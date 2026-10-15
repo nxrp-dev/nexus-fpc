@@ -182,7 +182,7 @@ Implementation
         if (not found) then
          found:=UnitSearchPath.FindFile(s,false,foundfile);
         if (not found) then
-         found:=CurrentModule.localobjectsearchpath.FindFile(s,false,foundfile);
+         found:=CurrentModule.LocalObjectSearchPath.FindFile(s,false,foundfile);
         if (not found) then
          found:=ObjectSearchPath.FindFile(s,false,foundfile);
         if not(cs_link_on_target in CurrentSettings.GlobalSwitches) and (not found) then
@@ -265,7 +265,7 @@ Implementation
         if (not found) and (CurrentModule.OutputPath<>'') then
          found:=FindFile(s,CurrentModule.OutputPath,false,foundfile);
         if (not found) then
-         found:=CurrentModule.locallibrarysearchpath.FindFile(s,false,foundfile);
+         found:=CurrentModule.LocalLibrarySearchPath.FindFile(s,false,foundfile);
         if (not found) then
          found:=LibrarySearchPath.FindFile(s,false,foundfile);
         if not(cs_link_on_target in CurrentSettings.GlobalSwitches) and (not found) then
@@ -315,18 +315,18 @@ Implementation
       begin
         with hp do
          begin
-           if not Assigned(hp.package) and (mf_has_resourcefiles in moduleflags) then
+           if not Assigned(hp.package) and (mf_has_resourcefiles in ModuleFlags) then
              HasResources:=true;
-           if mf_has_exports in moduleflags then
+           if mf_has_exports in ModuleFlags then
              HasExports:=true;
          { link unit files }
-           if (headerflags and UfNoLink)=0 then
+           if (HeaderFlags and UfNoLink)=0 then
             begin
               { create mask which unit files need linking }
               mask:=link_always;
               { lto linking ?}
               if (cs_lto in CurrentSettings.ModuleSwitches) and
-                 ((headerflags and UfLTOLinked)<>0) and
+                 ((HeaderFlags and UfLTOLinked)<>0) and
                  (not(cs_lto_nosystem in InitSettings.GlobalSwitches) or
                   (hp.ModuleName^<>'SYSTEM')) then
                 begin
@@ -337,10 +337,10 @@ Implementation
                   { static linking ? }
                   if (cs_link_static in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and UfStaticLinked)=0 then
+                     if (HeaderFlags and UfStaticLinked)=0 then
                       begin
                         { if static not avail then try smart linking }
-                        if (headerflags and UfSmartLinked)<>0 then
+                        if (HeaderFlags and UfSmartLinked)<>0 then
                          begin
                            Message1(exec_t_unit_not_static_linkable_switch_to_smart,ModuleName^);
                            mask:=mask or link_smart;
@@ -354,10 +354,10 @@ Implementation
                   { smart linking ? }
                   if (cs_link_smart in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and UfSmartLinked)=0 then
+                     if (HeaderFlags and UfSmartLinked)=0 then
                       begin
                         { if smart not avail then try static linking }
-                        if (headerflags and UfStaticLinked)<>0 then
+                        if (HeaderFlags and UfStaticLinked)<>0 then
                          begin
                            { if not create_smartlink_library, then smart linking happens using the
                              regular object files
@@ -375,10 +375,10 @@ Implementation
                   { shared linking }
                   if (cs_link_shared in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and UfSharedLinked)=0 then
+                     if (HeaderFlags and UfSharedLinked)=0 then
                       begin
                         { if shared not avail then try static linking }
-                        if (headerflags and UfStaticLinked)<>0 then
+                        if (HeaderFlags and UfStaticLinked)<>0 then
                          begin
                            Message1(exec_t_unit_not_shared_linkable_switch_to_static,ModuleName^);
                            mask:=mask or link_static;
@@ -391,23 +391,23 @@ Implementation
                    end;
                 end;
               { unit files }
-              while not linkunitofiles.empty do
-                AddObject(linkunitofiles.getusemask(mask),path,true);
-              while not linkunitstaticlibs.empty do
-                AddStaticLibrary(linkunitstaticlibs.getusemask(mask));
-              while not linkunitsharedlibs.empty do
-                AddSharedLibrary(linkunitsharedlibs.getusemask(mask));
+              while not LinkUnitOFiles.empty do
+                AddObject(LinkUnitOFiles.GetUseMask(mask),path,true);
+              while not LinkUnitStaticLibs.empty do
+                AddStaticLibrary(LinkUnitStaticLibs.GetUseMask(mask));
+              while not LinkUnitSharedLibs.empty do
+                AddSharedLibrary(LinkUnitSharedLibs.GetUseMask(mask));
             end;
            { Other needed .o and libs, specified using $L,$LINKLIB,external }
            mask:=link_always;
-           while not linkotherofiles.empty do
-            AddObject(linkotherofiles.Getusemask(mask),path,false);
-           while not linkotherstaticlibs.empty do
-            AddStaticCLibrary(linkotherstaticlibs.Getusemask(mask));
-           while not linkothersharedlibs.empty do
-            AddSharedCLibrary(linkothersharedlibs.Getusemask(mask));
-           while not linkotherframeworks.empty do
-             AddFramework(linkotherframeworks.Getusemask(mask));
+           while not LinkOtherOFiles.empty do
+            AddObject(LinkOtherOFiles.GetUseMask(mask),path,false);
+           while not LinkOtherStaticLibs.empty do
+            AddStaticCLibrary(LinkOtherStaticLibs.GetUseMask(mask));
+           while not LinkOtherSharedLibs.empty do
+            AddSharedCLibrary(LinkOtherSharedLibs.GetUseMask(mask));
+           while not LinkOtherFrameworks.empty do
+             AddFramework(LinkOtherFrameworks.GetUseMask(mask));
            { Known Library/DLL Imports }
            for i:=0 to ImportLibraryList.Count-1 do
              begin
@@ -420,7 +420,7 @@ Implementation
                  end;
              end;
            { ordered symbols }
-           OrderedSymbols.ConcatList(linkorderedsymbols);
+           OrderedSymbols.ConcatList(LinkOrderedSymbols);
          end;
       end;
 

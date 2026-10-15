@@ -135,7 +135,7 @@ type
 
 
 var
-  pbestrealtype : ^TDef = @s64floattype;
+  pbestrealtype : ^TDef = @S64FloatType;
 
 
 implementation
@@ -150,7 +150,7 @@ begin
   CErrorDef:=TCPUErrorDef;
   CPointerDef:=TCPUPointerDef;
   CRecordDef:=TCPURecordDef;
-  cimplementedinterface:=TCPUImplementedInterface;
+  CImplementedInterface:=TCPUImplementedInterface;
   CObjectDef:=TCPUObjectDef;
   CClassRefDef:=TCPUClassRefDef;
   CArrayDef:=TCPUArrayDef;

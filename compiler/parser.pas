@@ -92,20 +92,20 @@ implementation
        proc_program PM }
      if (module.IsInitial) and (module.state=ms_compiled) and NeedSymbolInfo then
        begin
-         hp:=TModule(loaded_units.first);
+         hp:=TModule(Loaded_Units.first);
          while Assigned(hp) do
           begin
             hp2:=TModule(hp.next);
             if (hp<>module) then
               begin
-                loaded_units.remove(hp);
+                Loaded_Units.remove(hp);
                 hp.free;
                 hp := nil;
               end;
             hp:=hp2;
           end;
          { free also unneeded units we didn't free before }
-         unloaded_units.Clear;
+         Unloaded_Units.Clear;
         end;
 
       { If used units are compiled current_module is already the same as
@@ -131,11 +131,11 @@ implementation
          CurrentGenericDef:=nil;
          CurrentSpecializeDef:=nil;
 
-         loaded_units:=TLinkedList.Create;
+         Loaded_Units:=TLinkedList.Create;
 
          UsedUnits:=TLinkedList.Create;
 
-         unloaded_units:=TLinkedList.Create;
+         Unloaded_Units:=TLinkedList.Create;
 
          { global switches }
          CurrentSettings.GlobalSwitches:=InitSettings.GlobalSwitches;
@@ -192,23 +192,23 @@ implementation
          CurrentSpecializeDef:=nil;
 
          { unload units }
-         if Assigned(loaded_units) then
+         if Assigned(Loaded_Units) then
            begin
-             loaded_units.free;
-             loaded_units:=nil;
+             Loaded_Units.free;
+             Loaded_Units:=nil;
            end;
          if Assigned(UsedUnits) then
            begin
              UsedUnits.free;
              UsedUnits:=nil;
            end;
-         if Assigned(unloaded_units) then
+         if Assigned(Unloaded_Units) then
            begin
-             unloaded_units.free;
-             unloaded_units:=nil;
+             Unloaded_Units.free;
+             Unloaded_Units:=nil;
            end;
          { Set default types to nil. At this point they are not valid class pointers. }
-         reset_all_default_types;
+         Reset_All_Default_Types;
 
          { if there was an error in the scanner, the scanner is
            still assigned }
@@ -254,14 +254,14 @@ implementation
          CurrentModule.Scanner:=CurrentScanner;
 
          { init macros before anything in the file is parsed.}
-         CurrentModule.localmacrosymtable:= TMacroSymTable.create(false);
-         MacroSymTableStack.push(initialmacrosymtable);
-         MacroSymTableStack.push(CurrentModule.localmacrosymtable);
+         CurrentModule.LocalMacroSymTable:= TMacroSymTable.create(false);
+         MacroSymTableStack.push(InitialMacroSymTable);
+         MacroSymTableStack.push(CurrentModule.LocalMacroSymTable);
 
          { read the first token }
          // current_scanner.readtoken(false);
 
-         main_module:=CurrentModule;
+         Main_Module:=CurrentModule;
          repeat
            CurrentScanner.readtoken(true);
            preprocfile.AddSpace;
@@ -337,7 +337,7 @@ implementation
            InternalError(200811121);
          if Assigned(CurrentStructDef) then
            InternalError(200811122);
-         inc(module.compilecount);
+         inc(module.CompileCount);
          Parser_Current_File:=module.MainSource;
 
        { reset parser, a previous fatal error could have left these variables in an unreliable state, this is
@@ -355,7 +355,7 @@ implementation
        { reset symtable }
          SymTableStack:=TDefAwareSymTableStack.create;
          MacroSymTableStack:=TSymTableStack.create;
-         systemunit:=nil;
+         SystemUnit:=nil;
          CurrentSettings.DefProcCall:=InitSettings.DefProcCall;
          Current_ExceptBlock:=0;
          ExceptBlockCounter:=0;
@@ -370,19 +370,19 @@ implementation
            InternalError(200212281);
 
          { load current asmdata from current_module }
-         CurrentAsmData:=TAsmData(module.asmdata);
+         CurrentAsmData:=TAsmData(module.AsmData);
 
          { startup scanner and load the first file }
          sc:=TScannerFile.Create(module.MainSource);
          sc.firstfile;
          module.Scanner:=sc;
-         module.mainscanner:=sc;
+         module.MainScanner:=sc;
          Set_Current_Scanner(sc);
 
          { init macros before anything in the file is parsed.}
-         module.localmacrosymtable:= TMacroSymTable.create(false);
-         MacroSymTableStack.push(initialmacrosymtable);
-         MacroSymTableStack.push(module.localmacrosymtable);
+         module.LocalMacroSymTable:= TMacroSymTable.create(false);
+         MacroSymTableStack.push(InitialMacroSymTable);
+         MacroSymTableStack.push(module.LocalMacroSymTable);
 
          { read the first token }
          CurrentScanner.readtoken(false);
@@ -395,7 +395,7 @@ implementation
          try
            if (CurrentScanner.token=_UNIT) or (not module.IsInitial) then
              begin
-               module.is_unit:=true;
+               module.IsUnit:=true;
                finished:=proc_unit(module);
              end
            else if (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_PACKAGE) then

@@ -103,7 +103,7 @@ begin
      exit;
    end;
   { now place in correct order }
-  hp2:=TExportedItem(CurrentModule._exports.first);
+  hp2:=TExportedItem(CurrentModule.ExportList.first);
   while Assigned(hp2) and
      (hp.name^>hp2.name^) do
     hp2:=TExportedItem(hp2.next);
@@ -114,8 +114,8 @@ begin
       duplicatesymbol(hp.name^);
       exit;
     end;
-  if hp2=TExportedItem(CurrentModule._exports.first) then
-    CurrentModule._exports.concat(hp)
+  if hp2=TExportedItem(CurrentModule.ExportList.first) then
+    CurrentModule.ExportList.concat(hp)
   else if Assigned(hp2) then
     begin
        hp.next:=hp2;
@@ -125,7 +125,7 @@ begin
        hp2.previous:=hp;
     end
   else
-    CurrentModule._exports.concat(hp);
+    CurrentModule.ExportList.concat(hp);
 {$ifdef cpuhighleveltarget}
   { in case of a high level target create a stub procedure at the node/def
     level instead of via hlcg.g_external_wrapper() later on, because it's
@@ -135,7 +135,7 @@ begin
   { in case of eo_name there is no sym, and this routine is also called from
     exportvar() so the sym doesn't have to be a procsym }
   if Assigned(hp.sym) and
-     (hp.sym.typ=procsym) then
+     (hp.sym.typ=ProcSym) then
     begin
       anyhasalias:=false;
       { if the procedure has the exported name as one of its aliases, we don't
@@ -144,15 +144,15 @@ begin
       for i:=0 to TProcSym(hp.sym).procdeflist.count-1 do
         begin
           pd:=TProcDef(TProcSym(hp.sym).procdeflist[i]);
-          anyhasalias:=pd.has_alias_name(hp.name^);
+          anyhasalias:=pd.Has_Alias_Name(hp.name^);
           if anyhasalias then
             break;
         end;
       if not anyhasalias then
         begin
           { avoid name clashes for the identifier }
-          wrapperpd:=create_procdef_alias(pd,'$fpc_exported$'+hp.name^,hp.name^,
-            CurrentModule.localsymtable,nil,
+          wrapperpd:=Create_ProcDef_Alias(pd,'$fpc_exported$'+hp.name^,hp.name^,
+            CurrentModule.LocalSymTable,nil,
             tsk_callthrough,pd);
         end;
     end;
@@ -177,12 +177,12 @@ begin
   pd:=nil;
   create_hlcodegen(nil);
   new_section(CurrentAsmData.asmlists[al_procedures],sec_code,'',0);
-  hp2:=TExportedItem(CurrentModule._exports.first);
+  hp2:=TExportedItem(CurrentModule.ExportList.first);
   while Assigned(hp2) do
    begin
      if (not hp2.is_var) and
         Assigned(hp2.sym) and
-        (hp2.sym.typ=procsym) then
+        (hp2.sym.typ=ProcSym) then
       begin
 {$ifndef cpuhighleveltarget}
         { the manglednames can already be the same when the procedure
@@ -193,22 +193,22 @@ begin
         for i:=0 to TProcSym(hp2.sym).procdeflist.count-1 do
           begin
             pd:=TProcDef(TProcSym(hp2.sym).procdeflist[i]);
-            anyhasalias:=pd.has_alias_name(hp2.name^);
+            anyhasalias:=pd.Has_Alias_Name(hp2.name^);
             if anyhasalias then
               break;
           end;
         if not anyhasalias then
-          hlcg.g_external_wrapper(CurrentAsmData.asmlists[al_procedures],pd,hp2.name^,pd.mangledname,true);
+          hlcg.g_external_wrapper(CurrentAsmData.asmlists[al_procedures],pd,hp2.name^,pd.MangledName,true);
 {$endif cpuhighleveltarget}
-        if not (CurrentModule.is_unit and (TargetInfo.system in systems_linux)) then
+        if not (CurrentModule.IsUnit and (TargetInfo.system in systems_linux)) then
           exportedsymnames.insert(hp2.name^);
       end
      else
        begin
          if Assigned(hp2.sym) and
-            (hp2.name^<>hp2.sym.mangledname) then
-           Message2(parser_e_cant_export_var_different_name,hp2.sym.realname,hp2.sym.mangledname)
-         else if not (CurrentModule.is_unit and (TargetInfo.system in systems_linux)) then
+            (hp2.name^<>hp2.sym.MangledName) then
+           Message2(parser_e_cant_export_var_different_name,hp2.sym.realname,hp2.sym.MangledName)
+         else if not (CurrentModule.IsUnit and (TargetInfo.system in systems_linux)) then
            exportedsymnames.insert(hp2.name^);
        end;
      hp2:=TExportedItem(hp2.next);

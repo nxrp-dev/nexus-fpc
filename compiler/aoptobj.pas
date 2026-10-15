@@ -1664,7 +1664,7 @@ Unit AoptObj;
               (TAI(next).typ = ait_label) then
               begin
                 l := TAILabel(next).labsym;
-                if not l.is_used then
+                if not l.Is_Used then
                   begin
                     { Unsafe label }
                     hp := next;
@@ -1851,7 +1851,7 @@ Unit AoptObj;
                           Continue;
                         end;
 
-                      if is_used or (bind <> AB_LOCAL) then
+                      if Is_Used or (bind <> AB_LOCAL) then
                         begin
                           { Valid label }
                           DebugWrite('JUMP DEBUG: Last label in cluster:' + ToStr(labelnr));
@@ -1929,7 +1929,7 @@ Unit AoptObj;
                                     Continue;
                                   end;
 
-                                if is_used or (bind <> AB_LOCAL) then
+                                if Is_Used or (bind <> AB_LOCAL) then
                                   begin
                                     { Valid label }
                                     DebugWrite('JUMP DEBUG: Last label in cluster:' + ToStr(labelnr));
@@ -2061,7 +2061,7 @@ Unit AoptObj;
           begin
 
             if (hp2.typ = ait_label) and
-              (TAILabel(hp2).labsym.is_used) and
+              (TAILabel(hp2).labsym.Is_Used) and
               (TAILabel(hp2).labsym.labeltype = alt_jump) then
               LastLabel := TAILabel(hp2).labsym;
 
@@ -2178,7 +2178,7 @@ Unit AoptObj;
 
                             stoploop := False;
 
-                            if not CJLabel.is_used then
+                            if not CJLabel.Is_Used then
                               begin
                                 CJLabel := NCJLabel;
 

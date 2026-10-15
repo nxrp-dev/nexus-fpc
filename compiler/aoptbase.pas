@@ -179,7 +179,7 @@ unit aoptbase;
 
   function labelCanBeSkipped(p: TAILabel): boolean; {$ifdef USEINLINE}inline;{$endif}
   begin
-    labelCanBeSkipped := not(p.labsym.is_used) or (p.labsym.labeltype<>alt_jump);
+    labelCanBeSkipped := not(p.labsym.Is_Used) or (p.labsym.labeltype<>alt_jump);
   end;
 
 

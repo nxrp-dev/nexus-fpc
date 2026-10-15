@@ -93,12 +93,12 @@ function TObjCSelectorNode.pass_typecheck: TNode;
       loadn:
         begin
           if (left.resultdef.typ=procdef) and
-             (po_objc in TProcDef(left.resultdef).procoptions) then
+             (po_objc in TProcDef(left.resultdef).ProcOptions) then
             begin
               { ok }
             end
           else
-            CGMessage1(type_e_expected_objc_method_but_got,left.resultdef.typename);
+            CGMessage1(type_e_expected_objc_method_but_got,left.resultdef.TypeName);
         end;
       stringconstn:
         begin
@@ -118,7 +118,7 @@ function TObjCSelectorNode.pass_typecheck: TNode;
       else
         CGMessage(type_e_expected_objc_method);
     end;
-    resultdef:=objc_seltype;
+    resultdef:=ObjC_SelType;
   end;
 
 
@@ -147,16 +147,16 @@ function TObjCProtocolNode.pass_typecheck: TNode;
     TypeCheckPass(left);
     if (left.nodetype<>typen) then
       MessagePos(left.fileinfo,type_e_type_id_expected)
-    else if not is_objcprotocol(left.resultdef) then
-      MessagePos2(left.fileinfo,type_e_incompatible_types,left.resultdef.typename,'ObjCProtocol');
-    resultdef:=objc_protocoltype;
+    else if not Is_ObjCProtocol(left.resultdef) then
+      MessagePos2(left.fileinfo,type_e_incompatible_types,left.resultdef.TypeName,'ObjCProtocol');
+    resultdef:=ObjC_ProtocolType;
   end;
 
 
 function TObjCProtocolNode.pass_1: TNode;
   begin
     result:=CCallNode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
-      CCallParaNode.create(CStringConstNode.createstr(TObjectDef(left.resultdef).objextname^),nil),
+      CCallParaNode.create(CStringConstNode.createstr(TObjectDef(left.resultdef).ObjExtName^),nil),
       resultdef
     );
     TypeCheckPass(result);

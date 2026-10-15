@@ -148,31 +148,31 @@ unit rasm;
       begin
         isimplicitpointer:=
           (sym.typ=paravarsym) and
-          (is_implicit_pointer_object_type(sym.vardef) or
-           paramanager.push_addr_param(sym.varspez,sym.vardef,CurrentProcInfo.procdef.proccalloption));
+          (Is_Implicit_Pointer_Object_Type(sym.vardef) or
+           paramanager.push_addr_param(sym.VarSpez,sym.vardef,CurrentProcInfo.procdef.ProcCallOption));
 
         { sym.initiallloc/localloc is not yet initialised here }
 
         { pointer parameter to aggregate passed in register to pure assembler routine }
-        if (po_assembler in CurrentProcInfo.procdef.procoptions) and
+        if (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
            (sym.typ=paravarsym) and
-           (TParaVarSym(sym).paraloc[calleeside].location^.loc=LOC_REGISTER) and
+           (TParaVarSym(sym).ParaLoc[calleeside].location^.loc=LOC_REGISTER) and
            { ... however this is only possible if the pointer takes only one register location }
-           not Assigned(TParaVarSym(sym).paraloc[calleeside].location^.Next) and
+           not Assigned(TParaVarSym(sym).ParaLoc[calleeside].location^.Next) and
            isimplicitpointer then
           exit;
 
         { aggregate parameter passed on the stack to a pure assembler routine }
-        if (po_assembler in CurrentProcInfo.procdef.procoptions) and
+        if (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
            (sym.typ=paravarsym) and
            { sym.localloc is not yet initialised here for pure assembler routines }
-           (TParaVarSym(sym).paraloc[calleeside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+           (TParaVarSym(sym).ParaLoc[calleeside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
            not isimplicitpointer then
           exit;
 
         { aggregate parameter located on the stack for a non-assembler routine
           (locals accessed from assembler code are never kept in registers) }
-        if not(po_assembler in CurrentProcInfo.procdef.procoptions) and
+        if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) and
            (sym.typ=paravarsym) and
            not isimplicitpointer then
           exit;
@@ -182,10 +182,10 @@ unit rasm;
         if ((sym.typ=localvarsym) or
            { even if a parameter is passed by reference, it will be copied to
              a local if it's a value parameter to a non assembler routines }
-            (not(po_assembler in CurrentProcInfo.procdef.procoptions) and
+            (not(po_assembler in CurrentProcInfo.procdef.ProcOptions) and
              (sym.typ=paravarsym) and
-             (sym.varspez=vs_value))) and
-           not is_implicit_pointer_object_type(sym.vardef) then
+             (sym.VarSpez=vs_value))) and
+           not Is_Implicit_Pointer_Object_Type(sym.vardef) then
           exit;
 
         Message(asmr_e_cannot_access_field_directly_for_parameters);

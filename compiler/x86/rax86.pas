@@ -283,7 +283,7 @@ begin
                       InternalError(2019061002);
                   end;
                 end;
-              if CurrentProcInfo.procdef.proccalloption=pocall_register then
+              if CurrentProcInfo.procdef.ProcCallOption=pocall_register then
                 message1(asmr_w_no_direct_ebp_for_parameter,ErrorRefStr)
               else
                 message1(asmr_w_direct_ebp_for_parameter_regcall,ErrorRefStr);
@@ -473,7 +473,7 @@ begin
         ExistsMemRefNoSize := true;
 
         case operands[i].opr.Typ of
-              OPR_LOCAL: ExistsLocalSymSize := tx86operand(operands[i]).opr.localsym.getsize > 0;
+              OPR_LOCAL: ExistsLocalSymSize := tx86operand(operands[i]).opr.localsym.GetSize > 0;
           OPR_REFERENCE: ExistsLocalSymSize := true;
           else
             ;

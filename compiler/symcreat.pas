@@ -27,31 +27,31 @@ unit symcreat;
 interface
 
   uses
-    FinPut,tokens,Scanner,GlobType,CClasses,
+    FinPut,Tokens,Scanner,GlobType,CClasses,
     AAsmData,
-    symconst,SymBase,symtype,symdef,SymSym,
-    node;
+    SymConst,SymBase,SymType,SymDef,SymSym,
+    Node;
 
 
   type
     TScannerState = record
-      new_scanner: TScannerFile;
-      old_scanner: TScannerFile;
-      old_filepos: TFilePosInfo;
-      old_modeswitches: TModeSwitches;
-      valid: boolean;
+      NewScanner: TScannerFile;
+      OldScanner: TScannerFile;
+      OldFilePos: TFilePosInfo;
+      OldModeSwitches: TModeSwitches;
+      Valid: Boolean;
     end;
 
   { save/restore the scanner state before/after injecting }
-  procedure replace_scanner(const tempname: string; out sstate: TScannerState);
-  procedure restore_scanner(const sstate: TScannerState);
+  procedure Replace_Scanner(const TempName: string; out SState: TScannerState);
+  procedure Restore_Scanner(const SState: TScannerState);
 
   { parses a (class or regular) method/constructor/destructor declaration from
     str, as if it were declared in astruct's declaration body
 
     WARNING: save the scanner state before calling this routine, and restore
       when done. }
-  function str_parse_method_dec(str: AnsiString; potype: TProcTypeOption; is_classdef: boolean; astruct: TAbstractRecordDef; out pd: TProcDef): boolean;
+  function Str_Parse_Method_Dec(Str: AnsiString; POType: TProcTypeOption; IsClassDef: Boolean; AStruct: TAbstractRecordDef; out PD: TProcDef): Boolean;
 
   { parses a (class or regular)  method/constructor/destructor implementation
     from str, as if it appeared in the current unit's implementation section
@@ -60,7 +60,7 @@ interface
         * save the scanner state before calling this routine, and restore when done.
         * the code *must* be written in objfpc style
   }
-  function str_parse_method_impl(const str: AnsiString; usefwpd: TProcDef; is_classdef: boolean):boolean;
+  function Str_Parse_Method_Impl(const Str: AnsiString; UseFWPD: TProcDef; IsClassDef: Boolean):Boolean;
 
   { parses a typed constant assignment to ssym
 
@@ -68,11 +68,11 @@ interface
         * save the scanner state before calling this routine, and restore when done.
         * the code *must* be written in objfpc style
   }
-  procedure str_parse_typedconst(list: TAsmList; str: AnsiString; ssym: TStaticVarSym);
+  procedure Str_Parse_TypedConst(List: TAsmList; Str: AnsiString; SSym: TStaticVarSym);
 
   { goes through all defs in st to add implementations for synthetic methods
     added earlier }
-  procedure add_synthetic_method_implementations(st: TSymTable);
+  procedure Add_Synthetic_Method_Implementations(ST: TSymTable);
 
   { create an alias for a procdef with Pascal name "newrealname",
     mangledname "newmangledname", in symtable newparentst, part of the
@@ -80,390 +80,390 @@ interface
     synthetic kind para "skpara" to create the implementation (tsk_none and nil
     in case not necessary). Returns the new procdef; finish_copied_procdef() is
     not required/must not be called for the result. }
-  function create_procdef_alias(pd: TProcDef; const newrealname: string; const newmangledname: TSymStr; newparentst: TSymTable; newstruct: TAbstractRecordDef; sk: TSyntheticKind; skpara: pointer): TProcDef;
+  function Create_ProcDef_Alias(PD: TProcDef; const NewRealName: string; const NewMangledName: TSymStr; NewParentST: TSymTable; NewStruct: TAbstractRecordDef; SK: TSyntheticKind; SKPara: Pointer): TProcDef;
 
   { finalize a procdef that has been copied with
     tprocdef.getcopyas(procdef,pc_bareproc) }
-  procedure finish_copied_procdef(var pd: TProcDef; const realname: string; newparentst: TSymTable; newstruct: TAbstractRecordDef);
+  procedure Finish_Copied_ProcDef(var PD: TProcDef; const RealName: string; NewParentST: TSymTable; NewStruct: TAbstractRecordDef);
 
   { checks whether sym (a local or para of pd) already has a counterpart in
     pd's parentfpstruct, and if not adds a new field to the struct with type
     "vardef" (can be different from sym's type in case it's a call-by-reference
     parameter, which is indicated by addrparam). If it already has a field in
     the parentfpstruct, this field is returned. }
-  function maybe_add_sym_to_parentfpstruct(pd: TProcDef; sym: TSym; vardef: TDef; addrparam: boolean): TSym;
+  function Maybe_Add_Sym_To_ParentFPStruct(PD: TProcDef; Sym: TSym; VarDef: TDef; AddrParam: Boolean): TSym;
   { given a localvarsym or paravarsym of pd, returns the field of the
     parentfpstruct corresponding to this sym }
-  function find_sym_in_parentfpstruct(pd: TProcDef; sym: TSym): TSym;
+  function Find_Sym_In_ParentFPStruct(PD: TProcDef; Sym: TSym): TSym;
   { replaces all local and paravarsyms that have been mirrored in the
     parentfpstruct with aliasvarsyms that redirect to these fields (used to
     make sure that references to these syms in the owning procdef itself also
     use the ones in the parentfpstructs) }
-  procedure redirect_parentfpstruct_local_syms(pd: TProcDef);
+  procedure Redirect_ParentFPStruct_Local_Syms(PD: TProcDef);
   { finalises the parentfpstruct (alignment padding, ...) }
-  procedure finish_parentfpstruct(pd: TProcDef);
+  procedure Finish_ParentFPStruct(PD: TProcDef);
 
   { turns a fieldvarsym into a class/static field definition, and returns the
     created staticvarsym that is responsible for allocating the global storage }
-  function make_field_static(recst: TSymTable; fieldvs: TFieldVarSym): TStaticVarSym;
+  function Make_Field_Static(RecST: TSymTable; FieldVS: TFieldVarSym): TStaticVarSym;
 
   { create a new procdef with the signature of orgpd and (mangled) name
     newname, and change the implementation of orgpd so that it calls through
     to this new procedure }
-  procedure call_through_new_name(orgpd: TProcDef; const newname: TSymStr);
+  procedure Call_Through_New_Name(OrgPD: TProcDef; const NewName: TSymStr);
 
-  function generate_pkg_stub(pd:TProcDef):TNode;
-  procedure generate_attr_constrs(attrs:TFPObjectList);
+  function Generate_Pkg_Stub(PD:TProcDef):TNode;
+  procedure Generate_Attr_Constrs(Attrs:TFPObjectList);
 
   { Generate the hidden thunk class for interfaces,
     so we can use them in TVirtualInterface on platforms that do not allow
     generating executable code in memory at runtime.}
-  procedure add_synthetic_interface_classes_for_st(st : TSymTable; gen_intf, gen_impl : boolean);
+  procedure Add_Synthetic_Interface_Classes_For_ST(ST : TSymTable; GenIntf, GenImpl : Boolean);
 
 
 implementation
 
   uses
     CUtils,Globals,Verbose,Systems,CompHook,FModule,ConstExp,
-    SymTable,defutil,symutil,ProcInfo,
-    pbase,pdecl, pdecobj,pdecsub,psub,ptconst,pparautl,
-    aasmcpu,symcpu,
-    nbas,nld,nmem,ncon,
-    defcmp,
-    paramgr;
+    SymTable,DefUtil,SymUtil,ProcInfo,
+    PBase,PDecl, PDecObj,PDecSub,PSub,PTConst,PParaUtl,
+    AAsmCPU,SymCPU,
+    NBas,NLd,NMem,NCon,
+    DefCmp,
+    Paramgr;
 
-  procedure replace_scanner(const tempname: string; out sstate: TScannerState);
+  procedure Replace_Scanner(const TempName: string; out SState: TScannerState);
     var
-      old_block_type: TBlockType;
+      OldBlockType: TBlockType;
     begin
       { would require saving of cstringpattern, patternw }
-      if (CurrentScanner.token=_CSTRING) or
-         (CurrentScanner.token=_CWCHAR) or
-         (CurrentScanner.token=_CWSTRING) then
+      if (CurrentScanner.Token=_CSTRING) or
+         (CurrentScanner.Token=_CWCHAR) or
+         (CurrentScanner.Token=_CWSTRING) then
         InternalError(2011032201);
-      sstate.old_scanner:=CurrentScanner;
-      sstate.old_filepos:=CurrentFilePos;
-      sstate.old_modeswitches:=CurrentSettings.ModeSwitches;
-      sstate.valid:=true;
+      SState.OldScanner:=CurrentScanner;
+      SState.OldFilePos:=CurrentFilePos;
+      SState.OldModeSwitches:=CurrentSettings.ModeSwitches;
+      SState.Valid:=True;
       { creating a new scanner resets the block type, while we want to continue
         in the current one }
-      old_block_type:=Block_Type;
-      sstate.new_scanner:=TScannerFile.Create('_Macro_.'+tempname,true);
-      Set_Current_Scanner(sstate.new_scanner);
-      Block_Type:=old_block_type;
+      OldBlockType:=Block_Type;
+      SState.NewScanner:=TScannerFile.Create('_Macro_.'+TempName,True);
+      Set_Current_Scanner(SState.NewScanner);
+      Block_Type:=OldBlockType;
       { required for e.g. FpcDeepCopy record method (uses "out" parameter; field
         names are escaped via &, so should not cause conflicts }
       CurrentSettings.ModeSwitches:=ObjFPCModeSwitches+
-        (sstate.old_modeswitches*[m_default_ansistring,m_default_unicodestring]);
+        (SState.OldModeSwitches*[m_default_ansistring,m_default_unicodestring]);
     end;
 
 
-  procedure restore_scanner(const sstate: TScannerState);
+  procedure Restore_Scanner(const SState: TScannerState);
     begin
-      if sstate.valid then
+      if SState.Valid then
         begin
-          sstate.new_scanner.free; // no nil needed
-          Set_Current_Scanner(sstate.old_scanner);
-          CurrentFilePos:=sstate.old_filepos;
-          CurrentSettings.ModeSwitches:=sstate.old_modeswitches;
+          SState.NewScanner.Free; // no nil needed
+          Set_Current_Scanner(SState.OldScanner);
+          CurrentFilePos:=SState.OldFilePos;
+          CurrentSettings.ModeSwitches:=SState.OldModeSwitches;
         end;
     end;
 
 
-  function str_parse_method_dec(str: AnsiString; potype: TProcTypeOption; is_classdef: boolean; astruct: TAbstractRecordDef; out pd: TProcDef): boolean;
+  function Str_Parse_Method_Dec(Str: AnsiString; POType: TProcTypeOption; IsClassDef: Boolean; AStruct: TAbstractRecordDef; out PD: TProcDef): Boolean;
     var
-      oldparse_only: boolean;
+      OldParseOnly: Boolean;
     begin
-      Message1(parser_d_internal_parser_string,str);
-      oldparse_only:=parse_only;
-      parse_only:=true;
-      result:=false;
+      Message1(parser_d_internal_parser_string,Str);
+      OldParseOnly:=parse_only;
+      parse_only:=True;
+      Result:=False;
       { in case multiple strings are injected, make sure to always close the
         previous macro inputfile to prevent memory leaks }
-      if Assigned(CurrentScanner.inputfile) and
-         not(CurrentScanner.inputfile.closed) then
-        CurrentScanner.closeinputfile;
+      if Assigned(CurrentScanner.InputFile) and
+         not(CurrentScanner.InputFile.Closed) then
+        CurrentScanner.CloseInputFile;
       { inject the string in the scanner }
-      str:=str+'end;';
-      CurrentScanner.substitutemacro('meth_head_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.RefIndex,true);
-      CurrentScanner.readtoken(false);
+      Str:=Str+'end;';
+      CurrentScanner.SubstituteMacro('meth_head_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.ReadToken(False);
       { and parse it... }
-      case potype of
+      case POType of
         potype_class_constructor:
-          pd:=class_constructor_head(astruct);
+          PD:=class_constructor_head(AStruct);
         potype_class_destructor:
-          pd:=class_destructor_head(astruct);
+          PD:=class_destructor_head(AStruct);
         potype_constructor:
-          pd:=constructor_head;
+          PD:=constructor_head;
         potype_destructor:
-          pd:=destructor_head;
-        else if Assigned(astruct) and
-           (astruct.typ=recorddef) then
-          pd:=parse_record_method_dec(astruct,is_classdef,false)
+          PD:=destructor_head;
+        else if Assigned(AStruct) and
+           (AStruct.Typ=RecordDef) then
+          PD:=parse_record_method_dec(AStruct,IsClassDef,False)
         else
-          pd:=method_dec(astruct,is_classdef,false);
+          PD:=method_dec(AStruct,IsClassDef,False);
       end;
-      if Assigned(pd) then
-        result:=true;
-      parse_only:=oldparse_only;
+      if Assigned(PD) then
+        Result:=True;
+      parse_only:=OldParseOnly;
       { remove the temporary macro input file again }
-      CurrentScanner.closeinputfile;
-      CurrentScanner.nextfile;
-      CurrentScanner.tempopeninputfile;
+      CurrentScanner.CloseInputFile;
+      CurrentScanner.NextFile;
+      CurrentScanner.TempOpenInputFile;
     end;
 
 
-  function str_parse_method_impl_with_fileinfo(str: AnsiString; usefwpd: TProcDef; fileno, lineno: LongInt; is_classdef: boolean; out result_procdef: TProcDef):boolean;
+  function StrParseMethodImplWithFileInfo(Str: AnsiString; UseFWPD: TProcDef; FileNo, LineNo: LongInt; IsClassDef: Boolean; out ResultProcDef: TProcDef):Boolean;
      var
-       oldparse_only: boolean;
-       tmpstr: AnsiString;
-       flags : TReadProcFlags;
+       OldParseOnly: Boolean;
+       TmpStr: AnsiString;
+       Flags : TReadProcFlags;
      begin
-      if ((status.verbosity and VDebug)<>0) then
+      if ((Status.Verbosity and VDebug)<>0) then
         begin
-           if Assigned(usefwpd) then
-             Message1(parser_d_internal_parser_string,usefwpd.customprocname([pno_proctypeoption,pno_paranames,pno_ownername,pno_noclassmarker,pno_noleadingdollar])+str)
+           if Assigned(UseFWPD) then
+             Message1(parser_d_internal_parser_string,UseFWPD.CustomProcName([pno_proctypeoption,pno_paranames,pno_ownername,pno_noclassmarker,pno_noleadingdollar])+Str)
            else
              begin
-               if is_classdef then
-                 tmpstr:='class '
+               if IsClassDef then
+                 TmpStr:='class '
                else
-                 tmpstr:='';
-               Message1(parser_d_internal_parser_string,tmpstr+str);
+                 TmpStr:='';
+               Message1(parser_d_internal_parser_string,TmpStr+Str);
              end;
         end;
-      oldparse_only:=parse_only;
-      parse_only:=false;
-      result:=false;
+      OldParseOnly:=parse_only;
+      parse_only:=False;
+      Result:=False;
       { "const" starts a new kind of block and hence makes the scanner return }
-      str:=str+'const;';
+      Str:=Str+'const;';
       { inject the string in the scanner }
-      CurrentScanner.substitutemacro('meth_impl_macro',@str[1],length(str),lineno,fileno,true);
-      CurrentScanner.readtoken(false);
+      CurrentScanner.SubstituteMacro('meth_impl_macro',@Str[1],Length(Str),LineNo,FileNo,True);
+      CurrentScanner.ReadToken(False);
       { and parse it... }
-      flags:=[];
-      if is_classdef then
-        include(flags,rpf_classmethod);
-      result_procdef:=read_proc(flags,usefwpd);
-      parse_only:=oldparse_only;
+      Flags:=[];
+      if IsClassDef then
+        Include(Flags,rpf_classmethod);
+      ResultProcDef:=read_proc(Flags,UseFWPD);
+      parse_only:=OldParseOnly;
       { remove the temporary macro input file again }
-      CurrentScanner.closeinputfile;
-      CurrentScanner.nextfile;
-      CurrentScanner.tempopeninputfile;
-      result:=true;
+      CurrentScanner.CloseInputFile;
+      CurrentScanner.NextFile;
+      CurrentScanner.TempOpenInputFile;
+      Result:=True;
      end;
 
 
-  function str_parse_method_impl(const str: AnsiString; usefwpd: TProcDef; is_classdef: boolean):boolean;
+  function Str_Parse_Method_Impl(const Str: AnsiString; UseFWPD: TProcDef; IsClassDef: Boolean):Boolean;
     var
-      tmpproc: TProcDef;
+      TmpProc: TProcDef;
     begin
-      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.RefIndex, CurrentScanner.line_no, is_classdef, tmpproc);
+      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.InputFile.RefIndex, CurrentScanner.line_no, IsClassDef, TmpProc);
     end;
 
 
-  function str_parse_method_impl(const str: AnsiString; usefwpd: TProcDef; is_classdef: boolean; out result_procdef: TProcDef):boolean;
+  function Str_Parse_Method_Impl(const Str: AnsiString; UseFWPD: TProcDef; IsClassDef: Boolean; out ResultProcDef: TProcDef):Boolean;
     begin
-      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.RefIndex, CurrentScanner.line_no, is_classdef, result_procdef);
+      Result:=StrParseMethodImplWithFileInfo(Str, UseFWPD, CurrentScanner.InputFile.RefIndex, CurrentScanner.line_no, IsClassDef, ResultProcDef);
     end;
 
 
-  procedure str_parse_typedconst(list: TAsmList; str: AnsiString; ssym: TStaticVarSym);
+  procedure Str_Parse_TypedConst(List: TAsmList; Str: AnsiString; SSym: TStaticVarSym);
     var
-      old_block_type: TBlockType;
-      old_parse_only: boolean;
+      OldBlockType: TBlockType;
+      OldParseOnly: Boolean;
     begin
-      Message1(parser_d_internal_parser_string,str);
+      Message1(parser_d_internal_parser_string,Str);
       { a string that will be interpreted as the start of a new section ->
         typed constant parsing will stop }
-      str:=str+'type ';
-      old_parse_only:=parse_only;
-      old_block_type:=Block_Type;
-      parse_only:=true;
+      Str:=Str+'type ';
+      OldParseOnly:=parse_only;
+      OldBlockType:=Block_Type;
+      parse_only:=True;
       Block_Type:=bt_const;
-      CurrentScanner.substitutemacro('typed_const_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.RefIndex,true);
-      CurrentScanner.readtoken(false);
-      read_typed_const(list,ssym,ssym.owner.symtabletype in [recordsymtable,objectsymtable]);
-      parse_only:=old_parse_only;
-      Block_Type:=old_block_type;
+      CurrentScanner.SubstituteMacro('typed_const_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.ReadToken(False);
+      read_typed_const(List,SSym,SSym.Owner.SymTableType in [RecordSymTable,ObjectSymTable]);
+      parse_only:=OldParseOnly;
+      Block_Type:=OldBlockType;
       { remove the temporary macro input file again }
-      CurrentScanner.closeinputfile;
-      CurrentScanner.nextfile;
-      CurrentScanner.tempopeninputfile;
+      CurrentScanner.CloseInputFile;
+      CurrentScanner.NextFile;
+      CurrentScanner.TempOpenInputFile;
     end;
 
-    function str_parse_objecttypedef(typename : shortstring;str: AnsiString): TObjectDef;
+    function StrParseObjectTypeDef(TypeName : ShortString;Str: AnsiString): TObjectDef;
      var
-       b,oldparse_only: boolean;
-       i : integer;
-       tmpstr: AnsiString;
-       flags : TReadProcFlags;
-       o : TObject;
+       B,OldParseOnly: Boolean;
+       I : Integer;
+       TmpStr: AnsiString;
+       Flags : TReadProcFlags;
+       O : TObject;
 
      begin
-      result:=nil;
-      Message1(parser_d_internal_parser_string,str);
-      oldparse_only:=parse_only;
-      parse_only:=true;
+      Result:=nil;
+      Message1(parser_d_internal_parser_string,Str);
+      OldParseOnly:=parse_only;
+      parse_only:=True;
       { "const" starts a new kind of block and hence makes the scanner return }
-      str:=str+'const;';
+      Str:=Str+'const;';
       Block_Type:=bt_type;
       { inject the string in the scanner }
-      CurrentScanner.substitutemacro('hidden_interface_class_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.RefIndex,true);
-      CurrentScanner.readtoken(false);
-      type_dec(b);
+      CurrentScanner.SubstituteMacro('hidden_interface_class_macro',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+      CurrentScanner.ReadToken(False);
+      type_dec(B);
       // In the interface part, the object def is not necessarily the last one, the methods also generate defs.
-      i:=CurrentModule.DefList.count-1;
-      While (result=nil) and (i>=0) do
+      I:=CurrentModule.DefList.Count-1;
+      While (Result=nil) and (I>=0) do
         begin
-        O:=CurrentModule.DefList[i];
-        if (o is TObjectDef) then
-           if (TObjectDef(o).GetTypeName=typename) then
-             result:=TObjectDef(o);
-        dec(i);
+        O:=CurrentModule.DefList[I];
+        if (O is TObjectDef) then
+           if (TObjectDef(O).GetTypeName=TypeName) then
+             Result:=TObjectDef(O);
+        Dec(I);
         end;
-      if result=nil then
+      if Result=nil then
         InternalError(2024050401);
-      parse_only:=oldparse_only;
+      parse_only:=OldParseOnly;
       { remove the temporary macro input file again }
-      CurrentScanner.closeinputfile;
-      CurrentScanner.nextfile;
-      CurrentScanner.tempopeninputfile;
+      CurrentScanner.CloseInputFile;
+      CurrentScanner.NextFile;
+      CurrentScanner.TempOpenInputFile;
      end;
 
 
-  function def_unit_name_prefix_if_toplevel(def: TDef): TSymStr;
+  function DefUnitNamePrefixIfTopLevel(Def: TDef): TSymStr;
     begin
-      result:='';
+      Result:='';
       { if the routine is a global routine in a unit, explicitly use this unit
         name to avoid accidentally calling other same-named routines that may be
         in scope }
-      if not Assigned(def.owner.defowner) and
-         Assigned(def.owner.realname) and
-         (def.owner.ModuleID<>0) then
-        result:=internal_macro_escape_unit_namespace_name+def.owner.realname^+'.';
+      if not Assigned(Def.Owner.DefOwner) and
+         Assigned(Def.Owner.RealName) and
+         (Def.Owner.ModuleID<>0) then
+        Result:=internal_macro_escape_unit_namespace_name+Def.Owner.RealName^+'.';
     end;
 
 
-  procedure implement_record_deepcopy(pd: TProcDef);
+  procedure ImplementRecordDeepCopy(PD: TProcDef);
     var
-      struct: TAbstractRecordDef;
-      str: AnsiString;
-      i: LongInt;
-      sym: TSym;
-      fsym: TFieldVarSym;
+      Struct: TAbstractRecordDef;
+      Str: AnsiString;
+      I: LongInt;
+      Sym: TSym;
+      FSym: TFieldVarSym;
     begin
-      if not(pd.struct.typ in [recorddef,objectdef]) then
+      if not(PD.Struct.Typ in [RecordDef,ObjectDef]) then
         InternalError(2011032810);
-      struct:=pd.struct;
+      Struct:=PD.Struct;
       { anonymous record types must get an artificial name, so we can generate
         a typecast at the scanner level }
-      if (struct.typ=recorddef) and
-         not Assigned(struct.typesym) then
+      if (Struct.Typ=RecordDef) and
+         not Assigned(Struct.TypeSym) then
         InternalError(2011032811);
       { copy all fields }
-      str:='type _fpc_ptrt = ^'+struct.typesym.realname+'; var res: _fpc_ptrt; begin res:=_fpc_ptrt(result);';
-      for i:=0 to struct.SymTable.symlist.count-1 do
+      Str:='type _fpc_ptrt = ^'+Struct.TypeSym.RealName+'; var res: _fpc_ptrt; begin res:=_fpc_ptrt(result);';
+      for I:=0 to Struct.SymTable.SymList.Count-1 do
         begin
-          sym:=TSym(struct.SymTable.symlist[i]);
-          if (sym.typ=fieldvarsym) then
+          Sym:=TSym(Struct.SymTable.SymList[I]);
+          if (Sym.Typ=FieldVarSym) then
             begin
-              fsym:=TFieldVarSym(sym);
-              str:=str+'res^.&'+fsym.realname+':=&'+fsym.realname+';';
+              FSym:=TFieldVarSym(Sym);
+              Str:=Str+'res^.&'+FSym.RealName+':=&'+FSym.RealName+';';
             end;
         end;
-      str:=str+'end;';
-      str_parse_method_impl(str,pd,false);
+      Str:=Str+'end;';
+      Str_Parse_Method_Impl(Str,PD,False);
     end;
 
 
-  procedure implement_record_initialize(pd: TProcDef);
+  procedure ImplementRecordInitialize(PD: TProcDef);
     var
-      struct: TAbstractRecordDef;
-      str: AnsiString;
-      i: LongInt;
-      sym: TSym;
-      fsym: TFieldVarSym;
+      Struct: TAbstractRecordDef;
+      Str: AnsiString;
+      I: LongInt;
+      Sym: TSym;
+      FSym: TFieldVarSym;
     begin
-      if not(pd.struct.typ in [recorddef,objectdef]) then
+      if not(PD.Struct.Typ in [RecordDef,ObjectDef]) then
         InternalError(2011071710);
-      struct:=pd.struct;
+      Struct:=PD.Struct;
       { anonymous record types must get an artificial name, so we can generate
         a typecast at the scanner level }
-      if (struct.typ=recorddef) and
-         not Assigned(struct.typesym) then
+      if (Struct.Typ=RecordDef) and
+         not Assigned(Struct.TypeSym) then
         InternalError(2011032804);
       { walk over all fields that need initialization }
-      str:='begin ';
-      for i:=0 to struct.SymTable.symlist.count-1 do
+      Str:='begin ';
+      for I:=0 to Struct.SymTable.SymList.Count-1 do
         begin
-          sym:=TSym(struct.SymTable.symlist[i]);
-          if (sym.typ=fieldvarsym) then
+          Sym:=TSym(Struct.SymTable.SymList[I]);
+          if (Sym.Typ=FieldVarSym) then
             begin
-              fsym:=TFieldVarSym(sym);
-              if fsym.vardef.NeedsInitTable then
-                str:=str+(internal_macro_escape_unit_namespace_name+'system.initialize(&')+fsym.realname+');';
+              FSym:=TFieldVarSym(Sym);
+              if FSym.VarDef.NeedsInitTable then
+                Str:=Str+(internal_macro_escape_unit_namespace_name+'system.initialize(&')+FSym.RealName+');';
             end;
         end;
-      str:=str+'end;';
-      str_parse_method_impl(str,pd,false);
+      Str:=Str+'end;';
+      Str_Parse_Method_Impl(Str,PD,False);
     end;
 
-  procedure implement_empty(pd: TProcDef);
+  procedure ImplementEmpty(PD: TProcDef);
     var
-      str: AnsiString;
-      isclassmethod: boolean;
+      Str: AnsiString;
+      IsClassMethod: Boolean;
     begin
-      isclassmethod:=
-        (po_classmethod in pd.procoptions) and
-        not(pd.proctypeoption in [potype_constructor,potype_destructor]);
-      str:='begin end;';
-      str_parse_method_impl(str,pd,isclassmethod);
+      IsClassMethod:=
+        (po_classmethod in PD.ProcOptions) and
+        not(PD.ProcTypeOption in [potype_constructor,potype_destructor]);
+      Str:='begin end;';
+      Str_Parse_Method_Impl(Str,PD,IsClassMethod);
     end;
 
 
-  procedure addvisibleparameters(var str: AnsiString; pd: TProcDef);
+  procedure AddVisibleParameters(var Str: AnsiString; PD: TProcDef);
     var
-      currpara: TParaVarSym;
-      i: LongInt;
-      firstpara: boolean;
+      CurrPara: TParaVarSym;
+      I: LongInt;
+      FirstPara: Boolean;
     begin
-      firstpara:=true;
-      for i:=0 to pd.paras.count-1 do
+      FirstPara:=True;
+      for I:=0 to PD.Paras.Count-1 do
         begin
-          currpara:=TParaVarSym(pd.paras[i]);
-          if not(vo_is_hidden_para in currpara.varoptions) then
+          CurrPara:=TParaVarSym(PD.Paras[I]);
+          if not(vo_is_hidden_para in CurrPara.VarOptions) then
             begin
-              if not firstpara then
-                str:=str+',';
-              firstpara:=false;
-              str:=str+'&'+currpara.realname;
+              if not FirstPara then
+                Str:=Str+',';
+              FirstPara:=False;
+              Str:=Str+'&'+CurrPara.RealName;
             end;
         end;
     end;
 
 
 
-  procedure implement_callthrough(pd: TProcDef);
+  procedure ImplementCallThrough(PD: TProcDef);
     var
-      str: AnsiString;
-      callpd: TProcDef;
-      isclassmethod: boolean;
+      Str: AnsiString;
+      CallPD: TProcDef;
+      IsClassMethod: Boolean;
     begin
-      isclassmethod:=
-        (po_classmethod in pd.procoptions) and
-        not(pd.proctypeoption in [potype_constructor,potype_destructor]);
-      callpd:=TProcDef(pd.skpara);
-      str:='begin ';
-      if pd.returndef<>voidtype then
-        str:=str+'result:=';
+      IsClassMethod:=
+        (po_classmethod in PD.ProcOptions) and
+        not(PD.ProcTypeOption in [potype_constructor,potype_destructor]);
+      CallPD:=TProcDef(PD.SKPara);
+      Str:='begin ';
+      if PD.ReturnDef<>VoidType then
+        Str:=Str+'result:=';
       { if the routine is a global routine in a unit/program, explicitly
         mnetion this program/unit name to avoid accidentally calling other
         same-named routines that may be in scope }
-      str:=str+def_unit_name_prefix_if_toplevel(callpd)+callpd.procsym.realname+'(';
-      addvisibleparameters(str,pd);
-      str:=str+') end;';
-      str_parse_method_impl(str,pd,isclassmethod);
+      Str:=Str+DefUnitNamePrefixIfTopLevel(CallPD)+CallPD.ProcSym.RealName+'(';
+      AddVisibleParameters(Str,PD);
+      Str:=Str+') end;';
+      Str_Parse_Method_Impl(Str,PD,IsClassMethod);
     end;
 
 
@@ -471,1035 +471,1035 @@ implementation
 
 
 
-  procedure implement_field_getter(pd: TProcDef);
+  procedure ImplementFieldGetter(PD: TProcDef);
     var
-      i: LongInt;
-      pvs: TParaVarSym;
-      str: AnsiString;
-      callthroughprop: TPropertySym;
-      propaccesslist: TPropAccessList;
-      lastparanr: LongInt;
-      firstpara: boolean;
+      I: LongInt;
+      PVS: TParaVarSym;
+      Str: AnsiString;
+      CallThroughProp: TPropertySym;
+      PropAccessList: TPropAccessList;
+      LastParaNr: LongInt;
+      FirstPara: Boolean;
     begin
-      callthroughprop:=TPropertySym(pd.skpara);
-      str:='begin result:='+callthroughprop.realname;
-      if ppo_hasparameters in callthroughprop.propoptions then
+      CallThroughProp:=TPropertySym(PD.SKPara);
+      Str:='begin result:='+CallThroughProp.RealName;
+      if ppo_hasparameters in CallThroughProp.PropOptions then
         begin
-          if not callthroughprop.getpropaccesslist(palt_read,propaccesslist) then
+          if not CallThroughProp.GetPropAccessList(palt_read,PropAccessList) then
             InternalError(2012100701);
-          str:=str+'[';
-          firstpara:=true;
-          lastparanr:=TProcDef(propaccesslist.procdef).paras.count-1;
-          if ppo_indexed in callthroughprop.propoptions then
-            dec(lastparanr);
-          for i:=0 to lastparanr do
+          Str:=Str+'[';
+          FirstPara:=True;
+          LastParaNr:=TProcDef(PropAccessList.ProcDef).Paras.Count-1;
+          if ppo_indexed in CallThroughProp.PropOptions then
+            Dec(LastParaNr);
+          for I:=0 to LastParaNr do
             begin
               { skip self/vmt/parentfp, passed implicitly }
-              pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[i]);
-              if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*pvs.varoptions)<>[] then
-                continue;
-              if not firstpara then
-                str:=str+',';
-              firstpara:=false;
-              str:=str+pvs.realname;
+              PVS:=TParaVarSym(TProcDef(PropAccessList.ProcDef).Paras[I]);
+              if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*PVS.VarOptions)<>[] then
+                Continue;
+              if not FirstPara then
+                Str:=Str+',';
+              FirstPara:=False;
+              Str:=Str+PVS.RealName;
             end;
-          str:=str+']';
+          Str:=Str+']';
         end;
-      str:=str+'; end;';
-      str_parse_method_impl(str,pd,po_classmethod in pd.procoptions)
+      Str:=Str+'; end;';
+      Str_Parse_Method_Impl(Str,PD,po_classmethod in PD.ProcOptions)
     end;
 
 
-  procedure implement_field_setter(pd: TProcDef);
+  procedure ImplementFieldSetter(PD: TProcDef);
     var
-      i, lastparaindex: LongInt;
-      pvs: TParaVarSym;
-      paraname,  str: AnsiString;
-      callthroughprop: TPropertySym;
-      propaccesslist: TPropAccessList;
-      firstpara: boolean;
+      I, LastParaIndex: LongInt;
+      PVS: TParaVarSym;
+      ParaName,  Str: AnsiString;
+      CallThroughProp: TPropertySym;
+      PropAccessList: TPropAccessList;
+      FirstPara: Boolean;
     begin
-      callthroughprop:=TPropertySym(pd.skpara);
-      str:='begin '+callthroughprop.realname;
-      if not callthroughprop.getpropaccesslist(palt_write,propaccesslist) then
+      CallThroughProp:=TPropertySym(PD.SKPara);
+      Str:='begin '+CallThroughProp.RealName;
+      if not CallThroughProp.GetPropAccessList(palt_write,PropAccessList) then
         InternalError(2012100702);
-      if ppo_hasparameters in callthroughprop.propoptions then
+      if ppo_hasparameters in CallThroughProp.PropOptions then
         begin
-          str:=str+'[';
-          firstpara:=true;
+          Str:=Str+'[';
+          FirstPara:=True;
           { last parameter is the value to be set, skip (only add index
             parameters here) }
-          lastparaindex:=TProcDef(propaccesslist.procdef).paras.count-2;
-          if ppo_indexed in callthroughprop.propoptions then
-            dec(lastparaindex);
-          for i:=0 to lastparaindex do
+          LastParaIndex:=TProcDef(PropAccessList.ProcDef).Paras.Count-2;
+          if ppo_indexed in CallThroughProp.PropOptions then
+            Dec(LastParaIndex);
+          for I:=0 to LastParaIndex do
             begin
               { skip self/vmt/parentfp/index, passed implicitly }
-              pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[i]);
-              if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*pvs.varoptions)<>[] then
-                continue;
-              if not firstpara then
-                str:=str+',';
-              firstpara:=false;
-              str:=str+pvs.realname;
+              PVS:=TParaVarSym(TProcDef(PropAccessList.ProcDef).Paras[I]);
+              if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*PVS.VarOptions)<>[] then
+                Continue;
+              if not FirstPara then
+                Str:=Str+',';
+              FirstPara:=False;
+              Str:=Str+PVS.RealName;
             end;
-          str:=str+']';
+          Str:=Str+']';
         end;
       { the value-to-be-set }
-      if Assigned(propaccesslist.procdef) then
+      if Assigned(PropAccessList.ProcDef) then
         begin
-          pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[TProcDef(propaccesslist.procdef).paras.count-1]);
-          paraname:=pvs.realname;
+          PVS:=TParaVarSym(TProcDef(PropAccessList.ProcDef).Paras[TProcDef(PropAccessList.ProcDef).Paras.Count-1]);
+          ParaName:=PVS.RealName;
         end
       else
-        paraname:='__fpc_newval__';
-      str:=str+':='+paraname+'; end;';
-      str_parse_method_impl(str,pd,po_classmethod in pd.procoptions)
+        ParaName:='__fpc_newval__';
+      Str:=Str+':='+ParaName+'; end;';
+      Str_Parse_Method_Impl(Str,PD,po_classmethod in PD.ProcOptions)
     end;
 
 
-  procedure implement_block_invoke_procvar(pd: TProcDef);
+  procedure ImplementBlockInvokeProcVar(PD: TProcDef);
     var
-      str: AnsiString;
+      Str: AnsiString;
     begin
-      str:='';
-      str:='begin ';
-      if pd.returndef<>voidtype then
-        str:=str+'result:=';
-      str:=str+'__FPC_BLOCK_INVOKE_PV_TYPE(PFPC_Block_literal_complex_procvar(FPC_Block_Self)^.pv)(';
-      addvisibleparameters(str,pd);
-      str:=str+') end;';
-      str_parse_method_impl(str,pd,false);
+      Str:='';
+      Str:='begin ';
+      if PD.ReturnDef<>VoidType then
+        Str:=Str+'result:=';
+      Str:=Str+'__FPC_BLOCK_INVOKE_PV_TYPE(PFPC_Block_literal_complex_procvar(FPC_Block_Self)^.pv)(';
+      AddVisibleParameters(Str,PD);
+      Str:=Str+') end;';
+      Str_Parse_Method_Impl(Str,PD,False);
     end;
 
 
-  procedure implement_interface_wrapper(pd: TProcDef);
+  procedure ImplementInterfaceWrapper(PD: TProcDef);
     var
-      wrapperinfo: PSKParaInterfaceWrapper;
-      callthroughpd, tmpproc: TProcDef;
-      str: AnsiString;
-      fileinfo: TFilePosInfo;
+      WrapperInfo: PSKParaInterfaceWrapper;
+      CallThroughPD, TmpProc: TProcDef;
+      Str: AnsiString;
+      FileInfo: TFilePosInfo;
     begin
-      wrapperinfo:=PSKParaInterfaceWrapper(pd.skpara);
-      if not Assigned(wrapperinfo) then
+      WrapperInfo:=PSKParaInterfaceWrapper(PD.SKPara);
+      if not Assigned(WrapperInfo) then
         InternalError(2015090801);
-      callthroughpd:=TProcDef(wrapperinfo^.pd);
-      str:='begin ';
+      CallThroughPD:=TProcDef(WrapperInfo^.PD);
+      Str:='begin ';
       { self right now points to the VMT of interface inside the instance ->
         adjust so it points to the start of the instance }
-      str:=str+'pointer(self):=pointer(self) - '+ToStr(wrapperinfo^.offset)+';';
+      Str:=Str+'pointer(self):=pointer(self) - '+ToStr(WrapperInfo^.Offset)+';';
       { now call through to the actual method }
-      if pd.returndef<>voidtype then
-        str:=str+'result:=';
-      str:=str+'&'+callthroughpd.procsym.realname+'(';
-      addvisibleparameters(str,pd);
-      str:=str+') end;';
+      if PD.ReturnDef<>VoidType then
+        Str:=Str+'result:=';
+      Str:=Str+'&'+CallThroughPD.ProcSym.RealName+'(';
+      AddVisibleParameters(Str,PD);
+      Str:=Str+') end;';
       { add dummy file info so we can step in/through it }
-      if pd.owner.iscurrentunit then
-        fileinfo:=pd.fileinfo
+      if PD.Owner.IsCurrentUnit then
+        FileInfo:=PD.FileInfo
       else
         begin
-          fileinfo.moduleindex:=CurrentModule.ModuleID;
-          fileinfo.fileindex:=1;
-          fileinfo.line:=1;
-          fileinfo.column:=1;
+          FileInfo.ModuleIndex:=CurrentModule.ModuleID;
+          FileInfo.FileIndex:=1;
+          FileInfo.Line:=1;
+          FileInfo.Column:=1;
         end;
-      str_parse_method_impl_with_fileinfo(str,pd,fileinfo.fileindex,fileinfo.line,false,tmpproc);
-      dispose(wrapperinfo);
-      pd.skpara:=nil;
+      StrParseMethodImplWithFileInfo(Str,PD,FileInfo.FileIndex,FileInfo.Line,False,TmpProc);
+      Dispose(WrapperInfo);
+      PD.SKPara:=nil;
     end;
 
 
-  procedure implement_call_no_parameters(pd: TProcDef);
+  procedure ImplementCallNoParameters(PD: TProcDef);
     var
-      callpd: TProcDef;
-      str: AnsiString;
-      warningson,
-      isclassmethod: boolean;
+      CallPD: TProcDef;
+      Str: AnsiString;
+      WarningsOn,
+      IsClassMethod: Boolean;
     begin
       { avoid warnings about unset function results in these abstract wrappers }
-      warningson:=(status.verbosity and VWarning)<>0;
-      setverbosity('W-');
-      str:='begin ';
-      callpd:=TProcDef(pd.skpara);
-      str:=str+def_unit_name_prefix_if_toplevel(callpd)+callpd.procsym.realname+'; end;';
-      isclassmethod:=
-        (po_classmethod in pd.procoptions) and
-        not(pd.proctypeoption in [potype_constructor,potype_destructor]);
-      str_parse_method_impl(str,pd,isclassmethod);
-      if warningson then
-        setverbosity('W+');
+      WarningsOn:=(Status.Verbosity and VWarning)<>0;
+      SetVerbosity('W-');
+      Str:='begin ';
+      CallPD:=TProcDef(PD.SKPara);
+      Str:=Str+DefUnitNamePrefixIfTopLevel(CallPD)+CallPD.ProcSym.RealName+'; end;';
+      IsClassMethod:=
+        (po_classmethod in PD.ProcOptions) and
+        not(PD.ProcTypeOption in [potype_constructor,potype_destructor]);
+      Str_Parse_Method_Impl(Str,PD,IsClassMethod);
+      if WarningsOn then
+        SetVerbosity('W+');
     end;
 
-  function get_method_paramtype(vardef  : TDef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : AnsiString; forward;
+  function GetMethodParamType(VarDef  : TDef; AsPointer : Boolean; out IsAnonymousArrayDef : Boolean) : AnsiString; forward;
 
-  function str_parse_method(str: AnsiString; allowgenericid : boolean): TProcDef; forward;
+  function StrParseMethod(Str: AnsiString; AllowGenericID : Boolean): TProcDef; forward;
 
-  function str_parse_method(str: AnsiString): TProcDef;
+  function StrParseMethod(Str: AnsiString): TProcDef;
   begin
-     Result:=str_parse_method(str,false);
+     Result:=StrParseMethod(Str,False);
   end;
 
-  procedure implement_invoke_helper(cn : string;pd: TProcDef; idx : integer);
+  procedure ImplementInvokeHelper(CN : string;PD: TProcDef; Idx : Integer);
 
     var
-      sarg,str : AnsiString;
-      pt, pn,d : shortstring;
-      sym : TSym;
-      aArg,argcount,i : integer;
-      isarray,haveresult : boolean;
-      para : TParaVarSym;
-      hasopenarray, washigh: Boolean;
+      SArg,Str : AnsiString;
+      PT, PN,D : ShortString;
+      Sym : TSym;
+      AArg,ArgCount,I : Integer;
+      IsArray,HaveResult : Boolean;
+      Para : TParaVarSym;
+      HasOpenArray, WasHigh: Boolean;
 
     begin
-      str:='procedure __invoke_helper__';
-      pn:=pd.procsym.realname;
-      str:=str+cn+'__'+pn+'_'+ToStr(idx);
-      for I:=1 to length(str) do
-        if str[i]='.' then
-          str[i]:='_';
-      str:=str+'(Instance : Pointer; Args : PPointer);'#10;
-      argCount:=0;
-      for i:=0 to pd.paras.Count-1 do
+      Str:='procedure __invoke_helper__';
+      PN:=PD.ProcSym.RealName;
+      Str:=Str+CN+'__'+PN+'_'+ToStr(Idx);
+      for I:=1 to Length(Str) do
+        if Str[I]='.' then
+          Str[I]:='_';
+      Str:=Str+'(Instance : Pointer; Args : PPointer);'#10;
+      ArgCount:=0;
+      for I:=0 to PD.Paras.Count-1 do
         begin
-          para:=TParaVarSym(pd.paras[i]);
-          if vo_is_hidden_para in para.varoptions then
-            continue;
-          inc(argCount);
-          if argCount=1 then
-            str:=str+'Type'#10;
-          pt:=get_method_paramtype(para.vardef,true,isArray);
-          if isArray then
+          Para:=TParaVarSym(PD.Paras[I]);
+          if vo_is_hidden_para in Para.VarOptions then
+            Continue;
+          Inc(ArgCount);
+          if ArgCount=1 then
+            Str:=Str+'Type'#10;
+          PT:=GetMethodParamType(Para.VarDef,True,IsArray);
+          if IsArray then
             begin
-            str:=str+'  tpa'+ToStr(argcount)+' = '+pt+';'#10;
-            pt:='^tpa'+ToStr(argcount);
+            Str:=Str+'  tpa'+ToStr(ArgCount)+' = '+PT+';'#10;
+            PT:='^tpa'+ToStr(ArgCount);
             end;
-          str:=str+'  tp'+ToStr(argcount)+' = '+pt+';'#10;
+          Str:=Str+'  tp'+ToStr(ArgCount)+' = '+PT+';'#10;
         end;
-      haveresult:=pd.returndef<>voidtype;
-      if haveresult then
+      HaveResult:=PD.ReturnDef<>VoidType;
+      if HaveResult then
         begin
-        if argCount=0 then
-          str:=str+'Type'#10;
-        pt:=get_method_paramtype(pd.returndef ,true,isArray);
-        if isArray then
+        if ArgCount=0 then
+          Str:=Str+'Type'#10;
+        PT:=GetMethodParamType(PD.ReturnDef ,True,IsArray);
+        if IsArray then
           begin
-          str:=str+'  tra'+ToStr(argcount)+' = '+pt+';'#10;
-          pt:='^tra';
+          Str:=Str+'  tra'+ToStr(ArgCount)+' = '+PT+';'#10;
+          PT:='^tra';
           end;
-        str:=str+'  tr = '+pt+';'#10;
+        Str:=Str+'  tr = '+PT+';'#10;
         end;
-      str:=str+'begin'#10'  ';
-      if haveResult then
-        str:=str+'TR(args[0])^:=';
-      str:=str+cn+'(Instance).'+pn+'(';
-      argCount:=0;
-      for i:=0 to pd.paras.Count-1 do
+      Str:=Str+'begin'#10'  ';
+      if HaveResult then
+        Str:=Str+'TR(args[0])^:=';
+      Str:=Str+CN+'(Instance).'+PN+'(';
+      ArgCount:=0;
+      for I:=0 to PD.Paras.Count-1 do
         begin
-          para:=TParaVarSym(pd.paras[i]);
-          if vo_is_hidden_para in para.varoptions then
-            continue;
-          inc(argCount);
-          sarg:=ToStr(argcount);
-          if argCount>1 then
-            str:=str+',';
-          str:=str+'tp'+sarg+'(Args['+sarg+'])^';
+          Para:=TParaVarSym(PD.Paras[I]);
+          if vo_is_hidden_para in Para.VarOptions then
+            Continue;
+          Inc(ArgCount);
+          SArg:=ToStr(ArgCount);
+          if ArgCount>1 then
+            Str:=Str+',';
+          Str:=Str+'tp'+SArg+'(Args['+SArg+'])^';
         end;
-      str:=str+');'#10;
-      str:=str+'end;'#10;
-      pd.invoke_helper:=str_parse_method(str,true);
+      Str:=Str+');'#10;
+      Str:=Str+'end;'#10;
+      PD.InvokeHelper:=StrParseMethod(Str,True);
   end;
 
-  procedure add_synthetic_method_implementations_for_st(st: TSymTable);
+  procedure AddSyntheticMethodImplementationsForST(ST: TSymTable);
     var
-      i   : LongInt;
-      def : TDef;
-      pd  : TProcDef;
-      cn  : shortstring;
+      I   : LongInt;
+      Def : TDef;
+      PD  : TProcDef;
+      CN  : ShortString;
     begin
-      for i:=0 to st.deflist.count-1 do
+      for I:=0 to ST.DefList.Count-1 do
         begin
-          def:=TDef(st.deflist[i]);
-          if (def.typ<>procdef) then
-            continue;
+          Def:=TDef(ST.DefList[I]);
+          if (Def.Typ<>ProcDef) then
+            Continue;
           { skip methods when processing unit symtable }
-          if def.owner<>st then
-            continue;
-          pd:=TProcDef(def);
-          case pd.synthetickind of
+          if Def.Owner<>ST then
+            Continue;
+          PD:=TProcDef(Def);
+          case PD.SyntheticKind of
             tsk_none:
               ;
             tsk_record_deepcopy:
-              implement_record_deepcopy(pd);
+              ImplementRecordDeepCopy(PD);
             tsk_record_initialize:
-              implement_record_initialize(pd);
+              ImplementRecordInitialize(PD);
             tsk_empty,
             { special handling for this one is done in tnodeutils.wrap_proc_body }
             tsk_tcinit:
-              implement_empty(pd);
+              ImplementEmpty(PD);
             tsk_callthrough:
-              implement_callthrough(pd);
+              ImplementCallThrough(PD);
             tsk_callthrough_nonabstract:
               begin
-                if (pd.owner.defowner.typ<>objectdef) or
-                   (TObjectDef(pd.owner.defowner).abstractcnt=0) then
-                  implement_callthrough(pd)
+                if (PD.Owner.DefOwner.Typ<>ObjectDef) or
+                   (TObjectDef(PD.Owner.DefOwner).AbstractCnt=0) then
+                  ImplementCallThrough(PD)
                 else
-                  implement_empty(pd);
+                  ImplementEmpty(PD);
               end;
             tsk_wasm_suspending_first,
             tsk_wasm_suspending_last,
             tsk_wasm_promising:
               InternalError(2023061107);
             tsk_field_getter:
-              implement_field_getter(pd);
+              ImplementFieldGetter(PD);
             tsk_field_setter:
-              implement_field_setter(pd);
+              ImplementFieldSetter(PD);
             tsk_block_invoke_procvar:
-              implement_block_invoke_procvar(pd);
+              ImplementBlockInvokeProcVar(PD);
             tsk_interface_wrapper:
-              implement_interface_wrapper(pd);
+              ImplementInterfaceWrapper(PD);
             tsk_call_no_parameters:
-              implement_call_no_parameters(pd);
+              ImplementCallNoParameters(PD);
             tsk_invoke_helper:
               begin
-                if (pd.owner.defowner) is TObjectDef  then
-                  cn:=TObjectDef(def.owner.defowner).GetTypeName
+                if (PD.Owner.DefOwner) is TObjectDef  then
+                  CN:=TObjectDef(Def.Owner.DefOwner).GetTypeName
                 else
                   InternalError(2023061107);
-                implement_invoke_helper(cn,pd,i);
+                ImplementInvokeHelper(CN,PD,I);
               end;
           end;
         end;
     end;
 
-  function get_method_paramtype(vardef  : TDef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : AnsiString;
+  function GetMethodParamType(VarDef  : TDef; AsPointer : Boolean; out IsAnonymousArrayDef : Boolean) : AnsiString;
 
   var
-    p : integer;
-    arrdef : TArrayDef absolute vardef;
+    P : Integer;
+    ArrDef : TArrayDef absolute VarDef;
 
   begin
     {
       None of the existing routines fulltypename,OwnerHierarchyName,FullOwnerHierarchyName,typename
       results in a workable definition for open array parameters.
     }
-    isAnonymousArrayDef:=false;
-    if asPointer and (vardef.typ=formaldef) then
-      exit('pointer');
-    if (vardef is TProcVarDef) then
+    IsAnonymousArrayDef:=False;
+    if AsPointer and (VarDef.Typ=FormalDef) then
+      Exit('pointer');
+    if (VarDef is TProcVarDef) then
       begin
-      result:=vardef.fullownerhierarchyname(false,false);
-      if Assigned(vardef.typesym) then
-        Result:=Result+(vardef.typesym.Name);
+      Result:=VarDef.FullOwnerHierarchyName(False,False);
+      if Assigned(VarDef.TypeSym) then
+        Result:=Result+(VarDef.TypeSym.Name);
       end
-    else if not (vardef is TArrayDef) then
-      result:=vardef.fulltypename
+    else if not (VarDef is TArrayDef) then
+      Result:=VarDef.FullTypeName
     else
       begin
-      if (ado_isarrayofconst in arrdef.arrayoptions) then
+      if (ado_isarrayofconst in ArrDef.ArrayOptions) then
         begin
-          if asPointer then
+          if AsPointer then
             Result:='Array of TVarRec'
           else
-            result:='Array Of Const';
-          asPointer:=False;
-          isAnonymousArrayDef:=true;
+            Result:='Array Of Const';
+          AsPointer:=False;
+          IsAnonymousArrayDef:=True;
         end
-      else if (ado_OpenArray in arrdef.arrayoptions) then
+      else if (ado_OpenArray in ArrDef.ArrayOptions) then
         begin
-        result:='Array of '+arrdef.elementdef.fulltypename;
-        asPointer:=False;
-        isAnonymousArrayDef:=true;
+        Result:='Array of '+ArrDef.ElementDef.FullTypeName;
+        AsPointer:=False;
+        IsAnonymousArrayDef:=True;
         end
       else
         begin
-        result:=vardef.fulltypename;
+        Result:=VarDef.FullTypeName;
         end;
       end;
     // ansistring(0) -> ansistring
-    p:=pos('(',result);
-    if p=0 then
-      p:=pos('[',result);
-    if p>0 then
-      result:=copy(result,1,p-1);
-    if asPointer then
+    P:=Pos('(',Result);
+    if P=0 then
+      P:=Pos('[',Result);
+    if P>0 then
+      Result:=Copy(Result,1,P-1);
+    if AsPointer then
       Result:='^'+Result;
   end;
 
-  function get_method_paramtype(vardef  : TDef; asPointer : Boolean) : AnsiString;
+  function GetMethodParamType(VarDef  : TDef; AsPointer : Boolean) : AnsiString;
 
   var
-    ad : boolean;
+    AD : Boolean;
 
   begin
-    result:=get_method_paramtype(vardef,aspointer,ad);
+    Result:=GetMethodParamType(VarDef,AsPointer,AD);
   end;
 
-  function create_intf_method_args(p : TProcDef; out argcount: integer) : AnsiString;
+  function CreateIntfMethodArgs(P : TProcDef; out ArgCount: Integer) : AnsiString;
 
   const
-    varspezprefixes : array[TVarSpez] of shortstring =
+    VarSpezPrefixes : array[TVarSpez] of ShortString =
       ('','const','var','out','constref','final');
   var
-    i : integer;
-    s : string;
-    para : TParaVarSym;
+    I : Integer;
+    S : string;
+    Para : TParaVarSym;
 
 
   begin
-    result:='';
-    argCount:=0;
-    for i:=0 to p.paras.Count-1 do
+    Result:='';
+    ArgCount:=0;
+    for I:=0 to P.Paras.Count-1 do
       begin
-      para:=TParaVarSym(p.paras[i]);
-      if vo_is_hidden_para in para.varoptions then
-        continue;
+      Para:=TParaVarSym(P.Paras[I]);
+      if vo_is_hidden_para in Para.VarOptions then
+        Continue;
       if Result<>'' then
         Result:=Result+';';
-      inc(argCount);
-      result:=result+varspezprefixes[para.varspez]+' p'+ToStr(argcount);
-      if Assigned(para.vardef) and not (para.vardef is TFormalDef) then
-        result:=Result+' : '+get_method_paramtype(para.vardef,false);
+      Inc(ArgCount);
+      Result:=Result+VarSpezPrefixes[Para.VarSpez]+' p'+ToStr(ArgCount);
+      if Assigned(Para.VarDef) and not (Para.VarDef is TFormalDef) then
+        Result:=Result+' : '+GetMethodParamType(Para.VarDef,False);
       end;
     if Result<>'' then
       Result:='('+Result+')';
   end;
 
-  function generate_thunkclass_name(acount: Integer; objdef : TObjectDef) : shortstring;
+  function GenerateThunkClassName(ACount: Integer; ObjDef : TObjectDef) : ShortString;
 
   var
-    cn : shortstring;
-    i : integer;
+    CN : ShortString;
+    I : Integer;
 
   begin
-    cn:=ObjDef.GetTypeName;
-    for i:=0 to Length(cn) do
+    CN:=ObjDef.GetTypeName;
+    for I:=0 to Length(CN) do
       begin
-      if cn[i]='.' then
-        cn[i]:='_'
-      else if (cn[i]='<') or (cn[i]='>') then
-        cn[i]:='_';
+      if CN[I]='.' then
+        CN[I]:='_'
+      else if (CN[I]='<') or (CN[I]='>') then
+        CN[I]:='_';
       end;
-    result:='_t_hidden'+ToStr(acount)+cn;
+    Result:='_t_hidden'+ToStr(ACount)+CN;
   end;
 
-  function get_thunkclass_interface_vmtoffset(objdef : TObjectDef) : integer;
+  function GetThunkClassInterfaceVMTOffset(ObjDef : TObjectDef) : Integer;
 
   var
-    i,j,offs : integer;
-    sym : TSym;
-    proc : TProcSym absolute sym;
-    pd : TProcDef;
+    I,J,Offs : Integer;
+    Sym : TSym;
+    Proc : TProcSym absolute Sym;
+    PD : TProcDef;
 
   begin
-    offs:=maxint;
-    for I:=0 to objdef.SymTable.symList.Count-1 do
+    Offs:=MaxInt;
+    for I:=0 to ObjDef.SymTable.SymList.Count-1 do
       begin
-      sym:=TSym(objdef.SymTable.symList[i]);
-      if Not Assigned(sym) then
-        continue;
-      if (Sym.typ<>procsym) then
-        continue;
-      for j:=0 to proc.ProcdefList.Count-1 do
+      Sym:=TSym(ObjDef.SymTable.SymList[I]);
+      if Not Assigned(Sym) then
+        Continue;
+      if (Sym.Typ<>ProcSym) then
+        Continue;
+      for J:=0 to Proc.ProcdefList.Count-1 do
         begin
-        pd:=TProcDef(proc.ProcdefList[j]);
-        if pd.extnumber<offs then
-          offs:=pd.extnumber;
+        PD:=TProcDef(Proc.ProcdefList[J]);
+        if PD.ExtNumber<Offs then
+          Offs:=PD.ExtNumber;
         end;
       end;
-      if offs=maxint then
-        offs:=0;
-      result:=offs;
+      if Offs=MaxInt then
+        Offs:=0;
+      Result:=Offs;
     end;
 
 
   // return parent Interface def, but skip iunknown.
 
-  function getparent_interface_def(odef : TObjectDef) : TObjectDef;
+  function GetParentInterfaceDef(ODef : TObjectDef) : TObjectDef;
 
   begin
-    if (odef.getparentdef is TObjectDef) then
+    if (ODef.GetParentDef is TObjectDef) then
       begin
-      result:=odef.getparentdef as TObjectDef;
-      if result=interface_iunknown then
-        result:=Nil;
+      Result:=ODef.GetParentDef as TObjectDef;
+      if Result=Interface_IUnknown then
+        Result:=Nil;
       end
     else
-      result:=nil;
+      Result:=nil;
   end;
 
-  procedure implement_interface_thunkclass_decl(cn : shortstring; objdef : TObjectDef);
+  procedure ImplementInterfaceThunkClassDecl(CN : ShortString; ObjDef : TObjectDef);
 
   var
-    parentname,str : AnsiString;
-    sym : TSym;
-    proc : TProcSym absolute sym;
-    pd : TProcDef;
-    odef,def : TObjectDef;
-    offs,argcount,i,j : integer;
-    intfDef : TObjectDef;
+    ParentName,Str : AnsiString;
+    Sym : TSym;
+    Proc : TProcSym absolute Sym;
+    PD : TProcDef;
+    ODef,Def : TObjectDef;
+    Offs,ArgCount,I,J : Integer;
+    IntfDef : TObjectDef;
   begin
-    str:='type '#10;
-    odef:=getparent_interface_def(objdef);
-    if (oDef=Nil) or (oDef.hiddenclassdef=Nil) then
-      parentname:='TInterfaceThunk'
+    Str:='type '#10;
+    ODef:=GetParentInterfaceDef(ObjDef);
+    if (ODef=Nil) or (ODef.HiddenClassDef=Nil) then
+      ParentName:='TInterfaceThunk'
     else
-      parentname:=odef.hiddenclassdef.GetTypeName;
-    str:=str+cn+' = class('+parentname+','+objdef.GetTypeName+')'#10;
-    str:=str+' protected '#10;
-    Intfdef:=objdef;
+      ParentName:=ODef.HiddenClassDef.GetTypeName;
+    Str:=Str+CN+' = class('+ParentName+','+ObjDef.GetTypeName+')'#10;
+    Str:=Str+' protected '#10;
+    IntfDef:=ObjDef;
     Repeat
-      if not IntfDef.is_generic then
-        for I:=0 to intfdef.SymTable.symList.Count-1 do
+      if not IntfDef.Is_Generic then
+        for I:=0 to IntfDef.SymTable.SymList.Count-1 do
           begin
-          sym:=TSym(intfdef.SymTable.symList[i]);
-          if Not Assigned(sym) then
-            continue;
-          if (Sym.typ<>procsym) then
-            continue;
-          for j:=0 to proc.ProcdefList.Count-1 do
+          Sym:=TSym(IntfDef.SymTable.SymList[I]);
+          if Not Assigned(Sym) then
+            Continue;
+          if (Sym.Typ<>ProcSym) then
+            Continue;
+          for J:=0 to Proc.ProcdefList.Count-1 do
             begin
-            pd:=TProcDef(proc.ProcdefList[j]);
-            if pd.returndef<>voidtype then
-              str:=str+'function '
+            PD:=TProcDef(Proc.ProcdefList[J]);
+            if PD.ReturnDef<>VoidType then
+              Str:=Str+'function '
             else
-              str:=str+'procedure ';
-            str:=str+proc.RealName;
-            str:=str+create_intf_method_args(pd,argcount);
-            if pd.returndef<>voidtype then
-              str:=str+' : '+get_method_paramtype(pd.returndef,false);
-            str:=str+';'#10;
+              Str:=Str+'procedure ';
+            Str:=Str+Proc.RealName;
+            Str:=Str+CreateIntfMethodArgs(PD,ArgCount);
+            if PD.ReturnDef<>VoidType then
+              Str:=Str+' : '+GetMethodParamType(PD.ReturnDef,False);
+            Str:=Str+';'#10;
             end;
           end;
       // Check parent class
-      intfdef:=getparent_interface_def(intfdef);
+      IntfDef:=GetParentInterfaceDef(IntfDef);
       // If we already have a hidden class def for it, no need to continue
-      if (IntfDef<>nil) and (IntfDef.hiddenclassdef<>nil) then
+      if (IntfDef<>nil) and (IntfDef.HiddenClassDef<>nil) then
         IntfDef:=Nil;
-    until intfdef=nil;
-    offs:=get_thunkclass_interface_vmtoffset(objdef);
-    if offs>0 then
+    until IntfDef=nil;
+    Offs:=GetThunkClassInterfaceVMTOffset(ObjDef);
+    if Offs>0 then
       begin
-      str:=str+'public '#10;
-      str:=str+'  function InterfaceVMTOffset : word; override;'#10;
+      Str:=Str+'public '#10;
+      Str:=Str+'  function InterfaceVMTOffset : word; override;'#10;
       end;
-    str:=str+' end;'#10;
-    def:=str_parse_objecttypedef(cn,str);
-    if Assigned(def) then
+    Str:=Str+' end;'#10;
+    Def:=StrParseObjectTypeDef(CN,Str);
+    if Assigned(Def) then
       begin
-      def.created_in_current_module:=true;
-      if not def.typesym.IsRegistered then
-        def.typesym.RegisterSym;
-      def.buildderef;
-      include(def.objectoptions,oo_can_have_published);
+      Def.CreatedInCurrentModule:=True;
+      if not Def.TypeSym.IsRegistered then
+        Def.TypeSym.RegisterSym;
+      Def.BuildDeref;
+      Include(Def.ObjectOptions,oo_can_have_published);
       end;
-    objdef.hiddenclassdef:=def;
+    ObjDef.HiddenClassDef:=Def;
   end;
 
-  function str_parse_method(str: AnsiString; allowgenericid : boolean): TProcDef;
+  function StrParseMethod(Str: AnsiString; AllowGenericID : Boolean): TProcDef;
    var
-     oldparse_only: boolean;
-     tmpstr: AnsiString;
-     flags : TReadProcFlags;
-     oldallow : boolean;
+     OldParseOnly: Boolean;
+     TmpStr: AnsiString;
+     Flags : TReadProcFlags;
+     OldAllow : Boolean;
 
    begin
-    Message1(parser_d_internal_parser_string,str);
-    oldparse_only:=parse_only;
-    parse_only:=false;
+    Message1(parser_d_internal_parser_string,Str);
+    OldParseOnly:=parse_only;
+    parse_only:=False;
     { "const" starts a new kind of block and hence makes the scanner return }
-    str:=str+'const;';
+    Str:=Str+'const;';
     Block_Type:=bt_none;
     { inject the string in the scanner }
-    oldallow:=CurrentScanner.allowgenericid;
-    CurrentScanner.allowgenericid:=allowgenericid;
-    CurrentScanner.substitutemacro('hidden_interface_method',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.RefIndex,true);
-    CurrentScanner.readtoken(false);
+    OldAllow:=CurrentScanner.AllowGenericID;
+    CurrentScanner.AllowGenericID:=AllowGenericID;
+    CurrentScanner.SubstituteMacro('hidden_interface_method',@Str[1],Length(Str),CurrentScanner.line_no,CurrentScanner.InputFile.RefIndex,True);
+    CurrentScanner.ReadToken(False);
     Result:=read_proc([],Nil);
-    parse_only:=oldparse_only;
+    parse_only:=OldParseOnly;
     { remove the temporary macro input file again }
-    CurrentScanner.closeinputfile;
-    CurrentScanner.nextfile;
-    CurrentScanner.tempopeninputfile;
-    CurrentScanner.allowgenericid:=oldallow;
+    CurrentScanner.CloseInputFile;
+    CurrentScanner.NextFile;
+    CurrentScanner.TempOpenInputFile;
+    CurrentScanner.AllowGenericID:=OldAllow;
    end;
 
 
-  procedure implement_interface_thunkclass_impl_method(cn : shortstring; objdef : TObjectDef; proc : TProcSym; pd : TProcDef);
+  procedure ImplementInterfaceThunkClassImplMethod(CN : ShortString; ObjDef : TObjectDef; Proc : TProcSym; PD : TProcDef);
 
   var
-    rest,str : AnsiString;
-    pn,d : shortstring;
-    sym : TSym;
-    aArg,argcount,i : integer;
-    haveresult : boolean;
-    para : TParaVarSym;
-    hasopenarray, washigh: Boolean;
+    Rest,Str : AnsiString;
+    PN,D : ShortString;
+    Sym : TSym;
+    AArg,ArgCount,I : Integer;
+    HaveResult : Boolean;
+    Para : TParaVarSym;
+    HasOpenArray, WasHigh: Boolean;
 
   begin
-    rest:='';
-    str:='';
-    if pd.returndef<>voidtype then
-      str:=str+'function '
+    Rest:='';
+    Str:='';
+    if PD.ReturnDef<>VoidType then
+      Str:=Str+'function '
     else
-      str:=str+'procedure ';
-    pn:=proc.RealName;
-    str:=str+cn+'.'+pn;
-    str:=str+create_intf_method_args(pd,argcount);
-    haveresult:=pd.returndef<>voidtype;
-    if haveresult then
+      Str:=Str+'procedure ';
+    PN:=Proc.RealName;
+    Str:=Str+CN+'.'+PN;
+    Str:=Str+CreateIntfMethodArgs(PD,ArgCount);
+    HaveResult:=PD.ReturnDef<>VoidType;
+    if HaveResult then
       begin
-      rest:=get_method_paramtype(pd.returndef,false);
-      str:=str+' : '+rest;
+      Rest:=GetMethodParamType(PD.ReturnDef,False);
+      Str:=Str+' : '+Rest;
       end;
-    str:=str+';'#10;
-    str:=str+'var '#10;
-    str:=str+'  data : array[0..'+ToStr(argcount)+'] of System.TInterfaceThunk.TArgData;'#10;
-    if haveresult then
-      str:=str+'  res : '+rest+';'#10;
-    str:=str+'begin'#10;
+    Str:=Str+';'#10;
+    Str:=Str+'var '#10;
+    Str:=Str+'  data : array[0..'+ToStr(ArgCount)+'] of System.TInterfaceThunk.TArgData;'#10;
+    if HaveResult then
+      Str:=Str+'  res : '+Rest+';'#10;
+    Str:=Str+'begin'#10;
     // initialize result.
     if HaveResult then
       begin
-      str:=Str+'  data[0].addr:=@Res;'#10;
-      str:=Str+'  data[0].info:=TypeInfo(Res);'#10;
+      Str:=Str+'  data[0].addr:=@Res;'#10;
+      Str:=Str+'  data[0].info:=TypeInfo(Res);'#10;
       end
     else
       begin
-      str:=Str+'  data[0].addr:=nil;'#10;
-      str:=Str+'  data[0].idx:=-1;'#10;
+      Str:=Str+'  data[0].addr:=nil;'#10;
+      Str:=Str+'  data[0].idx:=-1;'#10;
       end;
-    str:=Str+'  data[0].idx:=-1;'#10;
-    str:=Str+'  data[0].ahigh:=-1;'#10;
+    Str:=Str+'  data[0].idx:=-1;'#10;
+    Str:=Str+'  data[0].ahigh:=-1;'#10;
     // Fill rest of data
-    aArg:=0;
-    washigh:=false;
-    d:='0';
-    for i:=0 to pd.paras.Count-1 do
+    AArg:=0;
+    WasHigh:=False;
+    D:='0';
+    for I:=0 to PD.Paras.Count-1 do
       begin
-      para:=TParaVarSym(pd.paras[i]);
+      Para:=TParaVarSym(PD.Paras[I]);
       // previous was open array. Record high
-      if (i>1) then
+      if (I>1) then
         begin
-        WasHigh:=(vo_is_high_para in para.varoptions);
-        if Washigh then
+        WasHigh:=(vo_is_high_para in Para.VarOptions);
+        if WasHigh then
           // D is still value of previous (real) parameter
-          str:=str+'  data['+d+'].ahigh:=High(p'+d+');'#10
+          Str:=Str+'  data['+D+'].ahigh:=High(p'+D+');'#10
         else
-          str:=str+'  data['+d+'].ahigh:=-1;'#10;
+          Str:=Str+'  data['+D+'].ahigh:=-1;'#10;
         end;
-      if vo_is_hidden_para in para.varoptions then
-        continue;
-      inc(aArg);
-      d:=ToStr(aArg);
-      Str:=Str+'  data['+d+'].addr:=@p'+d+';'#10;
-      Str:=Str+'  data['+d+'].idx:='+ToStr(i)+';'#10;
-      if Assigned(para.vardef) and not (para.vardef is TFormalDef) then
-        Str:=Str+'  data['+d+'].info:=TypeInfo(p'+d+');'#10
+      if vo_is_hidden_para in Para.VarOptions then
+        Continue;
+      Inc(AArg);
+      D:=ToStr(AArg);
+      Str:=Str+'  data['+D+'].addr:=@p'+D+';'#10;
+      Str:=Str+'  data['+D+'].idx:='+ToStr(I)+';'#10;
+      if Assigned(Para.VarDef) and not (Para.VarDef is TFormalDef) then
+        Str:=Str+'  data['+D+'].info:=TypeInfo(p'+D+');'#10
       else
-        Str:=Str+'  data['+d+'].info:=Nil;'#10
+        Str:=Str+'  data['+D+'].info:=Nil;'#10
       end;
     // if last was not high, set to sentinel.
     if not WasHigh then
-      str:=str+'  data['+d+'].ahigh:=-1;'#10;
-    str:=str+'  Thunk('+ToStr(pd.extnumber)+','+ToStr(argcount)+',@Data);'#10;
+      Str:=Str+'  data['+D+'].ahigh:=-1;'#10;
+    Str:=Str+'  Thunk('+ToStr(PD.ExtNumber)+','+ToStr(ArgCount)+',@Data);'#10;
     if HaveResult then
-      str:=str+'  Result:=res;'#10;
-    str:=str+'end;'#10;
-    pd:=str_parse_method(str,true);
+      Str:=Str+'  Result:=res;'#10;
+    Str:=Str+'end;'#10;
+    PD:=StrParseMethod(Str,True);
   end;
 
-  procedure implement_thunkclass_interfacevmtoffset(cn : shortstring; objdef : TObjectDef; offs : integer);
+  procedure ImplementThunkClassInterfaceVMTOffset(CN : ShortString; ObjDef : TObjectDef; Offs : Integer);
 
   var
-    str : AnsiString;
+    Str : AnsiString;
   begin
-    str:='function '+cn+'.InterfaceVMTOffset : word;'#10;
-    str:=str+'begin'#10;
-    str:=str+'  result:='+ToStr(offs)+';'#10;
-    str:=str+'end;'#10;
-    str_parse_method(str);
+    Str:='function '+CN+'.InterfaceVMTOffset : word;'#10;
+    Str:=Str+'begin'#10;
+    Str:=Str+'  result:='+ToStr(Offs)+';'#10;
+    Str:=Str+'end;'#10;
+    StrParseMethod(Str);
   end;
 
 
-  procedure implement_interface_thunkclass_impl(cn: shortstring; objdef : TObjectDef);
+  procedure ImplementInterfaceThunkClassImpl(CN: ShortString; ObjDef : TObjectDef);
 
   var
-    str : AnsiString;
-    sym : TSym;
-    proc : TProcSym absolute sym;
-    pd : TProcDef;
-    offs,i,j : integer;
-    intfDef : TObjectDef;
+    Str : AnsiString;
+    Sym : TSym;
+    Proc : TProcSym absolute Sym;
+    PD : TProcDef;
+    Offs,I,J : Integer;
+    IntfDef : TObjectDef;
 
   begin
-    offs:=get_thunkclass_interface_vmtoffset(objdef);
-    if offs>0 then
-      implement_thunkclass_interfacevmtoffset(cn,objdef,offs);
-    intfDef:=objdef;
+    Offs:=GetThunkClassInterfaceVMTOffset(ObjDef);
+    if Offs>0 then
+      ImplementThunkClassInterfaceVMTOffset(CN,ObjDef,Offs);
+    IntfDef:=ObjDef;
     repeat
-      for I:=0 to intfdef.SymTable.symList.Count-1 do
+      for I:=0 to IntfDef.SymTable.SymList.Count-1 do
         begin
-        sym:=TSym(intfdef.SymTable.symList[i]);
-        if Not Assigned(sym) then
-          continue;
-        if (Sym.typ<>procsym) then
-          continue;
-        for j:=0 to proc.ProcdefList.Count-1 do
+        Sym:=TSym(IntfDef.SymTable.SymList[I]);
+        if Not Assigned(Sym) then
+          Continue;
+        if (Sym.Typ<>ProcSym) then
+          Continue;
+        for J:=0 to Proc.ProcdefList.Count-1 do
           begin
-          pd:=TProcDef(proc.ProcdefList[j]);
-          implement_interface_thunkclass_impl_method(cn,intfdef,proc,pd);
+          PD:=TProcDef(Proc.ProcdefList[J]);
+          ImplementInterfaceThunkClassImplMethod(CN,IntfDef,Proc,PD);
           end;
         end;
       // Check parent class.
-      intfdef:=getparent_interface_def(intfdef);
+      IntfDef:=GetParentInterfaceDef(IntfDef);
       // If we already have a hidden class def for it, no need to continue
-      if (intfdef<>Nil) and (IntfDef.hiddenclassdef<>nil) then
+      if (IntfDef<>Nil) and (IntfDef.HiddenClassDef<>nil) then
         IntfDef:=Nil;
-    until (intfdef=Nil);
+    until (IntfDef=Nil);
   end;
 
-  procedure add_synthetic_interface_classes_for_st(st : TSymTable; gen_intf, gen_impl : boolean);
+  procedure Add_Synthetic_Interface_Classes_For_ST(ST : TSymTable; GenIntf, GenImpl : Boolean);
 
   var
-    i   : LongInt;
-    def : TDef;
-    objdef : TObjectDef absolute def;
-    recdef : TRecordDef absolute def;
-    sstate: TScannerState;
-    cn : shortstring;
-    isDelphiMode : boolean;
-    oldsettings: TModeSwitches;
+    I   : LongInt;
+    Def : TDef;
+    ObjDef : TObjectDef absolute Def;
+    RecDef : TRecordDef absolute Def;
+    SState: TScannerState;
+    CN : ShortString;
+    IsDelphiMode : Boolean;
+    OldSettings: TModeSwitches;
 
   begin
     { skip if any errors have occurred, since then this can only cause more
       errors }
     if ErrorCount<>0 then
-      exit;
-    isDelphiMode:=(m_delphi in CurrentSettings.ModeSwitches);
-    replace_scanner('hiddenclass_impl',sstate);
-    sstate.new_scanner.allowgenericid:=true;
-    if isDelphiMode then
+      Exit;
+    IsDelphiMode:=(m_delphi in CurrentSettings.ModeSwitches);
+    Replace_Scanner('hiddenclass_impl',SState);
+    SState.NewScanner.AllowGenericID:=True;
+    if IsDelphiMode then
       begin
-      oldsettings:=CurrentSettings.ModeSwitches;
+      OldSettings:=CurrentSettings.ModeSwitches;
       CurrentSettings.ModeSwitches:=CurrentSettings.ModeSwitches+[m_delphi]-[m_objfpc];
       end;
-    for i:=0 to st.deflist.count-1 do
+    for I:=0 to ST.DefList.Count-1 do
       begin
-      def:=TDef(st.deflist[i]);
-      if (def.typ<>objectdef) then
-        continue;
-      if not (objdef.objecttype in objecttypes_with_thunk) then
-        continue;
-      if not (oo_can_have_published in objdef.objectoptions) then
-        continue;
+      Def:=TDef(ST.DefList[I]);
+      if (Def.Typ<>ObjectDef) then
+        Continue;
+      if not (ObjDef.ObjectType in objecttypes_with_thunk) then
+        Continue;
+      if not (oo_can_have_published in ObjDef.ObjectOptions) then
+        Continue;
       // need to add here extended rtti check when it is available
-      cn:=generate_thunkclass_name(i,objdef);
-      if gen_intf then
-        implement_interface_thunkclass_decl(cn,objdef);
-      if gen_impl then
-        implement_interface_thunkclass_impl(cn,objdef);
+      CN:=GenerateThunkClassName(I,ObjDef);
+      if GenIntf then
+        ImplementInterfaceThunkClassDecl(CN,ObjDef);
+      if GenImpl then
+        ImplementInterfaceThunkClassImpl(CN,ObjDef);
       end;
-    restore_scanner(sstate);
+    Restore_Scanner(SState);
     // Recurse for interfaces defined in a type section of a class/record.
-    for i:=0 to st.deflist.count-1 do
+    for I:=0 to ST.DefList.Count-1 do
       begin
-      def:=TDef(st.deflist[i]);
-      if (def.typ=objectdef) and (objdef.objecttype=odt_class) then
-        add_synthetic_interface_classes_for_st(objdef.SymTable,gen_intf,gen_impl)
-      else if (def.typ=recorddef) and (m_advanced_records in CurrentSettings.ModeSwitches) then
-        add_synthetic_interface_classes_for_st(recdef.SymTable,gen_intf,gen_impl);
+      Def:=TDef(ST.DefList[I]);
+      if (Def.Typ=ObjectDef) and (ObjDef.ObjectType=odt_class) then
+        Add_Synthetic_Interface_Classes_For_ST(ObjDef.SymTable,GenIntf,GenImpl)
+      else if (Def.Typ=RecordDef) and (m_advanced_records in CurrentSettings.ModeSwitches) then
+        Add_Synthetic_Interface_Classes_For_ST(RecDef.SymTable,GenIntf,GenImpl);
       end;
   end;
 
-  procedure add_synthetic_method_implementations(st: TSymTable);
+  procedure Add_Synthetic_Method_Implementations(ST: TSymTable);
     var
-      i: LongInt;
-      def: TDef;
-      sstate: TScannerState;
+      I: LongInt;
+      Def: TDef;
+      SState: TScannerState;
     begin
       { skip if any errors have occurred, since then this can only cause more
         errors }
       if ErrorCount<>0 then
-        exit;
-      replace_scanner('synthetic_impl',sstate);
-      add_synthetic_method_implementations_for_st(st);
-      for i:=0 to st.deflist.count-1 do
+        Exit;
+      Replace_Scanner('synthetic_impl',SState);
+      AddSyntheticMethodImplementationsForST(ST);
+      for I:=0 to ST.DefList.Count-1 do
         begin
-          def:=TDef(st.deflist[i]);
-          if (def.typ=procdef) and
-             Assigned(TProcDef(def).localst) and
+          Def:=TDef(ST.DefList[I]);
+          if (Def.Typ=ProcDef) and
+             Assigned(TProcDef(Def).LocalST) and
              { not true for the "main" procedure, whose localsymtable is the staticsymtable }
-             (TProcDef(def).localst.symtabletype=localsymtable) then
-            add_synthetic_method_implementations(TProcDef(def).localst)
-          else if ((def.typ=objectdef) and
-                   not(oo_is_external in TObjectDef(def).objectoptions) and
+             (TProcDef(Def).LocalST.SymTableType=LocalSymTable) then
+            Add_Synthetic_Method_Implementations(TProcDef(Def).LocalST)
+          else if ((Def.Typ=ObjectDef) and
+                   not(oo_is_external in TObjectDef(Def).ObjectOptions) and
                    { we must not create duplicate synthetic methods for a unique
                      type declaration as that simply shares the VMT of the aliased
                      types }
-                   not(TObjectDef(def).is_unique_objpasdef)) or
-                  (def.typ=recorddef) then
+                   not(TObjectDef(Def).Is_Unique_ObjPasDef)) or
+                  (Def.Typ=RecordDef) then
            begin
             { also complete nested types }
-            add_synthetic_method_implementations(TAbstractRecordDef(def).SymTable);
+            Add_Synthetic_Method_Implementations(TAbstractRecordDef(Def).SymTable);
            end;
         end;
-      restore_scanner(sstate);
+      Restore_Scanner(SState);
     end;
 
 
-  function create_procdef_alias(pd: TProcDef; const newrealname: string; const newmangledname: TSymStr; newparentst: TSymTable; newstruct: TAbstractRecordDef;
-      sk: TSyntheticKind; skpara: pointer): TProcDef;
+  function Create_ProcDef_Alias(PD: TProcDef; const NewRealName: string; const NewMangledName: TSymStr; NewParentST: TSymTable; NewStruct: TAbstractRecordDef;
+      SK: TSyntheticKind; SKPara: Pointer): TProcDef;
     begin
       { bare copy so we don't copy the aliasnames (specify prefix for
         parameter names so we don't get issues in the body in case
         we e.g. reference system.initialize and one of the parameters
         is called "system") }
-      result:=TProcDef(pd.getcopyas(procdef,pc_bareproc,'__FPCW_',true));
+      Result:=TProcDef(PD.GetCopyAs(ProcDef,pc_bareproc,'__FPCW_',True));
       { set the mangled name to the wrapper name }
-      result.setmangledname(newmangledname);
+      Result.SetMangledName(NewMangledName);
       { finish creating the copy }
-      finish_copied_procdef(result,newrealname,newparentst,newstruct);
+      Finish_Copied_ProcDef(Result,NewRealName,NewParentST,NewStruct);
       { insert hidden high parameters }
-      result.parast.SymList.ForEachCall(@insert_hidden_para,result);
+      Result.ParaST.SymList.ForEachCall(@insert_hidden_para,Result);
       { now insert self/vmt }
-      insert_self_and_vmt_para(result);
+      insert_self_and_vmt_para(Result);
       { and the function result }
-      insert_funcret_para(result);
+      insert_funcret_para(Result);
       { recalculate the parameters now that we've added the missing ones }
-      result.calcparas;
+      Result.CalcParas;
       { set the info required to generate the implementation }
-      result.synthetickind:=sk;
-      result.skpara:=skpara;
+      Result.SyntheticKind:=SK;
+      Result.SKPara:=SKPara;
     end;
 
 
-  procedure finish_copied_procdef(var pd: TProcDef; const realname: string; newparentst: TSymTable; newstruct: TAbstractRecordDef);
+  procedure Finish_Copied_ProcDef(var PD: TProcDef; const RealName: string; NewParentST: TSymTable; NewStruct: TAbstractRecordDef);
     var
-      sym: TSym;
-      parasym: TParaVarSym;
-      ps: TProcSym;
-      stname: string;
-      i: LongInt;
+      Sym: TSym;
+      PArasym: TParaVarSym;
+      PS: TProcSym;
+      STName: string;
+      I: LongInt;
     begin
       { add generic flag if required }
-      if Assigned(newstruct) and
-         (df_generic in newstruct.defoptions) then
-        include(pd.defoptions,df_generic);
+      if Assigned(NewStruct) and
+         (df_generic in NewStruct.DefOptions) then
+        Include(PD.DefOptions,df_generic);
       { associate the procdef with a procsym in the owner }
-      if not(pd.proctypeoption in [potype_class_constructor,potype_class_destructor]) then
-        stname:=upper(realname)
+      if not(PD.ProcTypeOption in [potype_class_constructor,potype_class_destructor]) then
+        STName:=Upper(RealName)
       else
-        stname:=lower(realname);
-      sym:=TSym(newparentst.find(stname));
-      if Assigned(sym) then
+        STName:=Lower(RealName);
+      Sym:=TSym(NewParentST.Find(STName));
+      if Assigned(Sym) then
         begin
-          if sym.typ<>procsym then
+          if Sym.Typ<>ProcSym then
             InternalError(2011040601);
-          ps:=TProcSym(sym);
+          PS:=TProcSym(Sym);
         end
       else
         begin
-          ps:=CProcSym.create(realname);
-          newparentst.insertsym(ps);
+          PS:=CProcSym.Create(RealName);
+          NewParentST.InsertSym(PS);
         end;
-      pd.procsym:=ps;
-      pd.struct:=newstruct;
+      PD.ProcSym:=PS;
+      PD.Struct:=NewStruct;
       { in case of methods, replace the special parameter types with new ones }
-      if Assigned(newstruct) then
+      if Assigned(NewStruct) then
         begin
-          SymTableStack.push(pd.parast);
+          SymTableStack.Push(PD.ParaST);
           { may not be assigned in case we converted a procvar into a procdef }
-          if Assigned(pd.paras) then
+          if Assigned(PD.Paras) then
             begin
-              for i:=0 to pd.paras.count-1 do
+              for I:=0 to PD.Paras.Count-1 do
                 begin
-                  parasym:=TParaVarSym(pd.paras[i]);
-                  if vo_is_self in parasym.varoptions then
+                  PArasym:=TParaVarSym(PD.Paras[I]);
+                  if vo_is_self in PArasym.VarOptions then
                     begin
-                      if parasym.vardef.typ=classrefdef then
-                        parasym.vardef:=CClassRefDef.create(newstruct)
+                      if PArasym.VarDef.Typ=ClassRefDef then
+                        PArasym.VarDef:=CClassRefDef.Create(NewStruct)
                       else
-                        parasym.vardef:=newstruct;
+                        PArasym.VarDef:=NewStruct;
                     end
                 end;
             end;
           { also fix returndef in case of a constructor }
-          if pd.proctypeoption=potype_constructor then
-            pd.returndef:=newstruct;
-          SymTableStack.pop(pd.parast);
+          if PD.ProcTypeOption=potype_constructor then
+            PD.ReturnDef:=NewStruct;
+          SymTableStack.Pop(PD.ParaST);
         end;
-      pd.calcparas;
-      proc_add_definition(pd);
+      PD.CalcParas;
+      proc_add_definition(PD);
     end;
 
 
-  function maybe_add_sym_to_parentfpstruct(pd: TProcDef; sym: TSym; vardef: TDef; addrparam: boolean): TSym;
+  function Maybe_Add_Sym_To_ParentFPStruct(PD: TProcDef; Sym: TSym; VarDef: TDef; AddrParam: Boolean): TSym;
     var
-      fieldvardef,
-      nestedvarsdef: TDef;
-      nestedvarsst: TSymTable;
-      initcode: TNode;
-      old_filepos: TFilePosInfo;
-      symname,
-      symrealname: TSymStr;
-      highsym: TAbstractVarSym;
+      FieldVarDef,
+      NestedVarsDef: TDef;
+      NestedVarsST: TSymTable;
+      InitCode: TNode;
+      OldFilePos: TFilePosInfo;
+      SymName,
+      SymRealName: TSymStr;
+      HighSym: TAbstractVarSym;
     begin
-      nestedvarsdef:=TLocalVarSym(pd.parentfpstruct).vardef;
+      NestedVarsDef:=TLocalVarSym(PD.ParentFPStruct).VarDef;
       { redirect all aliases for the function result also to the function
         result }
-      if vo_is_funcret in TAbstractVarSym(sym).varoptions then
+      if vo_is_funcret in TAbstractVarSym(Sym).VarOptions then
         begin
-          symname:='result';
-          symrealname:='$result'
+          SymName:='result';
+          SymRealName:='$result'
         end
       else
         begin
-          symname:=sym.name;
-          symrealname:=sym.EscapedRealName;
+          SymName:=Sym.Name;
+          SymRealName:=Sym.EscapedRealName;
         end;
-      result:=search_struct_member(TRecordDef(nestedvarsdef),symname);
-      if not Assigned(result) then
+      Result:=Search_Struct_Member(TRecordDef(NestedVarsDef),SymName);
+      if not Assigned(Result) then
         begin
           { mark that this symbol is mirrored in the parentfpstruct }
-          TAbstractNormalVarSym(sym).inparentfpstruct:=true;
+          TAbstractNormalVarSym(Sym).InParentFPStruct:=True;
           { add field to the struct holding all locals accessed
             by nested routines }
-          nestedvarsst:=TRecordDef(nestedvarsdef).SymTable;
+          NestedVarsST:=TRecordDef(NestedVarsDef).SymTable;
           { indicate whether or not this is a var/out/constref/... parameter }
-          if addrparam then
-            fieldvardef:=CPointerDef.getreusable(vardef)
+          if AddrParam then
+            FieldVarDef:=CPointerDef.GetReusable(VarDef)
           else
-            fieldvardef:=vardef;
-          result:=CFieldVarSym.create(symrealname,vs_value,fieldvardef,[]);
-          nestedvarsst.insertsym(result);
-          TRecordSymTable(nestedvarsst).addfield(TFieldVarSym(result),vis_public);
+            FieldVarDef:=VarDef;
+          Result:=CFieldVarSym.Create(SymRealName,vs_value,FieldVarDef,[]);
+          NestedVarsST.InsertSym(Result);
+          TRecordSymTable(NestedVarsST).AddField(TFieldVarSym(Result),vis_public);
 
           { add initialization with original value if it's a parameter }
-          if (sym.typ=paravarsym) then
+          if (Sym.Typ=ParaVarSym) then
             begin
-              old_filepos:=CurrentFilePos;
-              fillchar(CurrentFilePos,sizeof(CurrentFilePos),0);
-              initcode:=CLoadNode.create(sym,sym.owner);
+              OldFilePos:=CurrentFilePos;
+              FillChar(CurrentFilePos,SizeOf(CurrentFilePos),0);
+              InitCode:=CLoadNode.Create(Sym,Sym.Owner);
               { indicate that this load should not be transformed into a load
                 from the parentfpstruct, but instead should load the original
                 value }
-              include(initcode.flags,nf_internal);
+              Include(InitCode.Flags,nf_internal);
               { in case it's a var/out/constref parameter, store the address of the
                 parameter in the struct }
-              if addrparam then
+              if AddrParam then
                 begin
-                  initcode:=CAddrNode.create_internal(initcode);
-                  include(TAddrNode(initcode).addrnodeflags,anf_typedaddr);
+                  InitCode:=CAddrNode.Create_Internal(InitCode);
+                  Include(TAddrNode(InitCode).AddrNodeFlags,anf_typedaddr);
                 end;
-              initcode:=CAssignmentNode.create(
-                CSubscriptNode.create(result,CLoadNode.create(pd.parentfpstruct,pd.parentfpstruct.owner)),
-                initcode);
-              TBlockNode(pd.parentfpinitblock).left:=CStatementNode.create
-                (initcode,TBlockNode(pd.parentfpinitblock).left);
-              CurrentFilePos:=old_filepos;
+              InitCode:=CAssignmentNode.Create(
+                CSubscriptNode.Create(Result,CLoadNode.Create(PD.ParentFPStruct,PD.ParentFPStruct.Owner)),
+                InitCode);
+              TBlockNode(PD.ParentFPInitBlock).Left:=CStatementNode.Create
+                (InitCode,TBlockNode(PD.ParentFPInitBlock).Left);
+              CurrentFilePos:=OldFilePos;
 
               { also add the associated high para, if any. It may not be accessed
                 during code generation, and we need to catch 'em all (TM) during
                 the typecheck/firstpass }
-              highsym:=get_high_value_sym(TParaVarSym(sym));
-              if Assigned(highsym) then
-                maybe_add_sym_to_parentfpstruct(pd, highsym, highsym.vardef, false);
+              HighSym:=Get_High_Value_Sym(TParaVarSym(Sym));
+              if Assigned(HighSym) then
+                Maybe_Add_Sym_To_ParentFPStruct(PD, HighSym, HighSym.VarDef, False);
             end;
         end;
     end;
 
 
-  procedure redirect_parentfpstruct_local_syms(pd: TProcDef);
+  procedure Redirect_ParentFPStruct_Local_Syms(PD: TProcDef);
     var
-      nestedvarsdef: TRecordDef;
-      sl: TPropAccessList;
-      fsym,
-      lsym,
-      aliassym: TSym;
-      i: LongInt;
+      NestedVarsDef: TRecordDef;
+      SL: TPropAccessList;
+      FSym,
+      LSym,
+      AliasSym: TSym;
+      I: LongInt;
     begin
-      nestedvarsdef:=TRecordDef(TLocalVarSym(pd.parentfpstruct).vardef);
-      for i:=0 to nestedvarsdef.SymTable.symlist.count-1 do
+      NestedVarsDef:=TRecordDef(TLocalVarSym(PD.ParentFPStruct).VarDef);
+      for I:=0 to NestedVarsDef.SymTable.SymList.Count-1 do
         begin
-          fsym:=TSym(nestedvarsdef.SymTable.symlist[i]);
-          if fsym.typ<>fieldvarsym then
-            continue;
-          lsym:=TSym(pd.localst.find(fsym.name));
-          if not Assigned(lsym) then
-            lsym:=TSym(pd.parast.find(fsym.name));
-          if not Assigned(lsym) then
+          FSym:=TSym(NestedVarsDef.SymTable.SymList[I]);
+          if FSym.Typ<>FieldVarSym then
+            Continue;
+          LSym:=TSym(PD.LocalST.Find(FSym.Name));
+          if not Assigned(LSym) then
+            LSym:=TSym(PD.ParaST.Find(FSym.Name));
+          if not Assigned(LSym) then
             InternalError(2011060408);
           { add an absolute variable that redirects to the field }
-          sl:=TPropAccessList.create;
-          sl.addsym(sl_load,pd.parentfpstruct);
-          sl.addsym(sl_subscript,TFieldVarSym(fsym));
-          aliassym:=CAbsoluteVarSym.create_ref(lsym.EscapedRealName,TFieldVarSym(fsym).vardef,sl);
+          SL:=TPropAccessList.Create;
+          SL.AddSym(sl_load,PD.ParentFPStruct);
+          SL.AddSym(sl_subscript,TFieldVarSym(FSym));
+          AliasSym:=CAbsoluteVarSym.Create_Ref(LSym.EscapedRealName,TFieldVarSym(FSym).VarDef,SL);
           { hide the original variable (can't delete, because there
             may be other loadnodes that reference it)
             -- only for locals; hiding parameters changes the
             function signature }
-          if lsym.typ<>paravarsym then
-            hidesym(lsym);
+          if LSym.Typ<>ParaVarSym then
+            HideSym(LSym);
           { insert the absolute variable in the localst of the
             routine; ignore duplicates, because this will also check the
             parasymtable and we want to override parameters with our local
             versions }
-          pd.localst.insertsym(aliassym,false);
+          PD.LocalST.InsertSym(AliasSym,False);
         end;
     end;
 
 
-  function find_sym_in_parentfpstruct(pd: TProcDef; sym: TSym): TSym;
+  function Find_Sym_In_ParentFPStruct(PD: TProcDef; Sym: TSym): TSym;
     var
-      nestedvarsdef: TDef;
+      NestedVarsDef: TDef;
     begin
-      nestedvarsdef:=TLocalVarSym(pd.parentfpstruct).vardef;
-      result:=search_struct_member(TRecordDef(nestedvarsdef),sym.name);
+      NestedVarsDef:=TLocalVarSym(PD.ParentFPStruct).VarDef;
+      Result:=Search_Struct_Member(TRecordDef(NestedVarsDef),Sym.Name);
     end;
 
 
-  procedure finish_parentfpstruct(pd: TProcDef);
+  procedure Finish_ParentFPStruct(PD: TProcDef);
     begin
-      TRecordSymTable(TRecordDef(TLocalVarSym(pd.parentfpstruct).vardef).SymTable).addalignmentpadding;
+      TRecordSymTable(TRecordDef(TLocalVarSym(PD.ParentFPStruct).VarDef).SymTable).AddAlignmentPadding;
     end;
 
 
-  function make_field_static(recst: TSymTable; fieldvs: TFieldVarSym): TStaticVarSym;
+  function Make_Field_Static(RecST: TSymTable; FieldVS: TFieldVarSym): TStaticVarSym;
     var
       static_name: string;
-      hstaticvs: TStaticVarSym;
-      tmp: TAbsoluteVarSym;
-      sl: TPropAccessList;
+      HStaticVS: TStaticVarSym;
+      Tmp: TAbsoluteVarSym;
+      SL: TPropAccessList;
     begin
-      include(fieldvs.symoptions,sp_static);
+      Include(FieldVS.SymOptions,sp_static);
       { generate the symbol which reserves the space }
-      static_name:=lower(generate_nested_name(recst,'_'))+'_'+fieldvs.name;
-      hstaticvs:=CStaticVarSym.create_from_fieldvar(static_name,fieldvs);
-      include(hstaticvs.symoptions,sp_internal);
-      if df_generic in TDef(recst.defowner).defoptions then
-        TAbstractRecordSymTable(recst).insertsym(hstaticvs)
+      static_name:=Lower(Generate_Nested_Name(RecST,'_'))+'_'+FieldVS.Name;
+      HStaticVS:=CStaticVarSym.Create_From_FieldVar(static_name,FieldVS);
+      Include(HStaticVS.SymOptions,sp_internal);
+      if df_generic in TDef(RecST.DefOwner).DefOptions then
+        TAbstractRecordSymTable(RecST).InsertSym(HStaticVS)
       else
-        TDef(TAbstractRecordSymTable(recst).defowner).GetTopLevelSymTable(false).insertsym(hstaticvs);
+        TDef(TAbstractRecordSymTable(RecST).DefOwner).GetTopLevelSymTable(False).InsertSym(HStaticVS);
       { generate the symbol for the access }
-      sl:=TPropAccessList.create;
-      sl.addsym(sl_load,hstaticvs);
+      SL:=TPropAccessList.Create;
+      SL.AddSym(sl_load,HStaticVS);
       { do *not* change the visibility of this absolutevarsym from vis_public
         to anything else, because its visibility is used by visibility checks
         after turning a class property referring to a class variable into a
         load node (handle_staticfield_access -> searchsym_in_class ->
         is_visible_for_object), which means that the load will fail if this
         symbol is e.g. "strict private" while the property is public }
-      tmp:=CAbsoluteVarSym.create_ref('$'+static_name,fieldvs.vardef,sl);
-      recst.insertsym(tmp);
-      result:=hstaticvs;
+      Tmp:=CAbsoluteVarSym.Create_Ref('$'+static_name,FieldVS.VarDef,SL);
+      RecST.InsertSym(Tmp);
+      Result:=HStaticVS;
     end;
 
 
-  procedure call_through_new_name(orgpd: TProcDef; const newname: TSymStr);
+  procedure Call_Through_New_Name(OrgPD: TProcDef; const NewName: TSymStr);
     var
-      newpd: TProcDef;
+      NewPD: TProcDef;
     begin
       { we have a forward declaration like
          procedure test; (in the unit interface or "forward")
@@ -1515,105 +1515,105 @@ implementation
 
       { prefixing the parameters here is useless, because the new procdef will
         just be an external declaration without a body }
-      newpd:=TProcDef(orgpd.getcopyas(procdef,pc_bareproc,'',true));
-      insert_funcret_para(newpd);
-      newpd.procoptions:=newpd.procoptions+orgpd.procoptions*[po_external,po_has_importname,po_has_importdll];
-      StringDispose(orgpd.import_name);
-      StringDispose(orgpd.import_dll);
-      orgpd.import_nr:=0;
-      newpd.setmangledname(newname);
-      finish_copied_procdef(newpd,'__FPC_IMPL_EXTERNAL_REDIRECT_'+newname,CurrentModule.localsymtable,nil);
-      newpd.forwarddef:=false;
+      NewPD:=TProcDef(OrgPD.GetCopyAs(ProcDef,pc_bareproc,'',True));
+      insert_funcret_para(NewPD);
+      NewPD.ProcOptions:=NewPD.ProcOptions+OrgPD.ProcOptions*[po_external,po_has_importname,po_has_importdll];
+      StringDispose(OrgPD.ImportName);
+      StringDispose(OrgPD.ImportDLL);
+      OrgPD.ImportNr:=0;
+      NewPD.SetMangledName(NewName);
+      Finish_Copied_ProcDef(NewPD,'__FPC_IMPL_EXTERNAL_REDIRECT_'+NewName,CurrentModule.LocalSymTable,nil);
+      NewPD.ForwardDef:=False;
       { ideally we would prefix the parameters of the original routine here, but since it
         can be an interface definition, we cannot do that without risking to change the
         interface crc }
-      orgpd.skpara:=newpd;
-      orgpd.synthetickind:=tsk_callthrough;
-      orgpd.procoptions:=orgpd.procoptions-[po_external,po_has_importname,po_has_importdll];
-      orgpd.forwarddef:=true;
+      OrgPD.SKPara:=NewPD;
+      OrgPD.SyntheticKind:=tsk_callthrough;
+      OrgPD.ProcOptions:=OrgPD.ProcOptions-[po_external,po_has_importname,po_has_importdll];
+      OrgPD.ForwardDef:=True;
     end;
 
 
-  function generate_pkg_stub(pd:TProcDef):TNode;
+  function Generate_Pkg_Stub(PD:TProcDef):TNode;
     var
-      stat: TStatementNode;
-      handlevar: TStaticVarSym;
-      instance: TSym;
+      Stat: TStatementNode;
+      HandleVar: TStaticVarSym;
+      Instance: TSym;
     begin
-      if TargetInfo.system in systems_all_windows then
+      if TargetInfo.System in systems_all_windows then
         begin
-          insert_funcret_local(pd);
-          result:=internalstatements(stat);
-          if TargetInfo.system=system_x86_64_win64 then
+          insert_funcret_local(PD);
+          Result:=InternalStatements(Stat);
+          if TargetInfo.System=system_x86_64_win64 then
             begin
-              handlevar:=CStaticVarSym.create_C('FPC_PACKAGE_HANDLE','FPC_PACKAGE_HANDLE',
-                vs_value,sizeuinttype);
-              include(handlevar.varoptions,vo_is_external);
-              CurrentModule.localsymtable.insertsym(handlevar);
-              instance:=TSym(pd.parast.find('HINSTANCE'));
-              addstatement(stat,CAssignmentNode.create(
-                CLoadNode.create(handlevar,handlevar.owner),
-                CLoadNode.create(instance,pd.parast)));
+              HandleVar:=CStaticVarSym.Create_C('FPC_PACKAGE_HANDLE','FPC_PACKAGE_HANDLE',
+                vs_value,SizeUIntType);
+              Include(HandleVar.VarOptions,vo_is_external);
+              CurrentModule.LocalSymTable.InsertSym(HandleVar);
+              Instance:=TSym(PD.ParaST.Find('HINSTANCE'));
+              AddStatement(Stat,CAssignmentNode.Create(
+                CLoadNode.Create(HandleVar,HandleVar.Owner),
+                CLoadNode.Create(Instance,PD.ParaST)));
             end;
-          addstatement(stat,CAssignmentNode.create(
-                      CLoadNode.create(pd.funcretsym,pd.localst),
-                      COrdConstNode.create(1,bool32type,false)
+          AddStatement(Stat,CAssignmentNode.Create(
+                      CLoadNode.Create(PD.FuncRetSym,PD.LocalST),
+                      COrdConstNode.Create(1,Bool32Type,False)
                     ));
         end
       else
-        result:=CNothingNode.create;
+        Result:=CNothingNode.Create;
     end;
 
-  procedure generate_attr_constrs(attrs:TFPObjectList);
+  procedure Generate_Attr_Constrs(Attrs:TFPObjectList);
     var
-      ps : TProcSym;
-      pd : TProcDef;
-      pi : TCGProcInfo;
-      i : sizeint;
-      attr : TRTTIAttribute;
+      PS : TProcSym;
+      PD : TProcDef;
+      PI : TCGProcInfo;
+      I : SizeInt;
+      Attr : TRTTIAttribute;
     begin
-      if attrs.count=0 then
-        exit;
+      if Attrs.Count=0 then
+        Exit;
       { if this isn't set then this unit shouldn't have any attributes }
-      if not Assigned(class_tcustomattribute) then
+      if not Assigned(Class_TCustomAttribute) then
         InternalError(2019071003);
-      for i:=0 to attrs.count-1 do
+      for I:=0 to Attrs.Count-1 do
         begin
-          attr:=TRTTIAttribute(attrs[i]);
+          Attr:=TRTTIAttribute(Attrs[I]);
           {Generate a procsym for main}
-          ps:=CProcSym.create('$rttiattrconstr$'+ToStr(i));
+          PS:=CProcSym.Create('$rttiattrconstr$'+ToStr(I));
           { always register the symbol }
-          ps.RegisterSym;
+          PS.RegisterSym;
           { the RTTI always references this symbol }
-          inc(ps.refs);
-          CurrentModule.localsymtable.insertsym(ps);
-          pd:=CProcDef.create(normal_function_level,true);
+          Inc(PS.RefS);
+          CurrentModule.LocalSymTable.InsertSym(PS);
+          PD:=CProcDef.Create(normal_function_level,True);
           { always register the def }
-          pd.RegisterDef;
-          pd.procsym:=ps;
-          ps.ProcdefList.Add(pd);
+          PD.RegisterDef;
+          PD.ProcSym:=PS;
+          PS.ProcdefList.Add(PD);
           { set procdef options }
-          pd.proctypeoption:=potype_function;
-          pd.proccalloption:=pocall_default;
-          include(pd.procoptions,po_hascallingconvention);
-          pd.returndef:=class_tcustomattribute;
-          insert_funcret_para(pd);
-          pd.calcparas;
-          pd.forwarddef:=false;
-          pd.aliasnames.insert(pd.mangledname);
-          handle_calling_convention(pd,hcc_default_actions_impl);
+          PD.ProcTypeOption:=potype_function;
+          PD.ProcCallOption:=pocall_default;
+          Include(PD.ProcOptions,po_hascallingconvention);
+          PD.ReturnDef:=Class_TCustomAttribute;
+          insert_funcret_para(PD);
+          PD.CalcParas;
+          PD.ForwardDef:=False;
+          PD.AliasNames.Insert(PD.MangledName);
+          handle_calling_convention(PD,hcc_default_actions_impl);
           { set procinfo and current_procinfo.procdef }
-          pi:=TCGProcInfo(CProcInfo.create(nil));
-          pi.procdef:=pd;
+          PI:=TCGProcInfo(CProcInfo.Create(nil));
+          PI.ProcDef:=PD;
           { we always do a call, namely to the constructor }
-          include(pi.flags,pi_do_call);
-          insert_funcret_local(pd);
-          pi.code:=CAssignmentNode.create(
-                      CLoadNode.create(pd.funcretsym,pd.localst),
-                      attr.constructorcall.getcopy
+          Include(PI.Flags,pi_do_call);
+          insert_funcret_local(PD);
+          PI.Code:=CAssignmentNode.Create(
+                      CLoadNode.Create(PD.FuncRetSym,PD.LocalST),
+                      Attr.ConstructorCall.GetCopy
                     );
-          pi.generate_code;
-          attr.constructorpd:=pd;
+          PI.generate_code;
+          Attr.ConstructorPD:=PD;
         end;
     end;
 

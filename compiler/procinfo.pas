@@ -193,7 +193,7 @@ unit procinfo;
           procedure add_local_ref_def(def:TDef);
           procedure export_local_ref_defs;
 
-          procedure add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
+          procedure Add_Captured_Sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
 
           function create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): TProcInfo;
 
@@ -243,14 +243,14 @@ implementation
           (TargetInfo.system=system_x86_64_win64) and
           (cs_nexus_profile in CurrentSettings.ModuleSwitches) and
           Assigned(CurrentModule) and
-          Assigned(main_module) and
-          not main_module.IsLibrary and
+          Assigned(Main_Module) and
+          not Main_Module.IsLibrary and
           (CurrentModule.ModuleName^<>'NXPROFILE') and
           (CurrentModule.ModuleName^<>'NXPROFILERRUNTIME') and
-          not(po_assembler in pi.procdef.procoptions) and
-          not(po_nostackframe in pi.procdef.procoptions) and
-          not(po_interrupt in pi.procdef.procoptions) and
-          (pi.procdef.proctypeoption<>potype_exceptfilter);
+          not(po_assembler in pi.procdef.ProcOptions) and
+          not(po_nostackframe in pi.procdef.ProcOptions) and
+          not(po_interrupt in pi.procdef.ProcOptions) and
+          (pi.procdef.ProcTypeOption<>potype_exceptfilter);
       end;
 
 {****************************************************************************
@@ -279,13 +279,13 @@ implementation
         CurrentAsmData.getjumplabel(CurrGOTLabel);
         CurrBreakLabel:=nil;
         CurrContinueLabel:=nil;
-        if Assigned(parent) and (parent.procdef.parast.symtablelevel>=normal_function_level) then
+        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel>=normal_function_level) then
           parent.addnestedproc(Self);
       end;
 
     procedure TProcInfo.force_nested;
       begin
-        if Assigned(parent) and (parent.procdef.parast.symtablelevel<normal_function_level) then
+        if Assigned(parent) and (parent.procdef.ParaST.SymTableLevel<normal_function_level) then
           parent.addnestedproc(Self);
       end;
 
@@ -358,7 +358,7 @@ implementation
     function TProcInfo.get_normal_proc: TProcInfo;
       begin
         result:=self;
-        while Assigned(result.parent) and (result.procdef.parast.symtablelevel>normal_function_level) do
+        while Assigned(result.parent) and (result.procdef.ParaST.SymTableLevel>normal_function_level) do
           result:=result.parent;
       end;
 
@@ -382,7 +382,7 @@ implementation
             sym:=TSym(localrefsyms[i]);
             if sym.typ<>staticvarsym then
               InternalError(2019110901);
-            include(TStaticVarSym(sym).varoptions,vo_has_global_ref);
+            include(TStaticVarSym(sym).VarOptions,vo_has_global_ref);
           end;
       end;
 
@@ -407,28 +407,28 @@ implementation
             def:=TDef(localrefdefs[i]);
             if def.typ<>symconst.procdef then
               InternalError(2019111801);
-            include(TProcDef(def).defoptions,df_has_global_ref);
+            include(TProcDef(def).DefOptions,df_has_global_ref);
             { An inline body retains the referenced definition even when its
               implementation-only procsym is not loaded from a cached unit.
               Preserve its callable names independently for package exports. }
-            if not (df_generic in def.defoptions) and
-               not (po_external in TProcDef(def).procoptions) and
-               (TProcDef(def).proccalloption<>pocall_internproc) then
+            if not (df_generic in def.DefOptions) and
+               not (po_external in TProcDef(def).ProcOptions) and
+               (TProcDef(def).ProcCallOption<>pocall_internproc) then
               begin
-                CurrentModule.add_public_asmsym(TProcDef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
-                lAlias:=TCmdStrListItem(TProcDef(def).aliasnames.first);
+                CurrentModule.Add_Public_AsmSym(TProcDef(def).MangledName,AB_GLOBAL,AT_FUNCTION);
+                lAlias:=TCmdStrListItem(TProcDef(def).AliasNames.first);
                 while Assigned(lAlias) do
                   begin
-                    CurrentModule.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
+                    CurrentModule.Add_Public_AsmSym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
                     lAlias:=TCmdStrListItem(lAlias.next);
                   end;
               end;
           end;
       end;
 
-    procedure TProcInfo.add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
+    procedure TProcInfo.Add_Captured_Sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
       begin
-        procdef.add_captured_sym(sym,def,fileinfo);
+        procdef.Add_Captured_Sym(sym,def,fileinfo);
       end;
 
     function TProcInfo.create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): TProcInfo;
@@ -456,8 +456,8 @@ implementation
       begin
         { generate callee paraloc register info, it initialises the size that
           is allocated on the stack }
-        procdef.init_paraloc_info(calleeside);
-        para_stack_size:=procdef.calleeargareasize;
+        procdef.Init_ParaLoc_Info(calleeside);
+        para_stack_size:=procdef.CalleeArgAreaSize;
       end;
 
     procedure TProcInfo.allocate_got_register(list: TAsmList);
@@ -518,28 +518,28 @@ implementation
         pi : TProcInfo;
         p : TParaVarSym;
       begin
-        if procdef.parast.symtablelevel<=normal_function_level then
+        if procdef.ParaST.SymTableLevel<=normal_function_level then
           InternalError(2020050302);
-        if procdef.parast.symtablelevel<=parent_level then
+        if procdef.ParaST.SymTableLevel<=parent_level then
           exit;
         if parent_level<normal_function_level then
           parent_level:=normal_function_level;
         { Mark parentfp as used for the current proc }
         pi:=Self;
-        TParaVarSym(pi.procdef.parentfpsym).varstate:=vs_read;
+        TParaVarSym(pi.procdef.ParentFPSym).VarState:=vs_read;
         { Set both parentfp is used and pio_nested_access for all parent procs until parent_level }
-        while pi.procdef.parast.symtablelevel>parent_level do
+        while pi.procdef.ParaST.SymTableLevel>parent_level do
           begin
             pi:=pi.parent;
-            if pi.procdef.parast.symtablelevel>normal_function_level then
+            if pi.procdef.ParaST.SymTableLevel>normal_function_level then
               begin
-                p:=TParaVarSym(pi.procdef.parentfpsym);
-                p.varstate:=vs_read;
+                p:=TParaVarSym(pi.procdef.ParentFPSym);
+                p.VarState:=vs_read;
                 { parentfp is accessed from a nested routine.
                   Must be in the memory. }
-                p.varregable:=vr_none;
+                p.VarRegable:=vr_none;
               end;
-            include(pi.procdef.implprocoptions,pio_nested_access);
+            include(pi.procdef.ImplProcOptions,pio_nested_access);
           end;
       end;
 

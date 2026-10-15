@@ -59,7 +59,7 @@ implementation
     procedure TI386AddrNode.set_absvarsym_resultdef;
       begin
         if not(anf_typedaddr in addrnodeflags) then
-          resultdef:=voidnearfspointertype
+          resultdef:=VoidNearFSPointerType
         else
           resultdef:=TCPUPointerDefClass(CPointerDef).createx86(left.resultdef,x86pt_near_fs);
       end;

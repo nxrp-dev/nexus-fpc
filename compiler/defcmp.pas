@@ -294,9 +294,9 @@ implementation
 
          { resolve anonymous external definitions }
          if def_from.typ=objectdef then
-           def_from:=find_real_class_definition(TObjectDef(def_from),false);
+           def_from:=Find_Real_Class_Definition(TObjectDef(def_from),false);
          if def_to.typ=objectdef then
-           def_to:=find_real_class_definition(TObjectDef(def_to),false);
+           def_to:=Find_Real_Class_Definition(TObjectDef(def_to),false);
 
          { same def? then we've an exact match }
          if def_from=def_to then
@@ -321,10 +321,10 @@ implementation
                equal}
              if (
                    (def_from.typ=undefineddef) or
-                   Assigned(TStoredDef(def_from).genconstraintdata)
+                   Assigned(TStoredDef(def_from).GenConstraintData)
                  ) or (
                    (def_to.typ=undefineddef) or
-                   Assigned(TStoredDef(def_to).genconstraintdata)
+                   Assigned(TStoredDef(def_to).GenConstraintData)
                  ) then
               begin
                 doconv:=tc_not_possible;
@@ -342,8 +342,8 @@ implementation
                    not compatible with constrained defs }
                  if (cdo_strict_genconstraint_check in cdoptions) and
                      (
-                       Assigned(TStoredDef(def_from).genconstraintdata) or
-                       Assigned(TStoredDef(def_to).genconstraintdata)
+                       Assigned(TStoredDef(def_from).GenConstraintData) or
+                       Assigned(TStoredDef(def_to).GenConstraintData)
                      ) then
                    begin
                      doconv:=tc_not_possible;
@@ -356,8 +356,8 @@ implementation
                end;
 
              { either type has constraints }
-             if Assigned(TStoredDef(def_from).genconstraintdata) or
-                 Assigned(TStoredDef(def_to).genconstraintdata) then
+             if Assigned(TStoredDef(def_from).GenConstraintData) or
+                 Assigned(TStoredDef(def_to).GenConstraintData) then
                begin
                  { this is basically a poor man's type checking, if there is a chance
                    that the types are equal considering the constraints, this needs probably
@@ -379,8 +379,8 @@ implementation
                    of both parts need to match }
                  if cdo_strict_genconstraint_check in cdoptions then
                    begin
-                     genconstrfrom:=TStoredDef(def_from).genconstraintdata;
-                     genconstrto:=TStoredDef(def_to).genconstraintdata;
+                     genconstrfrom:=TStoredDef(def_from).GenConstraintData;
+                     genconstrto:=TStoredDef(def_to).GenConstraintData;
                      if (
                          { both parts need to be constraints }
                          not Assigned(genconstrfrom) or
@@ -392,15 +392,15 @@ implementation
                          { for objectdefs same object type as well as parent required }
                          (def_from.typ=objectdef) and
                          (
-                           (TObjectDef(def_from).objecttype<>TObjectDef(def_to).objecttype) or
-                           not equal_defs(TObjectDef(def_from).childof,TObjectDef(def_to).childof)
+                           (TObjectDef(def_from).ObjectType<>TObjectDef(def_to).ObjectType) or
+                           not equal_defs(TObjectDef(def_from).ChildOf,TObjectDef(def_to).ChildOf)
                          )
                        ) or (
                          { the flags need to match }
                          genconstrfrom.flags<>genconstrto.flags
                        ) or
                        { the interfaces of the constraints need to match }
-                       not same_interface_lists(genconstrfrom.interfaces,genconstrto.interfaces,@same_genconstraint_interfaces) or
+                       not same_interface_lists(genconstrfrom.Interfaces,genconstrto.Interfaces,@same_genconstraint_interfaces) or
                        (
                          { for objectdefs the implemented interfaces need to match }
                          (def_from.typ=objectdef) and not
@@ -416,12 +416,12 @@ implementation
                  { maybe we are in generic type declaration/implementation.
                    In this case constraint in comparison to not specialized generic
                    is not "exact" nor "incompatible" }
-                 if not(((df_genconstraint in def_from.defoptions) and
-                        ([df_generic,df_specialization]*def_to.defoptions=[df_generic])
+                 if not(((df_genconstraint in def_from.DefOptions) and
+                        ([df_generic,df_specialization]*def_to.DefOptions=[df_generic])
                       ) or
                       (
-                        (df_genconstraint in def_to.defoptions) and
-                        ([df_generic,df_specialization]*def_from.defoptions=[df_generic]))
+                        (df_genconstraint in def_to.DefOptions) and
+                        ([df_generic,df_specialization]*def_from.DefOptions=[df_generic]))
                     ) then
                    begin
                      { one is definitely a constraint, for the other we don't
@@ -435,25 +435,25 @@ implementation
 
          { two specializations are considered equal if they specialize the same
            generic with the same types }
-         if (df_specialization in def_from.defoptions) and
-             (df_specialization in def_to.defoptions) and
-             (TStoredDef(def_from).genericdef=TStoredDef(def_to).genericdef) then
+         if (df_specialization in def_from.DefOptions) and
+             (df_specialization in def_to.DefOptions) and
+             (TStoredDef(def_from).GenericDef=TStoredDef(def_to).GenericDef) then
            begin
-             if Assigned(TStoredDef(def_from).genericparas) xor
-                 Assigned(TStoredDef(def_to).genericparas) then
+             if Assigned(TStoredDef(def_from).GenericParas) xor
+                 Assigned(TStoredDef(def_to).GenericParas) then
                InternalError(2013030901);
              diff:=false;
-             if Assigned(TStoredDef(def_from).genericparas) then
+             if Assigned(TStoredDef(def_from).GenericParas) then
                begin
-                 if TStoredDef(def_from).genericparas.count<>TStoredDef(def_to).genericparas.count then
+                 if TStoredDef(def_from).GenericParas.count<>TStoredDef(def_to).GenericParas.count then
                    InternalError(2012091301);
-                 for i:=0 to TStoredDef(def_from).genericparas.count-1 do
+                 for i:=0 to TStoredDef(def_from).GenericParas.count-1 do
                    begin
-                     if TStoredDef(def_from).genericparas.nameofindex(i)<>TStoredDef(def_to).genericparas.nameofindex(i) then
+                     if TStoredDef(def_from).GenericParas.nameofindex(i)<>TStoredDef(def_to).GenericParas.nameofindex(i) then
                        InternalError(2012091302);
-                     symfrom:=TTypeSym(TStoredDef(def_from).genericparas[i]);
-                     symto:=TTypeSym(TStoredDef(def_to).genericparas[i]);
-                     if not (symfrom.typ in [typesym,constsym]) or not (symto.typ in [typesym,constsym]) then
+                     symfrom:=TTypeSym(TStoredDef(def_from).GenericParas[i]);
+                     symto:=TTypeSym(TStoredDef(def_to).GenericParas[i]);
+                     if not (symfrom.typ in [TypeSym,constsym]) or not (symto.typ in [TypeSym,constsym]) then
                        InternalError(2012121401);
                      if symto.typ<>symfrom.typ then
                        diff:=true
@@ -475,28 +475,28 @@ implementation
            end;
          { handling of partial specializations }
          if (
-               (df_generic in def_to.defoptions) and
-               (df_specialization in def_from.defoptions) and
-               (TStoredDef(def_from).genericdef=def_to) and
-               Assigned(TStoredDef(def_to).genericparas)
+               (df_generic in def_to.DefOptions) and
+               (df_specialization in def_from.DefOptions) and
+               (TStoredDef(def_from).GenericDef=def_to) and
+               Assigned(TStoredDef(def_to).GenericParas)
              ) or (
-               (df_generic in def_from.defoptions) and
-               (df_specialization in def_to.defoptions) and
-               (TStoredDef(def_to).genericdef=def_from) and
-               Assigned(TStoredDef(def_from).genericparas)
+               (df_generic in def_from.DefOptions) and
+               (df_specialization in def_to.DefOptions) and
+               (TStoredDef(def_to).GenericDef=def_from) and
+               Assigned(TStoredDef(def_from).GenericParas)
              ) then
            begin
-             if TStoredDef(def_from).genericdef=def_to then
+             if TStoredDef(def_from).GenericDef=def_to then
                def_generic:=TStoredDef(def_to)
              else
                def_generic:=TStoredDef(def_from);
-             if not Assigned(def_generic.genericparas) then
+             if not Assigned(def_generic.GenericParas) then
                InternalError(2014052306);
              diff:=false;
-             for i:=0 to def_generic.genericparas.count-1 do
+             for i:=0 to def_generic.GenericParas.count-1 do
                begin
-                 symfrom:=TSym(def_generic.genericparas[i]);
-                 if symfrom.typ<>typesym then
+                 symfrom:=TSym(def_generic.GenericParas[i]);
+                 if symfrom.typ<>TypeSym then
                    InternalError(2014052307);
                  if TTypeSym(symfrom).typedef.typ<>undefineddef then
                    diff:=true;
@@ -520,9 +520,9 @@ implementation
                case def_from.typ of
                  orddef :
                    begin
-                     if (TOrdDef(def_from).ordtype=TOrdDef(def_to).ordtype) then
+                     if (TOrdDef(def_from).OrdType=TOrdDef(def_to).OrdType) then
                       begin
-                        case TOrdDef(def_from).ordtype of
+                        case TOrdDef(def_from).OrdType of
                           uchar,uwidechar,
                           u8bit,u16bit,u32bit,u64bit,
                           s8bit,s16bit,s32bit,s64bit:
@@ -551,9 +551,9 @@ implementation
                              (cdo_explicit in cdoptions) then
                       begin
                         if cdo_explicit in cdoptions then
-                          doconv:=basedefconvertsexplicit[basedeftbl[TOrdDef(def_from).ordtype],basedeftbl[TOrdDef(def_to).ordtype]]
+                          doconv:=basedefconvertsexplicit[basedeftbl[TOrdDef(def_from).OrdType],basedeftbl[TOrdDef(def_to).OrdType]]
                         else
-                          doconv:=basedefconvertsimplicit[basedeftbl[TOrdDef(def_from).ordtype],basedeftbl[TOrdDef(def_to).ordtype]];
+                          doconv:=basedefconvertsimplicit[basedeftbl[TOrdDef(def_from).OrdType],basedeftbl[TOrdDef(def_to).OrdType]];
                         if (doconv=tc_not_possible) then
                           eq:=te_incompatible
                         else if (not is_in_limit(def_from,def_to)) then
@@ -583,7 +583,7 @@ implementation
                  objectdef:
                    begin
                      if (m_delphi in CurrentSettings.ModeSwitches) and
-                        is_implicit_pointer_object_type(def_from) and
+                        Is_Implicit_Pointer_Object_Type(def_from) and
                         (cdo_explicit in cdoptions) then
                       begin
                         eq:=te_convert_l1;
@@ -637,8 +637,8 @@ implementation
                         is_shortstring(def_from) and
                         is_shortstring(def_to) then
                         eq:=te_equal
-                     else if (TStringDef(def_to).stringtype=st_ansistring) and
-                             (TStringDef(def_from).stringtype=st_ansistring) then
+                     else if (TStringDef(def_to).StringType=st_ansistring) and
+                             (TStringDef(def_from).StringType=st_ansistring) then
                       begin
                         { don't convert ansistrings if any condition is true:
                           1) same encoding
@@ -646,8 +646,8 @@ implementation
                           3) from any ansistring to rawbytestring
                           4) from rawbytestring to any ansistring }
                         if (TStringDef(def_from).encoding=TStringDef(def_to).encoding) or
-                           ((TStringDef(def_to).encoding=0) and (TStringDef(def_from).encoding=getansistringcodepage)) or
-                           ((TStringDef(def_to).encoding=getansistringcodepage) and (TStringDef(def_from).encoding=0)) or
+                           ((TStringDef(def_to).encoding=0) and (TStringDef(def_from).encoding=GetAnsiStringCodePage)) or
+                           ((TStringDef(def_to).encoding=GetAnsiStringCodePage) and (TStringDef(def_from).encoding=0)) or
                            (TStringDef(def_to).encoding=Globals.CP_NONE) or
                            (TStringDef(def_from).encoding=Globals.CP_NONE) then
                          begin
@@ -661,7 +661,7 @@ implementation
                            if TStringDef(def_to).encoding = Globals.CP_UTF8 then
                              eq:=te_convert_l1
                            { else to AnsiString type }
-                           else if def_to=getansistringdef then
+                           else if def_to=GetAnsiStringDef then
                              eq:=te_convert_l2
                            { else to AnsiString with other codepage }
                            else
@@ -670,21 +670,21 @@ implementation
                       end
                      else
                      { same string type ? }
-                      if (TStringDef(def_from).stringtype=TStringDef(def_to).stringtype) and
+                      if (TStringDef(def_from).StringType=TStringDef(def_to).StringType) and
                         { for shortstrings also the length must match }
-                         ((TStringDef(def_from).stringtype<>st_shortstring) or
+                         ((TStringDef(def_from).StringType<>st_shortstring) or
                           (TStringDef(def_from).len=TStringDef(def_to).len)) and
                          { for ansi- and unicodestrings also the encoding must match }
-                         (not(TStringDef(def_from).stringtype in [st_ansistring,st_unicodestring]) or
+                         (not(TStringDef(def_from).StringType in [st_ansistring,st_unicodestring]) or
                           (TStringDef(def_from).encoding=TStringDef(def_to).encoding)) then
                         eq:=te_equal
                      else
                        begin
                          doconv:=tc_string_2_string;
-                         case TStringDef(def_from).stringtype of
+                         case TStringDef(def_from).StringType of
                            st_widestring :
                              begin
-                               case TStringDef(def_to).stringtype of
+                               case TStringDef(def_to).StringType of
                                  { Prefer conversions to unicodestring }
                                  st_unicodestring: eq:=te_convert_l1;
                                  { else prefer conversions to ansistring }
@@ -695,7 +695,7 @@ implementation
                              end;
                            st_unicodestring :
                              begin
-                               case TStringDef(def_to).stringtype of
+                               case TStringDef(def_to).StringType of
                                  { Prefer conversions to widestring }
                                  st_widestring: eq:=te_convert_l1;
                                  { else prefer conversions to ansistring }
@@ -708,12 +708,12 @@ implementation
                              begin
                                { Prefer shortstrings of different length or conversions
                                  from shortstring to ansistring }
-                               case TStringDef(def_to).stringtype of
+                               case TStringDef(def_to).StringType of
                                  st_shortstring: eq:=te_convert_l1;
                                  st_ansistring:
                                    if TStringDef(def_to).encoding=Globals.CP_UTF8 then
                                      eq:=te_convert_l2
-                                   else if def_to=getansistringdef then
+                                   else if def_to=GetAnsiStringDef then
                                      eq:=te_convert_l3
                                    else
                                      eq:=te_convert_l4;
@@ -725,7 +725,7 @@ implementation
                            st_ansistring :
                              begin
                                { Prefer conversion to widestrings }
-                               case TStringDef(def_to).stringtype of
+                               case TStringDef(def_to).StringType of
                                  st_unicodestring: eq:=te_convert_l4;
                                  st_widestring: eq:=te_convert_l5;
                                  else
@@ -743,7 +743,7 @@ implementation
                      if is_char(def_from) then
                        begin
                          doconv:=tc_char_2_string;
-                         case TStringDef(def_to).stringtype of
+                         case TStringDef(def_to).StringType of
                            st_shortstring: eq:=te_convert_l1;
                            st_ansistring: eq:=te_convert_l2;
                            st_unicodestring: eq:=te_convert_l3;
@@ -756,7 +756,7 @@ implementation
                      if is_widechar(def_from) then
                       begin
                         doconv:=tc_char_2_string;
-                        case TStringDef(def_to).stringtype of
+                        case TStringDef(def_to).StringType of
                           st_unicodestring: eq:=te_convert_l1;
                           st_widestring: eq:=te_convert_l2;
                           st_ansistring: eq:=te_convert_l3;
@@ -774,7 +774,7 @@ implementation
                         { bitpacked arrays of char whose element bitsize is not
                           8 cannot be auto-converted to strings }
                         (not is_packed_array(def_from) or
-                         (TArrayDef(def_from).elementdef.packedbitsize=8)) then
+                         (TArrayDef(def_from).ElementDef.PackedBitSize=8)) then
                       begin
                         { "Untyped" stringconstn is an array of char }
                         if fromtreetype=stringconstn then
@@ -783,7 +783,7 @@ implementation
                             { prefered string type depends on the $H switch }
                             if (m_default_unicodestring in CurrentSettings.ModeSwitches) and
                                (cs_refcountedstrings in CurrentSettings.LocalSwitches) then
-                              case TStringDef(def_to).stringtype of
+                              case TStringDef(def_to).StringType of
                                 st_unicodestring: eq:=te_equal;
                                 st_widestring: eq:=te_convert_l1;
                                 // widechar: eq:=te_convert_l2;
@@ -794,13 +794,13 @@ implementation
                                 eq:=te_convert_l6;
                               end
                             else if not(cs_refcountedstrings in CurrentSettings.LocalSwitches) and
-                               (TStringDef(def_to).stringtype=st_shortstring) then
+                               (TStringDef(def_to).StringType=st_shortstring) then
                               eq:=te_equal
                             else if not(m_default_unicodestring in CurrentSettings.ModeSwitches) and
                                (cs_refcountedstrings in CurrentSettings.LocalSwitches) and
-                               (TStringDef(def_to).stringtype=st_ansistring) then
+                               (TStringDef(def_to).StringType=st_ansistring) then
                               eq:=te_equal
-                            else if TStringDef(def_to).stringtype in [st_widestring,st_unicodestring] then
+                            else if TStringDef(def_to).StringType in [st_widestring,st_unicodestring] then
                               eq:=te_convert_l3
                             else
                               eq:=te_convert_l1;
@@ -887,7 +887,7 @@ implementation
                  objectdef :
                    begin
                      { corba interface -> id string }
-                     if is_interfacecorba(def_from) then
+                     if Is_InterfaceCORBA(def_from) then
                       begin
                         doconv:=tc_intf_2_string;
                         eq:=te_convert_l1;
@@ -905,7 +905,7 @@ implementation
                    begin { ordinal to real }
                       if (is_integer(def_from) or
                          (is_currency(def_from) and
-                          (s64currencytype.typ = floatdef))) then
+                          (S64CurrencyType.typ = floatdef))) then
                        begin
                          doconv:=tc_int_2_real;
 
@@ -934,16 +934,16 @@ implementation
                    end;
                  floatdef :
                    begin
-                     if TFloatDef(def_from).floattype=TFloatDef(def_to).floattype then
+                     if TFloatDef(def_from).FloatType=TFloatDef(def_to).FloatType then
                        eq:=te_equal
                      else
                        begin
                          doconv:=tc_real_2_real;
                          { do we lose precision? }
                          if (def_to.size<def_from.size) or
-                           (is_currency(def_from) and (TFloatDef(def_to).floattype in [S32Real,S64Real])) then
+                           (is_currency(def_from) and (TFloatDef(def_to).FloatType in [S32Real,S64Real])) then
                            begin
-                             if is_currency(def_from) and (TFloatDef(def_to).floattype=S32Real) then
+                             if is_currency(def_from) and (TFloatDef(def_to).FloatType=S32Real) then
                                eq:=te_convert_l3
                              else
                                eq:=te_convert_l2
@@ -970,11 +970,11 @@ implementation
                      else
                       begin
                         hd1:=def_from;
-                        while Assigned(TEnumDef(hd1).basedef) do
-                          hd1:=TEnumDef(hd1).basedef;
+                        while Assigned(TEnumDef(hd1).BaseDef) do
+                          hd1:=TEnumDef(hd1).BaseDef;
                         hd2:=def_to;
-                        while Assigned(TEnumDef(hd2).basedef) do
-                          hd2:=TEnumDef(hd2).basedef;
+                        while Assigned(TEnumDef(hd2).BaseDef) do
+                          hd2:=TEnumDef(hd2).BaseDef;
                         if (hd1=hd2) then
                           begin
                             eq:=te_convert_l1;
@@ -985,7 +985,7 @@ implementation
                           begin
                             { assignment of an enum symbol to an unique type? }
                             if (fromtreetype=ordconstn) and
-                              (TEnumSym(TEnumDef(hd1).getfirstsym)=TEnumSym(TEnumDef(hd2).getfirstsym)) then
+                              (TEnumSym(TEnumDef(hd1).GetFirstSym)=TEnumSym(TEnumDef(hd2).GetFirstSym)) then
                               begin
                                 { because of packenum they can have different sizes! (JM) }
                                 eq:=te_convert_l1;
@@ -1023,7 +1023,7 @@ implementation
                    begin
                      { ugly, but delphi allows it }
                      if (cdo_explicit in cdoptions) and
-                        is_class_or_interface_or_dispinterface_or_objc(def_from) then
+                        Is_Class_Or_Interface_Or_DispInterface_Or_ObjC(def_from) then
                        begin
 
                          if m_delphi in CurrentSettings.ModeSwitches then
@@ -1044,8 +1044,8 @@ implementation
                  the extra check for deftyp is needed because equal defs can also return
                  true if the def types are not the same, for example with dynarray to pointer. }
                if is_open_array(def_to) and
-                  (def_from.typ=TArrayDef(def_to).elementdef.typ) and
-                  equal_defs(def_from,TArrayDef(def_to).elementdef) then
+                  (def_from.typ=TArrayDef(def_to).ElementDef.typ) and
+                  equal_defs(def_from,TArrayDef(def_to).ElementDef) then
                 begin
                   doconv:=tc_elem_2_openarray;
                   { also update in htypechk.pas/var_para_allowed if changed
@@ -1064,11 +1064,11 @@ implementation
                         { char arrays -- except if they use subrange types   }
                         if (is_packed_array(def_from) and
                             (not is_chararray(def_from) or
-                             (TArrayDef(def_from).elementdef.packedbitsize<>8)) and
+                             (TArrayDef(def_from).ElementDef.PackedBitSize<>8)) and
                             not is_widechararray(def_from)) xor
                            (is_packed_array(def_to) and
                             (not is_chararray(def_to) or
-                             (TArrayDef(def_to).elementdef.packedbitsize<>8)) and
+                             (TArrayDef(def_to).ElementDef.PackedBitSize<>8)) and
                             not is_widechararray(def_to)) then
                           { both must be packed }
                           begin
@@ -1081,7 +1081,7 @@ implementation
                            if is_array_constructor(def_from) then
                              begin
                                { array constructor -> dynamic array }
-                               if is_void(TArrayDef(def_from).elementdef) then
+                               if is_void(TArrayDef(def_from).ElementDef) then
                                  begin
                                    { only needs to loose to [] -> open array }
                                    eq:=te_convert_l2;
@@ -1091,8 +1091,8 @@ implementation
                                  begin
                                    { this should loose to the array constructor -> open array conversions,
                                      but it might happen that the end of the convert levels is reached :/ }
-                                   subeq:=compare_defs_ext(TArrayDef(def_from).elementdef,
-                                                        TArrayDef(def_to).elementdef,
+                                   subeq:=compare_defs_ext(TArrayDef(def_from).ElementDef,
+                                                        TArrayDef(def_to).ElementDef,
                                                         { reason for cdo_allow_variant: see tbs/tw7070a and tbs/tw7070b }
                                                         arrayconstructorn,hct,hpd,[cdo_check_operator,cdo_allow_variant]);
                                    if (subeq>=te_equal) then
@@ -1119,7 +1119,7 @@ implementation
                                    doconv:=tc_arrayconstructor_2_dynarray;
                                  end;
                              end
-                           else if equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
+                           else if equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
                              begin
                                { dynamic array -> dynamic array }
                                if is_dynamic_array(def_from) then
@@ -1141,15 +1141,15 @@ implementation
                             { array constructor -> open array }
                             if is_array_constructor(def_from) then
                              begin
-                               if is_void(TArrayDef(def_from).elementdef) then
+                               if is_void(TArrayDef(def_from).ElementDef) then
                                 begin
                                   doconv:=tc_equal;
                                   eq:=te_convert_l1;
                                 end
                                else
                                 begin
-                                  subeq:=compare_defs_ext(TArrayDef(def_from).elementdef,
-                                                       TArrayDef(def_to).elementdef,
+                                  subeq:=compare_defs_ext(TArrayDef(def_from).ElementDef,
+                                                       TArrayDef(def_to).ElementDef,
                                                        { reason for cdo_allow_variant: see tbs/tw7070a and tbs/tw7070b }
                                                        arrayconstructorn,hct,hpd,[cdo_check_operator,cdo_allow_variant]);
                                   if (subeq>=te_equal) then
@@ -1173,7 +1173,7 @@ implementation
                             else
                              { dynamic array -> open array }
                              if is_dynamic_array(def_from) and
-                                equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
+                                equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
                                begin
                                  doconv:=tc_dynarray_2_openarray;
                                  eq:=te_convert_l2;
@@ -1181,15 +1181,15 @@ implementation
                             else
                              { open array -> open array }
                              if is_open_array(def_from) and
-                                equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
-                               if TArrayDef(def_from).elementdef=TArrayDef(def_to).elementdef then
+                                equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
+                               if TArrayDef(def_from).ElementDef=TArrayDef(def_to).ElementDef then
                                  eq:=te_exact
                                else
                                  eq:=te_equal
                             else
                              { array -> open array }
                              if not(cdo_parameter in cdoptions) and
-                                equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
+                                equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
                                begin
                                  if fromtreetype=stringconstn then
                                    eq:=te_convert_l1
@@ -1208,7 +1208,7 @@ implementation
                              end
                             else
                              { array of tvarrec -> array of const }
-                             if equal_defs(TArrayDef(def_to).elementdef,TArrayDef(def_from).elementdef) then
+                             if equal_defs(TArrayDef(def_to).ElementDef,TArrayDef(def_from).ElementDef) then
                               begin
                                 doconv:=tc_equal;
                                 eq:=te_convert_l1;
@@ -1221,7 +1221,7 @@ implementation
                                { bitpacked arrays of char whose element bitsize is not
                                  8 cannot be auto-converted from strings }
                                (not is_packed_array(def_to) or
-                                (TArrayDef(def_to).elementdef.packedbitsize=8))) or
+                                (TArrayDef(def_to).ElementDef.PackedBitSize=8))) or
                               is_widechararray(def_to)) then
                             begin
                               eq:=te_convert_l1;
@@ -1232,7 +1232,7 @@ implementation
                           if is_normal_array(def_to) and is_array_constructor(def_from) then
                             begin
                               { element count must match exactly }
-                              if TArrayDef(def_to).elecount=TArrayDef(def_from).elecount then
+                              if TArrayDef(def_to).EleCount=TArrayDef(def_from).EleCount then
                                 begin
                                   eq:=te_convert_l2;
                                   doconv:=tc_arrayconstructor_2_array;
@@ -1244,7 +1244,7 @@ implementation
                             { open array -> array }
                             if not(cdo_parameter in cdoptions) and
                                is_open_array(def_from) and
-                               equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
+                               equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) then
                               begin
                                 eq:=te_equal
                               end
@@ -1253,11 +1253,11 @@ implementation
                               if ((not(m_delphi in CurrentSettings.ModeSwitches)) or
                                 { allow assigning vector results to regular
                                   arrays. TODO: change once we expose vector types }
-                                 TArrayDef(def_from).is_hwvector) and
-                                (TArrayDef(def_from).lowrange=TArrayDef(def_to).lowrange) and
-                                (TArrayDef(def_from).highrange=TArrayDef(def_to).highrange) and
-                                equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) and
-                                (compare_defs_ext(TArrayDef(def_from).rangedef,TArrayDef(def_to).rangedef,nothingn,hct,hpd,[])>te_incompatible) then
+                                 TArrayDef(def_from).Is_HWVector) and
+                                (TArrayDef(def_from).LowRange=TArrayDef(def_to).LowRange) and
+                                (TArrayDef(def_from).HighRange=TArrayDef(def_to).HighRange) and
+                                equal_defs(TArrayDef(def_from).ElementDef,TArrayDef(def_to).ElementDef) and
+                                (compare_defs_ext(TArrayDef(def_from).RangeDef,TArrayDef(def_to).RangeDef,nothingn,hct,hpd,[])>te_incompatible) then
                               begin
                                 eq:=te_equal
                               end;
@@ -1276,7 +1276,7 @@ implementation
                         else
                          if is_zero_based_array(def_to) and
                             not is_cyclic(def_from) and
-                            equal_defs(TPointerDef(def_from).pointeddef,TArrayDef(def_to).elementdef) then
+                            equal_defs(TPointerDef(def_from).PointedDef,TArrayDef(def_to).ElementDef) then
                           begin
                             doconv:=tc_pointer_2_array;
                             eq:=te_convert_l1;
@@ -1286,12 +1286,12 @@ implementation
                       begin
                         { string to char array }
                         if not is_special_array(def_to) and
-                           ((is_char(TArrayDef(def_to).elementdef) and
+                           ((is_char(TArrayDef(def_to).ElementDef) and
                              { bitpacked arrays of char whose element bitsize is not
                                8 cannot be auto-converted from strings }
                              (not is_packed_array(def_to) or
-                              (TArrayDef(def_to).elementdef.packedbitsize=8))) or
-                            is_widechar(TArrayDef(def_to).elementdef)) then
+                              (TArrayDef(def_to).ElementDef.PackedBitSize=8))) or
+                            is_widechar(TArrayDef(def_to).ElementDef)) then
                          begin
                            doconv:=tc_string_2_chararray;
                            eq:=te_convert_l1;
@@ -1310,7 +1310,7 @@ implementation
                       begin
                         { tvarrec -> array of const }
                          if is_array_of_const(def_to) and
-                            equal_defs(def_from,TArrayDef(def_to).elementdef) then
+                            equal_defs(def_from,TArrayDef(def_to).ElementDef) then
                           begin
                             doconv:=tc_equal;
                             eq:=te_convert_l1;
@@ -1328,7 +1328,7 @@ implementation
                       begin
                         { special case: an empty set constant is compatible as
                           well }
-                        if not Assigned(TSetDef(def_from).elementdef)
+                        if not Assigned(TSetDef(def_from).ElementDef)
                             and (fromtreetype=setconstn) then
                           begin
                             doconv:=tc_arrayconstructor_2_dynarray;
@@ -1363,7 +1363,7 @@ implementation
                        begin
                          { corbainterfaces not accepted, until we have
                            runtime support for them in Variants (sergei) }
-                          if is_interfacecom_or_dispinterface(def_from) then
+                          if Is_InterfaceCOM_Or_DispInterface(def_from) then
                             begin
                                doconv:=tc_interface_2_variant;
                                eq:=te_convert_l1;
@@ -1373,8 +1373,8 @@ implementation
                        begin
                          { doing this in the compiler avoids a lot of unnecessary
                            copying }
-                         if (TVariantDef(def_from).varianttype=vt_olevariant) and
-                           (TVariantDef(def_to).varianttype=vt_normalvariant) then
+                         if (TVariantDef(def_from).VariantType=vt_olevariant) and
+                           (TVariantDef(def_to).VariantType=vt_normalvariant) then
                            begin
                              doconv:=tc_equal;
                              eq:=te_convert_l1;
@@ -1493,7 +1493,7 @@ implementation
                      if (((fromtreetype = arrayconstructorn) and
                           { can't use is_chararray, because returns false for }
                           { array constructors                                }
-                          is_char(TArrayDef(def_from).elementdef)) or
+                          is_char(TArrayDef(def_from).ElementDef)) or
                          (fromtreetype = stringconstn)) and
                         (is_pchar(def_to) or is_pwidechar(def_to)) then
                       begin
@@ -1508,7 +1508,7 @@ implementation
                       { chararray to pointer }
                       if (is_zero_based_array(def_from) or
                           is_open_array(def_from)) and
-                          equal_defs(TArrayDef(def_from).elementdef,TPointerDef(def_to).pointeddef) then
+                          equal_defs(TArrayDef(def_from).ElementDef,TPointerDef(def_to).PointedDef) then
                         begin
                           doconv:=tc_array_2_pointer;
                           { don't prefer the pchar overload when a constant
@@ -1530,7 +1530,7 @@ implementation
                  pointerdef :
                    begin
                      { check for far pointers }
-                     if not TPointerDef(def_from).compatible_with_pointerdef_size(TPointerDef(def_to)) then
+                     if not TPointerDef(def_from).Compatible_With_PointerDef_Size(TPointerDef(def_to)) then
                        begin
                          if fromtreetype=niln then
                            eq:=te_equal
@@ -1539,19 +1539,19 @@ implementation
                        end
                      { the types can be forward type, handle before normal type check !! }
                      else
-                      if Assigned(def_to.typesym) and
-                         ((TPointerDef(def_to).pointeddef.typ=forwarddef) or
-                          (TPointerDef(def_from).pointeddef.typ=forwarddef)) then
+                      if Assigned(def_to.TypeSym) and
+                         ((TPointerDef(def_to).PointedDef.typ=ForwardDef) or
+                          (TPointerDef(def_from).PointedDef.typ=ForwardDef)) then
                        begin
-                         if (def_from.typesym=def_to.typesym) or
+                         if (def_from.TypeSym=def_to.TypeSym) or
                             (fromtreetype=niln) then
                           eq:=te_equal
                        end
                      else
                        begin
                          { avoid crash/stack overflow on recursive pointer definitions, see tests/webtbf/tw39634.pas }
-                         hd1:=TAbstractPointerDef(def_from).pointeddef;
-                         hd2:=TAbstractPointerDef(def_to).pointeddef;
+                         hd1:=TAbstractPointerDef(def_from).PointedDef;
+                         hd2:=TAbstractPointerDef(def_to).PointedDef;
                          while Assigned(hd1) and (hd1.typ=pointerdef) and
                            Assigned(hd2) and (hd2.typ=pointerdef) do
                            begin
@@ -1562,22 +1562,22 @@ implementation
                                  eq:=te_incompatible;
                                  break;
                                end;
-                             hd1:=TAbstractPointerDef(hd1).pointeddef;
-                             hd2:=TAbstractPointerDef(hd2).pointeddef;
+                             hd1:=TAbstractPointerDef(hd1).PointedDef;
+                             hd2:=TAbstractPointerDef(hd2).PointedDef;
                            end;
 
                          { same types }
-                         if not((hd1=def_from) and (hd2=def_to)) and equal_defs(TPointerDef(def_from).pointeddef,TPointerDef(def_to).pointeddef) then
+                         if not((hd1=def_from) and (hd2=def_to)) and equal_defs(TPointerDef(def_from).PointedDef,TPointerDef(def_to).PointedDef) then
                            begin
                              eq:=te_equal
                            end
                          else
                           { child class pointer can be assigned to ancestor pointers }
                           if (
-                              (TPointerDef(def_from).pointeddef.typ=objectdef) and
-                              (TPointerDef(def_to).pointeddef.typ=objectdef) and
-                              def_is_related(TObjectDef(TPointerDef(def_from).pointeddef),
-                                TObjectDef(TPointerDef(def_to).pointeddef))
+                              (TPointerDef(def_from).PointedDef.typ=objectdef) and
+                              (TPointerDef(def_to).PointedDef.typ=objectdef) and
+                              def_is_related(TObjectDef(TPointerDef(def_from).PointedDef),
+                                TObjectDef(TPointerDef(def_to).PointedDef))
                              ) then
                            begin
                              doconv:=tc_equal;
@@ -1585,7 +1585,7 @@ implementation
                            end
                          else
                           { all pointers can be assigned to void-pointer }
-                          if is_void(TPointerDef(def_to).pointeddef) then
+                          if is_void(TPointerDef(def_to).PointedDef) then
                            begin
                              doconv:=tc_equal;
                              { give pwidechar,pchar a penalty so it prefers
@@ -1598,10 +1598,10 @@ implementation
                            end
                          else
                           { all pointers can be assigned from void-pointer }
-                          if is_void(TPointerDef(def_from).pointeddef) or
+                          if is_void(TPointerDef(def_from).PointedDef) or
                           { all pointers can be assigned from void-pointer or formaldef pointer, check
                             tw3777 (case in tb_records_delphi_run_01.pas).pas if you change this }
-                            (TPointerDef(def_from).pointeddef.typ=formaldef) then
+                            (TPointerDef(def_from).PointedDef.typ=formaldef) then
                            begin
                              doconv:=tc_equal;
                              { give pwidechar a penalty so it prefers
@@ -1613,10 +1613,10 @@ implementation
                            end
                          { id = generic class instance. metaclasses are also
                            class instances themselves.  }
-                         else if ((def_from=objc_idtype) and
-                                  (def_to=objc_metaclasstype)) or
-                                 ((def_to=objc_idtype) and
-                                  (def_from=objc_metaclasstype)) then
+                         else if ((def_from=ObjC_IDType) and
+                                  (def_to=ObjC_MetaClassType)) or
+                                 ((def_to=ObjC_IDType) and
+                                  (def_from=ObjC_MetaClassType)) then
                            begin
                              doconv:=tc_equal;
                              eq:=te_convert_l2;
@@ -1627,9 +1627,9 @@ implementation
                    begin
                      { procedure variable can be assigned to an void pointer,
                        this is not allowed for complex procvars }
-                     if (is_void(TPointerDef(def_to).pointeddef) or
+                     if (is_void(TPointerDef(def_to).PointedDef) or
                          (m_mac_procvar in CurrentSettings.ModeSwitches)) and
-                        TProcVarDef(def_from).compatible_with_pointerdef_size(TPointerDef(def_to)) then
+                        TProcVarDef(def_from).Compatible_With_PointerDef_Size(TPointerDef(def_to)) then
                       begin
                         doconv:=tc_equal;
                         eq:=te_convert_l1;
@@ -1640,7 +1640,7 @@ implementation
                      { procedure variable can be assigned to an void pointer,
                        this not allowed for methodpointers }
                      if (m_mac_procvar in CurrentSettings.ModeSwitches) and
-                        TProcDef(def_from).compatible_with_pointerdef_size(TPointerDef(def_to)) then
+                        TProcDef(def_from).Compatible_With_PointerDef_Size(TPointerDef(def_to)) then
                       begin
                         doconv:=tc_proc_2_procvar;
                         eq:=te_convert_l2;
@@ -1653,23 +1653,23 @@ implementation
                        can be assigned to void pointers, but it is less
                        preferred than assigning to a related objectdef }
                      if (
-                         is_implicit_pointer_object_type(def_from) or
+                         Is_Implicit_Pointer_Object_Type(def_from) or
                          (def_from.typ=classrefdef)
                         ) and
-                        (TPointerDef(def_to).pointeddef.typ=orddef) and
-                        (TOrdDef(TPointerDef(def_to).pointeddef).ordtype=uvoid) then
+                        (TPointerDef(def_to).PointedDef.typ=orddef) and
+                        (TOrdDef(TPointerDef(def_to).PointedDef).OrdType=uvoid) then
                        begin
                          doconv:=tc_equal;
                          eq:=te_convert_l5;
                        end
-                     else if (is_objc_class_or_protocol(def_from) and
-                              (def_to=objc_idtype)) or
+                     else if (Is_ObjC_Class_Or_Protocol(def_from) and
+                              (def_to=ObjC_IDType)) or
                              { classrefs are also instances in Objective-C,
                                hence they're also assignment-compatible with
                                id }
-                             (is_objcclassref(def_from) and
-                              ((def_to=objc_metaclasstype) or
-                               (def_to=objc_idtype))) then
+                             (Is_ObjCClassRef(def_from) and
+                              ((def_to=ObjC_MetaClassType) or
+                               (def_to=ObjC_IDType))) then
                        begin
                          doconv:=tc_equal;
                          eq:=te_convert_l2;
@@ -1685,17 +1685,17 @@ implementation
                case def_from.typ of
                  setdef :
                    begin
-                     if Assigned(TSetDef(def_from).elementdef) and
-                        Assigned(TSetDef(def_to).elementdef) then
+                     if Assigned(TSetDef(def_from).ElementDef) and
+                        Assigned(TSetDef(def_to).ElementDef) then
                       begin
                         { sets with the same size (packset setting), element
                           base type and the same range are equal }
-                        if equal_defs(TSetDef(def_from).elementdef,TSetDef(def_to).elementdef) and
-                           (TSetDef(def_from).setbase=TSetDef(def_to).setbase) and
-                           (TSetDef(def_from).setmax=TSetDef(def_to).setmax) and
+                        if equal_defs(TSetDef(def_from).ElementDef,TSetDef(def_to).ElementDef) and
+                           (TSetDef(def_from).SetBase=TSetDef(def_to).SetBase) and
+                           (TSetDef(def_from).SetMax=TSetDef(def_to).SetMax) and
                            (def_from.size=def_to.size) then
                           eq:=te_equal
-                        else if is_subequal(TSetDef(def_from).elementdef,TSetDef(def_to).elementdef) then
+                        else if is_subequal(TSetDef(def_from).ElementDef,TSetDef(def_to).ElementDef) then
                           begin
                             eq:=te_convert_l1;
                             doconv:=tc_set_to_set;
@@ -1730,7 +1730,7 @@ implementation
                      { proc -> procvar }
                      if (m_tp_procvar in CurrentSettings.ModeSwitches) or
                         (m_mac_procvar in CurrentSettings.ModeSwitches) or
-                        (po_anonymous in TProcDef(def_from).procoptions) then
+                        (po_anonymous in TProcDef(def_from).ProcOptions) then
                       begin
                         subeq:=proc_to_procvar_equal(TProcDef(def_from),TProcVarDef(def_to),cdo_warn_incompatible_univ in cdoptions);
                         if subeq>te_incompatible then
@@ -1757,7 +1757,7 @@ implementation
                      { nil is compatible with procvars }
                      if (fromtreetype=niln) then
                       begin
-                        if not TProcVarDef(def_to).is_addressonly then
+                        if not TProcVarDef(def_to).Is_AddressOnly then
                           {Nil to method pointers requires to convert a single
                            pointer nil value to a two pointer procvardef.}
                           doconv:=tc_nil_2_methodprocvar
@@ -1769,9 +1769,9 @@ implementation
                       { for example delphi allows the assignment from pointers  }
                       { to procedure variables                                  }
                       if (m_pointer_2_procedure in CurrentSettings.ModeSwitches) and
-                         is_void(TPointerDef(def_from).pointeddef) and
-                         TProcVarDef(def_to).is_addressonly and
-                         TProcVarDef(def_to).compatible_with_pointerdef_size(TPointerDef(def_from)) then
+                         is_void(TPointerDef(def_from).PointedDef) and
+                         TProcVarDef(def_to).Is_AddressOnly and
+                         TProcVarDef(def_to).Compatible_With_PointerDef_Size(TPointerDef(def_from)) then
                        begin
                          doconv:=tc_equal;
                          eq:=te_convert_l1;
@@ -1802,7 +1802,7 @@ implementation
 
                else if is_funcref(def_to) and
                    (def_from.typ=procdef) and
-                   (po_anonymous in TProcDef(def_from).procoptions) then
+                   (po_anonymous in TProcDef(def_from).ProcOptions) then
                  begin
                    subeq:=proc_to_funcref_conv(TProcDef(def_from),TObjectDef(def_to));
                    if subeq>te_incompatible then
@@ -1824,7 +1824,7 @@ implementation
                  end
                else
                { specific to implicit pointer object types }
-                if is_implicit_pointer_object_type(def_to) then
+                if Is_Implicit_Pointer_Object_Type(def_to) then
                  begin
                    { void pointer also for delphi mode }
                    if (m_delphi in CurrentSettings.ModeSwitches) and
@@ -1842,18 +1842,18 @@ implementation
                        eq:=te_convert_l1;
                      end
                    { All Objective-C classes are compatible with ID }
-                   else if is_objc_class_or_protocol(def_to) and
-                           (def_from=objc_idtype) then
+                   else if Is_ObjC_Class_Or_Protocol(def_to) and
+                           (def_from=ObjC_IDType) then
                       begin
                        doconv:=tc_equal;
                        eq:=te_convert_l2;
                      end
                    { classes can be assigned to interfaces
                      (same with objcclass and objcprotocol) }
-                   else if ((is_interface(def_to) and
-                             is_class(def_from)) or
-                            (is_objcprotocol(def_to) and
-                             is_objcclass(def_from))) and
+                   else if ((Is_Interface(def_to) and
+                             Is_Class(def_from)) or
+                            (Is_ObjCProtocol(def_to) and
+                             Is_ObjCClass(def_from))) and
                            Assigned(TObjectDef(def_from).ImplementedInterfaces) then
                      begin
                         { we've to search in parent classes as well }
@@ -1862,7 +1862,7 @@ implementation
                           begin
                              if find_implemented_interface(hobjdef,TObjectDef(def_to))<>nil then
                                begin
-                                  if is_interface(def_to) then
+                                  if Is_Interface(def_to) then
                                     doconv:=tc_class_2_intf
                                   else
                                     { for Objective-C, we don't have to do anything special }
@@ -1872,14 +1872,14 @@ implementation
                                   eq:=te_convert_l4;
                                   break;
                                end;
-                             hobjdef:=hobjdef.childof;
+                             hobjdef:=hobjdef.ChildOf;
                           end;
                      end
                    { Interface 2 GUID handling }
-                   else if (def_to=TDef(rec_tguid)) and
+                   else if (def_to=TDef(Rec_TGUID)) and
                            (fromtreetype=typen) and
-                           is_interface(def_from) and
-                           Assigned(TObjectDef(def_from).iidguid) then
+                           Is_Interface(def_from) and
+                           Assigned(TObjectDef(def_from).IIDGUID) then
                      begin
                        eq:=te_convert_l1;
                        doconv:=tc_equal;
@@ -1897,7 +1897,7 @@ implementation
                              eq:=subeq;
                          end;
                      end
-                   else if (def_from.typ=variantdef) and is_interfacecom_or_dispinterface(def_to) then
+                   else if (def_from.typ=variantdef) and Is_InterfaceCOM_Or_DispInterface(def_to) then
                      begin
                      { corbainterfaces not accepted, until we have
                        runtime support for them in Variants (sergei) }
@@ -1922,12 +1922,12 @@ implementation
            classrefdef :
              begin
                { similar to pointerdef wrt forwards }
-               if Assigned(def_to.typesym) and
-                  (TClassRefDef(def_to).pointeddef.typ=forwarddef) or
+               if Assigned(def_to.TypeSym) and
+                  (TClassRefDef(def_to).PointedDef.typ=ForwardDef) or
                   ((def_from.typ=classrefdef) and
-                   (TClassRefDef(def_from).pointeddef.typ=forwarddef)) then
+                   (TClassRefDef(def_from).PointedDef.typ=ForwardDef)) then
                  begin
-                   if (def_from.typesym=def_to.typesym) or
+                   if (def_from.TypeSym=def_to.TypeSym) or
                       (fromtreetype=niln) then
                     eq:=te_equal;
                  end
@@ -1935,7 +1935,7 @@ implementation
                 { class reference types }
                 if (def_from.typ=classrefdef) then
                  begin
-                   if equal_defs(TClassRefDef(def_from).pointeddef,TClassRefDef(def_to).pointeddef) then
+                   if equal_defs(TClassRefDef(def_from).PointedDef,TClassRefDef(def_to).PointedDef) then
                     begin
                       eq:=te_equal;
                     end
@@ -1943,8 +1943,8 @@ implementation
                     begin
                       doconv:=tc_equal;
                       if (cdo_explicit in cdoptions) or
-                         def_is_related(TObjectDef(TClassRefDef(def_from).pointeddef),
-                           TObjectDef(TClassRefDef(def_to).pointeddef)) then
+                         def_is_related(TObjectDef(TClassRefDef(def_from).PointedDef),
+                           TObjectDef(TClassRefDef(def_to).PointedDef)) then
                         eq:=te_convert_l1;
                     end;
                  end
@@ -1965,7 +1965,7 @@ implementation
                  end
                else
                  { id is compatible with all classref types }
-                 if (def_from=objc_idtype) then
+                 if (def_from=ObjC_IDType) then
                    begin
                      doconv:=tc_equal;
                      eq:=te_convert_l1;
@@ -1983,24 +1983,24 @@ implementation
                this is not very beautiful !!}
                if (def_from.typ=filedef) then
                 begin
-                  if (TFileDef(def_from).filetyp=TFileDef(def_to).filetyp) then
+                  if (TFileDef(def_from).FileTyp=TFileDef(def_to).FileTyp) then
                    begin
                      if
                         (
-                         (TFileDef(def_from).typedfiledef=nil) and
-                         (TFileDef(def_to).typedfiledef=nil)
+                         (TFileDef(def_from).TypedFileDef=nil) and
+                         (TFileDef(def_to).TypedFileDef=nil)
                         ) or
                         (
-                         (TFileDef(def_from).typedfiledef<>nil) and
-                         (TFileDef(def_to).typedfiledef<>nil) and
-                         equal_defs(TFileDef(def_from).typedfiledef,TFileDef(def_to).typedfiledef)
+                         (TFileDef(def_from).TypedFileDef<>nil) and
+                         (TFileDef(def_to).TypedFileDef<>nil) and
+                         equal_defs(TFileDef(def_from).TypedFileDef,TFileDef(def_to).TypedFileDef)
                         ) or
                         (
-                         (TFileDef(def_from).filetyp = ft_typed) and
-                         (TFileDef(def_to).filetyp = ft_typed) and
+                         (TFileDef(def_from).FileTyp = ft_typed) and
+                         (TFileDef(def_to).FileTyp = ft_typed) and
                          (
-                          (TFileDef(def_from).typedfiledef = TDef(voidtype)) or
-                          (TFileDef(def_to).typedfiledef = TDef(voidtype))
+                          (TFileDef(def_from).TypedFileDef = TDef(VoidType)) or
+                          (TFileDef(def_to).TypedFileDef = TDef(VoidType))
                          )
                         ) then
                       begin
@@ -2008,10 +2008,10 @@ implementation
                       end;
                    end
                   else
-                   if ((TFileDef(def_from).filetyp = ft_untyped) and
-                       (TFileDef(def_to).filetyp = ft_typed)) or
-                      ((TFileDef(def_from).filetyp = ft_typed) and
-                       (TFileDef(def_to).filetyp = ft_untyped)) then
+                   if ((TFileDef(def_from).FileTyp = ft_untyped) and
+                       (TFileDef(def_to).FileTyp = ft_typed)) or
+                      ((TFileDef(def_from).FileTyp = ft_typed) and
+                       (TFileDef(def_to).FileTyp = ft_untyped)) then
                     begin
                       doconv:=tc_equal;
                       eq:=te_convert_l1;
@@ -2022,8 +2022,8 @@ implementation
            recorddef :
              begin
                { interface -> guid }
-               if (def_to=rec_tguid) and
-                  (is_interfacecom_or_dispinterface(def_from)) then
+               if (def_to=Rec_TGUID) and
+                  (Is_InterfaceCOM_Or_DispInterface(def_from)) then
                 begin
                   doconv:=tc_intf_2_guid;
                   eq:=te_convert_l1;
@@ -2072,7 +2072,7 @@ implementation
             )
            ) then
           begin
-            operatorpd:=search_assignment_operator(def_from,def_to,cdo_explicit in cdoptions);
+            operatorpd:=Search_Assignment_Operator(def_from,def_to,cdo_explicit in cdoptions);
             if Assigned(operatorpd) then
              eq:=te_convert_operator;
           end;
@@ -2118,17 +2118,17 @@ implementation
             Begin
               { see p.47 of Turbo Pascal 7.01 manual for the separation of types }
               { range checking for case statements is done with adaptrange        }
-              case TOrdDef(def1).ordtype of
+              case TOrdDef(def1).OrdType of
                 u8bit,u16bit,u32bit,u64bit,
                 s8bit,s16bit,s32bit,s64bit :
-                  is_subequal:=(TOrdDef(def2).ordtype in [s64bit,u64bit,s32bit,u32bit,u8bit,s8bit,s16bit,u16bit]);
+                  is_subequal:=(TOrdDef(def2).OrdType in [s64bit,u64bit,s32bit,u32bit,u8bit,s8bit,s16bit,u16bit]);
                 pasbool1,pasbool8,pasbool16,pasbool32,pasbool64,
                 bool8bit,bool16bit,bool32bit,bool64bit :
-                  is_subequal:=(TOrdDef(def2).ordtype in [pasbool1,pasbool8,pasbool16,pasbool32,pasbool64,bool8bit,bool16bit,bool32bit,bool64bit]);
+                  is_subequal:=(TOrdDef(def2).OrdType in [pasbool1,pasbool8,pasbool16,pasbool32,pasbool64,bool8bit,bool16bit,bool32bit,bool64bit]);
                 uchar :
-                  is_subequal:=(TOrdDef(def2).ordtype=uchar);
+                  is_subequal:=(TOrdDef(def2).OrdType=uchar);
                 uwidechar :
-                  is_subequal:=(TOrdDef(def2).ordtype=uwidechar);
+                  is_subequal:=(TOrdDef(def2).OrdType=uwidechar);
                 customint:
                   is_subequal:=(TOrdDef(def2).low=TOrdDef(def1).low) and (TOrdDef(def2).high=TOrdDef(def1).high);
                 u128bit, s128bit,
@@ -2144,11 +2144,11 @@ implementation
                 Begin
                    { get both basedefs }
                    basedef1:=TEnumDef(def1);
-                   while Assigned(basedef1.basedef) do
-                     basedef1:=basedef1.basedef;
+                   while Assigned(basedef1.BaseDef) do
+                     basedef1:=basedef1.BaseDef;
                    basedef2:=TEnumDef(def2);
-                   while Assigned(basedef2.basedef) do
-                     basedef2:=basedef2.basedef;
+                   while Assigned(basedef2.BaseDef) do
+                     basedef2:=basedef2.BaseDef;
                    is_subequal:=(basedef1=basedef2);
                 end;
             end;
@@ -2166,13 +2166,13 @@ implementation
            (def1.typ<>def2.typ)) or
           { pointers, ordinals and small sets are all passed the same}
           (((def1.typ in [orddef,enumdef,pointerdef,procvardef,classrefdef]) or
-            (is_class_or_interface_or_objc(def1)) or
+            (Is_Class_Or_Interface_Or_ObjC(def1)) or
             is_dynamic_array(def1) or
             is_smallset(def1) or
             is_ansistring(def1) or
             is_unicodestring(def1)) <>
            (def2.typ in [orddef,enumdef,pointerdef,procvardef,classrefdef]) or
-            (is_class_or_interface_or_objc(def2)) or
+            (Is_Class_Or_Interface_Or_ObjC(def2)) or
             is_dynamic_array(def2) or
              is_smallset(def2) or
             is_ansistring(def2) or
@@ -2184,8 +2184,8 @@ implementation
            (is_widestring(def1)<>
             is_widestring(def2)) or
            { TP-style objects }
-           (is_object(def1) <>
-            is_object(def2));
+           (Is_Object(def1) <>
+            Is_Object(def2));
       end;
 
 
@@ -2203,13 +2203,13 @@ implementation
             if cpo_ignorehidden in cpoptions then
               begin
                 while (i1<para1.count) and
-                      (vo_is_hidden_para in TParaVarSym(para1[i1]).varoptions) do
+                      (vo_is_hidden_para in TParaVarSym(para1[i1]).VarOptions) do
                   begin
                     inc(i1);
                     skipped:=true;
                   end;
                 while (i2<para2.count) and
-                      (vo_is_hidden_para in TParaVarSym(para2[i2]).varoptions) do
+                      (vo_is_hidden_para in TParaVarSym(para2[i2]).VarOptions) do
                   begin
                     inc(i2);
                     skipped:=true;
@@ -2218,13 +2218,13 @@ implementation
             if cpo_ignoreself in cpoptions then
               begin
                 if (i1<para1.count) and
-                   (vo_is_self in TParaVarSym(para1[i1]).varoptions) then
+                   (vo_is_self in TParaVarSym(para1[i1]).VarOptions) then
                   begin
                     inc(i1);
                     skipped:=true;
                   end;
                 if (i2<para2.count) and
-                   (vo_is_self in TParaVarSym(para2[i2]).varoptions) then
+                   (vo_is_self in TParaVarSym(para2[i2]).VarOptions) then
                   begin
                     inc(i2);
                     skipped:=true;
@@ -2233,13 +2233,13 @@ implementation
             if cpo_ignoreframepointer in cpoptions then
               begin
                 if (i1<para1.count) and
-                   (vo_is_parentfp in TParaVarSym(para1[i1]).varoptions) then
+                   (vo_is_parentfp in TParaVarSym(para1[i1]).VarOptions) then
                   begin
                     inc(i1);
                     skipped:=true;
                   end;
                 if (i2<para2.count) and
-                   (vo_is_parentfp in TParaVarSym(para2[i2]).varoptions) then
+                   (vo_is_parentfp in TParaVarSym(para2[i2]).VarOptions) then
                   begin
                     inc(i2);
                     skipped:=true;
@@ -2272,30 +2272,30 @@ implementation
              currpara2:=TParaVarSym(para2[i2]);
 
              { Unique types must match exact }
-             if ((df_unique in currpara1.vardef.defoptions) or (df_unique in currpara2.vardef.defoptions)) and
+             if ((df_unique in currpara1.vardef.DefOptions) or (df_unique in currpara2.vardef.DefOptions)) and
                 (currpara1.vardef<>currpara2.vardef) then
                exit;
 
              { Handle hidden parameters separately, because self is
                defined as voidpointer for methodpointers }
-             if (vo_is_hidden_para in currpara1.varoptions) or
-                (vo_is_hidden_para in currpara2.varoptions) then
+             if (vo_is_hidden_para in currpara1.VarOptions) or
+                (vo_is_hidden_para in currpara2.VarOptions) then
               begin
                 { both must be hidden }
-                if (vo_is_hidden_para in currpara1.varoptions)<>(vo_is_hidden_para in currpara2.varoptions) then
+                if (vo_is_hidden_para in currpara1.VarOptions)<>(vo_is_hidden_para in currpara2.VarOptions) then
                   exit;
                 eq:=te_exact;
-                if (([vo_is_self,vo_is_vmt]*currpara1.varoptions)=[]) and
-                   (([vo_is_self,vo_is_vmt]*currpara2.varoptions)=[]) then
+                if (([vo_is_self,vo_is_vmt]*currpara1.VarOptions)=[]) and
+                   (([vo_is_self,vo_is_vmt]*currpara2.VarOptions)=[]) then
                  begin
                    if not(cpo_ignorevarspez in cpoptions) and
-                      (currpara1.varspez<>currpara2.varspez) then
+                      (currpara1.VarSpez<>currpara2.VarSpez) then
                     exit;
                    eq:=compare_defs_ext(currpara1.vardef,currpara2.vardef,nothingn,
                                         convtype,hpd,cdoptions);
                  end
-                else if ([vo_is_self,vo_is_vmt]*currpara1.varoptions)<>
-                         ([vo_is_self,vo_is_vmt]*currpara2.varoptions) then
+                else if ([vo_is_self,vo_is_vmt]*currpara1.VarOptions)<>
+                         ([vo_is_self,vo_is_vmt]*currpara2.VarOptions) then
                    eq:=te_incompatible;
               end
              else
@@ -2309,9 +2309,9 @@ implementation
                          any information about that }
                        if (
                            not(cpo_ignorevarspez in cpoptions) and
-                           (currpara1.varspez<>currpara2.varspez) and
-                           ((currpara1.varspez in [vs_var,vs_out,vs_constref]) or
-                            (currpara2.varspez in [vs_var,vs_out,vs_constref]))
+                           (currpara1.VarSpez<>currpara2.VarSpez) and
+                           ((currpara1.VarSpez in [vs_var,vs_out,vs_constref]) or
+                            (currpara2.VarSpez in [vs_var,vs_out,vs_constref]))
                           ) then
                          exit;
                        eq:=compare_defs_ext(currpara1.vardef,currpara2.vardef,nothingn,
@@ -2322,8 +2322,8 @@ implementation
                        { used to resolve forward definitions -> headers must
                          match exactly, including the "univ" specifier }
                        if (not(cpo_ignorevarspez in cpoptions) and
-                           (currpara1.varspez<>currpara2.varspez)) or
-                          (currpara1.univpara<>currpara2.univpara) then
+                           (currpara1.VarSpez<>currpara2.VarSpez)) or
+                          (currpara1.UnivPara<>currpara2.UnivPara) then
                          exit;
                        eq:=compare_defs_ext(currpara1.vardef,currpara2.vardef,nothingn,
                                             convtype,hpd,cdoptions);
@@ -2331,7 +2331,7 @@ implementation
                   cp_procvar :
                     begin
                        if not(cpo_ignorevarspez in cpoptions) and
-                          (currpara1.varspez<>currpara2.varspez) then
+                          (currpara1.VarSpez<>currpara2.VarSpez) then
                          exit;
                        { "univ" state doesn't matter here: from univ to non-univ
                           matches if the types are compatible (i.e., as usual),
@@ -2353,7 +2353,7 @@ implementation
                 begin
                   { special case: "univ" parameters match if their size is equal }
                   if not(cpo_ignoreuniv in cpoptions) and
-                     currpara2.univpara and
+                     currpara2.UnivPara and
                      is_valid_univ_para_type(currpara1.vardef) and
                      (currpara1.vardef.size=currpara2.vardef.size) then
                     begin
@@ -2368,7 +2368,7 @@ implementation
                              this check does not mean things will crash on all
                              platforms) }
                           if potentially_incompatible_univ_paras(currpara1.vardef,currpara2.vardef) then
-                            Message2(type_w_procvar_univ_conflicting_para,currpara1.vardef.typename,currpara2.vardef.typename)
+                            Message2(type_w_procvar_univ_conflicting_para,currpara1.vardef.TypeName,currpara2.vardef.TypeName)
                         end;
                     end
                   else if (cpo_generic in cpoptions) then
@@ -2387,14 +2387,14 @@ implementation
                   if is_open_array(currpara1.vardef) and
                       is_open_array(currpara2.vardef) then
                     begin
-                      if equal_genfunc_paradefs(TArrayDef(currpara1.vardef).elementdef,TArrayDef(currpara2.vardef).elementdef,currpara1.owner,currpara2.owner) then
+                      if equal_genfunc_paradefs(TArrayDef(currpara1.vardef).ElementDef,TArrayDef(currpara2.vardef).ElementDef,currpara1.owner,currpara2.owner) then
                         eq:=te_exact;
                     end
                   else
                     { for the purpose of forward declarations two equal specializations
                       are considered as exactly equal }
-                    if (df_specialization in TStoredDef(currpara1.vardef).defoptions) and
-                        (df_specialization in TStoredDef(currpara2.vardef).defoptions) then
+                    if (df_specialization in TStoredDef(currpara1.vardef).DefOptions) and
+                        (df_specialization in TStoredDef(currpara2.vardef).DefOptions) then
                       eq:=te_exact;
                 end;
               { open strings can never match exactly, since you cannot define }
@@ -2408,7 +2408,7 @@ implementation
               if (is_array_of_const(currpara1.vardef) or
                   is_open_string(currpara1.vardef) or
                   ((currpara1.vardef.typ = procvardef) and
-                   not(Assigned(currpara1.vardef.typesym)))) and
+                   not(Assigned(currpara1.vardef.TypeSym)))) and
                  (eq=te_equal) and
                  (cpo_openequalisexact in cpoptions) then
                 eq:=te_exact;
@@ -2417,15 +2417,15 @@ implementation
               { also check default value if both have it declared }
               if (cpo_comparedefaultvalue in cpoptions) then
                 begin
-                  if Assigned(currpara1.defaultconstsym) and
-                     Assigned(currpara2.defaultconstsym) then
+                  if Assigned(currpara1.DefaultConstSym) and
+                     Assigned(currpara2.DefaultConstSym) then
                     begin
-                      if not equal_constsym(TConstSym(currpara1.defaultconstsym),TConstSym(currpara2.defaultconstsym),true) then
+                      if not equal_constsym(TConstSym(currpara1.DefaultConstSym),TConstSym(currpara2.DefaultConstSym),true) then
                         exit;
                     end
                   { cannot have that the second (= implementation) has a default value declared and the
                     other (interface) doesn't }
-                  else if not Assigned(currpara1.defaultconstsym) and Assigned(currpara2.defaultconstsym) then
+                  else if not Assigned(currpara1.DefaultConstSym) and Assigned(currpara2.DefaultConstSym) then
                     exit;
                 end;
               if not(cpo_compilerproc in cpoptions) and
@@ -2448,8 +2448,8 @@ implementation
            value assigned then the parameters are also equal }
          if ((i1>=para1.count) and (i2>=para2.count)) or
             ((cpo_allowdefaults in cpoptions) and
-             (((i1<para1.count) and Assigned(TParaVarSym(para1[i1]).defaultconstsym)) or
-              ((i2<para2.count) and Assigned(TParaVarSym(para2[i2]).defaultconstsym)))) then
+             (((i1<para1.count) and Assigned(TParaVarSym(para1[i1]).DefaultConstSym)) or
+              ((i2<para2.count) and Assigned(TParaVarSym(para2[i2]).DefaultConstSym)))) then
            compare_paras:=lowesteq;
       end;
 
@@ -2496,20 +2496,20 @@ implementation
                 necessary for LLVM or CIL as long as they do not have support
                 for Delphi-style frame pointer parameter passing) }
          if is_block(def2) or                                                           { a) }
-            (po_anonymous in def1.procoptions) or                                       { b) }
-            (po_is_function_ref in def2.procoptions) then                               { c) }
+            (po_anonymous in def1.ProcOptions) or                                       { b) }
+            (po_is_function_ref in def2.ProcOptions) then                               { c) }
            { can't explicitly check against procvars here, because
              def1 may already be a procvar due to a proc_to_procvar;
              this is checked in the type conversion node itself -> ok }
          else if
-            ((def1.is_methodpointer and not (po_staticmethod in def1.procoptions))<> { d) }
-             (def2.is_methodpointer and not (po_staticmethod in def2.procoptions))) or
-            ((def1.is_addressonly<>def2.is_addressonly) and         { e) }
+            ((def1.Is_MethodPointer and not (po_staticmethod in def1.ProcOptions))<> { d) }
+             (def2.Is_MethodPointer and not (po_staticmethod in def2.ProcOptions))) or
+            ((def1.Is_AddressOnly<>def2.Is_AddressOnly) and         { e) }
              (is_nested_pd(def1) or
               not is_nested_pd(def2))) or
             ((def1.typ=procdef) and                                 { f) }
              is_nested_pd(def1) and
-             (not(po_delphi_nested_cc in def1.procoptions) or
+             (not(po_delphi_nested_cc in def1.ProcOptions) or
               not is_nested_pd(def2))) or
             ((def1.typ=procvardef) and                              { g) }
              (is_nested_pd(def1)<>is_nested_pd(def2))) then
@@ -2517,7 +2517,7 @@ implementation
          pa_comp:=[cpo_ignoreframepointer];
          if is_block(def2) then
            include(pa_comp,cpo_ignorehidden);
-         if (po_anonymous in def1.procoptions) or ignoreself then
+         if (po_anonymous in def1.ProcOptions) or ignoreself then
            include(pa_comp,cpo_ignoreself);
          if checkincompatibleuniv then
            include(pa_comp,cpo_warn_incompatible_univ);
@@ -2525,20 +2525,20 @@ implementation
          po_comp:=[po_interrupt,po_iocheck,po_varargs];
          { check static only if we compare method pointers (and function
            references don't count as methodpointers here) }
-         if def1.is_methodpointer and
+         if def1.Is_MethodPointer and
              (
-               def2.is_methodpointer and
-               not (po_is_function_ref in def2.procoptions)
+               def2.Is_MethodPointer and
+               not (po_is_function_ref in def2.ProcOptions)
              ) then
            include(po_comp,po_staticmethod);
          if (m_delphi in CurrentSettings.ModeSwitches) then
            exclude(po_comp,po_varargs);
          { for blocks, the calling convention doesn't matter because we have to
            generate a wrapper anyway }
-         if ((po_is_block in def2.procoptions) or
-             (def1.proccalloption=def2.proccalloption)) and
-            ((po_comp * def1.procoptions)= (po_comp * def2.procoptions)) and
-            equal_defs(def1.returndef,def2.returndef) then
+         if ((po_is_block in def2.ProcOptions) or
+             (def1.ProcCallOption=def2.ProcCallOption)) and
+            ((po_comp * def1.ProcOptions)= (po_comp * def2.ProcOptions)) and
+            equal_defs(def1.ReturnDef,def2.ReturnDef) then
           begin
             { return equal type based on the parameters, but a proc->procvar
               is never exact, so map an exact match of the parameters to
@@ -2552,23 +2552,23 @@ implementation
                 if (is_nested_pd(def1)<>is_nested_pd(def2)) then
                   eq:=te_convert_l1;
                 { in case of non-block to block, we need a type conversion }
-                if (po_is_block in def1.procoptions) <> (po_is_block in def2.procoptions) then
+                if (po_is_block in def1.ProcOptions) <> (po_is_block in def2.ProcOptions) then
                   eq:=te_convert_l1;
                 { for anonymous functions check whether their captured symbols are
                   compatible with the target }
-                if po_anonymous in def1.procoptions then
+                if po_anonymous in def1.ProcOptions then
                   begin
                     captured:=nil;
                     if def1.typ=procdef then
-                      captured:=TProcDef(def1).capturedsyms
+                      captured:=TProcDef(def1).CapturedSyms
                     { def1.typ=procvardef can happen if someone uses procvar := @<anon func> }
                     else if def1.typ<>procvardef then
                       InternalError(2021052601);
                     { a function reference can capture anything, but they're
                       rather expensive, so cheaper overloads are preferred }
                     dstisfuncref:=Assigned(def2.owner) and
-                        Assigned(def2.owner.defowner) and
-                        is_funcref(TDef(def2.owner.defowner));
+                        Assigned(def2.owner.DefOwner) and
+                        is_funcref(TDef(def2.owner.DefOwner));
                     { if no symbol was captured an anonymous function is
                       compatible to all four types of function pointers, but we
                       might need to generate its code differently (e.g. get rid
@@ -2582,9 +2582,9 @@ implementation
                       begin
                         if def1.typ=procvardef then
                           eq:=te_incompatible
-                        else if po_methodpointer in def2.procoptions then
+                        else if po_methodpointer in def2.ProcOptions then
                           eq:=te_convert_l2
-                        else if po_delphi_nested_cc in def2.procoptions then
+                        else if po_delphi_nested_cc in def2.ProcOptions then
                           eq:=te_convert_l4
                         else if dstisfuncref then
                           eq:=te_convert_l3
@@ -2598,11 +2598,11 @@ implementation
                         - function reference
                         - nested function }
                     else if (captured.count=1) and (TSym(PCapturedSymInfo(captured[0])^.sym).typ in [localvarsym,paravarsym]) and
-                         (vo_is_self in TAbstractVarSym(PCapturedSymInfo(captured[0])^.sym).varoptions) then
+                         (vo_is_self in TAbstractVarSym(PCapturedSymInfo(captured[0])^.sym).VarOptions) then
                       begin
-                        if po_methodpointer in def2.procoptions then
+                        if po_methodpointer in def2.ProcOptions then
                           eq:=te_convert_l1
-                        else if po_delphi_nested_cc in def2.procoptions then
+                        else if po_delphi_nested_cc in def2.ProcOptions then
                           eq:=te_convert_l3
                         else if dstisfuncref then
                           eq:=te_convert_l2
@@ -2615,15 +2615,15 @@ implementation
                       begin
                         if dstisfuncref then
                           eq:=te_convert_l1
-                        else if po_delphi_nested_cc in def2.procoptions then
+                        else if po_delphi_nested_cc in def2.ProcOptions then
                           eq:=te_convert_l2
                         else
                           eq:=te_incompatible;
                       end;
                   end
                 else if Assigned(def2.owner) and
-                    Assigned(def2.owner.defowner) and
-                    is_funcref(TDef(def2.owner.defowner)) then
+                    Assigned(def2.owner.DefOwner) and
+                    is_funcref(TDef(def2.owner.DefOwner)) then
                   begin
                     { consider assignment to a funcref a bit more expensive
                       then assigning it to a normal proc or method variable }
@@ -2690,8 +2690,8 @@ implementation
           (equal_defs(parentretdef,childretdef)) or
           ((parentretdef.typ=objectdef) and
            (childretdef.typ=objectdef) and
-           is_class_or_interface_or_objc(parentretdef) and
-           is_class_or_interface_or_objc(childretdef) and
+           Is_Class_Or_Interface_Or_ObjC(parentretdef) and
+           Is_Class_Or_Interface_Or_ObjC(childretdef) and
            (def_is_related(TObjectDef(childretdef),TObjectDef(parentretdef))))
       end;
 
@@ -2746,16 +2746,16 @@ implementation
          hp : TObjectDef;
       begin
         if (otherdef.typ=objectdef) then
-          otherdef:=find_real_class_definition(TObjectDef(otherdef),false);
-        realself:=find_real_class_definition(curdef,false);
+          otherdef:=Find_Real_Class_Definition(TObjectDef(otherdef),false);
+        realself:=Find_Real_Class_Definition(curdef,false);
         if realself=otherdef then
           begin
             result:=true;
             exit;
           end;
 
-        if (realself.objecttype in [odt_objcclass,odt_objcprotocol]) and
-           (otherdef=objc_idtype) then
+        if (realself.ObjectType in [odt_objcclass,odt_objcprotocol]) and
+           (otherdef=ObjC_IDType) then
           begin
             result:=true;
             exit;
@@ -2776,24 +2776,24 @@ implementation
 
 
         { Objective-C protocols support multiple inheritance. }
-        if (realself.objecttype in [odt_objcprotocol]) then
+        if (realself.ObjectType in [odt_objcprotocol]) then
           begin
             result:=is_related_interface_multiple(realself,otherdef);
             exit;
           end;
 
 
-        if (realself.objecttype in [odt_objcclass]) and
-           (TObjectDef(otherdef).objecttype=curdef.objecttype) and
-           ((oo_is_formal in curdef.objectoptions) or
-            (oo_is_formal in TObjectDef(otherdef).objectoptions)) and
-           (curdef.objrealname^=TObjectDef(otherdef).objrealname^) then
+        if (realself.ObjectType in [odt_objcclass]) and
+           (TObjectDef(otherdef).ObjectType=curdef.ObjectType) and
+           ((oo_is_formal in curdef.ObjectOptions) or
+            (oo_is_formal in TObjectDef(otherdef).ObjectOptions)) and
+           (curdef.ObjRealName^=TObjectDef(otherdef).ObjRealName^) then
           begin
             result:=true;
             exit;
           end;
 
-        hp:=realself.childof;
+        hp:=realself.ChildOf;
         while Assigned(hp) do
           begin
              if equal_defs(hp,otherdef) then
@@ -2801,7 +2801,7 @@ implementation
                   result:=true;
                   exit;
                end;
-             hp:=hp.childof;
+             hp:=hp.ChildOf;
           end;
         result:=false;
       end;
@@ -2824,14 +2824,14 @@ implementation
       begin
         result:=false;
         { for open array parameters, typesym might not be assigned }
-        if Assigned(fwdef.typesym) and (sp_generic_para in fwdef.typesym.symoptions) and
-           Assigned(currdef.typesym) and (sp_generic_para in currdef.typesym.symoptions) and
+        if Assigned(fwdef.TypeSym) and (sp_generic_para in fwdef.TypeSym.SymOptions) and
+           Assigned(currdef.TypeSym) and (sp_generic_para in currdef.TypeSym.SymOptions) and
             (fwdef.owner=fwpdst) and
             (currdef.owner=currpdst) then
           begin
             { the forward declaration may have constraints }
-            if not (df_genconstraint in currdef.defoptions) and (currdef.typ=undefineddef) and
-                ((fwdef.typ=undefineddef) or (df_genconstraint in fwdef.defoptions)) then
+            if not (df_genconstraint in currdef.DefOptions) and (currdef.typ=undefineddef) and
+                ((fwdef.typ=undefineddef) or (df_genconstraint in fwdef.DefOptions)) then
               result:=true;
           end
       end;

@@ -61,11 +61,11 @@ unit cpupi;
       begin
         if paramanager.use_fixed_stack then
           begin
-            if not(po_assembler in procdef.procoptions) and
+            if not(po_assembler in procdef.ProcOptions) and
                (tg.direction > 0) then
               tg.setfirsttemp(tg.direction*maxpushedparasize);
             if (tg.direction < 0) and
-               not(po_nostackframe in procdef.procoptions) then
+               not(po_nostackframe in procdef.ProcOptions) then
               { compensate for the return address and the "pushl %ebp" }
               tg.setalignmentmismatch(sizeof(PInt)*2);
           end;

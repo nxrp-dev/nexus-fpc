@@ -178,9 +178,9 @@ var
       begin
         Result:=inherited StateStr;
         if State<>ms_load then Exit;
-        if ppu_waitingfor_crc then
+        if PPUWaitingForCRC then
           Result:=Result+',waitcrc'
-        else if interface_compiled then
+        else if InterfaceCompiled then
           Result:=Result+',interface_compiled'
         else
           Result:=Result+',waitintf';
@@ -197,7 +197,7 @@ var
     procedure TPPUModule.Reset(ForRecompile : Boolean);
       begin
         LoadedFromModule:=nil;
-        ppu_waitingfor_crc:=False;
+        PPUWaitingForCRC:=False;
         DiscardPPU;
         FreeDerefUnitImportSyms;
         UnitImportSymsDerefs.Free;
@@ -209,17 +209,17 @@ var
 
       begin
         Message1(unit_u_reresolving_unit,ModuleName^);
-        if TStoredSymTable(GlobalSymTable).is_deref_built then
+        if TStoredSymTable(GlobalSymTable).Is_Deref_Built then
           TStoredSymTable(GlobalSymTable).Deref(False);
-        if TStoredSymTable(GlobalSymTable).is_derefimpl_built then
+        if TStoredSymTable(GlobalSymTable).Is_DerefImpl_Built then
           TStoredSymTable(GlobalSymTable).DerefImpl(False);
         if Assigned(LocalSymTable) then
           begin
             { we have only builderef(impl)'d the registered symbols of
               the localsymtable -> also only deref those again }
-            if TStoredSymTable(LocalSymTable).is_deref_built then
+            if TStoredSymTable(LocalSymTable).Is_Deref_Built then
               TStoredSymTable(LocalSymTable).Deref(True);
-            if TStoredSymTable(LocalSymTable).is_derefimpl_built then
+            if TStoredSymTable(LocalSymTable).Is_DerefImpl_Built then
               TStoredSymTable(LocalSymTable).DerefImpl(True);
           end;
         DerefImportedSymbols;
@@ -393,7 +393,7 @@ var
       { Load values for easier access }
         HeaderFlags:=PPUFile.Header.Common.Flags;
         CRC:=PPUFile.Header.Checksum;
-        crc_final:=True;
+        CRCFinal:=True;
         InterfaceCRC:=PPUFile.Header.InterfaceChecksum;
         IndirectCRC:=PPUFile.Header.IndirectChecksum;
         ChangeEndian:=PPUFile.ChangeEndian;
@@ -477,7 +477,7 @@ var
            SinglePathString:=FixPath(S,False);
          { Check for Sources }
            PPUFile:=nil;
-           recompile_reason:=rr_noppu;
+           RecompileReason:=rr_noppu;
          { Check for Pascal source }
            Found:=UnitExists(SourceExt,HS,Prefix);
            if not Found and
@@ -545,8 +545,8 @@ var
            Result:=PPUSearchPath('.',Prefix);
            if (not Result) and (OutputPath<>'') then
             Result:=PPUSearchPath(OutputPath,Prefix);
-           if (not Result) and Assigned(main_module) and (main_module.Path<>'')  then
-            Result:=PPUSearchPath(main_module.Path,Prefix);
+           if (not Result) and Assigned(Main_Module) and (Main_Module.Path<>'')  then
+            Result:=PPUSearchPath(Main_Module.Path,Prefix);
          end;
 
          function SearchSourcePaths(const Prefix:TCmdStr):TAvailableUnitFiles;
@@ -554,8 +554,8 @@ var
            Result:=[];
            if SourceSearchPath('.',Prefix) then
               Include(Result,auSrc);
-           if (Result=[]) and Assigned(main_module) and (main_module.Path<>'') then
-             if SourceSearchPath(main_module.Path,Prefix) then
+           if (Result=[]) and Assigned(Main_Module) and (Main_Module.Path<>'') then
+             if SourceSearchPath(Main_Module.Path,Prefix) then
               Include(Result,auSrc);
            if (Result=[]) and Assigned(LoadingModule) then
              Result:=SearchPathList(LoadingModule.LocalUnitSearchPath,Prefix);
@@ -637,7 +637,7 @@ var
                WriteLn('PPUALGO tppumodule.search_unit only sources, no ppu -> ',ModuleName^,' old=',State,' new=',ms_compile);
                {$ENDIF}
                State:=ms_compile;
-               recompile_reason:=rr_noppu;
+               RecompileReason:=rr_noppu;
                MainSource:=HS;
                SetFileName(HS,False);
              end;
@@ -797,11 +797,11 @@ var
 
     procedure TPPUModule.WriteUsedMacro(P:TNamedIndexItem;Arg:Pointer);
       begin
-        if TMacro(P).is_used or IsInitial then
+        if TMacro(P).IsUsed or IsInitial then
           begin
             PPUFile.PutString(P.Name);
             PPUFile.PutBoolean(IsInitial);
-            PPUFile.PutBoolean(TMacro(P).is_used);
+            PPUFile.PutBoolean(TMacro(P).IsUsed);
           end;
       end;
 
@@ -850,10 +850,10 @@ var
         U: TModule;
       begin
         { write a reference for each used unit }
-        HP:=TUsedUnit(used_units.First);
+        HP:=TUsedUnit(UsedUnitList.First);
         while Assigned(HP) do
          begin
-           if HP.in_interface=Intf then
+           if HP.InInterface=Intf then
              begin
                U:=HP.U;
                PPUFile.PutString(U.RealModuleName^);
@@ -1024,9 +1024,9 @@ var
       begin
         { Optional metadata: units without exports retain the existing format. }
         if not (TargetInfo.System in (systems_windows+systems_linux)) or
-           not Assigned(_Exports.First) then
+           not Assigned(ExportList.First) then
           Exit;
-        HP:=TExportedItem(_Exports.First);
+        HP:=TExportedItem(ExportList.First);
         while Assigned(HP) do
           begin
             PPUFile.PutString(HP.Name^);
@@ -1247,7 +1247,7 @@ var
                           WriteLn('PPUALGO tppumodule.readsourcefiles sourcechanged ',ModuleName^,' old=',State,' new=',ms_compile);
                           {$ENDIF}
                           State:=ms_compile;
-                          recompile_reason:=rr_sourcenewer;
+                          RecompileReason:=rr_sourcenewer;
                           Message2(unit_u_source_modified,HS,PPUFileName,@QueueComment);
                           Temp:=Temp+' *';
                         end;
@@ -1286,7 +1286,7 @@ var
             WriteLn('PPUALGO tppumodule.readsourcefiles do_build ',ModuleName^,' old=',State,' new=',ms_compile);
             {$ENDIF}
             State:=ms_compile;
-            recompile_reason:=rr_build;
+            RecompileReason:=rr_build;
           end;
       end;
 
@@ -1312,7 +1312,7 @@ var
              needed for a correct circular dependency check }
            HP:=RegisterUnit(Self,HS,'',IsNew);
            if IsNew then
-             UsedUnits.Concat(TUsedUnit.Create(HP,in_interface,True,nil));
+             UsedUnits.Concat(TUsedUnit.Create(HP,InInterface,True,nil));
            Pu:=FindUsedUnit(HP);
            if Pu=nil then
              Pu:=AddUsedUnit(HP,False,nil);
@@ -1320,7 +1320,7 @@ var
            Pu.InterfaceChecksum:=IntfChecksum;
            Pu.IndirectChecksum:=IndChecksum;
          end;
-        in_interface:=False;
+        InInterface:=False;
       end;
 
 
@@ -1428,7 +1428,7 @@ var
               if Flags and (1 shl Ord(Option))<>0 then
                 Include(HP.Options,Option);
             HP.is_var:=PPUFile.GetByte<>0;
-            _Exports.Concat(HP);
+            ExportList.Concat(HP);
           end;
       end;
 
@@ -1623,7 +1623,7 @@ var
          { A System unit built with a contradictory Char alias must never
            receive a PPU bearing the invocation's text-model flag. }
          if (cs_compilesystem in CurrentSettings.ModuleSwitches) and
-            (search_system_type('CHAR').TypeDef.Size <>
+            (Search_System_Type('CHAR').TypeDef.Size <>
              1+Ord(CompilerWide_Unicode_Strings)) then
            Comment(VFatal,'System.Char width does not match this compiler invocation''s default text model');
 
@@ -1719,7 +1719,7 @@ var
             end;
 
          if mf_local_symtable in ModuleFlags then
-           TStoredSymTable(LocalSymTable).buildderef_registered;
+           TStoredSymTable(LocalSymTable).BuildDeref_Registered;
          BuildDerefUnitImportSyms;
          WriteDerefMap;
          WriteDerefData;
@@ -1759,7 +1759,7 @@ var
                    Continue;
                  case LSymbol.Bind of
                    AB_EXTERNAL:
-                     add_extern_asmsym(LSymbol);
+                     Add_Extern_AsmSym(LSymbol);
                    else
                      ;
                  end;
@@ -1792,9 +1792,9 @@ var
          PPUFile.Flush;
 
          { save crc in current module also }
-         if not crc_final then
+         if not CRCFinal then
            begin
-             crc_final:=True;
+             CRCFinal:=True;
              CRC:=PPUFile.CRC;
            end;
          { create and write header }
@@ -1870,7 +1870,7 @@ var
 
          { save crc  }
          CRC:=PPUFile.CRC;
-         if in_interface then
+         if InInterface then
            begin
              { Note: the interface_crc and indirect_crc are not affected by the implementation }
              InterfaceCRC:=PPUFile.InterfaceCRC;
@@ -1902,7 +1902,7 @@ var
         Pu: TDependentUnit;
         M: FModule.TModule;
       begin
-        Pu:=TDependentUnit(dependent_units.First);
+        Pu:=TDependentUnit(DependentUnitList.First);
         while Assigned(Pu) do
           begin
             M:=Pu.U;
@@ -1924,19 +1924,19 @@ var
         CheckCRC, UsedByInterface: Boolean;
       begin
         Result:=False;
-        if not interface_compiled then
+        if not InterfaceCompiled then
           InternalError(2026033101);
-        Pu:=TDependentUnit(dependent_units.First);
+        Pu:=TDependentUnit(DependentUnitList.First);
         while Assigned(Pu) do
           begin
             M:=TPPUModule(Pu.U);
-            UsedByInterface:=Pu.in_interface;
+            UsedByInterface:=Pu.InInterface;
             Pu:=TDependentUnit(Pu.Next);
             if not M.FromPPU then
               begin
                 if UsedByInterface then
                   begin
-                    if not M.interface_compiled then Continue;
+                    if not M.InterfaceCompiled then Continue;
                   end
                 else
                   { uses by implementation }
@@ -1952,8 +1952,8 @@ var
                   end;
               end;
 
-            CheckCRC:=crc_final and (M.FromPPU or (M.State in [ms_compiled,ms_processed]));
-            UU:=TUsedUnit(M.used_units.First);
+            CheckCRC:=CRCFinal and (M.FromPPU or (M.State in [ms_compiled,ms_processed]));
+            UU:=TUsedUnit(M.UsedUnitList.First);
             while Assigned(UU) do
               begin
                 if (UU.U=Self)
@@ -1963,7 +1963,7 @@ var
                   begin
                     Result:=True;
                     {$IFDEF DEBUG_PPU_CYCLES}
-                    WriteLn('PPUALGO tppumodule.dependent_module_crc_mismatch ',ModuleName^,' used by ',BoolToStr(UU.in_interface,'interface','implementation'),' of "',M.ModuleName^,'" old=',M.StateStr,' new=',ms_compile);
+                    WriteLn('PPUALGO tppumodule.dependent_module_crc_mismatch ',ModuleName^,' used by ',BoolToStr(UU.InInterface,'interface','implementation'),' of "',M.ModuleName^,'" old=',M.StateStr,' new=',ms_compile);
                     {$ENDIF}
                     M.MarkRecompileNeeded(rr_crcchanged);
                   end;
@@ -1979,10 +1979,10 @@ var
         if CurrentModule<>Self then
           InternalError(200212284);
 
-        if not interface_compiled then
+        if not InterfaceCompiled then
         begin
           { load the used units from interface }
-          in_interface:=True;
+          InInterface:=True;
           if not LoadUsedUnitsSection then
             Exit(False); { e.g. fail or some used unit interface is not ready }
           if CurrentModule<>Self then
@@ -2003,16 +2003,16 @@ var
               TStoredSymTable(GlobalMacroSymTable).PPULoad(PPUFile)
             end;
 
-          interface_compiled:=True;
+          InterfaceCompiled:=True;
 
           { read the implementation part, containing
             the implementation uses and ObjData }
-          in_interface:=False;
+          InInterface:=False;
           LoadImplementation;
         end;
 
         { now only read the implementation uses }
-        if not ppu_waitingfor_crc then
+        if not PPUWaitingForCRC then
         begin
           if not LoadUsedUnitsSection then
             Exit(False); { fail or some used unit interface is not ready }
@@ -2020,9 +2020,9 @@ var
             InternalError(2026022316);
         end;
 
-        if not ppu_waitingfor_crc then
+        if not PPUWaitingForCRC then
           begin
-            ppu_waitingfor_crc:=True;
+            PPUWaitingForCRC:=True;
 
             { load implementation symtable }
             if mf_local_symtable in ModuleFlags then
@@ -2039,7 +2039,7 @@ var
             if Assigned(LocalSymTable) then
               TStoredSymTable(LocalSymTable).DerefImpl(False);
 
-            remove_waitforunit_cycles;
+            Remove_WaitForUnit_Cycles;
 
           end;
 
@@ -2047,13 +2047,13 @@ var
           the scc_tree_crc_wait is outdated.
           If all used units are compiled, continue.
           otherwise some used units might still change }
-        if find_used_unit_compiling<>nil then
+        if Find_Used_Unit_Compiling<>nil then
           Exit(False);
 
         { check that all used units have their crc and checksums match }
         if not PPUCheckUsedCRCs then
           Exit(False);
-        ppu_waitingfor_crc:=False;
+        PPUWaitingForCRC:=False;
 
         DerefUnitImportSyms;
 
@@ -2062,7 +2062,7 @@ var
         TUnitWPOInfo(WPOInfo).Deref;
         TUnitWPOInfo(WPOInfo).DerefImpl;
 
-        remove_all_waitsforthisunit;
+        Remove_All_WaitsForThisUnit;
 
         State:=ms_compiled;
       end;
@@ -2073,16 +2073,16 @@ var
         IntfCRCValid, CRCValid: Boolean;
       begin
         Result:=True;
-        Pu:=TUsedUnit(used_units.First);
+        Pu:=TUsedUnit(UsedUnitList.First);
         while Assigned(Pu) do
         begin
-          if Pu.in_interface=in_interface then
+          if Pu.InInterface=InInterface then
           begin
             { adddependency before loadppu for invalid cycle test }
-            if not Pu.dependent_added then
+            if not Pu.DependentAdded then
             begin
-              Pu.U.AddDependency(Self,in_interface);
-              Pu.dependent_added:=True;
+              Pu.U.AddDependency(Self,InInterface);
+              Pu.DependentAdded:=True;
             end;
 
             TPPUModule(Pu.U).LoadPPU(Self);
@@ -2095,7 +2095,7 @@ var
               Exit(False);
             end;
             {$IFDEF DEBUG_PPU_CYCLES}
-            WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' (',StateStr,') ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" state=',Pu.U.StateStr);
+            WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' (',StateStr,') ',BoolToStr(InInterface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" state=',Pu.U.StateStr);
             {$ENDIF}
 
             { check crc(s) if recompile is needed.
@@ -2104,8 +2104,8 @@ var
               If an unit of a cycle is recompiled, the whole cycle is recompiled.
 
               If this ppu was compiled with -Ur only check interface_crc, not crc }
-            CRCValid:=(not Pu.U.do_reload) and Pu.U.crc_final;
-            IntfCRCValid:=(not Pu.U.do_reload) and Pu.U.interface_compiled;
+            CRCValid:=(not Pu.U.DoReload) and Pu.U.CRCFinal;
+            IntfCRCValid:=(not Pu.U.DoReload) and Pu.U.InterfaceCompiled;
 
             if (IntfCRCValid and
                      ((Pu.U.InterfaceCRC<>Pu.InterfaceChecksum) or
@@ -2119,23 +2119,23 @@ var
             begin
               Message2(unit_u_recompile_crc_change,RealModuleName^,Pu.U.PPUFileName,@QueueComment);
               {$IFDEF DEBUG_PPU_CYCLES}
-              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" old=',StateStr,' new=',ms_compile);
+              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(InInterface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" old=',StateStr,' new=',ms_compile);
               {$ENDIF}
               MarkRecompileNeeded(rr_crcchanged);
               Exit(False);
             end;
 
-            if Pu.U.do_reload
-                or (not Pu.U.interface_compiled)
-                or ctask_fast_backtrack then
+            if Pu.U.DoReload
+                or (not Pu.U.InterfaceCompiled)
+                or CTask_Fast_Backtrack then
             begin
               { this used unit is delayed
                 Important: do not break, load the remaining uses section, so the scheduler
                            has more information about cycles }
               {$IFDEF DEBUG_PPU_CYCLES}
-              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'", state=',Pu.U.StateStr,', waiting ...');
+              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(InInterface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'", state=',Pu.U.StateStr,', waiting ...');
               {$ENDIF}
-              ctask_fast_backtrack:=True;
+              CTask_Fast_Backtrack:=True;
               Result:=False;
             end;
           end;
@@ -2149,10 +2149,10 @@ var
       Pu: TUsedUnit;
     begin
       Result:=False;
-      Pu:=TUsedUnit(used_units.First);
+      Pu:=TUsedUnit(UsedUnitList.First);
       while Assigned(Pu) do
       begin
-        if Pu.U.crc_final then
+        if Pu.U.CRCFinal then
         begin
           if (Pu.U.InterfaceCRC<>Pu.InterfaceChecksum)
               or (Pu.U.IndirectCRC<>Pu.IndirectChecksum)
@@ -2183,23 +2183,23 @@ var
       if State<>ms_load then
         InternalError(2026020610);
 
-      if do_reload and not interface_compiled then
+      if DoReload and not InterfaceCompiled then
         Exit(True);
 
-      if ppu_waitingfor_crc and (scc_tree_crc_wait<>nil) then
+      if PPUWaitingForCRC and (SCCTreeCRCWait<>nil) then
         begin
-          FirstWaiting:=scc_tree_crc_wait;
+          FirstWaiting:=SCCTreeCRCWait;
           Exit; { the final load step needs all used units and their used units }
         end;
 
-      Pu:=TUsedUnit(used_units.First);
+      Pu:=TUsedUnit(UsedUnitList.First);
       while Assigned(Pu) do
       begin
-        if Pu.in_interface or interface_compiled then
+        if Pu.InInterface or InterfaceCompiled then
         begin
-          if Pu.U.do_reload
-              or not Pu.U.interface_compiled
-              or (ppu_waitingfor_crc and not Pu.U.crc_final
+          if Pu.U.DoReload
+              or not Pu.U.InterfaceCompiled
+              or (PPUWaitingForCRC and not Pu.U.CRCFinal
                  {$IFNDEF DisableUrCRC}and not (mf_release in ModuleFlags){$ENDIF} ) then
           begin
             FirstWaiting:=Pu.U;
@@ -2214,8 +2214,8 @@ var
     function TPPUModule.Is_Reload_Needed(Pu: TDependentUnit): Boolean;
       begin
         if Pu.U.State=ms_load then
-          Result:=Pu.U.ppu_waitingfor_crc
-                or (Pu.in_interface and Pu.U.interface_compiled)
+          Result:=Pu.U.PPUWaitingForCRC
+                or (Pu.InInterface and Pu.U.InterfaceCompiled)
         else
           Result:=inherited Is_Reload_Needed(Pu);
       end;
@@ -2257,7 +2257,7 @@ var
         Result:=(PackageList.Count>0) and LoadFromPackage;
         if Result then
           begin
-            do_reload:=False;
+            DoReload:=False;
             { add the unit to the used units list of the program }
             UsedUnits.Concat(TUsedUnit.Create(Self,True,False,nil));
           end;
@@ -2274,11 +2274,11 @@ var
         {$IFDEF DEBUG_PPU_CYCLES}
         WriteLn('PPUALGO tppumodule.recompile_from_sources ',ModuleName^,' old=',StateStr,' new=',ms_compile);
         {$ENDIF}
-        WasInterfaceCompiled:=interface_compiled;
+        WasInterfaceCompiled:=InterfaceCompiled;
         { disconnect used modules }
-        disconnect_depending_modules;
+        Disconnect_Depending_Modules;
         if FromPPU then
-          ppu_discarded:=True;
+          PPUDiscarded:=True;
         { Flag modules to reload }
         FlagDependent;
         { Reset stack, parser, scanner, etc }
@@ -2304,9 +2304,9 @@ var
            if not SourcesAvail then
             begin
               PrintComments;
-              if recompile_reason=rr_noppu then
+              if RecompileReason=rr_noppu then
                 begin
-                  Pu:=TUsedUnit(LoadedFromModule.used_units.First);
+                  Pu:=TUsedUnit(LoadedFromModule.UsedUnitList.First);
                   while Assigned(Pu) do
                     begin
                       if Pu.U=Self then
@@ -2335,15 +2335,15 @@ var
         {$IFDEF DEBUG_PPU_CYCLES}
         WriteLn('PPUALGO tppumodule.mark_recompile_needed ',ModuleName^,' old=',StateStr,' new=',ms_compile);
         {$ENDIF}
-        recompile_reason:=Reason;
-        do_recompile:=True;
-        do_reload:=True;
+        RecompileReason:=Reason;
+        DoRecompile:=True;
+        DoReload:=True;
         State:=ms_compile;
       end;
 
     procedure TPPUModule.Post_Load_Or_Compile(FromModule : TModule);
       begin
-        if in_interface then
+        if InInterface then
           InternalError(200212283);
 
         { reopen the old module }
@@ -2362,19 +2362,19 @@ var
         {$ENDIF}
 
         Message3(unit_u_load_unit,FromModule.ModuleName^,
-                 ImplIntf[FromModule.in_interface],
+                 ImplIntf[FromModule.InInterface],
                  ModuleName^);
 
-        if do_reload then
+        if DoReload then
           Exit; { reload needed. see scheduler }
 
         if State>ms_registered then
-          Exit(interface_compiled); { loading has already started or is finished }
+          Exit(InterfaceCompiled); { loading has already started or is finished }
 
-        if ppu_discarded then
+        if PPUDiscarded then
           Exit; { the ppu crc didn't match and this module was reset, don't load the ppu }
 
-        if ctask_fast_backtrack then
+        if CTask_Fast_Backtrack then
           Exit; { return to scheduler }
 
         LoadedFromModule:=FromModule;
@@ -2418,13 +2418,13 @@ var
       begin
         CheckImplUses:=False;
         CheckCRC:=False;
-        if not interface_compiled then
+        if not InterfaceCompiled then
           Exit(False);
         Result:=True;
 
         { if implementation was parsed then implementation uses must be checked too }
         if State=ms_load then
-          CheckImplUses:=ppu_waitingfor_crc
+          CheckImplUses:=PPUWaitingForCRC
         else if FromPPU then
           CheckImplUses:=True
         else
@@ -2444,7 +2444,7 @@ var
 
         Restore_State;
 
-        if do_reload then
+        if DoReload then
           InternalError(2026021017);
 
         if State=ms_load then
@@ -2477,7 +2477,7 @@ var
           Result:=True;
           Post_Load_Or_Compile(LoadedFromModule);
         end else if State=ms_compile then
-          MarkRecompileNeeded(recompile_reason);
+          MarkRecompileNeeded(RecompileReason);
 
         { finished or recompile: no need to store state }
         FreeAndNil(StoredState);
@@ -2495,13 +2495,13 @@ var
         if not Get_Check_Uses(CheckImplUses, CheckCRC) then
           Exit(True);
 
-        Pu:=TUsedUnit(used_units.First);
+        Pu:=TUsedUnit(UsedUnitList.First);
         while Assigned(Pu) do
         begin
-          if Pu.in_interface or CheckImplUses then
+          if Pu.InInterface or CheckImplUses then
           begin
-            if not Pu.U.interface_compiled
-                or (Pu.U.do_reload and not IgnoreDoReload) then
+            if not Pu.U.InterfaceCompiled
+                or (Pu.U.DoReload and not IgnoreDoReload) then
             begin
               FirstWaiting:=Pu.U;
               Exit(False);
@@ -2516,7 +2516,7 @@ var
       var
         FirstWaiting: TModule;
       begin
-        if not do_reload then
+        if not DoReload then
           InternalError(2026021015);
 
         if State in [ms_compiled,ms_processed] then
@@ -2527,7 +2527,7 @@ var
 
         if not CanReload(FirstWaiting,True) then
         begin
-          if do_reload then
+          if DoReload then
           begin
             WriteLn('tppumodule.reload_module ',ModuleName^,' ',StateStr,' RELOAD FAILED');
             InternalError(2026022413);
@@ -2539,7 +2539,7 @@ var
         WriteLn('PPUALGO tppumodule.reload ',ModuleName^,' ',StateStr,' RELOADING');
         {$ENDIF}
         Message(unit_u_forced_reload);
-        do_reload:=False;
+        DoReload:=False;
         SetCurrentModule(Self);
         Re_Resolve;
       end;
@@ -2567,9 +2567,9 @@ var
             AParent: TDependentUnit;
           begin
             { check already visited }
-            if AFile.cycle_search_stamp=TPPUModule.cycle_stamp then
+            if AFile.CycleSearchStamp=TPPUModule.Cycle_Stamp then
               Exit(False);
-            AFile.cycle_search_stamp:=TPPUModule.cycle_stamp; { mark visited }
+            AFile.CycleSearchStamp:=TPPUModule.Cycle_Stamp; { mark visited }
 
             if AFile=SearchFor then
             begin
@@ -2580,11 +2580,11 @@ var
               Exit(True);
             end;
 
-            AParent:=TDependentUnit(AFile.dependent_units.First);
+            AParent:=TDependentUnit(AFile.DependentUnitList.First);
             While Assigned(AParent) do
             begin
               //writeln('Registering ',Callermodule.modulename^,': checking cyclic dependency of ',aFile.modulename^, ' on ',aParent.u.modulename^);
-              if AParent.in_interface then
+              if AParent.InInterface then
               begin
                 // writeln('Registering ',Callermodule.get_modulename,': checking cyclic dependency of ',aFile.get_modulename, ' on ',aparent.u.get_modulename);
                 if FindCycle(TPPUModule(AParent.U),SearchFor,Cycle) then
@@ -2609,8 +2609,8 @@ var
         Ups:=Upper(S);
 
         { search all loaded units, skip program/library }
-        HP:=TPPUModule(loaded_units.First);
-        while Assigned(HP) and ((HP.ModuleName^<>Ups) or not HP.is_unit) do
+        HP:=TPPUModule(Loaded_Units.First);
+        while Assigned(HP) and ((HP.ModuleName^<>Ups) or not HP.IsUnit) do
           HP:=TPPUModule(HP.Next);
 
         IsNewUnit:=not Assigned(HP);
@@ -2622,12 +2622,12 @@ var
           HP:=TPPUModule.Create(CallerModule,S,FN,True);
           AddLoadedUnit(HP);
         end
-        else if CallerModule.in_interface then
+        else if CallerModule.InInterface then
         begin
           { check for a cycle }
           Cycle:=nil;
           try
-            TModule.increase_cycle_stamp;
+            TModule.Increase_Cycle_Stamp;
             if FindCycle(TPPUModule(CallerModule),HP,Cycle) then
             begin
               Message2(unit_f_circular_unit_reference,CallerModule.RealModuleName^,HP.RealModuleName^);

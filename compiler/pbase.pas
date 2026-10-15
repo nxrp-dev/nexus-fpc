@@ -108,7 +108,7 @@ interface
     function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:TToken;flags:TConsumeUnitSymFlags;out is_specialize:boolean;sympattern:TSymStr):boolean;
     function try_consume_unitsym_no_specialize(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:TToken;flags:TConsumeUnitSymFlags;sympattern:TSymStr):boolean;
 
-    function try_consume_hintdirective(var symopt:TSymOptions; var deprecatedmsg:PShortString):boolean;
+    function try_consume_hintdirective(var symopt:TSymOptions; var DeprecatedMsg:PShortString):boolean;
 
     { just for an accurate position of the end of a procedure (PM) }
     var
@@ -240,21 +240,21 @@ implementation
         if CurrentScanner.token<>_ID then
           begin
             consume(_ID);
-            srsym:=generrorsym;
+            srsym:=GenErrorSym;
             srsymtable:=nil;
             result:=false;
             exit;
           end;
-        searchsym(CurrentScanner.pattern,srsym,srsymtable);
+        SearchSym(CurrentScanner.pattern,srsym,srsymtable);
         { handle unit specification like System.Writeln }
         try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],CurrentScanner.pattern);
         { if nothing found give error and return errorsym }
         if Assigned(srsym) then
-          check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg)
+          Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg)
         else
           begin
             identifier_not_found(CurrentScanner.orgpattern);
-            srsym:=generrorsym;
+            srsym:=GenErrorSym;
             srsymtable:=nil;
           end;
         consume(t);
@@ -273,21 +273,21 @@ implementation
         if CurrentScanner.token<>_ID then
           begin
             consume(_ID);
-            srsym:=generrorsym;
+            srsym:=GenErrorSym;
             srsymtable:=nil;
             result:=false;
             exit;
           end;
-        searchsym(CurrentScanner.pattern,srsym,srsymtable);
+        SearchSym(CurrentScanner.pattern,srsym,srsymtable);
         { handle unit specification like System.Writeln }
         try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],CurrentScanner.pattern);
         { if nothing found give error and return errorsym }
         if Assigned(srsym) then
-          check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg)
+          Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg)
         else
           begin
             identifier_not_found(CurrentScanner.orgpattern);
-            srsym:=generrorsym;
+            srsym:=GenErrorSym;
             srsymtable:=nil;
           end;
         s:=CurrentScanner.orgpattern;
@@ -308,8 +308,8 @@ implementation
             while Assigned(srsym) and (srsym.typ=namespacesym) do
               begin
                 { we have a namespace. the next identifier should be either a namespace or a unit }
-                searchsym_in_module(hmodule,ns+'.'+CurrentScanner.pattern,srsym,srsymtable);
-                if Assigned(srsym) and (srsym.typ in [namespacesym,unitsym]) then
+                SearchSym_In_Module(hmodule,ns+'.'+CurrentScanner.pattern,srsym,srsymtable);
+                if Assigned(srsym) and (srsym.typ in [namespacesym,UnitSym]) then
                   begin
                     ns:=ns+'.'+CurrentScanner.pattern;
                     nssym:=srsym;
@@ -319,8 +319,8 @@ implementation
               end;
             { check if there is a hidden unit with this current_scanner.pattern in the namespace }
             if not Assigned(srsym) and
-               Assigned(nssym) and (nssym.typ=namespacesym) and Assigned(TNamespaceSym(nssym).unitsym) then
-              srsym:=TNamespaceSym(nssym).unitsym;
+               Assigned(nssym) and (nssym.typ=namespacesym) and Assigned(TNamespaceSym(nssym).UnitSym) then
+              srsym:=TNamespaceSym(nssym).UnitSym;
           end;
 
       begin
@@ -339,23 +339,23 @@ implementation
               begin
                 ns:=upper(nsitem.str)+'.'+sympattern;
 
-                if searchsym_in_module(hmodule,ns,srsym,srsymtable) and
-                    (srsym.typ in [unitsym,namespacesym]) then
+                if SearchSym_In_Module(hmodule,ns,srsym,srsymtable) and
+                    (srsym.typ in [UnitSym,namespacesym]) then
                   break;
 
                 nsitem:=TCmdStrListItem(nsitem.next);
               end;
           end;
 
-        if Assigned(srsym) and (srsym.typ in [unitsym,namespacesym]) then
+        if Assigned(srsym) and (srsym.typ in [UnitSym,namespacesym]) then
           begin
-            if not(srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) then
+            if not(srsym.owner.SymTableType in [staticsymtable,GlobalSymTable]) then
               InternalError(2005011503);
             { only allow unit.symbol access if the name was
               found in the current module
               we can use iscurrentunit because generic specializations does not
               change current_unit variable }
-            hmodule:=find_module_from_symtable(srsym.Owner);
+            hmodule:=Find_Module_From_SymTable(srsym.Owner);
             if not Assigned(hmodule) then
               InternalError(2010011201);
             if hmodule.ModuleID=CurrentFilePos.moduleindex then
@@ -383,8 +383,8 @@ implementation
                           begin
                             ns:=upper(nsitem.str)+'.'+nssym.name;
 
-                            if searchsym_in_module(hmodule,ns,srsym,srsymtable) and
-                                (srsym.typ in [unitsym,namespacesym]) then
+                            if SearchSym_In_Module(hmodule,ns,srsym,srsymtable) and
+                                (srsym.typ in [UnitSym,namespacesym]) then
                               begin
                                 consume_namespace;
                                 break;
@@ -393,7 +393,7 @@ implementation
                             nsitem:=TCmdStrListItem(nsitem.next);
                           end;
                       end;
-                    if Assigned(srsym) and (srsym.typ<>unitsym) then
+                    if Assigned(srsym) and (srsym.typ<>UnitSym) then
                       InternalError(2011082601);
                     if not Assigned(srsym) then
                       begin
@@ -407,24 +407,24 @@ implementation
                     begin
                       if cuf_check_attr_suffix in flags then
                         begin
-                          if searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern+CustomAttributeSuffix,srsym,srsymtable) then
+                          if SearchSym_In_Module(TUnitSym(srsym).module,CurrentScanner.pattern+CustomAttributeSuffix,srsym,srsymtable) then
                             exit(true);
                         end;
                       { Resolve the default Char/PChar from the invocation's
                         text model, regardless of the System alias. }
                       if ((CurrentScanner.pattern='CHAR') or
                           (CurrentScanner.pattern='PCHAR')) and
-                         (TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit) then
+                         (TModule(TUnitSym(srsym).module).GlobalSymTable=SystemUnit) then
                         begin
                           if CurrentScanner.pattern='PCHAR' then
                             if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                              searchsym_in_module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                              SearchSym_In_Module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                             else
-                              searchsym_in_module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                              SearchSym_In_Module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
                           else if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                            searchsym_in_module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
+                            SearchSym_In_Module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
                           else
-                            searchsym_in_module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
+                            SearchSym_In_Module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
                         end
                       else
                         if (cuf_allow_specialize in flags) and (CurrentScanner.idtoken=_SPECIALIZE) then
@@ -434,30 +434,30 @@ implementation
                             if CurrentScanner.token=_ID then
                               begin
                                 if (cuf_check_attr_suffix in flags) and
-                                    searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern+CustomAttributeSuffix,srsym,srsymtable) then
+                                    SearchSym_In_Module(TUnitSym(srsym).module,CurrentScanner.pattern+CustomAttributeSuffix,srsym,srsymtable) then
                                   exit(true);
-                                searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
+                                SearchSym_In_Module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                               end;
                           end
                         else
-                          searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
+                          SearchSym_In_Module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                      end;
                   _STRING:
                     begin
                       if cs_compilesystem in CurrentSettings.ModuleSwitches then
                         Message(parser_e_nostringaliasinsystem);
                       { system.string? }
-                      if TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit then
+                      if TModule(TUnitSym(srsym).module).GlobalSymTable=SystemUnit then
                         begin
                           if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                             begin
                               if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                                searchsym_in_module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
+                                SearchSym_In_Module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                               else
-                                searchsym_in_module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
+                                SearchSym_In_Module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
                             end
                           else
-                            searchsym_in_module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
+                            SearchSym_In_Module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
                           tokentoconsume:=_STRING;
                         end;
                     end
@@ -483,7 +483,7 @@ implementation
         result:=try_consume_unitsym(srsym,srsymtable,tokentoconsume,flags,dummy,sympattern);
       end;
 
-    function try_consume_hintdirective(var symopt:TSymOptions; var deprecatedmsg:PShortString):boolean;
+    function try_consume_hintdirective(var symopt:TSymOptions; var DeprecatedMsg:PShortString):boolean;
       var
         last_is_deprecated:boolean;
       begin
@@ -541,12 +541,12 @@ implementation
           { handle deprecated message }
           if ((CurrentScanner.token=_CSTRING) or (CurrentScanner.token=_CCHAR)) and last_is_deprecated then
             begin
-              if not Assigned(deprecatedmsg) then
+              if not Assigned(DeprecatedMsg) then
                 begin
                   if CurrentScanner.token=_CSTRING then
-                    deprecatedmsg:=StringDup(CurrentScanner.cstringpattern)
+                    DeprecatedMsg:=StringDup(CurrentScanner.cstringpattern)
                   else
-                    deprecatedmsg:=StringDup(CurrentScanner.pattern);
+                    DeprecatedMsg:=StringDup(CurrentScanner.pattern);
                 end;
               consume(CurrentScanner.token);
               include(symopt,sp_has_deprecated_msg);

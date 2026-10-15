@@ -88,7 +88,7 @@ interface
           destructor Destroy;override;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
           function pass_1 : TNode;override;
@@ -232,7 +232,7 @@ interface
          { refs and deletenode can hook to this copy once they get copied too    }
          hookoncopy                 : PTempInfo;
          typedef                    : TDef;
-         typedefderef               : TDeref;
+         TypeDefDeref               : TDeref;
          temptype                   : TTempType;
          owner                      : TTempCreateNode;
          withnode                   : TNode;
@@ -281,7 +281,7 @@ interface
           constructor create_reference(_typedef:TDef; _size: TCGInt; _temptype: TTempType;allowreg:boolean; templvalue: TNode; readonly: boolean);
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           function dogetcopy: TNode; override;
           function pass_1 : TNode; override;
@@ -398,7 +398,7 @@ implementation
         if (p.nodetype<>blockn) or
             not Assigned(p.resultdef) or
             (p.resultdef.typ<>procdef) or
-            not (po_anonymous in TProcDef(p.resultdef).procoptions) then
+            not (po_anonymous in TProcDef(p.resultdef).ProcOptions) then
           exit;
 
         { skip the nothing node created by internalstatements }
@@ -485,7 +485,7 @@ implementation
     function TNothingNode.pass_typecheck:TNode;
       begin
         result:=nil;
-        resultdef:=voidtype;
+        resultdef:=VoidType;
       end;
 
 
@@ -521,7 +521,7 @@ implementation
          result:=nil;
          include(transientflags,tnf_error);
          CodeGenError:=true;
-         resultdef:=generrordef;
+         resultdef:=GenErrorDef;
       end;
 
 
@@ -560,7 +560,7 @@ implementation
     function TSpecializeNode.pass_typecheck:TNode;
       begin
          result:=nil;
-         resultdef:=cundefinedtype;
+         resultdef:=CUndefinedType;
       end;
 
 
@@ -591,7 +591,7 @@ implementation
 
     function TFinalizeTempsNode.pass_typecheck: TNode;
       begin
-        resultdef:=voidtype;
+        resultdef:=VoidType;
         result:=nil;
       end;
 
@@ -675,7 +675,7 @@ implementation
     function TStatementNode.pass_typecheck:TNode;
       begin
          result:=nil;
-         resultdef:=voidtype;
+         resultdef:=VoidType;
 
          { left is the statement itself calln assignn or a complex one }
          TypeCheckPass(left);
@@ -916,7 +916,7 @@ implementation
             { ensure the node is first passed, so the resultdef does not get changed if the
               the type conv. below is merged }
             FirstPass(result);
-            result:=CTypeConvNode.create_internal(result,TTempRefNode(a[3].left).resultdef);
+            result:=CTypeConvNode.Create_Internal(result,TTempRefNode(a[3].left).resultdef);
             FirstPass(result);
             exit;
           end;
@@ -929,7 +929,7 @@ implementation
          hp : TStatementNode;
       begin
          result:=nil;
-         resultdef:=voidtype;
+         resultdef:=VoidType;
 
          hp:=TStatementNode(left);
          while Assigned(hp) do
@@ -1126,17 +1126,17 @@ implementation
       end;
 
 
-    procedure TAsmNode.buildderefimpl;
+    procedure TAsmNode.BuildDerefImpl;
       var
         hp : TAI;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         if not(asmnf_get_asm_position in asmnodeflags) then
           begin
             hp:=TAI(p_asm.first);
             while Assigned(hp) do
              begin
-               hp.buildderefimpl;
+               hp.BuildDerefImpl;
                hp:=TAI(hp.next);
              end;
           end;
@@ -1181,7 +1181,7 @@ implementation
     function TAsmNode.pass_typecheck:TNode;
       begin
         result:=nil;
-        resultdef:=voidtype;
+        resultdef:=VoidType;
         if not(asmnf_get_asm_position in asmnodeflags) then
           include(CurrentProcInfo.flags,pi_has_assembler_block);
       end;
@@ -1371,7 +1371,7 @@ implementation
         if not Assigned(tempinfo) then
           exit;
 
-        WriteLn(T, PrintNodeIndention, '<typedef>', SanitiseXMLString(tempinfo^.typedef.typesymbolprettyname), '</typedef>');
+        WriteLn(T, PrintNodeIndention, '<typedef>', SanitiseXMLString(tempinfo^.typedef.TypeSymbolPrettyName), '</typedef>');
 
         NotFirst := False;
         for Flag := Low(TTempInfoFlag) to High(TTempInfoFlag) do
@@ -1409,8 +1409,8 @@ implementation
         tempinfo^.withnode := nil;
         if allowreg and
            { temp must fit a single register }
-           (TStoredDef(_typedef).is_fpuregable or
-            (TStoredDef(_typedef).is_intregable and
+           (TStoredDef(_typedef).Is_FPURegable or
+            (TStoredDef(_typedef).Is_IntRegable and
              (_size<=TCGSize2Size[OS_64]))) and
            { size of register operations must be known }
            (def_cgsize(_typedef)<>OS_NO) and
@@ -1423,7 +1423,7 @@ implementation
     constructor TTempCreateNode.create_withnode(_typedef: TDef; _size: TCGInt; _temptype: TTempType; allowreg:boolean; withnode: TNode);
       begin
         self.create(_typedef,_size,_temptype,allowreg);
-        tempinfo^.withnode:=withnode.getcopy;
+        tempinfo^.withnode:=withnode.GetCopy;
       end;
 
 
@@ -1475,12 +1475,12 @@ implementation
         excludetempflag(ti_nextref_set_hookoncopy_nil);
 
         if Assigned(tempinfo^.withnode) then
-          n.tempinfo^.withnode := tempinfo^.withnode.getcopy
+          n.tempinfo^.withnode := tempinfo^.withnode.GetCopy
         else
           n.tempinfo^.withnode := nil;
 
         if Assigned(tempinfo^.tempinitcode) then
-          n.tempinfo^.tempinitcode := tempinfo^.tempinitcode.getcopy
+          n.tempinfo^.tempinitcode := tempinfo^.tempinitcode.GetCopy
         else
           n.tempinfo^.tempinitcode := nil;
 
@@ -1496,7 +1496,7 @@ implementation
         new(tempinfo);
         fillchar(tempinfo^,sizeof(tempinfo^),0);
         ppufile.GetSet(TPPUSet2(tempinfo^.flags));
-        ppufile.getderef(tempinfo^.typedefderef);
+        ppufile.GetDeref(tempinfo^.TypeDefDeref);
         tempinfo^.temptype := TTempType(ppufile.GetByte);
         tempinfo^.owner:=self;
         tempinfo^.withnode:=ppuloadnode(ppufile);
@@ -1509,28 +1509,28 @@ implementation
         inherited ppuwrite(ppufile);
         ppufile.PutLongInt(size);
         ppufile.PutSet(TPPUSet2(tempinfo^.flags));
-        ppufile.putderef(tempinfo^.typedefderef);
+        ppufile.PutDeref(tempinfo^.TypeDefDeref);
         ppufile.PutByte(byte(tempinfo^.temptype));
         ppuwritenode(ppufile,tempinfo^.withnode);
         ppuwritenode(ppufile,ftemplvalue);
       end;
 
 
-    procedure TTempCreateNode.buildderefimpl;
+    procedure TTempCreateNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
-        tempinfo^.typedefderef.build(tempinfo^.typedef);
+        inherited BuildDerefImpl;
+        tempinfo^.TypeDefDeref.build(tempinfo^.typedef);
         if Assigned(tempinfo^.withnode) then
-          tempinfo^.withnode.buildderefimpl;
+          tempinfo^.withnode.BuildDerefImpl;
         if Assigned(ftemplvalue) then
-          ftemplvalue.buildderefimpl;
+          ftemplvalue.BuildDerefImpl;
       end;
 
 
     procedure TTempCreateNode.derefimpl;
       begin
         inherited derefimpl;
-        tempinfo^.typedef:=TDef(tempinfo^.typedefderef.resolve);
+        tempinfo^.typedef:=TDef(tempinfo^.TypeDefDeref.resolve);
         if Assigned(tempinfo^.withnode) then
           tempinfo^.withnode.derefimpl;
         if Assigned(ftemplvalue) then
@@ -1557,7 +1557,7 @@ implementation
           enabled a certain type to be stored in a register while the current settings do not support this, so correct this here
           if needed
         }
-        if not(TStoredDef(tempinfo^.typedef).is_fpuregable) and not(TStoredDef(tempinfo^.typedef).is_intregable) and (ti_may_be_in_reg in tempflags) then
+        if not(TStoredDef(tempinfo^.typedef).Is_FPURegable) and not(TStoredDef(tempinfo^.typedef).Is_IntRegable) and (ti_may_be_in_reg in tempflags) then
           excludetempflag(ti_may_be_in_reg);
       end;
 
@@ -1566,7 +1566,7 @@ implementation
       begin
         result := nil;
         { a tempcreatenode doesn't have a resultdef, only temprefnodes do }
-        resultdef := voidtype;
+        resultdef := VoidType;
         if Assigned(tempinfo^.withnode) then
           TypeCheckPass(tempinfo^.withnode);
         if Assigned(tempinfo^.tempinitcode) then
@@ -1592,7 +1592,7 @@ implementation
         first: Boolean;
       begin
         inherited printnodedata(t);
-        WriteLn(t,PrintNodeIndention,'size = ',size,', temptypedef = ',tempinfo^.typedef.typesymbolprettyname,' = "',
+        WriteLn(t,PrintNodeIndention,'size = ',size,', temptypedef = ',tempinfo^.typedef.TypeSymbolPrettyName,' = "',
           tempinfo^.typedef.GetTypeName,'", tempinfo = $',HexStr(ptrint(tempinfo),sizeof(ptrint)*2));
         write(t,PrintNodeIndention,'[');
         first:=true;
@@ -1703,7 +1703,7 @@ implementation
           begin
             if tempinfo^.typedef.typ=floatdef then
               begin
-                if not use_vectorfpu(tempinfo^.typedef) then
+                if not Use_VectorFPU(tempinfo^.typedef) then
                   if (tempinfo^.temptype = tt_persistent) then
                     expectloc := LOC_CFPUREGISTER
                   else
@@ -1761,7 +1761,7 @@ implementation
         notfirst : Boolean;
       begin
         inherited printnodedata(t);
-        write(t,PrintNodeIndention,'temptypedef = ',tempinfo^.typedef.typesymbolprettyname,' = "',
+        write(t,PrintNodeIndention,'temptypedef = ',tempinfo^.typedef.TypeSymbolPrettyName,' = "',
           tempinfo^.typedef.GetTypeName,'", (tempinfo = $',HexStr(ptrint(tempinfo),sizeof(ptrint)*2),' flags = [');
         notfirst:=false;
         for f in tempinfo^.flags do
@@ -1863,7 +1863,7 @@ implementation
     function TTempDeleteNode.pass_typecheck: TNode;
       begin
         result := nil;
-        resultdef := voidtype;
+        resultdef := VoidType;
       end;
 
     function TTempDeleteNode.docompare(p: TNode): boolean;
@@ -1884,7 +1884,7 @@ implementation
     procedure TTempDeleteNode.printnodedata(var t:text);
       begin
         inherited printnodedata(t);
-        WriteLn(t,PrintNodeIndention,'release_to_normal: ',release_to_normal,', temptypedef = ',tempinfo^.typedef.typesymbolprettyname,' = "',
+        WriteLn(t,PrintNodeIndention,'release_to_normal: ',release_to_normal,', temptypedef = ',tempinfo^.typedef.TypeSymbolPrettyName,' = "',
           tempinfo^.typedef.GetTypeName,'", temptype = ',tempinfo^.temptype,', tempinfo = $',HexStr(ptrint(tempinfo),sizeof(ptrint)*2));
       end;
 

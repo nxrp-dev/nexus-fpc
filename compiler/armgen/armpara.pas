@@ -34,9 +34,9 @@ type
     { Returns whether a def is a "homogeneous float array" at the machine level.
       This means that in the memory layout, the def only consists of maximally
       4 floating point values that appear consecutively in memory }
-    function is_hfa(p: TDef; out basedef: TDef) : boolean;
+    function is_hfa(p: TDef; out BaseDef: TDef) : boolean;
    private
-    function is_hfa_internal(p: TDef; var basedef: TDef; var elecount: LongInt): boolean;
+    function is_hfa_internal(p: TDef; var BaseDef: TDef; var EleCount: LongInt): boolean;
   end;
 
 
@@ -46,23 +46,23 @@ implementation
     symconst,symdef,SymSym,symutil,defutil;
 
 
-  function TArmGenParaManager.is_hfa(p: TDef; out basedef: TDef): boolean;
+  function TArmGenParaManager.is_hfa(p: TDef; out BaseDef: TDef): boolean;
     var
-      elecount: LongInt;
+      EleCount: LongInt;
     begin
       result:=false;
-      basedef:=nil;
-      elecount:=0;
-      result:=is_hfa_internal(p,basedef,elecount);
+      BaseDef:=nil;
+      EleCount:=0;
+      result:=is_hfa_internal(p,BaseDef,EleCount);
       result:=
         result and
-        (elecount>0) and
-        (elecount<=4) and
-        (p.size=basedef.size*elecount)
+        (EleCount>0) and
+        (EleCount<=4) and
+        (p.size=BaseDef.size*EleCount)
       end;
 
 
-  function TArmGenParaManager.is_hfa_internal(p: TDef; var basedef: TDef; var elecount: LongInt): boolean;
+  function TArmGenParaManager.is_hfa_internal(p: TDef; var BaseDef: TDef; var EleCount: LongInt): boolean;
     var
       i: LongInt;
       sym: TSym;
@@ -75,40 +75,40 @@ implementation
             if is_special_array(p) then
               exit;
             { an array of empty records has no influence }
-            if TArrayDef(p).elementdef.size=0 then
+            if TArrayDef(p).ElementDef.size=0 then
               begin
                 result:=true;
                 exit
               end;
             tmpelecount:=0;
-            if not is_hfa_internal(TArrayDef(p).elementdef,basedef,tmpelecount) then
+            if not is_hfa_internal(TArrayDef(p).ElementDef,BaseDef,tmpelecount) then
               exit;
             { tmpelecount now contains the number of hfa elements in a
               single array element (e.g. 2 if it's an array of a record
               containing two singles) -> multiply by number of elements
               in the array }
-            inc(elecount,TArrayDef(p).elecount*tmpelecount);
-            if elecount>4 then
+            inc(EleCount,TArrayDef(p).EleCount*tmpelecount);
+            if EleCount>4 then
               exit;
             result:=true;
           end;
         floatdef:
           begin
-            if not Assigned(basedef) then
-              basedef:=p
-            else if basedef<>p then
+            if not Assigned(BaseDef) then
+              BaseDef:=p
+            else if BaseDef<>p then
               exit;
-            inc(elecount);
+            inc(EleCount);
             result:=true;
           end;
         recorddef:
           begin
-            for i:=0 to TAbstractRecordDef(p).SymTable.symlist.count-1 do
+            for i:=0 to TAbstractRecordDef(p).SymTable.SymList.count-1 do
               begin
-                sym:=TSym(TAbstractRecordDef(p).SymTable.symlist[i]);
+                sym:=TSym(TAbstractRecordDef(p).SymTable.SymList[i]);
                 if not is_normal_fieldvarsym(sym) then
                   continue;
-                if not is_hfa_internal(TFieldVarSym(sym).vardef,basedef,elecount) then
+                if not is_hfa_internal(TFieldVarSym(sym).vardef,BaseDef,EleCount) then
                   exit
               end;
             result:=true;

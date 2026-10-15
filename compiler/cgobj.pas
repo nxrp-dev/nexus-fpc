@@ -204,7 +204,7 @@ unit cgobj;
                   contains all of the "sizeleft" bytes).)
            @param(align the alignment of the paraloc in case it's a reference)
           }
-          procedure a_load_cgparaloc_ref(list : TAsmList;const paraloc : TCGParaLocation;const ref : TReference;sizeleft : TCGInt;align : LongInt);
+          procedure a_load_cgparaloc_ref(list : TAsmList;const ParaLoc : TCGParaLocation;const ref : TReference;sizeleft : TCGInt;align : LongInt);
 
           {# Load a cgparaloc into any kind of register (int, fp, mm).
 
@@ -213,7 +213,7 @@ unit cgobj;
            @param(reg the destination register)
            @param(align the alignment of the paraloc in case it's a reference)
           }
-          procedure a_load_cgparaloc_anyreg(list : TAsmList;regsize : TCgSize;const paraloc : TCGParaLocation;reg : TRegister;align : LongInt);
+          procedure a_load_cgparaloc_anyreg(list : TAsmList;regsize : TCgSize;const ParaLoc : TCGParaLocation;reg : TRegister;align : LongInt);
 
           { Remarks:
             * If a method specifies a size you have only to take care
@@ -476,9 +476,9 @@ unit cgobj;
         procedure a_load128_reg_loc(list : TAsmList;reg : TRegister128;const l : TLocation);virtual;
         procedure a_load128_const_reg(list : TAsmList;valuelo,valuehi : int64;reg : TRegister128);virtual;
 
-        procedure a_load128_loc_cgpara(list : TAsmList;const l : TLocation;const paraloc : TCGPara);virtual;
-        procedure a_load128_ref_cgpara(list: TAsmList; const r: TReference;const paraloc: TCGPara);
-        procedure a_load128_reg_cgpara(list: TAsmList; reg: TRegister128;const paraloc: TCGPara);
+        procedure a_load128_loc_cgpara(list : TAsmList;const l : TLocation;const ParaLoc : TCGPara);virtual;
+        procedure a_load128_ref_cgpara(list: TAsmList; const r: TReference;const ParaLoc: TCGPara);
+        procedure a_load128_reg_cgpara(list: TAsmList; reg: TRegister128;const ParaLoc: TCGPara);
     end;
 
     { Creates a tregister128 record from 2 64 Bit registers. }
@@ -1148,68 +1148,68 @@ implementation
       end;
 
 
-    procedure TCG.a_load_cgparaloc_ref(list : TAsmList;const paraloc : TCGParaLocation;const ref : TReference;sizeleft : TCGInt;align : LongInt);
+    procedure TCG.a_load_cgparaloc_ref(list : TAsmList;const ParaLoc : TCGParaLocation;const ref : TReference;sizeleft : TCGInt;align : LongInt);
       var
         href : TReference;
         hreg : TRegister;
         cgsize: TCgSize;
       begin
-        case paraloc.loc of
+        case ParaLoc.loc of
           LOC_REGISTER :
             begin
-              hreg:=paraloc.register;
-              cgsize:=paraloc.size;
-              if (paraloc.shiftval>0) and
+              hreg:=ParaLoc.register;
+              cgsize:=ParaLoc.size;
+              if (ParaLoc.shiftval>0) and
 	        not ((TargetInfo.endian=endian_big) and (sizeleft in [3,5,6,7])) then
-                a_op_const_reg_reg(list,OP_SHL,OS_INT,paraloc.shiftval,paraloc.register,paraloc.register)
+                a_op_const_reg_reg(list,OP_SHL,OS_INT,ParaLoc.shiftval,ParaLoc.register,ParaLoc.register)
               { in case the original size was 3 or 5/6/7 bytes, the value was
                 shifted to the top of the to 4 resp. 8 byte register on the
                 caller side and needs to be stored with those bytes at the
                 start of the reference -> don't shift right }
-              else if (paraloc.shiftval<0)
+              else if (ParaLoc.shiftval<0)
 {$ifdef LIMIT_NEG_SHIFTVALUES}
 {$ifdef CPU64BITALU}
-                      and ((-paraloc.shiftval) in [56{for byte},48{for two bytes},32{for four bytes}])
+                      and ((-ParaLoc.shiftval) in [56{for byte},48{for two bytes},32{for four bytes}])
 {$else}
-                      and ((-paraloc.shiftval) in [24{for byte},16{for two bytes}])
+                      and ((-ParaLoc.shiftval) in [24{for byte},16{for two bytes}])
 {$endif}
 {$endif}
                   then
                 begin
-                  a_op_const_reg_reg(list,OP_SHR,OS_INT,-paraloc.shiftval,paraloc.register,paraloc.register);
+                  a_op_const_reg_reg(list,OP_SHR,OS_INT,-ParaLoc.shiftval,ParaLoc.register,ParaLoc.register);
                   { convert to a register of 1/2/4 bytes in size, since the
                     original register had to be made larger to be able to hold
                     the shifted value }
-                  cgsize:=int_cgsize(tcgsize2size[OS_INT]-(-paraloc.shiftval div 8));
+                  cgsize:=int_cgsize(tcgsize2size[OS_INT]-(-ParaLoc.shiftval div 8));
                   if cgsize=OS_NO then
                     cgsize:=OS_INT;
                   hreg:=getintregister(list,cgsize);
-                  a_load_reg_reg(list,OS_INT,cgsize,paraloc.register,hreg);
+                  a_load_reg_reg(list,OS_INT,cgsize,ParaLoc.register,hreg);
                 end;
               { use the exact size to avoid overwriting of adjacent data }
               if tcgsize2size[cgsize]<=sizeleft then
-                a_load_reg_ref(list,paraloc.size,cgsize,hreg,ref)
+                a_load_reg_ref(list,ParaLoc.size,cgsize,hreg,ref)
               else
                 case sizeleft of
                   1,2,4,8:
-                    a_load_reg_ref(list,paraloc.size,int_cgsize(sizeleft),hreg,ref);
+                    a_load_reg_ref(list,ParaLoc.size,int_cgsize(sizeleft),hreg,ref);
                   3:
                     begin
                       if TargetInfo.endian=endian_big then
                         begin
                           href:=ref;
                           inc(href.offset,2);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
                           a_op_const_reg_reg(list,OP_SHR,OS_INT,8,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,ref);
                         end
                       else
                         begin
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,ref);
                           href:=ref;
                           inc(href.offset,2);
                           a_op_const_reg_reg(list,OP_SHR,cgsize,16,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
                         end
                     end;
                   5:
@@ -1218,17 +1218,17 @@ implementation
                         begin
                           href:=ref;
                           inc(href.offset,4);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
                           a_op_const_reg_reg(list,OP_SHR,OS_INT,8,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
                         end
                       else
                        begin
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
                           href:=ref;
                           inc(href.offset,4);
                           a_op_const_reg_reg(list,OP_SHR,cgsize,32,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
                         end
                     end;
                   6:
@@ -1237,17 +1237,17 @@ implementation
                         begin
                           href:=ref;
                           inc(href.offset,4);
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,href);
                           a_op_const_reg_reg(list,OP_SHR,OS_INT,16,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
                         end
                       else
                        begin
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
                           href:=ref;
                           inc(href.offset,4);
                           a_op_const_reg_reg(list,OP_SHR,cgsize,32,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,href);
                         end
                     end;
                   7:
@@ -1256,28 +1256,28 @@ implementation
                         begin
                           href:=ref;
                           inc(href.offset,6);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
 
                           a_op_const_reg_reg(list,OP_SHR,OS_INT,8,hreg,hreg);
                           href:=ref;
                           inc(href.offset,4);
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,href);
 
                           a_op_const_reg_reg(list,OP_SHR,OS_INT,16,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
                         end
                       else
                        begin
-                          a_load_reg_ref(list,paraloc.size,OS_32,hreg,ref);
+                          a_load_reg_ref(list,ParaLoc.size,OS_32,hreg,ref);
 
                           href:=ref;
                           inc(href.offset,4);
                           a_op_const_reg_reg(list,OP_SHR,cgsize,32,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_16,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_16,hreg,href);
 
                           inc(href.offset,2);
                           a_op_const_reg_reg(list,OP_SHR,cgsize,16,hreg,hreg);
-                          a_load_reg_ref(list,paraloc.size,OS_8,hreg,href);
+                          a_load_reg_ref(list,ParaLoc.size,OS_8,hreg,href);
                         end
                     end;
                   else
@@ -1287,22 +1287,22 @@ implementation
             end;
           LOC_MMREGISTER :
             begin
-              case paraloc.size of
+              case ParaLoc.size of
                 OS_F32,
                 OS_F64,
                 OS_F128:
-                  a_loadmm_reg_ref(list,paraloc.size,paraloc.size,paraloc.register,ref,mms_movescalar);
+                  a_loadmm_reg_ref(list,ParaLoc.size,ParaLoc.size,ParaLoc.register,ref,mms_movescalar);
                 OS_M8..OS_M512:
-                  a_loadmm_reg_ref(list,paraloc.size,paraloc.size,paraloc.register,ref,nil);
+                  a_loadmm_reg_ref(list,ParaLoc.size,ParaLoc.size,ParaLoc.register,ref,nil);
                 else
                   InternalError(2010053102);
               end;
             end;
           LOC_FPUREGISTER :
-            a_loadfpu_reg_ref(list,paraloc.size,paraloc.size,paraloc.register,ref);
+            a_loadfpu_reg_ref(list,ParaLoc.size,ParaLoc.size,ParaLoc.register,ref);
           LOC_REFERENCE :
             begin
-              reference_reset_base(href,paraloc.reference.index,paraloc.reference.offset,ctempposinvalid,align,[]);
+              reference_reset_base(href,ParaLoc.reference.index,ParaLoc.reference.offset,ctempposinvalid,align,[]);
               { use concatcopy, because it can also be a float which fails when
                 load_ref_ref is used. Don't copy data when the references are equal }
               if not((href.base=ref.base) and (href.offset=ref.offset)) then
@@ -1314,23 +1314,23 @@ implementation
       end;
 
 
-    procedure TCG.a_load_cgparaloc_anyreg(list: TAsmList;regsize: TCgSize;const paraloc: TCGParaLocation;reg: TRegister;align: LongInt);
+    procedure TCG.a_load_cgparaloc_anyreg(list: TAsmList;regsize: TCgSize;const ParaLoc: TCGParaLocation;reg: TRegister;align: LongInt);
       var
         href : TReference;
       begin
-         case paraloc.loc of
+         case ParaLoc.loc of
            LOC_REGISTER :
              begin
-               if paraloc.shiftval<0 then
-                 a_op_const_reg_reg(list,OP_SHR,OS_INT,-paraloc.shiftval,paraloc.register,paraloc.register);
+               if ParaLoc.shiftval<0 then
+                 a_op_const_reg_reg(list,OP_SHR,OS_INT,-ParaLoc.shiftval,ParaLoc.register,ParaLoc.register);
                case getregtype(reg) of
                  R_ADDRESSREGISTER,
                  R_INTREGISTER:
-                   a_load_reg_reg(list,paraloc.size,regsize,paraloc.register,reg);
+                   a_load_reg_reg(list,ParaLoc.size,regsize,ParaLoc.register,reg);
                  R_MMREGISTER:
-                   a_loadmm_intreg_reg(list,paraloc.size,regsize,paraloc.register,reg,mms_movescalar);
+                   a_loadmm_intreg_reg(list,ParaLoc.size,regsize,ParaLoc.register,reg,mms_movescalar);
                  R_FPUREGISTER:
-                   a_loadfpu_intreg_reg(list,paraloc.size,regsize,paraloc.register,reg);
+                   a_loadfpu_intreg_reg(list,ParaLoc.size,regsize,ParaLoc.register,reg);
                  else
                    InternalError(2009112422);
                end;
@@ -1340,16 +1340,16 @@ implementation
                case getregtype(reg) of
                  R_ADDRESSREGISTER,
                  R_INTREGISTER:
-                   a_loadmm_reg_intreg(list,paraloc.size,regsize,paraloc.register,reg,mms_movescalar);
+                   a_loadmm_reg_intreg(list,ParaLoc.size,regsize,ParaLoc.register,reg,mms_movescalar);
                  R_MMREGISTER:
                    begin
-                     case paraloc.size of
+                     case ParaLoc.size of
                        OS_F32,
                        OS_F64,
                        OS_F128:
-                        a_loadmm_reg_reg(list,paraloc.size,regsize,paraloc.register,reg,mms_movescalar);
+                        a_loadmm_reg_reg(list,ParaLoc.size,regsize,ParaLoc.register,reg,mms_movescalar);
                        OS_M8..OS_M512:
-                         a_loadmm_reg_reg(list,paraloc.size,paraloc.size,paraloc.register,reg,nil);
+                         a_loadmm_reg_reg(list,ParaLoc.size,ParaLoc.size,ParaLoc.register,reg,nil);
                        else
                          InternalError(2010053106);
                      end;
@@ -1362,22 +1362,22 @@ implementation
              begin
                case getregtype(reg) of
                  R_FPUREGISTER:
-                   a_loadfpu_reg_reg(list,paraloc.size,regsize,paraloc.register,reg);
+                   a_loadfpu_reg_reg(list,ParaLoc.size,regsize,ParaLoc.register,reg);
                  R_INTREGISTER:
-                   a_loadfpu_reg_intreg(list,paraloc.size,regsize,paraloc.register,reg);
+                   a_loadfpu_reg_intreg(list,ParaLoc.size,regsize,ParaLoc.register,reg);
                  else
                    InternalError(2015031401);
                  end;
              end;
            LOC_REFERENCE :
              begin
-               reference_reset_base(href,paraloc.reference.index,paraloc.reference.offset,ctempposinvalid,align,[]);
+               reference_reset_base(href,ParaLoc.reference.index,ParaLoc.reference.offset,ctempposinvalid,align,[]);
                case getregtype(reg) of
                  R_ADDRESSREGISTER,
                  R_INTREGISTER :
-                   a_load_ref_reg(list,paraloc.size,regsize,href,reg);
+                   a_load_ref_reg(list,ParaLoc.size,regsize,href,reg);
                  R_FPUREGISTER :
-                   a_loadfpu_ref_reg(list,paraloc.size,regsize,href,reg);
+                   a_loadfpu_ref_reg(list,ParaLoc.size,regsize,href,reg);
                  R_MMREGISTER :
                    { not paraloc.size, because it may be OS_64 instead of
                      OS_F64 in case the parameter is passed using integer
@@ -1827,42 +1827,42 @@ implementation
         href : TReference;
         srcsize,
         hsize: TCgSize;
-        paraloc: PCGParaLocation;
+        ParaLoc: PCGParaLocation;
         sizeleft: TCGInt;
       begin
         sizeleft:=cgpara.intsize;
-        paraloc:=cgpara.location;
+        ParaLoc:=cgpara.location;
         paramanager.alloccgpara(list,cgpara);
         srcref:=ref;
         repeat
-          case paraloc^.loc of
+          case ParaLoc^.loc of
             LOC_FPUREGISTER,LOC_CFPUREGISTER:
               begin
                 { destination: can be something different in case of a record passed in fpu registers }
-                if is_float_cgsize(paraloc^.size) then
-                  hsize:=paraloc^.size
+                if is_float_cgsize(ParaLoc^.size) then
+                  hsize:=ParaLoc^.size
                 else
-                  hsize:=int_float_cgsize(tcgsize2size[paraloc^.size]);
+                  hsize:=int_float_cgsize(tcgsize2size[ParaLoc^.size]);
                 { source: the size comparison is to catch F128 passed in two 64 bit floating point registers }
                 if is_float_cgsize(size) and
-                   (tcgsize2size[size]<=tcgsize2size[paraloc^.size]) then
+                   (tcgsize2size[size]<=tcgsize2size[ParaLoc^.size]) then
                   srcsize:=size
                 else
                   srcsize:=hsize;
-                a_loadfpu_ref_reg(list,srcsize,hsize,srcref,paraloc^.register);
+                a_loadfpu_ref_reg(list,srcsize,hsize,srcref,ParaLoc^.register);
               end;
             LOC_REFERENCE,LOC_CREFERENCE:
               begin
-                if Assigned(paraloc^.next) then
+                if Assigned(ParaLoc^.next) then
                   InternalError(2020050101);
-                reference_reset_base(href,paraloc^.reference.index,paraloc^.reference.offset,ctempposinvalid,NewAlignment(cgpara.alignment,cgpara.intsize-sizeleft),[]);
+                reference_reset_base(href,ParaLoc^.reference.index,ParaLoc^.reference.offset,ctempposinvalid,NewAlignment(cgpara.alignment,cgpara.intsize-sizeleft),[]);
                 { concatcopy should choose the best way to copy the data }
                 g_concatcopy(list,srcref,href,sizeleft);
               end;
             LOC_REGISTER,LOC_CREGISTER:
               begin
                 { force integer size }
-                hsize:=int_cgsize(tcgsize2size[paraloc^.size]);
+                hsize:=int_cgsize(tcgsize2size[ParaLoc^.size]);
   {$ifndef cpu64bitalu}
                 if (hsize in [OS_S64,OS_64]) then
                   begin
@@ -1873,16 +1873,16 @@ implementation
                 else
   {$endif not cpu64bitalu}
                   begin
-                    a_load_ref_reg(list,hsize,hsize,srcref,paraloc^.register)
+                    a_load_ref_reg(list,hsize,hsize,srcref,ParaLoc^.register)
                   end;
               end
             else
               InternalError(200402201);
           end;
-          inc(srcref.offset,tcgsize2size[paraloc^.size]);
-          dec(sizeleft,tcgsize2size[paraloc^.size]);
-          paraloc:=paraloc^.next;
-        until not Assigned(paraloc);
+          inc(srcref.offset,tcgsize2size[ParaLoc^.size]);
+          dec(sizeleft,tcgsize2size[ParaLoc^.size]);
+          ParaLoc:=ParaLoc^.next;
+        until not Assigned(ParaLoc);
       end;
 
 
@@ -2512,7 +2512,7 @@ implementation
         paraloc1,paraloc2,paraloc3 : TCGPara;
         pd : TProcDef;
       begin
-        pd:=search_system_proc('MOVE');
+        pd:=Search_System_Proc('MOVE');
         paraloc1.init;
         paraloc2.init;
         paraloc3.init;
@@ -2573,9 +2573,9 @@ implementation
         regs_to_save_address,
         regs_to_save_mm : TCPURegisterArray;
       begin
-        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
         { calculate temp. size }
         size:=0;
         for r:=low(regs_to_save_int) to high(regs_to_save_int) do
@@ -2671,9 +2671,9 @@ implementation
       begin
         if not(pi_has_saved_regs in CurrentProcInfo.flags) then
           exit;
-        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
         { Copy registers from temp }
         href:=CurrentProcInfo.save_regs_ref;
         for r:=low(regs_to_save_int) to high(regs_to_save_int) do
@@ -2722,17 +2722,17 @@ implementation
       var
         hsym : TSym;
         href : TReference;
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
         { calculate the parameter info for the procdef }
-        procdef.init_paraloc_info(callerside);
-        hsym:=TSym(procdef.parast.Find('self'));
+        procdef.Init_ParaLoc_Info(callerside);
+        hsym:=TSym(procdef.ParaST.Find('self'));
         if not(Assigned(hsym) and
                (hsym.typ=paravarsym)) then
           InternalError(200305251);
-        paraloc:=TParaVarSym(hsym).paraloc[callerside].location;
-        while paraloc<>nil do
-          with paraloc^ do
+        ParaLoc:=TParaVarSym(hsym).ParaLoc[callerside].location;
+        while ParaLoc<>nil do
+          with ParaLoc^ do
             begin
               case loc of
                 LOC_REGISTER:
@@ -2747,7 +2747,7 @@ implementation
                 else
                   InternalError(200309189);
               end;
-              paraloc:=next;
+              ParaLoc:=next;
             end;
       end;
 
@@ -2771,7 +2771,7 @@ implementation
           system_i386_iphonesim:
             begin
               nlsymname:='L'+symname+'$non_lazy_ptr';
-              l:=CurrentAsmData.getasmsymbol(nlsymname);
+              l:=CurrentAsmData.GetAsmSymbol(nlsymname);
               if not(Assigned(l)) then
                 begin
                   if is_data in flags then
@@ -2779,7 +2779,7 @@ implementation
                   else
                     symtyp:=AT_FUNCTION;
                   new_section(CurrentAsmData.asmlists[al_picdata],sec_data_nonlazy,'',sizeof(PInt));
-                  l:=CurrentAsmData.DefineAsmSymbol(nlsymname,AB_LOCAL,AT_DATA,voidpointertype);
+                  l:=CurrentAsmData.DefineAsmSymbol(nlsymname,AB_LOCAL,AT_DATA,VoidPointerType);
                   CurrentAsmData.asmlists[al_picdata].concat(TAISymbol.create(l,0));
                   if not(is_weak in flags) then
                     CurrentAsmData.asmlists[al_picdata].concat(TAIDirective.Create(asd_indirect_symbol,CurrentAsmData.RefAsmSymbol(symname,symtyp).Name))
@@ -2815,8 +2815,8 @@ implementation
     procedure TCG.g_call(list: TAsmList;const s: string);
       begin
         allocallcpuregisters(list);
-        if systemunit<>CurrentModule.GlobalSymTable then
-          CurrentModule.add_extern_asmsym(s,AB_EXTERNAL,AT_FUNCTION);
+        if SystemUnit<>CurrentModule.GlobalSymTable then
+          CurrentModule.Add_Extern_AsmSym(s,AB_EXTERNAL,AT_FUNCTION);
         a_call_name(list,s,false);
         deallocallcpuregisters(list);
       end;
@@ -3305,32 +3305,32 @@ implementation
 
 
     procedure TCG128.a_load128_loc_cgpara(list: TAsmList; const l: TLocation;
-      const paraloc: TCGPara);
+      const ParaLoc: TCGPara);
       begin
         case l.loc of
           LOC_REGISTER,
           LOC_CREGISTER :
-            a_load128_reg_cgpara(list,l.register128,paraloc);
+            a_load128_reg_cgpara(list,l.register128,ParaLoc);
           {not yet implemented:
           LOC_CONSTANT :
             a_load128_const_cgpara(list,l.value64,paraloc);
           }
           LOC_CREFERENCE,
           LOC_REFERENCE :
-            a_load128_ref_cgpara(list,l.reference,paraloc);
+            a_load128_ref_cgpara(list,l.reference,ParaLoc);
           else
             InternalError(2012090603);
         end;
       end;
 
 
-    procedure TCG128.a_load128_reg_cgpara(list : TAsmList;reg : TRegister128;const paraloc : TCGPara);
+    procedure TCG128.a_load128_reg_cgpara(list : TAsmList;reg : TRegister128;const ParaLoc : TCGPara);
       var
         tmplochi,tmploclo: TCGPara;
       begin
         tmploclo.init;
         tmplochi.init;
-        splitparaloc128(paraloc,tmploclo,tmplochi);
+        splitparaloc128(ParaLoc,tmploclo,tmplochi);
         cg.a_load_reg_cgpara(list,OS_64,reg.reghi,tmplochi);
         cg.a_load_reg_cgpara(list,OS_64,reg.reglo,tmploclo);
         tmploclo.done;
@@ -3338,14 +3338,14 @@ implementation
       end;
 
 
-    procedure TCG128.a_load128_ref_cgpara(list : TAsmList;const r : TReference;const paraloc : TCGPara);
+    procedure TCG128.a_load128_ref_cgpara(list : TAsmList;const r : TReference;const ParaLoc : TCGPara);
       var
         tmprefhi,tmpreflo : TReference;
         tmploclo,tmplochi : TCGPara;
       begin
         tmploclo.init;
         tmplochi.init;
-        splitparaloc128(paraloc,tmploclo,tmplochi);
+        splitparaloc128(ParaLoc,tmploclo,tmplochi);
         tmprefhi:=r;
         tmpreflo:=r;
         if TargetInfo.endian=endian_big then

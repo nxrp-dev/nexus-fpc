@@ -96,7 +96,7 @@ unit raatt;
          procedure BuildRealConstant(typ : TFloatType);
          procedure BuildStringConstant(asciiz: boolean);
          procedure BuildRva;
-         procedure BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var mangledname: string; needvmtofs: boolean);
+         procedure BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
          procedure BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
          function BuildConstExpression(allowref,betweenbracket:boolean): TCGInt;
          function Assemble: TLinkedList;override;
@@ -388,11 +388,11 @@ unit raatt;
                    parse the identifier }
                  if (c='.') then
                   begin
-                    searchsym(actasmpattern,srsym,srsymtable);
+                    SearchSym(actasmpattern,srsym,srsymtable);
                     if Assigned(srsym) and
-                       (srsym.typ=unitsym) and
-                       (srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) and
-                       srsym.owner.iscurrentunit then
+                       (srsym.typ=UnitSym) and
+                       (srsym.owner.SymTableType in [staticsymtable,GlobalSymTable]) and
+                       srsym.owner.IsCurrentUnit then
                      begin
                        actasmpattern:=actasmpattern+c;
                        c:=CurrentScanner.asmgetchar;
@@ -1051,28 +1051,28 @@ unit raatt;
 
            AS_DATA:
              Begin
-               new_section(curList,sec_data,lower(CurrentProcInfo.procdef.mangledname),0);
+               new_section(curList,sec_data,lower(CurrentProcInfo.procdef.MangledName),0);
                lasTSec:=sec_data;
                Consume(AS_DATA);
              end;
 
            AS_TEXT:
              Begin
-               new_section(curList,sec_code,lower(CurrentProcInfo.procdef.mangledname),0);
+               new_section(curList,sec_code,lower(CurrentProcInfo.procdef.MangledName),0);
                lasTSec:=sec_code;
                Consume(AS_TEXT);
              end;
 
            AS_INIT:
              Begin
-               new_section(curList,sec_init,lower(CurrentProcInfo.procdef.mangledname),0);
+               new_section(curList,sec_init,lower(CurrentProcInfo.procdef.MangledName),0);
                lasTSec:=sec_init;
                Consume(AS_INIT);
              end;
 
            AS_FINI:
              Begin
-               new_section(curList,sec_fini,lower(CurrentProcInfo.procdef.mangledname),0);
+               new_section(curList,sec_fini,lower(CurrentProcInfo.procdef.MangledName),0);
                lasTSec:=sec_fini;
                Consume(AS_FINI);
              end;
@@ -1217,7 +1217,7 @@ unit raatt;
                Consume(AS_ID);
                Consume(AS_COMMA);
                symofs:=BuildConstExpression(false,false);
-               curList.concat(TAIDataBlock.Create(commname,symofs,CArrayDef.getreusable(u8inttype,symofs),AT_DATA));
+               curList.concat(TAIDataBlock.Create(commname,symofs,CArrayDef.getreusable(U8IntType,symofs),AT_DATA));
                if actasmtoken<>AS_SEPARATOR then
                 Consume(AS_SEPARATOR);
              end;
@@ -1229,7 +1229,7 @@ unit raatt;
                Consume(AS_ID);
                Consume(AS_COMMA);
                symofs:=BuildConstExpression(false,false);
-               curList.concat(TAIDataBlock.Create_global(commname,symofs,CArrayDef.getreusable(u8inttype,symofs),AT_DATA));
+               curList.concat(TAIDataBlock.Create_global(commname,symofs,CArrayDef.getreusable(U8IntType,symofs),AT_DATA));
                if actasmtoken<>AS_SEPARATOR then
                 Consume(AS_SEPARATOR);
              end;
@@ -1357,7 +1357,7 @@ unit raatt;
        if lasTSec<>sec_code then
         begin
           Message(asmr_w_assembler_code_not_returned_to_text);
-          new_section(curList,sec_code,lower(CurrentProcInfo.procdef.mangledname),0);
+          new_section(curList,sec_code,lower(CurrentProcInfo.procdef.MangledName),0);
         end;
        { Return the list in an asmnode }
        assemble:=curlist;
@@ -1369,7 +1369,7 @@ unit raatt;
                                Parsing Helpers
 *****************************************************************************}
 
-    Procedure TATTReader.BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var mangledname: string; needvmtofs: boolean);
+    Procedure TATTReader.BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var MangledName: string; needvmtofs: boolean);
       { Description: This routine builds up a record offset after a AS_DOT }
       { token is encountered.                                              }
       { On entry actasmtoken should be equal to AS_DOT                     }
@@ -1397,7 +1397,7 @@ unit raatt;
               break;
             end;
          end;
-        if not GetRecordOffsetSize(s,offset,size,mangledname,needvmtofs,hastypecast) then
+        if not GetRecordOffsetSize(s,offset,size,MangledName,needvmtofs,hastypecast) then
          Message(asmr_e_building_record_offset);
       end;
 
@@ -1405,7 +1405,7 @@ unit raatt;
     procedure TATTReader.BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
       var
         hssymtyp : TAsmsymtype;
-        hs,tempstr,expr,mangledname : string;
+        hs,tempstr,expr,MangledName : string;
         parenlevel : LongInt;
         l,k : TCGInt;
         errorflag : boolean;
@@ -1557,21 +1557,21 @@ unit raatt;
                    Consume(AS_ID);
                    if actasmtoken=AS_DOT then
                     begin
-                      BuildRecordOffsetSize(tempstr,k,l,mangledname,false);
-                      if mangledname<>'' then
+                      BuildRecordOffsetSize(tempstr,k,l,MangledName,false);
+                      if MangledName<>'' then
                         Message(asmr_e_wrong_sym_type);
                     end
                    else
                     begin
-                      searchsym(tempstr,sym,srsymtable);
+                      SearchSym(tempstr,sym,srsymtable);
                       if Assigned(sym) then
                        begin
                          case sym.typ of
                            staticvarsym,
                            localvarsym,
                            paravarsym :
-                             l:=TAbstractVarSym(sym).getsize;
-                           typesym :
+                             l:=TAbstractVarSym(sym).GetSize;
+                           TypeSym :
                              l:=TTypeSym(sym).typedef.size;
                            else
                              Message(asmr_e_wrong_sym_type);
@@ -1593,8 +1593,8 @@ unit raatt;
                   begin
                     tempstr:=actasmpattern;
                     consume(AS_ID);
-                    BuildRecordOffsetSize(tempstr,k,l,mangledname,true);
-                    if (mangledname <> '') then
+                    BuildRecordOffsetSize(tempstr,k,l,MangledName,true);
+                    if (MangledName <> '') then
                       Message(asmr_e_wrong_sym_type);
                     str(k,tempstr);
                     expr := expr + tempstr;
@@ -1628,7 +1628,7 @@ unit raatt;
                       end
                    else
                     begin
-                      searchsym(tempstr,sym,srsymtable);
+                      SearchSym(tempstr,sym,srsymtable);
                       if Assigned(sym) then
                        begin
                          case sym.typ of
@@ -1636,26 +1636,26 @@ unit raatt;
                              begin
                                { we always assume in asm statements that     }
                                { that the variable is valid.                 }
-                               TAbstractVarSym(sym).varstate:=vs_readwritten;
+                               TAbstractVarSym(sym).VarState:=vs_readwritten;
                                inc(TAbstractVarSym(sym).refs);
                                { variable can't be placed in a register }
-                               TAbstractVarSym(sym).varregable:=vr_none;
+                               TAbstractVarSym(sym).VarRegable:=vr_none;
                                { and anything may happen with its address }
-                               TAbstractVarSym(sym).addr_taken:=true;
+                               TAbstractVarSym(sym).AddrTaken:=true;
 
-                               hs:=TStaticVarSym(sym).mangledname;
+                               hs:=TStaticVarSym(sym).MangledName;
                              end;
                            localvarsym,
                            paravarsym :
                              Message(asmr_e_no_local_or_para_allowed);
-                           procsym :
+                           ProcSym :
                              begin
                                if TProcSym(sym).ProcdefList.Count>1 then
                                 Message(asmr_w_calling_overload_func);
-                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).mangledname;
+                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).MangledName;
                                hssymtyp:=AT_FUNCTION;
                              end;
-                           typesym :
+                           TypeSym :
                              begin
                                if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);

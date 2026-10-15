@@ -184,7 +184,7 @@ implementation
 
     procedure TDebugInfo.appenddef_classref(list:TAsmList;def: TClassRefDef);
       begin
-        appenddef_pointer(list,TPointerDef(pvmttype));
+        appenddef_pointer(list,TPointerDef(PVMTType));
       end;
 
 
@@ -230,19 +230,19 @@ implementation
 
     procedure TDebugInfo.appenddef(list:TAsmList;def:TDef);
       begin
-        if (def.dbg_state in [dbg_state_writing,dbg_state_written]) then
+        if (def.DbgState in [dbg_state_writing,dbg_state_written]) then
           exit;
         { never write generic template defs }
-        if df_generic in def.defoptions then
+        if df_generic in def.DefOptions then
           begin
-            def.dbg_state:=dbg_state_written;
+            def.DbgState:=dbg_state_written;
             exit;
           end;
         { to avoid infinite loops }
-        def.dbg_state := dbg_state_writing;
+        def.DbgState := dbg_state_writing;
         beforeappenddef(list,def);
         { queued defs have to be written later }
-        if (def.dbg_state=dbg_state_queued) then
+        if (def.DbgState=dbg_state_queued) then
           exit;
         case def.typ of
           stringdef :
@@ -285,7 +285,7 @@ implementation
           InternalError(200601281);
         end;
         afterappenddef(list,def);
-        def.dbg_state := dbg_state_written;
+        def.DbgState := dbg_state_written;
       end;
 
 
@@ -304,7 +304,7 @@ implementation
             for n := 0 to looplist.count - 1 do
               begin
                 def := TDef(looplist[n]);
-                case def.dbg_state of
+                case def.DbgState of
                   dbg_state_written:
                     continue;
                   dbg_state_writing:
@@ -323,16 +323,16 @@ implementation
                         not be encountered }
                       if def.typ<>objectdef then
                         InternalError(2012072401);
-                      if not Assigned(TObjectDef(def).childof) or
-                         (TObjectDef(def).childof.dbg_state=dbg_state_written) then
+                      if not Assigned(TObjectDef(def).ChildOf) or
+                         (TObjectDef(def).ChildOf.DbgState=dbg_state_written) then
                         appenddef(list,def)
-                      else if TObjectDef(def).childof.dbg_state=dbg_state_queued then
+                      else if TObjectDef(def).ChildOf.DbgState=dbg_state_queued then
                         begin
                           { ensure that the parent is indeed queued }
-                          deftowritelist.add(TObjectDef(def).childof);
+                          deftowritelist.add(TObjectDef(def).ChildOf);
                           deftowritelist.add(def);
                         end
-                      else if TObjectDef(def).childof.dbg_state=dbg_state_used then
+                      else if TObjectDef(def).ChildOf.DbgState=dbg_state_used then
                         { comes somewhere after the current def in the looplist
                           and will be written at that point, so we will have to
                           wait until the next iteration }
@@ -417,26 +417,26 @@ implementation
 
     procedure TDebugInfo.appendsym(list:TAsmList;sym:TSym);
       begin
-        if sym.isdbgwritten then
+        if sym.IsDbgWritten then
           exit;
         beforeappendsym(list,sym);
         case sym.typ of
           staticvarsym :
-            if not Assigned(TStaticVarSym(sym).fieldvarsym) or
-               not(df_generic in TDef(TStaticVarSym(sym).fieldvarsym.owner.defowner).defoptions) then
+            if not Assigned(TStaticVarSym(sym).FieldVarSym) or
+               not(df_generic in TDef(TStaticVarSym(sym).FieldVarSym.owner.DefOwner).DefOptions) then
               appendsym_staticvar(list,TStaticVarSym(sym));
-          unitsym:
+          UnitSym:
             appendsym_unit(list,TUnitSym(sym));
           labelsym :
             appendsym_label(list,TLabelSym(sym));
           localvarsym :
             appendsym_localvar(list,TLocalVarSym(sym));
           paravarsym :
-            if TParaVarSym(sym).localloc.loc<>LOC_VOID then
+            if TParaVarSym(sym).LocAlloc.loc<>LOC_VOID then
               appendsym_paravar(list,TParaVarSym(sym));
           constsym :
             appendsym_const(list,TConstSym(sym));
-          typesym :
+          TypeSym :
             appendsym_type(list,TTypeSym(sym));
           enumsym :
             { ignore enum syms, they are written by the owner }
@@ -444,7 +444,7 @@ implementation
           syssym :
             { ignore sys syms, they are only of internal use }
             ;
-          procsym :
+          ProcSym :
             { ignore proc syms, they are written by procdefs }
             ;
           absolutevarsym :
@@ -458,7 +458,7 @@ implementation
             InternalError(200601242);
         end;
         afterappendsym(list,sym);
-        sym.isdbgwritten:=true;
+        sym.IsDbgWritten:=true;
       end;
 
 
@@ -472,7 +472,7 @@ implementation
         i   : LongInt;
         nonewadded : boolean;
       begin
-        case st.symtabletype of
+        case st.SymTableType of
           staticsymtable :
             list.concat(TAIComment.Create(StrPNew('Defs - Begin Staticsymtable')));
           GlobalSymTable :
@@ -485,14 +485,14 @@ implementation
           for i:=0 to st.DefList.Count-1 do
             begin
               def:=TDef(st.DefList[i]);
-              if (def.dbg_state in [dbg_state_used,dbg_state_queued]) then
+              if (def.DbgState in [dbg_state_used,dbg_state_queued]) then
                 begin
                   appenddef(list,def);
                   nonewadded:=false;
                 end;
             end;
         until nonewadded;
-        case st.symtabletype of
+        case st.SymTableType of
           staticsymtable :
             list.concat(TAIComment.Create(StrPNew('Defs - End Staticsymtable')));
           GlobalSymTable :
@@ -517,7 +517,7 @@ implementation
                 { if we ever write this procdef again for some reason (this
                   can happen with DWARF), then we want to write all the
                   parasyms again as well. }
-                sym.isdbgwritten:=false;
+                sym.IsDbgWritten:=false;
               end;
           end;
       end;
@@ -528,7 +528,7 @@ implementation
         i   : LongInt;
         sym : TSym;
       begin
-        case st.symtabletype of
+        case st.SymTableType of
           staticsymtable :
             list.concat(TAIComment.Create(StrPNew('Syms - Begin Staticsymtable')));
           GlobalSymTable :
@@ -540,14 +540,14 @@ implementation
           begin
             sym:=TSym(st.SymList[i]);
             if (sym.visibility<>vis_hidden) and
-               (not sym.isdbgwritten) and
+               (not sym.IsDbgWritten) and
                { avoid all generic symbols }
-               not (sp_generic_dummy in sym.symoptions) and
-               not ((sym.typ=typesym) and Assigned(TTypeSym(sym).typedef) and
-                    (df_generic in TTypeSym(sym).typedef.defoptions)) then
+               not (sp_generic_dummy in sym.SymOptions) and
+               not ((sym.typ=TypeSym) and Assigned(TTypeSym(sym).typedef) and
+                    (df_generic in TTypeSym(sym).typedef.DefOptions)) then
               appendsym(list,sym);
           end;
-        case st.symtabletype of
+        case st.SymTableType of
           staticsymtable :
             list.concat(TAIComment.Create(StrPNew('Syms - End Staticsymtable')));
           GlobalSymTable :
@@ -570,8 +570,8 @@ implementation
               procdef :
                 begin
                   appendprocdef(list,TProcDef(def));
-                  if Assigned(TProcDef(def).localst) then
-                    write_symtable_procdefs(list,TProcDef(def).localst);
+                  if Assigned(TProcDef(def).LocalST) then
+                    write_symtable_procdefs(list,TProcDef(def).LocalST);
                 end;
               objectdef,recorddef :
                 begin
@@ -588,10 +588,10 @@ implementation
       var
         hp : TModule;
       begin
-        hp:=TModule(loaded_units.first);
+        hp:=TModule(Loaded_Units.first);
         while Assigned(hp) do
           begin
-            hp.is_dbginfo_written:=false;
+            hp.IsDbgInfoWritten:=false;
             hp:=TModule(hp.next);
           end;
       end;
@@ -601,13 +601,13 @@ implementation
       var
         pu : TUsedUnit;
       begin
-        pu:=TUsedUnit(hp.used_units.first);
+        pu:=TUsedUnit(hp.UsedUnitList.first);
         while Assigned(pu) do
           begin
-            if not pu.u.is_dbginfo_written and not Assigned(pu.u.package) then
+            if not pu.u.IsDbgInfoWritten and not Assigned(pu.u.package) then
               begin
                 { prevent infinite loop for circular dependencies }
-                pu.u.is_dbginfo_written:=true;
+                pu.u.IsDbgInfoWritten:=true;
                 { write type info from used units, use a depth first
                   strategy to reduce the recursion in writing all
                   dependent debug entries }

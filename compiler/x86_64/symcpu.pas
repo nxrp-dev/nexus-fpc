@@ -97,8 +97,8 @@ type
     { library symbol for AROS }
     libsym : TSym;
     libsymderef : TDeref;
-    function getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef; override;
-    procedure buildderef; override;
+    function GetCopyAs(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef; override;
+    procedure BuildDeref; override;
     procedure deref; override;
   end;
   TCPUProcDefClass = class of TCPUProcDef;
@@ -178,7 +178,7 @@ type
 
 
 var
-  pbestrealtype : ^TDef = @s80floattype;
+  pbestrealtype : ^TDef = @S80FloatType;
 
 
 implementation
@@ -190,20 +190,20 @@ implementation
   procedure TCPUProcDef.PPULoadPlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
-      if po_syscall_has_libsym in procoptions then
-        ppufile.getderef(libsymderef);
+      if po_syscall_has_libsym in ProcOptions then
+        ppufile.GetDeref(libsymderef);
     end;
 
 
   procedure TCPUProcDef.PPUWritePlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
-      if po_syscall_has_libsym in procoptions then
-        ppufile.putderef(libsymderef);
+      if po_syscall_has_libsym in ProcOptions then
+        ppufile.PutDeref(libsymderef);
     end;
 
 
-  function TCPUProcDef.getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
+  function TCPUProcDef.GetCopyAs(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
     begin
       result:=inherited;
       if newtyp=procdef then
@@ -211,10 +211,10 @@ implementation
     end;
 
 
-  procedure TCPUProcDef.buildderef;
+  procedure TCPUProcDef.BuildDeref;
     begin
       inherited;
-      if po_syscall_has_libsym in procoptions then
+      if po_syscall_has_libsym in ProcOptions then
         libsymderef.build(libsym);
     end;
 
@@ -222,7 +222,7 @@ implementation
   procedure TCPUProcDef.deref;
     begin
       inherited;
-      if po_syscall_has_libsym in procoptions then
+      if po_syscall_has_libsym in ProcOptions then
         libsym:=TSym(libsymderef.resolve)
       else
         libsym:=nil;
@@ -239,7 +239,7 @@ begin
   CErrorDef:=TCPUErrorDef;
   CPointerDef:=TCPUPointerDef;
   CRecordDef:=TCPURecordDef;
-  cimplementedinterface:=TCPUImplementedInterface;
+  CImplementedInterface:=TCPUImplementedInterface;
   CObjectDef:=TCPUObjectDef;
   CClassRefDef:=TCPUClassRefDef;
   CArrayDef:=TCPUArrayDef;

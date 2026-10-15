@@ -320,7 +320,7 @@ interface
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);virtual;
          destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
-         procedure buildderefimpl;virtual;
+         procedure BuildDerefImpl;virtual;
          procedure derefimpl;virtual;
          procedure resolveppuidx;virtual;
 
@@ -357,7 +357,7 @@ interface
          { to implement comparison, override this method }
          function docompare(p : TNode) : boolean;virtual;
          { wrapper for getcopy }
-         function getcopy : TNode;
+         function GetCopy : TNode;
 
          { does the real copying of a node }
          function dogetcopy : TNode;virtual;
@@ -397,7 +397,7 @@ interface
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-         procedure buildderefimpl;override;
+         procedure BuildDerefImpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
          function docompare(p : TNode) : boolean;override;
@@ -419,7 +419,7 @@ interface
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-         procedure buildderefimpl;override;
+         procedure BuildDerefImpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
          function docompare(p : TNode) : boolean;override;
@@ -444,7 +444,7 @@ interface
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-         procedure buildderefimpl;override;
+         procedure BuildDerefImpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
          function docompare(p : TNode) : boolean;override;
@@ -791,10 +791,10 @@ implementation
         nodetype:=t;
         { tnode fields }
         blocktype:=TBlockType(ppufile.GetByte);
-        ppufile.getposinfo(fileinfo);
+        ppufile.GetPosInfo(fileinfo);
         ppufile.GetSet(TPPUSet5(LocalSwitches));
         verbosity:=ppufile.GetLongInt;
-        ppufile.getderef(resultdefderef);
+        ppufile.GetDeref(resultdefderef);
         ppufile.GetSet(TPPUSet2(flags));
         { updated by firstpass }
         expectloc:=LOC_INVALID;
@@ -806,10 +806,10 @@ implementation
     procedure TNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         ppufile.PutByte(byte(blocktype));
-        ppufile.putposinfo(fileinfo);
+        ppufile.PutPosInfo(fileinfo);
         ppufile.PutSet(TPPUSet5(LocalSwitches));
         ppufile.PutLongInt(verbosity);
-        ppufile.putderef(resultdefderef);
+        ppufile.PutDeref(resultdefderef);
         ppufile.PutSet(TPPUSet2(flags));
       end;
 
@@ -830,7 +830,7 @@ implementation
       end;
 
 
-    procedure TNode.buildderefimpl;
+    procedure TNode.BuildDerefImpl;
       begin
         resultdefderef.build(resultdef);
       end;
@@ -885,7 +885,7 @@ implementation
       begin
         write(t,nodetype2str[nodetype]);
         if Assigned(resultdef) then
-          write(t,', resultdef = ',resultdef.typesymbolprettyname,' = "',resultdef.GetTypeName,'" ')
+          write(t,', resultdef = ',resultdef.TypeSymbolPrettyName,' = "',resultdef.GetTypeName,'" ')
         else
           write(t,', resultdef = <nil> ');
         printfileinfo(t,fileinfo);
@@ -936,7 +936,7 @@ implementation
         first: Boolean;
       begin
         if Assigned(resultdef) then
-          Write(T,' resultdef="', SanitiseXMLString(resultdef.typesymbolprettyname), '"');
+          Write(T,' resultdef="', SanitiseXMLString(resultdef.TypeSymbolPrettyName), '"');
 
         Write(T,' pos="',fileinfo.line,',',fileinfo.column);
 
@@ -1031,7 +1031,7 @@ implementation
       end;
 
 
-    function TNode.getcopy : TNode;
+    function TNode.GetCopy : TNode;
       begin
         result:=dogetcopy;
         foreachnodestatic(pm_postprocess,result,@setuplabelnode,nil);
@@ -1112,11 +1112,11 @@ implementation
       end;
 
 
-    procedure TUnaryNode.buildderefimpl;
+    procedure TUnaryNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         if Assigned(left) then
-          left.buildderefimpl;
+          left.BuildDerefImpl;
       end;
 
 
@@ -1220,11 +1220,11 @@ implementation
       end;
 
 
-    procedure TBinaryNode.buildderefimpl;
+    procedure TBinaryNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         if Assigned(right) then
-          right.buildderefimpl;
+          right.BuildDerefImpl;
       end;
 
 
@@ -1375,11 +1375,11 @@ implementation
       end;
 
 
-    procedure TTertiaryNode.buildderefimpl;
+    procedure TTertiaryNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         if Assigned(third) then
-          third.buildderefimpl;
+          third.BuildDerefImpl;
       end;
 
 

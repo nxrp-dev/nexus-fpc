@@ -131,8 +131,8 @@ implementation
       if (scopecount=0) then
         exit;
       hdir:=CAISEHDirective.create_name(ash_handler,'__FPC_specific_handler');
-      if not systemunit.iscurrentunit then
-        CurrentModule.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+      if not SystemUnit.IsCurrentUnit then
+        CurrentModule.Add_Extern_AsmSym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
       hdir.data.flags:=unwindflags;
       list.concat(hdir);
       list.concat(CAISEHDirective.create(ash_handlerdata));
@@ -141,7 +141,7 @@ implementation
       list.ConcatList(scopes);
       { return to text, required for GAS compatibility }
       { This creates a tai_align which is redundant here (although harmless) }
-      new_section(list,sec_code,lower(procdef.mangledname),0);
+      new_section(list,sec_code,lower(procdef.MangledName),0);
     end;
 
 

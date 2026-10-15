@@ -79,10 +79,10 @@ implementation
             { Fixes the case when there are calls done by low-level means
               (cg.a_call_name) but no child callnode }
             if (pi_do_call in flags) and
-              not (po_nostackframe in procdef.procoptions) then
+              not (po_nostackframe in procdef.ProcOptions) then
               allocate_push_parasize(32);
 
-            if not(po_assembler in procdef.procoptions) and
+            if not(po_assembler in procdef.ProcOptions) and
               (tg.direction > 0) then
             { maxpushedparasize already contains 32 bytes of spilling area }
               tg.setfirsttemp(tg.direction*maxpushedparasize);
@@ -159,15 +159,15 @@ implementation
         if profiled then
           begin
             hdir:=CAISEHDirective.create_name(ash_handler,'__NXP_specific_handler');
-            CurrentModule.add_extern_asmsym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
-            CurrentModule.add_extern_asmsym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
+            CurrentModule.Add_Extern_AsmSym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+            CurrentModule.Add_Extern_AsmSym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags or 2;
           end
         else
           begin
             hdir:=CAISEHDirective.create_name(ash_handler,'__FPC_specific_handler');
-            if not systemunit.iscurrentunit then
-              CurrentModule.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+            if not SystemUnit.IsCurrentUnit then
+              CurrentModule.Add_Extern_AsmSym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags;
           end;
         list.concat(hdir);
@@ -187,7 +187,7 @@ implementation
           end;
         { return to text, required for GAS compatibility }
         { This creates a tai_align which is redundant here (although harmless) }
-        new_section(list,sec_code,lower(procdef.mangledname),0);
+        new_section(list,sec_code,lower(procdef.MangledName),0);
       end;
 
     destructor TCPUProcInfo.Destroy;

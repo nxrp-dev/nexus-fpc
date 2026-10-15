@@ -284,7 +284,7 @@ implementation
               will occur, but also full 64-bit references to avoid problems with
               relative references }
             sectype:=sec_rodata;
-            new_section(CurrentProcInfo.aktlocaldata,sectype,lower(CurrentProcInfo.procdef.mangledname),sizeof(aint));
+            new_section(CurrentProcInfo.aktlocaldata,sectype,lower(CurrentProcInfo.procdef.MangledName),sizeof(aint));
           end
         else
           begin
@@ -305,7 +305,7 @@ implementation
                   same subsection that contains the routine's code }
                 sectype:=sec_code;
               end;
-            new_section(CurrentProcInfo.aktlocaldata,sectype,CurrentProcInfo.procdef.mangledname,4);
+            new_section(CurrentProcInfo.aktlocaldata,sectype,CurrentProcInfo.procdef.MangledName,4);
           end;
         if TargetInfo.system in systems_darwin then
           begin

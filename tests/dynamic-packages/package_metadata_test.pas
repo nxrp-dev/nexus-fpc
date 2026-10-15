@@ -78,7 +78,7 @@ var
   U: TModuleBase;
 begin
   SetCurrentModule(TModule.Create(nil,'Fixture','Fixture.nxpk',false));
-  CurrentModule.setmodulename('Fixture');
+  CurrentModule.SetModuleName('Fixture');
   P:=TPCPPackage.Create('Fixture');
   U:=TModuleBase.Create('UX');
   try
@@ -103,7 +103,7 @@ begin
   if ParamStr(1)='building' then
     begin
       SetCurrentModule(TModule.Create(nil,ParamStr(3),ParamStr(3)+'.nxpk',false));
-      CurrentModule.setmodulename(ParamStr(3));
+      CurrentModule.SetModuleName(ParamStr(3));
       CurrentModule.IsPackage:=true;
       First:=4;
     end;

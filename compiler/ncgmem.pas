@@ -105,32 +105,32 @@ implementation
         otherunit,
         indirect : boolean;
       begin
-         location_reset(location,LOC_REGISTER,def_cgsize(voidpointertype));
+         location_reset(location,LOC_REGISTER,def_cgsize(VoidPointerType));
          if (left.nodetype=typen) then
            begin
-             location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,voidpointertype);
-             if not is_objcclass(left.resultdef) then
+             location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,VoidPointerType);
+             if not Is_ObjCClass(left.resultdef) then
                begin
                  { we are using a direct reference if any of the following is true:
                    - the target does not support packages
                    - the target does not use indirect references
                    - the class is located inside the same unit }
-                 otherunit:=findunitsymtable(left.resultdef.owner).ModuleID<>CurrentModule.ModuleID;
+                 otherunit:=FindUnitSymTable(left.resultdef.owner).ModuleID<>CurrentModule.ModuleID;
                  indirect:=(tf_supports_packages in TargetInfo.flags) and
                            (TargetInfo.system in systems_indirect_var_imports) and
                            otherunit;
-                 vmtname:=TObjectDef(TClassRefDef(resultdef).pointeddef).vmt_mangledname;
+                 vmtname:=TObjectDef(TClassRefDef(resultdef).PointedDef).VMT_MangledName;
                  reference_reset_symbol(href,
                    CurrentAsmData.RefAsmSymbol(vmtname,AT_DATA,indirect),0,
                    resultdef.alignment,[]);
                  hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,href,location.register);
                  if otherunit then
-                   CurrentModule.add_extern_asmsym(vmtname,AB_EXTERNAL,AT_DATA);
+                   CurrentModule.Add_Extern_AsmSym(vmtname,AB_EXTERNAL,AT_DATA);
                end
              else
                begin
                  pool:=CurrentAsmData.ConstPools[sp_objcclassnamerefs];
-                 entry:=pool.FindOrAdd(@TObjectDef(left.resultdef).objextname^[1],length(TObjectDef(left.resultdef).objextname^));
+                 entry:=pool.FindOrAdd(@TObjectDef(left.resultdef).ObjExtName^[1],length(TObjectDef(left.resultdef).ObjExtName^));
                  if (TargetInfo.system in systems_objc_nfabi) then
                    begin
                      { find/add necessary classref/classname pool entries }
@@ -141,8 +141,8 @@ implementation
                      { find/add necessary classref/classname pool entries }
                      objcfinishstringrefpoolentry(entry,sp_objcclassnames,sec_objc_cls_refs,sec_objc_class_names);
                    end;
-                 reference_reset_symbol(href,TAsmLabel(entry^.Data),0,objc_idtype.alignment,[]);
-                 hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,objc_idtype,objc_idtype,href,location.register);
+                 reference_reset_symbol(href,TAsmLabel(entry^.Data),0,ObjC_IDType.alignment,[]);
+                 hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,ObjC_IDType,ObjC_IDType,href,location.register);
                end;
            end
          else
@@ -161,35 +161,35 @@ implementation
         hsym   : TParaVarSym;
         href   : TReference;
       begin
-        if (CurrentProcInfo.procdef.parast.symtablelevel=parentpd.parast.symtablelevel) then
+        if (CurrentProcInfo.procdef.ParaST.SymTableLevel=parentpd.ParaST.SymTableLevel) then
           begin
-            location_reset(location,LOC_REGISTER,def_cgsize(parentfpvoidpointertype));
+            location_reset(location,LOC_REGISTER,def_cgsize(ParentFPVoidPointerType));
             location.register:=CurrentProcInfo.framepointer;
           end
         else
           begin
-            location_reset(location,LOC_REGISTER,def_cgsize(parentfpvoidpointertype));
+            location_reset(location,LOC_REGISTER,def_cgsize(ParentFPVoidPointerType));
             currpi:=CurrentProcInfo;
             { load framepointer of current proc }
-            hsym:=TParaVarSym(currpi.procdef.parentfpsym);
-            if (currpi.procdef.owner.symtablelevel=parentpd.parast.symtablelevel) and (hsym.localloc.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-              location.register:=hsym.localloc.register
+            hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
+            if (currpi.procdef.owner.SymTableLevel=parentpd.ParaST.SymTableLevel) and (hsym.LocAlloc.loc in [LOC_REGISTER,LOC_CREGISTER]) then
+              location.register:=hsym.LocAlloc.register
             else
               begin
-                location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,parentfpvoidpointertype);
-                hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,parentfpvoidpointertype,parentfpvoidpointertype,hsym.localloc,location.register);
+                location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType);
+                hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,hsym.LocAlloc,location.register);
                 { walk parents }
-                while (currpi.procdef.owner.symtablelevel>parentpd.parast.symtablelevel) do
+                while (currpi.procdef.owner.SymTableLevel>parentpd.ParaST.SymTableLevel) do
                   begin
                     currpi:=currpi.parent;
                     if not Assigned(currpi) then
                       InternalError(200311201);
-                    hsym:=TParaVarSym(currpi.procdef.parentfpsym);
-                    if hsym.localloc.loc<>LOC_REFERENCE then
+                    hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
+                    if hsym.LocAlloc.loc<>LOC_REFERENCE then
                       InternalError(200309283);
 
-                    hlcg.reference_reset_base(href,parentfpvoidpointertype,location.register,hsym.localloc.reference.offset,ctempposinvalid,parentfpvoidpointertype.alignment,[]);
-                    hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,parentfpvoidpointertype,parentfpvoidpointertype,href,location.register);
+                    hlcg.reference_reset_base(href,ParentFPVoidPointerType,location.register,hsym.LocAlloc.reference.offset,ctempposinvalid,ParentFPVoidPointerType.alignment,[]);
+                    hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,ParentFPVoidPointerType,ParentFPVoidPointerType,href,location.register);
                   end;
               end;
           end;
@@ -236,7 +236,7 @@ implementation
          sym:=nil;
          { assume natural alignment, except for packed records }
          if not(resultdef.typ in [recorddef,objectdef]) or
-            (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).usefieldalignment<>1) then
+            (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).UseFieldAlignment<>1) then
            location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),resultdef.alignment,[])
          else
            location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),1,[]);
@@ -304,13 +304,13 @@ implementation
          if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) and
             (cs_checkpointer in CurrentSettings.LocalSwitches) and
             not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
-            TPointerDef(left.resultdef).compatible_with_pointerdef_size(TPointerDef(voidpointertype)) and
+            TPointerDef(left.resultdef).Compatible_With_PointerDef_Size(TPointerDef(VoidPointerType)) and
             not(drnf_no_checkpointer in derefnodeflags) and
             { can be NR_NO in case of LOC_CONSTANT }
             (location.reference.base<>NR_NO) then
           begin
-            if not searchsym_in_named_module('HEAPTRC','CHECKPOINTER',sym,st) or
-               (sym.typ<>procsym) then
+            if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',sym,st) or
+               (sym.typ<>ProcSym) then
               InternalError(2012010601);
             pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
             paraloc1.init;
@@ -354,14 +354,14 @@ implementation
            exit;
          paraloc1.init;
          { several object types must be dereferenced implicitly }
-         if is_implicit_pointer_object_type(left.resultdef) then
+         if Is_Implicit_Pointer_Object_Type(left.resultdef) then
            begin
              if not is_managed_type(left.resultdef) then
                begin
                  { take care of the alignment of the fields }
                  if not(left.resultdef is TAbstractRecordDef) then
                    InternalError(2018021601);
-                 location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),NewAlignment(TAbstractRecordSymTable(TAbstractRecordDef(left.resultdef).SymTable).recordalignment,vs.fieldoffset),[]);
+                 location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),NewAlignment(TAbstractRecordSymTable(TAbstractRecordDef(left.resultdef).SymTable).RecordAlignment,vs.FieldOffset),[]);
                  case left.location.loc of
                     LOC_CREGISTER,
                     LOC_REGISTER:
@@ -402,8 +402,8 @@ implementation
                     (cs_checkpointer in CurrentSettings.LocalSwitches) and
                     not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
                   begin
-                    if not searchsym_in_named_module('HEAPTRC','CHECKPOINTER',sym,st) or
-                       (sym.typ<>procsym) then
+                    if not SearchSym_In_Named_Module('HEAPTRC','CHECKPOINTER',sym,st) or
+                       (sym.typ<>ProcSym) then
                       InternalError(2012010602);
                     pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
                     paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
@@ -447,12 +447,12 @@ implementation
                      -> force to memory
                    }
 
-                   if not TStoredDef(left.resultdef).is_intregable or
-                      not TStoredDef(resultdef).is_intregable or
+                   if not TStoredDef(left.resultdef).Is_IntRegable or
+                      not TStoredDef(resultdef).Is_IntRegable or
                       { if the field spans multiple registers, we must force the record into
                         memory as well }
                       ((left.location.size in [OS_PAIR,OS_SPAIR]) and
-                       (vs.fieldoffset div sizeof(aword)<>(vs.fieldoffset+vs.getsize-1) div sizeof(aword))) or
+                       (vs.FieldOffset div sizeof(aword)<>(vs.FieldOffset+vs.GetSize-1) div sizeof(aword))) or
                       (location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER,
                         { actually, we should be able to "subscript" a constant, but this would require some code
                           which enables dumping and reading constants from a temporary memory buffer. This
@@ -490,12 +490,12 @@ implementation
                            else
                              awordoffset:=sizeof(aword)*8;
 
-                           if (vs.fieldoffset>=awordoffset) xor (TargetInfo.endian=endian_big) then
+                           if (vs.FieldOffset>=awordoffset) xor (TargetInfo.endian=endian_big) then
                              location.sreg.subsetreg := left.location.registerhi
                            else
                              location.sreg.subsetreg := left.location.register;
 
-                           if vs.fieldoffset>=awordoffset then
+                           if vs.FieldOffset>=awordoffset then
                              offsetcorrection := sizeof(aword)*8;
 
                            location.sreg.subsetregsize := OS_INT;
@@ -509,18 +509,18 @@ implementation
                        if not is_packed_record_or_object(left.resultdef) then
                          begin
                            if (TargetInfo.endian = ENDIAN_BIG) then
-                             location.sreg.startbit := (tcgsize2size[location.sreg.subsetregsize] - tcgsize2size[location.size] - vs.fieldoffset) * 8+offsetcorrection
+                             location.sreg.startbit := (tcgsize2size[location.sreg.subsetregsize] - tcgsize2size[location.size] - vs.FieldOffset) * 8+offsetcorrection
                            else
-                             location.sreg.startbit := (vs.fieldoffset * 8)-offsetcorrection;
+                             location.sreg.startbit := (vs.FieldOffset * 8)-offsetcorrection;
                            location.sreg.bitlen := tcgsize2size[location.size] * 8;
                          end
                        else
                          begin
-                           location.sreg.bitlen := resultdef.packedbitsize;
+                           location.sreg.bitlen := resultdef.PackedBitSize;
                            if (TargetInfo.endian = ENDIAN_BIG) then
-                             location.sreg.startbit := (tcgsize2size[location.sreg.subsetregsize]*8 - location.sreg.bitlen) - vs.fieldoffset+offsetcorrection
+                             location.sreg.startbit := (tcgsize2size[location.sreg.subsetregsize]*8 - location.sreg.bitlen) - vs.FieldOffset+offsetcorrection
                            else
-                             location.sreg.startbit := vs.fieldoffset-offsetcorrection;
+                             location.sreg.startbit := vs.FieldOffset-offsetcorrection;
                          end;
                      end;
                  end;
@@ -531,18 +531,18 @@ implementation
                    if not is_packed_record_or_object(left.resultdef) then
                      begin
                        if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(location.sreg.startbit, (left.resultdef.size - tcgsize2size[location.size] - vs.fieldoffset) * 8)
+                         inc(location.sreg.startbit, (left.resultdef.size - tcgsize2size[location.size] - vs.FieldOffset) * 8)
                        else
-                         inc(location.sreg.startbit, vs.fieldoffset * 8);
+                         inc(location.sreg.startbit, vs.FieldOffset * 8);
                        location.sreg.bitlen := tcgsize2size[location.size] * 8;
                      end
                    else
                      begin
-                       location.sreg.bitlen := resultdef.packedbitsize;
+                       location.sreg.bitlen := resultdef.PackedBitSize;
                        if (TargetInfo.endian = ENDIAN_BIG) then
-                         inc(location.sreg.startbit, left.location.sreg.bitlen - location.sreg.bitlen - vs.fieldoffset)
+                         inc(location.sreg.startbit, left.location.sreg.bitlen - location.sreg.bitlen - vs.FieldOffset)
                        else
-                         inc(location.sreg.startbit, vs.fieldoffset);
+                         inc(location.sreg.startbit, vs.FieldOffset);
                      end;
                  end;
                else
@@ -550,7 +550,7 @@ implementation
              end;
            end;
 
-         if is_objc_class_or_protocol(left.resultdef) and
+         if Is_ObjC_Class_Or_Protocol(left.resultdef) and
             (TargetInfo.system in systems_objc_nfabi) then
            begin
              if (location.loc<>LOC_REFERENCE) or
@@ -561,11 +561,11 @@ implementation
                classes can be changed without breaking programs compiled against
                earlier versions)
              }
-             asmsym:=CurrentAsmData.RefAsmSymbol(vs.mangledname,AT_DATA);
-             reference_reset_symbol(tmpref,asmsym,0,voidpointertype.alignment,[]);
+             asmsym:=CurrentAsmData.RefAsmSymbol(vs.MangledName,AT_DATA);
+             reference_reset_symbol(tmpref,asmsym,0,VoidPointerType.alignment,[]);
              hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,left.resultdef,CPointerDef.getreusable(resultdef),location.reference);
-             location.reference.index:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ptruinttype);
-             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,ptruinttype,ptruinttype,tmpref,location.reference.index);
+             location.reference.index:=hlcg.getintregister(CurrentAsmData.CurrAsmList,PtrUIntType);
+             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,PtrUIntType,PtrUIntType,tmpref,location.reference.index);
              { always packrecords C -> natural alignment }
              location.reference.alignment:=vs.vardef.alignment;
            end
@@ -577,26 +577,26 @@ implementation
            begin
              if not is_packed_record_or_object(left.resultdef) then
                begin
-                 inc(location.reference.offset,vs.fieldoffset);
-                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.fieldoffset);
+                 inc(location.reference.offset,vs.FieldOffset);
+                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.FieldOffset);
                end
-             else if (vs.fieldoffset mod 8 = 0) and
-                     (resultdef.packedbitsize mod 8 = 0) and
+             else if (vs.FieldOffset mod 8 = 0) and
+                     (resultdef.PackedBitSize mod 8 = 0) and
                      { is different in case of e.g. packenum 2 and an enum }
                      { which fits in 8 bits                                }
-                     (resultdef.size*8 = resultdef.packedbitsize) then
+                     (resultdef.size*8 = resultdef.PackedBitSize) then
                begin
-                 inc(location.reference.offset,vs.fieldoffset div 8);
-                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.fieldoffset div 8);
+                 inc(location.reference.offset,vs.FieldOffset div 8);
+                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.FieldOffset div 8);
                end
              else
                begin
                  sref.ref:=location.reference;
                  sref.ref.alignment:=1;
                  sref.bitindexreg:=NR_NO;
-                 inc(sref.ref.offset,vs.fieldoffset div 8);
-                 sref.startbit:=vs.fieldoffset mod 8;
-                 sref.bitlen:=resultdef.packedbitsize;
+                 inc(sref.ref.offset,vs.FieldOffset div 8);
+                 sref.startbit:=vs.FieldOffset mod 8;
+                 sref.bitlen:=resultdef.PackedBitSize;
                  if (left.location.loc=LOC_REFERENCE) then
                    location.loc:=LOC_SUBSETREF
                  else
@@ -622,9 +622,9 @@ implementation
           begin
             if (left.resultdef.typ=arraydef) then
              if not is_packed_array(left.resultdef) then
-              get_mul_size:=TArrayDef(left.resultdef).elesize
+              get_mul_size:=TArrayDef(left.resultdef).EleSize
              else
-              get_mul_size:=TArrayDef(left.resultdef).elepackedbitsize
+              get_mul_size:=TArrayDef(left.resultdef).ElePackedBitSize
             else
              get_mul_size:=resultdef.size;
           end
@@ -702,7 +702,7 @@ implementation
          hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,regsize,get_address_type,maybe_const_reg);
          sref.ref := location.reference;
          hreg := hlcg.getaddressregister(CurrentAsmData.CurrAsmList,get_address_type);
-         hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SUB,get_address_type,TArrayDef(left.resultdef).lowrange,maybe_const_reg,hreg);
+         hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SUB,get_address_type,TArrayDef(left.resultdef).LowRange,maybe_const_reg,hreg);
          hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_IMUL,get_address_type,l,hreg);
          { keep alignment for index }
          sref.ref.alignment := left.resultdef.alignment;
@@ -727,18 +727,18 @@ implementation
 {$push}
 {$warn 6018 off}
          { we can reuse hreg only if aluuinttype and get_address_type have the same size/type }
-         if aluuinttype.size<>get_address_type.size then
+         if ALUUIntType.size<>get_address_type.size then
            begin
-             sref.bitindexreg := hlcg.getintregister(CurrentAsmData.CurrAsmList,aluuinttype);
-             hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,get_address_type,aluuinttype,hreg,sref.bitindexreg);
+             sref.bitindexreg := hlcg.getintregister(CurrentAsmData.CurrAsmList,ALUUIntType);
+             hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,get_address_type,ALUUIntType,hreg,sref.bitindexreg);
            end
          else
            sref.bitindexreg:=hreg;
 {$pop}
 
-         hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_AND,aluuinttype,(1 shl (3+alignpower))-1,sref.bitindexreg);
+         hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_AND,ALUUIntType,(1 shl (3+alignpower))-1,sref.bitindexreg);
          sref.startbit := 0;
-         sref.bitlen := resultdef.packedbitsize;
+         sref.bitlen := resultdef.PackedBitSize;
          if (left.location.loc = LOC_REFERENCE) then
            location.loc := LOC_SUBSETREF
          else
@@ -785,16 +785,16 @@ implementation
        begin
          { omit range checking when this is an array access to a pointer which has been
            typecasted from an array }
-         if (ado_isconvertedpointer in TArrayDef(left.resultdef).arrayoptions) then
+         if (ado_isconvertedpointer in TArrayDef(left.resultdef).ArrayOptions) then
            exit;
          paraloc1.init;
          paraloc2.init;
          if is_dynamic_array(left.resultdef) then
             begin
-               pd:=search_system_proc('fpc_dynarray_rangecheck');
+               pd:=Search_System_Proc('fpc_dynarray_rangecheck');
                paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,2,paraloc2);
-               if pd.is_pushleftright then
+               if pd.Is_PushLeftRight then
                  begin
                    hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,left.resultdef,left.location,paraloc1);
                    hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,right.resultdef,right.location,paraloc2);
@@ -824,20 +824,20 @@ implementation
       begin
         paraloc1.init;
         paraloc2.init;
-        case TStringDef(left.resultdef).stringtype of
+        case TStringDef(left.resultdef).StringType of
           { it's the same for ansi- and wide strings }
           st_unicodestring,
           st_widestring,
           st_ansistring:
             begin
               if cs_zerobasedstrings in CurrentSettings.LocalSwitches then
-                helpername:='fpc_'+TStringDef(left.resultdef).stringtypname+'_zerobased_rangecheck'
+                helpername:='fpc_'+TStringDef(left.resultdef).StringTypName+'_zerobased_rangecheck'
               else
-                helpername:='fpc_'+TStringDef(left.resultdef).stringtypname+'_rangecheck';
-              pd:=search_system_proc(helpername);
+                helpername:='fpc_'+TStringDef(left.resultdef).StringTypName+'_rangecheck';
+              pd:=Search_System_Proc(helpername);
               paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
               paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,2,paraloc2);
-              if pd.is_pushleftright then
+              if pd.Is_PushLeftRight then
                 begin
                   hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,left.resultdef,left.location,paraloc1);
                   hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,right.resultdef,right.location,paraloc2);
@@ -883,7 +883,7 @@ implementation
          subsetref : TSubsetReference;
          temp : LongInt;
          hreg : TRegister;
-         indexdef : TDef;
+         IndexDef : TDef;
 
       begin
          paraloc1.init;
@@ -960,7 +960,7 @@ implementation
                 we assume to be always aligned to a multiple of the
                 pointer size
               }
-              location.reference.alignment:=voidpointertype.size;
+              location.reference.alignment:=VoidPointerType.size;
               location.reference.volatility:=[];
            end
          else
@@ -970,7 +970,7 @@ implementation
                LOC_CREGISTER,
                LOC_REGISTER:
                  begin
-                   if not(is_constnode(right)) or (TArrayDef(left.resultdef).elementdef.size<>alusinttype.size) then
+                   if not(is_constnode(right)) or (TArrayDef(left.resultdef).ElementDef.size<>ALUSIntType.size) then
                      begin
                        hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
                        location_copy(location,left.location);
@@ -1014,7 +1014,7 @@ implementation
               or is_64bitint(resultdef)
 {$endif not cpu64bitalu}
               ) then
-           update_reference_offset(location.reference,-TArrayDef(left.resultdef).lowrange,bytemulsize);
+           update_reference_offset(location.reference,-TArrayDef(left.resultdef).LowRange,bytemulsize);
 
          if right.nodetype=ordconstn then
            begin
@@ -1065,7 +1065,7 @@ implementation
                         end;
 {$endif defined(cpu64bitalu)}
 
-                      location_reset(location,left.location.loc,def_cgsize(TArrayDef(left.resultdef).elementdef));
+                      location_reset(location,left.location.loc,def_cgsize(TArrayDef(left.resultdef).ElementDef));
                       location.register:=hreg;
                     end;
                 end
@@ -1073,13 +1073,13 @@ implementation
                 begin
                   subsetref.ref := location.reference;
                   subsetref.ref.alignment := left.resultdef.alignment;
-                  if not IsPowerOf2(PackedBitsLoadSize(resultdef.packedbitsize),temp) then
+                  if not IsPowerOf2(PackedBitsLoadSize(resultdef.PackedBitSize),temp) then
                     InternalError(2006081212);
                   alignpow:=temp;
-                  update_reference_offset(subsetref.ref,(mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) shr (3+alignpow),1 shl alignpow);
+                  update_reference_offset(subsetref.ref,(mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).LowRange)) shr (3+alignpow),1 shl alignpow);
                   subsetref.bitindexreg := NR_NO;
-                  subsetref.startbit := (mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) and ((1 shl (3+alignpow))-1);
-                  subsetref.bitlen := resultdef.packedbitsize;
+                  subsetref.startbit := (mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).LowRange)) and ((1 shl (3+alignpow))-1);
+                  subsetref.bitlen := resultdef.PackedBitSize;
                   if (left.location.loc = LOC_REFERENCE) then
                     location.loc := LOC_SUBSETREF
                   else
@@ -1135,11 +1135,11 @@ implementation
               if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
                  not valid_index_size(right.location.size) then
                 begin
-                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,sizeuinttype,true);
-                  indexdef:=sizeuinttype
+                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,SizeUIntType,true);
+                  IndexDef:=SizeUIntType
                 end
               else
-                indexdef:=right.resultdef;
+                IndexDef:=right.resultdef;
 
             { produce possible range check code: }
               if cs_check_range in CurrentSettings.LocalSwitches then
@@ -1153,9 +1153,9 @@ implementation
               { insert the register and the multiplication factor in the
                 reference }
               if not is_packed_array(left.resultdef) then
-                update_reference_reg_mul(right.location.register,indexdef,mulsize)
+                update_reference_reg_mul(right.location.register,IndexDef,mulsize)
               else
-                update_reference_reg_packed(right.location.register,indexdef,mulsize);
+                update_reference_reg_packed(right.location.register,IndexDef,mulsize);
            end;
 
         location.size:=newsize;

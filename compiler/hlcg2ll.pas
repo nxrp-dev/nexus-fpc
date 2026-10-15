@@ -1061,7 +1061,7 @@ implementation
 
                 end;
               else
-                a_load_loc_reg(list,src_size,u32inttype,l,hregister);
+                a_load_loc_reg(list,src_size,U32IntType,l,hregister);
             end;
             { reset hi part, take care of the signed bit of the current value }
             hregisterhi:=cg.getintregister(list,OS_32);
@@ -1276,7 +1276,7 @@ implementation
               reg:=cg.getmmregister(list,OS_F64);
               cg64.a_loadmm_intreg64_reg(list,OS_F64,l.register64,reg);
               l.size:=OS_F64;
-              size:=s64floattype;
+              size:=S64FloatType;
             end
           else
 {$endif not cpu64bitalu}
@@ -1287,12 +1287,12 @@ implementation
                if (l.size in [OS_32,OS_S32]) then
                  begin
                    size:=cgsize_orddef(l.size);
-                   newsize:=s32floattype;
+                   newsize:=S32FloatType;
                  end
                else if (l.size in [OS_64,OS_S64]) then
                  begin
                    size:=cgsize_orddef(l.size);
-                   newsize:=s64floattype;
+                   newsize:=S64FloatType;
                  end
                else
                  newsize:=size;
@@ -1322,23 +1322,23 @@ implementation
 
   procedure THLCG2LL.gen_load_para_value(list: TAsmList);
 
-    procedure get_para(const paraloc:TCGParaLocation);
+    procedure get_para(const ParaLoc:TCGParaLocation);
       begin
-         case paraloc.loc of
+         case ParaLoc.loc of
            LOC_REGISTER :
              begin
-               if getsupreg(paraloc.register)<first_int_imreg then
-                 cg.getcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_int_imreg then
+                 cg.getcpuregister(list,ParaLoc.register);
              end;
            LOC_MMREGISTER :
              begin
-               if getsupreg(paraloc.register)<first_mm_imreg then
-                 cg.getcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_mm_imreg then
+                 cg.getcpuregister(list,ParaLoc.register);
              end;
            LOC_FPUREGISTER :
              begin
-               if getsupreg(paraloc.register)<first_fpu_imreg then
-                 cg.getcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_fpu_imreg then
+                 cg.getcpuregister(list,ParaLoc.register);
              end;
            else
              ;
@@ -1348,24 +1348,24 @@ implementation
    var
      i : LongInt;
      currpara : TParaVarSym;
-     paraloc  : PCGParaLocation;
+     ParaLoc  : PCGParaLocation;
    begin
-     if (po_assembler in CurrentProcInfo.procdef.procoptions) or
+     if (po_assembler in CurrentProcInfo.procdef.ProcOptions) or
      { exceptfilters have a single hidden 'parentfp' parameter, which
        is handled by tcg.g_proc_entry. }
-        (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+        (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
        exit;
 
      { Allocate registers used by parameters }
      for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
        begin
          currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-         paraloc:=currpara.paraloc[calleeside].location;
-         while Assigned(paraloc) do
+         ParaLoc:=currpara.ParaLoc[calleeside].location;
+         while Assigned(ParaLoc) do
            begin
-             if paraloc^.loc in [LOC_REGISTER,LOC_FPUREGISTER,LOC_MMREGISTER] then
-               get_para(paraloc^);
-             paraloc:=paraloc^.next;
+             if ParaLoc^.loc in [LOC_REGISTER,LOC_FPUREGISTER,LOC_MMREGISTER] then
+               get_para(ParaLoc^);
+             ParaLoc:=ParaLoc^.next;
            end;
        end;
 
@@ -1375,10 +1375,10 @@ implementation
          currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
          { don't use currpara.vardef, as this will be wrong in case of
            call-by-reference parameters (it won't contain the pointerdef) }
-         gen_load_cgpara_loc(list,currpara.paraloc[calleeside].def,currpara.paraloc[calleeside],currpara.initialloc,paramanager.param_use_paraloc(currpara.paraloc[calleeside]));
+         gen_load_cgpara_loc(list,currpara.ParaLoc[calleeside].def,currpara.ParaLoc[calleeside],currpara.InitialLoc,paramanager.param_use_paraloc(currpara.ParaLoc[calleeside]));
          { gen_load_cgpara_loc() already allocated the initialloc
            -> don't allocate again }
-         if currpara.initialloc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER] then
+         if currpara.InitialLoc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER] then
            begin
              gen_alloc_regvar(list,currpara,false);
              hlcg.varsym_set_localloc(list,currpara);
@@ -1388,8 +1388,8 @@ implementation
      { generate copies of call by value parameters, must be done before
        the initialization and body is parsed because the refcounts are
        incremented using the local copies }
-     CurrentProcInfo.procdef.parast.SymList.ForEachCall(@hlcg.g_copyvalueparas,list);
-     if not(po_assembler in CurrentProcInfo.procdef.procoptions) then
+     CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@hlcg.g_copyvalueparas,list);
+     if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
        begin
          { initialize refcounted paras, and trash others. Needed here
            instead of in gen_initialize_code, because when a reference is
@@ -1397,7 +1397,7 @@ implementation
            in a regvar, we add a register move and that one again has to
            come after the parameter loading code as far as the register
            allocator is concerned }
-         CurrentProcInfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
+         CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@init_paras,list);
        end;
    end;
 
@@ -1461,7 +1461,7 @@ implementation
             { Some targets pass floats in normal registers }
             LOC_REFERENCE,
             LOC_CREFERENCE:
-              if use_vectorfpu(size) then
+              if Use_VectorFPU(size) then
                 cg.a_loadmm_ref_cgpara(list,locsize,l.reference,cgpara,mms_movescalar)
               else
                 cg.a_loadfpu_ref_cgpara(list,locsize,l.reference,cgpara);
@@ -1551,7 +1551,7 @@ implementation
           begin
 {$ifdef cpu64bitalu}
             { use cg128 only if no "chained" location is used }
-            if is_methodpointer(cgpara.def) and (l.size in [OS_128,OS_S128]) and (cgpara.Size in [OS_128,OS_S128]) then
+            if Is_MethodPointer(cgpara.def) and (l.size in [OS_128,OS_S128]) and (cgpara.Size in [OS_128,OS_S128]) then
               cg128.a_load128_loc_cgpara(list,l,cgpara)
             else
 {$else cpu64bitalu}
@@ -1609,23 +1609,23 @@ implementation
 
   procedure THLCG2LL.gen_load_cgpara_loc(list: TAsmList; vardef: TDef; const para: TCGPara; var destloc: TLocation; reusepara: boolean);
 
-    procedure unget_para(const paraloc:TCGParaLocation);
+    procedure unget_para(const ParaLoc:TCGParaLocation);
       begin
-         case paraloc.loc of
+         case ParaLoc.loc of
            LOC_REGISTER :
              begin
-               if getsupreg(paraloc.register)<first_int_imreg then
-                 cg.ungetcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_int_imreg then
+                 cg.ungetcpuregister(list,ParaLoc.register);
              end;
            LOC_MMREGISTER :
              begin
-               if getsupreg(paraloc.register)<first_mm_imreg then
-                 cg.ungetcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_mm_imreg then
+                 cg.ungetcpuregister(list,ParaLoc.register);
              end;
            LOC_FPUREGISTER :
              begin
-               if getsupreg(paraloc.register)<first_fpu_imreg then
-                 cg.ungetcpuregister(list,paraloc.register);
+               if getsupreg(ParaLoc.register)<first_fpu_imreg then
+                 cg.ungetcpuregister(list,ParaLoc.register);
              end;
            else
              ;
@@ -1633,7 +1633,7 @@ implementation
       end;
 
     var
-      paraloc   : PCGParaLocation;
+      ParaLoc   : PCGParaLocation;
       href      : TReference;
       sizeleft  : aint;
       tempref   : TReference;
@@ -1644,11 +1644,11 @@ implementation
 
 {$endif not cpu64bitalu}
     begin
-      paraloc:=para.location;
-      if not Assigned(paraloc) then
+      ParaLoc:=para.location;
+      if not Assigned(ParaLoc) then
         InternalError(200408203);
       { skip e.g. empty records }
-      if (paraloc^.loc = LOC_VOID) then
+      if (ParaLoc^.loc = LOC_VOID) then
         exit;
       case destloc.loc of
         LOC_REFERENCE :
@@ -1659,16 +1659,16 @@ implementation
               begin
                 href:=destloc.reference;
                 sizeleft:=para.intsize;
-                while Assigned(paraloc) do
+                while Assigned(ParaLoc) do
                   begin
-                    if (paraloc^.size=OS_NO) then
+                    if (ParaLoc^.size=OS_NO) then
                       begin
                         { Can only be a reference that contains the rest
                           of the parameter }
-                        if (paraloc^.loc<>LOC_REFERENCE) or
-                           Assigned(paraloc^.next) then
+                        if (ParaLoc^.loc<>LOC_REFERENCE) or
+                           Assigned(ParaLoc^.next) then
                           InternalError(2005013010);
-                        cg.a_load_cgparaloc_ref(list,paraloc^,href,sizeleft,destloc.reference.alignment);
+                        cg.a_load_cgparaloc_ref(list,ParaLoc^,href,sizeleft,destloc.reference.alignment);
                         inc(href.offset,sizeleft);
                         sizeleft:=0;
                       end
@@ -1679,16 +1679,16 @@ implementation
                            and as on big endian system the parameters might be left aligned, we have to work
                            with the full register size for paraloc^.size }
                         if tcgsize2size[destloc.size]<>0 then
-                          loadsize:=min(min(tcgsize2size[paraloc^.size],tcgsize2size[destloc.size]),sizeleft)
+                          loadsize:=min(min(tcgsize2size[ParaLoc^.size],tcgsize2size[destloc.size]),sizeleft)
                         else
-                          loadsize:=min(tcgsize2size[paraloc^.size],sizeleft);
+                          loadsize:=min(tcgsize2size[ParaLoc^.size],sizeleft);
 
-                        cg.a_load_cgparaloc_ref(list,paraloc^,href,loadsize,destloc.reference.alignment);
+                        cg.a_load_cgparaloc_ref(list,ParaLoc^,href,loadsize,destloc.reference.alignment);
                         inc(href.offset,loadsize);
                         dec(sizeleft,loadsize);
                       end;
-                    unget_para(paraloc^);
-                    paraloc:=paraloc^.next;
+                    unget_para(ParaLoc^);
+                    ParaLoc:=ParaLoc^.next;
                   end;
               end;
           end;
@@ -1700,38 +1700,38 @@ implementation
                ({ in case of fpu emulation, or abi's that pass fpu values
                   via integer registers }
                 (vardef.typ=floatdef) or
-                 is_methodpointer(vardef) or
-                 is_record(vardef)) then
+                 Is_MethodPointer(vardef) or
+                 Is_Record(vardef)) then
               begin
-                case paraloc^.loc of
+                case ParaLoc^.loc of
                   LOC_REGISTER,
                   LOC_MMREGISTER:
                     begin
-                      if not Assigned(paraloc^.next) then
+                      if not Assigned(ParaLoc^.next) then
                         InternalError(200410104);
-                      case tcgsize2size[paraloc^.size] of
+                      case tcgsize2size[ParaLoc^.size] of
                         8:
                           begin
                             if (TargetInfo.endian=ENDIAN_BIG) then
                               begin
                                 { paraloc^ -> high
                                   paraloc^.next -> low }
-                                unget_para(paraloc^);
+                                unget_para(ParaLoc^);
                                 gen_alloc_regloc(list,destloc,vardef);
                                 { reg->reg, alignment is irrelevant }
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,destloc.register128.reghi,8);
-                                unget_para(paraloc^.next^);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^.next^,destloc.register128.reglo,8);
+                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reghi,8);
+                                unget_para(ParaLoc^.next^);
+                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^.next^,destloc.register128.reglo,8);
                               end
                             else
                               begin
                                 { paraloc^ -> low
                                   paraloc^.next -> high }
-                                unget_para(paraloc^);
+                                unget_para(ParaLoc^);
                                 gen_alloc_regloc(list,destloc,vardef);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,destloc.register128.reglo,8);
-                                unget_para(paraloc^.next^);
-                                cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^.next^,destloc.register128.reghi,8);
+                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reglo,8);
+                                unget_para(ParaLoc^.next^);
+                                cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^.next^,destloc.register128.reghi,8);
                               end;
                           end;
                         4:
@@ -1745,26 +1745,26 @@ implementation
                             gen_alloc_regloc(list,destloc,vardef);
                             tempreg:=cg.getintregister(list,OS_64);
                             // Low part of the 128-bit param
-                            unget_para(paraloc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,tempreg,4);
-                            paraloc:=paraloc^.next;
-                            if paraloc=nil then
+                            unget_para(ParaLoc^);
+                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,tempreg,4);
+                            ParaLoc:=ParaLoc^.next;
+                            if ParaLoc=nil then
                               InternalError(2018101703);
-                            unget_para(paraloc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,destloc.register128.reglo,4);
+                            unget_para(ParaLoc^);
+                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reglo,4);
                             cg.a_op_const_reg(list,OP_SHL,OS_64,32,destloc.register128.reglo);
                             cg.a_op_reg_reg(list,OP_OR,OS_64,tempreg,destloc.register128.reglo);
                             // High part of the 128-bit param
-                            paraloc:=paraloc^.next;
-                            if paraloc=nil then
+                            ParaLoc:=ParaLoc^.next;
+                            if ParaLoc=nil then
                               InternalError(2018101704);
-                            unget_para(paraloc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,tempreg,4);
-                            paraloc:=paraloc^.next;
-                            if paraloc=nil then
+                            unget_para(ParaLoc^);
+                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,tempreg,4);
+                            ParaLoc:=ParaLoc^.next;
+                            if ParaLoc=nil then
                               InternalError(2018101705);
-                            unget_para(paraloc^);
-                            cg.a_load_cgparaloc_anyreg(list,OS_64,paraloc^,destloc.register128.reghi,4);
+                            unget_para(ParaLoc^);
+                            cg.a_load_cgparaloc_anyreg(list,OS_64,ParaLoc^,destloc.register128.reghi,4);
                             cg.a_op_const_reg(list,OP_SHL,OS_64,32,destloc.register128.reghi);
                             cg.a_op_reg_reg(list,OP_OR,OS_64,tempreg,destloc.register128.reghi);
                           end
@@ -1775,9 +1775,9 @@ implementation
                   LOC_REFERENCE:
                     begin
                       gen_alloc_regloc(list,destloc,vardef);
-                      reference_reset_base(href,CPointerDef.getreusable(vardef),paraloc^.reference.index,paraloc^.reference.offset,ctempposinvalid,para.alignment,[]);
+                      reference_reset_base(href,CPointerDef.getreusable(vardef),ParaLoc^.reference.index,ParaLoc^.reference.offset,ctempposinvalid,para.alignment,[]);
                       cg128.a_load128_ref_reg(list,href,destloc.register128);
-                      unget_para(paraloc^);
+                      unget_para(ParaLoc^);
                     end;
                   else
                     InternalError(2012090607);
@@ -1790,10 +1790,10 @@ implementation
                 { in case of fpu emulation, or abi's that pass fpu values
                   via integer registers }
                 (vardef.typ=floatdef) or
-                 is_methodpointer(vardef) or
-                 is_record(vardef)) then
+                 Is_MethodPointer(vardef) or
+                 Is_Record(vardef)) then
               begin
-                case paraloc^.loc of
+                case ParaLoc^.loc of
                   LOC_REGISTER:
                     begin
                       case para.locations_count of
@@ -1804,22 +1804,22 @@ implementation
                             begin
                               { paraloc^ -> high
                                 paraloc^.next -> low }
-                              unget_para(paraloc^);
+                              unget_para(ParaLoc^);
                               gen_alloc_regloc(list,destloc,vardef);
                               { reg->reg, alignment is irrelevant }
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,paraloc^,destloc.register64.reghi,4);
-                              unget_para(paraloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,paraloc^.next^,destloc.register64.reglo,4);
+                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^,destloc.register64.reghi,4);
+                              unget_para(ParaLoc^.next^);
+                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,destloc.register64.reglo,4);
                             end
                           else
                             begin
                               { paraloc^ -> low
                                 paraloc^.next -> high }
-                              unget_para(paraloc^);
+                              unget_para(ParaLoc^);
                               gen_alloc_regloc(list,destloc,vardef);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,paraloc^,destloc.register64.reglo,4);
-                              unget_para(paraloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_32,paraloc^.next^,destloc.register64.reghi,4);
+                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^,destloc.register64.reglo,4);
+                              unget_para(ParaLoc^.next^);
+                              cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,destloc.register64.reghi,4);
                             end;
                         else
                           { unexpected number of paralocs }
@@ -1829,9 +1829,9 @@ implementation
                   LOC_REFERENCE:
                     begin
                       gen_alloc_regloc(list,destloc,vardef);
-                      reference_reset_base(href,CPointerDef.getreusable(vardef),paraloc^.reference.index,paraloc^.reference.offset,ctempposinvalid,para.alignment,[]);
+                      reference_reset_base(href,CPointerDef.getreusable(vardef),ParaLoc^.reference.index,ParaLoc^.reference.offset,ctempposinvalid,para.alignment,[]);
                       cg64.a_load64_ref_reg(list,href,destloc.register64);
-                      unget_para(paraloc^);
+                      unget_para(ParaLoc^);
                     end;
                   else
                     InternalError(2005101501);
@@ -1840,17 +1840,17 @@ implementation
             else
 {$endif cpu64bitalu}
               begin
-                if Assigned(paraloc^.next) then
+                if Assigned(ParaLoc^.next) then
                   begin
                     if (destloc.size in [OS_PAIR,OS_SPAIR]) and
                       (para.Size in [OS_PAIR,OS_SPAIR]) then
                       begin
-                        unget_para(paraloc^);
+                        unget_para(ParaLoc^);
                         gen_alloc_regloc(list,destloc,vardef);
-                        cg.a_load_cgparaloc_anyreg(list,OS_INT,paraloc^,destloc.register,sizeof(aint));
-                        unget_para(paraloc^.Next^);
+                        cg.a_load_cgparaloc_anyreg(list,OS_INT,ParaLoc^,destloc.register,sizeof(aint));
+                        unget_para(ParaLoc^.Next^);
 
-                          cg.a_load_cgparaloc_anyreg(list,OS_INT,paraloc^.Next^,destloc.registerhi,sizeof(aint));
+                          cg.a_load_cgparaloc_anyreg(list,OS_INT,ParaLoc^.Next^,destloc.registerhi,sizeof(aint));
 
                       end
 
@@ -1872,16 +1872,16 @@ implementation
                         gen_alloc_regloc(list,destloc,vardef);
                         while sizeleft>0 do
                           begin
-                            if not Assigned(paraloc) then
+                            if not Assigned(ParaLoc) then
                               InternalError(2014122807);
-                            unget_para(paraloc^);
-                            cg.a_load_cgparaloc_ref(list,paraloc^,tempref,sizeleft,NewAlignment(para.alignment,para.intsize-sizeleft));
-                            if (paraloc^.size=OS_NO) and
-                               Assigned(paraloc^.next) then
+                            unget_para(ParaLoc^);
+                            cg.a_load_cgparaloc_ref(list,ParaLoc^,tempref,sizeleft,NewAlignment(para.alignment,para.intsize-sizeleft));
+                            if (ParaLoc^.size=OS_NO) and
+                               Assigned(ParaLoc^.next) then
                               InternalError(2014122805);
-                            inc(tempref.offset,tcgsize2size[paraloc^.size]);
-                            dec(sizeleft,tcgsize2size[paraloc^.size]);
-                            paraloc:=paraloc^.next;
+                            inc(tempref.offset,tcgsize2size[ParaLoc^.size]);
+                            dec(sizeleft,tcgsize2size[ParaLoc^.size]);
+                            ParaLoc:=ParaLoc^.next;
                           end;
                         dec(tempref.offset,para.intsize);
                         cg.a_load_ref_reg(list,para.size,para.size,tempref,destloc.register);
@@ -1890,20 +1890,20 @@ implementation
                   end
                 else
                   begin
-                    unget_para(paraloc^);
+                    unget_para(ParaLoc^);
                     gen_alloc_regloc(list,destloc,vardef);
-                    cg.a_load_cgparaloc_anyreg(list,destloc.size,paraloc^,destloc.register,sizeof(aint));
+                    cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,sizeof(aint));
                   end;
               end;
           end;
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER :
           begin
-            unget_para(paraloc^);
+            unget_para(ParaLoc^);
             gen_alloc_regloc(list,destloc,vardef);
             { from register to register -> alignment is irrelevant }
-            cg.a_load_cgparaloc_anyreg(list,destloc.size,paraloc^,destloc.register,0);
-            if Assigned(paraloc^.next) then
+            cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,0);
+            if Assigned(ParaLoc^.next) then
               InternalError(200410109);
           end;
         LOC_MMREGISTER,
@@ -1912,46 +1912,46 @@ implementation
 {$ifndef cpu64bitalu}
             { ARM vfp floats are passed in integer registers }
             if (para.size=OS_F64) and
-               (paraloc^.size in [OS_32,OS_S32]) and
-               use_vectorfpu(vardef) then
+               (ParaLoc^.size in [OS_32,OS_S32]) and
+               Use_VectorFPU(vardef) then
               begin
                 { we need 2x32bit reg }
-                if not Assigned(paraloc^.next) or
-                   Assigned(paraloc^.next^.next) then
+                if not Assigned(ParaLoc^.next) or
+                   Assigned(ParaLoc^.next^.next) then
                   InternalError(2009112421);
-                unget_para(paraloc^.next^);
-                case paraloc^.next^.loc of
+                unget_para(ParaLoc^.next^);
+                case ParaLoc^.next^.loc of
                   LOC_REGISTER:
-                    tempreg:=paraloc^.next^.register;
+                    tempreg:=ParaLoc^.next^.register;
                   LOC_REFERENCE:
                     begin
                       tempreg:=cg.getintregister(list,OS_32);
-                      cg.a_load_cgparaloc_anyreg(list,OS_32,paraloc^.next^,tempreg,4);
+                      cg.a_load_cgparaloc_anyreg(list,OS_32,ParaLoc^.next^,tempreg,4);
                     end;
                   else
                     InternalError(2012051301);
                 end;
                 { don't free before the above, because then the getintregister
                   could reallocate this register and overwrite it }
-                unget_para(paraloc^);
+                unget_para(ParaLoc^);
                 gen_alloc_regloc(list,destloc,vardef);
                 if (TargetInfo.endian=endian_big) then
                   { paraloc^ -> high
                     paraloc^.next -> low }
-                  reg64:=joinreg64(tempreg,paraloc^.register)
+                  reg64:=joinreg64(tempreg,ParaLoc^.register)
                 else
-                  reg64:=joinreg64(paraloc^.register,tempreg);
+                  reg64:=joinreg64(ParaLoc^.register,tempreg);
                 cg64.a_loadmm_intreg64_reg(list,OS_F64,reg64,destloc.register);
               end
             else
 {$endif not cpu64bitalu}
               begin
-                if not Assigned(paraloc^.next) then
+                if not Assigned(ParaLoc^.next) then
                   begin
-                    unget_para(paraloc^);
+                    unget_para(ParaLoc^);
                     gen_alloc_regloc(list,destloc,vardef);
                     { from register to register -> alignment is irrelevant }
-                    cg.a_load_cgparaloc_anyreg(list,destloc.size,paraloc^,destloc.register,0);
+                    cg.a_load_cgparaloc_anyreg(list,destloc.size,ParaLoc^,destloc.register,0);
                   end
                 else
                   begin

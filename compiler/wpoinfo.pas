@@ -52,8 +52,8 @@ type
 
     procedure deref;
     procedure derefimpl;
-    procedure buildderef;
-    procedure buildderefimpl;
+    procedure BuildDeref;
+    procedure BuildDerefImpl;
   end;
 
 
@@ -100,13 +100,13 @@ implementation
       }
       ppufile.PutLongInt(fcreatedobjtypes.count);
       for i:=0 to fcreatedobjtypes.count-1 do
-        ppufile.putderef(fcreatedobjtypesderefs[i]);
+        ppufile.PutDeref(fcreatedobjtypesderefs[i]);
       ppufile.PutLongInt(fcreatedclassrefobjtypes.count);
       for i:=0 to fcreatedclassrefobjtypes.count-1 do
-        ppufile.putderef(fcreatedclassrefobjtypesderefs[i]);
+        ppufile.PutDeref(fcreatedclassrefobjtypesderefs[i]);
       ppufile.PutLongInt(fmaybecreatedbyclassrefdeftypes.count);
       for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
-        ppufile.putderef(fmaybecreatedbyclassrefdeftypesderefs[i]);
+        ppufile.PutDeref(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
       ppufile.PutLongInt(fcalledvmtentriestemplist.count);
       for i:=0 to fcalledvmtentriestemplist.count-1 do
@@ -140,21 +140,21 @@ implementation
           fcreatedobjtypes.count:=len;
           SetLength(fcreatedobjtypesderefs,len);
           for i:=0 to len-1 do
-            ppufile.getderef(fcreatedobjtypesderefs[i]);
+            ppufile.GetDeref(fcreatedobjtypesderefs[i]);
 
           len:=ppufile.GetLongInt;
           fcreatedclassrefobjtypes:=TFPObjectList.create(false);
           fcreatedclassrefobjtypes.count:=len;
           SetLength(fcreatedclassrefobjtypesderefs,len);
           for i:=0 to len-1 do
-            ppufile.getderef(fcreatedclassrefobjtypesderefs[i]);
+            ppufile.GetDeref(fcreatedclassrefobjtypesderefs[i]);
 
           len:=ppufile.GetLongInt;
           fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
           fmaybecreatedbyclassrefdeftypes.count:=len;
           SetLength(fmaybecreatedbyclassrefdeftypesderefs,len);
           for i:=0 to len-1 do
-            ppufile.getderef(fmaybecreatedbyclassrefdeftypesderefs[i]);
+            ppufile.GetDeref(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
           len:=ppufile.GetLongInt;
           fcalledvmtentriestemplist:=TFPObjectList.create(false);
@@ -166,7 +166,7 @@ implementation
     end;
 
 
-  procedure TUnitWPOInfo.buildderef;
+  procedure TUnitWPOInfo.BuildDeref;
     var
       i: LongInt;
     begin
@@ -190,7 +190,7 @@ implementation
       fcalledvmtentriestemplist.count:=fcalledvmtentries.count;
       for i:=0 to fcalledvmtentries.count-1 do
         begin
-          TCalledVMTEntries(fcalledvmtentries[i]).buildderef;
+          TCalledVMTEntries(fcalledvmtentries[i]).BuildDeref;
           { necessary in case we have unit1 loads unit2, unit2 is recompiled,
             then unit1 derefs unit2 -> in this case we have buildderef for unit2
             -> ppuwrite for unit2 -> deref for unit2 (without a load) -> ensure
@@ -201,13 +201,13 @@ implementation
     end;
 
 
-  procedure TUnitWPOInfo.buildderefimpl;
+  procedure TUnitWPOInfo.BuildDerefImpl;
     var
       i: LongInt;
     begin
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         begin
-          TCalledVMTEntries(fcalledvmtentriestemplist[i]).buildderefimpl;
+          TCalledVMTEntries(fcalledvmtentriestemplist[i]).BuildDerefImpl;
         end;
     end;
 
@@ -244,7 +244,7 @@ implementation
           with TCalledVMTEntries(fcalledvmtentriestemplist[i]) do
             begin
               deref;
-              fcalledvmtentries.add(TObjectDef(objdef).vmt_mangledname,
+              fcalledvmtentries.add(TObjectDef(objdef).VMT_MangledName,
                 fcalledvmtentriestemplist[i]);
             end;
         end;

@@ -808,7 +808,7 @@ unit cgx86;
         stubname: string;
       begin
         stubname := 'L'+s+'$stub';
-        result := CurrentAsmData.getasmsymbol(stubname);
+        result := CurrentAsmData.GetAsmSymbol(stubname);
         if Assigned(result) then
           exit;
 
@@ -816,7 +816,7 @@ unit cgx86;
           CurrentAsmData.asmlists[al_imports]:=TAsmList.create;
 
         new_section(CurrentAsmData.asmlists[al_imports],sec_stub,'',0);
-        result := CurrentAsmData.DefineAsmSymbol(stubname,AB_LOCAL,AT_FUNCTION,voidcodepointertype);
+        result := CurrentAsmData.DefineAsmSymbol(stubname,AB_LOCAL,AT_FUNCTION,VoidCodePointerType);
         CurrentAsmData.asmlists[al_imports].concat(TAISymbol.Create(result,0));
         { register as a weak symbol if necessary }
         if weak then
@@ -3263,8 +3263,8 @@ unit cgx86;
           hreg: TRegister;
         begin
           regsize:=0;
-          usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption);
-          regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
+          usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+          regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
           for r := low(regs_to_save_int) to high(regs_to_save_int) do
             if regs_to_save_int[r] in usedregs then
               begin
@@ -3288,7 +3288,7 @@ unit cgx86;
 
 {$ifdef i386}
         { interrupt support for i386 }
-        if (po_interrupt in CurrentProcInfo.procdef.procoptions) then
+        if (po_interrupt in CurrentProcInfo.procdef.ProcOptions) then
           begin
             { .... also the segment registers }
             list.concat(TAICPU.Op_reg(A_PUSH,S_W,NR_GS));
@@ -3331,7 +3331,7 @@ unit cgx86;
                 { Return address and FP are both on stack }
                 CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,2*sizeof(PInt));
                 CurrentAsmData.asmcfi.cfa_offset(list,NR_FRAME_POINTER_REG,-(2*sizeof(PInt)));
-                if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
+                if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
                   list.concat(TAICPU.op_reg_reg(A_MOV,tcgsize2opsize[OS_ADDR],NR_STACK_POINTER_REG,NR_FRAME_POINTER_REG))
                 else
                   begin
@@ -3351,7 +3351,7 @@ unit cgx86;
                ((TargetInfo.stackalign>sizeof(PInt)) and
                 (stackmisalignment <> 0) and
                 ((pi_do_call in CurrentProcInfo.flags) or
-                 (po_assembler in CurrentProcInfo.procdef.procoptions))) then
+                 (po_assembler in CurrentProcInfo.procdef.ProcOptions))) then
               begin
                 if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
@@ -3368,7 +3368,7 @@ unit cgx86;
 {$ifdef i386}
             if (not paramanager.use_fixed_stack) and
                (CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG) and
-               (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) then
+               (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
               begin
                 regsize:=0;
                 push_regs;
@@ -3408,8 +3408,8 @@ unit cgx86;
         regs_to_save_int: TCPURegisterArray;
       begin
         href:=CurrentProcInfo.save_regs_ref;
-        usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
+        usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
         for r:=high(regs_to_save_int) downto low(regs_to_save_int) do
           if regs_to_save_int[r] in usedregs then
             begin
@@ -3463,7 +3463,7 @@ unit cgx86;
          CurrentAsmData.getjumplabel(hl);
          if not ((def.typ=pointerdef) or
                 ((def.typ=orddef) and
-                 (TOrdDef(def).ordtype in [u64bit,u16bit,u32bit,u8bit,uchar,
+                 (TOrdDef(def).OrdType in [u64bit,u16bit,u32bit,u8bit,uchar,
                                            pasbool1,pasbool8,pasbool16,pasbool32,pasbool64]))) then
            cond:=C_NO
          else

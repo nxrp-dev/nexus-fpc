@@ -49,19 +49,19 @@ unit paramgr;
           { Returns true if a result variable should be allocated for an assembler routine }
           function asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;virtual;
 
-          function push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
-          function keep_para_array_range(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
+          function push_high_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
+          function keep_para_array_range(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
 
           { Returns true if a parameter is too large to copy and only
             the address is pushed
           }
-          function push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;abstract;
+          function push_addr_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;abstract;
           { returns true if a parameter must be handled via copy-out (construct
             a reference, copy the parameter's value there in case of copy-in/out, pass the reference)
           }
-          function push_copyout_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
+          function push_copyout_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
           { return the size of a push }
-          function push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;virtual;
+          function push_size(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;virtual;
           {# Returns a structure giving the information on
             the storage of the parameter (which must be
             an integer parameter). This is only used when calling
@@ -103,7 +103,7 @@ unit paramgr;
             @param(list Current assembler list)
             @param(loc Parameter location element)
           }
-          procedure allocparaloc(list: TAsmList; const paraloc: PCGParaLocation);
+          procedure allocparaloc(list: TAsmList; const ParaLoc: PCGParaLocation);
 
           {# allocate a parameter location created with create_paraloc_info
 
@@ -145,7 +145,7 @@ unit paramgr;
           }
           function  create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;virtual;abstract;
 
-          function is_stack_paraloc(paraloc: PCGParaLocation): boolean;virtual;
+          function is_stack_paraloc(ParaLoc: PCGParaLocation): boolean;virtual;
           procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
           procedure duplicatecgparaloc(const orgparaloc: PCGParaLocation; intonewparaloc: PCGParaLocation);
           procedure duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
@@ -184,7 +184,7 @@ unit paramgr;
           { convert a single CGParaLocation to a RTTIParaLoc; the method *might*
             be overridden by targets to provide backwards compatibility with
             older versions in case register indices changed }
-          function cgparaloc_to_rttiparaloc(paraloc:PCGParaLocation):TRTTIParaLoc;virtual;
+          function cgparaloc_to_rttiparaloc(ParaLoc:PCGParaLocation):TRTTIParaLoc;virtual;
        end;
 
 
@@ -217,8 +217,8 @@ implementation
          ret_in_param:=(def.typ=arraydef) or
            (def.typ=recorddef) or
            (def.typ=stringdef) or
-           ((def.typ=procvardef) and not TProcVarDef(def).is_addressonly) or
-           ((def.typ=objectdef) and (is_object(def))) or
+           ((def.typ=procvardef) and not TProcVarDef(def).Is_AddressOnly) or
+           ((def.typ=objectdef) and (Is_Object(def))) or
            ((def.typ=setdef) and not is_smallset(def));
       end;
 
@@ -226,13 +226,13 @@ implementation
     { true if a result variable should be allocated for an assembler routine }
     function TParaManager.asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;
       begin
-        if not(po_assembler in pd.procoptions) then
+        if not(po_assembler in pd.ProcOptions) then
           InternalError(2018021501);
         result:=true;
       end;
 
 
-    function TParaManager.push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
+    function TParaManager.push_high_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
       begin
          push_high_param:=not(calloption in cdecl_pocalls) and
                           (
@@ -243,32 +243,32 @@ implementation
       end;
 
 
-    function TParaManager.keep_para_array_range(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
+    function TParaManager.keep_para_array_range(VarSpez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
-        result:=push_high_param(varspez,def,calloption);
+        result:=push_high_param(VarSpez,def,calloption);
       end;
 
 
-    function TParaManager.push_copyout_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
+    function TParaManager.push_copyout_param(VarSpez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
         push_copyout_param:=false;
       end;
 
 
     { return the size of a push }
-    function TParaManager.push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;
+    function TParaManager.push_size(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;
       begin
         push_size:=-1;
-        case varspez of
+        case VarSpez of
           vs_constref,
           vs_out,
           vs_var :
-            push_size:=voidpointertype.size;
+            push_size:=VoidPointerType.size;
           vs_value,
           vs_const :
             begin
-                if push_addr_param(varspez,def,calloption) then
-                  push_size:=voidpointertype.size
+                if push_addr_param(VarSpez,def,calloption) then
+                  push_size:=VoidPointerType.size
                 else
                   begin
                     { special array are normally pushed by addr, only for
@@ -353,29 +353,29 @@ implementation
         result:=inv;
       end;
 
-    procedure TParaManager.allocparaloc(list: TAsmList; const paraloc: PCGParaLocation);
+    procedure TParaManager.allocparaloc(list: TAsmList; const ParaLoc: PCGParaLocation);
       begin
-        case paraloc^.loc of
+        case ParaLoc^.loc of
           LOC_REGISTER,
           LOC_CREGISTER:
             begin
-              if getsupreg(paraloc^.register)<first_int_imreg then
-                cg.getcpuregister(list,paraloc^.register);
+              if getsupreg(ParaLoc^.register)<first_int_imreg then
+                cg.getcpuregister(list,ParaLoc^.register);
             end;
 {$ifndef x86}
 { don't allocate ST(x), they're not handled by the register allocator }
           LOC_FPUREGISTER,
           LOC_CFPUREGISTER:
             begin
-              if getsupreg(paraloc^.register)<first_fpu_imreg then
-                cg.getcpuregister(list,paraloc^.register);
+              if getsupreg(ParaLoc^.register)<first_fpu_imreg then
+                cg.getcpuregister(list,ParaLoc^.register);
             end;
 {$endif not x86}
           LOC_MMREGISTER,
           LOC_CMMREGISTER :
             begin
-              if getsupreg(paraloc^.register)<first_mm_imreg then
-                cg.getcpuregister(list,paraloc^.register);
+              if getsupreg(ParaLoc^.register)<first_mm_imreg then
+                cg.getcpuregister(list,ParaLoc^.register);
             end;
           else
             ;
@@ -385,45 +385,45 @@ implementation
 
     procedure TParaManager.alloccgpara(list: TAsmList; const cgpara: TCGPara);
       var
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
-        paraloc:=cgpara.location;
-        while Assigned(paraloc) do
+        ParaLoc:=cgpara.location;
+        while Assigned(ParaLoc) do
           begin
-            allocparaloc(list,paraloc);
-            paraloc:=paraloc^.next;
+            allocparaloc(list,ParaLoc);
+            ParaLoc:=ParaLoc^.next;
           end;
       end;
 
 
     procedure TParaManager.freecgpara(list: TAsmList; const cgpara: TCGPara);
       var
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
         href : TReference;
       begin
-        paraloc:=cgpara.location;
-        while Assigned(paraloc) do
+        ParaLoc:=cgpara.location;
+        while Assigned(ParaLoc) do
           begin
-            case paraloc^.loc of
+            case ParaLoc^.loc of
               LOC_VOID:
                 ;
               LOC_REGISTER,
               LOC_CREGISTER:
                 begin
-                  if getsupreg(paraloc^.register)<first_int_imreg then
-                    cg.ungetcpuregister(list,paraloc^.register);
+                  if getsupreg(ParaLoc^.register)<first_int_imreg then
+                    cg.ungetcpuregister(list,ParaLoc^.register);
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER:
                 begin
-                  if getsupreg(paraloc^.register)<first_fpu_imreg then
-                    cg.ungetcpuregister(list,paraloc^.register);
+                  if getsupreg(ParaLoc^.register)<first_fpu_imreg then
+                    cg.ungetcpuregister(list,ParaLoc^.register);
                 end;
               LOC_MMREGISTER,
               LOC_CMMREGISTER :
                 begin
-                  if getsupreg(paraloc^.register)<first_mm_imreg then
-                    cg.ungetcpuregister(list,paraloc^.register);
+                  if getsupreg(ParaLoc^.register)<first_mm_imreg then
+                    cg.ungetcpuregister(list,ParaLoc^.register);
                 end;
               LOC_REFERENCE,
               LOC_CREFERENCE :
@@ -432,8 +432,8 @@ implementation
                     begin
                       { don't use reference_reset_base, because that will depend on cgobj }
                       fillchar(href,sizeof(href),0);
-                      href.base:=paraloc^.reference.index;
-                      href.offset:=paraloc^.reference.offset;
+                      href.base:=ParaLoc^.reference.index;
+                      href.offset:=ParaLoc^.reference.offset;
                       href.temppos:=ctempposinvalid;
                       tg.ungetiftemp(list,href);
                     end;
@@ -441,38 +441,38 @@ implementation
               else
                 InternalError(2004110212);
             end;
-            paraloc:=paraloc^.next;
+            ParaLoc:=ParaLoc^.next;
           end;
       end;
 
 
     function TParaManager.get_safecallresult_funcretloc(p: TAbstractProcDef; side: TCallerCallee): TCGPara;
       var
-        paraloc: PCGParaLocation;
+        ParaLoc: PCGParaLocation;
       begin
         result.init;
-        result.def:=ossinttype;
+        result.def:=OSSIntType;
         result.intsize:=result.def.size;
         result.size:=def_cgsize(result.def);
         result.alignment:=result.def.alignment;
-        paraloc:=result.add_location;
-        paraloc^.size:=result.size;
-        paraloc^.def:=result.def;
-        paraloc^.loc:=LOC_REGISTER;
+        ParaLoc:=result.add_location;
+        ParaLoc^.size:=result.size;
+        ParaLoc^.def:=result.def;
+        ParaLoc^.loc:=LOC_REGISTER;
         if side=callerside then
-          paraloc^.register:=NR_FUNCTION_RESULT_REG
+          ParaLoc^.register:=NR_FUNCTION_RESULT_REG
         else
-          paraloc^.register:=NR_FUNCTION_RETURN_REG;
+          ParaLoc^.register:=NR_FUNCTION_RETURN_REG;
         result.Temporary:=true;
       end;
 
 
-    function TParaManager.is_stack_paraloc(paraloc: PCGParaLocation): boolean;
+    function TParaManager.is_stack_paraloc(ParaLoc: PCGParaLocation): boolean;
       begin
         result:=
-          Assigned(paraloc) and
-          (paraloc^.loc=LOC_REFERENCE) and
-          (paraloc^.reference.index=NR_STACK_POINTER_REG);
+          Assigned(ParaLoc) and
+          (ParaLoc^.loc=LOC_REFERENCE) and
+          (ParaLoc^.reference.index=NR_STACK_POINTER_REG);
       end;
 
 
@@ -480,29 +480,29 @@ implementation
       var
         href : TReference;
         len  : aint;
-        paraloc,
+        ParaLoc,
         newparaloc : PCGParaLocation;
       begin
-        paraloc:=parasym.paraloc[callerside].location;
+        ParaLoc:=parasym.ParaLoc[callerside].location;
         cgpara.reset;
-        cgpara.size:=parasym.paraloc[callerside].size;
-        cgpara.intsize:=parasym.paraloc[callerside].intsize;
-        cgpara.alignment:=parasym.paraloc[callerside].alignment;
-        cgpara.def:=parasym.paraloc[callerside].def;
-        while Assigned(paraloc) do
+        cgpara.size:=parasym.ParaLoc[callerside].size;
+        cgpara.intsize:=parasym.ParaLoc[callerside].intsize;
+        cgpara.alignment:=parasym.ParaLoc[callerside].alignment;
+        cgpara.def:=parasym.ParaLoc[callerside].def;
+        while Assigned(ParaLoc) do
           begin
-            if paraloc^.size=OS_NO then
-              len:=push_size(parasym.varspez,parasym.vardef,calloption)
+            if ParaLoc^.size=OS_NO then
+              len:=push_size(parasym.VarSpez,parasym.vardef,calloption)
             else
-              len:=tcgsize2size[paraloc^.size];
+              len:=tcgsize2size[ParaLoc^.size];
             newparaloc:=cgpara.add_location;
-            newparaloc^.size:=paraloc^.size;
-            newparaloc^.def:=paraloc^.def;
+            newparaloc^.size:=ParaLoc^.size;
+            newparaloc^.def:=ParaLoc^.def;
             { shiftval overlaps with part of the reference, so it may be
               different from 0 and if wr then force the newparaloc to a register
               in the optimization below, shiftval will remain <> 0 }
-            if not(paraloc^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-              newparaloc^.shiftval:=paraloc^.shiftval;
+            if not(ParaLoc^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+              newparaloc^.shiftval:=ParaLoc^.shiftval;
             { $warning maybe release this optimization for all targets?  }
             { released for all CPUs:
               i386 isn't affected anyways because it uses the stack to push parameters
@@ -510,40 +510,40 @@ implementation
             { Does it fit a register? }
             if ((not can_use_final_stack_loc and
                  use_fixed_stack) or
-                not is_stack_paraloc(paraloc)) and
+                not is_stack_paraloc(ParaLoc)) and
                (len<=sizeof(PInt)) and
-               (paraloc^.size in [OS_8,OS_16,OS_32,OS_64,OS_128,OS_S8,OS_S16,OS_S32,OS_S64,OS_S128]) then
+               (ParaLoc^.size in [OS_8,OS_16,OS_32,OS_64,OS_128,OS_S8,OS_S16,OS_S32,OS_S64,OS_S128]) then
               newparaloc^.loc:=LOC_REGISTER
             else
-              newparaloc^.loc:=paraloc^.loc;
+              newparaloc^.loc:=ParaLoc^.loc;
             case newparaloc^.loc of
               LOC_REGISTER :
                 begin
-                  if (vo_has_explicit_paraloc in parasym.varoptions) and (paraloc^.loc = LOC_REGISTER) then
-                    if getregtype(paraloc^.register) = R_ADDRESSREGISTER then
+                  if (vo_has_explicit_paraloc in parasym.VarOptions) and (ParaLoc^.loc = LOC_REGISTER) then
+                    if getregtype(ParaLoc^.register) = R_ADDRESSREGISTER then
                       newparaloc^.register:=cg.getaddressregister(list)
                     else
-                      newparaloc^.register:=cg.getintregister(list,paraloc^.size)
+                      newparaloc^.register:=cg.getintregister(list,ParaLoc^.size)
                   else
                     begin
                       {$ifdef cpu_uses_separate_address_registers}
-                      if hlcg.def2regtyp(paraloc^.def) = R_ADDRESSREGISTER then
-                        newparaloc^.register:=hlcg.getaddressregister(list,paraloc^.def)
+                      if hlcg.def2regtyp(ParaLoc^.def) = R_ADDRESSREGISTER then
+                        newparaloc^.register:=hlcg.getaddressregister(list,ParaLoc^.def)
                       else
                       {$endif}
-                        newparaloc^.register:=cg.getintregister(list,paraloc^.size);
+                        newparaloc^.register:=cg.getintregister(list,ParaLoc^.size);
                     end;
                 end;
               LOC_FPUREGISTER :
-                newparaloc^.register:=cg.getfpuregister(list,paraloc^.size);
+                newparaloc^.register:=cg.getfpuregister(list,ParaLoc^.size);
               LOC_MMREGISTER :
-                newparaloc^.register:=cg.getmmregister(list,paraloc^.size);
+                newparaloc^.register:=cg.getmmregister(list,ParaLoc^.size);
               LOC_REFERENCE :
                 begin
                   if (can_use_final_stack_loc or
                       not use_fixed_stack) and
-                     is_stack_paraloc(paraloc) then
-                    duplicatecgparaloc(paraloc,newparaloc)
+                     is_stack_paraloc(ParaLoc) then
+                    duplicatecgparaloc(ParaLoc,newparaloc)
                   else
                     begin
                       if Assigned(cgpara.def) then
@@ -557,7 +557,7 @@ implementation
               else
                 ;
             end;
-            paraloc:=paraloc^.next;
+            ParaLoc:=ParaLoc^.next;
           end;
       end;
 
@@ -571,35 +571,35 @@ implementation
 
     procedure TParaManager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
       var
-        paraloc,
+        ParaLoc,
         newparaloc : PCGParaLocation;
       begin
         cgpara.reset;
-        cgpara.size:=parasym.paraloc[callerside].size;
-        cgpara.intsize:=parasym.paraloc[callerside].intsize;
-        cgpara.alignment:=parasym.paraloc[callerside].alignment;
-        paraloc:=parasym.paraloc[callerside].location;
-        while Assigned(paraloc) do
+        cgpara.size:=parasym.ParaLoc[callerside].size;
+        cgpara.intsize:=parasym.ParaLoc[callerside].intsize;
+        cgpara.alignment:=parasym.ParaLoc[callerside].alignment;
+        ParaLoc:=parasym.ParaLoc[callerside].location;
+        while Assigned(ParaLoc) do
           begin
             newparaloc:=cgpara.add_location;
-            duplicatecgparaloc(paraloc,newparaloc);
-            paraloc:=paraloc^.next;
+            duplicatecgparaloc(ParaLoc,newparaloc);
+            ParaLoc:=ParaLoc^.next;
           end;
       end;
 
 
     procedure TParaManager.create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
       begin
-        if not Assigned(p.funcretloc[side].Location) then
-          p.funcretloc[side]:=get_funcretloc(p,side,nil);
+        if not Assigned(p.FuncRetLoc[side].Location) then
+          p.FuncRetLoc[side]:=get_funcretloc(p,side,nil);
       end;
 
 
     function TParaManager.create_inline_paraloc_info(p : TAbstractProcDef):LongInt;
       begin
         { We need to return the size allocated }
-        p.init_paraloc_info(callbothsides);
-        result:=p.calleeargareasize;
+        p.Init_ParaLoc_Info(callbothsides);
+        result:=p.CalleeArgAreaSize;
       end;
 
 
@@ -607,20 +607,20 @@ implementation
     { this is the standard implementation, CGs might overwrite it }
     function TParaManager.parseparaloc(parasym: TParaVarSym; const s: string): boolean;
       var
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
-        parasym.paraloc[callerside].alignment:=sizeof(PInt);
-        paraloc:=parasym.paraloc[callerside].add_location;
-        paraloc^.loc:=LOC_REGISTER;
-        paraloc^.size:=def_cgsize(parasym.vardef);
-        paraloc^.def:=parasym.vardef;
-        paraloc^.register:=std_regnum_search(lowercase(s));
+        parasym.ParaLoc[callerside].alignment:=sizeof(PInt);
+        ParaLoc:=parasym.ParaLoc[callerside].add_location;
+        ParaLoc^.loc:=LOC_REGISTER;
+        ParaLoc^.size:=def_cgsize(parasym.vardef);
+        ParaLoc^.def:=parasym.vardef;
+        ParaLoc^.register:=std_regnum_search(lowercase(s));
 
         { copy to callee side }
-        parasym.paraloc[calleeside].add_location^:=paraloc^;
+        parasym.ParaLoc[calleeside].add_location^:=ParaLoc^;
 
-        result:=(paraloc^.register <> NR_NO) and
-                (paraloc^.register <> NR_STACK_POINTER_REG);
+        result:=(ParaLoc^.register <> NR_NO) and
+                (ParaLoc^.register <> NR_STACK_POINTER_REG);
       end;
 
 
@@ -661,37 +661,37 @@ implementation
 
     function TParaManager.set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: TCgSize; out retloc: TCGPara): boolean;
       var
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
         result:=true;
         retloc.init;
         if not Assigned(forcetempdef) then
-          retloc.def:=p.returndef
+          retloc.def:=p.ReturnDef
         else
           begin
             retloc.def:=forcetempdef;
             retloc.temporary:=true;
           end;
-        retloc.alignment:=get_para_align(p.proccalloption);
+        retloc.alignment:=get_para_align(p.ProcCallOption);
         { void has no location }
         if is_void(retloc.def) then
           begin
-            paraloc:=retloc.add_location;
+            ParaLoc:=retloc.add_location;
             retloc.size:=OS_NO;
             retcgsize:=OS_NO;
             retloc.intsize:=0;
-            paraloc^.def:=retloc.def;
-            paraloc^.size:=OS_NO;
-            paraloc^.loc:=LOC_VOID;
+            ParaLoc^.def:=retloc.def;
+            ParaLoc^.size:=OS_NO;
+            ParaLoc^.loc:=LOC_VOID;
             exit;
           end;
         { Constructors return self instead of a boolean }
-        if p.proctypeoption=potype_constructor then
+        if p.ProcTypeOption=potype_constructor then
           begin
-            retloc.def:=TDef(p.owner.defowner);
-            if not (is_implicit_pointer_object_type(retloc.def) or
+            retloc.def:=TDef(p.owner.DefOwner);
+            if not (Is_Implicit_Pointer_Object_Type(retloc.def) or
                (retloc.def.typ<>objectdef)) then
-              retloc.def:=CPointerDef.getreusable_no_free(retloc.def);
+              retloc.def:=CPointerDef.GetReusable_No_Free(retloc.def);
           end;
         retcgsize:=def_cgsize(retloc.def);
         retloc.intsize:=retloc.def.size;
@@ -699,11 +699,11 @@ implementation
         { Return is passed as var parameter }
         if ret_in_param(retloc.def,p) then
           begin
-            retloc.def:=CPointerDef.getreusable_no_free(retloc.def);
-            paraloc:=retloc.add_location;
-            paraloc^.loc:=LOC_REFERENCE;
-            paraloc^.size:=retcgsize;
-            paraloc^.def:=retloc.def;
+            retloc.def:=CPointerDef.GetReusable_No_Free(retloc.def);
+            ParaLoc:=retloc.add_location;
+            ParaLoc^.loc:=LOC_REFERENCE;
+            ParaLoc^.size:=retcgsize;
+            ParaLoc^.def:=retloc.def;
             exit;
           end;
         result:=false;
@@ -718,15 +718,15 @@ implementation
           Furthermore, any managed type is returned in param, in order to avoid
           its finalization on exception at callee side. }
         if ((tf_safecall_exceptions in TargetInfo.flags) and
-            (pd.proccalloption=pocall_safecall)) or
+            (pd.ProcCallOption=pocall_safecall)) or
            (
-             (pd.proctypeoption=potype_constructor) and
+             (pd.ProcTypeOption=potype_constructor) and
              (
-               is_record(def) or
+               Is_Record(def) or
                (
                  (def.typ<>objectdef) and
-                 (pd.owner.symtabletype=objectsymtable) and
-                 is_objectpascal_helper(TDef(pd.owner.defowner))
+                 (pd.owner.SymTableType=objectsymtable) and
+                 Is_ObjectPascal_Helper(TDef(pd.owner.DefOwner))
                )
              )
            ) or is_managed_type(def) then
@@ -734,7 +734,7 @@ implementation
             retinparam:=true;
             exit(true);
           end;
-        if pd.proctypeoption=potype_constructor then
+        if pd.ProcTypeOption=potype_constructor then
           begin
             retinparam:=false;
             exit(true);
@@ -752,7 +752,7 @@ implementation
         else if restlen in [1,2,4,8] then
           result:=cgsize_orddef(int_cgsize(restlen))
         else
-          result:=CArrayDef.getreusable_no_free(u8inttype,restlen);
+          result:=CArrayDef.GetReusable_No_Free(U8IntType,restlen);
       end;
 
 
@@ -760,8 +760,8 @@ implementation
       begin
         if (nr<1) or (nr>pd.paras.count) then
           InternalError(2013060101);
-        pd.init_paraloc_info(callerside);
-        cgpara:=TParaVarSym(pd.paras[nr-1]).paraloc[callerside].getcopy;
+        pd.Init_ParaLoc_Info(callerside);
+        cgpara:=TParaVarSym(pd.paras[nr-1]).ParaLoc[callerside].GetCopy;
       end;
 
 
@@ -792,7 +792,7 @@ implementation
       end;
 
 
-    function TParaManager.cgparaloc_to_rttiparaloc(paraloc:PCGParaLocation):TRTTIParaLoc;
+    function TParaManager.cgparaloc_to_rttiparaloc(ParaLoc:PCGParaLocation):TRTTIParaLoc;
       var
         reg : TRegisterRec;
       begin
@@ -802,17 +802,17 @@ implementation
           results if the record as gaps between fields
           due to field alignment. PM 2021-05-06 }
         fillchar(result,sizeof(TRTTIParaLoc),#0);
-        if paraloc^.Loc=LOC_REFERENCE then
+        if ParaLoc^.Loc=LOC_REFERENCE then
           begin
-            reg:=TRegisterRec(paraloc^.reference.index);
-            result.offset:=paraloc^.reference.offset;
+            reg:=TRegisterRec(ParaLoc^.reference.index);
+            result.offset:=ParaLoc^.reference.offset;
             result.loctype:=$80;
           end
         else
           begin
-            reg:=TRegisterRec(paraloc^.register);
+            reg:=TRegisterRec(ParaLoc^.register);
             { use sign extension }
-            result.offset:=paraloc^.shiftval;
+            result.offset:=ParaLoc^.shiftval;
             result.loctype:=$00;
           end;
         case reg.regtype of
@@ -850,13 +850,13 @@ implementation
         }
         result:=(cs_opt_unused_para in CurrentSettings.OptimizerSwitches) and
           Assigned(parasym.Owner) and
-          (parasym.Owner.defowner.typ=procdef);
+          (parasym.Owner.DefOwner.typ=procdef);
         if not result then
           exit;
-        pd:=TProcDef(parasym.Owner.defowner);
-        result:=(pd.proctypeoption<>potype_exceptfilter) and
-          not parasym.is_used and
-          pd.is_implemented;
+        pd:=TProcDef(parasym.Owner.DefOwner);
+        result:=(pd.ProcTypeOption<>potype_exceptfilter) and
+          not parasym.Is_Used and
+          pd.IsImplemented;
       end;
 
 initialization

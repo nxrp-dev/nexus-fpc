@@ -94,7 +94,7 @@ const
         for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
             ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
-            CurrentModule.linkothersharedlibs.add(ImportLibrary.Name,link_always);
+            CurrentModule.LinkOtherSharedLibs.add(ImportLibrary.Name,link_always);
           end;
       end;
 
@@ -127,11 +127,11 @@ const
         }
         // Check for the JNI_OnLoad export
         if CurrentModule.IsLibrary and not hp.is_var and Assigned(hp.sym) and
-           (hp.sym.typ = procsym) and (eo_name in hp.options) and
+           (hp.sym.typ = ProcSym) and (eo_name in hp.options) and
            (hp.name^ = SJNI_OnLoad) and (TProcSym(hp.sym).procdeflist.count = 1) then
           begin
             // Save the JNI_OnLoad procdef
-            TLinkerAndroid(Linker).FJNIOnLoadName:=TProcDef(TProcSym(hp.sym).procdeflist[0]).mangledname;
+            TLinkerAndroid(Linker).FJNIOnLoadName:=TProcDef(TProcSym(hp.sym).procdeflist[0]).MangledName;
             hp.Free;
             exit;
           end;
@@ -222,7 +222,7 @@ begin
   with linkres do
     begin
       { Write path to search libraries }
-      HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
+      HPath:=TCmdStrListItem(CurrentModule.LocalLibrarySearchPath.First);
       while Assigned(HPath) do
        begin
          Add('SEARCH_DIR('+MaybeQuoted(HPath.Str)+')');

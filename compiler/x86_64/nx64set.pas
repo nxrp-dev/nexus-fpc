@@ -192,7 +192,7 @@ implementation
           sectype:=sec_code;
 
         jtlist := CurrentProcInfo.aktlocaldata;
-        new_section(jtlist,sectype,CurrentProcInfo.procdef.mangledname,4);
+        new_section(jtlist,sectype,CurrentProcInfo.procdef.MangledName,4);
         jtlist.concat(TAILabel.Create(tablelabel));
 
         if AlmostExhaustive then

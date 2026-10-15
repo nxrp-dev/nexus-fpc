@@ -41,20 +41,20 @@ type
     class function getreusablex86(def: TDef; x86typ: TX86PointerTyp): TPointerDef;
     constructor createx86(def:TDef;x86typ:TX86PointerTyp);virtual;
     function size: asizeint; override;
-    function getcopy: TStoredDef; override;
+    function GetCopy: TStoredDef; override;
     function GetTypeName: string; override;
     class function default_x86_data_pointer_type: TX86PointerTyp; virtual;
-    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
+    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
   end;
   TX86PointerDefClass = class of TX86PointerDef;
 
   TX86ProcVarDef = class(TProcVarDef)
-    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
+    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
   end;
   TX86ProcVarDefClass = class of TX86ProcVarDef;
 
   TX86ProcDef = class(TProcDef)
-    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
+    function Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean; override;
   end;
   TX86ProcDefClass = class of TX86ProcDef;
 
@@ -112,7 +112,7 @@ implementation
         InternalError(2011071102);
       key.def:=def;
       key.x86typ:=x86typ;
-      res:=CurrentModule.ptrdefs.FindOrAdd(@key,sizeof(key));
+      res:=CurrentModule.PtrDefs.FindOrAdd(@key,sizeof(key));
       if not Assigned(res^.Data) then
         begin
           { since these pointerdefs can be reused anywhere in the current
@@ -149,7 +149,7 @@ implementation
     end;
 
 
-  function TX86PointerDef.getcopy: TStoredDef;
+  function TX86PointerDef.GetCopy: TStoredDef;
     begin
       result:=inherited;
       TX86PointerDef(result).x86pointertyp:=x86pointertyp;
@@ -191,7 +191,7 @@ implementation
     end;
 
 
-  function TX86PointerDef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
+  function TX86PointerDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
     begin
       result:=
         inherited and
@@ -204,11 +204,11 @@ implementation
 ****************************************************************************}
 
 
-  function TX86ProcVarDef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
+  function TX86ProcVarDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
     begin
       result:=
         inherited and
-        (TX86PointerDef(address_type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
+        (TX86PointerDef(Address_Type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
     end;
 
 
@@ -217,11 +217,11 @@ implementation
   ****************************************************************************}
 
 
-    function TX86ProcDef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
+    function TX86ProcDef.Compatible_With_PointerDef_Size(ptr: TPointerDef): boolean;
       begin
         result:=
           inherited and
-          (TX86PointerDef(address_type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
+          (TX86PointerDef(Address_Type).x86pointertyp=TX86PointerDef(ptr).x86pointertyp);
       end;
 
 

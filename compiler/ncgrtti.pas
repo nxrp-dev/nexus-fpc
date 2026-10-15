@@ -166,7 +166,7 @@ implementation
           begin
             def:=TDef(st.DefList[i]);
             { skip generics }
-            if [df_generic,df_genconstraint]*def.defoptions<>[] then
+            if [df_generic,df_genconstraint]*def.DefOptions<>[] then
               continue;
             case def.typ of
               recorddef:
@@ -174,20 +174,20 @@ implementation
               objectdef :
                 begin
                   { Skip forward defs }
-                  if (oo_is_forward in TObjectDef(def).objectoptions) then
+                  if (oo_is_forward in TObjectDef(def).ObjectOptions) then
                     continue;
                   { skip unique type aliases, they use the RTTI from the parent class }
-                  if TObjectDef(def).is_unique_objpasdef then
+                  if TObjectDef(def).Is_Unique_ObjPasDef then
                     continue;
                   write_persistent_type_info(TObjectDef(def).SymTable,is_global);
                 end;
               procdef :
                 begin
-                  if Assigned(TProcDef(def).localst) and
-                     (TProcDef(def).localst.symtabletype=localsymtable) then
-                    write_persistent_type_info(TProcDef(def).localst,false);
-                  if Assigned(TProcDef(def).parast) then
-                    write_persistent_type_info(TProcDef(def).parast,false);
+                  if Assigned(TProcDef(def).LocalST) and
+                     (TProcDef(def).LocalST.SymTableType=LocalSymTable) then
+                    write_persistent_type_info(TProcDef(def).LocalST,false);
+                  if Assigned(TProcDef(def).ParaST) then
+                    write_persistent_type_info(TProcDef(def).ParaST,false);
                 end;
               errordef:
                 { we shouldn't have come this far if we have an errordef somewhere }
@@ -203,22 +203,22 @@ implementation
               location. }
             { Init }
             if (
-                Assigned(def.typesym) and
+                Assigned(def.TypeSym) and
                 is_global and
-                not is_objc_class_or_protocol(def)
+                not Is_ObjC_Class_Or_Protocol(def)
                ) or
                is_managed_type(def) or
-               (ds_init_table_used in def.defstates) then
+               (ds_init_table_used in def.DefStates) then
               RTTIWriter.write_rtti(def,initrtti);
             { RTTI }
-            if not(df_internal in def.defoptions) and
+            if not(df_internal in def.DefOptions) and
                (
                 (
-                 Assigned(def.typesym) and
+                 Assigned(def.TypeSym) and
                  is_global and
-                 not is_objc_class_or_protocol(def)
+                 not Is_ObjC_Class_Or_Protocol(def)
                 ) or
-                (ds_rtti_table_used in def.defstates)
+                (ds_rtti_table_used in def.DefStates)
                ) then
               RTTIWriter.write_rtti(def,fullrtti);
           end;
@@ -259,15 +259,15 @@ implementation
 
         totalcount:=0;
         rtticount:=0;
-        for i:=0 to st.symlist.count-1 do
-          if TSym(st.symlist[i]).typ=procsym then
+        for i:=0 to st.SymList.count-1 do
+          if TSym(st.SymList[i]).typ=ProcSym then
             begin
-              sym:=TProcSym(st.symlist[i]);
+              sym:=TProcSym(st.SymList[i]);
               inc(totalcount,sym.procdeflist.count);
               for j:=0 to sym.procdeflist.count-1 do
                 begin
                 def:=TProcDef(sym.procdeflist[j]);
-                if (def.visibility in visibilities) and not (def.is_generic) then
+                if (def.visibility in visibilities) and not (def.Is_Generic) then
                   inc(rtticount);
                 end;
             end;
@@ -276,47 +276,47 @@ implementation
         if not extended_rtti then
           begin
             maybe_add_comment(tcb,#9'count');
-            tcb.emit_ord_const(totalcount,u16inttype);
+            tcb.emit_ord_const(totalcount,U16IntType);
             maybe_add_comment(tcb,#9'RTTI count');
             if rtticount=0 then
-              tcb.emit_ord_const($FFFF,u16inttype)
+              tcb.emit_ord_const($FFFF,U16IntType)
             else
-              tcb.emit_ord_const(rtticount,u16inttype);
+              tcb.emit_ord_const(rtticount,U16IntType);
           end;
 
         if rtticount>0 then
-          for i:=0 to st.symlist.count-1 do
-            if TSym(st.symlist[i]).typ=procsym then
+          for i:=0 to st.SymList.count-1 do
+            if TSym(st.SymList[i]).typ=ProcSym then
               begin
-                sym:=TProcSym(st.symlist[i]);
+                sym:=TProcSym(st.SymList[i]);
                 for j:=0 to sym.procdeflist.count-1 do
                   begin
                     def:=TProcDef(sym.procdeflist[j]);
 
-                    if (def.is_generic) or not (def.visibility in visibilities) then
+                    if (def.Is_Generic) or not (def.visibility in visibilities) then
                       continue;
 
-                    def.init_paraloc_info(callerside);
+                    def.Init_ParaLoc_Info(callerside);
 
-                    maybe_add_comment(tcb,'RTTI: begin method '+def.fullprocname(false));
+                    maybe_add_comment(tcb,'RTTI: begin method '+def.FullProcName(false));
                     tcb.begin_anonymous_record('',defaultpacking,min(reqalign,SizeOf(PInt)),
                       targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
                     maybe_add_comment(tcb,#9'return type');
-                    write_rtti_reference(tcb,def.returndef,fullrtti);
+                    write_rtti_reference(tcb,def.ReturnDef,fullrtti);
                     maybe_add_comment(tcb,#9'calling convention');
                     write_callconv(tcb,def);
                     maybe_add_comment(tcb,#9'method kind');
                     write_methodkind(tcb,def);
                     maybe_add_comment(tcb,#9'param count');
-                    tcb.emit_ord_const(def.paras.count,u16inttype);
+                    tcb.emit_ord_const(def.paras.count,U16IntType);
                     maybe_add_comment(tcb,#9'caller args size');
-                    tcb.emit_ord_const(def.callerargareasize,sizesinttype);
+                    tcb.emit_ord_const(def.CallerArgAreaSize,SizeSIntType);
                     maybe_add_comment(tcb,#9'invoke helper');
-                    if def.invoke_helper=nil then
-                      tcb.emit_tai(TAIConst.Create_nil_dataptr,voidcodepointertype)
+                    if def.InvokeHelper=nil then
+                      tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidCodePointerType)
                     else
-                      tcb.emit_procdef_const(def.invoke_helper);
+                      tcb.emit_procdef_const(def.InvokeHelper);
                     maybe_add_comment(tcb,#9'name');
                     tcb.emit_pooled_shortstring_const_ref(sym.realname);
 
@@ -324,12 +324,12 @@ implementation
                       begin
                         { write visibility section for extended RTTI }
                         maybe_add_comment(tcb,#9'visibility');
-                        tcb.emit_ord_const(visibility_to_rtti_flags(def.visibility),u8inttype);
+                        tcb.emit_ord_const(visibility_to_rtti_flags(def.visibility),U8IntType);
                         { for objects and classes write a VMT index }
-                        if st.defowner.typ=objectdef then
+                        if st.DefOwner.typ=objectdef then
                           begin
                             maybe_add_comment(tcb,#9'VMT index');
-                            tcb.emit_ord_const(def.extnumber,u16inttype);
+                            tcb.emit_ord_const(def.ExtNumber,U16IntType);
                           end;
                         maybe_add_comment(tcb,#9'Code Address');
                         tcb.emit_procdef_const(def);
@@ -340,14 +340,14 @@ implementation
                     for k:=0 to def.paras.count-1 do
                         write_param(tcb,TParaVarSym(def.paras[k]));
 
-                    if not is_void(def.returndef) then
+                    if not is_void(def.ReturnDef) then
                       begin
                       maybe_add_comment(tcb,#9'return loc');
-                      write_paralocs(tcb,@def.funcretloc[callerside]);
+                      write_paralocs(tcb,@def.FuncRetLoc[callerside]);
                       end;
 
                     tcb.end_anonymous_record;
-                    maybe_add_comment(tcb,'RTTI: end method '+def.fullprocname(false));
+                    maybe_add_comment(tcb,'RTTI: end method '+def.FullProcName(false));
                   end;
               end;
 
@@ -360,8 +360,8 @@ implementation
       var
         name: shortstring;
       begin
-        if Assigned(def.typesym) then
-          name:=TTypeSym(def.typesym).realname
+        if Assigned(def.TypeSym) then
+          name:=TTypeSym(def.TypeSym).realname
         else
           name:='';
         { TTypeInfo, always packed and doesn't need alignment }
@@ -370,7 +370,7 @@ implementation
           targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
         if def.typ=arraydef then
           InternalError(201012211);
-        tcb.emit_tai(TAIConst.Create_8bit(typekind),u8inttype);
+        tcb.emit_tai(TAIConst.Create_8bit(typekind),U8IntType);
         tcb.emit_shortstring_const(name);
 
         tcb.end_anonymous_record;
@@ -379,31 +379,31 @@ implementation
 
     function TRTTIWriter.write_methodkind(tcb:TTAITypedConstBuilder;def:TAbstractProcDef):byte;
       begin
-        case def.proctypeoption of
+        case def.ProcTypeOption of
           potype_constructor: result:=mkConstructor;
           potype_destructor: result:=mkDestructor;
           potype_class_constructor: result:=mkClassConstructor;
           potype_class_destructor: result:=mkClassDestructor;
           potype_operator: result:=mkOperatorOverload;
           potype_procedure:
-            if po_classmethod in def.procoptions then
+            if po_classmethod in def.ProcOptions then
               result:=mkClassProcedure
             else
               result:=mkProcedure;
           potype_function:
-            if po_classmethod in def.procoptions then
+            if po_classmethod in def.ProcOptions then
               result:=mkClassFunction
             else
               result:=mkFunction;
         else
           begin
-            if def.returndef = voidtype then
+            if def.ReturnDef = VoidType then
               result:=mkProcedure
             else
               result:=mkFunction;
           end;
         end;
-        tcb.emit_ord_const(result,u8inttype);
+        tcb.emit_ord_const(result,U8IntType);
       end;
 
 
@@ -432,7 +432,7 @@ implementation
          { pocall_vectorcall }       18
         );
       begin
-        tcb.emit_ord_const(ProcCallOptionToCallConv[def.proccalloption],u8inttype);
+        tcb.emit_ord_const(ProcCallOptionToCallConv[def.ProcCallOption],U8IntType);
       end;
 
 
@@ -453,7 +453,7 @@ implementation
         if length(locs)=0 then
           begin
             { *shrugs* }
-            tcb.emit_tai(TAIConst.Create_nil_codeptr,voidpointertype);
+            tcb.emit_tai(TAIConst.Create_nil_codeptr,VoidPointerType);
             exit;
           end;
 
@@ -470,16 +470,16 @@ implementation
 
             loctcb.begin_anonymous_record('',defaultpacking,min(reqalign,SizeOf(PInt)),
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-            loctcb.emit_ord_const(length(locs),u8inttype);
+            loctcb.emit_ord_const(length(locs),U8IntType);
             for i:=low(locs) to high(locs) do
               begin
                 loctcb.begin_anonymous_record('',defaultpacking,min(reqalign,SizeOf(PInt)),
                   targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-                loctcb.emit_ord_const(locs[i].loctype,u8inttype);
-                loctcb.emit_ord_const(locs[i].regsub,u8inttype);
-                loctcb.emit_ord_const(locs[i].regindex,u16inttype);
+                loctcb.emit_ord_const(locs[i].loctype,U8IntType);
+                loctcb.emit_ord_const(locs[i].regsub,U8IntType);
+                loctcb.emit_ord_const(locs[i].regindex,U16IntType);
                 { the corresponding type for aint is alusinttype }
-                loctcb.emit_ord_const(locs[i].offset,alusinttype);
+                loctcb.emit_ord_const(locs[i].offset,ALUSIntType);
                 loctcb.end_anonymous_record;
               end;
             datadef:=loctcb.end_anonymous_record;
@@ -496,7 +496,7 @@ implementation
         else
           loclab:=TAsmLabel(entry^.Data);
 
-        tcb.emit_tai(TAIConst.Create_sym(loclab),voidpointertype);
+        tcb.emit_tai(TAIConst.Create_sym(loclab),VoidPointerType);
       end;
 
 
@@ -504,7 +504,7 @@ implementation
       var
         paraspec : word;
       begin
-        case parasym.varspez of
+        case parasym.VarSpez of
           vs_value   : paraspec := 0;
           vs_const   : paraspec := pfConst;
           vs_var     : paraspec := pfVar;
@@ -521,18 +521,18 @@ implementation
         { and these for classes and interfaces (maybe because they
           are themselves addresses?)
         }
-        if is_class_or_interface(parasym.vardef) then
+        if Is_Class_Or_Interface(parasym.vardef) then
           paraspec:=paraspec or pfAddress;
         { flags for the hidden parameters }
-        if vo_is_hidden_para in parasym.varoptions then
+        if vo_is_hidden_para in parasym.VarOptions then
           paraspec:=paraspec or pfHidden;
-        if vo_is_high_para in parasym.varoptions then
+        if vo_is_high_para in parasym.VarOptions then
           paraspec:=paraspec or pfHigh;
-        if vo_is_self in parasym.varoptions then
+        if vo_is_self in parasym.VarOptions then
           paraspec:=paraspec or pfSelf;
-        if vo_is_vmt in parasym.varoptions then
+        if vo_is_vmt in parasym.VarOptions then
           paraspec:=paraspec or pfVmt;
-        if vo_is_funcret in parasym.varoptions then
+        if vo_is_funcret in parasym.VarOptions then
           paraspec:=paraspec or pfResult;
         { set bits run from the highest to the lowest bit on
           big endian systems
@@ -540,7 +540,7 @@ implementation
         if (TargetInfo.endian = endian_big) then
           paraspec:=Reverse_Word(paraspec);
         { write flags for current parameter }
-        tcb.emit_ord_const(paraspec,u16inttype);
+        tcb.emit_ord_const(paraspec,U16IntType);
       end;
 
     procedure TRTTIWriter.write_param(tcb: TTAITypedConstBuilder;
@@ -552,8 +552,8 @@ implementation
 
         maybe_add_comment(tcb,#9'type');
         if is_open_array(para.vardef) or is_array_of_const(para.vardef) then
-          write_rtti_reference(tcb,TArrayDef(para.vardef).elementdef,fullrtti)
-        else if para.vardef=cformaltype then
+          write_rtti_reference(tcb,TArrayDef(para.vardef).ElementDef,fullrtti)
+        else if para.vardef=CFormalType then
           write_rtti_reference(tcb,nil,fullrtti)
         else
           write_rtti_reference(tcb,para.vardef,fullrtti);
@@ -564,7 +564,7 @@ implementation
         tcb.emit_pooled_shortstring_const_ref(para.realname);
 
         maybe_add_comment(tcb,#9'locs');
-        write_paralocs(tcb,@para.paraloc[callerside]);
+        write_paralocs(tcb,@para.ParaLoc[callerside]);
 
         tcb.end_anonymous_record;
         maybe_add_comment(tcb,'RTTI: end param '+para.prettyname);
@@ -596,28 +596,28 @@ implementation
         pdef : TObjectDef;
       begin
         list:=TFPList.create;
-        TAbstractRecordSymTable(def.SymTable).get_managementoperator_offset_list(mop,list);
+        TAbstractRecordSymTable(def.SymTable).Get_ManagementOperator_Offset_List(mop,list);
         if (def.typ=objectdef) then
           begin
-            pdef:=TObjectDef(def).childof;
+            pdef:=TObjectDef(def).ChildOf;
             while Assigned(pdef) do
               begin
-                TAbstractRecordSymTable(pdef.SymTable).get_managementoperator_offset_list(mop,list);
-                pdef:=pdef.childof;
+                TAbstractRecordSymTable(pdef.SymTable).Get_ManagementOperator_Offset_List(mop,list);
+                pdef:=pdef.ChildOf;
               end;
             list.sort(@compare_mop_offset_entry);
           end;
         if list.count=0 then
-          tcb.emit_tai(TAIConst.create_nil_dataptr,voidpointertype)
+          tcb.emit_tai(TAIConst.create_nil_dataptr,VoidPointerType)
         else
           begin
             tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_rtti],sec_rodata,'',datatcb,tbllbl);
 
             datatcb.begin_anonymous_record('',defaultpacking,min(reqalign,SizeOf(PInt)),
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-            datatcb.emit_ord_const(list.count,u32inttype);
+            datatcb.emit_ord_const(list.count,U32IntType);
 
-            entrydef:=get_recorddef(itp_init_mop_offset_entry,[voidcodepointertype,sizeuinttype],defaultpacking);
+            entrydef:=Get_RecordDef(itp_init_mop_offset_entry,[VoidCodePointerType,SizeUIntType],defaultpacking);
 
             for i:=0 to list.count-1 do
               begin
@@ -625,11 +625,11 @@ implementation
 
                 datatcb.maybe_begin_aggregate(entrydef);
 
-                datatcb.queue_init(voidcodepointertype);
+                datatcb.queue_init(VoidCodePointerType);
                 datatcb.queue_emit_proc(entry^.pd);
 
-                datatcb.queue_init(sizeuinttype);
-                datatcb.queue_emit_ordconst(entry^.offset,sizeuinttype);
+                datatcb.queue_init(SizeUIntType);
+                datatcb.queue_emit_ordconst(entry^.offset,SizeUIntType);
 
                 datatcb.maybe_end_aggregate(entrydef);
 
@@ -640,7 +640,7 @@ implementation
 
             tcb.finish_internal_data_builder(datatcb,tbllbl,datadef,sizeof(PInt));
 
-            tcb.emit_tai(TAIConst.Create_sym(tbllbl),voidpointertype);
+            tcb.emit_tai(TAIConst.Create_sym(tbllbl),VoidPointerType);
           end;
         list.free;
         list := nil;
@@ -655,10 +655,10 @@ implementation
              elements in the array in this case (so together with the pfArray
              flag, you can reconstruct the full typename, I assume (JM))
            }
-           def:=TArrayDef(def).elementdef;
+           def:=TArrayDef(def).ElementDef;
          { name }
-         if Assigned(def.typesym) then
-           tcb.emit_shortstring_const(TTypeSym(def.typesym).prettyname)
+         if Assigned(def.TypeSym) then
+           tcb.emit_shortstring_const(TTypeSym(def.TypeSym).prettyname)
          else
            tcb.emit_shortstring_const('');
       end;
@@ -687,12 +687,12 @@ implementation
         parentrtti:=false;
         st:=def.SymTable;
         fields:=TFPList.create;
-        fields.capacity:=st.symlist.count+1;
+        fields.capacity:=st.SymList.count+1;
         { For objects, treat parent (if any) as a field with offset 0. This
           provides correct handling of entire instance with RTL rtti routines. }
-        if (def.typ=objectdef) and (TObjectDef(def).objecttype=odt_object) and
-            Assigned(TObjectDef(def).childof) and
-            ((rt=fullrtti) or (TObjectDef(def).childof.NeedsInitTable)) then
+        if (def.typ=objectdef) and (TObjectDef(def).ObjectType=odt_object) and
+            Assigned(TObjectDef(def).ChildOf) and
+            ((rt=fullrtti) or (TObjectDef(def).ChildOf.NeedsInitTable)) then
            begin
              parentrtti:=true;
              inc(fieldcnt);
@@ -706,7 +706,7 @@ implementation
                 (rt=fullrtti) or
                 TFieldVarSym(sym).vardef.NeedsInitTable
                ) and
-               not is_objc_class_or_protocol(TFieldVarSym(sym).vardef) then
+               not Is_ObjC_Class_Or_Protocol(TFieldVarSym(sym).vardef) then
               begin
                 fields.add(TFieldVarSym(sym));
                 inc(fieldcnt);
@@ -714,12 +714,12 @@ implementation
           end;
         { insert field count before data }
         maybe_add_comment(tcb,'Field count');
-        tcb.emit_ord_const(fieldcnt,u32inttype);
+        tcb.emit_ord_const(fieldcnt,U32IntType);
         { parent object? }
         if parentrtti then
           begin
-            write_rtti_reference(tcb,TObjectDef(def).childof,rt);
-            tcb.emit_ord_const(0,ptruinttype);
+            write_rtti_reference(tcb,TObjectDef(def).ChildOf,rt);
+            tcb.emit_ord_const(0,PtrUIntType);
           end;
         { fields }
         for i:=0 to fields.count-1 do
@@ -727,7 +727,7 @@ implementation
             sym:=TSym(fields[i]);
             maybe_add_comment(tcb,'RTTI begin field '+ToStr(i)+': '+sym.prettyname);
             write_rtti_reference(tcb,TFieldVarSym(sym).vardef,rt);
-            tcb.emit_ord_const(TFieldVarSym(sym).fieldoffset,sizeuinttype);
+            tcb.emit_ord_const(TFieldVarSym(sym).FieldOffset,SizeUIntType);
             maybe_add_comment(tcb,'RTTI end field '+ToStr(i)+': '+sym.prettyname);
           end;
         fields.free;
@@ -761,10 +761,10 @@ implementation
         for i:=0 to def.paras.count-1 do
           begin
             sym:=TParaVarSym(def.paras[i]);
-            if not (vo_is_hidden_para in sym.varoptions) or allow_hidden then
+            if not (vo_is_hidden_para in sym.VarOptions) or allow_hidden then
               begin
                 if is_open_array(sym.vardef) or is_array_of_const(sym.vardef) then
-                  write_rtti(TArrayDef(sym.vardef).elementdef,rt)
+                  write_rtti(TArrayDef(sym.vardef).ElementDef,rt)
                 else
                   write_rtti(sym.vardef,rt);
               end;
@@ -778,14 +778,14 @@ implementation
         sym : TProcSym;
         def : TAbstractProcDef;
       begin
-        for i:=0 to st.symlist.count-1 do
-          if TSym(st.symlist[i]).typ=procsym then
+        for i:=0 to st.SymList.count-1 do
+          if TSym(st.SymList[i]).typ=ProcSym then
             begin
-              sym:=TProcSym(st.symlist[i]);
+              sym:=TProcSym(st.SymList[i]);
               for j:=0 to sym.procdeflist.count-1 do
                 begin
                   def:=TAbstractProcDef(sym.procdeflist[j]);
-                  write_rtti(def.returndef,rt);
+                  write_rtti(def.ReturnDef,rt);
                   params_write_rtti(def,rt,allow_hidden);
                 end;
             end;
@@ -802,14 +802,14 @@ implementation
       begin
         { count methods }
         methodcount:=0;
-        for i:=0 to def.SymTable.symlist.count-1 do
-          if TSym(def.SymTable.symlist[i]).typ=procsym then
+        for i:=0 to def.SymTable.SymList.count-1 do
+          if TSym(def.SymTable.SymList[i]).typ=ProcSym then
             begin
-              sym:=TProcSym(def.SymTable.symlist[i]);
+              sym:=TProcSym(def.SymTable.SymList[i]);
               for j:=0 to sym.procdeflist.count-1 do
                 begin
                 pdef:=TProcDef(sym.procdeflist[j]);
-                if (not pdef.is_generic) and def.is_visible_for_rtti(ro_methods,pdef.visibility) then
+                if (not pdef.Is_Generic) and def.Is_Visible_For_RTTI(ro_methods,pdef.visibility) then
                   inc(methodcount);
                 end;
             end;
@@ -818,10 +818,10 @@ implementation
           targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
         { emit method count }
         maybe_add_comment(tcb,'RTTI Method table: method count');
-        tcb.emit_ord_const(methodcount,u16inttype);
+        tcb.emit_ord_const(methodcount,U16IntType);
         { emit method entries (array) }
         if methodcount>0 then
-          write_methods(tcb,def.SymTable,true,def.rtti_visibilities_for_option(ro_methods));
+          write_methods(tcb,def.SymTable,true,def.RTTI_Visibilities_For_Option(ro_methods));
         tcb.end_anonymous_record;
       end;
 
@@ -841,12 +841,12 @@ implementation
       begin
         list:=TFPList.Create;
         { build list of visible fields }
-        for i:=0 to def.SymTable.symlist.Count-1 do
+        for i:=0 to def.SymTable.SymList.Count-1 do
           begin
-            asym:=TSym(def.SymTable.symlist[i]);
-            if (asym.typ=fieldvarsym) and
-               not(sp_static in asym.symoptions) and
-               def.is_visible_for_rtti(ro_fields, asym.visibility) then
+            asym:=TSym(def.SymTable.SymList[i]);
+            if (asym.typ=FieldVarSym) and
+               not(sp_static in asym.SymOptions) and
+               def.Is_Visible_For_RTTI(ro_fields, asym.visibility) then
               list.add(asym);
           end;
         {
@@ -857,7 +857,7 @@ implementation
         }
         tcb.begin_anonymous_record(internaltypeprefixName[itp_extended_rtti_table]+ToStr(list.count),PackRecords,min(reqalign,SizeOf(PInt)),targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
         maybe_add_comment(tcb,'RTTI: Extended Field count');
-        tcb.emit_ord_const(list.count,u16inttype);
+        tcb.emit_ord_const(list.count,U16IntType);
         for i := 0 to list.count-1 do
           begin
             fldsym:=TFieldVarSym(list[i]);
@@ -870,16 +870,16 @@ implementation
                 Attributes :
               end;
             }
-            tcb.begin_anonymous_record(internaltypeprefixName[itp_extended_rtti_field]+ToStr(fldsym.fieldoffset),PackRecords,min(reqalign,SizeOf(PInt)),targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+            tcb.begin_anonymous_record(internaltypeprefixName[itp_extended_rtti_field]+ToStr(fldsym.FieldOffset),PackRecords,min(reqalign,SizeOf(PInt)),targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
             { FieldOffset }
-            tcb.emit_tai(TAIConst.Create_sizeint(fldsym.fieldoffset),sizeuinttype);
+            tcb.emit_tai(TAIConst.Create_sizeint(fldsym.FieldOffset),SizeUIntType);
             { FieldType: PPTypeInfo }
-            if is_objc_class_or_protocol(fldsym.vardef) then
-              tcb.emit_tai(TAIConst.Create_sym(RTTIWriter.get_rtti_label(voidpointertype,fullrtti,true)),voidpointertype)
+            if Is_ObjC_Class_Or_Protocol(fldsym.vardef) then
+              tcb.emit_tai(TAIConst.Create_sym(RTTIWriter.get_rtti_label(VoidPointerType,fullrtti,true)),VoidPointerType)
             else
-              tcb.emit_tai(TAIConst.Create_sym(RTTIWriter.get_rtti_label(fldsym.vardef,fullrtti,true)),voidpointertype);
+              tcb.emit_tai(TAIConst.Create_sym(RTTIWriter.get_rtti_label(fldsym.vardef,fullrtti,true)),VoidPointerType);
             { FieldVisibility }
-            tcb.emit_ord_const(visibility_to_rtti_flags(fldsym.visibility),u8inttype);
+            tcb.emit_ord_const(visibility_to_rtti_flags(fldsym.visibility),U8IntType);
             { Name }
             tcb.emit_pooled_shortstring_const_ref(fldsym.realname);
             { Attribute table }
@@ -912,12 +912,12 @@ implementation
         for i:=0 to st.SymList.Count-1 do
           begin
             sym:=TSym(st.SymList[i]);
-            if (sym.visibility=vis_published) or def.is_visible_for_rtti(ro_properties, sym.visibility)  then
+            if (sym.visibility=vis_published) or def.Is_Visible_For_RTTI(ro_properties, sym.visibility)  then
               begin
                 case TSym(sym).typ of
                   propertysym:
-                    write_rtti(TPropertySym(sym).propdef,rt);
-                  fieldvarsym:
+                    write_rtti(TPropertySym(sym).PropDef,rt);
+                  FieldVarSym:
                     write_rtti(TFieldVarSym(sym).vardef,rt);
                   else
                     ;
@@ -936,8 +936,8 @@ implementation
         { search into parent for objects }
         if def.typ=objectdef then
           begin
-            if Assigned(TObjectDef(def).childof) then
-              collect_propnamelist(propnamelist,TObjectDef(def).childof,visibilities);
+            if Assigned(TObjectDef(def).ChildOf) then
+              collect_propnamelist(propnamelist,TObjectDef(def).ChildOf,visibilities);
           end;
         for i:=0 to def.SymTable.SymList.Count-1 do
           begin
@@ -973,52 +973,52 @@ implementation
         var
            typvalue : byte;
            hp : PPropAccessListItem;
-           extnumber: LongInt;
+           ExtNumber: LongInt;
            address,space : LongInt;
            def : TDef;
            hpropsym : TPropertySym;
-           propaccesslist : TPropAccessList;
+           PropAccessList : TPropAccessList;
         begin
            hpropsym:=TPropertySym(sym);
            repeat
-             propaccesslist:=hpropsym.propaccesslist[pap];
-             if not propaccesslist.empty then
+             PropAccessList:=hpropsym.PropAccessList[pap];
+             if not PropAccessList.empty then
                break;
-             hpropsym:=hpropsym.overriddenpropsym;
+             hpropsym:=hpropsym.OverriddenPropSym;
            until not Assigned(hpropsym);
-           if not(Assigned(propaccesslist) and Assigned(propaccesslist.firstsym))  then
+           if not(Assigned(PropAccessList) and Assigned(PropAccessList.FirstSym))  then
              begin
-               tcb.emit_tai(TAIConst.Create_int_codeptr(unsetvalue),codeptruinttype);
+               tcb.emit_tai(TAIConst.Create_int_codeptr(unsetvalue),CodePtrUIntType);
                typvalue:=3;
              end
            { also for accessing class fields }
-           else if propaccesslist.firstsym^.sym.typ=fieldvarsym then
+           else if PropAccessList.FirstSym^.sym.typ=FieldVarSym then
              begin
                 address:=0;
-                hp:=propaccesslist.firstsym;
+                hp:=PropAccessList.FirstSym;
                 def:=nil;
                 while Assigned(hp) do
                   begin
-                     case hp^.sltype of
+                     case hp^.SLType of
                        sl_load :
                          begin
                            def:=TFieldVarSym(hp^.sym).vardef;
-                           inc(address,TFieldVarSym(hp^.sym).fieldoffset);
+                           inc(address,TFieldVarSym(hp^.sym).FieldOffset);
                          end;
                        sl_subscript :
                          begin
                            if not(Assigned(def) and
                                   ((def.typ=recorddef) or
-                                   is_object(def))) then
+                                   Is_Object(def))) then
                              InternalError(200402171);
-                           inc(address,TFieldVarSym(hp^.sym).fieldoffset);
+                           inc(address,TFieldVarSym(hp^.sym).FieldOffset);
                            def:=TFieldVarSym(hp^.sym).vardef;
                          end;
                        sl_vec :
                          begin
                            if not(Assigned(def) and (def.typ=arraydef)) then
                              InternalError(200402172);
-                           def:=TArrayDef(def).elementdef;
+                           def:=TArrayDef(def).ElementDef;
                            {Hp.value is a Tconstexprint, which can be rather large,
                             sanity check for longint overflow.}
                            space:=(high(address)-address) div def.size;
@@ -1031,30 +1031,30 @@ implementation
                      end;
                      hp:=hp^.next;
                   end;
-                tcb.emit_tai(TAIConst.Create_int_codeptr(address),codeptruinttype);
+                tcb.emit_tai(TAIConst.Create_int_codeptr(address),CodePtrUIntType);
                 typvalue:=0;
              end
            else
              begin
                 { When there was an error then procdef is not assigned }
-                if not Assigned(propaccesslist.procdef) then
+                if not Assigned(PropAccessList.procdef) then
                   exit;
-                if not(po_virtualmethod in TProcDef(propaccesslist.procdef).procoptions) or
-                   is_objectpascal_helper(TProcDef(propaccesslist.procdef).struct) then
+                if not(po_virtualmethod in TProcDef(PropAccessList.procdef).ProcOptions) or
+                   Is_ObjectPascal_Helper(TProcDef(PropAccessList.procdef).struct) then
                   begin
-                    tcb.queue_init(codeptruinttype);
-                    tcb.queue_emit_proc(TProcDef(propaccesslist.procdef));
+                    tcb.queue_init(CodePtrUIntType);
+                    tcb.queue_emit_proc(TProcDef(PropAccessList.procdef));
                     typvalue:=1;
                   end
                 else
                   begin
                     { virtual method, write vmt offset }
-                    extnumber:=TProcDef(propaccesslist.procdef).extnumber;
+                    ExtNumber:=TProcDef(PropAccessList.procdef).ExtNumber;
                     tcb.emit_tai(TAIConst.Create_int_codeptr(
-                      TObjectDef(TProcDef(propaccesslist.procdef).struct).vmtmethodoffset(extnumber)),
-                      codeptruinttype);
+                      TObjectDef(TProcDef(PropAccessList.procdef).struct).VMTMethodOffset(ExtNumber)),
+                      CodePtrUIntType);
                     { register for wpo }
-                    TObjectDef(TProcDef(propaccesslist.procdef).struct).register_vmt_call(extnumber);
+                    TObjectDef(TProcDef(PropAccessList.procdef).struct).Register_VMT_Call(ExtNumber);
                     {$ifdef vtentry}
                     { not sure if we can insert those vtentry symbols safely here }
                     {$error register methods used for published properties}
@@ -1077,8 +1077,8 @@ implementation
                 if (TSym(sym).typ=propertysym) and
                    (sym.visibility in visibilities) and
                    (extended_rtti or (
-                     (TPropertySym(sym).parast=Nil) and
-                     not (sp_static in sym.symoptions)
+                     (TPropertySym(sym).ParaST=Nil) and
+                     not (sp_static in sym.SymOptions)
                    )) then
                   inc(result);
               end;
@@ -1097,19 +1097,19 @@ implementation
                 targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
               { paramcount }
-              paramtcb.emit_ord_const(paramst.symlist.count,u32inttype);
-              for i:=0 to paramst.symlist.count-1 do
+              paramtcb.emit_ord_const(paramst.SymList.count,U32IntType);
+              for i:=0 to paramst.SymList.count-1 do
                 begin
-                  if TSym(paramst.symlist[i]).typ<>paravarsym then
+                  if TSym(paramst.SymList[i]).typ<>paravarsym then
                     InternalError(2024103101);
-                  write_param(paramtcb,TParaVarSym(paramst.symlist[i]));
+                  write_param(paramtcb,TParaVarSym(paramst.SymList[i]));
                 end;
 
 
               paramdef:=paramtcb.end_anonymous_record;
               tcb.finish_internal_data_builder(paramtcb,paramlbl,paramdef,sizeof(PInt));
 
-              tcb.emit_tai(TAIConst.Create_sym(paramlbl),voidpointertype);
+              tcb.emit_tai(TAIConst.Create_sym(paramlbl),VoidPointerType);
           end;
 
         function write_propinfo_data(tcb: TTAITypedConstBuilder; sym: TPropertySym): TDef;
@@ -1117,7 +1117,7 @@ implementation
             { we can only easily reuse defs if the property is not stored,
               because otherwise the rtti layout depends on how the "stored"
               is defined (field, indexed expression, virtual method, ...) }
-            if not(ppo_stored in sym.propoptions) then
+            if not(ppo_stored in sym.PropOptions) then
               propdefname:=internaltypeprefixName[itp_rtti_prop]+ToStr(length(sym.realname))
             else
               propdefname:='';
@@ -1132,13 +1132,13 @@ implementation
               propdefname,
               1,min(reqalign,SizeOf(PInt)),
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-            if ppo_indexed in sym.propoptions then
+            if ppo_indexed in sym.PropOptions then
               proctypesinfo:=$40
             else
               proctypesinfo:=0;
             if addcomments then
-              tcb.emit_comment(#9'type info '+sym.Name+' (Type: '+sym.propdef.GetTypeName+')');
-            write_rtti_reference(tcb,sym.propdef,fullrtti);
+              tcb.emit_comment(#9'type info '+sym.Name+' (Type: '+sym.PropDef.GetTypeName+')');
+            write_rtti_reference(tcb,sym.PropDef,fullrtti);
             if addcomments then
               tcb.emit_comment(#9'read access');
             writeaccessproc(tcb,palt_read,0,0);
@@ -1148,39 +1148,39 @@ implementation
             { is it stored ? }
             if addcomments then
               tcb.emit_comment(#9'stored ?');
-            if not(ppo_stored in sym.propoptions) then
+            if not(ppo_stored in sym.PropOptions) then
               begin
                 { no, so put a constant zero }
-                tcb.emit_tai(TAIConst.Create_nil_codeptr,codeptruinttype);
+                tcb.emit_tai(TAIConst.Create_nil_codeptr,CodePtrUIntType);
                 proctypesinfo:=proctypesinfo or (3 shl 4);
               end
             else
               writeaccessproc(tcb,palt_stored,4,1); { maybe; if no procedure put a constant 1 (=true) }
             if addcomments then
               tcb.emit_comment(#9'Index');
-            tcb.emit_ord_const(sym.index,u32inttype);
+            tcb.emit_ord_const(sym.index,U32IntType);
             if addcomments then
               tcb.emit_comment(#9'default');
-            tcb.emit_ord_const(sym.default,u32inttype);
+            tcb.emit_ord_const(sym.default,U32IntType);
             propnameitem:=TPropNameListItem(propnamelist.Find(sym.name));
             if not Assigned(propnameitem) then
               InternalError(200512201);
             if addcomments then
               tcb.emit_comment(#9'property index');
-            tcb.emit_ord_const(propnameitem.propindex,u16inttype);
+            tcb.emit_ord_const(propnameitem.propindex,U16IntType);
             if addcomments then
               tcb.emit_comment(#9'proc types');
-            tcb.emit_ord_const(proctypesinfo,u8inttype);
+            tcb.emit_ord_const(proctypesinfo,U8IntType);
             if addcomments then
               tcb.emit_comment(#9'is static prop');
-            tcb.emit_ord_const(ord(sp_static in sym.symoptions),pasbool1type);
+            tcb.emit_ord_const(ord(sp_static in sym.SymOptions),PasBool1Type);
             { index parameters }
             if addcomments then
               tcb.emit_comment(#9'indexed params');
-            if extended_rtti and Assigned(TPropertySym(sym).parast) then
-              write_prop_params(tcb,sym.parast)
+            if extended_rtti and Assigned(TPropertySym(sym).ParaST) then
+              write_prop_params(tcb,sym.ParaST)
             else
-              tcb.emit_tai(TAIConst.create_nil_dataptr,voidpointertype);
+              tcb.emit_tai(TAIConst.create_nil_dataptr,VoidPointerType);
             { write reference to attribute table }
             if addcomments then
               tcb.emit_comment(#9'attributes');
@@ -1201,13 +1201,13 @@ implementation
           maybe_add_comment(tcb,'RTTI: Extended property data: Property count')
         else
           maybe_add_comment(tcb,'RTTI: Legacy property data: Property count');
-        tcb.emit_ord_const(properties_count(st),u16inttype);
+        tcb.emit_ord_const(properties_count(st),U16IntType);
         for i:=0 to st.SymList.Count-1 do
           begin
             sym:=TSym(st.SymList[i]);
             if (sym.typ=propertysym) and
                (sym.visibility in visibilities) and
-               (extended_rtti or (TPropertySym(sym).parast=Nil)) then
+               (extended_rtti or (TPropertySym(sym).ParaST=Nil)) then
               begin
                 if extended_rtti then
                   begin
@@ -1224,7 +1224,7 @@ implementation
                     { write visiblity flags for extended RTTI }
                     maybe_add_comment(tcb,#9'visibility flags');
                     visbyte:=byte(visibility_to_rtti_flags(sym.visibility));
-                    tcb.emit_ord_const(visByte,u8inttype);
+                    tcb.emit_ord_const(visByte,U8IntType);
                     { create separate constant builder }
                     CurrentAsmData.getglobaldatalabel(tbllab);
                     tbltcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable]);
@@ -1237,12 +1237,12 @@ implementation
                     tbltcb := nil;
                     { write the pointer to the prop info }
                     maybe_add_comment(tcb,#9'property info reference');
-                    tcb.emit_tai(TAIConst.Create_sym(tbllab),voidpointertype);
+                    tcb.emit_tai(TAIConst.Create_sym(tbllab),VoidPointerType);
                     { end record }
                     tcb.end_anonymous_record;
                     maybe_add_comment(tcb,'RTTI: end property '+sym.prettyname);
                   end
-                else if not (sp_static in sym.symoptions) then
+                else if not (sp_static in sym.SymOptions) then
                   write_propinfo_data(tcb,TPropertySym(sym));
               end;
           end;
@@ -1254,7 +1254,7 @@ implementation
 
         procedure unknown_rtti(def:TStoredDef);
         begin
-          tcb.emit_ord_const(tkUnknown,u8inttype);
+          tcb.emit_ord_const(tkUnknown,U8IntType);
           write_rtti_name(tcb,def);
           write_common_rtti_data(tcb,def,rt);
         end;
@@ -1271,30 +1271,30 @@ implementation
             tkSString,tkLString,tkAString,tkWString,tkUString
           );
         begin
-          write_header(tcb,def,string_typekinds[def.stringtype]);
+          write_header(tcb,def,string_typekinds[def.StringType]);
           tcb.begin_anonymous_record(
-            internaltypeprefixName[itp_rtti_outer]+ToStr(string_typekinds[def.stringtype]),
+            internaltypeprefixName[itp_rtti_outer]+ToStr(string_typekinds[def.StringType]),
             defaultpacking,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           write_common_rtti_data(tcb,def,rt);
-          case def.stringtype of
+          case def.StringType of
             st_ansistring:
               begin
                 tcb.begin_anonymous_record(
-                  internaltypeprefixName[itp_rtti_case]+ToStr(string_typekinds[def.stringtype]),
+                  internaltypeprefixName[itp_rtti_case]+ToStr(string_typekinds[def.StringType]),
                   defaultpacking,reqalign,
                   targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-                tcb.emit_ord_const(def.encoding,u16inttype);
+                tcb.emit_ord_const(def.encoding,U16IntType);
                 tcb.end_anonymous_record;
               end;
 
             st_shortstring:
               begin
                 tcb.begin_anonymous_record(
-                  internaltypeprefixName[itp_rtti_case]+ToStr(string_typekinds[def.stringtype]),
+                  internaltypeprefixName[itp_rtti_case]+ToStr(string_typekinds[def.StringType]),
                   defaultpacking,reqalign,
                   targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-                tcb.emit_ord_const(def.len,u8inttype);
+                tcb.emit_ord_const(def.len,U8IntType);
                 tcb.end_anonymous_record;
               end;
 
@@ -1328,11 +1328,11 @@ implementation
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           case LongInt(def.size) of
             1 :
-              tcb.emit_ord_const(otUByte,u8inttype);
+              tcb.emit_ord_const(otUByte,U8IntType);
             2 :
-              tcb.emit_ord_const(otUWord,u8inttype);
+              tcb.emit_ord_const(otUWord,U8IntType);
             4 :
-              tcb.emit_ord_const(otULong,u8inttype);
+              tcb.emit_ord_const(otULong,U8IntType);
           end;
           { we need to align by Tconstptruint here to satisfy the alignment
             rules set by records: in the typinfo unit we overlay a TTypeData
@@ -1344,22 +1344,22 @@ implementation
           tcb.next_field_name:='min_max_rec';
           tcb.begin_anonymous_record(internaltypeprefixName[itp_rtti_enum_min_max_rec]+def.UniqueIDStr,defaultpacking,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-          tcb.emit_ord_const(def.min,s32inttype);
-          tcb.emit_ord_const(def.max,s32inttype);
+          tcb.emit_ord_const(def.min,S32IntType);
+          tcb.emit_ord_const(def.max,S32IntType);
           tcb.next_field_name:='basetype_array_rec';
           { all strings must appear right after each other -> from now on
             packrecords 1 (but the start must still be aligned) }
           tcb.begin_anonymous_record(internaltypeprefixName[itp_rtti_enum_basetype_array_rec]+def.UniqueIDStr,1,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           { write base type }
-          write_rtti_reference(tcb,def.basedef,rt);
+          write_rtti_reference(tcb,def.BaseDef,rt);
           for i:=0 to def.SymTable.SymList.Count-1 do
             begin
               hp:=TEnumSym(def.SymTable.SymList[i]);
-              if hp.value<def.minval then
+              if hp.value<def.MinVal then
                 continue
               else
-              if hp.value>def.maxval then
+              if hp.value>def.MaxVal then
                 break;
               tcb.next_field_name:=hp.name;
               tcb.emit_shortstring_const(hp.realname);
@@ -1367,7 +1367,7 @@ implementation
           { write unit name }
           tcb.emit_shortstring_const(CurrentModule.RealModuleName^);
           { write zero which is required by RTL }
-          tcb.emit_ord_const(0,u8inttype);
+          tcb.emit_ord_const(0,U8IntType);
           { terminate all records }
           tcb.end_anonymous_record;
           tcb.end_anonymous_record;
@@ -1387,20 +1387,20 @@ implementation
                  otSByte,otSWord,otSLong,otSQWord,
                  otUByte,otUWord,otUByte,255);
             var
-              elesize: string[1];
+              EleSize: string[1];
               deftrans: byte;
           begin
             write_header(tcb,def,typekind);
-            deftrans:=trans[def.ordtype];
+            deftrans:=trans[def.OrdType];
             case deftrans of
               otUQWord,
               otSQWord:
-                elesize:='8';
+                EleSize:='8';
               255:
                 begin
-                  if def.packedbitsize<=32 then
+                  if def.PackedBitSize<=32 then
                     begin
-                      elesize:='4';
+                      EleSize:='4';
                       if def.low<0 then
                         deftrans:=otSLong
                       else
@@ -1408,7 +1408,7 @@ implementation
                     end
                   else
                     begin
-                      elesize:='8';
+                      EleSize:='8';
                       if def.low<0 then
                         deftrans:=otSQWord
                       else
@@ -1416,38 +1416,38 @@ implementation
                     end;
                 end
               else
-                elesize:='4'
+                EleSize:='4'
             end;
             tcb.begin_anonymous_record(
-              internaltypeprefixName[itp_rtti_ord_outer]+elesize,
+              internaltypeprefixName[itp_rtti_ord_outer]+EleSize,
               defaultpacking,reqalign,
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
             write_common_rtti_data(tcb,def,rt);
             tcb.begin_anonymous_record(
-              internaltypeprefixName[itp_rtti_ord_middle]+elesize,
+              internaltypeprefixName[itp_rtti_ord_middle]+EleSize,
               defaultpacking,reqalign,
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-            tcb.emit_ord_const(byte(trans[def.ordtype]),u8inttype);
+            tcb.emit_ord_const(byte(trans[def.OrdType]),U8IntType);
             tcb.begin_anonymous_record(
-              internaltypeprefixName[itp_rtti_ord_inner]+elesize,
+              internaltypeprefixName[itp_rtti_ord_inner]+EleSize,
               defaultpacking,reqalign,
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
             {Convert to longint to smuggle values in high(longint)+1..high(cardinal) into asmlist.}
             case deftrans of
               otUQWord:
                 begin
-                  tcb.emit_ord_const(min,u64inttype);
-                  tcb.emit_ord_const(max,u64inttype);
+                  tcb.emit_ord_const(min,U64IntType);
+                  tcb.emit_ord_const(max,U64IntType);
                 end;
               otSQWord:
                 begin
-                  tcb.emit_ord_const(min,s64inttype);
-                  tcb.emit_ord_const(max,s64inttype);
+                  tcb.emit_ord_const(min,S64IntType);
+                  tcb.emit_ord_const(max,S64IntType);
                 end;
               else
                 begin
-                  tcb.emit_ord_const(LongInt(min),s32inttype);
-                  tcb.emit_ord_const(LongInt(max),s32inttype);
+                  tcb.emit_ord_const(LongInt(min),S32IntType);
+                  tcb.emit_ord_const(LongInt(max),S32IntType);
                 end;
             end;
             tcb.end_anonymous_record;
@@ -1461,7 +1461,7 @@ implementation
           end;
 
         begin
-          case def.ordtype of
+          case def.OrdType of
             s64bit :
                 dointeger(tkInt64);
             u64bit :
@@ -1491,7 +1491,7 @@ implementation
                   defaultpacking,reqalign,
                   targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
                 write_common_rtti_data(tcb,def,rt);
-                tcb.emit_ord_const(ftCurr,u8inttype);
+                tcb.emit_ord_const(ftCurr,U8IntType);
                 tcb.end_anonymous_record;
               end;
             else
@@ -1515,7 +1515,7 @@ implementation
              internaltypeprefixName[itp_rtti_float],
              defaultpacking,reqalign,
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-           tcb.emit_ord_const(translate[def.floattype],u8inttype);
+           tcb.emit_ord_const(translate[def.FloatType],U8IntType);
            tcb.end_anonymous_record;
            tcb.end_anonymous_record;
         end;
@@ -1535,20 +1535,20 @@ implementation
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
            case def.size of
              1:
-               tcb.emit_ord_const(otUByte,u8inttype);
+               tcb.emit_ord_const(otUByte,U8IntType);
              2:
-               tcb.emit_ord_const(otUWord,u8inttype);
+               tcb.emit_ord_const(otUWord,U8IntType);
              4:
-               tcb.emit_ord_const(otULong,u8inttype);
+               tcb.emit_ord_const(otULong,U8IntType);
              else
-               tcb.emit_ord_const(otUByte,u8inttype);
+               tcb.emit_ord_const(otUByte,U8IntType);
            end;
            tcb.begin_anonymous_record(
              internaltypeprefixName[itp_rtti_set_inner],
              defaultpacking,reqalign,
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-           tcb.emit_ord_const(def.size,sizesinttype);
-           write_rtti_reference(tcb,def.elementdef,rt);
+           tcb.emit_ord_const(def.size,SizeSIntType);
+           write_rtti_reference(tcb,def.ElementDef,rt);
            tcb.end_anonymous_record;
            tcb.end_anonymous_record;
            tcb.end_anonymous_record;
@@ -1562,13 +1562,13 @@ implementation
             finaldef: TDef;
             curdef:TArrayDef;
         begin
-           if ado_IsDynamicArray in def.arrayoptions then
-             tcb.emit_ord_const(tkDynArray,u8inttype)
+           if ado_IsDynamicArray in def.ArrayOptions then
+             tcb.emit_ord_const(tkDynArray,U8IntType)
            else
-             tcb.emit_ord_const(tkArray,u8inttype);
+             tcb.emit_ord_const(tkArray,U8IntType);
            write_rtti_name(tcb,def);
 
-           if not(ado_IsDynamicArray in def.arrayoptions) then
+           if not(ado_IsDynamicArray in def.ArrayOptions) then
              begin
                { remember tha last instruction. we will need to insert some
                  calculated values after it }
@@ -1577,12 +1577,12 @@ implementation
                dimcount:=0;
                repeat
                  curdef:=TArrayDef(finaldef);
-                 finaldef:=curdef.elementdef;
+                 finaldef:=curdef.ElementDef;
                  { Dims[i] PTypeInfo }
                  inc(dimcount);
-                 totalcount:=totalcount*curdef.elecount;
+                 totalcount:=totalcount*curdef.EleCount;
                until (finaldef.typ<>arraydef) or
-                     (ado_IsDynamicArray in TArrayDef(finaldef).arrayoptions);
+                     (ado_IsDynamicArray in TArrayDef(finaldef).ArrayOptions);
                tcb.begin_anonymous_record(
                  internaltypeprefixName[itp_rtti_normal_array]+ToStr(dimcount),
                  defaultpacking,reqalign,
@@ -1595,24 +1595,24 @@ implementation
                  targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
                { total size = elecount * elesize of the first arraydef }
-               tcb.emit_tai(TAIConst.Create_sizeint(def.elecount*def.elesize),sizeuinttype);
+               tcb.emit_tai(TAIConst.Create_sizeint(def.EleCount*def.EleSize),SizeUIntType);
                { total element count }
-               tcb.emit_tai(TAIConst.Create_sizeint(asizeint(totalcount)),sizeuinttype);
+               tcb.emit_tai(TAIConst.Create_sizeint(asizeint(totalcount)),SizeUIntType);
                { last dimension element type }
-               if is_objc_class_or_protocol(curdef.elementdef) then
-                 tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(voidpointertype,rt,true)),voidpointertype)
+               if Is_ObjC_Class_Or_Protocol(curdef.ElementDef) then
+                 tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(VoidPointerType,rt,true)),VoidPointerType)
                else
-                 tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(curdef.elementdef,rt,true)),voidpointertype);
+                 tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(curdef.ElementDef,rt,true)),VoidPointerType);
                { dimension count }
-               tcb.emit_ord_const(dimcount,u8inttype);
+               tcb.emit_ord_const(dimcount,U8IntType);
                finaldef:=def;
                { ranges of the dimensions }
                for i:=1 to dimcount do
                  begin
                    curdef:=TArrayDef(finaldef);
-                   finaldef:=curdef.elementdef;
+                   finaldef:=curdef.ElementDef;
                    { Dims[i] PPTypeInfo }
-                   write_rtti_reference(tcb,curdef.rangedef,rt);
+                   write_rtti_reference(tcb,curdef.RangeDef,rt);
                  end;
              end
            else
@@ -1637,16 +1637,16 @@ implementation
                  targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
                { size of elements }
-               tcb.emit_tai(TAIConst.Create_sizeint(def.elesize),sizeuinttype);
+               tcb.emit_tai(TAIConst.Create_sizeint(def.EleSize),SizeUIntType);
                { element type }
-               write_rtti_reference(tcb,def.elementdef,rt);
+               write_rtti_reference(tcb,def.ElementDef,rt);
                { variant type }
-               tcb.emit_ord_const(TStoredDef(def.elementdef).getvardef,s32inttype);
+               tcb.emit_ord_const(TStoredDef(def.ElementDef).GetVarDef,S32IntType);
                { element type }
-               if def.elementdef.NeedsInitTable then
-                 write_rtti_reference(tcb,def.elementdef,rt)
+               if def.ElementDef.NeedsInitTable then
+                 write_rtti_reference(tcb,def.ElementDef,rt)
                else
-                 tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
+                 tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
                { write unit name }
                tcb.emit_shortstring_const(CurrentModule.RealModuleName^);
              end;
@@ -1667,7 +1667,7 @@ implementation
             internaltypeprefixName[itp_rtti_classref],
             defaultpacking,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-          write_rtti_reference(tcb,def.pointeddef,rt);
+          write_rtti_reference(tcb,def.PointedDef,rt);
           tcb.end_anonymous_record;
           tcb.end_anonymous_record;
         end;
@@ -1684,7 +1684,7 @@ implementation
             internaltypeprefixName[itp_rtti_pointer],
             defaultpacking,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-          write_rtti_reference(tcb,def.pointeddef,rt);
+          write_rtti_reference(tcb,def.PointedDef,rt);
           tcb.end_anonymous_record;
           tcb.end_anonymous_record;
         end;
@@ -1709,16 +1709,16 @@ implementation
             { use "succ" to omit first enum item "mop_none" }
             for mop := succ(low(TManagementOperator)) to high(TManagementOperator) do
             begin
-              if not (mop in TRecordSymTable(def.SymTable).managementoperators) then
-                tcb.emit_tai(TAIConst.Create_nil_codeptr,voidcodepointertype)
+              if not (mop in TRecordSymTable(def.SymTable).ManagementOperators) then
+                tcb.emit_tai(TAIConst.Create_nil_codeptr,VoidCodePointerType)
               else
                 begin
-                  procdef := search_management_operator(mop, def);
+                  procdef := Search_Management_Operator(mop, def);
                   if procdef = nil then
                     InternalError(201603021)
                   else
-                    tcb.emit_tai(TAIConst.Createname(procdef.mangledname,AT_FUNCTION,0),
-                      CProcVarDef.getreusableprocaddr(procdef,pc_address_only));
+                    tcb.emit_tai(TAIConst.Createname(procdef.MangledName,AT_FUNCTION,0),
+                      CProcVarDef.GetReusableProcAddr(procdef,pc_address_only));
                 end;
             end;
 
@@ -1738,7 +1738,7 @@ implementation
             visibilities: TVisibilities;
           begin
             propnamelist:=TFPHashObjectList.Create;
-            visibilities:=def.rtti_visibilities_for_option(ro_properties);
+            visibilities:=def.RTTI_Visibilities_For_Option(ro_properties);
             collect_propnamelist(propnamelist,def,visibilities);
             properties_write_rtti_data(tcb,propnamelist,def.SymTable,true,visibilities);
             propnamelist.free;
@@ -1766,28 +1766,28 @@ implementation
              strictly related to RecordRTTI procedure in rtti.inc (directly
              related to RTTIRecordRttiInfoToInitInfo function) }
            if rt=initrtti then
-             tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype)
+             tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType)
            else
              { we use a direct reference as the init RTTI is always in the same
                unit as the full RTTI }
-             tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,initrtti,false)),voidpointertype);
+             tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,initrtti,false)),VoidPointerType);
 
-           tcb.emit_ord_const(def.size,u32inttype);
+           tcb.emit_ord_const(def.size,U32IntType);
 
            oplab:=nil;
            { store rtti management operators only for init table }
            if rt=initrtti then
              begin
                { for now records don't have the initializer table }
-               tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
-               if (TRecordSymTable(def.SymTable).managementoperators=[]) then
-                 tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype)
+               tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
+               if (TRecordSymTable(def.SymTable).ManagementOperators=[]) then
+                 tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType)
                else
                  begin
                    CurrentAsmData.getlocaldatalabel(oplab);
                    tcb.emit_tai(TAIConst.Createname(
                      oplab.name,
-                     AT_DATA_FORCEINDIRECT,0),voidpointertype);
+                     AT_DATA_FORCEINDIRECT,0),VoidPointerType);
                  end;
              end;
 
@@ -1803,7 +1803,7 @@ implementation
            tcb.end_anonymous_record;
 
            { write pointers to operators if needed }
-           if (rt=initrtti) and (TRecordSymTable(def.SymTable).managementoperators<>[]) then
+           if (rt=initrtti) and (TRecordSymTable(def.SymTable).ManagementOperators<>[]) then
              write_record_operators(oplab);
         end;
 
@@ -1831,8 +1831,8 @@ implementation
                write_param_flag(tcb,parasym);
                { write param type }
                if is_open_array(parasym.vardef) or is_array_of_const(parasym.vardef) then
-                 write_rtti_reference(tcb,TArrayDef(parasym.vardef).elementdef,fullrtti)
-               else if parasym.vardef=cformaltype then
+                 write_rtti_reference(tcb,TArrayDef(parasym.vardef).ElementDef,fullrtti)
+               else if parasym.vardef=CFormalType then
                  write_rtti_reference(tcb,nil,fullrtti)
                else
                  write_rtti_reference(tcb,parasym.vardef,fullrtti);
@@ -1845,7 +1845,7 @@ implementation
           methodkind : byte;
           i : integer;
         begin
-          if po_methodpointer in def.procoptions then
+          if po_methodpointer in def.ProcOptions then
             begin
                { write method id and name }
                write_header(tcb,def,tkMethod);
@@ -1862,7 +1862,7 @@ implementation
 
                { write parameter info. The parameters must be written in reverse order
                  if this method uses right to left parameter pushing! }
-               tcb.emit_ord_const(def.paras.count,u8inttype);
+               tcb.emit_ord_const(def.paras.count,U8IntType);
 
                for i:=0 to def.paras.count-1 do
                  write_para(TParaVarSym(def.paras[i]));
@@ -1870,10 +1870,10 @@ implementation
                if (methodkind=mkFunction) or (methodkind=mkClassFunction) then
                begin
                  { write name of result type }
-                 write_rtti_name(tcb,def.returndef);
+                 write_rtti_name(tcb,def.ReturnDef);
                  { enclosing record takes care of alignment }
                  { write result typeinfo }
-                 write_rtti_reference(tcb,def.returndef,fullrtti);
+                 write_rtti_reference(tcb,def.ReturnDef,fullrtti);
                end;
 
                { write calling convention }
@@ -1884,8 +1884,8 @@ implementation
                for i:=0 to def.paras.count-1 do
                  begin
                    if is_open_array(TParaVarSym(def.paras[i]).vardef) or is_array_of_const(TParaVarSym(def.paras[i]).vardef) then
-                     write_rtti_reference(tcb,TArrayDef(TParaVarSym(def.paras[i]).vardef).elementdef,fullrtti)
-                   else if TParaVarSym(def.paras[i]).vardef=cformaltype then
+                     write_rtti_reference(tcb,TArrayDef(TParaVarSym(def.paras[i]).vardef).ElementDef,fullrtti)
+                   else if TParaVarSym(def.paras[i]).vardef=CFormalType then
                      write_rtti_reference(tcb,nil,fullrtti)
                    else
                      write_rtti_reference(tcb,TParaVarSym(def.paras[i]).vardef,fullrtti);
@@ -1905,14 +1905,14 @@ implementation
                 defaultpacking,reqalign,
                 targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
               { flags }
-              tcb.emit_ord_const(0,u8inttype);
+              tcb.emit_ord_const(0,U8IntType);
               { write calling convention }
               write_callconv(tcb,def);
               { enclosing record takes care of alignment }
               { write result typeinfo }
-              write_rtti_reference(tcb,def.returndef,fullrtti);
+              write_rtti_reference(tcb,def.ReturnDef,fullrtti);
               { write parameter count }
-              tcb.emit_ord_const(def.paras.count,u8inttype);
+              tcb.emit_ord_const(def.paras.count,U8IntType);
               for i:=0 to def.paras.count-1 do
                 write_procedure_param(TParaVarSym(def.paras[i]));
               tcb.end_anonymous_record;
@@ -1925,7 +1925,7 @@ implementation
 
           procedure objectdef_rtti_fields(def:TObjectDef);
           begin
-            maybe_add_comment(tcb,'RTTI begin fields '+def.objname^);
+            maybe_add_comment(tcb,'RTTI begin fields '+def.ObjName^);
             tcb.begin_anonymous_record('',defaultpacking,reqalign,
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
@@ -1938,34 +1938,34 @@ implementation
               - neither helper nor class type have fullrtti for fields
             }
             if (rt=initrtti) then
-              tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype)
+              tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType)
             else
-              if (def.objecttype=odt_object) then
-                tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,initrtti,false)),voidpointertype)
+              if (def.ObjectType=odt_object) then
+                tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,initrtti,false)),VoidPointerType)
               else
                 InternalError(2017011801);
 
-            tcb.emit_ord_const(def.size, u32inttype);
+            tcb.emit_ord_const(def.size, U32IntType);
             { pointer to management operators available only for initrtti }
             if (rt=initrtti) then
               begin
                 { initializer table only available for classes currently }
-                if def.objecttype=odt_class then
+                if def.ObjectType=odt_class then
                   write_mop_offset_table(tcb,def,mop_initialize)
                 else
-                  tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
-                tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
+                  tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
+                tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
               end;
             { enclosing record takes care of alignment }
             fields_write_rtti_data(tcb,def,rt);
 
             tcb.end_anonymous_record;
-            maybe_add_comment(tcb,'RTTI end fields '+def.objname^);
+            maybe_add_comment(tcb,'RTTI end fields '+def.ObjName^);
           end;
 
           procedure objectdef_rtti_interface_init(def:TObjectDef);
           begin
-            tcb.emit_ord_const(def.size, u32inttype);
+            tcb.emit_ord_const(def.size, U32IntType);
           end;
 
           procedure objectdef_extended_rtti_class(def:TObjectDef);
@@ -1974,7 +1974,7 @@ implementation
             visibilities : TVisibilities;
           begin
             propnamelist:=TFPHashObjectList.Create;
-            visibilities:=def.rtti_visibilities_for_option(ro_properties);
+            visibilities:=def.RTTI_Visibilities_For_Option(ro_properties);
             collect_propnamelist(propnamelist,def,visibilities);
             properties_write_rtti_data(tcb,propnamelist,def.SymTable,true,visibilities);
             propnamelist.free;
@@ -1992,26 +1992,26 @@ implementation
             tcb.begin_anonymous_record('',defaultpacking,reqalign,
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
-            if not is_objectpascal_helper(def) then
+            if not Is_ObjectPascal_Helper(def) then
               begin
               maybe_add_comment(tcb,#9'Parent type info');
-              if (oo_has_vmt in def.objectoptions) then
+              if (oo_has_vmt in def.ObjectOptions) then
                 tcb.emit_tai(
-                  TAIConst.Createname(def.vmt_mangledname,AT_DATA_FORCEINDIRECT,0),
-                  CPointerDef.getreusable(def.vmt_def))
+                  TAIConst.Createname(def.VMT_MangledName,AT_DATA_FORCEINDIRECT,0),
+                  CPointerDef.getreusable(def.VMT_Def))
               else
-                tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
+                tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
               end;
             { write parent typeinfo }
             maybe_add_comment(tcb,#9'Parent type info');
-            write_rtti_reference(tcb,def.childof,fullrtti);
+            write_rtti_reference(tcb,def.ChildOf,fullrtti);
 
             { write typeinfo of extended type }
-            if is_objectpascal_helper(def) then
-              if Assigned(def.extendeddef) then
+            if Is_ObjectPascal_Helper(def) then
+              if Assigned(def.ExtendedDef) then
                 begin
                 maybe_add_comment(tcb,#9'helper for type info');
-                write_rtti_reference(tcb,def.extendeddef,fullrtti)
+                write_rtti_reference(tcb,def.ExtendedDef,fullrtti)
                 end
               else
                 InternalError(2011033001);
@@ -2019,7 +2019,7 @@ implementation
             { total number of unique properties }
 
             maybe_add_comment(tcb,#9'Number of properties');
-            tcb.emit_ord_const(propnamelist.count,u16inttype);
+            tcb.emit_ord_const(propnamelist.count,U16IntType);
 
             { write unit name }
 
@@ -2054,27 +2054,27 @@ implementation
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
             { write parent typeinfo }
-            write_rtti_reference(tcb,def.childof,fullrtti);
+            write_rtti_reference(tcb,def.ChildOf,fullrtti);
 
             { interface: write flags, iid and iidstr }
             IntfFlags:=0;
-            if Assigned(def.iidguid) then
+            if Assigned(def.IIDGUID) then
               IntfFlags:=IntfFlags or (1 shl ord(ifHasGuid));
-            if (def.objecttype=odt_interfacecorba) and (def.iidstr^<>'') then
+            if (def.ObjectType=odt_interfacecorba) and (def.IIDStr^<>'') then
               IntfFlags:=IntfFlags or (1 shl ord(ifHasStrGUID));
-            if (def.objecttype=odt_dispinterface) then
+            if (def.ObjectType=odt_dispinterface) then
               IntfFlags:=IntfFlags or (1 shl ord(ifDispInterface));
             if (TargetInfo.endian=endian_big) then
               IntfFlags:=Reverse_Byte(IntfFlags);
               {
               ifDispatch, }
-            tcb.emit_ord_const(IntfFlags,u8inttype);
+            tcb.emit_ord_const(IntfFlags,U8IntType);
 
             { write GUID }
-            tcb.emit_guid_const(def.iidguid^);
+            tcb.emit_guid_const(def.IIDGUID^);
 
             { write hidden class reference - if it is nil, write_rtti_reference writes nil }
-            write_rtti_reference(tcb,def.hiddenclassdef,fullrtti);
+            write_rtti_reference(tcb,def.HiddenClassDef,fullrtti);
 
             { write unit name }
             tcb.emit_shortstring_const(CurrentModule.RealModuleName^);
@@ -2083,12 +2083,12 @@ implementation
               targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
 
             { write iidstr }
-            if def.objecttype=odt_interfacecorba then
+            if def.ObjectType=odt_interfacecorba then
               begin
                 { prepareguid always allocates an empty string }
-                if not Assigned(def.iidstr) then
+                if not Assigned(def.IIDStr) then
                   InternalError(2016021901);
-                tcb.emit_shortstring_const(def.iidstr^)
+                tcb.emit_shortstring_const(def.IIDStr^)
               end;
 
             { write published properties for this object }
@@ -2105,24 +2105,24 @@ implementation
           end;
 
         begin
-           case def.objecttype of
+           case def.ObjectType of
              odt_class:
-               tcb.emit_ord_const(tkclass,u8inttype);
+               tcb.emit_ord_const(tkclass,U8IntType);
              odt_object:
-               tcb.emit_ord_const(tkobject,u8inttype);
+               tcb.emit_ord_const(tkobject,U8IntType);
              odt_dispinterface,
              odt_interfacecom:
-               tcb.emit_ord_const(tkInterface,u8inttype);
+               tcb.emit_ord_const(tkInterface,U8IntType);
              odt_interfacecorba:
-               tcb.emit_ord_const(tkinterfaceCorba,u8inttype);
+               tcb.emit_ord_const(tkinterfaceCorba,U8IntType);
              odt_helper:
-               tcb.emit_ord_const(tkhelper,u8inttype);
+               tcb.emit_ord_const(tkhelper,U8IntType);
              else
                InternalError(200611034);
            end;
 
            { generate the name }
-           tcb.emit_shortstring_const(def.objrealname^);
+           tcb.emit_shortstring_const(def.ObjRealName^);
 
            tcb.begin_anonymous_record('',defaultpacking,reqalign,
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
@@ -2132,7 +2132,7 @@ implementation
            case rt of
              initrtti :
                begin
-                 if def.objecttype in [odt_class,odt_object,odt_helper] then
+                 if def.ObjectType in [odt_class,odt_object,odt_helper] then
                    objectdef_rtti_fields(def)
                  else
                    objectdef_rtti_interface_init(def);
@@ -2142,7 +2142,7 @@ implementation
                  tcb.begin_anonymous_record('',
                    defaultpacking,reqalign,
                    targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-                 case def.objecttype of
+                 case def.ObjectType of
                    odt_helper,
                    odt_class:
                      objectdef_rtti_class_full(def);
@@ -2177,14 +2177,14 @@ implementation
             procvardef_rtti(TProcVarDef(def));
           arraydef :
             begin
-              if ado_IsBitPacked in TArrayDef(def).arrayoptions then
+              if ado_IsBitPacked in TArrayDef(def).ArrayOptions then
                 unknown_rtti(TStoredDef(def))
               else
                 arraydef_rtti(TArrayDef(def));
             end;
           recorddef :
             begin
-              if TRecordDef(def).is_packed then
+              if TRecordDef(def).Is_Packed then
                 unknown_rtti(TStoredDef(def))
               else
                 recorddef_rtti(TRecordDef(def));
@@ -2211,8 +2211,8 @@ implementation
       begin
         if length(attr.paras)=0 then
           begin
-            tbltcb.emit_tai(TAIConst.Create_16bit(0),u16inttype);
-            tbltcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
+            tbltcb.emit_tai(TAIConst.Create_16bit(0),U16IntType);
+            tbltcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
           end
         else
           begin
@@ -2250,8 +2250,8 @@ implementation
             argtcb := nil;
 
             { write argument size and the reference to the argument entry }
-            tbltcb.emit_ord_const(argdef.size,u16inttype);
-            tbltcb.emit_tai(TAIConst.Create_sym(arglab),voidpointertype);
+            tbltcb.emit_ord_const(argdef.size,U16IntType);
+            tbltcb.emit_tai(TAIConst.Create_sym(arglab),VoidPointerType);
           end;
       end;
 
@@ -2270,7 +2270,7 @@ implementation
       if count=0 then
         begin
           { write a Nil reference }
-          tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype);
+          tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType);
           exit;
         end;
 
@@ -2283,20 +2283,20 @@ implementation
         internaltypeprefixName[itp_rtti_attr_list]+ToStr(count),
         defaultpacking,min(reqalign,SizeOf(PInt)),
         targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-      tbltcb.emit_ord_const(count,u16inttype);
+      tbltcb.emit_ord_const(count,U16IntType);
       for i:=0 to count-1 do
         begin
           tbltcb.begin_anonymous_record(internaltypeprefixName[itp_rtti_attr_entry],defaultpacking,min(reqalign,SizeOf(PInt)),
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           attr:=TRTTIAttribute(attr_list.RTTIAttributes[i]);
 
-          write_rtti_reference(tbltcb,TTypeSym(attr.typesym).typedef,fullrtti);
+          write_rtti_reference(tbltcb,TTypeSym(attr.TypeSym).typedef,fullrtti);
 
-          tbltcb.emit_procdef_const(TProcDef(TCallNode(attr.constructorcall).procdefinition));
+          tbltcb.emit_procdef_const(TProcDef(TCallNode(attr.ConstructorCall).procdefinition));
 
-          if not Assigned(attr.constructorpd) then
+          if not Assigned(attr.ConstructorPD) then
             InternalError(2019071004);
-          tbltcb.emit_procdef_const(TProcDef(attr.constructorpd));
+          tbltcb.emit_procdef_const(TProcDef(attr.ConstructorPD));
 
           write_args(tbltcb,attr);
 
@@ -2312,7 +2312,7 @@ implementation
       tbltcb := nil;
 
       { write the reference to the attribute table }
-      tcb.emit_tai(TAIConst.Create_sym(tbllab),voidpointertype);
+      tcb.emit_tai(TAIConst.Create_sym(tbllab),VoidPointerType);
     end;
 
 
@@ -2402,7 +2402,7 @@ implementation
           tcb.begin_anonymous_record('',defaultpacking,reqalign,
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           { now emit the data: first the mode }
-          tcb.emit_tai(TAIConst.create_32bit(LongInt(mode)),u32inttype);
+          tcb.emit_tai(TAIConst.create_32bit(LongInt(mode)),U32IntType);
           { align }
           tcb.begin_anonymous_record('',defaultpacking,min(reqalign,sizeof(PInt)),
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
@@ -2413,11 +2413,11 @@ implementation
                 begin
                   while o<TEnumSym(syms[i]).value do
                     begin
-                      tcb.emit_tai(TAIConst.create_nil_dataptr,ptruinttype);
+                      tcb.emit_tai(TAIConst.create_nil_dataptr,PtrUIntType);
                       inc(o);
                     end;
                   inc(o);
-                  tcb.queue_init(voidpointertype);
+                  tcb.queue_init(VoidPointerType);
                   tcb.queue_subscriptn_multiple_by_name(rttidef,
                     ['size_start_rec',
                       'typ_union_rec',
@@ -2430,13 +2430,13 @@ implementation
             end
           else
             begin
-              tcb.emit_ord_const(sym_count,u32inttype);
+              tcb.emit_ord_const(sym_count,U32IntType);
               tcb.begin_anonymous_record('',defaultpacking,min(reqalign,sizeof(PInt)),
                 targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
               for i:=0 to sym_count-1 do
                 begin
-                  tcb.emit_ord_const(TEnumSym(syms[i]).value,s32inttype);
-                  tcb.queue_init(voidpointertype);
+                  tcb.emit_ord_const(TEnumSym(syms[i]).value,S32IntType);
+                  tcb.queue_init(VoidPointerType);
                   tcb.queue_subscriptn_multiple_by_name(rttidef,
                     ['size_start_rec',
                       'typ_union_rec',
@@ -2458,7 +2458,7 @@ implementation
             tcb.free;
             tcb := nil;
 
-            CurrentModule.add_public_asmsym(rttilab);
+            CurrentModule.Add_Public_AsmSym(rttilab);
         end;
 
 
@@ -2478,15 +2478,15 @@ implementation
           { begin of Tstring_to_ord }
           tcb.begin_anonymous_record('',defaultpacking,min(reqalign,sizeof(PInt)),
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-          tcb.emit_ord_const(syms.count,s32inttype);
+          tcb.emit_ord_const(syms.count,S32IntType);
           { begin of "data" array in Tstring_to_ord }
           tcb.begin_anonymous_record('',defaultpacking,min(reqalign,sizeof(PInt)),
             targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
           for i:=0 to syms.count-1 do
             begin
-              tcb.emit_ord_const(TEnumSym(syms[i]).value,s32inttype);
+              tcb.emit_ord_const(TEnumSym(syms[i]).value,S32IntType);
               { alignment of pointer value handled by enclosing record already }
-              tcb.queue_init(voidpointertype);
+              tcb.queue_init(VoidPointerType);
               tcb.queue_subscriptn_multiple_by_name(rttidef,
                 ['size_start_rec',
                   'typ_union_rec',
@@ -2505,7 +2505,7 @@ implementation
           tcb.free;
           tcb := nil;
 
-          CurrentModule.add_public_asmsym(rttilab);
+          CurrentModule.Add_Public_AsmSym(rttilab);
         end;
 
         procedure enumdef_rtti_extrasyms(def:TEnumDef);
@@ -2523,17 +2523,17 @@ implementation
           for i := 0 to def.SymTable.SymList.Count - 1 do
             begin
               t:=TEnumSym(def.SymTable.SymList[i]);
-              if t.value<def.minval then
+              if t.value<def.MinVal then
                 continue
               else
-              if t.value>def.maxval then
+              if t.value>def.MaxVal then
                 break;
               syms.add(t);
             end;
           { sort the syms by enum name }
           syms.sort(@enumsym_compare_name);
           s:=internaltypeprefixName[itp_rttidef]+def.RTTIMangledName(fullrtti);
-          rttitypesym:=try_search_current_module_type(s);
+          rttitypesym:=Try_Search_Current_Module_Type(s);
           if not Assigned(rttitypesym) or
              (TTypeSym(rttitypesym).typedef.typ<>recorddef) then
             InternalError(2015071402);
@@ -2563,14 +2563,14 @@ implementation
       begin
         case def.typ of
           enumdef :
-            if Assigned(TEnumDef(def).basedef) then
-              write_rtti(TEnumDef(def).basedef,rt);
+            if Assigned(TEnumDef(def).BaseDef) then
+              write_rtti(TEnumDef(def).BaseDef,rt);
           setdef :
-            write_rtti(TSetDef(def).elementdef,rt);
+            write_rtti(TSetDef(def).ElementDef,rt);
           arraydef :
             begin
-              write_rtti(TArrayDef(def).rangedef,rt);
-              write_rtti(TArrayDef(def).elementdef,rt);
+              write_rtti(TArrayDef(def).RangeDef,rt);
+              write_rtti(TArrayDef(def).ElementDef,rt);
             end;
           recorddef :
             begin
@@ -2578,16 +2578,16 @@ implementation
                 also for fpc_initialize, fpc_finalize }
               if (rt=fullrtti) then
                 begin
-                  include(def.defstates,ds_init_table_used);
+                  include(def.DefStates,ds_init_table_used);
                   write_rtti(def, initrtti);
                 end;
               fields_write_rtti(TRecordDef(def).SymTable,rt);
             end;
           objectdef :
             begin
-              if Assigned(TObjectDef(def).childof) then
-                write_rtti(TObjectDef(def).childof,rt);
-              if (rt=initrtti) or (TObjectDef(def).objecttype=odt_object) then
+              if Assigned(TObjectDef(def).ChildOf) then
+                write_rtti(TObjectDef(def).ChildOf,rt);
+              if (rt=initrtti) or (TObjectDef(def).ObjectType=odt_object) then
                 fields_write_rtti(TObjectDef(def).SymTable,rt)
               else
                 published_write_rtti(TObjectDef(def),rt);
@@ -2596,20 +2596,20 @@ implementation
                 begin
                   { guarantee initrtti for any object for RTTI purposes
                     also for fpc_initialize, fpc_finalize }
-                  if (TObjectDef(def).objecttype=odt_object) then
+                  if (TObjectDef(def).ObjectType=odt_object) then
                     begin
-                      include(def.defstates,ds_init_table_used);
+                      include(def.DefStates,ds_init_table_used);
                       write_rtti(def,initrtti);
                     end;
-                  if (is_interface(def) or is_dispinterface(def))
-                      and (oo_can_have_published in TObjectDef(def).objectoptions) then
+                  if (Is_Interface(def) or Is_DispInterface(def))
+                      and (oo_can_have_published in TObjectDef(def).ObjectOptions) then
                     methods_write_rtti(TObjectDef(def).SymTable,rt,[vis_published],true);
                 end;
             end;
           classrefdef,
           pointerdef:
-            if not is_objc_class_or_protocol(TAbstractPointerDef(def).pointeddef) then
-              write_rtti(TAbstractPointerDef(def).pointeddef,rt);
+            if not Is_ObjC_Class_Or_Protocol(TAbstractPointerDef(def).PointedDef) then
+              write_rtti(TAbstractPointerDef(def).PointedDef,rt);
           procvardef:
             params_write_rtti(TAbstractProcDef(def),rt,false);
           else
@@ -2630,10 +2630,10 @@ implementation
           mismatches, type conversions will have to be inserted afterwards (like
           in llvm/llvmtype)
         }
-        if not Assigned(def) or is_void(def) or ((rt<>initrtti) and is_objc_class_or_protocol(def)) then
-          tcb.emit_tai(TAIConst.Create_nil_dataptr,voidpointertype)
+        if not Assigned(def) or is_void(def) or ((rt<>initrtti) and Is_ObjC_Class_Or_Protocol(def)) then
+          tcb.emit_tai(TAIConst.Create_nil_dataptr,VoidPointerType)
         else
-          tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,rt,true)),voidpointertype);
+          tcb.emit_tai(TAIConst.Create_sym(get_rtti_label(def,rt,true)),VoidPointerType);
       end;
 
 
@@ -2644,7 +2644,7 @@ implementation
         s:=def.RTTIMangledName(rt)+suffix;
         result:=CurrentAsmData.RefAsmSymbol(s,AT_DATA,indirect);
         if def.owner.ModuleID<>CurrentModule.ModuleID then
-          CurrentModule.add_extern_asmsym(s,AB_EXTERNAL,AT_DATA);
+          CurrentModule.Add_Extern_AsmSym(s,AB_EXTERNAL,AT_DATA);
       end;
 
     procedure TRTTIWriter.write_rtti(def:TDef;rt:TRTTIType);
@@ -2657,19 +2657,19 @@ implementation
         s: TIDString;
       begin
         { Objective-C has its own RTTI system }
-        if is_objc_class_or_protocol(def) then
+        if Is_ObjC_Class_Or_Protocol(def) then
           exit;
 
         { only write rtti of definitions from the current module }
-        if not findunitsymtable(def.owner).iscurrentunit then
+        if not FindUnitSymTable(def.owner).IsCurrentUnit then
           exit;
         { check if separate initrtti is actually needed }
         if (rt=initrtti) and (not def.NeedsSeparateInitRTTI) then
           rt:=fullrtti;
         { prevent recursion }
-        if rttidefstate[rt] in def.defstates then
+        if rttidefstate[rt] in def.DefStates then
           exit;
-        include(def.defstates,rttidefstate[rt]);
+        include(def.DefStates,rttidefstate[rt]);
 
         { write first all dependencies }
         write_child_rtti_data(def,rt);
@@ -2692,7 +2692,7 @@ implementation
         tcb.free;
         tcb := nil;
 
-        CurrentModule.add_public_asmsym(rttilab);
+        CurrentModule.Add_Public_AsmSym(rttilab);
 
         { write additional data }
         write_rtti_extrasyms(def,rt,rttilab);

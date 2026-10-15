@@ -62,15 +62,15 @@ implementation
         result:=inherited;
         if Assigned(result) or
            (Assigned(CurrentProcInfo) and
-            (df_generic in CurrentProcInfo.procdef.defoptions)) then
+            (df_generic in CurrentProcInfo.procdef.DefOptions)) then
           exit;
         currpi:=CurrentProcInfo.parent;
         { current_procinfo.parent is not assigned for specialised generic routines in the
           top-level scope }
         while Assigned(currpi) and
-              (currpi.procdef.parast.symtablelevel>=parentpd.parast.symtablelevel) do
+              (currpi.procdef.ParaST.SymTableLevel>=parentpd.ParaST.SymTableLevel) do
           begin
-            if not Assigned(currpi.procdef.parentfpstruct) then
+            if not Assigned(currpi.procdef.ParentFPStruct) then
               build_parentfpstruct(currpi.procdef);
             currpi:=currpi.parent;
           end;
@@ -81,10 +81,10 @@ implementation
           begin
             nextpi:=currpi.parent;
             while Assigned(currpi) and
-                  (currpi.procdef.parast.symtablelevel>parentpd.parast.symtablelevel) do
+                  (currpi.procdef.ParaST.SymTableLevel>parentpd.ParaST.SymTableLevel) do
               begin
-                hsym:=TParaVarSym(currpi.procdef.parentfpsym);
-                maybe_add_sym_to_parentfpstruct(currpi.procdef,hsym,nextpi.procdef.parentfpstructptrtype,false);
+                hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
+                Maybe_Add_Sym_To_ParentFPStruct(currpi.procdef,hsym,nextpi.procdef.ParentFPStructPtrType,false);
                 currpi:=nextpi;
                 nextpi:=nextpi.parent;
               end;
@@ -104,12 +104,12 @@ implementation
           nested routine does nothing for which it needs the nestedfp pointer
           of the current routine (and hence it has not been moved into the
           nestedfp struct), get the original nestedfp parameter }
-        useparentfppara:=not Assigned(CurrentProcInfo.procdef.parentfpstruct);
-        hsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('parentfp'));
-        if CurrentProcInfo.procdef.parast.symtablelevel>parentpd.parast.symtablelevel then
+        useparentfppara:=not Assigned(CurrentProcInfo.procdef.ParentFPStruct);
+        hsym:=TParaVarSym(CurrentProcInfo.procdef.ParaST.Find('parentfp'));
+        if CurrentProcInfo.procdef.ParaST.SymTableLevel>parentpd.ParaST.SymTableLevel then
           useparentfppara:=
             useparentfppara or
-            (find_sym_in_parentfpstruct(CurrentProcInfo.procdef,hsym)=nil);
+            (Find_Sym_In_ParentFPStruct(CurrentProcInfo.procdef,hsym)=nil);
         if useparentfppara then
           begin
             result:=CLoadNode.create(hsym,hsym.owner);
@@ -117,16 +117,16 @@ implementation
           end
         else
           begin
-            result:=CAddrNode.create_internal(CLoadNode.create(CurrentProcInfo.procdef.parentfpstruct,CurrentProcInfo.procdef.parentfpstruct.owner));
+            result:=CAddrNode.Create_Internal(CLoadNode.create(CurrentProcInfo.procdef.ParentFPStruct,CurrentProcInfo.procdef.ParentFPStruct.owner));
             include(TAddrNode(result).addrnodeflags,anf_typedaddr);
             currpi:=CurrentProcInfo;
           end;
         { follow the chain of parentfpstructs until we arrive at the one we
           need }
-        while (currpi.procdef.parast.symtablelevel>parentpd.parast.symtablelevel) do
+        while (currpi.procdef.ParaST.SymTableLevel>parentpd.ParaST.SymTableLevel) do
           begin
-            hsym:=TParaVarSym(currpi.procdef.parentfpsym);
-            fsym:=TFieldVarSym(find_sym_in_parentfpstruct(currpi.procdef,hsym));
+            hsym:=TParaVarSym(currpi.procdef.ParentFPSym);
+            fsym:=TFieldVarSym(Find_Sym_In_ParentFPStruct(currpi.procdef,hsym));
             if not Assigned(fsym) then
               InternalError(2011060405);
             result:=CSubscriptNode.create(fsym,CDerefNode.create(result));

@@ -839,7 +839,7 @@ implementation
       ch       : char;
       lasthp,
       hp       : TAI;
-      constdef : TAIConstType;
+      ConstDef : TAIConstType;
       s,t      : string;
       i,pos,l  : LongInt;
       InlineLevel : cardinal;
@@ -1018,8 +1018,8 @@ implementation
 
            ait_const:
              begin
-               constdef:=TAIConst(hp).consttype;
-               case constdef of
+               ConstDef:=TAIConst(hp).consttype;
+               case ConstDef of
 {$ifndef cpu64bitaddr}
                  aitconst_128bit :
                     begin
@@ -1128,7 +1128,7 @@ implementation
                  aitconst_64bit_unaligned:
                    begin
                      if (TargetInfo.system in systems_darwin) and
-                        (constdef in [aitconst_uleb128bit,aitconst_sleb128bit]) then
+                        (ConstDef in [aitconst_uleb128bit,aitconst_sleb128bit]) then
                        begin
                          writer.AsmWrite(ait_const2str[aitconst_8bit]);
                          case TAIConst(hp).consttype of
@@ -1142,7 +1142,7 @@ implementation
                        end
                      else
                        begin
-                         writer.AsmWrite(ait_const2str[constdef]);
+                         writer.AsmWrite(ait_const2str[ConstDef]);
                          l:=0;
                          t := '';
                          repeat
@@ -1150,7 +1150,7 @@ implementation
                              begin
                                if Assigned(TAIConst(hp).endsym) then
                                  begin
-                                   if (constdef in [aitconst_darwin_dwarf_delta32,aitconst_darwin_dwarf_delta64]) then
+                                   if (ConstDef in [aitconst_darwin_dwarf_delta32,aitconst_darwin_dwarf_delta64]) then
                                      begin
                                        s := NextSetLabel;
                                        t := #9'.set '+s+','+TAIConst(hp).endsym.name+'-'+TAIConst(hp).sym.name;
@@ -1172,9 +1172,9 @@ implementation
                              { 64 bit constants are already handled above in this case }
                              s:=ToStr(LongInt(TAIConst(hp).value));
 {$endif cpu64bitaddr}
-                           if constdef = aitconst_half16bit then
+                           if ConstDef = aitconst_half16bit then
                              s:='('+s+')/2';
-                           if constdef = aitconst_gs then
+                           if ConstDef = aitconst_gs then
                              s:='gs('+s+')';
 
                            writer.AsmWrite(s);
@@ -1186,7 +1186,7 @@ implementation
                               (l>line_length) or
                               (hp.next=nil) or
                               (TAI(hp.next).typ<>ait_const) or
-                              (TAIConst(hp.next).consttype<>constdef) or
+                              (TAIConst(hp.next).consttype<>ConstDef) or
                               Assigned(TAIConst(hp.next).sym) then
                              break;
                            hp:=TAI(hp.next);
@@ -1245,7 +1245,7 @@ implementation
 
            ait_label :
              begin
-               if (TAILabel(hp).labsym.is_used) then
+               if (TAILabel(hp).labsym.Is_Used) then
                 begin
                   if TAILabel(hp).labsym.bind in [AB_GLOBAL,AB_PRIVATE_EXTERN] then
                    begin
@@ -1349,7 +1349,7 @@ implementation
            ait_symbol_end :
              begin
                if (tf_needs_symbol_size in TargetInfo.flags) and
-                  (TAISymbolEnd(hp).sym.is_used) then
+                  (TAISymbolEnd(hp).sym.Is_Used) then
                 begin
                   s:=asminfo^.labelprefix+'e'+ToStr(symendcount);
                   inc(symendcount);

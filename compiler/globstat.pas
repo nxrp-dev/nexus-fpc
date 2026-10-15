@@ -218,7 +218,7 @@ var
       while Item<>nil do
         begin
           Id:=Item^.SymTable.ModuleID;
-          Item^.Saved_ModuleID:=Id;
+          Item^.SavedModuleID:=Id;
           if (Id<>CurrentModule.ModuleID) and (Id>0) then
             begin
               M:=Get_Module(Id);
@@ -296,7 +296,7 @@ var
       Item:=Stack.Stack;
       while Item<>nil do
         begin
-          Id:=Item^.Saved_ModuleID;
+          Id:=Item^.SavedModuleID;
           if (Id<>OldCurrentModule.ModuleID) and (Id>0) then
             begin
               M:=Get_Module(Id);

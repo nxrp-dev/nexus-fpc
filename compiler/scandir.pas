@@ -135,9 +135,9 @@ unit scandir;
         else
           state:=CurrentScanner.readstate;
         if state='-' then
-          exclude(CurrentModule.moduleflags,flag)
+          exclude(CurrentModule.ModuleFlags,flag)
         else
-          include(CurrentModule.moduleflags,flag);
+          include(CurrentModule.ModuleFlags,flag);
       end;
 
 
@@ -342,7 +342,7 @@ unit scandir;
           end
         else
           begin
-            if not CurrentModule.in_global then
+            if not CurrentModule.InGlobal then
               Message(scan_w_switch_is_global)
             else
               begin
@@ -475,15 +475,15 @@ unit scandir;
     procedure dir_fputype;
       begin
         CurrentScanner.skipspace;
-        undef_system_macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
+        Undef_System_Macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
         if not(SetFPUType(upper(CurrentScanner.readcomment),CurrentSettings.FPUType)) then
           comment(VError,'Illegal FPU type');
-        def_system_macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
+        Def_System_Macro('FPU'+FPUTypeStr[CurrentSettings.FPUType]);
      end;
 
     procedure dir_frameworkpath;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
          Message(scan_w_switch_is_global)
         else if not(TargetInfo.system in systems_darwin) then
           begin
@@ -494,7 +494,7 @@ unit scandir;
         else
           begin
             CurrentScanner.skipspace;
-            CurrentModule.localframeworksearchpath.AddPath(CurrentScanner.readcomment,false);
+            CurrentModule.LocalFrameworkSearchPath.AddPath(CurrentScanner.readcomment,false);
           end;
       end;
 
@@ -536,13 +536,13 @@ unit scandir;
       var
         path : string;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
          Message(scan_w_switch_is_global)
         else
           begin
             CurrentScanner.skipspace;
             path:=CurrentScanner.readcomment;
-            CurrentModule.localincludesearchpath.AddPath(path,false);
+            CurrentModule.LocalIncludeSearchPath.AddPath(path,false);
             Message2(general_t_includepath_local,CurrentModule.RealModuleName^,path);
           end;
       end;
@@ -589,13 +589,13 @@ unit scandir;
       var
         path : string;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
          Message(scan_w_switch_is_global)
         else
           begin
             CurrentScanner.skipspace;
             path:=CurrentScanner.readcomment;
-            CurrentModule.locallibrarysearchpath.AddPath(path,false);
+            CurrentModule.LocalLibrarySearchPath.AddPath(path,false);
             Message2(general_t_librarypath_local,CurrentModule.RealModuleName^,path);
           end;
       end;
@@ -615,7 +615,7 @@ unit scandir;
         s:=FixFileName(s);
         if ExtractFileExt(s)='' then
           s:=ChangeFileExt(s,TargetInfo.objext);
-        CurrentModule.linkotherofiles.add(s,link_always);
+        CurrentModule.LinkOtherOFiles.add(s,link_always);
       end;
 
     procedure dir_linkframework;
@@ -632,7 +632,7 @@ unit scandir;
           s:= TrimSpace(CurrentScanner.readcomment);
         s:=FixFileName(s);
         if (TargetInfo.system in systems_darwin) then
-          CurrentModule.linkotherframeworks.add(s,link_always)
+          CurrentModule.LinkOtherFrameworks.add(s,link_always)
         else
           Message(scan_w_frameworks_darwin_only);
       end;
@@ -702,9 +702,9 @@ unit scandir;
 
         { add to the list of other libraries }
         if linkMode=lm_static then
-         CurrentModule.linkOtherStaticLibs.add(libname,link_always)
+         CurrentModule.LinkOtherStaticLibs.add(libname,link_always)
         else
-         CurrentModule.linkOtherSharedLibs.add(libname,link_always);
+         CurrentModule.LinkOtherSharedLibs.add(libname,link_always);
       end;
 
     procedure dir_localsymbols;
@@ -730,18 +730,18 @@ unit scandir;
       begin
         CurrentScanner.skipspace;
         s:=TrimSpace(CurrentScanner.readcomment);
-        if Assigned(CurrentModule.mainname) and
-           (s<>CurrentModule.mainname^) then
+        if Assigned(CurrentModule.MainName) and
+           (s<>CurrentModule.MainName^) then
           begin
-            Message1(scan_w_multiple_main_name_overrides,CurrentModule.mainname^);
-            StringDispose(CurrentModule.mainname)
+            Message1(scan_w_multiple_main_name_overrides,CurrentModule.MainName^);
+            StringDispose(CurrentModule.MainName)
           end
         else if (MainAliasName<>DefaultMainAliasName) and
                 (MainAliasName<>s) then
           Message1(scan_w_multiple_main_name_overrides,MainAliasName);
         MainAliasName:=s;
         if (MainAliasName<>DefaultMainAliasName) then
-          CurrentModule.mainname:=StringDup(MainAliasName);
+          CurrentModule.MainName:=StringDup(MainAliasName);
       end;
 
     procedure dir_maxfpuregisters;
@@ -880,19 +880,19 @@ unit scandir;
     procedure dir_mode;
 
     begin
-      if not CurrentModule.in_global then
+      if not CurrentModule.InGlobal then
         Message(scan_w_switch_is_global)
       else
         begin
           CurrentScanner.skipspace;
           CurrentScanner.readstring;
-          if not CurrentModule.mode_switch_allowed and
+          if not CurrentModule.ModeSwitchAllowed and
               not ((m_mac in CurrentSettings.ModeSwitches) and (CurrentScanner.pattern='MACPAS')) then
             Message1(scan_e_mode_switch_not_allowed,CurrentScanner.pattern)
           else if not SetCompileMode(CurrentScanner.pattern,false) then
             Message1(scan_w_illegal_switch,CurrentScanner.pattern)
         end;
-      CurrentModule.mode_switch_allowed:= false;
+      CurrentModule.ModeSwitchAllowed:= false;
     end;
 
     procedure dir_multilinestringlineending;
@@ -981,7 +981,7 @@ unit scandir;
       var
         s : string;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
           Message(scan_w_switch_is_global)
         else
           begin
@@ -1005,7 +1005,7 @@ unit scandir;
         s : string;
 
     begin
-      if not CurrentModule.in_global then
+      if not CurrentModule.InGlobal then
         Message(scan_w_switch_is_global)
       else
         begin
@@ -1055,13 +1055,13 @@ unit scandir;
       var
         path : string;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
          Message(scan_w_switch_is_global)
         else
           begin
             CurrentScanner.skipspace;
             path:=CurrentScanner.readcomment;
-            CurrentModule.localobjectsearchpath.AddPath(path,false);
+            CurrentModule.LocalObjectSearchPath.AddPath(path,false);
             Message2(general_t_objectpath_local,CurrentModule.RealModuleName^,path);
           end;
       end;
@@ -1317,12 +1317,12 @@ unit scandir;
           s:=ChangeFileExt(s,TargetInfo.resext);
         if TargetInfo.res<>res_none then
           begin
-            include(CurrentModule.moduleflags,mf_has_resourcefiles);
+            include(CurrentModule.ModuleFlags,mf_has_resourcefiles);
             if (res_single_file in TargetRes.resflags) and
                                    not (CurrentModule.ResourceFiles.Empty) then
               Message(scan_w_only_one_resourcefile_supported)
             else
-              CurrentModule.resourcefiles.insert(FixFileName(s));
+              CurrentModule.ResourceFiles.insert(FixFileName(s));
           end
         else
           Message(scan_e_resourcefiles_not_supported);
@@ -1336,7 +1336,7 @@ unit scandir;
           value: TNormalSet;
         begin
           result:=[];
-          sym:=search_system_type('TVISIBILITYCLASSES');
+          sym:=Search_System_Type('TVISIBILITYCLASSES');
           if CurrentScanner.readpreprocset(TSetDef(sym.typedef),value,'RTTI') then
             begin
               result:=PRTTIVisibilities(@value)^;
@@ -1355,7 +1355,7 @@ unit scandir;
         options: array[TRTTIOption] of boolean;
       begin
         { the system unit has not yet loaded which means the directive is misplaced}
-        if systemunit=nil then
+        if SystemUnit=nil then
           begin
             Message(scan_e_misplaced_rtti_directive);
             exit;
@@ -1412,7 +1412,7 @@ unit scandir;
           end;
 
         { set the directive in the module }
-        CurrentModule.rtti_directive:=dir;
+        CurrentModule.RTTIDirective:=dir;
       end;
 
     procedure dir_saturation;
@@ -1436,15 +1436,15 @@ unit scandir;
         srsymtable : TSymTable;
       begin
         result:=0;
-        if searchsym(ident,srsym,srsymtable) then
+        if SearchSym(ident,srsym,srsymtable) then
           if (srsym.typ=constsym) and
-              (TConstSym(srsym).consttyp=constord) and
-              is_integer(TConstSym(srsym).constdef) then
-            with TConstSym(srsym).value.valueord do
+              (TConstSym(srsym).ConstTyp=constord) and
+              is_integer(TConstSym(srsym).ConstDef) then
+            with TConstSym(srsym).value.ValueOrd do
               if signed then
-                result:=TConstSym(srsym).value.valueord.svalue
+                result:=TConstSym(srsym).value.ValueOrd.svalue
               else
-                result:=TConstSym(srsym).value.valueord.uvalue
+                result:=TConstSym(srsym).value.ValueOrd.uvalue
           else
             message(error)
         else
@@ -1582,17 +1582,17 @@ unit scandir;
             CurrentScanner.readchar;
             CurrentScanner.readid;
             value:=CurrentScanner.orgpattern;
-            if not UpdateTargetSwitchStr(name+'='+value,CurrentSettings.TargetSwitches,CurrentModule.in_global) then
+            if not UpdateTargetSwitchStr(name+'='+value,CurrentSettings.TargetSwitches,CurrentModule.InGlobal) then
               Message1(scan_w_illegal_switch,name);
           end
         else if CurrentScanner.c='-' then
           begin
             CurrentScanner.readchar;
-            if not UpdateTargetSwitchStr(name+'-',CurrentSettings.TargetSwitches,CurrentModule.in_global) then
+            if not UpdateTargetSwitchStr(name+'-',CurrentSettings.TargetSwitches,CurrentModule.InGlobal) then
               Message1(scan_w_illegal_switch,name);
           end
         else
-          if not UpdateTargetSwitchStr(name,CurrentSettings.TargetSwitches,CurrentModule.in_global) then
+          if not UpdateTargetSwitchStr(name,CurrentSettings.TargetSwitches,CurrentModule.InGlobal) then
             Message1(scan_w_illegal_switch,name);
       end;
 
@@ -1610,7 +1610,7 @@ unit scandir;
       var
         unitpath: TPathStr;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
          Message(scan_w_switch_is_global)
         else
           begin
@@ -1619,7 +1619,7 @@ unit scandir;
             if (CurrentModule.path<>'') and
                not Path_Absolute(unitpath) then
              unitpath:=CurrentModule.path+SourceInfo.DirSep+unitpath;
-            CurrentModule.localunitsearchpath.AddPath(unitpath,false);
+            CurrentModule.LocalUnitSearchPath.AddPath(unitpath,false);
             Message2(general_t_unitpath_local,CurrentModule.RealModuleName^,unitpath);
           end;
       end;
@@ -1901,7 +1901,7 @@ unit scandir;
       var
          s : string;
       begin
-        if not CurrentModule.in_global then
+        if not CurrentModule.InGlobal then
           Message(scan_w_switch_is_global)
         else
           begin

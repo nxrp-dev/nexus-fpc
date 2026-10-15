@@ -76,10 +76,10 @@ unit cg64f32;
         procedure a_op64_loc_reg(list : TAsmList;op:TOpCG;size : TCgSize;const l : TLocation;reg : TRegister64);override;
         procedure a_op64_const_ref(list : TAsmList;op:TOpCG;size : TCgSize;value : int64;const ref : TReference);override;
 
-        procedure a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const paraloc : TCGPara);override;
-        procedure a_load64_const_cgpara(list : TAsmList;value : int64;const paraloc : TCGPara);override;
-        procedure a_load64_ref_cgpara(list : TAsmList;const r : TReference;const paraloc : TCGPara);override;
-        procedure a_load64_loc_cgpara(list : TAsmList;const l : TLocation;const paraloc : TCGPara);override;
+        procedure a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const ParaLoc : TCGPara);override;
+        procedure a_load64_const_cgpara(list : TAsmList;value : int64;const ParaLoc : TCGPara);override;
+        procedure a_load64_ref_cgpara(list : TAsmList;const r : TReference;const ParaLoc : TCGPara);override;
+        procedure a_load64_loc_cgpara(list : TAsmList;const l : TLocation;const ParaLoc : TCGPara);override;
 
         procedure a_loadmm_intreg64_reg(list: TAsmList; mmsize: TCgSize; intreg: TRegister64; mmreg: TRegister);override;
         procedure a_loadmm_reg_intreg64(list: TAsmList; mmsize: TCgSize; mmreg: TRegister; intreg: TRegister64);override;
@@ -433,9 +433,9 @@ unit cg64f32;
             tmpsref.ref.index:=tmpreg;
           end;
         tmpsref.bitlen:=32;
-        hlcg.a_load_subsetref_reg(list,u32inttype,u32inttype,tmpsref,destreg.reglo);
+        hlcg.a_load_subsetref_reg(list,U32IntType,U32IntType,tmpsref,destreg.reglo);
         inc(tmpsref.ref.offset,4);
-        hlcg.a_load_subsetref_reg(list,u32inttype,u32inttype,tmpsref,destreg.reghi);
+        hlcg.a_load_subsetref_reg(list,U32IntType,U32IntType,tmpsref,destreg.reghi);
       end;
 
 
@@ -462,9 +462,9 @@ unit cg64f32;
           end;
         tmpsref:=sref;
         tmpsref.bitlen:=32;
-        hlcg.a_load_reg_subsetref(list,u32inttype,u32inttype,fromreg.reglo,tmpsref);
+        hlcg.a_load_reg_subsetref(list,U32IntType,U32IntType,fromreg.reglo,tmpsref);
         inc(tmpsref.ref.offset,4);
-        hlcg.a_load_reg_subsetref(list,u32inttype,u32inttype,fromreg.reghi,tmpsref);
+        hlcg.a_load_reg_subsetref(list,U32IntType,U32IntType,fromreg.reghi,tmpsref);
       end;
 
 
@@ -480,9 +480,9 @@ unit cg64f32;
           swap64(a);
         tmpsref := sref;
         tmpsref.bitlen := 32;
-        hlcg.a_load_const_subsetref(list,u32inttype,LongInt(lo(a)),tmpsref);
+        hlcg.a_load_const_subsetref(list,U32IntType,LongInt(lo(a)),tmpsref);
         inc(tmpsref.ref.offset,4);
-        hlcg.a_load_const_subsetref(list,u32inttype,LongInt(hi(a)),tmpsref);
+        hlcg.a_load_const_subsetref(list,U32IntType,LongInt(hi(a)),tmpsref);
       end;
 
 
@@ -786,13 +786,13 @@ unit cg64f32;
       end;
 
 
-    procedure TCG64F32.a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const paraloc : TCGPara);
+    procedure TCG64F32.a_load64_reg_cgpara(list : TAsmList;reg : TRegister64;const ParaLoc : TCGPara);
       var
         tmplochi,tmploclo: TCGPara;
       begin
         tmploclo.init;
         tmplochi.init;
-        splitparaloc64(paraloc,tmploclo,tmplochi);
+        splitparaloc64(ParaLoc,tmploclo,tmplochi);
         if TargetInfo.endian=endian_big then
           begin
             { Keep this order of first lo before hi to have
@@ -812,13 +812,13 @@ unit cg64f32;
       end;
 
 
-    procedure TCG64F32.a_load64_const_cgpara(list : TAsmList;value : int64;const paraloc : TCGPara);
+    procedure TCG64F32.a_load64_const_cgpara(list : TAsmList;value : int64;const ParaLoc : TCGPara);
       var
         tmplochi,tmploclo: TCGPara;
       begin
         tmploclo.init;
         tmplochi.init;
-        splitparaloc64(paraloc,tmploclo,tmplochi);
+        splitparaloc64(ParaLoc,tmploclo,tmplochi);
         if TargetInfo.endian=endian_big then
           begin
             { Keep this order of first lo before hi to have
@@ -838,14 +838,14 @@ unit cg64f32;
       end;
 
 
-    procedure TCG64F32.a_load64_ref_cgpara(list : TAsmList;const r : TReference;const paraloc : TCGPara);
+    procedure TCG64F32.a_load64_ref_cgpara(list : TAsmList;const r : TReference;const ParaLoc : TCGPara);
       var
         tmprefhi,tmpreflo : TReference;
         tmploclo,tmplochi : TCGPara;
       begin
         tmploclo.init;
         tmplochi.init;
-        splitparaloc64(paraloc,tmploclo,tmplochi);
+        splitparaloc64(ParaLoc,tmploclo,tmplochi);
         tmprefhi:=r;
         tmpreflo:=r;
         if TargetInfo.endian=endian_big then
@@ -869,17 +869,17 @@ unit cg64f32;
       end;
 
 
-    procedure TCG64F32.a_load64_loc_cgpara(list : TAsmList;const l:TLocation;const paraloc : TCGPara);
+    procedure TCG64F32.a_load64_loc_cgpara(list : TAsmList;const l:TLocation;const ParaLoc : TCGPara);
       begin
         case l.loc of
           LOC_REGISTER,
           LOC_CREGISTER :
-            a_load64_reg_cgpara(list,l.register64,paraloc);
+            a_load64_reg_cgpara(list,l.register64,ParaLoc);
           LOC_CONSTANT :
-            a_load64_const_cgpara(list,l.value64,paraloc);
+            a_load64_const_cgpara(list,l.value64,ParaLoc);
           LOC_CREFERENCE,
           LOC_REFERENCE :
-            a_load64_ref_cgpara(list,l.reference,paraloc);
+            a_load64_ref_cgpara(list,l.reference,ParaLoc);
           else
             InternalError(200203287);
         end;
@@ -1027,7 +1027,7 @@ unit cg64f32;
               { also not if the fromdef is unsigned and < 64bit, since that will }
               { always fit in a 64bit int (todef is 64bit)                       }
               (from_signed or
-               (TOrdDef(fromdef).ordtype = u64bit)) then
+               (TOrdDef(fromdef).OrdType = u64bit)) then
              begin
                { in all cases, there is only a problem if the highest bit is set }
                if l.loc in [LOC_REGISTER,LOC_CREGISTER] then

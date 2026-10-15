@@ -183,7 +183,7 @@ implementation
           jtlist:=CurrentAsmData.asmlists[al_const]
         else
           jtlist:=CurrentProcInfo.aktlocaldata;
-        new_section(jtlist,sec_rodata,CurrentProcInfo.procdef.mangledname,sizeof(aint));
+        new_section(jtlist,sec_rodata,CurrentProcInfo.procdef.MangledName,sizeof(aint));
         jtlist.concat(TAILabel.Create(table));
 
         if AlmostExhaustive then
@@ -427,7 +427,7 @@ implementation
          opdef      : TOrdDef;
          orgopsize  : TCgSize;
          setparts   : array[1..8] of Tsetpart;
-         setbase    : aint;
+         SetBase    : aint;
          adjustment : LongInt;
          l,l2       : TAsmLabel;
          i,numparts : byte;
@@ -638,7 +638,7 @@ implementation
          else
           begin
             location_reset(location,LOC_FLAGS,OS_NO);
-            setbase:=TSetDef(right.resultdef).setbase;
+            SetBase:=TSetDef(right.resultdef).SetBase;
 
             { We will now generated code to check the set itself, no jmps,
               handle smallsets separate, because it allows faster checks }
@@ -653,12 +653,12 @@ implementation
                     LOC_CREGISTER:
                       begin
                          emit_const_reg(A_TEST,TCGSize2OpSize[right.location.size],
-                           1 shl ((left.location.value-setbase) and 31),right.location.register);
+                           1 shl ((left.location.value-SetBase) and 31),right.location.register);
                       end;
                     LOC_REFERENCE,
                     LOC_CREFERENCE :
                       begin
-                        emit_const_ref(A_TEST,TCGSize2OpSize[right.location.size],1 shl ((left.location.value-setbase) and 31),
+                        emit_const_ref(A_TEST,TCGSize2OpSize[right.location.size],1 shl ((left.location.value-SetBase) and 31),
                            right.location.reference);
                       end;
                     else
@@ -668,14 +668,14 @@ implementation
                else
                 begin
 
-                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,u32inttype,true);
-                  register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,u32inttype,left.location,setbase);
+                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,U32IntType,true);
+                  register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,U32IntType,left.location,SetBase);
 
                   if (tcgsize2size[right.location.size] < opdef.size) or
                     (right.location.loc = LOC_CONSTANT) or
                     { bt ...,[mem] is slow, see #40039, so try to use a register if we are not optimizing for size }
-                    ((right.resultdef.size<=u32inttype.size) and not(cs_opt_size in CurrentSettings.OptimizerSwitches)) then
-                    hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,u32inttype,true);
+                    ((right.resultdef.size<=U32IntType.size) and not(cs_opt_size in CurrentSettings.OptimizerSwitches)) then
+                    hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,U32IntType,true);
 
                   hreg:=left.location.register;
 
@@ -709,10 +709,10 @@ implementation
 
                   { load constants to a register }
                   if (left.location.loc=LOC_CONSTANT) or
-                     (setbase<>0) then
+                     (SetBase<>0) then
                     begin
                       hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,true);
-                      register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,setbase);
+                      register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,SetBase);
                     end;
 
                   case left.location.loc of
@@ -758,7 +758,7 @@ implementation
                  but also used if the left side contains values > 32 or < 0 }
                else if left.location.loc=LOC_CONSTANT then
                 begin
-                  if (left.location.value<setbase) or (((left.location.value-setbase) shr 3) >= right.resultdef.size) then
+                  if (left.location.value<SetBase) or (((left.location.value-SetBase) shr 3) >= right.resultdef.size) then
                     {should be caught earlier }
                     InternalError(2007020201);
 
@@ -766,14 +766,14 @@ implementation
                   case right.location.loc of
                     LOC_REFERENCE,LOC_CREFERENCE:
                       begin
-                        inc(right.location.reference.offset,(left.location.value-setbase) shr 3);
+                        inc(right.location.reference.offset,(left.location.value-SetBase) shr 3);
                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                        emit_const_ref(A_TEST,S_B,1 shl ((left.location.value-setbase) and 7),right.location.reference);
+                        emit_const_ref(A_TEST,S_B,1 shl ((left.location.value-SetBase) and 7),right.location.reference);
                       end;
                     LOC_REGISTER,LOC_CREGISTER:
                       begin
                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                        emit_const_reg(A_TEST,TCGSize2OpSize[right.location.size],1 shl (left.location.value-setbase),right.location.register);
+                        emit_const_reg(A_TEST,TCGSize2OpSize[right.location.size],1 shl (left.location.value-SetBase),right.location.register);
                       end;
                     else
                       InternalError(2007051901);
@@ -783,7 +783,7 @@ implementation
                 begin
 
                   hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
-                  register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,setbase);
+                  register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,SetBase);
 
                   if (right.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
                     { bt ...,[mem] is slow, see #40039, so try to use a register if we are not optimizing for size }
@@ -794,11 +794,11 @@ implementation
 
                   if (opsize >= OS_S8) or { = if signed }
                      ((left.resultdef.typ=orddef) and
-                      ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).setbase)) or
-                       (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).setmax)))) or
+                      ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).SetBase)) or
+                       (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).SetMax)))) or
                      ((left.resultdef.typ=enumdef) and
-                      ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).setbase)) or
-                       (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).setmax)))) then
+                      ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).SetBase)) or
+                       (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).SetMax)))) then
                     begin
                       { we have to check if the value is < 0 or > setmax }
 
@@ -806,7 +806,7 @@ implementation
                       CurrentAsmData.getjumplabel(l2);
 
                       { BE will be false for negative values }
-                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opsize,OC_BE,TSetDef(right.resultdef).setmax-TSetDef(right.resultdef).setbase,pleftreg,l);
+                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opsize,OC_BE,TSetDef(right.resultdef).SetMax-TSetDef(right.resultdef).SetBase,pleftreg,l);
                       cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
                       { reset carry flag }
                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_CLC,S_NO));

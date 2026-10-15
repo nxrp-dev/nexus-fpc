@@ -412,7 +412,7 @@ implementation
             gcc_except_table.secflags:=[SF_A];
             gcc_except_table.secprogbits:=SPB_PROGBITS;
 {$ifdef debug_eh}
-            gcc_except_table_data.concat(TAIComment.Create(StrPNew('gcc_except_table for '+procdef.fullprocname(true))));
+            gcc_except_table_data.concat(TAIComment.Create(StrPNew('gcc_except_table for '+procdef.FullProcName(true))));
  {$endif debug_eh}
             CurrentAsmData.getlabel(LSDALabel,alt_data);
 
@@ -470,19 +470,19 @@ implementation
 
                 callsite_table_data.concat(TAILabel.create(callsitetableend));
 {$ifdef debug_eh}
-                gcc_except_table_data.concat(TAIComment.Create(StrPNew('Call site table for '+procdef.fullprocname(true))));
+                gcc_except_table_data.concat(TAIComment.Create(StrPNew('Call site table for '+procdef.FullProcName(true))));
 {$endif debug_eh}
                 gcc_except_table_data.ConcatList(callsite_table_data);
                 { action table must follow immediately after callsite table }
 {$ifdef debug_eh}
                 if not(action_table_data.Empty) then
-                  gcc_except_table_data.concat(TAIComment.Create(StrPNew('Action table for '+procdef.fullprocname(true))));
+                  gcc_except_table_data.concat(TAIComment.Create(StrPNew('Action table for '+procdef.FullProcName(true))));
 {$endif debug_eh}
                 gcc_except_table_data.ConcatList(action_table_data);
                 if typefilterlist.count>0 then
                   begin
 {$ifdef debug_eh}
-                    gcc_except_table_data.concat(TAIComment.Create(StrPNew('Type filter list for '+procdef.fullprocname(true))));
+                    gcc_except_table_data.concat(TAIComment.Create(StrPNew('Type filter list for '+procdef.FullProcName(true))));
 {$endif debug_eh}
                     for i:=typefilterlist.count-1 downto 0 do
                       begin
@@ -490,7 +490,7 @@ implementation
                         gcc_except_table_data.concat(TAIComment.Create(StrPNew('Type filter '+ToStr(i))));
 {$endif debug_eh}
                         if Assigned(typefilterlist[i]) then
-                          gcc_except_table_data.concat(TAIConst.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(typefilterlist[i]).vmt_mangledname, AT_DATA)))
+                          gcc_except_table_data.concat(TAIConst.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(typefilterlist[i]).VMT_MangledName, AT_DATA)))
                         else
                           gcc_except_table_data.concat(TAIConst.Create_sym(nil));
                       end;
@@ -527,9 +527,9 @@ implementation
 
     class procedure TPSABIEHExceptionStateHandler.get_exception_temps(list: TAsmList; var t: TExceptionTemps);
       begin
-        if not Assigned(exceptionreasontype) then
-          exceptionreasontype:=ossinttype;
-        tg.gethltemp(list,exceptionreasontype,exceptionreasontype.size,tt_persistent,t.reasonbuf);
+        if not Assigned(ExceptionReasonType) then
+          ExceptionReasonType:=OSSIntType;
+        tg.gethltemp(list,ExceptionReasonType,ExceptionReasonType.size,tt_persistent,t.reasonbuf);
       end;
 
 
@@ -572,9 +572,9 @@ implementation
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
         if exceptframekind<>tek_except then
           begin
-            reg:=hlcg.getintregister(list,ossinttype);
-            hlcg.a_load_const_reg(list,ossinttype,1,reg);
-            hlcg.g_exception_reason_save(list,ossinttype,ossinttype,reg,t.reasonbuf);
+            reg:=hlcg.getintregister(list,OSSIntType);
+            hlcg.a_load_const_reg(list,OSSIntType,1,reg);
+            hlcg.g_exception_reason_save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
           end;
       end;
 
@@ -592,7 +592,7 @@ implementation
             hlcg.a_label(list,exceptionstate.finallycodelabel);
             exceptionstate.finallycodelabel:=nil;
             exceptiontemps.unwind_info:=cg.getaddressregister(list);
-            hlcg.a_load_reg_reg(list,voidpointertype,voidpointertype,NR_FUNCTION_RESULT_REG,exceptiontemps.unwind_info);
+            hlcg.a_load_reg_reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,exceptiontemps.unwind_info);
           end;
       end;
 
@@ -605,9 +605,9 @@ implementation
         if exceptframekind<>tek_except then
           begin
             { record that no exception happened in the reason buf, in case we are in a try block of a finally statement }
-            reg:=hlcg.getintregister(list,ossinttype);
-            hlcg.a_load_const_reg(list,ossinttype,0,reg);
-            hlcg.g_exception_reason_save(list,ossinttype,ossinttype,reg,t.reasonbuf);
+            reg:=hlcg.getintregister(list,OSSIntType);
+            hlcg.a_load_const_reg(list,OSSIntType,0,reg);
+            hlcg.g_exception_reason_save(list,OSSIntType,OSSIntType,reg,t.reasonbuf);
           end;
         inherited;
         if exceptframekind=tek_except then
@@ -647,10 +647,10 @@ implementation
                 psabiehprocinfo.PushLandingPad(psabiehprocinfo.NoAction);
               end;
 
-            pd:=search_system_proc('_unwind_resume');
+            pd:=Search_System_Proc('_unwind_resume');
             cgpara1.init;
             paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-            hlcg.a_load_reg_cgpara(list,voidpointertype,t.unwind_info,cgpara1);
+            hlcg.a_load_reg_cgpara(list,VoidPointerType,t.unwind_info,cgpara1);
             paramanager.freecgpara(list,cgpara1);
             hlcg.g_call_system_proc(list,'_unwind_resume',[@cgpara1],nil).resetiftemp;
             { we do not have to clean up the stack, we never return }
@@ -710,8 +710,8 @@ implementation
         rttidef:=nil;
         rttisym:=nil;
 }
-        wrappedexception:=hlcg.getaddressregister(list,voidpointertype);
-        hlcg.a_load_reg_reg(list,voidpointertype,voidpointertype,NR_FUNCTION_RESULT_REG,wrappedexception);
+        wrappedexception:=hlcg.getaddressregister(list,VoidPointerType);
+        hlcg.a_load_reg_reg(list,VoidPointerType,VoidPointerType,NR_FUNCTION_RESULT_REG,wrappedexception);
 (*
         if add_catch then
           begin
@@ -735,9 +735,9 @@ implementation
 {$endif}
             CurrentAsmData.getjumplabel(catchstartlab);
 {$if defined(i386)}
-            hlcg.a_cmp_const_reg_label (list,osuinttype,OC_EQ,typeindex+1,NR_FUNCTION_RESULT64_HIGH_REG,catchstartlab);
+            hlcg.a_cmp_const_reg_label (list,OSUIntType,OC_EQ,typeindex+1,NR_FUNCTION_RESULT64_HIGH_REG,catchstartlab);
 {$elseif defined(x86_64)}
-            hlcg.a_cmp_const_reg_label (list,s32inttype,OC_EQ,typeindex+1,NR_EDX,catchstartlab);
+            hlcg.a_cmp_const_reg_label (list,S32IntType,OC_EQ,typeindex+1,NR_EDX,catchstartlab);
 {$else}
             { we need to find a way to fix this in a generic way }
             InternalError(2019021008);
@@ -748,9 +748,9 @@ implementation
         else
           (CurrentProcInfo as TPSABIEHProcInfo).CurrentAction.AddAction(TObjectDef(-1));
 
-        pd:=search_system_proc('fpc_psabi_begin_catch');
+        pd:=Search_System_Proc('fpc_psabi_begin_catch');
         paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
-        hlcg.a_load_reg_cgpara(list,voidpointertype,wrappedexception,paraloc1);
+        hlcg.a_load_reg_cgpara(list,VoidPointerType,wrappedexception,paraloc1);
         begincatchres:=hlcg.g_call_system_proc(list,pd,[@paraloc1],nil);
         location_reset(exceptloc, LOC_REGISTER, def_cgsize(begincatchres.def));
         exceptloc.register:=hlcg.getaddressregister(list, begincatchres.def);

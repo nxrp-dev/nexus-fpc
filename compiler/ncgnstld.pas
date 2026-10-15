@@ -48,7 +48,7 @@ interface
          function  docompare(p: TNode): boolean; override;
          constructor ppuload(t: TNodeType; ppufile: TCompilerPPUFile); override;
          procedure ppuwrite(ppufile: TCompilerPPUFile); override;
-         procedure buildderefimpl; override;
+         procedure BuildDerefImpl; override;
          procedure derefimpl; override;
        end;
 
@@ -93,7 +93,7 @@ implementation
         result:=inherited pass_typecheck;
         if Assigned(result) or
            (Assigned(CurrentProcInfo) and
-            (df_generic in CurrentProcInfo.procdef.defoptions)) then
+            (df_generic in CurrentProcInfo.procdef.DefOptions)) then
           exit;
         case symtableentry.typ of
           paravarsym,
@@ -102,35 +102,35 @@ implementation
               { Nested variable? Then we have to move it to a structure that
                 can be passed by reference to nested routines }
               if Assigned(CurrentProcInfo) and
-                 (SymTable.symtabletype in [localsymtable,parasymtable]) and
-                 ((SymTable.symtablelevel<>CurrentProcInfo.procdef.parast.symtablelevel) or
+                 (SymTable.SymTableType in [LocalSymTable,parasymtable]) and
+                 ((SymTable.SymTableLevel<>CurrentProcInfo.procdef.ParaST.SymTableLevel) or
                   { also redirect loads of locals/paras that have been moved to
                      the parentfpstruct inside the routine in which they were
                      originally declared, except in the initialisation code for
                      the parentfpstruct (nf_internal flag) }
-                  TAbstractNormalVarSym(symtableentry).inparentfpstruct) and
+                  TAbstractNormalVarSym(symtableentry).InParentFPStruct) and
                    not(nf_internal in flags) then
                 begin
                   { get struct holding all locals accessed by nested routines }
-                  nestedvars:=TProcDef(SymTable.defowner).parentfpstruct;
+                  nestedvars:=TProcDef(SymTable.DefOwner).ParentFPStruct;
                   { don't add the parentfpstruct to itself! }
                   if nestedvars=symtableentry then
                     exit;
                   if not Assigned(nestedvars) then
                     begin
                       { create this struct }
-                      build_parentfpstruct(TProcDef(SymTable.defowner));
-                      nestedvars:=TProcDef(SymTable.defowner).parentfpstruct;
+                      build_parentfpstruct(TProcDef(SymTable.DefOwner));
+                      nestedvars:=TProcDef(SymTable.DefOwner).ParentFPStruct;
                     end;
                   {  store result for use in pass_1 }
-                  nestsym:=maybe_add_sym_to_parentfpstruct(TProcDef(symtableentry.owner.defowner),symtableentry,resultdef,keep_param_address_in_nested_struct);
+                  nestsym:=Maybe_Add_Sym_To_ParentFPStruct(TProcDef(symtableentry.owner.DefOwner),symtableentry,resultdef,keep_param_address_in_nested_struct);
                   { left normally holds the parentfp node. If it's not assigned,
                     this is an access to a local variable/para from the routine
                     in which it was actually declared -> redirect to its
                     equivalent in the parentfp struct }
                   if not Assigned(left) then
                     begin
-                      left:=CAddrNode.create_internal(CLoadNode.create(TProcDef(symtableentry.owner.defowner).parentfpstruct,TProcDef(symtableentry.owner.defowner).parentfpstruct.owner));
+                      left:=CAddrNode.Create_Internal(CLoadNode.create(TProcDef(symtableentry.owner.DefOwner).ParentFPStruct,TProcDef(symtableentry.owner.DefOwner).ParentFPStruct.owner));
                       include(TAddrNode(left).addrnodeflags,anf_typedaddr);
                     end;
                   TypeCheckPass(left);
@@ -160,17 +160,17 @@ implementation
                  not(nf_internal in flags) then
                 begin
                   { get struct holding all locals accessed by nested routines }
-                  nestedvars:=TProcDef(SymTable.defowner).parentfpstruct;
+                  nestedvars:=TProcDef(SymTable.DefOwner).ParentFPStruct;
                   if not Assigned(nestedvars) then
                     begin
                       { create this struct }
-                      build_parentfpstruct(TProcDef(SymTable.defowner));
-                      nestedvars:=TProcDef(SymTable.defowner).parentfpstruct;
+                      build_parentfpstruct(TProcDef(SymTable.DefOwner));
+                      nestedvars:=TProcDef(SymTable.DefOwner).ParentFPStruct;
                     end;
                   if nestedvars<>symtableentry then
                     thissym:=nestsym
                   else
-                    thissym:=find_sym_in_parentfpstruct(TProcDef(symtableentry.owner.defowner),symtableentry);
+                    thissym:=Find_Sym_In_ParentFPStruct(TProcDef(symtableentry.owner.DefOwner),symtableentry);
                   if not Assigned(thissym) then
                     InternalError(2011060406);
                   { firstpass the parentfpnode. This will transform it into
@@ -210,20 +210,20 @@ implementation
     constructor TCGNestLoadNode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getderef(nestsymderef);
+        ppufile.GetDeref(nestsymderef);
       end;
 
 
     procedure TCGNestLoadNode.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putderef(nestsymderef);
+        ppufile.PutDeref(nestsymderef);
       end;
 
 
-    procedure TCGNestLoadNode.buildderefimpl;
+    procedure TCGNestLoadNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         nestsymderef.build(nestsym);
       end;
 

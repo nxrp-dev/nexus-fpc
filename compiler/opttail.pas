@@ -83,7 +83,7 @@ unit opttail;
 
         function is_resultassignment(n : TNode) : boolean;
           begin
-            result:=((n.nodetype=loadn) and (TLoadNode(n).symtableentry=p.funcretsym)) or
+            result:=((n.nodetype=loadn) and (TLoadNode(n).symtableentry=p.FuncRetSym)) or
               ((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_equal) and is_resultassignment(TTypeConvNode(n).left));
           end;
 
@@ -147,19 +147,19 @@ unit opttail;
                             addstatement(calcstatements,paranode.fparainit);
                             paranode.fparainit:=nil;
                           end;
-                        useaddr:=(paranode.parasym.varspez in [vs_var,vs_constref]) or
-                          ((paranode.parasym.varspez=vs_const) and
-                          paramanager.push_addr_param(paranode.parasym.varspez,paranode.parasym.vardef,p.proccalloption)) or
-                          ((paranode.parasym.varspez=vs_value) and
+                        useaddr:=(paranode.parasym.VarSpez in [vs_var,vs_constref]) or
+                          ((paranode.parasym.VarSpez=vs_const) and
+                          paramanager.push_addr_param(paranode.parasym.VarSpez,paranode.parasym.vardef,p.ProcCallOption)) or
+                          ((paranode.parasym.VarSpez=vs_value) and
                           is_open_array(paranode.parasym.vardef));
                         if useaddr then
                           begin
-                            tempnode:=CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+                            tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
                               CAssignmentNode.create(
                                 CTempRefNode.create(tempnode),
-                                CAddrNode.create_internal(paranode.left)
+                                CAddrNode.Create_Internal(paranode.left)
                                 ));
                           end
                         else
@@ -167,7 +167,7 @@ unit opttail;
                             tempnode:=CTempCreateNode.create(paranode.left.resultdef,paranode.left.resultdef.size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
-                              CAssignmentNode.create_internal(
+                              CAssignmentNode.Create_Internal(
                                 CTempRefNode.create(tempnode),
                                 paranode.left
                                 ));
@@ -181,7 +181,7 @@ unit opttail;
                         if useaddr then
                           include(TLoadNode(loadnode).loadnodeflags,loadnf_load_addr);
                         addstatement(copystatements,
-                          CAssignmentNode.create_internal(
+                          CAssignmentNode.Create_Internal(
                             loadnode,
                             CTempRefNode.create(tempnode)
                             ));
@@ -239,7 +239,7 @@ unit opttail;
         { check if the parameters actually would support tail recursion elimination }
         for i:=0 to p.paras.count-1 do
           with TParaVarSym(p.paras[i]) do
-            if (varspez=vs_out) or
+            if (VarSpez=vs_out) or
                { parameters requiring tables are too complicated to handle
                  and slow down things anyways so a tail recursion call
                  makes no sense
@@ -251,7 +251,7 @@ unit opttail;
         write('callnode: ',p.gettypename,' tail call opt disabled because parameter ',i,' ',realname,' ');
         if is_managed_type(vardef) then
           write('is managed ')
-        else if (varspez=vs_out) then
+        else if (VarSpez=vs_out) then
           write('is out parameter');
         WriteLn;
         WriteLn('====================================================================================');
@@ -261,8 +261,8 @@ unit opttail;
 
 {$ifdef fix_opttail}
         { check if the local parameters should prevent tail recursion elimination }
-        for i:=0 to p.localst.count-1 do
-          with TAbstractVarSym(p.localst[i]) do
+        for i:=0 to p.LocalST.count-1 do
+          with TAbstractVarSym(p.LocalST[i]) do
             if is_managed_type(vardef) then
               begin
 {$ifdef debug_opttail}

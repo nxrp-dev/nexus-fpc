@@ -1834,11 +1834,11 @@ implementation
         sym: TAbstractNormalVarSym absolute p;
       begin
         if (TSym(p).typ in [paravarsym,localvarsym]) and
-          (sym.localloc.loc=LOC_REFERENCE) and
-          (sym.localloc.reference.base=NR_STACK_POINTER_REG) then
+          (sym.LocAlloc.loc=LOC_REFERENCE) and
+          (sym.LocAlloc.reference.base=NR_STACK_POINTER_REG) then
           begin
-            sym.localloc.reference.base:=NR_FRAME_POINTER_REG;
-            dec(sym.localloc.reference.offset,PLongInt(arg)^);
+            sym.LocAlloc.reference.base:=NR_FRAME_POINTER_REG;
+            dec(sym.LocAlloc.reference.offset,PLongInt(arg)^);
           end;
       end;
 
@@ -1939,7 +1939,7 @@ implementation
                 if TargetInfo.system=system_aarch64_win64 then
                   list.concat(CAISEHDirective.create_offset(ash_savefplr_x,16));
                 { initialise frame pointer }
-                if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
+                if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
                   begin
                     a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_SP,NR_FP);
                     CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_FP);
@@ -2024,8 +2024,8 @@ implementation
                  (CurrentProcInfo.flags*[pi_has_implicit_finally,pi_needs_implicit_finally,pi_uses_exceptions]<>[])
                ) then
               begin
-                CurrentProcInfo.procdef.localst.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
-                CurrentProcInfo.procdef.parast.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
+                CurrentProcInfo.procdef.LocalST.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
+                CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
               end;
           end;
 
@@ -2037,7 +2037,7 @@ implementation
           end;
 
         { Generate unwind data for aarch64-win64 }
-        seh_proc:=CAISEHDirective.create_name(ash_proc,CurrentProcInfo.procdef.mangledname);
+        seh_proc:=CAISEHDirective.create_name(ash_proc,CurrentProcInfo.procdef.MangledName);
         if Assigned(hitem) then
           list.insertafter(seh_proc,hitem)
         else
@@ -2167,7 +2167,7 @@ implementation
             * the entry stack frame must be normally generated because the subroutine could be still left by
               an exception and then the unwinding code might need to restore the registers stored by the entry code
           }
-          not(po_noreturn in CurrentProcInfo.procdef.procoptions) then
+          not(po_noreturn in CurrentProcInfo.procdef.ProcOptions) then
           begin
             { if no registers have been stored, we don't have to subtract the
               allocated temp space from the stack pointer }
@@ -2196,7 +2196,7 @@ implementation
                   to have matching exit sequence to the entry sequence.
                   Skip for exceptfilters where FP points to parent's frame, not local frame. }
                 if (TargetInfo.system=system_aarch64_win64) and
-                   (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) then
+                   (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
                   a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
               end
             else if CurrentProcInfo.final_localsize<>0 then
@@ -2210,13 +2210,13 @@ implementation
                       CurrentProcInfo.framepointer,NR_IP0,false,true);
                     { Skip mov sp,fp for exceptfilters where FP points to parent's frame }
                     if not (pi_no_framepointer_needed in CurrentProcInfo.flags) and
-                       (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) then
+                       (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) then
                       a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
                   end
                 else if pi_no_framepointer_needed in CurrentProcInfo.flags then
                   handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.framepointer,CurrentProcInfo.final_localsize,
                     CurrentProcInfo.framepointer,NR_IP0,false,true)
-                else if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
+                else if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
                   { Skip for exceptfilters where FP points to parent's frame }
                   a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
               end;
@@ -2735,7 +2735,7 @@ implementation
             inherited g_local_unwind(list,l);
             exit;
           end;
-        pd:=search_system_proc('_fpc_local_unwind');
+        pd:=Search_System_Proc('_fpc_local_unwind');
         para1.init;
         para2.init;
         paramanager.getcgtempparaloc(list,pd,1,para1);
@@ -2797,7 +2797,7 @@ implementation
               finalize_procinfo is the exceptfilter we're generating finalization for }
             if not Assigned(CurrentProcInfo.finalize_procinfo) then
               exit;
-            if CurrentProcInfo.finalize_procinfo.procdef.proctypeoption<>potype_exceptfilter then
+            if CurrentProcInfo.finalize_procinfo.procdef.ProcTypeOption<>potype_exceptfilter then
               exit;
             if ref.base<>CurrentProcInfo.framepointer then
               exit;
@@ -2813,7 +2813,7 @@ implementation
               the boundary) must be converted to FP-relative to access the
               parent's stack frame. Handler temps (offset at or above the
               boundary) stay SP-relative in the handler's own stack frame. }
-            if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
+            if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
               exit;
             if ref.base<>NR_STACK_POINTER_REG then
               exit;

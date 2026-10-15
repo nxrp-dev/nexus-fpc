@@ -177,9 +177,9 @@ const
 
 procedure set_default_link_type;
 begin
-  undef_system_macro('FPC_LINK_SMART');
-  def_system_macro('FPC_LINK_STATIC');
-  undef_system_macro('FPC_LINK_DYNAMIC');
+  Undef_System_Macro('FPC_LINK_SMART');
+  Def_System_Macro('FPC_LINK_STATIC');
+  Undef_System_Macro('FPC_LINK_DYNAMIC');
   InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_link_static];
   InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches-[cs_link_shared,cs_link_smart];
 end;
@@ -190,17 +190,17 @@ procedure set_endianess_macros;
     case TargetInfo.endian of
       endian_little :
         begin
-          def_system_macro('ENDIAN_LITTLE');
-          def_system_macro('FPC_LITTLE_ENDIAN');
-          undef_system_macro('ENDIAN_BIG');
-          undef_system_macro('FPC_BIG_ENDIAN');
+          Def_System_Macro('ENDIAN_LITTLE');
+          Def_System_Macro('FPC_LITTLE_ENDIAN');
+          Undef_System_Macro('ENDIAN_BIG');
+          Undef_System_Macro('FPC_BIG_ENDIAN');
         end;
       endian_big :
         begin
-          def_system_macro('ENDIAN_BIG');
-          def_system_macro('FPC_BIG_ENDIAN');
-          undef_system_macro('ENDIAN_LITTLE');
-          undef_system_macro('FPC_LITTLE_ENDIAN');
+          Def_System_Macro('ENDIAN_BIG');
+          Def_System_Macro('FPC_BIG_ENDIAN');
+          Undef_System_Macro('ENDIAN_LITTLE');
+          Undef_System_Macro('FPC_LITTLE_ENDIAN');
         end;
     end;
   end;
@@ -1018,9 +1018,9 @@ end;
 
 procedure TOption.ForceStaticLinking;
 begin
-  def_system_macro('FPC_LINK_STATIC');
-  undef_system_macro('FPC_LINK_SMART');
-  undef_system_macro('FPC_LINK_DYNAMIC');
+  Def_System_Macro('FPC_LINK_STATIC');
+  Undef_System_Macro('FPC_LINK_SMART');
+  Undef_System_Macro('FPC_LINK_DYNAMIC');
   include(InitSettings.GlobalSwitches,cs_link_static);
   exclude(InitSettings.GlobalSwitches,cs_link_smart);
   exclude(InitSettings.GlobalSwitches,cs_link_shared);
@@ -1063,7 +1063,7 @@ function TOption.ParseMacVersionMin(out minversion,
     { check whether the value is a valid version number }
     if value='' then
       begin
-        undef_system_macro(compvarname);
+        Undef_System_Macro(compvarname);
         exit(true);
       end;
     { major version number }
@@ -1149,7 +1149,7 @@ function TOption.ParseMacVersionMin(out minversion,
         versionstr:=versionstr+'.0'
       end;
     minversion.init(versionstr,major,minor,patch);
-    set_system_compvar(compvarname,compvarvalue);
+    Set_System_CompVar(compvarname,compvarvalue);
     MacVersionSet:=true;
     result:=true;
   end;
@@ -1438,7 +1438,7 @@ begin
               RemoveSep(opts);
               s:=upper(GetName(opts));
               if level=0 then
-               skip[level]:=not defined_macro(s) or (s='COMMON');
+               skip[level]:=not Defined_Macro(s) or (s='COMMON');
             end
            else
             if (s='IFDEF') then
@@ -1454,7 +1454,7 @@ begin
                if (opts[1]='$') and (opts[length(opts)]='$') then
                  skip[level]:=skip[level-1] or (GetEnvironmentVariable(copy(opts,2,length(opts)-2))='')
                else
-                 skip[level]:=(skip[level-1] or not defined_macro(upper(GetName(opts))));
+                 skip[level]:=(skip[level-1] or not Defined_Macro(upper(GetName(opts))));
              end
            else
             if (s='IFNDEF') then
@@ -1470,7 +1470,7 @@ begin
                if (opts[1]='$') and (opts[length(opts)]='$') then
                  skip[level]:=skip[level-1] or (GetEnvironmentVariable(copy(opts,2,length(opts)-2))<>'')
                else
-                 skip[level]:=skip[level-1] or defined_macro(upper(GetName(opts)));
+                 skip[level]:=skip[level-1] or Defined_Macro(upper(GetName(opts)));
              end
            else
             if (s='ELSE') then
@@ -1508,7 +1508,7 @@ begin
                         StopOptions(1);
                       end
                     else
-                      def_system_macro(tmp);
+                      Def_System_Macro(tmp);
                   Option_read:=true;
                 end
               else
@@ -1523,7 +1523,7 @@ begin
                         StopOptions(1);
                       end
                     else
-                      undef_system_macro(tmp);
+                      Undef_System_Macro(tmp);
                   Option_read:=true;
                 end
               else
@@ -1792,9 +1792,9 @@ var
   target_unsup_features : TFeatures;
 begin
   if def then
-   def_system_macro(TargetInfo.shortname)
+   Def_System_Macro(TargetInfo.shortname)
   else
-   undef_system_macro(TargetInfo.shortname);
+   Undef_System_Macro(TargetInfo.shortname);
 
   s:=TargetInfo.extradefines;
   while (s<>'') do
@@ -1803,59 +1803,59 @@ begin
      if i=0 then
       i:=length(s)+1;
      if def then
-      def_system_macro(Copy(s,1,i-1))
+      Def_System_Macro(Copy(s,1,i-1))
      else
-      undef_system_macro(Copy(s,1,i-1));
+      Undef_System_Macro(Copy(s,1,i-1));
      delete(s,1,i);
    end;
 
   if (tf_winlikewidestring in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_WINLIKEWIDESTRING')
+      Def_System_Macro('FPC_WINLIKEWIDESTRING')
     else
-      undef_system_macro('FPC_WINLIKEWIDESTRING');
+      Undef_System_Macro('FPC_WINLIKEWIDESTRING');
 
   if (tf_requires_proper_alignment in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT')
+      Def_System_Macro('FPC_REQUIRES_PROPER_ALIGNMENT')
     else
-      undef_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
+      Undef_System_Macro('FPC_REQUIRES_PROPER_ALIGNMENT');
 
   if (tf_init_final_units_by_calls in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_INIT_FINAL_UNITS_BY_CALLS')
+      Def_System_Macro('FPC_INIT_FINAL_UNITS_BY_CALLS')
     else
-      undef_system_macro('FPC_INIT_FINAL_UNITS_BY_CALLS');
+      Undef_System_Macro('FPC_INIT_FINAL_UNITS_BY_CALLS');
 
   if SourceInfo.system<>TargetInfo.system then
     if def then
-      def_system_macro('FPC_CROSSCOMPILING')
+      Def_System_Macro('FPC_CROSSCOMPILING')
     else
-      undef_system_macro('FPC_CROSSCOMPILING');
+      Undef_System_Macro('FPC_CROSSCOMPILING');
 
   if SourceInfo.cpu<>TargetInfo.cpu then
     if def then
-      def_system_macro('FPC_CPUCROSSCOMPILING')
+      Def_System_Macro('FPC_CPUCROSSCOMPILING')
     else
-      undef_system_macro('FPC_CPUCROSSCOMPILING');
+      Undef_System_Macro('FPC_CPUCROSSCOMPILING');
 
   if (tf_no_generic_stackcheck in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_NO_GENERIC_STACK_CHECK')
+      Def_System_Macro('FPC_NO_GENERIC_STACK_CHECK')
     else
-      undef_system_macro('FPC_NO_GENERIC_STACK_CHECK');
+      Undef_System_Macro('FPC_NO_GENERIC_STACK_CHECK');
 
   if (tf_section_threadvars in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_SECTION_THREADVARS')
+      Def_System_Macro('FPC_SECTION_THREADVARS')
     else
-      undef_system_macro('FPC_SECTION_THREADVARS');
+      Undef_System_Macro('FPC_SECTION_THREADVARS');
 
   if (tf_use_psabieh in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_USE_PSABIEH')
+      Def_System_Macro('FPC_USE_PSABIEH')
     else
-      undef_system_macro('FPC_USE_PSABIEH');
+      Undef_System_Macro('FPC_USE_PSABIEH');
 
   { Code generation flags }
   if (tf_pic_default in TargetInfo.flags) then
@@ -1867,9 +1867,9 @@ begin
   { Resources support }
   if (tf_has_winlike_resources in TargetInfo.flags) then
     if def then
-      def_system_macro('FPC_HAS_WINLIKERESOURCES')
+      Def_System_Macro('FPC_HAS_WINLIKERESOURCES')
     else
-      undef_system_macro('FPC_HAS_WINLIKERESOURCES');
+      Undef_System_Macro('FPC_HAS_WINLIKERESOURCES');
 
   target_unsup_features:=[];
 
@@ -2418,12 +2418,12 @@ begin
     if l>0 then
       begin
         if cs_support_macro in InitSettings.ModuleSwitches then
-          set_system_macro(hs,Copy(more,l+2))
+          Set_System_Macro(hs,Copy(more,l+2))
         else
-          set_system_compvar(hs,Copy(more,l+2));
+          Set_System_CompVar(hs,Copy(more,l+2));
       end
     else
-      def_system_macro(hs);
+      Def_System_Macro(hs);
 end;
 
 
@@ -3239,7 +3239,7 @@ begin
           StopOptions(1);
         end
       else
-        undef_system_macro(more);
+        Undef_System_Macro(more);
     end
   else
     begin
@@ -3610,9 +3610,9 @@ begin
          end;
        'D' :
          begin
-           def_system_macro('FPC_LINK_DYNAMIC');
-           undef_system_macro('FPC_LINK_SMART');
-           undef_system_macro('FPC_LINK_STATIC');
+           Def_System_Macro('FPC_LINK_DYNAMIC');
+           Undef_System_Macro('FPC_LINK_SMART');
+           Undef_System_Macro('FPC_LINK_STATIC');
            exclude(InitSettings.GlobalSwitches,cs_link_static);
            exclude(InitSettings.GlobalSwitches,cs_link_smart);
            include(InitSettings.GlobalSwitches,cs_link_shared);
@@ -3681,9 +3681,9 @@ begin
          end;
        'X' :
          begin
-           def_system_macro('FPC_LINK_SMART');
-           undef_system_macro('FPC_LINK_STATIC');
-           undef_system_macro('FPC_LINK_DYNAMIC');
+           Def_System_Macro('FPC_LINK_SMART');
+           Undef_System_Macro('FPC_LINK_STATIC');
+           Undef_System_Macro('FPC_LINK_DYNAMIC');
            exclude(InitSettings.GlobalSwitches,cs_link_static);
            include(InitSettings.GlobalSwitches,cs_link_smart);
            exclude(InitSettings.GlobalSwitches,cs_link_shared);
@@ -3783,12 +3783,12 @@ procedure read_arguments(cmd:TCmdStr);
     begin
 
       for CPUType:=low(TCPUType) to high(TCPUType) do
-        undef_system_macro('CPU'+CPUTypeStr[CPUType]);
-      def_system_macro('CPU'+CPUTypeStr[InitSettings.CPUType]);
+        Undef_System_Macro('CPU'+CPUTypeStr[CPUType]);
+      Def_System_Macro('CPU'+CPUTypeStr[InitSettings.CPUType]);
 
       for FPUType:=low(TFPUType) to high(TFPUType) do
-        undef_system_macro('FPU'+FPUTypeStr[FPUType]);
-      def_system_macro('FPU'+FPUTypeStr[InitSettings.FPUType]);
+        Undef_System_Macro('FPU'+FPUTypeStr[FPUType]);
+      Def_System_Macro('FPU'+FPUTypeStr[InitSettings.FPUType]);
 
 {$PUSH}
 {$WARN 6018 OFF} { Unreachable code due to compile time evaluation }
@@ -3798,60 +3798,60 @@ procedure read_arguments(cmd:TCmdStr);
             begin
               s:=embedded_controllers[controller].ControllerTypeStr;
               if s<>'' then
-                undef_system_macro('FPC_MCU_'+s);
+                Undef_System_Macro('FPC_MCU_'+s);
             end;
           s:=embedded_controllers[InitSettings.ControllerType].ControllerTypeStr;
           if s<>'' then
-            def_system_macro('FPC_MCU_'+s);
+            Def_System_Macro('FPC_MCU_'+s);
         end;
 {$POP}
 
       { define abi }
       for abi:=low(TABI) to high(TABI) do
-        undef_system_macro('FPC_ABI_'+ABIInfo[abi].name);
-      def_system_macro('FPC_ABI_'+ABIInfo[TargetInfo.abi].name);
+        Undef_System_Macro('FPC_ABI_'+ABIInfo[abi].name);
+      Def_System_Macro('FPC_ABI_'+ABIInfo[TargetInfo.abi].name);
 
       { this is not a switchable ABI in the sense of tabi, but it's an ABI
         nevertheless }
       if TargetInfo.system in systems_win64_abi then
-        def_system_macro('FPC_ABI_WIN64');
+        Def_System_Macro('FPC_ABI_WIN64');
 
       { Define FPC_ABI_EABI in addition to FPC_ABI_EABIHF on EABI VFP hardfloat
         systems since most code needs to behave the same on both}
       if TargetInfo.abi = abi_eabihf then
-        def_system_macro('FPC_ABI_EABI');
+        Def_System_Macro('FPC_ABI_EABI');
 
       { using a case is pretty useless here (FK) }
       { some stuff for TP compatibility }
       {$ifdef i386}
-        def_system_macro('CPU86');
-        def_system_macro('CPU87');
-        def_system_macro('CPU386');
+        Def_System_Macro('CPU86');
+        Def_System_Macro('CPU87');
+        Def_System_Macro('CPU386');
       {$endif}
 
       { new processor stuff }
       {$ifdef i386}
-        def_system_macro('CPUI386');
-        def_system_macro('CPU32');
-        def_system_macro('CPUX86');
-        def_system_macro('FPC_HAS_TYPE_EXTENDED');
-        def_system_macro('FPC_HAS_TYPE_DOUBLE');
-        def_system_macro('FPC_HAS_TYPE_SINGLE');
+        Def_System_Macro('CPUI386');
+        Def_System_Macro('CPU32');
+        Def_System_Macro('CPUX86');
+        Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
+        Def_System_Macro('FPC_HAS_TYPE_DOUBLE');
+        Def_System_Macro('FPC_HAS_TYPE_SINGLE');
       {$endif}
 
 
 
 
       {$ifdef x86_64}
-        def_system_macro('CPUX86_64');
-        def_system_macro('CPUAMD64');
-        def_system_macro('CPU64');
-        def_system_macro('CPUX64');
+        Def_System_Macro('CPUX86_64');
+        Def_System_Macro('CPUAMD64');
+        Def_System_Macro('CPU64');
+        Def_System_Macro('CPUX64');
         { Win64 Currency and Comp retain their integer representation. }
         if TargetInfo.system=system_x86_64_win64 then
           begin
-            def_system_macro('FPC_CURRENCY_IS_INT64');
-            def_system_macro('FPC_COMP_IS_INT64');
+            Def_System_Macro('FPC_CURRENCY_IS_INT64');
+            Def_System_Macro('FPC_COMP_IS_INT64');
           end;
       {$endif}
 
@@ -3867,11 +3867,11 @@ procedure read_arguments(cmd:TCmdStr);
 
 
       {$ifdef aarch64}
-        def_system_macro('CPUAARCH64');
-        def_system_macro('CPUARM64');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
+        Def_System_Macro('CPUAARCH64');
+        Def_System_Macro('CPUARM64');
+        Def_System_Macro('CPU64');
+        Def_System_Macro('FPC_CURRENCY_IS_INT64');
+        Def_System_Macro('FPC_COMP_IS_INT64');
       {$endif aarch64}
 
 
@@ -3882,42 +3882,42 @@ procedure read_arguments(cmd:TCmdStr);
 
 
       {$if defined(cpu32bitalu)}
-        def_system_macro('CPUINT32');
+        Def_System_Macro('CPUINT32');
       {$elseif defined(cpu64bitalu)}
-        def_system_macro('CPUINT64');
+        Def_System_Macro('CPUINT64');
       {$endif defined(cpu64bitalu)}
 
 
       { abs(long) is handled internally on all CPUs }
-        def_system_macro('FPC_HAS_INTERNAL_ABS_LONG');
+        Def_System_Macro('FPC_HAS_INTERNAL_ABS_LONG');
       { abs(int64) is handled internally on all CPUs }
-        def_system_macro('FPC_HAS_INTERNAL_ABS_INT64');
+        Def_System_Macro('FPC_HAS_INTERNAL_ABS_INT64');
 
-        def_system_macro('FPC_HAS_UNICODESTRING');
-        def_system_macro('FPC_RTTI_PACKSET1');
-        def_system_macro('FPC_HAS_CPSTRING');
+        Def_System_Macro('FPC_HAS_UNICODESTRING');
+        Def_System_Macro('FPC_RTTI_PACKSET1');
+        Def_System_Macro('FPC_HAS_CPSTRING');
       {$ifdef x86_64}
-        def_system_macro('FPC_HAS_RIP_RELATIVE');
+        Def_System_Macro('FPC_HAS_RIP_RELATIVE');
       {$endif x86_64}
-        def_system_macro('FPC_HAS_CEXTENDED');
-        def_system_macro('FPC_HAS_RESSTRINITS');
+        Def_System_Macro('FPC_HAS_CEXTENDED');
+        Def_System_Macro('FPC_HAS_RESSTRINITS');
 
       { these cpus have an inline rol/ror implementation }
       {$ifdef cpurox}
-        def_system_macro('FPC_HAS_INTERNAL_ROX');
+        Def_System_Macro('FPC_HAS_INTERNAL_ROX');
       {$endif}
 
 
-      def_system_macro('FPC_HAS_ANSICHAR_CHAR');
+      Def_System_Macro('FPC_HAS_ANSICHAR_CHAR');
       { currently, all supported CPUs have an internal sar implementation }
-        def_system_macro('FPC_HAS_INTERNAL_SAR');
+        Def_System_Macro('FPC_HAS_INTERNAL_SAR');
       {$ifdef SUPPORT_GET_FRAME}
-        def_system_macro('INTERNAL_BACKTRACE');
+        Def_System_Macro('INTERNAL_BACKTRACE');
       {$endif SUPPORT_GET_FRAME}
-        def_system_macro('STR_CONCAT_PROCS');
+        Def_System_Macro('STR_CONCAT_PROCS');
       {$warnings off}
         if pocall_default = pocall_register then
-          def_system_macro('REGCALL');
+          Def_System_Macro('REGCALL');
       {$warnings on}
     end;
 
@@ -3977,31 +3977,31 @@ begin
   SetApptype(AppType);
 
 { default defines }
-  def_system_macro(TargetInfo.shortname);
-  def_system_macro('FPC');
-  def_system_macro('VER'+VersionNr);
-  def_system_macro('VER'+VersionNr+'_'+ReleaseNr);
-  def_system_macro('VER'+VersionNr+'_'+ReleaseNr+'_'+PatchNr);
+  Def_System_Macro(TargetInfo.shortname);
+  Def_System_Macro('FPC');
+  Def_System_Macro('VER'+VersionNr);
+  Def_System_Macro('VER'+VersionNr+'_'+ReleaseNr);
+  Def_System_Macro('VER'+VersionNr+'_'+ReleaseNr+'_'+PatchNr);
 
 { Temporary defines, until things settle down }
-  def_system_macro('FPC_HAS_OPERATOR_ENUMERATOR');
-  def_system_macro('FPC_HAS_CONSTREF');
-  def_system_macro('FPC_STATICRIPFIXED');
-  def_system_macro('FPC_VARIANTCOPY_FIXED');
-  def_system_macro('FPC_DYNARRAYCOPY_FIXED');
-  def_system_macro('FPC_HAS_MEMBAR');
-  def_system_macro('FPC_SETBASE_USED');
-  def_system_macro('FPC_ALIGNED_THREADVARTABLES');
-  def_system_macro('FPC_INITFINAL_HASUNITNAME');
+  Def_System_Macro('FPC_HAS_OPERATOR_ENUMERATOR');
+  Def_System_Macro('FPC_HAS_CONSTREF');
+  Def_System_Macro('FPC_STATICRIPFIXED');
+  Def_System_Macro('FPC_VARIANTCOPY_FIXED');
+  Def_System_Macro('FPC_DYNARRAYCOPY_FIXED');
+  Def_System_Macro('FPC_HAS_MEMBAR');
+  Def_System_Macro('FPC_SETBASE_USED');
+  Def_System_Macro('FPC_ALIGNED_THREADVARTABLES');
+  Def_System_Macro('FPC_INITFINAL_HASUNITNAME');
 
-  def_system_macro('FPC_HAS_FEATURE_SUPPORT');
+  Def_System_Macro('FPC_HAS_FEATURE_SUPPORT');
   if (Option.parasubtarget<>'') then
     begin
-    def_system_macro('FPC_SUBTARGET_'+Option.parasubtarget);
+    Def_System_Macro('FPC_SUBTARGET_'+Option.parasubtarget);
     if cs_support_macro in InitSettings.ModuleSwitches then
-      set_system_macro('FPC_SUBTARGET',Option.parasubtarget)
+      Set_System_Macro('FPC_SUBTARGET',Option.parasubtarget)
     else
-      set_system_compvar('FPC_SUBTARGET',Option.parasubtarget);
+      Set_System_CompVar('FPC_SUBTARGET',Option.parasubtarget);
     // So it can be used in macro substitution.
     Globals.SubTarget:=Option.parasubtarget;
     end;
@@ -4327,9 +4327,9 @@ begin
     begin
       str(cpuflag,hs);
       if cpuflag in cpu_capabilities[InitSettings.CPUType] then
-        def_system_macro(hs)
+        Def_System_Macro(hs)
       else
-        undef_system_macro(hs);
+        Undef_System_Macro(hs);
     end;
 {$endif defined(cpucapabilities)}
 {$if defined(fpucapabilities)}
@@ -4337,55 +4337,55 @@ begin
     begin
       str(fpuflag,hs);
       if fpuflag in fpu_capabilities[InitSettings.FPUType] then
-        def_system_macro(hs)
+        Def_System_Macro(hs)
       else
-        undef_system_macro(hs);
+        Undef_System_Macro(hs);
     end;
 {$endif defined(fpucapabilities)}
 
   if InitSettings.FPUType<>fpu_none then
     begin
 {$if defined(i386)}
-      def_system_macro('FPC_HAS_TYPE_EXTENDED');
+      Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
 {$endif}
-      def_system_macro('FPC_HAS_TYPE_SINGLE');
-      def_system_macro('FPC_HAS_TYPE_DOUBLE');
+      Def_System_Macro('FPC_HAS_TYPE_SINGLE');
+      Def_System_Macro('FPC_HAS_TYPE_DOUBLE');
 {$if not defined(i386) and not defined(x86_64) and not defined(aarch64)}
-      def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
+      Def_System_Macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
 {$endif}
 {$ifdef x86_64}
-      def_system_macro('FPC_HAS_TYPE_EXTENDED');
+      Def_System_Macro('FPC_HAS_TYPE_EXTENDED');
 {$endif}
     end;
     { Enable now for testing }
 {$ifndef DISABLE_TLS_DIRECTORY}
     if TargetInfo.system in systems_windows then
-      def_system_macro('FPC_USE_TLS_DIRECTORY');
+      Def_System_Macro('FPC_USE_TLS_DIRECTORY');
 {$endif not DISABLE_TLS_DIRECTORY}
 
 {$ifndef DISABLE_WIN64_SEH}
     if TargetInfo.system=system_x86_64_win64 then
-      def_system_macro('FPC_USE_WIN64_SEH');
+      Def_System_Macro('FPC_USE_WIN64_SEH');
 {$endif DISABLE_WIN64_SEH}
 
 {$ifndef DISABLE_WIN32_SEH}
     if TargetInfo.system=system_i386_win32 then
-      def_system_macro('FPC_USE_WIN32_SEH');
+      Def_System_Macro('FPC_USE_WIN32_SEH');
 {$endif not DISABLE_WIN32_SEH}
 
 
 { inline bsf/bsr implementation }
 {$if defined(i386) or defined(x86_64) or defined(aarch64)}
-  def_system_macro('FPC_HAS_INTERNAL_BSF');
-  def_system_macro('FPC_HAS_INTERNAL_BSR');
+  Def_System_Macro('FPC_HAS_INTERNAL_BSF');
+  Def_System_Macro('FPC_HAS_INTERNAL_BSR');
 {$endif}
 
 { hardware FMA support }
 {$if defined(i386) or defined(x86_64)}
   if (fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
     begin
-      def_system_macro('FPC_HAS_FAST_FMA_SINGLE');
-      def_system_macro('FPC_HAS_FAST_FMA_DOUBLE');
+      Def_System_Macro('FPC_HAS_FAST_FMA_SINGLE');
+      Def_System_Macro('FPC_HAS_FAST_FMA_DOUBLE');
     end;
 {$endif defined(i386) or defined(x86_64)}
 
@@ -4427,30 +4427,30 @@ begin
 
   UpdateAlignment(InitSettings.alignment,option.paraalignment);
 
-  set_system_macro('FPC_VERSION',VersionNr);
-  set_system_macro('FPC_RELEASE',ReleaseNr);
-  set_system_macro('FPC_PATCH',PatchNr);
-  set_system_macro('FPC_FULLVERSION',Format('%d%.02d%.02d',[StrToInt(VersionNr),StrToInt(ReleaseNr),StrToInt(PatchNr)]));
+  Set_System_Macro('FPC_VERSION',VersionNr);
+  Set_System_Macro('FPC_RELEASE',ReleaseNr);
+  Set_System_Macro('FPC_PATCH',PatchNr);
+  Set_System_Macro('FPC_FULLVERSION',Format('%d%.02d%.02d',[StrToInt(VersionNr),StrToInt(ReleaseNr),StrToInt(PatchNr)]));
 
   if TargetInfo.system in systems_indirect_entry_information then
-    def_system_macro('FPC_HAS_INDIRECT_ENTRY_INFORMATION');
+    Def_System_Macro('FPC_HAS_INDIRECT_ENTRY_INFORMATION');
 
   if not (tf_winlikewidestring in TargetInfo.flags) then
-    def_system_macro('FPC_WIDESTRING_EQUAL_UNICODESTRING');
+    Def_System_Macro('FPC_WIDESTRING_EQUAL_UNICODESTRING');
 
   if tf_supports_packages in TargetInfo.flags then
-    def_system_macro('FPC_HAS_DYNAMIC_PACKAGES');
+    Def_System_Macro('FPC_HAS_DYNAMIC_PACKAGES');
 
   if TargetInfo.system in systems_indirect_var_imports then
-    def_system_macro('FPC_HAS_INDIRECT_VAR_ACCESS');
+    Def_System_Macro('FPC_HAS_INDIRECT_VAR_ACCESS');
 
   if cs_compilesystem in InitSettings.ModuleSwitches then
     for i:=low(TFeature) to high(TFeature) do
       if i in Features then
-        def_system_macro('FPC_HAS_FEATURE_'+FeatureStr[i]);
+        Def_System_Macro('FPC_HAS_FEATURE_'+FeatureStr[i]);
 
   { as stackalign is not part of the alignment record, we do not need to define the others alignments for symmetry yet }
-  set_system_macro('FPC_STACKALIGNMENT',ToStr(TargetInfo.stackalign));
+  Set_System_Macro('FPC_STACKALIGNMENT',ToStr(TargetInfo.stackalign));
 
   option.free;
   Option:=nil;

@@ -54,10 +54,10 @@ type
     genname : AnsiString;
     sym : TSym;
     SymTable : TSymTable;
-    forwarddef : TDef;
+    ForwardDef : TDef;
     constructor create;
     destructor Destroy;override;
-    function getcopy:TSpecializationContext;
+    function GetCopy:TSpecializationContext;
   end;
 
 
@@ -77,7 +77,7 @@ begin
   inherited Destroy;
 end;
 
-function TSpecializationContext.getcopy:TSpecializationContext;
+function TSpecializationContext.GetCopy:TSpecializationContext;
 var
   posinfo : PFilePosInfo;
   i : LongInt;
@@ -100,7 +100,7 @@ begin
   result.genname:=genname;
   result.sym:=sym;
   result.SymTable:=SymTable;
-  result.forwarddef:=forwarddef;
+  result.ForwardDef:=ForwardDef;
 end;
 
 end.

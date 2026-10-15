@@ -48,7 +48,7 @@ interface
        TCGStringConstNode = class(TStringConstNode)
           procedure pass_generate_code;override;
        protected
-         procedure load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean); virtual;
+         procedure load_dynstring(const strpointerdef: TDef; const ElementDef: TDef; const winlikewidestring: boolean); virtual;
        end;
 
        TCGSetConstNode = class(TSetConstNode)
@@ -110,14 +110,14 @@ implementation
       begin
         location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),Const_Align(resultdef.alignment),[]);
         lastlabel:=nil;
-        realait:=floattype2ait[TFloatDef(resultdef).floattype];
+        realait:=floattype2ait[TFloatDef(resultdef).FloatType];
         { const already used ? }
         if not Assigned(lab_real) then
           begin
             { there may be gap between record fields, zero it out }
             fillchar(key,sizeof(key),0);
             key.value:=value_real;
-            key.typ:=TFloatDef(resultdef).floattype;
+            key.typ:=TFloatDef(resultdef).FloatType;
             entry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
 
             lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
@@ -199,7 +199,7 @@ implementation
          pool: THashSet;
          entry: PHashSetItem;
          winlikewidestring: boolean;
-         elementdef: TDef;
+         ElementDef: TDef;
          strpointerdef: TDef;
          datatcb: TTAITypedConstBuilder;
          datadef: TDef;
@@ -221,14 +221,14 @@ implementation
            cst_conststring,
            cst_ansistring:
              begin
-               elementdef:=cansichartype;
-               strpointerdef:=charpointertype;
+               ElementDef:=CAnsiCharType;
+               strpointerdef:=CharPointerType;
              end;
            cst_widestring,
            cst_unicodestring:
              begin
-               elementdef:=cwidechartype;
-               strpointerdef:=widecharpointertype;
+               ElementDef:=CWideCharType;
+               strpointerdef:=WideCharPointerType;
              end;
            else
              InternalError(2014032803);
@@ -247,7 +247,7 @@ implementation
               pool := CurrentAsmData.ConstPools[PoolMap[cst_type]];
 
               if cst_type in [cst_widestring, cst_unicodestring] then
-                entry := pool.FindOrAdd(pointer(valuews.data),len*cwidechartype.size)
+                entry := pool.FindOrAdd(pointer(ValueWS.data),len*CWideCharType.size)
               else
               if cst_type = cst_ansistring then
                 entry := PHashSetItem(TTagHashSet(pool).FindOrAdd(pointer(valueas),len,TStringDef(resultdef).encoding))
@@ -285,12 +285,12 @@ implementation
                            else
                              begin
                                lastlabel:=datatcb.emit_unicodestring_const(CurrentAsmData.AsmLists[al_typedconsts],
-                                               valuews,
+                                               ValueWS,
                                                TStringDef(resultdef).encoding,
                                                winlikewidestring);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
-                               if lastlabel.ofs<>datatcb.get_string_symofs(TStringDef(resultdef).stringtype,winlikewidestring) then
+                               if lastlabel.ofs<>datatcb.get_string_symofs(TStringDef(resultdef).StringType,winlikewidestring) then
                                  InternalError(2012051702);
                              end;
                            { no contents of the datatcb itself to concatenate,
@@ -308,9 +308,9 @@ implementation
                            l:=len;
 
                           { include length and terminating zero for quick conversion to pchar }
-                          datadef:=CArrayDef.getreusable(cansichartype,l+2);
+                          datadef:=CArrayDef.getreusable(CAnsiCharType,l+2);
                           datatcb.maybe_begin_aggregate(datadef);
-                          datatcb.emit_tai(TAIConst.Create_8bit(l),cansichartype);
+                          datatcb.emit_tai(TAIConst.Create_8bit(l),CAnsiCharType);
                           t:=TAIString.Create_Data(asconstpchar,l,true);
                           datatcb.emit_tai(t,datadef);
                           datatcb.maybe_end_aggregate(datadef);
@@ -326,7 +326,7 @@ implementation
                             string can be used for pchar assignments (but it's
                             also used for array-of-char assignments, in which
                             case the terminating #0 is not part of the data) }
-                          datadef:=CArrayDef.getreusable(cansichartype,len+1);
+                          datadef:=CArrayDef.getreusable(CAnsiCharType,len+1);
                           datatcb.maybe_begin_aggregate(datadef);
                           t:=TAIString.Create_Data(asconstpchar,len,true);
                           datatcb.emit_tai(t,datadef);
@@ -348,7 +348,7 @@ implementation
            begin
              location_reset(location, LOC_REGISTER, def_cgsize(strpointerdef));
              location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,strpointerdef);
-             load_dynstring(strpointerdef, elementdef, winlikewidestring);
+             load_dynstring(strpointerdef, ElementDef, winlikewidestring);
            end
          else
            begin
@@ -358,14 +358,14 @@ implementation
       end;
 
 
-    procedure TCGStringConstNode.load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean);
+    procedure TCGStringConstNode.load_dynstring(const strpointerdef: TDef; const ElementDef: TDef; const winlikewidestring: boolean);
       var
         href: TReference;
       begin
         reference_reset_symbol(href, lab_str,
-          CTAITypedConstBuilder.get_string_symofs(TStringDef(resultdef).stringtype, winlikewidestring),
+          CTAITypedConstBuilder.get_string_symofs(TStringDef(resultdef).StringType, winlikewidestring),
           Const_Align(strpointerdef.size),[]);
-        hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, elementdef, strpointerdef, href, location.register)
+        hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, ElementDef, strpointerdef, href, location.register)
       end;
 
 
@@ -389,10 +389,10 @@ implementation
         tcb.maybe_begin_aggregate(resultdef);
         if (SourceInfo.endian=TargetInfo.endian) then
           for i:=0 to resultdef.size-1 do
-            tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),u8inttype)
+            tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),U8IntType)
         else
           for i:=0 to resultdef.size-1 do
-            tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),u8inttype);
+            tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),U8IntType);
         tcb.maybe_end_aggregate(resultdef);
         CurrentAsmData.asmlists[al_typedconsts].ConcatList(tcb.get_final_asmlist(
           result,resultdef,sec_rodata_norel,result.name,Const_Align(8)));
@@ -491,7 +491,7 @@ implementation
                  datatcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
                  datatcb.emit_guid_const(value);
                  CurrentAsmData.asmlists[al_typedconsts].ConcatList(
-                   datatcb.get_final_asmlist(lastlabel,rec_tguid,sec_rodata_norel,lastlabel.name,Const_Align(16)));
+                   datatcb.get_final_asmlist(lastlabel,Rec_TGUID,sec_rodata_norel,lastlabel.name,Const_Align(16)));
                  datatcb.free;
                  datatcb := nil;
                  lab_set:=lastlabel;

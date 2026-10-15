@@ -72,7 +72,7 @@ implementation
       begin
         result:=Assigned(def) and
                 (def.typ=procdef) and
-                (po_anonymous in TProcDef(def).procoptions);
+                (po_anonymous in TProcDef(def).ProcOptions);
       end;
 
 
@@ -97,9 +97,9 @@ implementation
                       a:=curr;
                       exit;
                     end;
-                  check:=check.childof;
+                  check:=check.ChildOf;
                 end;
-              curr:=curr.childof;
+              curr:=curr.ChildOf;
             end;
         end;
 
@@ -134,16 +134,16 @@ implementation
           result:=branchdef
         else if is_widestring(branchdef) or is_widestring(olddef) or
                 ((is_ansistring(olddef) or is_chararray(olddef)) and is_widechar(branchdef)) then
-          result:=cwidestringtype
+          result:=CWideStringType
         else if is_unicodestring(branchdef) or is_unicodestring(olddef) then
-          result:=cunicodestringtype
+          result:=CUnicodeStringType
         else if is_char(olddef) and is_widechar(branchdef) then
-          result:=cwidechartype
+          result:=CWideCharType
         { constant strings: use longest }
         else if is_chararray(olddef) and is_chararray(branchdef) then
           begin
             result:=olddef;
-            if TArrayDef(olddef).elecount<TArrayDef(branchdef).elecount then
+            if TArrayDef(olddef).EleCount<TArrayDef(branchdef).EleCount then
               result:=branchdef;
           end
         { shortstrings: use longest }
@@ -295,7 +295,7 @@ implementation
         { variants must be accepted, but first they must be converted to integer }
         if caseexpr.resultdef.typ=variantdef then
           begin
-            caseexpr:=CTypeConvNode.create_internal(caseexpr,sinttype);
+            caseexpr:=CTypeConvNode.Create_Internal(caseexpr,SIntType);
             DoTypeCheckPass(caseexpr);
           end;
         set_varstate(caseexpr,vs_read,[vsf_must_be_valid]);
@@ -312,7 +312,7 @@ implementation
           CGMessage(type_e_ordinal_or_string_expr_expected);
           { create a valid tree }
           caseexpr.free;
-          caseexpr:=COrdConstNode.create(0,u32inttype,false);
+          caseexpr:=COrdConstNode.create(0,U32IntType,false);
           { set error flag so no rangechecks are done }
           casedeferror:=true;
          end;
@@ -336,14 +336,14 @@ implementation
             begin
               if (p.nodetype=rangen) then
                 begin
-                  TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,cwidechartype);
-                  TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,cwidechartype);
+                  TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,CWideCharType);
+                  TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,CWideCharType);
                   DoTypeCheckPass(TRangeNode(p).left);
                   DoTypeCheckPass(TRangeNode(p).right);
                 end
               else
                 begin
-                  p:=CTypeConvNode.create(p,cwidechartype);
+                  p:=CTypeConvNode.create(p,CWideCharType);
                   DoTypeCheckPass(p);
                 end;
             end
@@ -353,13 +353,13 @@ implementation
                 begin
                   if (p.nodetype=ordconstn) then
                     begin
-                      p:=CTypeConvNode.create(p,cansichartype);
+                      p:=CTypeConvNode.create(p,CAnsiCharType);
                       DoTypeCheckPass(p);
                     end
                   else if (p.nodetype=rangen) then
                     begin
-                      TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,cansichartype);
-                      TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,cansichartype);
+                      TRangeNode(p).left:=CTypeConvNode.create(TRangeNode(p).left,CAnsiCharType);
+                      TRangeNode(p).right:=CTypeConvNode.create(TRangeNode(p).right,CAnsiCharType);
                       DoTypeCheckPass(TRangeNode(p).left);
                       DoTypeCheckPass(TRangeNode(p).right);
                     end;
@@ -678,7 +678,7 @@ implementation
                then
                begin
                  MessagePos(hloopvar.fileinfo,type_e_ordinal_expr_expected);
-                 hloopvar.resultdef:=generrordef;
+                 hloopvar.resultdef:=GenErrorDef;
                end;
 
              hp:=hloopvar;
@@ -704,18 +704,18 @@ implementation
                            3. No threadvar, readonly or typedconst
                        }
                        if (
-                           (TLoadNode(hp).SymTable.symtablelevel=main_program_level) or
-                           (TLoadNode(hp).SymTable.symtablelevel=CurrentProcInfo.procdef.parast.symtablelevel)
+                           (TLoadNode(hp).SymTable.SymTableLevel=main_program_level) or
+                           (TLoadNode(hp).SymTable.SymTableLevel=CurrentProcInfo.procdef.ParaST.SymTableLevel)
                           ) and
-                          (TAbstractVarSym(TLoadNode(hp).symtableentry).varspez=vs_value) and
-                          ([vo_is_thread_var,vo_is_typed_const] * TAbstractVarSym(TLoadNode(hp).symtableentry).varoptions=[]) then
+                          (TAbstractVarSym(TLoadNode(hp).symtableentry).VarSpez=vs_value) and
+                          ([vo_is_thread_var,vo_is_typed_const] * TAbstractVarSym(TLoadNode(hp).symtableentry).VarOptions=[]) then
                          begin
                            { Assigning for-loop variable is allowed in MacPas }
                            if not(m_mac in CurrentSettings.ModeSwitches) then
                              begin
                                if not Assigned(loopvarsym) then
                                  loopvarsym:=TAbstractVarSym(TLoadNode(hp).symtableentry);
-                               include(loopvarsym.varoptions,vo_is_loop_counter);
+                               include(loopvarsym.VarOptions,vo_is_loop_counter);
                              end;
                          end
                        else
@@ -767,7 +767,7 @@ implementation
 
              { variable is not used for loop counter anymore }
              if Assigned(loopvarsym) then
-               exclude(loopvarsym.varoptions,vo_is_loop_counter);
+               exclude(loopvarsym.VarOptions,vo_is_loop_counter);
 
              result:=CForNode.create(hloopvar,hfrom,hto,hblock,backward);
 
@@ -789,7 +789,7 @@ implementation
               if Assigned(hp)and(hp.nodetype=loadn) then
                 begin
                   loopvarsym:=TAbstractVarSym(TLoadNode(hp).symtableentry);
-                  include(loopvarsym.varoptions,vo_is_loop_counter);
+                  include(loopvarsym.VarOptions,vo_is_loop_counter);
                 end
               else
                 loopvarsym:=nil;
@@ -803,7 +803,7 @@ implementation
 
               hloopbody:=statement;
               if Assigned(loopvarsym) then
-                exclude(loopvarsym.varoptions,vo_is_loop_counter);
+                exclude(loopvarsym.VarOptions,vo_is_loop_counter);
               result:=create_for_in_loop(hloopvar,hloopbody,expr);
 
               expr.free;
@@ -856,22 +856,22 @@ implementation
          begin
            if not Assigned(obj) then
              exit;
-           pushobjchild(withdef,obj.childof);
+           pushobjchild(withdef,obj.ChildOf);
            { we need to look for helpers that were defined for the parent
              class as well }
-           search_last_objectpascal_helper(obj,CurrentStructDef,parenthelperdef);
+           Search_Last_ObjectPascal_Helper(obj,CurrentStructDef,parenthelperdef);
            { push the symtables of the helper's parents in reverse order }
            if Assigned(parenthelperdef) then
-             pushobjchild(withdef,parenthelperdef.childof);
+             pushobjchild(withdef,parenthelperdef.ChildOf);
            { keep the original tobjectdef as owner, because that is used for
              visibility of the symtable }
-           st:=TWithSymTable.create(withdef,obj.SymTable.SymList,refnode.getcopy);
+           st:=TWithSymTable.create(withdef,obj.SymTable.SymList,refnode.GetCopy);
            SymTableStack.push(st);
            withsymtablelist.add(st);
            { push the symtable of the helper }
            if Assigned(parenthelperdef) then
              begin
-               st:=TWithSymTable.create(withdef,parenthelperdef.SymTable.SymList,refnode.getcopy);
+               st:=TWithSymTable.create(withdef,parenthelperdef.SymTable.SymList,refnode.GetCopy);
                SymTableStack.push(st);
                withsymtablelist.add(st);
              end;
@@ -892,7 +892,7 @@ implementation
          maybe_call_procvar(p,false);
 
          if (p.resultdef.typ in [objectdef,recorddef,classrefdef]) or
-           ((p.resultdef.typ=undefineddef) and (df_generic in CurrentProcInfo.procdef.defoptions)) then
+           ((p.resultdef.typ=undefineddef) and (df_generic in CurrentProcInfo.procdef.DefOptions)) then
           begin
             newblock:=nil;
             valuenode:=nil;
@@ -901,16 +901,16 @@ implementation
             hp:=skip_nodes_before_load(p);
             if (hp.nodetype=loadn) and
                (
-                (TLoadNode(hp).SymTable=CurrentProcInfo.procdef.localst) or
-                (TLoadNode(hp).SymTable=CurrentProcInfo.procdef.parast) or
-                (TLoadNode(hp).SymTable.symtabletype in [staticsymtable,GlobalSymTable])
+                (TLoadNode(hp).SymTable=CurrentProcInfo.procdef.LocalST) or
+                (TLoadNode(hp).SymTable=CurrentProcInfo.procdef.ParaST) or
+                (TLoadNode(hp).SymTable.SymTableType in [staticsymtable,GlobalSymTable])
                ) and
                { MacPas objects are mapped to classes, and the MacPas compilers
                  interpret with-statements with MacPas objects the same way
                  as records (the object referenced by the with-statement
                  must remain constant)
                }
-               not(is_class(hp.resultdef) and
+               not(Is_Class(hp.resultdef) and
                    (m_mac in CurrentSettings.ModeSwitches)) then
               begin
                 { simple load, we can reference direct }
@@ -935,7 +935,7 @@ implementation
                 { several object types have implicit dereferencing }
 
                 hasimplicitderef:=
-                  is_implicit_pointer_object_type(p.resultdef) or
+                  Is_Implicit_Pointer_Object_Type(p.resultdef) or
                   (p.resultdef.typ=classrefdef);
                 if hasimplicitderef then
                   hdef:=p.resultdef
@@ -970,12 +970,12 @@ implementation
               objectdef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
+                   Search_Last_ObjectPascal_Helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
                    { push symtables of all parents in reverse order }
-                   pushobjchild(TObjectDef(p.resultdef),TObjectDef(p.resultdef).childof);
+                   pushobjchild(TObjectDef(p.resultdef),TObjectDef(p.resultdef).ChildOf);
                    { push symtables of all parents of the helper in reverse order }
                    if Assigned(helperdef) then
-                     pushobjchild(helperdef,helperdef.childof);
+                     pushobjchild(helperdef,helperdef.ChildOf);
                    { push object symtable }
                    st:=TWithSymTable.Create(TObjectDef(p.resultdef),TObjectDef(p.resultdef).SymTable.SymList,refnode);
                    SymTableStack.push(st);
@@ -984,24 +984,24 @@ implementation
               classrefdef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(TObjectDef(TClassRefDef(p.resultdef).pointeddef),CurrentStructDef,helperdef);
+                   Search_Last_ObjectPascal_Helper(TObjectDef(TClassRefDef(p.resultdef).PointedDef),CurrentStructDef,helperdef);
                    { push symtables of all parents in reverse order }
-                   pushobjchild(TObjectDef(TClassRefDef(p.resultdef).pointeddef),TObjectDef(TClassRefDef(p.resultdef).pointeddef).childof);
+                   pushobjchild(TObjectDef(TClassRefDef(p.resultdef).PointedDef),TObjectDef(TClassRefDef(p.resultdef).PointedDef).ChildOf);
                    { push symtables of all parents of the helper in reverse order }
                    if Assigned(helperdef) then
-                     pushobjchild(helperdef,helperdef.childof);
+                     pushobjchild(helperdef,helperdef.ChildOf);
                    { push object symtable }
-                   st:=TWithSymTable.Create(TObjectDef(TClassRefDef(p.resultdef).pointeddef),TObjectDef(TClassRefDef(p.resultdef).pointeddef).SymTable.SymList,refnode);
+                   st:=TWithSymTable.Create(TObjectDef(TClassRefDef(p.resultdef).PointedDef),TObjectDef(TClassRefDef(p.resultdef).PointedDef).SymTable.SymList,refnode);
                    SymTableStack.push(st);
                    withsymtablelist.add(st);
                 end;
               recorddef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
+                   Search_Last_ObjectPascal_Helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
                    { push symtables of all parents of the helper in reverse order }
                    if Assigned(helperdef) then
-                     pushobjchild(helperdef,helperdef.childof);
+                     pushobjchild(helperdef,helperdef.ChildOf);
                    { push record symtable }
                    st:=TWithSymTable.create(TRecordDef(p.resultdef),TRecordDef(p.resultdef).SymTable.SymList,refnode);
                    SymTableStack.push(st);
@@ -1009,7 +1009,7 @@ implementation
                 end;
               undefineddef :
                 begin
-                   if not(df_generic in CurrentProcInfo.procdef.defoptions) then
+                   if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
                      InternalError(2012122802);
                    helperdef:=nil;
                    { push record symtable }
@@ -1024,7 +1024,7 @@ implementation
             { push helper symtable }
             if Assigned(helperdef) then
               begin
-                st:=TWithSymTable.Create(helperdef,helperdef.SymTable.SymList,refnode.getcopy);
+                st:=TWithSymTable.Create(helperdef,helperdef.SymTable.SymList,refnode.GetCopy);
                 SymTableStack.push(st);
                 withsymtablelist.add(st);
               end;
@@ -1112,7 +1112,7 @@ implementation
               if (Block_Type<>bt_except) then
                 Message(parser_e_no_reraise_possible);
            end;
-         if (po_noreturn in CurrentProcInfo.procdef.procoptions) and (ExceptBlockCounter=0) then
+         if (po_noreturn in CurrentProcInfo.procdef.ProcOptions) and (ExceptBlockCounter=0) then
            Message(parser_e_raise_with_noreturn_not_allowed);
          p:=CRaiseNode.create(pobj,paddr,pframe);
          raise_statement:=p;
@@ -1121,10 +1121,10 @@ implementation
 
     procedure check_except_type_valid(var def: TDef);
       begin
-        if not (is_class(def) or (def.typ=errordef)) then
+        if not (Is_Class(def) or (def.typ=errordef)) then
           begin
-            Message1(type_e_class_type_expected,def.typename);
-            def:=generrordef;
+            Message1(type_e_class_type_expected,def.TypeName);
+            def:=GenErrorDef;
           end;
       end;
 
@@ -1133,29 +1133,29 @@ implementation
     procedure read_on_head(out ot : TDef; out excepTSymtable : TSymTable);
       var
         sym : TLocalVarSym;
-        objname,objrealname : TIDString;
+        ObjName,ObjRealName : TIDString;
         srsym : TSym;
         srsymtable : TSymTable;
         t : TToken;
         unit_found : boolean;
       begin
-        ot:=generrordef;
+        ot:=GenErrorDef;
         excepTSymtable:=nil;
         consume(_ON);
         if CurrentScanner.token=_ID then
           begin
-            objname:=CurrentScanner.pattern;
-            objrealname:=CurrentScanner.orgpattern;
+            ObjName:=CurrentScanner.pattern;
+            ObjRealName:=CurrentScanner.orgpattern;
             { can't use consume_sym here, because we need already
               to check for the colon }
-            searchsym(objname,srsym,srsymtable);
+            SearchSym(ObjName,srsym,srsymtable);
             consume(_ID);
             { is a explicit name for the exception given ? }
             if try_to_consume(_COLON) then
               begin
                 single_type(ot,[]);
                 check_except_type_valid(ot);
-                sym:=CLocalVarSym.create(objrealname,vs_value,ot,[]);
+                sym:=CLocalVarSym.create(ObjRealName,vs_value,ot,[]);
               end
             else
               begin
@@ -1164,17 +1164,17 @@ implementation
 
                 { support unit.identifier }
                 t:=NOTOKEN;
-                unit_found:=try_consume_unitsym_no_specialize(srsym,srsymtable,t,[],objname);
+                unit_found:=try_consume_unitsym_no_specialize(srsym,srsymtable,t,[],ObjName);
                 if srsym=nil then
                   begin
-                    identifier_not_found(objrealname);
-                    srsym:=generrorsym;
+                    identifier_not_found(ObjRealName);
+                    srsym:=GenErrorSym;
                   end;
                 if unit_found then
                   consume(t);
                 { check if type is valid, must be done here because
                   with "e: Exception" the e is not necessary }
-                if (srsym.typ=typesym) then
+                if (srsym.typ=TypeSym) then
                   begin
                     ot:=TTypeSym(srsym).typedef;
                     parse_nested_types(ot,false,false,nil);
@@ -1183,7 +1183,7 @@ implementation
                 else
                   begin
                     Message(type_e_type_id_expected);
-                    ot:=generrordef;
+                    ot:=GenErrorDef;
                   end;
 
                 { create dummy symbol so we don't need a special
@@ -1192,8 +1192,8 @@ implementation
                 sym:=CLocalVarSym.create('$exceptsym',vs_value,ot,[]);
               end;
             excepTSymtable:=TSTTExceptSymTable.create;
-            excepTSymtable.defowner:=CurrentProcInfo.procdef;
-            excepTSymtable.insertsym(sym);
+            excepTSymtable.DefOwner:=CurrentProcInfo.procdef;
+            excepTSymtable.InsertSym(sym);
             SymTableStack.push(excepTSymtable);
           end
         else
@@ -1510,7 +1510,7 @@ implementation
 
          { Force an empty register list for pure assembler routines,
            so that pass2 won't allocate volatile registers for them. }
-         if (po_assembler in CurrentProcInfo.procdef.procoptions) then
+         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
            Include(asmstat.asmnodeflags,asmnf_has_registerlist);
 
          { END is read, got a list of changed registers? }
@@ -1518,7 +1518,7 @@ implementation
            begin
              if CurrentScanner.token<>_RECKKLAMMER then
               begin
-                if po_assembler in CurrentProcInfo.procdef.procoptions then
+                if po_assembler in CurrentProcInfo.procdef.ProcOptions then
                   Message(parser_w_register_list_ignored);
                 repeat
                   { it's possible to specify the modified registers }
@@ -1531,7 +1531,7 @@ implementation
                   { is_extra_reg is not exported on all architectures from cpubase }
                   if reg<>NR_NO then
                     begin
-                      if not(po_assembler in CurrentProcInfo.procdef.procoptions) and Assigned(hl) then
+                      if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) and Assigned(hl) then
                         begin
                           hl.Insert(TAIRegAlloc.alloc(reg,nil));
                           hl.Insert(TAIRegAlloc.markused(reg));
@@ -1570,11 +1570,11 @@ implementation
           cv:=get_intconst;
           case actype of
             aitconst_8bit:
-              def:=s8inttype;
+              def:=S8IntType;
             aitconst_16bit:
-              def:=s16inttype;
+              def:=S16IntType;
             else
-              def:=sizesinttype;
+              def:=SizeSIntType;
           end;
           if cv.uvalue>get_max_value(def).uvalue then
             def:=get_unsigned_inttype(def);
@@ -1650,7 +1650,7 @@ implementation
           sym:=nil;
           if CurrentScanner.token=_ID then
             begin
-              if searchsym(CurrentScanner.pattern,sym,SymTable) then
+              if SearchSym(CurrentScanner.pattern,sym,SymTable) then
                 begin
                   if sym.typ in [staticvarsym,localvarsym,paravarsym] then
                     begin
@@ -1664,7 +1664,7 @@ implementation
                       else
                         w:=0;
                       if sym.typ=staticvarsym then
-                        s:=sym.mangledname
+                        s:=sym.MangledName
                       else
                         s:=sym.name;
                       ac:=TAIConst.Createname(s,w);
@@ -1718,8 +1718,8 @@ implementation
         { Mark procedure that it has assembler blocks }
         include(CurrentProcInfo.flags,pi_has_assembler_block);
         { Assume the function result is always used }
-        if Assigned(CurrentProcInfo.procdef.funcretsym) then
-          CurrentProcInfo.procdef.funcretsym.IncRefCount;
+        if Assigned(CurrentProcInfo.procdef.FuncRetSym) then
+          CurrentProcInfo.procdef.FuncRetSym.IncRefCount;
         result:=asmstat;
       end;
 
@@ -1765,11 +1765,11 @@ implementation
                           while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
                             delete(CurrentScanner.pattern,1,1);
 
-                        searchsym(CurrentScanner.pattern,srsym,srsymtable);
+                        SearchSym(CurrentScanner.pattern,srsym,srsymtable);
                         if srsym=nil then
                           begin
                             identifier_not_found(CurrentScanner.pattern);
-                            srsym:=generrorsym;
+                            srsym:=GenErrorSym;
                             srsymtable:=nil;
                           end;
                         consume(CurrentScanner.token);
@@ -1783,14 +1783,14 @@ implementation
                      else
                        begin
                          { goto outside the current scope? }
-                         if srsym.owner<>CurrentProcInfo.procdef.localst then
+                         if srsym.owner<>CurrentProcInfo.procdef.LocalST then
                            begin
                              { allowed? }
                              if not(m_non_local_goto in CurrentSettings.ModeSwitches) then
                                Message(parser_e_goto_outside_proc);
                              include(CurrentProcInfo.flags,pi_has_global_goto);
                              if is_nested_pd(CurrentProcInfo.procdef) then
-                               CurrentProcInfo.set_needs_parentfp(srsym.owner.symtablelevel);
+                               CurrentProcInfo.set_needs_parentfp(srsym.owner.SymTableLevel);
                            end;
                          code:=CGotoNode.create(TLabelSym(srsym));
                          TGotoNode(code).labelsym:=TLabelSym(srsym);
@@ -1828,7 +1828,7 @@ implementation
              code:=CNothingNode.create;
            _FAIL :
              begin
-                if (CurrentProcInfo.procdef.proctypeoption<>potype_constructor) then
+                if (CurrentProcInfo.procdef.ProcTypeOption<>potype_constructor) then
                   Message(parser_e_fail_only_in_constructor);
                 consume(_FAIL);
                 code:=CNodeUtils.call_fail_node;
@@ -1875,9 +1875,9 @@ implementation
               begin
                 { in iso mode, 0003: is equal to 3: }
                 if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
-                  searchsym(ToStr(TOrdConstNode(p).value),srsym,srsymtable)
+                  SearchSym(ToStr(TOrdConstNode(p).value),srsym,srsymtable)
                 else
-                  searchsym(s,srsym,srsymtable);
+                  SearchSym(s,srsym,srsymtable);
                 p.free;
                 p := nil;
 
@@ -1886,10 +1886,10 @@ implementation
                  begin
                    if TLabelSym(srsym).defined then
                      Message(sym_e_label_already_defined);
-                   if SymTableStack.top.symtablelevel<>srsymtable.symtablelevel then
+                   if SymTableStack.top.SymTableLevel<>srsymtable.SymTableLevel then
                      begin
                        include(CurrentProcInfo.flags,pi_has_interproclabel);
-                       if (CurrentProcInfo.procdef.proctypeoption in [potype_unitinit,potype_unitfinalize]) then
+                       if (CurrentProcInfo.procdef.ProcTypeOption in [potype_unitinit,potype_unitfinalize]) then
                          Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                      end;
 
@@ -1933,7 +1933,7 @@ implementation
                  not TInlineNode(p).may_ignore_result) or
                 ((p.nodetype=calln) and
                  (Assigned(TCallNode(p).procdefinition)) and
-                 (TCallNode(p).procdefinition.proctypeoption=potype_operator)) then
+                 (TCallNode(p).procdefinition.ProcTypeOption=potype_operator)) then
                Message(parser_e_illegal_expression);
 
              if not Assigned(p.resultdef) then
@@ -1956,8 +1956,8 @@ implementation
                     { allow constructor calls to drop the result if they are
                       called as instance methods instead of class methods }
                     not(
-                      (TCallNode(p).procdefinition.proctypeoption=potype_constructor) and
-                      is_class_or_object(TProcDef(TCallNode(p).procdefinition).struct) and
+                      (TCallNode(p).procdefinition.ProcTypeOption=potype_constructor) and
+                      Is_Class_Or_Object(TProcDef(TCallNode(p).procdefinition).struct) and
                       Assigned(TCallNode(p).methodpointer) and
                       (TNode(TCallNode(p).methodpointer).resultdef.typ=objectdef)
                     ) then
@@ -2037,18 +2037,18 @@ implementation
            message(parser_e_no_assembler_in_generic);
 
          { Rename the funcret so that recursive calls are possible }
-         if not is_void(CurrentProcInfo.procdef.returndef) then
+         if not is_void(CurrentProcInfo.procdef.ReturnDef) then
            begin
-             srsym:=TSym(CurrentProcInfo.procdef.localst.Find(CurrentProcInfo.procdef.procsym.name));
+             srsym:=TSym(CurrentProcInfo.procdef.LocalST.Find(CurrentProcInfo.procdef.ProcSym.name));
              if Assigned(srsym) then
                srsym.realname:='$hiddenresult';
            end;
 
          { delphi uses register calling for assembler methods }
          if (m_delphi in CurrentSettings.ModeSwitches) and
-            (po_assembler in CurrentProcInfo.procdef.procoptions) and
-            not(po_hascallingconvention in CurrentProcInfo.procdef.procoptions) then
-           CurrentProcInfo.procdef.proccalloption:=pocall_register;
+            (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
+            not(po_hascallingconvention in CurrentProcInfo.procdef.ProcOptions) then
+           CurrentProcInfo.procdef.ProcCallOption:=pocall_register;
 
          { force the asm statement }
          if CurrentScanner.token<>_ASM then
@@ -2056,7 +2056,7 @@ implementation
          include(CurrentProcInfo.flags,pi_is_assembler);
          p:=_asm_statement;
 
-         if (po_assembler in CurrentProcInfo.procdef.procoptions) then
+         if (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
            begin
              { set the framepointer to esp for assembler functions when the
                following conditions are met:
@@ -2066,15 +2066,15 @@ implementation
                - target processor has optional frame pointer save
                  (vm, i386, vm only currently)
              }
-             locals:=TAbstractLocalSymTable(CurrentProcInfo.procdef.parast).count_locals;
-             if (CurrentProcInfo.procdef.localst.symtabletype=localsymtable) then
-               inc(locals,TAbstractLocalSymTable(CurrentProcInfo.procdef.localst).count_locals);
+             locals:=TAbstractLocalSymTable(CurrentProcInfo.procdef.ParaST).Count_Locals;
+             if (CurrentProcInfo.procdef.LocalST.SymTableType=LocalSymTable) then
+               inc(locals,TAbstractLocalSymTable(CurrentProcInfo.procdef.LocalST).Count_Locals);
              if (locals=0) and
-                not (CurrentProcInfo.procdef.owner.symtabletype in [ObjectSymtable,recordsymtable]) and
-                (not Assigned(CurrentProcInfo.procdef.funcretsym) or
-                 (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs<=1)) and
-                not (df_generic in CurrentProcInfo.procdef.defoptions) and
-                not(paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef)) then
+                not (CurrentProcInfo.procdef.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
+                (not Assigned(CurrentProcInfo.procdef.FuncRetSym) or
+                 (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs<=1)) and
+                not (df_generic in CurrentProcInfo.procdef.DefOptions) and
+                not(paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
                begin
                  { Only need to set the framepointer, the locals will
                    be inserted with the correct reference in tcgasmnode.pass_generate_code }
@@ -2085,10 +2085,10 @@ implementation
         { Flag the result as assigned when it is returned in a
           register.
         }
-        if Assigned(CurrentProcInfo.procdef.funcretsym) and
-            not (df_generic in CurrentProcInfo.procdef.defoptions) and
-           (not paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef)) then
-          TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).varstate:=vs_initialised;
+        if Assigned(CurrentProcInfo.procdef.FuncRetSym) and
+            not (df_generic in CurrentProcInfo.procdef.DefOptions) and
+           (not paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef)) then
+          TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).VarState:=vs_initialised;
 
         { because the END is already read we need to get the
           last_endtoken_filepos here (PFV) }

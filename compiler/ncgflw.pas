@@ -506,8 +506,8 @@ implementation
          { Write also extra label if this label was referenced from
            assembler block }
          if Assigned(labsym) and
-            Assigned(labsym.asmblocklabel) then
-           hlcg.a_label(CurrentAsmData.CurrAsmList,labsym.asmblocklabel);
+            Assigned(labsym.AsmBlockLabel) then
+           hlcg.a_label(CurrentAsmData.CurrAsmList,labsym.AsmBlockLabel);
       end;
 
 
@@ -525,7 +525,7 @@ implementation
           { we must also destroy the address frame which guards
             the exception object }
           cexceptionstatehandler.popaddrstack(list);
-          hlcg.g_exception_reason_discard(list,exceptionreasontype,excepttemps.reasonbuf);
+          hlcg.g_exception_reason_discard(list,ExceptionReasonType,excepttemps.reasonbuf);
           if frametype=ft_except then
             begin
               cexceptionstatehandler.cleanupobjectstack(list);
@@ -765,9 +765,9 @@ implementation
 
          if Assigned(exceptvarsym) then
            begin
-             location_reset_ref(exceptvarsym.localloc, LOC_REFERENCE, def_cgsize(voidpointertype), voidpointertype.alignment, []);
-             tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.size, voidpointertype.alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.localloc.reference);
-             hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList, exceptlocdef, exceptvarsym.vardef, exceptlocreg, exceptvarsym.localloc.reference);
+             location_reset_ref(exceptvarsym.LocAlloc, LOC_REFERENCE, def_cgsize(VoidPointerType), VoidPointerType.alignment, []);
+             tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.size, VoidPointerType.alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.LocAlloc.reference);
+             hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList, exceptlocdef, exceptvarsym.vardef, exceptlocreg, exceptvarsym.LocAlloc.reference);
            end;
          { in the case that another exception is risen
            we've to destroy the old one, so create a new
@@ -800,8 +800,8 @@ implementation
          { clear some stuff }
          if Assigned(exceptvarsym) then
            begin
-             tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.localloc.reference);
-             exceptvarsym.localloc.loc:=LOC_INVALID;
+             tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.reference);
+             exceptvarsym.LocAlloc.loc:=LOC_INVALID;
            end;
          cexceptionstatehandler.end_catch(CurrentAsmData.CurrAsmList);
          hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
@@ -858,8 +858,8 @@ implementation
     procedure TCGTryFinallyNode.emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
       begin
          hlcg.a_label(list,framelabel);
-         hlcg.g_exception_reason_discard(list,exceptionreasontype,excepttemps.reasonbuf);
-         hlcg.g_exception_reason_save_const(list,exceptionreasontype,reason,excepttemps.reasonbuf);
+         hlcg.g_exception_reason_discard(list,ExceptionReasonType,excepttemps.reasonbuf);
+         hlcg.g_exception_reason_save_const(list,ExceptionReasonType,reason,excepttemps.reasonbuf);
          hlcg.a_jmp_always(list,finallycodelabel);
       end;
 
@@ -879,23 +879,23 @@ implementation
       begin
         { call fpc_safecallhandler, passing self for methods of classes,
           nil otherwise. }
-        pd:=search_system_proc('fpc_safecallhandler');
+        pd:=Search_System_Proc('fpc_safecallhandler');
         cgpara.init;
         paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
-        if is_class(CurrentProcInfo.procdef.struct) then
+        if Is_Class(CurrentProcInfo.procdef.struct) then
           begin
-            selfsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('self'));
+            selfsym:=TParaVarSym(CurrentProcInfo.procdef.ParaST.Find('self'));
             if (selfsym=nil) or (selfsym.typ<>paravarsym) then
               InternalError(2011123101);
-            hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.localloc,cgpara);
+            hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.LocAlloc,cgpara);
           end
         else
-          hlcg.a_load_const_cgpara(CurrentAsmData.CurrAsmList,voidpointertype,0,cgpara);
+          hlcg.a_load_const_cgpara(CurrentAsmData.CurrAsmList,VoidPointerType,0,cgpara);
         paramanager.freecgpara(CurrentAsmData.CurrAsmList,cgpara);
         resultpara:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
         cgpara.done;
-        safecallresult:=TLocalVarSym(CurrentProcInfo.procdef.localst.Find('safecallresult'));
-        hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.localloc,false);
+        safecallresult:=TLocalVarSym(CurrentProcInfo.procdef.LocalST.Find('safecallresult'));
+        hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.LocAlloc,false);
         resultpara.resetiftemp;
       end;
 
@@ -919,13 +919,13 @@ implementation
         procedure handle_breakcontinueexit(const finallycode: TAsmLabel; doreraise: boolean);
           begin
             { no exception happened, but maybe break/continue/exit }
-            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,0,reasonreg,endfinallylabel);
+            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
             if fc_exit in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,2,reasonreg,oldCurrExitLabel);
+              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,2,reasonreg,oldCurrExitLabel);
             if fc_break in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,3,reasonreg,oldBreakLabel);
+              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,3,reasonreg,oldBreakLabel);
             if fc_continue in finallyexceptionstate.newflowcontrol then
-              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,4,reasonreg,oldContinueLabel);
+              hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,4,reasonreg,oldContinueLabel);
             if doreraise then
               cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,tek_normalfinally)
             else
@@ -1002,8 +1002,8 @@ implementation
                exit;
              if not implicitframe then
                CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
-             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,exceptionreasontype);
-             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,exceptionreasontype,exceptionreasontype,excepttemps.reasonbuf,reasonreg);
+             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
              handle_breakcontinueexit(finallyNoExceptionLabel,false);
 
              CurrentAsmData.CurrAsmList.ConcatList(tmplist);
@@ -1042,14 +1042,14 @@ implementation
          if not Assigned(third) then
            begin
              { the value should now be in the exception handler }
-             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,exceptionreasontype);
-             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,exceptionreasontype,exceptionreasontype,excepttemps.reasonbuf,reasonreg);
+             reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ExceptionReasonType);
+             hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,ExceptionReasonType,ExceptionReasonType,excepttemps.reasonbuf,reasonreg);
              if implicitframe then
                begin
-                 hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,0,reasonreg,endfinallylabel);
+                 hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,ExceptionReasonType,OC_EQ,0,reasonreg,endfinallylabel);
                  { finally code only needed to be executed on exception (-> in
                    if-branch -> fc_inflowcontrol) }
-                 if CurrentProcInfo.procdef.generate_safecall_wrapper then
+                 if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
                    begin
                      handle_safecall_exception;
                      { we have to jump immediately as we have to return the value of FPC_SAFECALL }
@@ -1069,7 +1069,7 @@ implementation
            begin
              if implicitframe then
                begin
-                 if CurrentProcInfo.procdef.generate_safecall_wrapper then
+                 if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
                    handle_safecall_exception
                  else
                    cexceptionstatehandler.handle_reraise(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,exceptframekind);

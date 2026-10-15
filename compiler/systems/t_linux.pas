@@ -88,7 +88,7 @@ implementation
         for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
             ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
-            CurrentModule.linkothersharedlibs.add(ImportLibrary.Name,link_always);
+            CurrentModule.LinkOtherSharedLibs.add(ImportLibrary.Name,link_always);
           end;
       end;
 
@@ -115,23 +115,23 @@ implementation
         end;
 
       begin
-        hp:=TExportedItem(CurrentModule._exports.first);
+        hp:=TExportedItem(CurrentModule.ExportList.first);
         while Assigned(hp) do
           begin
-            asmsym:=CurrentAsmData.getasmsymbol(hp.name^);
+            asmsym:=CurrentAsmData.GetAsmSymbol(hp.name^);
             if Assigned(asmsym) and (asmsym.bind=AB_PRIVATE_EXTERN) then
               begin
                 { A version script cannot export an ELF HIDDEN symbol.
                   This includes procedures exported under their own name. }
                 asmsym.bind:=AB_GLOBAL;
-                CurrentModule.add_public_asmsym(asmsym);
+                CurrentModule.Add_Public_AsmSym(asmsym);
               end;
             hp:=TExportedItem(hp.next);
           end;
         inherited generatelib;
-        if CurrentModule.is_unit then
+        if CurrentModule.IsUnit then
           begin
-            hp:=TExportedItem(CurrentModule._exports.first);
+            hp:=TExportedItem(CurrentModule.ExportList.first);
             while Assigned(hp) do
               begin
                 { The alias now lives in the unit object. Only its name is
@@ -143,19 +143,19 @@ implementation
             exit;
           end;
 
-        hp:=TExportedItem(CurrentModule._exports.first);
+        hp:=TExportedItem(CurrentModule.ExportList.first);
         while Assigned(hp) do
           begin
             retainexport(hp);
             hp:=TExportedItem(hp.next);
           end;
 
-        unitmodule:=TModule(loaded_units.first);
+        unitmodule:=TModule(Loaded_Units.first);
         while Assigned(unitmodule) do
           begin
-            if unitmodule.is_unit and not Assigned(unitmodule.package) then
+            if unitmodule.IsUnit and not Assigned(unitmodule.package) then
               begin
-                hp:=TExportedItem(unitmodule._exports.first);
+                hp:=TExportedItem(unitmodule.ExportList.first);
                 while Assigned(hp) do
                   begin
                     if Assigned(exportedsymnames.FindCase(hp.name^)) and
@@ -301,14 +301,14 @@ begin
     The former contains library names qualified with prefix and suffix (coming from
     "external 'c' name 'foo' declarations), the latter contains raw names (from "$linklib c"
     directives). }
-  hp:=TModule(loaded_units.first);
+  hp:=TModule(Loaded_Units.first);
   while Assigned(hp) do
     begin
       result:=Assigned(hp.ImportLibraryList.find(TargetInfo.sharedClibprefix+'c'+TargetInfo.sharedClibext));
       if result then break;
-      result:=hp.linkothersharedlibs.find(TargetInfo.sharedClibprefix+'c'+TargetInfo.sharedClibext);
+      result:=hp.LinkOtherSharedLibs.find(TargetInfo.sharedClibprefix+'c'+TargetInfo.sharedClibext);
       if result then break;
-      result:=hp.linkothersharedlibs.find('c');
+      result:=hp.LinkOtherSharedLibs.find('c');
       if result then break;
       hp:=TModule(hp.next);
     end;
@@ -434,7 +434,7 @@ begin
   with linkres do
     begin
       { Write path to search libraries }
-      HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
+      HPath:=TCmdStrListItem(CurrentModule.LocalLibrarySearchPath.First);
       while Assigned(HPath) do
        begin
          Add('SEARCH_DIR("'+HPath.Str+'")');

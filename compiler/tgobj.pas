@@ -464,7 +464,7 @@ implementation
 {$ifdef EXTDEBUG}
          tl^.posinfo:=CurrentFilePos;
          if Assigned(tl^.def) then
-           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.typename))
+           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.TypeName))
          else
            list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]));
          Comment(VNote,'tgobj: (AllocTemp) temp of size '+ToStr(size)+' type '+TempTypeStr[tl^.temptype]+' requested, allocated at offset '+ToStr(tl^.pos));
@@ -753,7 +753,7 @@ implementation
     procedure TTGObj.getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : TReference);
       begin
         if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef])  then
-          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).explicitrecordalignment, def, nil, ref)
+          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).ExplicitRecordAlignment, def, nil, ref)
         else
           getlocal(list, size, def.alignment, 0, def, nil, ref);
       end;
@@ -769,14 +769,14 @@ implementation
             if Assigned(sym) then
               CGMessage1(scanner_w_local_alignment_larger_than_max,sym.name)
             else
-              CGMessage1(scanner_w_local_alignment_larger_than_max,def.typename);
+              CGMessage1(scanner_w_local_alignment_larger_than_max,def.TypeName);
           end
         else if (alignment>lalign) and (CurrentSettings.alignment.LocalAlignMax>1) then
           begin
             if Assigned(sym) then
               CGMessage1(scanner_n_local_alignment_larger_than_max,sym.name)
             else
-              CGMessage1(scanner_n_local_alignment_larger_than_max,def.typename);
+              CGMessage1(scanner_n_local_alignment_larger_than_max,def.TypeName);
 	  end;
         alloctemp(list,size,lalign,tt_persistent,def,false,ref);
       end;

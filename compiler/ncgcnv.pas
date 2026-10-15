@@ -88,7 +88,7 @@ interface
                   (TargetInfo.system in systems_indirect_var_imports) and
                   (
                     not Assigned(CurrentModule) or
-                    (CurrentModule.GlobalSymTable<>systemunit)
+                    (CurrentModule.GlobalSymTable<>SystemUnit)
                   );
       end;
 
@@ -310,9 +310,9 @@ interface
                   { FPC_EMPTYCHAR is a widechar -> 2 bytes }
                   reference_reset(hr,2,[]);
                   hr.symbol:=CurrentAsmData.RefAsmSymbol('FPC_EMPTYCHAR',AT_DATA,needs_indirect);
-                  CurrentModule.add_extern_asmsym('FPC_EMPTYCHAR',AB_EXTERNAL,AT_DATA);
+                  CurrentModule.Add_Extern_AsmSym('FPC_EMPTYCHAR',AB_EXTERNAL,AT_DATA);
                   location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,resultdef);
-                  hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,cwidechartype,resultdef,hr,location.register);
+                  hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,CWideCharType,resultdef,hr,location.register);
                 end
                else
                 begin
@@ -408,7 +408,7 @@ interface
         tmpref: TReference;
       begin
          location_reset_ref(location,LOC_REFERENCE,OS_NO,2,[]);
-         case TStringDef(resultdef).stringtype of
+         case TStringDef(resultdef).StringType of
            st_shortstring :
              begin
                tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,resultdef.size,tt_normal,location.reference);
@@ -534,14 +534,14 @@ interface
         procvarrectype: TRecordDef;
         procvarselfname: TIDString;
       begin
-        if TAbstractProcDef(resultdef).is_addressonly then
+        if TAbstractProcDef(resultdef).Is_AddressOnly then
           begin
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
             { only a code pointer? (when taking the address of classtype.method
               we also only get a code pointer even though the resultdef is a
               procedure of object, and hence is_addressonly would return false)
              }
-	    if left.location.size = def_cgsize(TAbstractProcDef(left.resultdef).address_type) then
+	    if left.location.size = def_cgsize(TAbstractProcDef(left.resultdef).Address_Type) then
               begin
                 case left.location.loc of
                   LOC_REFERENCE,LOC_CREFERENCE:
@@ -562,7 +562,7 @@ interface
                     begin
                       location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,resultdef);
                       { code field is the first one }
-                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(CProcVarDef.getreusableprocaddr(TProcDef(left.resultdef),pc_normal)),CPointerDef.getreusable(resultdef),left.location.reference);
+                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(CProcVarDef.GetReusableProcAddr(TProcDef(left.resultdef),pc_normal)),CPointerDef.getreusable(resultdef),left.location.reference);
                       hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,left.location.reference,location.register);
                     end;
                   LOC_REGISTER,LOC_CREGISTER:
@@ -579,7 +579,7 @@ interface
           end
         else
           begin
-            if not TAbstractProcDef(left.resultdef).is_addressonly then
+            if not TAbstractProcDef(left.resultdef).Is_AddressOnly then
               location_copy(location,left.location)
             else
               begin
@@ -592,18 +592,18 @@ interface
                 href:=location.reference;
                 if is_nested_pd(TAbstractProcDef(resultdef)) then
                   begin
-                    procvarrectype:=TRecordDef(nestedprocpointertype);
+                    procvarrectype:=TRecordDef(NestedProcPointerType);
                     procvarselfname:='parentfp';
                   end
                 else
                   begin
-                    procvarrectype:=TRecordDef(methodpointertype);
+                    procvarrectype:=TRecordDef(MethodPointerType);
                     procvarselfname:='self';
                   end;
                 hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(resultdef),CPointerDef.getreusable(procvarrectype),href);
-                tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,voidcodepointertype);
-                hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,TProcDef(left.resultdef),voidcodepointertype,left.location.reference,tmpreg);
-                hlcg.g_load_reg_field_by_name(CurrentAsmData.CurrAsmList,voidcodepointertype,TRecordDef(procvarrectype),tmpreg,'proc',href);
+                tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,VoidCodePointerType);
+                hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,TProcDef(left.resultdef),VoidCodePointerType,left.location.reference,tmpreg);
+                hlcg.g_load_reg_field_by_name(CurrentAsmData.CurrAsmList,VoidCodePointerType,TRecordDef(procvarrectype),tmpreg,'proc',href);
                 { setting the frame pointer to nil is not strictly necessary
                   since the global procedure won't use it, but it can help with
                   debugging }
@@ -615,10 +615,10 @@ interface
     procedure TCGTypeConvNode.second_nil_to_methodprocvar;
     begin
       location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-      location.registerhi:=hlcg.getaddressregister(CurrentAsmData.currasmlist,voidpointertype);
-      hlcg.a_load_const_reg(CurrentAsmData.currasmlist,voidpointertype,0,location.registerhi);
-      location.register:=hlcg.getaddressregister(CurrentAsmData.currasmlist,voidcodepointertype);
-      hlcg.a_load_const_reg(CurrentAsmData.currasmlist,voidcodepointertype,0,location.register);
+      location.registerhi:=hlcg.getaddressregister(CurrentAsmData.currasmlist,VoidPointerType);
+      hlcg.a_load_const_reg(CurrentAsmData.currasmlist,VoidPointerType,0,location.registerhi);
+      location.register:=hlcg.getaddressregister(CurrentAsmData.currasmlist,VoidCodePointerType);
+      hlcg.a_load_const_reg(CurrentAsmData.currasmlist,VoidCodePointerType,0,location.register);
     end;
 
     procedure TCGTypeConvNode.second_bool_to_int;
@@ -695,8 +695,8 @@ interface
          { FPC_EMPTYCHAR is a widechar -> 2 bytes }
          reference_reset(hr,2,[]);
          hr.symbol:=CurrentAsmData.RefAsmSymbol('FPC_EMPTYCHAR',AT_DATA,needs_indirect);
-         CurrentModule.add_extern_asmsym('FPC_EMPTYCHAR',AB_EXTERNAL,AT_DATA);
-         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,cwidechartype,resultdef,hr,location.register);
+         CurrentModule.Add_Extern_AsmSym('FPC_EMPTYCHAR',AB_EXTERNAL,AT_DATA);
+         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,CWideCharType,resultdef,hr,location.register);
          hlcg.a_label(CurrentAsmData.CurrAsmList,l1);
       end;
 
@@ -753,7 +753,7 @@ interface
                      InternalError(200802163);
                  end;
                end;
-             hd:=hd.childof;
+             hd:=hd.ChildOf;
            end;
          if hd=nil then
            InternalError(2002081301);

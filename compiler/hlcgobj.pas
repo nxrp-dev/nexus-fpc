@@ -768,15 +768,15 @@ implementation
         item: TCmdStrListItem;
         global: boolean;
       begin
-        item:=TCmdStrListItem(CurrentProcInfo.procdef.aliasnames.first);
+        item:=TCmdStrListItem(CurrentProcInfo.procdef.AliasNames.first);
         firstitem:=item;
-        global:=CurrentProcInfo.procdef.needsglobalasmsym;
+        global:=CurrentProcInfo.procdef.NeedsGlobalAsmSym;
         while Assigned(item) do
           begin
             { Record emitted entry points, rather than declarations: generic
               templates can have assembler names without executable bodies. }
             if global and (tf_supports_packages in TargetInfo.flags) then
-              CurrentModule.add_public_asmsym(item.str,AB_GLOBAL,AT_FUNCTION);
+              CurrentModule.Add_Public_AsmSym(item.str,AB_GLOBAL,AT_FUNCTION);
             { alias procedure entry symbols via ".set" on Darwin, otherwise
               they can be interpreted as all different starting symbols of
               subsections and be reordered }
@@ -803,7 +803,7 @@ implementation
               end;
             item:=TCmdStrListItem(item.next);
           end;
-        CurrentProcInfo.procdef.procstarttai:=TAI(list.last);
+        CurrentProcInfo.procdef.ProcStartTAI:=TAI(list.last);
       end;
 
     class procedure THLCGObjHelpers.record_generated_code_for_procdef(pd: TProcDef; code, data: TAsmList);
@@ -812,7 +812,7 @@ implementation
         procsection: TAISection;
       begin
         procsection:=nil;
-        if not(po_assembler in pd.procoptions) then
+        if not(po_assembler in pd.ProcOptions) then
           alt:=al_procedures
         else
           alt:=al_pure_assembler;
@@ -826,7 +826,7 @@ implementation
           procsection:=new_proc_section(CurrentAsmData.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
   {$endif symansistr}
         else
-          procsection:=new_section(CurrentAsmData.asmlists[alt],sec_code,lower(pd.mangledname),getprocalign);
+          procsection:=new_section(CurrentAsmData.asmlists[alt],sec_code,lower(pd.MangledName),getprocalign);
         if Assigned(CurrentProcInfo) and (CurrentProcInfo.procdef=pd) then
           begin
             if not Assigned(procsection) then
@@ -976,7 +976,7 @@ implementation
 
             { getaddressregister cannot handle if multiple registers
               are required for a single element }
-            if is_methodpointer(def) then
+            if Is_MethodPointer(def) then
               result:=R_INTREGISTER
             else
 
@@ -989,20 +989,20 @@ implementation
           formaldef:
             result:=R_ADDRESSREGISTER;
           arraydef:
-            if TArrayDef(def).is_hwvector then
+            if TArrayDef(def).Is_HWVector then
               result:=R_MMREGISTER
-            else if TStoredDef(def).is_intregable then
+            else if TStoredDef(def).Is_IntRegable then
               result:=R_INTREGISTER
             else
               result:=R_ADDRESSREGISTER;
           floatdef:
-            if use_vectorfpu(def) then
+            if Use_VectorFPU(def) then
               result:=R_MMREGISTER
             else
               result:=R_FPUREGISTER;
           filedef,
           variantdef,
-          forwarddef,
+          ForwardDef,
           undefineddef:
             result:=R_INVALIDREGISTER;
         else
@@ -1062,7 +1062,7 @@ implementation
            a_load_reg_reg(list,size,cgpara.location^.def,r,cgpara.location^.register);
          LOC_REFERENCE,LOC_CREFERENCE:
            begin
-              reference_reset_base(ref,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+              reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
               a_load_reg_ref(list,size,cgpara.location^.def,r,ref);
            end;
          LOC_MMREGISTER,LOC_CMMREGISTER:
@@ -1092,7 +1092,7 @@ implementation
             a_load_const_reg(list,cgpara.location^.def,a,cgpara.location^.register);
           LOC_REFERENCE,LOC_CREFERENCE:
             begin
-               reference_reset_base(ref,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+               reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
                a_load_const_ref(list,cgpara.location^.def,a,ref);
             end
           else
@@ -1166,7 +1166,7 @@ implementation
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
                      if sizeleft>=4 then
                        begin
-                         a_load_ref_reg(list,u32inttype,location^.def,tmpref,location^.register);
+                         a_load_ref_reg(list,U32IntType,location^.def,tmpref,location^.register);
                          dec(sizeleft,4);
                          if TargetInfo.endian=endian_big then
                            a_op_const_reg(list,OP_SHL,location^.def,sizeleft*8,location^.register);
@@ -1177,7 +1177,7 @@ implementation
                      if sizeleft>=2 then
                        begin
                          tmpreg:=getintregister(list,location^.def);
-                         a_load_ref_reg(list,u16inttype,location^.def,tmpref,tmpreg);
+                         a_load_ref_reg(list,U16IntType,location^.def,tmpref,tmpreg);
                          dec(sizeleft,2);
                          if reghasvalue then
                            begin
@@ -1200,7 +1200,7 @@ implementation
                      if sizeleft=1 then
                        begin
                          tmpreg:=getintregister(list,location^.def);
-                         a_load_ref_reg(list,u8inttype,location^.def,tmpref,tmpreg);
+                         a_load_ref_reg(list,U8IntType,location^.def,tmpref,tmpreg);
                          dec(sizeleft,1);
                          if reghasvalue then
                            begin
@@ -1223,7 +1223,7 @@ implementation
               begin
                  if Assigned(location^.next) then
                    InternalError(2017073001);
-                 reference_reset_base(ref,voidstackpointertype,location^.reference.index,location^.reference.offset,ctempposinvalid,NewAlignment(cgpara.alignment,cgpara.intsize-sizeleft),[]);
+                 reference_reset_base(ref,VoidStackPointerType,location^.reference.index,location^.reference.offset,ctempposinvalid,NewAlignment(cgpara.alignment,cgpara.intsize-sizeleft),[]);
                  if (def_cgsize(size)<>OS_NO) and
                     (size.size=sizeleft) and
                     (sizeleft<=sizeof(aint)) then
@@ -1628,11 +1628,11 @@ implementation
           tmpsref:=sref;
           tmpsref.bitlen:=AIntBits;
           valuereg:=hlcg.getintregister(list,tosize);
-          a_load_subsetref_reg(list,sinttype,tosize,tmpsref,valuereg);
+          a_load_subsetref_reg(list,SIntType,tosize,tmpsref,valuereg);
           tmpsref.bitlen:=sref.bitlen-AIntBits;
           inc(tmpsref.ref.offset,AIntBits div 8);
           extra_value_reg:=hlcg.getintregister(list,tosize);
-          a_load_subsetref_reg(list,sinttype,tosize,tmpsref,extra_value_reg);
+          a_load_subsetref_reg(list,SIntType,tosize,tmpsref,extra_value_reg);
           { can't use a_load_reg_subsetreg to merge the results, as that one
             does not support sizes > AIntBits either }
           tmpreg:=hlcg.getintregister(list,tosize);
@@ -1671,8 +1671,8 @@ implementation
       loadbitsize:=loadsize.size*8;
 
       { load the (first part) of the bit sequence }
-      valuereg:=getintregister(list,aluuinttype);
-      a_load_ref_reg(list,loadsize,aluuinttype,sref.ref,valuereg);
+      valuereg:=getintregister(list,ALUUIntType);
+      a_load_ref_reg(list,loadsize,ALUUIntType,sref.ref,valuereg);
 
       if not extra_load then
         begin
@@ -1681,7 +1681,7 @@ implementation
             begin
               { use subsetreg routine, it may have been overridden with an optimized version }
               tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(aluuinttype);
+              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
               { subsetregs always count bits from right to left }
               if (TargetInfo.endian=endian_big) then
                 tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
@@ -1697,40 +1697,40 @@ implementation
                 InternalError(2006081510);
               if (TargetInfo.endian=endian_big) then
                 begin
-                  a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,valuereg);
+                  a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,valuereg);
                   if is_signed(fromsubsetsize) then
                     begin
                       { sign extend to entire register }
-                      a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-loadbitsize,valuereg);
-                      a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,valuereg);
+                      a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize,valuereg);
+                      a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
                     end
                   else
-                    a_op_const_reg(list,OP_SHR,aluuinttype,loadbitsize-sref.bitlen,valuereg);
+                    a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-sref.bitlen,valuereg);
                 end
               else
                 begin
-                  a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,valuereg);
+                  a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,valuereg);
                   if is_signed(fromsubsetsize) then
                     begin
-                      a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-sref.bitlen,valuereg);
-                      a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,valuereg);
+                      a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+                      a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
                     end
                 end;
               { mask other bits/sign extend }
               if not is_signed(fromsubsetsize) then
-                a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
             end
         end
       else
         begin
           { load next value as well }
-          extra_value_reg:=getintregister(list,aluuinttype);
+          extra_value_reg:=getintregister(list,ALUUIntType);
 
           if (sref.bitindexreg=NR_NO) then
             begin
               tmpref:=sref.ref;
               inc(tmpref.offset,loadbitsize div 8);
-              a_load_ref_reg(list,loadsize,aluuinttype,tmpref,extra_value_reg);
+              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
               { can be overridden to optimize }
               a_load_subsetref_regs_noindex(list,fromsubsetsize,loadbitsize,sref,valuereg,extra_value_reg)
             end
@@ -1752,7 +1752,7 @@ implementation
 {$else}
       { can't juggle with register sizes, they are actually typed entities
         here }
-      a_load_reg_reg(list,aluuinttype,tosize,valuereg,destreg);
+      a_load_reg_reg(list,ALUUIntType,tosize,valuereg,destreg);
 {$endif}
     end;
 
@@ -1767,13 +1767,13 @@ implementation
             InternalError(2019052901);
           tmpsref:=sref;
           tmpsref.bitlen:=AIntBits;
-          fromreg1:=hlcg.getintregister(list,aluuinttype);
-          a_load_reg_reg(list,fromsize,aluuinttype,fromreg,fromreg1);
+          fromreg1:=hlcg.getintregister(list,ALUUIntType);
+          a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,fromreg1);
           if TargetInfo.endian=endian_big then
             begin
               inc(tmpsref.ref.offset,sref.bitlen-AIntBits);
             end;
-          a_load_reg_subsetref(list,aluuinttype,aluuinttype,fromreg1,tmpsref);
+          a_load_reg_subsetref(list,ALUUIntType,ALUUIntType,fromreg1,tmpsref);
           if TargetInfo.endian=endian_big then
             begin
               tmpsref.ref.offset:=sref.ref.offset;
@@ -1935,8 +1935,8 @@ implementation
       href: TReference;
     begin
       href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(fromsize),CPointerDef.getreusable(u8inttype),href);
-      a_load_subsetref_reg(list,u8inttype,destsize,get_bit_const_ref_sref(bitnumber,fromsize,href),destreg);
+      g_ptrtypecast_ref(list,CPointerDef.getreusable(fromsize),CPointerDef.getreusable(U8IntType),href);
+      a_load_subsetref_reg(list,U8IntType,destsize,get_bit_const_ref_sref(bitnumber,fromsize,href),destreg);
     end;
 
   procedure THLCGObj.a_bit_test_const_reg_reg(list: TAsmList; setregsize, destsize: TDef; bitnumber: aint; setreg, destreg: TRegister);
@@ -1964,8 +1964,8 @@ implementation
       href: TReference;
     begin
       href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(refsize),CPointerDef.getreusable(u8inttype),href);
-      a_load_subsetref_reg(list,u8inttype,destsize,get_bit_reg_ref_sref(list,bitnumbersize,refsize,bitnumber,href),destreg);
+      g_ptrtypecast_ref(list,CPointerDef.getreusable(refsize),CPointerDef.getreusable(U8IntType),href);
+      a_load_subsetref_reg(list,U8IntType,destsize,get_bit_reg_ref_sref(list,bitnumbersize,refsize,bitnumber,href),destreg);
     end;
 
   procedure THLCGObj.a_bit_test_reg_loc_reg(list: TAsmList; bitnumbersize, locsize, destsize: TDef; bitnumber: TRegister; const loc: TLocation; destreg: TRegister);
@@ -2052,14 +2052,14 @@ implementation
       href: TReference;
     begin
       href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(u8inttype),href);
-      a_load_const_subsetref(list,u8inttype,ord(doset),get_bit_const_ref_sref(bitnumber,destsize,href));
+      g_ptrtypecast_ref(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(U8IntType),href);
+      a_load_const_subsetref(list,U8IntType,ord(doset),get_bit_const_ref_sref(bitnumber,destsize,href));
     end;
 
   procedure THLCGObj.a_bit_set_const_reg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; destreg: TRegister);
     begin
-      g_ptrtypecast_reg(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(u8inttype),destreg);
-      a_load_const_subsetreg(list,u8inttype,ord(doset),get_bit_const_reg_sreg(destsize,bitnumber,destreg));
+      g_ptrtypecast_reg(list,CPointerDef.getreusable(destsize),CPointerDef.getreusable(U8IntType),destreg);
+      a_load_const_subsetreg(list,U8IntType,ord(doset),get_bit_const_reg_sreg(destsize,bitnumber,destreg));
     end;
 
   procedure THLCGObj.a_bit_set_const_subsetreg(list: TAsmList; doset: boolean; destsize: TDef; bitnumber: TCGInt; const destreg: TSubsetRegister);
@@ -2074,7 +2074,7 @@ implementation
       tmpsreg.subsetregsize:=destreg.subsetregsize;
       { correct offset of the set in the subsetreg }
       inc(tmpsreg.startbit,destreg.startbit);
-      a_load_const_subsetreg(list,u8inttype,ord(doset),tmpsreg);
+      a_load_const_subsetreg(list,U8IntType,ord(doset),tmpsreg);
     end;
 
   procedure THLCGObj.a_bit_set_reg_ref(list: TAsmList; doset: boolean; fromsize, tosize: TDef; bitnumber: TRegister; const ref: TReference);
@@ -2082,8 +2082,8 @@ implementation
       href: TReference;
     begin
       href:=ref;
-      g_ptrtypecast_ref(list,CPointerDef.getreusable(tosize),CPointerDef.getreusable(u8inttype),href);
-      a_load_const_subsetref(list,u8inttype,ord(doset),get_bit_reg_ref_sref(list,fromsize,tosize,bitnumber,href));
+      g_ptrtypecast_ref(list,CPointerDef.getreusable(tosize),CPointerDef.getreusable(U8IntType),href);
+      a_load_const_subsetref(list,U8IntType,ord(doset),get_bit_reg_ref_sref(list,fromsize,tosize,bitnumber,href));
     end;
 
   procedure THLCGObj.a_bit_set_reg_loc(list: TAsmList; doset: boolean; regsize, tosize: TDef; bitnumber: TRegister; const loc: TLocation);
@@ -2128,7 +2128,7 @@ implementation
 
   function THLCGObj.get_call_result_cgpara(pd: TAbstractProcDef; forceresdef: TDef): TCGPara;
     begin
-      if pd.generate_safecall_wrapper then
+      if pd.Generate_SafeCall_Wrapper then
         begin
           if Assigned(forceresdef) then
             InternalError(2019112403);
@@ -2136,8 +2136,8 @@ implementation
         end
       else if not Assigned(forceresdef) then
         begin
-          pd.init_paraloc_info(callerside);
-          result:=pd.funcretloc[callerside];
+          pd.Init_ParaLoc_Info(callerside);
+          result:=pd.FuncRetLoc[callerside];
         end
       else
         result:=paramanager.get_funcretloc(pd,callerside,forceresdef);
@@ -2231,37 +2231,37 @@ implementation
           if is_signed(subsetsize) then
             begin
               { sign extend }
-              a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-loadbitsize+sref.startbit,valuereg);
-              a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,valuereg);
+              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize+sref.startbit,valuereg);
+              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
             end
           else
             begin
-              a_op_const_reg(list,OP_SHL,aluuinttype,restbits,valuereg);
+              a_op_const_reg(list,OP_SHL,ALUUIntType,restbits,valuereg);
               { mask other bits }
               if (sref.bitlen<>AIntBits) then
-                a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
             end;
-          a_op_const_reg(list,OP_SHR,aluuinttype,loadbitsize-restbits,extra_value_reg)
+          a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-restbits,extra_value_reg)
         end
       else
         begin
           { valuereg contains the lower bits, extra_value_reg the upper }
-          a_op_const_reg(list,OP_SHR,aluuinttype,sref.startbit,valuereg);
+          a_op_const_reg(list,OP_SHR,ALUUIntType,sref.startbit,valuereg);
           if is_signed(subsetsize) then
             begin
-              a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-sref.bitlen+loadbitsize-sref.startbit,extra_value_reg);
-              a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,extra_value_reg);
+              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen+loadbitsize-sref.startbit,extra_value_reg);
+              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,extra_value_reg);
             end
           else
             begin
-              a_op_const_reg(list,OP_SHL,aluuinttype,loadbitsize-sref.startbit,extra_value_reg);
+              a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.startbit,extra_value_reg);
               { mask other bits }
               if (sref.bitlen <> AIntBits) then
-                a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),extra_value_reg);
+                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),extra_value_reg);
             end;
         end;
       { merge }
-      a_op_reg_reg(list,OP_OR,aluuinttype,extra_value_reg,valuereg);
+      a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
     end;
 
   procedure THLCGObj.a_load_subsetref_regs_index(list: TAsmList; subsetsize: TDef; loadbitsize: byte; const sref: TSubsetReference; valuereg: TRegister);
@@ -2271,10 +2271,10 @@ implementation
       extra_value_reg,
       tmpreg: TRegister;
     begin
-      tmpreg:=getintregister(list,aluuinttype);
+      tmpreg:=getintregister(list,ALUUIntType);
       tmpref:=sref.ref;
       inc(tmpref.offset,loadbitsize div 8);
-      extra_value_reg:=getintregister(list,aluuinttype);
+      extra_value_reg:=getintregister(list,ALUUIntType);
 
       if (TargetInfo.endian=endian_big) then
         begin
@@ -2282,71 +2282,71 @@ implementation
           { is entirely in valuereg.                                      }
 
           { get the data in valuereg in the right place }
-          a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,valuereg);
+          a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,valuereg);
           if is_signed(subsetsize) then
             begin
-              a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-loadbitsize,valuereg);
-              a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,valuereg)
+              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-loadbitsize,valuereg);
+              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg)
             end
           else
             begin
-              a_op_const_reg(list,OP_SHR,aluuinttype,loadbitsize-sref.bitlen,valuereg);
+              a_op_const_reg(list,OP_SHR,ALUUIntType,loadbitsize-sref.bitlen,valuereg);
               if (loadbitsize<>AIntBits) then
                 { mask left over bits }
-                a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+                a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
             end;
-          tmpreg := getintregister(list,aluuinttype);
+          tmpreg := getintregister(list,ALUUIntType);
 
           { ensure we don't load anything past the end of the array }
           CurrentAsmData.getjumplabel(hl);
-          a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+          a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
           { the bits in extra_value_reg (if any) start at the most significant bit =>         }
           { extra_value_reg must be shr by (loadbitsize-sref.bitlen)+(loadsize-sref.bitindex) }
           { => = -(sref.bitindex+(sref.bitlen-2*loadbitsize))                                 }
-          a_op_const_reg_reg(list,OP_ADD,aluuinttype,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpreg);
-          a_op_reg_reg(list,OP_NEG,aluuinttype,tmpreg,tmpreg);
+          a_op_const_reg_reg(list,OP_ADD,ALUUIntType,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpreg);
+          a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpreg,tmpreg);
 
           { load next "loadbitsize" bits of the array }
-          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),aluuinttype,tmpref,extra_value_reg);
+          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),ALUUIntType,tmpref,extra_value_reg);
 
-          a_op_reg_reg(list,OP_SHR,aluuinttype,tmpreg,extra_value_reg);
+          a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpreg,extra_value_reg);
           { if there are no bits in extra_value_reg, then sref.bitindex was      }
           { < loadsize-sref.bitlen, and therefore tmpreg will now be >= loadsize }
           { => extra_value_reg is now 0                                          }
           { merge }
-          a_op_reg_reg(list,OP_OR,aluuinttype,extra_value_reg,valuereg);
+          a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
           { no need to mask, necessary masking happened earlier on }
           a_label(list,hl);
         end
       else
         begin
-          a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,valuereg);
+          a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,valuereg);
 
           { ensure we don't load anything past the end of the array }
           CurrentAsmData.getjumplabel(hl);
-          a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+          a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
           { Y-x = -(Y-x) }
-          a_op_const_reg_reg(list,OP_SUB,aluuinttype,loadbitsize,sref.bitindexreg,tmpreg);
-          a_op_reg_reg(list,OP_NEG,aluuinttype,tmpreg,tmpreg);
+          a_op_const_reg_reg(list,OP_SUB,ALUUIntType,loadbitsize,sref.bitindexreg,tmpreg);
+          a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpreg,tmpreg);
 
           { load next "loadbitsize" bits of the array }
-          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),aluuinttype,tmpref,extra_value_reg);
+          a_load_ref_reg(list,cgsize_orddef(int_cgsize(loadbitsize div 8)),ALUUIntType,tmpref,extra_value_reg);
 
           { tmpreg is in the range 1..<cpu_bitsize>-1 -> always ok }
-          a_op_reg_reg(list,OP_SHL,aluuinttype,tmpreg,extra_value_reg);
+          a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpreg,extra_value_reg);
           { merge }
-          a_op_reg_reg(list,OP_OR,aluuinttype,extra_value_reg,valuereg);
+          a_op_reg_reg(list,OP_OR,ALUUIntType,extra_value_reg,valuereg);
           a_label(list,hl);
           { sign extend or mask other bits }
           if is_signed(subsetsize) then
             begin
-              a_op_const_reg(list,OP_SHL,aluuinttype,AIntBits-sref.bitlen,valuereg);
-              a_op_const_reg(list,OP_SAR,aluuinttype,AIntBits-sref.bitlen,valuereg);
+              a_op_const_reg(list,OP_SHL,ALUUIntType,AIntBits-sref.bitlen,valuereg);
+              a_op_const_reg(list,OP_SAR,ALUUIntType,AIntBits-sref.bitlen,valuereg);
             end
           else
-            a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
+            a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),valuereg);
         end;
     end;
 
@@ -2369,8 +2369,8 @@ implementation
       loadbitsize:=loadsize.size*8;
 
       { load the (first part) of the bit sequence }
-      valuereg:=getintregister(list,aluuinttype);
-      a_load_ref_reg(list,loadsize,aluuinttype,sref.ref,valuereg);
+      valuereg:=getintregister(list,ALUUIntType);
+      a_load_ref_reg(list,loadsize,ALUUIntType,sref.ref,valuereg);
 
       { constant offset of bit sequence? }
       if not extra_load then
@@ -2379,7 +2379,7 @@ implementation
             begin
               { use subsetreg routine, it may have been overridden with an optimized version }
               tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(aluuinttype);
+              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
               { subsetregs always count bits from right to left }
               if (TargetInfo.endian=endian_big) then
                 tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
@@ -2402,86 +2402,86 @@ implementation
                 begin
                   if (slopt=SL_SETZERO) and (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
                     begin
-                      a_bit_set_reg_reg(list,false,aluuinttype,aluuinttype,sref.bitindexreg,valuereg);
+                      a_bit_set_reg_reg(list,false,ALUUIntType,ALUUIntType,sref.bitindexreg,valuereg);
 
                       { store back to memory }
                       tmpreg:=getintregister(list,loadsize);
-                      a_load_reg_reg(list,aluuinttype,loadsize,valuereg,tmpreg);
+                      a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
                       a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
                       exit;
                     end
                   else
                     begin
-                      maskreg:=getintregister(list,aluuinttype);
+                      maskreg:=getintregister(list,ALUUIntType);
                       if (TargetInfo.endian = endian_big) then
                         begin
-                          a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen),maskreg);
-                          a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,maskreg);
+                          a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen),maskreg);
+                          a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,maskreg);
                         end
                       else
                         begin
-                          a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                          a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,maskreg);
+                          a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
+                          a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,maskreg);
                         end;
-                      a_op_reg_reg(list,OP_NOT,aluuinttype,maskreg,maskreg);
-                      a_op_reg_reg(list,OP_AND,aluuinttype,maskreg,valuereg);
+                      a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
+                      a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,valuereg);
                     end;
                 end;
 
               { insert the value }
               if (slopt<>SL_SETZERO) then
                 begin
-                  tmpreg:=getintregister(list,aluuinttype);
+                  tmpreg:=getintregister(list,ALUUIntType);
                   if (slopt<>SL_SETMAX) then
-                    a_load_reg_reg(list,fromsize,aluuinttype,fromreg,tmpreg)
+                    a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
                   { setting of a single bit?
                     then we might take advantage of the CPU's bit set instruction }
                   else if (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
                     begin
-                      a_bit_set_reg_reg(list,true,aluuinttype,aluuinttype,sref.bitindexreg,valuereg);
+                      a_bit_set_reg_reg(list,true,ALUUIntType,ALUUIntType,sref.bitindexreg,valuereg);
 
                       { store back to memory }
                       tmpreg:=getintregister(list,loadsize);
-                      a_load_reg_reg(list,aluuinttype,loadsize,valuereg,tmpreg);
+                      a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
                       a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
                       exit;
                     end
                   else if (sref.bitlen<>AIntBits) then
-                    a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1), tmpreg)
+                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1), tmpreg)
                   else
-                    a_load_const_reg(list,aluuinttype,-1,tmpreg);
+                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
                   if (TargetInfo.endian=endian_big) then
                     begin
-                      a_op_const_reg(list,OP_SHL,aluuinttype,loadbitsize-sref.bitlen,tmpreg);
+                      a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.bitlen,tmpreg);
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         begin
                           if (loadbitsize<>AIntBits) then
                             bitmask:=(((aword(1) shl loadbitsize)-1) xor ((aword(1) shl (loadbitsize-sref.bitlen))-1))
                           else
                             bitmask:=(high(aword) xor ((aword(1) shl (loadbitsize-sref.bitlen))-1));
-                          a_op_const_reg(list,OP_AND,aluuinttype,bitmask,tmpreg);
+                          a_op_const_reg(list,OP_AND,ALUUIntType,bitmask,tmpreg);
                         end;
-                      a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,tmpreg);
+                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,tmpreg);
                     end
                   else
                     begin
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,tmpreg);
+                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
+                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,tmpreg);
                     end;
-                  a_op_reg_reg(list,OP_OR,aluuinttype,tmpreg,valuereg);
+                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,valuereg);
                 end;
             end;
           { store back to memory }
           tmpreg:=getintregister(list,loadsize);
-          a_load_reg_reg(list,aluuinttype,loadsize,valuereg,tmpreg);
+          a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
           a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
           exit;
         end
       else
         begin
           { load next value }
-          extra_value_reg:=getintregister(list,aluuinttype);
+          extra_value_reg:=getintregister(list,ALUUIntType);
           tmpref:=sref.ref;
           inc(tmpref.offset,loadbitsize div 8);
 
@@ -2489,12 +2489,12 @@ implementation
           { on e.g. i386 with shld/shrd                                 }
           if (sref.bitindexreg = NR_NO) then
             begin
-              a_load_ref_reg(list,loadsize,aluuinttype,tmpref,extra_value_reg);
+              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
 
               fromsreg.subsetreg:=fromreg;
               fromsreg.subsetregsize:=def_cgsize(fromsize);
               tosreg.subsetreg:=valuereg;
-              tosreg.subsetregsize:=def_cgsize(aluuinttype);
+              tosreg.subsetregsize:=def_cgsize(ALUUIntType);
 
               { transfer first part }
               fromsreg.bitlen:=loadbitsize-sref.startbit;
@@ -2529,7 +2529,7 @@ implementation
               a_load_reg_ref(list,loadsize,loadsize,valuereg,sref.ref);
 {$else}
               tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,aluuinttype,loadsize,valuereg,tmpreg);
+              a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
               a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
 {$endif}
 
@@ -2563,7 +2563,7 @@ implementation
                   a_load_subsetreg_subsetreg(list,subsetsize,subsetsize,fromsreg,tosreg);
               end;
               tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,aluuinttype,loadsize,extra_value_reg,tmpreg);
+              a_load_reg_reg(list,ALUUIntType,loadsize,extra_value_reg,tmpreg);
               a_load_reg_ref(list,loadsize,loadsize,tmpreg,tmpref);
               exit;
             end
@@ -2579,114 +2579,114 @@ implementation
               { generate mask to zero the bits we have to insert }
               if (slopt <> SL_SETMAX) then
                 begin
-                  maskreg := getintregister(list,aluuinttype);
+                  maskreg := getintregister(list,ALUUIntType);
                   if (TargetInfo.endian = endian_big) then
                     begin
-                      a_load_const_reg(list,aluuinttype,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),maskreg);
-                      a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,maskreg);
+                      a_load_const_reg(list,ALUUIntType,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),maskreg);
+                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,maskreg);
                     end
                   else
                     begin
-                      a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,maskreg);
+                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
+                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,maskreg);
                     end;
 
-                  a_op_reg_reg(list,OP_NOT,aluuinttype,maskreg,maskreg);
-                  a_op_reg_reg(list,OP_AND,aluuinttype,maskreg,valuereg);
+                  a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
+                  a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,valuereg);
                 end;
 
               { insert the value }
               if (slopt <> SL_SETZERO) then
                 begin
-                  tmpreg := getintregister(list,aluuinttype);
+                  tmpreg := getintregister(list,ALUUIntType);
                   if (slopt <> SL_SETMAX) then
-                    a_load_reg_reg(list,fromsize,aluuinttype,fromreg,tmpreg)
+                    a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
                   else if (sref.bitlen <> AIntBits) then
-                    a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
+                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
                   else
-                    a_load_const_reg(list,aluuinttype,-1,tmpreg);
+                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
                   if (TargetInfo.endian = endian_big) then
                     begin
-                      a_op_const_reg(list,OP_SHL,aluuinttype,loadbitsize-sref.bitlen,tmpreg);
+                      a_op_const_reg(list,OP_SHL,ALUUIntType,loadbitsize-sref.bitlen,tmpreg);
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         { mask left over bits }
-                        a_op_const_reg(list,OP_AND,aluuinttype,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),tmpreg);
-                      a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,tmpreg);
+                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),tmpreg);
+                      a_op_reg_reg(list,OP_SHR,ALUUIntType,sref.bitindexreg,tmpreg);
                     end
                   else
                     begin
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
                         { mask left over bits }
-                        a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,tmpreg);
+                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
+                      a_op_reg_reg(list,OP_SHL,ALUUIntType,sref.bitindexreg,tmpreg);
                     end;
-                  a_op_reg_reg(list,OP_OR,aluuinttype,tmpreg,valuereg);
+                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,valuereg);
                 end;
               tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,aluuinttype,loadsize,valuereg,tmpreg);
+              a_load_reg_reg(list,ALUUIntType,loadsize,valuereg,tmpreg);
               a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
 
               { make sure we do not read/write past the end of the array }
               CurrentAsmData.getjumplabel(hl);
-              a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
+              a_cmp_const_reg_label(list,ALUUIntType,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
-              a_load_ref_reg(list,loadsize,aluuinttype,tmpref,extra_value_reg);
-              tmpindexreg:=getintregister(list,aluuinttype);
+              a_load_ref_reg(list,loadsize,ALUUIntType,tmpref,extra_value_reg);
+              tmpindexreg:=getintregister(list,ALUUIntType);
 
               { load current array value }
               if (slopt<>SL_SETZERO) then
                 begin
-                  tmpreg:=getintregister(list,aluuinttype);
+                  tmpreg:=getintregister(list,ALUUIntType);
                   if (slopt<>SL_SETMAX) then
-                     a_load_reg_reg(list,fromsize,aluuinttype,fromreg,tmpreg)
+                     a_load_reg_reg(list,fromsize,ALUUIntType,fromreg,tmpreg)
                   else if (sref.bitlen<>AIntBits) then
-                    a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
+                    a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen) - 1), tmpreg)
                   else
-                    a_load_const_reg(list,aluuinttype,-1,tmpreg);
+                    a_load_const_reg(list,ALUUIntType,-1,tmpreg);
                 end;
 
               { generate mask to zero the bits we have to insert }
               if (slopt<>SL_SETMAX) then
                 begin
-                  maskreg:=getintregister(list,aluuinttype);
+                  maskreg:=getintregister(list,ALUUIntType);
                   if (TargetInfo.endian=endian_big) then
                     begin
-                      a_op_const_reg_reg(list,OP_ADD,aluuinttype,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpindexreg);
-                      a_op_reg_reg(list,OP_NEG,aluuinttype,tmpindexreg,tmpindexreg);
-                      a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHL,aluuinttype,tmpindexreg,maskreg);
+                      a_op_const_reg_reg(list,OP_ADD,ALUUIntType,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpindexreg);
+                      a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpindexreg,tmpindexreg);
+                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
+                      a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpindexreg,maskreg);
                     end
                   else
                     begin
                       { Y-x = -(x-Y) }
-                      a_op_const_reg_reg(list,OP_SUB,aluuinttype,loadbitsize,sref.bitindexreg,tmpindexreg);
-                      a_op_reg_reg(list,OP_NEG,aluuinttype,tmpindexreg,tmpindexreg);
-                      a_load_const_reg(list,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
-                      a_op_reg_reg(list,OP_SHR,aluuinttype,tmpindexreg,maskreg);
+                      a_op_const_reg_reg(list,OP_SUB,ALUUIntType,loadbitsize,sref.bitindexreg,tmpindexreg);
+                      a_op_reg_reg(list,OP_NEG,ALUUIntType,tmpindexreg,tmpindexreg);
+                      a_load_const_reg(list,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),maskreg);
+                      a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpindexreg,maskreg);
                     end;
 
-                  a_op_reg_reg(list,OP_NOT,aluuinttype,maskreg,maskreg);
-                  a_op_reg_reg(list,OP_AND,aluuinttype,maskreg,extra_value_reg);
+                  a_op_reg_reg(list,OP_NOT,ALUUIntType,maskreg,maskreg);
+                  a_op_reg_reg(list,OP_AND,ALUUIntType,maskreg,extra_value_reg);
                 end;
 
               if (slopt<>SL_SETZERO) then
                 begin
                   if (TargetInfo.endian=endian_big) then
-                    a_op_reg_reg(list,OP_SHL,aluuinttype,tmpindexreg,tmpreg)
+                    a_op_reg_reg(list,OP_SHL,ALUUIntType,tmpindexreg,tmpreg)
                   else
                     begin
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
-                        a_op_const_reg(list,OP_AND,aluuinttype,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
-                      a_op_reg_reg(list,OP_SHR,aluuinttype,tmpindexreg,tmpreg);
+                        a_op_const_reg(list,OP_AND,ALUUIntType,TCGInt((aword(1) shl sref.bitlen)-1),tmpreg);
+                      a_op_reg_reg(list,OP_SHR,ALUUIntType,tmpindexreg,tmpreg);
                     end;
-                  a_op_reg_reg(list,OP_OR,aluuinttype,tmpreg,extra_value_reg);
+                  a_op_reg_reg(list,OP_OR,ALUUIntType,tmpreg,extra_value_reg);
                 end;
 {$ifndef cpuhighleveltarget}
               extra_value_reg:=cg.makeregsize(list,extra_value_reg,def_cgsize(loadsize));
               a_load_reg_ref(list,loadsize,loadsize,extra_value_reg,tmpref);
 {$else}
               tmpreg:=getintregister(list,loadsize);
-              a_load_reg_reg(list,aluuinttype,loadsize,extra_value_reg,tmpreg);
+              a_load_reg_reg(list,ALUUIntType,loadsize,extra_value_reg,tmpreg);
               a_load_reg_ref(list,loadsize,loadsize,tmpreg,tmpref);
 {$endif}
 
@@ -2783,9 +2783,9 @@ implementation
       result.startbit:=0;
       result.bitlen:=1;
 
-      tmpreg:=getintregister(list,ptruinttype);
-      a_load_reg_reg(list,bitnumbersize,ptruinttype,bitnumber,tmpreg);
-      a_op_const_reg(list,OP_SHR,ptruinttype,3,tmpreg);
+      tmpreg:=getintregister(list,PtrUIntType);
+      a_load_reg_reg(list,bitnumbersize,PtrUIntType,bitnumber,tmpreg);
+      a_op_const_reg(list,OP_SHR,PtrUIntType,3,tmpreg);
 
       { don't assign to ref.base, that one is for pointers and this is an index
         (important for platforms like LLVM) }
@@ -2798,9 +2798,9 @@ implementation
           reference_reset_base(result.ref,refptrdef,newbase,0,result.ref.temppos,result.ref.alignment,[]);
         end;
       result.ref.index:=tmpreg;
-      tmpreg:=getintregister(list,aluuinttype);
-      a_load_reg_reg(list,bitnumbersize,aluuinttype,bitnumber,tmpreg);
-      a_op_const_reg(list,OP_AND,aluuinttype,7,tmpreg);
+      tmpreg:=getintregister(list,ALUUIntType);
+      a_load_reg_reg(list,bitnumbersize,ALUUIntType,bitnumber,tmpreg);
+      a_op_const_reg(list,OP_AND,ALUUIntType,7,tmpreg);
       result.bitindexreg:=tmpreg;
     end;
 
@@ -2876,7 +2876,7 @@ implementation
           LOC_REFERENCE,LOC_CREFERENCE:
             begin
               cgpara.check_simple_location;
-              reference_reset_base(ref,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+              reference_reset_base(ref,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
               a_loadfpu_reg_ref(list,fromsize,cgpara.def,r,ref);
             end;
           LOC_REGISTER,LOC_CREGISTER:
@@ -2908,7 +2908,7 @@ implementation
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
             cgpara.check_simple_location;
-            reference_reset_base(href,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+            reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
             { concatcopy should choose the best way to copy the data }
             g_concatcopy(list,fromsize,ref,href);
           end;
@@ -3018,7 +3018,7 @@ implementation
           a_loadmm_reg_reg(list,fromsize,cgpara.def,reg,cgpara.location^.register,shuffle);
         LOC_REFERENCE,LOC_CREFERENCE:
           begin
-            reference_reset_base(href,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+            reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
             a_loadmm_reg_ref(list,fromsize,cgpara.def,reg,href,shuffle);
           end;
         LOC_REGISTER,LOC_CREGISTER:
@@ -3702,12 +3702,12 @@ implementation
       if (cs_check_object in CurrentSettings.LocalSwitches) or
          (cs_check_range in CurrentSettings.LocalSwitches) then
        begin
-         pd:=search_system_proc('fpc_handleerror');
+         pd:=Search_System_Proc('fpc_handleerror');
          CurrentAsmData.getjumplabel(oklabel);
          a_cmp_const_reg_label(list,selftype,OC_NE,0,reg,oklabel);
          cgpara1.init;
          paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-         a_load_const_cgpara(list,s32inttype,aint(210),cgpara1);
+         a_load_const_cgpara(list,S32IntType,aint(210),cgpara1);
          paramanager.freecgpara(list,cgpara1);
          g_call_system_proc(list,pd,[@cgpara1],nil).resetiftemp;
          cgpara1.done;
@@ -3717,7 +3717,7 @@ implementation
 
   procedure THLCGObj.g_concatcopy(list: TAsmList; size: TDef; const source, dest: TReference);
     begin
-      if use_vectorfpu(size) then
+      if Use_VectorFPU(size) then
         a_loadmm_ref_ref(list,size,size,source,dest,mms_movescalar)
       else if size.typ<>floatdef then
         a_load_ref_ref(list,size,size,source,dest)
@@ -3735,23 +3735,23 @@ implementation
       cgpara1,cgpara2,cgpara3 : TCGPara;
       pd : TProcDef;
     begin
-      pd:=search_system_proc('fpc_shortstr_to_shortstr');
+      pd:=Search_System_Proc('fpc_shortstr_to_shortstr');
       cgpara1.init;
       cgpara2.init;
       cgpara3.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       paramanager.getcgtempparaloc(list,pd,2,cgpara2);
       paramanager.getcgtempparaloc(list,pd,3,cgpara3);
-      if pd.is_pushleftright then
+      if pd.Is_PushLeftRight then
         begin
           a_loadaddr_ref_cgpara(list,strdef,dest,cgpara1);
-          a_load_const_cgpara(list,s32inttype,strdef.len,cgpara2);
+          a_load_const_cgpara(list,S32IntType,strdef.len,cgpara2);
           a_loadaddr_ref_cgpara(list,strdef,source,cgpara3);
         end
       else
         begin
           a_loadaddr_ref_cgpara(list,strdef,source,cgpara3);
-          a_load_const_cgpara(list,s32inttype,strdef.len,cgpara2);
+          a_load_const_cgpara(list,S32IntType,strdef.len,cgpara2);
           a_loadaddr_ref_cgpara(list,strdef,dest,cgpara1);
         end;
       paramanager.freecgpara(list,cgpara3);
@@ -3768,12 +3768,12 @@ implementation
       cgpara1,cgpara2 : TCGPara;
       pd : TProcDef;
     begin
-      pd:=search_system_proc('fpc_variant_copy_overwrite');
+      pd:=Search_System_Proc('fpc_variant_copy_overwrite');
       cgpara1.init;
       cgpara2.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       paramanager.getcgtempparaloc(list,pd,2,cgpara2);
-      if pd.is_pushleftright then
+      if pd.Is_PushLeftRight then
         begin
           a_loadaddr_ref_cgpara(list,vardef,source,cgpara1);
           a_loadaddr_ref_cgpara(list,vardef,dest,cgpara2);
@@ -3799,7 +3799,7 @@ implementation
     begin
        cgpara1.init;
        cgpara2.init;
-       if is_interfacecom_or_dispinterface(t) then
+       if Is_InterfaceCOM_Or_DispInterface(t) then
          incrfunc:='fpc_intf_incr_ref'
        else if is_ansistring(t) then
          incrfunc:='fpc_ansistr_incr_ref'
@@ -3814,7 +3814,7 @@ implementation
        { call the special incr function or the generic addref }
        if incrfunc<>'' then
         begin
-          pd:=search_system_proc(incrfunc);
+          pd:=Search_System_Proc(incrfunc);
           paramanager.getcgtempparaloc(list,pd,1,cgpara1);
           { widestrings aren't ref. counted on all platforms so we need the address
             to create a real copy }
@@ -3828,20 +3828,20 @@ implementation
         end
        else
         begin
-          pd:=search_system_proc('fpc_addref');
+          pd:=Search_System_Proc('fpc_addref');
           paramanager.getcgtempparaloc(list,pd,1,cgpara1);
           paramanager.getcgtempparaloc(list,pd,2,cgpara2);
           if is_open_array(t) then
             InternalError(201103054);
           reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-          if pd.is_pushleftright then
+          if pd.Is_PushLeftRight then
             begin
               a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-              a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
             end
           else
             begin
-              a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
               a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
             end;
           paramanager.freecgpara(list,cgpara1);
@@ -3863,12 +3863,12 @@ implementation
        if is_ansistring(t) or
           is_widestring(t) or
           is_unicodestring(t) or
-          is_interfacecom_or_dispinterface(t) or
+          Is_InterfaceCOM_Or_DispInterface(t) or
           is_dynamic_array(t) then
          a_load_const_ref(list,t,0,ref)
        else if t.typ=variantdef then
          begin
-           pd:=search_system_proc('fpc_variant_init');
+           pd:=Search_System_Proc('fpc_variant_init');
            paramanager.getcgtempparaloc(list,pd,1,cgpara1);
            a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
            paramanager.freecgpara(list,cgpara1);
@@ -3878,18 +3878,18 @@ implementation
          begin
             if is_open_array(t) then
               InternalError(201103052);
-            pd:=search_system_proc('fpc_initialize');
+            pd:=Search_System_Proc('fpc_initialize');
             paramanager.getcgtempparaloc(list,pd,1,cgpara1);
             paramanager.getcgtempparaloc(list,pd,2,cgpara2);
             reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-            if pd.is_pushleftright then
+            if pd.Is_PushLeftRight then
               begin
                 a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-                a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+                a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
               end
             else
               begin
-                a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+                a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
                 a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
               end;
             paramanager.freecgpara(list,cgpara1);
@@ -3907,7 +3907,7 @@ implementation
        pd : TProcDef;
        decrfunc : string;
     begin
-      if is_interfacecom_or_dispinterface(t) then
+      if Is_InterfaceCOM_Or_DispInterface(t) then
         decrfunc:='fpc_intf_decr_ref'
       else if is_ansistring(t) then
         decrfunc:='fpc_ansistr_decr_ref'
@@ -3926,20 +3926,20 @@ implementation
           { fpc_finalize takes a pointer value parameter, fpc_dynarray_clear a
             pointer var parameter }
           if is_dynamic_array(t) then
-            pd:=search_system_proc('fpc_dynarray_clear')
+            pd:=Search_System_Proc('fpc_dynarray_clear')
           else
-            pd:=search_system_proc('fpc_finalize');
+            pd:=Search_System_Proc('fpc_finalize');
           paramanager.getcgtempparaloc(list,pd,1,cgpara1);
           paramanager.getcgtempparaloc(list,pd,2,cgpara2);
           reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
-          if pd.is_pushleftright then
+          if pd.Is_PushLeftRight then
             begin
               a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-              a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
             end
           else
             begin
-              a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+              a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
               a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
             end;
           paramanager.freecgpara(list,cgpara1);
@@ -3949,7 +3949,7 @@ implementation
           cgpara2.done;
           exit;
         end;
-      pd:=search_system_proc(decrfunc);
+      pd:=Search_System_Proc(decrfunc);
       cgpara1.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
@@ -3968,41 +3968,41 @@ implementation
       cgpara1.init;
       cgpara2.init;
       cgpara3.init;
-      pd:=search_system_proc(name);
+      pd:=Search_System_Proc(name);
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       paramanager.getcgtempparaloc(list,pd,2,cgpara2);
       paramanager.getcgtempparaloc(list,pd,3,cgpara3);
 
       reference_reset_symbol(href,RTTIWriter.get_rtti_label(t,initrtti,def_needs_indirect(t)),0,sizeof(PInt),[]);
       { if calling convention is left to right, push parameters 1 and 2 }
-      if pd.is_pushleftright then
+      if pd.Is_PushLeftRight then
         begin
           a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
-          a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+          a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
         end;
 
       { push parameter 3 }
       if highloc.loc=LOC_CONSTANT then
-        a_load_const_cgpara(list,sizesinttype,highloc.value+1,cgpara3)
+        a_load_const_cgpara(list,SizeSIntType,highloc.value+1,cgpara3)
       else
         begin
           if highloc.loc in [LOC_REGISTER,LOC_CREGISTER] then
             hreg:=highloc.register
           else
             begin
-              hreg:=getintregister(list,sizesinttype);
-              a_load_loc_reg(list,sizesinttype,sizesinttype,highloc,hreg);
+              hreg:=getintregister(list,SizeSIntType);
+              a_load_loc_reg(list,SizeSIntType,SizeSIntType,highloc,hreg);
             end;
           { increment, converts high(x) to length(x) }
-          lenreg:=getintregister(list,sizesinttype);
-          a_op_const_reg_reg(list,OP_ADD,sizesinttype,1,hreg,lenreg);
-          a_load_reg_cgpara(list,sizesinttype,lenreg,cgpara3);
+          lenreg:=getintregister(list,SizeSIntType);
+          a_op_const_reg_reg(list,OP_ADD,SizeSIntType,1,hreg,lenreg);
+          a_load_reg_cgpara(list,SizeSIntType,lenreg,cgpara3);
         end;
 
       { if calling convention is right to left, push parameters 2 and 1 }
-      if not pd.is_pushleftright then
+      if not pd.Is_PushLeftRight then
         begin
-          a_loadaddr_ref_cgpara(list,voidpointertype,href,cgpara2);
+          a_loadaddr_ref_cgpara(list,VoidPointerType,href,cgpara2);
           a_loadaddr_ref_cgpara(list,t,ref,cgpara1);
         end;
       paramanager.freecgpara(list,cgpara1);
@@ -4019,7 +4019,7 @@ implementation
     begin
       result:=(tf_supports_packages in TargetInfo.flags) and
                 (TargetInfo.system in systems_indirect_var_imports) and
-                (findunitsymtable(t.owner).ModuleID<>CurrentModule.ModuleID);
+                (FindUnitSymTable(t.owner).ModuleID<>CurrentModule.ModuleID);
     end;
 
   procedure THLCGObj.g_rangecheck(list: TAsmList; const l: TLocation; fromdef, todef: TDef);
@@ -4063,7 +4063,7 @@ implementation
       { check the rangedef of the array, not the array itself }
       { (only change now, since getrange needs the arraydef)   }
       if (todef.typ = arraydef) then
-        todef := TArrayDef(todef).rangedef;
+        todef := TArrayDef(todef).RangeDef;
       { no range check if from and to are equal and are both longint/dword }
       { (if we have a 32bit processor) or int64/qword, since such          }
       { operations can at most cause overflows (JM)                        }
@@ -4072,13 +4072,13 @@ implementation
 {$if defined(cpuhighleveltarget) or defined(cpu64bitalu)}
       if (fromdef=todef) and
          (fromdef.typ=orddef) and
-         (((((TOrdDef(fromdef).ordtype=s64bit) and
+         (((((TOrdDef(fromdef).OrdType=s64bit) and
              (lfrom = low(int64)) and
              (hfrom = high(int64))) or
-            ((TOrdDef(fromdef).ordtype=u64bit) and
+            ((TOrdDef(fromdef).OrdType=u64bit) and
              (lfrom = low(qword)) and
              (hfrom = high(qword))) or
-            ((TOrdDef(fromdef).ordtype=scurrency) and
+            ((TOrdDef(fromdef).OrdType=scurrency) and
              (lfrom = low(int64)) and
              (hfrom = high(int64)))))) then
         exit;
@@ -4088,10 +4088,10 @@ implementation
 {$ifdef cpu32bitaddr}
       if (fromdef = todef) and
          (fromdef.typ=orddef) and
-         (((((TOrdDef(fromdef).ordtype = s32bit) and
+         (((((TOrdDef(fromdef).OrdType = s32bit) and
              (lfrom = int64(low(LongInt))) and
              (hfrom = int64(high(LongInt)))) or
-            ((TOrdDef(fromdef).ordtype = u32bit) and
+            ((TOrdDef(fromdef).OrdType = u32bit) and
              (lfrom = low(cardinal)) and
              (hfrom = high(cardinal)))))) then
         exit;
@@ -4165,7 +4165,7 @@ implementation
 {$endif}
         begin
           aintmax:=high(LongInt);
-          maxdef:=u32inttype;
+          maxdef:=U32IntType;
         end;
 
       { generate the rangecheck code for the def where we are going to }
@@ -4251,25 +4251,25 @@ implementation
       { read/write operations on one register make the life of the register allocator hard }
       if not(lenloc.loc in [LOC_REGISTER,LOC_CREGISTER]) then
         begin
-          lenreg:=getintregister(list,sinttype);
-          a_load_loc_reg(list,sinttype,sinttype,lenloc,lenreg);
+          lenreg:=getintregister(list,SIntType);
+          a_load_loc_reg(list,SIntType,SIntType,lenloc,lenreg);
         end
       else
         lenreg:=lenloc.register;
 
-      sizereg:=getintregister(list,sinttype);
-      a_op_const_reg_reg(list,OP_ADD,sinttype,1,lenreg,sizereg);
-      a_op_const_reg(list,OP_IMUL,sinttype,arrdef.elesize,sizereg);
+      sizereg:=getintregister(list,SIntType);
+      a_op_const_reg_reg(list,OP_ADD,SIntType,1,lenreg,sizereg);
+      a_op_const_reg(list,OP_IMUL,SIntType,arrdef.EleSize,sizereg);
       { load source }
       ptrarrdef:=CPointerDef.getreusable(arrdef);
       sourcereg:=getaddressregister(list,ptrarrdef);
       a_loadaddr_ref_reg(list,arrdef,ptrarrdef,ref,sourcereg);
 
       { do getmem call }
-      pd:=search_system_proc('fpc_getmem');
+      pd:=Search_System_Proc('fpc_getmem');
       cgpara1.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
-      a_load_reg_cgpara(list,sinttype,sizereg,cgpara1);
+      a_load_reg_cgpara(list,SIntType,sizereg,cgpara1);
       paramanager.freecgpara(list,cgpara1);
       getmemres:=g_call_system_proc(list,pd,[@cgpara1],ptrarrdef);
       cgpara1.done;
@@ -4279,26 +4279,26 @@ implementation
       gen_load_cgpara_loc(list,ptrarrdef,getmemres,destloc,false);
 
       { do move call }
-      pd:=search_system_proc('MOVE');
+      pd:=Search_System_Proc('MOVE');
       cgpara1.init;
       cgpara2.init;
       cgpara3.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       paramanager.getcgtempparaloc(list,pd,2,cgpara2);
       paramanager.getcgtempparaloc(list,pd,3,cgpara3);
-      if pd.is_pushleftright then
+      if pd.Is_PushLeftRight then
         begin
           { load source }
           a_load_reg_cgpara(list,ptrarrdef,sourcereg,cgpara1);
           { load destination }
           a_load_reg_cgpara(list,ptrarrdef,destreg,cgpara2);
           { load size }
-          a_load_reg_cgpara(list,sizesinttype,sizereg,cgpara3);
+          a_load_reg_cgpara(list,SizeSIntType,sizereg,cgpara3);
         end
       else
         begin
           { load size }
-          a_load_reg_cgpara(list,sizesinttype,sizereg,cgpara3);
+          a_load_reg_cgpara(list,SizeSIntType,sizereg,cgpara3);
           { load destination }
           a_load_reg_cgpara(list,ptrarrdef,destreg,cgpara2);
           { load source }
@@ -4320,7 +4320,7 @@ implementation
       pd : TProcDef;
     begin
       { do freemem call }
-      pd:=search_system_proc('fpc_freemem');
+      pd:=Search_System_Proc('fpc_freemem');
       cgpara1.init;
       paramanager.getcgtempparaloc(list,pd,1,cgpara1);
       { load source }
@@ -4409,11 +4409,11 @@ implementation
             if (fromloc.reference.base<>NR_NO) and
                (fromloc.reference.base<>CurrentProcInfo.framepointer) and
                (fromloc.reference.base<>NR_STACK_POINTER_REG) then
-              handle_reg_move(voidpointertype,fromloc.reference.base,toloc.reference.base,getregtype(fromloc.reference.base));
+              handle_reg_move(VoidPointerType,fromloc.reference.base,toloc.reference.base,getregtype(fromloc.reference.base));
             if (fromloc.reference.index<>NR_NO) and
                (fromloc.reference.index<>CurrentProcInfo.framepointer) and
                (fromloc.reference.index<>NR_STACK_POINTER_REG) then
-              handle_reg_move(voidpointertype,fromloc.reference.index,toloc.reference.index,getregtype(fromloc.reference.index));
+              handle_reg_move(VoidPointerType,fromloc.reference.index,toloc.reference.index,getregtype(fromloc.reference.index));
           end;
         else
           InternalError(2012012701);
@@ -4432,8 +4432,8 @@ implementation
 
   procedure THLCGObj.g_set_addr_nonbitpacked_field_ref(list: TAsmList; recdef: TAbstractRecordDef; field: TFieldVarSym; var recref: TReference);
     begin
-      inc(recref.offset,field.fieldoffset);
-      recref.alignment:=NewAlignment(recref.alignment,field.fieldoffset);
+      inc(recref.offset,field.FieldOffset);
+      recref.alignment:=NewAlignment(recref.alignment,field.FieldOffset);
     end;
 
 
@@ -4448,9 +4448,9 @@ implementation
       sym: TSym;
       field: TFieldVarSym;
     begin
-      sym:=search_struct_member(recdef,name);
+      sym:=Search_Struct_Member(recdef,name);
       if not Assigned(sym) or
-         (sym.typ<>fieldvarsym) then
+         (sym.typ<>FieldVarSym) then
         InternalError(2015111901);
       field:=TFieldVarSym(sym);
       fref:=recref;
@@ -4679,20 +4679,20 @@ implementation
           if (l.size in [OS_32,OS_S32]) then
             begin
               size:=cgsize_orddef(l.size);
-              newsize:=s32floattype;
+              newsize:=S32FloatType;
             end
           else if (l.size in [OS_64,OS_S64]) then
             begin
               size:=cgsize_orddef(l.size);
-              newsize:=s64floattype;
+              newsize:=S64FloatType;
             end
           else
             newsize:=size;
           case size.size of
             4:
-              newsize:=s32floattype;
+              newsize:=S32FloatType;
             8:
-              newsize:=s64floattype;
+              newsize:=S64FloatType;
             else
               newsize:=size;
           end;
@@ -4724,7 +4724,7 @@ implementation
               if loadref then
                 begin
                   pdef:=CPointerDef.getreusable(def);
-                  reference_reset_base(ref,pdef,getaddressregister(list,voidpointertype),0,ctempposinvalid,alignment,[]);
+                  reference_reset_base(ref,pdef,getaddressregister(list,VoidPointerType),0,ctempposinvalid,alignment,[]);
                   { it's a pointer to def }
                   a_load_ref_reg(list,pdef,pdef,l.reference,ref.base);
                 end
@@ -4871,12 +4871,12 @@ implementation
       { self is implicitly returned from constructors, even if there are no
         references to it; additionally, funcretsym is not set for constructor
         procdefs }
-      if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) then
-        rr.ressym:=TSym(CurrentProcInfo.procdef.parast.Find('self'))
-      else if not is_void(CurrentProcInfo.procdef.returndef) and
-         Assigned(CurrentProcInfo.procdef.funcretsym) and
-         (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs <> 0) then
-        rr.ressym:=CurrentProcInfo.procdef.funcretsym;
+      if (CurrentProcInfo.procdef.ProcTypeOption=potype_constructor) then
+        rr.ressym:=TSym(CurrentProcInfo.procdef.ParaST.Find('self'))
+      else if not is_void(CurrentProcInfo.procdef.ReturnDef) and
+         Assigned(CurrentProcInfo.procdef.FuncRetSym) and
+         (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs <> 0) then
+        rr.ressym:=CurrentProcInfo.procdef.FuncRetSym;
 
       if not foreachnode(n,@do_replace_node_regs,@rr) then
         exit;
@@ -4956,32 +4956,32 @@ implementation
         loadn:
           begin
             if (TLoadNode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
-               (TAbstractVarSym(TLoadNode(n).symtableentry).varoptions * [vo_is_dll_var, vo_is_thread_var] = []) and
+               (TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions * [vo_is_dll_var, vo_is_thread_var] = []) and
                not Assigned(TLoadNode(n).left) and
                ((TLoadNode(n).symtableentry <> rr^.ressym) or
                 not(fc_exit in flowcontrol)
                ) and
-               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
-               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register = rr^.old) then
+               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.loc in [LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMXREGISTER,LOC_CMMREGISTER]) and
+               (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register = rr^.old) then
               begin
 {$ifdef cpu64bitalu}
                 { it's possible a 128 bit location was shifted and/xor typecasted }
                 { in a 64 bit value, so only 1 register was left in the location }
-                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.size in [OS_128,OS_S128]) then
-                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register128.reghi = rr^.oldhi) then
-                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register128.reghi := rr^.newhi
+                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.size in [OS_128,OS_S128]) then
+                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register128.reghi = rr^.oldhi) then
+                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register128.reghi := rr^.newhi
                   else
                     exit;
 {$else cpu64bitalu}
                 { it's possible a 64 bit location was shifted and/xor typecasted }
                 { in a 32 bit value, so only 1 register was left in the location }
-                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.size in [OS_64,OS_S64]) then
-                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register64.reghi = rr^.oldhi) then
-                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register64.reghi := rr^.newhi
+                if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.size in [OS_64,OS_S64]) then
+                  if (TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register64.reghi = rr^.oldhi) then
+                    TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register64.reghi := rr^.newhi
                   else
                     exit;
 {$endif cpu64bitalu}
-                TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.register := rr^.new;
+                TAbstractNormalVarSym(TLoadNode(n).symtableentry).LocAlloc.register := rr^.new;
                 rr^.sym := TAbstractNormalVarSym(TLoadNode(n).symtableentry);
                 result := fen_norecurse_true;
               end;
@@ -5048,13 +5048,13 @@ implementation
           list.concat(TAILabel.create(CurrentProcInfo.nexus_profile_endlabel));
           emit_nexus_profile_descriptor;
         end;
-      if (CurrentProcInfo.procdef.proctypeoption=potype_proginit) and
+      if (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) and
          (cs_nexus_profile in CurrentSettings.ModuleSwitches) and
          (TargetInfo.system=system_x86_64_win64) and
          not CurrentModule.IsLibrary then
         emit_nexus_profile_module_data;
-      list.concat(TAISymbolEnd.Createname(CurrentProcInfo.procdef.mangledname));
-      CurrentProcInfo.procdef.procendtai:=TAI(list.last);
+      list.concat(TAISymbolEnd.Createname(CurrentProcInfo.procdef.MangledName));
+      CurrentProcInfo.procdef.ProcEndTAI:=TAI(list.last);
     end;
 
 
@@ -5063,23 +5063,23 @@ implementation
       { External declared in implementation, and there was already a
         forward (or interface) declaration then we need to generate
         a stub that calls the external routine }
-      if (not pd.forwarddef) and
-         (pd.hasforward) then
+      if (not pd.ForwardDef) and
+         (pd.HasForward) then
         begin
           if importname<>'' then
             begin
              { add the procedure to the al_procedures }
-             g_external_wrapper(list,pd,pd.mangledname,importname,true);
+             g_external_wrapper(list,pd,pd.MangledName,importname,true);
             end;
           { remove the external stuff, so that the interface crc
             doesn't change. This makes the function calls less
             efficient, but it means that the interface doesn't
             change if the function is ever redirected to another
             function or implemented in the unit. }
-          pd.procoptions:=pd.procoptions-[po_external,po_has_importname,po_has_importdll];
-          StringDispose(pd.import_name);
-          StringDispose(pd.import_dll);
-          pd.import_nr:=0;
+          pd.ProcOptions:=pd.ProcOptions-[po_external,po_has_importname,po_has_importdll];
+          StringDispose(pd.ImportName);
+          StringDispose(pd.ImportDLL);
+          pd.ImportNr:=0;
         end;
     end;
 
@@ -5087,16 +5087,16 @@ implementation
   procedure THLCGObj.gen_initialize_code(list: TAsmList);
     begin
       { initialize global register variables }
-      case CurrentProcInfo.procdef.proctypeoption of
+      case CurrentProcInfo.procdef.ProcTypeOption of
         potype_unitinit,
         potype_proginit:
-          TSymTable(CurrentModule.localsymtable).SymList.ForEachCall(@initialize_regvars,list);
+          TSymTable(CurrentModule.LocalSymTable).SymList.ForEachCall(@initialize_regvars,list);
         else
           ;
       end;
 
       { initialises temp. ansi/wide string data }
-      if (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) or
+      if (CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter) or
          (TargetInfo.system=system_aarch64_win64) then
         inittempvariables(list);
     end;
@@ -5108,7 +5108,7 @@ implementation
     begin
       old_current_procinfo:=CurrentProcInfo;
       for_finalization:=false;
-      if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+      if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
         begin
           if (CurrentProcInfo.parent.finalize_procinfo<>CurrentProcInfo) then
             exit;
@@ -5117,9 +5117,9 @@ implementation
         end;
 
       { finalize paras data }
-      if Assigned(CurrentProcInfo.procdef.parast) and
-         not(po_assembler in CurrentProcInfo.procdef.procoptions) then
-        CurrentProcInfo.procdef.parast.SymList.ForEachCall(@final_paras,list);
+      if Assigned(CurrentProcInfo.procdef.ParaST) and
+         not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
+        CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@final_paras,list);
 
       { finalize temporary data }
       finalizetempvariables(list,for_finalization);
@@ -5131,32 +5131,32 @@ implementation
     begin
       if cs_asm_source in CurrentSettings.GlobalSwitches then
         begin
-          case vs.initialloc.loc of
+          case vs.InitialLoc.loc of
             LOC_REFERENCE :
               begin
-                if not Assigned(vs.initialloc.reference.symbol) then
+                if not Assigned(vs.InitialLoc.reference.symbol) then
                   list.concat(TAIComment.Create(StrPNew('Var '+vs.realname+' located at '+
-                     std_regname(vs.initialloc.reference.base)+ToStr_With_Plus(vs.initialloc.reference.offset)+
-                     ', size='+tcgsize2str(vs.initialloc.size))));
+                     std_regname(vs.InitialLoc.reference.base)+ToStr_With_Plus(vs.InitialLoc.reference.offset)+
+                     ', size='+tcgsize2str(vs.InitialLoc.size))));
               end;
             else
               ;
           end;
         end;
-      vs.localloc:=vs.initialloc;
+      vs.LocAlloc:=vs.InitialLoc;
     end;
 
   procedure THLCGObj.paravarsym_set_initialloc_to_paraloc(vs: TParaVarSym);
     begin
-      reference_reset_base(vs.initialloc.reference,voidstackpointertype,TParaVarSym(vs).paraloc[calleeside].location^.reference.index,
-          TParaVarSym(vs).paraloc[calleeside].location^.reference.offset,ctempposinvalid,
-          TParaVarSym(vs).paraloc[calleeside].alignment,[]);
+      reference_reset_base(vs.InitialLoc.reference,VoidStackPointerType,TParaVarSym(vs).ParaLoc[calleeside].location^.reference.index,
+          TParaVarSym(vs).ParaLoc[calleeside].location^.reference.offset,ctempposinvalid,
+          TParaVarSym(vs).ParaLoc[calleeside].alignment,[]);
     end;
 
   procedure THLCGObj.gen_entry_code(list: TAsmList);
     begin
       { call startup helpers from main program }
-      if (CurrentProcInfo.procdef.proctypeoption=potype_proginit) then
+      if (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) then
        begin
          if cs_nexus_profile in CurrentSettings.ModuleSwitches then
            gen_nexus_profile_module_call(list,'nxp_module_register');
@@ -5194,7 +5194,7 @@ implementation
 
       { call __EXIT for main program }
       if (not CurrentModule.IsLibrary) and
-         (CurrentProcInfo.procdef.proctypeoption=potype_proginit) then
+         (CurrentProcInfo.procdef.ProcTypeOption=potype_proginit) then
         g_call_system_proc(list,'fpc_do_exit',[],nil).resetiftemp;
     end;
 
@@ -5221,30 +5221,30 @@ implementation
       symname:='NXP_DESC_'+CurrentModule.ModuleName^+'_'+
         CurrentProcInfo.procdef.UniqueIDStr;
       CurrentProcInfo.nexus_profile_descsym:=CurrentAsmData.DefineAsmSymbol(
-        symname,AB_LOCAL,AT_DATA,voidpointertype);
+        symname,AB_LOCAL,AT_DATA,VoidPointerType);
     end;
 
   procedure THLCGObj.gen_nexus_profile_call(list:TAsmList; const hookname:TIDString);
     var
       para: TCGPara;
-      paraloc: PCGParaLocation;
+      ParaLoc: PCGParaLocation;
       href: TReference;
     begin
       ensure_nexus_profile_descriptor_symbol;
 {$ifdef x86_64}
-      CurrentModule.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      CurrentModule.Add_Extern_AsmSym(hookname,AB_EXTERNAL,AT_FUNCTION);
       para.init;
-      para.def:=voidpointertype;
+      para.def:=VoidPointerType;
       para.size:=OS_ADDR;
       para.intsize:=sizeof(PInt);
-      paraloc:=para.add_location;
-      paraloc^.def:=voidpointertype;
-      paraloc^.size:=OS_ADDR;
-      paraloc^.loc:=LOC_REGISTER;
-      paraloc^.register:=NR_RCX;
+      ParaLoc:=para.add_location;
+      ParaLoc^.def:=VoidPointerType;
+      ParaLoc^.size:=OS_ADDR;
+      ParaLoc^.loc:=LOC_REGISTER;
+      ParaLoc^.register:=NR_RCX;
       reference_reset_symbol(href,CurrentProcInfo.nexus_profile_descsym,0,
         sizeof(PInt),[]);
-      a_loadaddr_ref_cgpara(list,voidpointertype,href,para);
+      a_loadaddr_ref_cgpara(list,VoidPointerType,href,para);
       allocallcpuregisters(list);
       cg.a_call_name(list,hookname,false);
       deallocallcpuregisters(list);
@@ -5258,24 +5258,24 @@ implementation
     const hookname:TIDString);
     var
       para: TCGPara;
-      paraloc: PCGParaLocation;
+      ParaLoc: PCGParaLocation;
       href: TReference;
       modulesym: TAsmSymbol;
     begin
 {$ifdef x86_64}
-      CurrentModule.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      CurrentModule.Add_Extern_AsmSym(hookname,AB_EXTERNAL,AT_FUNCTION);
       modulesym:=CurrentAsmData.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
       para.init;
-      para.def:=voidpointertype;
+      para.def:=VoidPointerType;
       para.size:=OS_ADDR;
       para.intsize:=sizeof(PInt);
-      paraloc:=para.add_location;
-      paraloc^.def:=voidpointertype;
-      paraloc^.size:=OS_ADDR;
-      paraloc^.loc:=LOC_REGISTER;
-      paraloc^.register:=NR_RCX;
+      ParaLoc:=para.add_location;
+      ParaLoc^.def:=VoidPointerType;
+      ParaLoc^.size:=OS_ADDR;
+      ParaLoc^.loc:=LOC_REGISTER;
+      ParaLoc^.register:=NR_RCX;
       reference_reset_symbol(href,modulesym,0,sizeof(PInt),[]);
-      a_loadaddr_ref_cgpara(list,voidpointertype,href,para);
+      a_loadaddr_ref_cgpara(list,VoidPointerType,href,para);
       allocallcpuregisters(list);
       cg.a_call_name(list,hookname,false);
       deallocallcpuregisters(list);
@@ -5301,35 +5301,35 @@ implementation
     begin
       ensure_nexus_profile_descriptor_symbol;
       pd:=CurrentProcInfo.procdef;
-      name:=pd.fullprocname(true);
+      name:=pd.FullProcName(true);
       profunitname:=CurrentModule.RealModuleName^;
-      sourcefile:=get_source_file(CurrentProcInfo.entrypos.moduleindex,
+      sourcefile:=Get_Source_File(CurrentProcInfo.entrypos.moduleindex,
         CurrentProcInfo.entrypos.fileindex);
       if Assigned(sourcefile) then
         source:=sourcefile.path+sourcefile.name
       else
         source:='';
-      key:=profunitname+'|'+name+'|'+pd.mangledname+'|'+pd.UniqueIDStr;
+      key:=profunitname+'|'+name+'|'+pd.MangledName+'|'+pd.UniqueIDStr;
       stableid:=nexus_profile_hash64(key);
       tcb:=CTAITypedConstBuilder.create([]);
       if name='' then
         namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          nil,0,getansistringcodepage)
+          nil,0,GetAnsiStringCodePage)
       else
         namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @name[1],length(name),getansistringcodepage);
+          @name[1],length(name),GetAnsiStringCodePage);
       if profunitname='' then
         unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          nil,0,getansistringcodepage)
+          nil,0,GetAnsiStringCodePage)
       else
         unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @profunitname[1],length(profunitname),getansistringcodepage);
+          @profunitname[1],length(profunitname),GetAnsiStringCodePage);
       if source='' then
         sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          nil,0,getansistringcodepage)
+          nil,0,GetAnsiStringCodePage)
       else
         sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
-          @source[1],length(source),getansistringcodepage);
+          @source[1],length(source),GetAnsiStringCodePage);
       tcb.free;
       section:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$M_'+HexStr(int64(stableid),16),3);
@@ -5343,7 +5343,7 @@ implementation
       CurrentProcInfo.aktlocaldata.concat(TAIConst.create_32bit(0));
       CurrentProcInfo.aktlocaldata.concat(TAIConst.create_64bit(int64(stableid)));
       CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym(
-        CurrentAsmData.RefAsmSymbol(pd.mangledname,AT_FUNCTION)));
+        CurrentAsmData.RefAsmSymbol(pd.MangledName,AT_FUNCTION)));
       CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym(
         CurrentProcInfo.nexus_profile_endlabel));
       CurrentProcInfo.aktlocaldata.concat(TAIConst.create_sym_offset(
@@ -5368,11 +5368,11 @@ implementation
       startsym,endsym,modulesym: TAsmSymbol;
     begin
       startsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_start',
-        AB_GLOBAL,AT_DATA,voidpointertype);
+        AB_GLOBAL,AT_DATA,VoidPointerType);
       endsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_end',
-        AB_GLOBAL,AT_DATA,voidpointertype);
+        AB_GLOBAL,AT_DATA,VoidPointerType);
       modulesym:=CurrentAsmData.DefineAsmSymbol('__NXP_module_descriptor',
-        AB_GLOBAL,AT_DATA,voidpointertype);
+        AB_GLOBAL,AT_DATA,VoidPointerType);
 
       modulesection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$0',3);
@@ -5425,7 +5425,7 @@ implementation
               initialised by the parent; only handler-local temps need zeroing.
               adjust_exceptfilter_ref converts parent temps to FP-relative,
               so if the base changed from the framepointer it is a parent temp. }
-            if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+            if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
               begin
                 cg.adjust_exceptfilter_ref(href,false);
                 if href.base<>CurrentProcInfo.framepointer then
@@ -5467,29 +5467,29 @@ implementation
       href : TReference;
       mmreg : TRegister;
     begin
-      if (TSym(p).typ=staticvarsym) and not(TStaticVarSym(p).noregvarinitneeded) then
+      if (TSym(p).typ=staticvarsym) and not(TStaticVarSym(p).NoRegVarInitNeeded) then
        begin
          { Static variables can have the initialloc only set to LOC_CxREGISTER
            or LOC_INVALID, for explanation see gen_alloc_symtable (PFV) }
-         case TStaticVarSym(p).initialloc.loc of
+         case TStaticVarSym(p).InitialLoc.loc of
            LOC_CREGISTER :
              begin
 {$ifdef cpu64bitalu}
-               if (TStaticVarSym(p).initialloc.size in [OS_128,OS_S128]) then
-                 cg128.a_load128_const_reg(TAsmList(arg),0,0,TStaticVarSym(p).initialloc.register128)
+               if (TStaticVarSym(p).InitialLoc.size in [OS_128,OS_S128]) then
+                 cg128.a_load128_const_reg(TAsmList(arg),0,0,TStaticVarSym(p).InitialLoc.register128)
                else
 {$else cpu64bitalu}
-               if (TStaticVarSym(p).initialloc.size in [OS_64,OS_S64]) then
-                 cg64.a_load64_const_reg(TAsmList(arg),0,TStaticVarSym(p).initialloc.register64)
+               if (TStaticVarSym(p).InitialLoc.size in [OS_64,OS_S64]) then
+                 cg64.a_load64_const_reg(TAsmList(arg),0,TStaticVarSym(p).InitialLoc.register64)
                else
 {$endif cpu64bitalu}
                  a_load_const_reg(TAsmList(arg),TStaticVarSym(p).vardef,0,
-                     TStaticVarSym(p).initialloc.register);
+                     TStaticVarSym(p).InitialLoc.register);
              end;
            LOC_CMMREGISTER :
              begin
                { clear the whole register }
-               mmreg:=newreg(R_MMREGISTER,getsupreg(TStaticVarSym(p).initialloc.register),R_SUBMMWHOLE);
+               mmreg:=newreg(R_MMREGISTER,getsupreg(TStaticVarSym(p).InitialLoc.register),R_SUBMMWHOLE);
                a_opmm_reg_reg(TAsmList(arg),OP_XOR,TStaticVarSym(p).vardef, mmreg, mmreg,
                  { as we pass shuffle=nil, we have to pass a full register }
                  nil);
@@ -5498,10 +5498,10 @@ implementation
              begin
                { initialize fpu regvar by loading from memory }
                reference_reset_symbol(href,
-                 CurrentAsmData.RefAsmSymbol(TStaticVarSym(p).mangledname,AT_DATA), 0,
+                 CurrentAsmData.RefAsmSymbol(TStaticVarSym(p).MangledName,AT_DATA), 0,
                  Var_Align(TStaticVarSym(p).vardef.alignment),[]);
                a_loadfpu_ref_reg(TAsmList(arg), TStaticVarSym(p).vardef,
-                 TStaticVarSym(p).vardef, href, TStaticVarSym(p).initialloc.register);
+                 TStaticVarSym(p).vardef, href, TStaticVarSym(p).InitialLoc.register);
              end;
            LOC_INVALID :
              ;
@@ -5524,31 +5524,31 @@ implementation
       list:=TAsmList(arg);
       if is_managed_type(TParaVarSym(p).vardef) then
        begin
-         if (TParaVarSym(p).varspez=vs_value) then
+         if (TParaVarSym(p).VarSpez=vs_value) then
           begin
             include(CurrentProcInfo.flags,pi_needs_implicit_finally);
-            location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).localloc,href,
+            location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).LocAlloc,href,
               is_open_array(TParaVarSym(p).vardef) or
               ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-               paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
+               paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)),
               sizeof(PInt));
             if is_open_array(TParaVarSym(p).vardef) then
               begin
-                if paramanager.push_high_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
+                if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
                   begin
-                    hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                    hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
                     if not Assigned(hsym) then
                       InternalError(201003032);
-                    highloc:=hsym.initialloc;
+                    highloc:=hsym.InitialLoc;
                     { adjust high bound reference for exceptfilter finalization }
                     if Assigned(CurrentProcInfo.finalize_procinfo) and
-                       (CurrentProcInfo.finalize_procinfo.procdef.proctypeoption=potype_exceptfilter) and
+                       (CurrentProcInfo.finalize_procinfo.procdef.ProcTypeOption=potype_exceptfilter) and
                        (highloc.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                       cg.adjust_exceptfilter_ref(highloc.reference,true);
                   end
                 else
                   highloc.loc:=LOC_INVALID;
-                eldef:=TArrayDef(TParaVarSym(p).vardef).elementdef;
+                eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
                 g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
                 g_array_rtti_helper(list,eldef,href,highloc,'fpc_finalize_array');
               end
@@ -5558,14 +5558,14 @@ implementation
        end;
       { open arrays can contain elements requiring init/final code, so the else has been removed here }
       if not(TargetInfo.system in systems_caller_copy_addr_value_para) and
-         (TParaVarSym(p).varspez=vs_value) and
+         (TParaVarSym(p).VarSpez=vs_value) and
          (is_open_array(TParaVarSym(p).vardef) or
           is_array_of_const(TParaVarSym(p).vardef)) then
         begin
           { cdecl functions don't have a high pointer so it is not possible to generate
             a local copy }
-          if not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
-            g_releasevaluepara_openarray(list,TArrayDef(TParaVarSym(p).vardef),TParaVarSym(p).localloc);
+          if not(CurrentProcInfo.procdef.ProcCallOption in cdecl_pocalls) then
+            g_releasevaluepara_openarray(list,TArrayDef(TParaVarSym(p).vardef),TParaVarSym(p).LocAlloc);
         end;
     end;
 
@@ -5587,34 +5587,34 @@ implementation
       if (TSym(p).typ=paravarsym) then
        begin
          NeedsInitTable:=is_managed_type(TParaVarSym(p).vardef);
-         case TParaVarSym(p).varspez of
+         case TParaVarSym(p).VarSpez of
            vs_value :
              if NeedsInitTable then
                begin
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
                  if not((TParaVarSym(p).vardef.typ=variantdef) and
-                   paramanager.push_addr_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption)) then
+                   paramanager.push_addr_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)) then
                    begin
-                     location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).initialloc,href,
+                     location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,
                        is_open_array(TParaVarSym(p).vardef) or
                        ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-                        paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
+                        paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption)),
                        sizeof(PInt));
                      if is_open_array(TParaVarSym(p).vardef) then
                        begin
-                         if paramanager.push_high_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
+                         if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
                            begin
-                             hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                             hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
                              if not Assigned(hsym) then
                                InternalError(2010030303);
-                             highloc:=hsym.initialloc
+                             highloc:=hsym.InitialLoc
                            end
                          else
                            highloc.loc:=LOC_INVALID;
                          { open arrays do not contain correct element count in their rtti,
                            the actual count must be passed separately. }
-                         eldef:=TArrayDef(TParaVarSym(p).vardef).elementdef;
+                         eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
                          g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
                          g_array_rtti_helper(list,eldef,href,highloc,'fpc_addref_array');
                        end
@@ -5629,21 +5629,21 @@ implementation
                    { we have no idea about the alignment at the callee side,
                      and the user also cannot specify "unaligned" here, so
                      assume worst case }
-                   location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).initialloc,href,true,1);
+                   location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,true,1);
                    if NeedsInitTable then
                      begin
                        if is_open_array(TParaVarSym(p).vardef) then
                          begin
-                           if paramanager.push_high_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
+                           if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
                              begin
-                               hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                               hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
                                if not Assigned(hsym) then
                                  InternalError(2010030304);
-                               highloc:=hsym.initialloc
+                               highloc:=hsym.InitialLoc
                              end
                            else
                              highloc.loc:=LOC_INVALID;
-                           eldef:=TArrayDef(TParaVarSym(p).vardef).elementdef;
+                           eldef:=TArrayDef(TParaVarSym(p).vardef).ElementDef;
                            g_ptrtypecast_ref(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(eldef),href);
                            g_array_rtti_helper(list,eldef,href,highloc,'fpc_initialize_array');
                          end
@@ -5663,29 +5663,29 @@ implementation
       i: LongInt;
       currpara: TParaVarSym;
     begin
-      if (po_assembler in CurrentProcInfo.procdef.procoptions) or
+      if (po_assembler in CurrentProcInfo.procdef.ProcOptions) or
       { exceptfilters have a single hidden 'parentfp' parameter, which
         is handled by tcg.g_proc_entry. }
-         (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+         (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
         exit;
 
       { Copy parameters to local references/registers }
       for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
         begin
           currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-          if not currpara.is_used then
+          if not currpara.Is_Used then
             continue;
           { don't use currpara.vardef, as this will be wrong in case of
             call-by-reference parameters (it won't contain the pointer) }
-          gen_load_cgpara_loc(list,currpara.paraloc[calleeside].def,currpara.paraloc[calleeside],currpara.initialloc,paramanager.param_use_paraloc(currpara.paraloc[calleeside]));
+          gen_load_cgpara_loc(list,currpara.ParaLoc[calleeside].def,currpara.ParaLoc[calleeside],currpara.InitialLoc,paramanager.param_use_paraloc(currpara.ParaLoc[calleeside]));
         end;
 
       { generate copies of call by value parameters, must be done before
         the initialization and body is parsed because the refcounts are
         incremented using the local copies }
-      CurrentProcInfo.procdef.parast.SymList.ForEachCall(@g_copyvalueparas,list);
+      CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@g_copyvalueparas,list);
 
-      if not(po_assembler in CurrentProcInfo.procdef.procoptions) then
+      if not(po_assembler in CurrentProcInfo.procdef.ProcOptions) then
         begin
           { initialize refcounted paras, and trash others. Needed here
             instead of in gen_initialize_code, because when a reference is
@@ -5693,7 +5693,7 @@ implementation
             in a regvar, we add a register move and that one again has to
             come after the parameter loading code as far as the register
             allocator is concerned }
-          CurrentProcInfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
+          CurrentProcInfo.procdef.ParaST.SymList.ForEachCall(@init_paras,list);
         end;
     end;
 
@@ -5709,44 +5709,44 @@ implementation
     begin
       list:=TAsmList(arg);
       if (TSym(p).typ=paravarsym) and
-         (TParaVarSym(p).is_used) and
-         ((vo_has_local_copy in TParaVarSym(p).varoptions) or
+         (TParaVarSym(p).Is_Used) and
+         ((vo_has_local_copy in TParaVarSym(p).VarOptions) or
           (not(TargetInfo.system in systems_caller_copy_addr_value_para) and
            (is_open_array(TParaVarSym(p).vardef) or
             is_array_of_const(TParaVarSym(p).vardef)) and
-           (TParaVarSym(p).varspez=vs_value))) then
+           (TParaVarSym(p).VarSpez=vs_value))) then
         begin
           { we have no idea about the alignment at the caller side }
-          location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).initialloc,href,true,1);
+          location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).InitialLoc,href,true,1);
           if is_open_array(TParaVarSym(p).vardef) or
              is_array_of_const(TParaVarSym(p).vardef) then
             begin
               { cdecl functions don't have a high pointer so it is not possible to generate
                 a local copy }
-              if not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
+              if not(CurrentProcInfo.procdef.ProcCallOption in cdecl_pocalls) then
                 begin
-                  if paramanager.push_high_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
+                  if paramanager.push_high_param(TParaVarSym(p).VarSpez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.ProcCallOption) then
                     begin
-                      hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                      hsym:=TParaVarSym(Get_High_Value_Sym(TParaVarSym(p)));
                       if not Assigned(hsym) then
                         InternalError(2011020506);
-                      highloc:=hsym.initialloc
+                      highloc:=hsym.InitialLoc
                     end
                   else
                     highloc.loc:=LOC_INVALID;
-                  hreg:=getaddressregister(list,voidpointertype);
+                  hreg:=getaddressregister(list,VoidPointerType);
                   if not is_packed_array(TParaVarSym(p).vardef) then
                     g_copyvaluepara_openarray(list,href,highloc,TArrayDef(TParaVarSym(p).vardef),hreg)
                   else
                     InternalError(2011020507);
 //                      cg.g_copyvaluepara_packedopenarray(list,href,hsym.intialloc,tarraydef(tparavarsym(p).vardef).elepackedbitsize,hreg);
-                  a_load_reg_loc(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(TParaVarSym(p).vardef),hreg,TParaVarSym(p).initialloc);
+                  a_load_reg_loc(list,CPointerDef.getreusable(TParaVarSym(p).vardef),CPointerDef.getreusable(TParaVarSym(p).vardef),hreg,TParaVarSym(p).InitialLoc);
                 end;
             end
           else
             begin
               { Allocate space for the local copy }
-              l:=TParaVarSym(p).getsize;
+              l:=TParaVarSym(p).GetSize;
               localcopyloc.loc:=LOC_REFERENCE;
               localcopyloc.size:=int_cgsize(l);
               getlocal(list,TParaVarSym(p),l,TParaVarSym(p).vardef.alignment,TParaVarSym(p).vardef,localcopyloc.reference);
@@ -5772,10 +5772,10 @@ implementation
                   g_concatcopy(list,TParaVarSym(p).vardef,href,localcopyloc.reference);
                 end;
               { update localloc of varsym }
-              if TParaVarSym(p).localloc.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-                tg.Ungetlocal(list,TParaVarSym(p).localloc.reference);
-              TParaVarSym(p).localloc:=localcopyloc;
-              TParaVarSym(p).initialloc:=localcopyloc;
+              if TParaVarSym(p).LocAlloc.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
+                tg.Ungetlocal(list,TParaVarSym(p).LocAlloc.reference);
+              TParaVarSym(p).LocAlloc:=localcopyloc;
+              TParaVarSym(p).InitialLoc:=localcopyloc;
             end;
         end;
     end;
@@ -5786,7 +5786,7 @@ implementation
       explicitalign : shortint;
     begin
       if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef]) then
-        explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).explicitrecordalignment
+        explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).ExplicitRecordAlignment
       else
         explicitalign:=0;
       tg.getlocal(list,size,alignment,explicitalign,def,sym,ref);
@@ -5879,8 +5879,8 @@ implementation
     var
       safecallretpara: TCGPara;
     begin
-      if not CurrentProcInfo.procdef.generate_safecall_wrapper then
-        gen_load_loc_cgpara(list,vardef,l,CurrentProcInfo.procdef.funcretloc[calleeside])
+      if not CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
+        gen_load_loc_cgpara(list,vardef,l,CurrentProcInfo.procdef.FuncRetLoc[calleeside])
       else
         begin
           safecallretpara:=paramanager.get_safecallresult_funcretloc(CurrentProcInfo.procdef,calleeside);
@@ -5935,7 +5935,7 @@ implementation
         LOC_MMREGISTER,
         LOC_CMMREGISTER:
           begin
-            if use_vectorfpu(vardef) then
+            if Use_VectorFPU(vardef) then
               a_loadmm_loc_cgpara(list,vardef,l,cgpara,mms_movescalar)
             else
               { no vector support yet }
@@ -5967,7 +5967,7 @@ implementation
                 case para.location^.loc of
                   LOC_REFERENCE,LOC_CREFERENCE:
                     begin
-                      reference_reset_base(href,voidstackpointertype,para.location^.reference.index,para.location^.reference.offset,ctempposinvalid,para.alignment,[]);
+                      reference_reset_base(href,VoidStackPointerType,para.location^.reference.index,para.location^.reference.offset,ctempposinvalid,para.alignment,[]);
                       a_load_ref_ref(list,para.def,para.def,href,destloc.reference);
                     end;
                   else
@@ -5987,48 +5987,48 @@ implementation
       retdef : TDef;
     begin
       { Is the loading needed? }
-      if (is_void(CurrentProcInfo.procdef.returndef) and
-          not CurrentProcInfo.procdef.generate_safecall_wrapper) or
+      if (is_void(CurrentProcInfo.procdef.ReturnDef) and
+          not CurrentProcInfo.procdef.Generate_SafeCall_Wrapper) or
          (
-          (po_assembler in CurrentProcInfo.procdef.procoptions) and
-          (CurrentProcInfo.procdef.generate_safecall_wrapper or
-           not Assigned(CurrentProcInfo.procdef.funcretsym) or
-           (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs=0) or
-           (po_nostackframe in CurrentProcInfo.procdef.procoptions)
+          (po_assembler in CurrentProcInfo.procdef.ProcOptions) and
+          (CurrentProcInfo.procdef.Generate_SafeCall_Wrapper or
+           not Assigned(CurrentProcInfo.procdef.FuncRetSym) or
+           (TAbstractVarSym(CurrentProcInfo.procdef.FuncRetSym).refs=0) or
+           (po_nostackframe in CurrentProcInfo.procdef.ProcOptions)
           )
          ) then
         begin
-          ressym:=CurrentProcInfo.procdef.funcretsym;
+          ressym:=CurrentProcInfo.procdef.FuncRetSym;
           if not Assigned(ressym) then
             exit;
         end
       else
         begin
           { constructors return self }
-          if CurrentProcInfo.procdef.generate_safecall_wrapper then
+          if CurrentProcInfo.procdef.Generate_SafeCall_Wrapper then
             begin
-              if not CurrentProcInfo.procdef.get_safecall_funcretsym_info(ressym,retdef) then
+              if not CurrentProcInfo.procdef.Get_SafeCall_FuncRetSym_Info(ressym,retdef) then
                 InternalError(2019112402);
-              gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).localloc);
+              gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).LocAlloc);
             end
           else
             begin
-              if not CurrentProcInfo.procdef.get_funcretsym_info(ressym,retdef) then
+              if not CurrentProcInfo.procdef.Get_FuncRetSym_Info(ressym,retdef) then
                 InternalError(2018122501);
               if (ressym.refs>0) or
                  is_managed_type(retdef) then
                 begin
                   { was: don't do anything if funcretloc.loc in [LOC_INVALID,LOC_REFERENCE] }
-                  if not paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef) then
-                    gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).localloc);
+                  if not paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,CurrentProcInfo.procdef) then
+                    gen_load_loc_function_result(list,retdef,TAbstractNormalVarSym(ressym).LocAlloc);
                 end
               else
-                gen_load_uninitialized_function_result(list,CurrentProcInfo.procdef,retdef,CurrentProcInfo.procdef.funcretloc[calleeside]);
+                gen_load_uninitialized_function_result(list,CurrentProcInfo.procdef,retdef,CurrentProcInfo.procdef.FuncRetLoc[calleeside]);
             end;
         end;
 
-      if TAbstractNormalVarSym(ressym).localloc.loc=LOC_REFERENCE then
-        tg.UnGetLocal(list,TAbstractNormalVarSym(ressym).localloc.reference);
+      if TAbstractNormalVarSym(ressym).LocAlloc.loc=LOC_REFERENCE then
+        tg.UnGetLocal(list,TAbstractNormalVarSym(ressym).LocAlloc.reference);
     end;
 
   procedure THLCGObj.gen_stack_check_size_para(list: TAsmList);
@@ -6036,7 +6036,7 @@ implementation
       paraloc1 : TCGPara;
       pd       : TProcDef;
     begin
-      pd:=search_system_proc('fpc_stackcheck');
+      pd:=Search_System_Proc('fpc_stackcheck');
       paraloc1.init;
       paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
       hlcg.a_load_const_cgpara(list,paraloc1.def,CurrentProcInfo.calc_stackframe_size,paraloc1);
@@ -6049,7 +6049,7 @@ implementation
       paraloc1 : TCGPara;
       pd       : TProcDef;
     begin
-      pd:=search_system_proc('fpc_stackcheck');
+      pd:=Search_System_Proc('fpc_stackcheck');
       paraloc1.init;
       { The parameter to fpc_stackcheck is loaded separately via
         gen_stack_check_size_para() }
@@ -6069,10 +6069,10 @@ implementation
     var
       pd: TProcDef;
     begin
-      pd:=search_system_proc(procname);
-      pd.init_paraloc_info(callerside);
-      if systemunit<>CurrentModule.GlobalSymTable then
-        CurrentModule.addimportedsym(pd.procsym);
+      pd:=Search_System_Proc(procname);
+      pd.Init_ParaLoc_Info(callerside);
+      if SystemUnit<>CurrentModule.GlobalSymTable then
+        CurrentModule.AddImportedSym(pd.ProcSym);
       result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
     end;
 
@@ -6081,16 +6081,16 @@ implementation
       { separate non-virtual routine to make it clear that the routine to
         override, if any, is g_call_system_proc_intern (and that none of
         the g_call_system_proc variants should be made virtual) }
-      pd.init_paraloc_info(callerside);
-      if systemunit<>CurrentModule.GlobalSymTable then
-        CurrentModule.addimportedsym(pd.procsym);
+      pd.Init_ParaLoc_Info(callerside);
+      if SystemUnit<>CurrentModule.GlobalSymTable then
+        CurrentModule.AddImportedSym(pd.ProcSym);
       result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
     end;
 
   function THLCGObj.g_call_system_proc_intern(list: TAsmList; pd: TProcDef; const paras: array of PCGPara; forceresdef: TDef): TCGPara;
     begin
       allocallcpuregisters(list);
-      result:=a_call_name(list,pd,pd.mangledname,paras,forceresdef,false);
+      result:=a_call_name(list,pd,pd.MangledName,paras,forceresdef,false);
       deallocallcpuregisters(list);
     end;
 

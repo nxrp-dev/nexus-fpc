@@ -242,15 +242,15 @@ implementation
 
     function get_str_int_func(def: TDef): string;
     var
-      ordtype: TOrdType;
+      OrdType: TOrdType;
     begin
-      ordtype := TOrdDef(def).ordtype;
-      if not (ordtype in [scurrency,s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
+      OrdType := TOrdDef(def).OrdType;
+      if not (OrdType in [scurrency,s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
         InternalError(2013032603);
 
       if is_oversizedord(def) then
         begin
-          case ordtype of
+          case OrdType of
             scurrency,
             s64bit: exit('int64');
             u64bit: exit('qword');
@@ -310,13 +310,13 @@ implementation
           do all checks, the parameters might be type parameters,
 
           bailout as well in case of an error before }
-        if (df_generic in CurrentProcInfo.procdef.defoptions) or
+        if (df_generic in CurrentProcInfo.procdef.DefOptions) or
          (dest.resultdef.typ=errordef) or
          (source.resultdef.typ=errordef) then
           begin
             result.Free;
             result:=nil;
-            resultdef:=voidtype;
+            resultdef:=VoidType;
             exit;
           end;
 
@@ -329,7 +329,7 @@ implementation
                (source.left.resultdef.typ=orddef)) then
           begin
             CGMessagePos1(source.fileinfo,
-              type_e_integer_expr_expected,source.resultdef.typename);
+              type_e_integer_expr_expected,source.resultdef.TypeName);
             exit;
           end;
 
@@ -345,7 +345,7 @@ implementation
             if not is_integer(lenpara.resultdef) then
               begin
                 CGMessagePos1(lenpara.fileinfo,
-                  type_e_integer_expr_expected,lenpara.resultdef.typename);
+                  type_e_integer_expr_expected,lenpara.resultdef.TypeName);
                 exit;
               end;
             if (cpf_is_colon_para in TCallParaNode(lenpara.right).callparaflags) then
@@ -361,7 +361,7 @@ implementation
                 if not is_integer(lenpara.resultdef) then
                   begin
                     CGMessagePos1(lenpara.fileinfo,
-                      type_e_integer_expr_expected,lenpara.resultdef.typename);
+                      type_e_integer_expr_expected,lenpara.resultdef.TypeName);
                     exit;
                   end;
               end;
@@ -376,9 +376,9 @@ implementation
             { insert realtype parameter }
             if not is_currency(source.resultdef) then
               begin
-                rt:=ord(TFloatDef(source.left.resultdef).floattype);
+                rt:=ord(TFloatDef(source.left.resultdef).FloatType);
                 newparas.right := CCallParaNode.create(COrdConstNode.create(
-                  rt,s32inttype,true),newparas.right);
+                  rt,S32IntType,true),newparas.right);
                 tmppara:=TCallParaNode(newparas.right);
               end
             else
@@ -387,46 +387,46 @@ implementation
             if not Assigned(fracpara) then
               begin
                 tmppara.right := CCallParaNode.create(
-                  COrdConstNode.create(int64(-1),s32inttype,false),
+                  COrdConstNode.create(int64(-1),S32IntType,false),
                    tmppara.right);
                 fracpara := TCallParaNode(tmppara.right);
               end;
             { if necessary, insert a length para }
             if not Assigned(lenpara) then
               fracpara.right := CCallParaNode.create(
-                COrdConstNode.create(int64(-32767),s32inttype,false),
+                COrdConstNode.create(int64(-32767),S32IntType,false),
                    fracpara.right);
           end
         else if is_enum then
           begin
             {Insert a reference to the ord2string index.}
             newparas.right:=CCallParaNode.create(
-              CAddrNode.create_internal(
+              CAddrNode.Create_Internal(
                 CRTTINode.create(TEnumDef(source.left.resultdef),fullrtti,rdt_normal)
               ),
               newparas.right);
             {Insert a reference to the typinfo.}
             newparas.right:=CCallParaNode.create(
-              CAddrNode.create_internal(
+              CAddrNode.Create_Internal(
                 CRTTINode.create(TEnumDef(source.left.resultdef),fullrtti,rdt_ord2str)
               ),
               newparas.right);
             {Insert a type conversion from the enumeration to longint.}
-            source.left:=CTypeConvNode.create_internal(source.left,s32inttype);
+            source.left:=CTypeConvNode.Create_Internal(source.left,S32IntType);
             TypeCheckPass(source.left);
 
             { if necessary, insert a length para }
             if not Assigned(lenpara) then
               TCallParaNode(TCallParaNode(newparas.right).right).right:=
                 CCallParaNode.create(
-                  COrdConstNode.create(int64(-1),s32inttype,false),
+                  COrdConstNode.create(int64(-1),S32IntType,false),
                   TCallParaNode(TCallParaNode(newparas.right).right).right
                 );
           end
         else
           { for a normal parameter, insert a only length parameter if one is missing }
           if not Assigned(lenpara) then
-            newparas.right := CCallParaNode.create(COrdConstNode.create(int64(-1),s32inttype,false),
+            newparas.right := CCallParaNode.create(COrdConstNode.create(int64(-1),S32IntType,false),
               newparas.right);
 
         { remove the parameters from the original node so they won't get disposed, }
@@ -439,7 +439,7 @@ implementation
         if is_chararray(dest.resultdef) then
           procname:='fpc_chararray_'
         else
-          procname := 'fpc_' + TStringDef(dest.resultdef).stringtypname+'_';
+          procname := 'fpc_' + TStringDef(dest.resultdef).StringTypName+'_';
         if is_real then
           if is_currency(source.resultdef) then
             procname := procname + 'currency'
@@ -448,7 +448,7 @@ implementation
         else if is_enum then
           procname:=procname+'enum'
         else
-          case TOrdDef(source.resultdef).ordtype of
+          case TOrdDef(source.resultdef).OrdType of
             pasbool1,pasbool8,pasbool16,pasbool32,pasbool64,
             bool8bit,bool16bit,bool32bit,bool64bit:
               procname := procname + 'bool';
@@ -462,7 +462,7 @@ implementation
             else
               begin
                 CGMessagePos1(source.fileinfo,
-                  type_e_integer_expr_expected,TOrdDef(source.resultdef).typename);
+                  type_e_integer_expr_expected,TOrdDef(source.resultdef).TypeName);
                 exit;
               end;
           end;
@@ -470,7 +470,7 @@ implementation
         { for ansistrings insert the encoding argument }
         if is_ansistring(dest.resultdef) then
           newparas:=CCallParaNode.create(COrdConstNode.create(
-            getparaencoding(dest.resultdef),u16inttype,true),newparas);
+            GetParaEncoding(dest.resultdef),U16IntType,true),newparas);
 
         { free the errornode we generated in the beginning }
         result.free;
@@ -487,11 +487,11 @@ implementation
           srsym : TSym;
           srsymtable : TSymTable;
           defaultname : TIDString;
-          varspez : TVarSpez;
+          VarSpez : TVarSpez;
         begin
           if not Assigned(def) or
               not (def.typ in [arraydef,recorddef,variantdef,objectdef,procvardef]) or
-              ((def.typ=objectdef) and not is_object(def)) then
+              ((def.typ=objectdef) and not Is_Object(def)) then
             InternalError(201202101);
 
           { extra '$' prefix because on darwin the result of makemangledname
@@ -502,7 +502,7 @@ implementation
             routines -- that's also why we prefix with '$_', so it will still
             work if make_mangledname() would somehow return a name that already
             starts with '$' }
-          defaultname:='$_'+make_mangledname('zero',def.owner,def.typesym.Name);
+          defaultname:='$_'+Make_MangledName('zero',def.owner,def.TypeSym.Name);
           { can't hardcode the position of the '$', e.g. on darwin an underscore
             is added }
           hashedid.id:=copy(defaultname,2,255);
@@ -511,29 +511,29 @@ implementation
           if Assigned(CurrentProcInfo) then
             begin
               { the default sym is always part of the current procedure/function }
-              srsymtable:=CurrentModule.localsymtable;
+              srsymtable:=CurrentModule.LocalSymTable;
               srsym:=TSym(srsymtable.findwithhash(hashedid));
               if not Assigned(srsym) then
                 begin
-                  varspez:=vs_const;
+                  VarSpez:=vs_const;
                   { if we have an initialize or finalize management operator then
                     we may not declare this as const as the unit init-/finalization
                     needs to be able to modify it }
-                  if (def.typ=recorddef) and (mop_initialize in TRecordSymTable(TRecordDef(def).SymTable).managementoperators) then
-                    varspez:=vs_var;
+                  if (def.typ=recorddef) and (mop_initialize in TRecordSymTable(TRecordDef(def).SymTable).ManagementOperators) then
+                    VarSpez:=vs_var;
                   { no valid default variable found, so create it }
-                  srsym:=CStaticVarSym.create(defaultname,varspez,def,[]);
+                  srsym:=CStaticVarSym.create(defaultname,VarSpez,def,[]);
                   { mark the staticvarsym as typedconst }
-                  if varspez=vs_const then
-                    include(TAbstractVarSym(srsym).varoptions,vo_is_typed_const);
-                  include(TAbstractVarSym(srsym).varoptions,vo_is_default_var);
+                  if VarSpez=vs_const then
+                    include(TAbstractVarSym(srsym).VarOptions,vo_is_typed_const);
+                  include(TAbstractVarSym(srsym).VarOptions,vo_is_default_var);
                   { There is no reliable way to be sure that this symbol will not be used
                     later on inside some inlined code, so mark it as global }
-                  include(TAbstractVarSym(srsym).varoptions,vo_is_public);
+                  include(TAbstractVarSym(srsym).VarOptions,vo_is_public);
                   { The variable has a value assigned }
-                  TAbstractVarSym(srsym).varstate:=vs_initialised;
+                  TAbstractVarSym(srsym).VarState:=vs_initialised;
 
-                  srsymtable.insertsym(srsym);
+                  srsymtable.InsertSym(srsym);
                   CNodeUtils.insertbssdata(TStaticVarSym(srsym));
                 end;
               result:=CLoadNode.create(srsym,srsymtable);
@@ -550,7 +550,7 @@ implementation
 
         def:=TTypeNode(left).typedef;
         if Assigned(CurrentProcInfo) and
-           (df_generic in CurrentProcInfo.procdef.defoptions) then
+           (df_generic in CurrentProcInfo.procdef.DefOptions) then
           begin
             { don't allow as a default parameter value, because it may not be valid
               when specialising }
@@ -585,10 +585,10 @@ implementation
             result:=CRealConstNode.create(0,def);
           objectdef:
             begin
-              if is_implicit_pointer_object_type(def) then
+              if Is_Implicit_Pointer_Object_Type(def) then
                 result:=CPointerConstNode.create(0,def)
               else
-                if is_object(def) then
+                if Is_Object(def) then
                   begin
                     { Delphi does not recursively check whether
                       an object contains unsupported types }
@@ -619,7 +619,7 @@ implementation
           arraydef:
             begin
               { can other array types be parsed by single_type? }
-              if ado_isdynamicarray in TArrayDef(def).arrayoptions then
+              if ado_isdynamicarray in TArrayDef(def).ArrayOptions then
                 result:=CPointerConstNode.create(0,def)
               else
                 begin
@@ -628,7 +628,7 @@ implementation
             end;
           undefineddef:
             begin
-              if sp_generic_dummy in def.typesym.symoptions then
+              if sp_generic_dummy in def.TypeSym.SymOptions then
                 begin
                   { this matches the error messages that are printed
                     in case of non-Delphi modes }
@@ -657,7 +657,7 @@ implementation
         if inlinenumber in [in_reset_typedfile_name,in_rewrite_typedfile_name] then
           begin
             left := CCallParaNode.create(COrdConstNode.create(
-              TFileDef(TCallParaNode(TCallParaNode(left).nextpara).paravalue.resultdef).typedfiledef.size,s32inttype,true),left);
+              TFileDef(TCallParaNode(TCallParaNode(left).nextpara).paravalue.resultdef).TypedFileDef.size,S32IntType,true),left);
           end
         else
           begin
@@ -665,7 +665,7 @@ implementation
             {   parameter is gets lifted out of its original tcallparanode (see round }
             {   line 1306 of ncal.pas), so recreate a tcallparanode here (JM)         }
             left := CCallParaNode.create(COrdConstNode.create(
-              TFileDef(left.resultdef).typedfiledef.size,s32inttype,true),
+              TFileDef(left.resultdef).TypedFileDef.size,S32IntType,true),
               CCallParaNode.create(left,nil));
           end;
         { create the correct call }
@@ -706,51 +706,51 @@ implementation
         if (n.nodetype=stringconstn) then
           if is_chararray(n.resultdef) then
             if (TStringConstNode(n).len<=255) then
-              inserttypeconv(n,cshortstringtype)
+              inserttypeconv(n,CShortStringType)
             else
-              inserttypeconv(n,getansistringdef)
+              inserttypeconv(n,GetAnsiStringDef)
           else if is_widechararray(n.resultdef) then
-            inserttypeconv(n,cunicodestringtype);
+            inserttypeconv(n,CUnicodeStringType);
       end;
 
 
     procedure get_read_write_int_func(def: TDef; out func_suffix: ShortString; out readfunctype: TDef);
     var
-      ordtype: TOrdType;
+      OrdType: TOrdType;
     begin
-      ordtype := TOrdDef(def).ordtype;
+      OrdType := TOrdDef(def).OrdType;
       if is_oversizedint(def) then
         begin
-          case ordtype of
+          case OrdType of
             s64bit:
               begin
                 func_suffix := 'int64';
-                readfunctype:=s64inttype;
+                readfunctype:=S64IntType;
               end;
             u64bit :
               begin
                 func_suffix := 'qword';
-                readfunctype:=u64inttype;
+                readfunctype:=U64IntType;
               end;
             s32bit:
               begin
                 func_suffix := 'longint';
-                readfunctype:=s32inttype;
+                readfunctype:=S32IntType;
               end;
             u32bit :
               begin
                 func_suffix := 'longword';
-                readfunctype:=u32inttype;
+                readfunctype:=U32IntType;
               end;
             s16bit:
               begin
                 func_suffix := 'smallint';
-                readfunctype:=s16inttype;
+                readfunctype:=S16IntType;
               end;
             u16bit :
               begin
                 func_suffix := 'word';
-                readfunctype:=u16inttype;
+                readfunctype:=U16IntType;
               end;
             else
               InternalError(2013032602);
@@ -758,14 +758,14 @@ implementation
         end
       else
         begin
-          case ordtype of
+          case OrdType of
             s64bit,
             s32bit,
             s16bit,
             s8bit:
               begin
                 func_suffix := 'sint';
-                readfunctype := sinttype;
+                readfunctype := SIntType;
               end;
             u64bit,
             u32bit,
@@ -773,7 +773,7 @@ implementation
             u8bit:
               begin
                 func_suffix := 'uint';
-                readfunctype := uinttype;
+                readfunctype := UIntType;
               end;
             else
               InternalError(2013032601);
@@ -839,8 +839,8 @@ implementation
             case para.left.resultdef.typ of
               stringdef :
                 begin
-                  name:=procprefixes[do_read]+TStringDef(para.left.resultdef).stringtypname;
-                  if (m_isolike_io in CurrentSettings.ModeSwitches) and (TStringDef(para.left.resultdef).stringtype<>st_shortstring) then
+                  name:=procprefixes[do_read]+TStringDef(para.left.resultdef).StringTypName;
+                  if (m_isolike_io in CurrentSettings.ModeSwitches) and (TStringDef(para.left.resultdef).StringType<>st_shortstring) then
                     begin
                       CGMessagePos(para.fileinfo,type_e_cant_read_write_type_in_iso_mode);
                       error_para := true;
@@ -859,7 +859,7 @@ implementation
               floatdef :
                 begin
                   is_real:=true;
-                  if TFloatDef(para.left.resultdef).floattype=s64currency then
+                  if TFloatDef(para.left.resultdef).FloatType=s64currency then
                     name := procprefixes[do_read]+'currency'
                   else
                     begin
@@ -886,27 +886,27 @@ implementation
                       1:
                         begin
                           name:=name+'_shortint';
-                          readfunctype:=s8inttype;
+                          readfunctype:=S8IntType;
                         end;
                       2:
                         begin
                           name:=name+'_smallint';
-                          readfunctype:=s16inttype;
+                          readfunctype:=S16IntType;
                         end;
                       4:
                         begin
                           name:=name+'_longint';
-                          readfunctype:=s32inttype;
+                          readfunctype:=S32IntType;
                         end;
                       else
                         InternalError(2022082601);
                     end
                   else
-                    readfunctype:=s32inttype;
+                    readfunctype:=S32IntType;
                 end;
               orddef :
                 begin
-                  case TOrdDef(para.left.resultdef).ordtype of
+                  case TOrdDef(para.left.resultdef).OrdType of
                     s8bit,
                     s16bit,
                     s32bit,
@@ -927,12 +927,12 @@ implementation
                         { iso pascal needs a different handler }
                         if (m_isolike_io in CurrentSettings.ModeSwitches) and do_read then
                           name:=name+'_iso';
-                        readfunctype:=cansichartype;
+                        readfunctype:=CAnsiCharType;
                       end;
                     uwidechar :
                       begin
                         name := procprefixes[do_read]+'widechar';
-                        readfunctype:=cwidechartype;
+                        readfunctype:=CWideCharType;
                       end;
                     scurrency:
                       begin
@@ -940,7 +940,7 @@ implementation
                         { iso pascal needs a different handler }
                         if (m_isolike_io in CurrentSettings.ModeSwitches) and do_read then
                           name:=name+'_iso';
-                        readfunctype:=s64currencytype;
+                        readfunctype:=S64CurrencyType;
                         is_real:=true;
                       end;
                     pasbool1,
@@ -960,7 +960,7 @@ implementation
                       else
                         begin
                           name := procprefixes[do_read]+'boolean';
-                          readfunctype:=pasbool1type;
+                          readfunctype:=PasBool1Type;
                         end
                     else
                       begin
@@ -972,7 +972,7 @@ implementation
               variantdef :
                 begin
                   name:=procprefixes[do_read]+'variant';
-                  include(CurrentModule.moduleflags,mf_uses_variants);
+                  include(CurrentModule.ModuleFlags,mf_uses_variants);
                 end;
               arraydef :
                 begin
@@ -1045,10 +1045,10 @@ implementation
                         begin
                           if m_isolike_io in CurrentSettings.ModeSwitches then
                             lenpara := CCallParaNode.create(
-                              COrdConstNode.create(-1,s32inttype,false),nil)
+                              COrdConstNode.create(-1,S32IntType,false),nil)
                           else
                             lenpara := CCallParaNode.create(
-                              COrdConstNode.create(0,s32inttype,false),nil);
+                              COrdConstNode.create(0,S32IntType,false),nil);
                         end
                       else
                         { make sure we don't pass the successive }
@@ -1061,11 +1061,11 @@ implementation
                     begin
                       if not Assigned(lenpara) then
                         lenpara := CCallParaNode.create(
-                          COrdConstNode.create(int64(-32767),s32inttype,false),nil);
+                          COrdConstNode.create(int64(-32767),S32IntType,false),nil);
                       { also create a default fracpara if necessary }
                       if not Assigned(fracpara) then
                         fracpara := CCallParaNode.create(
-                          COrdConstNode.create(int64(-1),s32inttype,false),nil);
+                          COrdConstNode.create(int64(-1),S32IntType,false),nil);
                       { add it to the lenpara }
                       lenpara.right := fracpara;
                       if not is_currency(para.left.resultdef) then
@@ -1073,8 +1073,8 @@ implementation
                           { and add the realtype para (this also removes the link }
                           { to any parameters coming after it)                    }
                           fracpara.right := CCallParaNode.create(
-                              COrdConstNode.create(ord(TFloatDef(para.left.resultdef).floattype),
-                              s32inttype,true),nil);
+                              COrdConstNode.create(ord(TFloatDef(para.left.resultdef).FloatType),
+                              S32IntType,true),nil);
                         end
                       else
                         fracpara.right:=nil;
@@ -1084,18 +1084,18 @@ implementation
                       {To write(ln) an enum we need a some extra parameters.}
                       {Insert a reference to the ord2string index.}
                       indexpara:=CCallParaNode.create(
-                        CAddrNode.create_internal(
+                        CAddrNode.Create_Internal(
                           CRTTINode.create(TEnumDef(para.left.resultdef),fullrtti,rdt_normal)
                         ),
                         nil);
                       {Insert a reference to the typinfo.}
                       indexpara:=CCallParaNode.create(
-                        CAddrNode.create_internal(
+                        CAddrNode.Create_Internal(
                          CRTTINode.create(TEnumDef(para.left.resultdef),fullrtti,rdt_ord2str)
                         ),
                         indexpara);
                       {Insert a type conversion to to convert the enum to longint.}
-                      para.left:=CTypeConvNode.create_internal(para.left,s32inttype);
+                      para.left:=CTypeConvNode.Create_Internal(para.left,S32IntType);
                       TypeCheckPass(para.left);
                     end;
                 end
@@ -1105,11 +1105,11 @@ implementation
                   if para.left.resultdef.typ=enumdef then
                     begin
                       {Insert a reference to the string2ord index.}
-                      indexpara:=CCallParaNode.create(CAddrNode.create_internal(
+                      indexpara:=CCallParaNode.create(CAddrNode.Create_Internal(
                         CRTTINode.create(TEnumDef(para.left.resultdef),fullrtti,rdt_str2ord)
                       ),nil);
                       {Insert a type conversion to to convert the enum to longint.}
-                      para.left:=CTypeConvNode.create_internal(para.left,readfunctype);
+                      para.left:=CTypeConvNode.Create_Internal(para.left,readfunctype);
                       TypeCheckPass(para.left);
                     end;
                   { special handling of reading small numbers, because the helpers  }
@@ -1133,7 +1133,7 @@ implementation
 
                   { ... and the file }
                   p1 := CCallParaNode.create(CTempRefNode.create(temp),
-                    filepara.getcopy);
+                    filepara.GetCopy);
                   TCallParaNode(TCallParaNode(p1).right).right:=indexpara;
 
                   { create the call to the helper }
@@ -1162,7 +1162,7 @@ implementation
                 { read of non s/u-8/16bit, or a write }
                 begin
                   { add the filepara to the current parameter }
-                  para.right := filepara.getcopy;
+                  para.right := filepara.GetCopy;
                   {Add the lenpara and the indexpara(s) (fracpara and realtype are
                    already linked with the lenpara if necessary).}
                   if indexpara=nil then
@@ -1181,12 +1181,12 @@ implementation
                   { in case of writing a chararray, add whether it's zero-based }
                   if para.left.resultdef.typ=arraydef then
                     para := CCallParaNode.create(COrdConstNode.create(
-                      ord(TArrayDef(para.left.resultdef).lowrange=0),pasbool1type,false),para)
+                      ord(TArrayDef(para.left.resultdef).LowRange=0),PasBool1Type,false),para)
                   else
                   { in case of reading an ansistring pass a codepage argument }
                   if do_read and is_ansistring(para.left.resultdef) then
                     para:=CCallParaNode.create(COrdConstNode.create(
-                      getparaencoding(para.left.resultdef),u16inttype,true),para);
+                      GetParaEncoding(para.left.resultdef),U16IntType,true),para);
                   { create the call statement }
                   addstatement(TStatementNode(newstatement),
                     CCallNode.createintern(name,para));
@@ -1238,7 +1238,7 @@ implementation
             else
               InternalError(2019050501);
           end;
-          addstatement(TStatementNode(newstatement),CCallNode.createintern(name,filepara.getcopy));
+          addstatement(TStatementNode(newstatement),CCallNode.createintern(name,filepara.GetCopy));
         end;
       handle_text_read_write:=found_error;
     end;
@@ -1264,7 +1264,7 @@ implementation
       { add the typesize to the filepara }
       if filepara.resultdef.typ=filedef then
         filepara.right := CCallParaNode.create(COrdConstNode.create(
-          TFileDef(filepara.resultdef).typedfiledef.size,s32inttype,true),nil);
+          TFileDef(filepara.resultdef).TypedFileDef.size,S32IntType,true),nil);
 
       { check for "no parameters" (you need at least one extra para for typed files) }
       if not Assigned(para) then
@@ -1292,7 +1292,7 @@ implementation
             end;
 
           if filepara.resultdef.typ=filedef then
-            inserttypeconv(para.left,TFileDef(filepara.resultdef).typedfiledef);
+            inserttypeconv(para.left,TFileDef(filepara.resultdef).TypedFileDef);
 
           if Assigned(para.right) and
             (cpf_is_colon_para in TCallParaNode(para.right).callparaflags) then
@@ -1332,7 +1332,7 @@ implementation
               para.left := CTempRefNode.create(temp);
             end;
           { add fileparameter }
-          para.right := filepara.getcopy;
+          para.right := filepara.GetCopy;
 
           { create call statement                                            }
           { since the parameters are in the correct order, we have to insert }
@@ -1399,7 +1399,7 @@ implementation
                 { (if you want to optimize to use shortstring, keep in mind that    }
                 {  readstr internally always uses ansistring, and to account for    }
                 {  chararrays with > 255 characters)                                }
-                inserttypeconv(filepara.left,getansistringdef);
+                inserttypeconv(filepara.left,GetAnsiStringDef);
                 filepara.resultdef:=filepara.left.resultdef;
                 if CodeGenError then
                   exit;
@@ -1412,14 +1412,14 @@ implementation
 
             if (filepara.resultdef.typ=filedef) then
               begin
-                if (TFileDef(filepara.resultdef).filetyp=ft_untyped) then
+                if (TFileDef(filepara.resultdef).FileTyp=ft_untyped) then
                   begin
                     CGMessagePos(fileinfo,type_e_no_read_write_for_untyped_file);
                     exit;
                   end
                 else
                   begin
-                    if (TFileDef(filepara.resultdef).filetyp=ft_typed) then
+                    if (TFileDef(filepara.resultdef).FileTyp=ft_typed) then
                       begin
                         if (inlinenumber in [in_readln_x,in_writeln_x]) then
                           begin
@@ -1455,7 +1455,7 @@ implementation
               unit because these can be nested (in case of parameters to
               writestr that are function calls to functions that also call
               readstr/writestr) }
-            textsym:=search_system_type('TEXT');
+            textsym:=Search_System_Type('TEXT');
             filetemp:=CTempCreateNode.create(textsym.typedef,textsym.typedef.size,tt_persistent,false);
             addstatement(newstatement,filetemp);
 
@@ -1463,7 +1463,7 @@ implementation
               name:='fpc_setupreadstr_'
             else
               name:='fpc_setupwritestr_';
-            name:=name+TStringDef(filepara.resultdef).stringtypname;
+            name:=name+TStringDef(filepara.resultdef).StringTypName;
             { the file para is a var parameter, but it is properly initialized,
               so it should be actually an out parameter }
             if not(do_read) then
@@ -1488,7 +1488,7 @@ implementation
           begin
             { since the input/output variables are threadvars loading them into
               a temp once is faster. Create a temp which will hold a pointer to the file }
-            filetemp := CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+            filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
             addstatement(newstatement,filetemp);
 
             { make sure the resultdef of the temp (and as such of the }
@@ -1510,8 +1510,8 @@ implementation
             { create a new fileparameter as follows: file_type(temp^)    }
             { (so that we pass the value and not the address of the temp }
             { to the read/write routine)                                 }
-            textsym:=search_system_type('TEXT');
-            filepara := CCallParaNode.create(CTypeConvNode.create_internal(
+            textsym:=Search_System_Type('TEXT');
+            filepara := CCallParaNode.create(CTypeConvNode.Create_Internal(
               CDerefNode.create(CTempRefNode.create(filetemp)),textsym.typedef),nil);
           end
         else
@@ -1526,7 +1526,7 @@ implementation
             if (filepara.left.nodetype <> loadn) then
               begin
                 { create a temp which will hold a pointer to the file }
-                filetemp := CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+                filetemp := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
 
                 { add it to the statements }
                 addstatement(newstatement,filetemp);
@@ -1541,12 +1541,12 @@ implementation
                 { assign the address of the file to the temp }
                 addstatement(newstatement,
                   CAssignmentNode.create(CTempRefNode.create(filetemp),
-                    CAddrNode.create_internal(filepara.left)));
+                    CAddrNode.Create_Internal(filepara.left)));
                 TypeCheckPass(newstatement.left);
                 { create a new fileparameter as follows: file_type(temp^)    }
                 { (so that we pass the value and not the address of the temp }
                 { to the read/write routine)                                 }
-                nextpara := CCallParaNode.create(CTypeConvNode.create_internal(
+                nextpara := CCallParaNode.create(CTypeConvNode.Create_Internal(
                   CDerefNode.create(CTempRefNode.create(filetemp)),filepara.left.resultdef),nil);
 
                 { replace the old file para with the new one }
@@ -1604,15 +1604,15 @@ implementation
 
     function get_val_int_func(def: TDef): string;
     var
-      ordtype: TOrdType;
+      OrdType: TOrdType;
     begin
-      ordtype := TOrdDef(def).ordtype;
-      if not (ordtype in [s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
+      OrdType := TOrdDef(def).OrdType;
+      if not (OrdType in [s64bit,u64bit,s32bit,u32bit,s16bit,u16bit,s8bit,u8bit]) then
         InternalError(2020080101);
 
       if is_oversizedint(def) then
         begin
-          case ordtype of
+          case OrdType of
             s64bit: exit('int64');
             u64bit: exit('qword');
             s32bit: exit('longint');
@@ -1625,7 +1625,7 @@ implementation
         end
       else
         begin
-          case ordtype of
+          case OrdType of
             s64bit,s32bit,s16bit,s8bit: exit('sint');
             u64bit,u32bit,u16bit,u8bit: exit('uint');
             else
@@ -1666,16 +1666,16 @@ implementation
 
          { in case we are in a generic definition, we cannot
            do all checks, the parameters might be type parameters }
-         if df_generic in CurrentProcInfo.procdef.defoptions then
+         if df_generic in CurrentProcInfo.procdef.DefOptions then
            begin
              result.Free;
              result:=nil;
-             resultdef:=voidtype;
+             resultdef:=VoidType;
              exit;
            end;
 
         { retrieve the ValSInt type }
-        valsinttype:=search_system_type('VALSINT').typedef;
+        valsinttype:=Search_System_Type('VALSINT').typedef;
 
         { reverse parameters for easier processing }
         reverseparameters(TCallParaNode(left));
@@ -1697,7 +1697,7 @@ implementation
 {$endif not cpu64bitaddr}
             ) then
           begin
-            CGMessagePos1(codepara.fileinfo,type_e_integer_expr_expected,codepara.resultdef.typename);
+            CGMessagePos1(codepara.fileinfo,type_e_integer_expr_expected,codepara.resultdef.TypeName);
             exit;
           end;
 
@@ -1742,14 +1742,14 @@ implementation
             { we need its resultdef later on }
             codepara.get_paratype;
           end
-        else if (TOrdDef(codepara.resultdef).ordtype <> TOrdDef(valsinttype).ordtype) then
+        else if (TOrdDef(codepara.resultdef).OrdType <> TOrdDef(valsinttype).OrdType) then
           { because code is a var parameter, it must match types exactly    }
           { however, since it will return values >= 0, both signed and      }
           { and unsigned ints of the same size are fine. Since the formal   }
           { code para type is sinttype, insert a typecoversion to sint for  }
           { unsigned para's  }
           begin
-            codepara.left := CTypeConvNode.create_internal(codepara.left,valsinttype);
+            codepara.left := CTypeConvNode.Create_Internal(codepara.left,valsinttype);
             { make it explicit, otherwise you may get a nonsense range}
             { check error if the cardinal already contained a value   }
             { > $7fffffff                                             }
@@ -1762,7 +1762,7 @@ implementation
         case destpara.resultdef.typ of
           orddef:
             begin
-              case TOrdDef(destpara.resultdef).ordtype of
+              case TOrdDef(destpara.resultdef).OrdType of
                 s8bit,s16bit,s32bit,s64bit,
                 u8bit,u16bit,u32bit,u64bit:
                   begin
@@ -1770,7 +1770,7 @@ implementation
                     { we also need a destsize para in the case of sint or uint }
                     if (suffix = 'sint_') or (suffix = 'uint_') then
                       sizepara := CCallParaNode.create(COrdConstNode.create
-                        (destpara.resultdef.size,s32inttype,true),nil);
+                        (destpara.resultdef.size,S32IntType,true),nil);
                   end;
                 scurrency: suffix := 'currency_';
                 else
@@ -1782,7 +1782,7 @@ implementation
           enumdef:
             begin
               suffix:='enum_';
-              sizepara:=CCallParaNode.create(CAddrNode.create_internal(
+              sizepara:=CCallParaNode.create(CAddrNode.Create_Internal(
                 CRTTINode.create(TEnumDef(destpara.resultdef),fullrtti,rdt_str2ord)
               ),nil);
             end;
@@ -1795,7 +1795,7 @@ implementation
         { play a trick to have tcallnode handle invalid source parameters: }
         { the shortstring-longint val routine by default                   }
         if (sourcepara.resultdef.typ = stringdef) then
-          procname := procname + TStringDef(sourcepara.resultdef).stringtypname
+          procname := procname + TStringDef(sourcepara.resultdef).StringTypName
         { zero-based arrays (of char) can be implicitly converted to ansistring, but don't do
           so if not needed because the array is too short }
         else if is_zero_based_array(sourcepara.resultdef) and (sourcepara.resultdef.size>255) then
@@ -1826,13 +1826,13 @@ implementation
           The implicit conversion is also avoided for COMP type if it is handled by FPU (x86)
           to prevent warning about automatic type conversion. }
         if (destpara.resultdef.typ=enumdef) or
-           ((destpara.resultdef.typ=floatdef) and (TFloatDef(destpara.resultdef).floattype=s64comp))
+           ((destpara.resultdef.typ=floatdef) and (TFloatDef(destpara.resultdef).FloatType=s64comp))
           then
             tc:=CCallNode.createfromintrinsic(in_val_x,procname,newparas)
         else
           tc:=CTypeConvNode.create(CCallNode.createfromintrinsic(in_val_x,procname,newparas),destpara.left.resultdef);
         addstatement(newstatement,CAssignmentNode.create(
-          destpara.left,CTypeConvNode.create_internal(tc,destpara.left.resultdef)));
+          destpara.left,CTypeConvNode.Create_Internal(tc,destpara.left.resultdef)));
 
         { dispose of the enclosing paranode of the destination }
         destpara.left := nil;
@@ -1845,7 +1845,7 @@ implementation
         if Assigned(orgcode) then
           addstatement(newstatement,CAssignmentNode.create(
               orgcode,
-              CTypeConvNode.create_internal(
+              CTypeConvNode.Create_Internal(
                 CTempRefNode.create(tempcode),orgcode.resultdef)));
 
         { release the temp if we allocated one }
@@ -1871,7 +1871,7 @@ implementation
       begin
         { for easy exiting if something goes wrong }
         result:=CErrorNode.create;
-        resultdef:=voidtype;
+        resultdef:=VoidType;
         paras:=left;
         dims:=0;
         if Assigned(paras) then
@@ -1881,7 +1881,7 @@ implementation
            while Assigned(ppn.right) do
             begin
               set_varstate(ppn.left,vs_read,[vsf_must_be_valid]);
-              inserttypeconv(ppn.left,sinttype);
+              inserttypeconv(ppn.left,SIntType);
               inc(dims);
               ppn:=TCallParaNode(ppn.right);
             end;
@@ -1903,7 +1903,7 @@ implementation
                isarray) then
           begin
             { possibly generic involved? }
-            if df_generic in CurrentProcInfo.procdef.defoptions then
+            if df_generic in CurrentProcInfo.procdef.DefOptions then
               result:=internalstatements(newstatement)
             else
               CGMessage(type_e_mismatch);
@@ -1918,7 +1918,7 @@ implementation
            else
             begin
               { check if the amount of dimensions is valid }
-              def:=TArrayDef(destppn.resultdef).elementdef;
+              def:=TArrayDef(destppn.resultdef).ElementDef;
               counter:=dims;
               while counter > 1 do
                 begin
@@ -1928,7 +1928,7 @@ implementation
                       break;
                     end;
                   dec(counter);
-                  def:=TArrayDef(def).elementdef;
+                  def:=TArrayDef(def).ElementDef;
                 end;
             end;
          end;
@@ -1943,7 +1943,7 @@ implementation
 
         procedure write_dynarray_copy;
           begin
-            MessagePos1(fileinfo,sym_e_param_list,'Copy(Dynamic Array;'+sizesinttype.typename+'=`<low>`;'+sizesinttype.typename+'=`<length>`);');
+            MessagePos1(fileinfo,sym_e_param_list,'Copy(Dynamic Array;'+SizeSIntType.TypeName+'=`<low>`;'+SizeSIntType.TypeName+'=`<length>`);');
           end;
 
         begin
@@ -1953,18 +1953,18 @@ implementation
             CGMessagePos1(fi,parser_e_wrong_parameter_size,'Copy');
           if func='' then
             begin
-              write_system_parameter_lists('fpc_shortstr_copy');
-              write_system_parameter_lists('fpc_char_copy');
-              write_system_parameter_lists('fpc_unicodestr_copy');
+              Write_System_Parameter_Lists('fpc_shortstr_copy');
+              Write_System_Parameter_Lists('fpc_char_copy');
+              Write_System_Parameter_Lists('fpc_unicodestr_copy');
               if tf_winlikewidestring in TargetInfo.flags then
-                write_system_parameter_lists('fpc_widestr_copy');
-              write_system_parameter_lists('fpc_ansistr_copy');
+                Write_System_Parameter_Lists('fpc_widestr_copy');
+              Write_System_Parameter_Lists('fpc_ansistr_copy');
               write_dynarray_copy;
             end
           else if func='fpc_dynarray_copy' then
             write_dynarray_copy
           else
-            write_system_parameter_lists(func);
+            Write_System_Parameter_Lists(func);
         end;
 
       var
@@ -2009,25 +2009,25 @@ implementation
            ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and is_pchar(paradef)) then
           begin
             // set resultdef to ansistring type since result will be in ansistring codepage
-            resultdef:=getansistringdef;
+            resultdef:=GetAnsiStringDef;
             func:='fpc_ansistr_copy';
           end
         else if is_widestring(paradef) then
           begin
-           resultdef:=cwidestringtype;
+           resultdef:=CWideStringType;
            func:='fpc_widestr_copy';
           end
         else if is_unicodestring(paradef) or
             is_widechararray(paradef) or
             is_pwidechar(paradef) then
           begin
-            resultdef:=cunicodestringtype;
+            resultdef:=CUnicodeStringType;
             func:='fpc_unicodestr_copy';
           end
         else
          if is_char(paradef) then
            begin
-             resultdef:=cshortstringtype;
+             resultdef:=CShortStringType;
              func:='fpc_char_copy';
            end
         else
@@ -2041,14 +2041,14 @@ implementation
          if is_open_array(paradef) then
           begin
             minargs:=1;
-            resultdef:=CArrayDef.create(0,-1,TArrayDef(paradef).rangedef);
-            TArrayDef(resultdef).arrayoptions:=TArrayDef(resultdef).arrayoptions+[ado_IsDynamicArray];
-            TArrayDef(resultdef).elementdef:=TArrayDef(paradef).elementdef;
+            resultdef:=CArrayDef.create(0,-1,TArrayDef(paradef).RangeDef);
+            TArrayDef(resultdef).ArrayOptions:=TArrayDef(resultdef).ArrayOptions+[ado_IsDynamicArray];
+            TArrayDef(resultdef).ElementDef:=TArrayDef(paradef).ElementDef;
             func:='fpc_array_to_dynarray_copy';
           end
         else if counter in [2..3] then
           begin
-            resultdef:=cshortstringtype;
+            resultdef:=CShortStringType;
             func:='fpc_shortstr_copy';
           end
         else if counter<=maxargs then
@@ -2091,9 +2091,9 @@ implementation
                begin
                   set_varstate(left,vs_read,[]);
                   if inlinenumber=in_high_x then
-                    v:=TEnumDef(def).maxval
+                    v:=TEnumDef(def).MaxVal
                   else
-                    v:=TEnumDef(def).minval;
+                    v:=TEnumDef(def).MinVal;
                   enum:=nil;
                   for i := 0 to TEnumDef(def).SymTable.SymList.Count - 1 do
                     if TEnumSym(TEnumDef(def).SymTable.SymList[i]).value=v then
@@ -2437,7 +2437,7 @@ implementation
                        { Not as informative, but less confusing }
                        CGMessagePos(left.fileinfo,parser_e_illegal_expression)
                      else
-                       CGMessagePos1(left.fileinfo,type_e_integer_expr_expected,left.resultdef.typename);
+                       CGMessagePos1(left.fileinfo,type_e_integer_expr_expected,left.resultdef.TypeName);
                      result:=CErrorNode.create;
                      exit;
                    end;
@@ -2454,7 +2454,7 @@ implementation
                    else
                      hp:=create_simplified_ord_const(sqr(vl.uvalue),resultdef,forinline,false);
                  in_const_odd :
-                   hp:=COrdConstNode.create(qword(odd(int64(vl))),pasbool1type,true);
+                   hp:=COrdConstNode.create(qword(odd(int64(vl))),PasBool1Type,true);
                  in_const_swap_word :
                    hp:=COrdConstNode.create((vl and $ff) shl 8+(vl shr 8),left.resultdef,true);
                  in_const_swap_long :
@@ -2467,9 +2467,9 @@ implementation
                      if (vl.signed and (vl.svalue<0)) or (vl2.signed and (vl2.svalue<0)) then
                        CGMessage(parser_e_range_check_error);
 {$if defined(i386)}
-                     hp:=CPointerConstNode.create((vl2.uvalue shl 4)+vl.uvalue,voidnearfspointertype);
+                     hp:=CPointerConstNode.create((vl2.uvalue shl 4)+vl.uvalue,VoidNearFSPointerType);
 {$else}
-                     hp:=CPointerConstNode.create((vl2.uvalue shl 4)+vl.uvalue,voidpointertype);
+                     hp:=CPointerConstNode.create((vl2.uvalue shl 4)+vl.uvalue,VoidPointerType);
 {$endif}
                    end;
                  in_const_eh_return_data_regno:
@@ -2501,17 +2501,17 @@ implementation
                     begin
                       case inlinenumber of
                         in_lo_word :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ff,u8inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ff,U8IntType,true);
                         in_hi_word :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 8,u8inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 8,U8IntType,true);
                         in_lo_long :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffff,u16inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffff,U16IntType,true);
                         in_hi_long :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 16,u16inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 16,U16IntType,true);
                         in_lo_qword :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffffffff,u32inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value and $ffffffff,U32IntType,true);
                         in_hi_qword :
-                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 32,u32inttype,true);
+                          result:=COrdConstNode.create(TOrdConstNode(left).value shr 32,U32IntType,true);
                         else
                           InternalError(2019050514);
                       end;
@@ -2522,60 +2522,60 @@ implementation
                   case left.resultdef.typ of
                     orddef :
                       begin
-                        case TOrdDef(left.resultdef).ordtype of
+                        case TOrdDef(left.resultdef).OrdType of
                           pasbool1,
                           pasbool8,
                           uchar:
                             begin
                               { change to byte() }
-                              result:=CTypeConvNode.create_internal(left,u8inttype);
+                              result:=CTypeConvNode.Create_Internal(left,U8IntType);
                               left:=nil;
                             end;
                           pasbool16,
                           uwidechar :
                             begin
                               { change to word() }
-                              result:=CTypeConvNode.create_internal(left,u16inttype);
+                              result:=CTypeConvNode.Create_Internal(left,U16IntType);
                               left:=nil;
                             end;
                           pasbool32 :
                             begin
                               { change to dword() }
-                              result:=CTypeConvNode.create_internal(left,u32inttype);
+                              result:=CTypeConvNode.Create_Internal(left,U32IntType);
                               left:=nil;
                             end;
                           pasbool64 :
                             begin
                               { change to qword() }
-                              result:=CTypeConvNode.create_internal(left,u64inttype);
+                              result:=CTypeConvNode.Create_Internal(left,U64IntType);
                               left:=nil;
                             end;
                           bool8bit:
                             begin
                               { change to shortint() }
-                              result:=CTypeConvNode.create_internal(left,s8inttype);
+                              result:=CTypeConvNode.Create_Internal(left,S8IntType);
                               left:=nil;
                             end;
                           bool16bit :
                             begin
                               { change to smallint() }
-                              result:=CTypeConvNode.create_internal(left,s16inttype);
+                              result:=CTypeConvNode.Create_Internal(left,S16IntType);
                               left:=nil;
                             end;
                           bool32bit :
                             begin
                               { change to longint() }
-                              result:=CTypeConvNode.create_internal(left,s32inttype);
+                              result:=CTypeConvNode.Create_Internal(left,S32IntType);
                               left:=nil;
                             end;
                           bool64bit :
                             begin
                               { change to int64() }
-                              result:=CTypeConvNode.create_internal(left,s64inttype);
+                              result:=CTypeConvNode.Create_Internal(left,S64IntType);
                               left:=nil;
                             end;
                           uvoid :
-                            CGMessage1(type_e_ordinal_expr_expected,left.resultdef.typename);
+                            CGMessage1(type_e_ordinal_expr_expected,left.resultdef.TypeName);
                           else
                             begin
                               { all other orddef need no transformation }
@@ -2586,14 +2586,14 @@ implementation
                       end;
                     enumdef :
                       begin
-                        result:=CTypeConvNode.create_internal(left,s32inttype);
+                        result:=CTypeConvNode.Create_Internal(left,S32IntType);
                         left:=nil;
                       end;
                     undefineddef :
                       begin
                         { we just create a constant 0 here, that's marked as a
                           parameter }
-                        result:=COrdConstNode.create(0,s32inttype,false);
+                        result:=COrdConstNode.create(0,S32IntType,false);
                         include(result.flags,nf_generic_para);
                         left:=nil;
                       end;
@@ -2601,7 +2601,7 @@ implementation
                       begin
                         if m_mac in CurrentSettings.ModeSwitches then
                           begin
-                            result:=CTypeConvNode.create_internal(left,ptruinttype);
+                            result:=CTypeConvNode.Create_Internal(left,PtrUIntType);
                             left:=nil;
                           end
                       end;
@@ -2623,7 +2623,7 @@ implementation
               in_chr_byte:
                 begin
                    { convert to explicit char() }
-                   result:=CTypeConvNode.create_internal(left,cansichartype);
+                   result:=CTypeConvNode.Create_Internal(left,CAnsiCharType);
                    left:=nil;
                 end;
               in_length_x:
@@ -2634,7 +2634,7 @@ implementation
                         if (left.nodetype=stringconstn) then
                           begin
                             result:=COrdConstNode.create(
-                              TStringConstNode(left).len,sinttype,true);
+                              TStringConstNode(left).len,SIntType,true);
                           end;
                       end;
                     orddef :
@@ -2643,7 +2643,7 @@ implementation
                         if is_char(left.resultdef) or
                            is_widechar(left.resultdef) then
                          begin
-                           result:=COrdConstNode.create(1,sinttype,false);
+                           result:=COrdConstNode.create(1,SIntType,false);
                          end
                       end;
                     arraydef :
@@ -2651,13 +2651,13 @@ implementation
                         if (left.nodetype=stringconstn) then
                           begin
                             result:=COrdConstNode.create(
-                              TStringConstNode(left).len,sinttype,true);
+                              TStringConstNode(left).len,SIntType,true);
                           end
                         else if not is_open_array(left.resultdef) and
                            not is_array_of_const(left.resultdef) and
                            not is_dynamic_array(left.resultdef) then
-                          result:=genintconstnode(TArrayDef(left.resultdef).highrange-
-                            TArrayDef(left.resultdef).lowrange+1,sizesinttype);
+                          result:=genintconstnode(TArrayDef(left.resultdef).HighRange-
+                            TArrayDef(left.resultdef).LowRange+1,SizeSIntType);
                       end;
                     else
                       ;
@@ -2738,20 +2738,20 @@ implementation
                       end;
                     setdef:
                       begin
-                        result:=do_lowhigh(TSetDef(left.resultdef).elementdef);
+                        result:=do_lowhigh(TSetDef(left.resultdef).ElementDef);
                       end;
                     arraydef:
                       begin
                         if (inlinenumber=in_low_x) then
                           begin
                             result:=COrdConstNode.create(int64(TArrayDef(
-                             left.resultdef).lowrange),TArrayDef(left.resultdef).rangedef,true);
+                             left.resultdef).LowRange),TArrayDef(left.resultdef).RangeDef,true);
                           end
                         else if not is_open_array(left.resultdef) and
                                 not is_array_of_const(left.resultdef) and
                                 not is_dynamic_array(left.resultdef) then
-                          result:=COrdConstNode.create(int64(TArrayDef(left.resultdef).highrange),
-                            TArrayDef(left.resultdef).rangedef,true);
+                          result:=COrdConstNode.create(int64(TArrayDef(left.resultdef).HighRange),
+                            TArrayDef(left.resultdef).RangeDef,true);
                       end;
                     stringdef:
                       begin
@@ -2759,16 +2759,16 @@ implementation
                           begin
                             if is_dynamicstring(left.resultdef) and
                               not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
-                              result:=COrdConstNode.create(1,u8inttype,false)
+                              result:=COrdConstNode.create(1,U8IntType,false)
                             else
-                              result:=COrdConstNode.create(0,u8inttype,false);
+                              result:=COrdConstNode.create(0,U8IntType,false);
                           end
                         else if not is_dynamicstring(left.resultdef) then
-                          result:=COrdConstNode.create(TStringDef(left.resultdef).len,u8inttype,true)
+                          result:=COrdConstNode.create(TStringDef(left.resultdef).len,U8IntType,true)
                       end;
                     undefineddef:
                       begin
-                        result:=COrdConstNode.create(0,u8inttype,false);
+                        result:=COrdConstNode.create(0,U8IntType,false);
                       end;
                     errordef:
                       ;
@@ -2797,10 +2797,10 @@ implementation
                       if (vr>=BestReal(QWord($8000000000000000))) or (vr<BestReal(Low(Int64))) then
                         begin
                           message3(type_e_range_check_error_bounds,RealToStr(vr),'-9223372036854775808.0','9223372036854775807.99..');
-                          result:=COrdConstNode.create(1,s64inttype,false)
+                          result:=COrdConstNode.create(1,S64IntType,false)
                         end
                       else
-                        result:=COrdConstNode.create(Trunc(vr),s64inttype,true)
+                        result:=COrdConstNode.create(Trunc(vr),S64IntType,true)
                     end
                 end;
               in_round_real :
@@ -2813,10 +2813,10 @@ implementation
                       if (vr>=BestReal(High(Int64))+BestReal(0.5)) or (vr<BestReal(Low(Int64))) then
                         begin
                           message3(type_e_range_check_error_bounds,RealToStr(vr),'-9223372036854775808.49..','9223372036854775807.49..');
-                          result:=COrdConstNode.create(1,s64inttype,false)
+                          result:=COrdConstNode.create(1,S64IntType,false)
                         end
                       else
-                        result:=COrdConstNode.create(Round(vr),s64inttype,true)
+                        result:=COrdConstNode.create(Round(vr),S64IntType,true)
                     end
                 end;
               in_frac_real :
@@ -2952,13 +2952,13 @@ implementation
                           if (TRealConstNode(hp).value_real = MathQNaN.value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken }
-                            result:=hp2.getcopy()
+                            result:=hp2.GetCopy()
                           else if (TRealConstNode(hp).value_real = MathNegInf.value) then
                             { Nothing is less than than -oo }
                             result:=CRealConstNode.create(MathNegInf.value,resultdef)
                           else if (TRealConstNode(hp).value_real = MathInf.value) then
                             { Everything is less than +oo }
-                            result:=hp2.getcopy()
+                            result:=hp2.GetCopy()
                           else if (hp2.nodetype=realconstn) then
                             begin
                               { Both actual parameters are constants, so take
@@ -2980,7 +2980,7 @@ implementation
                             result:=CRealConstNode.create(MathNegInf.value,resultdef)
                           else if (TRealConstNode(hp2).value_real = MathInf.value) then
                             { Everything is less than +oo }
-                            result:=hp.getcopy();
+                            result:=hp.GetCopy();
                         end;
                     end;
                 end;
@@ -2998,10 +2998,10 @@ implementation
                           if (TRealConstNode(hp).value_real = MathQNaN.value) then
                             { If one of the inputs is NaN, the second parameter
                               is taken }
-                            result:=hp2.getcopy()
+                            result:=hp2.GetCopy()
                           else if (TRealConstNode(hp).value_real = MathNegInf.value) then
                             { Everything is greater than than -oo }
-                            result:=hp2.getcopy()
+                            result:=hp2.GetCopy()
                           else if (TRealConstNode(hp).value_real = MathInf.value) then
                             { Nothing is greater than +oo }
                             result:=CRealConstNode.create(MathInf.value,resultdef)
@@ -3023,7 +3023,7 @@ implementation
                             result:=CRealConstNode.create(MathQNaN.value,resultdef)
                           else if (TRealConstNode(hp2).value_real = MathNegInf.value) then
                             { Everything is greater than than -oo }
-                            result:=hp.getcopy()
+                            result:=hp.GetCopy()
                           else if (TRealConstNode(hp2).value_real = MathInf.value) then
                             { Nothing is greater than +oo }
                             result:=CRealConstNode.create(MathInf.value,resultdef);
@@ -3056,7 +3056,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
                               else
-                                result:=hp2.getcopy();
+                                result:=hp2.GetCopy();
                             end;
                         end
                       else if (hp2.nodetype=ordconstn) then
@@ -3066,7 +3066,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
                               else
-                                result:=hp.getcopy();
+                                result:=hp.GetCopy();
                             end;
                         end;
                     end;
@@ -3097,7 +3097,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
                               else
-                                result:=hp2.getcopy();
+                                result:=hp2.GetCopy();
                             end;
                         end
                       else if (hp2.nodetype=ordconstn) then
@@ -3107,7 +3107,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
                               else
-                                result:=hp.getcopy();
+                                result:=hp.GetCopy();
                             end;
                         end;
                     end;
@@ -3138,7 +3138,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
                               else
-                                result:=hp2.getcopy();
+                                result:=hp2.GetCopy();
                             end;
                         end
                       else if (hp2.nodetype=ordconstn) then
@@ -3148,7 +3148,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
                               else
-                                result:=hp.getcopy();
+                                result:=hp.GetCopy();
                             end;
                         end;
                     end;
@@ -3179,7 +3179,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp).value,resultdef,false)
                               else
-                                result:=hp2.getcopy();
+                                result:=hp2.GetCopy();
                             end;
                         end
                       else if (hp2.nodetype=ordconstn) then
@@ -3189,7 +3189,7 @@ implementation
                               if helperres then
                                 result:=COrdConstNode.create(TOrdConstNode(hp2).value,resultdef,false)
                               else
-                                result:=hp.getcopy();
+                                result:=hp.GetCopy();
                             end;
                         end;
                     end;
@@ -3221,7 +3221,7 @@ implementation
              (p.nodetype=typeconvn) and
              (TTypeConvNode(p).left.resultdef.typ=floatdef) and
              (p.flags*[nf_explicit,nf_internal]=[]) and
-             (TFloatDef(TTypeConvNode(p).left.resultdef).floattype in (floattypes*[S32Real,S64Real,s80real,sc80real])) then
+             (TFloatDef(TTypeConvNode(p).left.resultdef).FloatType in (floattypes*[S32Real,S64Real,s80real,sc80real])) then
             begin
               hnode:=TTypeConvNode(p).left;
               TTypeConvNode(p).left:=nil;
@@ -3232,7 +3232,7 @@ implementation
           else if (p.nodetype=typeconvn) and
              (p.flags*[nf_explicit,nf_internal]=[]) and
              (TTypeConvNode(p).left.resultdef.typ=floatdef) and
-             (TFloatDef(TTypeConvNode(p).left.resultdef).floattype in (floattypes*[s64currency,s64comp])) then
+             (TFloatDef(TTypeConvNode(p).left.resultdef).FloatType in (floattypes*[s64currency,s64comp])) then
             begin
               hnode:=TTypeConvNode(p).left;
               TTypeConvNode(p).left:=nil;
@@ -3257,7 +3257,7 @@ implementation
           { in case the system helper was declared with overloads for different types,
             keep those }
           else if (p.resultdef.typ=floatdef) and
-             (TFloatDef(p.resultdef).floattype in (floattypes*[S32Real,S64Real,s80real,sc80real])) then
+             (TFloatDef(p.resultdef).FloatType in (floattypes*[S32Real,S64Real,s80real,sc80real])) then
             result:=p.resultdef
           else
             begin
@@ -3276,7 +3276,7 @@ implementation
           unpackedarraydef, packedarraydef: TArrayDef;
           tempindex: TConstExprInt;
         begin
-          resultdef:=voidtype;
+          resultdef:=VoidType;
 
           unpackedarraydef := nil;
           packedarraydef := nil;
@@ -3288,13 +3288,13 @@ implementation
 
               { source must be a packed array }
               if not is_packed_array(source.left.resultdef) then
-                CGMessagePos2(source.left.fileinfo,type_e_got_expected_packed_array,'1',source.left.resultdef.typename)
+                CGMessagePos2(source.left.fileinfo,type_e_got_expected_packed_array,'1',source.left.resultdef.TypeName)
               else
                 packedarraydef := TArrayDef(source.left.resultdef);
               { target can be any kind of array, as long as it's not packed }
               if (target.left.resultdef.typ <> arraydef) or
                  is_packed_array(target.left.resultdef) then
-                CGMessagePos2(target.left.fileinfo,type_e_got_expected_unpacked_array,'2',target.left.resultdef.typename)
+                CGMessagePos2(target.left.fileinfo,type_e_got_expected_unpacked_array,'2',target.left.resultdef.TypeName)
               else
                 unpackedarraydef := TArrayDef(target.left.resultdef);
             end
@@ -3306,12 +3306,12 @@ implementation
               { source can be any kind of array, as long as it's not packed }
               if (source.left.resultdef.typ <> arraydef) or
                  is_packed_array(source.left.resultdef) then
-                CGMessagePos2(source.left.fileinfo,type_e_got_expected_unpacked_array,'1',source.left.resultdef.typename)
+                CGMessagePos2(source.left.fileinfo,type_e_got_expected_unpacked_array,'1',source.left.resultdef.TypeName)
               else
                 unpackedarraydef := TArrayDef(source.left.resultdef);
               { target must be a packed array }
               if not is_packed_array(target.left.resultdef) then
-                CGMessagePos2(target.left.fileinfo,type_e_got_expected_packed_array,'3',target.left.resultdef.typename)
+                CGMessagePos2(target.left.fileinfo,type_e_got_expected_packed_array,'3',target.left.resultdef.TypeName)
               else
                 packedarraydef := TArrayDef(target.left.resultdef);
             end;
@@ -3319,7 +3319,7 @@ implementation
           if Assigned(unpackedarraydef) then
             begin
               { index must be compatible with the unpacked array's indextype }
-              inserttypeconv(index.left,unpackedarraydef.rangedef);
+              inserttypeconv(index.left,unpackedarraydef.RangeDef);
 
               { range check at compile time if possible }
               if Assigned(packedarraydef) and
@@ -3327,7 +3327,7 @@ implementation
                  not is_special_array(unpackedarraydef) then
                 begin
                   adaptrange(unpackedarraydef,TOrdConstNode(index.left).value,false,false,cs_check_range in CurrentSettings.LocalSwitches);
-                  tempindex := TOrdConstNode(index.left).value + packedarraydef.highrange-packedarraydef.lowrange;
+                  tempindex := TOrdConstNode(index.left).value + packedarraydef.HighRange-packedarraydef.LowRange;
                   adaptrange(unpackedarraydef,tempindex,false,false,cs_check_range in CurrentSettings.LocalSwitches);
                 end;
             end;
@@ -3353,7 +3353,7 @@ implementation
         begin
           encodedtype:='';
           if not objctryencodetype(left.resultdef,encodedtype,errordef) then
-            Message1(type_e_objc_type_unsupported,errordef.typename);
+            Message1(type_e_objc_type_unsupported,errordef.TypeName);
           result:=CStringConstNode.createpchar(pchar(encodedtype),length(encodedtype),nil);
         end;
 
@@ -3389,17 +3389,17 @@ implementation
                     CGMessage(type_w_maybe_wrong_hi_lo);
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
                   if not is_integer(left.resultdef) then
-                    CGMessage1(type_e_integer_expr_expected,left.resultdef.typename);
+                    CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
                   case inlinenumber of
                     in_lo_word,
                     in_hi_word :
-                      resultdef:=u8inttype;
+                      resultdef:=U8IntType;
                     in_lo_long,
                     in_hi_long :
-                      resultdef:=u16inttype;
+                      resultdef:=U16IntType;
                     in_lo_qword,
                     in_hi_qword :
-                      resultdef:=u32inttype;
+                      resultdef:=U32IntType;
                     else
                       ;
                   end;
@@ -3412,7 +3412,7 @@ implementation
                   set_varstate(left,vs_read,[]);
                   if (left.resultdef.typ<>undefineddef) and
                       Assigned(CurrentProcInfo) and
-                      paramanager.push_high_param(vs_value,left.resultdef,CurrentProcInfo.procdef.proccalloption) then
+                      paramanager.push_high_param(vs_value,left.resultdef,CurrentProcInfo.procdef.ProcCallOption) then
                    begin
                      { this should be an open array or array of const, both of
                        which can only be simple load nodes of parameters }
@@ -3422,21 +3422,21 @@ implementation
                      if Assigned(hightree) then
                       begin
                         hp:=CAddNode.create(addn,hightree,
-                                         COrdConstNode.create(1,sizesinttype,false));
+                                         COrdConstNode.create(1,SizeSIntType,false));
                         if (left.resultdef.typ=arraydef) then
                           if not is_packed_array(TArrayDef(left.resultdef)) then
                             begin
-                              if (TArrayDef(left.resultdef).elesize<>1) then
+                              if (TArrayDef(left.resultdef).EleSize<>1) then
                                 hp:=CAddNode.create(muln,hp,COrdConstNode.create(TArrayDef(
-                                  left.resultdef).elesize,sizesinttype,true));
+                                  left.resultdef).EleSize,SizeSIntType,true));
                             end
-                          else if (TArrayDef(left.resultdef).elepackedbitsize <> 8) then
+                          else if (TArrayDef(left.resultdef).ElePackedBitSize <> 8) then
                             begin
                               { no packed open array support yet }
                               if (hp.nodetype <> ordconstn) then
                                 InternalError(2006081511);
                               hp.free;
-                              hp := COrdConstNode.create(left.resultdef.size,sizesinttype,true);
+                              hp := COrdConstNode.create(left.resultdef.size,SizeSIntType,true);
 {
                               hp:=
                                  ctypeconvnode.create_explicit(sizesinttype,
@@ -3453,7 +3453,7 @@ implementation
                       end;
                    end
                   else
-                   resultdef:=sizesinttype;
+                   resultdef:=SizeSIntType;
                 end;
 
               in_typeof_x:
@@ -3461,9 +3461,9 @@ implementation
                   TypeCheckPass(left);
                   set_varstate(left,vs_read,[]);
                   if (left.resultdef.typ=objectdef) and
-                    not(oo_has_vmt in TObjectDef(left.resultdef).objectoptions) then
+                    not(oo_has_vmt in TObjectDef(left.resultdef).ObjectOptions) then
                       message(type_e_typeof_requires_vmt);
-                  resultdef:=voidpointertype;
+                  resultdef:=VoidPointerType;
                 end;
 
               in_ord_x:
@@ -3477,10 +3477,10 @@ implementation
                      pointerdef :
                        begin
                          if not(m_mac in CurrentSettings.ModeSwitches) then
-                           CGMessage1(type_e_ordinal_expr_expected,left.resultdef.typename);
+                           CGMessage1(type_e_ordinal_expr_expected,left.resultdef.TypeName);
                        end
                      else
-                       CGMessage1(type_e_ordinal_expr_expected,left.resultdef.typename);
+                       CGMessage1(type_e_ordinal_expr_expected,left.resultdef.TypeName);
                    end;
                 end;
 
@@ -3502,7 +3502,7 @@ implementation
                   case left.resultdef.typ of
                     variantdef:
                       begin
-                        inserttypeconv(left,getansistringdef);
+                        inserttypeconv(left,GetAnsiStringDef);
                       end;
 
                     stringdef :
@@ -3560,7 +3560,7 @@ implementation
                            hightree:=load_high_value_node(TParaVarSym(TLoadNode(left).symtableentry));
                            if Assigned(hightree) then
                              result:=CAddNode.create(addn,hightree,
-                               COrdConstNode.create(1,sinttype,false));
+                               COrdConstNode.create(1,SIntType,false));
                            exit;
                          end
                         { Length() for dynamic arrays is inlined }
@@ -3571,7 +3571,7 @@ implementation
                       end;
                     undefineddef :
                       begin
-                        if not (df_generic in CurrentProcInfo.procdef.defoptions) then
+                        if not (df_generic in CurrentProcInfo.procdef.DefOptions) then
                           CGMessage(type_e_mismatch);
                         { otherwise nothing }
                       end;
@@ -3582,40 +3582,40 @@ implementation
                   { shortstring return an 8 bit value as the length
                     is the first byte of the string }
                   if is_shortstring(left.resultdef) then
-                    resultdef:=u8inttype
+                    resultdef:=U8IntType
                   else
-                    resultdef:=sizesinttype;
+                    resultdef:=SizeSIntType;
                 end;
 
               in_typeinfo_x:
                 begin
                    if (left.resultdef.typ=enumdef) and
-                      (TEnumDef(left.resultdef).has_jumps) and
+                      (TEnumDef(left.resultdef).HasJumps) and
                       (
                         (left.nodetype<>typen) or
-                        not (sp_generic_para in TTypeNode(left).typesym.symoptions)
+                        not (sp_generic_para in TTypeNode(left).TypeSym.SymOptions)
                       ) then
                      CGMessage(type_e_no_type_info);
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
-                   resultdef:=voidpointertype;
+                   resultdef:=VoidPointerType;
                 end;
 
               in_gettypekind_x:
                 begin
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
-                  resultdef:=typekindtype;
+                  resultdef:=TypeKindType;
                 end;
 
               in_ismanagedtype_x:
                 begin
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
-                  resultdef:=pasbool1type;
+                  resultdef:=PasBool1Type;
                 end;
 
               in_isconstvalue_x:
                 begin
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
-                  resultdef:=pasbool1type;
+                  resultdef:=PasBool1Type;
                 end;
 
               in_assigned_x:
@@ -3624,9 +3624,9 @@ implementation
 
                   { in case of a complex procvar, only check the "code" pointer }
                   if (TCallParaNode(left).left.resultdef.typ=procvardef) and
-                     not TProcVarDef(TCallParaNode(left).left.resultdef).is_addressonly then
+                     not TProcVarDef(TCallParaNode(left).left.resultdef).Is_AddressOnly then
                     begin
-                      inserttypeconv_explicit(TCallParaNode(left).left,search_system_type('TMETHOD').typedef);
+                      inserttypeconv_explicit(TCallParaNode(left).left,Search_System_Type('TMETHOD').typedef);
                       TCallParaNode(left).left:=CSubscriptNode.create(TSym(TAbstractRecordDef(TCallParaNode(left).left.resultdef).SymTable.find('CODE')),TCallParaNode(left).left);
                       TCallParaNode(left).get_paratype;
                     end;
@@ -3634,7 +3634,7 @@ implementation
                   { Postpone conversion into addnode until firstpass, so targets
                     may override first_assigned and insert specific code. }
                   set_varstate(TCallParaNode(left).left,vs_read,[vsf_must_be_valid]);
-                  resultdef:=pasbool1type;
+                  resultdef:=PasBool1Type;
                 end;
 
               in_ofs_x :
@@ -3653,7 +3653,7 @@ implementation
                    if is_ordinal(resultdef) or is_typeparam(resultdef) then
                      begin
                        if (resultdef.typ=enumdef) and
-                          (TEnumDef(resultdef).has_jumps) and
+                          (TEnumDef(resultdef).HasJumps) and
                           not(m_delphi in CurrentSettings.ModeSwitches) and
                           not(nf_internal in flags) then
                          CGMessage(type_e_succ_and_pred_enums_with_assign_not_possible);
@@ -3678,8 +3678,8 @@ implementation
               in_inc_x,
               in_dec_x:
                 begin
-                  resultdef:=voidtype;
-                  if not(df_generic in CurrentProcInfo.procdef.defoptions) then
+                  resultdef:=VoidType;
+                  if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
                     begin
                       if Assigned(left) then
                         begin
@@ -3710,9 +3710,9 @@ implementation
                                              goes wrong when they have to be multiplied with the size of the elements
                                              to which the pointer points in ncginl (mantis #17342) }
                                            if is_signed(TCallParaNode(TCallParaNode(left).right).left.resultdef) then
-                                             inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).pointer_arithmetic_int_type)
+                                             inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).Pointer_Arithmetic_Int_Type)
                                            else
-                                             inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).pointer_arithmetic_uint_type)
+                                             inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TPointerDef(TCallParaNode(left).left.resultdef).Pointer_Arithmetic_UInt_Type)
                                          end
                                        else if is_integer(TCallParaNode(left).left.resultdef) then
                                          inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,TCallParaNode(left).left.resultdef)
@@ -3738,7 +3738,7 @@ implementation
                                if isunaryoverloaded(hp,[]) then
                                  begin
                                    { inc(rec) and dec(rec) assigns result value to argument }
-                                   result:=CAssignmentNode.create(TCallParaNode(left).left.getcopy,hp);
+                                   result:=CAssignmentNode.create(TCallParaNode(left).left.GetCopy,hp);
                                    exit;
                                  end
                                else
@@ -3759,8 +3759,8 @@ implementation
               in_rol_assign_x_y,
               in_ror_assign_x_y:
                 begin
-                  resultdef:=voidtype;
-                  if not(df_generic in CurrentProcInfo.procdef.defoptions) then
+                  resultdef:=VoidType;
+                  if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
                     begin
                       { first parameter must exist }
                       if not Assigned(left) or (left.nodetype<>callparan) then
@@ -3786,7 +3786,7 @@ implementation
                               if [cs_check_range,cs_check_overflow]*LocalSwitches<>[] then
                                 InternalError(2017032701);
                               if inlinenumber in [in_sar_assign_x_y,in_shl_assign_x_y,in_shr_assign_x_y,in_rol_assign_x_y,in_ror_assign_x_y] then
-                                inserttypeconv(TCallParaNode(left).left,sinttype)
+                                inserttypeconv(TCallParaNode(left).left,SIntType)
                               else
                                 inserttypeconv(TCallParaNode(left).left,TCallParaNode(TCallParaNode(left).right).left.resultdef);
                             end
@@ -3807,8 +3807,8 @@ implementation
               in_neg_assign_x,
               in_not_assign_x:
                 begin
-                  resultdef:=voidtype;
-                  if not(df_generic in CurrentProcInfo.procdef.defoptions) then
+                  resultdef:=VoidType;
+                  if not(df_generic in CurrentProcInfo.procdef.DefOptions) then
                     begin
                       valid_for_var(left,true);
                       set_varstate(left,vs_readwritten,[vsf_must_be_valid]);
@@ -3844,10 +3844,10 @@ implementation
 
               in_settextbuf_file_x :
                 begin
-                  resultdef:=voidtype;
+                  resultdef:=VoidType;
                   { now we know the type of buffer }
                   hp:=CCallParaNode.create(COrdConstNode.create(
-                     TCallParaNode(left).left.resultdef.size,s32inttype,true),left);
+                     TCallParaNode(left).left.resultdef.size,S32IntType,true),left);
                   result:=CCallNode.createintern('SETTEXTBUF',hp);
                   left:=nil;
                 end;
@@ -3874,7 +3874,7 @@ implementation
               in_include_x_y,
               in_exclude_x_y:
                 begin
-                  resultdef:=voidtype;
+                  resultdef:=VoidType;
                   { the parser already checks whether we have two (and exactly two) }
                   { parameters (JM)                                                 }
                   { first param must be var }
@@ -3887,7 +3887,7 @@ implementation
                       { to the type of the set elements  }
                       set_varstate(TCallParaNode(TCallParaNode(left).right).left,vs_read,[vsf_must_be_valid]);
                       inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,
-                        TSetDef(left.resultdef).elementdef);
+                        TSetDef(left.resultdef).ElementDef);
                     end
                   else if left.resultdef.typ<>undefineddef then
                     CGMessage(type_e_mismatch);
@@ -3905,11 +3905,11 @@ implementation
                   if (resultdef.typ <> arraydef) then
                     CGMessagePos(left.fileinfo,type_e_mismatch)
                   else if is_packed_array(resultdef) then
-                    CGMessagePos2(left.fileinfo,type_e_got_expected_unpacked_array,'1',resultdef.typename);
+                    CGMessagePos2(left.fileinfo,type_e_got_expected_unpacked_array,'1',resultdef.TypeName);
                   if not(is_integer(TCallParaNode(TCallParaNode(left).right).left.resultdef)) then
                     CGMessagePos1(TCallParaNode(left).right.fileinfo,
                       type_e_integer_expr_expected,
-                      TCallParaNode(TCallParaNode(left).right).left.resultdef.typename);
+                      TCallParaNode(TCallParaNode(left).right).left.resultdef.TypeName);
                 end;
 
               in_new_x:
@@ -3939,7 +3939,7 @@ implementation
                            else
                              begin
                                set_varstate(left,vs_read,[]);
-                               resultdef:=sizesinttype;
+                               resultdef:=SizeSIntType;
                              end;
                          end;
                       end;
@@ -3960,7 +3960,7 @@ implementation
                               begin
                                 result:=CInlineNode.create(in_length_x,false,left);
                                 if cs_zerobasedstrings in CurrentSettings.LocalSwitches then
-                                  result:=CAddNode.create(subn,result,COrdConstNode.create(1,sinttype,false));
+                                  result:=CAddNode.create(subn,result,COrdConstNode.create(1,SIntType,false));
                                 { make sure the left node doesn't get disposed, since it's }
                                 { reused in the new node (JM)                              }
                                 left:=nil;
@@ -4017,15 +4017,15 @@ implementation
                      is_currency(temp_pnode^.resultdef) and
                      (nf_is_currency in temp_pnode^.flags) then
                     begin
-                      result:=CModDivNode.create(divn,CTypeConvNode.create_internal(temp_pnode^.getcopy,s64inttype),genintconstnode(10000));
+                      result:=CModDivNode.create(divn,CTypeConvNode.Create_Internal(temp_pnode^.GetCopy,S64IntType),genintconstnode(10000));
                       exit;
                     end
                   else if is_fpucomp(temp_pnode^.resultdef) then
                     begin
-                      result:=CTypeConvNode.create_internal(temp_pnode^.getcopy,s64inttype);
+                      result:=CTypeConvNode.Create_Internal(temp_pnode^.GetCopy,S64IntType);
                       exit;
                     end;
-                  resultdef:=s64inttype;
+                  resultdef:=S64IntType;
                 end;
 
               in_pi_real :
@@ -4072,7 +4072,7 @@ implementation
                 end;
               in_assert_x_y :
                 begin
-                  resultdef:=voidtype;
+                  resultdef:=VoidType;
                   if Assigned(left) then
                     begin
                       set_varstate(TCallParaNode(left).left,vs_read,[vsf_must_be_valid]);
@@ -4080,15 +4080,15 @@ implementation
                       if is_boolean(left.resultdef) or
                           (
                             (left.resultdef.typ=undefineddef) and
-                            (df_generic in CurrentProcInfo.procdef.defoptions)
+                            (df_generic in CurrentProcInfo.procdef.DefOptions)
                           ) then
                         begin
                            set_varstate(TCallParaNode(TCallParaNode(left).right).left,vs_read,[vsf_must_be_valid]);
                            { must always be a string }
-                           inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,cshortstringtype);
+                           inserttypeconv(TCallParaNode(TCallParaNode(left).right).left,CShortStringType);
                          end
                        else
-                         CGMessage1(type_e_boolean_expr_expected,left.resultdef.typename);
+                         CGMessage1(type_e_boolean_expr_expected,left.resultdef.TypeName);
                     end
                   else
                     CGMessage(type_e_mismatch);
@@ -4097,12 +4097,12 @@ implementation
                     include(CurrentProcInfo.flags,pi_do_call);
                 end;
               in_prefetch_var:
-                resultdef:=voidtype;
+                resultdef:=VoidType;
               in_get_frame,
               in_get_caller_frame,
               in_get_caller_addr:
                 begin
-                  resultdef:=voidpointertype;
+                  resultdef:=VoidPointerType;
                 end;
               in_rol_x,
               in_ror_x,
@@ -4124,18 +4124,18 @@ implementation
                  begin
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
                    if not is_integer(left.resultdef) then
-                     CGMessage1(type_e_integer_expr_expected,left.resultdef.typename);
-                   if TOrdDef(left.resultdef).ordtype in [u64bit, s64bit] then
-                     resultdef:=u64inttype
+                     CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
+                   if TOrdDef(left.resultdef).OrdType in [u64bit, s64bit] then
+                     resultdef:=U64IntType
                    else
-                     resultdef:=u32inttype
+                     resultdef:=U32IntType
                  end;
 
               in_popcnt_x:
                  begin
                    set_varstate(left,vs_read,[vsf_must_be_valid]);
                    if not is_integer(left.resultdef) then
-                     CGMessage1(type_e_integer_expr_expected,left.resultdef.typename);
+                     CGMessage1(type_e_integer_expr_expected,left.resultdef.TypeName);
                    resultdef:=left.resultdef;
                  end;
 
@@ -4262,8 +4262,8 @@ implementation
                           { pointer is only allowed for Exchange and CmpExchange }
                           if (inlinenumber<>in_atomic_xchg) and (inlinenumber<>in_atomic_cmp_xchg) then
                             CGMessagePos(fileinfo,type_e_ordinal_expr_expected);
-                          resultdef:=voidpointertype;
-                          convdef:=ptrsinttype;
+                          resultdef:=VoidPointerType;
+                          convdef:=PtrSIntType;
                         end;
                       { left gets changed -> must be unique }
                       set_unique(TCallParaNode(left).left);
@@ -4284,7 +4284,7 @@ implementation
                                   valid_for_var(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,true);
                                   set_varstate(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,vs_written,[]);
                                   if not is_boolean(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left.resultdef) then
-                                    inserttypeconv(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,pasbool1type);
+                                    inserttypeconv(TCallParaNode(TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).right).left,PasBool1Type);
                                 end;
                             end;
                         end;
@@ -4359,10 +4359,10 @@ implementation
                   ;
               end;
               if shiftconst <> 0 then
-                result := CTypeConvNode.create_internal(CShlShrNode.create(shrn,left,
-                    COrdConstNode.create(shiftconst,sinttype,false)),resultdef)
+                result := CTypeConvNode.Create_Internal(CShlShrNode.create(shrn,left,
+                    COrdConstNode.create(shiftconst,SIntType,false)),resultdef)
               else
-                result := CTypeConvNode.create_internal(left,resultdef);
+                result := CTypeConvNode.Create_Internal(left,resultdef);
               left := nil;
               FirstPass(result);
             end;
@@ -4382,17 +4382,17 @@ implementation
                     else
                       begin
                         result:=left;
-                        objdef:=TObjectDef(TClassRefDef(left.resultdef).pointeddef);
+                        objdef:=TObjectDef(TClassRefDef(left.resultdef).PointedDef);
                       end;
                     left:=nil;
                     if inlinenumber=in_sizeof_x then
                       begin
-                        inserttypeconv_explicit(result,CPointerDef.getreusable(objdef.vmt_def));
+                        inserttypeconv_explicit(result,CPointerDef.getreusable(objdef.VMT_Def));
                         result:=CDerefNode.create(result);
                         result:=genloadfield(result,'VINSTANCESIZE');
                       end
                     else
-                      inserttypeconv_explicit(result,voidpointertype);
+                      inserttypeconv_explicit(result,VoidPointerType);
                   end;
                 undefineddef:
                   ;
@@ -4409,22 +4409,22 @@ implementation
           in_typeinfo_x:
             begin
               if (left.resultdef.typ=enumdef) and
-                 (TEnumDef(left.resultdef).has_jumps) then
+                 (TEnumDef(left.resultdef).HasJumps) then
                 begin
-                  if (left.nodetype=typen) and (sp_generic_para in TTypeNode(left).typesym.symoptions) then
+                  if (left.nodetype=typen) and (sp_generic_para in TTypeNode(left).TypeSym.SymOptions) then
                     result:=CNilNode.create
                   else
                     InternalError(2021032601);
                 end
               else
-                result:=CAddrNode.create_internal(
+                result:=CAddrNode.Create_Internal(
                   CRTTINode.create(TStoredDef(left.resultdef),fullrtti,rdt_normal)
                 );
             end;
 
           in_gettypekind_x:
             begin
-              sym:=TEnumDef(typekindtype).int2enumsym(get_typekind(left.resultdef));
+              sym:=TEnumDef(TypeKindType).Int2EnumSym(get_typekind(left.resultdef));
               if not Assigned(sym) then
                 InternalError(2017081101);
               if sym.typ<>enumsym then
@@ -4469,11 +4469,11 @@ implementation
                   hp:=COrdConstNode.create(1,hdef,false);
                   TypeCheckPass(hp);
                   if not is_integer(hp.resultdef) then
-                    inserttypeconv_internal(hp,sinttype);
+                    inserttypeconv_internal(hp,SIntType);
 
                   { avoid type errors from the addn/subn }
                   if not is_integer(left.resultdef) then
-                    inserttypeconv_internal(left,sinttype);
+                    inserttypeconv_internal(left,SIntType);
 
                   { addition/subtraction depending on succ/pred }
                   if inlinenumber=in_succ_x then
@@ -5006,35 +5006,35 @@ implementation
            Value of 3 corresponds to subscript nodes, i.e. record field. }
          if node_complexity(TCallParaNode(left).left) > 3 then
            begin
-             tempnode := CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+             tempnode := CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
              addstatement(newstatement,tempnode);
              addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(tempnode),
-               CAddrNode.create_internal(TCallParaNode(left).left.getcopy)));
+               CAddrNode.Create_Internal(TCallParaNode(left).left.GetCopy)));
              hp := CDerefNode.create(CTempRefNode.create(tempnode));
              inserttypeconv_internal(hp,TCallParaNode(left).left.resultdef);
            end
          else
            begin
-             hp := TCallParaNode(left).left.getcopy;
+             hp := TCallParaNode(left).left.GetCopy;
              tempnode := nil;
            end;
 
-         resultnode := hp.getcopy;
+         resultnode := hp.GetCopy;
          { Remove "modify" flag from what will be an assignment destination }
          Exclude(resultnode.flags, nf_modify);
 
          { avoid type errors from the addn/subn }
          if not is_integer(resultnode.resultdef) then
            begin
-             inserttypeconv_internal(hp,sinttype);
-             inserttypeconv_internal(hpp,sinttype);
+             inserttypeconv_internal(hp,SIntType);
+             inserttypeconv_internal(hpp,SIntType);
            end;
 
          { addition/subtraction depending on inc/dec }
          if inlinenumber = in_inc_x then
-           hpp := CAddNode.create_internal(addn,hp,hpp)
+           hpp := CAddNode.Create_Internal(addn,hp,hpp)
          else
-           hpp := CAddNode.create_internal(subn,hp,hpp);
+           hpp := CAddNode.Create_Internal(subn,hp,hpp);
 
          { assign result of addition }
 
@@ -5158,9 +5158,9 @@ implementation
            if (dims=1) and is_constintvalue(TCallParaNode(paras).left, 0) then
              begin
                ppn.left:=nil; { unlink destppn }
-               result:=CCallParaNode.create(CTypeConvNode.create_internal(destppn,voidpointertype),nil);
+               result:=CCallParaNode.create(CTypeConvNode.Create_Internal(destppn,VoidPointerType),nil);
                result:=CCallNode.createintern('fpc_dynarray_clear',
-                 CCallParaNode.create(CAddrNode.create_internal(
+                 CCallParaNode.create(CAddrNode.Create_Internal(
                    CRTTINode.create(TStoredDef(destppn.resultdef),initrtti,rdt_normal)),
                  result));
                exit;
@@ -5170,7 +5170,7 @@ implementation
            newblock:=internalstatements(newstatement);
 
            { get temp for array of lengths }
-           temp:=CTempCreateNode.create(CArrayDef.getreusable(sinttype,dims),dims*sinttype.size,tt_persistent,false);
+           temp:=CTempCreateNode.create(CArrayDef.getreusable(SIntType,dims),dims*SIntType.size,tt_persistent,false);
            addstatement(newstatement,temp);
 
            { load array of lengths }
@@ -5192,25 +5192,25 @@ implementation
            ppn.left:=nil;
 
            { create call to fpc_dynarr_setlength }
-           npara:=CCallParaNode.create(CAddrNode.create_internal(
+           npara:=CCallParaNode.create(CAddrNode.Create_Internal(
                      CVecNode.create(
                        CTempRefNode.create(temp),
                        genintconstnode(0)
                      )),
                   CCallParaNode.create(COrdConstNode.create
-                     (dims,sinttype,true),
-                  CCallParaNode.create(CAddrNode.create_internal
+                     (dims,SIntType,true),
+                  CCallParaNode.create(CAddrNode.Create_Internal
                      (CRTTINode.create(TStoredDef(destppn.resultdef),initrtti,rdt_normal)),
-                  CCallParaNode.create(CTypeConvNode.create_internal(destppn,voidpointertype),nil))));
+                  CCallParaNode.create(CTypeConvNode.Create_Internal(destppn,VoidPointerType),nil))));
            addstatement(newstatement,CCallNode.createintern('fpc_dynarray_setlength',npara));
            addstatement(newstatement,CTempDeleteNode.create(temp));
          end
         else if is_ansistring(destppn.resultdef) then
          begin
             newblock:=CCallNode.createintern(
-              'fpc_'+TStringDef(destppn.resultdef).stringtypname+'_setlength',
+              'fpc_'+TStringDef(destppn.resultdef).StringTypName+'_setlength',
               CCallParaNode.create(
-                COrdConstNode.create(getparaencoding(destppn.resultdef),u16inttype,true),
+                COrdConstNode.create(GetParaEncoding(destppn.resultdef),U16IntType,true),
                 paras
               )
             );
@@ -5221,7 +5221,7 @@ implementation
          begin
            { we can reuse the supplied parameters }
            newblock:=CCallNode.createintern(
-              'fpc_'+TStringDef(destppn.resultdef).stringtypname+'_setlength',paras);
+              'fpc_'+TStringDef(destppn.resultdef).StringTypName+'_setlength',paras);
            { we reused the parameters, make sure we don't release them }
            left:=nil;
          end;
@@ -5258,7 +5258,7 @@ implementation
         { fill up third parameter }
         if counter=2 then
           begin
-            paras:=CCallParaNode.create(COrdConstNode.create(TOrdDef(sinttype).high,sinttype,false),paras);
+            paras:=CCallParaNode.create(COrdConstNode.create(TOrdDef(SIntType).high,SIntType,false),paras);
             counter:=3;
           end;
 
@@ -5276,30 +5276,30 @@ implementation
         else if is_dynamic_array(resultdef) then
           begin
             { create statements with call }
-            elesizeppn:=COrdConstNode.create(TArrayDef(paradef).elesize,sinttype,false);
-            if is_managed_type(TArrayDef(paradef).elementdef) then
-              eletypeppn:=CAddrNode.create_internal(
-                CRTTINode.create(TStoredDef(TArrayDef(paradef).elementdef),initrtti,rdt_normal))
+            elesizeppn:=COrdConstNode.create(TArrayDef(paradef).EleSize,SIntType,false);
+            if is_managed_type(TArrayDef(paradef).ElementDef) then
+              eletypeppn:=CAddrNode.Create_Internal(
+                CRTTINode.create(TStoredDef(TArrayDef(paradef).ElementDef),initrtti,rdt_normal))
             else
-              eletypeppn:=COrdConstNode.create(0,voidpointertype,false);
-            maxcountppn:=geninlinenode(in_length_x,false,ppn.left.getcopy);
+              eletypeppn:=COrdConstNode.create(0,VoidPointerType,false);
+            maxcountppn:=geninlinenode(in_length_x,false,ppn.left.GetCopy);
             case counter of
               1:
                 begin
                   { copy the whole array using [0..high(sizeint)] range }
-                  countppn:=COrdConstNode.create(TOrdDef(sinttype).high,sinttype,false);
-                  lowppn:=COrdConstNode.create(0,sinttype,false);
+                  countppn:=COrdConstNode.create(TOrdDef(SIntType).high,SIntType,false);
+                  lowppn:=COrdConstNode.create(0,SIntType,false);
                 end;
               2:
                 begin
                   { copy the array using [low..high(sizeint)] range }
-                  countppn:=COrdConstNode.create(TOrdDef(sinttype).high,sinttype,false);
-                  lowppn:=TCallParaNode(paras).left.getcopy;
+                  countppn:=COrdConstNode.create(TOrdDef(SIntType).high,SIntType,false);
+                  lowppn:=TCallParaNode(paras).left.GetCopy;
                 end;
               3:
                 begin
-                  countppn:=TCallParaNode(paras).left.getcopy;
-                  lowppn:=TCallParaNode(TCallParaNode(paras).right).left.getcopy;
+                  countppn:=TCallParaNode(paras).left.GetCopy;
+                  lowppn:=TCallParaNode(TCallParaNode(paras).right).left.GetCopy;
                 end;
               else
                 InternalError(2012100703);
@@ -5307,16 +5307,16 @@ implementation
 
             if is_open_array(paradef) then
               begin
-                arrayppn:=CAddrNode.create_internal(ppn.left);
+                arrayppn:=CAddrNode.Create_Internal(ppn.left);
               end
             else if is_dynamic_array(paradef) then
               begin
-                arrayppn:=CTypeConvNode.create_internal(ppn.left,voidpointertype);
+                arrayppn:=CTypeConvNode.Create_Internal(ppn.left,VoidPointerType);
               end
             else
               InternalError(2012100704);
 
-            rttippn:=CAddrNode.create_internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal));
+            rttippn:=CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal));
 
             { create call to fpc_array_to_dynarray_copy }
             npara:=CCallParaNode.create(eletypeppn,
@@ -5355,16 +5355,16 @@ implementation
 
          { create call to fpc_getmem }
          para := CCallParaNode.create(COrdConstNode.create
-             (TPointerDef(left.resultdef).pointeddef.size,s32inttype,true),nil);
+             (TPointerDef(left.resultdef).PointedDef.size,S32IntType,true),nil);
          addstatement(newstatement,CAssignmentNode.create(
              CTempRefNode.create(temp),
              CCallNode.createintern('fpc_getmem',para)));
 
          { create call to fpc_initialize }
-         if is_managed_type(TPointerDef(left.resultdef).pointeddef) then
+         if is_managed_type(TPointerDef(left.resultdef).PointedDef) then
           begin
-            para := CCallParaNode.create(CAddrNode.create_internal(CRTTINode.create
-                       (TStoredDef(TPointerDef(left.resultdef).pointeddef),initrtti,rdt_normal)),
+            para := CCallParaNode.create(CAddrNode.Create_Internal(CRTTINode.create
+                       (TStoredDef(TPointerDef(left.resultdef).PointedDef),initrtti,rdt_normal)),
                     CCallParaNode.create(CTempRefNode.create
                        (temp),nil));
             addstatement(newstatement,CCallNode.createintern('fpc_initialize',para));
@@ -5435,7 +5435,7 @@ implementation
        var
          suffix : string;
        begin
-         case TOrdDef(left.resultdef).ordtype of
+         case TOrdDef(left.resultdef).OrdType of
            u8bit: suffix:='byte';
            u16bit: suffix:='word';
            u32bit: suffix:='dword';
@@ -5457,7 +5457,7 @@ implementation
      function TInlineNode.typecheck_seg: TNode;
        begin
          set_varstate(left,vs_read,[]);
-         result:=COrdConstNode.create(0,s32inttype,false);
+         result:=COrdConstNode.create(0,S32IntType,false);
        end;
 
 
@@ -5476,7 +5476,7 @@ implementation
          if is_64bitint(resultdef) then
            begin
              if (inlinenumber=in_sar_x) then
-               left:=CCallParaNode.create(COrdConstNode.create(1,u8inttype,false),
+               left:=CCallParaNode.create(COrdConstNode.create(1,U8IntType,false),
                  CCallParaNode.create(left,nil));
              result:=CCallNode.createintern('fpc_sarint64',left);
              left:=nil;
@@ -5491,7 +5491,7 @@ implementation
          if not Assigned(left) or
             Assigned(TCallParaNode(left).right) then
            CGMessage1(parser_e_wrong_parameter_size,'FpcInternalBox');
-         resultdef:=class_tobject;
+         resultdef:=Class_TObject;
        end;
 
 
@@ -5513,14 +5513,14 @@ implementation
        procedure do_error;
          begin
            CGMessagePos1(fileinfo,parser_e_wrong_parameter_size,'Insert');
-           write_system_parameter_lists('fpc_shortstr_insert');
-           write_system_parameter_lists('fpc_shortstr_insert_char');
-           write_system_parameter_lists('fpc_unicodestr_insert');
+           Write_System_Parameter_Lists('fpc_shortstr_insert');
+           Write_System_Parameter_Lists('fpc_shortstr_insert_char');
+           Write_System_Parameter_Lists('fpc_unicodestr_insert');
            if tf_winlikewidestring in TargetInfo.flags then
-             write_system_parameter_lists('fpc_widestr_insert');
-           write_system_parameter_lists('fpc_ansistr_insert');
-           MessagePos1(fileinfo,sym_e_param_list,'Insert(Dynamic Array;var Dynamic Array;'+sinttype.typename+');');
-           MessagePos1(fileinfo,sym_e_param_list,'Insert(Element;var Dynamic Array;'+sinttype.typename+');');
+             Write_System_Parameter_Lists('fpc_widestr_insert');
+           Write_System_Parameter_Lists('fpc_ansistr_insert');
+           MessagePos1(fileinfo,sym_e_param_list,'Insert(Dynamic Array;var Dynamic Array;'+SIntType.TypeName+');');
+           MessagePos1(fileinfo,sym_e_param_list,'Insert(Element;var Dynamic Array;'+SIntType.TypeName+');');
          end;
 
        var
@@ -5573,8 +5573,8 @@ implementation
                c) a static array of the same type (not Delphi compatible)
              }
              isconstr:=is_array_constructor(first);
-             iscomparray:=(first.typ=arraydef) and equal_defs(TArrayDef(first).elementdef,TArrayDef(second).elementdef);
-             iscompelem:=compare_defs(first,TArrayDef(second).elementdef,niln)<>te_incompatible;
+             iscomparray:=(first.typ=arraydef) and equal_defs(TArrayDef(first).ElementDef,TArrayDef(second).ElementDef);
+             iscompelem:=compare_defs(first,TArrayDef(second).ElementDef,niln)<>te_incompatible;
              if not iscomparray
                  and not iscompelem
                  and not isconstr then
@@ -5589,9 +5589,9 @@ implementation
                  datatemp:=CTempCreateNode.create_value(first,first.size,tt_normal,false,firstn);
                  addstatement(insertstatement,datatemp);
                  if is_dynamic_array(first) then
-                   datan:=CTypeConvNode.create_internal(CTempRefNode.create(datatemp),voidpointertype)
+                   datan:=CTypeConvNode.Create_Internal(CTempRefNode.create(datatemp),VoidPointerType)
                  else
-                   datan:=CAddrNode.create_internal(CVecNode.create(CTempRefNode.create(datatemp),COrdConstNode.create(0,sizesinttype,false)));
+                   datan:=CAddrNode.Create_Internal(CVecNode.create(CTempRefNode.create(datatemp),COrdConstNode.create(0,SizeSIntType,false)));
                  datacountn:=CInlineNode.create(in_length_x,false,CTempRefNode.create(datatemp));
                end
              else if isconstr then
@@ -5599,32 +5599,32 @@ implementation
                  inserttypeconv(firstn,second);
                  datatemp:=CTempCreateNode.create_value(second,second.size,tt_normal,false,firstn);
                  addstatement(insertstatement,datatemp);
-                 datan:=CTypeConvNode.create_internal(CTempRefNode.create(datatemp),voidpointertype);
+                 datan:=CTypeConvNode.Create_Internal(CTempRefNode.create(datatemp),VoidPointerType);
                  datacountn:=CInlineNode.create(in_length_x,false,CTempRefNode.create(datatemp));
                end
              else
                begin
                  if is_const(firstn) then
                    begin
-                     datatemp:=CTempCreateNode.create_value(TArrayDef(second).elementdef,TArrayDef(second).elementdef.size,tt_normal,false,firstn);
+                     datatemp:=CTempCreateNode.create_value(TArrayDef(second).ElementDef,TArrayDef(second).ElementDef.size,tt_normal,false,firstn);
                      addstatement(insertstatement,datatemp);
-                     datan:=CAddrNode.create_internal(CTempRefNode.create(datatemp));
+                     datan:=CAddrNode.Create_Internal(CTempRefNode.create(datatemp));
                    end
                  else
                    begin
                      datan:=firstn;
-                     inserttypeconv(datan,TArrayDef(second).elementdef);
-                     datan:=CAddrNode.create_internal(datan);
+                     inserttypeconv(datan,TArrayDef(second).ElementDef);
+                     datan:=CAddrNode.Create_Internal(datan);
                    end;
-                 datacountn:=COrdConstNode.create(1,sizesinttype,false);
+                 datacountn:=COrdConstNode.create(1,SizeSIntType,false);
                end;
              procname:='fpc_dynarray_insert';
              { recreate the parameters as array pointer, source, data, count, typeinfo }
-             newn:=CCallParaNode.create(CAddrNode.create_internal(CRTTINode.create(TStoredDef(second),initrtti,rdt_normal)),
+             newn:=CCallParaNode.create(CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(second),initrtti,rdt_normal)),
                      CCallParaNode.create(datacountn,
                        CCallParaNode.create(datan,
                          CCallParaNode.create(TCallParaNode(left).left,
-                           CCallParaNode.create(CTypeConvNode.create_internal(secondn,voidpointertype),nil)))));
+                           CCallParaNode.create(CTypeConvNode.Create_Internal(secondn,VoidPointerType),nil)))));
              addstatement(insertstatement,CCallNode.createintern(procname,newn));
              if Assigned(datatemp) then
                addstatement(insertstatement,CTempDeleteNode.create(datatemp));
@@ -5653,12 +5653,12 @@ implementation
        procedure do_error;
          begin
            CGMessagePos1(fileinfo,parser_e_wrong_parameter_size,'Delete');
-           write_system_parameter_lists('fpc_shortstr_delete');
-           write_system_parameter_lists('fpc_unicodestr_delete');
+           Write_System_Parameter_Lists('fpc_shortstr_delete');
+           Write_System_Parameter_Lists('fpc_unicodestr_delete');
            if tf_winlikewidestring in TargetInfo.flags then
-             write_system_parameter_lists('fpc_widestr_delete');
-           write_system_parameter_lists('fpc_ansistr_delete');
-           MessagePos1(fileinfo,sym_e_param_list,'Delete(var Dynamic Array;'+sinttype.typename+';'+sinttype.typename+');');
+             Write_System_Parameter_Lists('fpc_widestr_delete');
+           Write_System_Parameter_Lists('fpc_ansistr_delete');
+           MessagePos1(fileinfo,sym_e_param_list,'Delete(var Dynamic Array;'+SIntType.TypeName+';'+SIntType.TypeName+');');
          end;
 
        var
@@ -5690,11 +5690,11 @@ implementation
            begin
              procname:='fpc_dynarray_delete';
              { recreate the parameters as array pointer, src, count, typeinfo }
-             newn:=CCallParaNode.create(CAddrNode.create_internal
+             newn:=CCallParaNode.create(CAddrNode.Create_Internal
                   (CRTTINode.create(TStoredDef(first),initrtti,rdt_normal)),
                     CCallParaNode.create(TCallParaNode(left).left,
                       CCallParaNode.create(TCallParaNode(TCallParaNode(left).right).left,
-                        CCallParaNode.create(CTypeConvNode.create_internal(firstn,voidpointertype),nil))));
+                        CCallParaNode.create(CTypeConvNode.Create_Internal(firstn,VoidPointerType),nil))));
              TCallParaNode(TCallParaNode(TCallParaNode(left).right).right).left:=nil;
              TCallParaNode(TCallParaNode(left).right).left:=nil;
              TCallParaNode(left).left:=nil;
@@ -5830,7 +5830,7 @@ implementation
                      addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
                      n:=CTempRefNode.create(tempnode);
                      { then to a plain pointer for the helper }
-                     inserttypeconv_internal(n,voidpointertype);
+                     inserttypeconv_internal(n,VoidPointerType);
                      arrconstr:=CArrayConstructorNode.create(n,arrconstr);
                    end;
                  Include(arrconstr.arrayconstructornodeflags,acnf_allow_array_constructor);
@@ -5842,8 +5842,8 @@ implementation
                  cpn:=CCallParaNode.create(
                          arrconstr,
                          CCallParaNode.create(
-                           CAddrNode.create_internal(CRTTINode.create(TStoredDef(arrn.resultdef),initrtti,rdt_normal)),
-                             CCallParaNode.create(CTypeConvNode.create_internal(CTempRefNode.create(tempnode),voidpointertype),nil))
+                           CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(arrn.resultdef),initrtti,rdt_normal)),
+                             CCallParaNode.create(CTypeConvNode.Create_Internal(CTempRefNode.create(tempnode),VoidPointerType),nil))
                        );
                  addstatement(
                    newstatement,
@@ -5872,7 +5872,7 @@ implementation
                             is_chararray(result.resultdef) or
                             is_char(result.resultdef)
                            ) then
-                       inserttypeconv(result,cshortstringtype);
+                       inserttypeconv(result,CShortStringType);
                    end;
                end;
            end;
@@ -5925,8 +5925,8 @@ implementation
 
          loop := internalstatements(loopstatement);
          loopvar := CTempCreateNode.create(
-           TArrayDef(packednode.resultdef).rangedef,
-           TArrayDef(packednode.resultdef).rangedef.size,
+           TArrayDef(packednode.resultdef).RangeDef,
+           TArrayDef(packednode.resultdef).RangeDef.size,
            tt_persistent,true);
          addstatement(loopstatement,loopvar);
 
@@ -5940,13 +5940,13 @@ implementation
          getrange(packednode.resultdef,plorange,phirange);
          { does not really need to be registered, but then we would have to
            record it elsewhere so it still can be freed }
-         temprangedef:=COrdDef.create(TOrdDef(sinttype).ordtype,ulorange,uhirange,true);
+         temprangedef:=COrdDef.create(TOrdDef(SIntType).OrdType,ulorange,uhirange,true);
          sourcevecindex := CTempRefNode.create(loopvar);
-         targetvecindex := CTypeConvNode.create_internal(index.getcopy,sinttype);
-         targetvecindex := CAddNode.create(subn,targetvecindex,COrdConstNode.create(plorange,sinttype,true));
+         targetvecindex := CTypeConvNode.Create_Internal(index.GetCopy,SIntType);
+         targetvecindex := CAddNode.create(subn,targetvecindex,COrdConstNode.create(plorange,SIntType,true));
          targetvecindex := CAddNode.create(addn,targetvecindex,CTempRefNode.create(loopvar));
          targetvecindex := CTypeConvNode.create(targetvecindex,temprangedef);
-         targetvecindex := CTypeConvNode.create_explicit(targetvecindex,TArrayDef(unpackednode.resultdef).rangedef);
+         targetvecindex := CTypeConvNode.create_explicit(targetvecindex,TArrayDef(unpackednode.resultdef).RangeDef);
 
          if (inlinenumber = in_pack_x_y_z) then
            begin
@@ -5959,14 +5959,14 @@ implementation
          { create the assignment in the loop body }
          loopbody :=
            CAssignmentNode.create(
-             CVecNode.create(target.getcopy,targetvecindex),
-             CVecNode.create(source.getcopy,sourcevecindex)
+             CVecNode.create(target.GetCopy,targetvecindex),
+             CVecNode.create(source.GetCopy,sourcevecindex)
            );
          { create the actual for loop }
          tempnode := CForNode.create(
            CTempRefNode.create(loopvar),
-           CInlineNode.create(in_low_x,false,packednode.getcopy),
-           CInlineNode.create(in_high_x,false,packednode.getcopy),
+           CInlineNode.create(in_low_x,false,packednode.GetCopy),
+           CInlineNode.create(in_high_x,false,packednode.GetCopy),
            loopbody,
            false);
          addstatement(loopstatement,tempnode);
@@ -6112,9 +6112,9 @@ implementation
          end;
          name:=name+'_';
          if is_pointer(resultdef) then
-           name:=name+ToStr(voidpointertype.size*8)
+           name:=name+ToStr(VoidPointerType.size*8)
          else if is_integer(resultdef) then
-           case TOrdDef(resultdef).ordtype of
+           case TOrdDef(resultdef).OrdType of
              s8bit:
                name:=name+'8';
              s16bit:
@@ -6146,14 +6146,14 @@ implementation
              left.free;
              left:=TCallParaNode(n);
              { get a copy of the Comparand parameter }
-             cmpn:=TCallParaNode(left).left.getcopy;
+             cmpn:=TCallParaNode(left).left.GetCopy;
            end
          else if ((inlinenumber=in_atomic_inc) or (inlinenumber=in_atomic_dec)) and (c=2) then
            begin
-             valn:=TCallParaNode(left).left.getcopy;
+             valn:=TCallParaNode(left).left.GetCopy;
            end;
 
-         result:=CTypeConvNode.create_internal(CCallNode.createintern(name,left),resultdef);
+         result:=CTypeConvNode.Create_Internal(CCallNode.createintern(name,left),resultdef);
 
          left:=nil;
 
@@ -6167,7 +6167,7 @@ implementation
              tmp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
              addstatement(stmt,tmp);
              addstatement(stmt,CAssignmentNode.create(CTempRefNode.create(tmp),result));
-             cmpn:=cmpn.getcopy;
+             cmpn:=cmpn.GetCopy;
              inserttypeconv_internal(cmpn,resultdef);
              addstatement(stmt,
                CAssignmentNode.create(succn,

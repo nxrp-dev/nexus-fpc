@@ -33,13 +33,13 @@ type
   { ti86procvardef }
 
   TI86ProcVarDef = class(TX86ProcVarDef)
-    function is_pushleftright: boolean; override;
+    function Is_PushLeftRight: boolean; override;
   end;
 
   { ti86procdef }
 
   TI86ProcDef = class(TX86ProcDef)
-    function is_pushleftright: boolean; override;
+    function Is_PushLeftRight: boolean; override;
   end;
 
   { ti86absolutevarsym }
@@ -59,16 +59,16 @@ uses
 
 { ti86procvardef }
 
-function TI86ProcVarDef.is_pushleftright: boolean;
+function TI86ProcVarDef.Is_PushLeftRight: boolean;
   begin
-    result:=proccalloption in pushleftright_pocalls;
+    result:=ProcCallOption in pushleftright_pocalls;
   end;
 
 { ti86procdef }
 
-function TI86ProcDef.is_pushleftright: boolean;
+function TI86ProcDef.Is_PushLeftRight: boolean;
   begin
-    result:=proccalloption in pushleftright_pocalls;
+    result:=ProcCallOption in pushleftright_pocalls;
   end;
 
 { ti86absolutevarsym }
@@ -76,7 +76,7 @@ function TI86ProcDef.is_pushleftright: boolean;
 procedure TI86AbsoluteVarSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
-    if abstyp=toaddr then
+    if AbsTyp=toaddr then
       absseg:=ppufile.GetBoolean
     else
       absseg:=false;
@@ -86,7 +86,7 @@ procedure TI86AbsoluteVarSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
 procedure TI86AbsoluteVarSym.PPUWritePlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
-    if abstyp=toaddr then
+    if AbsTyp=toaddr then
       ppufile.PutBoolean(absseg);
   end;
 

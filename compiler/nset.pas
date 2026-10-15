@@ -116,7 +116,7 @@ interface
           destructor Destroy;override;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
           procedure printnodetree(var t:text);override;
@@ -226,17 +226,17 @@ implementation
           i : LongInt;
         begin
           new(pcs);
-          case psd.elementdef.typ of
+          case psd.ElementDef.typ of
             enumdef :
               begin
-                for i := 0 to TEnumDef(psd.elementdef).SymTable.SymList.Count - 1 do
+                for i := 0 to TEnumDef(psd.ElementDef).SymTable.SymList.Count - 1 do
                   begin
-                    include(pcs^,TEnumSym(TEnumDef(psd.elementdef).SymTable.SymList[i]).value);
+                    include(pcs^,TEnumSym(TEnumDef(psd.ElementDef).SymTable.SymList[i]).value);
                   end;
               end;
             orddef :
               begin
-                for i:=int64(TOrdDef(psd.elementdef).low) to int64(TOrdDef(psd.elementdef).high) do
+                for i:=int64(TOrdDef(psd.ElementDef).low) to int64(TOrdDef(psd.ElementDef).high) do
                   include(pcs^,i);
               end;
             else
@@ -248,7 +248,7 @@ implementation
       begin
          result:=nil;
 
-         resultdef:=pasbool1type;
+         resultdef:=PasBool1Type;
          TypeCheckPass(right);
          set_varstate(right,vs_read,[vsf_must_be_valid]);
          if CodeGenError then
@@ -273,7 +273,7 @@ implementation
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
            begin
-             resultdef:=cundefinedtype;
+             resultdef:=CUndefinedType;
              exit;
            end;
 
@@ -290,16 +290,16 @@ implementation
          if CodeGenError then
            exit;
 
-         if not is_ordinal(left.resultdef) or (left.resultdef.size > u32inttype.size) then
+         if not is_ordinal(left.resultdef) or (left.resultdef.size > U32IntType.size) then
            begin
              CGMessage(type_h_in_range_check);
              if is_signed(left.resultdef) then
-               inserttypeconv(left,s32inttype)
+               inserttypeconv(left,S32IntType)
              else
-               inserttypeconv(left,u32inttype);
+               inserttypeconv(left,U32IntType);
            end
-         else if Assigned(TSetDef(right.resultdef).elementdef) and
-                 not(is_integer(TSetDef(right.resultdef).elementdef) and
+         else if Assigned(TSetDef(right.resultdef).ElementDef) and
+                 not(is_integer(TSetDef(right.resultdef).ElementDef) and
                      is_integer(left.resultdef)) then
             { Type conversion to check things like 'char in set_of_byte'. }
             { Can't use is_subequal because that will fail for            }
@@ -307,14 +307,14 @@ implementation
             { Can't use the type conversion for integers because then     }
             { "longint in set_of_byte" will give a range check error      }
             { instead of false                                            }
-            inserttypeconv(left,TSetDef(right.resultdef).elementdef);
+            inserttypeconv(left,TSetDef(right.resultdef).ElementDef);
 
          { empty set then return false }
-         if not Assigned(TSetDef(right.resultdef).elementdef) or
+         if not Assigned(TSetDef(right.resultdef).ElementDef) or
             ((right.nodetype = setconstn) and
              (TNormalSet(TSetConstNode(right).value_set^) = [])) then
           begin
-            t:=COrdConstNode.create(0,pasbool1type,false);
+            t:=COrdConstNode.create(0,PasBool1Type,false);
             TypeCheckPass(t);
             result:=t;
             exit;
@@ -342,20 +342,20 @@ implementation
                  { into account                                             }
                  if TOrdConstNode(left).value.signed then
                    t:=COrdConstNode.create(byte(TOrdConstNode(left).value.svalue in TSetConstNode(right).value_set^),
-                     pasbool1type,true)
+                     PasBool1Type,true)
                  else
                    t:=COrdConstNode.create(byte(TOrdConstNode(left).value.uvalue in TSetConstNode(right).value_set^),
-                     pasbool1type,true);
+                     PasBool1Type,true);
                  TypeCheckPass(t);
                  result:=t;
                  exit;
                end
              else
                begin
-                 if (TOrdConstNode(left).value<int64(TSetDef(right.resultdef).setbase)) or
-                    (TOrdConstNode(left).value>int64(TSetDef(right.resultdef).setmax)) then
+                 if (TOrdConstNode(left).value<int64(TSetDef(right.resultdef).SetBase)) or
+                    (TOrdConstNode(left).value>int64(TSetDef(right.resultdef).SetMax)) then
                    begin
-                     t:=COrdConstNode.create(0, pasbool1type, true);
+                     t:=COrdConstNode.create(0, PasBool1Type, true);
                      TypeCheckPass(t);
                      result:=t;
                      exit;
@@ -376,7 +376,7 @@ implementation
            ) and
            not(might_have_sideeffects(left,[mhs_exceptions])) then
            begin
-             t:=COrdConstNode.create(1, pasbool1type, true);
+             t:=COrdConstNode.create(1, PasBool1Type, true);
              TypeCheckPass(t);
              result:=t;
              exit;
@@ -385,7 +385,7 @@ implementation
          else if is_emptyset(right) and
            not(might_have_sideeffects(left,[mhs_exceptions])) then
            begin
-             t:=COrdConstNode.create(1, pasbool1type, false);
+             t:=COrdConstNode.create(1, PasBool1Type, false);
              TypeCheckPass(t);
              result:=t;
              exit;
@@ -534,8 +534,8 @@ implementation
          n^:=p^;
          if (p^.label_type = ltConstString) then
            begin
-             n^._low_str := TStringConstNode(p^._low_str.getcopy);
-             n^._high_str := TStringConstNode(p^._high_str.getcopy);
+             n^._low_str := TStringConstNode(p^._low_str.GetCopy);
+             n^._high_str := TStringConstNode(p^._high_str.GetCopy);
            end;
          if Assigned(p^.greater) then
            n^.greater:=copycaselabel(p^.greater);
@@ -557,8 +557,8 @@ implementation
           end
         else
           begin
-            ppufile.putexprint(p^._low);
-            ppufile.putexprint(p^._high);
+            ppufile.PutExprInt(p^._low);
+            ppufile.PutExprInt(p^._high);
           end;
 
         ppufile.PutLongInt(p^.blockid);
@@ -587,8 +587,8 @@ implementation
           begin
             p^.label_type := ltOrdinal;
 
-            p^._low:=ppufile.getexprint;
-            p^._high:=ppufile.getexprint;
+            p^._low:=ppufile.GetExprInt;
+            p^._high:=ppufile.GetExprInt;
           end;
 
         p^.blockid:=ppufile.GetLongInt;
@@ -668,15 +668,15 @@ implementation
       end;
 
 
-    procedure TCaseNode.buildderefimpl;
+    procedure TCaseNode.BuildDerefImpl;
       var
         i : integer;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         if Assigned(elseblock) then
-          elseblock.buildderefimpl;
+          elseblock.BuildDerefImpl;
         for i:=0 to blocks.count-1 do
-          PCaseBlock(blocks[i])^.statement.buildderefimpl;
+          PCaseBlock(blocks[i])^.statement.BuildDerefImpl;
       end;
 
 
@@ -706,7 +706,7 @@ implementation
         if Assigned(elseblock) then
           TypeCheckPass(elseblock);
 
-        resultdef:=voidtype;
+        resultdef:=VoidType;
         result:=simplify(false);
       end;
 
@@ -777,13 +777,13 @@ implementation
                   else
                     newcheck:=@check;
                   labitem:=TLinkedListCaseLabelItem(lablist[j]).casenode;
-                  newcheck^:=CAddNode.create(equaln,left.getcopy,labitem^._low_str.getcopy);
+                  newcheck^:=CAddNode.create(equaln,left.GetCopy,labitem^._low_str.GetCopy);
                   if (labitem^._low_str.fullcompare(labitem^._high_str)<>0) then
                     begin
                       newcheck^.nodetype:=gten;
                       newcheck^:=CAddNode.create(
                         andn,newcheck^,CAddNode.create(
-                          lten,left.getcopy,labitem^._high_str.getcopy));
+                          lten,left.GetCopy,labitem^._high_str.GetCopy));
                     end;
                 end;
               result:=CIfNode.create(check,
@@ -946,16 +946,16 @@ implementation
            begin
              if flabels^._low=flabels^._high then
                begin
-                 result:=CIfNode.create_internal(
-                   CAddNode.create_internal(equaln,left.getcopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
+                 result:=CIfNode.Create_Internal(
+                   CAddNode.Create_Internal(equaln,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
                    PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock);
                end
              else if not(might_have_sideeffects(left,[mhs_exceptions])) and (node_complexity(left)<=1) then
                begin
-                 result:=CIfNode.create_internal(
-                   CAddNode.create_internal(andn,
-                     CAddNode.create_internal(gten,left.getcopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
-                     CAddNode.create_internal(lten,left.getcopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
+                 result:=CIfNode.Create_Internal(
+                   CAddNode.Create_Internal(andn,
+                     CAddNode.Create_Internal(gten,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
+                     CAddNode.Create_Internal(lten,left.GetCopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
                    ),
                    PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock);
                end
@@ -969,15 +969,15 @@ implementation
 
                  addstatement(stmt,tempcaseexpr);
                  addstatement(stmt,CAssignmentNode.create(
-                   CTempRefNode.create(tempcaseexpr),left.getcopy));
+                   CTempRefNode.create(tempcaseexpr),left.GetCopy));
 
                  left:=CTempRefNode.create(tempcaseexpr);
                  TypeCheckPass(left);
 
-                 addstatement(stmt,CIfNode.create_internal(
-                   CAddNode.create_internal(andn,
-                     CAddNode.create_internal(gten,left.getcopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
-                     CAddNode.create_internal(lten,left.getcopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
+                 addstatement(stmt,CIfNode.Create_Internal(
+                   CAddNode.Create_Internal(andn,
+                     CAddNode.Create_Internal(gten,left.GetCopy,COrdConstNode.create(flabels^._low,left.resultdef,false)),
+                     CAddNode.Create_Internal(lten,left.GetCopy,COrdConstNode.create(flabels^._high,left.resultdef,false))
                    ),
                    PCaseBlock(blocks[flabels^.blockid])^.statement,elseblock));
                  addstatement(stmt,temp_cleanup);
@@ -1009,7 +1009,7 @@ implementation
                     result:=PCaseBlock(blocks[tmp^.blockid])^.statement;
                     if not Assigned(result) then
                       InternalError(2014022102);
-                    result:=result.getcopy;
+                    result:=result.GetCopy;
                     exit;
                   end;
 
@@ -1020,7 +1020,7 @@ implementation
               end;
             { no label did match; use the else block if available }
             if Assigned(elseblock) then
-              result:=elseblock.getcopy
+              result:=elseblock.GetCopy
             else
               begin
                 if ([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[] then
@@ -1251,22 +1251,22 @@ implementation
 
       function orddefspansfullrange(def: TOrdDef): boolean;
         var
-          packedbitsize: cardinal;
+          PackedBitSize: cardinal;
           dummy: LongInt;
           val: qword;
         begin
           result:=false;
-          packedbitsize:=def.packedbitsize;
-          if ((packedbitsize mod 8) <> 0) or
-             not IsPowerOf2(packedbitsize div 8,dummy) then
+          PackedBitSize:=def.PackedBitSize;
+          if ((PackedBitSize mod 8) <> 0) or
+             not IsPowerOf2(PackedBitSize div 8,dummy) then
             exit;
-          dec(packedbitsize);
+          dec(PackedBitSize);
           if is_signed(def) then
             begin
 {$push}{$q-}
-              if def.low<>(-(int64(1) shl packedbitsize)) then
+              if def.low<>(-(int64(1) shl PackedBitSize)) then
                 exit;
-              if def.high<>((int64(1) shl packedbitsize)-1) then
+              if def.high<>((int64(1) shl PackedBitSize)-1) then
                 exit;
 {$pop}
             end
@@ -1274,7 +1274,7 @@ implementation
             begin
               if def.low<>0 then
                 exit;
-              val:=qword(1) shl packedbitsize;
+              val:=qword(1) shl PackedBitSize;
               val:=(val-1)+val;
               if def.high<>val then
                 exit;
@@ -1412,8 +1412,8 @@ implementation
         hcaselabel^.blockid := blockid;
         hcaselabel^.label_type := ltConstString;
 
-        hcaselabel^._low_str := TStringConstNode(l.getcopy);
-        hcaselabel^._high_str := TStringConstNode(h.getcopy);
+        hcaselabel^._low_str := TStringConstNode(l.GetCopy);
+        hcaselabel^._high_str := TStringConstNode(h.GetCopy);
 
         insertlabel(flabels);
       end;

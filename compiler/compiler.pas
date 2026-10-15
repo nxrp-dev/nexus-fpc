@@ -112,7 +112,7 @@ begin
 { Free memory for the others }
   CompilerInited:=false;
   Do_DoneSymbolInfo;
-  DoneSymtable;
+  DoneSymTable;
   DoneGlobals;
   DoneFileUtils;
   donetokens;
@@ -137,7 +137,7 @@ begin
   { verbose depends on exe_path and must be after globals }
   InitVerbose;
   inittokens;
-  InitSymtable; {Must come before read_arguments, to enable macrosymstack}
+  InitSymTable; {Must come before read_arguments, to enable macrosymstack}
   Do_InitSymbolInfo;
   CompilerInited:=true;
 { this is needed here for the IDE
@@ -225,10 +225,10 @@ begin
          m.state:=ms_compile;
          m.IsInitial:=true;
          { We need to add the initial module manually to the list of units }
-         addloadedunit(m);
-         main_module:=m;
-         task_handler.addmodule(m);
-         task_handler.processqueue;
+         AddLoadedUnit(m);
+         Main_Module:=m;
+         Task_Handler.AddModule(m);
+         Task_Handler.ProcessQueue;
          end;
 
 

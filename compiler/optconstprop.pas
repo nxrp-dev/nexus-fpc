@@ -121,7 +121,7 @@ unit optconstprop;
         else if n.isequal(TAssignmentNode(arg).left) and ((n.flags*[nf_write,nf_modify])=[]) then
           begin
             n.Free;
-            n:=TAssignmentNode(arg).right.getcopy;
+            n:=TAssignmentNode(arg).right.GetCopy;
             inserttypeconv_internal(n, TAssignmentNode(arg).left.resultdef);
 
             tree_modified:=true;
@@ -144,7 +144,7 @@ unit optconstprop;
                     { the constant can propagate if is is not the counter variable ... }
                     if not(TAssignmentNode(arg).left.isequal(actualtargetnode(@TForNode(n).left)^)) and
                     { if it is a temprefn or its address is not taken in case of loadn }
-                      ((TAssignmentNode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).addr_taken)) and
+                      ((TAssignmentNode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).AddrTaken)) and
                       { and no definition in the loop? }
                       not(DynSetIn(TForNode(n).t2.optinfo^.defsum,TAssignmentNode(arg).left.optinfo^.index)) then
                       begin
@@ -261,7 +261,7 @@ unit optconstprop;
             { only propagate simply variables which are regable, this means that their address is not
               taken }
             if (TAssignmentNode(arg).left.nodetype=loadn) and
-              (TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).varregable in [vr_fpureg,vr_mmreg,vr_intreg]) then
+              (TAbstractVarSym(TLoadNode(TAssignmentNode(arg).left).symtableentry).VarRegable in [vr_fpureg,vr_mmreg,vr_intreg]) then
               begin
                 result:=replaceBasicAssign(TNode(TCallNode(n).callinitblock), arg, tree_modified);
                 result:=result and replaceBasicAssign(TCallNode(n).left, arg, tree_modified2);
@@ -336,16 +336,16 @@ unit optconstprop;
 
                     if ((((l.nodetype=loadn) and
                          { its address cannot have escaped the current routine }
-                         not(TAbstractVarSym(TLoadNode(l).symtableentry).addr_taken)) and
+                         not(TAbstractVarSym(TLoadNode(l).symtableentry).AddrTaken)) and
                          ((
                            (TLoadNode(l).symtableentry.typ=localvarsym) and
-                           (TLoadNode(l).SymTable=CurrentProcInfo.procdef.localst)
+                           (TLoadNode(l).SymTable=CurrentProcInfo.procdef.LocalST)
                           ) or
                           ((TLoadNode(l).symtableentry.typ=paravarsym) and
-                           (TLoadNode(l).SymTable=CurrentProcInfo.procdef.parast)
+                           (TLoadNode(l).SymTable=CurrentProcInfo.procdef.ParaST)
                           ) or
                           ((TLoadNode(l).symtableentry.typ=staticvarsym) and
-                           (TLoadNode(l).SymTable.symtabletype=staticsymtable)
+                           (TLoadNode(l).SymTable.SymTableType=staticsymtable)
                           )
                          )) or
                         (l.nodetype = temprefn)) and

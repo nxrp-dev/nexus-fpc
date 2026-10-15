@@ -97,7 +97,7 @@ implementation
       { do not use a ref. for calling conventions which allocate all registers, the reg. allocator cannot handle this, see
         also issue #28639, I were not able to create a simple example though to cause the resulting endless spilling }
       result:=((getsupreg(ref.base)<first_int_imreg) and (getsupreg(ref.index)<first_int_imreg)) or
-              not(procdefinition.proccalloption in save_all_regs);
+              not(procdefinition.ProcCallOption in save_all_regs);
     end;
 
 

@@ -134,9 +134,9 @@ begin
   updatecurmaxlen;
   { left and right are already firstpass'ed by taddnode.pass_1 }
   if not is_shortstring(left.resultdef) then
-   inserttypeconv(left,cshortstringtype);
+   inserttypeconv(left,CShortStringType);
   if not is_shortstring(right.resultdef) then
-   inserttypeconv(right,cshortstringtype);
+   inserttypeconv(right,CShortStringType);
   resultdef := left.resultdef;
 end;
 
@@ -258,7 +258,7 @@ function genaddsstringcharoptnode(p: TAddNode): TNode;
 var
   hp: TNode;
 begin
-  hp := CAddSStringCharOptNode.create(p.left.getcopy,p.right.getcopy);
+  hp := CAddSStringCharOptNode.create(p.left.GetCopy,p.right.GetCopy);
   hp.flags := p.flags;
   genaddsstringcharoptnode := hp;
 end;
@@ -280,7 +280,7 @@ function genaddsstringcsstringoptnode(p: TAddNode): TNode;
 var
   hp: TNode;
 begin
-  hp := CAddSStringCSStringOptNode.create(p.left.getcopy,p.right.getcopy);
+  hp := CAddSStringCSStringOptNode.create(p.left.GetCopy,p.right.GetCopy);
   hp.flags := p.flags;
   genaddsstringcsstringoptnode := hp;
 end;
@@ -319,7 +319,7 @@ begin
   is_shortstr:=is_shortstring(p.resultdef);
   while Assigned(hp) and (hp.nodetype=addn) do
     begin
-      sn:=TAddNode(hp).right.getcopy;
+      sn:=TAddNode(hp).right.GetCopy;
       if not is_shortstr or not is_shortstring(sn.resultdef) then
         inserttypeconv(sn,p.resultdef);
       if is_shortstr then
@@ -330,7 +330,7 @@ begin
       arrp:=CArrayConstructorNode.create(sn,arrp);
       hp:=TAddNode(hp).left;
     end;
-  sn:=hp.getcopy;
+  sn:=hp.GetCopy;
   if not is_shortstr or not is_shortstring(sn.resultdef) then
     inserttypeconv(sn,p.resultdef);
   if is_shortstr then
@@ -353,7 +353,7 @@ begin
     begin
       para:=CCallParaNode.create(
               arrp,
-              CCallParaNode.create(aktassignmentnode.left.getcopy,nil)
+              CCallParaNode.create(aktassignmentnode.left.GetCopy,nil)
             );
       if is_ansistring(p.resultdef) then
         para:=CCallParaNode.create(
@@ -361,13 +361,13 @@ begin
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
                   TStringDef(p.resultdef).encoding,
-                  u16inttype,
+                  U16IntType,
                   true
                 ),
                 para
               );
       result:=CCallNode.createintern(
-                'fpc_'+TStringDef(p.resultdef).stringtypname+'_concat_multi',
+                'fpc_'+TStringDef(p.resultdef).StringTypName+'_concat_multi',
                 para
               );
       include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
@@ -387,7 +387,7 @@ begin
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
                   TStringDef(p.resultdef).encoding,
-                  u16inttype,
+                  U16IntType,
                   true
                 ),
                 para
@@ -395,7 +395,7 @@ begin
       addstatement(
         newstatement,
         CCallNode.createintern(
-          'fpc_'+TStringDef(p.resultdef).stringtypname+'_concat_multi',
+          'fpc_'+TStringDef(p.resultdef).StringTypName+'_concat_multi',
           para
         )
       );
@@ -451,14 +451,14 @@ var
       optemp : TTempCreateNode;
     begin
       if is_stored_operand(n) then
-        exit(CTypeConvNode.create_internal(n,voidpointertype));
+        exit(CTypeConvNode.Create_Internal(n,VoidPointerType));
       if not is_array_constructor(n.resultdef) then
         inserttypeconv(n,p.resultdef);
       optemp:=CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
       addstatement(newstatement,optemp);
       addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(optemp),n));
       addstatement(newstatement,CTempDeleteNode.create_normal_temp(optemp));
-      operandref:=CTypeConvNode.create_internal(CTempRefNode.create(optemp),voidpointertype);
+      operandref:=CTypeConvNode.Create_Internal(CTempRefNode.create(optemp),VoidPointerType);
     end;
 
 begin
@@ -467,10 +467,10 @@ begin
   hp:=p;
   while Assigned(hp) and (hp.nodetype=addn) do
     begin
-      arrp:=CArrayConstructorNode.create(operandref(TAddNode(hp).right.getcopy),arrp);
+      arrp:=CArrayConstructorNode.create(operandref(TAddNode(hp).right.GetCopy),arrp);
       hp:=TAddNode(hp).left;
     end;
-  arrp:=CArrayConstructorNode.create(operandref(hp.getcopy),arrp);
+  arrp:=CArrayConstructorNode.create(operandref(hp.GetCopy),arrp);
   Include(arrp.arrayconstructornodeflags, acnf_allow_array_constructor);
   if Assigned(aktassignmentnode) and
      (aktassignmentnode.right=p) and
@@ -480,9 +480,9 @@ begin
       para:=CCallParaNode.create(
               arrp,
             CCallParaNode.create(
-              CAddrNode.create_internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
+              CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
             CCallParaNode.create(
-              CTypeConvNode.create_internal(aktassignmentnode.left.getcopy,voidpointertype),nil)
+              CTypeConvNode.Create_Internal(aktassignmentnode.left.GetCopy,VoidPointerType),nil)
           ));
       addstatement(newstatement,
         CCallNode.createintern(
@@ -499,9 +499,9 @@ begin
       para:=CCallParaNode.create(
               arrp,
             CCallParaNode.create(
-              CAddrNode.create_internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
+              CAddrNode.Create_Internal(CRTTINode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
             CCallParaNode.create(
-              CTypeConvNode.create_internal(CTempRefNode.create(tempnode),voidpointertype),nil)
+              CTypeConvNode.Create_Internal(CTempRefNode.create(tempnode),VoidPointerType),nil)
           ));
       addstatement(
         newstatement,

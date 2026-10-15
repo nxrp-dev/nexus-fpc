@@ -340,7 +340,7 @@ unit agcpugas;
       var
         hp,hpnext,hpdata : TAI;
         seh : TAISEHDirective absolute hp;
-        lastsym : TAISymbol;
+        LastSym : TAISymbol;
         lastsec : TAISection;
         inprologue,
         smartunwind,
@@ -364,7 +364,7 @@ unit agcpugas;
         if not Assigned(list) then
           exit;
 
-        lastsym:=nil;
+        LastSym:=nil;
         tmplist:=nil;
         sehlist:=nil;
         lastsec:=nil;
@@ -400,7 +400,7 @@ unit agcpugas;
                     begin
                       lastsec:=TAISection(hp);
                       { also reset the last encountered symbol }
-                      lastsym:=nil;
+                      LastSym:=nil;
                     end;
 
                   if Assigned(tmplist) then
@@ -414,7 +414,7 @@ unit agcpugas;
               ait_symbol:
                 begin
                   if TAISymbol(hp).sym.typ=AT_FUNCTION then
-                    lastsym:=TAISymbol(hp);
+                    LastSym:=TAISymbol(hp);
                 end;
               ait_instruction:
                 if Assigned(sehlist) then
@@ -446,7 +446,7 @@ unit agcpugas;
                           InternalError(2020041501);
                         if Assigned(tmplist) then
                           InternalError(2020041302);
-                        if not Assigned(lastsym) then
+                        if not Assigned(LastSym) then
                           InternalError(2020041303);
                         if inprologue then
                           CGMessage(asmw_e_missing_endprologue);
@@ -469,16 +469,16 @@ unit agcpugas;
                             { note: we can pass Nil here, because in case of a LLVM
                                     backend this whole code shouldn't be required
                                     anyway }
-                            xdatasym:=CurrentAsmData.DefineAsmSymbol('xdata_'+lastsym.sym.name,AB_LOCAL,AT_DATA,nil);
+                            xdatasym:=CurrentAsmData.DefineAsmSymbol('xdata_'+LastSym.sym.name,AB_LOCAL,AT_DATA,nil);
 
                             tmplist:=TAsmList.create;
                             pdatasection:=new_section(tmplist,sec_pdata,lastsec.name^,0);
-                            tmplist.concat(TAIConst.Create_rva_sym(lastsym.sym));
+                            tmplist.concat(TAIConst.Create_rva_sym(LastSym.sym));
                             tmplist.concat(TAIConst.Create_rva_sym(xdatasym));
 
                             smartunwind:=IsWin64SmartSection(lastsec.sectype,lastsec.name^);
                             if create_smartlink_sections then
-                              xdatasection:=new_section(tmplist,sec_user,'.xdata$N_'+lower(lastsym.sym.name),sizeof(int32))
+                              xdatasection:=new_section(tmplist,sec_user,'.xdata$N_'+lower(LastSym.sym.name),sizeof(int32))
                             else
                               xdatasection:=new_section(tmplist,sec_user,'.xdata',sizeof(int32));
                             xdatasection.secflags:=[SF_A];

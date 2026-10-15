@@ -95,7 +95,7 @@ Unit Rax86int;
          procedure RecoverConsume(allowcomma:boolean);
          procedure AddReferences(dest,src : tx86operand);
          procedure SetSegmentOverride(oper:tx86operand;seg:TRegister);
-         procedure BuildRecordOffsetSize(const expr: string;out offset:TCGInt;out size:TCGInt; out mangledname: string; needvmtofs: boolean; out hastypecast: boolean);
+         procedure BuildRecordOffsetSize(const expr: string;out offset:TCGInt;out size:TCGInt; out MangledName: string; needvmtofs: boolean; out hastypecast: boolean);
          procedure BuildConstSymbolExpression(in_flags: TConstSymbolExpressionInputFlags;out value:TCGInt;out asmsym:string;out asmsymtyp:TAsmsymtype;out size:TCGInt;out out_flags:TConstSymbolExpressionOutputFlags);
          function BuildConstExpression:aint;
          function BuildRefConstExpression(out size:TCGInt;startingminus:boolean=false):aint;
@@ -556,9 +556,9 @@ Unit Rax86int;
                   begin
                     asmsearchsym(actasmpattern,srsym,srsymtable);
                     if Assigned(srsym) and
-                       (srsym.typ=unitsym) and
-                       (srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) and
-                       srsym.owner.iscurrentunit then
+                       (srsym.typ=UnitSym) and
+                       (srsym.owner.SymTableType in [staticsymtable,GlobalSymTable]) and
+                       srsym.owner.IsCurrentUnit then
                      begin
                        { Add . to create System.Identifier }
                        actasmpattern:=actasmpattern+c;
@@ -1231,13 +1231,13 @@ Unit Rax86int;
     { This routine builds up a record offset after a AS_DOT
       token is encountered.
       On entry actasmtoken should be equal to AS_DOT                     }
-    Procedure TX86IntReader.BuildRecordOffsetSize(const expr: string;out offset:TCGInt;out size:TCGInt; out mangledname: string; needvmtofs: boolean; out hastypecast: boolean);
+    Procedure TX86IntReader.BuildRecordOffsetSize(const expr: string;out offset:TCGInt;out size:TCGInt; out MangledName: string; needvmtofs: boolean; out hastypecast: boolean);
       var
         s: string;
       Begin
         offset:=0;
         size:=0;
-        mangledname:='';
+        MangledName:='';
         hastypecast:=false;
         s:=expr;
         while (actasmtoken=AS_DOT) do
@@ -1255,14 +1255,14 @@ Unit Rax86int;
               break;
             end;
          end;
-        if not GetRecordOffsetSize(s,offset,size,mangledname,needvmtofs,hastypecast) then
+        if not GetRecordOffsetSize(s,offset,size,MangledName,needvmtofs,hastypecast) then
           Message(asmr_e_building_record_offset);
       end;
 
 
     Procedure TX86IntReader.BuildConstSymbolExpression(in_flags: TConstSymbolExpressionInputFlags;out value:TCGInt;out asmsym:string;out asmsymtyp:TAsmsymtype;out size:TCGInt;out out_flags:TConstSymbolExpressionOutputFlags);
       var
-        tempstr,expr,hs,mangledname : string;
+        tempstr,expr,hs,MangledName : string;
         parenlevel : LongInt;
         l,k : TCGInt;
         hasparen,
@@ -1441,8 +1441,8 @@ Unit Rax86int;
                    Consume(AS_ID);
                    if actasmtoken=AS_DOT then
                      begin
-                       BuildRecordOffsetSize(tempstr,k,l,mangledname,false,hastypecast);
-                       if mangledname<>'' then
+                       BuildRecordOffsetSize(tempstr,k,l,MangledName,false,hastypecast);
+                       if MangledName<>'' then
                          { procsym }
                          Message(asmr_e_wrong_sym_type);
                        if hastypecast then
@@ -1457,8 +1457,8 @@ Unit Rax86int;
                            staticvarsym,
                            localvarsym,
                            paravarsym :
-                             l:=TAbstractVarSym(sym).getsize;
-                           typesym :
+                             l:=TAbstractVarSym(sym).GetSize;
+                           TypeSym :
                              l:=TTypeSym(sym).typedef.size;
                            else
                              Message(asmr_e_wrong_sym_type);
@@ -1554,7 +1554,7 @@ Unit Rax86int;
                          case sym.typ of
                            staticvarsym :
                              begin
-                               hs:=TStaticVarSym(sym).mangledname;
+                               hs:=TStaticVarSym(sym).MangledName;
                                def:=TStaticVarSym(sym).vardef;
                              end;
                            localvarsym,
@@ -1562,23 +1562,23 @@ Unit Rax86int;
                              begin
                                Message(asmr_e_no_local_or_para_allowed);
                              end;
-                           procsym :
+                           ProcSym :
                              begin
                                if TProcSym(sym).ProcdefList.Count>1 then
                                 Message(asmr_w_calling_overload_func);
-                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).mangledname;
+                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).MangledName;
 
                                hssymtyp:=AT_FUNCTION;
                              end;
-                           typesym :
+                           TypeSym :
                              begin
                                if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
                                size:=TTypeSym(sym).typedef.size;
                              end;
-                           fieldvarsym :
+                           FieldVarSym :
                              begin
-                               tempstr:=upper(TDef(sym.owner.defowner).GetTypeName)+'.'+tempstr;
+                               tempstr:=upper(TDef(sym.owner.DefOwner).GetTypeName)+'.'+tempstr;
                              end;
                            else
                              Message(asmr_e_wrong_sym_type);
@@ -1627,7 +1627,7 @@ Unit Rax86int;
                     end
                    else if (actasmtoken<>AS_DOT) and
                            Assigned(sym) and
-                           (sym.typ=typesym) and
+                           (sym.typ=TypeSym) and
                            (TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                      begin
                        { just a record type (without being followed by dot)
@@ -1645,13 +1645,13 @@ Unit Rax86int;
                      begin
                        consume(AS_LBRACKET);
                        l:=BuildConstExpression;
-                       if l<TArrayDef(def).lowrange then
+                       if l<TArrayDef(def).LowRange then
                          begin
                            Message(asmr_e_constant_out_of_bounds);
                            l:=0;
                          end
                        else
-                         l:=(l-TArrayDef(def).lowrange)*TArrayDef(def).elesize;
+                         l:=(l-TArrayDef(def).LowRange)*TArrayDef(def).EleSize;
                        str(l, tempstr);
                        expr:=expr + '+' + tempstr;
                        consume(AS_RBRACKET);
@@ -1853,7 +1853,7 @@ Unit Rax86int;
                                  qword store.  A value Pointer or an ABI-indirect
                                  aggregate keeps the width unknown, and an
                                  explicit "ptr" above stays authoritative. }
-                               if (refparasym.varspez in [vs_var,vs_out,vs_constref]) and
+                               if (refparasym.VarSpez in [vs_var,vs_out,vs_constref]) and
                                   (refparasym.vardef.typ in [orddef,enumdef,floatdef,pointerdef,classrefdef]) then
                                  oper.SetSize(refparasym.vardef.size,false);
                              end;
@@ -2445,7 +2445,7 @@ Unit Rax86int;
                   rest -> save it here and restore it afterwards }
                 l:=oper.typesize;
                 BuildOperand(oper,false);
-                oper.setsize(l,true);
+                oper.SetSize(l,true);
               end;
 
             AS_ID : { A constant expression, or a Variable ref. }
@@ -2672,7 +2672,7 @@ Unit Rax86int;
                     Consume(AS_LPAREN);
                     BuildOperand(oper,true);
                     Consume(AS_RPAREN);
-                    oper.setsize(l,true);
+                    oper.SetSize(l,true);
                   end;
               end;
 
@@ -2947,7 +2947,7 @@ Unit Rax86int;
         { e.g. for "push dword 1", "push word 6" }
         if (instr.ops=1) and
            (instr.operands[1].typesize<>0) then
-          instr.operands[1].setsize(instr.operands[1].typesize,false);
+          instr.operands[1].SetSize(instr.operands[1].typesize,false);
 
         if (MemRefInfo(instr.opcode).ExistsSSEAVX) and
            (MemRefInfo(instr.opcode).MemRefSize in MemRefSizeInfoVMems) then

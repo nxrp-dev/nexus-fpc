@@ -114,7 +114,7 @@ Unit aopt;
               Begin
                 If (p.typ = ait_label) and
                    (TAILabel(p).labsym.labeltype=alt_jump) and
-                   (TAILabel(p).labsym.is_used) Then
+                   (TAILabel(p).labsym.Is_Used) Then
                   Begin
                     LabelFound := True;
                     If (TAILabel(p).labsym.labelnr < LowLabel) Then
@@ -149,7 +149,7 @@ Unit aopt;
               Case p.typ Of
                 ait_Label:
                   begin
-                    If TAILabel(p).labsym.is_used and
+                    If TAILabel(p).labsym.Is_Used and
                        (TAILabel(p).labsym.labeltype=alt_jump) then
                       begin
                         LabelIdx:=TAILabel(p).labsym.labelnr-LowLabel;

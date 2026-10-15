@@ -178,7 +178,7 @@ uses
         StrCharPointerType: TDef;
 
       begin
-        ResStrDef:=search_system_type('TRESOURCESTRINGRECORD').TypeDef;
+        ResStrDef:=Search_System_Type('TRESOURCESTRINGRECORD').TypeDef;
 
         TCB:=CTAITypedConstBuilder.Create([tcalo_vectorized_dead_strip_start,tcalo_data_force_indirect,tcalo_is_public_asm]);
         { Write unitname entry }

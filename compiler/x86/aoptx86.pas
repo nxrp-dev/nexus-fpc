@@ -1558,7 +1558,7 @@ unit aoptx86;
       begin
         Result := NR_NO;
         RegSet :=
-          paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption) +
+          paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption) +
           CurrentProcInfo.saved_regs_int;
 (*
         { Don't use the frame register unless explicitly allowed (fixes i40111) }
@@ -1636,7 +1636,7 @@ unit aoptx86;
       begin
         Result := NR_NO;
         RegSet :=
-          paramanager.get_volatile_registers_mm(CurrentProcInfo.procdef.proccalloption) +
+          paramanager.get_volatile_registers_mm(CurrentProcInfo.procdef.ProcCallOption) +
           CurrentProcInfo.saved_regs_mm;
 
         for CurrentSuperReg in RegSet do
@@ -2412,18 +2412,18 @@ unit aoptx86;
         end;
 
       begin
-          case CurrentProcInfo.procdef.returndef.typ of
+          case CurrentProcInfo.procdef.ReturnDef.typ of
             arraydef,recorddef,pointerdef,
                stringdef,enumdef,procdef,objectdef,errordef,
                filedef,setdef,procvardef,
-               classrefdef,forwarddef:
+               classrefdef,ForwardDef:
               DoRemoveLastDeallocForFuncRes(RS_EAX);
             orddef:
-              if CurrentProcInfo.procdef.returndef.size <> 0 then
+              if CurrentProcInfo.procdef.ReturnDef.size <> 0 then
                 begin
                   DoRemoveLastDeallocForFuncRes(RS_EAX);
                   { for int64/qword }
-                  if CurrentProcInfo.procdef.returndef.size = 8 then
+                  if CurrentProcInfo.procdef.ReturnDef.size = 8 then
                     DoRemoveLastDeallocForFuncRes(RS_EDX);
                 end;
             else
@@ -5534,8 +5534,8 @@ unit aoptx86;
             (
               (TAICPU(p).oper[1]^.ref^.base = CurrentProcInfo.FramePointer) and
               not (
-                Assigned(CurrentProcInfo.procdef.funcretsym) and
-                (TAICPU(p).oper[1]^.ref^.offset <= TAbstractNormalVarSym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)
+                Assigned(CurrentProcInfo.procdef.FuncRetSym) and
+                (TAICPU(p).oper[1]^.ref^.offset <= TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.reference.offset)
               )
             ) or
             { Also discard writes to the stack that are below the base pointer,
@@ -6251,7 +6251,7 @@ unit aoptx86;
                     if (InputP.typ = ait_align) or
                       (
                         (InputP.typ = ait_label) and
-                        not (TAILabel(InputP).labsym.is_used)
+                        not (TAILabel(InputP).labsym.Is_Used)
                       ) then
                       GetNextInstruction(InputP, InputP);
                   end;
@@ -6322,7 +6322,7 @@ unit aoptx86;
                     if (hp1.typ = ait_align) or
                       (
                         (hp1.typ = ait_label) and
-                        not (TAILabel(hp1).labsym.is_used)
+                        not (TAILabel(hp1).labsym.Is_Used)
                       ) then
                       GetNextInstruction(hp1, hp1);
                   end;
@@ -8744,8 +8744,8 @@ unit aoptx86;
                (((hp2.typ = ait_instruction) and
                IsExitCode(hp2) and
                (TAICPU(p).oper[0]^.ref^.base = CurrentProcInfo.FramePointer) and
-               not(Assigned(CurrentProcInfo.procdef.funcretsym) and
-                   (TAICPU(p).oper[0]^.ref^.offset < TAbstractNormalVarSym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)) and
+               not(Assigned(CurrentProcInfo.procdef.FuncRetSym) and
+                   (TAICPU(p).oper[0]^.ref^.offset < TAbstractNormalVarSym(CurrentProcInfo.procdef.FuncRetSym).LocAlloc.reference.offset)) and
                (TAICPU(p).oper[0]^.ref^.index = NR_NO)) or
                { fstp <temp>
                  fld  <temp>
@@ -8983,7 +8983,7 @@ unit aoptx86;
                          if (p_jump.typ = ait_align) or
                            (
                              (p_jump.typ = ait_label) and
-                             not (TAILabel(p_jump).labsym.is_used)
+                             not (TAILabel(p_jump).labsym.Is_Used)
                            ) then
                            GetNextInstruction(p_jump, p_jump);
                        end;
@@ -10226,14 +10226,14 @@ unit aoptx86;
                   if TAIRegAlloc(hp1).ratype = ra_dealloc then
                     begin
                       { Duplicate the register deallocation... }
-                      hp3:=TAI(hp1.getcopy);
+                      hp3:=TAI(hp1.GetCopy);
                       if first_assignment = nil then
                         first_assignment := hp3;
 
                       asml.InsertBefore(hp3, p);
 
                       { ... but also reallocate it after the jump }
-                      hp3:=TAI(hp1.getcopy);
+                      hp3:=TAI(hp1.GetCopy);
                       TAIRegAlloc(hp3).ratype := ra_alloc;
 
                       asml.InsertAfter(hp3, p);
@@ -10271,7 +10271,7 @@ unit aoptx86;
                     else
                       begin
                         { Duplicate the MOV instruction }
-                        hp3:=TAI(hp1.getcopy);
+                        hp3:=TAI(hp1.GetCopy);
                         if first_assignment = nil then
                           first_assignment := hp3;
 
@@ -13097,7 +13097,7 @@ unit aoptx86;
           running RemoveDeadCodeAfterJump for each RET instruction, because
           this optimisation rarely happens and most RETs appear at the end of
           routines where there is nothing that can be stripped. [Kit] }
-        if not ThisLabel.is_used then
+        if not ThisLabel.Is_Used then
           RemoveDeadCodeAfterJump(p);
       end;
 
@@ -18189,7 +18189,7 @@ unit aoptx86;
           else if the subroutine is marked as no return, remove the ret
         }
         if ((cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
-          (po_noreturn in CurrentProcInfo.procdef.procoptions)) and
+          (po_noreturn in CurrentProcInfo.procdef.ProcOptions)) and
           GetNextInstruction(p, hp1) and
           (MatchInstruction(hp1,A_RET,[S_NO]) or
            (MatchInstruction(hp1,A_VZEROUPPER,[S_NO]) and

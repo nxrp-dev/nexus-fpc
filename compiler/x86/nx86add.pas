@@ -509,7 +509,7 @@ unit nx86add;
 
     procedure TX86AddNode.second_addsmallset;
       var
-        setbase : aint;
+        SetBase : aint;
         opdef  : TDef;
         opsize : TCgSize;
         op     : TAsmOp;
@@ -526,9 +526,9 @@ unit nx86add;
         opdef:=resultdef;
         opsize:=int_cgsize(opdef.size);
         if (left.resultdef.typ=setdef) then
-          setbase:=TSetDef(left.resultdef).setbase
+          SetBase:=TSetDef(left.resultdef).SetBase
         else
-          setbase:=TSetDef(right.resultdef).setbase;
+          SetBase:=TSetDef(right.resultdef).SetBase;
         case nodetype of
           addn :
             begin
@@ -545,12 +545,12 @@ unit nx86add;
                  if opsize=OS_8 then
                    begin
                      opsize:=OS_32;
-                     opdef:=u32inttype;
+                     opdef:=U32IntType;
                    end;
                  { bts requires both elements to be registers }
                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,opdef,true);
-                 register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,right.location,setbase);
+                 register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,right.location,SetBase);
                  op:=A_BTS;
                  noswap:=true;
                end
@@ -644,7 +644,7 @@ unit nx86add;
 
     procedure TX86AddNode.second_addsmallsetelement;
       var
-        setbase, mask: aint;
+        SetBase, mask: aint;
       begin
         if resultdef.size=1 then
           inherited second_addsmallsetelement
@@ -662,17 +662,17 @@ unit nx86add;
               swapleftright;
             force_reg_left_right(false,false);
             set_result_location_reg;
-            setbase:=TSetDef(left.resultdef).setbase;
+            SetBase:=TSetDef(left.resultdef).SetBase;
             if (right.location.loc = LOC_CONSTANT) then
               begin
-                mask:=aint(1 shl (right.location.value-setbase));
+                mask:=aint(1 shl (right.location.value-SetBase));
                 hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
                   mask,left.location.register,location.register);
               end
             else
               begin
                 hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,resultdef,true);
-                register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.location,setbase);
+                register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.location,SetBase);
                 if left.location.loc <> LOC_CONSTANT then
                   hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,
                       left.location.register,location.register)
@@ -933,7 +933,7 @@ unit nx86add;
       begin
         sqr_sum:=false;
         if (CurrentSettings.FPUType>=fpu_sse3) and
-           use_vectorfpu(resultdef) and
+           Use_VectorFPU(resultdef) and
            (nodetype in [addn,subn]) and
           (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
           (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
@@ -1084,7 +1084,7 @@ unit nx86add;
         sqr_sum:=false;
 {$ifdef dummy}
         if (CurrentSettings.FPUType>=fpu_sse3) and
-           use_vectorfpu(resultdef) and
+           Use_VectorFPU(resultdef) and
            (nodetype in [addn,subn]) and
           (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
           (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
@@ -1250,8 +1250,8 @@ unit nx86add;
 
           this should be called before pass_1 so we have a proper expectloc }
         if ((left.resultdef.typ=floatdef) or (right.resultdef.typ=floatdef)) and
-          (not(use_vectorfpu(left.resultdef)) and not(use_vectorfpu(right.resultdef)) and
-           not(use_vectorfpu(resultdef))) then
+          (not(Use_VectorFPU(left.resultdef)) and not(Use_VectorFPU(right.resultdef)) and
+           not(Use_VectorFPU(resultdef))) then
           begin
             make_not_regable(left,[ra_addr_regable]);
             make_not_regable(right,[ra_addr_regable]);
@@ -1259,7 +1259,7 @@ unit nx86add;
         Result:=inherited pass_1;
         { correct expectloc, it does not matter of Result is set as another pass_1 is run on it
           which will fix that one }
-        if use_vectorfpu(resultdef) then
+        if Use_VectorFPU(resultdef) then
           expectloc:=LOC_MMREGISTER;
       end;
 
@@ -1414,7 +1414,7 @@ unit nx86add;
                                   <comparison constant shr (b - 1)>
                             }
 
-                            ThisNode:=CTypeConvNode.create_internal(TModDivNode(t).left, ThisDef);
+                            ThisNode:=CTypeConvNode.Create_Internal(TModDivNode(t).left, ThisDef);
                             TTypeConvNode(ThisNode).convtype:=tc_int_2_int;
                             ThisDef:=get_unsigned_inttype(ThisDef);
                             ThisNode.resultdef:=ThisDef;
@@ -1424,7 +1424,7 @@ unit nx86add;
                             ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=CAddNode.create_internal(muln, ThisNode, ConstNode);
+                            ThisNode:=CAddNode.Create_Internal(muln, ThisNode, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
 {$push}
@@ -1437,13 +1437,13 @@ unit nx86add;
                             ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=CAddNode.create_internal(addn, ThisNode, ConstNode);
+                            ThisNode:=CAddNode.Create_Internal(addn, ThisNode, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
                             if shift>0 then
                               begin
-                                ConstNode:=COrdConstNode.create(shift, u8inttype, False);
-                                ConstNode.resultdef:=u8inttype;
+                                ConstNode:=COrdConstNode.create(shift, U8IntType, False);
+                                ConstNode.resultdef:=U8IntType;
                                 ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
                                   CCallParaNode.create(ConstNode,
                                   CCallParaNode.create(ThisNode, nil)));
@@ -1457,7 +1457,7 @@ unit nx86add;
 
                             ConstNode.resultdef:=ThisDef;
 
-                            Result:=CAddNode.create_internal(ThisType, ThisNode, ConstNode);
+                            Result:=CAddNode.Create_Internal(ThisType, ThisNode, ConstNode);
                             Result.resultdef:=resultdef;
                             Exit;
                           end;
@@ -1546,15 +1546,15 @@ unit nx86add;
                             ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=CAddNode.create_internal(muln, TModDivNode(t).left, ConstNode);
+                            ThisNode:=CAddNode.Create_Internal(muln, TModDivNode(t).left, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
                             TModDivNode(t).left:=nil;
 
                             if shift>0 then
                               begin
-                                ConstNode:=COrdConstNode.create(shift, u8inttype, False);
-                                ConstNode.resultdef:=u8inttype;
+                                ConstNode:=COrdConstNode.create(shift, U8IntType, False);
+                                ConstNode.resultdef:=U8IntType;
                                 ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
                                   CCallParaNode.create(ConstNode,
                                   CCallParaNode.create(ThisNode, nil)));
@@ -1576,7 +1576,7 @@ unit nx86add;
                             ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            Result:=CAddNode.create_internal(ThisType, ThisNode, ConstNode);
+                            Result:=CAddNode.Create_Internal(ThisType, ThisNode, ConstNode);
                             Result.resultdef:=resultdef;
                             Exit;
                           end;
@@ -1593,7 +1593,7 @@ unit nx86add;
       begin
 
         { test if the result stays in an xmm register, fiddeling with fpu registers and fma makes no sense }
-        Result:=use_vectorfpu(resultdef) and
+        Result:=Use_VectorFPU(resultdef) and
           ((fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
 
       end;
@@ -1694,12 +1694,12 @@ unit nx86add;
                 if UseAVX then
                   begin
                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
-                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).floattype],left.location,right.location.register,location.register,nil);
+                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).FloatType],left.location,right.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=right.location.register;
-                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).floattype],left.location,location.register,nil);
+                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).FloatType],left.location,location.register,nil);
                   end;
               end
             else
@@ -1709,13 +1709,13 @@ unit nx86add;
                   begin
                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
                     cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,
-                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).elementdef).floattype],right.location,left.location.register,location.register,nil);
+                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).ElementDef).FloatType],right.location,left.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=left.location.register;
                     cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,
-                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).elementdef).floattype],right.location,location.register,nil);
+                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).ElementDef).FloatType],right.location,location.register,nil);
                   end;
               end;
           end
@@ -1740,11 +1740,11 @@ unit nx86add;
         refnode, hp: TNode;
         hasref : boolean;
       begin
-        if use_vectorfpu(resultdef)
+        if Use_VectorFPU(resultdef)
 {$ifndef x86_64}
           { Make sure currency typs etc. aren't passed through SSE/AVX }
-          and use_vectorfpu(left.resultdef)
-          and use_vectorfpu(right.resultdef)
+          and Use_VectorFPU(left.resultdef)
+          and Use_VectorFPU(right.resultdef)
 {$endif x86_64}
           then
           begin
@@ -1810,7 +1810,7 @@ unit nx86add;
     procedure TX86AddNode.second_cmpfloat;
 
       begin
-        if use_vectorfpu(left.resultdef) or use_vectorfpu(right.resultdef) then
+        if Use_VectorFPU(left.resultdef) or Use_VectorFPU(right.resultdef) then
           begin
             second_cmpfloatvector;
             exit;

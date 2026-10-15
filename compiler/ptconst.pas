@@ -49,11 +49,11 @@ implementation
         datalist     : TAsmList;
       begin
         { mark the staticvarsym as typedconst }
-        include(sym.varoptions,vo_is_typed_const);
+        include(sym.VarOptions,vo_is_typed_const);
         { The variable has a value assigned }
-        sym.varstate:=vs_initialised;
+        sym.VarState:=vs_initialised;
         { the variable can't be placed in a register }
-        sym.varregable:=vr_none;
+        sym.VarRegable:=vr_none;
 
         { generate data for typed const }
         storefilepos:=CurrentFilePos;
@@ -64,7 +64,7 @@ implementation
         TAsmListTypedConstBuilder(tcbuilder).parse_into_asmlist;
 
         { Parse hints }
-        try_consume_hintdirective(sym.symoptions,sym.deprecatedmsg);
+        try_consume_hintdirective(sym.SymOptions,sym.DeprecatedMsg);
 
         consume(_SEMICOLON);
 
@@ -89,8 +89,8 @@ implementation
 
         if not parse_generic then
           begin
-            if vo_is_public in sym.varoptions then
-              CurrentModule.add_public_asmsym(sym.mangledname,AB_GLOBAL,AT_DATA);
+            if vo_is_public in sym.VarOptions then
+              CurrentModule.Add_Public_AsmSym(sym.MangledName,AB_GLOBAL,AT_DATA);
 
             { only now get the final asmlist, because inserting the symbol
               information depends on potential section information set above }

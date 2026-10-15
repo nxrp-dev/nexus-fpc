@@ -153,9 +153,9 @@ implementation
         result:=paramanager.can_opt_unused_para(parasym) and
           not paramanager.has_strict_proc_signature and
           (paramanager.use_fixed_stack or
-           ((vo_is_parentfp in parasym.varoptions) and
-            (po_delphi_nested_cc in TAbstractProcDef(parasym.owner.defowner).procoptions)) or
-           (parasym.paraloc[callerside].Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]));
+           ((vo_is_parentfp in parasym.VarOptions) and
+            (po_delphi_nested_cc in TAbstractProcDef(parasym.owner.DefOwner).ProcOptions)) or
+           (parasym.ParaLoc[callerside].Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]));
       end;
 
 {*****************************************************************************
@@ -178,7 +178,7 @@ implementation
 
     procedure TCGCallParaNode.push_addr_para;
       var
-        valuedef: TDef;
+        ValueDef: TDef;
       begin
         if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
           InternalError(200304235);
@@ -191,10 +191,10 @@ implementation
           has }
         if is_dynamic_array(left.resultdef) and
            is_open_array(parasym.vardef) then
-          valuedef:=parasym.vardef
+          ValueDef:=parasym.vardef
         else
-          valuedef:=left.resultdef;
-        hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,valuedef,left.location.reference,tempcgpara);
+          ValueDef:=left.resultdef;
+        hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,ValueDef,left.location.reference,tempcgpara);
       end;
 
 
@@ -232,7 +232,7 @@ implementation
         hpreversestart:=nil;
         while Assigned(hpcurr) do
           begin
-            if not(hpcurr.parasym.paraloc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+            if not(hpcurr.parasym.ParaLoc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
               hpreversestart:=hpcurr;
             hpcurr:=TCGCallParaNode(hpcurr.right);
           end;
@@ -247,7 +247,7 @@ implementation
         while (hpcurr<>hpreversestart) do
           begin
             hpnext:=TCGCallParaNode(hpcurr.right);
-            if not(hpcurr.parasym.paraloc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
+            if not(hpcurr.parasym.ParaLoc[callerside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
               begin
                 { remove hpcurr from chain }
                 if Assigned(hpprev) then
@@ -292,7 +292,7 @@ implementation
         if maybe_push_unused_para then
           exit;
         { allow passing of a constant to a const formaldef }
-        if (parasym.varspez=vs_const) and
+        if (parasym.VarSpez=vs_const) and
            not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
           hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
         push_addr_para;
@@ -332,26 +332,26 @@ implementation
       begin
         hlcg.maybe_change_load_node_reg(CurrentAsmData.CurrAsmList,left,true);
 
-        paramanager.createtempparaloc(CurrentAsmData.CurrAsmList,callnode.procdefinition.proccalloption,parasym,not followed_by_stack_tainting_call_cached,tempcgpara);
+        paramanager.createtempparaloc(CurrentAsmData.CurrAsmList,callnode.procdefinition.ProcCallOption,parasym,not followed_by_stack_tainting_call_cached,tempcgpara);
 
         { handle varargs first, because parasym is not valid }
         if (cpf_varargs_para in callparaflags) then
           begin
             if paramanager.push_addr_param(vs_value,left.resultdef,
-                   callnode.procdefinition.proccalloption) then
+                   callnode.procdefinition.ProcCallOption) then
               push_addr_para
             else
               push_value_para;
           end
         { hidden parameters }
-        else if (vo_is_hidden_para in parasym.varoptions) then
+        else if (vo_is_hidden_para in parasym.VarOptions) then
           begin
             { don't push a node that already generated a pointer type
               by address for implicit hidden parameters }
-            pushaddr:=(vo_is_funcret in parasym.varoptions) or
+            pushaddr:=(vo_is_funcret in parasym.VarOptions) or
               { pass "this" in C++ classes explicitly as pointer
                 because push_addr_param might not be true for them }
-              (is_cppclass(parasym.vardef) and (vo_is_self in parasym.varoptions)) or
+              (Is_CPPClass(parasym.vardef) and (vo_is_self in parasym.VarOptions)) or
                (
                  (
                    not(left.resultdef.typ in [pointerdef,classrefdef]) or
@@ -359,14 +359,14 @@ implementation
                      { allow pointerdefs (as self) to be passed as addr
                        param if the method is part of a type helper which
                        extends a pointer type }
-                     (vo_is_self in parasym.varoptions) and
-                     (callnode.procdefinition.owner.symtabletype=objectsymtable) and
-                     (is_objectpascal_helper(TDef(callnode.procdefinition.owner.defowner))) and
-                     (TObjectDef(callnode.procdefinition.owner.defowner).extendeddef.typ=pointerdef)
+                     (vo_is_self in parasym.VarOptions) and
+                     (callnode.procdefinition.owner.SymTableType=objectsymtable) and
+                     (Is_ObjectPascal_Helper(TDef(callnode.procdefinition.owner.DefOwner))) and
+                     (TObjectDef(callnode.procdefinition.owner.DefOwner).ExtendedDef.typ=pointerdef)
                    )
                  ) and
-                paramanager.push_addr_param(parasym.varspez,parasym.vardef,
-                    callnode.procdefinition.proccalloption));
+                paramanager.push_addr_param(parasym.VarSpez,parasym.vardef,
+                    callnode.procdefinition.ProcCallOption));
 
             if pushaddr then
               begin
@@ -382,19 +382,19 @@ implementation
         else if (parasym.vardef.typ=formaldef) then
           push_formal_para
         { Normal parameter }
-        else if paramanager.push_copyout_param(parasym.varspez,parasym.vardef,
-                    callnode.procdefinition.proccalloption) then
+        else if paramanager.push_copyout_param(parasym.VarSpez,parasym.vardef,
+                    callnode.procdefinition.ProcCallOption) then
           push_copyout_para
         else
           begin
             { don't push a node that already generated a pointer type
               by address for implicit hidden parameters }
             if (not(
-                    (vo_is_hidden_para in parasym.varoptions) and
+                    (vo_is_hidden_para in parasym.VarOptions) and
                     (left.resultdef.typ in [pointerdef,classrefdef])
                    ) and
-                paramanager.push_addr_param(parasym.varspez,parasym.vardef,
-                    callnode.procdefinition.proccalloption)) and
+                paramanager.push_addr_param(parasym.VarSpez,parasym.vardef,
+                    callnode.procdefinition.ProcCallOption)) and
                 { dyn. arrays passed to an array of const must be passed by value, see tests/tbs/tb_arrays_objfpc_run_02.pas (case tw4219.pas) }
                 not(
                     is_array_of_const(parasym.vardef) and
@@ -429,11 +429,11 @@ implementation
            (
              { for type helper/record constructor check that it is self parameter }
              (
-               (vo_is_self in parasym.varoptions) and
-               (callnode.procdefinition.proctypeoption=potype_constructor) and
+               (vo_is_self in parasym.VarOptions) and
+               (callnode.procdefinition.ProcTypeOption=potype_constructor) and
                (parasym.vardef.typ<>objectdef)
              ) or
-             (vo_is_funcret in parasym.varoptions)
+             (vo_is_funcret in parasym.VarOptions)
            ) then
           location_copy(callnode.location,left.location);
       end;
@@ -485,10 +485,10 @@ implementation
       var
         hsym: TSym;
       begin
-        hsym:=TSym(procdefinition.parast.Find('syscalllib'));
+        hsym:=TSym(procdefinition.ParaST.Find('syscalllib'));
         if not Assigned(hsym) then
           InternalError(2016110605);
-        result:=TParaVarSym(hsym).paraloc[callerside].location;
+        result:=TParaVarSym(hsym).ParaLoc[callerside].location;
         if not Assigned(result) then
           InternalError(2016110604);
       end;
@@ -501,12 +501,12 @@ implementation
 
         case libparaloc^.loc of
           LOC_REGISTER:
-            reference_reset_base(tmpref,libparaloc^.register,-TProcDef(procdefinition).extnumber,ctempposinvalid,sizeof(PInt),[]);
+            reference_reset_base(tmpref,libparaloc^.register,-TProcDef(procdefinition).ExtNumber,ctempposinvalid,sizeof(PInt),[]);
           LOC_REFERENCE:
             begin
               reference_reset_base(tmpref,libparaloc^.reference.index,libparaloc^.reference.offset,ctempposinvalid,sizeof(PInt),[]);
               cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,tmpref,reg);
-              reference_reset_base(tmpref,reg,-TProcDef(procdefinition).extnumber,ctempposinvalid,sizeof(PInt),[]);
+              reference_reset_base(tmpref,reg,-TProcDef(procdefinition).ExtNumber,ctempposinvalid,sizeof(PInt),[]);
             end;
           else
             begin
@@ -545,7 +545,7 @@ implementation
         hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,CPointerDef.getreusable(literaldef),true);
         { load the invoke pointer }
         hlcg.reference_reset_base(href,right.resultdef,right.location.register,0,ctempposinvalid,right.resultdef.alignment,[]);
-        callprocdef:=CProcVarDef.getreusableprocaddr(procdefinition,pc_address_only);
+        callprocdef:=CProcVarDef.GetReusableProcAddr(procdefinition,pc_address_only);
         toreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,callprocdef);
         hlcg.g_load_field_reg_by_name(CurrentAsmData.CurrAsmList,literaldef,callprocdef,'INVOKE',href,toreg);
      end;
@@ -553,7 +553,7 @@ implementation
 
     function TCGCallNode.get_call_reg(list: TAsmList): TRegister;
       begin
-        result:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,procdefinition.address_type);
+        result:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,procdefinition.Address_Type);
       end;
 
 
@@ -565,8 +565,8 @@ implementation
 
     procedure TCGCallNode.set_result_location(realresdef: TStoredDef);
       begin
-        if realresdef.is_intregable or
-           realresdef.is_fpuregable or
+        if realresdef.Is_IntRegable or
+           realresdef.Is_FPURegable or
            { avoid temporarily storing pointer-sized entities that can't be
              regvars, such as reference-counted pointers, to memory --
              no exception can occur right now (except in case of existing
@@ -641,10 +641,10 @@ implementation
             hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,realresdef,retloc,location,false);
 
         if ((location.loc=LOC_REGISTER) and
-            not realresdef.is_intregable) or
+            not realresdef.Is_IntRegable) or
            ((location.loc in [LOC_FPUREGISTER,LOC_MMREGISTER]) and
-            (not realresdef.is_fpuregable or
-             ((location.loc=LOC_MMREGISTER)<>use_vectorfpu(realresdef)))) then
+            (not realresdef.Is_FPURegable or
+             ((location.loc=LOC_MMREGISTER)<>Use_VectorFPU(realresdef)))) then
           begin
             hlcg.location_force_mem(CurrentAsmData.CurrAsmList,location,realresdef);
             { may have been record returned in a floating point register (-> location.size
@@ -758,10 +758,10 @@ implementation
                  { don't release the funcret temp }
                  if not(Assigned(ppn.parasym)) or
                     not(
-                      (vo_is_funcret in ppn.parasym.varoptions) or
+                      (vo_is_funcret in ppn.parasym.VarOptions) or
                       (
-                        (vo_is_self in ppn.parasym.varoptions) and
-                        (procdefinition.proctypeoption=potype_constructor) and
+                        (vo_is_self in ppn.parasym.VarOptions) and
+                        (procdefinition.ProcTypeOption=potype_constructor) and
                         (ppn.parasym.vardef.typ<>objectdef)
                       )
                     )then
@@ -818,13 +818,13 @@ implementation
                  }
                  paramanager.freecgpara(CurrentAsmData.CurrAsmList,ppn.tempcgpara);
                  tmpparaloc:=ppn.tempcgpara.location;
-                 sizeleft:=ppn.parasym.paraloc[callerside].intsize;
-                 calleralignment:=ppn.parasym.paraloc[callerside].alignment;
+                 sizeleft:=ppn.parasym.ParaLoc[callerside].intsize;
+                 calleralignment:=ppn.parasym.ParaLoc[callerside].alignment;
                  tmpalignment:=ppn.tempcgpara.alignment;
                  if (tmpalignment=0) or
                     (calleralignment=0) then
                    InternalError(2009020701);
-                 callerparaloc:=ppn.parasym.paraloc[callerside].location;
+                 callerparaloc:=ppn.parasym.ParaLoc[callerside].location;
                  skipiffinalloc:=
                    not paramanager.use_fixed_stack or
                    not(ppn.followed_by_stack_tainting_call_cached);
@@ -912,7 +912,7 @@ implementation
            end;
          SetLength(paralocs,procdefinition.paras.count);
          for i:=0 to procdefinition.paras.count-1 do
-           paralocs[i]:=@TParaVarSym(procdefinition.paras[i]).paraloc[callerside];
+           paralocs[i]:=@TParaVarSym(procdefinition.paras[i]).ParaLoc[callerside];
        end;
 
 
@@ -925,7 +925,7 @@ implementation
            of far calls where the procvardef was defined does not matter,
            even though the procvardef constructor called by getcopyas looks at
            it) }
-         callprocdef:=CProcVarDef.getreusableprocaddr(procdefinition,pc_address_only);
+         callprocdef:=CProcVarDef.GetReusableProcAddr(procdefinition,pc_address_only);
          reg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,callprocdef);
          { in case we have a method pointer on a big endian target in registers,
            the method address is stored in registerhi (it's the first field
@@ -951,9 +951,9 @@ implementation
 
      procedure TCGCallNode.load_procvar_codeptr(out reg: TRegister; out callprocdef: TAbstractProcDef);
        begin
-         if po_is_block in procdefinition.procoptions then
+         if po_is_block in procdefinition.ProcOptions then
            load_block_invoke(reg,callprocdef)
-         else if not(procdefinition.is_addressonly) then
+         else if not(procdefinition.Is_AddressOnly) then
            load_complex_procvar_codeptr(reg,callprocdef)
          else
            begin
@@ -961,7 +961,7 @@ implementation
              hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,procdefinition,procdefinition,right.location,reg);
              callprocdef:=procdefinition;
            end;
-         callprocdef.init_paraloc_info(callerside);
+         callprocdef.Init_ParaLoc_Info(callerside);
        end;
 
 
@@ -975,8 +975,8 @@ implementation
            begin
              if (ppn.left.nodetype<>nothingn) then
                begin
-                 if (ppn.parasym.paraloc[callerside].location^.loc <> LOC_REFERENCE) then
-                   paramanager.freecgpara(CurrentAsmData.CurrAsmList,ppn.parasym.paraloc[callerside]);
+                 if (ppn.parasym.ParaLoc[callerside].location^.loc <> LOC_REFERENCE) then
+                   paramanager.freecgpara(CurrentAsmData.CurrAsmList,ppn.parasym.ParaLoc[callerside]);
                end;
              ppn:=TCGCallParaNode(ppn.right);
            end;
@@ -986,7 +986,7 @@ implementation
     function TCGCallNode.is_parentfp_pushed: boolean;
       begin
         result:=(procdefinition.typ<>procdef) or
-          not can_skip_para_push(TParaVarSym(TProcDef(procdefinition).parentfpsym));
+          not can_skip_para_push(TParaVarSym(TProcDef(procdefinition).ParentFPSym));
       end;
 
 
@@ -1012,7 +1012,7 @@ implementation
         tmploc: TLocation;
       begin
          if not Assigned(procdefinition) or
-            not(procdefinition.has_paraloc_info in [callerside,callbothsides]) then
+            not(procdefinition.HasParaLocInfo in [callerside,callbothsides]) then
            InternalError(200305264);
 
          extra_pre_call_code;
@@ -1020,10 +1020,10 @@ implementation
          if Assigned(callinitblock) then
            SecondPass(TNode(callinitblock));
 
-         regs_to_save_int:=paramanager.get_volatile_registers_int(procdefinition.proccalloption);
-         regs_to_save_address:=paramanager.get_volatile_registers_address(procdefinition.proccalloption);
-         regs_to_save_fpu:=paramanager.get_volatile_registers_fpu(procdefinition.proccalloption);
-         regs_to_save_mm:=paramanager.get_volatile_registers_mm(procdefinition.proccalloption);
+         regs_to_save_int:=paramanager.get_volatile_registers_int(procdefinition.ProcCallOption);
+         regs_to_save_address:=paramanager.get_volatile_registers_address(procdefinition.ProcCallOption);
+         regs_to_save_fpu:=paramanager.get_volatile_registers_fpu(procdefinition.ProcCallOption);
+         regs_to_save_mm:=paramanager.get_volatile_registers_mm(procdefinition.ProcCallOption);
 
          { Include Function result registers }
          if (not is_void(resultdef)) then
@@ -1069,18 +1069,18 @@ implementation
              { register call for WPO (must be done before wpo test below,
                otherwise optimised called methods are no longer registered)
              }
-             if (po_virtualmethod in procdefinition.procoptions) and
-                not is_objectpascal_helper(TProcDef(procdefinition).struct) and
+             if (po_virtualmethod in procdefinition.ProcOptions) and
+                not Is_ObjectPascal_Helper(TProcDef(procdefinition).struct) and
                 Assigned(methodpointer) and
                 (methodpointer.nodetype<>typen) and
                 (not Assigned(CurrentProcInfo) or
-                 wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
-               TObjectDef(TProcDef(procdefinition).struct).register_vmt_call(TProcDef(procdefinition).extnumber);
+                 wpoinfomanager.symbol_live(CurrentProcInfo.procdef.MangledName)) then
+               TObjectDef(TProcDef(procdefinition).struct).Register_VMT_Call(TProcDef(procdefinition).ExtNumber);
 {$ifdef vtentry}
-             if not is_interface(TProcDef(procdefinition)._class) then
+             if not Is_Interface(TProcDef(procdefinition)._class) then
                begin
                  inc(CurrentAsmData.NextVTEntryNr);
-                 CurrentAsmData.CurrAsmList.Concat(TAISymbol.CreateName('VTREF'+ToStr(CurrentAsmData.NextVTEntryNr)+'_'+TProcDef(procdefinition).struct.vmt_mangledname+'$$'+ToStr(vmtoffset div sizeof(PInt)),AT_FUNCTION,0,voidpointerdef));
+                 CurrentAsmData.CurrAsmList.Concat(TAISymbol.CreateName('VTREF'+ToStr(CurrentAsmData.NextVTEntryNr)+'_'+TProcDef(procdefinition).struct.VMT_MangledName+'$$'+ToStr(vmtoffset div sizeof(PInt)),AT_FUNCTION,0,voidpointerdef));
                end;
 {$endif vtentry}
 
@@ -1088,14 +1088,14 @@ implementation
                a pointer. We can directly call the correct procdef (PFV) }
              name_to_call:='';
              if not Assigned(overrideprocnamedef) and
-                (po_virtualmethod in procdefinition.procoptions) and
-                not is_objectpascal_helper(TProcDef(procdefinition).struct) and
+                (po_virtualmethod in procdefinition.ProcOptions) and
+                not Is_ObjectPascal_Helper(TProcDef(procdefinition).struct) and
                 Assigned(methodpointer) and
                 (methodpointer.nodetype<>typen) and
                 not wpoinfomanager.can_be_devirtualized(methodpointer.resultdef,procdefinition,name_to_call) then
                begin
                  { virtual methods require an index }
-                 if TProcDef(procdefinition).extnumber=$ffff then
+                 if TProcDef(procdefinition).ExtNumber=$ffff then
                    InternalError(200304021);
 
                  { load the VMT entry (address of the virtual method) }
@@ -1103,8 +1103,8 @@ implementation
 
                  { register call for WPO }
                  if (not Assigned(CurrentProcInfo) or
-                     wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
-                   TObjectDef(TProcDef(procdefinition).struct).register_vmt_call(TProcDef(procdefinition).extnumber);
+                     wpoinfomanager.symbol_live(CurrentProcInfo.procdef.MangledName)) then
+                   TObjectDef(TProcDef(procdefinition).struct).Register_VMT_Call(TProcDef(procdefinition).ExtNumber);
 
                  if not(vmt_entry.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                    InternalError(2015052502);
@@ -1171,32 +1171,32 @@ implementation
                   if cg.uses_registers(R_MMREGISTER) then
                     cg.alloccpuregisters(CurrentAsmData.CurrAsmList,R_MMREGISTER,regs_to_save_mm);
 
-                  if procdefinition.proccalloption=pocall_syscall then
+                  if procdefinition.ProcCallOption=pocall_syscall then
                     do_syscall
                   else
                     begin
                       { Calling interrupt from the same code requires some
                         extra code }
-                      if (po_interrupt in procdefinition.procoptions) then
+                      if (po_interrupt in procdefinition.ProcOptions) then
                         extra_interrupt_code;
                       extra_call_code;
                       retloc.resetiftemp;
                       if name_to_call='' then
                         begin
                           if not Assigned(overrideprocnamedef) then
-                            name_to_call:=TProcDef(procdefinition).mangledname
+                            name_to_call:=TProcDef(procdefinition).MangledName
                           else
-                            name_to_call:=overrideprocnamedef.mangledname;
+                            name_to_call:=overrideprocnamedef.MangledName;
                         end;
                       if cnf_inherited in callnodeflags then
                         retloc:=hlcg.a_call_name_inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
                       { under certain conditions, a static call (i.e. without PIC) can be generated }
                       else if ((procdefinition.owner=CurrentProcInfo.procdef.owner) or
-                         (procdefinition.owner.symtabletype in [localsymtable,staticsymtable])
-                        ) and ((procdefinition.procoptions*[po_weakexternal,po_external])=[]) then
+                         (procdefinition.owner.SymTableType in [LocalSymTable,staticsymtable])
+                        ) and ((procdefinition.ProcOptions*[po_weakexternal,po_external])=[]) then
                         retloc:=hlcg.a_call_name_static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
                       else
-                        retloc:=hlcg.a_call_name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.procoptions);
+                        retloc:=hlcg.a_call_name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.ProcOptions);
                       extra_post_call_code;
                     end;
                end;
@@ -1208,7 +1208,7 @@ implementation
 
               { can we directly call the procvar in a memory location? }
               callref:=false;
-              if not(po_is_block in procdefinition.procoptions) and
+              if not(po_is_block in procdefinition.ProcOptions) and
                  (right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                 begin
                   href:=right.location.reference;
@@ -1245,7 +1245,7 @@ implementation
 
               { Calling interrupt from the same code requires some
                 extra code }
-              if (po_interrupt in procdefinition.procoptions) then
+              if (po_interrupt in procdefinition.ProcOptions) then
                 extra_interrupt_code;
               extra_call_code;
 
@@ -1303,7 +1303,7 @@ implementation
          cg.dealloccpuregisters(CurrentAsmData.CurrAsmList,R_INTREGISTER,regs_to_save_int);
 
          { Need to remove the parameters from the stack? }
-         if procdefinition.proccalloption in clearstack_pocalls then
+         if procdefinition.ProcCallOption in clearstack_pocalls then
            begin
              pop_size:=pushedparasize;
              { for Cdecl functions we don't need to pop the funcret when it
@@ -1311,9 +1311,9 @@ implementation
                safecall-exceptions enabled. In that case the funcret is always
                returned as a para which is considered a normal para on the
                c-side, so the funcret has to be pop'ed normally. }
-             if not ((procdefinition.proccalloption=pocall_safecall) and
+             if not ((procdefinition.ProcCallOption=pocall_safecall) and
                      (tf_safecall_exceptions in TargetInfo.flags)) and
-                paramanager.ret_in_param(procdefinition.returndef,procdefinition) then
+                paramanager.ret_in_param(procdefinition.ReturnDef,procdefinition) then
                dec(pop_size,sizeof(PInt));
              { Remove parameters/alignment from the stack }
              pop_parasize(pop_size);
@@ -1324,27 +1324,27 @@ implementation
 
            This does not apply to interrupt procedures, their ret statement never clears any stack parameters }
          else if paramanager.use_fixed_stack and
-                 not(po_interrupt in procdefinition.procoptions) and
+                 not(po_interrupt in procdefinition.ProcOptions) and
                  (TargetInfo.abi=abi_i386_dynalignedstack) then
            begin
              { however, a delphi style frame pointer for a nested subroutine
                is not cleared by the callee, so we have to compensate for this
                by passing 4 as pushedparasize does include it }
-             if po_delphi_nested_cc in procdefinition.procoptions then
+             if po_delphi_nested_cc in procdefinition.ProcOptions then
                pop_parasize(sizeof(PInt))
              else
                pop_parasize(0);
            end
          { frame pointer parameter is popped by the caller when it's passed the
            Delphi way and $parentfp is used }
-         else if (po_delphi_nested_cc in procdefinition.procoptions) and
+         else if (po_delphi_nested_cc in procdefinition.ProcOptions) and
             not paramanager.use_fixed_stack and
             is_parentfp_pushed() then
            pop_parasize(sizeof(PInt));
 
-         if procdefinition.generate_safecall_wrapper then
+         if procdefinition.Generate_SafeCall_Wrapper then
            begin
-             pd:=search_system_proc('fpc_safecallcheck');
+             pd:=Search_System_Proc('fpc_safecallcheck');
              cgpara.init;
              { fpc_safecallcheck returns its parameter value (= function result of function we just called) }
              paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
@@ -1385,11 +1385,11 @@ implementation
 
          { perhaps i/o check ? }
          if (cs_check_io in CurrentSettings.LocalSwitches) and
-            (po_iocheck in procdefinition.procoptions) and
-            not(po_iocheck in CurrentProcInfo.procdef.procoptions) and
+            (po_iocheck in procdefinition.ProcOptions) and
+            not(po_iocheck in CurrentProcInfo.procdef.ProcOptions) and
             { no IO check for methods and procedure variables }
             (right=nil) and
-            not(po_virtualmethod in procdefinition.procoptions) then
+            not(po_virtualmethod in procdefinition.ProcOptions) then
            begin
               hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_iocheck',[],nil).resetiftemp;
               hlcg.g_maybe_checkforexceptions(CurrentAsmData.CurrAsmList);

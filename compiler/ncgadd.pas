@@ -121,7 +121,7 @@ interface
 {$ifdef x86}
         if pushedfpu then
           begin
-            if use_vectorfpu(left.resultdef) then
+            if Use_VectorFPU(left.resultdef) then
               begin
                 tmpreg := cg.getmmregister(CurrentAsmData.CurrAsmList,left.location.size);
                 hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.location,tmpreg,mms_movescalar);
@@ -313,7 +313,7 @@ interface
       var
         tmpreg : TRegister;
         mask,
-        setbase : aint;
+        SetBase : aint;
         cgop    : TOpCG;
       begin
         if nodetype<>addn then
@@ -328,13 +328,13 @@ interface
           swapleftright;
         force_reg_left_right(false,false);
         set_result_location_reg;
-        setbase:=TSetDef(left.resultdef).setbase;
+        SetBase:=TSetDef(left.resultdef).SetBase;
         if (right.location.loc = LOC_CONSTANT) then
           begin
             if (TargetInfo.endian=endian_big) then
-              mask:=aint((aword(1) shl (resultdef.size*8-1)) shr aword(right.location.value-setbase))
+              mask:=aint((aword(1) shl (resultdef.size*8-1)) shr aword(right.location.value-SetBase))
             else
-              mask:=aint(1 shl (right.location.value-setbase));
+              mask:=aint(1 shl (right.location.value-SetBase));
             hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
               mask,left.location.register,location.register);
           end
@@ -353,7 +353,7 @@ interface
             tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
             hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,mask,tmpreg);
             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,resultdef,true);
-            register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.location,setbase);
+            register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.location,SetBase);
             hlcg.a_op_reg_reg(CurrentAsmData.CurrAsmList,cgop,resultdef,
               right.location.register,tmpreg);
             if left.location.loc <> LOC_CONSTANT then

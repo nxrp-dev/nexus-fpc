@@ -202,7 +202,7 @@ begin
          RecordPendingLocalSwitch(TLocalSwitch(SetSW),State);
        ModuleSW :
          begin
-           if CurrentModule.In_Global then
+           if CurrentModule.InGlobal then
             begin
                 begin
                   if State='+' then
@@ -222,7 +222,7 @@ begin
          end;
        GlobalSW :
          begin
-           if CurrentModule.In_Global and (CurrentModule=main_module) then
+           if CurrentModule.InGlobal and (CurrentModule=Main_Module) then
             begin
               if State='+' then
                Include(CurrentSettings.GlobalSwitches,TGlobalSwitch(SetSW))
@@ -247,7 +247,7 @@ begin
              Message1(scan_w_unsupported_switch,'$'+Switch);
          end;
        TargetSW:
-         UpdateTargetSwitchStr(TargetSwitchStr[TTargetSwitch(SetSW)].Name+State,CurrentSettings.TargetSwitches,CurrentModule.In_Global);
+         UpdateTargetSwitchStr(TargetSwitchStr[TTargetSwitch(SetSW)].Name+State,CurrentSettings.TargetSwitches,CurrentModule.InGlobal);
      end;
    end;
 end;

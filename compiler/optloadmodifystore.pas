@@ -467,7 +467,7 @@ unit optloadmodifystore;
                 end;
                 result:=CInlineNode.createintern(
                   newinlinenodetype,false,CCallParaNode.create(
-                  COrdConstNode.create(1,u8inttype,false),CCallParaNode.create(TInlineNode(right).left,nil)));
+                  COrdConstNode.create(1,U8IntType,false),CCallParaNode.create(TInlineNode(right).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
@@ -518,7 +518,7 @@ unit optloadmodifystore;
                 end;
                 result:=CInlineNode.createintern(
                   newinlinenodetype,false,CCallParaNode.create(
-                  COrdConstNode.create(1,u8inttype,false),CCallParaNode.create(
+                  COrdConstNode.create(1,U8IntType,false),CCallParaNode.create(
                   TTypeConvNode(TInlineNode(TTypeConvNode(right).left).left).left,nil)));
                 result.LocalSwitches:=LocalSwitches;
                 result.fileinfo:=fileinfo;

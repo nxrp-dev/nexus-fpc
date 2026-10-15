@@ -82,7 +82,7 @@ Unit rax64int;
               end;
           end;
         { allow SEH directives only in pure assember routines }
-        if result and not (po_assembler in CurrentProcInfo.procdef.procoptions) then
+        if result and not (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
           begin
             Message(asmr_e_seh_in_pure_asm_only);
             result:=false;

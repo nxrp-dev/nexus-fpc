@@ -304,9 +304,9 @@ implementation
                     Result:=False;
                   if (TargetSwitchStr[Opt].Define<>'') and (DoSet xor (Opt in A)) then
                     if DoSet then
-                      def_system_macro(TargetSwitchStr[Opt].Define)
+                      Def_System_Macro(TargetSwitchStr[Opt].Define)
                     else
-                      undef_system_macro(TargetSwitchStr[Opt].Define);
+                      Undef_System_Macro(TargetSwitchStr[Opt].Define);
                   if DoSet then
                     Include(A,Opt)
                   else

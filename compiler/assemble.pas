@@ -53,7 +53,7 @@ interface
         AsmFileName,         { current .s and .o file }
         ObjFileName,
         PPUFileName  : TPathStr;
-        asmprefix    : string;
+        AsmPrefix    : string;
         SmartAsm     : boolean;
         SmartFilesCount,
         SmartHeaderCount : LongInt;
@@ -298,7 +298,7 @@ Implementation
         ObjFileName:=CurrentModule.ObjFileName;
         name:=Lower(CurrentModule.ModuleName^);
         path:=CurrentModule.OutputPath;
-        asmprefix := CurrentModule.asmprefix^;
+        AsmPrefix := CurrentModule.AsmPrefix^;
         if CurrentModule.OutputPath = '' then
           PPUFileName := ''
         else
@@ -326,12 +326,12 @@ Implementation
           cut_begin :
             begin
               inc(SmartHeaderCount);
-              s:=asmprefix+ToStr(SmartHeaderCount)+'h';
+              s:=AsmPrefix+ToStr(SmartHeaderCount)+'h';
             end;
           cut_normal :
-            s:=asmprefix+ToStr(SmartHeaderCount)+'s';
+            s:=AsmPrefix+ToStr(SmartHeaderCount)+'s';
           cut_end :
-            s:=asmprefix+ToStr(SmartHeaderCount)+'t';
+            s:=AsmPrefix+ToStr(SmartHeaderCount)+'t';
         end;
         AsmFileName:=Path+FixFileName(s+ToStr(SmartFilesCount)+TargetInfo.asmext);
         ObjFileName:=Path+FixFileName(s+ToStr(SmartFilesCount)+TargetInfo.objext);

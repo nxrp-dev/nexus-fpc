@@ -84,7 +84,7 @@ unit optcse;
           ((n.nodetype=callparan) and not(Assigned(TCallParaNode(n).right))) or
           ((n.nodetype=loadn) and
             not((TLoadNode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) and
-                (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).varoptions))
+                (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions))
           ) then
           result:=fen_true
         else
@@ -188,7 +188,7 @@ unit optcse;
         }
         if (((n.nodetype=callparan) and
              (TCallParaNode(n).left.resultdef.typ=formaldef) and
-             (TCallParaNode(n).parasym.varspez=vs_const)) or
+             (TCallParaNode(n).parasym.VarSpez=vs_const)) or
             ((n.nodetype=typeconvn) and
              (nf_absolute in n.flags))
            ) then
@@ -203,9 +203,9 @@ unit optcse;
             { regable expressions }
             (actualtargetnode(@n)^.flags*[nf_write,nf_modify,nf_address_taken]=[]) and
             (
-              TStoredDef(n.resultdef).is_intregable or
-              TStoredDef(n.resultdef).is_fpuregable or
-              TStoredDef(n.resultdef).is_const_intregable
+              TStoredDef(n.resultdef).Is_IntRegable or
+              TStoredDef(n.resultdef).Is_FPURegable or
+              TStoredDef(n.resultdef).Is_Const_IntRegable
             ) and
             { is_int/fpuregable allows arrays and records to be in registers, cse cannot handle this }
             (
@@ -213,13 +213,13 @@ unit optcse;
               (
                 (
                   (n.resultdef.typ = recorddef) and
-                  TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).SymTable).has_single_field(tempdef)
+                  TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).SymTable).Has_Single_Field(tempdef)
                 ) or
                 is_dynamic_array(n.resultdef) or
                 (
                   not(is_special_array(TStoredDef(n.resultdef))) and
-                  not(TStoredDef(n.resultdef).is_intregable) and
-                  not(TStoredDef(n.resultdef).is_fpuregable)
+                  not(TStoredDef(n.resultdef).Is_IntRegable) and
+                  not(TStoredDef(n.resultdef).Is_FPURegable)
                 )
               )
             ) and
@@ -250,8 +250,8 @@ unit optcse;
              not(TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) or
              { apply cse on non-regable variables }
              ((TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
-               not(TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).is_regvar(true)) and
-               not(vo_volatile in TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).varoptions)) or
+               not(TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).Is_RegVar(true)) and
+               not(vo_volatile in TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).VarOptions)) or
              (node_complexity(n)>1)
             ) and
 
@@ -269,7 +269,7 @@ unit optcse;
               one instruction on every platform except i8086/i386
               so consider in this case loading the address of the data
             }
-            (((n.resultdef.typ in [arraydef,recorddef]) or is_object(n.resultdef)) and not(is_dynamic_array(n.resultdef)) and
+            (((n.resultdef.typ in [arraydef,recorddef]) or Is_Object(n.resultdef)) and not(is_dynamic_array(n.resultdef)) and
              (n.nodetype=loadn) and
              (TLoadNode(n).symtableentry.typ=staticvarsym)
             )
@@ -480,14 +480,14 @@ unit optcse;
                         def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
-                        addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
+                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(is_dynamic_array(def));
 
                         if addrstored then
-                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),voidpointertype.size,tt_persistent,
-                            true,CAddrNode.create_internal(TNode(lists.nodelist[i])))
+                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),VoidPointerType.size,tt_persistent,
+                            true,CAddrNode.Create_Internal(TNode(lists.nodelist[i])))
                         else
                           templist[i]:=CTempCreateNode.create_value(def,def.size,tt_persistent,
-                            def.is_intregable or def.is_fpuregable or def.is_const_intregable,TNode(lists.nodelist[i]));
+                            def.Is_IntRegable or def.Is_FPURegable or def.Is_Const_IntRegable,TNode(lists.nodelist[i]));
 
                         { the value described by the temp. is immutable and the temp. can be always in register
 
@@ -531,7 +531,7 @@ unit optcse;
                         def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
-                        addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
+                        addrstored:=((def.typ in [arraydef,recorddef]) or Is_Object(def)) and not(is_dynamic_array(def));
 
 {$if defined(csedebug) or defined(csestats)}
                         WriteLn;
@@ -645,10 +645,10 @@ unit optcse;
     function CSEOnReference(n : TNode) : Boolean;
       begin
         Result:=(n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym)
-          and ((vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).varoptions) or
+          and ((vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).VarOptions) or
             (cs_create_pic in CurrentSettings.ModuleSwitches)
 {$if defined(aarch64)}
-            or (not(TAbstractVarSym(TLoadNode(n).symtableentry).is_regvar(false)))
+            or (not(TAbstractVarSym(TLoadNode(n).symtableentry).Is_RegVar(false)))
 {$endif defined(aarch64) or defined(sparc) or defined(sparc64)}
            );
       end;
@@ -665,7 +665,7 @@ unit optcse;
         if ((n.nodetype=realconstn)
 {$ifdef x86}
           { x87 consts would end up in memory, so loading them in temps. makes no sense }
-          and use_vectorfpu(n.resultdef)
+          and Use_VectorFPU(n.resultdef)
 {$endif x86}
           ) or
           CSEOnReference(n) then
@@ -685,7 +685,7 @@ unit optcse;
                 inc(consts^[i].weight);
 
                 { non-sectioned threadvars really hurt so do more aggressive cse on them }
-                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).varoptions) then
+                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).VarOptions) then
                   inc(consts^[i].weight);
               end
             else
@@ -693,7 +693,7 @@ unit optcse;
                 SetLength(consts^,length(consts^)+1);
                 with consts^[high(consts^)] do
                   begin
-                    valuenode:=n.getcopy;
+                    valuenode:=n.GetCopy;
                     valuenode.fileinfo:=CurrentProcInfo.entrypos;
                     weight:=1;
                   end;
@@ -712,7 +712,7 @@ unit optcse;
             { shall we take the address? }
             if CSEOnReference(PConstEntry(arg)^.valuenode) then
               begin
-                hp:=CTypeConvNode.create_internal(CDerefNode.create(CTempRefNode.create(PConstEntry(arg)^.temp)),PConstEntry(arg)^.valuenode.resultdef);
+                hp:=CTypeConvNode.Create_Internal(CDerefNode.create(CTempRefNode.create(PConstEntry(arg)^.temp)),PConstEntry(arg)^.valuenode.resultdef);
                 TTypeConvNode(hp).left.fileinfo:=n.fileinfo;
               end
             else
@@ -788,7 +788,7 @@ unit optcse;
         rootblock:=nil;
         { estimate how many int registers can be used }
         if pi_do_call in CurrentProcInfo.flags then
-          max_int_regs_assigned:=length(paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption))
+          max_int_regs_assigned:=length(paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption))
           { we store only addresses, so take care of the relation between address sizes and register sizes }
             div max(sizeof(PtrUInt) div sizeof(ALUUInt),1)
           { heuristics, just use a quarter of all registers at maximum }
@@ -799,13 +799,13 @@ unit optcse;
         { x86, aarch64 and arm (neglecting fpa) use mm registers for floats }
         if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption)) div 5
+          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption)) div 5
         else
           max_fpu_regs_assigned:=max(first_mm_imreg div 5,1);
 {$else defined(x86) or defined(aarch64) or defined(arm)}
         if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(CurrentProcInfo.procdef.proccalloption)) div 5
+          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(CurrentProcInfo.procdef.ProcCallOption)) div 5
         else
           max_fpu_regs_assigned:=max(first_fpu_imreg div 5,1);
 {$endif}
@@ -837,7 +837,7 @@ unit optcse;
                      constentries[i].temp:=CTempCreateNode.create(constentries[i].valuenode.resultdef,
                        constentries[i].valuenode.resultdef.size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
-                     addstatement(creates,CAssignmentNode.create_internal(CTempRefNode.create(constentries[i].temp),constentries[i].valuenode));
+                     addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),constentries[i].valuenode));
                      CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(fpu_regs_assigned);
@@ -859,10 +859,10 @@ unit optcse;
                         deleteblock:=internalstatements(deletes);
                       end;
                      constentries[i].temp:=CTempCreateNode.create(CPointerDef.getreusable(constentries[i].valuenode.resultdef),
-                       voidpointertype.size,tt_persistent,true);
+                       VoidPointerType.size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
-                     addstatement(creates,CAssignmentNode.create_internal(CTempRefNode.create(constentries[i].temp),
-                       CAddrNode.create_internal(constentries[i].valuenode)));
+                     addstatement(creates,CAssignmentNode.Create_Internal(CTempRefNode.create(constentries[i].temp),
+                       CAddrNode.Create_Internal(constentries[i].valuenode)));
                      CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(int_regs_assigned);

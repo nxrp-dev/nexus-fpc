@@ -44,7 +44,7 @@ unit cgcpu;
         procedure a_loadaddr_ref_cgpara(list : TAsmList;const r : TReference;const cgpara : TCGPara);override;
 
         procedure g_proc_exit(list : TAsmList;parasize:LongInt;nostackframe:boolean);override;
-        procedure g_copyvaluepara_openarray(list : TAsmList;const ref:TReference;const lenloc:TLocation;elesize:TCGInt;destreg:TRegister);
+        procedure g_copyvaluepara_openarray(list : TAsmList;const ref:TReference;const lenloc:TLocation;EleSize:TCGInt;destreg:TRegister);
         procedure g_releasevaluepara_openarray(list : TAsmList;const l:TLocation);
 
         procedure g_maybe_got_init(list: TAsmList); override;
@@ -139,30 +139,30 @@ unit cgcpu;
 
     procedure TCG386.a_load_ref_cgpara(list : TAsmList;size : TCgSize;const r : TReference;const cgpara : TCGPara);
 
-        procedure pushdata(paraloc:PCGParaLocation;ofs:TCGInt);
+        procedure pushdata(ParaLoc:PCGParaLocation;ofs:TCGInt);
         var
           pushsize : TCgSize;
           opsize : TOpSize;
           tmpreg   : TRegister;
           href     : TReference;
         begin
-          if not Assigned(paraloc) then
+          if not Assigned(ParaLoc) then
             exit;
-          if (paraloc^.loc<>LOC_REFERENCE) or
-             (paraloc^.reference.index<>NR_STACK_POINTER_REG) or
-             (tcgsize2size[paraloc^.size]>sizeof(aint)) then
+          if (ParaLoc^.loc<>LOC_REFERENCE) or
+             (ParaLoc^.reference.index<>NR_STACK_POINTER_REG) or
+             (tcgsize2size[ParaLoc^.size]>sizeof(aint)) then
             InternalError(200501162);
           { Pushes are needed in reverse order, add the size of the
             current location to the offset where to load from. This
             prevents wrong calculations for the last location when
             the size is not a power of 2 }
-          if Assigned(paraloc^.next) then
-            pushdata(paraloc^.next,ofs+tcgsize2size[paraloc^.size]);
+          if Assigned(ParaLoc^.next) then
+            pushdata(ParaLoc^.next,ofs+tcgsize2size[ParaLoc^.size]);
           { Push the data starting at ofs }
           href:=r;
           inc(href.offset,ofs);
-          if tcgsize2size[paraloc^.size]>cgpara.alignment then
-            pushsize:=paraloc^.size
+          if tcgsize2size[ParaLoc^.size]>cgpara.alignment then
+            pushsize:=ParaLoc^.size
           else
             pushsize:=int_cgsize(cgpara.alignment);
           opsize:=TCgsize2opsize[pushsize];
@@ -170,10 +170,10 @@ unit cgcpu;
             but pushs is not valid, we need pushl }
           if opsize=S_FS then
             opsize:=S_L;
-          if tcgsize2size[paraloc^.size]<cgpara.alignment then
+          if tcgsize2size[ParaLoc^.size]<cgpara.alignment then
             begin
               tmpreg:=getintregister(list,pushsize);
-              a_load_ref_reg(list,paraloc^.size,pushsize,href,tmpreg);
+              a_load_ref_reg(list,ParaLoc^.size,pushsize,href,tmpreg);
               list.concat(TAICPU.op_reg(A_PUSH,opsize,tmpreg));
             end
           else
@@ -324,16 +324,16 @@ unit cgcpu;
             * the entry stack frame must be normally generated because the subroutine could be still left by
               an exception and then the unwinding code might need to restore the registers stored by the entry code
           }
-          not(po_noreturn in CurrentProcInfo.procdef.procoptions) then
+          not(po_noreturn in CurrentProcInfo.procdef.ProcOptions) then
           begin
             if (CurrentProcInfo.framepointer=NR_STACK_POINTER_REG) or
-               (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+               (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
               begin
                 if CurrentProcInfo.final_localsize<>0 then
                   increase_sp(CurrentProcInfo.final_localsize);
                 if (not paramanager.use_fixed_stack) then
                   internal_restore_regs(list,true);
-                if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+                if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
                   list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[OS_ADDR],NR_FRAME_POINTER_REG));
                 CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,sizeof(PInt));
               end
@@ -350,12 +350,12 @@ unit cgcpu;
           list.Concat(TAICPU.op_none(A_VZEROUPPER));
 
         { return from proc }
-        if po_interrupt in CurrentProcInfo.procdef.procoptions then
+        if po_interrupt in CurrentProcInfo.procdef.ProcOptions then
           begin
-            if Assigned(CurrentProcInfo.procdef.funcretloc[calleeside].location) and
-               (CurrentProcInfo.procdef.funcretloc[calleeside].location^.loc=LOC_REGISTER) then
+            if Assigned(CurrentProcInfo.procdef.FuncRetLoc[calleeside].location) and
+               (CurrentProcInfo.procdef.FuncRetLoc[calleeside].location^.loc=LOC_REGISTER) then
               begin
-                if (getsupreg(CurrentProcInfo.procdef.funcretloc[calleeside].location^.register)=RS_EAX) then
+                if (getsupreg(CurrentProcInfo.procdef.FuncRetLoc[calleeside].location^.register)=RS_EAX) then
                   list.concat(TAICPU.Op_const_reg(A_ADD,S_L,4,NR_ESP))
                 else
                   InternalError(2010053001);
@@ -365,12 +365,12 @@ unit cgcpu;
             list.concat(TAICPU.Op_reg(A_POP,S_L,NR_EBX));
             list.concat(TAICPU.Op_reg(A_POP,S_L,NR_ECX));
 
-            if (CurrentProcInfo.procdef.funcretloc[calleeside].size in [OS_64,OS_S64]) and
-               Assigned(CurrentProcInfo.procdef.funcretloc[calleeside].location) and
-               Assigned(CurrentProcInfo.procdef.funcretloc[calleeside].location^.next) and
-               (CurrentProcInfo.procdef.funcretloc[calleeside].location^.next^.loc=LOC_REGISTER) then
+            if (CurrentProcInfo.procdef.FuncRetLoc[calleeside].size in [OS_64,OS_S64]) and
+               Assigned(CurrentProcInfo.procdef.FuncRetLoc[calleeside].location) and
+               Assigned(CurrentProcInfo.procdef.FuncRetLoc[calleeside].location^.next) and
+               (CurrentProcInfo.procdef.FuncRetLoc[calleeside].location^.next^.loc=LOC_REGISTER) then
               begin
-                if (getsupreg(CurrentProcInfo.procdef.funcretloc[calleeside].location^.next^.register)=RS_EDX) then
+                if (getsupreg(CurrentProcInfo.procdef.FuncRetLoc[calleeside].location^.next^.register)=RS_EDX) then
                   list.concat(TAICPU.Op_const_reg(A_ADD,S_L,4,NR_ESP))
                 else
                   InternalError(2010053002);
@@ -393,7 +393,7 @@ unit cgcpu;
             list.concat(TAICPU.Op_none(A_IRET,S_NO));
           end
         { Routines with the poclearstack flag set use only a ret }
-        else if (CurrentProcInfo.procdef.proccalloption in clearstack_pocalls) and
+        else if (CurrentProcInfo.procdef.ProcCallOption in clearstack_pocalls) and
                 (not paramanager.use_fixed_stack)  then
          begin
            { complex return values are removed from stack in C code PM }
@@ -405,9 +405,9 @@ unit cgcpu;
 
            if ((TargetInfo.system <> system_i386_win32) or
                (TargetInfo.abi=abi_old_win32_gnu)) and
-              not ((CurrentProcInfo.procdef.proccalloption = pocall_safecall) and
+              not ((CurrentProcInfo.procdef.ProcCallOption = pocall_safecall) and
                (tf_safecall_exceptions in TargetInfo.flags)) and
-              paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,
+              paramanager.ret_in_param(CurrentProcInfo.procdef.ReturnDef,
                                        CurrentProcInfo.procdef) then
              list.concat(TAICPU.Op_const(A_RET,S_W,sizeof(aint)))
            else
@@ -437,7 +437,7 @@ unit cgcpu;
       end;
 
 
-    procedure TCG386.g_copyvaluepara_openarray(list : TAsmList;const ref:TReference;const lenloc:TLocation;elesize:TCGInt;destreg:TRegister);
+    procedure TCG386.g_copyvaluepara_openarray(list : TAsmList;const ref:TReference;const lenloc:TLocation;EleSize:TCGInt;destreg:TRegister);
       var
         power  : LongInt;
         opsize : TOpSize;
@@ -457,21 +457,21 @@ unit cgcpu;
           In the case of elesize=4 and 2, this allows us to avoid the SHR later.
           In the case of elesize=8, we can later use a SHL ECX, 1 instead of
           SHR ECX, 2 which is one byte shorter. }
-        if (elesize=8) or (elesize=4) or (elesize=2) then
+        if (EleSize=8) or (EleSize=4) or (EleSize=2) then
           begin
             { Now EDI contains (high+1). Copy it to ECX for later use. }
             getcpuregister(list,NR_ECX);
             list.concat(TAICPU.op_reg_reg(A_MOV,S_L,NR_EDI,NR_ECX));
           end;
         { EDI := EDI * elesize }
-        if (elesize<>1) then
+        if (EleSize<>1) then
          begin
-           if IsPowerOf2(elesize, power) then
+           if IsPowerOf2(EleSize, power) then
              list.concat(TAICPU.op_const_reg(A_SHL,S_L,power,NR_EDI))
            else
-             list.concat(TAICPU.op_const_reg(A_IMUL,S_L,elesize,NR_EDI));
+             list.concat(TAICPU.op_const_reg(A_IMUL,S_L,EleSize,NR_EDI));
          end;
-        if (elesize<>8) and (elesize<>4) and (elesize<>2) then
+        if (EleSize<>8) and (EleSize<>4) and (EleSize<>2) then
           begin
             { Now EDI contains (high+1)*elesize. Copy it to ECX for later use. }
             getcpuregister(list,NR_ECX);
@@ -513,31 +513,31 @@ unit cgcpu;
 
         { calculate size }
         opsize:=S_B;
-        if elesize=8 then
+        if EleSize=8 then
           begin
             opsize:=S_L;
             { ECX is number of qwords, convert to dwords }
             list.concat(TAICPU.op_const_reg(A_SHL,S_L,1,NR_ECX))
           end
-        else if elesize=4 then
+        else if EleSize=4 then
           begin
             opsize:=S_L;
             { ECX is already number of dwords, so no need to SHL/SHR }
           end
-        else if elesize=2 then
+        else if EleSize=2 then
           begin
             opsize:=S_W;
             { ECX is already number of words, so no need to SHL/SHR }
           end
         else
-         if (elesize and 3)=0 then
+         if (EleSize and 3)=0 then
          begin
            opsize:=S_L;
            { ECX is number of bytes, convert to dwords }
            list.concat(TAICPU.op_const_reg(A_SHR,S_L,2,NR_ECX))
          end
         else
-         if (elesize and 1)=0 then
+         if (EleSize and 1)=0 then
           begin
             opsize:=S_W;
             { ECX is number of bytes, convert to words }
@@ -590,7 +590,7 @@ unit cgcpu;
                 { Allocate registers used for parameters to make sure they
                   never allocated during this PIC init code }
                 for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
+                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
                     if Loc in [LOC_REGISTER, LOC_CREGISTER] then begin
                       a_reg_alloc(list, register);
                       { If ECX is used for a parameter, use EBX as temp }
@@ -602,12 +602,12 @@ unit cgcpu;
                   begin
                     { Mark EBX as used in the proc }
                     include(rg[R_INTREGISTER].used_in_proc,RS_EBX);
-                    CurrentModule.requires_ebx_pic_helper:=true;
+                    CurrentModule.RequiresEBXPICHelper:=true;
                     a_call_name_static(list,'fpc_geteipasebx');
                   end
                 else
                   begin
-                    CurrentModule.requires_ecx_pic_helper:=true;
+                    CurrentModule.RequiresECXPICHelper:=true;
                     a_call_name_static(list,'fpc_geteipasecx');
                   end;
                 list.concat(TAICPU.op_sym_ofs_reg(A_ADD,S_L,CurrentAsmData.RefAsmSymbol('_GLOBAL_OFFSET_TABLE_',AT_DATA),0,tmpreg));
@@ -615,7 +615,7 @@ unit cgcpu;
 
                 { Deallocate parameter registers }
                 for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
+                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).ParaLoc[calleeside].Location^ do
                     if Loc in [LOC_REGISTER, LOC_CREGISTER] then
                       a_reg_dealloc(list, register);
               end

@@ -623,11 +623,11 @@ unit optdfa;
           nodemap:=TIndexedNodeSet.Create;
 
         { create a fake node using the result which will be the last node }
-        if not(is_void(CurrentProcInfo.procdef.returndef)) then
+        if not(is_void(CurrentProcInfo.procdef.ReturnDef)) then
           begin
-            if CurrentProcInfo.procdef.proctypeoption=potype_constructor then
+            if CurrentProcInfo.procdef.ProcTypeOption=potype_constructor then
               resultnode:=load_self_node
-            else if (CurrentProcInfo.procdef.proccalloption=pocall_safecall) and
+            else if (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) and
               (tf_safecall_exceptions in TargetInfo.flags) then
               resultnode:=load_safecallresult_node
             else
@@ -712,22 +712,22 @@ unit optdfa;
         symtables }
       function SymbolCandidateForWarningOrHint(sym : TAbstractNormalVarSym) : Boolean;
         begin
-          Result:=(((sym.owner=CurrentProcInfo.procdef.localst) and
-                    (CurrentProcInfo.procdef.localst.symtablelevel=sym.owner.symtablelevel)
+          Result:=(((sym.owner=CurrentProcInfo.procdef.LocalST) and
+                    (CurrentProcInfo.procdef.LocalST.SymTableLevel=sym.owner.SymTableLevel)
                    ) or
-                   ((sym.owner=CurrentProcInfo.procdef.parast) and
+                   ((sym.owner=CurrentProcInfo.procdef.ParaST) and
                     (sym.typ=paravarsym) and
-                    (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel) and
+                    (CurrentProcInfo.procdef.ParaST.SymTableLevel=sym.owner.SymTableLevel) and
                     { all parameters except out parameters are initialized by the caller }
-                    (TParaVarSym(sym).varspez=vs_out)
+                    (TParaVarSym(sym).VarSpez=vs_out)
                    ) or
-                   ((vo_is_funcret in sym.varoptions) and
-                    (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel)
+                   ((vo_is_funcret in sym.VarOptions) and
+                    (CurrentProcInfo.procdef.ParaST.SymTableLevel=sym.owner.SymTableLevel)
                    )
                   ) and
-                  not(vo_is_external in sym.varoptions) and
-                  not sym.inparentfpstruct and
-                  not(vo_is_internal in sym.varoptions);
+                  not(vo_is_external in sym.VarOptions) and
+                  not sym.InParentFPStruct and
+                  not(vo_is_internal in sym.VarOptions);
         end;
 
       var
@@ -741,7 +741,7 @@ unit optdfa;
             begin
               { do not warn about variables passed by var, just issue a hint, this
                 is a workaround for old code e.g. using fillchar }
-              if Assigned(TCallParaNode(n).parasym) and (TCallParaNode(n).parasym.varspez in [vs_var,vs_out]) then
+              if Assigned(TCallParaNode(n).parasym) and (TCallParaNode(n).parasym.VarSpez in [vs_var,vs_out]) then
                 begin
                   hpt:=TCallParaNode(n).left;
                   while Assigned(hpt) and (hpt.nodetype in [subscriptn,vecn,typeconvn]) do
@@ -751,9 +751,9 @@ unit optdfa;
                     PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) then
                     begin
                       { issue only a hint for var, when encountering the node passed as out, we need only to stop searching }
-                      if TCallParaNode(n).parasym.varspez=vs_var then
+                      if TCallParaNode(n).parasym.VarSpez=vs_var then
                         UninitializedVariableMessage(hpt.fileinfo,false,
-                          TLoadNode(hpt).SymTable.symtabletype=localsymtable,
+                          TLoadNode(hpt).SymTable.SymTableType=LocalSymTable,
                           is_managed_type(TLoadNode(hpt).resultdef),
                           TLoadNode(hpt).symtableentry.RealName);
                       AddFilepos(hpt.fileinfo);
@@ -789,10 +789,10 @@ unit optdfa;
 
                   { R.Init then R will be initialized by the constructor,
                     Also allow it for simple loads }
-                  if (TCallNode(n).procdefinition.proctypeoption=potype_constructor) or
+                  if (TCallNode(n).procdefinition.ProcTypeOption=potype_constructor) or
                      (PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) and
                       (((methodpointer.resultdef.typ=objectdef) and
-                        not(oo_has_virtual in TObjectDef(methodpointer.resultdef).objectoptions)) or
+                        not(oo_has_virtual in TObjectDef(methodpointer.resultdef).ObjectOptions)) or
                        (methodpointer.resultdef.typ=recorddef)
                       )
                      ) then
@@ -815,7 +815,7 @@ unit optdfa;
 
                   if Assigned(varsym.owner) and SymbolCandidateForWarningOrHint(varsym) then
                     begin
-                      if (vo_is_funcret in varsym.varoptions) and not(WarnedForLocation(n.fileinfo)) then
+                      if (vo_is_funcret in varsym.VarOptions) and not(WarnedForLocation(n.fileinfo)) then
                         begin
                           if is_managed_type(varsym.vardef) then
                             MessagePos(n.fileinfo,sym_w_managed_function_result_uninitialized)
@@ -827,7 +827,7 @@ unit optdfa;
                       else
                         begin
                           { typed consts are initialized, further, warn only once per location }
-                          if not (vo_is_typed_const in varsym.varoptions) and not(WarnedForLocation(n.fileinfo)) then
+                          if not (vo_is_typed_const in varsym.VarOptions) and not(WarnedForLocation(n.fileinfo)) then
                             begin
                               UninitializedVariableMessage(n.fileinfo,true,varsym.typ=localvarsym,is_managed_type(varsym.vardef),varsym.realname);
                               AddFilepos(n.fileinfo);
@@ -838,10 +838,10 @@ unit optdfa;
 {$ifdef dummy}
                   { if a the variable we are looking for is passed as a var parameter, we stop searching }
                   else if Assigned(varsym.owner) and
-                     (varsym.owner=CurrentProcInfo.procdef.parast) and
+                     (varsym.owner=CurrentProcInfo.procdef.ParaST) and
                      (varsym.typ=paravarsym) and
-                     (CurrentProcInfo.procdef.parast.symtablelevel=varsym.owner.symtablelevel) and
-                     (TParaVarSym(varsym).varspez=vs_var) then
+                     (CurrentProcInfo.procdef.ParaST.SymTableLevel=varsym.owner.SymTableLevel) and
+                     (TParaVarSym(varsym).VarSpez=vs_var) then
                     result:=fen_norecurse_true;
 {$endif dummy}
                 end;
@@ -941,12 +941,12 @@ unit optdfa;
 
                   successor might be assigned in case of an inlined exit node, in this case we do not warn about an unassigned
                   result as this had happened already when the routine has been compiled }
-                if not(Assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.returndef)) and
+                if not(Assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.ReturnDef)) and
                   not(Assigned(TExitNode(node).resultexpr)) and
                   { don't warn about constructors }
-                  not(CurrentProcInfo.procdef.proctypeoption in [potype_class_constructor,potype_constructor]) then
+                  not(CurrentProcInfo.procdef.ProcTypeOption in [potype_class_constructor,potype_constructor]) then
                   begin
-                    if is_managed_type(CurrentProcInfo.procdef.returndef) then
+                    if is_managed_type(CurrentProcInfo.procdef.ReturnDef) then
                       MessagePos(node.fileinfo,sym_w_managed_function_result_uninitialized)
                     else
                       MessagePos(node.fileinfo,sym_w_function_result_uninitialized);

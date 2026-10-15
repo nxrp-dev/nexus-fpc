@@ -141,21 +141,21 @@ implementation
       make_global: boolean;
       href: TReference;
       hsym: TSym;
-      paraloc: PCGParaLocation;
+      ParaLoc: PCGParaLocation;
       op: TAsmOp;
     begin
-      if not(procdef.proctypeoption in [potype_function,potype_procedure]) then
+      if not(procdef.ProcTypeOption in [potype_function,potype_procedure]) then
         InternalError(200006137);
       if not Assigned(procdef.struct) or
-         (procdef.procoptions*[po_classmethod, po_staticmethod,
+         (procdef.ProcOptions*[po_classmethod, po_staticmethod,
            po_methodpointer, po_interrupt, po_iocheck]<>[]) then
         InternalError(200006138);
-      if procdef.owner.symtabletype<>ObjectSymtable then
+      if procdef.owner.SymTableType<>ObjectSymtable then
         InternalError(200109191);
 
       make_global:=false;
-      if (not CurrentModule.is_unit) or create_smartlink_library or
-         (procdef.owner.defowner.owner.symtabletype=GlobalSymTable) then
+      if (not CurrentModule.IsUnit) or create_smartlink_library or
+         (procdef.owner.DefOwner.owner.SymTableType=GlobalSymTable) then
         make_global:=true;
 
       if make_global then
@@ -164,33 +164,33 @@ implementation
         list.concat(TAISymbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
 
       { set param1 interface to self  }
-      procdef.init_paraloc_info(callerside);
-      hsym:=TSym(procdef.parast.Find('self'));
+      procdef.Init_ParaLoc_Info(callerside);
+      hsym:=TSym(procdef.ParaST.Find('self'));
       if not(Assigned(hsym) and
         (hsym.typ=paravarsym)) then
         InternalError(2010103101);
-      paraloc:=TParaVarSym(hsym).paraloc[callerside].location;
-      if Assigned(paraloc^.next) then
+      ParaLoc:=TParaVarSym(hsym).ParaLoc[callerside].location;
+      if Assigned(ParaLoc^.next) then
         InternalError(2013020101);
 
-      case paraloc^.loc of
+      case ParaLoc^.loc of
         LOC_REGISTER:
-          TCGAArch64(cg).handle_reg_imm12_reg(list,A_SUB,paraloc^.size,paraloc^.register,ioffset,paraloc^.register,NR_IP0,false,true);
+          TCGAArch64(cg).handle_reg_imm12_reg(list,A_SUB,ParaLoc^.size,ParaLoc^.register,ioffset,ParaLoc^.register,NR_IP0,false,true);
         else
           InternalError(2010103102);
       end;
 
-      if (po_virtualmethod in procdef.procoptions) and
-          not is_objectpascal_helper(procdef.struct) then
+      if (po_virtualmethod in procdef.ProcOptions) and
+          not Is_ObjectPascal_Helper(procdef.struct) then
         begin
-          if (procdef.extnumber=$ffff) then
+          if (procdef.ExtNumber=$ffff) then
             InternalError(2000061302);
           { mov  0(%rdi),%rax ; load vmt}
-          reference_reset_base(href,voidpointertype,paraloc^.register,0,ctempposinvalid,sizeof(PInt),[]);
+          reference_reset_base(href,VoidPointerType,ParaLoc^.register,0,ctempposinvalid,sizeof(PInt),[]);
           getcpuregister(list,NR_IP0);
-          a_load_ref_reg(list,voidpointertype,voidpointertype,href,NR_IP0);
+          a_load_ref_reg(list,VoidPointerType,VoidPointerType,href,NR_IP0);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_IP0,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(PInt),[]);
+          reference_reset_base(href,VoidPointerType,NR_IP0,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,sizeof(PInt),[]);
           op:=A_LDR;
           TCGAArch64(cg).make_simple_ref(list,op,OS_ADDR,PF_None,href,NR_IP0);
           list.concat(TAICPU.op_reg_ref(op,NR_IP0,href));
@@ -198,7 +198,7 @@ implementation
           list.concat(TAICPU.op_reg(A_BR,NR_IP0));
         end
       else
-        cg.a_jmp_name(list,procdef.mangledname);
+        cg.a_jmp_name(list,procdef.MangledName);
       list.concat(TAISymbolEnd.Createname(labelname));
     end;
 

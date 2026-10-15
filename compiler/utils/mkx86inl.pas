@@ -140,30 +140,30 @@ function GetPascalType(const ATyp: string): string;
 function GetTypeDef(const ATyp: string): string;
   begin
     case ATyp of
-      'r8':    exit('u8inttype');
-      'rs8':   exit('s8inttype');
-      'r16':   exit('u16inttype');
-      'rs16':  exit('s16inttype');
-      'r32':   exit('u32inttype');
-      'rs32':  exit('s32inttype');
-      'r64':   exit('u64inttype');
-      'rs64':  exit('s64inttype');
-      'reg':   exit('uinttype');
-      'sreg':  exit('sinttype');
-      'f32':   exit('s32floattype');
-      'f64':   exit('s64floattype');
-      'mm':    exit('x86_m64type');
+      'r8':    exit('U8IntType');
+      'rs8':   exit('S8IntType');
+      'r16':   exit('U16IntType');
+      'rs16':  exit('S16IntType');
+      'r32':   exit('U32IntType');
+      'rs32':  exit('S32IntType');
+      'r64':   exit('U64IntType');
+      'rs64':  exit('S64IntType');
+      'reg':   exit('UIntType');
+      'sreg':  exit('SIntType');
+      'f32':   exit('S32FloatType');
+      'f64':   exit('S64FloatType');
+      'mm':    exit('X86_M64Type');
       'implicit_xmm0',
-      'xmm':   exit('x86_m128type');
-      'i32':   exit('s32inttype');
+      'xmm':   exit('X86_M128Type');
+      'i32':   exit('S32IntType');
 
-      'edi_ptr':   exit('voidpointertype');
+      'edi_ptr':   exit('VoidPointerType');
 
       'ptr8',
       'ptr16',
       'ptr32',
       'ptr64',
-      'ptr128': exit('voidpointertype');
+      'ptr128': exit('VoidPointerType');
     else
       exit(ATyp);
     end;
@@ -267,16 +267,16 @@ function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): 
   begin
     result:='';
     case ATyp of
-      'r8':    exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs8':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r16':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs16':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r32':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs32':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r64':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs64':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'reg':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,uinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'sreg':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,sinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r8':    exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs8':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U8IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r16':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs16':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U16IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r32':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs32':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U32IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r64':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs64':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,U64IntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'reg':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,UIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'sreg':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,SIntType,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
       'f32':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
       'f64':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
       'mm':    exit(format('location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
@@ -285,11 +285,11 @@ function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): 
       'implicit_xmm0':
         exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);'+LineEnding+
                     '    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
-                    '    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,x86_m128type,paraarray[%d].location,NR_XMM0,nil);',
+                    '    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,X86_M128Type,paraarray[%d].location,NR_XMM0,nil);',
                       [AIndex+1, BoolToStr(aconst,'true','false'), AIndex+1, AIndex+1]));
       'edi_ptr':
         exit(format('hlcg.getcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
-                    '    hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,voidpointertype,paraarray[%d].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
+                    '    hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,VoidPointerType,paraarray[%d].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
                       [AIndex+1, AIndex+1]));
 
       'ptr8',
@@ -598,7 +598,7 @@ procedure ParseList(const APrefix, AFilename: string);
             if hasOutput then
               ftypechk.Add('    resultdef:='+GetTypeDef(outputType)+';')
             else
-              ftypechk.Add('    resultdef:=voidtype;');
+              ftypechk.Add('    resultdef:=VoidType;');
             ftypechk.Add('  end;');
 
             if target<>'' then

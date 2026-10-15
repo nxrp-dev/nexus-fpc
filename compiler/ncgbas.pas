@@ -154,7 +154,7 @@ interface
             forceref:=op.localoper^.localforceref;
             sym:=TAbstractNormalVarSym(pointer(op.localoper^.localsym));
             dispose(op.localoper);
-            case sym.localloc.loc of
+            case sym.LocAlloc.loc of
               LOC_REFERENCE :
                 begin
                   if getoffset then
@@ -166,14 +166,14 @@ interface
                          then
                         begin
                           op.typ:=top_const;
-                          op.val:=sym.localloc.reference.offset+sofs;
+                          op.val:=sym.LocAlloc.reference.offset+sofs;
                         end
                       else
                         begin
                           op.typ:=top_ref;
                           new(op.ref);
-                          reference_reset_base(op.ref^,indexreg,sym.localloc.reference.offset+sofs,
-                            sym.localloc.reference.temppos,NewAlignment(sym.localloc.reference.alignment,sofs),[]);
+                          reference_reset_base(op.ref^,indexreg,sym.LocAlloc.reference.offset+sofs,
+                            sym.LocAlloc.reference.temppos,NewAlignment(sym.LocAlloc.reference.alignment,sofs),[]);
 {$ifdef x86}
                           op.ref^.segment:=segment;
 {$endif x86}
@@ -183,8 +183,8 @@ interface
                     begin
                       op.typ:=top_ref;
                       new(op.ref);
-                      reference_reset_base(op.ref^,sym.localloc.reference.base,sym.localloc.reference.offset+sofs,
-                        sym.localloc.reference.temppos,NewAlignment(sym.localloc.reference.alignment,sofs),[]);
+                      reference_reset_base(op.ref^,sym.LocAlloc.reference.base,sym.LocAlloc.reference.offset+sofs,
+                        sym.LocAlloc.reference.temppos,NewAlignment(sym.LocAlloc.reference.alignment,sofs),[]);
                       op.ref^.index:=indexreg;
 {$ifdef x86}
                       op.ref^.segment:=segment;
@@ -204,7 +204,7 @@ interface
                       op.typ:=top_ref;
                       new(op.ref);
                       { no idea about the actual alignment }
-                      reference_reset_base(op.ref^,sym.localloc.register,sofs,ctempposinvalid,1,[]);
+                      reference_reset_base(op.ref^,sym.LocAlloc.register,sofs,ctempposinvalid,1,[]);
                       op.ref^.index:=indexreg;
 {$ifdef x86}
                       op.ref^.scalefactor:=scale;
@@ -213,10 +213,10 @@ interface
                   else
                     begin
                       op.typ:=top_reg;
-                      op.reg:=sym.localloc.register;
+                      op.reg:=sym.LocAlloc.register;
 {$ifdef x86}
-                      if reg2opsize(op.reg)<>TCGSize2Opsize[sym.localloc.size] then
-                        op.reg:=newreg(getregtype(op.reg),getsupreg(op.reg),cgsize2subreg(getregtype(op.reg),sym.localloc.size));
+                      if reg2opsize(op.reg)<>TCGSize2Opsize[sym.LocAlloc.size] then
+                        op.reg:=newreg(getregtype(op.reg),getsupreg(op.reg),cgsize2subreg(getregtype(op.reg),sym.LocAlloc.size));
 {$endif x86}
                     end;
                 end;
@@ -230,9 +230,9 @@ interface
                     MessagePos(filepos,asmr_e_invalid_reference_syntax);
                   { Using an MM/FPU register in a reference is not possible }
                   if forceref or (sofs<>0) then
-                    MessagePos1(filepos,asmr_e_invalid_ref_register,std_regname(sym.localloc.register))
+                    MessagePos1(filepos,asmr_e_invalid_ref_register,std_regname(sym.LocAlloc.register))
                   else
-                    op.reg:=sym.localloc.register;
+                    op.reg:=sym.LocAlloc.register;
                 end;
               LOC_INVALID :
                 begin
@@ -240,7 +240,7 @@ interface
                     funcret loc is set to LOC_INVALID in case the
                     result is returned via a complex location
                     (more than one register, ...) }
-                  if (vo_is_funcret in TAbstractVarSym(sym).varoptions) then
+                  if (vo_is_funcret in TAbstractVarSym(sym).VarOptions) then
                     MessagePos(filepos,asmr_e_complex_function_result_location)
                   else
                     InternalError(2012082101);
@@ -292,12 +292,12 @@ interface
          if not (asmnf_has_registerlist in asmnodeflags) then
            cg.allocallcpuregisters(CurrentAsmData.CurrAsmList);
 
-         if (po_inline in CurrentProcInfo.procdef.procoptions) then
+         if (po_inline in CurrentProcInfo.procdef.ProcOptions) then
            begin
              hp:=TAI(p_asm.first);
              while Assigned(hp) do
               begin
-                hp2:=TAI(hp.getcopy);
+                hp2:=TAI(hp.GetCopy);
                 case hp2.typ of
                   ait_label :
                      ReLabel(TAsmSymbol(TAILabel(hp2).labsym));
@@ -398,14 +398,14 @@ interface
                       { Handle references to locals from TP-style INLINE(). }
                       if Assigned(sym) and (sym.bind=AB_NONE) then
                         begin
-                          vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.parast.Find(sym.Name));
+                          vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.ParaST.Find(sym.Name));
                           if not Assigned(vs) then
-                            vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.localst.Find(sym.Name));
+                            vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.LocalST.Find(sym.Name));
                           if not Assigned(vs) then
                             InternalError(2021081401);
-                          if vs.localloc.loc<>LOC_REFERENCE then
+                          if vs.LocAlloc.loc<>LOC_REFERENCE then
                             InternalError(2021081402);
-                          value:=vs.localloc.reference.offset+symofs;
+                          value:=vs.LocAlloc.reference.offset+symofs;
                           sym:=nil;
                           symofs:=0;
                         end;

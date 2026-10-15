@@ -125,7 +125,7 @@ unit cgcpu;
     function TCGX8664.use_push: boolean;
       begin
         result:=(CurrentProcInfo.framepointer=NR_STACK_POINTER_REG) or
-          (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter);
+          (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter);
       end;
 
 
@@ -138,7 +138,7 @@ unit cgcpu;
         if (TargetInfo.system<>system_x86_64_win64) or
            (not uses_registers(R_MMREGISTER)) then
           exit;
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
         for i:=low(regs_to_save_mm) to high(regs_to_save_mm) do
           begin
             if (regs_to_save_mm[i] in rg[R_MMREGISTER].used_in_proc) then
@@ -178,7 +178,7 @@ unit cgcpu;
           usedregs: TCPURegisterSet;
           hreg: TRegister;
         begin
-          usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption);
+          usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption);
           for r := low(regs_to_save_int) to high(regs_to_save_int) do
             if regs_to_save_int[r] in usedregs then
               begin
@@ -198,8 +198,8 @@ unit cgcpu;
 
       begin
         regsize:=0;
-        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.ProcCallOption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
         hitem:=list.last;
         { pi_has_unwind_info may already be set at this point if there are
           SEH directives in assembler body. In this case, .seh_endprologue
@@ -227,7 +227,7 @@ unit cgcpu;
                 { Return address and FP are both on stack }
                 CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,2*sizeof(PInt));
                 CurrentAsmData.asmcfi.cfa_offset(list,NR_FRAME_POINTER_REG,-(2*sizeof(PInt)));
-                if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
+                if CurrentProcInfo.procdef.ProcTypeOption<>potype_exceptfilter then
                   list.concat(TAICPU.op_reg_reg(A_MOV,tcgsize2opsize[OS_ADDR],NR_STACK_POINTER_REG,NR_FRAME_POINTER_REG))
                 else
                   begin
@@ -262,7 +262,7 @@ unit cgcpu;
                ((TargetInfo.stackalign>sizeof(PInt)) and
                 (stackmisalignment <> 0) and
                 ((pi_do_call in CurrentProcInfo.flags) or
-                 (po_assembler in CurrentProcInfo.procdef.procoptions))) then
+                 (po_assembler in CurrentProcInfo.procdef.ProcOptions))) then
               begin
                 if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
@@ -292,7 +292,7 @@ unit cgcpu;
         if not (pi_has_unwind_info in CurrentProcInfo.flags) then
           exit;
         { Generate unwind data for x86_64-win64 }
-        seh_proc:=CAISEHDirective.create_name(ash_proc,CurrentProcInfo.procdef.mangledname);
+        seh_proc:=CAISEHDirective.create_name(ash_proc,CurrentProcInfo.procdef.MangledName);
         if Assigned(hitem) then
           list.insertafter(seh_proc,hitem)
         else
@@ -376,9 +376,9 @@ unit cgcpu;
                 * the entry stack frame must be normally generated because the subroutine could be still left by
                   an exception and then the unwinding code might need to restore the registers stored by the entry code
         }
-        if not(po_noreturn in CurrentProcInfo.procdef.procoptions) then
+        if not(po_noreturn in CurrentProcInfo.procdef.ProcOptions) then
           begin
-            regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
+            regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.ProcCallOption);
             { Prevent return address from a possible call from ending up in the epilogue }
             { (restoring registers happens before epilogue, providing necessary padding) }
             if (CurrentProcInfo.flags*[pi_has_unwind_info,pi_do_call,pi_has_saved_regs])=[pi_has_unwind_info,pi_do_call] then
@@ -406,7 +406,7 @@ unit cgcpu;
                       increase_sp(CurrentProcInfo.final_localsize);
                     internal_restore_regs(list,true);
 
-                    if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
+                    if (CurrentProcInfo.procdef.ProcTypeOption=potype_exceptfilter) then
                       list.concat(TAICPU.op_reg(A_POP,tcgsize2opsize[OS_ADDR],NR_FRAME_POINTER_REG));
                     CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,sizeof(PInt));
                   end
@@ -467,7 +467,7 @@ unit cgcpu;
             inherited g_local_unwind(list,l);
             exit;
           end;
-        pd:=search_system_proc('_fpc_local_unwind');
+        pd:=Search_System_Proc('_fpc_local_unwind');
         para1.init;
         para2.init;
         paramanager.getcgtempparaloc(list,pd,1,para1);
@@ -547,7 +547,7 @@ unit cgcpu;
     function TCGX8664.use_ms_abi: boolean;
       begin
         if Assigned(CurrentProcInfo) then
-          use_ms_abi:=x86_64_use_ms_abi(CurrentProcInfo.procdef.proccalloption)
+          use_ms_abi:=x86_64_use_ms_abi(CurrentProcInfo.procdef.ProcCallOption)
         else
           use_ms_abi:=TargetInfo.system=system_x86_64_win64;
       end;

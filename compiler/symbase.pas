@@ -30,7 +30,7 @@ interface
        { global }
        GlobType,Globals,
        { symtable }
-       symconst
+       SymConst
        ;
 
 {************************************************
@@ -46,7 +46,7 @@ interface
        private
          FId   : TIDString;
          FHash : LongWord;
-         procedure SetId(const s:TIDString);
+         procedure SetId(const S:TIDString);
        public
          property Id:TIDString read FId write SetId;
          property Hash:LongWord read FHash;
@@ -58,9 +58,9 @@ interface
 ************************************************}
 
       TDefEntry = class
-         typ   : TDefTyp;
-         defid : LongInt;
-         owner : TSymTable;
+         Typ   : TDefTyp;
+         DefID : LongInt;
+         Owner : TSymTable;
       end;
 
 
@@ -73,11 +73,11 @@ interface
       private
          FRealName : {$ifdef symansistr}TSymStr{$else}PShortString{$endif};
          function GetEscapedRealName: TSymStr;
-         function  GetRealname: TSymStr;
-         procedure SetRealname(const ANewName: TSymStr);
+         function  GetRealName: TSymStr;
+         procedure SetRealName(const ANewName: TSymStr);
       public
-         typ   : TSymTyp;
-         SymId : LongInt;
+         Typ   : TSymTyp;
+         SymID : LongInt;
          Owner : TSymTable;
          destructor Destroy;override;
          property RealName: TSymStr read GetRealName write SetRealName;
@@ -90,69 +90,69 @@ interface
 
        TSymTable = class
        public
-          name      : PShortString;
-          realname  : PShortString;
+          Name      : PShortString;
+          RealName  : PShortString;
           DefList   : TFPObjectList;
           SymList   : TFPHashObjectList;
-          defowner  : TDefEntry; { for records and objects }
+          DefOwner  : TDefEntry; { for records and objects }
           ModuleID  : LongInt;
-          refcount  : smallint;
-          currentvisibility : TVisibility;
-          currentlyoptional : boolean;
-          tableoptions : TSymTableOptions;
+          RefCount  : SmallInt;
+          CurrentVisibility : TVisibility;
+          CurrentlyOptional : Boolean;
+          TableOptions : TSymTableOptions;
           { level of symtable, used for nested procedures }
-          symtablelevel : byte;
+          SymTableLevel : Byte;
           { do not allow to add new definitions, can be extended to symbols probably }
-          sealed : boolean;
-          symtabletype  : TSymTableType;
-          constructor Create(const s:string);
+          Sealed : Boolean;
+          SymTableType  : TSymTableType;
+          constructor Create(const S:string);
           { attention: only execute the a child's destructor if refcount is 1! }
           destructor  Destroy;override;
-          procedure freeinstance;override;
-          function  getcopy:TSymTable;
-          procedure clear;virtual;
-          function  checkduplicate(var s:THashedIDString;sym:TSymEntry):boolean;virtual;
-          procedure insertsym(sym:TSymEntry;checkdup:boolean=true);virtual;
-          procedure Deletesym(sym:TSymEntry);virtual;
-          function  Find(const s:TIDString) : TSymEntry;
-          function  FindWithHash(const s:THashedIDString) : TSymEntry;virtual;
-          procedure insertdef(def:TDefEntry);virtual;
-          procedure deletedef(def:TDefEntry);
-          function  iscurrentunit:boolean;virtual;
+          procedure FreeInstance;override;
+          function  GetCopy:TSymTable;
+          procedure Clear;virtual;
+          function  CheckDuplicate(var S:THashedIDString;Sym:TSymEntry):Boolean;virtual;
+          procedure InsertSym(Sym:TSymEntry;CheckDup:Boolean=True);virtual;
+          procedure DeleteSym(Sym:TSymEntry);virtual;
+          function  Find(const S:TIDString) : TSymEntry;
+          function  FindWithHash(const S:THashedIDString) : TSymEntry;virtual;
+          procedure InsertDef(Def:TDefEntry);virtual;
+          procedure DeleteDef(Def:TDefEntry);
+          function  IsCurrentUnit:Boolean;virtual;
           { includes the flag in this symtable and all parent symtables; if
             it's already set the flag is not set again }
-          procedure includeoption(option:TSymTableOption);
-          class function maybe_adjust_symname(const s:TSymStr):TSymStr;
+          procedure IncludeOption(Option:TSymTableOption);
+          class function Maybe_Adjust_SymName(const S:TSymStr):TSymStr;
        end;
 
        PSymTableStackItem = ^TSymTableStackItem;
        TSymTableStackItem = record
          SymTable : TSymTable;
-         Saved_ModuleID : LongInt;
-         next     : PSymTableStackItem;
+         SavedModuleID : LongInt;
+         Next     : PSymTableStackItem;
        end;
 
        TSymTableStack = class
-         stack : PSymTableStackItem;
-         constructor create;
+         Stack : PSymTableStackItem;
+         constructor Create;
          destructor Destroy;override;
-         procedure clear;
-         function finditem(st:TSymTable):PSymTableStackItem;
-         procedure push(st:TSymTable); virtual;
-         procedure pushafter(st,afterst:TSymTable); virtual;
-         procedure pop(st:TSymTable); virtual;
+         procedure Clear;
+         function FindItem(ST:TSymTable):PSymTableStackItem;
+         procedure Push(ST:TSymTable); virtual;
+         procedure PushAfter(ST,AfterST:TSymTable); virtual;
+         procedure Pop(ST:TSymTable); virtual;
          { Remove st from anywhere in the stack without raising an error if
            it is not present.  Used by the CTask PPU-cycle fix to excise a
            symtable that is about to be freed (via tmodule.reset) from a
            suspended module's saved symtablestack before RestoreState runs. }
-         procedure remove(st:TSymTable);
-         function  top:TSymTable;
-         function getcopyuntil(finalst: TSymTable): TSymTableStack;
+         procedure Remove(ST:TSymTable);
+         function  Top:TSymTable;
+         function GetCopyUntil(FinalST: TSymTable): TSymTableStack;
        end;
 
 
     var
-       initialmacrosymtable: TSymTable;   { macros initially defined by the compiler or
+       InitialMacroSymTable: TSymTable;   { macros initially defined by the compiler or
                                             given on the command line. Is common
                                             for all files compiled and do not change. }
        MacroSymTableStack,
@@ -160,7 +160,7 @@ interface
 
 {$ifdef MEMDEBUG}
     var
-      memrealnames : TMemDebug;
+      MemRealNames : TMemDebug;
 {$endif MEMDEBUG}
 
 
@@ -173,12 +173,12 @@ implementation
                               THashedIDString
 ****************************************************************************}
 
-    procedure THashedIDString.SetId(const s:TIDString);
+    procedure THashedIDString.SetId(const S:TIDString);
       begin
-        FId:=s;
+        FId:=S;
 {$ifdef symansistr}
-        if length(FId)>maxidlen then
-          SetLength(FId,maxidlen);
+        if Length(FId)>MaxIDLen then
+          SetLength(FId,MaxIDLen);
 {$endif}
         FHash:=FPHash(FId);
       end;
@@ -191,52 +191,52 @@ implementation
     destructor TSymEntry.Destroy;
       begin
 {$ifdef MEMDEBUG}
-        memrealnames.start;
+        MemRealNames.Start;
 {$endif MEMDEBUG}
 {$ifndef symansistr}
-        StringDispose(Frealname);
+        StringDispose(FRealName);
 {$endif}
 {$ifdef MEMDEBUG}
-        memrealnames.stop;
+        MemRealNames.Stop;
 {$endif MEMDEBUG}
         inherited Destroy;
       end;
 
 
-    function TSymEntry.GetRealname:TSymStr;
+    function TSymEntry.GetRealName:TSymStr;
       begin
 {$ifndef symansistr}
-        if not Assigned(FRealname) then
+        if not Assigned(FRealName) then
           InternalError(200611011);
-        result:=FRealname^;
+        Result:=FRealName^;
 {$else}
        if FRealName='' then
          InternalError(200611011);
-       result:=FRealName;
+       Result:=FRealName;
 {$endif}
       end;
 
 
     function TSymEntry.GetEscapedRealName: TSymStr;
       begin
-        result:=GetRealname;
-        if result=Name then
-          result:='$'+result;
+        Result:=GetRealName;
+        if Result=Name then
+          Result:='$'+Result;
       end;
 
 
-    procedure TSymEntry.SetRealname(const ANewName:TSymStr);
+    procedure TSymEntry.SetRealName(const ANewName:TSymStr);
       begin
 {$ifndef symansistr}
-        StringDispose(FRealname);
-        FRealname:=StringDup(ANewName);
+        StringDispose(FRealName);
+        FRealName:=StringDup(ANewName);
 {$else}
-        FRealname:=ANewName;
+        FRealName:=ANewName;
 {$endif}
         if Hash<>$ffffffff then
           begin
             if ANewName[1]='$' then
-              Rename(Copy(ANewName,2,length(ANewName)))
+              Rename(Copy(ANewName,2,Length(ANewName)))
             else
               Rename(Upper(ANewName));
           end;
@@ -247,34 +247,34 @@ implementation
                                 TSymtable
 ****************************************************************************}
 
-    constructor TSymTable.Create(const s:string);
+    constructor TSymTable.Create(const S:string);
       begin
-         if s<>'' then
+         if S<>'' then
            begin
-             name:=StringDup(upper(s));
-             realname:=StringDup(s);
+             Name:=StringDup(Upper(S));
+             RealName:=StringDup(S);
            end
          else
            begin
-             name:=nil;
-             realname:=nil;
+             Name:=nil;
+             RealName:=nil;
            end;
-         symtabletype:=abstractsymtable;
-         symtablelevel:=0;
-         defowner:=nil;
-         DefList:=TFPObjectList.Create(true);
-         SymList:=TFPHashObjectList.Create(true);
-         refcount:=1;
-         currentvisibility:=vis_public;
-         currentlyoptional:=false;
+         SymTableType:=AbstractSymTable;
+         SymTableLevel:=0;
+         DefOwner:=nil;
+         DefList:=TFPObjectList.Create(True);
+         SymList:=TFPHashObjectList.Create(True);
+         RefCount:=1;
+         CurrentVisibility:=vis_public;
+         CurrentlyOptional:=False;
       end;
 
 
     destructor TSymTable.Destroy;
       begin
         { freeinstance decreases refcount }
-        if refcount>1 then
-          exit;
+        if RefCount>1 then
+          Exit;
         Clear;
         DefList.Free;
         DefList := nil;
@@ -282,149 +282,149 @@ implementation
         { but in that case Free does nothing                              }
         SymList.Free;
         SymList := nil;
-        StringDispose(name);
-        StringDispose(realname);
+        StringDispose(Name);
+        StringDispose(RealName);
       end;
 
 
-    procedure TSymTable.freeinstance;
+    procedure TSymTable.FreeInstance;
       begin
-        dec(refcount);
-        if refcount=0 then
-          inherited freeinstance;
+        Dec(RefCount);
+        if RefCount=0 then
+          inherited FreeInstance;
       end;
 
 
-    function TSymTable.getcopy:TSymTable;
+    function TSymTable.GetCopy:TSymTable;
       begin
-        inc(refcount);
-        result:=self;
+        Inc(RefCount);
+        Result:=Self;
       end;
 
 
-    function TSymTable.iscurrentunit:boolean;
+    function TSymTable.IsCurrentUnit:Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
-    procedure TSymTable.includeoption(option: TSymTableOption);
+    procedure TSymTable.IncludeOption(Option: TSymTableOption);
       var
-        st: TSymTable;
+        ST: TSymTable;
       begin
-        if option in tableoptions then
-          exit;
-        include(tableoptions,option);
+        if Option in TableOptions then
+          Exit;
+        Include(TableOptions,Option);
         { iterative approach should be faster than recursion based on calls }
-        st:=self;
-        while Assigned(st.defowner) do
+        ST:=Self;
+        while Assigned(ST.DefOwner) do
           begin
-            st:=st.defowner.owner;
+            ST:=ST.DefOwner.Owner;
             { this can happen for specializations of routines that are not yet
               owned cause they might be thrown away again }
-            if not Assigned(st) then
-              break;
+            if not Assigned(ST) then
+              Break;
             { the flag is already set, so by definition it is set in the
               owning symtables as well }
-            if option in st.tableoptions then
-              break;
-            include(st.tableoptions,option);
+            if Option in ST.TableOptions then
+              Break;
+            Include(ST.TableOptions,Option);
           end;
       end;
 
 
-    procedure TSymTable.clear;
+    procedure TSymTable.Clear;
       var
-        i : integer;
+        I : Integer;
       begin
          SymList.Clear;
          { Prevent recursive calls between TDef.destroy and TSymtable.Remove }
          if DefList.OwnsObjects then
            begin
-             for i := 0 to DefList.Count-1 do
-               TDefEntry(DefList[i]).Owner:=nil;
+             for I := 0 to DefList.Count-1 do
+               TDefEntry(DefList[I]).Owner:=nil;
            end;
          DefList.Clear;
       end;
 
 
-    function TSymTable.checkduplicate(var s:THashedIDString;sym:TSymEntry):boolean;
+    function TSymTable.CheckDuplicate(var S:THashedIDString;Sym:TSymEntry):Boolean;
       begin
-        result:=(FindWithHash(s)<>nil);
+        Result:=(FindWithHash(S)<>nil);
       end;
 
 
-    procedure TSymTable.insertsym(sym:TSymEntry;checkdup:boolean=true);
+    procedure TSymTable.InsertSym(Sym:TSymEntry;CheckDup:Boolean=True);
       var
-        hashedid : THashedIDString;
-        s : TSymStr;
+        HashedID : THashedIDString;
+        S : TSymStr;
       begin
-         s:=maybe_adjust_symname(sym.realname);
-         if checkdup then
+         S:=Maybe_Adjust_SymName(Sym.RealName);
+         if CheckDup then
            begin
-             hashedid.id:=s;
+             HashedID.Id:=S;
              { First check for duplicates, this can change the symbol name
                in case of a duplicate entry }
-             if checkduplicate(hashedid,sym) then
-               s:=maybe_adjust_symname(sym.realname);
+             if CheckDuplicate(HashedID,Sym) then
+               S:=Maybe_Adjust_SymName(Sym.RealName);
            end;
          { Now we can insert the symbol, any duplicate entries
            are renamed to an unique (and for users inaccessible) name }
-         if checkdup then
+         if CheckDup then
            begin
-             if hashedid.id<>s then
-               hashedid.id:=s;
-             sym.ChangeOwnerAndNameWithHash(SymList,s,hashedid.hash);
+             if HashedID.Id<>S then
+               HashedID.Id:=S;
+             Sym.ChangeOwnerAndNameWithHash(SymList,S,HashedID.Hash);
            end
          else
-           sym.ChangeOwnerAndName(SymList,s);
-         sym.Owner:=self;
+           Sym.ChangeOwnerAndName(SymList,S);
+         Sym.Owner:=Self;
       end;
 
 
-    procedure TSymTable.Deletesym(sym:TSymEntry);
+    procedure TSymTable.DeleteSym(Sym:TSymEntry);
       begin
-        if sym.Owner<>self then
+        if Sym.Owner<>Self then
           InternalError(200611121);
-        SymList.Remove(sym);
+        SymList.Remove(Sym);
       end;
 
 
-    procedure TSymTable.insertdef(def:TDefEntry);
+    procedure TSymTable.InsertDef(Def:TDefEntry);
       begin
-         DefList.Add(def);
-         def.owner:=self;
+         DefList.Add(Def);
+         Def.Owner:=Self;
       end;
 
 
-    procedure TSymTable.deletedef(def:TDefEntry);
+    procedure TSymTable.DeleteDef(Def:TDefEntry);
       begin
-        if def.Owner<>self then
+        if Def.Owner<>Self then
           InternalError(200611122);
-        def.Owner:=nil;
-        DefList.Remove(def);
+        Def.Owner:=nil;
+        DefList.Remove(Def);
       end;
 
 
-    function TSymTable.Find(const s : TIDString) : TSymEntry;
+    function TSymTable.Find(const S : TIDString) : TSymEntry;
       begin
-        result:=TSymEntry(SymList.Find(s));
+        Result:=TSymEntry(SymList.Find(S));
       end;
 
 
-    function TSymTable.FindWithHash(const s:THashedIDString) : TSymEntry;
+    function TSymTable.FindWithHash(const S:THashedIDString) : TSymEntry;
       begin
-        result:=TSymEntry(SymList.FindWithHash(s.id,s.hash));
+        Result:=TSymEntry(SymList.FindWithHash(S.Id,S.Hash));
       end;
 
 
-    class function TSymTable.maybe_adjust_symname(const s:TSymStr):TSymStr;
+    class function TSymTable.Maybe_Adjust_SymName(const S:TSymStr):TSymStr;
       begin
-        if s[1]='$' then
-          result:=copy(s,2,maxidlen+1)
-        else if length(s)>maxidlen then
-          result:=upper(copy(s,1,maxidlen))
+        if S[1]='$' then
+          Result:=Copy(S,2,MaxIDLen+1)
+        else if Length(S)>MaxIDLen then
+          Result:=Upper(Copy(S,1,MaxIDLen))
         else
-          result:=upper(s);
+          Result:=Upper(S);
       end;
 
 
@@ -432,146 +432,146 @@ implementation
                             Symtable Stack
 ****************************************************************************}
 
-    constructor TSymTableStack.create;
+    constructor TSymTableStack.Create;
       begin
-        stack:=nil;
+        Stack:=nil;
       end;
 
 
     destructor TSymTableStack.Destroy;
       begin
-        clear;
+        Clear;
       end;
 
 
-    procedure TSymTableStack.clear;
+    procedure TSymTableStack.Clear;
       var
-        hp : PSymTableStackItem;
+        HP : PSymTableStackItem;
       begin
-        while Assigned(stack) do
+        while Assigned(Stack) do
           begin
-            hp:=stack;
-            stack:=hp^.next;
-            dispose(hp);
+            HP:=Stack;
+            Stack:=HP^.Next;
+            Dispose(HP);
           end;
       end;
 
-    function TSymTableStack.finditem(st: TSymTable): PSymTableStackItem;
+    function TSymTableStack.FindItem(ST: TSymTable): PSymTableStackItem;
       begin
-        if not Assigned(stack) then
+        if not Assigned(Stack) then
           InternalError(200601233);
-        result:=stack;
-        while Assigned(result)and(result^.SymTable<>st) do
-          result:=result^.next;
+        Result:=Stack;
+        while Assigned(Result)and(Result^.SymTable<>ST) do
+          Result:=Result^.Next;
       end;
 
-    procedure TSymTableStack.push(st:TSymTable);
+    procedure TSymTableStack.Push(ST:TSymTable);
       var
-        hp : PSymTableStackItem;
+        HP : PSymTableStackItem;
       begin
-        new(hp);
-        hp^.SymTable:=st;
-        hp^.next:=stack;
-        stack:=hp;
+        New(HP);
+        HP^.SymTable:=ST;
+        HP^.Next:=Stack;
+        Stack:=HP;
       end;
 
-    procedure TSymTableStack.pushafter(st,afterst:TSymTable);
+    procedure TSymTableStack.PushAfter(ST,AfterST:TSymTable);
       var
-        hp,afteritem: PSymTableStackItem;
+        HP,AfterItem: PSymTableStackItem;
       begin
-        afteritem:=finditem(afterst);
-        if Assigned(afteritem) then
+        AfterItem:=FindItem(AfterST);
+        if Assigned(AfterItem) then
           begin
-            new(hp);
-            hp^.SymTable:=st;
-            hp^.next:=afteritem^.next;
-            afteritem^.next:=hp;
+            New(HP);
+            HP^.SymTable:=ST;
+            HP^.Next:=AfterItem^.Next;
+            AfterItem^.Next:=HP;
           end
         else
           InternalError(201309171);
       end;
 
-    procedure TSymTableStack.pop(st:TSymTable);
+    procedure TSymTableStack.Pop(ST:TSymTable);
       var
-        hp : PSymTableStackItem;
+        HP : PSymTableStackItem;
       begin
-        if not Assigned(stack) then
+        if not Assigned(Stack) then
           InternalError(200601231);
-        if stack^.SymTable<>st then
+        if Stack^.SymTable<>ST then
           InternalError(200601232);
-        hp:=stack;
-        stack:=hp^.next;
-        dispose(hp);
+        HP:=Stack;
+        Stack:=HP^.Next;
+        Dispose(HP);
       end;
 
 
-    procedure TSymTableStack.remove(st: TSymTable);
+    procedure TSymTableStack.Remove(ST: TSymTable);
       { Remove st from anywhere in the stack.  If st appears more than once
         (which should not happen in normal operation) all occurrences are
         removed.  A missing st is silently ignored. }
       var
-        prev, cur, nxt: PSymTableStackItem;
+        Prev, Cur, Nxt: PSymTableStackItem;
       begin
-        prev:=nil;
-        cur:=stack;
-        while Assigned(cur) do
+        Prev:=nil;
+        Cur:=Stack;
+        while Assigned(Cur) do
           begin
-            nxt:=cur^.next;
-            if cur^.SymTable=st then
+            Nxt:=Cur^.Next;
+            if Cur^.SymTable=ST then
               begin
-                if Assigned(prev) then
-                  prev^.next:=nxt
+                if Assigned(Prev) then
+                  Prev^.Next:=Nxt
                 else
-                  stack:=nxt;
-                dispose(cur);
+                  Stack:=Nxt;
+                Dispose(Cur);
                 { do NOT update prev ? the item at prev is still valid }
               end
             else
-              prev:=cur;
-            cur:=nxt;
+              Prev:=Cur;
+            Cur:=Nxt;
           end;
       end;
 
 
-    function TSymTableStack.top:TSymTable;
+    function TSymTableStack.Top:TSymTable;
       begin
-        if not Assigned(stack) then
+        if not Assigned(Stack) then
           InternalError(2006012304);
-        result:=stack^.SymTable;
+        Result:=Stack^.SymTable;
       end;
 
 
-  function addstitemreverse(st: TSymTableStack; finalst: TSymTable; curitem: PSymTableStackItem): boolean;
+  function AddSTItemReverse(ST: TSymTableStack; FinalST: TSymTable; CurItem: PSymTableStackItem): Boolean;
     begin
-      if not Assigned(curitem) then
+      if not Assigned(CurItem) then
         begin
-          result:=true;
-          exit;
+          Result:=True;
+          Exit;
         end;
-      if addstitemreverse(st,finalst,curitem^.next) then
+      if AddSTItemReverse(ST,FinalST,CurItem^.Next) then
         begin
-          st.push(curitem^.SymTable);
-          result:=curitem^.SymTable<>finalst
+          ST.Push(CurItem^.SymTable);
+          Result:=CurItem^.SymTable<>FinalST
         end
       else
-        result:=false
+        Result:=False
     end;
 
 
-  function TSymTableStack.getcopyuntil(finalst: TSymTable): TSymTableStack;
+  function TSymTableStack.GetCopyUntil(FinalST: TSymTable): TSymTableStack;
     begin
-      result:=TSymTableStack.create;
-      addstitemreverse(result,finalst,stack);
+      Result:=TSymTableStack.Create;
+      AddSTItemReverse(Result,FinalST,Stack);
     end;
 
 
 {$ifdef MEMDEBUG}
 initialization
-  memrealnames:=TMemDebug.create('Realnames');
-  memrealnames.stop;
+  MemRealNames:=TMemDebug.Create('Realnames');
+  MemRealNames.Stop;
 
 finalization
-  memrealnames.free;
-  memrealnames := nil;
+  MemRealNames.Free;
+  MemRealNames := nil;
 {$endif MEMDEBUG}
 end.

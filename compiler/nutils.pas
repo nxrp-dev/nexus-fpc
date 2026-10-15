@@ -420,7 +420,7 @@ implementation
               method without a self pointer }
             if Assigned(TCallNode(p1).methodpointer) and
                (TCallNode(p1).methodpointer.nodetype<>typen) then
-              TLoadNode(p2).set_mp(TCallNode(p1).methodpointer.getcopy);
+              TLoadNode(p2).set_mp(TCallNode(p1).methodpointer.GetCopy);
           end;
         TypeCheckPass(p2);
         p1.free;
@@ -489,16 +489,16 @@ implementation
           is run for nested procedures }
         pd:=CurrentProcInfo.procdef;
         repeat
-          ressym:=TSym(pd.localst.Find(aname));
+          ressym:=TSym(pd.LocalST.Find(aname));
           if Assigned(ressym) then
             break;
-          ressym:=TSym(pd.parast.Find(aname));
+          ressym:=TSym(pd.ParaST.Find(aname));
           if Assigned(ressym) then
             break;
           { try the parent of a nested function }
-          if Assigned(pd.owner.defowner) and
-             (pd.owner.defowner.typ=procdef) then
-            pd:=TProcDef(pd.owner.defowner)
+          if Assigned(pd.owner.DefOwner) and
+             (pd.owner.DefOwner.typ=procdef) then
+            pd:=TProcDef(pd.owner.DefOwner)
           else
             break;
         until false;
@@ -512,7 +512,7 @@ implementation
 
     function load_high_value_node(vs:TParaVarSym):TNode;
       begin
-        result:=gen_load_var(get_high_value_sym(vs));
+        result:=gen_load_var(Get_High_Value_Sym(vs));
         TypeCheckPass(result);
       end;
 
@@ -549,7 +549,7 @@ implementation
         srsym:=get_local_or_para_sym('self');
         result:=gen_load_var(srsym);
         if Assigned(srsym) and
-           (is_object(TAbstractVarSym(srsym).vardef) or is_record(TAbstractVarSym(srsym).vardef)) then
+           (Is_Object(TAbstractVarSym(srsym).vardef) or Is_Record(TAbstractVarSym(srsym).vardef)) then
           begin
             if result.nodetype=loadn then
               include(TLoadNode(result).loadnodeflags,loadnf_load_addr)
@@ -571,7 +571,7 @@ implementation
       begin
         is_self_node:=(p.nodetype=loadn) and
                       (TLoadNode(p).symtableentry.typ=paravarsym) and
-                      (vo_is_self in TParaVarSym(TLoadNode(p).symtableentry).varoptions);
+                      (vo_is_self in TParaVarSym(TLoadNode(p).symtableentry).VarOptions);
       end;
 
 
@@ -591,7 +591,7 @@ implementation
         case self_resultdef.typ of
           classrefdef:
             begin
-              obj_def:=TObjectDef(TClassRefDef(self_resultdef).pointeddef);
+              obj_def:=TObjectDef(TClassRefDef(self_resultdef).PointedDef);
             end;
           objectdef:
             obj_def:=TObjectDef(self_resultdef);
@@ -607,12 +607,12 @@ implementation
             if Assigned(n) and (n.resultdef.typ=classrefdef) then
               is_typecasted_classref:=true;
 	  end;
-        if is_classhelper(obj_def) then
-          obj_def:=TObjectDef(TObjectDef(obj_def).extendeddef);
+        if Is_ClassHelper(obj_def) then
+          obj_def:=TObjectDef(TObjectDef(obj_def).ExtendedDef);
         docheck:=
-          not(is_interface(obj_def)) and
-          not(is_cppclass(obj_def)) and
-          not(is_objc_class_or_protocol(obj_def)) and
+          not(Is_Interface(obj_def)) and
+          not(Is_CPPClass(obj_def)) and
+          not(Is_ObjC_Class_Or_Protocol(obj_def)) and
           (([cs_check_object,cs_check_range]*CurrentSettings.LocalSwitches)<>[]);
 
         block:=nil;
@@ -622,7 +622,7 @@ implementation
           begin
             { check for nil self-pointer }
             block:=internalstatements(stat);
-            if is_object(self_resultdef) then
+            if Is_Object(self_resultdef) then
               begin
                 self_temp:=CTempCreateNode.create_value(
                   CPointerDef.getreusable(self_resultdef),CPointerDef.getreusable(self_resultdef).size,tt_persistent,true,
@@ -637,7 +637,7 @@ implementation
             { in case of an object, self can only be nil if it's a dereferenced
               node somehow
             }
-            if not is_object(self_resultdef) or
+            if not Is_Object(self_resultdef) or
                (actualtargetnode(@self_node)^.nodetype=derefn) then
               begin
                 check_self:=CTempRefNode.create(self_temp);
@@ -645,14 +645,14 @@ implementation
                   CAddNode.create(equaln,
                     CTypeConvNode.create_explicit(
                       check_self,
-                      voidpointertype
+                      VoidPointerType
                     ),
                     CNilNode.create),
                   CCallNode.createintern('fpc_objecterror',nil),
                   nil)
                 );
               end;
-            if is_object(self_resultdef) then
+            if Is_Object(self_resultdef) then
               self_node:=CDerefNode.create(CTempRefNode.create(self_temp))
             else
               self_node:=CTempRefNode.create(self_temp)
@@ -663,8 +663,8 @@ implementation
           result:=self_node
         { get the VMT field in case of a class/object }
         else if (self_resultdef.typ=objectdef) and
-           Assigned(TObjectDef(self_resultdef).vmt_field) then
-          result:=CSubscriptNode.create(TObjectDef(self_resultdef).vmt_field,self_node)
+           Assigned(TObjectDef(self_resultdef).VMTField) then
+          result:=CSubscriptNode.create(TObjectDef(self_resultdef).VMTField,self_node)
         { in case of an interface, the "instance" is a pointer to a pointer
           to a VMT -> dereference once already }
         else
@@ -673,12 +673,12 @@ implementation
           result:=CDerefNode.create(
             CTypeConvNode.create_explicit(
               self_node,
-              CPointerDef.getreusable(voidpointertype)
+              CPointerDef.getreusable(VoidPointerType)
             )
           );
         result:=CTypeConvNode.create_explicit(
           result,
-          CPointerDef.getreusable(obj_def.vmt_def));
+          CPointerDef.getreusable(obj_def.VMT_Def));
         TypeCheckPass(result);
         if docheck then
           begin
@@ -733,7 +733,7 @@ implementation
 
           result:=0;
           lastv:=High(lastv)-1;
-          for i:=TSetDef(cs.resultdef).setbase to TSetDef(cs.resultdef).setmax do
+          for i:=TSetDef(cs.resultdef).SetBase to TSetDef(cs.resultdef).SetMax do
             if i in cs.value_set^ then
               begin
                 if i<>lastv+1 then
@@ -788,25 +788,25 @@ implementation
                     inc(cv,node_complexity(TLoadNode(p).left));
                   { threadvars need a helper call }
                   if (TLoadNode(p).symtableentry.typ=staticvarsym) and
-                     (vo_is_thread_var in TStaticVarSym(TLoadNode(p).symtableentry).varoptions) then
+                     (vo_is_thread_var in TStaticVarSym(TLoadNode(p).symtableentry).VarOptions) then
                     inc(cv,5)
-                  else if not((TLoadNode(p).symtableentry.typ in [staticvarsym,localvarsym,paravarsym,fieldvarsym]) and
-                    (TAbstractVarSym(TLoadNode(p).symtableentry).varregable in [vr_intreg,vr_mmreg,vr_fpureg])) then
+                  else if not((TLoadNode(p).symtableentry.typ in [staticvarsym,localvarsym,paravarsym,FieldVarSym]) and
+                    (TAbstractVarSym(TLoadNode(p).symtableentry).VarRegable in [vr_intreg,vr_mmreg,vr_fpureg])) then
                     inc(cv);
                   if (TLoadNode(p).symtableentry.typ=paravarsym) and
-                     not(TAbstractVarSym(TLoadNode(p).symtableentry).varregable=vr_addr) and
+                     not(TAbstractVarSym(TLoadNode(p).symtableentry).VarRegable=vr_addr) and
                      TLoadNode(p).is_addr_param_load then
                     inc(cv);
                   p:=nil; { Check for NODE_COMPLEXITY_INF and return cv. }
                 end;
               subscriptn:
                 begin
-                  if is_implicit_pointer_object_type(TUnaryNode(p).left.resultdef) or
+                  if Is_Implicit_Pointer_Object_Type(TUnaryNode(p).left.resultdef) or
                     is_bitpacked_access(p) then
                     inc(cv,2)
                   { non-packed, int. regable records cause no extra
                     overhead no overhead if the fields are aligned to register boundaries }
-                  else if TStoredDef(p.resultdef).is_intregable and (TSubscriptNode(p).vs.fieldoffset mod sizeof(aint)<>0) then
+                  else if TStoredDef(p.resultdef).Is_IntRegable and (TSubscriptNode(p).vs.FieldOffset mod sizeof(aint)<>0) then
                     inc(cv,1);
                   p:=TUnaryNode(p).left;
                 end;
@@ -816,7 +816,7 @@ implementation
                 begin
                   { call to decr? }
                   if is_managed_type(TUnaryNode(p).left.resultdef) and
-                     Assigned(TCallParaNode(p).parasym) and (TCallParaNode(p).parasym.varspez=vs_out) then
+                     Assigned(TCallParaNode(p).parasym) and (TCallParaNode(p).parasym.VarSpez=vs_out) then
                     exit;
                   inc(cv);
                   p:=TUnaryNode(p).left;
@@ -1130,13 +1130,13 @@ implementation
       var
         plist : PPropAccessListItem;
       begin
-        plist:=pl.firstsym;
+        plist:=pl.FirstSym;
         while Assigned(plist) do
          begin
-           case plist^.sltype of
+           case plist^.SLType of
              sl_load :
                begin
-                 addsymref(plist^.sym);
+                 AddSymRef(plist^.sym);
                  if not Assigned(st) then
                    st:=plist^.sym.owner;
                  if (plist^.sym.typ<>staticvarsym) then
@@ -1146,9 +1146,9 @@ implementation
                        may need to load it for with or objects }
                      if not Assigned(p1) then
                       begin
-                        case st.symtabletype of
+                        case st.SymTableType of
                           withsymtable :
-                            p1:=TNode(TWithSymTable(st).withrefnode).getcopy;
+                            p1:=TNode(TWithSymTable(st).WithRefNode).GetCopy;
                           ObjectSymtable :
                             p1:=load_self_node;
                           else
@@ -1168,7 +1168,7 @@ implementation
                end;
              sl_subscript :
                begin
-                 addsymref(plist^.sym);
+                 AddSymRef(plist^.sym);
                  p1:=CSubscriptNode.create(plist^.sym,p1);
                end;
              sl_typeconv :
@@ -1179,7 +1179,7 @@ implementation
                  include(p1.flags,nf_absolute);
                end;
              sl_vec :
-               p1:=CVecNode.create(p1,COrdConstNode.create(plist^.value,plist^.valuedef,true));
+               p1:=CVecNode.create(p1,COrdConstNode.create(plist^.value,plist^.ValueDef,true));
              else
                InternalError(200110205);
            end;
@@ -1198,30 +1198,30 @@ implementation
             subscriptn :
               begin
                 addnode(TSubscriptNode(p).left);
-                sl.addsym(sl_subscript,TSubscriptNode(p).vs);
+                sl.AddSym(sl_subscript,TSubscriptNode(p).vs);
               end;
             typeconvn :
               begin
                 addnode(TTypeConvNode(p).left);
                 if nf_absolute in TTypeConvNode(p).flags then
-                  sl.addtype(sl_absolutetype,TTypeConvNode(p).totypedef)
+                  sl.AddType(sl_absolutetype,TTypeConvNode(p).totypedef)
                 else
-                  sl.addtype(sl_typeconv,TTypeConvNode(p).totypedef);
+                  sl.AddType(sl_typeconv,TTypeConvNode(p).totypedef);
               end;
             vecn :
               begin
                 addnode(TVecNode(p).left);
                 if TVecNode(p).right.nodetype=ordconstn then
-                  sl.addconst(sl_vec,TOrdConstNode(TVecNode(p).right).value,TVecNode(p).right.resultdef)
+                  sl.AddConst(sl_vec,TOrdConstNode(TVecNode(p).right).value,TVecNode(p).right.resultdef)
                 else
                   begin
                     Message(parser_e_illegal_expression);
                     { recovery }
-                    sl.addconst(sl_vec,0,TVecNode(p).right.resultdef);
+                    sl.AddConst(sl_vec,0,TVecNode(p).right.resultdef);
                   end;
              end;
             loadn :
-              sl.addsym(sl_load,TLoadNode(p).symtableentry);
+              sl.AddSym(sl_load,TLoadNode(p).symtableentry);
             else
               InternalError(200310282);
           end;
@@ -1243,18 +1243,18 @@ implementation
         begin
           { in case we have a specialization inside a generic (thus the static var sym does not
             exist) we simply simulate a non static access to avoid unnecessary errors }
-          if Assigned(sym.owner.defowner) and (df_specialization in TStoredDef(sym.owner.defowner).defoptions) then
+          if Assigned(sym.owner.DefOwner) and (df_specialization in TStoredDef(sym.owner.DefOwner).DefOptions) then
             begin
-              tmp:=TStoredDef(sym.owner.defowner);
+              tmp:=TStoredDef(sym.owner.DefOwner);
               while Assigned(tmp) do
                 begin
-                  if df_generic in tmp.defoptions then
+                  if df_generic in tmp.DefOptions then
                     begin
                       p1.free;
                       if Assigned(CurrentProcInfo) then
                         begin
                           pd:=CurrentProcInfo.get_normal_proc.procdef;
-                          if Assigned(pd) and pd.no_self_node then
+                          if Assigned(pd) and pd.No_Self_Node then
                             p1:=CLoadVMTAddrNode.create(CTypeNode.create(pd.struct))
                           else
                             p1:=load_self_node;
@@ -1264,7 +1264,7 @@ implementation
                       p1:=CSubscriptNode.create(sym,p1);
                       exit(true);
                     end;
-                  tmp:=TStoredDef(tmp.owner.defowner);
+                  tmp:=TStoredDef(tmp.owner.DefOwner);
                 end;
             end;
           result:=false;
@@ -1276,18 +1276,18 @@ implementation
       begin
         result:=false;
         { generate access code }
-        if (sp_static in sym.symoptions) then
+        if (sp_static in sym.SymOptions) then
           begin
             result:=true;
             if handle_generic_staticfield_access then
               exit;
-            static_name:=lower(generate_nested_name(sym.owner,'_'))+'_'+sym.name;
-            if sym.owner.defowner.typ=objectdef then
-              searchsym_in_class(TObjectDef(sym.owner.defowner),TObjectDef(sym.owner.defowner),static_name,sym,srsymtable,[ssf_search_helper])
+            static_name:=lower(Generate_Nested_Name(sym.owner,'_'))+'_'+sym.name;
+            if sym.owner.DefOwner.typ=objectdef then
+              SearchSym_In_Class(TObjectDef(sym.owner.DefOwner),TObjectDef(sym.owner.DefOwner),static_name,sym,srsymtable,[ssf_search_helper])
             else
-              searchsym_in_record(TRecordDef(sym.owner.defowner),static_name,sym,srsymtable);
+              SearchSym_In_Record(TRecordDef(sym.owner.DefOwner),static_name,sym,srsymtable);
             if Assigned(sym) then
-              check_hints(sym,sym.symoptions,sym.deprecatedmsg);
+              Check_Hints(sym,sym.SymOptions,sym.DeprecatedMsg);
             p1.free;
             p1:=nil;
             { static syms are always stored as absolutevarsym to handle scope and storage properly }
@@ -1306,15 +1306,15 @@ implementation
                 e.g. an access to a 3-byte record as "bitpacked", since it
                 isn't }
               (TVecNode(n).left.resultdef.typ = arraydef) and
-              (TArrayDef(TVecNode(n).left.resultdef).elementdef.typ in [orddef,enumdef]) and
-              not(TArrayDef(TVecNode(n).left.resultdef).elepackedbitsize in [8,16,32,64]);
+              (TArrayDef(TVecNode(n).left.resultdef).ElementDef.typ in [orddef,enumdef]) and
+              not(TArrayDef(TVecNode(n).left.resultdef).ElePackedBitSize in [8,16,32,64]);
           subscriptn:
             result:=
               is_packed_record_or_object(TSubscriptNode(n).left.resultdef) and
               { see above }
               (TSubscriptNode(n).vs.vardef.typ in [orddef,enumdef]) and
-              (not(TSubscriptNode(n).vs.vardef.packedbitsize in [8,16,32,64]) or
-               (TSubscriptNode(n).vs.fieldoffset mod 8 <> 0));
+              (not(TSubscriptNode(n).vs.vardef.PackedBitSize in [8,16,32,64]) or
+               (TSubscriptNode(n).vs.FieldOffset mod 8 <> 0));
           else
             result:=false;
         end;
@@ -1329,7 +1329,7 @@ implementation
           TypeCheckPass(n);
         vs:=TSym(TAbstractRecordDef(n.resultdef).SymTable.find(fieldname));
         if not Assigned(vs) or
-           (vs.typ<>fieldvarsym) then
+           (vs.typ<>FieldVarSym) then
           InternalError(2010061902);
         result:=CSubscriptNode.create(vs,n);
       end;
@@ -1376,7 +1376,7 @@ implementation
            ) or
            ((mhs_exceptions in PMHSFlags(arg)^) and
             ((n.nodetype in [derefn,vecn,divn,slashn]) or
-             ((n.nodetype=subscriptn) and is_implicit_pointer_object_type(TSubscriptNode(n).left.resultdef)) or
+             ((n.nodetype=subscriptn) and Is_Implicit_Pointer_Object_Type(TSubscriptNode(n).left.resultdef)) or
              ((n.nodetype in [addn,subn,muln,unaryminusn]) and (n.LocalSwitches*[cs_check_overflow,cs_check_range]<>[])) or
              { float operations could throw an exception }
              ((n.nodetype in [addn,subn,muln,slashn,unaryminusn,equaln,unequaln,gten,gtn,lten,ltn]) and is_real_or_cextended(TUnaryNode(n).left.resultdef))
@@ -1384,9 +1384,9 @@ implementation
            ) or
            ((n.nodetype=loadn) and
             (
-             ((TLoadNode(n).symtableentry.typ=absolutevarsym) and (TAbsoluteVarSym(TLoadNode(n).symtableentry).abstyp=toaddr)) or
+             ((TLoadNode(n).symtableentry.typ=absolutevarsym) and (TAbsoluteVarSym(TLoadNode(n).symtableentry).AbsTyp=toaddr)) or
              ((TLoadNode(n).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
-               (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).varoptions)
+               (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).VarOptions)
              )
             )
            ) or
@@ -1471,7 +1471,7 @@ implementation
       begin
         result:=is_constnode(node) or
           ((node.nodetype=temprefn) and (ti_const in TTempRefNode(node).tempflags)) or
-          ((node.nodetype=loadn) and (TLoadNode(node).symtableentry.typ=paravarsym) and (TParaVarSym(TLoadNode(node).symtableentry).varspez in [vs_const,vs_constref]));
+          ((node.nodetype=loadn) and (TLoadNode(node).symtableentry.typ=paravarsym) and (TParaVarSym(TLoadNode(node).symtableentry).VarSpez in [vs_const,vs_constref]));
       end;
 
 

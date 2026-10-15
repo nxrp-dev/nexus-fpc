@@ -38,7 +38,7 @@ unit cpupara;
                                                var intparareg,mmparareg,parasize:LongInt;varargsparas: boolean);
        public
           function param_use_paraloc(const cgpara:TCGPara):boolean;override;
-          function push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;override;
+          function push_addr_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;override;
           function ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;override;
           function get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;override;
           function get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;override;
@@ -120,10 +120,10 @@ unit cpupara;
       TX64ParaClasses = array[0..MAX_PARA_CLASSES-1] of TX64ParaClass;
 
     { Win64-specific helper }
-    function aggregate_in_registers_win64(varspez:TVarSpez;size:LongInt):boolean;
+    function aggregate_in_registers_win64(VarSpez:TVarSpez;size:LongInt):boolean;
       begin
     { TODO: Temporary hack: vs_const parameters are always passed by reference for win64}
-        result:=(varspez=vs_value) and (size in [1,2,4,8])
+        result:=(VarSpez=vs_value) and (size in [1,2,4,8])
       end;
 
     (* x86-64 register passing implementation.  See x86-64 ABI for details.  Goal
@@ -182,8 +182,8 @@ unit cpupara;
                  -> also do it for compatibility when calling such code }
                if not Assigned(cl.def) or
                   (cl.def.typ<>orddef) or
-                  (TOrdDef(cl.def).ordtype<>pasbool1) then
-                 cl.def:=u32inttype;
+                  (TOrdDef(cl.def).OrdType<>pasbool1) then
+                 cl.def:=U32IntType;
              end
            else
              begin
@@ -191,10 +191,10 @@ unit cpupara;
                if not Assigned(cl.def) or
                   (cl.def.size<size) or
                   (not(cl.def.typ in [orddef,floatdef,pointerdef,classrefdef]) and
-                   not is_implicit_pointer_object_type(cl.def) and
+                   not Is_Implicit_Pointer_Object_Type(cl.def) and
                    not is_dynamicstring(cl.def) and
                    not is_dynamic_array(cl.def)) then
-                 cl.def:=u64inttype;
+                 cl.def:=U64IntType;
              end;
          end;
 
@@ -258,7 +258,7 @@ unit cpupara;
             if result.def.size<8 then
               begin
                 result.typ:=X86_64_INTEGER_CLASS;
-                result.def:=s64inttype;
+                result.def:=S64IntType;
               end;
             exit
           end
@@ -268,7 +268,7 @@ unit cpupara;
             if result.def.size<8 then
               begin
                 result.typ:=X86_64_INTEGER_CLASS;
-                result.def:=s64inttype;
+                result.def:=S64IntType;
               end;
             exit
           end;
@@ -294,13 +294,13 @@ unit cpupara;
         else
           result:=class2;
         result.typ:=X86_64_SSE_CLASS;
-        result.def:=s64floattype;
+        result.def:=S64FloatType;
       end;
 
 
-    function classify_argument(calloption: TProcCallOption; def: TDef; parentdef: TDef; varspez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; byte_offset: aint; round_to_8: Boolean): LongInt; forward;
+    function classify_argument(calloption: TProcCallOption; def: TDef; parentdef: TDef; VarSpez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; byte_offset: aint; round_to_8: Boolean): LongInt; forward;
 
-    function init_aggregate_classification(calloption: TProcCallOption; def: TDef; parentdef: TDef; varspez: TVarSpez; byte_offset: aint; out words: LongInt; out classes: TX64ParaClasses): LongInt;
+    function init_aggregate_classification(calloption: TProcCallOption; def: TDef; parentdef: TDef; VarSpez: TVarSpez; byte_offset: aint; out words: LongInt; out classes: TX64ParaClasses): LongInt;
       var
         i: LongInt;
       begin
@@ -317,7 +317,7 @@ unit cpupara;
         { win64 follows a different convention here }
         if x86_64_use_ms_abi(calloption) then
           begin
-            if aggregate_in_registers_win64(varspez,def.size) then
+            if aggregate_in_registers_win64(VarSpez,def.size) then
               begin
                 classes[0].typ:=X86_64_INTEGER_CLASS;
                 classes[0].def:=def;
@@ -333,8 +333,8 @@ unit cpupara;
                   { Aligned vector or array elements }
                   Result := words;
                 else
-                  if ((def.aggregatealignment mod (words shl 3)) = 0) or
-                    Assigned(parentdef) and ((parentdef.aggregatealignment mod 16) = 0)
+                  if ((def.AggregateAlignment mod (words shl 3)) = 0) or
+                    Assigned(parentdef) and ((parentdef.AggregateAlignment mod 16) = 0)
                     then
                       begin
                         { Field of aligned vector type }
@@ -378,14 +378,14 @@ unit cpupara;
       end;
 
 
-    function classify_aggregate_element(calloption: TProcCallOption; def: TDef; parentdef: TDef; varspez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; new_byte_offset: aint): LongInt;
+    function classify_aggregate_element(calloption: TProcCallOption; def: TDef; parentdef: TDef; VarSpez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; new_byte_offset: aint): LongInt;
       var
         subclasses: TX64ParaClasses;
         i,
         pos: LongInt;
       begin
         fillchar(subclasses,sizeof(subclasses),0);
-        result:=classify_argument(calloption,def,parentdef,varspez,real_size,subclasses,new_byte_offset, True);
+        result:=classify_argument(calloption,def,parentdef,VarSpez,real_size,subclasses,new_byte_offset, True);
         if (result=0) then
           exit;
 
@@ -432,7 +432,7 @@ unit cpupara;
                 Exit(words);
               end;
 
-            if ((words shl 3) > def.aggregatealignment) then
+            if ((words shl 3) > def.AggregateAlignment) then
               { The alignment is wrong for this vector size, hence it is unaligned }
               Exit(0);
 
@@ -500,7 +500,7 @@ unit cpupara;
                (classes[i-1].typ<>X86_64_SSEUP_CLASS) then
               begin
                 classes[i].typ:=X86_64_SSE_CLASS;
-                classes[i].def:=CArrayDef.getreusable_no_free(s32floattype,2);
+                classes[i].def:=CArrayDef.GetReusable_No_Free(S32FloatType,2);
               end;
 
             (*  If X86_64_X87UP_CLASS isn't preceded by X86_64_X87_CLASS,
@@ -538,12 +538,12 @@ unit cpupara;
               X86_64_INTEGERSI_CLASS:
                 begin
                   classes[0].typ:=X86_64_INTEGER_CLASS;
-                  classes[0].def:=s64inttype;
+                  classes[0].def:=S64IntType;
                 end;
               X86_64_SSESF_CLASS:
                 begin
                   classes[0].typ:=X86_64_SSE_CLASS;
-                  classes[0].def:=CArrayDef.getreusable_no_free(s32floattype,2);
+                  classes[0].def:=CArrayDef.GetReusable_No_Free(S32FloatType,2);
                 end;
               else
                 ;
@@ -554,12 +554,12 @@ unit cpupara;
               X86_64_INTEGERSI_CLASS:
                 begin
                   classes[1].typ:=X86_64_INTEGER_CLASS;
-                  classes[1].def:=s64inttype;
+                  classes[1].def:=S64IntType;
                 end;
               X86_64_SSESF_CLASS:
                 begin
                   classes[1].typ:=X86_64_SSE_CLASS;
-                  classes[1].def:=CArrayDef.getreusable_no_free(s32floattype,2);
+                  classes[1].def:=CArrayDef.GetReusable_No_Free(S32FloatType,2);
                 end;
               else
                 ;
@@ -594,22 +594,22 @@ unit cpupara;
             begin
               { Possibly an HFA of Doubles }
 
-              if TAbstractRecordDef(def).SymTable.symlist.count = 0 then
+              if TAbstractRecordDef(def).SymTable.SymList.count = 0 then
                 Exit(0);
 
               { Get the information and position on the last entry }
-              vs:=TFieldVarSym(TAbstractRecordDef(def).SymTable.symlist[TAbstractRecordDef(def).SymTable.symlist.count - 1]);
+              vs:=TFieldVarSym(TAbstractRecordDef(def).SymTable.SymList[TAbstractRecordDef(def).SymTable.SymList.count - 1]);
               //size:=vs.vardef.size;
 
               checkalignment:=true;
-              if not TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).is_packed then
+              if not TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).Is_Packed then
                 begin
-                  byte_offset:=vs.fieldoffset;
+                  byte_offset:=vs.FieldOffset;
                   //size:=vs.vardef.size;
                 end
               else
                 begin
-                  byte_offset:=vs.fieldoffset div 8;
+                  byte_offset:=vs.FieldOffset div 8;
                   if (vs.vardef.typ in [orddef,enumdef]) then
                     begin
                       { calculate the number of bytes spanned by
@@ -626,7 +626,7 @@ unit cpupara;
               { If [..] an object [..] contains unaligned fields, it has class
                 MEMORY }
               if checkalignment and
-                 (align(byte_offset,vs.vardef.structalignment)<>byte_offset) then
+                 (align(byte_offset,vs.vardef.StructAlignment)<>byte_offset) then
                 begin
                   result:=0;
                   exit;
@@ -663,7 +663,7 @@ unit cpupara;
                     classes[0].typ := X86_64_SSESF_CLASS;
                     if classes[0].def.typ = arraydef then
                        { Break up the array }
-                      classes[0].def := TDef(TArrayDef(classes[0].def).elementdef); { Break up the array }
+                      classes[0].def := TDef(TArrayDef(classes[0].def).ElementDef); { Break up the array }
                     classes[1].typ := X86_64_SSESF_CLASS;
                     classes[1].def := classes[0].def;
                     result := 2;
@@ -680,7 +680,7 @@ unit cpupara;
                     classes[0].typ := X86_64_SSESF_CLASS;
                     if classes[0].def.typ = arraydef then
                       { Break up the array }
-                      classes[0].def := TDef(TArrayDef(classes[0].def).elementdef);
+                      classes[0].def := TDef(TArrayDef(classes[0].def).ElementDef);
                     classes[1].typ := X86_64_SSESF_CLASS;
                     classes[1].def := classes[0].def;
                     result := 3;
@@ -694,10 +694,10 @@ unit cpupara;
 
                     if classes[0].def.typ = arraydef then
                        { Break up the array }
-                      classes[0].def := TDef(TArrayDef(classes[0].def).elementdef);
+                      classes[0].def := TDef(TArrayDef(classes[0].def).ElementDef);
                     if classes[1].def.typ = arraydef then
                        { Break up the array }
-                      classes[2].def := TDef(TArrayDef(classes[1].def).elementdef);
+                      classes[2].def := TDef(TArrayDef(classes[1].def).ElementDef);
 
                     classes[1].def := classes[0].def;
                     classes[3].def := classes[2].def;
@@ -753,7 +753,7 @@ unit cpupara;
       end;
 
 
-    function classify_record(calloption: TProcCallOption; def: TDef; parentdef: TDef; varspez: TVarSpez; var classes: TX64ParaClasses; byte_offset: aint): LongInt;
+    function classify_record(calloption: TProcCallOption; def: TDef; parentdef: TDef; VarSpez: TVarSpez; var classes: TX64ParaClasses; byte_offset: aint): LongInt;
       var
         vs: TFieldVarSym;
         size,
@@ -763,30 +763,30 @@ unit cpupara;
         num: LongInt;
         checkalignment: boolean;
       begin
-        result:=init_aggregate_classification(calloption,def,parentdef,varspez,byte_offset,words,classes);
+        result:=init_aggregate_classification(calloption,def,parentdef,VarSpez,byte_offset,words,classes);
         if (words=0) then
           exit;
 
         (* Merge the fields of the structure.  *)
-        for i:=0 to TAbstractRecordDef(def).SymTable.symlist.count-1 do
+        for i:=0 to TAbstractRecordDef(def).SymTable.SymList.count-1 do
           begin
-            if not is_normal_fieldvarsym(TSym(TAbstractRecordDef(def).SymTable.symlist[i])) then
+            if not is_normal_fieldvarsym(TSym(TAbstractRecordDef(def).SymTable.SymList[i])) then
               continue;
-            vs:=TFieldVarSym(TAbstractRecordDef(def).SymTable.symlist[i]);
+            vs:=TFieldVarSym(TAbstractRecordDef(def).SymTable.SymList[i]);
             checkalignment:=true;
-            if not TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).is_packed then
+            if not TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).Is_Packed then
               begin
-                new_byte_offset:=byte_offset+vs.fieldoffset;
+                new_byte_offset:=byte_offset+vs.FieldOffset;
                 size:=vs.vardef.size;
               end
             else
               begin
-                new_byte_offset:=byte_offset+vs.fieldoffset div 8;
+                new_byte_offset:=byte_offset+vs.FieldOffset div 8;
                 if (vs.vardef.typ in [orddef,enumdef]) then
                   begin
                     { calculate the number of bytes spanned by
                       this bitpacked field }
-                    size:=((vs.fieldoffset+vs.vardef.packedbitsize+7) div 8)-(vs.fieldoffset div 8);
+                    size:=((vs.FieldOffset+vs.vardef.PackedBitSize+7) div 8)-(vs.FieldOffset div 8);
                     { our bitpacked fields are interpreted as always being
                       aligned, because unlike in C we don't have char:1, int:1
                       etc (so everything is basically a char:x) }
@@ -798,12 +798,12 @@ unit cpupara;
             { If [..] an object [..] contains unaligned fields, it has class
               MEMORY }
             if checkalignment and
-               (align(new_byte_offset,vs.vardef.structalignment)<>new_byte_offset) then
+               (align(new_byte_offset,vs.vardef.StructAlignment)<>new_byte_offset) then
               begin
                 result:=0;
                 exit;
               end;
-            num:=classify_aggregate_element(calloption,vs.vardef,def,varspez,size,classes,new_byte_offset);
+            num:=classify_aggregate_element(calloption,vs.vardef,def,VarSpez,size,classes,new_byte_offset);
             if (num=0) then
               exit(0);
           end;
@@ -835,20 +835,20 @@ unit cpupara;
       end;
 
 
-    function classify_normal_array(calloption: TProcCallOption; def: TArrayDef; parentdef: TDef; varspez: TVarSpez; var classes: TX64ParaClasses; byte_offset: aint): LongInt;
+    function classify_normal_array(calloption: TProcCallOption; def: TArrayDef; parentdef: TDef; VarSpez: TVarSpez; var classes: TX64ParaClasses; byte_offset: aint): LongInt;
       var
-        i, elecount: aword;
+        i, EleCount: aword;
         size,
-        elesize,
+        EleSize,
         new_byte_offset,
-        bitoffset: aint;
+        BitOffset: aint;
         words,
         num: LongInt;
         isbitpacked: boolean;
       begin
         size:=0;
-        bitoffset:=0;
-        result:=init_aggregate_classification(calloption,def,parentdef,varspez,byte_offset,words,classes);
+        BitOffset:=0;
+        result:=init_aggregate_classification(calloption,def,parentdef,VarSpez,byte_offset,words,classes);
 
         if (words=0) then
           exit;
@@ -856,23 +856,23 @@ unit cpupara;
         isbitpacked:=is_packed_array(def);
         if not isbitpacked then
           begin
-            elesize:=def.elesize;
-            size:=elesize;
+            EleSize:=def.EleSize;
+            size:=EleSize;
           end
         else
           begin
-            elesize:=def.elepackedbitsize;
-            bitoffset:=0;
+            EleSize:=def.ElePackedBitSize;
+            BitOffset:=0;
           end;
 
         (* Merge the elements of the array.  *)
         i:=0;
-        elecount:=def.elecount;
+        EleCount:=def.EleCount;
         repeat
           if not isbitpacked then
             begin
               { size does not change }
-              new_byte_offset:=byte_offset+i*elesize;
+              new_byte_offset:=byte_offset+i*EleSize;
               { If [..] an object [..] contains unaligned fields, it has class
                 MEMORY }
               if align(new_byte_offset,def.alignment)<>new_byte_offset then
@@ -885,22 +885,22 @@ unit cpupara;
             begin
               { calculate the number of bytes spanned by this bitpacked
                 element }
-              size:=((bitoffset+elesize+7) div 8)-(bitoffset div 8);
-              new_byte_offset:=byte_offset+(elesize*i) div 8;
+              size:=((BitOffset+EleSize+7) div 8)-(BitOffset div 8);
+              new_byte_offset:=byte_offset+(EleSize*i) div 8;
               { bit offset of next element }
-              inc(bitoffset,elesize);
+              inc(BitOffset,EleSize);
             end;
-          num:=classify_aggregate_element(calloption,def.elementdef,def,varspez,size,classes,new_byte_offset);
+          num:=classify_aggregate_element(calloption,def.ElementDef,def,VarSpez,size,classes,new_byte_offset);
           if (num=0) then
             exit(0);
           inc(i);
-        until (i=elecount);
+        until (i=EleCount);
 
         result:=finalize_aggregate_classification(calloption,def,words,classes);
       end;
 
 
-    function classify_argument(calloption: TProcCallOption; def: TDef; parentdef: TDef; varspez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; byte_offset: aint; round_to_8: Boolean): LongInt;
+    function classify_argument(calloption: TProcCallOption; def: TDef; parentdef: TDef; VarSpez: TVarSpez; real_size: aint; var classes: TX64ParaClasses; byte_offset: aint; round_to_8: Boolean): LongInt;
       var
         rounded_offset: aint;
       begin
@@ -916,16 +916,16 @@ unit cpupara;
           classrefdef:
             result:=classify_as_integer_argument(def,real_size,classes,rounded_offset);
           formaldef:
-            result:=classify_as_integer_argument(voidpointertype,voidpointertype.size,classes,rounded_offset);
+            result:=classify_as_integer_argument(VoidPointerType,VoidPointerType.size,classes,rounded_offset);
           floatdef:
             begin
               classes[0].def:=def;
-              case TFloatDef(def).floattype of
+              case TFloatDef(def).FloatType of
                 S32Real:
                   begin
                     if (byte_offset mod 8) = 0 then { Check regardless of the round_to_8 flag }
                       begin
-                        if Assigned(parentdef) and ((parentdef.aggregatealignment mod 16) = 0) and ((byte_offset mod parentdef.aggregatealignment) <> 0) then
+                        if Assigned(parentdef) and ((parentdef.AggregateAlignment mod 16) = 0) and ((byte_offset mod parentdef.AggregateAlignment) <> 0) then
                           { Third element of an aligned vector }
                           classes[0].typ:=X86_64_SSEUP_CLASS
                         else
@@ -933,7 +933,7 @@ unit cpupara;
                       end
                     else
                       begin
-                        if Assigned(parentdef) and ((parentdef.aggregatealignment mod 16) = 0) then
+                        if Assigned(parentdef) and ((parentdef.AggregateAlignment mod 16) = 0) then
                           { Fourth element of an aligned vector }
                           classes[0].typ:=X86_64_SSEUP_CLASS
                         else
@@ -941,13 +941,13 @@ unit cpupara;
                             fields, we need a 64 bit rather than a 32 bit load }
                           classes[0].typ:=X86_64_SSE_CLASS;
 
-                        classes[0].def:=CArrayDef.getreusable_no_free(s32floattype,2);
+                        classes[0].def:=CArrayDef.GetReusable_No_Free(S32FloatType,2);
                       end;
                     result:=1;
                   end;
                 S64Real:
                   begin
-                    if Assigned(parentdef) and ((parentdef.aggregatealignment mod 16) = 0) and ((byte_offset mod parentdef.aggregatealignment) <> 0) then
+                    if Assigned(parentdef) and ((parentdef.AggregateAlignment mod 16) = 0) and ((byte_offset mod parentdef.AggregateAlignment) <> 0) then
                       { Aligned vector of type double }
                       classes[0].typ:=X86_64_SSEUP_CLASS
                     else
@@ -971,15 +971,15 @@ unit cpupara;
               end;
             end;
           recorddef:
-            result:=classify_record(calloption,def,parentdef,varspez,classes,rounded_offset);
+            result:=classify_record(calloption,def,parentdef,VarSpez,classes,rounded_offset);
           objectdef:
             begin
-              if is_object(def) then
+              if Is_Object(def) then
                 { pass by reference, like ppc and i386 }
                 result:=0
               else
                 { all kinds of pointer types: class, objcclass, interface, ... }
-                result:=classify_as_integer_argument(def,voidpointertype.size,classes,rounded_offset);
+                result:=classify_as_integer_argument(def,VoidPointerType.size,classes,rounded_offset);
             end;
           setdef:
             begin
@@ -990,7 +990,7 @@ unit cpupara;
             end;
           stringdef:
             begin
-              if (TStringDef(def).stringtype in [st_shortstring,st_longstring]) then
+              if (TStringDef(def).StringType in [st_shortstring,st_longstring]) then
                 result:=0
               else
                 result:=classify_as_integer_argument(def,def.size,classes,rounded_offset);
@@ -999,25 +999,25 @@ unit cpupara;
             begin
               { a dynamic array is treated like a pointer }
               if is_dynamic_array(def) then
-                result:=classify_as_integer_argument(def,voidpointertype.size,classes,rounded_offset)
+                result:=classify_as_integer_argument(def,VoidPointerType.size,classes,rounded_offset)
               { other special arrays are passed on the stack }
               else if is_open_array(def) or
                       is_array_of_const(def) then
                 result:=0
               else
               { normal array }
-                result:=classify_normal_array(calloption,TArrayDef(def),parentdef,varspez,classes,rounded_offset);
+                result:=classify_normal_array(calloption,TArrayDef(def),parentdef,VarSpez,classes,rounded_offset);
             end;
           { the file record is definitely too big }
           filedef:
             result:=0;
           procvardef:
             begin
-              if (po_methodpointer in TProcVarDef(def).procoptions) then
+              if (po_methodpointer in TProcVarDef(def).ProcOptions) then
                 begin
                   { treat as TMethod record }
-                  def:=search_system_type('TMETHOD').typedef;
-                  result:=classify_argument(calloption,def,parentdef,varspez,def.size,classes,rounded_offset, False);
+                  def:=Search_System_Type('TMETHOD').typedef;
+                  result:=classify_argument(calloption,def,parentdef,VarSpez,def.size,classes,rounded_offset, False);
                 end
               else
                 { pointer }
@@ -1026,8 +1026,8 @@ unit cpupara;
           variantdef:
             begin
               { same as tvardata record }
-              def:=search_system_type('TVARDATA').typedef;
-              result:=classify_argument(calloption,def,parentdef,varspez,def.size,classes,rounded_offset, False);
+              def:=Search_System_Type('TVARDATA').typedef;
+              result:=classify_argument(calloption,def,parentdef,VarSpez,def.size,classes,rounded_offset, False);
             end;
           undefineddef:
             { show shall we know?
@@ -1045,7 +1045,7 @@ unit cpupara;
 
 
     { Returns the size of a single element in the aggregate, or the entire vector, if it is one of these types, 0 otherwise }
-    function is_simd_vector_type_or_homogeneous_aggregate(calloption: TProcCallOption; def: TDef; varspez: TVarSpez): aint;
+    function is_simd_vector_type_or_homogeneous_aggregate(calloption: TProcCallOption; def: TDef; VarSpez: TVarSpez): aint;
       var
         numclasses,i,vecsize,veccount,maxvecsize:LongInt;
         classes: TX64ParaClasses;
@@ -1163,7 +1163,7 @@ unit cpupara;
       end;
 
 
-    procedure getvalueparaloc(calloption: TProcCallOption;varspez:TVarSpez;def:TDef;var classes: TX64ParaClasses);
+    procedure getvalueparaloc(calloption: TProcCallOption;VarSpez:TVarSpez;def:TDef;var classes: TX64ParaClasses);
       var
         size: aint;
         i: LongInt;
@@ -1185,7 +1185,7 @@ unit cpupara;
           size:=-1
         else
           size:=def.size;
-        numclasses:=classify_argument(calloption,def,nil,varspez,size,classes,0,False);
+        numclasses:=classify_argument(calloption,def,nil,VarSpez,size,classes,0,False);
         case numclasses of
           0:
            begin
@@ -1222,7 +1222,7 @@ unit cpupara;
           { make sure we handle 'procedure of object' correctly }
           procvardef:
             begin
-              numclasses:=classify_argument(pd.proccalloption,def,nil,vs_value,def.size,classes,0,False);
+              numclasses:=classify_argument(pd.ProcCallOption,def,nil,vs_value,def.size,classes,0,False);
               result:=(numclasses=0);
             end;
           else
@@ -1233,27 +1233,27 @@ unit cpupara;
 
     function TCPUParaManager.param_use_paraloc(const cgpara:TCGPara):boolean;
       var
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
         if not Assigned(cgpara.location) then
           InternalError(200410102);
         result:=true;
         { All locations are LOC_REFERENCE }
-        paraloc:=cgpara.location;
-        while Assigned(paraloc) do
+        ParaLoc:=cgpara.location;
+        while Assigned(ParaLoc) do
           begin
-            if (paraloc^.loc<>LOC_REFERENCE) then
+            if (ParaLoc^.loc<>LOC_REFERENCE) then
               begin
                 result:=false;
                 exit;
               end;
-            paraloc:=paraloc^.next;
+            ParaLoc:=ParaLoc^.next;
           end;
       end;
 
 
     { true if a parameter is too large to copy and only the address is pushed }
-    function TCPUParaManager.push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
+    function TCPUParaManager.push_addr_param(VarSpez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
       var
         classes: TX64ParaClasses;
         numclasses: LongInt;
@@ -1261,7 +1261,7 @@ unit cpupara;
         fillchar(classes,sizeof(classes),0);
         result:=false;
         { var,out,constref always require address }
-        if varspez in [vs_var,vs_out,vs_constref] then
+        if VarSpez in [vs_var,vs_out,vs_constref] then
           begin
             result:=true;
             exit;
@@ -1275,7 +1275,7 @@ unit cpupara;
               { MetroWerks Pascal: const records always passed by reference
                 (for Mac OS X interfaces) }
               if (calloption=pocall_mwpascal) and
-                 (varspez=vs_const) then
+                 (VarSpez=vs_const) then
                 result:=true
               { Win ABI depends on size to pass it in a register or not }
               else if x86_64_use_ms_abi(calloption) then
@@ -1284,16 +1284,16 @@ unit cpupara;
                     begin
                       { "vectorcall" has the addition that it allows for aligned SSE types }
                       result :=
-                        not aggregate_in_registers_win64(varspez,def.size) and
+                        not aggregate_in_registers_win64(VarSpez,def.size) and
                         (is_simd_vector_type_or_homogeneous_aggregate(pocall_vectorcall,def,vs_value) = 0);
                     end
                   else
-                    result:=not aggregate_in_registers_win64(varspez,def.size)
+                    result:=not aggregate_in_registers_win64(VarSpez,def.size)
                 end
               { pass constant parameters that would be passed via memory by
                 reference for non-cdecl/cppdecl, and make sure that the tmethod
                 record (size=16) is passed the same way as a complex procvar }
-              else if ((varspez=vs_const) and
+              else if ((VarSpez=vs_const) and
                        not(calloption in cdecl_pocalls)) or
                       (def.size=16) then
                 begin
@@ -1331,7 +1331,7 @@ unit cpupara;
                 methods, their size can still change after we've determined
                 whether this function result should be returned by reference or
                 by value }
-              if is_object(def) then
+              if Is_Object(def) then
                 result:=true;
             end;
           variantdef,
@@ -1413,7 +1413,7 @@ unit cpupara;
         intretregidx,
         mmretregidx: LongInt;
         retcgsize : TCgSize;
-        paraloc : PCGParaLocation;
+        ParaLoc : PCGParaLocation;
       begin
         if set_common_funcretloc_info(p,forcetempdef,retcgsize,result) then
           exit;
@@ -1423,20 +1423,20 @@ unit cpupara;
           when passing as parameter, but LOC_FPUREGISTER as function result) }
         if result.def.typ=floatdef then
           begin
-            paraloc:=result.add_location;
-            paraloc^.def:=result.def;
-            case TFloatDef(result.def).floattype of
+            ParaLoc:=result.add_location;
+            ParaLoc^.def:=result.def;
+            case TFloatDef(result.def).FloatType of
               S32Real:
                 begin
-                  paraloc^.loc:=LOC_MMREGISTER;
-                  paraloc^.register:=newreg(R_MMREGISTER,RS_MM_RESULT_REG,R_SUBMMS);
-                  paraloc^.size:=OS_F32;
+                  ParaLoc^.loc:=LOC_MMREGISTER;
+                  ParaLoc^.register:=newreg(R_MMREGISTER,RS_MM_RESULT_REG,R_SUBMMS);
+                  ParaLoc^.size:=OS_F32;
                 end;
               S64Real:
                 begin
-                  paraloc^.loc:=LOC_MMREGISTER;
-                  paraloc^.register:=newreg(R_MMREGISTER,RS_MM_RESULT_REG,R_SUBMMD);
-                  paraloc^.size:=OS_F64;
+                  ParaLoc^.loc:=LOC_MMREGISTER;
+                  ParaLoc^.register:=newreg(R_MMREGISTER,RS_MM_RESULT_REG,R_SUBMMD);
+                  ParaLoc^.size:=OS_F64;
                 end;
               { the first two only exist on targets with an x87, on others
                 they are replace by int64 }
@@ -1445,9 +1445,9 @@ unit cpupara;
               s80real,
               sc80real:
                 begin
-                  paraloc^.loc:=LOC_FPUREGISTER;
-                  paraloc^.register:=NR_FPU_RESULT_REG;
-                  paraloc^.size:=retcgsize;
+                  ParaLoc^.loc:=LOC_FPUREGISTER;
+                  ParaLoc^.register:=NR_FPU_RESULT_REG;
+                  ParaLoc^.size:=retcgsize;
                 end;
             end;
           end
@@ -1455,7 +1455,7 @@ unit cpupara;
          { Return in register }
           begin
             fillchar(classes,sizeof(classes),0);
-            numclasses:=classify_argument(p.proccalloption,result.def,nil,vs_value,result.def.size,classes,0,False);
+            numclasses:=classify_argument(p.ProcCallOption,result.def,nil,vs_value,result.def.size,classes,0,False);
             { this would mean a memory return }
             if (numclasses=0) then
               begin
@@ -1474,19 +1474,19 @@ unit cpupara;
             { We can't use a for-loop here because the treatment of the SSEUP class requires skipping over i's }
             while i < numclasses do
               begin
-                paraloc:=result.add_location;
-                paraloc^.def:=classes[i].def;
+                ParaLoc:=result.add_location;
+                ParaLoc^.def:=classes[i].def;
                 case classes[i].typ of
                   X86_64_INTEGERSI_CLASS,
                   X86_64_INTEGER_CLASS:
                     begin
-                      paraloc^.loc:=LOC_REGISTER;
-                      paraloc^.register:=intretregs[intretregidx];
+                      ParaLoc^.loc:=LOC_REGISTER;
+                      ParaLoc^.register:=intretregs[intretregidx];
                       if classes[i].typ=X86_64_INTEGER_CLASS then
                         begin
-                          paraloc^.size:=OS_64;
-                          if paraloc^.def.size<>8 then
-                            paraloc^.def:=u64inttype;
+                          ParaLoc^.size:=OS_64;
+                          if ParaLoc^.def.size<>8 then
+                            ParaLoc^.def:=U64IntType;
                         end
                       else if result.intsize in [1,2,4] then
                         begin
@@ -1499,19 +1499,19 @@ unit cpupara;
                              not(TargetInfo.system in systems_darwin) and
                              (result.intsize in [1,2]) then
                             begin
-                              paraloc^.size:=int_cgsize(result.intsize);
-                              paraloc^.def:=cgsize_orddef(paraloc^.size);
+                              ParaLoc^.size:=int_cgsize(result.intsize);
+                              ParaLoc^.def:=cgsize_orddef(ParaLoc^.size);
                             end
                           else
-                            paraloc^.size:=def_cgsize(paraloc^.def);
+                            ParaLoc^.size:=def_cgsize(ParaLoc^.def);
                         end
                       else
                         begin
-                          paraloc^.size:=OS_32;
-                          if paraloc^.def.size<>4 then
-                            paraloc^.def:=u32inttype;
+                          ParaLoc^.size:=OS_32;
+                          if ParaLoc^.def.size<>4 then
+                            ParaLoc^.def:=U32IntType;
                         end;
-                      setsubreg(paraloc^.register,cgsize2subreg(R_INTREGISTER,paraloc^.size));
+                      setsubreg(ParaLoc^.register,cgsize2subreg(R_INTREGISTER,ParaLoc^.size));
                       inc(intretregidx);
                     end;
                   X86_64_SSE_CLASS,
@@ -1519,28 +1519,28 @@ unit cpupara;
                   X86_64_SSESF_CLASS,
                   X86_64_SSEDF_CLASS:
                     begin
-                      paraloc^.loc:=LOC_MMREGISTER;
+                      ParaLoc^.loc:=LOC_MMREGISTER;
 
-                      if p.proccalloption = pocall_vectorcall then
-                        paraloc^.register:=mmretregs_vectorcall[mmretregidx]
+                      if p.ProcCallOption = pocall_vectorcall then
+                        ParaLoc^.register:=mmretregs_vectorcall[mmretregidx]
                       else
-                        paraloc^.register:=mmretregs[mmretregidx];
+                        ParaLoc^.register:=mmretregs[mmretregidx];
 
                       case classes[i].typ of
                         X86_64_SSESF_CLASS:
                           begin
-                            setsubreg(paraloc^.register,R_SUBMMS);
-                            paraloc^.size:=OS_F32;
+                            setsubreg(ParaLoc^.register,R_SUBMMS);
+                            ParaLoc^.size:=OS_F32;
                           end;
                         X86_64_SSEDF_CLASS:
                           begin
-                            setsubreg(paraloc^.register,R_SUBMMD);
-                            paraloc^.size:=OS_F64;
+                            setsubreg(ParaLoc^.register,R_SUBMMD);
+                            ParaLoc^.size:=OS_F64;
                           end;
                         X86_64_SSE_CLASS:
                           begin
                             j := 1;
-                            if not (x86_64_use_ms_abi(p.proccalloption) and (p.proccalloption <> pocall_vectorcall)) then
+                            if not (x86_64_use_ms_abi(p.ProcCallOption) and (p.ProcCallOption <> pocall_vectorcall)) then
                               while i + j <= numclasses do
                                 begin
                                   if classes[i+j].typ <> X86_64_SSEUP_CLASS then
@@ -1554,34 +1554,34 @@ unit cpupara;
                             case j of
                               1:
                                 begin
-                                  setsubreg(paraloc^.register,R_SUBQ);
-                                  paraloc^.size:=OS_M64;
+                                  setsubreg(ParaLoc^.register,R_SUBQ);
+                                  ParaLoc^.size:=OS_M64;
                                 end;
                               2:
                                 begin
-                                  setsubreg(paraloc^.register,R_SUBMMX);
-                                  paraloc^.size:=OS_M128;
+                                  setsubreg(ParaLoc^.register,R_SUBMMX);
+                                  ParaLoc^.size:=OS_M128;
                                 end;
                               4:
                                 begin
-                                  setsubreg(paraloc^.register,R_SUBMMY);
-                                  paraloc^.size:=OS_M256; { Currently unsupported }
+                                  setsubreg(ParaLoc^.register,R_SUBMMY);
+                                  ParaLoc^.size:=OS_M256; { Currently unsupported }
                                 end;
                               8:
                                 begin
-                                  setsubreg(paraloc^.register,R_SUBMMZ);
-                                  paraloc^.size:=OS_M512; { Currently unsupported }
+                                  setsubreg(ParaLoc^.register,R_SUBMMZ);
+                                  ParaLoc^.size:=OS_M512; { Currently unsupported }
                                 end;
                               else
                                 InternalError(2018012901);
                             end;
-                            paraloc^.def:=CArrayDef.getreusable_no_free_vector(paraloc^.def,j);
+                            ParaLoc^.def:=CArrayDef.GetReusable_No_Free_Vector(ParaLoc^.def,j);
                           end;
                         else
-                          if (x86_64_use_ms_abi(p.proccalloption) and (p.proccalloption <> pocall_vectorcall)) then
+                          if (x86_64_use_ms_abi(p.ProcCallOption) and (p.ProcCallOption <> pocall_vectorcall)) then
                             begin
-                              setsubreg(paraloc^.register,R_SUBQ);
-                              paraloc^.size:=OS_M64;
+                              setsubreg(ParaLoc^.register,R_SUBQ);
+                              ParaLoc^.size:=OS_M64;
                             end
                           else
                             { Should not get here }
@@ -1596,9 +1596,9 @@ unit cpupara;
                       if (i<>(numclasses-2)) or
                          (classes[i+1].typ<>X86_64_X87UP_CLASS) then
                         InternalError(2014110401);
-                      paraloc^.loc:=LOC_FPUREGISTER;
-                      paraloc^.register:=NR_FPU_RESULT_REG;
-                      paraloc^.size:=OS_F80;
+                      ParaLoc^.loc:=LOC_FPUREGISTER;
+                      ParaLoc^.register:=NR_FPU_RESULT_REG;
+                      ParaLoc^.size:=OS_F80;
                       break;
                     end;
                   X86_64_NO_CLASS:
@@ -1607,8 +1607,8 @@ unit cpupara;
                       if (i<>0) or
                          (numclasses<>1) then
                         InternalError(2010060302);
-                      paraloc^.loc:=LOC_VOID;
-                      paraloc^.def:=voidtype;
+                      ParaLoc^.loc:=LOC_VOID;
+                      ParaLoc^.def:=VoidType;
                     end;
                   else
                     InternalError(2010021504);
@@ -1626,7 +1626,7 @@ unit cpupara;
         fdef,
         paradef,
         paralocdef : TDef;
-        paraloc    : PCGParaLocation;
+        ParaLoc    : PCGParaLocation;
         subreg     : TSubRegister;
         pushaddr   : boolean;
         paracgsize : TCgSize;
@@ -1644,8 +1644,8 @@ unit cpupara;
         paraalign  : LongInt;
         use_ms_abi : boolean;
       begin
-        procparaalign:=get_para_align(p.proccalloption);
-        use_ms_abi:=x86_64_use_ms_abi(p.proccalloption);
+        procparaalign:=get_para_align(p.ProcCallOption);
+        use_ms_abi:=x86_64_use_ms_abi(p.ProcCallOption);
         { Register parameters are assigned from left to right }
         for i:=0 to paras.count-1 do
           begin
@@ -1654,37 +1654,37 @@ unit cpupara;
             paralocdef:=hp.vardef;
 
             { in syscalls the libbase might be set as explicit paraloc }
-            if (vo_has_explicit_paraloc in hp.varoptions) then
-              if not (vo_is_syscall_lib in hp.varoptions) then
+            if (vo_has_explicit_paraloc in hp.VarOptions) then
+              if not (vo_is_syscall_lib in hp.VarOptions) then
                 InternalError(2022010501)
               else
                 begin
                   paracgsize:=def_cgsize(paradef);
-                  hp.paraloc[side].def:=paradef;
-                  hp.paraloc[side].size:=paracgsize;
-                  hp.paraloc[side].intsize:=tcgsize2size[paracgsize];
-                  hp.paraloc[side].alignment:=sizeof(PInt);
+                  hp.ParaLoc[side].def:=paradef;
+                  hp.ParaLoc[side].size:=paracgsize;
+                  hp.ParaLoc[side].intsize:=tcgsize2size[paracgsize];
+                  hp.ParaLoc[side].alignment:=sizeof(PInt);
                   continue;
                 end;
 
             { on vectorcall, if a record has only one field and that field is a
               single or double, it has to be handled like a single/double }
-            if (p.proccalloption=pocall_vectorcall) and
+            if (p.ProcCallOption=pocall_vectorcall) and
                ((paradef.typ=recorddef) {or
                is_object(paradef)}) and
-               TAbstractRecordSymTable(TAbstractRecordDef(paradef).SymTable).has_single_field(fdef) and
+               TAbstractRecordSymTable(TAbstractRecordDef(paradef).SymTable).Has_Single_Field(fdef) and
                (fdef.typ=floatdef) and
-               (TFloatDef(fdef).floattype in [S32Real,S64Real]) then
+               (TFloatDef(fdef).FloatType in [S32Real,S64Real]) then
               paralocdef:=fdef;
 
-            pushaddr:=push_addr_param(hp.varspez,paralocdef,p.proccalloption);
+            pushaddr:=push_addr_param(hp.VarSpez,paralocdef,p.ProcCallOption);
             if pushaddr then
               begin
                 loc[0].typ:=X86_64_INTEGER_CLASS;
                 loc[1].typ:=X86_64_NO_CLASS;
                 paracgsize:=OS_ADDR;
                 paralen:=sizeof(PInt);
-                paradef:=CPointerDef.getreusable_no_free(paradef);
+                paradef:=CPointerDef.GetReusable_No_Free(paradef);
                 paralocdef:=paradef;
                 paraalign:=procparaalign;
                 loc[0].def:=paralocdef;
@@ -1697,10 +1697,10 @@ unit cpupara;
               end
             else
               begin
-                getvalueparaloc(p.proccalloption,hp.varspez,paralocdef,loc);
-                paralen:=push_size(hp.varspez,paralocdef,p.proccalloption);
+                getvalueparaloc(p.ProcCallOption,hp.VarSpez,paralocdef,loc);
+                paralen:=push_size(hp.VarSpez,paralocdef,p.ProcCallOption);
                 paraalign:=max(procparaalign,paradef.alignment);
-                if p.proccalloption = pocall_vectorcall then
+                if p.ProcCallOption = pocall_vectorcall then
                   begin
                     { TODO: Can this set of instructions be put into 'defutil' without it relying on the argument classification? [Kit] }
 
@@ -1738,22 +1738,22 @@ unit cpupara;
                   begin
                     loc[0].typ:=X86_64_INTEGER_CLASS;
                     paracgsize:=OS_64;
-                    paralocdef:=u64inttype;
+                    paralocdef:=U64IntType;
                   end
                 else
                   begin
                     loc[0].typ:=X86_64_INTEGERSI_CLASS;
                     paracgsize:=OS_32;
-                    paralocdef:=u32inttype;
+                    paralocdef:=U32IntType;
                   end;
                 loc[0].def:=paralocdef;
               end;
 
-            hp.paraloc[side].reset;
-            hp.paraloc[side].size:=paracgsize;
-            hp.paraloc[side].intsize:=paralen;
-            hp.paraloc[side].Alignment:=paraalign;
-            hp.paraloc[side].def:=paradef;
+            hp.ParaLoc[side].reset;
+            hp.ParaLoc[side].size:=paracgsize;
+            hp.ParaLoc[side].intsize:=paralen;
+            hp.ParaLoc[side].Alignment:=paraalign;
+            hp.ParaLoc[side].def:=paradef;
             if paralen>0 then
               begin
                 { Enough registers free? }
@@ -1776,8 +1776,8 @@ unit cpupara;
                 { the "-1" is because we can also use the current register }
                 if (use_ms_abi and
                     ((intparareg+needintloc-1 > high(paraintsupregs_winx64)) or
-                     ((p.proccalloption = pocall_vectorcall) and (mmparareg+needmmloc-1 > high(parammsupregs_vectorcall))) or
-                     ((p.proccalloption <> pocall_vectorcall) and (mmparareg+needmmloc-1 > high(parammsupregs_winx64))))) or
+                     ((p.ProcCallOption = pocall_vectorcall) and (mmparareg+needmmloc-1 > high(parammsupregs_vectorcall))) or
+                     ((p.ProcCallOption <> pocall_vectorcall) and (mmparareg+needmmloc-1 > high(parammsupregs_winx64))))) or
                    (not use_ms_abi and
                     ((intparareg+needintloc-1 > high(paraintsupregs)) or
                      (mmparareg+needmmloc-1 > high(parammsupregs)))) then
@@ -1801,21 +1801,21 @@ unit cpupara;
                       X86_64_INTEGER_CLASS,
                       X86_64_INTEGERSI_CLASS:
                         begin
-                          paraloc:=hp.paraloc[side].add_location;
-                          paraloc^.loc:=LOC_REGISTER;
-                          paraloc^.def:=loc[locidx].def;
+                          ParaLoc:=hp.ParaLoc[side].add_location;
+                          ParaLoc^.loc:=LOC_REGISTER;
+                          ParaLoc^.def:=loc[locidx].def;
                           if (paracgsize=OS_NO) or ((locidx<high(loc)) and (loc[locidx+1].typ<>X86_64_NO_CLASS)) then
                             begin
                               if loc[locidx].typ=X86_64_INTEGER_CLASS then
                                 begin
-                                  paraloc^.size:=OS_INT;
-                                  paraloc^.def:=u64inttype;
+                                  ParaLoc^.size:=OS_INT;
+                                  ParaLoc^.def:=U64IntType;
                                   subreg:=R_SUBWHOLE;
                                 end
                               else
                                 begin
-                                  paraloc^.size:=OS_32;
-                                  paraloc^.def:=u32inttype;
+                                  ParaLoc^.size:=OS_32;
+                                  ParaLoc^.def:=U32IntType;
                                   subreg:=R_SUBD;
                                 end;
                             end
@@ -1840,59 +1840,59 @@ unit cpupara;
 
                               if not(TargetInfo.system in systems_darwin) and
                                  (side=calleeside) and
-                                 (hp.paraloc[side].intsize in [1,2]) then
+                                 (hp.ParaLoc[side].intsize in [1,2]) then
                                 begin
-                                  paraloc^.def:=hp.paraloc[side].def
+                                  ParaLoc^.def:=hp.ParaLoc[side].def
                                 end;
 
-                              paraloc^.size:=def_cgsize(paraloc^.def);
+                              ParaLoc^.size:=def_cgsize(ParaLoc^.def);
                               { s64comp/s64currency is pushed in an int register }
-                              if paraloc^.size=OS_C64 then
+                              if ParaLoc^.size=OS_C64 then
                                 begin
-                                  paraloc^.size:=OS_64;
-                                  paraloc^.def:=u64inttype;
+                                  ParaLoc^.size:=OS_64;
+                                  ParaLoc^.def:=U64IntType;
                                 end;
-                              subreg:=cgsize2subreg(R_INTREGISTER,paraloc^.size);
+                              subreg:=cgsize2subreg(R_INTREGISTER,ParaLoc^.size);
                             end;
 
                           { winx64 uses different registers }
                           if use_ms_abi then
-                            paraloc^.register:=newreg(R_INTREGISTER,paraintsupregs_winx64[intparareg],subreg)
+                            ParaLoc^.register:=newreg(R_INTREGISTER,paraintsupregs_winx64[intparareg],subreg)
                           else
-                            paraloc^.register:=newreg(R_INTREGISTER,paraintsupregs[intparareg],subreg);
+                            ParaLoc^.register:=newreg(R_INTREGISTER,paraintsupregs[intparareg],subreg);
 
                           { matching mm register must be skipped }
                           if use_ms_abi then
                             inc(mmparareg);
 
                           inc(intparareg);
-                          dec(paralen,tcgsize2size[paraloc^.size]);
+                          dec(paralen,tcgsize2size[ParaLoc^.size]);
                         end;
                       X86_64_SSE_CLASS,
                       X86_64_SSESF_CLASS,
                       X86_64_SSEDF_CLASS:
                         begin
-                          paraloc:=hp.paraloc[side].add_location;
-                          paraloc^.loc:=LOC_MMREGISTER;
-                          paraloc^.def:=loc[locidx].def;
+                          ParaLoc:=hp.ParaLoc[side].add_location;
+                          ParaLoc^.loc:=LOC_MMREGISTER;
+                          ParaLoc^.def:=loc[locidx].def;
 
                           case loc[locidx].typ of
                             X86_64_SSESF_CLASS:
                               begin
                                 subreg:=R_SUBMMS;
-                                paraloc^.size:=OS_F32;
+                                ParaLoc^.size:=OS_F32;
                               end;
                             X86_64_SSEDF_CLASS:
                               begin
                                 subreg:=R_SUBMMD;
-                                paraloc^.size:=OS_F64;
+                                ParaLoc^.size:=OS_F64;
                               end;
                             X86_64_SSE_CLASS:
                               begin
                                 subreg:=R_SUBQ;
-                                paraloc^.size:=OS_M64;
+                                ParaLoc^.size:=OS_M64;
                                 j := 1;
-                                if not (use_ms_abi and (p.proccalloption <> pocall_vectorcall)) then
+                                if not (use_ms_abi and (p.ProcCallOption <> pocall_vectorcall)) then
                                   while locidx + j <= high(loc) do
                                     begin
                                       if loc[locidx+j].typ <> X86_64_SSEUP_CLASS then
@@ -1907,33 +1907,33 @@ unit cpupara;
                                   1:
                                     begin
                                       subreg:=R_SUBQ;
-                                      paraloc^.size:=OS_M64;
+                                      ParaLoc^.size:=OS_M64;
                                     end;
                                   2:
                                     begin
                                       subreg:=R_SUBMMX;
-                                      paraloc^.size:=OS_M128;
+                                      ParaLoc^.size:=OS_M128;
                                     end;
                                   4:
                                     begin
                                       subreg:=R_SUBMMY;
-                                      paraloc^.size:=OS_M256; { Currently unsupported }
+                                      ParaLoc^.size:=OS_M256; { Currently unsupported }
                                     end;
                                   8:
                                     begin
                                       subreg:=R_SUBMMZ;
-                                      paraloc^.size:=OS_M512; { Currently unsupported }
+                                      ParaLoc^.size:=OS_M512; { Currently unsupported }
                                     end;
                                   else
                                     InternalError(2018012903);
                                 end;
-                                paraloc^.def:=CArrayDef.getreusable_no_free_vector(paraloc^.def,j);
+                                ParaLoc^.def:=CArrayDef.GetReusable_No_Free_Vector(ParaLoc^.def,j);
                               end;
                             else
-                              if (use_ms_abi and (p.proccalloption <> pocall_vectorcall)) then
+                              if (use_ms_abi and (p.ProcCallOption <> pocall_vectorcall)) then
                                 begin
                                   subreg:=R_SUBQ;
-                                  paraloc^.size:=OS_M64;
+                                  ParaLoc^.size:=OS_M64;
                                 end
                               else
                                 { Should not get here }
@@ -1943,33 +1943,33 @@ unit cpupara;
                           { winx64 uses different registers }
                           if use_ms_abi then
                             begin
-                              if p.proccalloption = pocall_vectorcall then
-                                paraloc^.register:=newreg(R_MMREGISTER,parammsupregs_vectorcall[mmparareg],subreg)
+                              if p.ProcCallOption = pocall_vectorcall then
+                                ParaLoc^.register:=newreg(R_MMREGISTER,parammsupregs_vectorcall[mmparareg],subreg)
                               else
-                                paraloc^.register:=newreg(R_MMREGISTER,parammsupregs_winx64[mmparareg],subreg);
+                                ParaLoc^.register:=newreg(R_MMREGISTER,parammsupregs_winx64[mmparareg],subreg);
                             end
                           else
-                            paraloc^.register:=newreg(R_MMREGISTER,parammsupregs[mmparareg],subreg);
+                            ParaLoc^.register:=newreg(R_MMREGISTER,parammsupregs[mmparareg],subreg);
 
                           { matching int register must be skipped }
                           if use_ms_abi then
                             inc(intparareg);
 
                           inc(mmparareg);
-                          dec(paralen,tcgsize2size[paraloc^.size]);
+                          dec(paralen,tcgsize2size[ParaLoc^.size]);
                         end;
                       X86_64_MEMORY_CLASS :
                         begin
-                          paraloc:=hp.paraloc[side].add_location;
-                          paraloc^.loc:=LOC_REFERENCE;
-                          paraloc^.def:=loc[locidx].def;
+                          ParaLoc:=hp.ParaLoc[side].add_location;
+                          ParaLoc^.loc:=LOC_REFERENCE;
+                          ParaLoc^.def:=loc[locidx].def;
 
                           { s64comp/s64currency are passed as integer types
                             (important for LLVM here) }
                           if paracgsize=OS_C64 then
                             begin
-                              paraloc^.size:=OS_64;
-                              paraloc^.def:=u64inttype;
+                              ParaLoc^.size:=OS_64;
+                              ParaLoc^.def:=U64IntType;
                             end;
 
                           {Hack alert!!! We should modify int_cgsize to handle OS_128,
@@ -1978,21 +1978,21 @@ unit cpupara;
                            properly is out of the question to release 2.2.0 in time. (DM)}
                           if paracgsize=OS_128 then
                             if paralen=8 then
-                              paraloc^.size:=OS_64
+                              ParaLoc^.size:=OS_64
                             else if paralen=16 then
-                              paraloc^.size:=OS_128
+                              ParaLoc^.size:=OS_128
                             else
                               InternalError(200707143)
                           else if paracgsize in [OS_F32,OS_F64,OS_F80,OS_F128] then
-                            paraloc^.size:=int_float_cgsize(paralen)
+                            ParaLoc^.size:=int_float_cgsize(paralen)
                           else
-                            paraloc^.size:=int_cgsize(paralen);
+                            ParaLoc^.size:=int_cgsize(paralen);
                           if side=callerside then
-                            paraloc^.reference.index:=NR_STACK_POINTER_REG
+                            ParaLoc^.reference.index:=NR_STACK_POINTER_REG
                           else
-                            paraloc^.reference.index:=NR_FRAME_POINTER_REG;
+                            ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
                           varalign:=Used_Align(Size_2_Align(paralen),paraalign,paraalign);
-                          paraloc^.reference.offset:=align(parasize,varalign);
+                          ParaLoc^.reference.offset:=align(parasize,varalign);
                           parasize:=align(parasize+paralen,varalign);
                           paralen:=0;
                         end;
@@ -2004,9 +2004,9 @@ unit cpupara;
               end
             else
               begin
-                paraloc:=hp.paraloc[side].add_location;
-                paraloc^.loc:=LOC_VOID;
-                paraloc^.def:=paralocdef;
+                ParaLoc:=hp.ParaLoc[side].add_location;
+                ParaLoc^.loc:=LOC_VOID;
+                ParaLoc^.def:=paralocdef;
               end;
           end;
         { Register parameters are assigned from left-to-right, but the
@@ -2018,13 +2018,13 @@ unit cpupara;
             for i:=0 to paras.count-1 do
               begin
                 hp:=TParaVarSym(paras[i]);
-                paraloc:=hp.paraloc[side].location;
-                while paraloc<>nil do
+                ParaLoc:=hp.ParaLoc[side].location;
+                while ParaLoc<>nil do
                   begin
-                    with paraloc^ do
+                    with ParaLoc^ do
                      if (loc=LOC_REFERENCE) then
                        inc(reference.offset,TargetInfo.first_parm_offset);
-                    paraloc:=paraloc^.next;
+                    ParaLoc:=ParaLoc^.next;
                   end;
               end;
           end;
@@ -2038,7 +2038,7 @@ unit cpupara;
       begin
         intparareg:=0;
         mmparareg:=0;
-        if x86_64_use_ms_abi(p.proccalloption) then
+        if x86_64_use_ms_abi(p.ProcCallOption) then
           parasize:=4*8
         else
           parasize:=0;
@@ -2066,7 +2066,7 @@ unit cpupara;
       begin
         intparareg:=0;
         mmparareg:=0;
-        if x86_64_use_ms_abi(p.proccalloption) then
+        if x86_64_use_ms_abi(p.ProcCallOption) then
           parasize:=4*8
         else
           parasize:=0;

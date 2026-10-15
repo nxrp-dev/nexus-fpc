@@ -48,7 +48,7 @@ interface
     procedure property_dec;
     procedure resourcestring_dec(out had_generic:boolean);
     procedure parse_rttiattributes(var rtti_attrs_def:TRTTIAttributeList);
-    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;genericdef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;GenericDef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
 
 implementation
 
@@ -73,9 +73,9 @@ implementation
 
     function is_system_custom_attribute_descendant(def:TDef):boolean;
     begin
-      if not Assigned(class_tcustomattribute) then
-        class_tcustomattribute:=TObjectDef(search_system_type('TCUSTOMATTRIBUTE').typedef);
-      Result:=def_is_related(def,class_tcustomattribute);
+      if not Assigned(Class_TCustomAttribute) then
+        Class_TCustomAttribute:=TObjectDef(Search_System_Type('TCUSTOMATTRIBUTE').typedef);
+      Result:=def_is_related(def,Class_TCustomAttribute);
     end;
 
     function readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):TConstSym;
@@ -101,17 +101,17 @@ implementation
            ordconstn:
              begin
                if p.resultdef.typ=pointerdef then
-                 hp:=CConstSym.create_ordptr(orgname,constpointer,TOrdConstNode(p).value.uvalue,p.resultdef)
+                 hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TOrdConstNode(p).value.uvalue,p.resultdef)
                else
-                 hp:=CConstSym.create_ord(orgname,constord,TOrdConstNode(p).value,p.resultdef);
+                 hp:=CConstSym.Create_Ord(orgname,constord,TOrdConstNode(p).value,p.resultdef);
              end;
            stringconstn:
              begin
                if is_wide_or_unicode_string(p.resultdef) then
                  begin
                    InitWideString(pw);
-                   CopyWideString(TStringConstNode(p).valuews,pw);
-                   hp:=CConstSym.create_wstring(orgname,constwstring,pw);
+                   CopyWideString(TStringConstNode(p).ValueWS,pw);
+                   hp:=CConstSym.Create_WString(orgname,constwstring,pw);
                  end
                else
                  begin
@@ -123,16 +123,16 @@ implementation
                      keep it }
                    if is_ansistring(p.resultdef) and
                       (TStringDef(p.resultdef).encoding<>0) then
-                     hp:=CConstSym.create_string(orgname,conststring,sp,TStringConstNode(p).len,p.resultdef)
+                     hp:=CConstSym.Create_String(orgname,conststring,sp,TStringConstNode(p).len,p.resultdef)
                    else
-                     hp:=CConstSym.create_string(orgname,conststring,sp,TStringConstNode(p).len,nil);
+                     hp:=CConstSym.Create_String(orgname,conststring,sp,TStringConstNode(p).len,nil);
                  end;
              end;
            realconstn :
              begin
                 new(pd);
                 pd^:=TRealConstNode(p).value_real;
-                hp:=CConstSym.create_ptr(orgname,constreal,pd,p.resultdef);
+                hp:=CConstSym.Create_Ptr(orgname,constreal,pd,p.resultdef);
              end;
            setconstn :
              begin
@@ -141,28 +141,28 @@ implementation
                  ps^:=TSetConstNode(p).value_set^
                else
                  ps^:=[];
-               hp:=CConstSym.create_ptr(orgname,constset,ps,p.resultdef);
+               hp:=CConstSym.Create_Ptr(orgname,constset,ps,p.resultdef);
              end;
            pointerconstn :
              begin
-               hp:=CConstSym.create_ordptr(orgname,constpointer,TPointerConstNode(p).value,p.resultdef);
+               hp:=CConstSym.Create_OrdPtr(orgname,constpointer,TPointerConstNode(p).value,p.resultdef);
              end;
            niln :
              begin
-               hp:=CConstSym.create_ord(orgname,constnil,0,p.resultdef);
+               hp:=CConstSym.Create_Ord(orgname,constnil,0,p.resultdef);
              end;
            typen :
              begin
-               if is_interface(p.resultdef) then
+               if Is_Interface(p.resultdef) then
                 begin
-                  if Assigned(TObjectDef(p.resultdef).iidguid) then
+                  if Assigned(TObjectDef(p.resultdef).IIDGUID) then
                    begin
                      new(pg);
-                     pg^:=TObjectDef(p.resultdef).iidguid^;
-                     hp:=CConstSym.create_ptr(orgname,constguid,pg,p.resultdef);
+                     pg^:=TObjectDef(p.resultdef).IIDGUID^;
+                     hp:=CConstSym.Create_Ptr(orgname,constguid,pg,p.resultdef);
                    end
                   else
-                   Message1(parser_e_interface_has_no_guid,TObjectDef(p.resultdef).objrealname^);
+                   Message1(parser_e_interface_has_no_guid,TObjectDef(p.resultdef).ObjRealName^);
                 end
                else
                 Message(parser_e_illegal_expression);
@@ -178,11 +178,11 @@ implementation
                case TInlineNode(p).inlinenumber of
                  in_sizeof_x:
                    begin
-                     hp:=CConstSym.create_ord(orgname,constord,1,p.resultdef);
+                     hp:=CConstSym.Create_Ord(orgname,constord,1,p.resultdef);
                    end;
                  in_bitsizeof_x:
                    begin
-                     hp:=CConstSym.create_ord(orgname,constord,8,p.resultdef);
+                     hp:=CConstSym.Create_Ord(orgname,constord,8,p.resultdef);
                    end;
                  { add other cases here if necessary }
                  else
@@ -195,7 +195,7 @@ implementation
                  untyped so we need to pass a placeholder constant
                  instead of givng an error }
                if nf_generic_para in p.flags then
-                 hp:=CConstSym.create_ord(orgname,constnil,0,p.resultdef)
+                 hp:=CConstSym.Create_Ord(orgname,constnil,0,p.resultdef)
                else
                  Message(parser_e_illegal_expression);
              end;
@@ -203,8 +203,8 @@ implementation
         { transfer generic param flag from node to symbol }
         if nf_generic_para in p.flags then
           begin
-            include(hp.symoptions,sp_generic_const);
-            include(hp.symoptions,sp_generic_para);
+            include(hp.SymOptions,sp_generic_const);
+            include(hp.SymOptions,sp_generic_para);
           end;
         CurrentTokenPos:=storetokenpos;
         p.free;
@@ -225,7 +225,7 @@ implementation
          sym : TSym;
          flags : THCCFlags;
          dummysymoptions : TSymOptions;
-         deprecatedmsg : PShortString;
+         DeprecatedMsg : PShortString;
          storetokenpos,filepos : TFilePosInfo;
          nodetype : TNodeType;
          old_block_type : TBlockType;
@@ -233,7 +233,7 @@ implementation
          isgeneric,
          expect_directive,
          skip_initialiser : boolean;
-         varspez : TVarSpez;
+         VarSpez : TVarSpez;
          asmtype : TAsmListType;
       begin
          old_block_type:=Block_Type;
@@ -253,18 +253,18 @@ implementation
                    sym:=readconstant(orgname,filepos,nodetype);
                    { Support hint directives }
                    dummysymoptions:=[];
-                   deprecatedmsg:=nil;
-                   try_consume_hintdirective(dummysymoptions,deprecatedmsg);
+                   DeprecatedMsg:=nil;
+                   try_consume_hintdirective(dummysymoptions,DeprecatedMsg);
                    if Assigned(sym) then
                      begin
-                       sym.symoptions:=sym.symoptions+dummysymoptions;
-                       sym.deprecatedmsg:=deprecatedmsg;
-                       sym.visibility:=SymTableStack.top.currentvisibility;
-                       SymTableStack.top.insertsym(sym);
+                       sym.SymOptions:=sym.SymOptions+dummysymoptions;
+                       sym.DeprecatedMsg:=DeprecatedMsg;
+                       sym.visibility:=SymTableStack.top.CurrentVisibility;
+                       SymTableStack.top.InsertSym(sym);
                        sym.RegisterSym;
                      end
                    else
-                     StringDispose(deprecatedmsg);
+                     StringDispose(DeprecatedMsg);
                    consume(_SEMICOLON);
                 end;
 
@@ -286,31 +286,31 @@ implementation
                    CurrentTokenPos:=filepos;
                    if not (cs_typed_const_writable in CurrentSettings.LocalSwitches) then
                      begin
-                       varspez:=vs_const;
+                       VarSpez:=vs_const;
                        asmtype:=al_rotypedconsts;
                      end
                    else
                      begin
-                       varspez:=vs_value;
+                       VarSpez:=vs_value;
                        asmtype:=al_typedconsts;
                      end;
                    { if we are dealing with structure const then we need to handle it as a
                      structure static variable: create a symbol in unit symtable and a reference
                      to it from the structure or linking will fail }
-                   if SymTableStack.top.symtabletype in [recordsymtable,ObjectSymtable] then
+                   if SymTableStack.top.SymTableType in [recordsymtable,ObjectSymtable] then
                      begin
                        { note: we keep hdef so that we might at least read the
                                constant data correctly for error recovery }
                        check_allowed_for_var_or_const(hdef,false);
-                       sym:=CFieldVarSym.create(orgname,varspez,hdef,[]);
-                       SymTableStack.top.insertsym(sym);
-                       sym:=make_field_static(SymTableStack.top,TFieldVarSym(sym));
+                       sym:=CFieldVarSym.create(orgname,VarSpez,hdef,[]);
+                       SymTableStack.top.InsertSym(sym);
+                       sym:=Make_Field_Static(SymTableStack.top,TFieldVarSym(sym));
                      end
                    else
                      begin
-                       sym:=CStaticVarSym.create(orgname,varspez,hdef,[]);
-                       sym.visibility:=SymTableStack.top.currentvisibility;
-                       SymTableStack.top.insertsym(sym);
+                       sym:=CStaticVarSym.create(orgname,VarSpez,hdef,[]);
+                       sym.visibility:=SymTableStack.top.CurrentVisibility;
+                       SymTableStack.top.InsertSym(sym);
                      end;
                    sym.RegisterSym;
                    CurrentTokenPos:=storetokenpos;
@@ -320,7 +320,7 @@ implementation
                          (hdef.typ=procvardef) or
                          is_funcref(hdef)
                        ) and
-                       (hdef.typesym=nil) then
+                       (hdef.TypeSym=nil) then
                     begin
                       { Either "procedure; stdcall" or "procedure stdcall" }
                       expect_directive:=try_to_consume(_SEMICOLON);
@@ -390,23 +390,23 @@ implementation
                     labelsym:=CLabelSym.create(CurrentScanner.pattern);
                   end;
 
-                SymTableStack.top.insertsym(labelsym);
+                SymTableStack.top.InsertSym(labelsym);
                 if m_non_local_goto in CurrentSettings.ModeSwitches then
                   begin
-                    if SymTableStack.top.symtabletype=localsymtable then
+                    if SymTableStack.top.SymTableType=LocalSymTable then
                       begin
-                        labelsym.jumpbuf:=CLocalVarSym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
-                        SymTableStack.top.insertsym(labelsym.jumpbuf);
+                        labelsym.JumpBuf:=CLocalVarSym.create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
+                        SymTableStack.top.InsertSym(labelsym.JumpBuf);
                       end
                     else
                       begin
-                        labelsym.jumpbuf:=CStaticVarSym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
-                        SymTableStack.top.insertsym(labelsym.jumpbuf);
-                        CNodeUtils.insertbssdata(TStaticVarSym(labelsym.jumpbuf));
+                        labelsym.JumpBuf:=CStaticVarSym.create('LABEL$_'+labelsym.name,vs_value,Rec_Jmp_Buf,[]);
+                        SymTableStack.top.InsertSym(labelsym.JumpBuf);
+                        CNodeUtils.insertbssdata(TStaticVarSym(labelsym.JumpBuf));
                       end;
-                    include(labelsym.jumpbuf.symoptions,sp_internal);
+                    include(labelsym.JumpBuf.SymOptions,sp_internal);
                     { the buffer will be setup later, but avoid a hint }
-                    TAbstractVarSym(labelsym.jumpbuf).varstate:=vs_written;
+                    TAbstractVarSym(labelsym.JumpBuf).VarState:=vs_written;
                   end;
                 consume(CurrentScanner.token);
              end;
@@ -422,7 +422,7 @@ implementation
              result:=objdef.SymTable.Find('CREATE');
              if Assigned(result) then
                exit;
-             objdef:=objdef.childof;
+             objdef:=objdef.ChildOf;
            end;
          // A class without a constructor called 'create'?!?
          InternalError(2012111101);
@@ -454,7 +454,7 @@ implementation
         paras : array of TNode;
         od : TObjectDef;
         constrsym : TSymEntry;
-        typesym : TTypeSym;
+        TypeSym : TTypeSym;
         parasok : boolean;
       begin
         consume(_LECKKLAMMER);
@@ -464,13 +464,13 @@ implementation
           p:=factor(false,[ef_type_only,ef_check_attr_suffix]);
           if p.nodetype=typen then
             begin
-              typesym:=TTypeSym(TTypeNode(p).typesym);
+              TypeSym:=TTypeSym(TTypeNode(p).TypeSym);
               od:=TObjectDef(TTypeNode(p).typedef);
 
               { Check if the attribute class is related to TCustomAttribute }
               if not is_system_custom_attribute_descendant(od) then
                 begin
-                  incompatibletypes(od,class_tcustomattribute);
+                  IncompatibleTypes(od,Class_TCustomAttribute);
                   read_attr_paras.free; // no nil needed
                   continue;
                 end;
@@ -479,7 +479,7 @@ implementation
 
               { Search the tprocdef of the constructor which has to be called. }
               constrsym:=find_create_constructor(od);
-              if constrsym.typ<>procsym then
+              if constrsym.typ<>ProcSym then
                 InternalError(2018102301);
 
               pcalln:=CCallNode.create(paran,TProcSym(constrsym),od.SymTable,CLoadVMTAddrNode.create(p),[cnf_no_convert_procvar],nil);
@@ -507,7 +507,7 @@ implementation
                       pcount:=0;
                       while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.varoptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.VarOptions) then
                             inc(pcount);
                           ptmp:=TCallParaNode(ptmp).right;
                         end;
@@ -516,14 +516,14 @@ implementation
                       pcount:=0;
                       while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.varoptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.VarOptions) then
                             begin
                               if not is_constnode(TCallParaNode(ptmp).left) then
                                 begin
                                   parasok:=false;
                                   messagepos(TCallParaNode(ptmp).left.fileinfo,type_e_constant_expr_expected);
                                 end;
-                              paras[high(paras)-pcount]:=TCallParaNode(ptmp).left.getcopy;
+                              paras[high(paras)-pcount]:=TCallParaNode(ptmp).left.GetCopy;
                               inc(pcount);
                             end;
                           ptmp:=TCallParaNode(ptmp).right;
@@ -536,7 +536,7 @@ implementation
                         to the property which is defined next. }
                       if not Assigned(rtti_attrs_def) then
                         rtti_attrs_def:=TRTTIAttributeList.create;
-                      rtti_attrs_def.addattribute(typesym,TCallNode(pcalln).procdefinition,pcalln,paras);
+                      rtti_attrs_def.AddAttribute(TypeSym,TCallNode(pcalln).procdefinition,pcalln,paras);
                     end
                   else
                     begin
@@ -570,10 +570,10 @@ implementation
       end;
 
 
-    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;genericdef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;GenericDef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
       var
         wasforward : boolean;
-        objecttype : TObjectTyp;
+        ObjectType : TObjectTyp;
         gendef : TStoredDef;
       begin
         newtype:=nil;
@@ -585,43 +585,43 @@ implementation
             (CurrentScanner.token=_OBJCPROTOCOL) or
             (CurrentScanner.token=_OBJCCATEGORY)) and
            (Assigned(TTypeSym(sym).typedef)) and
-           is_implicit_pointer_object_type(TTypeSym(sym).typedef) and
-           (oo_is_forward in TObjectDef(TTypeSym(sym).typedef).objectoptions) then
+           Is_Implicit_Pointer_Object_Type(TTypeSym(sym).typedef) and
+           (oo_is_forward in TObjectDef(TTypeSym(sym).typedef).ObjectOptions) then
          begin
            wasforward:=true;
-           objecttype:=odt_none;
+           ObjectType:=odt_none;
            case CurrentScanner.token of
              _CLASS :
-               objecttype:=default_class_type;
+               ObjectType:=default_class_type;
              _INTERFACE :
                case CurrentSettings.InterfaceType of
                  it_interfacecom:
-                   objecttype:=odt_interfacecom;
+                   ObjectType:=odt_interfacecom;
                  it_interfacecorba:
-                   objecttype:=odt_interfacecorba;
+                   ObjectType:=odt_interfacecorba;
 
                end;
              _DISPINTERFACE :
-               objecttype:=odt_dispinterface;
+               ObjectType:=odt_dispinterface;
              _OBJCCLASS,
              _OBJCCATEGORY :
-               objecttype:=odt_objcclass;
+               ObjectType:=odt_objcclass;
              _OBJCPROTOCOL :
-               objecttype:=odt_objcprotocol;
+               ObjectType:=odt_objcprotocol;
              else
                InternalError(200811072);
            end;
            consume(CurrentScanner.token);
-           if Assigned(genericdef) then
-             gendef:=TStoredDef(genericdef)
+           if Assigned(GenericDef) then
+             gendef:=TStoredDef(GenericDef)
            else
              { determine the generic def in case we are in a nested type
                of a specialization }
              gendef:=determine_generic_def(gentypename);
            { we can ignore the result, the definition is modified }
-           object_dec(objecttype,genorgtypename,newtype,gendef,generictypelist,TObjectDef(TTypeSym(sym).typedef),ht_none);
+           object_dec(ObjectType,genorgtypename,newtype,gendef,generictypelist,TObjectDef(TTypeSym(sym).typedef),ht_none);
            if wasforward and
-             (TObjectDef(TTypeSym(sym).typedef).objecttype<>objecttype) then
+             (TObjectDef(TTypeSym(sym).typedef).ObjectType<>ObjectType) then
              Message1(type_e_forward_interface_type_does_not_match,TObjectDef(TTypeSym(sym).typedef).GetTypeName);
            newtype:=TTypeSym(sym);
            result:=newtype.typedef;
@@ -629,7 +629,7 @@ implementation
         else
           begin
             message1(parser_h_type_redef,genorgtypename);
-            result:=generrordef;
+            result:=GenErrorDef;
           end;
       end;
 
@@ -652,49 +652,49 @@ implementation
         if TDef(def).typ<>procdef then
           exit;
         pd:=TProcDef(def);
-        if not(po_msgstr in pd.procoptions) then
+        if not(po_msgstr in pd.ProcOptions) then
           InternalError(2019082401);
-        firstcamelend:=length(pd.messageinf.str^);
-        for i:=1 to length(pd.messageinf.str^) do
-          if pd.messageinf.str^[i] in ['A'..'Z'] then
+        firstcamelend:=length(pd.MessageInf.str^);
+        for i:=1 to length(pd.MessageInf.str^) do
+          if pd.MessageInf.str^[i] in ['A'..'Z'] then
             begin
               firstcamelend:=pred(i);
               break;
             end;
-        case copy(pd.messageinf.str^,1,firstcamelend) of
+        case copy(pd.MessageInf.str^,1,firstcamelend) of
           'alloc',
           'new':
-             inferresult:=po_classmethod in pd.procoptions;
+             inferresult:=po_classmethod in pd.ProcOptions;
           'autorelease',
           'init',
           'retain',
           'self':
-             inferresult:=not(po_classmethod in pd.procoptions);
+             inferresult:=not(po_classmethod in pd.ProcOptions);
           else
             inferresult:=false;
         end;
         if inferresult and
-           def_is_related(TDef(pd.procsym.owner.defowner),pd.returndef) then
-          include(pd.procoptions,po_objc_related_result_type);
+           def_is_related(TDef(pd.ProcSym.owner.DefOwner),pd.ReturnDef) then
+          include(pd.ProcOptions,po_objc_related_result_type);
       end;
 
     procedure types_dec(in_structure: boolean;out had_generic:boolean;var rtti_attrs_def: TRTTIAttributeList);
 
       procedure finalize_class_external_status(od: TObjectDef);
         begin
-          if  [oo_is_external,oo_is_forward] <= od.objectoptions then
+          if  [oo_is_external,oo_is_forward] <= od.ObjectOptions then
             begin
               { formal definition: x = objcclass external; }
-              exclude(od.objectoptions,oo_is_forward);
-              include(od.objectoptions,oo_is_formal);
+              exclude(od.ObjectOptions,oo_is_forward);
+              include(od.ObjectOptions,oo_is_formal);
             end;
         end;
 
       var
-         typename,orgtypename,
+         TypeName,orgtypename,
          gentypename,genorgtypename : TIDString;
          newtype  : TTypeSym;
-         dummysym,
+         DummySym,
          sym      : TSym;
          hdef,
          hdef2    : TDef;
@@ -720,8 +720,8 @@ implementation
          old_block_type:=Block_Type;
          { save unit container of forward declarations -
            we can be inside nested class type block }
-         old_checkforwarddefs:=CurrentModule.checkforwarddefs;
-         CurrentModule.checkforwarddefs:=TFPObjectList.Create(false);
+         old_checkforwarddefs:=CurrentModule.CheckForwardDefs;
+         CurrentModule.CheckForwardDefs:=TFPObjectList.Create(false);
          Block_Type:=bt_type;
          hdef:=nil;
          first:=true;
@@ -744,7 +744,7 @@ implementation
              had_generic:=not(m_delphi in CurrentSettings.ModeSwitches) and try_to_consume(_GENERIC);
            isgeneric:=had_generic;
 
-           typename:=CurrentScanner.pattern;
+           TypeName:=CurrentScanner.pattern;
            orgtypename:=CurrentScanner.orgpattern;
            consume(_ID);
 
@@ -763,12 +763,12 @@ implementation
                consume(_RSHARPBRACKET);
 
                str(generictypelist.Count,s);
-               gentypename:=typename+'$'+s;
+               gentypename:=TypeName+'$'+s;
                genorgtypename:=orgtypename+'$'+s;
              end
            else
              begin
-               gentypename:=typename;
+               gentypename:=TypeName;
                genorgtypename:=orgtypename;
              end;
 
@@ -798,12 +798,12 @@ implementation
            { found a symbol with this name? }
            if Assigned(sym) then
             begin
-              if (sym.typ=typesym) and
+              if (sym.typ=TypeSym) and
                  { this should not be a symbol that was created by a generic
                    that was declared earlier }
                  not (
                    (TTypeSym(sym).typedef.typ=undefineddef) and
-                   (sp_generic_dummy in sym.symoptions)
+                   (sp_generic_dummy in sym.SymOptions)
                  ) then
                begin
                  hdef:=parse_forward_declaration(sym,gentypename,genorgtypename,nil,generictypelist,newtype);
@@ -818,7 +818,7 @@ implementation
                   for i:=0 to generictypelist.count-1 do
                     begin
                        TStoredSym(generictypelist[i]).RegisterSym;
-                       if TStoredSym(generictypelist[i]).typ=typesym then
+                       if TStoredSym(generictypelist[i]).typ=TypeSym then
                          TStoredDef(TTypeSym(generictypelist[i]).typedef).RegisterDef;
                     end;
                 end;
@@ -826,7 +826,7 @@ implementation
               { insert the new type first with an errordef, so that
                 referencing the type before it's really set it
                 will give an error (PFV) }
-              hdef:=generrordef;
+              hdef:=GenErrorDef;
               gendef:=nil;
               storetokenpos:=CurrentTokenPos;
               if isgeneric then
@@ -835,16 +835,16 @@ implementation
                     already exists and if not we need to insert a symbol with
                     the non-generic name (available in (org)typename) that is a
                     undefineddef, so that inline specializations can be used }
-                  sym:=TSym(SymTableStack.top.Find(typename));
+                  sym:=TSym(SymTableStack.top.Find(TypeName));
                   if not Assigned(sym) then
                     begin
                       sym:=CTypeSym.create(orgtypename,CUndefinedDef.create(true));
-                      Include(sym.symoptions,sp_generic_dummy);
-                      TTypeSym(sym).typedef.typesym:=sym;
-                      sym.visibility:=SymTableStack.top.currentvisibility;
+                      Include(sym.SymOptions,sp_generic_dummy);
+                      TTypeSym(sym).typedef.TypeSym:=sym;
+                      sym.visibility:=SymTableStack.top.CurrentVisibility;
                       { add as dummy symbol before adding it to the symtable stack }
-                      add_generic_dummysym(sym,typename);
-                      SymTableStack.top.insertsym(sym);
+                      add_generic_dummysym(sym,TypeName);
+                      SymTableStack.top.InsertSym(sym);
                       TTypeSym(sym).typedef.owner:=sym.owner;
                     end
                   else
@@ -855,15 +855,15 @@ implementation
                       begin
                         { we need to find this symbol even if it's a variable or
                           something else when doing an inline specialization }
-                        Include(sym.symoptions,sp_generic_dummy);
+                        Include(sym.SymOptions,sp_generic_dummy);
                         add_generic_dummysym(sym,'');
                       end;
                 end
               else
                 begin
-                  if Assigned(sym) and (sym.typ=typesym) and
+                  if Assigned(sym) and (sym.typ=TypeSym) and
                       (TTypeSym(sym).typedef.typ=undefineddef) and
-                      (sp_generic_dummy in sym.symoptions) then
+                      (sp_generic_dummy in sym.SymOptions) then
                     begin
                       { this is a symbol that was added by an earlier generic
                         declaration, reuse it }
@@ -882,8 +882,8 @@ implementation
               if not Assigned(newtype) then
                 begin
                   newtype:=CTypeSym.create(genorgtypename,hdef);
-                  newtype.visibility:=SymTableStack.top.currentvisibility;
-                  SymTableStack.top.insertsym(newtype);
+                  newtype.visibility:=SymTableStack.top.CurrentVisibility;
+                  SymTableStack.top.InsertSym(newtype);
                 end;
               CurrentTokenPos:=defpos;
               CurrentTokenPos:=storetokenpos;
@@ -892,30 +892,30 @@ implementation
               { update the definition of the type }
               if Assigned(hdef) then
                 begin
-                  if Assigned(hdef.typesym) then
+                  if Assigned(hdef.TypeSym) then
                     begin
                       istyperenaming:=true;
-                      include(newtype.symoptions,sp_explicitrename);
+                      include(newtype.SymOptions,sp_explicitrename);
                     end;
                   if isunique then
                     begin
-                      if is_objc_class_or_protocol(hdef) then
+                      if Is_ObjC_Class_Or_Protocol(hdef) then
                         Message(parser_e_unique_unsupported);
 
-                      if is_object(hdef) or
-                         is_class_or_interface_or_dispinterface(hdef) then
+                      if Is_Object(hdef) or
+                         Is_Class_Or_Interface_Or_DispInterface(hdef) then
                         begin
                           { just create a copy that is a child of the original class class type; this is
                             Delphi-compatible }
-                          hdef2:=TStoredDef(hdef).getcopy;
-                          TObjectDef(hdef2).childof:=TObjectDef(hdef);
-                          TStoredDef(hdef2).orgdef:=TStoredDef(hdef);
+                          hdef2:=TStoredDef(hdef).GetCopy;
+                          TObjectDef(hdef2).ChildOf:=TObjectDef(hdef);
+                          TStoredDef(hdef2).OrgDef:=TStoredDef(hdef);
                           hdef:=hdef2;
                         end
                       else
                         begin
-                          hdef2:=TStoredDef(hdef).getcopy;
-                          TStoredDef(hdef2).orgdef:=TStoredDef(hdef);
+                          hdef2:=TStoredDef(hdef).GetCopy;
+                          TStoredDef(hdef2).OrgDef:=TStoredDef(hdef);
                           hdef:=hdef2;
                           { check if it is an ansistring(codepage) declaration }
                           if is_ansistring(hdef) and try_to_consume(_LKLAMMER) then
@@ -940,20 +940,20 @@ implementation
                               p := nil;
                             end;
                           if (hdef.typ in [pointerdef,classrefdef]) and
-                             (TAbstractPointerDef(hdef).pointeddef.typ=forwarddef) then
-                            CurrentModule.checkforwarddefs.add(hdef);
+                             (TAbstractPointerDef(hdef).PointedDef.typ=ForwardDef) then
+                            CurrentModule.CheckForwardDefs.add(hdef);
                         end;
 
-                      include(hdef.defoptions,df_unique);
+                      include(hdef.DefOptions,df_unique);
 
                       { update object's real name for better error messages }
                       if hdef is TAbstractRecordDef then
-                        TAbstractRecordDef(hdef).setobjrealname(newtype.RealName);
+                        TAbstractRecordDef(hdef).SetObjRealName(newtype.RealName);
                     end;
-                  if not Assigned(hdef.typesym) then
+                  if not Assigned(hdef.TypeSym) then
                     begin
-                      hdef.typesym:=newtype;
-                      if sp_generic_dummy in newtype.symoptions then
+                      hdef.TypeSym:=newtype;
+                      if sp_generic_dummy in newtype.SymOptions then
                         add_generic_dummysym(newtype,'');
                     end;
                 end;
@@ -975,7 +975,7 @@ implementation
               if (CurrentScanner.replay_stack_depth=0) and
                   (
                     (hdef.typ<>procvardef) or
-                    not (po_is_function_ref in TAbstractProcDef(hdef).procoptions)
+                    not (po_is_function_ref in TAbstractProcDef(hdef).ProcOptions)
                   ) then
                 hdef.RegisterDef;
               { KAZ: handle TGUID declaration in system unit }
@@ -983,16 +983,16 @@ implementation
                  Assigned(hdef) and
                  (hdef.typ=recorddef) then
                 begin
-                  if not Assigned(rec_tguid) and
+                  if not Assigned(Rec_TGUID) and
                      (gentypename='TGUID') and
                      (hdef.size=16) then
-                    rec_tguid:=TRecordDef(hdef)
-                  else if not Assigned(rec_jmp_buf) and
+                    Rec_TGUID:=TRecordDef(hdef)
+                  else if not Assigned(Rec_Jmp_Buf) and
                      (gentypename='JMP_BUF') then
-                    rec_jmp_buf:=TRecordDef(hdef)
-                  else if not Assigned(rec_exceptaddr) and
+                    Rec_Jmp_Buf:=TRecordDef(hdef)
+                  else if not Assigned(Rec_ExceptAddr) and
                      (gentypename='TEXCEPTADDR') then
-                    rec_exceptaddr:=TRecordDef(hdef);
+                    Rec_ExceptAddr:=TRecordDef(hdef);
                 end;
             end;
            if Assigned(hdef) then
@@ -1000,7 +1000,7 @@ implementation
               case hdef.typ of
                 pointerdef :
                   begin
-                    try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                    try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                     consume(_SEMICOLON);
 {$ifdef x86}
 
@@ -1039,29 +1039,29 @@ implementation
                     { in case of type renaming, don't parse proc directives }
                     if istyperenaming then
                       begin
-                        try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                        try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                         consume(_SEMICOLON);
                       end
                     else
                      begin
                        if not check_proc_directive(true) then
                          begin
-                           try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                           try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                            consume(_SEMICOLON);
                          end;
                        parse_proctype_directives(TProcVarDef(hdef));
-                       if po_is_function_ref in TProcVarDef(hdef).procoptions then
+                       if po_is_function_ref in TProcVarDef(hdef).ProcOptions then
                          begin
                            if not (m_function_references in CurrentSettings.ModeSwitches) and
-                               not (po_is_block in TProcVarDef(hdef).procoptions) then
+                               not (po_is_block in TProcVarDef(hdef).ProcOptions) then
                              messagepos(storetokenpos,sym_e_error_in_type_def)
                            else
                              begin
                                if setdummysym then
-                                 dummysym:=sym
+                                 DummySym:=sym
                                else
-                                 dummysym:=nil;
-                               adjust_funcref(hdef,newtype,dummysym);
+                                 DummySym:=nil;
+                               adjust_funcref(hdef,newtype,DummySym);
                              end;
                            if CurrentScanner.replay_stack_depth=0 then
                              hdef.RegisterDef;
@@ -1071,13 +1071,13 @@ implementation
                        else
                          flags:=hcc_default_actions_intf_struct;
                        handle_calling_convention(hdef,flags);
-                       if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).procoptions) then
+                       if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).ProcOptions) then
                          begin
-                           if (po_is_block in TProcVarDef(hdef).procoptions) and
-                              not (TProcVarDef(hdef).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
+                           if (po_is_block in TProcVarDef(hdef).ProcOptions) and
+                              not (TProcVarDef(hdef).ProcCallOption in [pocall_cdecl,pocall_mwpascal]) then
                              message(type_e_cblock_callconv);
                          end;
-                       if try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg) then
+                       if try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg) then
                          consume(_SEMICOLON);
                      end;
                   end;
@@ -1087,29 +1087,29 @@ implementation
                       begin
                         if not check_proc_directive(true) then
                           begin
-                            try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                            try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                             consume(_SEMICOLON);
                           end;
                         parse_proctype_directives(hdef);
-                        if try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg) then
+                        if try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg) then
                           consume(_SEMICOLON);
                       end
                     else
                       begin
-                        try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                        try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                         consume(_SEMICOLON);
                       end;
 
                     { change a forward and external class declaration into
                       formal external definition, so the compiler does not
                       expect an real definition later }
-                    if is_objc_class_or_protocol(hdef) then
+                    if Is_ObjC_Class_Or_Protocol(hdef) then
                       finalize_class_external_status(TObjectDef(hdef));
 
                     { Build VMT indexes, skip for type renaming and forward classes }
                     if not istyperenaming and
-                       not(oo_is_forward in TObjectDef(hdef).objectoptions) then
-                      if not (oo_inherits_not_specialized in TObjectDef(hdef).objectoptions) then
+                       not(oo_is_forward in TObjectDef(hdef).ObjectOptions) then
+                      if not (oo_inherits_not_specialized in TObjectDef(hdef).ObjectOptions) then
                         build_vmt(TObjectDef(hdef))
                       else
                       { update the procdevs to add hidden self param }
@@ -1123,25 +1123,25 @@ implementation
                       bogus notes about them being unused)
                     }
                     { watch out for crashes in case of errors }
-                    if is_objc_class_or_protocol(hdef) and
-                       (not is_objccategory(hdef) or
-                        Assigned(TObjectDef(hdef).childof)) then
+                    if Is_ObjC_Class_Or_Protocol(hdef) and
+                       (not Is_ObjCCategory(hdef) or
+                        Assigned(TObjectDef(hdef).ChildOf)) then
                       begin
-                        TObjectDef(hdef).finish_objc_data;
+                        TObjectDef(hdef).Finish_ObjC_Data;
                         TObjectDef(hdef).SymTable.DefList.ForEachCall(@pd_set_objc_related_result,nil);
                       end;
 
-                    if is_cppclass(hdef) then
-                      TObjectDef(hdef).finish_cpp_data;
+                    if Is_CPPClass(hdef) then
+                      TObjectDef(hdef).Finish_CPP_Data;
                   end;
                 recorddef :
                   begin
-                    try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                    try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                     consume(_SEMICOLON);
                   end;
                 else
                   begin
-                    try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
+                    try_consume_hintdirective(newtype.SymOptions,newtype.DeprecatedMsg);
                     consume(_SEMICOLON);
                   end;
               end;
@@ -1151,15 +1151,15 @@ implementation
               if not istyperenaming or isunique then
                 TRTTIAttributeList.bind(rtti_attrs_def,TStoredDef(hdef).RTTIAttributeList);
 
-              if df_generic in hdef.defoptions then
+              if df_generic in hdef.DefOptions then
                 { flag parent symtables that they now contain a generic }
-                hdef.owner.includeoption(sto_has_generic);
+                hdef.owner.IncludeOption(sto_has_generic);
             end;
 
            if isgeneric and (not(hdef.typ in [objectdef,recorddef,arraydef,procvardef])
-               or is_objectpascal_helper(hdef)) then
+               or Is_ObjectPascal_Helper(hdef)) then
              begin
-               newtype.typedef:=generrordef;
+               newtype.typedef:=GenErrorDef;
                message(parser_e_cant_create_generics_of_this_type);
              end;
 
@@ -1167,14 +1167,14 @@ implementation
            if Assigned(generictypelist) then
              begin
                CurrentScanner.stoprecordtokens;
-               TStoredDef(hdef).generictokenbuf:=localgenerictokenbuf;
+               TStoredDef(hdef).GenericTokenBuf:=localgenerictokenbuf;
                { Generic is never a type renaming }
-               hdef.typesym:=newtype;
+               hdef.TypeSym:=newtype;
                { reusing a forward declared type also reuses the type parameters,
                  so free them if they haven't been used }
                for i:=0 to generictypelist.count-1 do
                  begin
-                   if (TStoredSym(generictypelist[i]).typ=typesym) and
+                   if (TStoredSym(generictypelist[i]).typ=TypeSym) and
                        not TTypeSym(generictypelist[i]).typedef.IsRegistered then
                      FreeAndNil(TTypeSym(generictypelist[i]).typedef);
                    if not TStoredSym(generictypelist[i]).IsRegistered then
@@ -1196,7 +1196,7 @@ implementation
              had_generic:=false;
            first:=false;
            if Assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
-             Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).typesym.prettyname);
+             Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).TypeSym.prettyname);
 
  {$ifdef DEBUG_NODE_XML}
           if Assigned(hdef) then
@@ -1211,8 +1211,8 @@ implementation
          { resolve type block forward declarations and restore a unit
            container for them }
          resolve_forward_types;
-         CurrentModule.checkforwarddefs.free;
-         CurrentModule.checkforwarddefs:=old_checkforwarddefs;
+         CurrentModule.CheckForwardDefs.free;
+         CurrentModule.CheckForwardDefs:=old_checkforwarddefs;
          Block_Type:=old_block_type;
       end;
 
@@ -1245,7 +1245,7 @@ implementation
          old_block_type: TBlockType;
       begin
          consume(_PROPERTY);
-         if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
+         if not(SymTableStack.top.SymTableType in [staticsymtable,GlobalSymTable]) then
            message(parser_e_property_only_sgr);
          old_block_type:=Block_Type;
          Block_Type:=bt_const;
@@ -1262,7 +1262,7 @@ implementation
     { the top symbol table of symtablestack                }
       begin
         consume(_THREADVAR);
-        if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
+        if not(SymTableStack.top.SymTableType in [staticsymtable,GlobalSymTable]) then
           message(parser_e_threadvars_only_sg);
         if f_threading in Features then
           read_var_decls([vd_threadvar,vd_check_generic],had_generic)
@@ -1279,7 +1279,7 @@ implementation
          orgname : TIDString;
          p : TNode;
          dummysymoptions : TSymOptions;
-         deprecatedmsg : PShortString;
+         DeprecatedMsg : PShortString;
          storetokenpos,filepos : TFilePosInfo;
          old_block_type : TBlockType;
          sp : pchar;
@@ -1290,7 +1290,7 @@ implementation
 
       begin
          consume(_RESOURCESTRING);
-         if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
+         if not(SymTableStack.top.SymTableType in [staticsymtable,GlobalSymTable]) then
            message(parser_e_resourcestring_only_sg);
          first:=true;
          had_generic:=false;
@@ -1319,14 +1319,14 @@ implementation
                                   GetMem(sp,2);
                                   sp[0]:=chr(TOrdConstNode(p).value.svalue);
                                   sp[1]:=#0;
-                                  sym:=CConstSym.create_string(orgname,constresourcestring,sp,1,nil);
+                                  sym:=CConstSym.Create_String(orgname,constresourcestring,sp,1,nil);
                                   end
                                 else
                                   begin
                                   InitWideString(pw);
                                   SetLengthWideString(pw,1);
                                   pw.data[0]:=TOrdConstNode(p).value.svalue;
-                                  sym:=CConstSym.create_wstring(orgname,constwresourcestring,pw);
+                                  sym:=CConstSym.Create_WString(orgname,constwresourcestring,pw);
                                   end;
                              end
                            else
@@ -1338,21 +1338,21 @@ implementation
                              if not is_systemunit_unicode  then
                                begin
                                if cst_type in [cst_widestring,cst_unicodestring] then
-                                 changestringtype(getansistringdef);
+                                 changestringtype(GetAnsiStringDef);
                                GetMem(sp,len+1);
                                sp[len]:=#0;
                                if len>0 then
                                  move(valueas[0],sp^,len);
-                               sym:=CConstSym.create_string(orgname,constresourcestring,sp,len,nil);
+                               sym:=CConstSym.Create_String(orgname,constresourcestring,sp,len,nil);
                                end
                              else
                                begin
                                // For unicode rtl, resourcestrings are unicodestrings
                                if cst_type in [cst_conststring,cst_longstring, cst_shortstring,cst_ansistring] then
-                                 changestringtype(cunicodestringtype);
+                                 changestringtype(CUnicodeStringType);
                                InitWideString(pw);
-                               CopyWideString(valuews,pw);
-                               sym:=CConstSym.create_wstring(orgname,constwresourcestring,pw);
+                               CopyWideString(ValueWS,pw);
+                               sym:=CConstSym.Create_WString(orgname,constwresourcestring,pw);
                                end;
                           end;
                       else
@@ -1361,16 +1361,16 @@ implementation
                    CurrentTokenPos:=storetokenpos;
                    { Support hint directives }
                    dummysymoptions:=[];
-                   deprecatedmsg:=nil;
-                   try_consume_hintdirective(dummysymoptions,deprecatedmsg);
+                   DeprecatedMsg:=nil;
+                   try_consume_hintdirective(dummysymoptions,DeprecatedMsg);
                    if Assigned(sym) then
                      begin
-                       sym.symoptions:=sym.symoptions+dummysymoptions;
-                       sym.deprecatedmsg:=deprecatedmsg;
-                       SymTableStack.top.insertsym(sym);
+                       sym.SymOptions:=sym.SymOptions+dummysymoptions;
+                       sym.DeprecatedMsg:=DeprecatedMsg;
+                       SymTableStack.top.InsertSym(sym);
                      end
                    else
-                     StringDispose(deprecatedmsg);
+                     StringDispose(DeprecatedMsg);
                    consume(_SEMICOLON);
                    p.free;
                    p := nil;

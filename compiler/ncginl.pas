@@ -300,9 +300,9 @@ implementation
              with size OS_SINT/ossinttype can hold the length without
              overflowing (this code returns an ossinttype value) }
            if is_widestring(left.resultdef) then
-             lendef:=u32inttype
+             lendef:=U32IntType
            else
-             lendef:=sizesinttype;
+             lendef:=SizeSIntType;
            { volatility of the ansistring/widestring refers to the volatility of the
              string pointer, not of the string data }
            hlcg.reference_reset_base(href,left.resultdef,left.location.register,-lendef.size,ctempposinvalid,lendef.alignment,[]);
@@ -345,12 +345,12 @@ implementation
         hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,left.resultdef,OC_EQ,0,left.location.register,nillab);
         { volatility of the dyn. array refers to the volatility of the
           string pointer, not of the string data }
-        hlcg.reference_reset_base(href,left.resultdef,left.location.register,-sizesinttype.size,ctempposinvalid,ossinttype.alignment,[]);
+        hlcg.reference_reset_base(href,left.resultdef,left.location.register,-SizeSIntType.size,ctempposinvalid,OSSIntType.alignment,[]);
         { if the string pointer is nil, the length is 0 -> reuse the register
           that originally held the string pointer for the length, so that we
           can keep the original nil/0 as length in that case }
         hregister:=cg.makeregsize(CurrentAsmData.CurrAsmList,left.location.register,def_cgsize(resultdef));
-        hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,sizesinttype,resultdef,href,hregister);
+        hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,SizeSIntType,resultdef,href,hregister);
         hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,donelab);
 
         cg.a_label(CurrentAsmData.CurrAsmList,nillab);
@@ -435,10 +435,10 @@ implementation
                 addvalue:=1;
             pointerdef :
                begin
-                 if is_void(TPointerDef(TCallParaNode(left).left.resultdef).pointeddef) then
+                 if is_void(TPointerDef(TCallParaNode(left).left.resultdef).PointedDef) then
                    addvalue:=1
                  else
-                   addvalue:=TPointerDef(TCallParaNode(left).left.resultdef).pointeddef.size;
+                   addvalue:=TPointerDef(TCallParaNode(left).left.resultdef).PointedDef.size;
                end;
            else
                InternalError(2020100814);
@@ -672,14 +672,14 @@ implementation
           if elepara.location.loc=LOC_CONSTANT then
             begin
               hlcg.a_bit_set_const_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
-                setpara.resultdef,elepara.location.value-TSetDef(setpara.resultdef).setbase,setpara.location);
+                setpara.resultdef,elepara.location.value-TSetDef(setpara.resultdef).SetBase,setpara.location);
             end
           else
             begin
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,elepara.location,elepara.resultdef,u32inttype,true);
-              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,u32inttype,elepara.location,TSetDef(setpara.resultdef).setbase);
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,elepara.location,elepara.resultdef,U32IntType,true);
+              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,U32IntType,elepara.location,TSetDef(setpara.resultdef).SetBase);
               hlcg.a_bit_set_reg_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
-                u32inttype,setpara.resultdef,elepara.location.register,setpara.location);
+                U32IntType,setpara.resultdef,elepara.location.register,setpara.location);
             end;
         end;
 
@@ -851,7 +851,7 @@ implementation
             use_frame_pointer:=true
           else
             begin
-              hlcg.location_force_reg(CurrentAsmData.currasmlist,left.location,left.resultdef,voidpointertype,false);
+              hlcg.location_force_reg(CurrentAsmData.currasmlist,left.location,left.resultdef,VoidPointerType,false);
               frame_reg:=left.location.register;
               use_frame_pointer:=false;
             end
@@ -963,9 +963,9 @@ implementation
                  if def_cgsize(resultdef) in [OS_64,OS_S64] then
                    begin
                      if not(op2.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
-                       not(equal_defs(op2.resultdef,alusinttype)) then
+                       not(equal_defs(op2.resultdef,ALUSIntType)) then
                        hlcg.location_force_reg(CurrentAsmData.CurrAsmList,op2.location,
-                                               op2.resultdef,alusinttype,true);
+                                               op2.resultdef,ALUSIntType,true);
                      cg64.a_op64_reg_reg_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),
                                              joinreg64(op2.location.register,NR_NO),op1.location.register64,
                                              location.register64);

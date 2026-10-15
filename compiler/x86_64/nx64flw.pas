@@ -110,10 +110,10 @@ procedure TX64OnNode.pass_generate_code;
 
     if Assigned(exceptvarsym) then
       begin
-        exceptvarsym.localloc.loc:=LOC_REFERENCE;
-        exceptvarsym.localloc.size:=OS_ADDR;
-        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),voidpointertype,exceptvarsym.localloc.reference);
-        cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.localloc.reference);
+        exceptvarsym.LocAlloc.loc:=LOC_REFERENCE;
+        exceptvarsym.LocAlloc.size:=OS_ADDR;
+        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),VoidPointerType,exceptvarsym.LocAlloc.reference);
+        cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.LocAlloc.reference);
       end;
     cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
@@ -123,8 +123,8 @@ procedure TX64OnNode.pass_generate_code;
     { deallocate exception symbol }
     if Assigned(exceptvarsym) then
       begin
-        tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.localloc.reference);
-        exceptvarsym.localloc.loc:=LOC_INVALID;
+        tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.reference);
+        exceptvarsym.LocAlloc.loc:=LOC_INVALID;
       end;
     cg.g_call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
     cg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
@@ -164,9 +164,9 @@ constructor TX64TryFinallyNode.create(l, r: TNode);
         behavior causes compilation errors because real nested procedures
         aren't allowed for generics. Not creating them doesn't harm because
         generic node tree is discarded without generating code. }
-       not (df_generic in CurrentProcInfo.procdef.defoptions) then
+       not (df_generic in CurrentProcInfo.procdef.DefOptions) then
       begin
-        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
         { the init/final code is messing with asm nodes, so inform the compiler about this }
         include(finalizepi.flags,pi_has_assembler_block);
         { Regvar optimization for symbols is suppressed when using exceptions, but
@@ -181,10 +181,10 @@ constructor TX64TryFinallyNode.create_implicit(l, r: TNode);
     inherited create_implicit(l, r);
     if (TargetInfo.system=system_x86_64_win64) then
       begin
-        if df_generic in CurrentProcInfo.procdef.defoptions then
+        if df_generic in CurrentProcInfo.procdef.DefOptions then
           InternalError(2013012501);
 
-        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+        finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
         include(finalizepi.flags,pi_do_call);
         { the init/final code is messing with asm nodes, so inform the compiler about this }
         include(finalizepi.flags,pi_has_assembler_block);
@@ -202,7 +202,7 @@ function TX64TryFinallyNode.dogetcopy: TNode;
       begin
         n.finalizepi:=TCGProcInfo(CProcInfo.create(finalizepi.parent));
         n.finalizepi.force_nested;
-        n.finalizepi.procdef:=create_outline_procdef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype);
+        n.finalizepi.procdef:=create_outline_procdef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType);
         n.finalizepi.entrypos:=finalizepi.entrypos;
         n.finalizepi.entryswitches:=finalizepi.entryswitches;
         n.finalizepi.exitpos:=finalizepi.exitpos;
@@ -211,8 +211,8 @@ function TX64TryFinallyNode.dogetcopy: TNode;
         { node already transformed? }
         if Assigned(finalizepi.code) then
           begin
-            n.finalizepi.code:=finalizepi.code.getcopy;
-            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
+            n.finalizepi.code:=finalizepi.code.GetCopy;
+            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.ProcSym),nil,nil,[],nil);
             FirstPass(n.right);
           end;
       end;
@@ -232,7 +232,7 @@ function TX64TryFinallyNode.simplify(forinline: boolean): TNode;
           begin
             finalizepi.code:=right;
             foreachnodestatic(right,@copy_parasize,finalizepi);
-            right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
+            right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.ProcSym),nil,nil,[],nil);
             FirstPass(right);
             { For implicit frames, no actual code is available at this time,
               it is added later in assembler form. So store the nested procinfo
@@ -281,7 +281,7 @@ procedure TX64TryFinallyNode.pass_generate_code;
       would be reraising it. Doing so is extremely inefficient with SEH
       (in contrast with setjmp/longjmp exception handling) }
     catch_frame:=implicitframe and
-      (CurrentProcInfo.procdef.proccalloption=pocall_safecall);
+      (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall);
 
     oldflowcontrol:=flowcontrol;
     flowcontrol:=[fc_inflowcontrol];
@@ -340,7 +340,7 @@ procedure TX64TryFinallyNode.pass_generate_code;
           as end of scope and as unwind target. This way it is possible to
           encode everything into a single scope record. }
         cg.a_label(CurrentAsmData.CurrAsmList,endtrylabel);
-        if (CurrentProcInfo.procdef.proccalloption=pocall_safecall) then
+        if (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) then
           begin
             handle_safecall_exception;
             cg.a_jmp_always(CurrentAsmData.CurrAsmList,endfinallylabel);
@@ -375,14 +375,14 @@ procedure TX64TryFinallyNode.pass_generate_code;
       exit;
 
     { normal exit from safecall proc must zero the result register }
-    if implicitframe and (CurrentProcInfo.procdef.proccalloption=pocall_safecall) then
+    if implicitframe and (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) then
       cg.a_load_const_reg(CurrentAsmData.CurrAsmList,OS_INT,0,NR_FUNCTION_RESULT_REG);
 
     cg.a_label(CurrentAsmData.CurrAsmList,endfinallylabel);
 
     { generate the scope record in .xdata }
     TCPUProcInfo(CurrentProcInfo).add_finally_scope(trylabel,endtrylabel,
-      CurrentAsmData.RefAsmSymbol(finalizepi.procdef.mangledname,AT_FUNCTION),catch_frame);
+      CurrentAsmData.RefAsmSymbol(finalizepi.procdef.MangledName,AT_FUNCTION),catch_frame);
 
     if implicitframe then
       CurrentProcInfo.CurrExitLabel:=oldexitlabel;
@@ -498,10 +498,10 @@ procedure TX64TryExceptNode.pass_generate_code;
             if hnode.nodetype<>onn then
               InternalError(2011103101);
             CurrentAsmData.getjumplabel(onlabel);
-            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.vmt_mangledname,AT_DATA,true);
+            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.VMT_MangledName,AT_DATA,true);
             hlist.concat(TAIConst.create_rva_sym(sym));
             hlist.concat(TAIConst.create_rva_sym(onlabel));
-            CurrentModule.add_extern_asmsym(sym);
+            CurrentModule.Add_Extern_AsmSym(sym);
             cg.a_label(CurrentAsmData.CurrAsmList,onlabel);
             SecondPass(hnode);
             inc(onnodecount.value);

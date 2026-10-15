@@ -55,7 +55,7 @@ interface
     function TAArch64RealConstNode.pass_1 : TNode;
       begin
         result:=nil;
-        if IsFloatImmediate(TFloatDef(resultdef).floattype,value_real) then
+        if IsFloatImmediate(TFloatDef(resultdef).FloatType,value_real) then
            expectloc:=LOC_MMREGISTER
          else
            result:=Inherited pass_1;
@@ -66,7 +66,7 @@ interface
       var
         hreg : TRegister;
       begin
-        if IsFloatImmediate(TFloatDef(resultdef).floattype,value_real) then
+        if IsFloatImmediate(TFloatDef(resultdef).FloatType,value_real) then
           begin
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);

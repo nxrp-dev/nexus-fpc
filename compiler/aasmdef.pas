@@ -77,7 +77,7 @@ function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: 
         tcb.free;
         tcb := nil;
         if (_typ=AT_DATA_FORCEINDIRECT) and not (TargetInfo.system in systems_indirect_var_imports) then
-          CurrentModule.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
+          CurrentModule.Add_Public_AsmSym(symind.name,AB_INDIRECT,AT_DATA);
       end;
   end;
 

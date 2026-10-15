@@ -142,7 +142,7 @@ Unit racpugas;
               end;
           end;
         { allow SEH directives only in pure assember routines }
-        if result and not (po_assembler in CurrentProcInfo.procdef.procoptions) then
+        if result and not (po_assembler in CurrentProcInfo.procdef.ProcOptions) then
           begin
             Message(asmr_e_seh_in_pure_asm_only);
             result:=false;
@@ -152,7 +152,7 @@ Unit racpugas;
 
     procedure TAArch64ATTReader.ReadSym(oper: TAArch64Operand; is64bit: boolean);
       var
-         tempstr, mangledname : string;
+         tempstr, MangledName : string;
          typesize,l,k: aint;
       begin
         tempstr:=actasmpattern;
@@ -174,8 +174,8 @@ Unit racpugas;
         { record.field ? }
         if actasmtoken=AS_DOT then
           begin
-            BuildRecordOffsetSize(tempstr,l,k,mangledname,false);
-            if (mangledname<>'') then
+            BuildRecordOffsetSize(tempstr,l,k,MangledName,false);
+            if (MangledName<>'') then
               Message(asmr_e_invalid_reference_syntax);
             inc(oper.opr.ref.offset,l);
           end;
@@ -678,7 +678,7 @@ Unit racpugas;
 
         procedure MaybeRecordOffset;
           var
-            mangledname: string;
+            MangledName: string;
             hasdot  : boolean;
             l,
             toffset,
@@ -687,15 +687,15 @@ Unit racpugas;
             if not(actasmtoken in [AS_DOT,AS_PLUS,AS_MINUS]) then
               exit;
             l:=0;
-            mangledname:='';
+            MangledName:='';
             hasdot:=(actasmtoken=AS_DOT);
             if hasdot then
               begin
                 if expr<>'' then
                   begin
-                    BuildRecordOffsetSize(expr,toffset,tsize,mangledname,false);
+                    BuildRecordOffsetSize(expr,toffset,tsize,MangledName,false);
                     if (oper.opr.typ<>OPR_CONSTANT) and
-                       (mangledname<>'') then
+                       (MangledName<>'') then
                       Message(asmr_e_wrong_sym_type);
                     inc(l,toffset);
                     oper.SetSize(tsize,true);
@@ -716,12 +716,12 @@ Unit racpugas;
               OPR_CONSTANT :
                 inc(oper.opr.val,l);
               OPR_REFERENCE :
-                if (mangledname<>'') then
+                if (MangledName<>'') then
                   begin
                     if (oper.opr.val<>0) then
                       Message(asmr_e_wrong_sym_type);
                     oper.opr.typ:=OPR_SYMBOL;
-                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(mangledname,AT_FUNCTION);
+                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(MangledName,AT_FUNCTION);
                   end
                 else
                   inc(oper.opr.val,l);

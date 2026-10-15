@@ -326,8 +326,8 @@ type
 
     protected
      procedure maybe_emit_tail_padding(def: TDef); virtual;
-     function emit_string_const_common(stringtype: TStringType; len: asizeint; encoding: TStringEncoding; var startlab: TAsmLabel):TAsmLabOfs;
-     function get_dynstring_def_for_type(stringtype: TStringType; winlikewidestring: boolean): TStringDef;
+     function emit_string_const_common(StringType: TStringType; len: asizeint; encoding: TStringEncoding; var startlab: TAsmLabel):TAsmLabOfs;
+     function get_dynstring_def_for_type(StringType: TStringType; winlikewidestring: boolean): TStringDef;
      procedure begin_aggregate_internal(def: TDef; anonymous: boolean); virtual;
      procedure end_aggregate_internal(def: TDef; anonymous: boolean); virtual;
      { when building an anonymous record, we cannot immediately insert the
@@ -539,11 +539,11 @@ implementation
         field: TFieldVarSym;
       begin
         if Assigned(curfield) then
-          result:=curfield.fieldoffset+curfield.vardef.size
+          result:=curfield.FieldOffset+curfield.vardef.size
         else if curindex<>-1 then
           begin
-            field:=TFieldVarSym(TAbstractRecordDef(def).SymTable.symlist[curindex]);
-            result:=field.fieldoffset+field.vardef.size
+            field:=TFieldVarSym(TAbstractRecordDef(def).SymTable.SymList[curindex]);
+            result:=field.FieldOffset+field.vardef.size
           end
         else
           result:=0
@@ -578,7 +578,7 @@ implementation
           one }
         if Assigned(nextfield) then
           begin
-            nextoffset:=nextfield.fieldoffset;
+            nextoffset:=nextfield.FieldOffset;
             currentoffset:=curoffset;
             curfield:=nextfield;
           end
@@ -587,14 +587,14 @@ implementation
             { must set nextfield for unions and objects, as we cannot
               automatically detect the "next" field in that case }
             if ((def.typ=recorddef) and
-                TRecordDef(def).isunion) or
-               is_object(def) then
+                TRecordDef(def).IsUnion) or
+               Is_Object(def) then
               InternalError(2014091202);
             { if we are constructing this record as data gets emitted, add a field
               for this data }
             if anonrecord then
               begin
-                TRecordDef(def).add_field_by_def(fnextfieldname,nextfielddef);
+                TRecordDef(def).Add_Field_By_Def(fnextfieldname,nextfielddef);
                 fnextfieldname:='';
               end
             else if fnextfieldname<>'' then
@@ -604,10 +604,10 @@ implementation
             i:=curindex;
             repeat
               inc(i);
-              sym:=TSym(TAbstractRecordDef(def).SymTable.symlist[i]);
+              sym:=TSym(TAbstractRecordDef(def).SymTable.SymList[i]);
             until is_normal_fieldvarsym(sym);
             curfield:=TFieldVarSym(sym);
-            nextoffset:=curfield.fieldoffset;
+            nextoffset:=curfield.FieldOffset;
             curindex:=i;
           end;
         { need padding? }
@@ -843,7 +843,7 @@ implementation
              InternalError(2014070105);
            lString:=TAIString(TAISimpleTypedConst(fvalues[0]).val);
            len:=lString.len;
-           TAISimpleTypedConst(fvalues[0]).fdef:=CArrayDef.getreusable(cansichartype,len);
+           TAISimpleTypedConst(fvalues[0]).fdef:=CArrayDef.getreusable(CAnsiCharType,len);
          end;
      end;
 
@@ -899,7 +899,7 @@ implementation
        fillbytes:=curagginfo.prepare_next_field(nextfielddef);
        while fillbytes>0 do
          begin
-           do_emit_tai(TAIConst.create_8bit(0),u8inttype);
+           do_emit_tai(TAIConst.create_8bit(0),U8IntType);
            dec(fillbytes);
          end;
      end;
@@ -943,16 +943,16 @@ implementation
 
    procedure TTAITypedConstBuilder.add_link_ordered_symbol(sym: TAsmSymbol; const secname: TSymStr);
      begin
-       CurrentModule.linkorderedsymbols.concat(sym.Name);
+       CurrentModule.LinkOrderedSymbols.concat(sym.Name);
      end;
 
 
    function TTAITypedConstBuilder.aggregate_kind(def: TDef): TTypedConstKind;
      begin
        if (def.typ in [recorddef,filedef,variantdef]) or
-          is_object(def) or
+          Is_Object(def) or
           ((def.typ=procvardef) and
-           not TProcVarDef(def).is_addressonly and
+           not TProcVarDef(def).Is_AddressOnly and
            not is_block(def)) then
          result:=tck_record
        else if ((def.typ=arraydef) and
@@ -1083,7 +1083,7 @@ implementation
            indtcb.free;
            indtcb := nil;
            if not (TargetInfo.system in systems_indirect_var_imports) then
-             CurrentModule.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
+             CurrentModule.Add_Public_AsmSym(symind.name,AB_INDIRECT,AT_DATA);
          end;
      end;
 
@@ -1116,7 +1116,7 @@ implementation
              InternalError(2015110801);
            asmsym:=get_vectorized_dead_strip_section_symbol_start(basename,st,dsopts);
            if not customsecname then
-             secname:=make_mangledname(basename,st,'1_START');
+             secname:=Make_MangledName(basename,st,'1_START');
          end
        else if tcalo_vectorized_dead_strip_end in options then
          begin
@@ -1125,7 +1125,7 @@ implementation
              InternalError(2015110802);
            asmsym:=get_vectorized_dead_strip_section_symbol_end(basename,st,dsopts);
            if not customsecname then
-             secname:=make_mangledname(basename,st,'3_END');
+             secname:=Make_MangledName(basename,st,'3_END');
          end
        else if tcalo_vectorized_dead_strip_item in options then
          begin
@@ -1133,11 +1133,11 @@ implementation
              asmtype:=AT_DATA_FORCEINDIRECT
            else
              asmtype:=AT_DATA;
-           asmsym:=CurrentAsmData.DefineAsmSymbol(make_mangledname(basename,st,itemname),AB_GLOBAL,asmtype,def);
+           asmsym:=CurrentAsmData.DefineAsmSymbol(Make_MangledName(basename,st,itemname),AB_GLOBAL,asmtype,def);
            if tcalo_is_public_asm in options then
-             CurrentModule.add_public_asmsym(asmsym);
+             CurrentModule.Add_Public_AsmSym(asmsym);
            if not customsecname then
-             secname:=make_mangledname(basename,st,'2_'+itemname);
+             secname:=Make_MangledName(basename,st,'2_'+itemname);
          end;
        add_link_ordered_symbol(asmsym,secname);
        if is_smartlink_vectorized_dead_strip then
@@ -1227,12 +1227,12 @@ implementation
          2 +
          { reference count }
 {$ifdef cpu64bitaddr}
-         s32inttype.size +
+         S32IntType.size +
 {$else !cpu64bitaddr}
-         sizesinttype.size +
+         SizeSIntType.size +
 {$endif !cpu64bitaddr}
          { length }
-         sizesinttype.size;
+         SizeSIntType.size;
        unicodestring_header_size:=ansistring_header_size;
        case typ of
          st_ansistring:
@@ -1254,9 +1254,9 @@ implementation
      begin
        result:=
          { reference count }
-         ptrsinttype.size +
+         PtrSIntType.size +
          { high value }
-         sizesinttype.size;
+         SizeSIntType.size;
      end;
 
 
@@ -1398,8 +1398,8 @@ implementation
          begin
            { queue_init already adds padding }
            if not queue_is_active and
-               (is_record(info.def) or
-                is_object(info.def)) and
+               (Is_Record(info.def) or
+                Is_Object(info.def)) and
               { may add support for these later }
               not is_packed_record_or_object(info.def) then
              pad_next_field(def);
@@ -1426,61 +1426,61 @@ implementation
          InternalError(2014091002);
        if def<>info.def then
          InternalError(2014091205);
-       if (is_record(def) or
-           is_object(def)) and
+       if (Is_Record(def) or
+           Is_Object(def)) and
           not is_packed_record_or_object(def) then
          begin
            fillbytes:=def.size-info.curoffset;
            while fillbytes>0 do
              begin
-               do_emit_tai(TAIConst.Create_8bit(0),u8inttype);
+               do_emit_tai(TAIConst.Create_8bit(0),U8IntType);
                dec(fillbytes)
              end;
          end;
      end;
 
 
-   function TTAITypedConstBuilder.emit_string_const_common(stringtype: TStringType; len: asizeint; encoding: TStringEncoding; var startlab: TAsmLabel): TAsmLabOfs;
+   function TTAITypedConstBuilder.emit_string_const_common(StringType: TStringType; len: asizeint; encoding: TStringEncoding; var startlab: TAsmLabel): TAsmLabOfs;
      var
        string_symofs: asizeint;
        charptrdef: TDef;
-       elesize: word;
+       EleSize: word;
      begin
        result.lab:=startlab;
        result.ofs:=0;
        { pack the data, so that we don't add unnecessary null bytes after the
          constant string }
-       begin_anonymous_record(get_dynstring_rec_name(stringtype,false,len),1,sizeof(TConstPtrUInt),1);
-       string_symofs:=get_string_symofs(stringtype,false);
+       begin_anonymous_record(get_dynstring_rec_name(StringType,false,len),1,sizeof(TConstPtrUInt),1);
+       string_symofs:=get_string_symofs(StringType,false);
        { encoding }
-       emit_tai(TAIConst.create_16bit(encoding),u16inttype);
+       emit_tai(TAIConst.create_16bit(encoding),U16IntType);
        inc(result.ofs,2);
        { element size }
-       case stringtype of
+       case StringType of
          st_ansistring:
            begin
-             elesize:=1;
-             charptrdef:=charpointertype;
+             EleSize:=1;
+             charptrdef:=CharPointerType;
            end;
          st_unicodestring:
            begin
-             elesize:=2;
-             charptrdef:=widecharpointertype;
+             EleSize:=2;
+             charptrdef:=WideCharPointerType;
            end
          else
            InternalError(2014080401);
        end;
-       emit_tai(TAIConst.create_16bit(elesize),u16inttype);
+       emit_tai(TAIConst.create_16bit(EleSize),U16IntType);
        inc(result.ofs,2);
 {$ifdef cpu64bitaddr}
-       emit_tai(TAIConst.Create_32bit(-1),s32inttype);
-       inc(result.ofs,s32inttype.size);
+       emit_tai(TAIConst.Create_32bit(-1),S32IntType);
+       inc(result.ofs,S32IntType.size);
 {$else !cpu64bitaddr}
-       emit_tai(TAIConst.create_sizeint(-1),sizesinttype);
-       inc(result.ofs,sizesinttype.size);
+       emit_tai(TAIConst.create_sizeint(-1),SizeSIntType);
+       inc(result.ofs,SizeSIntType.size);
 {$endif !cpu64bitaddr}
-       emit_tai(TAIConst.create_sizeint(len),sizesinttype);
-       inc(result.ofs,sizesinttype.size);
+       emit_tai(TAIConst.create_sizeint(len),SizeSIntType);
+       inc(result.ofs,SizeSIntType.size);
        if string_symofs=0 then
          begin
            { results in slightly more efficient code }
@@ -1498,16 +1498,16 @@ implementation
      end;
 
 
-   function TTAITypedConstBuilder.get_dynstring_def_for_type(stringtype: TStringType; winlikewidestring: boolean): TStringDef;
+   function TTAITypedConstBuilder.get_dynstring_def_for_type(StringType: TStringType; winlikewidestring: boolean): TStringDef;
      begin
-       if stringtype=st_ansistring then
-         result:=TStringDef(cansistringtype)
-       else if (stringtype=st_unicodestring) or
-               ((stringtype=st_widestring) and
+       if StringType=st_ansistring then
+         result:=TStringDef(CAnsiStringType)
+       else if (StringType=st_unicodestring) or
+               ((StringType=st_widestring) and
                 not winlikewidestring) then
-         result:=TStringDef(cunicodestringtype)
-       else if stringtype=st_widestring then
-         result:=TStringDef(cwidestringtype)
+         result:=TStringDef(CUnicodeStringType)
+       else if StringType=st_widestring then
+         result:=TStringDef(CWideStringType)
        else
          InternalError(2015122101);
      end;
@@ -1528,12 +1528,12 @@ implementation
          it at the end }
        else if not anonymous or
           ((def.typ<>recorddef) and
-           not is_object(def)) then
+           not Is_Object(def)) then
          begin
            { add padding if necessary, and update the current field/offset }
            info:=curagginfo;
-           if (is_record(curagginfo.def) or
-               is_object(curagginfo.def)) and
+           if (Is_Record(curagginfo.def) or
+               Is_Object(curagginfo.def)) and
               not is_packed_record_or_object(curagginfo.def) then
              begin
                if queue_is_active then
@@ -1576,24 +1576,24 @@ implementation
        asmtype : TAsmsymtype;
      begin
        if start then
-         name:=make_mangledname(basename,st,'START')
+         name:=Make_MangledName(basename,st,'START')
        else
-         name:=make_mangledname(basename,st,'END');
+         name:=Make_MangledName(basename,st,'END');
        if tcdssso_define in options then
          begin
            if tcdssso_use_indirect in options then
              asmtype:=AT_DATA_FORCEINDIRECT
            else
              asmtype:=AT_DATA;
-           result:=CurrentAsmData.DefineAsmSymbol(name,AB_GLOBAL,asmtype,voidpointertype);
+           result:=CurrentAsmData.DefineAsmSymbol(name,AB_GLOBAL,asmtype,VoidPointerType);
            if tcdssso_register_asmsym in options then
-             CurrentModule.add_public_asmsym(result);
+             CurrentModule.Add_Public_AsmSym(result);
          end
        else
          begin
            result:=CurrentAsmData.RefAsmSymbol(name,AT_DATA,tcdssso_use_indirect in options);
            if tcdssso_register_asmsym in options then
-             CurrentModule.add_extern_asmsym(result);
+             CurrentModule.Add_Extern_AsmSym(result);
          end;
      end;
 
@@ -1653,7 +1653,7 @@ implementation
      begin
        name:=get_dynstring_rec_name(typ,winlike,len);
        { search in the interface of all units for the type to reuse it }
-       if searchsym_type(name,srsym,srsymtable) then
+       if SearchSym_Type(name,srsym,srsymtable) then
          begin
            result:=TRecordDef(TTypeSym(srsym).typedef);
            exit;
@@ -1661,7 +1661,7 @@ implementation
        else
          begin
            { also search the implementation of the current unit }
-           strtypesym:=try_search_current_module_type(name);
+           strtypesym:=Try_Search_Current_Module_Type(name);
            if Assigned(strtypesym) then
              begin
                result:=TRecordDef(strtypesym.typedef);
@@ -1671,40 +1671,40 @@ implementation
        if (typ<>st_widestring) or
           not winlike then
          begin
-           result:=CRecordDef.create_global_internal('$'+name,1,1);
+           result:=CRecordDef.Create_Global_Internal('$'+name,1,1);
            { encoding }
-           result.add_field_by_def('',u16inttype);
+           result.Add_Field_By_Def('',U16IntType);
            { element size }
-           result.add_field_by_def('',u16inttype);
+           result.Add_Field_By_Def('',U16IntType);
            { elements }
            case typ of
              st_ansistring:
-               streledef:=cansichartype;
+               streledef:=CAnsiCharType;
              st_unicodestring:
-               streledef:=cwidechartype;
+               streledef:=CWideCharType;
              else
                InternalError(2016082301);
            end;
            { reference count }
 {$ifdef cpu64bitaddr}
-           result.add_field_by_def('',s32inttype);
+           result.Add_Field_By_Def('',S32IntType);
 {$else !cpu64bitaddr}
-           result.add_field_by_def('',sizesinttype);
+           result.Add_Field_By_Def('',SizeSIntType);
 {$endif !cpu64bitaddr}
            { length in elements }
-           result.add_field_by_def('',sizesinttype);
+           result.Add_Field_By_Def('',SizeSIntType);
          end
        else
          begin
-           result:=CRecordDef.create_global_internal('$'+name,4,
+           result:=CRecordDef.Create_Global_Internal('$'+name,4,
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
            { length in bytes }
-           result.add_field_by_def('',s32inttype);
-           streledef:=cwidechartype;
+           result.Add_Field_By_Def('',S32IntType);
+           streledef:=CWideCharType;
          end;
        { data (include zero terminator) }
-       result.add_field_by_def('',CArrayDef.getreusable(streledef,len+1));
-       TRecordSymTable(TRecordDef(result).SymTable).addalignmentpadding;
+       result.Add_Field_By_Def('',CArrayDef.getreusable(streledef,len+1));
+       TRecordSymTable(TRecordDef(result).SymTable).AddAlignmentPadding;
      end;
 
 
@@ -1720,13 +1720,13 @@ implementation
        result:=datatcb.emit_string_const_common(st_ansistring,len,encoding,startlab);
 
        { add room for the #0-terminator }
-       datadef:=CArrayDef.getreusable(cansichartype,len+1);
+       datadef:=CArrayDef.getreusable(CAnsiCharType,len+1);
        datatcb.maybe_begin_aggregate(datadef);
        ts:=TAIString.Create_Data(data,len,true);
        datatcb.emit_tai(ts,datadef);
        datatcb.maybe_end_aggregate(datadef);
        ansistrrecdef:=datatcb.end_anonymous_record;
-       finish_internal_data_builder(datatcb,startlab,ansistrrecdef,Const_Align(voidpointertype.alignment));
+       finish_internal_data_builder(datatcb,startlab,ansistrrecdef,Const_Align(VoidPointerType.alignment));
      end;
 
 
@@ -1747,14 +1747,14 @@ implementation
            datatcb.begin_anonymous_record(get_dynstring_rec_name(st_widestring,true,strlength),
              4,4,
              targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-           datatcb.emit_tai(TAIConst.Create_32bit(strlength*cwidechartype.size),s32inttype);
+           datatcb.emit_tai(TAIConst.Create_32bit(strlength*CWideCharType.size),S32IntType);
            { can we optimise by placing the string constant label at the
              required offset? }
            string_symofs:=get_string_symofs(st_widestring,true);
            if string_symofs=0 then
              begin
                { yes }
-               datatcb.emit_tai(TAILabel.Create(result.lab),widecharpointertype);
+               datatcb.emit_tai(TAILabel.Create(result.lab),WideCharPointerType);
                { allocate a separate label for the start of the data (see
                  emit_string_const_common() for explanation) }
                startlab:=TAsmLabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
@@ -1767,21 +1767,21 @@ implementation
          begin
            result:=datatcb.emit_string_const_common(st_unicodestring,strlength,encoding,startlab);
          end;
-       if cwidechartype.size = 2 then
+       if CWideCharType.size = 2 then
          begin
-           datadef:=CArrayDef.getreusable(cwidechartype,strlength+1);
+           datadef:=CArrayDef.getreusable(CWideCharType,strlength+1);
            datatcb.maybe_begin_aggregate(datadef);
            for i:=0 to strlength-1 do
-             datatcb.emit_tai(TAIConst.Create_16bit(data.data[i]),cwidechartype);
+             datatcb.emit_tai(TAIConst.Create_16bit(data.data[i]),CWideCharType);
            { ending #0 }
-           datatcb.emit_tai(TAIConst.Create_16bit(0),cwidechartype);
+           datatcb.emit_tai(TAIConst.Create_16bit(0),CWideCharType);
            datatcb.maybe_end_aggregate(datadef);
            unicodestrrecdef:=datatcb.end_anonymous_record;
          end
        else
          { code generation for other sizes must be written }
          InternalError(200904271);
-       finish_internal_data_builder(datatcb,startlab,unicodestrrecdef,Const_Align(voidpointertype.alignment));
+       finish_internal_data_builder(datatcb,startlab,unicodestrrecdef,Const_Align(VoidPointerType.alignment));
      end;
 
 
@@ -1808,10 +1808,10 @@ implementation
        begin_anonymous_record('',1,sizeof(TConstPtrUInt),1);
        dynarray_symofs:=get_dynarray_symofs;
        { what to do if ptrsinttype <> sizesinttype??? }
-       emit_tai(TAIConst.create_sizeint(-1),ptrsinttype);
-       inc(result.ofs,ptrsinttype.size);
-       arrlengthloc:=emit_placeholder(sizesinttype);
-       inc(result.ofs,sizesinttype.size);
+       emit_tai(TAIConst.create_sizeint(-1),PtrSIntType);
+       inc(result.ofs,PtrSIntType.size);
+       arrlengthloc:=emit_placeholder(SizeSIntType);
+       inc(result.ofs,SizeSIntType.size);
        if dynarray_symofs=0 then
          begin
            { results in slightly more efficient code }
@@ -1832,7 +1832,7 @@ implementation
    function TTAITypedConstBuilder.end_dynarray_const(arrdef:TDef;arrlength:asizeint;arrlengthloc:TTypedConstPlaceholder;llofs:TAsmLabOfs):TDef;
      begin
        { we emit the high value, not the count }
-       arrlengthloc.replace(TAIConst.Create_sizeint(arrlength-1),sizesinttype);
+       arrlengthloc.replace(TAIConst.Create_sizeint(arrlength-1),SizeSIntType);
        arrlengthloc.free;
        arrlengthloc := nil;
        if get_dynarray_symofs=0 then
@@ -1847,21 +1847,21 @@ implementation
          functionality in place yet to reuse shortstringdefs of the same length
          and neither the lowlevel nor the llvm typedconst builder cares about
          this difference }
-       result:=CArrayDef.getreusable(cansichartype,length(str)+1);
+       result:=CArrayDef.getreusable(CAnsiCharType,length(str)+1);
        maybe_begin_aggregate(result);
-       emit_tai(TAIConst.Create_8bit(length(str)),u8inttype);
+       emit_tai(TAIConst.Create_8bit(length(str)),U8IntType);
        if str<>'' then
-         emit_tai(TAIString.Create(str),CArrayDef.getreusable(cansichartype,length(str)));
+         emit_tai(TAIString.Create(str),CArrayDef.getreusable(CAnsiCharType,length(str)));
        maybe_end_aggregate(result);
      end;
 
 
    function TTAITypedConstBuilder.emit_pchar_const(str: pchar; len: PInt): TDef;
      begin
-       result:=CArrayDef.getreusable(cansichartype,len+1);
+       result:=CArrayDef.getreusable(CAnsiCharType,len+1);
        maybe_begin_aggregate(result);
        if len=0 then
-         emit_tai(TAIConst.Create_8bit(0),cansichartype)
+         emit_tai(TAIConst.Create_8bit(0),CAnsiCharType)
        else
          emit_tai(TAIString.Create_Data(str,len,true),result);
        maybe_end_aggregate(result);
@@ -1873,27 +1873,27 @@ implementation
        i: LongInt;
        field: TFieldVarSym;
      begin
-       maybe_begin_aggregate(rec_tguid);
+       maybe_begin_aggregate(Rec_TGUID);
        { variant record -> must specify which fields get initialised }
-       next_field:=TFieldVarSym(rec_tguid.SymTable.Find('DATA1'));
-       emit_tai(TAIConst.Create_32bit(LongInt(guid.D1)),u32inttype);
-       next_field:=TFieldVarSym(rec_tguid.SymTable.Find('DATA2'));
-       emit_tai(TAIConst.Create_16bit(guid.D2),u16inttype);
-       next_field:=TFieldVarSym(rec_tguid.SymTable.Find('DATA3'));
-       emit_tai(TAIConst.Create_16bit(guid.D3),u16inttype);
-       field:=TFieldVarSym(rec_tguid.SymTable.Find('DATA4'));
+       next_field:=TFieldVarSym(Rec_TGUID.SymTable.Find('DATA1'));
+       emit_tai(TAIConst.Create_32bit(LongInt(guid.D1)),U32IntType);
+       next_field:=TFieldVarSym(Rec_TGUID.SymTable.Find('DATA2'));
+       emit_tai(TAIConst.Create_16bit(guid.D2),U16IntType);
+       next_field:=TFieldVarSym(Rec_TGUID.SymTable.Find('DATA3'));
+       emit_tai(TAIConst.Create_16bit(guid.D3),U16IntType);
+       field:=TFieldVarSym(Rec_TGUID.SymTable.Find('DATA4'));
        next_field:=field;
        { the array }
        maybe_begin_aggregate(field.vardef);
        for i:=Low(guid.D4) to High(guid.D4) do
-         emit_tai(TAIConst.Create_8bit(guid.D4[i]),u8inttype);
+         emit_tai(TAIConst.Create_8bit(guid.D4[i]),U8IntType);
        maybe_end_aggregate(field.vardef);
-       maybe_end_aggregate(rec_tguid);
+       maybe_end_aggregate(Rec_TGUID);
      end;
 
    procedure TTAITypedConstBuilder.emit_procdef_const(pd: TProcDef);
      begin
-       emit_tai(TAIConst.Createname(pd.mangledname,AT_FUNCTION,0),CProcVarDef.getreusableprocaddr(pd,pc_address_only));
+       emit_tai(TAIConst.Createname(pd.MangledName,AT_FUNCTION,0),CProcVarDef.GetReusableProcAddr(pd,pc_address_only));
      end;
 
 
@@ -1934,7 +1934,7 @@ implementation
 
            { include length and terminating zero for quick conversion to pchar }
            l:=length(str);
-           datadef:=CArrayDef.getreusable(cansichartype,l+2);
+           datadef:=CArrayDef.getreusable(CAnsiCharType,l+2);
 
            { we start a new constbuilder as we don't know whether we're called
              from inside an internal constbuilder }
@@ -1958,7 +1958,7 @@ implementation
        else
          strlab:=TAsmLabel(entry^.Data);
 
-       emit_tai(TAIConst.Create_sym(strlab),charpointertype);
+       emit_tai(TAIConst.Create_sym(strlab),CharPointerType);
      end;
 
 
@@ -1977,26 +1977,26 @@ implementation
    function TTAITypedConstBuilder.begin_anonymous_record(const optionalname: string; PackRecords, recordalign, RecordAlignMin: shortint): TRecordDef;
      var
        anonrecorddef: TRecordDef;
-       typesym: TTypeSym;
+       TypeSym: TTypeSym;
      begin
        { if the name is specified, we create a typesym with that name in order
          to ensure we can find it again later with that name -> reuse here as
          well if possible (and that also avoids duplicate type name issues) }
        if optionalname<>'' then
          begin
-           typesym:=try_search_current_module_type(optionalname);
-           if Assigned(typesym) then
+           TypeSym:=Try_Search_Current_Module_Type(optionalname);
+           if Assigned(TypeSym) then
              begin
-               if typesym.typedef.typ<>recorddef then
+               if TypeSym.typedef.typ<>recorddef then
                  InternalError(2015071401);
-               result:=TRecordDef(typesym.typedef);
+               result:=TRecordDef(TypeSym.typedef);
                maybe_begin_aggregate(result);
                exit;
              end;
          end;
        { create skeleton def }
-       anonrecorddef:=CRecordDef.create_global_internal(optionalname,PackRecords,RecordAlignMin);
-       TRecordSymTable(anonrecorddef.SymTable).recordalignment:=recordalign;
+       anonrecorddef:=CRecordDef.Create_Global_Internal(optionalname,PackRecords,RecordAlignMin);
+       TRecordSymTable(anonrecorddef.SymTable).RecordAlignment:=recordalign;
        { generic aggregate housekeeping }
        begin_aggregate_internal(anonrecorddef,true);
        { mark as anonymous record }
@@ -2023,7 +2023,7 @@ implementation
          emit_tai()) -- anonrecord may not be set in case we reused an earlier
          constructed def }
        if anonrecord then
-         TRecordSymTable(result.SymTable).addalignmentpadding;
+         TRecordSymTable(result.SymTable).AddAlignmentPadding;
        end_aggregate_internal(result,true);
        if anonrecord and
           Assigned(curagginfo) and
@@ -2072,7 +2072,7 @@ implementation
        if Assigned(info) then
          begin
            if ((info.def.typ=recorddef) or
-               is_object(info.def)) and
+               Is_Object(info.def)) and
               { may add support for these later }
               not is_packed_record_or_object(info.def) then
              pad_next_field(todef);
@@ -2098,8 +2098,8 @@ implementation
            begin
              if not is_packed_array(def) then
                begin
-                 elelen:=TArrayDef(def).elesize;
-                 vecbase:=TArrayDef(def).lowrange;
+                 elelen:=TArrayDef(def).EleSize;
+                 vecbase:=TArrayDef(def).LowRange;
                end
              else
                Message(parser_e_packed_dynamic_open_array);
@@ -2120,19 +2120,19 @@ implementation
 
    procedure TTAITypedConstBuilder.queue_pointeraddn(def: TPointerDef; const index: TConstExprInt);
      begin
-       inc(fqueue_offset,def.pointeddef.size*int64(index));
+       inc(fqueue_offset,def.PointedDef.size*int64(index));
      end;
 
 
    procedure TTAITypedConstBuilder.queue_pointersubn(def: TPointerDef; const index: TConstExprInt);
      begin
-       dec(fqueue_offset,def.pointeddef.size*int64(index));
+       dec(fqueue_offset,def.PointedDef.size*int64(index));
      end;
 
 
    procedure TTAITypedConstBuilder.queue_subscriptn(def: TAbstractRecordDef; vs: TFieldVarSym);
      begin
-       inc(fqueue_offset,vs.fieldoffset);
+       inc(fqueue_offset,vs.FieldOffset);
      end;
 
 
@@ -2154,7 +2154,7 @@ implementation
        curdef:=def;
        for i:=low(fields) to high(fields) do
          begin
-           sym:=search_struct_member_no_helper(TAbstractRecordDef(curdef),fields[i]);
+           sym:=Search_Struct_Member_No_Helper(TAbstractRecordDef(curdef),fields[i]);
            if not Assigned(sym) or
               not is_normal_fieldvarsym(sym) or
               ((i<>high(fields)) and
@@ -2193,14 +2193,14 @@ implementation
      begin
        { pointerdef because we are emitting a pointer to the staticvarsym
          data, not the data itself }
-       emit_tai(TAIConst.Createname(vs.mangledname,AT_DATA,fqueue_offset),CPointerDef.getreusable(vs.vardef));
+       emit_tai(TAIConst.Createname(vs.MangledName,AT_DATA,fqueue_offset),CPointerDef.getreusable(vs.vardef));
        fqueue_offset:=low(fqueue_offset);
      end;
 
 
    procedure TTAITypedConstBuilder.queue_emit_label(l: TLabelSym);
      begin
-       emit_tai(TAIConst.Createname(l.mangledname,fqueue_offset),voidcodepointertype);
+       emit_tai(TAIConst.Createname(l.MangledName,fqueue_offset),VoidCodePointerType);
        fqueue_offset:=low(fqueue_offset);
      end;
 
@@ -2209,19 +2209,19 @@ implementation
      var
        resourcestrrec: TRecordDef;
      begin
-       if not (cs.consttyp in [constresourcestring,constwresourcestring]) then
+       if not (cs.ConstTyp in [constresourcestring,constwresourcestring]) then
          InternalError(2014062102);
        if fqueue_offset<>0 then
          InternalError(2014062103);
        { warning: update if/when the type of resource strings changes }
-       case cs.consttyp of
+       case cs.ConstTyp of
          constwresourcestring,
          constresourcestring:
            begin
-             resourcestrrec:=TRecordDef(search_system_type('TRESOURCESTRINGRECORD').typedef);
+             resourcestrrec:=TRecordDef(Search_System_Type('TRESOURCESTRINGRECORD').typedef);
              queue_subscriptn_multiple_by_name(resourcestrrec,['CURRENTVALUE']);
              queue_emit_asmsym(CurrentAsmData.RefAsmSymbol(
-               make_mangledname('RESSTR',cs.owner,cs.name),AT_DATA),resourcestrrec
+               Make_MangledName('RESSTR',cs.owner,cs.name),AT_DATA),resourcestrrec
              );
            end;
          { can these occur? }

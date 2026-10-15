@@ -27,14 +27,14 @@ interface
 
     uses
        CUtils,CClasses,CFileUtl,
-       GlobType,FinPut,ogbase,FPkg,
+       GlobType,FinPut,OGBase,FPkg,
        SymBase,SymSym,
-       wpobase,
-       aasmbase,AAsmData;
+       WPOBase,
+       AAsmBase,AAsmData;
 
 
     const
-      UNSPECIFIED_LIBRARY_NAME = '<none>';
+      UnspecifiedLibraryName = '<none>';
 
     type
       TRecompileReason = (rr_unknown,
@@ -62,38 +62,38 @@ interface
 
       TLinkContainerItem=class(TLinkedListItem)
       public
-         data : TPathStr;
-         needlink : cardinal;
-         constructor Create(const s:TPathStr;m:cardinal);
+         Data : TPathStr;
+         NeedLink : Cardinal;
+         constructor Create(const S:TPathStr;M:Cardinal);
       end;
 
       TLinkContainer=class(TLinkedList)
-         procedure add(const s : TPathStr;m:cardinal);
-         function get(var m:cardinal) : TPathStr;
-         function getusemask(mask:cardinal) : TPathStr;
-         function find(const s:TPathStr):boolean;
+         procedure Add(const S : TPathStr;M:Cardinal);
+         function Get(var M:Cardinal) : TPathStr;
+         function GetUseMask(Mask:Cardinal) : TPathStr;
+         function Find(const S:TPathStr):Boolean;
       end;
 
       TModule = class;
       TUsedUnit = class;
 
       TUnitImportSym = class
-        module: TModule;
-        symid: LongInt;
-        sym: TSymEntry;
+        Module: TModule;
+        SymID: LongInt;
+        Sym: TSymEntry;
       end;
 
       TUnitMapRec = record
-        u        : TModule;
+        U        : TModule;
         { number of references }
-        refs     : LongInt;
+        Refs     : LongInt;
         { index in the derefmap }
-        derefidx : LongInt;
+        DerefIdx : LongInt;
       end;
       TUnitMapArray = array of TUnitMapRec;
 
       TDerefMapRec = record
-        u           : TModule;
+        U           : TModule;
         { modulename, used during ppu load }
         ModuleName  : PShortString;
       end;
@@ -105,22 +105,22 @@ interface
       { tused_unit }
 
       TUsedUnit = class(TLinkedListItem)
-        checksum,
+        Checksum,
         InterfaceChecksum,
-        IndirectChecksum: cardinal;
-        in_uses,
-        in_interface    : boolean;
-        u               : TModule;
-        unitsym         : TUnitSym;
-        dependent_added : boolean;
-        constructor create(_u : TModule;intface,inuses:boolean;usym:TUnitSym);
-        procedure check_hints;
+        IndirectChecksum: Cardinal;
+        InUses,
+        InInterface    : Boolean;
+        U               : TModule;
+        UnitSym         : TUnitSym;
+        DependentAdded : Boolean;
+        constructor Create(AUnit : TModule;IntFace,AInUses:Boolean;USym:TUnitSym);
+        procedure Check_Hints;
       end;
 
       TDependentUnit = class(TLinkedListItem)
-        u : TModule;
-        in_interface : boolean;
-        constructor create(_u : TModule; frominterface : boolean);
+        U : TModule;
+        InInterface : Boolean;
+        constructor Create(AUnit : TModule; FromInterface : Boolean);
       end;
 
       { tmodule }
@@ -129,147 +129,147 @@ interface
       private
         FImportLibraryList : TFPHashObjectList;
       public
-        loadedfrommodule: TModule;
-        is_reset,                 { has reset been called ? }
-        do_recompile,         { reset needed, done by ctask }
-        do_reload,                { force reloading of the unit }
-        FromPPU: boolean;         { loaded from ppu }
-        ppu_discarded: boolean;         { ppu was recompiled }
-        ppu_waitingfor_crc: boolean;
+        LoadedFromModule: TModule;
+        IsReset,                 { has reset been called ? }
+        DoRecompile,         { reset needed, done by ctask }
+        DoReload,                { force reloading of the unit }
+        FromPPU: Boolean;         { loaded from ppu }
+        PPUDiscarded: Boolean;         { ppu was recompiled }
+        PPUWaitingForCRC: Boolean;
         SourcesAvail,            { if all sources are reachable }
-        interface_compiled,       { if the interface section has been parsed/compiled/loaded, interface_crc and indirect_crc are valid }
-        is_dbginfo_written,
-        is_unit,
-        in_interface,             { processing the interface part? }
+        InterfaceCompiled,       { if the interface section has been parsed/compiled/loaded, interface_crc and indirect_crc are valid }
+        IsDbgInfoWritten,
+        IsUnit,
+        InInterface,             { processing the interface part? }
         { allow global settings }
-        in_global     : boolean;
+        InGlobal     : Boolean;
         { Whether a mode switch is still allowed at this point in the parsing.}
-        mode_switch_allowed,
+        ModeSwitchAllowed,
         { generate pic helper which loads eip in ecx (for leave procedures) }
-        requires_ecx_pic_helper,
+        RequiresECXPICHelper,
         { generate pic helper which loads eip in ebx (for non leave procedures) }
-        requires_ebx_pic_helper : boolean;
-        interface_only: boolean; { interface-only macpas unit; flag does not need saving/restoring to ppu }
-        mainfilepos   : TFilePosInfo;
-        recompile_reason : TRecompileReason;  { the reason why the unit should be recompiled }
-        crc_final: boolean;
-        crc,                       { valid when crc_final=true }
+        RequiresEBXPICHelper : Boolean;
+        InterfaceOnly: Boolean; { interface-only macpas unit; flag does not need saving/restoring to ppu }
+        MainFilePos   : TFilePosInfo;
+        RecompileReason : TRecompileReason;  { the reason why the unit should be recompiled }
+        CRCFinal: Boolean;
+        CRC,                       { valid when crc_final=true }
         InterfaceCRC,             { valid when interface_compiled=true }
-        IndirectCRC  : cardinal;  { valid when interface_compiled=true }
-        headerflags   : cardinal;  { the PPU header flags }
-        longversion   : cardinal;  { longer version than what fits in the ppu header }
-        moduleflags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
-        IsLibrary     : boolean;  { if it is a library (win32 dll) }
-        IsPackage     : boolean;
-        ChangeEndian : boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
-        unitmap       : TUnitMapArray; { mapping of all used units }
-        unitmapsize   : LongInt;  { number of units in the map }
-        derefmap      : TDerefMapArray; { mapping of all units needed for deref }
-        derefmapcnt   : LongInt;  { number of units in the map }
-        derefmapsize  : LongInt;  { number of units in the map }
-        derefdataintflen : LongInt;
-        derefdata     : TDynamicArray;
-        checkforwarddefs,
-        deflist,
-        symlist       : TFPObjectList;
-        forwardgenericdefs : TFPHashObjectList; { contains a list of specializations of a forward declared generic (the key) }
-        ptrdefs       : THashSet; { list of pointerdefs created in this module so we can reuse them (not saved/restored) }
-        arraydefs     : THashSet; { list of single-element-arraydefs created in this module so we can reuse them (not saved/restored) }
-        procaddrdefs  : THashSet; { list of procvardefs created when getting the address of a procdef (not saved/restored) }
+        IndirectCRC  : Cardinal;  { valid when interface_compiled=true }
+        HeaderFlags   : Cardinal;  { the PPU header flags }
+        LongVersion   : Cardinal;  { longer version than what fits in the ppu header }
+        ModuleFlags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
+        IsLibrary     : Boolean;  { if it is a library (win32 dll) }
+        IsPackage     : Boolean;
+        ChangeEndian : Boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
+        UnitMap       : TUnitMapArray; { mapping of all used units }
+        UnitMapSize   : LongInt;  { number of units in the map }
+        DerefMap      : TDerefMapArray; { mapping of all units needed for deref }
+        DerefMapCnt   : LongInt;  { number of units in the map }
+        DerefMapSize  : LongInt;  { number of units in the map }
+        DerefDataIntfLen : LongInt;
+        DerefData     : TDynamicArray;
+        CheckForwardDefs,
+        DefList,
+        SymList       : TFPObjectList;
+        ForwardGenericDefs : TFPHashObjectList; { contains a list of specializations of a forward declared generic (the key) }
+        PtrDefs       : THashSet; { list of pointerdefs created in this module so we can reuse them (not saved/restored) }
+        ArrayDefs     : THashSet; { list of single-element-arraydefs created in this module so we can reuse them (not saved/restored) }
+        ProcAddrDefs  : THashSet; { list of procvardefs created when getting the address of a procdef (not saved/restored) }
 
-        ansistrdef    : tobject; { an ansistring def redefined for the current module }
-        wpoinfo       : TUnitWPOInfoBase; { whole program optimization-related information that is generated during the current run for this unit }
+        AnsiStrDef    : TObject; { an ansistring def redefined for the current module }
+        WPOInfo       : TUnitWPOInfoBase; { whole program optimization-related information that is generated during the current run for this unit }
         GlobalSymTable,           { pointer to the global symtable of this unit }
-        localsymtable : TSymTable;{ pointer to the local symtable of this unit }
+        LocalSymTable : TSymTable;{ pointer to the local symtable of this unit }
         GlobalMacroSymTable,           { pointer to the global macro symtable of this unit }
-        localmacrosymtable : TSymTable;{ pointer to the local macro symtable of this unit }
-        mainscanner   : TObject;  { scanner object used }
+        LocalMacroSymTable : TSymTable;{ pointer to the local macro symtable of this unit }
+        MainScanner   : TObject;  { scanner object used }
         Scanner       : TObject;  { scanner object used }
         ProcInfo      : TObject;  { current procedure being compiled }
-        asmdata       : TObject;  { Assembler data }
-        asmprefix     : PShortString;  { prefix for the smartlink asmfiles }
-        publicasmsyms : TFPHashObjectList; { contains the assembler symbols which need to be exported from a package }
-        externasmsyms : TFPHashObjectList; { contains the assembler symbols which are imported from another unit }
-        unitimportsyms : TFPObjectList; { list of symbols (tunitimportsym) that are imported from other units }
-        debuginfo     : TObject;
-        _exports      : TLinkedList;
-        dllscannerinputlist : TFPHashList;
-        localnamespacelist,
-        resourcefiles,
-        linkorderedsymbols : TCmdStrList;
-        linkunitofiles,
-        linkunitstaticlibs,
-        linkunitsharedlibs,
-        linkotherofiles,           { objects,libs loaded from the source }
-        linkothersharedlibs,       { using $L or $LINKLIB or import lib (for linux) }
-        linkotherstaticlibs,
-        linkotherframeworks  : TLinkContainer;
-        mainname      : PShortString; { alternate name for "main" procedure }
-        package       : TPackage;
+        AsmData       : TObject;  { Assembler data }
+        AsmPrefix     : PShortString;  { prefix for the smartlink asmfiles }
+        PublicAsmSyms : TFPHashObjectList; { contains the assembler symbols which need to be exported from a package }
+        ExternAsmSyms : TFPHashObjectList; { contains the assembler symbols which are imported from another unit }
+        UnitImportSyms : TFPObjectList; { list of symbols (tunitimportsym) that are imported from other units }
+        DebugInfo     : TObject;
+        ExportList      : TLinkedList;
+        DLLScannerInputList : TFPHashList;
+        LocalNamespaceList,
+        ResourceFiles,
+        LinkOrderedSymbols : TCmdStrList;
+        LinkUnitOFiles,
+        LinkUnitStaticLibs,
+        LinkUnitSharedLibs,
+        LinkOtherOFiles,           { objects,libs loaded from the source }
+        LinkOtherSharedLibs,       { using $L or $LINKLIB or import lib (for linux) }
+        LinkOtherStaticLibs,
+        LinkOtherFrameworks  : TLinkContainer;
+        MainName      : PShortString; { alternate name for "main" procedure }
+        Package       : TPackage;
 
-        used_units           : TLinkedList; { list of tused_unit }
-        dependent_units      : TLinkedList;
+        UsedUnitList           : TLinkedList; { list of tused_unit }
+        DependentUnitList      : TLinkedList;
 
         { circular unit groups = strongly connected components }
-        scc_finished: boolean; { scc is compiled = this module and all used modules even indirectly are ms_procesed
+        SCCFinished: Boolean; { scc is compiled = this module and all used modules even indirectly are ms_procesed
                                  Note that in a cycle ms_processed can be reached while scc_finished is still false }
-        scc_root: TModule;     { valid if not scc_finished: all modules of a scc poins to their root module }
-        scc_next: TModule;     { next module in same scc }
-        scc_index: integer;    { dont use. used in ttask_handler.update_circular_unit_groups }
-        scc_lowindex: integer; { valid if >0 and scc_finished=false.
+        SCCRoot: TModule;     { valid if not scc_finished: all modules of a scc poins to their root module }
+        SCCNext: TModule;     { next module in same scc }
+        SCCIndex: Integer;    { dont use. used in ttask_handler.update_circular_unit_groups }
+        SCCLowIndex: Integer; { valid if >0 and scc_finished=false.
                                  lowest scc_index reachable through used_units,
                                  all circular connected modules have the same lowindex }
-        scc_onstack: boolean;  { dont use. used in ttask_handler.update_circular_unit_groups }
+        SCCOnStack: Boolean;  { dont use. used in ttask_handler.update_circular_unit_groups }
         class var
-          ctask_fast_backtrack: boolean; { true if some cycle was detected and returning fast to ctask scheduler }
-          cycle_stamp: dword;
+          CTask_Fast_Backtrack: Boolean; { true if some cycle was detected and returning fast to ctask scheduler }
+          Cycle_Stamp: DWord;
         var
-        cycle_search_stamp: dword;
-        scc_tree_unfinished: boolean; { the scc or a sub scc has at least one module not ms_processed }
-        other_scc_unfinished: boolean; { a sub scc has a module not ms_processed }
-        scc_tree_crc_wait: TModule; { an unfinished used unit, can be indirectly used, not self }
+        CycleSearchStamp: DWord;
+        SCCTreeUnfinished: Boolean; { the scc or a sub scc has at least one module not ms_processed }
+        OtherSCCUnfinished: Boolean; { a sub scc has a module not ms_processed }
+        SCCTreeCRCWait: TModule; { an unfinished used unit, can be indirectly used, not self }
 
-        task: TObject;         { ctask ttask }
+        Task: TObject;         { ctask ttask }
 
-        localunitsearchpath,           { local searchpaths }
-        localobjectsearchpath,
-        localincludesearchpath,
-        locallibrarysearchpath,
-        localframeworksearchpath : TSearchPathList;
+        LocalUnitSearchPath,           { local searchpaths }
+        LocalObjectSearchPath,
+        LocalIncludeSearchPath,
+        LocalLibrarySearchPath,
+        LocalFrameworkSearchPath : TSearchPathList;
 
-        moduleoptions: TModuleOptions;
-        deprecatedmsg: PShortString;
-        compilecount : integer;
-        consume_semicolon_after_uses : Boolean;
-        initfinalchecked : boolean;
-        functypechecked : boolean;
+        ModuleOptions: TModuleOptions;
+        DeprecatedMsg: PShortString;
+        CompileCount : Integer;
+        ConsumeSemicolonAfterUses : Boolean;
+        InitFinalChecked : Boolean;
+        FuncTypeChecked : Boolean;
 
         { contains a list of types that are extended by helper types; the key is
           the full name of the type and the data is a TFPObjectList of
           tobjectdef instances (the helper defs) }
-        extendeddefs: TFPHashObjectList;
+        ExtendedDefs: TFPHashObjectList;
         { contains a list of the current topmost non-generic symbol for a
           typename of which at least one generic exists; the key is the
           non-generic typename and the data is a TFPObjectList of tgenericdummyentry
           instances whereby the last one is the current top most one }
-        genericdummysyms: TFPHashObjectList;
+        GenericDummySyms: TFPHashObjectList;
         { contains a list of specializations for which the method bodies need
           to be generated }
-        pendingspecializations : TFPHashObjectList;
+        PendingSpecializations : TFPHashObjectList;
         { list of attributes that are used and thus need their construction
           functions generated }
-        used_rtti_attrs: TFPObjectList;
+        UsedRTTIAttrs: TFPObjectList;
 
         { this contains a list of units (tmodule) that needs to be waited for until the
           unit can be finished (code generated, etc.); this is needed to handle
           specializations in circular unit usages correctly }
-        waitingforunit: TFPObjectList;
+        WaitingForUnit: TFPObjectList;
         { this contains a list of all units (tmodule) that are waiting for this unit to be
           finished }
-        waitingunits: TFPObjectList;
+        WaitingUnits: TFPObjectList;
 
-        finishstate: pointer;
-        specializestate : pointer;
+        FinishState: Pointer;
+        SpecializeState : Pointer;
 
 
         { for targets that initialise typed constants via explicit assignments
@@ -277,73 +277,73 @@ interface
           constant assignments at the module level; does not have to be saved
           into the ppu file, because translated into code during compilation)
            -- actual type: tnode (but fmodule should not depend on node) }
-        tcinitcode     : tobject;
+        TCInitCode     : TObject;
 
         { the current extended rtti directive }
-        rtti_directive : TRTTIDirective;
+        RTTIDirective : TRTTIDirective;
 
         {create creates a new module which name is stored in 's'. LoadedFrom
         points to the module calling it. It is nil for the first compiled
         module. This allow inheritance of all path lists. MUST pay attention
         to that when creating link.res!!!!(mazen)}
-        constructor create(loadedfrom: TModule; const amodulename: string; const afilename:TPathStr;_is_unit:boolean);
+        constructor Create(LoadedFrom: TModule; const AModuleName: string; const AFileName:TPathStr;AIsUnit:Boolean);
         destructor Destroy;override;
-        procedure reset(for_recompile: boolean);virtual;
+        procedure Reset(ForRecompile: Boolean);virtual;
         function StateStr: string; virtual;
-        procedure checkstate; virtual;
-        procedure loadlocalnamespacelist;
-        procedure adddependency(callermodule:TModule; frominterface : boolean);
-        procedure removedependency(callermodule:TModule);
-        function hasdependency(callermodule:TModule): boolean;
-        procedure flagdependent;
-        function find_used_unit_compiling: TModule; // find a used module compiling/loading, even indirect
-        class procedure increase_cycle_stamp;
-        procedure disconnect_depending_modules; virtual;
-        function Is_Reload_Needed(du: TDependentUnit): boolean; virtual; // true if reload needed after self changed
-        class var finish_module: TFinishModuleEvent;
-        procedure addimportedsym(sym:TSymEntry; check_if_exists: boolean = true);
-        procedure derefimportedsymbols;
-        function  addusedunit(hp:TModule;inuses:boolean;usym:TUnitSym):TUsedUnit;
-        function  usesmodule_in_interface(m : TModule) : boolean;
-        function findusedunit(m : TModule) : TUsedUnit;
-        function usedunitsloaded(interface_units: boolean; out firstwaiting : TModule): boolean;
-        function nowaitingforunits(out firstwaiting : TModule) : Boolean;
-        function usedunitsfinalcrc(out firstwaiting : TModule): boolean;
-        procedure updatemaps;
-        function  derefidx_unit(id:LongInt):LongInt;
-        function  resolve_unit(id:LongInt):TModule;
-        procedure allunitsused;
+        procedure CheckState; virtual;
+        procedure LoadLocalNamespaceList;
+        procedure AddDependency(CallerModule:TModule; FromInterface : Boolean);
+        procedure RemoveDependency(CallerModule:TModule);
+        function HasDependency(CallerModule:TModule): Boolean;
+        procedure FlagDependent;
+        function Find_Used_Unit_Compiling: TModule; // find a used module compiling/loading, even indirect
+        class procedure Increase_Cycle_Stamp;
+        procedure Disconnect_Depending_Modules; virtual;
+        function Is_Reload_Needed(DU: TDependentUnit): Boolean; virtual; // true if reload needed after self changed
+        class var Finish_Module: TFinishModuleEvent;
+        procedure AddImportedSym(Sym:TSymEntry; CheckIfExists: Boolean = True);
+        procedure DerefImportedSymbols;
+        function  AddUsedUnit(HP:TModule;AInUses:Boolean;USym:TUnitSym):TUsedUnit;
+        function  UsesModule_In_Interface(M : TModule) : Boolean;
+        function FindUsedUnit(M : TModule) : TUsedUnit;
+        function UsedUnitsLoaded(InterfaceUnits: Boolean; out FirstWaiting : TModule): Boolean;
+        function NoWaitingForUnits(out FirstWaiting : TModule) : Boolean;
+        function UsedUnitsFinalCRC(out FirstWaiting : TModule): Boolean;
+        procedure UpdateMaps;
+        function  DerefIdx_Unit(ID:LongInt):LongInt;
+        function  Resolve_Unit(ID:LongInt):TModule;
+        procedure AllUnitsUsed;
         procedure End_Of_Parsing;virtual;
-        procedure setmodulename(const s:string);
-        procedure AddExternalImport(const libname,symname,symmangledname:string;OrdNr: LongInt;isvar:boolean;ImportByOrdinalOnly:boolean);
-        procedure add_public_asmsym(sym:TAsmSymbol);
-        procedure add_public_asmsym(const name:TSymStr;bind:TAsmsymbind;typ:TAsmsymtype);
-        procedure add_extern_asmsym(sym:TAsmSymbol);
-        procedure add_extern_asmsym(const name:TSymStr;bind:TAsmsymbind;typ:TAsmsymtype);
-        procedure remove_waitforunit_cycles;
-        procedure remove_all_waitsforthisunit;
-        procedure remove_from_waitingforunits(amodule : TModule);
-        property ImportLibraryList : TFPHashObjectList read FImportLibraryList;
+        procedure SetModuleName(const S:string);
+        procedure AddExternalImport(const LibName,SymName,SymMangledName:string;OrdNr: LongInt;IsVar:Boolean;ImportByOrdinalOnly:Boolean);
+        procedure Add_Public_AsmSym(Sym:TAsmSymbol);
+        procedure Add_Public_AsmSym(const Name:TSymStr;Bind:TAsmsymbind;Typ:TAsmsymtype);
+        procedure Add_Extern_AsmSym(Sym:TAsmSymbol);
+        procedure Add_Extern_AsmSym(const Name:TSymStr;Bind:TAsmsymbind;Typ:TAsmsymtype);
+        procedure Remove_WaitForUnit_Cycles;
+        procedure Remove_All_WaitsForThisUnit;
+        procedure Remove_From_WaitingForUnits(AModule : TModule);
+        property ImportLibraryList : TFPHashObjectList Read FImportLibraryList;
         function ToString: RTLString; override;
-        procedure WriteUsedUnits(m: TModule);
+        procedure WriteUsedUnits(M: TModule);
       end;
 
     var
-       main_module       : TModule;     { Main module of the program }
+       Main_Module       : TModule;     { Main module of the program }
        CurrentModule    : TModule;     { Current module which is compiled or loaded }
        UsedUnits         : TLinkedList; { Used units for this program }
-       loaded_units      : TLinkedList; { All loaded units, excluding main_module }
-       unloaded_units    : TLinkedList; { Units removed from loaded_units, to be freed }
-       all_modules: array of TModule;   { modules by moduleid }
+       Loaded_Units      : TLinkedList; { All loaded units, excluding main_module }
+       Unloaded_Units    : TLinkedList; { Units removed from loaded_units, to be freed }
+       All_Modules: array of TModule;   { modules by moduleid }
        SmartLinkOFiles   : TCmdStrList; { List of .o files which are generated,
                                           used to delete them after linking }
 
 
-    procedure SetCurrentModule(p:TModule);
-    function Get_Module(moduleindex : LongInt) : TModule;
-    function get_source_file(moduleindex,fileindex : LongInt) : TInputFile;
-    procedure addloadedunit(hp:TModule);
-    function find_module_from_symtable(st:TSymTable):TModule;
+    procedure SetCurrentModule(P:TModule);
+    function Get_Module(ModuleIndex : LongInt) : TModule;
+    function Get_Source_File(ModuleIndex,FileIndex : LongInt) : TInputFile;
+    procedure AddLoadedUnit(HP:TModule);
+    function Find_Module_From_SymTable(ST:TSymTable):TModule;
 
 
 implementation
@@ -352,47 +352,47 @@ implementation
       SysUtils,Globals,
       Verbose,Systems,
       Scanner,DbgBase,
-      ProcInfo,symdef,symtype;
+      ProcInfo,SymDef,SymType;
 
 {$ifdef MEMDEBUG}
     var
-      memsymtable : TMemDebug;
+      MemSymTable : TMemDebug;
 {$endif}
 
 {*****************************************************************************
                              Global Functions
 *****************************************************************************}
 
-    function find_module_from_symtable(st:TSymTable):TModule;
+    function Find_Module_From_SymTable(ST:TSymTable):TModule;
       begin
-        result:=Get_Module(st.ModuleID);
+        Result:=Get_Module(ST.ModuleID);
       end;
 
-    procedure SetCurrentModule(p:TModule);
+    procedure SetCurrentModule(P:TModule);
 
       begin
         { save the state of the scanner }
         if Assigned(CurrentScanner) then
-          CurrentScanner.tempcloseinputfile;
+          CurrentScanner.TempCloseInputFile;
         { set new module }
-        CurrentModule:=p;
+        CurrentModule:=P;
         { restore previous module settings }
-        Fillchar(CurrentFilePos,sizeof(CurrentFilePos),0);
+        Fillchar(CurrentFilePos,SizeOf(CurrentFilePos),0);
         if Assigned(CurrentModule) then
           begin
-            CurrentAsmData:=TAsmData(CurrentModule.asmdata);
-            CurrentDebugInfo:=TDebugInfo(CurrentModule.debuginfo);
+            CurrentAsmData:=TAsmData(CurrentModule.AsmData);
+            CurrentDebugInfo:=TDebugInfo(CurrentModule.DebugInfo);
             { restore scanner and file positions }
             Set_Current_Scanner(TScannerFile(CurrentModule.Scanner));
             if Assigned(CurrentScanner) then
               begin
-                CurrentScanner.tempopeninputfile;
-                CurrentScanner.gettokenpos;
-                Parser_Current_File:=CurrentScanner.inputfile.name;
+                CurrentScanner.TempOpenInputFile;
+                CurrentScanner.GetTokenPos;
+                Parser_Current_File:=CurrentScanner.InputFile.Name;
               end
             else
               begin
-                CurrentFilePos.moduleindex:=CurrentModule.ModuleID;
+                CurrentFilePos.ModuleIndex:=CurrentModule.ModuleID;
                 Parser_Current_File:='';
               end;
           end
@@ -405,30 +405,30 @@ implementation
       end;
 
 
-    function Get_Module(moduleindex : LongInt) : TModule;
+    function Get_Module(ModuleIndex : LongInt) : TModule;
       begin
-        if moduleindex>=length(all_modules) then
-          result:=nil
+        if ModuleIndex>=Length(All_Modules) then
+          Result:=nil
         else
-          result:=all_modules[moduleindex];
+          Result:=All_Modules[ModuleIndex];
       end;
 
 
-    function get_source_file(moduleindex,fileindex : LongInt) : TInputFile;
+    function Get_Source_File(ModuleIndex,FileIndex : LongInt) : TInputFile;
       var
-        hp : TModule;
+        HP : TModule;
       begin
-        hp:=Get_Module(moduleindex);
-        if Assigned(hp) then
-          get_source_file:=hp.SourceFiles.Get_File(fileindex)
+        HP:=Get_Module(ModuleIndex);
+        if Assigned(HP) then
+          Get_Source_File:=HP.SourceFiles.Get_File(FileIndex)
         else
-          get_source_file:=nil;
+          Get_Source_File:=nil;
       end;
 
 
-    procedure addloadedunit(hp:TModule);
+    procedure AddLoadedUnit(HP:TModule);
       begin
-        loaded_units.concat(hp);
+        Loaded_Units.Concat(HP);
       end;
 
 
@@ -436,11 +436,11 @@ implementation
                              TLinkContainerItem
  ****************************************************************************}
 
-    constructor TLinkContainerItem.Create(const s:TPathStr;m:cardinal);
+    constructor TLinkContainerItem.Create(const S:TPathStr;M:Cardinal);
       begin
         inherited Create;
-        data:=s;
-        needlink:=m;
+        Data:=S;
+        NeedLink:=M;
       end;
 
 
@@ -448,67 +448,67 @@ implementation
                            TLinkContainer
  ****************************************************************************}
 
-    procedure TLinkContainer.add(const s : TPathStr;m:cardinal);
+    procedure TLinkContainer.Add(const S : TPathStr;M:Cardinal);
       begin
-        inherited concat(TLinkContainerItem.Create(s,m));
+        inherited Concat(TLinkContainerItem.Create(S,M));
       end;
 
 
-    function TLinkContainer.get(var m:cardinal) : TPathStr;
+    function TLinkContainer.Get(var M:Cardinal) : TPathStr;
       var
-        p : TLinkContainerItem;
+        P : TLinkContainerItem;
       begin
-        p:=TLinkContainerItem(inherited GetFirst);
-        if p=nil then
+        P:=TLinkContainerItem(inherited GetFirst);
+        if P=nil then
          begin
-           get:='';
-           m:=0;
+           Get:='';
+           M:=0;
          end
         else
          begin
-           get:=p.data;
-           m:=p.needlink;
-           p.free;
-           p := nil;
+           Get:=P.Data;
+           M:=P.NeedLink;
+           P.Free;
+           P := nil;
          end;
       end;
 
 
-    function TLinkContainer.getusemask(mask:cardinal) : TPathStr;
+    function TLinkContainer.GetUseMask(Mask:Cardinal) : TPathStr;
       var
-         p : TLinkContainerItem;
-         found : boolean;
+         P : TLinkContainerItem;
+         Found : Boolean;
       begin
-        found:=false;
+        Found:=False;
         repeat
-          p:=TLinkContainerItem(inherited GetFirst);
-          if p=nil then
+          P:=TLinkContainerItem(inherited GetFirst);
+          if P=nil then
            begin
-             getusemask:='';
-             exit;
+             GetUseMask:='';
+             Exit;
            end;
-          getusemask:=p.data;
-          found:=(p.needlink and mask)<>0;
-          p.free;
-          p := nil;
-        until found;
+          GetUseMask:=P.Data;
+          Found:=(P.NeedLink and Mask)<>0;
+          P.Free;
+          P := nil;
+        until Found;
       end;
 
 
-    function TLinkContainer.find(const s:TPathStr):boolean;
+    function TLinkContainer.Find(const S:TPathStr):Boolean;
       var
-        newnode : TLinkContainerItem;
+        NewNode : TLinkContainerItem;
       begin
-        find:=false;
-        newnode:=TLinkContainerItem(First);
-        while Assigned(newnode) do
+        Find:=False;
+        NewNode:=TLinkContainerItem(First);
+        while Assigned(NewNode) do
          begin
-           if newnode.data=s then
+           if NewNode.Data=S then
             begin
-              find:=true;
-              exit;
+              Find:=True;
+              Exit;
             end;
-           newnode:=TLinkContainerItem(newnode.next);
+           NewNode:=TLinkContainerItem(NewNode.Next);
          end;
       end;
 
@@ -517,20 +517,20 @@ implementation
                               TUSED_UNIT
  ****************************************************************************}
 
-    constructor TUsedUnit.create(_u : TModule;intface,inuses:boolean;usym:TUnitSym);
+    constructor TUsedUnit.Create(AUnit : TModule;IntFace,AInUses:Boolean;USym:TUnitSym);
       begin
-        u:=_u;
-        in_interface:=intface;
-        in_uses:=inuses;
-        unitsym:=usym;
-        if _u.state in [ms_load,ms_compiled_waitcrc,ms_compiled,ms_processed] then
-          checksum:=u.crc
+        U:=AUnit;
+        InInterface:=IntFace;
+        InUses:=AInUses;
+        UnitSym:=USym;
+        if AUnit.State in [ms_load,ms_compiled_waitcrc,ms_compiled,ms_processed] then
+          Checksum:=U.CRC
         else
-          checksum:=0;
-        if _u.interface_compiled then
+          Checksum:=0;
+        if AUnit.InterfaceCompiled then
          begin
-           InterfaceChecksum:=u.InterfaceCRC;
-           IndirectChecksum:=u.IndirectCRC;
+           InterfaceChecksum:=U.InterfaceCRC;
+           IndirectChecksum:=U.IndirectCRC;
          end
         else
          begin
@@ -540,24 +540,24 @@ implementation
       end;
 
 
-    procedure TUsedUnit.check_hints;
+    procedure TUsedUnit.Check_Hints;
       var
-        uname: PShortString;
+        UName: PShortString;
       begin
-        uname:=u.RealModuleName;
-        if mo_hint_deprecated in u.moduleoptions then
-          if (mo_has_deprecated_msg in u.moduleoptions) and (u.deprecatedmsg <> nil) then
-            MessagePos2(unitsym.fileinfo,sym_w_deprecated_unit_with_msg,uname^,u.deprecatedmsg^)
+        UName:=U.RealModuleName;
+        if mo_hint_deprecated in U.ModuleOptions then
+          if (mo_has_deprecated_msg in U.ModuleOptions) and (U.DeprecatedMsg <> nil) then
+            MessagePos2(UnitSym.FileInfo,sym_w_deprecated_unit_with_msg,UName^,U.DeprecatedMsg^)
           else
-            MessagePos1(unitsym.fileinfo,sym_w_deprecated_unit,uname^);
-        if mo_hint_experimental in u.moduleoptions then
-          MessagePos1(unitsym.fileinfo,sym_w_experimental_unit,uname^);
-        if mo_hint_platform in u.moduleoptions then
-          MessagePos1(unitsym.fileinfo,sym_w_non_portable_unit,uname^);
-        if mo_hint_library in u.moduleoptions then
-          MessagePos1(unitsym.fileinfo,sym_w_library_unit,uname^);
-        if mo_hint_unimplemented in u.moduleoptions then
-          MessagePos1(unitsym.fileinfo,sym_w_non_implemented_unit,uname^);
+            MessagePos1(UnitSym.FileInfo,sym_w_deprecated_unit,UName^);
+        if mo_hint_experimental in U.ModuleOptions then
+          MessagePos1(UnitSym.FileInfo,sym_w_experimental_unit,UName^);
+        if mo_hint_platform in U.ModuleOptions then
+          MessagePos1(UnitSym.FileInfo,sym_w_non_portable_unit,UName^);
+        if mo_hint_library in U.ModuleOptions then
+          MessagePos1(UnitSym.FileInfo,sym_w_library_unit,UName^);
+        if mo_hint_unimplemented in U.ModuleOptions then
+          MessagePos1(UnitSym.FileInfo,sym_w_non_implemented_unit,UName^);
       end;
 
 
@@ -565,10 +565,10 @@ implementation
                             TDENPENDENT_UNIT
  ****************************************************************************}
 
-    constructor TDependentUnit.create(_u: TModule; frominterface: boolean);
+    constructor TDependentUnit.Create(AUnit: TModule; FromInterface: Boolean);
       begin
-         u:=_u;
-         in_interface:=frominterface;
+         U:=AUnit;
+         InInterface:=FromInterface;
       end;
 
 
@@ -576,157 +576,157 @@ implementation
                                   TMODULE
  ****************************************************************************}
 
-    constructor TModule.create(loadedfrom: TModule; const amodulename: string; const afilename:TPathStr;_is_unit:boolean);
+    constructor TModule.Create(LoadedFrom: TModule; const AModuleName: string; const AFileName:TPathStr;AIsUnit:Boolean);
       var
-        n:string;
-        fn:TPathStr;
-        old_mod_cnt, i: SizeInt;
-        new_mod_cnt: Integer;
+        N:string;
+        FN:TPathStr;
+        OldModuleCount, I: SizeInt;
+        NewModuleCount: Integer;
       begin
-        loadedfrommodule:=LoadedFrom;
-        if amodulename='' then
-          n:=ChangeFileExt(ExtractFileName(afilename),'')
+        LoadedFromModule:=LoadedFrom;
+        if AModuleName='' then
+          N:=ChangeFileExt(ExtractFileName(AFileName),'')
         else
-          n:=amodulename;
-        if afilename='' then
-          fn:=amodulename
+          N:=AModuleName;
+        if AFileName='' then
+          FN:=AModuleName
         else
-          fn:=afilename;
+          FN:=AFileName;
         { Programs have the name 'Program' to don't conflict with dup id's }
-        if _is_unit then
-         inherited create(amodulename)
+        if AIsUnit then
+         inherited Create(AModuleName)
         else
-         inherited create('Program');
-        MainSource:=fn;
+         inherited Create('Program');
+        MainSource:=FN;
 
-        old_mod_cnt:=length(all_modules);
-        if ModuleID>=old_mod_cnt then
+        OldModuleCount:=Length(All_Modules);
+        if ModuleID>=OldModuleCount then
           begin
-            if old_mod_cnt<32 then
-              new_mod_cnt:=32
+            if OldModuleCount<32 then
+              NewModuleCount:=32
             else
-              new_mod_cnt:=old_mod_cnt*2;
-            SetLength(all_modules,new_mod_cnt);
-            for i:=old_mod_cnt to new_mod_cnt-1 do
-              all_modules[i]:=nil;
+              NewModuleCount:=OldModuleCount*2;
+            SetLength(All_Modules,NewModuleCount);
+            for I:=OldModuleCount to NewModuleCount-1 do
+              All_Modules[I]:=nil;
           end;
-        all_modules[ModuleID]:=self;
+        All_Modules[ModuleID]:=Self;
 
-        asmprefix:=StringDup(FixFileName(n));
-        setfilename(fn,true);
-        localunitsearchpath:=TSearchPathList.Create;
-        localobjectsearchpath:=TSearchPathList.Create;
-        localincludesearchpath:=TSearchPathList.Create;
-        locallibrarysearchpath:=TSearchPathList.Create;
-        localframeworksearchpath:=TSearchPathList.Create;
-        used_units:=TLinkedList.Create;
-        dependent_units:=TLinkedList.Create;
-        localnamespacelist:=TCmdStrList.Create;
-        resourcefiles:=TCmdStrList.Create;
-        linkorderedsymbols:=TCmdStrList.Create;
-        linkunitofiles:=TLinkContainer.Create;
-        linkunitstaticlibs:=TLinkContainer.Create;
-        linkunitsharedlibs:=TLinkContainer.Create;
-        linkotherofiles:=TLinkContainer.Create;
-        linkotherstaticlibs:=TLinkContainer.Create;
-        linkothersharedlibs:=TLinkContainer.Create;
-        linkotherframeworks:=TLinkContainer.Create;
-        mainname:=nil;
-        FImportLibraryList:=TFPHashObjectList.Create(true);
-        crc_final:=false;
-        crc:=0;
+        AsmPrefix:=StringDup(FixFileName(N));
+        SetFileName(FN,True);
+        LocalUnitSearchPath:=TSearchPathList.Create;
+        LocalObjectSearchPath:=TSearchPathList.Create;
+        LocalIncludeSearchPath:=TSearchPathList.Create;
+        LocalLibrarySearchPath:=TSearchPathList.Create;
+        LocalFrameworkSearchPath:=TSearchPathList.Create;
+        UsedUnitList:=TLinkedList.Create;
+        DependentUnitList:=TLinkedList.Create;
+        LocalNamespaceList:=TCmdStrList.Create;
+        ResourceFiles:=TCmdStrList.Create;
+        LinkOrderedSymbols:=TCmdStrList.Create;
+        LinkUnitOFiles:=TLinkContainer.Create;
+        LinkUnitStaticLibs:=TLinkContainer.Create;
+        LinkUnitSharedLibs:=TLinkContainer.Create;
+        LinkOtherOFiles:=TLinkContainer.Create;
+        LinkOtherStaticLibs:=TLinkContainer.Create;
+        LinkOtherSharedLibs:=TLinkContainer.Create;
+        LinkOtherFrameworks:=TLinkContainer.Create;
+        MainName:=nil;
+        FImportLibraryList:=TFPHashObjectList.Create(True);
+        CRCFinal:=False;
+        CRC:=0;
         InterfaceCRC:=0;
         IndirectCRC:=0;
-        headerflags:=0;
-        longversion:=0;
-        moduleflags:=[];
+        HeaderFlags:=0;
+        LongVersion:=0;
+        ModuleFlags:=[];
         Scanner:=nil;
-        unitmap:=nil;
-        unitmapsize:=0;
-        derefmap:=nil;
-        derefmapsize:=0;
-        derefmapcnt:=0;
-        derefdata:=TDynamicArray.Create(1024);
-        derefdataintflen:=0;
-        deflist:=TFPObjectList.Create(false);
-        symlist:=TFPObjectList.Create(false);
-        ptrdefs:=THashSet.Create(64,true,false);
-        arraydefs:=THashSet.Create(64,true,false);
-        procaddrdefs:=THashSet.Create(64,true,false);
+        UnitMap:=nil;
+        UnitMapSize:=0;
+        DerefMap:=nil;
+        DerefMapSize:=0;
+        DerefMapCnt:=0;
+        DerefData:=TDynamicArray.Create(1024);
+        DerefDataIntfLen:=0;
+        DefList:=TFPObjectList.Create(False);
+        SymList:=TFPObjectList.Create(False);
+        PtrDefs:=THashSet.Create(64,True,False);
+        ArrayDefs:=THashSet.Create(64,True,False);
+        ProcAddrDefs:=THashSet.Create(64,True,False);
 
-        ansistrdef:=nil;
-        wpoinfo:=nil;
-        checkforwarddefs:=TFPObjectList.Create(false);
-        forwardgenericdefs:=TFPHashObjectList.Create(true);
-        extendeddefs:=TFPHashObjectList.Create(true);
-        genericdummysyms:=TFPHashObjectList.create(true);
-        pendingspecializations:=TFPHashObjectList.create(false);
-        waitingforunit:=TFPObjectList.create(false);
-        waitingunits:=TFPObjectList.create(false);
-        used_rtti_attrs:=TFPObjectList.create(false);
+        AnsiStrDef:=nil;
+        WPOInfo:=nil;
+        CheckForwardDefs:=TFPObjectList.Create(False);
+        ForwardGenericDefs:=TFPHashObjectList.Create(True);
+        ExtendedDefs:=TFPHashObjectList.Create(True);
+        GenericDummySyms:=TFPHashObjectList.Create(True);
+        PendingSpecializations:=TFPHashObjectList.Create(False);
+        WaitingForUnit:=TFPObjectList.Create(False);
+        WaitingUnits:=TFPObjectList.Create(False);
+        UsedRTTIAttrs:=TFPObjectList.Create(False);
         GlobalSymTable:=nil;
-        localsymtable:=nil;
+        LocalSymTable:=nil;
         GlobalMacroSymTable:=nil;
-        localmacrosymtable:=nil;
-        do_reload:=false;
-        SourcesAvail:=true;
-        mainfilepos.line:=0;
-        mainfilepos.column:=0;
-        mainfilepos.fileindex:=0;
-        recompile_reason:=rr_unknown;
-        in_interface:=true;
-        in_global:=true;
-        is_unit:=_is_unit;
-        IsLibrary:=false;
-        IsPackage:=false;
-        ChangeEndian:=false;
-        is_dbginfo_written:=false;
-        mode_switch_allowed:= true;
-        moduleoptions:=[];
-        deprecatedmsg:=nil;
-        tcinitcode:=nil;
-        _exports:=TLinkedList.Create;
-        dllscannerinputlist:=TFPHashList.Create;
-        asmdata:=casmdata.create(ModuleName);
-        unitimportsyms:=TFPObjectList.Create(true);
-        publicasmsyms:=TFPHashObjectList.Create(true);
-        externasmsyms:=TFPHashObjectList.Create(true);
-        InitDebugInfo(self,false);
+        LocalMacroSymTable:=nil;
+        DoReload:=False;
+        SourcesAvail:=True;
+        MainFilePos.Line:=0;
+        MainFilePos.Column:=0;
+        MainFilePos.FileIndex:=0;
+        RecompileReason:=rr_unknown;
+        InInterface:=True;
+        InGlobal:=True;
+        IsUnit:=AIsUnit;
+        IsLibrary:=False;
+        IsPackage:=False;
+        ChangeEndian:=False;
+        IsDbgInfoWritten:=False;
+        ModeSwitchAllowed:= True;
+        ModuleOptions:=[];
+        DeprecatedMsg:=nil;
+        TCInitCode:=nil;
+        ExportList:=TLinkedList.Create;
+        DLLScannerInputList:=TFPHashList.Create;
+        AsmData:=CAsmData.Create(ModuleName);
+        UnitImportSyms:=TFPObjectList.Create(True);
+        PublicAsmSyms:=TFPHashObjectList.Create(True);
+        ExternAsmSyms:=TFPHashObjectList.Create(True);
+        InitDebugInfo(Self,False);
       end;
 
 
     destructor TModule.Destroy;
       var
-        i : LongInt;
-        current_debuginfo_reset : boolean;
+        I : LongInt;
+        CurrentDebugInfoReset : Boolean;
       begin
-        unitmap:=nil;
-        if Assigned(derefmap) then
+        UnitMap:=nil;
+        if Assigned(DerefMap) then
           begin
-            for i:=0 to derefmapcnt-1 do
-              StringDispose(derefmap[i].ModuleName);
+            for I:=0 to DerefMapCnt-1 do
+              StringDispose(DerefMap[I].ModuleName);
           end;
-        derefmap:=nil;
-        if Assigned(_exports) then
-          freeandnil(_exports);
-        if Assigned(dllscannerinputlist) then
-          freeandnil(dllscannerinputlist);
-        if Assigned(localnamespacelist) then
-          freeandnil(localnamespacelist);
+        DerefMap:=nil;
+        if Assigned(ExportList) then
+          FreeAndNil(ExportList);
+        if Assigned(DLLScannerInputList) then
+          FreeAndNil(DLLScannerInputList);
+        if Assigned(LocalNamespaceList) then
+          FreeAndNil(LocalNamespaceList);
         if Assigned(Scanner) then
           begin
             { also update current_scanner if it was pointing
               to this module }
             if CurrentScanner=TScannerFile(Scanner) then
               Set_Current_Scanner(nil);
-            freeandnil(Scanner);
+            FreeAndNil(Scanner);
           end;
-        if Assigned(asmdata) then
+        if Assigned(AsmData) then
           begin
-            if CurrentAsmData=asmdata then
+            if CurrentAsmData=AsmData then
               CurrentAsmData:=nil;
-             asmdata.free;
-             asmdata := nil;
+             AsmData.Free;
+             AsmData := nil;
           end;
         if Assigned(ProcInfo) then
           begin
@@ -741,128 +741,128 @@ implementation
             TProcInfo(ProcInfo).destroy_tree;
             ProcInfo := nil;
           end;
-        DoneDebugInfo(self,current_debuginfo_reset);
-        used_units.free;
-        used_units := nil;
-        dependent_units.free;
-        dependent_units := nil;
-        resourcefiles.Free;
-        resourcefiles := nil;
-        linkorderedsymbols.Free;
-        linkorderedsymbols := nil;
-        linkunitofiles.Free;
-        linkunitofiles := nil;
-        linkunitstaticlibs.Free;
-        linkunitstaticlibs := nil;
-        linkunitsharedlibs.Free;
-        linkunitsharedlibs := nil;
-        linkotherofiles.Free;
-        linkotherofiles := nil;
-        linkotherstaticlibs.Free;
-        linkotherstaticlibs := nil;
-        linkothersharedlibs.Free;
-        linkothersharedlibs := nil;
-        linkotherframeworks.Free;
-        linkotherframeworks := nil;
-        StringDispose(mainname);
-        externasmsyms.Free;
-        externasmsyms := nil;
-        publicasmsyms.Free;
-        publicasmsyms := nil;
-        unitimportsyms.Free;
-        unitimportsyms := nil;
+        DoneDebugInfo(Self,CurrentDebugInfoReset);
+        UsedUnitList.Free;
+        UsedUnitList := nil;
+        DependentUnitList.Free;
+        DependentUnitList := nil;
+        ResourceFiles.Free;
+        ResourceFiles := nil;
+        LinkOrderedSymbols.Free;
+        LinkOrderedSymbols := nil;
+        LinkUnitOFiles.Free;
+        LinkUnitOFiles := nil;
+        LinkUnitStaticLibs.Free;
+        LinkUnitStaticLibs := nil;
+        LinkUnitSharedLibs.Free;
+        LinkUnitSharedLibs := nil;
+        LinkOtherOFiles.Free;
+        LinkOtherOFiles := nil;
+        LinkOtherStaticLibs.Free;
+        LinkOtherStaticLibs := nil;
+        LinkOtherSharedLibs.Free;
+        LinkOtherSharedLibs := nil;
+        LinkOtherFrameworks.Free;
+        LinkOtherFrameworks := nil;
+        StringDispose(MainName);
+        ExternAsmSyms.Free;
+        ExternAsmSyms := nil;
+        PublicAsmSyms.Free;
+        PublicAsmSyms := nil;
+        UnitImportSyms.Free;
+        UnitImportSyms := nil;
         FImportLibraryList.Free;
         FImportLibraryList := nil;
-        extendeddefs.Free;
-        extendeddefs := nil;
-        genericdummysyms.free;
-        genericdummysyms := nil;
-        pendingspecializations.free;
-        pendingspecializations := nil;
-        waitingforunit.free;
-        waitingforunit := nil;
-        waitingunits.free;
-        waitingunits := nil;
-        used_rtti_attrs.free;
-        used_rtti_attrs := nil;
-        StringDispose(asmprefix);
-        StringDispose(deprecatedmsg);
-        tcinitcode.free;
-        tcinitcode := nil;
-        localunitsearchpath.Free;
-        localunitsearchpath := nil;
-        localobjectsearchpath.free;
-        localobjectsearchpath := nil;
-        localincludesearchpath.free;
-        localincludesearchpath := nil;
-        locallibrarysearchpath.free;
-        locallibrarysearchpath := nil;
-        localframeworksearchpath.free;
-        localframeworksearchpath := nil;
+        ExtendedDefs.Free;
+        ExtendedDefs := nil;
+        GenericDummySyms.Free;
+        GenericDummySyms := nil;
+        PendingSpecializations.Free;
+        PendingSpecializations := nil;
+        WaitingForUnit.Free;
+        WaitingForUnit := nil;
+        WaitingUnits.Free;
+        WaitingUnits := nil;
+        UsedRTTIAttrs.Free;
+        UsedRTTIAttrs := nil;
+        StringDispose(AsmPrefix);
+        StringDispose(DeprecatedMsg);
+        TCInitCode.Free;
+        TCInitCode := nil;
+        LocalUnitSearchPath.Free;
+        LocalUnitSearchPath := nil;
+        LocalObjectSearchPath.Free;
+        LocalObjectSearchPath := nil;
+        LocalIncludeSearchPath.Free;
+        LocalIncludeSearchPath := nil;
+        LocalLibrarySearchPath.Free;
+        LocalLibrarySearchPath := nil;
+        LocalFrameworkSearchPath.Free;
+        LocalFrameworkSearchPath := nil;
 {$ifdef MEMDEBUG}
-        memsymtable.start;
+        MemSymTable.Start;
 {$endif}
-        derefdata.free;
-        derefdata := nil;
-        if Assigned(deflist) then
+        DerefData.Free;
+        DerefData := nil;
+        if Assigned(DefList) then
           begin
-            for i:=0 to deflist.Count-1 do
-              if Assigned(deflist[i]) and
-                 (TDef(deflist[i]).registered_in_module=self) then
-                TDef(deflist[i]).registered_in_module:=nil;
-            deflist.free;
-            deflist := nil;
+            for I:=0 to DefList.Count-1 do
+              if Assigned(DefList[I]) and
+                 (TDef(DefList[I]).RegisteredInModule=Self) then
+                TDef(DefList[I]).RegisteredInModule:=nil;
+            DefList.Free;
+            DefList := nil;
           end;
-        symlist.free;
-        symlist := nil;
-        ptrdefs.free;
-        ptrdefs := nil;
-        arraydefs.free;
-        arraydefs := nil;
-        procaddrdefs.free;
-        procaddrdefs := nil;
+        SymList.Free;
+        SymList := nil;
+        PtrDefs.Free;
+        PtrDefs := nil;
+        ArrayDefs.Free;
+        ArrayDefs := nil;
+        ProcAddrDefs.Free;
+        ProcAddrDefs := nil;
 
-        ansistrdef:=nil;
-        wpoinfo.free;
-        wpoinfo := nil;
-        checkforwarddefs.free;
-        checkforwarddefs := nil;
-        forwardgenericdefs.free;
-        forwardgenericdefs := nil;
-        GlobalSymTable.free;
+        AnsiStrDef:=nil;
+        WPOInfo.Free;
+        WPOInfo := nil;
+        CheckForwardDefs.Free;
+        CheckForwardDefs := nil;
+        ForwardGenericDefs.Free;
+        ForwardGenericDefs := nil;
+        GlobalSymTable.Free;
         GlobalSymTable := nil;
-        localsymtable.free;
-        localsymtable := nil;
-        GlobalMacroSymTable.free;
+        LocalSymTable.Free;
+        LocalSymTable := nil;
+        GlobalMacroSymTable.Free;
         GlobalMacroSymTable := nil;
-        localmacrosymtable.free;
-        localmacrosymtable := nil;
+        LocalMacroSymTable.Free;
+        LocalMacroSymTable := nil;
 
-        task:=nil;
-        all_modules[ModuleID]:=nil;
+        Task:=nil;
+        All_Modules[ModuleID]:=nil;
 {$ifdef MEMDEBUG}
-        memsymtable.stop;
+        MemSymTable.Stop;
 {$endif}
         inherited Destroy;
       end;
 
 
-    procedure TModule.reset(for_recompile: boolean);
+    procedure TModule.Reset(ForRecompile: Boolean);
       var
-        i   : LongInt;
-        current_debuginfo_reset : boolean;
-        m : TModule;
+        I   : LongInt;
+        CurrentDebugInfoReset : Boolean;
+        M : TModule;
       begin
-        is_reset:=true;
-        do_recompile:=false;
-        FromPPU:=false;
+        IsReset:=True;
+        DoRecompile:=False;
+        FromPPU:=False;
         if Assigned(Scanner) then
           begin
             { also update current_scanner if it was pointing
               to this module }
             if CurrentScanner=TScannerFile(Scanner) then
               Set_Current_Scanner(nil);
-            freeandnil(Scanner);
+            FreeAndNil(Scanner);
           end;
         if Assigned(ProcInfo) then
           begin
@@ -876,69 +876,69 @@ implementation
             { release procinfo tree }
             TProcInfo(ProcInfo).destroy_tree;
           end;
-        if Assigned(asmdata) then
+        if Assigned(AsmData) then
           begin
-            if CurrentAsmData=asmdata then
+            if CurrentAsmData=AsmData then
               CurrentAsmData:=nil;
-            asmdata.free;
-            asmdata:=nil;
+            AsmData.Free;
+            AsmData:=nil;
           end;
-        DoneDebugInfo(self,current_debuginfo_reset);
-        GlobalSymTable.free;
+        DoneDebugInfo(Self,CurrentDebugInfoReset);
+        GlobalSymTable.Free;
         GlobalSymTable:=nil;
-        localsymtable.free;
-        localsymtable:=nil;
-        GlobalMacroSymTable.free;
+        LocalSymTable.Free;
+        LocalSymTable:=nil;
+        GlobalMacroSymTable.Free;
         GlobalMacroSymTable:=nil;
-        localmacrosymtable.free;
-        localmacrosymtable:=nil;
-        deflist.free;
-        deflist:=TFPObjectList.Create(false);
-        symlist.free;
-        symlist:=TFPObjectList.Create(false);
-        ptrdefs.free;
-        ptrdefs:=THashSet.Create(64,true,false);
-        arraydefs.free;
-        arraydefs:=THashSet.Create(64,true,false);
-        procaddrdefs.free;
-        procaddrdefs:=THashSet.Create(64,true,false);
+        LocalMacroSymTable.Free;
+        LocalMacroSymTable:=nil;
+        DefList.Free;
+        DefList:=TFPObjectList.Create(False);
+        SymList.Free;
+        SymList:=TFPObjectList.Create(False);
+        PtrDefs.Free;
+        PtrDefs:=THashSet.Create(64,True,False);
+        ArrayDefs.Free;
+        ArrayDefs:=THashSet.Create(64,True,False);
+        ProcAddrDefs.Free;
+        ProcAddrDefs:=THashSet.Create(64,True,False);
 
-        ansistrdef:=nil;
-        wpoinfo.free;
-        wpoinfo:=nil;
-        checkforwarddefs.free;
-        checkforwarddefs:=TFPObjectList.Create(false);
-        forwardgenericdefs.free;
-        forwardgenericdefs:=TFPHashObjectList.Create(true);
-        publicasmsyms.free;
-        publicasmsyms:=TFPHashObjectList.Create(true);
-        externasmsyms.free;
-        externasmsyms:=TFPHashObjectList.Create(true);
-        unitimportsyms.free;
-        unitimportsyms:=TFPObjectList.Create(true);
-        derefdata.free;
-        derefdata:=TDynamicArray.Create(1024);
-        unitmap:=nil;
-        if Assigned(derefmap) then
+        AnsiStrDef:=nil;
+        WPOInfo.Free;
+        WPOInfo:=nil;
+        CheckForwardDefs.Free;
+        CheckForwardDefs:=TFPObjectList.Create(False);
+        ForwardGenericDefs.Free;
+        ForwardGenericDefs:=TFPHashObjectList.Create(True);
+        PublicAsmSyms.Free;
+        PublicAsmSyms:=TFPHashObjectList.Create(True);
+        ExternAsmSyms.Free;
+        ExternAsmSyms:=TFPHashObjectList.Create(True);
+        UnitImportSyms.Free;
+        UnitImportSyms:=TFPObjectList.Create(True);
+        DerefData.Free;
+        DerefData:=TDynamicArray.Create(1024);
+        UnitMap:=nil;
+        if Assigned(DerefMap) then
           begin
-            for i:=0 to derefmapcnt-1 do
-              StringDispose(derefmap[i].ModuleName);
+            for I:=0 to DerefMapCnt-1 do
+              StringDispose(DerefMap[I].ModuleName);
           end;
-        derefmap:=nil;
-        unitmapsize:=0;
-        derefmapsize:=0;
-        derefmapcnt:=0;
-        derefdataintflen:=0;
-        SourceFiles.free;
-        SourceFiles:=TInputFileManager.create;
-        asmdata:=casmdata.create(ModuleName);
-        if CurrentModule=self then
-          CurrentAsmData:=TAsmData(asmdata);
-        InitDebugInfo(self,current_debuginfo_reset);
-        _exports.free;
-        _exports:=TLinkedList.create;
-        dllscannerinputlist.free;
-        dllscannerinputlist:=TFPHashList.create;
+        DerefMap:=nil;
+        UnitMapSize:=0;
+        DerefMapSize:=0;
+        DerefMapCnt:=0;
+        DerefDataIntfLen:=0;
+        SourceFiles.Free;
+        SourceFiles:=TInputFileManager.Create;
+        AsmData:=CAsmData.Create(ModuleName);
+        if CurrentModule=Self then
+          CurrentAsmData:=TAsmData(AsmData);
+        InitDebugInfo(Self,CurrentDebugInfoReset);
+        ExportList.Free;
+        ExportList:=TLinkedList.Create;
+        DLLScannerInputList.Free;
+        DLLScannerInputList:=TFPHashList.Create;
         { During reload, the list of used units cannot change.
           It can only change while recompiling.
           Because the used_units is used in loops in the load cycle(s) which
@@ -946,84 +946,84 @@ implementation
           we do not destroy the list, we only update the contents.
           As a result the loop variable does not get reset during the loop.
           For recompile, we recreate the list }
-        if for_recompile then
+        if ForRecompile then
           begin
-          used_units.free;
-          used_units:=TLinkedList.Create;
+          UsedUnitList.Free;
+          UsedUnitList:=TLinkedList.Create;
           end;
         // keep dependent_units
-        resourcefiles.Free;
-        resourcefiles:=TCmdStrList.Create;
-        linkorderedsymbols.Free;
-        linkorderedsymbols:=TCmdStrList.Create;
-        pendingspecializations.free;
-        pendingspecializations:=TFPHashObjectList.create(false);
-        genericdummysyms.Free;
-        genericdummysyms := TFPHashObjectList.create(true);
-        extendeddefs.Free;
-        extendeddefs:=TFPHashObjectList.Create(true);
-        if Assigned(waitingforunit) and
-          (waitingforunit.count<>0) then
+        ResourceFiles.Free;
+        ResourceFiles:=TCmdStrList.Create;
+        LinkOrderedSymbols.Free;
+        LinkOrderedSymbols:=TCmdStrList.Create;
+        PendingSpecializations.Free;
+        PendingSpecializations:=TFPHashObjectList.Create(False);
+        GenericDummySyms.Free;
+        GenericDummySyms := TFPHashObjectList.Create(True);
+        ExtendedDefs.Free;
+        ExtendedDefs:=TFPHashObjectList.Create(True);
+        if Assigned(WaitingForUnit) and
+          (WaitingForUnit.Count<>0) then
            begin
            Write(Self.ModuleName^, ' is reset while still waiting for units: ');
-           for I:=0 to waitingforunit.Count-1 do
+           for I:=0 to WaitingForUnit.Count-1 do
              begin
-             M:=TModule(waitingforunit.Items[i]);
-             write(m.ModuleName^,' (state:',M.state,') ');
+             M:=TModule(WaitingForUnit.Items[I]);
+             Write(M.ModuleName^,' (state:',M.State,') ');
              end;
            WriteLn;
            InternalError(2016070501);
            end;
-        waitingforunit.free;
-        waitingforunit:=TFPObjectList.create(false);
-        linkunitofiles.Free;
-        linkunitofiles:=TLinkContainer.Create;
-        linkunitstaticlibs.Free;
-        linkunitstaticlibs:=TLinkContainer.Create;
-        linkunitsharedlibs.Free;
-        linkunitsharedlibs:=TLinkContainer.Create;
-        linkotherofiles.Free;
-        linkotherofiles:=TLinkContainer.Create;
-        linkotherstaticlibs.Free;
-        linkotherstaticlibs:=TLinkContainer.Create;
-        linkothersharedlibs.Free;
-        linkothersharedlibs:=TLinkContainer.Create;
-        linkotherframeworks.Free;
-        linkotherframeworks:=TLinkContainer.Create;
-        StringDispose(mainname);
+        WaitingForUnit.Free;
+        WaitingForUnit:=TFPObjectList.Create(False);
+        LinkUnitOFiles.Free;
+        LinkUnitOFiles:=TLinkContainer.Create;
+        LinkUnitStaticLibs.Free;
+        LinkUnitStaticLibs:=TLinkContainer.Create;
+        LinkUnitSharedLibs.Free;
+        LinkUnitSharedLibs:=TLinkContainer.Create;
+        LinkOtherOFiles.Free;
+        LinkOtherOFiles:=TLinkContainer.Create;
+        LinkOtherStaticLibs.Free;
+        LinkOtherStaticLibs:=TLinkContainer.Create;
+        LinkOtherSharedLibs.Free;
+        LinkOtherSharedLibs:=TLinkContainer.Create;
+        LinkOtherFrameworks.Free;
+        LinkOtherFrameworks:=TLinkContainer.Create;
+        StringDispose(MainName);
         FImportLibraryList.Free;
         FImportLibraryList:=TFPHashObjectList.Create;
-        do_reload:=false;
-        interface_compiled:=false;
-        in_interface:=true;
-        in_global:=true;
-        mode_switch_allowed:=true;
-        StringDispose(deprecatedmsg);
-        tcinitcode.free;
-        tcinitcode:=nil;
-        localunitsearchpath.Free;
-        localunitsearchpath:=TSearchPathList.Create;
-        localobjectsearchpath.free;
-        localobjectsearchpath:=TSearchPathList.Create;
-        localincludesearchpath.free;
-        localincludesearchpath:=TSearchPathList.Create;
-        locallibrarysearchpath.free;
-        locallibrarysearchpath:=TSearchPathList.Create;
-        localframeworksearchpath.free;
-        localframeworksearchpath:=TSearchPathList.Create;
-        moduleoptions:=[];
-        is_dbginfo_written:=false;
-        crc_final:=false;
-        crc:=0;
+        DoReload:=False;
+        InterfaceCompiled:=False;
+        InInterface:=True;
+        InGlobal:=True;
+        ModeSwitchAllowed:=True;
+        StringDispose(DeprecatedMsg);
+        TCInitCode.Free;
+        TCInitCode:=nil;
+        LocalUnitSearchPath.Free;
+        LocalUnitSearchPath:=TSearchPathList.Create;
+        LocalObjectSearchPath.Free;
+        LocalObjectSearchPath:=TSearchPathList.Create;
+        LocalIncludeSearchPath.Free;
+        LocalIncludeSearchPath:=TSearchPathList.Create;
+        LocalLibrarySearchPath.Free;
+        LocalLibrarySearchPath:=TSearchPathList.Create;
+        LocalFrameworkSearchPath.Free;
+        LocalFrameworkSearchPath:=TSearchPathList.Create;
+        ModuleOptions:=[];
+        IsDbgInfoWritten:=False;
+        CRCFinal:=False;
+        CRC:=0;
         InterfaceCRC:=0;
         IndirectCRC:=0;
-        headerflags:=0;
-        longversion:=0;
-        moduleflags:=[];
-        mainfilepos.line:=0;
-        mainfilepos.column:=0;
-        mainfilepos.fileindex:=0;
-        recompile_reason:=rr_unknown;
+        HeaderFlags:=0;
+        LongVersion:=0;
+        ModuleFlags:=[];
+        MainFilePos.Line:=0;
+        MainFilePos.Column:=0;
+        MainFilePos.FileIndex:=0;
+        RecompileReason:=rr_unknown;
         {
           The following fields should not
           be reset:
@@ -1036,110 +1036,110 @@ implementation
         }
       end;
 
-    procedure TModule.loadlocalnamespacelist;
+    procedure TModule.LoadLocalNamespaceList;
 
       var
-        nsitem : TCmdStrListItem;
+        NSItem : TCmdStrListItem;
 
       begin
         // Copying local namespace list
         if PreModule_NamespaceList.Count>0 then
           begin
-          nsitem:=TCmdStrListItem(PreModule_NamespaceList.First);
-          while Assigned(nsItem) do
+          NSItem:=TCmdStrListItem(PreModule_NamespaceList.First);
+          while Assigned(NSItem) do
             begin
-            localnamespacelist.Concat(nsitem.Str);
-            nsItem:=TCmdStrListItem(nsitem.Next);
+            LocalNamespaceList.Concat(NSItem.Str);
+            NSItem:=TCmdStrListItem(NSItem.Next);
             end;
           PreModule_NamespaceList.Clear;
           end;
-        CurrentNamespaceList:=localnamespacelist;
+        CurrentNamespaceList:=LocalNamespaceList;
       end;
 
 
-    procedure TModule.adddependency(callermodule: TModule; frominterface: boolean);
+    procedure TModule.AddDependency(CallerModule: TModule; FromInterface: Boolean);
       begin
-        if hasdependency(callermodule) then exit;
-        if is_unit then
-          Message2(unit_u_add_depend_to,callermodule.ModuleName^,ModuleName^);
+        if HasDependency(CallerModule) then Exit;
+        if IsUnit then
+          Message2(unit_u_add_depend_to,CallerModule.ModuleName^,ModuleName^);
 
         { dependent_units is needed by the invalid cycle test,
           using the program is an invalid cycle as well }
-        dependent_units.concat(TDependentUnit.create(callermodule,frominterface));
+        DependentUnitList.Concat(TDependentUnit.Create(CallerModule,FromInterface));
 
-        if callermodule.scc_finished then
+        if CallerModule.SCCFinished then
           InternalError(2026022202);
       end;
 
-    procedure TModule.removedependency(callermodule: TModule);
+    procedure TModule.RemoveDependency(CallerModule: TModule);
       var
-        du, nextdu: TDependentUnit;
+        DU, NextDU: TDependentUnit;
       begin
-        du:=TDependentUnit(dependent_units.First);
-        while Assigned(du) do
+        DU:=TDependentUnit(DependentUnitList.First);
+        while Assigned(DU) do
         begin
-          nextdu:=TDependentUnit(du.Next);
-          if du.u=callermodule then
-            dependent_units.Remove(du);
-          du:=nextdu;
+          NextDU:=TDependentUnit(DU.Next);
+          if DU.U=CallerModule then
+            DependentUnitList.Remove(DU);
+          DU:=NextDU;
         end;
       end;
 
-    function TModule.hasdependency(callermodule: TModule): boolean;
+    function TModule.HasDependency(CallerModule: TModule): Boolean;
       var
-        du: TDependentUnit;
+        DU: TDependentUnit;
       begin
-        du:=TDependentUnit(dependent_units.First);
-        while Assigned(du) do
+        DU:=TDependentUnit(DependentUnitList.First);
+        while Assigned(DU) do
         begin
-          if du.u=callermodule then
-            exit(true);
-          du:=TDependentUnit(du.Next);
+          if DU.U=CallerModule then
+            Exit(True);
+          DU:=TDependentUnit(DU.Next);
         end;
-        Result:=false;
+        Result:=False;
       end;
 
-    procedure TModule.flagdependent;
+    procedure TModule.FlagDependent;
       var
-        dm : TDependentUnit;
-        m , bm: TModule;
+        DM : TDependentUnit;
+        M , BM: TModule;
 
       begin
         { flag all units that depend on this unit for reloading }
-        if not interface_compiled then exit;
+        if not InterfaceCompiled then Exit;
 
-        dm:=TDependentUnit(dependent_units.first);
-        while Assigned(dm) do
+        DM:=TDependentUnit(DependentUnitList.First);
+        while Assigned(DM) do
         begin
-          m:=dm.u;
-          if m.state in [ms_compiled,ms_processed] then
+          M:=DM.U;
+          if M.State in [ms_compiled,ms_processed] then
           begin
             { Inconsistency: ms_compiled must only be set when all depending units (even indirect)
                 are complete aka wait for crc or higher }
-            WriteLn('tmodule.flagdependent ',ModuleName^,' state=',StateStr,', is used by ',BoolToStr(dm.in_interface,'interface','implementation'),' of ',m.ModuleName^,' ',m.StateStr);
-            bm:=find_used_unit_compiling;
-            if bm<>nil then
-              WriteLn('tmodule.flagdependent ',ModuleName^,' is using (indirectly) ',bm.ModuleName^,' ',bm.StateStr)
+            WriteLn('tmodule.flagdependent ',ModuleName^,' state=',StateStr,', is used by ',BoolToStr(DM.InInterface,'interface','implementation'),' of ',M.ModuleName^,' ',M.StateStr);
+            BM:=Find_Used_Unit_Compiling;
+            if BM<>nil then
+              WriteLn('tmodule.flagdependent ',ModuleName^,' is using (indirectly) ',BM.ModuleName^,' ',BM.StateStr)
             else
               WriteLn('tmodule.flagdependent ',ModuleName^,' is not using any incomplete unit.');
-            bm:=m.find_used_unit_compiling;
-            if bm<>nil then
-              WriteLn('tmodule.flagdependent ',m.ModuleName^,' is using (indirectly) ',bm.ModuleName^,' ',bm.StateStr)
+            BM:=M.Find_Used_Unit_Compiling;
+            if BM<>nil then
+              WriteLn('tmodule.flagdependent ',M.ModuleName^,' is using (indirectly) ',BM.ModuleName^,' ',BM.StateStr)
             else
-              WriteLn('tmodule.flagdependent ',m.ModuleName^,' is not using any incomplete unit.');
+              WriteLn('tmodule.flagdependent ',M.ModuleName^,' is not using any incomplete unit.');
 
-            WriteUsedUnits(self);
-            WriteUsedUnits(m);
+            WriteUsedUnits(Self);
+            WriteUsedUnits(M);
 
             InternalError(2026022510);
           end;
-          if not m.do_reload and Is_Reload_Needed(dm) then
+          if not M.DoReload and Is_Reload_Needed(DM) then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
-            WriteLn('PPUALGO tmodule.flagdependent ',ModuleName^,' state=',StateStr,', is used by ',BoolToStr(dm.in_interface,'interface','implementation'),' of ',m.ModuleName^,' ',m.StateStr);
+            WriteLn('PPUALGO tmodule.flagdependent ',ModuleName^,' state=',StateStr,', is used by ',BoolToStr(DM.InInterface,'interface','implementation'),' of ',M.ModuleName^,' ',M.StateStr);
             {$ENDIF}
-            m.do_reload:=true;
-            Message1(unit_u_flag_for_reload,m.ModuleName^);
+            M.DoReload:=True;
+            Message1(unit_u_flag_for_reload,M.ModuleName^);
             { We have to flag the units that depend on this unit even
               though it didn't change, because they might also
               indirectly depend on the unit that did change (e.g.,
@@ -1149,100 +1149,100 @@ implementation
               must also be re-resolved, because they will also contain
               pointers to procdefs in the old trgobj (in case of a
               recompile, all old defs are freed) }
-            m.flagdependent;
+            M.FlagDependent;
           end;
-          dm:=TDependentUnit(dm.next);
+          DM:=TDependentUnit(DM.Next);
         end;
       end;
 
-    function TModule.find_used_unit_compiling: TModule;
+    function TModule.Find_Used_Unit_Compiling: TModule;
 
-        function find_compiling(m: TModule): TModule;
+        function FindCompiling(M: TModule): TModule;
         var
-          uu: TUsedUnit;
+          UU: TUsedUnit;
         begin
           Result:=nil;
-          if m.cycle_search_stamp=TModule.cycle_stamp then
-            exit; // already visited
-          m.cycle_search_stamp:=TModule.cycle_stamp;
+          if M.CycleSearchStamp=TModule.Cycle_Stamp then
+            Exit; // already visited
+          M.CycleSearchStamp:=TModule.Cycle_Stamp;
 
-          if m<>self then
-            if m.do_reload then
-              exit(m)
+          if M<>Self then
+            if M.DoReload then
+              Exit(M)
             else
-              case m.state of
+              case M.State of
                 ms_load:
-                  if m.ppu_waitingfor_crc then
+                  if M.PPUWaitingForCRC then
                     // check used units
                   else
-                    exit(m);
+                    Exit(M);
                 ms_compiled_waitcrc:
                   ; // check used units
                 ms_compiled, ms_processed:
-                  exit;
+                  Exit;
               else
-                exit(m);
+                Exit(M);
               end;
 
-          uu:=TUsedUnit(m.used_units.first);
-          while uu<>nil do
+          UU:=TUsedUnit(M.UsedUnitList.First);
+          while UU<>nil do
             begin
-              Result:=find_compiling(uu.u);
-              if Result<>nil then exit;
-              uu:=TUsedUnit(uu.Next);
+              Result:=FindCompiling(UU.U);
+              if Result<>nil then Exit;
+              UU:=TUsedUnit(UU.Next);
             end;
         end;
 
       begin
-        increase_cycle_stamp;
-        Result:=find_compiling(self);
+        Increase_Cycle_Stamp;
+        Result:=FindCompiling(Self);
       end;
 
-    class procedure TModule.increase_cycle_stamp;
+    class procedure TModule.Increase_Cycle_Stamp;
       begin
-        if cycle_stamp=high(integer) then
+        if Cycle_Stamp=High(Integer) then
           InternalError(2026022203);
-        inc(cycle_stamp);
+        Inc(Cycle_Stamp);
       end;
 
     function TModule.StateStr: string;
       begin
-        str(state,Result);
-        if do_recompile then
+        Str(State,Result);
+        if DoRecompile then
           Result:='do_recompile,'+Result;
-        if do_reload then
+        if DoReload then
           Result:='do_reload,'+Result;
       end;
 
-    procedure TModule.checkstate;
+    procedure TModule.CheckState;
       begin
         // Note: ms_load is checked in tppumodule.checkstate
 
-        if interface_compiled then
+        if InterfaceCompiled then
         begin
-          if state in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf] then
+          if State in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' interface_compiled=true');
             InternalError(2026021912);
           end;
         end else begin
-          if state in [ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed] then
+          if State in [ms_compiling_waitimpl,ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' interface_compiled=false');
             InternalError(2026021911);
           end;
         end;
 
-        if crc_final then
+        if CRCFinal then
         begin
-          if state in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf,
+          if State in [ms_registered,ms_compile,ms_compiling_wait,ms_compiling_waitintf,
             ms_compiling_waitimpl,ms_compiling_waitfinish] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' crc_final=true');
             InternalError(2026021910);
           end;
         end else begin
-          if state in [ms_compiled_waitcrc,ms_compiled,ms_processed] then
+          if State in [ms_compiled_waitcrc,ms_compiled,ms_processed] then
           begin
             WriteLn('tmodule.checkstate ',ModuleName^,' ',StateStr,' crc_final=false');
             InternalError(2026021909);
@@ -1250,288 +1250,288 @@ implementation
         end;
       end;
 
-    procedure TModule.disconnect_depending_modules;
+    procedure TModule.Disconnect_Depending_Modules;
       var
-        uu: TUsedUnit;
+        UU: TUsedUnit;
       begin
-        uu:=TUsedUnit(used_units.first);
-        while Assigned(uu) do
+        UU:=TUsedUnit(UsedUnitList.First);
+        while Assigned(UU) do
           begin
-            uu.u.removedependency(self);
-            uu.dependent_added:=false;
-            uu:=TUsedUnit(uu.next);
+            UU.U.RemoveDependency(Self);
+            UU.DependentAdded:=False;
+            UU:=TUsedUnit(UU.Next);
           end;
       end;
 
-    function TModule.Is_Reload_Needed(du: TDependentUnit): boolean;
+    function TModule.Is_Reload_Needed(DU: TDependentUnit): Boolean;
       { du.u is a module using this unit }
       begin
-        Result:=(du.u.state in [ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed])
-             or (du.in_interface and du.u.interface_compiled);
+        Result:=(DU.U.State in [ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed])
+             or (DU.InInterface and DU.U.InterfaceCompiled);
         { Note: see also the override in fppu.tppumodule }
       end;
 
-    procedure TModule.addimportedsym(sym: TSymEntry; check_if_exists: boolean);
+    procedure TModule.AddImportedSym(Sym: TSymEntry; CheckIfExists: Boolean);
       var
-        importsym: TUnitImportSym;
-        module: TModule;
-        asymtable: TSymTable;
-        i: Integer;
+        ImportSym: TUnitImportSym;
+        Module: TModule;
+        ASymTable: TSymTable;
+        I: Integer;
       begin
-        if check_if_exists then
+        if CheckIfExists then
         begin
-          for i:=0 to unitimportsyms.Count-1 do
-            if TUnitImportSym(unitimportsyms[i]).sym=sym then
-              exit;
+          for I:=0 to UnitImportSyms.Count-1 do
+            if TUnitImportSym(UnitImportSyms[I]).Sym=Sym then
+              Exit;
         end;
 
-        asymtable:=sym.owner;
-        module:=Get_Module(asymtable.ModuleID);
-        if module=nil then
+        ASymTable:=Sym.Owner;
+        Module:=Get_Module(ASymTable.ModuleID);
+        if Module=nil then
         begin
-          WriteLn('tmodule.find_unitimportsymbol missing moduleid=',asymtable.ModuleID);
+          WriteLn('tmodule.find_unitimportsymbol missing moduleid=',ASymTable.ModuleID);
           InternalError(2026022622);
         end;
 
-        if (sym.SymId>=module.symlist.Count) then
+        if (Sym.SymID>=Module.SymList.Count) then
           InternalError(2026022617);
-        if sym<>TSymEntry(module.symlist[sym.SymId]) then
+        if Sym<>TSymEntry(Module.SymList[Sym.SymID]) then
         begin
-          WriteLn('tmodule.addimportedsym ',ModuleName^,' ',StateStr,' ',Sym.RealName,' ',Sym.SymId,' MISMATCH');
+          WriteLn('tmodule.addimportedsym ',ModuleName^,' ',StateStr,' ',Sym.RealName,' ',Sym.SymID,' MISMATCH');
           InternalError(2026022611);
         end;
 
-        importsym:=TUnitImportSym.Create;
-        importsym.sym:=sym;
-        importsym.module:=module;
-        importsym.symid:=sym.SymId;
-        unitimportsyms.Add(importsym);
+        ImportSym:=TUnitImportSym.Create;
+        ImportSym.Sym:=Sym;
+        ImportSym.Module:=Module;
+        ImportSym.SymID:=Sym.SymID;
+        UnitImportSyms.Add(ImportSym);
       end;
 
-    procedure TModule.derefimportedsymbols;
+    procedure TModule.DerefImportedSymbols;
       var
-        i: Integer;
-        importsym: TUnitImportSym;
-        module: TModule;
+        I: Integer;
+        ImportSym: TUnitImportSym;
+        Module: TModule;
       begin
-        for i:=0 to unitimportsyms.Count-1 do
+        for I:=0 to UnitImportSyms.Count-1 do
           begin
-            importsym:=TUnitImportSym(unitimportsyms[i]);
-            module:=importsym.module;
-            if (importsym.SymId>=module.symlist.Count) then
+            ImportSym:=TUnitImportSym(UnitImportSyms[I]);
+            Module:=ImportSym.Module;
+            if (ImportSym.SymID>=Module.SymList.Count) then
               InternalError(2026022618);
-            importsym.sym:=TSymEntry(module.symlist[importsym.symid]);
+            ImportSym.Sym:=TSymEntry(Module.SymList[ImportSym.SymID]);
           end;
       end;
 
-    function TModule.addusedunit(hp:TModule;inuses:boolean;usym:TUnitSym):TUsedUnit;
+    function TModule.AddUsedUnit(HP:TModule;AInUses:Boolean;USym:TUnitSym):TUsedUnit;
       var
-        pu : TUsedUnit;
+        PU : TUsedUnit;
       begin
-        pu:=TUsedUnit.create(hp,in_interface,inuses,usym);
-        used_units.concat(pu);
-        addusedunit:=pu;
+        PU:=TUsedUnit.Create(HP,InInterface,AInUses,USym);
+        UsedUnitList.Concat(PU);
+        AddUsedUnit:=PU;
       end;
 
-    function TModule.usedunitsloaded(interface_units : boolean; out firstwaiting : TModule): boolean;
+    function TModule.UsedUnitsLoaded(InterfaceUnits : Boolean; out FirstWaiting : TModule): Boolean;
       var
-        uu: TUsedUnit;
-        ok: Boolean;
+        UU: TUsedUnit;
+        OK: Boolean;
       begin
-        Result:=true;
-        firstwaiting:=nil;
-        uu:=TUsedUnit(used_units.First);
-        while Assigned(uu) do
+        Result:=True;
+        FirstWaiting:=nil;
+        UU:=TUsedUnit(UsedUnitList.First);
+        while Assigned(UU) do
         begin
-          if uu.in_interface=interface_units then
+          if UU.InInterface=InterfaceUnits then
           begin
-            ok:=uu.u.interface_compiled and not uu.u.do_reload;
+            OK:=UU.U.InterfaceCompiled and not UU.U.DoReload;
             {$IFDEF DEBUG_CTASK_VERBOSE}
-            WriteLn('  ',ToString,' checking state of ', uu.u.ToString,' : ',uu.u.StateStr,' : ',ok);
-            uu.u.checkstate;
+            WriteLn('  ',ToString,' checking state of ', UU.U.ToString,' : ',UU.U.StateStr,' : ',OK);
+            UU.U.CheckState;
             {$ENDIF}
-            if not ok then
+            if not OK then
             begin
-              Result:=false;
-              firstwaiting:=uu.u;
+              Result:=False;
+              FirstWaiting:=UU.U;
               {$IFNDEF DEBUG_CTASK_VERBOSE}
-              break;
+              Break;
               {$ENDIF}
             end;
           end;
-          uu:=TUsedUnit(uu.Next);
+          UU:=TUsedUnit(UU.Next);
         end;
       end;
 
-    function TModule.nowaitingforunits(out firstwaiting : TModule): Boolean;
+    function TModule.NoWaitingForUnits(out FirstWaiting : TModule): Boolean;
 
       begin
-        firstwaiting:=nil;
-        Result:=waitingforunit.count=0;
+        FirstWaiting:=nil;
+        Result:=WaitingForUnit.Count=0;
         If not Result then
-          firstwaiting:=TModule(waitingforunit[0]);
+          FirstWaiting:=TModule(WaitingForUnit[0]);
       end;
 
-    function TModule.usedunitsfinalcrc(out firstwaiting: TModule): boolean;
+    function TModule.UsedUnitsFinalCRC(out FirstWaiting: TModule): Boolean;
       { return a used unit, that has not yet computed its crc }
 
       begin
-        firstwaiting:=scc_tree_crc_wait;
-        Result:=firstwaiting=nil;
+        FirstWaiting:=SCCTreeCRCWait;
+        Result:=FirstWaiting=nil;
       end;
 
-    function TModule.usesmodule_in_interface(m: TModule): boolean;
+    function TModule.UsesModule_In_Interface(M: TModule): Boolean;
 
       var
-        u : TUsedUnit;
+        U : TUsedUnit;
 
       begin
-        result:=False;
-        u:=TUsedUnit(used_units.First);
-        while Assigned(u) do
+        Result:=False;
+        U:=TUsedUnit(UsedUnitList.First);
+        while Assigned(U) do
           begin
-          if (u.u=m) then
-            exit(u.in_interface) ;
-          u:=TUsedUnit(u.next);
+          if (U.U=M) then
+            Exit(U.InInterface) ;
+          U:=TUsedUnit(U.Next);
           end;
       end;
 
-    function TModule.findusedunit(m: TModule): TUsedUnit;
+    function TModule.FindUsedUnit(M: TModule): TUsedUnit;
       var
-        u : TUsedUnit;
+        U : TUsedUnit;
 
       begin
-        result:=nil;
-        u:=TUsedUnit(used_units.First);
-        while Assigned(u) do
+        Result:=nil;
+        U:=TUsedUnit(UsedUnitList.First);
+        while Assigned(U) do
           begin
-          if u.u=m then
-            exit(u);
-          u:=TUsedUnit(u.next);
+          if U.U=M then
+            Exit(U);
+          U:=TUsedUnit(U.Next);
           end;
       end;
 
-    procedure TModule.updatemaps;
+    procedure TModule.UpdateMaps;
       var
-        oldmapsize : LongInt;
-        hp  : TModule;
-        i   : LongInt;
+        OldMapSize : LongInt;
+        HP  : TModule;
+        I   : LongInt;
       begin
         { Extend unitmap }
-        oldmapsize:=unitmapsize;
-        unitmapsize:=loaded_units.count+1;
-        SetLength(unitmap,unitmapsize);
+        OldMapSize:=UnitMapSize;
+        UnitMapSize:=Loaded_Units.Count+1;
+        SetLength(UnitMap,UnitMapSize);
 
         { Extend Derefmap }
-        oldmapsize:=derefmapsize;
-        derefmapsize:=loaded_units.count+1;
-        SetLength(derefmap,derefmapsize);
+        OldMapSize:=DerefMapSize;
+        DerefMapSize:=Loaded_Units.Count+1;
+        SetLength(DerefMap,DerefMapSize);
         { Add all units to unitmap }
-        hp:=TModule(loaded_units.first);
-        if hp=nil then exit;
-        i:=hp.ModuleID;
-        while Assigned(hp) do
+        HP:=TModule(Loaded_Units.First);
+        if HP=nil then Exit;
+        I:=HP.ModuleID;
+        while Assigned(HP) do
           begin
-            if hp.ModuleID>=unitmapsize then
+            if HP.ModuleID>=UnitMapSize then
               InternalError(2005011513);
             { Verify old entries }
-            if (i<oldmapsize) then
+            if (I<OldMapSize) then
               begin
-                if (hp.ModuleID<>i) or
-                   (unitmap[hp.ModuleID].u<>hp) then
+                if (HP.ModuleID<>I) or
+                   (UnitMap[HP.ModuleID].U<>HP) then
                   InternalError(200501156);
               end
             else
               begin
-                unitmap[hp.ModuleID].u:=hp;
-                unitmap[hp.ModuleID].derefidx:=-1;
+                UnitMap[HP.ModuleID].U:=HP;
+                UnitMap[HP.ModuleID].DerefIdx:=-1;
               end;
-            inc(i);
-            hp:=TModule(hp.next);
+            Inc(I);
+            HP:=TModule(HP.Next);
           end;
       end;
 
 
 
-    function TModule.derefidx_unit(id:LongInt):LongInt;
+    function TModule.DerefIdx_Unit(ID:LongInt):LongInt;
       begin
-        if id>=unitmapsize then
+        if ID>=UnitMapSize then
           InternalError(2005011511);
-        if unitmap[id].derefidx=-1 then
+        if UnitMap[ID].DerefIdx=-1 then
           begin
-            unitmap[id].derefidx:=derefmapcnt;
-            inc(derefmapcnt);
-            derefmap[unitmap[id].derefidx].u:=unitmap[id].u;
+            UnitMap[ID].DerefIdx:=DerefMapCnt;
+            Inc(DerefMapCnt);
+            DerefMap[UnitMap[ID].DerefIdx].U:=UnitMap[ID].U;
           end;
-        if unitmap[id].derefidx>=derefmapsize then
+        if UnitMap[ID].DerefIdx>=DerefMapSize then
           InternalError(2005011514);
-        result:=unitmap[id].derefidx;
+        Result:=UnitMap[ID].DerefIdx;
       end;
 
 
-    function TModule.resolve_unit(id:LongInt):TModule;
+    function TModule.Resolve_Unit(ID:LongInt):TModule;
       var
-        hp : TModule;
+        HP : TModule;
       begin
-        if id>=derefmapsize then
+        if ID>=DerefMapSize then
           begin
-            WriteLn('tmodule.resolve_unit ',ModuleName^,' ',StateStr,' id=',id,' derefmapsize=',derefmapsize);
+            WriteLn('tmodule.resolve_unit ',ModuleName^,' ',StateStr,' id=',ID,' derefmapsize=',DerefMapSize);
             InternalError(200306231);
           end;
-        result:=derefmap[id].u;
-        if not Assigned(result) then
+        Result:=DerefMap[ID].U;
+        if not Assigned(Result) then
           begin
-            if not Assigned(derefmap[id].ModuleName) or
-               (derefmap[id].ModuleName^='') then
+            if not Assigned(DerefMap[ID].ModuleName) or
+               (DerefMap[ID].ModuleName^='') then
               InternalError(200501159);
-            hp:=TModule(loaded_units.first);
-            while Assigned(hp) do
+            HP:=TModule(Loaded_Units.First);
+            while Assigned(HP) do
               begin
                 { only check for units. The main program is also
                   as a unit in the loaded_units list. We simply need
                   to ignore this entry (PFV) }
-                if hp.is_unit and
-                   (hp.ModuleName^=derefmap[id].ModuleName^) then
-                  break;
-                hp:=TModule(hp.next);
+                if HP.IsUnit and
+                   (HP.ModuleName^=DerefMap[ID].ModuleName^) then
+                  Break;
+                HP:=TModule(HP.Next);
               end;
-            if not Assigned(hp) then
+            if not Assigned(HP) then
               InternalError(2005011510);
-            derefmap[id].u:=hp;
-            result:=hp;
+            DerefMap[ID].U:=HP;
+            Result:=HP;
           end;
       end;
 
 
-    procedure TModule.allunitsused;
+    procedure TModule.AllUnitsUsed;
       var
-        pu : TUsedUnit;
+        PU : TUsedUnit;
       begin
-        pu:=TUsedUnit(used_units.first);
-        while Assigned(pu) do
+        PU:=TUsedUnit(UsedUnitList.First);
+        while Assigned(PU) do
           begin
-            if Assigned(pu.u.GlobalSymTable) then
+            if Assigned(PU.U.GlobalSymTable) then
               begin
-                if unitmap[pu.u.ModuleID].u<>pu.u then
+                if UnitMap[PU.U.ModuleID].U<>PU.U then
                   InternalError(200501157);
                 { Give a note when the unit is not referenced, skip
                   this is for units with an initialization/finalization }
-                if (unitmap[pu.u.ModuleID].refs=0) and
-                   pu.in_uses and
-                   ((pu.u.moduleflags * [mf_init,mf_finalize])=[]) then
-                  CGMessagePos2(pu.unitsym.fileinfo,sym_n_unit_not_used,pu.u.RealModuleName^,RealModuleName^);
+                if (UnitMap[PU.U.ModuleID].Refs=0) and
+                   PU.InUses and
+                   ((PU.U.ModuleFlags * [mf_init,mf_finalize])=[]) then
+                  CGMessagePos2(PU.UnitSym.FileInfo,sym_n_unit_not_used,PU.U.RealModuleName^,RealModuleName^);
               end;
-            pu:=TUsedUnit(pu.next);
+            PU:=TUsedUnit(PU.Next);
           end;
       end;
 
     procedure TModule.End_Of_Parsing;
       begin
         { free asmdata }
-        if Assigned(asmdata) then
+        if Assigned(AsmData) then
           begin
-            asmdata.free;
-            asmdata:=nil;
+            AsmData.Free;
+            AsmData:=nil;
           end;
 
         { free scanner }
@@ -1546,79 +1546,79 @@ implementation
         { free symtable stack }
         if Assigned(SymTableStack) then
           begin
-            SymTableStack.free;
+            SymTableStack.Free;
             SymTableStack:=nil;
           end;
         if Assigned(MacroSymTableStack) then
           begin
-            MacroSymTableStack.free;
+            MacroSymTableStack.Free;
             MacroSymTableStack:=nil;
           end;
-        waitingforunit.free;
-        waitingforunit:=nil;
-        localmacrosymtable.free;
-        localmacrosymtable:=nil;
-        ptrdefs.free;
-        ptrdefs:=nil;
-        arraydefs.free;
-        arraydefs:=nil;
-        procaddrdefs.free;
-        procaddrdefs:=nil;
+        WaitingForUnit.Free;
+        WaitingForUnit:=nil;
+        LocalMacroSymTable.Free;
+        LocalMacroSymTable:=nil;
+        PtrDefs.Free;
+        PtrDefs:=nil;
+        ArrayDefs.Free;
+        ArrayDefs:=nil;
+        ProcAddrDefs.Free;
+        ProcAddrDefs:=nil;
 
-        checkforwarddefs.free;
-        checkforwarddefs:=nil;
-        tcinitcode.free;
-        tcinitcode:=nil;
-        localunitsearchpath.free;
-        localunitsearchpath:=nil;
-        localobjectsearchpath.free;
-        localobjectsearchpath:=nil;
-        localincludesearchpath.free;
-        localincludesearchpath:=nil;
-        locallibrarysearchpath.free;
-        locallibrarysearchpath:=nil;
-        localframeworksearchpath.free;
-        localframeworksearchpath:=nil;
+        CheckForwardDefs.Free;
+        CheckForwardDefs:=nil;
+        TCInitCode.Free;
+        TCInitCode:=nil;
+        LocalUnitSearchPath.Free;
+        LocalUnitSearchPath:=nil;
+        LocalObjectSearchPath.Free;
+        LocalObjectSearchPath:=nil;
+        LocalIncludeSearchPath.Free;
+        LocalIncludeSearchPath:=nil;
+        LocalLibrarySearchPath.Free;
+        LocalLibrarySearchPath:=nil;
+        LocalFrameworkSearchPath.Free;
+        LocalFrameworkSearchPath:=nil;
       end;
 
 
-    procedure TModule.setmodulename(const s:string);
+    procedure TModule.SetModuleName(const S:string);
       begin
         StringDispose(ModuleName);
         StringDispose(RealModuleName);
-        ModuleName:=StringDup(upper(s));
-        RealModuleName:=StringDup(s);
+        ModuleName:=StringDup(Upper(S));
+        RealModuleName:=StringDup(S);
         { also update asmlibrary names }
-        CurrentAsmData.name:=ModuleName;
+        CurrentAsmData.Name:=ModuleName;
       end;
 
 
-    procedure TModule.AddExternalImport(const libname, symname, symmangledname: string; OrdNr: LongInt; isvar: boolean;
-      ImportByOrdinalOnly: boolean);
+    procedure TModule.AddExternalImport(const LibName, SymName, SymMangledName: string; OrdNr: LongInt; IsVar: Boolean;
+      ImportByOrdinalOnly: Boolean);
       var
         ImportLibrary,OtherIL : TImportLibrary;
         ImportSymbol  : TImportSymbol;
-        i : LongInt;
+        I : LongInt;
       begin
-        ImportLibrary:=TImportLibrary(ImportLibraryList.Find(libname));
+        ImportLibrary:=TImportLibrary(ImportLibraryList.Find(LibName));
         if not Assigned(ImportLibrary) then
-          ImportLibrary:=TImportLibrary.Create(ImportLibraryList,libname);
-        ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList.Find(symname));
+          ImportLibrary:=TImportLibrary.Create(ImportLibraryList,LibName);
+        ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList.Find(SymName));
         if not Assigned(ImportSymbol) then
           begin
             { Check that the same name does not exist in another library }
             { If it does and the same mangled name is used, issue a warning }
             if ImportLibraryList.Count>1 then
-              for i:=0 To ImportLibraryList.Count-1 do
+              for I:=0 To ImportLibraryList.Count-1 do
                 begin
-                  OtherIL:=TImportLibrary(ImportLibraryList.Items[i]);
-                  ImportSymbol:=TImportSymbol(OtherIL.ImportSymbolList.Find(symname));
+                  OtherIL:=TImportLibrary(ImportLibraryList.Items[I]);
+                  ImportSymbol:=TImportSymbol(OtherIL.ImportSymbolList.Find(SymName));
                   if Assigned(ImportSymbol) then
                     begin
-                      if ImportSymbol.MangledName=symmangledname then
+                      if ImportSymbol.MangledName=SymMangledName then
                         begin
-                          CGMessage3(sym_w_library_overload,symname,libname,OtherIL.Name);
-                          break;
+                          CGMessage3(sym_w_library_overload,SymName,LibName,OtherIL.Name);
+                          Break;
                         end;
                     end;
                 end;
@@ -1626,107 +1626,107 @@ implementation
               { negative ordinal number indicates import by name with ordinal number as hint }
               OrdNr:=-OrdNr;
             ImportSymbol:=TImportSymbol.Create(ImportLibrary.ImportSymbolList,
-              symname,symmangledname,OrdNr,isvar);
+              SymName,SymMangledName,OrdNr,IsVar);
           end;
       end;
 
 
-    procedure TModule.add_public_asmsym(sym:TAsmSymbol);
+    procedure TModule.Add_Public_AsmSym(Sym:TAsmSymbol);
       begin
-        add_public_asmsym(sym.name,sym.bind,sym.typ);
+        Add_Public_AsmSym(Sym.Name,Sym.Bind,Sym.Typ);
       end;
 
 
-    procedure TModule.add_public_asmsym(const name:TSymStr;bind:TAsmsymbind;typ:TAsmsymtype);
+    procedure TModule.Add_Public_AsmSym(const Name:TSymStr;Bind:TAsmsymbind;Typ:TAsmsymtype);
       var
-        sym : TAsmSymbol;
+        Sym : TAsmSymbol;
       begin
         { ToDo: check for AB_GLOBAL, AB_EXTERNAL? }
-        sym:=TAsmSymbol(publicasmsyms.find(name));
-        if Assigned(sym) then
+        Sym:=TAsmSymbol(PublicAsmSyms.Find(Name));
+        if Assigned(Sym) then
           begin
-            if (sym.bind<>bind) or (sym.typ<>typ) then
+            if (Sym.Bind<>Bind) or (Sym.Typ<>Typ) then
               InternalError(2016070101);
-            exit;
+            Exit;
           end;
-        TAsmSymbol.create(publicasmsyms,name,bind,typ);
+        TAsmSymbol.Create(PublicAsmSyms,Name,Bind,Typ);
       end;
 
 
-    procedure TModule.add_extern_asmsym(sym:TAsmSymbol);
+    procedure TModule.Add_Extern_AsmSym(Sym:TAsmSymbol);
       begin
-        add_extern_asmsym(sym.name,sym.bind,sym.typ);
+        Add_Extern_AsmSym(Sym.Name,Sym.Bind,Sym.Typ);
       end;
 
 
-    procedure TModule.add_extern_asmsym(const name:TSymStr;bind:TAsmsymbind;typ:TAsmsymtype);
+    procedure TModule.Add_Extern_AsmSym(const Name:TSymStr;Bind:TAsmsymbind;Typ:TAsmsymtype);
       var
-        sym : TAsmSymbol;
+        Sym : TAsmSymbol;
       begin
         { ToDo: check for AB_EXTERNAL? }
-        sym:=TAsmSymbol(externasmsyms.find(name));
-        if Assigned(sym) then
+        Sym:=TAsmSymbol(ExternAsmSyms.Find(Name));
+        if Assigned(Sym) then
           begin
-            if (sym.bind<>bind) or (sym.typ<>typ) then
+            if (Sym.Bind<>Bind) or (Sym.Typ<>Typ) then
               InternalError(2016070102);
-            exit;
+            Exit;
           end;
-        TAsmSymbol.create(externasmsyms,name,bind,typ);
+        TAsmSymbol.Create(ExternAsmSyms,Name,Bind,Typ);
       end;
 
-    procedure TModule.remove_waitforunit_cycles;
+    procedure TModule.Remove_WaitForUnit_Cycles;
 
-        function search(m: TModule): boolean;
+        function Search(M: TModule): Boolean;
         var
-          i: Integer;
+          I: Integer;
         begin
-          Result:=false;
-          if m=self then exit(true);
-          if m.cycle_search_stamp=TModule.cycle_stamp then exit;
-          m.cycle_search_stamp:=TModule.cycle_stamp;
-          if not Assigned(m.waitingunits) then exit;
-          for i:=m.waitingunits.Count-1 downto 0 do
-            if search(TModule(m.waitingunits[i])) then
-              exit(true);
+          Result:=False;
+          if M=Self then Exit(True);
+          if M.CycleSearchStamp=TModule.Cycle_Stamp then Exit;
+          M.CycleSearchStamp:=TModule.Cycle_Stamp;
+          if not Assigned(M.WaitingUnits) then Exit;
+          for I:=M.WaitingUnits.Count-1 downto 0 do
+            if Search(TModule(M.WaitingUnits[I])) then
+              Exit(True);
         end;
 
       var
-        waitingmodule: TModule;
-        i: Integer;
+        WaitingModule: TModule;
+        I: Integer;
       begin
-        if not Assigned(waitingunits) then exit;
-        TModule.increase_cycle_stamp;
-        for i:=waitingunits.Count-1 downto 0 do
+        if not Assigned(WaitingUnits) then Exit;
+        TModule.Increase_Cycle_Stamp;
+        for I:=WaitingUnits.Count-1 downto 0 do
           begin
-            waitingmodule:=TModule(waitingunits[i]);
-            if search(waitingmodule) then
+            WaitingModule:=TModule(WaitingUnits[I]);
+            if Search(WaitingModule) then
               begin
-                waitingunits.delete(i);
-                waitingmodule.remove_from_waitingforunits(self);
-                TModule.increase_cycle_stamp;
+                WaitingUnits.Delete(I);
+                WaitingModule.Remove_From_WaitingForUnits(Self);
+                TModule.Increase_Cycle_Stamp;
               end;
           end;
       end;
 
-    procedure TModule.remove_all_waitsforthisunit;
+    procedure TModule.Remove_All_WaitsForThisUnit;
       var
-        i: Integer;
-        waitingmodule: TModule;
+        I: Integer;
+        WaitingModule: TModule;
       begin
-        if not Assigned(waitingunits) then exit;
-        for i:=0 to waitingunits.count-1 do
+        if not Assigned(WaitingUnits) then Exit;
+        for I:=0 to WaitingUnits.Count-1 do
           begin
-            waitingmodule:=TModule(waitingunits[i]);
-            waitingmodule.remove_from_waitingforunits(self);
+            WaitingModule:=TModule(WaitingUnits[I]);
+            WaitingModule.Remove_From_WaitingForUnits(Self);
           end;
-        waitingunits.Clear;
+        WaitingUnits.Clear;
       end;
 
-    procedure TModule.remove_from_waitingforunits(amodule: TModule);
+    procedure TModule.Remove_From_WaitingForUnits(AModule: TModule);
     begin
       // It can be nil after when this is called after end_of_parsing was called.
-      if Assigned(waitingforunit) then
-        waitingforunit.remove(amodule);
+      if Assigned(WaitingForUnit) then
+        WaitingForUnit.Remove(AModule);
     end;
 
     function TModule.ToString: RTLString;
@@ -1735,45 +1735,45 @@ implementation
         if Assigned(ModuleName) then
           Result:='('+ModuleName^+')'
         else
-         Result:='(<'+IntToStr(ptrint(self))+'>)';
+         Result:='(<'+IntToStr(PtrInt(Self))+'>)';
         // Possibly add some state ?
       end;
 
-    procedure TModule.WriteUsedUnits(m: TModule);
+    procedure TModule.WriteUsedUnits(M: TModule);
     var
-      uu: TUsedUnit;
+      UU: TUsedUnit;
     begin
-      if m=nil then exit;
-      WriteLn('tmodule.WriteUsedUnits ',m.ModuleName^,' ',m.StateStr);
+      if M=nil then Exit;
+      WriteLn('tmodule.WriteUsedUnits ',M.ModuleName^,' ',M.StateStr);
       WriteLn('  interface uses:');
-      uu:=TUsedUnit(m.used_units.First);
-      while Assigned(uu) do
+      UU:=TUsedUnit(M.UsedUnitList.First);
+      while Assigned(UU) do
         begin
-          if uu.in_interface then
-            WriteLn('  ',uu.u.ModuleName^,' ',uu.u.StateStr);
-          uu:=TUsedUnit(uu.Next);
+          if UU.InInterface then
+            WriteLn('  ',UU.U.ModuleName^,' ',UU.U.StateStr);
+          UU:=TUsedUnit(UU.Next);
         end;
       WriteLn('  implementation uses:');
-      uu:=TUsedUnit(m.used_units.First);
-      while Assigned(uu) do
+      UU:=TUsedUnit(M.UsedUnitList.First);
+      while Assigned(UU) do
         begin
-          if not uu.in_interface then
-            WriteLn('  ',uu.u.ModuleName^,' ',uu.u.StateStr);
-          uu:=TUsedUnit(uu.Next);
+          if not UU.InInterface then
+            WriteLn('  ',UU.U.ModuleName^,' ',UU.U.StateStr);
+          UU:=TUsedUnit(UU.Next);
         end;
     end;
 
 
 initialization
 {$ifdef MEMDEBUG}
-  memsymtable:=TMemDebug.create('Symtables');
-  memsymtable.stop;
+  MemSymTable:=TMemDebug.Create('Symtables');
+  MemSymTable.Stop;
 {$endif MEMDEBUG}
 
 finalization
 {$ifdef MEMDEBUG}
-  memsymtable.free;
-  memsymtable := nil;
+  MemSymTable.Free;
+  MemSymTable := nil;
 {$endif MEMDEBUG}
 
 end.

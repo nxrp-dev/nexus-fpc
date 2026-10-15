@@ -39,7 +39,7 @@ implementation
   uses
     Globals,
     CompHook,
-    wpobase, wpoinfo;
+    wpobase, WPOInfo;
 
   { called after command line parameters have been parsed }
   procedure InitWpo;

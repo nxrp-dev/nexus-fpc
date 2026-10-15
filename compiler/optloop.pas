@@ -137,8 +137,8 @@ unit optloop;
            { the address of the counter variable might be taken if it is passed by constref to a
              subroutine, so really check if it is not taken }
            ((TForNode(node).left.nodetype=loadn) and (TLoadNode(TForNode(node).left).symtableentry is TAbstractVarSym) and
-            not(TAbstractVarSym(TLoadNode(TForNode(node).left).symtableentry).addr_taken) and
-            not(TAbstractVarSym(TLoadNode(TForNode(node).left).symtableentry).different_scope))
+            not(TAbstractVarSym(TLoadNode(TForNode(node).left).symtableentry).AddrTaken) and
+            not(TAbstractVarSym(TLoadNode(TForNode(node).left).symtableentry).DifferentScope))
            ) then
           begin
             { number of executions known? }
@@ -181,7 +181,7 @@ unit optloop;
                 for i:=1 to unrolls do
                   begin
                     { create and insert copy of the statement block }
-                    addstatement(unrollstatement,TForNode(node).t2.getcopy);
+                    addstatement(unrollstatement,TForNode(node).t2.GetCopy);
 
                     { set and insert entry label? }
                     if (counts mod unrolls<>0) and
@@ -207,10 +207,10 @@ unit optloop;
                             { insert incr/decrementation of counter var }
                             if lnf_backward in TForNode(node).loopflags then
                               addstatement(unrollstatement,
-                                geninlinenode(in_dec_x,false,CCallParaNode.create(TForNode(node).left.getcopy,nil)))
+                                geninlinenode(in_dec_x,false,CCallParaNode.create(TForNode(node).left.GetCopy,nil)))
                             else
                               addstatement(unrollstatement,
-                                geninlinenode(in_inc_x,false,CCallParaNode.create(TForNode(node).left.getcopy,nil)));
+                                geninlinenode(in_inc_x,false,CCallParaNode.create(TForNode(node).left.GetCopy,nil)));
                           end;
                        end;
                   end;
@@ -282,7 +282,7 @@ unit optloop;
                 Assigned(expr.optinfo) and
                 not(expr.isequal(TForNode(loop).left)) then
                 { no aliasing? }
-                result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(TAbstractVarSym(TLoadNode(expr).symtableentry).addr_taken) and
+                result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(TAbstractVarSym(TLoadNode(expr).symtableentry).AddrTaken) and
                 { no definition in the loop? }
                   not(DynSetIn(TForNode(loop).t2.optinfo^.defsum,expr.optinfo^.index));
             end;
@@ -340,7 +340,7 @@ unit optloop;
                   muln:
                     hp:=CTempRefNode.create(inductions[i].temp);
                   vecn:
-                    hp:=CTypeConvNode.create_internal(CDerefNode.create(CTempRefNode.create(inductions[i].temp)),n.resultdef);
+                    hp:=CTypeConvNode.Create_Internal(CDerefNode.create(CTempRefNode.create(inductions[i].temp)),n.resultdef);
                   else
                     InternalError(200809211);
                 end;
@@ -407,20 +407,20 @@ unit optloop;
                   if not(findpreviousstrengthreduction(n)) then
                     begin
                       tempnode:=CTempCreateNode.create(n.resultdef,n.resultdef.size,tt_persistent,
-                        TStoredDef(n.resultdef).is_intregable or TStoredDef(n.resultdef).is_fpuregable);
+                        TStoredDef(n.resultdef).Is_IntRegable or TStoredDef(n.resultdef).Is_FPURegable);
                       addinduction(tempnode,n);
 
                       if lnf_backward in currforloop.loopflags then
                         addstatement(calccodestatements,
                           geninlinenode(in_dec_x,false,
-                          CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(TAddNode(n).right.getcopy,nil))))
+                          CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(TAddNode(n).right.GetCopy,nil))))
                       else
                         addstatement(calccodestatements,
                           geninlinenode(in_inc_x,false,
-                          CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(TAddNode(n).right.getcopy,nil))));
+                          CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(TAddNode(n).right.GetCopy,nil))));
 
                       addstatement(initcodestatements,tempnode);
-                      nn:=currforloop.right.getcopy;
+                      nn:=currforloop.right.GetCopy;
                       { If the calculation is not performed at the end
                         it is needed to adjust the starting value }
                       if not docalcatend then
@@ -429,12 +429,12 @@ unit optloop;
                             nt:=addn
                           else
                             nt:=subn;
-                          nn:=CAddNode.create_internal(nt,nn,
+                          nn:=CAddNode.Create_Internal(nt,nn,
                              COrdConstNode.create(1,nn.resultdef,false));
                         end;
                       addstatement(initcodestatements,CAssignmentNode.create(CTempRefNode.create(tempnode),
                           CAddNode.create(muln,nn,
-                            TAddNode(n).right.getcopy)
+                            TAddNode(n).right.GetCopy)
                           )
                         );
 
@@ -478,25 +478,25 @@ unit optloop;
                   { did we use the same expression before already? }
                   if not(findpreviousstrengthreduction(n)) then
                     begin
-                      tempnode:=CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+                      tempnode:=CTempCreateNode.create(VoidPointerType,VoidPointerType.size,tt_persistent,true);
                       addinduction(tempnode,n);
 
                       if lnf_backward in currforloop.loopflags then
                         addstatement(calccodestatements,
                           CInlineNode.createintern(in_dec_x,false,
                           CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(
-                          COrdConstNode.create(TCGVecNode(n).get_mul_size,sizeuinttype,false),nil))))
+                          COrdConstNode.create(TCGVecNode(n).get_mul_size,SizeUIntType,false),nil))))
                       else
                         addstatement(calccodestatements,
                           CInlineNode.createintern(in_inc_x,false,
                           CCallParaNode.create(CTempRefNode.create(tempnode),CCallParaNode.create(
-                          COrdConstNode.create(TCGVecNode(n).get_mul_size,sizeuinttype,false),nil))));
+                          COrdConstNode.create(TCGVecNode(n).get_mul_size,SizeUIntType,false),nil))));
 
                       addstatement(initcodestatements,tempnode);
 
                       startvaltemp:=maybereplacewithtemp(currforloop.right,initcode,initcodestatements,currforloop.right.resultdef.size,true);
                       nn:=CAddrNode.create(
-                          CVecNode.create(TVecNode(n).left.getcopy,CTypeConvNode.create_internal(currforloop.right.getcopy,TVecNode(n).right.resultdef))
+                          CVecNode.create(TVecNode(n).left.GetCopy,CTypeConvNode.Create_Internal(currforloop.right.GetCopy,TVecNode(n).right.resultdef))
                         );
                       { If the calculation is not performed at the end
                         it is needed to adjust the starting value }
@@ -506,14 +506,14 @@ unit optloop;
                             nt:=addn
                           else
                             nt:=subn;
-                          nn:=CAddNode.create_internal(nt,
-                             CTypeConvNode.create_internal(nn,voidpointertype),
-                             COrdConstNode.create(TCGVecNode(n).get_mul_size,sizeuinttype,false));
+                          nn:=CAddNode.Create_Internal(nt,
+                             CTypeConvNode.Create_Internal(nn,VoidPointerType),
+                             COrdConstNode.create(TCGVecNode(n).get_mul_size,SizeUIntType,false));
                         end;
                       addstatement(initcodestatements,CAssignmentNode.create(CTempRefNode.create(tempnode),nn));
 
                       { finally replace the node by a temp. ref }
-                      n:=CTypeConvNode.create_internal(CDerefNode.create(CTempRefNode.create(tempnode)),n.resultdef);
+                      n:=CTypeConvNode.Create_Internal(CDerefNode.create(CTempRefNode.create(tempnode)),n.resultdef);
 
                       { ... and add a temp. release node }
                       if startvaltemp<>nil then
@@ -686,14 +686,14 @@ unit optloop;
               (TLoadNode(TSubscriptNode(n).left).symtableentry=PRecordData(arg)^.BaseSymbol) and
               { Needs to be a basic type }
               not is_string(TSubscriptNode(n).vs.vardef) and
-              not is_object(TSubscriptNode(n).vs.vardef) and
+              not Is_Object(TSubscriptNode(n).vs.vardef) and
               not is_managed_type(TSubscriptNode(n).vs.vardef) and
               (
                 (
-                  TStoredDef(TSubscriptNode(n).vs.vardef).is_intregable and
+                  TStoredDef(TSubscriptNode(n).vs.vardef).Is_IntRegable and
                   (TSubscriptNode(n).vs.vardef.size<=sizeof(aint))
                 ) or
-                TStoredDef(TSubscriptNode(n).vs.vardef).is_fpuregable or
+                TStoredDef(TSubscriptNode(n).vs.vardef).Is_FPURegable or
                 (
                   is_vector(TStoredDef(TSubscriptNode(n).vs.vardef)) and
                   fits_in_mm_register(TStoredDef(TSubscriptNode(n).vs.vardef))
@@ -861,23 +861,23 @@ unit optloop;
             RecordData.Fields:=nil;
             { Check to see if local record-types can have individual fields
               promoted to registers }
-            if CurrentProcInfo.procdef.localst.symtabletype = localsymtable then
+            if CurrentProcInfo.procdef.LocalST.SymTableType = LocalSymTable then
               begin
                 RecordData.Fields:=TLinkedList.Create;
-                SymCount:=CurrentProcInfo.procdef.localst.SymList.Count-1;
+                SymCount:=CurrentProcInfo.procdef.LocalST.SymList.Count-1;
                 for X:=0 to SymCount do
                   begin
-                    CurrentSym:=TSym(CurrentProcInfo.procdef.localst.SymList[X]);
+                    CurrentSym:=TSym(CurrentProcInfo.procdef.LocalST.SymList[X]);
                     if (CurrentSym.typ=localvarsym) and
                       { Don't optimise records whose address has been taken,
                         since there may be some multithreaded access going on }
-                      (TAbstractVarSym(CurrentSym).varsymaccess*[vsa_addr_taken,vsa_different_scope]=[]) then
+                      (TAbstractVarSym(CurrentSym).VarSymAccess*[vsa_addr_taken,vsa_different_scope]=[]) then
                       begin
 
-                        if is_record(TAbstractVarSym(CurrentSym).vardef) then
+                        if Is_Record(TAbstractVarSym(CurrentSym).vardef) then
                           begin
                             { TODO: Support unions in a limited fashion later }
-                            if TRecordDef(TAbstractVarSym(CurrentSym).vardef).isunion then
+                            if TRecordDef(TAbstractVarSym(CurrentSym).vardef).IsUnion then
                               Continue;
 
                             { Ignore records with only a single field, but
@@ -892,10 +892,10 @@ unit optloop;
                             { Make sure an absolute variable doesn't alias to it }
                             for Y:=0 to SymCount do
                               if (X<>Y) and
-                                (TSym(CurrentProcInfo.procdef.localst.SymList[X]).typ=absolutevarsym) and
-                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).abstyp=tovar) and
-                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).ref.firstsym^.sltype=sl_load) and
-                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).ref.firstsym^.sym=CurrentSym) then
+                                (TSym(CurrentProcInfo.procdef.LocalST.SymList[X]).typ=absolutevarsym) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).AbsTyp=tovar) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).ref.FirstSym^.SLType=sl_load) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.LocalST.SymList[X]).ref.FirstSym^.sym=CurrentSym) then
                                 begin
                                   { Don't take any chances }
                                   AbortRecord:=True;
@@ -916,10 +916,10 @@ unit optloop;
                           end
                         else if
                           (
-                            TStoredDef(TAbstractVarSym(CurrentSym).vardef).is_intregable and
+                            TStoredDef(TAbstractVarSym(CurrentSym).vardef).Is_IntRegable and
                             (TAbstractVarSym(CurrentSym).vardef.size<=sizeof(aint))
                           ) or
-                          TStoredDef(TAbstractVarSym(CurrentSym).vardef).is_fpuregable or
+                          TStoredDef(TAbstractVarSym(CurrentSym).vardef).Is_FPURegable or
                           (
                             is_vector(TStoredDef(TAbstractVarSym(CurrentSym).vardef)) and
                             fits_in_mm_register(TStoredDef(TAbstractVarSym(CurrentSym).vardef))
@@ -981,13 +981,13 @@ unit optloop;
                             addstatement(NewWrapper, ThisTemp.TempCreate);
                             if ThisTemp.InitialRead or (ThisTemp.FirstDepth<>0) then
                               begin
-                                NewNode:=CAssignmentNode.create_internal( { Suppress uninitialized value warning }
+                                NewNode:=CAssignmentNode.Create_Internal( { Suppress uninitialized value warning }
                                   CTempRefNode.create(
                                     ThisTemp.TempCreate
                                   ),
                                   CSubscriptNode.create(
                                     ThisTemp.Field,
-                                    CLoadNode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.localst)
+                                    CLoadNode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.LocalST)
                                   )
                                 );
                                 NewNode.fileinfo:=n.fileinfo;
@@ -1000,7 +1000,7 @@ unit optloop;
                           created during a previous iteration of this
                           function's for-loop, which includes the original
                           loop node, so insert that instead }
-                        NewCopy:=n.getcopy();
+                        NewCopy:=n.GetCopy();
                         node_reset_flags(NewCopy,[],[tnf_pass1_done]);
                         Include(NewCopy.flags, nf_internal); { Prevents this simplification pass from happening again }
                         addstatement(NewWrapper, NewCopy);
@@ -1015,7 +1015,7 @@ unit optloop;
                                 NewNode:=CAssignmentNode.create(
                                   CSubscriptNode.create(
                                     ThisTemp.Field,
-                                    CLoadNode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.localst)
+                                    CLoadNode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.LocalST)
                                   ),
                                   CTempRefNode.create(
                                     ThisTemp.TempCreate
@@ -1071,8 +1071,8 @@ unit optloop;
           (([cs_check_overflow,cs_check_range]*n.LocalSwitches)=[]) and
           (([cs_check_overflow,cs_check_range]*TForNode(n).left.LocalSwitches)=[]) and
           ((TForNode(n).left.nodetype=loadn) and (TLoadNode(TForNode(n).left).symtableentry is TAbstractVarSym) and
-            not(TAbstractVarSym(TLoadNode(TForNode(n).left).symtableentry).addr_taken) and
-            not(TAbstractVarSym(TLoadNode(TForNode(n).left).symtableentry).different_scope)) then
+            not(TAbstractVarSym(TLoadNode(TForNode(n).left).symtableentry).AddrTaken) and
+            not(TAbstractVarSym(TLoadNode(TForNode(n).left).symtableentry).DifferentScope)) then
           begin
             { do we have DFA available? }
             if pi_dfaavailable in CurrentProcInfo.flags then
@@ -1090,8 +1090,8 @@ unit optloop;
                 { convert the loop from i:=a to b into i:=b-a+1 to 1 as this simplifies the
                   abort condition }
                 include(TForNode(n).loopflags,lnf_backward);
-                TForNode(n).right:=CTypeConvNode.create_internal(
-                  CAddNode.create_internal(addn,CAddNode.create_internal(subn,
+                TForNode(n).right:=CTypeConvNode.Create_Internal(
+                  CAddNode.Create_Internal(addn,CAddNode.Create_Internal(subn,
                     TForNode(n).t1,TForNode(n).right),
                     COrdConstNode.create(1,TForNode(n).left.resultdef,false)),
                   TForNode(n).left.resultdef);

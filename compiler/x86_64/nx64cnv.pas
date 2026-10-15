@@ -75,11 +75,11 @@ implementation
         { If typecasting between a Single or Double and a record of equal size,
           we can use MOVD and MOVQ }
         if (resultdef.typ in [recorddef,orddef]) and
-          use_vectorfpu(left.resultdef) and
+          Use_VectorFPU(left.resultdef) and
           (resultdef.size=left.resultdef.size) then
           expectloc:=LOC_MMREGISTER
         else if (left.resultdef.typ in [recorddef,orddef]) and
-          use_vectorfpu(resultdef) and
+          Use_VectorFPU(resultdef) and
           (resultdef.size=left.resultdef.size) then
           expectloc:=LOC_REGISTER
         else
@@ -90,16 +90,16 @@ implementation
     function TX8664TypeConvNode.first_int_to_real : TNode;
       begin
         result:=nil;
-        if use_vectorfpu(resultdef) and
-           (TOrdDef(left.resultdef).ordtype=u32bit) and
+        if Use_VectorFPU(resultdef) and
+           (TOrdDef(left.resultdef).OrdType=u32bit) and
            not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
-            inserttypeconv(left,s64inttype);
+            inserttypeconv(left,S64IntType);
             FirstPass(left);
           end
         else
           result:=inherited first_int_to_real;
-       if use_vectorfpu(resultdef) then
+       if Use_VectorFPU(resultdef) then
          expectloc:=LOC_MMREGISTER;
       end;
 
@@ -110,7 +110,7 @@ implementation
          l1,l2 : TAsmLabel;
          op : TAsmOp;
       begin
-        if use_vectorfpu(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
+        if Use_VectorFPU(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
             if is_double(resultdef) then
               op:=A_CVTSI2SD
@@ -122,7 +122,7 @@ implementation
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
 
-            case TOrdDef(left.resultdef).ordtype of
+            case TOrdDef(left.resultdef).OrdType of
               u64bit:
                 begin
                    { unsigned 64 bit ints are harder to handle:

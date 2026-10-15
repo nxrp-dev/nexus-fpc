@@ -89,14 +89,14 @@ unit parabase;
           destructor  done;
           procedure   reset;
           procedure   resetiftemp; { reset if Temporary }
-          function    getcopy:TCGPara;
+          function    GetCopy:TCGPara;
           procedure   check_simple_location;
           function    add_location:PCGParaLocation;
           procedure   get_location(var newloc:TLocation);
           function    locations_count:integer;
           function    isempty: boolean; { no data, and not varargs para }
 
-          procedure   buildderef;
+          procedure   BuildDeref;
           procedure   deref;
           procedure   ppuwrite(ppufile:TCompilerPPUFile);
           procedure   ppuload(ppufile:TCompilerPPUFile);
@@ -184,7 +184,7 @@ implementation
       end;
 
 
-    function TCGPara.getcopy:TCGPara;
+    function TCGPara.GetCopy:TCGPara;
       var
         srcloc,hlocation : PCGParaLocation;
       begin
@@ -318,15 +318,15 @@ implementation
         result:=true;
       end;
 
-    procedure TCGPara.buildderef;
+    procedure TCGPara.BuildDeref;
       begin
-        defderef.build(def);
+        DefDeref.build(def);
       end;
 
 
     procedure TCGPara.deref;
       begin
-        def:=TDef(defderef.resolve);
+        def:=TDef(DefDeref.resolve);
       end;
 
 
@@ -338,7 +338,7 @@ implementation
         ppufile.PutByte(byte(Alignment));
         ppufile.PutByte(ord(Size));
         ppufile.PutAInt(IntSize);
-        ppufile.putderef(defderef);
+        ppufile.PutDeref(DefDeref);
         nparaloc:=0;
         hparaloc:=location;
         while Assigned(hparaloc) do
@@ -391,7 +391,7 @@ implementation
         Alignment:=shortint(ppufile.GetByte);
         Size:=TCgSize(ppufile.GetByte);
         IntSize:=ppufile.GetAInt;
-        ppufile.getderef(defderef);
+        ppufile.GetDeref(DefDeref);
         nparaloc:=ppufile.GetByte;
         while nparaloc>0 do
           begin
@@ -437,7 +437,7 @@ implementation
         I1 : TParaVarSym absolute Item1;
         I2 : TParaVarSym absolute Item2;
       begin
-        Result:=LongInt(I1.paranr)-LongInt(I2.paranr);
+        Result:=LongInt(I1.ParaNr)-LongInt(I2.ParaNr);
       end;
 
 

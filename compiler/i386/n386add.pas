@@ -111,9 +111,9 @@ interface
         mboverflow:=false;
         opsize:=S_L;
         unsigned:=((left.resultdef.typ=orddef) and
-                   (TOrdDef(left.resultdef).ordtype=u64bit)) or
+                   (TOrdDef(left.resultdef).OrdType=u64bit)) or
                   ((right.resultdef.typ=orddef) and
-                   (TOrdDef(right.resultdef).ordtype=u64bit));
+                   (TOrdDef(right.resultdef).OrdType=u64bit));
         case nodetype of
           addn :
             begin
@@ -328,9 +328,9 @@ interface
         pass_left_right;
 
         unsigned:=((left.resultdef.typ=orddef) and
-                   (TOrdDef(left.resultdef).ordtype=u64bit)) or
+                   (TOrdDef(left.resultdef).OrdType=u64bit)) or
                   ((right.resultdef.typ=orddef) and
-                   (TOrdDef(right.resultdef).ordtype=u64bit));
+                   (TOrdDef(right.resultdef).OrdType=u64bit));
 
         { we have LOC_JUMP as result }
         CurrentAsmData.getjumplabel(truelabel);
@@ -497,7 +497,7 @@ interface
         begin
           { LOC_CONSTANT for example.}
           reg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,osuinttype,left.location,reg);
+          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,OSUIntType,left.location,reg);
         end;
 
       if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
@@ -506,7 +506,7 @@ interface
         is_64bit(resultdef)) then
         begin
           cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,osuinttype,right.location,NR_EDX);
+          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,NR_EDX);
           reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
           reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
           if use_ref then
@@ -529,7 +529,7 @@ interface
           { Allocate EAX. }
           cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
           { Load the right value. }
-          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,osuinttype,right.location,NR_EAX);
+          hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,NR_EAX);
           { Also allocate EDX, since it is also modified by a mul (JM). }
           cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
 

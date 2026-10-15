@@ -184,7 +184,7 @@ begin
   CErrorDef:=TCPUErrorDef;
   CPointerDef:=TCPUPointerDef;
   CRecordDef:=TCPURecordDef;
-  cimplementedinterface:=TCPUImplementedInterface;
+  CImplementedInterface:=TCPUImplementedInterface;
   CObjectDef:=TCPUObjectDef;
   CClassRefDef:=TCPUClassRefDef;
   CArrayDef:=TCPUArrayDef;

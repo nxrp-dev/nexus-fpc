@@ -88,10 +88,10 @@ implementation
                      (cgpara.location^.reference.index=NR_STACK_POINTER_REG) then
                     begin
                       cg.g_stackpointer_alloc(list,StackSize);
-                      reference_reset_base(href,voidstackpointertype,NR_STACK_POINTER_REG,0,ctempposinvalid,voidstackpointertype.size,[]);
+                      reference_reset_base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,ctempposinvalid,VoidStackPointerType.size,[]);
                     end
                   else
-                    reference_reset_base(href,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+                    reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
                   cg.a_loadfpu_reg_ref(list,locsize,locsize,l.register,href);
                 end;
               LOC_FPUREGISTER:
@@ -133,10 +133,10 @@ implementation
                      (cgpara.location^.reference.index=NR_STACK_POINTER_REG) then
                     begin
                       cg.g_stackpointer_alloc(list,StackSize);
-                      reference_reset_base(href,voidstackpointertype,NR_STACK_POINTER_REG,0,ctempposinvalid,voidstackpointertype.size,[]);
+                      reference_reset_base(href,VoidStackPointerType,NR_STACK_POINTER_REG,0,ctempposinvalid,VoidStackPointerType.size,[]);
                     end
                   else
-                    reference_reset_base(href,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+                    reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
                   cg.a_loadmm_reg_ref(list,locsize,locsize,l.register,href,mms_movescalar);
                 end;
               LOC_FPUREGISTER:
@@ -162,7 +162,7 @@ implementation
                     cg.a_load_ref_cgpara(list,locsize,l.reference,cgpara)
                   else
                     begin
-                      reference_reset_base(href,voidstackpointertype,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
+                      reference_reset_base(href,VoidStackPointerType,cgpara.location^.reference.index,cgpara.location^.reference.offset,ctempposinvalid,cgpara.alignment,[]);
                       cg.g_concatcopy(list,l.reference,href,StackSize);
                     end;
                 end;
@@ -190,7 +190,7 @@ implementation
     need_got_load:=not (TargetInfo.system in systems_darwin) and
                    (cs_create_pic in CurrentSettings.ModuleSwitches) and
                    (tf_pic_uses_got in TargetInfo.flags) and
-                   (po_external in pd.procoptions);
+                   (po_external in pd.ProcOptions);
     if need_got_load then
       begin
         { Alloc EBX }
@@ -212,7 +212,7 @@ implementation
           inherited;
           exit;
         end;
-      TCG386(cg).g_copyvaluepara_openarray(list,ref,lenloc,arrdef.elesize,destreg);
+      TCG386(cg).g_copyvaluepara_openarray(list,ref,lenloc,arrdef.EleSize,destreg);
     end;
 
 
@@ -301,20 +301,20 @@ implementation
       var
         i: Integer;
         hp: TParaVarSym;
-        paraloc: PCGParaLocation;
+        ParaLoc: PCGParaLocation;
       begin
-        if not (RS_ECX in paramanager.get_volatile_registers_int(procdef.proccalloption)) then
+        if not (RS_ECX in paramanager.get_volatile_registers_int(procdef.ProcCallOption)) then
           exit(true);
         for i:=0 to procdef.paras.count-1 do
          begin
            hp:=TParaVarSym(procdef.paras[i]);
-           procdef.init_paraloc_info(calleeside);
-           paraloc:=hp.paraloc[calleeside].Location;
-           while paraloc<>nil do
+           procdef.Init_ParaLoc_Info(calleeside);
+           ParaLoc:=hp.ParaLoc[calleeside].Location;
+           while ParaLoc<>nil do
              begin
-               if (paraloc^.Loc=LOC_REGISTER) and (getsupreg(paraloc^.register)=RS_ECX) then
+               if (ParaLoc^.Loc=LOC_REGISTER) and (getsupreg(ParaLoc^.register)=RS_ECX) then
                  exit(true);
-               paraloc:=paraloc^.Next;
+               ParaLoc:=ParaLoc^.Next;
              end;
          end;
         Result:=false;
@@ -326,14 +326,14 @@ implementation
         selfoffsetfromsp : LongInt;
       begin
         { mov offset(%esp),%eax }
-        if (procdef.proccalloption<>pocall_register) then
+        if (procdef.ProcCallOption<>pocall_register) then
           begin
             { framepointer is pushed for nested procs }
-            if procdef.parast.symtablelevel>normal_function_level then
+            if procdef.ParaST.SymTableLevel>normal_function_level then
               selfoffsetfromsp:=2*sizeof(aint)
             else
               selfoffsetfromsp:=sizeof(aint);
-            reference_reset_base(href,voidstackpointertype,NR_ESP,selfoffsetfromsp+offs,ctempposinvalid,4,[]);
+            reference_reset_base(href,VoidStackPointerType,NR_ESP,selfoffsetfromsp+offs,ctempposinvalid,4,[]);
             cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
           end;
       end;
@@ -343,7 +343,7 @@ implementation
         href : TReference;
       begin
         { mov  0(%eax),%reg ; load vmt}
-        reference_reset_base(href,voidpointertype,NR_EAX,0,ctempposinvalid,4,[]);
+        reference_reset_base(href,VoidPointerType,NR_EAX,0,ctempposinvalid,4,[]);
         cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,reg);
       end;
 
@@ -351,10 +351,10 @@ implementation
       var
         href : TReference;
       begin
-        if (procdef.extnumber=$ffff) then
+        if (procdef.ExtNumber=$ffff) then
           InternalError(2000061312);
         { call/jmp  vmtoffs(%reg) ; method offs }
-        reference_reset_base(href,voidpointertype,reg,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
+        reference_reset_base(href,VoidPointerType,reg,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,4,[]);
         list.concat(TAICPU.op_ref(op,S_L,href));
       end;
 
@@ -363,10 +363,10 @@ implementation
       var
         href : TReference;
       begin
-        if (procdef.extnumber=$ffff) then
+        if (procdef.ExtNumber=$ffff) then
           InternalError(2000061313);
         { mov vmtoffs(%eax),%eax ; method offs }
-        reference_reset_base(href,voidpointertype,NR_EAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
+        reference_reset_base(href,VoidPointerType,NR_EAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,4,[]);
         cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
       end;
 
@@ -376,19 +376,19 @@ implementation
       make_global : boolean;
       href : TReference;
     begin
-      if not(procdef.proctypeoption in [potype_function,potype_procedure]) then
+      if not(procdef.ProcTypeOption in [potype_function,potype_procedure]) then
         InternalError(200006137);
       if not Assigned(procdef.struct) or
-         (procdef.procoptions*[po_classmethod, po_staticmethod,
+         (procdef.ProcOptions*[po_classmethod, po_staticmethod,
            po_methodpointer, po_interrupt, po_iocheck]<>[]) then
         InternalError(200006138);
-      if procdef.owner.symtabletype<>ObjectSymtable then
+      if procdef.owner.SymTableType<>ObjectSymtable then
         InternalError(200109191);
 
       make_global:=false;
-      if (not CurrentModule.is_unit) or
+      if (not CurrentModule.IsUnit) or
          create_smartlink or
-         (procdef.owner.defowner.owner.symtabletype=GlobalSymTable) then
+         (procdef.owner.DefOwner.owner.SymTableType=GlobalSymTable) then
         make_global:=true;
 
       if make_global then
@@ -399,10 +399,10 @@ implementation
       { set param1 interface to self  }
       g_adjust_self_value(list,procdef,ioffset);
 
-      if (po_virtualmethod in procdef.procoptions) and
-          not is_objectpascal_helper(procdef.struct) then
+      if (po_virtualmethod in procdef.ProcOptions) and
+          not Is_ObjectPascal_Helper(procdef.struct) then
         begin
-          if (procdef.proccalloption=pocall_register) and is_ecx_used then
+          if (procdef.ProcCallOption=pocall_register) and is_ecx_used then
             begin
               { case 2 }
               list.concat(TAICPU.op_reg(A_PUSH,S_L,NR_EBX)); { allocate space for address}
@@ -411,7 +411,7 @@ implementation
               loadvmtto(NR_EAX);
               loadmethodoffstoeax;
               { mov %eax,4(%esp) }
-              reference_reset_base(href,voidstackpointertype,NR_ESP,4,ctempposinvalid,4,[]);
+              reference_reset_base(href,VoidStackPointerType,NR_ESP,4,ctempposinvalid,4,[]);
               list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
               { pop  %eax }
               list.concat(TAICPU.op_reg(A_POP,S_L,NR_EAX));
@@ -431,11 +431,11 @@ implementation
         begin
           if (TargetInfo.system <> system_i386_darwin) then
             begin
-              lab:=CurrentAsmData.RefAsmSymbol(procdef.mangledname,AT_FUNCTION);
+              lab:=CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION);
               list.concat(TAICPU.op_sym(A_JMP,S_NO,lab))
             end
           else
-            list.concat(TAICPU.op_sym(A_JMP,S_NO,TCGX86(cg).get_darwin_call_stub(procdef.mangledname,false)))
+            list.concat(TAICPU.op_sym(A_JMP,S_NO,TCGX86(cg).get_darwin_call_stub(procdef.MangledName,false)))
         end;
 
       List.concat(TAISymbolEnd.Createname(labelname));

@@ -413,13 +413,13 @@ implementation
               begin
                 exclude(CurrentSettings.ModeSwitches,m_default_ansistring);
                 include(CurrentSettings.ModeSwitches,m_default_unicodestring);
-                def_system_macro('FPC_UNICODESTRINGS');
+                Def_System_Macro('FPC_UNICODESTRINGS');
               end
             else
               begin
                 exclude(CurrentSettings.ModeSwitches,m_default_unicodestring);
                 include(CurrentSettings.ModeSwitches,m_default_ansistring);
-                undef_system_macro('FPC_UNICODESTRINGS');
+                Undef_System_Macro('FPC_UNICODESTRINGS');
               end;
             include(CurrentSettings.LocalSwitches,cs_refcountedstrings);
             if changeinit then
@@ -693,35 +693,35 @@ implementation
 
             { Undefine old symbol }
             if (m_delphi in oldmodeswitches) then
-              undef_system_macro('FPC_DELPHI')
+              Undef_System_Macro('FPC_DELPHI')
             else if (m_objfpc in oldmodeswitches) then
-              undef_system_macro('FPC_OBJFPC')
+              Undef_System_Macro('FPC_OBJFPC')
 {$ifdef gpc_mode}
             else if (m_gpc in oldmodeswitches) then
-              undef_system_macro('FPC_GPC')
+              Undef_System_Macro('FPC_GPC')
 {$endif}
             else if (m_mac in oldmodeswitches) then
-              undef_system_macro('FPC_MACPAS')
+              Undef_System_Macro('FPC_MACPAS')
             else if (m_iso in oldmodeswitches) then
-              undef_system_macro('FPC_ISO')
+              Undef_System_Macro('FPC_ISO')
             else if (m_extpas in oldmodeswitches) then
-              undef_system_macro('FPC_EXTENDEDPASCAL');
+              Undef_System_Macro('FPC_EXTENDEDPASCAL');
 
             { define new symbol in Delphi, ObjFPC, GPC, or MacPas mode }
             if (m_delphi in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_DELPHI')
+              Def_System_Macro('FPC_DELPHI')
             else if (m_objfpc in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_OBJFPC')
+              Def_System_Macro('FPC_OBJFPC')
 {$ifdef gpc_mode}
             else if (m_gpc in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_GPC')
+              Def_System_Macro('FPC_GPC')
 {$endif}
             else if (m_mac in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_MACPAS')
+              Def_System_Macro('FPC_MACPAS')
             else if (m_iso in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_ISO')
+              Def_System_Macro('FPC_ISO')
             else if (m_extpas in CurrentSettings.ModeSwitches) then
-              def_system_macro('FPC_EXTENDEDPASCAL');
+              Def_System_Macro('FPC_EXTENDEDPASCAL');
          end;
 
         SetCompileMode:=b;
@@ -826,10 +826,10 @@ implementation
       begin
 
         if AppType in [app_cui,app_com] then
-          undef_system_macro('CONSOLE');
+          Undef_System_Macro('CONSOLE');
         AppType:=NewAppType;
         if AppType in [app_cui,app_com] then
-          def_system_macro('CONSOLE');
+          Def_System_Macro('CONSOLE');
       end;
 {*****************************************************************************
                            Conditional Directives
@@ -867,7 +867,7 @@ implementation
         valuedescr:= hs;
         if hs='' then
           Message(scan_e_error_in_preproc_expr);
-        isdef:=defined_macro(hs);
+        isdef:=Defined_Macro(hs);
       end;
 
     procedure dir_ifdef;
@@ -884,7 +884,7 @@ implementation
         valuedescr:= hs;
         if hs='' then
           Message(scan_e_error_in_preproc_expr);
-        isnotdef:=not defined_macro(hs);
+        isnotdef:=not Defined_Macro(hs);
       end;
 
     procedure dir_ifndef;
@@ -1013,12 +1013,12 @@ type
     class constructor createdefs;
     class destructor destroydefs;
   public
-    consttyp: TConstTyp;
+    ConstTyp: TConstTyp;
     value: TConstValue;
     def: TDef;
     constructor create_const(c:TConstSym);
     constructor create_error;
-    constructor create_ord(v: TConstExprInt);
+    constructor Create_Ord(v: TConstExprInt);
     constructor create_int(v: int64);
     constructor create_uint(v: qword);
     constructor create_bool(b: boolean);
@@ -1048,7 +1048,7 @@ type
       sintdef:=TOrdDef.create(s64bit,low(int64),high(int64),false);
       uintdef:=TOrdDef.create(u64bit,low(qword),high(qword),false);
       booldef:=TOrdDef.create(pasbool1,0,1,false);
-      strdef:=TStringDef.createansi(0,false);
+      strdef:=TStringDef.CreateAnsi(0,false);
       setdef:=TSetDef.create(sintdef,0,255,false);
       realdef:=TFloatDef.create(s80real,false);
     end;
@@ -1071,36 +1071,36 @@ type
 
   constructor TExprValue.create_const(c: TConstSym);
     begin
-      consttyp:=c.consttyp;
-      def:=c.constdef;
-      case consttyp of
+      ConstTyp:=c.ConstTyp;
+      def:=c.ConstDef;
+      case ConstTyp of
         conststring,
         constresourcestring:
           begin
             value.len:=c.value.len;
-            GetMem(value.valueptr,value.len+1);
-            move(c.value.valueptr^,value.valueptr^,value.len+1);
+            GetMem(value.ValuePtr,value.len+1);
+            move(c.value.ValuePtr^,value.ValuePtr^,value.len+1);
           end;
         constwstring,
         constwresourcestring:
           begin
-            InitWideString(value.valuews);
-            CopyWideString(c.value.valuews,value.valuews);
+            InitWideString(value.ValueWS);
+            CopyWideString(c.value.ValueWS,value.ValueWS);
           end;
         constreal:
           begin
-            new(PBestReal(value.valueptr));
-            PBestReal(value.valueptr)^:=PBestReal(c.value.valueptr)^;
+            new(PBestReal(value.ValuePtr));
+            PBestReal(value.ValuePtr)^:=PBestReal(c.value.ValuePtr)^;
           end;
         constset:
           begin
-            new(PNormalSet(value.valueptr));
-            PNormalSet(value.valueptr)^:=PNormalSet(c.value.valueptr)^;
+            new(PNormalSet(value.ValuePtr));
+            PNormalSet(value.ValuePtr)^:=PNormalSet(c.value.ValuePtr)^;
           end;
         constguid:
           begin
-            new(PGUID(value.valueptr));
-            PGUID(value.valueptr)^:=PGUID(c.value.valueptr)^;
+            new(PGUID(value.ValuePtr));
+            PGUID(value.ValuePtr)^:=PGUID(c.value.ValuePtr)^;
           end;
         else
           value:=c.value;
@@ -1110,15 +1110,15 @@ type
   constructor TExprValue.create_error;
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constnone;
-      def:=generrordef;
+      ConstTyp:=constnone;
+      def:=GenErrorDef;
     end;
 
-  constructor TExprValue.create_ord(v: TConstExprInt);
+  constructor TExprValue.Create_Ord(v: TConstExprInt);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constord;
-      value.valueord:=v;
+      ConstTyp:=constord;
+      value.ValueOrd:=v;
       if v.signed then
         def:=sintdef
       else
@@ -1128,24 +1128,24 @@ type
   constructor TExprValue.create_int(v: int64);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constord;
-      value.valueord:=v;
+      ConstTyp:=constord;
+      value.ValueOrd:=v;
       def:=sintdef;
     end;
 
   constructor TExprValue.create_uint(v: qword);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constord;
-      value.valueord:=v;
+      ConstTyp:=constord;
+      value.ValueOrd:=v;
       def:=uintdef;
     end;
 
   constructor TExprValue.create_bool(b: boolean);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constord;
-      value.valueord:=ord(b);
+      ConstTyp:=constord;
+      value.ValueOrd:=ord(b);
       def:=booldef;
     end;
 
@@ -1155,11 +1155,11 @@ type
       len: integer;
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=conststring;
+      ConstTyp:=conststring;
       len:=length(s);
       GetMem(sp,len+1);
       move(s[1],sp^,len+1);
-      value.valueptr:=sp;
+      value.ValuePtr:=sp;
       value.len:=len;
       def:=strdef;
     end;
@@ -1167,18 +1167,18 @@ type
   constructor TExprValue.create_set(ns: TNormalSet);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constset;
-      new(PNormalSet(value.valueptr));
-      PNormalSet(value.valueptr)^:=ns;
+      ConstTyp:=constset;
+      new(PNormalSet(value.ValuePtr));
+      PNormalSet(value.ValuePtr)^:=ns;
       def:=setdef;
     end;
 
   constructor TExprValue.create_real(r: BestReal);
     begin
       fillchar(value,sizeof(value),#0);
-      consttyp:=constreal;
-      new(PBestReal(value.valueptr));
-      PBestReal(value.valueptr)^:=r;
+      ConstTyp:=constreal;
+      new(PBestReal(value.ValuePtr));
+      PBestReal(value.ValuePtr)^:=r;
       def:=realdef;
     end;
 
@@ -1225,7 +1225,7 @@ type
                 ) or
                 (is_stringlike(v.def) and is_stringlike(def));
         if not result then
-          Message2(type_e_incompatible_types,def.typename,v.def.typename);
+          Message2(type_e_incompatible_types,def.TypeName,v.def.TypeName);
       end;
     var
       lv,rv: TConstExprInt;
@@ -1247,10 +1247,10 @@ type
               result:=TExprValue.create_error;
             end
           else
-          if value.valueord.signed then
-            result:=TExprValue.create_bool(value.valueord.svalue in PNormalSet(v.value.valueptr)^)
+          if value.ValueOrd.signed then
+            result:=TExprValue.create_bool(value.ValueOrd.svalue in PNormalSet(v.value.ValuePtr)^)
           else
-            result:=TExprValue.create_bool(value.valueord.uvalue in PNormalSet(v.value.valueptr)^);
+            result:=TExprValue.create_bool(value.ValueOrd.uvalue in PNormalSet(v.value.ValuePtr)^);
         end;
         _OP_NOT:
         begin
@@ -1258,9 +1258,9 @@ type
             result:=TExprValue.create_bool(not asBool)
           else if is_ordinal(def) then
             begin
-              result:=TExprValue.create_ord(value.valueord);
+              result:=TExprValue.Create_Ord(value.ValueOrd);
               result.def:=def;
-              calc_not_ordvalue(result.value.valueord,result.def);
+              calc_not_ordvalue(result.value.ValueOrd,result.def);
             end
           else
             begin
@@ -1280,7 +1280,7 @@ type
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=TExprValue.create_ord(value.valueord or v.value.valueord)
+              result:=TExprValue.Create_Ord(value.ValueOrd or v.value.ValueOrd)
             else
               begin
                 v.error('Ordinal','OR');
@@ -1304,7 +1304,7 @@ type
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=TExprValue.create_ord(value.valueord xor v.value.valueord)
+              result:=TExprValue.Create_Ord(value.ValueOrd xor v.value.ValueOrd)
             else
               begin
                 v.error('Ordinal','XOR');
@@ -1328,7 +1328,7 @@ type
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=TExprValue.create_ord(value.valueord and v.value.valueord)
+              result:=TExprValue.Create_Ord(value.ValueOrd and v.value.ValueOrd)
             else
               begin
                 v.error('Ordinal','AND');
@@ -1344,9 +1344,9 @@ type
         if (op=_MINUS) and not(Assigned(v)) then
           begin
             if is_ordinal(def) then
-              result:=TExprValue.create_ord(-value.valueord)
+              result:=TExprValue.Create_Ord(-value.ValueOrd)
             else if is_fpu(def) then
-              result:=TExprValue.create_real(-PBestReal(value.valueptr)^)
+              result:=TExprValue.create_real(-PBestReal(value.ValuePtr)^)
             else
               InternalError(2025050610);
           end
@@ -1354,8 +1354,8 @@ type
           begin
             if (is_ordinal(def) and is_ordinal(v.def)) then
               begin
-                lv:=value.valueord;
-                rv:=v.value.valueord;
+                lv:=value.ValueOrd;
+                rv:=v.value.ValueOrd;
                 case op of
                   _EQ:
                     result:=TExprValue.create_bool(lv=rv);
@@ -1370,21 +1370,21 @@ type
                   _LTE:
                     result:=TExprValue.create_bool(lv<=rv);
                   _PLUS:
-                    result:=TExprValue.create_ord(lv+rv);
+                    result:=TExprValue.Create_Ord(lv+rv);
                   _MINUS:
-                    result:=TExprValue.create_ord(lv-rv);
+                    result:=TExprValue.Create_Ord(lv-rv);
                   _STAR:
-                    result:=TExprValue.create_ord(lv*rv);
+                    result:=TExprValue.Create_Ord(lv*rv);
                   _SLASH:
                     result:=TExprValue.create_real(lv/rv);
                   _OP_DIV:
-                    result:=TExprValue.create_ord(lv div rv);
+                    result:=TExprValue.Create_Ord(lv div rv);
                   _OP_MOD:
-                    result:=TExprValue.create_ord(lv mod rv);
+                    result:=TExprValue.Create_Ord(lv mod rv);
                   _OP_SHL:
-                    result:=TExprValue.create_ord(lv shl rv);
+                    result:=TExprValue.Create_Ord(lv shl rv);
                   _OP_SHR:
-                    result:=TExprValue.create_ord(lv shr rv);
+                    result:=TExprValue.Create_Ord(lv shr rv);
                   else
                     InternalError(2025050611);
                 end;
@@ -1394,13 +1394,13 @@ type
                (is_fpu(v.def) or is_ordinal(v.def)) then
               begin
                 if is_fpu(def) then
-                  lvd:=PBestReal(value.valueptr)^
+                  lvd:=PBestReal(value.ValuePtr)^
                 else
-                  lvd:=value.valueord;
+                  lvd:=value.ValueOrd;
                 if is_fpu(v.def) then
-                  rvd:=PBestReal(v.value.valueptr)^
+                  rvd:=PBestReal(v.value.ValuePtr)^
                 else
-                  rvd:=v.value.valueord;
+                  rvd:=v.value.ValueOrd;
                 case op of
                   _EQ:
                     result:=TExprValue.create_bool(lvd=rvd);
@@ -1467,7 +1467,7 @@ type
     begin
       Message3(scan_e_compile_time_typeerror,
                expecteddef,
-               def.typename,
+               def.TypeName,
                place
               );
     end;
@@ -1491,41 +1491,41 @@ type
 
   function TExprValue.asBool: Boolean;
     begin
-      result:=value.valueord<>0;
+      result:=value.ValueOrd<>0;
     end;
 
   function TExprValue.asInt: Integer;
     begin
-      result:=value.valueord.svalue;
+      result:=value.ValueOrd.svalue;
     end;
 
   function TExprValue.asInt64: Int64;
     begin
-      result:=value.valueord.svalue;
+      result:=value.ValueOrd.svalue;
     end;
 
   function TExprValue.asSet: TNormalSet;
     begin
-      result:=PNormalSet(value.valueptr)^;
+      result:=PNormalSet(value.ValuePtr)^;
     end;
 
   function TExprValue.asStr: String;
     var
       b:byte;
     begin
-      case consttyp of
+      case ConstTyp of
         constord:
-          result:=ToStr(value.valueord);
+          result:=ToStr(value.ValueOrd);
         conststring,
         constresourcestring:
-          SetString(result,pchar(value.valueptr),value.len);
+          SetString(result,pchar(value.ValuePtr),value.len);
         constreal:
-          result:=RealToStr(PBestReal(value.valueptr)^);
+          result:=RealToStr(PBestReal(value.ValuePtr)^);
         constset:
           begin
             result:=',';
             for b:=0 to 255 do
-              if b in PConstSet(value.valueptr)^ then
+              if b in PConstSet(value.ValuePtr)^ then
                 result:=result+ToStr(b)+',';
           end;
         { error values }
@@ -1538,19 +1538,19 @@ type
 
   destructor TExprValue.Destroy;
     begin
-      case consttyp of
+      case ConstTyp of
         conststring,
         constresourcestring :
-          FreeMem(value.valueptr,value.len+1);
+          FreeMem(value.ValuePtr,value.len+1);
         constwstring,
         constwresourcestring:
-          DoneWideString(value.valuews);
+          DoneWideString(value.ValueWS);
         constreal :
-          dispose(PBestReal(value.valueptr));
+          dispose(PBestReal(value.ValuePtr));
         constset :
-          dispose(PNormalSet(value.valueptr));
+          dispose(PNormalSet(value.ValuePtr));
         constguid :
-          dispose(PGUID(value.valueptr));
+          dispose(PGUID(value.ValuePtr));
         constnil,
         constpointer,
         constord,
@@ -1590,7 +1590,7 @@ type
              hpath:=CurrentScanner.inputfile.path+';'+CurDirRelPath(SourceInfo);
              found:=FindFile(path+name, hpath,true,foundfile);
              if not found then
-               found:=CurrentModule.localincludesearchpath.FindFile(path+name,true,foundfile);
+               found:=CurrentModule.LocalIncludeSearchPath.FindFile(path+name,true,foundfile);
              if not found  then
                found:=IncludeSearchPath.FindFile(path+name,true,foundfile);
            end;
@@ -1618,15 +1618,15 @@ type
             result:=false;
             tokentoconsume:=_ID;
 
-            if Assigned(srsym) and (srsym.typ in [unitsym,namespacesym]) then
+            if Assigned(srsym) and (srsym.typ in [UnitSym,namespacesym]) then
               begin
-                if not(srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) then
+                if not(srsym.owner.SymTableType in [staticsymtable,GlobalSymTable]) then
                   InternalError(200501154);
                 { only allow unit.symbol access if the name was
                   found in the current module
                   we can use iscurrentunit because generic specializations does not
                   change current_unit variable }
-                hmodule:=find_module_from_symtable(srsym.Owner);
+                hmodule:=Find_Module_From_SymTable(srsym.Owner);
                 if not Assigned(hmodule) then
                   InternalError(201001120);
                 if hmodule.ModuleID=CurrentFilePos.moduleindex then
@@ -1640,8 +1640,8 @@ type
                         while Assigned(srsym) and (srsym.typ=namespacesym) do
                           begin
                             { we have a namespace. the next identifier should be either a namespace or a unit }
-                            searchsym_in_module(hmodule,ns+'.'+CurrentScanner.preproc_pattern,srsym,srsymtable);
-                            if Assigned(srsym) and (srsym.typ in [namespacesym,unitsym]) then
+                            SearchSym_In_Module(hmodule,ns+'.'+CurrentScanner.preproc_pattern,srsym,srsymtable);
+                            if Assigned(srsym) and (srsym.typ in [namespacesym,UnitSym]) then
                               begin
                                 ns:=ns+'.'+CurrentScanner.preproc_pattern;
                                 nssym:=srsym;
@@ -1653,9 +1653,9 @@ type
                           end;
                         { check if there is a hidden unit with this pattern in the namespace }
                         if not Assigned(srsym) and
-                           Assigned(nssym) and (nssym.typ=namespacesym) and Assigned(TNamespaceSym(nssym).unitsym) then
-                          srsym:=TNamespaceSym(nssym).unitsym;
-                        if Assigned(srsym) and (srsym.typ<>unitsym) then
+                           Assigned(nssym) and (nssym.typ=namespacesym) and Assigned(TNamespaceSym(nssym).UnitSym) then
+                          srsym:=TNamespaceSym(nssym).UnitSym;
+                        if Assigned(srsym) and (srsym.typ<>UnitSym) then
                           InternalError(201108260);
                         if not Assigned(srsym) then
                           begin
@@ -1670,34 +1670,34 @@ type
                           text model, regardless of the System alias. }
                         if ((CurrentScanner.preproc_pattern='CHAR') or
                             (CurrentScanner.preproc_pattern='PCHAR')) and
-                           (TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit) then
+                           (TModule(TUnitSym(srsym).module).GlobalSymTable=SystemUnit) then
                           begin
                             if CurrentScanner.preproc_pattern='PCHAR' then
                               if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                                searchsym_in_module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                                SearchSym_In_Module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                               else
-                                searchsym_in_module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                                SearchSym_In_Module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
                             else if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                              searchsym_in_module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
+                              SearchSym_In_Module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
                             else
-                              searchsym_in_module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
+                              SearchSym_In_Module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
                           end
                         else
-                          searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.preproc_pattern,srsym,srsymtable);
+                          SearchSym_In_Module(TUnitSym(srsym).module,CurrentScanner.preproc_pattern,srsym,srsymtable);
                       _STRING:
                         begin
                           { system.string? }
-                          if TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit then
+                          if TModule(TUnitSym(srsym).module).GlobalSymTable=SystemUnit then
                             begin
                               if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                                 begin
                                   if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                                    searchsym_in_module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
+                                    SearchSym_In_Module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                                   else
-                                    searchsym_in_module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
+                                    SearchSym_In_Module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
                                 end
                               else
-                                searchsym_in_module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
+                                SearchSym_In_Module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
                               tokentoconsume:=_STRING;
                             end;
                         end
@@ -1728,17 +1728,17 @@ type
               end;
              while (CurrentScanner.preproc_token=_POINT) do
                begin
-                 if Assigned(srsym)and(srsym.typ=typesym) then
+                 if Assigned(srsym)and(srsym.typ=TypeSym) then
                    begin
                      def:=TTypeSym(srsym).typedef;
-                     if is_class_or_object(def) or is_record(def) then
+                     if Is_Class_Or_Object(def) or Is_Record(def) then
                        begin
                          preproc_consume(_POINT);
                          CurrentScanner.skipspace;
                          if def.typ=objectdef then
-                           found:=searchsym_in_class(TObjectDef(def),TObjectDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable,[ssf_search_helper])
+                           found:=SearchSym_In_Class(TObjectDef(def),TObjectDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable,[ssf_search_helper])
                          else
-                           found:=searchsym_in_record(TRecordDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable);
+                           found:=SearchSym_In_Record(TRecordDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable);
                          if not found then
                            begin
                              Message1(sym_e_id_not_found,CurrentScanner.preproc_pattern);
@@ -1790,7 +1790,7 @@ type
             For real macros also do recursive substitution. }
           macrocount:=0;
           repeat
-            mac:=TMacro(search_macro(searchstr^));
+            mac:=TMacro(Search_Macro(searchstr^));
 
             inc(macrocount);
             if macrocount>max_macro_nesting then
@@ -1800,21 +1800,21 @@ type
               end;
 
             if Assigned(mac) and mac.defined then
-              if Assigned(mac.buftext) then
+              if Assigned(mac.BufText) then
                 begin
-                  if mac.buflen>255 then
+                  if mac.BufLen>255 then
                     begin
                       len:=255;
                       Message(scan_w_macro_cut_after_255_chars);
                     end
                   else
-                    len:=mac.buflen;
+                    len:=mac.BufLen;
                   hs[0]:=char(len);
                   if len>0 then
-                    move(mac.buftext[0],hs[1],len);
+                    move(mac.BufText[0],hs[1],len);
                   searchstr2store:=upcase(hs);
                   searchstr:=@searchstr2store;
-                  mac.is_used:=true;
+                  mac.IsUsed:=true;
                   foundmacro:=true;
                 end
               else
@@ -1825,7 +1825,7 @@ type
             else
               break;
 
-            if mac.is_compiler_var then
+            if mac.IsCompilerVar then
               break;
           until false;
 
@@ -1856,8 +1856,8 @@ type
           begin
            sym.IncRefCount;
            { do we know an owner? }
-           if Assigned(CurrentModule) and Assigned(CurrentModule.unitmap) and Assigned(sym.owner) then
-             inc(CurrentModule.unitmap[sym.owner.ModuleID].refs);
+           if Assigned(CurrentModule) and Assigned(CurrentModule.UnitMap) and Assigned(sym.owner) then
+             inc(CurrentModule.UnitMap[sym.owner.ModuleID].refs);
           end;
 
         function preproc_factor(eval: Boolean):TExprValue;
@@ -1933,11 +1933,11 @@ type
                     if CurrentScanner.preproc_token =_ID then
                       begin
                         hs := CurrentScanner.preproc_pattern;
-                        mac := TMacro(search_macro(hs));
+                        mac := TMacro(Search_Macro(hs));
                         if Assigned(mac) and mac.defined then
                           begin
                             result:=TExprValue.create_bool(true);
-                            mac.is_used:=true;
+                            mac.IsUsed:=true;
                           end
                         else
                           result:=TExprValue.create_bool(false);
@@ -1961,14 +1961,14 @@ type
                     if CurrentScanner.preproc_token =_ID then
                       begin
                         hs := CurrentScanner.preproc_pattern;
-                        mac := TMacro(search_macro(hs));
+                        mac := TMacro(Search_Macro(hs));
                         { FPC_UNICODESTRINGS is always present in the initial
                           macro table, but is undefined in ANSI mode. }
                         if Assigned(mac) and
                            ((upper(hs)<>'FPC_UNICODESTRINGS') or mac.defined) then
                           begin
                             result:=TExprValue.create_bool(false);
-                            mac.is_used:=true;
+                            mac.IsUsed:=true;
                           end
                         else
                           result:=TExprValue.create_bool(true);
@@ -2031,7 +2031,7 @@ type
                     CurrentScanner.skipspace;
 
                     if eval then
-                      if searchsym(storedpattern,srsym,srsymtable) then
+                      if SearchSym(storedpattern,srsym,srsymtable) then
                         begin
                           try_consume_nestedsym(srsym,srsymtable);
                           l:=0;
@@ -2041,12 +2041,12 @@ type
                               localvarsym,
                               paravarsym :
                                 begin
-                                  l:=TAbstractVarSym(srsym).getsize;
+                                  l:=TAbstractVarSym(srsym).GetSize;
                                   MarkSymbolAsUsed(srsym);
                                 end;
-                              typesym:
+                              TypeSym:
                                 begin
-                                  if TTypeSym(srsym).typedef.typ in [errordef,abstractdef,forwarddef] then
+                                  if TTypeSym(srsym).typedef.typ in [errordef,abstractdef,ForwardDef] then
                                     Message(parser_e_illegal_expression);
                                   l:=TTypeSym(srsym).typedef.size;
                                   MarkSymbolAsUsed(srsym);
@@ -2082,7 +2082,7 @@ type
                     CurrentScanner.skipspace;
 
                     if eval then
-                      if searchsym(storedpattern,srsym,srsymtable) then
+                      if SearchSym(storedpattern,srsym,srsymtable) then
                         begin
                           try_consume_nestedsym(srsym,srsymtable);
                           hdef:=nil;
@@ -2097,7 +2097,7 @@ type
                                   hdef:=TAbstractVarSym(srsym).vardef;
                                   MarkSymbolAsUsed(srsym);
                                 end;
-                              typesym:
+                              TypeSym:
                                 begin
                                   hdef:=TTypeSym(srsym).typedef;
                                   MarkSymbolAsUsed(srsym);
@@ -2108,7 +2108,7 @@ type
                           if Assigned(hdef) then
                             begin
                               if hdef.typ=setdef then
-                                hdef:=TSetDef(hdef).elementdef;
+                                hdef:=TSetDef(hdef).ElementDef;
                               case hdef.typ of
                                 orddef:
                                   with TOrdDef(hdef).high do
@@ -2117,12 +2117,12 @@ type
                                     else
                                       result:=TExprValue.create_uint(uvalue);
                                 enumdef:
-                                  result:=TExprValue.create_int(TEnumDef(hdef).maxval);
+                                  result:=TExprValue.create_int(TEnumDef(hdef).MaxVal);
                                 arraydef:
                                   if is_open_array(hdef) or is_array_of_const(hdef) or is_dynamic_array(hdef) then
                                     Message(type_e_mismatch)
                                   else
-                                    result:=TExprValue.create_int(TArrayDef(hdef).highrange);
+                                    result:=TExprValue.create_int(TArrayDef(hdef).HighRange);
                                 stringdef:
                                   if is_open_string(hdef) or is_ansistring(hdef) or is_wide_or_unicode_string(hdef) then
                                     Message(type_e_mismatch)
@@ -2184,16 +2184,16 @@ type
                               preproc_consume(_NE);
                             end;
                         CurrentScanner.skipspace;
-                        if searchsym(hs,srsym,srsymtable) then
+                        if SearchSym(hs,srsym,srsymtable) then
                           begin
                             { TSomeGeneric<...> also adds a TSomeGeneric symbol }
-                            if (sp_generic_dummy in srsym.symoptions) and
-                                (srsym.typ=typesym) and
+                            if (sp_generic_dummy in srsym.SymOptions) and
+                                (srsym.typ=TypeSym) and
                                 (
                                   { mode delphi}
                                   (TTypeSym(srsym).typedef.typ in [undefineddef,errordef]) or
                                   { non-delphi modes }
-                                  (df_generic in TTypeSym(srsym).typedef.defoptions)
+                                  (df_generic in TTypeSym(srsym).typedef.DefOptions)
                                 ) then
                               result:=TExprValue.create_bool(false)
                             else
@@ -2274,9 +2274,9 @@ type
                     CurrentScanner.skipspace;
                     { first look for a macros/int/float }
                     result:=preproc_substitutedtoken(storedpattern,eval);
-                    if eval and (result.consttyp=conststring) then
+                    if eval and (result.ConstTyp=conststring) then
                       begin
-                        if searchsym(storedpattern,srsym,srsymtable) then
+                        if SearchSym(storedpattern,srsym,srsymtable) then
                           begin
                             try_consume_nestedsym(srsym,srsymtable);
                             if Assigned(srsym) then
@@ -2288,8 +2288,8 @@ type
                                       { const def must conform to the set type }
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
-                                        (TConstSym(srsym).constdef.typ=setdef) and
-                                        (compare_defs(TSetDef(TConstSym(srsym).constdef).elementdef,TSetDef(conform_to).elementdef,nothingn)<>te_exact) then
+                                        (TConstSym(srsym).ConstDef.typ=setdef) and
+                                        (compare_defs(TSetDef(TConstSym(srsym).ConstDef).ElementDef,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2307,7 +2307,7 @@ type
                                       { enum definition must conform to the set type }
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
-                                        (compare_defs(TEnumSym(srsym).definition,TSetDef(conform_to).elementdef,nothingn)<>te_exact) then
+                                        (compare_defs(TEnumSym(srsym).definition,TSetDef(conform_to).ElementDef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2335,7 +2335,7 @@ type
                           end;
                       end
                       { skip id(<expr>) if expression must not be evaluated }
-                      else if not(eval) and (result.consttyp=conststring) then
+                      else if not(eval) and (result.ConstTyp=conststring) then
                         begin
                           if CurrentScanner.preproc_token =_LKLAMMER then
                             begin
@@ -2369,7 +2369,7 @@ type
                  { the const set does not conform to the set def }
                  if (conform_to<>nil) and
                    (conform_to.typ=setdef) and
-                   (exprvalue.consttyp=constnone) then
+                   (exprvalue.ConstTyp=constnone) then
                    begin
                      result:=TExprValue.create_error;
                      break;
@@ -2426,7 +2426,7 @@ type
                else if exprvalue.isInt then
                  result:=TExprValue.create_int(-exprvalue.asInt)
                else if is_fpu(exprvalue.def) then
-                 result:=TExprValue.create_real(-PBestReal(exprvalue.value.valueptr)^)
+                 result:=TExprValue.create_real(-PBestReal(exprvalue.value.ValuePtr)^)
                else
                  Message(scan_e_error_in_preproc_expr);
                exprvalue.free;
@@ -2535,7 +2535,7 @@ type
         bracketcount : LongInt;
         mac : TMacro;
         macropos : SizeInt;
-        macrobuffer : array[0..maxmacrolen-1] of char;
+        macrobuffer : array[0..MaxMacroLen-1] of char;
       begin
         CurrentScanner.skipspace;
         hs:=CurrentScanner.readid;
@@ -2549,22 +2549,22 @@ type
             Message1(scan_e_illegal_directive,'DEFINE '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=TMacro(search_macro(hs));
-        if not Assigned(mac) or (mac.owner <> CurrentModule.localmacrosymtable) then
+        mac:=TMacro(Search_Macro(hs));
+        if not Assigned(mac) or (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
             mac:=TMacro.create(hs);
             mac.defined:=true;
-            CurrentModule.localmacrosymtable.insertsym(mac);
+            CurrentModule.LocalMacroSymTable.InsertSym(mac);
           end
         else
           begin
             mac.defined:=true;
-            mac.is_compiler_var:=false;
+            mac.IsCompilerVar:=false;
           { delete old definition }
-            mac.free_buftext;
+            mac.Free_BufText;
           end;
         Message1(parser_c_macro_defined,mac.name);
-        mac.is_used:=true;
+        mac.IsUsed:=true;
         if (cs_support_macro in CurrentSettings.ModuleSwitches) then
           begin
              CurrentScanner.skipspace;
@@ -2577,13 +2577,13 @@ type
                  CurrentScanner.readchar;
                  if CurrentScanner.c <> '=' then
                    exit;
-                 mac.is_c_macro:=true;
+                 mac.IsCMacro:=true;
                  CurrentScanner.readchar;
                  CurrentScanner.skipspace;
                end
              else
                { $definec always defines a text-substitution (C-style) macro }
-               mac.is_c_macro:=true;
+               mac.IsCMacro:=true;
 
              { key words are never substituted }
              if is_keyword(hs) then
@@ -2610,7 +2610,7 @@ type
                  #26 :
                    CurrentScanner.end_of_file;
                end;
-               if macropos>=maxmacrolen then
+               if macropos>=MaxMacroLen then
                  Message(scan_f_macro_buffer_overflow);
                macrobuffer[macropos]:=CurrentScanner.c;
                inc(macropos);
@@ -2619,7 +2619,7 @@ type
 
              { copy the text }
              if macropos>0 then
-               move(pchar(@macrobuffer[0])^,mac.allocate_buftext(macropos)^,macropos);
+               move(pchar(@macrobuffer[0])^,mac.Allocate_BufText(macropos)^,macropos);
           end
         else
           begin
@@ -2658,24 +2658,24 @@ type
             Message1(scan_e_illegal_directive,'SETC '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=TMacro(search_macro(hs));
+        mac:=TMacro(Search_Macro(hs));
         if not Assigned(mac) or
-           (mac.owner <> CurrentModule.localmacrosymtable) then
+           (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
             mac:=TMacro.create(hs);
             mac.defined:=true;
-            mac.is_compiler_var:=true;
-            CurrentModule.localmacrosymtable.insertsym(mac);
+            mac.IsCompilerVar:=true;
+            CurrentModule.LocalMacroSymTable.InsertSym(mac);
           end
         else
           begin
             mac.defined:=true;
-            mac.is_compiler_var:=true;
+            mac.IsCompilerVar:=true;
           { delete old definition }
-            mac.free_buftext;
+            mac.Free_BufText;
           end;
         Message1(parser_c_macro_defined,mac.name);
-        mac.is_used:=true;
+        mac.IsUsed:=true;
 
         { key words are never substituted }
         if is_keyword(hs) then
@@ -2707,7 +2707,7 @@ type
                    end;
                  Message2(parser_c_macro_set_to,mac.name,hs);
                  { copy the text }
-                 move(hs[1],mac.allocate_buftext(length(hs))^,length(hs));
+                 move(hs[1],mac.Allocate_BufText(length(hs))^,length(hs));
                end
              else
                Message(scan_e_preproc_syntax_error);
@@ -2731,24 +2731,24 @@ type
             Message1(scan_e_illegal_directive,'UNDEF '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=TMacro(search_macro(hs));
+        mac:=TMacro(Search_Macro(hs));
         if not Assigned(mac) or
-           (mac.owner <> CurrentModule.localmacrosymtable) then
+           (mac.owner <> CurrentModule.LocalMacroSymTable) then
           begin
              mac:=TMacro.create(hs);
              mac.defined:=false;
-             CurrentModule.localmacrosymtable.insertsym(mac);
+             CurrentModule.LocalMacroSymTable.InsertSym(mac);
           end
         else
           begin
              mac.defined:=false;
-             mac.is_compiler_var:=false;
-             mac.is_c_macro:=false;
+             mac.IsCompilerVar:=false;
+             mac.IsCMacro:=false;
              { delete old definition }
-             mac.free_buftext;
+             mac.Free_BufText;
           end;
         Message1(parser_c_macro_undefined,mac.name);
-        mac.is_used:=true;
+        mac.IsUsed:=true;
       end;
 
 
@@ -2842,7 +2842,7 @@ type
              'FPCTARGETOS':
                hs:=TargetInfo.shortname;
              'CURRENTROUTINE':
-               hs:=CurrentProcInfo.procdef.procsym.RealName;
+               hs:=CurrentProcInfo.procdef.ProcSym.RealName;
              else
                hs:=GetEnvironmentVariable(hs);
            end;
@@ -4045,7 +4045,7 @@ type
                           already (we don't support {$codepage xxx} switches in
                           the middle of a file either) *)
                        if (CurrentSettings.SourceCodePage<>CP_UTF8) and
-                          not CurrentModule.in_global then
+                          not CurrentModule.InGlobal then
                          Message(scanner_f_illegal_utf8_bom);
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
                        inc_inputpointer(3);
@@ -6208,14 +6208,14 @@ type
             { this takes some time ... }
               if (cs_support_macro in CurrentSettings.ModuleSwitches) then
                begin
-                 mac:=TMacro(search_macro(pattern));
-                 if Assigned(mac) and (not mac.is_compiler_var) and mac.is_c_macro then
+                 mac:=TMacro(Search_Macro(pattern));
+                 if Assigned(mac) and (not mac.IsCompilerVar) and mac.IsCMacro then
                   begin
                     if (yylexcount<max_macro_nesting) and (macro_nesting_depth<max_macro_nesting) then
                      begin
-                       mac.is_used:=true;
+                       mac.IsUsed:=true;
                        inc(yylexcount);
-                       substitutemacro(pattern,pchar(mac.buftext),mac.buflen,
+                       substitutemacro(pattern,pchar(mac.BufText),mac.BufLen,
                          mac.fileinfo.line,mac.fileinfo.fileindex,false);
                        { handle empty macros }
                        if c=#0 then

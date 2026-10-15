@@ -161,7 +161,7 @@ implementation
                   modn:
                     result := COrdConstNode.create(0,left.resultdef,true);
                   divn:
-                    result := left.getcopy;
+                    result := left.GetCopy;
                   else
                     InternalError(2019050518);
                 end;
@@ -206,13 +206,13 @@ implementation
               (compare_defs(resultdef,left.resultdef,nothingn)=te_exact) then
               begin
                 { re-use the current node so we get the result type right }
-                right:=CAddNode.create_internal(muln,right,TModDivNode(left).right.getcopy);
-                hp:=TModDivNode(left).left.getcopy;
+                right:=CAddNode.Create_Internal(muln,right,TModDivNode(left).right.GetCopy);
+                hp:=TModDivNode(left).left.GetCopy;
                 left.Free;
                 left:=hp;
-                Result:=getcopy;
+                Result:=GetCopy;
                 Result.resultdef:=nil;
-                Result:=CTypeConvNode.create_internal(Result,resultdef);
+                Result:=CTypeConvNode.Create_Internal(Result,resultdef);
                 exit;
               end;
 
@@ -289,7 +289,7 @@ implementation
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
            begin
-             resultdef:=cundefinedtype;
+             resultdef:=CUndefinedType;
              exit;
            end;
 
@@ -315,19 +315,19 @@ implementation
            begin
              { Divide the stored fixed-point integers. The quotient needs its
                Currency scale restored; the remainder already has that scale. }
-             inserttypeconv(left,s64currencytype);
-             inserttypeconv(right,s64currencytype);
+             inserttypeconv(left,S64CurrencyType);
+             inserttypeconv(right,S64CurrencyType);
              if CodeGenError then
                exit;
              hp:=CModDivNode.create(nodetype,
-               CTypeConvNode.create_internal(left,s64inttype),
-               CTypeConvNode.create_internal(right,s64inttype));
+               CTypeConvNode.Create_Internal(left,S64IntType),
+               CTypeConvNode.Create_Internal(right,S64IntType));
              TModDivNode(hp).moddivnodeflags:=moddivnodeflags;
              left:=nil;
              right:=nil;
              if nodetype=divn then
-               hp:=CAddNode.create_internal(muln,hp,COrdConstNode.create(10000,s64inttype,false));
-             result:=CTypeConvNode.create_internal(hp,s64currencytype);
+               hp:=CAddNode.Create_Internal(muln,hp,COrdConstNode.create(10000,S64IntType,false));
+             result:=CTypeConvNode.Create_Internal(hp,S64CurrencyType);
              TypeCheckPass(result);
              include(result.flags,nf_is_currency);
              exit;
@@ -335,9 +335,9 @@ implementation
 
          { we need 2 orddefs always }
          if (left.resultdef.typ<>orddef) then
-           inserttypeconv(left,sinttype);
+           inserttypeconv(left,SIntType);
          if (right.resultdef.typ<>orddef) then
-           inserttypeconv(right,sinttype);
+           inserttypeconv(right,SIntType);
          if CodeGenError then
            exit;
 
@@ -362,33 +362,33 @@ implementation
          { Additionally, do the same for cardinal/qwords and other positive types, but    }
          { always in a way that a smaller type is converted to a bigger type              }
          { (tbs/tw8870)                                                                }
-         if (rd.ordtype in [u8bit,u16bit,u32bit,u64bit]) and
+         if (rd.OrdType in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(left) and
               (TOrdConstNode(left).value >= 0) and
               (TOrdConstNode(left).value <= get_max_value(rd))) or
              (not is_signed(ld) and
               (rd.size >= ld.size))) then
            begin
-             if rd.size<uinttype.size then
+             if rd.size<UIntType.size then
                begin
-                 inserttypeconv(left,uinttype);
-                 inserttypeconv(right,uinttype);
+                 inserttypeconv(left,UIntType);
+                 inserttypeconv(right,UIntType);
                end
              else
                inserttypeconv(left,rd);
              resultdef:=right.resultdef;
            end
-         else if (ld.ordtype in [u8bit,u16bit,u32bit,u64bit]) and
+         else if (ld.OrdType in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(right) and
               (TOrdConstNode(right).value >= 0) and
               (TOrdConstNode(right).value <= get_max_value(ld))) or
              (not is_signed(rd) and
               (ld.size >= rd.size))) then
            begin
-             if ld.size<uinttype.size then
+             if ld.size<UIntType.size then
                begin
-                 inserttypeconv(left,uinttype);
-                 inserttypeconv(right,uinttype);
+                 inserttypeconv(left,UIntType);
+                 inserttypeconv(right,UIntType);
                end
              else
                inserttypeconv(right,ld);
@@ -398,13 +398,13 @@ implementation
 
          { when there is one currency value, everything is done
            using currency }
-         if (ld.ordtype=scurrency) or
-            (rd.ordtype=scurrency) then
+         if (ld.OrdType=scurrency) or
+            (rd.OrdType=scurrency) then
            begin
-             if (ld.ordtype<>scurrency) then
-              inserttypeconv(left,s64currencytype);
-             if (rd.ordtype<>scurrency) then
-              inserttypeconv(right,s64currencytype);
+             if (ld.OrdType<>scurrency) then
+              inserttypeconv(left,S64CurrencyType);
+             if (rd.OrdType<>scurrency) then
+              inserttypeconv(right,S64CurrencyType);
              resultdef:=left.resultdef;
            end
          else
@@ -415,17 +415,17 @@ implementation
            begin
              if is_signed(rd) or is_signed(ld) then
                begin
-                  if (ld.ordtype<>s64bit) then
-                    inserttypeconv(left,s64inttype);
-                  if (rd.ordtype<>s64bit) then
-                    inserttypeconv(right,s64inttype);
+                  if (ld.OrdType<>s64bit) then
+                    inserttypeconv(left,S64IntType);
+                  if (rd.OrdType<>s64bit) then
+                    inserttypeconv(right,S64IntType);
                end
              else
                begin
-                  if (ld.ordtype<>u64bit) then
-                    inserttypeconv(left,u64inttype);
-                  if (rd.ordtype<>u64bit) then
-                    inserttypeconv(right,u64inttype);
+                  if (ld.OrdType<>u64bit) then
+                    inserttypeconv(left,U64IntType);
+                  if (rd.OrdType<>u64bit) then
+                    inserttypeconv(right,U64IntType);
                end;
              resultdef:=left.resultdef;
            end
@@ -434,9 +434,9 @@ implementation
           if is_oversizedint(ld) or is_oversizedint(rd) then
            begin
              nd:=get_common_intdef(ld,rd,false);
-             if (ld.ordtype<>nd.ordtype) then
+             if (ld.OrdType<>nd.OrdType) then
                inserttypeconv(left,nd);
-             if (rd.ordtype<>nd.ordtype) then
+             if (rd.OrdType<>nd.OrdType) then
                inserttypeconv(right,nd);
              resultdef:=left.resultdef;
            end
@@ -449,20 +449,20 @@ implementation
            begin
               CGMessage(type_h_mixed_signed_unsigned);
               { get a signed int, larger than the native int }
-              nd:=get_common_intdef(TOrdDef(sinttype),TOrdDef(uinttype),false);
-              if (ld.ordtype<>nd.ordtype) then
+              nd:=get_common_intdef(TOrdDef(SIntType),TOrdDef(UIntType),false);
+              if (ld.OrdType<>nd.OrdType) then
                 inserttypeconv(left,nd);
-              if (rd.ordtype<>nd.ordtype) then
+              if (rd.OrdType<>nd.OrdType) then
                 inserttypeconv(right,nd);
               resultdef:=left.resultdef;
            end
          else
            begin
               { Make everything always default signed int }
-              if not(rd.ordtype in [TOrdDef(sinttype).ordtype,TOrdDef(uinttype).ordtype]) then
-                inserttypeconv(right,sinttype);
-              if not(ld.ordtype in [TOrdDef(sinttype).ordtype,TOrdDef(uinttype).ordtype]) then
-                inserttypeconv(left,sinttype);
+              if not(rd.OrdType in [TOrdDef(SIntType).OrdType,TOrdDef(UIntType).OrdType]) then
+                inserttypeconv(right,SIntType);
+              if not(ld.OrdType in [TOrdDef(SIntType).OrdType,TOrdDef(UIntType).OrdType]) then
+                inserttypeconv(left,SIntType);
               resultdef:=right.resultdef;
            end;
 
@@ -477,7 +477,7 @@ implementation
              result_data:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
 
              { right <=0? }
-             addstatement(statements,CIfNode.create_internal(CAddNode.create_internal(lten,right.getcopy,COrdConstNode.create(0,resultdef,false)),
+             addstatement(statements,CIfNode.Create_Internal(CAddNode.Create_Internal(lten,right.GetCopy,COrdConstNode.create(0,resultdef,false)),
                { then: result:=left mod right }
                CCallNode.createintern('fpc_divbyzero',nil),
                nil
@@ -485,19 +485,19 @@ implementation
 
              { prepare else block }
              { result:=(-left) mod right }
-             addstatement(else_statements,CAssignmentNode.create(CTempRefNode.create(result_data),CModDivNode.create(modn,CUnaryMinusNode.create(left.getcopy),right.getcopy)));
+             addstatement(else_statements,CAssignmentNode.create(CTempRefNode.create(result_data),CModDivNode.create(modn,CUnaryMinusNode.create(left.GetCopy),right.GetCopy)));
              { result<>0? }
-             addstatement(else_statements,CIfNode.create_internal(CAddNode.create_internal(unequaln,CTempRefNode.create(result_data),COrdConstNode.create(0,resultdef,false)),
+             addstatement(else_statements,CIfNode.Create_Internal(CAddNode.Create_Internal(unequaln,CTempRefNode.create(result_data),COrdConstNode.create(0,resultdef,false)),
                { then: result:=right-result }
-               CAssignmentNode.create_internal(CTempRefNode.create(result_data),CAddNode.create_internal(subn,right.getcopy,CTempRefNode.create(result_data))),
+               CAssignmentNode.Create_Internal(CTempRefNode.create(result_data),CAddNode.Create_Internal(subn,right.GetCopy,CTempRefNode.create(result_data))),
                nil
                ));
 
              addstatement(statements,result_data);
              { if left>=0 }
-             addstatement(statements,CIfNode.create_internal(CAddNode.create_internal(gten,left.getcopy,COrdConstNode.create(0,resultdef,false)),
+             addstatement(statements,CIfNode.Create_Internal(CAddNode.Create_Internal(gten,left.GetCopy,COrdConstNode.create(0,resultdef,false)),
                { then: result:=left mod right }
-               CAssignmentNode.create_internal(CTempRefNode.create(result_data),CModDivNode.create(modn,left.getcopy,right.getcopy)),
+               CAssignmentNode.Create_Internal(CTempRefNode.create(result_data),CModDivNode.create(modn,left.GetCopy,right.GetCopy)),
                { else block }
                else_block
                ));
@@ -523,7 +523,7 @@ implementation
 
         { only qword needs the unsigned code, the
           signed code is also used for currency }
-        case TOrdDef(resultdef).ordtype of
+        case TOrdDef(resultdef).OrdType of
           u8bit:
             procname := procname + 'byte';
           s8bit:
@@ -552,7 +552,7 @@ implementation
           InternalError(2013031701);
         if resultdef.typ<>orddef then
           InternalError(2013031702);
-        if TOrdDef(result.resultdef).ordtype <> TOrdDef(resultdef).ordtype then
+        if TOrdDef(result.resultdef).OrdType <> TOrdDef(resultdef).OrdType then
           inserttypeconv(result,resultdef);
       end;
 {$else cpuneedsdivhelper}
@@ -572,8 +572,8 @@ implementation
           parameters to s64bit, so they are not converted }
         if nf_is_currency in flags then
           begin
-            left.resultdef:=s64inttype;
-            right.resultdef:=s64inttype;
+            left.resultdef:=S64IntType;
+            right.resultdef:=S64IntType;
           end;
 
         { otherwise create a call to a helper }
@@ -647,13 +647,13 @@ implementation
                       masknode:=
                         CShlShrNode.create(shrn,
                           CTempRefNode.create(temp),
-                          COrdConstNode.create(shiftval,u8inttype,false)
+                          COrdConstNode.create(shiftval,U8IntType,false)
                         )
                     else
                       masknode:=
                         CAddNode.create(andn,
                           CInlineNode.create(in_sar_x_y,false,
-                            CCallParaNode.create(COrdConstNode.create(shiftval,u8inttype,false),
+                            CCallParaNode.create(COrdConstNode.create(shiftval,U8IntType,false),
                             CCallParaNode.create(CTempRefNode.create(temp),nil))
                           ),
                           COrdConstNode.create(TCGInt((qword(1) shl power)-1),
@@ -664,7 +664,7 @@ implementation
                       addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),
                         CUnaryMinusNode.create(
                           CInlineNode.create(in_sar_x_y,false,
-                            CCallParaNode.create(COrdConstNode.create(power,u8inttype,false),
+                            CCallParaNode.create(COrdConstNode.create(power,U8IntType,false),
                             CCallParaNode.create(CAddNode.create(addn,CTempRefNode.create(temp),
                               masknode),nil
                             )))))
@@ -672,7 +672,7 @@ implementation
                     else
                       addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),
                         CInlineNode.create(in_sar_x_y,false,
-                          CCallParaNode.create(COrdConstNode.create(power,u8inttype,false),
+                          CCallParaNode.create(COrdConstNode.create(power,U8IntType,false),
                           CCallParaNode.create(CAddNode.create(addn,CTempRefNode.create(temp),
                             masknode),nil
                           ))))
@@ -708,13 +708,13 @@ implementation
                   masknode:=
                     CShlShrNode.create(shrn,
                       CTempRefNode.create(temp),
-                      COrdConstNode.create(shiftval,u8inttype,false)
+                      COrdConstNode.create(shiftval,U8IntType,false)
                     )
                 else
                   masknode:=
                     CAddNode.create(andn,
                       CInlineNode.create(in_sar_x_y,false,
-                        CCallParaNode.create(COrdConstNode.create(shiftval,u8inttype,false),
+                        CCallParaNode.create(COrdConstNode.create(shiftval,U8IntType,false),
                         CCallParaNode.create(CTempRefNode.create(temp),nil))
                       ),
                       COrdConstNode.create(TCGInt((qword(1) shl power)-1),
@@ -811,7 +811,7 @@ implementation
     function TShlShrNode.simplify(forinline : boolean):TNode;
       var
         lvalue, rvalue, mask : TConstExprInt;
-        rangedef: TDef;
+        RangeDef: TDef;
         size: LongInt;
       begin
         result:=nil;
@@ -834,7 +834,7 @@ implementation
             if is_constintnode(left) then
                begin
                  lvalue:=TOrdConstNode(left).value;
-                 getrangedefmasksize(resultdef, rangedef, mask, size);
+                 getrangedefmasksize(resultdef, RangeDef, mask, size);
                  { shr is an unsigned operation, so cut off upper bits }
                  if forinline then
                    lvalue:=lvalue and mask;
@@ -872,7 +872,7 @@ implementation
             lvalue:=TOrdConstNode(left).value;
             if forinline then
               begin
-                getrangedefmasksize(resultdef, rangedef, mask, size);
+                getrangedefmasksize(resultdef, RangeDef, mask, size);
                 lvalue:=lvalue and mask;
               end;
             { '0 shl x' and '0 shr x' are 0 }
@@ -895,7 +895,7 @@ implementation
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
            begin
-             resultdef:=cundefinedtype;
+             resultdef:=CUndefinedType;
              exit;
            end;
 
@@ -924,9 +924,9 @@ implementation
             ) or is_constintnode(right)) then
            begin
              if not(mmx_type(left.resultdef) in [mmxu16bit,mmxs16bit,mmxfixed16,mmxu32bit,mmxs32bit,mmxu64bit,mmxs64bit]) then
-               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.typename,right.resultdef.typename);
+               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.TypeName,right.resultdef.TypeName);
              if not(is_mmx_able_array(right.resultdef)) then
-               inserttypeconv(right,sinttype);
+               inserttypeconv(right,SIntType);
            end
          else
 {$endif SUPPORT_MMX}
@@ -935,13 +935,13 @@ implementation
                32 bit for backwards compatibility. That way 'shl 33' is
                the same as 'shl 1'. It's ugly but compatible with delphi/tp/gcc }
              if (not is_64bit(left.resultdef)) and
-                (TOrdDef(left.resultdef).ordtype<>u32bit) then
+                (TOrdDef(left.resultdef).OrdType<>u32bit) then
                begin
                  { keep signedness of original type }
                  if is_signed(left.resultdef) then
                    begin
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
-                     inserttypeconv(left,s32inttype)
+                     inserttypeconv(left,S32IntType)
 {$else}
                      InternalError(2013031301);
 {$endif}
@@ -949,14 +949,14 @@ implementation
                  else
                    begin
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
-                     inserttypeconv(left,u32inttype);
+                     inserttypeconv(left,U32IntType);
 {$else}
                      InternalError(2013031302);
 {$endif}
                    end
                end;
 
-             inserttypeconv(right,sinttype);
+             inserttypeconv(right,SIntType);
            end;
 
          resultdef:=left.resultdef;
@@ -1048,7 +1048,7 @@ implementation
             }
             if (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (left.nodetype=subn) then
               begin
-                result:=CAddNode.create(subn,TAddNode(left).right.getcopy,TAddNode(left).left.getcopy);
+                result:=CAddNode.create(subn,TAddNode(left).right.GetCopy,TAddNode(left).left.GetCopy);
                 exit;
               end;
 
@@ -1060,12 +1060,12 @@ implementation
             }
             if (left.nodetype=muln) and ((TAddNode(left).left.nodetype=unaryminusn)) then
               begin
-                result:=CAddNode.create(muln,TUnaryMinusNode(TAddNode(left).left).left.getcopy,TAddNode(left).right.getcopy);
+                result:=CAddNode.create(muln,TUnaryMinusNode(TAddNode(left).left).left.GetCopy,TAddNode(left).right.GetCopy);
                 exit;
               end;
             if (left.nodetype=muln) and ((TAddNode(left).right.nodetype=unaryminusn)) then
               begin
-                result:=CAddNode.create(muln,TAddNode(left).left.getcopy,TUnaryMinusNode(TAddNode(left).right).left.getcopy);
+                result:=CAddNode.create(muln,TAddNode(left).left.GetCopy,TUnaryMinusNode(TAddNode(left).right).left.GetCopy);
                 exit;
               end;
 
@@ -1077,12 +1077,12 @@ implementation
             }
             if (left.nodetype=slashn) and ((TAddNode(left).left.nodetype=unaryminusn)) then
               begin
-                result:=CAddNode.create(slashn,TUnaryMinusNode(TAddNode(left).left).left.getcopy,TAddNode(left).right.getcopy);
+                result:=CAddNode.create(slashn,TUnaryMinusNode(TAddNode(left).left).left.GetCopy,TAddNode(left).right.GetCopy);
                 exit;
               end;
             if (left.nodetype=slashn) and ((TAddNode(left).right.nodetype=unaryminusn)) then
               begin
-                result:=CAddNode.create(slashn,TAddNode(left).left.getcopy,TUnaryMinusNode(TAddNode(left).right).left.getcopy);
+                result:=CAddNode.create(slashn,TAddNode(left).left.GetCopy,TUnaryMinusNode(TAddNode(left).right).left.GetCopy);
                 exit;
               end;
 
@@ -1092,7 +1092,7 @@ implementation
             }
             if left.nodetype=unaryminusn then
               begin
-                result:=TUnaryNode(left).left.getcopy;
+                result:=TUnaryNode(left).left.GetCopy;
                 exit;
               end;
           end
@@ -1101,12 +1101,12 @@ implementation
           begin
             if is_constintnode(TAddNode(left).right) and (TOrdConstNode(TAddNode(left).right).value=1) then
               begin
-                result:=CNotNode.create(TAddNode(left).left.getcopy);
+                result:=CNotNode.create(TAddNode(left).left.GetCopy);
                 exit;
               end
             else if is_constintnode(TAddNode(left).left) and (TOrdConstNode(TAddNode(left).left).value=1) then
               begin
-                result:=CNotNode.create(TAddNode(left).right.getcopy);
+                result:=CNotNode.create(TAddNode(left).right.GetCopy);
                 exit;
               end;
           end;
@@ -1123,7 +1123,7 @@ implementation
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) then
            begin
-             resultdef:=cundefinedtype;
+             resultdef:=CUndefinedType;
              exit;
            end;
 
@@ -1145,7 +1145,7 @@ implementation
            end
          else if left.resultdef.typ=floatdef then
            begin
-             if not(TFloatDef(left.resultdef).floattype in [s64comp,s64currency]) and
+             if not(TFloatDef(left.resultdef).FloatType in [s64comp,s64currency]) and
                (cs_excessprecision in CurrentSettings.LocalSwitches) then
                begin
                  inserttypeconv(left,pbestrealtype^);
@@ -1168,18 +1168,18 @@ implementation
          else if is_oversizedord(left.resultdef) then
            begin
              if is_64bit(left.resultdef) then
-               inserttypeconv(left,s64inttype)
+               inserttypeconv(left,S64IntType)
              else if is_32bit(left.resultdef) then
-               inserttypeconv(left,s32inttype)
+               inserttypeconv(left,S32IntType)
              else if is_16bit(left.resultdef) then
-               inserttypeconv(left,s16inttype)
+               inserttypeconv(left,S16IntType)
              else
                InternalError(2013040701);
              resultdef:=left.resultdef;
            end
          else if (left.resultdef.typ=orddef) then
            begin
-             inserttypeconv(left,sinttype);
+             inserttypeconv(left,SIntType);
              resultdef:=left.resultdef
            end
          else
@@ -1244,7 +1244,7 @@ implementation
         { avoid any problems with type parameters later on }
         if is_typeparam(left.resultdef) then
           begin
-            resultdef:=cundefinedtype;
+            resultdef:=CUndefinedType;
             exit;
           end;
 
@@ -1268,11 +1268,11 @@ implementation
         else if is_oversizedord(left.resultdef) then
           begin
             if is_64bit(left.resultdef) then
-              inserttypeconv(left,s64inttype)
+              inserttypeconv(left,S64IntType)
             else if is_32bit(left.resultdef) then
-              inserttypeconv(left,s32inttype)
+              inserttypeconv(left,S32IntType)
             else if is_16bit(left.resultdef) then
-              inserttypeconv(left,s16inttype)
+              inserttypeconv(left,S16IntType)
             else
               InternalError(2013040702);
             result:=left;
@@ -1280,7 +1280,7 @@ implementation
           end
         else if (left.resultdef.typ=orddef) then
           begin
-            inserttypeconv(left,sinttype);
+            inserttypeconv(left,SIntType);
             result:=left;
             left:=nil;
           end
@@ -1384,7 +1384,7 @@ implementation
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) then
            begin
-             resultdef:=cundefinedtype;
+             resultdef:=CUndefinedType;
              exit;
            end;
 

@@ -63,11 +63,11 @@ procedure TCGObjCSelectorNode.pass_generate_code;
     case left.nodetype of
       loadn:
         begin
-          if (TLoadNode(left).symtableentry.typ<>procsym) then
+          if (TLoadNode(left).symtableentry.typ<>ProcSym) then
             InternalError(2009051602);
           if (TProcSym(TLoadNode(left).symtableentry).procdeflist.count<>1) then
             InternalError(2009051701);
-          name:=TProcDef(TProcSym(TLoadNode(left).symtableentry).procdeflist[0]).messageinf.str;
+          name:=TProcDef(TProcSym(TLoadNode(left).symtableentry).procdeflist[0]).MessageInf.str;
           entry:=pool.FindOrAdd(@name^[1],length(name^))
         end;
       stringconstn:

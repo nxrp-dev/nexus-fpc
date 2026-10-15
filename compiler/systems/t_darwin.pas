@@ -361,7 +361,7 @@ implementation
         HPath: TCmdStrListItem;
       begin
         result:='';
-        HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
+        HPath:=TCmdStrListItem(CurrentModule.LocalLibrarySearchPath.First);
         while Assigned(HPath) do
          begin
            result:=result+' '+MaybeQuoted('-L'+HPath.Str);
@@ -374,7 +374,7 @@ implementation
            HPath:=TCmdStrListItem(HPath.Next);
          end;
 
-        HPath:=TCmdStrListItem(CurrentModule.localframeworksearchpath.First);
+        HPath:=TCmdStrListItem(CurrentModule.LocalFrameworkSearchPath.First);
         while Assigned(HPath) do
          begin
            result:=result+' '+MaybeQuoted('-F'+HPath.Str);

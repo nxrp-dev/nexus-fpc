@@ -116,9 +116,9 @@ implementation
           so funcret is always in EAX for register calling }
         if ((TargetInfo.system = system_i386_win32) and
             not (TargetInfo.abi=abi_old_win32_gnu)) and
-            paramanager.ret_in_param(procdefinition.returndef,procdefinition) and
-            not ((procdefinition.proccalloption=pocall_register) or
-                 ((procdefinition.proccalloption=pocall_internproc) and
+            paramanager.ret_in_param(procdefinition.ReturnDef,procdefinition) and
+            not ((procdefinition.ProcCallOption=pocall_register) or
+                 ((procdefinition.ProcCallOption=pocall_internproc) and
                   (pocall_default=pocall_register))) then
           inc(pop_size,sizeof(aint));
 

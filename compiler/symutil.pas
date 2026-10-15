@@ -50,7 +50,7 @@ implementation
     function is_funcret_sym(p:TSymEntry):boolean;
       begin
         is_funcret_sym:=(p.typ in [absolutevarsym,localvarsym,paravarsym]) and
-                        (vo_is_funcret in TAbstractVarSym(p).varoptions);
+                        (vo_is_funcret in TAbstractVarSym(p).VarOptions);
       end;
 
 
@@ -59,19 +59,19 @@ implementation
         p1,p2,pend : pchar;
       begin
         equal_constsym:=false;
-        if sym1.consttyp<>sym2.consttyp then
+        if sym1.ConstTyp<>sym2.ConstTyp then
          exit;
-        case sym1.consttyp of
+        case sym1.ConstTyp of
            constord :
-             equal_constsym:=(sym1.value.valueord=sym2.value.valueord);
+             equal_constsym:=(sym1.value.ValueOrd=sym2.value.ValueOrd);
            constpointer :
-             equal_constsym:=(sym1.value.valueordptr=sym2.value.valueordptr);
+             equal_constsym:=(sym1.value.ValueOrdPtr=sym2.value.ValueOrdPtr);
            conststring,constresourcestring :
              begin
                if sym1.value.len=sym2.value.len then
                 begin
-                  p1:=pchar(sym1.value.valueptr);
-                  p2:=pchar(sym2.value.valueptr);
+                  p1:=pchar(sym1.value.ValuePtr);
+                  p2:=pchar(sym2.value.ValuePtr);
                   pend:=p1+sym1.value.len;
                   while (p1<pend) do
                    begin
@@ -86,16 +86,16 @@ implementation
              end;
            constwstring :
              begin
-               if (CompareWideStrings(sym1.value.valuews,sym2.value.valuews)=0) then
+               if (CompareWideStrings(sym1.value.ValueWS,sym2.value.ValueWS)=0) then
                  equal_constsym:=true;
              end;
            constreal :
              if nanequal then
-               equal_constsym:=CompareByte(PBestReal(sym1.value.valueptr)^,PBestReal(sym2.value.valueptr)^,sizeof(PBestReal^))=0
+               equal_constsym:=CompareByte(PBestReal(sym1.value.ValuePtr)^,PBestReal(sym2.value.ValuePtr)^,sizeof(PBestReal^))=0
              else
-               equal_constsym:=PBestReal(sym1.value.valueptr)^=PBestReal(sym2.value.valueptr)^;
+               equal_constsym:=PBestReal(sym1.value.ValuePtr)^=PBestReal(sym2.value.ValuePtr)^;
            constset :
-             equal_constsym:=(PNormalSet(sym1.value.valueptr)^=PNormalSet(sym2.value.valueptr)^);
+             equal_constsym:=(PNormalSet(sym1.value.ValuePtr)^=PNormalSet(sym2.value.ValuePtr)^);
            constnil :
              equal_constsym:=true;
            else
@@ -126,8 +126,8 @@ implementation
     function is_normal_fieldvarsym(sym: TSym): boolean; inline;
       begin
         result:=
-           (sym.typ=fieldvarsym) and
-           not(sp_static in sym.symoptions);
+           (sym.typ=FieldVarSym) and
+           not(sp_static in sym.SymOptions);
       end;
 
 

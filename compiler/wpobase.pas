@@ -124,8 +124,8 @@ type
     destructor Destroy; override;
     procedure ppuwrite(ppufile: TCompilerPPUFile);
 
-    procedure buildderef;
-    procedure buildderefimpl;
+    procedure BuildDeref;
+    procedure BuildDerefImpl;
     procedure deref;
     procedure derefimpl;
 
@@ -399,13 +399,13 @@ implementation
     begin
       if Assigned(fcreatedobjtypes) then
         for i:=0 to fcreatedobjtypes.count-1 do
-          TObjectDef(fcreatedobjtypes[i]).created_in_current_module:=false;
+          TObjectDef(fcreatedobjtypes[i]).CreatedInCurrentModule:=false;
       if Assigned(fcreatedclassrefobjtypes) then
         for i:=0 to fcreatedclassrefobjtypes.count-1 do
-          TObjectDef(fcreatedclassrefobjtypes[i]).classref_created_in_current_module:=false;
+          TObjectDef(fcreatedclassrefobjtypes[i]).ClassRefCreatedInCurrentModule:=false;
       if Assigned(fmaybecreatedbyclassrefdeftypes) then
         for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
-          TObjectDef(fmaybecreatedbyclassrefdeftypes[i]).maybe_created_in_current_module:=false;
+          TObjectDef(fmaybecreatedbyclassrefdeftypes[i]).MaybeCreatedInCurrentModule:=false;
     end;
 
 
@@ -432,11 +432,11 @@ implementation
       entries: TCalledVMTEntries;
       key: shortstring;
     begin
-      key:=TObjectDef(def).vmt_mangledname;
+      key:=TObjectDef(def).VMT_MangledName;
       entries:=TCalledVMTEntries(fcalledvmtentries.find(key));
       if not Assigned(entries) then
         begin
-          entries:=TCalledVMTEntries.create(def,TObjectDef(def).vmtentries.count);
+          entries:=TCalledVMTEntries.create(def,TObjectDef(def).VMTEntries.count);
           fcalledvmtentries.add(key,entries);
         end;
       entries.calledentries.include(index);
@@ -735,7 +735,7 @@ implementation
         item: TCmdStrListItem;
       begin
         result:=true;
-        item:=TCmdStrListItem(CurrentProcInfo.procdef.aliasnames.first);
+        item:=TCmdStrListItem(CurrentProcInfo.procdef.AliasNames.first);
         while Assigned(item) do
           begin
             if symbol_live(item.Str) then
@@ -747,12 +747,12 @@ implementation
 
     begin
       if Assigned(CurrentProcInfo) and
-         not(po_inline in CurrentProcInfo.procdef.procoptions) and
-         not symbol_live(CurrentProcInfo.procdef.mangledname) and
+         not(po_inline in CurrentProcInfo.procdef.ProcOptions) and
+         not symbol_live(CurrentProcInfo.procdef.MangledName) and
          not alias_symbol_live then
         begin
 {$ifdef debug_deadcode}
-          WriteLn(' NOT adding creation of ',fordef.typename,' because performed in dead stripped proc: ',CurrentProcInfo.procdef.typename);
+          WriteLn(' NOT adding creation of ',fordef.TypeName,' because performed in dead stripped proc: ',CurrentProcInfo.procdef.TypeName);
 {$endif debug_deadcode}
           result:=false;
         end
@@ -818,7 +818,7 @@ implementation
     var
       len: LongInt;
     begin
-      ppufile.getderef(fobjdefderef);
+      ppufile.GetDeref(fobjdefderef);
       len:=ppufile.GetLongInt;
       calledentries:=TBitSet.Create_ByteSize(len);
       if (len <> calledentries.DataSize) then
@@ -837,19 +837,19 @@ implementation
 
   procedure TCalledVMTEntries.ppuwrite(ppufile: TCompilerPPUFile);
     begin
-      ppufile.putderef(objdefderef);
+      ppufile.PutDeref(objdefderef);
       ppufile.PutLongInt(calledentries.DataSize);
       ppufile.PutData(calledentries.data);
     end;
 
 
-  procedure TCalledVMTEntries.buildderef;
+  procedure TCalledVMTEntries.BuildDeref;
     begin
       objdefderef.build(objdef);
     end;
 
 
-  procedure TCalledVMTEntries.buildderefimpl;
+  procedure TCalledVMTEntries.BuildDerefImpl;
     begin
     end;
 

@@ -55,18 +55,18 @@ implementation
       sym : TAsmSymbol;
       r : TReference;
     begin
-      if not(procdef.proctypeoption in [potype_function,potype_procedure]) then
+      if not(procdef.ProcTypeOption in [potype_function,potype_procedure]) then
         InternalError(200006137);
       if not Assigned(procdef.struct) or
-         (procdef.procoptions*[po_classmethod, po_staticmethod,
+         (procdef.ProcOptions*[po_classmethod, po_staticmethod,
            po_methodpointer, po_interrupt, po_iocheck]<>[]) then
         InternalError(200006138);
-      if procdef.owner.symtabletype<>ObjectSymtable then
+      if procdef.owner.SymTableType<>ObjectSymtable then
         InternalError(200109191);
 
       make_global:=false;
-      if (not CurrentModule.is_unit) or create_smartlink or
-         (procdef.owner.defowner.owner.symtabletype=GlobalSymTable) then
+      if (not CurrentModule.IsUnit) or create_smartlink or
+         (procdef.owner.DefOwner.owner.SymTableType=GlobalSymTable) then
         make_global:=true;
 
       if make_global then
@@ -77,25 +77,25 @@ implementation
       { set param1 interface to self  }
       g_adjust_self_value(list,procdef,ioffset);
 
-      if (po_virtualmethod in procdef.procoptions) and
-          not is_objectpascal_helper(procdef.struct) then
+      if (po_virtualmethod in procdef.ProcOptions) and
+          not Is_ObjectPascal_Helper(procdef.struct) then
         begin
-          if (procdef.extnumber=$ffff) then
+          if (procdef.ExtNumber=$ffff) then
             InternalError(2000061301);
           { load vmt from first parameter }
           { win64 uses a different abi }
-          if x86_64_use_ms_abi(procdef.proccalloption) then
-            reference_reset_base(href,voidpointertype,NR_RCX,0,ctempposinvalid,sizeof(PInt),[])
+          if x86_64_use_ms_abi(procdef.ProcCallOption) then
+            reference_reset_base(href,VoidPointerType,NR_RCX,0,ctempposinvalid,sizeof(PInt),[])
           else
-            reference_reset_base(href,voidpointertype,NR_RDI,0,ctempposinvalid,sizeof(PInt),[]);
+            reference_reset_base(href,VoidPointerType,NR_RDI,0,ctempposinvalid,sizeof(PInt),[]);
           cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_RAX);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_RAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(PInt),[]);
+          reference_reset_base(href,VoidPointerType,NR_RAX,TObjectDef(procdef.struct).VMTMethodOffset(procdef.ExtNumber),ctempposinvalid,sizeof(PInt),[]);
           list.concat(TAICPU.op_ref(A_JMP,S_Q,href));
         end
       else
         begin
-          sym:=CurrentAsmData.RefAsmSymbol(procdef.mangledname,AT_FUNCTION);
+          sym:=CurrentAsmData.RefAsmSymbol(procdef.MangledName,AT_FUNCTION);
           reference_reset_symbol(r,sym,0,sizeof(PInt),[]);
           if (cs_create_pic in CurrentSettings.ModuleSwitches) and
              { darwin/x86_64's assembler doesn't want @PLT after call symbols }

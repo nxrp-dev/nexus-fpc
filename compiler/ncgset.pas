@@ -44,7 +44,7 @@ interface
        { tcginnode }
 
        TCGInNode = class(TInNode)
-         procedure in_smallset(opdef: TDef; setbase: aint); virtual;
+         procedure in_smallset(opdef: TDef; SetBase: aint); virtual;
 
          function pass_1: TNode;override;
          procedure pass_generate_code;override;
@@ -220,7 +220,7 @@ implementation
       end;
 
 
-    procedure TCGInNode.in_smallset(opdef: TDef; setbase: aint);
+    procedure TCGInNode.in_smallset(opdef: TDef; SetBase: aint);
       begin
         { location is always LOC_REGISTER }
         location_reset(location, LOC_REGISTER, def_cgsize(resultdef));
@@ -231,7 +231,7 @@ implementation
           begin
             hlcg.a_bit_test_const_loc_reg(CurrentAsmData.CurrAsmList,
              right.resultdef, resultdef,
-              left.location.value-setbase, right.location,
+              left.location.value-SetBase, right.location,
               location.register);
           end
         else
@@ -239,7 +239,7 @@ implementation
             hlcg.location_force_reg(CurrentAsmData.CurrAsmList, left.location,
              left.resultdef, opdef, true);
             register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList, opdef, left.location,
-             setbase);
+             SetBase);
             hlcg.a_bit_test_reg_loc_reg(CurrentAsmData.CurrAsmList, opdef,
               right.resultdef, resultdef, left.location.register, right.location,
                location.register);
@@ -277,7 +277,7 @@ implementation
     procedure TCGInNode.pass_generate_code;
        var
          adjustment,
-         setbase    : aint;
+         SetBase    : aint;
          l, l2      : TAsmLabel;
          hr,
          pleftreg   : TRegister;
@@ -304,11 +304,11 @@ implementation
 
            begin
              uopsize := OS_32;
-             uopdef := u32inttype;
+             uopdef := U32IntType;
              if is_signed(left.resultdef) then
                begin
                  opsize := OS_S32;
-                 opdef := s32inttype;
+                 opdef := S32IntType;
                end
              else
                begin
@@ -341,7 +341,7 @@ implementation
          if nf_swapped in flags then
           swapleftright;
 
-         setbase:=TSetDef(right.resultdef).setbase;
+         SetBase:=TSetDef(right.resultdef).SetBase;
          if genjumps then
            begin
              { location is always LOC_JUMP }
@@ -423,7 +423,7 @@ implementation
                handle smallsets separate, because it allows faster checks }
              if use_small then
                begin
-                 in_smallset(opdef, setbase);
+                 in_smallset(opdef, SetBase);
                end
              else
                {************************** NOT SMALL SET ********************}
@@ -436,9 +436,9 @@ implementation
                  if (right.location.loc=LOC_CONSTANT) and
                       (opsize < OS_S8) and { = if unsigned }
                       (((left.resultdef.typ=orddef) and
-                        (TOrdDef(left.resultdef).low >= int64(TSetDef(right.resultdef).setbase))) or
+                        (TOrdDef(left.resultdef).low >= int64(TSetDef(right.resultdef).SetBase))) or
                        ((left.resultdef.typ=enumdef) and
-                        (TEnumDef(left.resultdef).min >= aint(TSetDef(right.resultdef).setbase)))) then
+                        (TEnumDef(left.resultdef).min >= aint(TSetDef(right.resultdef).SetBase)))) then
                    begin
                      { can it actually occur currently? CEC }
                      { yes: "if bytevar in [1,3,5,7,9,11,13,15]" (JM) }
@@ -448,39 +448,39 @@ implementation
 
                      { load left in register }
                      hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,uopdef,true);
-                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,uopdef,left.location,setbase);
+                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,uopdef,left.location,SetBase);
                      in_reg_const(uopdef, opsize);
                    end { of right.location.loc=LOC_CONSTANT }
                  { do search in a normal set which could have >32 elements
                    but also used if the left side contains higher values > 32 }
                  else if (left.location.loc=LOC_CONSTANT) then
                    begin
-                     if (left.location.value < setbase) or (((left.location.value-setbase) shr 3) >= right.resultdef.size) then
+                     if (left.location.value < SetBase) or (((left.location.value-SetBase) shr 3) >= right.resultdef.size) then
                        {should be caught earlier }
                        InternalError(2007020402);
 
-                     hlcg.a_bit_test_const_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,uopdef,left.location.value-setbase,
+                     hlcg.a_bit_test_const_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,uopdef,left.location.value-SetBase,
                        right.location,location.register);
                    end
                  else
                    begin
                      hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,true);
-                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,setbase);
+                     register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,left.location,SetBase);
                      pleftreg := left.location.register;
 
                      if (opsize >= OS_S8) or { = if signed }
                         ((left.resultdef.typ=orddef) and
-                         ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).setbase)) or
-                          (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).setmax)))) or
+                         ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).SetBase)) or
+                          (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).SetMax)))) or
                         ((left.resultdef.typ=enumdef) and
-                         ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).setbase)) or
-                          (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).setmax)))) then
+                         ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).SetBase)) or
+                          (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).SetMax)))) then
                        begin
                          CurrentAsmData.getjumplabel(l);
                          CurrentAsmData.getjumplabel(l2);
                          needslabel := True;
 
-                         hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList, opdef, OC_BE, TSetDef(right.resultdef).setmax-TSetDef(right.resultdef).setbase, pleftreg, l);
+                         hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList, opdef, OC_BE, TSetDef(right.resultdef).SetMax-TSetDef(right.resultdef).SetBase, pleftreg, l);
 
                          hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList, uopdef, 0, location.register);
                          hlcg.a_jmp_always(CurrentAsmData.CurrAsmList, l2);

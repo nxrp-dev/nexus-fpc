@@ -72,40 +72,40 @@ implementation
         bpacked: boolean;
       begin
         result:=false;
-        bpacked:=recst.fieldalignment=bit_alignment;
+        bpacked:=recst.FieldAlignment=bit_alignment;
         { Is the first field already the start of a variant?  }
         firstfield:=nil;
         firstfieldvariant:=false;
-        for i:=0 to recst.symlist.count-1 do
+        for i:=0 to recst.SymList.count-1 do
           begin
-            if (TSym(recst.symlist[i]).typ<>fieldvarsym) then
+            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
               continue;
-            field:=TFieldVarSym(recst.symlist[i]);
+            field:=TFieldVarSym(recst.SymList[i]);
             if not Assigned(firstfield) then
               firstfield:=field
-            else if (vo_is_first_field in field.varoptions) then
+            else if (vo_is_first_field in field.VarOptions) then
               begin
-                if (field.fieldoffset=firstfield.fieldoffset) then
+                if (field.FieldOffset=firstfield.FieldOffset) then
                   firstfieldvariant:=true;
               end;
           end;
         variantstarts:=TFPList.create;
         encodedstr:=encodedstr+'{'+recname+'=';
-        for i:=0 to recst.symlist.count-1 do
+        for i:=0 to recst.SymList.count-1 do
           begin
-            if (TSym(recst.symlist[i]).typ<>fieldvarsym) then
+            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
               continue;
 
-            field:=TFieldVarSym(recst.symlist[i]);
+            field:=TFieldVarSym(recst.SymList[i]);
             { start of a variant part? }
             if ((field=firstfield) and
                 firstfieldvariant) or
                ((field<>firstfield) and
-                (vo_is_first_field in field.varoptions)) then
+                (vo_is_first_field in field.VarOptions)) then
               begin
                 varindex:=variantstarts.count-1;
                 if (varindex=-1) or
-                   (TFieldVarSym(variantstarts[varindex]).fieldoffset<field.fieldoffset) then
+                   (TFieldVarSym(variantstarts[varindex]).FieldOffset<field.FieldOffset) then
                   begin
                     { new, more deeply nested variant }
                     encodedstr:=encodedstr+'(?={?=';
@@ -115,7 +115,7 @@ implementation
                   begin
                     { close existing nested variants if any }
                     while (varindex>=0) and
-                          (TFieldVarSym(variantstarts[varindex]).fieldoffset>field.fieldoffset) do
+                          (TFieldVarSym(variantstarts[varindex]).FieldOffset>field.FieldOffset) do
                       begin
                         { close more deeply nested variants }
                         encodedstr:=encodedstr+'})';
@@ -128,7 +128,7 @@ implementation
                     variantstarts.count:=varindex+1;
                     { No need to add this field, it has the same offset as the
                       previous one at this position.  }
-                    if TFieldVarSym(variantstarts[varindex]).fieldoffset<>field.fieldoffset then
+                    if TFieldVarSym(variantstarts[varindex]).FieldOffset<>field.FieldOffset then
                       InternalError(2009081601);
                     { close previous variant sub-part and start new one }
                     encodedstr:=encodedstr+'}{?=';
@@ -160,7 +160,7 @@ implementation
         case def.typ of
           stringdef :
             begin
-              case TStringDef(def).stringtype of
+              case TStringDef(def).StringType of
                 st_shortstring:
                   { include length byte }
                   encodedstr:=encodedstr+'['+ToStr(TStringDef(def).len+1)+'C]';
@@ -179,7 +179,7 @@ implementation
             begin
               if bpacked and
                  not is_void(def) then
-                encodedstr:=encodedstr+'b'+ToStr(def.packedbitsize)
+                encodedstr:=encodedstr+'b'+ToStr(def.PackedBitSize)
               else
                 begin
                   if is_void(def) then
@@ -212,11 +212,11 @@ implementation
             begin
               if is_pchar(def) then
                 encodedstr:=encodedstr+'*'
-              else if (def=objc_idtype) then
+              else if (def=ObjC_IDType) then
                 encodedstr:=encodedstr+'@'
-              else if (def=objc_seltype) then
+              else if (def=ObjC_SelType) then
                 encodedstr:=encodedstr+':'
-              else if (def=objc_metaclasstype) then
+              else if (def=ObjC_MetaClassType) then
                 encodedstr:=encodedstr+'#'
               else
                 begin
@@ -224,7 +224,7 @@ implementation
                   newstate:=recordinfostate;
                   if (recordinfostate<ris_dontprint) then
                     newstate:=succ(newstate);
-                  if not objcaddencodedtype(TPointerDef(def).pointeddef,newstate,false,encodedstr,founderror) then
+                  if not objcaddencodedtype(TPointerDef(def).PointedDef,newstate,false,encodedstr,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -234,7 +234,7 @@ implementation
             end;
           floatdef :
             begin
-              case TFloatDef(def).floattype of
+              case TFloatDef(def).FloatType of
                 S32Real:
                   c:='f';
                 S64Real:
@@ -251,8 +251,8 @@ implementation
             result:=false;
           recorddef :
             begin
-              if Assigned(def.typesym) then
-                recname:=def.typename
+              if Assigned(def.TypeSym) then
+                recname:=def.TypeName
               else
                 recname:='?';
 
@@ -270,10 +270,10 @@ implementation
             end;
           variantdef :
             begin
-              recdef:=TRecordDef(search_system_type('TVARDATA').typedef);
+              recdef:=TRecordDef(Search_System_Type('TVARDATA').typedef);
               if (recordinfostate<>ris_dontprint) then
                 begin
-                  if not encoderecst(recdef.typename,TAbstractRecordSymTable(recdef.SymTable),encodedstr,founderror) then
+                  if not encoderecst(recdef.TypeName,TAbstractRecordSymTable(recdef.SymTable),encodedstr,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -281,7 +281,7 @@ implementation
                     end
                 end
               else
-                encodedstr:=encodedstr+'{'+recdef.typename+'}';
+                encodedstr:=encodedstr+'{'+recdef.TypeName+'}';
             end;
           classrefdef :
             begin
@@ -289,19 +289,19 @@ implementation
               newstate:=recordinfostate;
               if (recordinfostate<>ris_dontprint) then
                 newstate:=succ(newstate);
-              if is_objcclassref(def) then
+              if Is_ObjCClassRef(def) then
                 begin
-                  objdef:=TObjectDef(TClassRefDef(def).pointeddef);
+                  objdef:=TObjectDef(TClassRefDef(def).PointedDef);
                   if (newstate<>ris_dontprint) then
                     { anonymous (objc)class definitions do not exist }
                     begin
-                      if not encoderecst(objdef.objextname^,TAbstractRecordSymTable(objdef.SymTable),encodedstr,founderror) then
+                      if not encoderecst(objdef.ObjExtName^,TAbstractRecordSymTable(objdef.SymTable),encodedstr,founderror) then
                         { The fields of an Objective-C class should always be
                           encodeable.  }
                         InternalError(2009081702);
                     end
                   else
-                    encodedstr:=encodedstr+'{'+objdef.objextname^+'}'
+                    encodedstr:=encodedstr+'{'+objdef.ObjExtName^+'}'
                 end
               { Object Pascal classrefdefs point to a vmt, not really useful
                 to completely write those here.  I'm not even sure what the
@@ -311,8 +311,8 @@ implementation
                 classrefdefs the same as such forward-defined structs.  }
               else
                 begin
-                  if Assigned(def.typesym) then
-                    recname:=def.typename
+                  if Assigned(def.TypeSym) then
+                    recname:=def.TypeName
                   else
                     recname:='?';
                   encodedstr:=encodedstr+'{'+recname;
@@ -345,7 +345,7 @@ implementation
                 result:=false
               else
                 begin
-                  len:=TArrayDef(def).highrange-TArrayDef(def).lowrange+1;
+                  len:=TArrayDef(def).HighRange-TArrayDef(def).LowRange+1;
                   if is_packed_array(def) then
                     begin
                       { convert from bits to bytes for bitpacked arrays }
@@ -358,7 +358,7 @@ implementation
                       encodedstr:=encodedstr+'['+ToStr(len);
                       { Embedded structured types in the array are printed
                         in full regardless of the current recordinfostate.  }
-                      if not objcaddencodedtype(TArrayDef(def).elementdef,ris_initial,false,encodedstr,founderror) then
+                      if not objcaddencodedtype(TArrayDef(def).ElementDef,ris_initial,false,encodedstr,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -369,12 +369,12 @@ implementation
                 end;
             end;
           procvardef :
-            if not(po_is_block in TProcVarDef(def).procoptions) then
+            if not(po_is_block in TProcVarDef(def).ProcOptions) then
               encodedstr:=encodedstr+'^?'
             else
               encodedstr:=encodedstr+'@?';
           objectdef :
-            case TObjectDef(def).objecttype of
+            case TObjectDef(def).ObjectType of
               odt_helper,
               odt_class,
               odt_object,
@@ -382,7 +382,7 @@ implementation
                 begin
                   newstate:=recordinfostate;
                   { implicit pointer for classes }
-                  if (TObjectDef(def).objecttype in [odt_class,odt_helper]) then
+                  if (TObjectDef(def).ObjectType in [odt_class,odt_helper]) then
                     begin
                       encodedstr:=encodedstr+'^';
                       { make all classes opaque, so even if they contain a
@@ -393,7 +393,7 @@ implementation
                     end;
                   if newstate<>ris_dontprint then
                     begin
-                      if not encoderecst(def.typename,TAbstractRecordSymTable(TObjectDef(def).SymTable),encodedstr,founderror) then
+                      if not encoderecst(def.TypeName,TAbstractRecordSymTable(TObjectDef(def).SymTable),encodedstr,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -401,7 +401,7 @@ implementation
                         end
                     end
                   else
-                    encodedstr:=encodedstr+'{'+def.typename+'}'
+                    encodedstr:=encodedstr+'{'+def.TypeName+'}'
                 end;
               odt_interfacecom,
               odt_interfacecom_property,
@@ -409,7 +409,7 @@ implementation
               odt_dispinterface:
                 result:=false;
               odt_interfacecorba:
-                encodedstr:=encodedstr+'^{'+def.typename+'=}';
+                encodedstr:=encodedstr+'^{'+def.TypeName+'=}';
               { In Objective-C, the actual types of class instances are
                 NSObject* etc, and those are encoded as "@". In FPC, to keep
                 the similarity with Delphi-style Object Pascal, the type is
@@ -462,12 +462,12 @@ implementation
           refcounted field.  }
         if (newstate=ris_afterpointer) then
           newstate:=ris_dontprint;
-        for i:=0 to recst.symlist.count-1 do
+        for i:=0 to recst.SymList.count-1 do
           begin
-            if (TSym(recst.symlist[i]).typ<>fieldvarsym) then
+            if (TSym(recst.SymList[i]).typ<>FieldVarSym) then
               continue;
 
-            field:=TFieldVarSym(recst.symlist[i]);
+            field:=TFieldVarSym(recst.SymList[i]);
             if not objcdochecktype(field.vardef,newstate,founderror) then
               exit;
           end;
@@ -485,7 +485,7 @@ implementation
         case def.typ of
           stringdef :
             begin
-              case TStringDef(def).stringtype of
+              case TStringDef(def).StringType of
                 st_shortstring:
                   ;
                 else
@@ -506,7 +506,7 @@ implementation
               newstate:=recordinfostate;
               if (recordinfostate<ris_dontprint) then
                 newstate:=succ(newstate);
-              if not objcdochecktype(TPointerDef(def).pointeddef,newstate,founderror) then
+              if not objcdochecktype(TPointerDef(def).PointedDef,newstate,founderror) then
                 begin
                   result:=false;
                   { report the exact (nested) error definition }
@@ -515,7 +515,7 @@ implementation
             end;
           floatdef :
             begin
-              case TFloatDef(def).floattype of
+              case TFloatDef(def).FloatType of
                 S32Real,
                 S64Real:
                   ;
@@ -539,7 +539,7 @@ implementation
             end;
           variantdef :
             begin
-              recdef:=TRecordDef(search_system_type('TVARDATA').typedef);
+              recdef:=TRecordDef(Search_System_Type('TVARDATA').typedef);
               if (recordinfostate<>ris_dontprint) then
                 begin
                   if not checkrecsttype(TAbstractRecordSymTable(recdef.SymTable),recordinfostate,founderror) then
@@ -552,9 +552,9 @@ implementation
             end;
           classrefdef:
             begin
-              if is_objcclassref(def) then
+              if Is_ObjCClassRef(def) then
                 begin
-                  objdef:=TObjectDef(TClassRefDef(def).pointeddef);
+                  objdef:=TObjectDef(TClassRefDef(def).PointedDef);
                   newstate:=recordinfostate;
                   if (recordinfostate<ris_dontprint) then
                     newstate:=succ(newstate);
@@ -582,7 +582,7 @@ implementation
                 begin
                   if not is_packed_array(def) then
                     begin
-                      if not objcdochecktype(TArrayDef(def).elementdef,ris_initial,founderror) then
+                      if not objcdochecktype(TArrayDef(def).ElementDef,ris_initial,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -594,7 +594,7 @@ implementation
           procvardef :
             ;
           objectdef :
-            case TObjectDef(def).objecttype of
+            case TObjectDef(def).ObjectType of
               odt_helper,
               odt_class,
               odt_object,
@@ -602,7 +602,7 @@ implementation
                 begin
                   newstate:=recordinfostate;
                   { implicit pointer for classes }
-                  if (TObjectDef(def).objecttype in [odt_class,odt_helper]) then
+                  if (TObjectDef(def).ObjectType in [odt_class,odt_helper]) then
                     begin
                       { make all classes opaque, so even if they contain a
                         reference-counted field there is no problem. Since a

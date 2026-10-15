@@ -78,21 +78,21 @@ unit optcall;
             sym:=TLoadNode(n).symtableentry;
             if sym.typ=staticvarsym then
               begin
-                if FindUnitSymtable(TLoadNode(n).SymTable).ModuleID<>CurrentModule.ModuleID then
-                  CurrentModule.addimportedsym(sym);
+                if FindUnitSymTable(TLoadNode(n).SymTable).ModuleID<>CurrentModule.ModuleID then
+                  CurrentModule.AddImportedSym(sym);
               end
-            else if (sym.typ=constsym) and (TConstSym(sym).consttyp in [constwresourcestring,constresourcestring]) then
+            else if (sym.typ=constsym) and (TConstSym(sym).ConstTyp in [constwresourcestring,constresourcestring]) then
               begin
                 if TLoadNode(n).symtableentry.owner.ModuleID<>CurrentModule.ModuleID then
-                  CurrentModule.addimportedsym(sym);
+                  CurrentModule.AddImportedSym(sym);
               end;
           end
         else if (n.nodetype=calln) then
           begin
             if (Assigned(TCallNode(n).procdefinition)) and
                (TCallNode(n).procdefinition.typ=procdef) and
-               (findunitsymtable(TCallNode(n).procdefinition.owner).ModuleID<>CurrentModule.ModuleID) then
-              CurrentModule.addimportedsym(TProcDef(TCallNode(n).procdefinition).procsym);
+               (FindUnitSymTable(TCallNode(n).procdefinition.owner).ModuleID<>CurrentModule.ModuleID) then
+              CurrentModule.AddImportedSym(TProcDef(TCallNode(n).procdefinition).ProcSym);
           end;
       end;
 
@@ -120,26 +120,26 @@ unit optcall;
         callnode: TCallNode;
       begin
         result:=fen_false;
-        if not(_n.nodetype=calln) or not(po_inline in TCallNode(_n).procdefinition.procoptions) then
+        if not(_n.nodetype=calln) or not(po_inline in TCallNode(_n).procdefinition.ProcOptions) then
           exit;
         callnode:=TCallNode(_n);
 
         if not(callnode.doinlining) then
           begin
-            if not(po_compilerproc in callnode.procdefinition.procoptions) then
-              Message1(cg_n_no_inline,TProcDef(callnode.procdefinition).customprocname([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
+            if not(po_compilerproc in callnode.procdefinition.ProcOptions) then
+              Message1(cg_n_no_inline,TProcDef(callnode.procdefinition).CustomProcName([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
             exit;
           end;
 
-        if not(Assigned(TProcDef(callnode.procdefinition).inlininginfo) and
-          Assigned(TProcDef(callnode.procdefinition).inlininginfo^.code)) then
+        if not(Assigned(TProcDef(callnode.procdefinition).InliningInfo) and
+          Assigned(TProcDef(callnode.procdefinition).InliningInfo^.code)) then
           InternalError(200412021);
 
         callnode.inlinelocals:=TFPObjectList.create(true);
 
         { inherit flags }
         CurrentProcInfo.flags:=CurrentProcInfo.flags+
-          ((callnode.procdefinition as TProcDef).inlininginfo^.flags*inherited_inlining_flags);
+          ((callnode.procdefinition as TProcDef).InliningInfo^.flags*inherited_inlining_flags);
 
         { Create new code block for inlining }
         inlineblock:=internalstatements(callnode.inlineinitstatement);
@@ -150,13 +150,13 @@ unit optcall;
         inlinecleanupblock:=internalstatements(callnode.inlinecleanupstatement);
 
         if Assigned(callnode.callinitblock) then
-          addstatement(callnode.inlineinitstatement,callnode.callinitblock.getcopy);
+          addstatement(callnode.inlineinitstatement,callnode.callinitblock.GetCopy);
 
         { replace complex parameters with temps }
         callnode.createinlineparas;
 
         { create a copy of the body and replace parameter loads with the parameter values }
-        body:=TProcDef(callnode.procdefinition).inlininginfo^.code.getcopy;
+        body:=TProcDef(callnode.procdefinition).InliningInfo^.code.GetCopy;
         foreachnodestatic(pm_postprocess,body,@ removeusercodeflag,nil);
         foreachnodestatic(pm_postprocess,body,@importglobalsyms,nil);
         foreachnodestatic(pm_postprocess,body,@setinlinelevel,pointer(callnode.inlinelevel+1));
@@ -168,7 +168,7 @@ unit optcall;
         inlinecleanupblock:=nil;
 
         if Assigned(callnode.callcleanupblock) then
-          addstatement(callnode.inlineinitstatement,callnode.callcleanupblock.getcopy);
+          addstatement(callnode.inlineinitstatement,callnode.callcleanupblock.GetCopy);
 
         { the last statement of the new inline block must return the
           location and type of the function result.
@@ -178,16 +178,16 @@ unit optcall;
            (cnf_return_value_used in callnode.callnodeflags) then
           begin
             if Assigned(callnode.funcretnode) then
-              addstatement(callnode.inlineinitstatement,callnode.funcretnode.getcopy)
+              addstatement(callnode.inlineinitstatement,callnode.funcretnode.GetCopy)
             else
               begin
                 para:=TCallParaNode(callnode.left);
                 while Assigned(para) do
                   begin
-                    if (vo_is_hidden_para in para.parasym.varoptions) and
-                       (vo_is_funcret in para.parasym.varoptions) then
+                    if (vo_is_hidden_para in para.parasym.VarOptions) and
+                       (vo_is_funcret in para.parasym.VarOptions) then
                       begin
-                        addstatement(callnode.inlineinitstatement,para.left.getcopy);
+                        addstatement(callnode.inlineinitstatement,para.left.GetCopy);
                         break;
                       end;
                     para:=TCallParaNode(para.right);
@@ -234,7 +234,7 @@ unit optcall;
 {$ifdef EXTDEBUG_INLINE}
         WriteLn;
         WriteLn('**************************************************************************************************************');
-        WriteLn('************************** Inlined ',TProcDef(callnode.procdefinition).mangledname,'**************************');
+        WriteLn('************************** Inlined ',TProcDef(callnode.procdefinition).MangledName,'**************************');
         WriteLn('**************************************************************************************************************');
 {$endif EXTDEBUG_INLINE}
       end;

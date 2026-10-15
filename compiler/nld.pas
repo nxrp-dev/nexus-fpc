@@ -64,7 +64,7 @@ interface
           constructor create_procvar(v : TSym;d:TProcDef;st : TSymTable);virtual;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           procedure set_mp(p:TNode);
           function  is_addr_param_load:boolean;virtual;
@@ -99,7 +99,7 @@ interface
           assigntype : TAssignType;
           constructor create(l,r : TNode);virtual;
           { no checks for validity of assignment }
-          constructor create_internal(l,r : TNode);virtual;
+          constructor Create_Internal(l,r : TNode);virtual;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function dogetcopy : TNode;override;
@@ -159,13 +159,13 @@ interface
           allowed : boolean;
           helperallowed : boolean;
           typedef : TDef;
-          typedefderef : TDeref;
-          typesym : TSym;
-          typesymderef : TDeref;
+          TypeDefDeref : TDeref;
+          TypeSym : TSym;
+          TypeSymDeref : TDeref;
           constructor create(def:TDef);virtual;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
@@ -183,7 +183,7 @@ interface
           constructor create(def:TStoredDef;rt:TRTTIType;dt:Trttidatatype);virtual;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderefimpl;override;
+          procedure BuildDerefImpl;override;
           procedure derefimpl;override;
           function  dogetcopy : TNode;override;
           function pass_1 : TNode;override;
@@ -229,7 +229,7 @@ implementation
         if Assigned(sym) then
           begin
             if (sym.typ<>absolutevarsym) or
-               (TAbsoluteVarSym(sym).abstyp<>tovar) then
+               (TAbsoluteVarSym(sym).AbsTyp<>tovar) then
               begin
                 result:=CLoadNode.create(sym,sym.owner);
               end
@@ -280,9 +280,9 @@ implementation
     constructor TLoadNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getderef(symtableentryderef);
+        ppufile.GetDeref(symtableentryderef);
         SymTable:=nil;
-        ppufile.getderef(fprocdefderef);
+        ppufile.GetDeref(fprocdefderef);
         ppufile.GetSet(TPPUSet1(loadnodeflags));
       end;
 
@@ -290,15 +290,15 @@ implementation
     procedure TLoadNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putderef(symtableentryderef);
-        ppufile.putderef(fprocdefderef);
+        ppufile.PutDeref(symtableentryderef);
+        ppufile.PutDeref(fprocdefderef);
         ppufile.PutSet(TPPUSet1(loadnodeflags));
       end;
 
 
-    procedure TLoadNode.buildderefimpl;
+    procedure TLoadNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         symtableentryderef.build(symtableentry);
         fprocdefderef.build(fprocdef);
       end;
@@ -353,11 +353,11 @@ implementation
 
     function TLoadNode.is_addr_param_load:boolean;
       begin
-        result:=(SymTable.symtabletype=parasymtable) and
+        result:=(SymTable.SymTableType=parasymtable) and
                 (symtableentry.typ=paravarsym) and
-                not(vo_has_local_copy in TParaVarSym(symtableentry).varoptions) and
+                not(vo_has_local_copy in TParaVarSym(symtableentry).VarOptions) and
                 not(loadnf_load_addr in loadnodeflags) and
-                paramanager.push_addr_param(TParaVarSym(symtableentry).varspez,TParaVarSym(symtableentry).vardef,TProcDef(SymTable.defowner).proccalloption);
+                paramanager.push_addr_param(TParaVarSym(symtableentry).VarSpez,TParaVarSym(symtableentry).vardef,TProcDef(SymTable.DefOwner).ProcCallOption);
       end;
 
 
@@ -369,10 +369,10 @@ implementation
              resultdef:=TAbsoluteVarSym(symtableentry).vardef;
            constsym:
              begin
-               if TConstSym(symtableentry).consttyp=constresourcestring then
-                 resultdef:=getansistringdef
-               else if TConstSym(symtableentry).consttyp=constwresourcestring then
-                 resultdef:=cunicodestringtype
+               if TConstSym(symtableentry).ConstTyp=constresourcestring then
+                 resultdef:=GetAnsiStringDef
+               else if TConstSym(symtableentry).ConstTyp=constwresourcestring then
+                 resultdef:=CUnicodeStringType
                else
                  InternalError(22799);
              end;
@@ -384,14 +384,14 @@ implementation
                  It is too hard and the benefit is too small to detect whether a
                  variable is only used in the finalization to add support for it (PFV) }
                if Assigned(CurrentProcInfo) and
-                  (SymTable.symtabletype=staticsymtable) and
+                  (SymTable.SymTableType=staticsymtable) and
                   (
-                    (SymTable.symtablelevel<>CurrentProcInfo.procdef.localst.symtablelevel) or
-                    (CurrentProcInfo.procdef.proctypeoption=potype_unitfinalize)
+                    (SymTable.SymTableLevel<>CurrentProcInfo.procdef.LocalST.SymTableLevel) or
+                    (CurrentProcInfo.procdef.ProcTypeOption=potype_unitfinalize)
                   ) then
                  make_not_regable(self,[ra_different_scope]);
                resultdef:=TAbstractVarSym(symtableentry).vardef;
-               if vo_is_thread_var in TStaticVarSym(symtableentry).varoptions then
+               if vo_is_thread_var in TStaticVarSym(symtableentry).VarOptions then
                  result:=handle_threadvar_access;
              end;
            paravarsym,
@@ -402,15 +402,15 @@ implementation
                { Nested variable? The we need to load the framepointer of
                  the parent procedure }
                if Assigned(CurrentProcInfo) and
-                  (SymTable.symtabletype in [localsymtable,parasymtable]) and
-                  (SymTable.symtablelevel<>CurrentProcInfo.procdef.parast.symtablelevel) then
+                  (SymTable.SymTableType in [LocalSymTable,parasymtable]) and
+                  (SymTable.SymTableLevel<>CurrentProcInfo.procdef.ParaST.SymTableLevel) then
                  begin
                    if Assigned(left) then
                      InternalError(200309289);
-                   left:=CLoadParentFPNode.create(TProcDef(SymTable.defowner),lpf_forload);
-                   CurrentProcInfo.set_needs_parentfp(TProcDef(SymTable.defowner).parast.symtablelevel);
+                   left:=CLoadParentFPNode.create(TProcDef(SymTable.DefOwner),lpf_forload);
+                   CurrentProcInfo.set_needs_parentfp(TProcDef(SymTable.DefOwner).ParaST.SymTableLevel);
                    { reference this as a captured symbol }
-                   CurrentProcInfo.add_captured_sym(symtableentry,resultdef,fileinfo);
+                   CurrentProcInfo.Add_Captured_Sym(symtableentry,resultdef,fileinfo);
                    { reference in nested procedures, variable needs to be in memory }
                    { and behaves as if its address escapes its parent block         }
                    make_not_regable(self,[ra_different_scope]);
@@ -418,9 +418,9 @@ implementation
                { if this is a nested function and it uses the Self parameter then
                  consider this as captured as well (needed for anonymous functions) }
                else if Assigned(CurrentProcInfo) and
-                   (vo_is_self in TAbstractVarSym(symtableentry).varoptions) and
-                   (SymTable.symtablelevel>normal_function_level) then
-                 CurrentProcInfo.add_captured_sym(symtableentry,resultdef,fileinfo);
+                   (vo_is_self in TAbstractVarSym(symtableentry).VarOptions) and
+                   (SymTable.SymTableLevel>normal_function_level) then
+                 CurrentProcInfo.Add_Captured_Sym(symtableentry,resultdef,fileinfo);
 
                { e.g. self for objects is passed as var-parameter on the caller
                  side, but on the callee-side we use it as a pointer ->
@@ -428,11 +428,11 @@ implementation
                if (loadnf_load_addr in loadnodeflags) then
                  resultdef:=CPointerDef.getreusable(resultdef);
 
-               if (vo_is_self in TAbstractVarSym(symtableentry).varoptions) and (resultdef=objc_idtype) and
-                 (po_classmethod in TProcDef(symtableentry.owner.defowner).procoptions) then
-                 resultdef:=CClassRefDef.create(TProcDef(symtableentry.owner.defowner).struct)
+               if (vo_is_self in TAbstractVarSym(symtableentry).VarOptions) and (resultdef=ObjC_IDType) and
+                 (po_classmethod in TProcDef(symtableentry.owner.DefOwner).ProcOptions) then
+                 resultdef:=CClassRefDef.create(TProcDef(symtableentry.owner.DefOwner).struct)
              end;
-           procsym :
+           ProcSym :
              begin
                { Return the first procdef. In case of overloaded
                  procdefs the matching procdef will be choosen
@@ -440,7 +440,7 @@ implementation
                  in htypechk.pas (PFV) }
                if not Assigned(fprocdef) then
                  fprocdef:=TProcDef(TProcSym(symtableentry).ProcdefList[0])
-               else if po_kylixlocal in fprocdef.procoptions then
+               else if po_kylixlocal in fprocdef.ProcOptions then
                  CGMessage(type_e_cant_take_address_of_local_subroutine);
 
                { the result is a fprocdef, addrn and proc_to_procvar
@@ -449,14 +449,14 @@ implementation
                resultdef:=fprocdef;
 
                if is_nested_pd(fprocdef) and is_nested_pd(CurrentProcInfo.procdef) then
-                 CurrentProcInfo.set_needs_parentfp(TProcDef(fprocdef.owner.defowner).parast.symtablelevel);
+                 CurrentProcInfo.set_needs_parentfp(TProcDef(fprocdef.owner.DefOwner).ParaST.SymTableLevel);
 
                { process methodpointer/framepointer }
                if Assigned(left) then
                  begin
                    TypeCheckPass(left);
-                   if (po_classmethod in fprocdef.procoptions) and
-                      is_class(left.resultdef) and
+                   if (po_classmethod in fprocdef.ProcOptions) and
+                      Is_Class(left.resultdef) and
                       (left.nodetype<>niln) then
                      begin
                        left:=CLoadVMTAddrNode.create(left);
@@ -467,21 +467,21 @@ implementation
                { we can't know what will happen with this function pointer, so
                  we have to assume it will be used to create an instance of this
                  type }
-               if fprocdef.wpo_may_create_instance(left) then
+               if fprocdef.WPO_May_Create_Instance(left) then
                  begin
-                   if wpoinfomanager.symbol_live_in_currentproc(TDef(SymTable.defowner)) then
+                   if wpoinfomanager.symbol_live_in_currentproc(TDef(SymTable.DefOwner)) then
                      begin
                        if Assigned(left) then
                          TObjectDef(left.resultdef).RegisterCreatedObjectType
                        else
-                         TObjectDef(fprocdef.owner.defowner).RegisterCreatedObjectType;
+                         TObjectDef(fprocdef.owner.DefOwner).RegisterCreatedObjectType;
                      end;
                  end;
              end;
            labelsym:
              begin
                TLabelSym(symtableentry).used:=true;
-               resultdef:=voidtype;
+               resultdef:=VoidType;
              end;
            else
              InternalError(200104141);
@@ -508,7 +508,7 @@ implementation
               ;
             constsym:
               begin
-                if TConstSym(symtableentry).consttyp in [constresourcestring,constwresourcestring] then
+                if TConstSym(symtableentry).ConstTyp in [constresourcestring,constwresourcestring] then
                   expectloc:=LOC_CREFERENCE;
               end;
             staticvarsym,
@@ -518,19 +518,19 @@ implementation
                 if Assigned(left) then
                   FirstPass(left);
                 if not is_addr_param_load and
-                   TAbstractVarSym(symtableentry).is_regvar(is_addr_param_load) then
-                  expectloc:=tvarregable2tcgloc[TAbstractVarSym(symtableentry).varregable]
+                   TAbstractVarSym(symtableentry).Is_RegVar(is_addr_param_load) then
+                  expectloc:=tvarregable2tcgloc[TAbstractVarSym(symtableentry).VarRegable]
                 else
-                  if (TAbstractVarSym(symtableentry).varspez=vs_const) then
+                  if (TAbstractVarSym(symtableentry).VarSpez=vs_const) then
                     expectloc:=LOC_CREFERENCE;
                 { call to get address of threadvar }
-                if (vo_is_thread_var in TAbstractVarSym(symtableentry).varoptions) then
+                if (vo_is_thread_var in TAbstractVarSym(symtableentry).VarOptions) then
                   begin
                     include(CurrentProcInfo.flags,pi_do_call);
                     include(CurrentProcInfo.flags,pi_uses_threadvar);
                   end;
               end;
-            procsym :
+            ProcSym :
               begin
                 { initialise left for nested procs if necessary (this won't need
                   to pass true for the forfuncref parameter, cause code that would
@@ -546,7 +546,7 @@ implementation
               end;
             labelsym :
               begin
-                if not Assigned(TLabelSym(symtableentry).asmblocklabel) and
+                if not Assigned(TLabelSym(symtableentry).AsmBlockLabel) and
                    not Assigned(TLabelSym(symtableentry).code) then
                   Message(parser_e_label_outside_proc);
               end
@@ -570,8 +570,8 @@ implementation
       begin
         inherited printnodedata(t);
         write(t,PrintNodeIndention,'symbol = ',symtableentry.name);
-        if symtableentry.typ=procsym then
-          write(t,PrintNodeIndention,'procdef = ',fprocdef.mangledname);
+        if symtableentry.typ=ProcSym then
+          write(t,PrintNodeIndention,'procdef = ',fprocdef.MangledName);
         WriteLn(t,'');
       end;
 
@@ -581,8 +581,8 @@ implementation
         inherited XMLPrintNodeData(T);
         WriteLn(T, PrintNodeIndention, '<symbol>', symtableentry.name, '</symbol>');
 
-        if symtableentry.typ = procsym then
-          WriteLn(T, PrintNodeIndention, '<procdef>', fprocdef.mangledname, '</procdef>');
+        if symtableentry.typ = ProcSym then
+          WriteLn(T, PrintNodeIndention, '<procdef>', fprocdef.MangledName, '</procdef>');
       end;
 {$endif DEBUG_NODE_XML}
 
@@ -595,8 +595,8 @@ implementation
            is_nested_pd(p) and
            not forfuncref and
            (
-             not (po_anonymous in p.procoptions) or
-             (po_delphi_nested_cc in p.procoptions)
+             not (po_anonymous in p.ProcOptions) or
+             (po_delphi_nested_cc in p.ProcOptions)
            ) then
           begin
             if not(m_nested_procvars in CurrentSettings.ModeSwitches) then
@@ -605,7 +605,7 @@ implementation
               begin
                 { parent frame pointer pointer as "self" }
                 left.free;
-                left:=CLoadParentFPNode.create(TProcDef(p.owner.defowner),lpf_forpara);
+                left:=CLoadParentFPNode.create(TProcDef(p.owner.DefOwner),lpf_forpara);
                 TypeCheckPass(left);
               end;
           end
@@ -615,7 +615,7 @@ implementation
         else if Assigned(left) and
                 (left.nodetype=loadparentfpn) then
           begin
-            if po_anonymous in p.procoptions then
+            if po_anonymous in p.ProcOptions then
               begin
                 left.free;
                 left:=nil;
@@ -648,7 +648,7 @@ implementation
       end;
 
 
-    constructor TAssignmentNode.create_internal(l, r: TNode);
+    constructor TAssignmentNode.Create_Internal(l, r: TNode);
       begin
         create(l,r);
         include(flags,nf_internal);
@@ -713,7 +713,7 @@ implementation
         oldassignmentnode : TAssignmentNode;
       begin
         result:=nil;
-        resultdef:=voidtype;
+        resultdef:=VoidType;
 
         { must be made unique }
         set_unique(left);
@@ -774,7 +774,7 @@ implementation
               (
                 (right.nodetype=arrayconstructorn) and
                 (right.resultdef.typ=arraydef) and
-                (TArrayDef(right.resultdef).elementdef=voidtype) and
+                (TArrayDef(right.resultdef).ElementDef=VoidType) and
                 TArrayConstructorNode(right).isempty
               )
             ) then
@@ -820,8 +820,8 @@ implementation
                      (TStringConstNode(right).len=0) then
                     useshelper:=false;
                 end
-              else if (TStringDef(right.resultdef).stringtype in [st_unicodestring,st_widestring]) then
-                Message2(type_w_implicit_string_cast_loss,right.resultdef.typename,left.resultdef.typename);
+              else if (TStringDef(right.resultdef).StringType in [st_unicodestring,st_widestring]) then
+                Message2(type_w_implicit_string_cast_loss,right.resultdef.TypeName,left.resultdef.TypeName);
              { rest is done in pass 1 (JM) }
              if useshelper then
                exit;
@@ -836,7 +836,7 @@ implementation
                 { sse register to an extended value in memory more      }
                 { efficiently than a type conversion node, so don't     }
                 { bother implementing support for that                  }
-                and (use_vectorfpu(left.resultdef) or not(use_vectorfpu(right.resultdef)))
+                and (Use_VectorFPU(left.resultdef) or not(Use_VectorFPU(right.resultdef)))
 {$endif}
 
         then
@@ -874,7 +874,7 @@ implementation
                     Include(right.flags,nf_is_currency);
 
                     { Force an explicit conversion so the scalar is generated }
-                    if s64currencytype.typ=floatdef then
+                    if S64CurrencyType.typ=floatdef then
                       TTypeConvNode(right).convtype:=tc_real_2_real
                     else
                       TTypeConvNode(right).convtype:=tc_int_2_int;
@@ -884,7 +884,7 @@ implementation
           end;
 
         { call helpers for interface }
-        if is_interfacecom_or_dispinterface(left.resultdef) then
+        if Is_InterfaceCOM_Or_DispInterface(left.resultdef) then
          begin
 	   { Normal interface assignments are handled by the generic refcount incr/decr }
            if not def_is_related(right.resultdef,left.resultdef) then
@@ -894,11 +894,11 @@ implementation
                exclude(left.flags,nf_isproperty);
                hp:=
                  CCallParaNode.create(
-                   CGUIDConstNode.create(TObjectDef(left.resultdef).iidguid^),
+                   CGUIDConstNode.create(TObjectDef(left.resultdef).IIDGUID^),
                  CCallParaNode.create(
-                   CTypeConvNode.create_internal(right,voidpointertype),
+                   CTypeConvNode.Create_Internal(right,VoidPointerType),
                  CCallParaNode.create(
-                   CTypeConvNode.create_internal(left,voidpointertype),
+                   CTypeConvNode.Create_Internal(left,VoidPointerType),
                    nil)));
                result:=CCallNode.createintern('fpc_intf_assign_by_iid',hp);
                left:=nil;
@@ -994,7 +994,7 @@ implementation
                  hp:=CCallParaNode.create
                        (right,
                   CCallParaNode.create(left,nil));
-                 result:=CCallNode.createintern('fpc_'+TStringDef(right.resultdef).stringtypname+'_to_shortstr',hp);
+                 result:=CCallNode.createintern('fpc_'+TStringDef(right.resultdef).StringTypName+'_to_shortstr',hp);
                  FirstPass(result);
                  left:=nil;
                  right:=nil;
@@ -1005,16 +1005,16 @@ implementation
         { call helpers for composite types containing automated types }
         else if is_managed_type(left.resultdef) and
             (left.resultdef.typ in [arraydef,objectdef,recorddef]) and
-            not is_interfacecom_or_dispinterface(left.resultdef) and
+            not Is_InterfaceCOM_Or_DispInterface(left.resultdef) and
             not is_dynamic_array(left.resultdef) and
             not is_const(left) then
          begin
-           hp:=CCallParaNode.create(CAddrNode.create_internal(
+           hp:=CCallParaNode.create(CAddrNode.Create_Internal(
                   CRTTINode.create(TStoredDef(left.resultdef),initrtti,rdt_normal)),
-               CCallParaNode.create(CTypeConvNode.create_internal(
-                 CAddrNode.create_internal(left),voidpointertype),
-               CCallParaNode.create(CTypeConvNode.create_internal(
-                 CAddrNode.create_internal(right),voidpointertype),
+               CCallParaNode.create(CTypeConvNode.Create_Internal(
+                 CAddrNode.Create_Internal(left),VoidPointerType),
+               CCallParaNode.create(CTypeConvNode.Create_Internal(
+                 CAddrNode.Create_Internal(right),VoidPointerType),
                nil)));
            if tempreturnfromcall then
              result:=CCallNode.createintern('fpc_copy_with_move_semantics_proc',hp)
@@ -1033,10 +1033,10 @@ implementation
            { remove property flag to avoid errors, see comments for }
            { tf_winlikewidestring assignments below                 }
            exclude(left.flags,nf_isproperty);
-           hdef:=search_system_type('TVARDATA').typedef;
-           hp:=CCallParaNode.create(CTypeConvNode.create_internal(
+           hdef:=Search_System_Type('TVARDATA').typedef;
+           hp:=CCallParaNode.create(CTypeConvNode.Create_Internal(
                  right,hdef),
-               CCallParaNode.create(CTypeConvNode.create_internal(
+               CCallParaNode.create(CTypeConvNode.Create_Internal(
                  left,hdef),
                nil));
            result:=CCallNode.createintern('fpc_variant_copy',hp);
@@ -1054,7 +1054,7 @@ implementation
               hs:='fpc_ansistr_assign'
             else if is_unicodestring(left.resultdef) then
               hs:='fpc_unicodestr_assign'
-            else if is_interfacecom_or_dispinterface(left.resultdef) then
+            else if Is_InterfaceCOM_Or_DispInterface(left.resultdef) then
               hs:='fpc_intf_assign'
             else if is_dynamic_array(left.resultdef) then
               begin
@@ -1083,12 +1083,12 @@ implementation
         {     is a property which refers to a field without a setter call, we will not get }
         {     an error about trying to pass a property as a var parameter                  }
         exclude(left.flags,nf_isproperty);
-        hp:=CCallParaNode.create(CTypeConvNode.create_internal(right,voidpointertype),
-            CCallParaNode.create(CTypeConvNode.create_internal(left,voidpointertype),
+        hp:=CCallParaNode.create(CTypeConvNode.Create_Internal(right,VoidPointerType),
+            CCallParaNode.create(CTypeConvNode.Create_Internal(left,VoidPointerType),
             nil));
         if needrtti then
           hp:=CCallParaNode.create(
-            CAddrNode.create_internal(
+            CAddrNode.Create_Internal(
               CRTTINode.create(TStoredDef(left.resultdef),initrtti,rdt_normal)),
             hp);
         result:=CCallNode.createintern(hs,hp);
@@ -1119,7 +1119,7 @@ implementation
                 right.resultdef:=nil;
                 DoTypeCheckPass(right);
                 TypeCheckPass(right);
-                aktstate.store_fact(left.getcopy,right.getcopy);
+                aktstate.store_fact(left.GetCopy,right.GetCopy);
             end
         else
             aktstate.delete_fact(left);
@@ -1268,7 +1268,7 @@ implementation
         run }
         if not (acnf_allow_array_constructor in arrayconstructornodeflags) or has_range_node then
          begin
-           hp:=TArrayConstructorNode(getcopy);
+           hp:=TArrayConstructorNode(GetCopy);
            arrayconstructor_to_set(TNode(hp));
            result:=hp;
            exit;
@@ -1337,14 +1337,14 @@ implementation
             varia or
             is_array_of_const(hdef) or
             is_open_array(hdef) then
-           hdef:=voidtype;
-         resultdef:=CArrayDef.create(0,len-1,s32inttype);
-         include(TArrayDef(resultdef).arrayoptions,ado_IsConstructor);
+           hdef:=VoidType;
+         resultdef:=CArrayDef.create(0,len-1,S32IntType);
+         include(TArrayDef(resultdef).ArrayOptions,ado_IsConstructor);
          if varia then
-           include(TArrayDef(resultdef).arrayoptions,ado_IsVariant);
+           include(TArrayDef(resultdef).ArrayOptions,ado_IsVariant);
          if diff then
-           include(TArrayDef(resultdef).arrayoptions,ado_IsArrayOfConst);
-         TArrayDef(resultdef).elementdef:=hdef;
+           include(TArrayDef(resultdef).ArrayOptions,ado_IsArrayOfConst);
+         TArrayDef(resultdef).ElementDef:=hdef;
       end;
 
 
@@ -1352,9 +1352,9 @@ implementation
       var
         hp : TArrayConstructorNode;
       begin
-        TArrayDef(resultdef).elementdef:=def;
-        include(TArrayDef(resultdef).arrayoptions,ado_IsConstructor);
-        exclude(TArrayDef(resultdef).arrayoptions,ado_IsVariant);
+        TArrayDef(resultdef).ElementDef:=def;
+        include(TArrayDef(resultdef).ArrayOptions,ado_IsConstructor);
+        exclude(TArrayDef(resultdef).ArrayOptions,ado_IsVariant);
         if Assigned(left) then
          begin
            hp:=self;
@@ -1372,7 +1372,7 @@ implementation
         hp        : TArrayConstructorNode;
         dovariant : boolean;
       begin
-        dovariant:=(acnf_forcevaria in arrayconstructornodeflags) or (ado_isvariant in TArrayDef(resultdef).arrayoptions);
+        dovariant:=(acnf_forcevaria in arrayconstructornodeflags) or (ado_isvariant in TArrayDef(resultdef).ArrayOptions);
         { only pass left tree, right tree contains next construct if any }
         if Assigned(left) then
          begin
@@ -1395,7 +1395,7 @@ implementation
         hp : TArrayConstructorNode;
         do_variant:boolean;
       begin
-        do_variant:=(acnf_forcevaria in arrayconstructornodeflags) or (ado_isvariant in TArrayDef(resultdef).arrayoptions);
+        do_variant:=(acnf_forcevaria in arrayconstructornodeflags) or (ado_isvariant in TArrayDef(resultdef).ArrayOptions);
         result:=nil;
         { Insert required type convs, this must be
           done in pass 1, because the call must be
@@ -1421,10 +1421,10 @@ implementation
           end;
         { set the elementdef to the correct type in case of a variant array }
         if do_variant then
-          TArrayDef(resultdef).elementdef:=search_system_type('TVARREC').typedef;
+          TArrayDef(resultdef).ElementDef:=Search_System_Type('TVARREC').typedef;
         expectloc:=LOC_CREFERENCE;
 
-        inc(CurrentProcInfo.estimatedtempsize,(TArrayDef(resultdef).highrange+1)*TArrayDef(resultdef).elementdef.size);
+        inc(CurrentProcInfo.estimatedtempsize,(TArrayDef(resultdef).HighRange+1)*TArrayDef(resultdef).ElementDef.size);
       end;
 
 
@@ -1464,7 +1464,7 @@ implementation
       begin
          inherited create(typen);
          typedef:=def;
-         typesym:=def.typesym;
+         TypeSym:=def.TypeSym;
          allowed:=false;
          helperallowed:=false;
       end;
@@ -1473,8 +1473,8 @@ implementation
     constructor TTypeNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getderef(typedefderef);
-        ppufile.getderef(typesymderef);
+        ppufile.GetDeref(TypeDefDeref);
+        ppufile.GetDeref(TypeSymDeref);
         allowed:=ppufile.GetBoolean;
         helperallowed:=ppufile.GetBoolean;
       end;
@@ -1483,26 +1483,26 @@ implementation
     procedure TTypeNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putderef(typedefderef);
-        ppufile.putderef(typesymderef);
+        ppufile.PutDeref(TypeDefDeref);
+        ppufile.PutDeref(TypeSymDeref);
         ppufile.PutBoolean(allowed);
         ppufile.PutBoolean(helperallowed);
       end;
 
 
-    procedure TTypeNode.buildderefimpl;
+    procedure TTypeNode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
-        typedefderef.build(typedef);
-        typesymderef.build(typesym);
+        inherited BuildDerefImpl;
+        TypeDefDeref.build(typedef);
+        TypeSymDeref.build(TypeSym);
       end;
 
 
     procedure TTypeNode.derefimpl;
       begin
         inherited derefimpl;
-        typedef:=TDef(typedefderef.resolve);
-        typesym:=TSym(typesymderef.resolve);
+        typedef:=TDef(TypeDefDeref.resolve);
+        TypeSym:=TSym(TypeSymDeref.resolve);
       end;
 
 
@@ -1526,7 +1526,7 @@ implementation
            an error }
          if not allowed then
            CGMessage(parser_e_no_type_not_allowed_here);
-         if not helperallowed and is_objectpascal_helper(typedef) then
+         if not helperallowed and Is_ObjectPascal_Helper(typedef) then
            CGMessage(parser_e_no_category_as_types);
       end;
 
@@ -1538,7 +1538,7 @@ implementation
          n:=TTypeNode(inherited dogetcopy);
          n.allowed:=allowed;
          n.typedef:=typedef;
-         n.typesym:=typesym;
+         n.TypeSym:=TypeSym;
          n.helperallowed:=helperallowed;
          result:=n;
       end;
@@ -1549,7 +1549,7 @@ implementation
         docompare :=
           inherited docompare(p) and
           (typedef=TTypeNode(p).typedef) and
-          (typesym=TTypeNode(p).typesym) and
+          (TypeSym=TTypeNode(p).TypeSym) and
           (allowed=TTypeNode(p).allowed) and
           (helperallowed=TTypeNode(p).helperallowed);
       end;
@@ -1572,7 +1572,7 @@ implementation
     constructor TRTTINode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getderef(rttidefderef);
+        ppufile.GetDeref(rttidefderef);
         rttitype:=TRTTIType(ppufile.GetByte);
         rttidatatype:=trttidatatype(ppufile.GetByte);
       end;
@@ -1581,15 +1581,15 @@ implementation
     procedure TRTTINode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putderef(rttidefderef);
+        ppufile.PutDeref(rttidefderef);
         ppufile.PutByte(byte(rttitype));
         ppufile.PutByte(byte(rttidatatype));
       end;
 
 
-    procedure TRTTINode.buildderefimpl;
+    procedure TRTTINode.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
         rttidefderef.build(rttidef);
       end;
 
@@ -1617,7 +1617,7 @@ implementation
       begin
         { rtti information will be returned as a void pointer }
         result:=nil;
-        resultdef:=voidpointertype;
+        resultdef:=VoidPointerType;
       end;
 
 

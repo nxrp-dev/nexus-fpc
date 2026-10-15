@@ -26,9 +26,9 @@ interface
 
     uses
        { common }
-       CUtils,CClasses,GlobType,tokens,
+       CUtils,CClasses,GlobType,Tokens,
        { symtable }
-       symconst,SymBase,symtype,symdef,SymSym;
+       SymConst,SymBase,SymType,SymDef,SymSym;
 
 
 {****************************************************************************
@@ -41,105 +41,105 @@ interface
 
        TStoredSymTable = class(TSymTable)
        private
-          init_final_check_done : boolean;
-          deref_built : boolean;
-          derefimpl_built : boolean;
-          procedure _needs_init_final(sym:TObject;arg:pointer);
-          procedure do_init_final_check;
-          procedure check_forward(sym:TObject;arg:pointer);
-          procedure check_block_valid(def: TObject;arg:pointer);
-          procedure register_defs(def:tobject;arg:pointer);
-          procedure register_syms(sym:tobject;arg:pointer);
-          procedure labeldefined(sym:TObject;arg:pointer);
-          procedure varsymbolused(sym:TObject;arg:pointer);
-          procedure TestPrivate(sym:TObject;arg:pointer);
-          procedure objectprivatesymbolused(sym:TObject;arg:pointer);
-          procedure loaddefs(ppufile:TCompilerPPUFile);
-          procedure loadsyms(ppufile:TCompilerPPUFile);
-          procedure writedefs(ppufile:TCompilerPPUFile);
-          procedure writesyms(ppufile:TCompilerPPUFile);
+          FInitFinalCheckDone : Boolean;
+          FDerefBuilt : Boolean;
+          FDerefImplBuilt : Boolean;
+          procedure NeedsInitFinal(Sym:TObject;Arg:Pointer);
+          procedure DoInitFinalCheck;
+          procedure CheckForward(Sym:TObject;Arg:Pointer);
+          procedure CheckBlockValid(Def: TObject;Arg:Pointer);
+          procedure RegisterDefs(Def:TObject;Arg:Pointer);
+          procedure RegisterSyms(Sym:TObject;Arg:Pointer);
+          procedure LabelDefined(Sym:TObject;Arg:Pointer);
+          procedure VarSymbolUsed(Sym:TObject;Arg:Pointer);
+          procedure TestPrivate(Sym:TObject;Arg:Pointer);
+          procedure ObjectPrivateSymbolUsed(Sym:TObject;Arg:Pointer);
+          procedure LoadDefs(PPUFile:TCompilerPPUFile);
+          procedure LoadSyms(PPUFile:TCompilerPPUFile);
+          procedure WriteDefs(PPUFile:TCompilerPPUFile);
+          procedure WriteSyms(PPUFile:TCompilerPPUFile);
        public
-          constructor create(const s:string);
-          procedure insertsym(sym:TSymEntry;checkdup:boolean=true);override;
-          procedure deletesym(sym:TSymEntry);override;
+          constructor Create(const S:string);
+          procedure InsertSym(Sym:TSymEntry;CheckDup:Boolean=True);override;
+          procedure DeleteSym(Sym:TSymEntry);override;
           { load/write }
-          procedure ppuload(ppufile:TCompilerPPUFile);virtual;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
-          procedure buildderef;
-          procedure buildderefimpl;
+          procedure PPULoad(PPUFile:TCompilerPPUFile);virtual;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);virtual;
+          procedure BuildDeref;
+          procedure BuildDerefImpl;
           { buildderef but only for (recursively) used symbols/defs }
-          procedure buildderef_registered;
-          procedure deref(only_registered: boolean);virtual;
-          procedure derefimpl(only_registered: boolean);virtual;
-          function  checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
-          procedure allsymbolsused;
-          procedure allprivatesused;
-          procedure check_forwards;
-          procedure checklabels;
-          function  needs_init_final : boolean; virtual;
-          function  has_non_trivial_init:boolean;virtual;
-          function is_derefimpl_built: boolean;
-          function is_deref_built: boolean;
-          procedure testfordefaultproperty(sym:TObject;arg:pointer);
-          procedure register_children;
+          procedure BuildDeref_Registered;
+          procedure Deref(OnlyRegistered: Boolean);virtual;
+          procedure DerefImpl(OnlyRegistered: Boolean);virtual;
+          function  CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
+          procedure AllSymbolsUsed;
+          procedure AllPrivatesUsed;
+          procedure Check_Forwards;
+          procedure CheckLabels;
+          function  Needs_Init_Final : Boolean; virtual;
+          function  Has_Non_Trivial_Init:Boolean;virtual;
+          function Is_DerefImpl_Built: Boolean;
+          function Is_Deref_Built: Boolean;
+          procedure TestForDefaultProperty(Sym:TObject;Arg:Pointer);
+          procedure Register_Children;
        end;
 
 
 
        TManagementOperatorOffsetEntry = record
-         pd : TProcDef;
-         offset : asizeint;
+         PD : TProcDef;
+         Offset : ASizeInt;
        end;
        PManagementOperatorOffsetEntry = ^TManagementOperatorOffsetEntry;
 
        TAbstractRecordSymTable = class(TStoredSymTable)
 
        public
-          usefieldalignment,     { alignment to use for fields (PACKRECORDS value), C_alignment is C style }
-          recordalignment,       { alignment desired when inserting this record }
-          explicitrecordalignment, { explicit alignment for inserting this record, given by align XX at end of declaration }
-          fieldalignment,        { alignment current alignment used when fields are inserted }
-          padalignment : shortint;   { size to a multiple of which the symtable has to be rounded up }
-          RecordAlignMin: shortint; { local equivalentsof global settings, so that records can be created with custom settings internally }
-          has_fields_with_mop : TManagementOperators; { whether any of the fields has the need for a management operator (or one of the field's fields) }
-          constructor create(const n:string;usealign,recordminalign:shortint);
+          UseFieldAlignment,     { alignment to use for fields (PACKRECORDS value), C_alignment is C style }
+          RecordAlignment,       { alignment desired when inserting this record }
+          ExplicitRecordAlignment, { explicit alignment for inserting this record, given by align XX at end of declaration }
+          FieldAlignment,        { alignment current alignment used when fields are inserted }
+          PadAlignment : ShortInt;   { size to a multiple of which the symtable has to be rounded up }
+          RecordAlignMin: ShortInt; { local equivalentsof global settings, so that records can be created with custom settings internally }
+          HasFieldsWithMOP : TManagementOperators; { whether any of the fields has the need for a management operator (or one of the field's fields) }
+          constructor Create(const N:string;UseAlign,RecordMinAlign:ShortInt);
           destructor Destroy;override;
-          procedure ppuload(ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure alignrecord(fieldoffset:asizeint;varalign:shortint);
-          procedure addfield(sym:TFieldVarSym;vis:TVisibility);
-          procedure addfieldlist(list: TFPObjectList; maybereorder: boolean);
+          procedure PPULoad(PPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
+          procedure AlignRecord(FieldOffset:ASizeInt;VarAlign:ShortInt);
+          procedure AddField(Sym:TFieldVarSym;Vis:TVisibility);
+          procedure AddFieldList(List: TFPObjectList; MaybeReorder: Boolean);
           { returns the field closest to this offset (may not be exact because
             of padding; internalerrors for variant records, assumes fields are
             ordered by increasing offset) }
-          function findfieldbyoffset(offset:asizeint): TFieldVarSym;
-          procedure addalignmentpadding;
-          procedure insertdef(def:TDefEntry);override;
-          function is_packed: boolean;
-          function has_single_field(out def:TDef): boolean;
-          function has_double_field(out def1,def2:TDef; out offset:integer): integer;
+          function FindFieldByOffset(Offset:ASizeInt): TFieldVarSym;
+          procedure AddAlignmentPadding;
+          procedure InsertDef(Def:TDefEntry);override;
+          function Is_Packed: Boolean;
+          function Has_Single_Field(out Def:TDef): Boolean;
+          function Has_Double_Field(out Def1,Def2:TDef; out Offset:Integer): Integer;
           { collects all management operators of the specified type in list (which
             is not cleared); the entries are copies and thus must be freed by the
             caller }
-          procedure get_managementoperator_offset_list(mop:TManagementOperator;list:TFPList);
+          procedure Get_ManagementOperator_Offset_List(MOP:TManagementOperator;List:TFPList);
         protected
           { size in bytes including padding }
-          _datasize      : asizeint;
+          FDataSize      : ASizeInt;
           { size in bits of the data in case of bitpacked record. Only important during construction, }
           { no need to save in/restore from ppu file. datasize is always (databitsize+7) div 8.       }
-          databitsize    : asizeint;
+          DataBitSize    : ASizeInt;
           { size in bytes of padding }
-          _paddingsize   : word;
+          FPaddingSize   : Word;
           { array of tmanagementoperator_offset_entry lists; only assigned if
             they had been queried once by get_management_operator_list }
-          mop_list : array[TManagementOperator] of TFPList;
-          procedure setdatasize(val: asizeint);
-          function getfieldoffset(sym: TFieldVarSym; base: asizeint; var globalfieldalignment: shortint): asizeint;
-          procedure do_get_managementoperator_offset_list(data:tobject;arg:pointer);
+          MOPList : array[TManagementOperator] of TFPList;
+          procedure SetDataSize(Val: ASizeInt);
+          function GetFieldOffset(Sym: TFieldVarSym; Base: ASizeInt; var GlobalFieldAlignment: ShortInt): ASizeInt;
+          procedure Do_Get_ManagementOperator_Offset_List(Data:TObject;Arg:Pointer);
         public
-          function iscurrentunit: boolean; override;
-          property DataSize : asizeint read _datasize write setdatasize;
-          property paddingsize: word read _paddingsize write _paddingsize;
+          function IsCurrentUnit: Boolean; override;
+          property DataSize : ASizeInt read FDataSize write SetDataSize;
+          property PaddingSize: Word read FPaddingSize write FPaddingSize;
 
        end;
 
@@ -149,16 +149,16 @@ interface
           { tabstractrecordsymtable to perform management class operators for  }
           { object/classes. In XE5 and newer is possible to use class operator }
           { for classes (like for Delphi .NET before) only for Delphi NEXTGEN  }
-          managementoperators : TManagementOperators;
-          constructor create(const n:string;usealign,recordminalign:shortint);
-          procedure insertunionst(unionst : TRecordSymTable;offset : asizeint);
-          procedure includemanagementoperator(mop:TManagementOperator);
+          ManagementOperators : TManagementOperators;
+          constructor Create(const N:string;UseAlign,RecordMinAlign:ShortInt);
+          procedure InsertUnionST(UnionST : TRecordSymTable;Offset : ASizeInt);
+          procedure IncludeManagementOperator(MOP:TManagementOperator);
        end;
 
        TObjectSymTable = class(TAbstractRecordSymTable)
        public
-          constructor create(adefowner:TDef;const n:string;usealign,recordminalign:shortint);
-          function  checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
+          constructor Create(ADefOwner:TDef;const N:string;UseAlign,RecordMinAlign:ShortInt);
+          function  CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
        end;
 
 
@@ -167,101 +167,101 @@ interface
 
        TAbstractSubSymTable = class(TStoredSymTable)
        public
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
        end;
 
        { tabstractlocalsymtable }
 
        TAbstractLocalSymTable = class(TAbstractSubSymTable)
        public
-          function count_locals:LongInt;
-          function iscurrentunit: boolean; override;
+          function Count_Locals:LongInt;
+          function IsCurrentUnit: Boolean; override;
        end;
 
        TLocalSymTable = class(TAbstractLocalSymTable)
        public
-          constructor create(adefowner:TDef;level:byte);
-          function checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
+          constructor Create(ADefOwner:TDef;Level:Byte);
+          function CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
        end;
 
        { tparasymtable }
 
        TParaSymTable = class(TAbstractLocalSymTable)
        public
-          constructor create(adefowner:TDef;level:byte);
-          function checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
+          constructor Create(ADefOwner:TDef;Level:Byte);
+          function CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
        end;
 
        TAbstractUnitSymTable = class(TStoredSymTable)
        public
-          constructor create(const n : string;id:word);
-          function checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
-          function findnamespace(const n:string):TSymEntry;virtual;
-          function iscurrentunit:boolean;override;
-          function needs_init_final: boolean; override;
-          procedure insertunit(sym:TSymEntry);
-          function has_class_condestructors: boolean;
+          constructor Create(const N : string;ID:Word);
+          function CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
+          function FindNamespace(const N:string):TSymEntry;virtual;
+          function IsCurrentUnit:Boolean;override;
+          function Needs_Init_Final: Boolean; override;
+          procedure InsertUnit(Sym:TSymEntry);
+          function Has_Class_ConDestructors: Boolean;
        end;
 
        TGlobalSymTable = class(TAbstractUnitSymTable)
        public
-          unittypecount : word;
-          constructor create(const n : string;id:word);
-          procedure ppuload(ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          UnitTypeCount : Word;
+          constructor Create(const N : string;ID:Word);
+          procedure PPULoad(PPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
        end;
 
        TStaticSymTable = class(TAbstractUnitSymTable)
        public
-          constructor create(const n : string;id:word);
-          procedure ppuload(ppufile:TCompilerPPUFile);override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;override;
-          function findnamespace(const n:string):TSymEntry;override;
+          constructor Create(const N : string;ID:Word);
+          procedure PPULoad(PPUFile:TCompilerPPUFile);override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
+          function CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;override;
+          function FindNamespace(const N:string):TSymEntry;override;
        end;
 
        TSpecializeSymTable = class(TGlobalSymTable)
        public
-          constructor create(const n : string;id:word);
-          function iscurrentunit:boolean;override;
+          constructor Create(const N : string;ID:Word);
+          function IsCurrentUnit:Boolean;override;
        end;
 
        TWithSymTable = class(TSymTable)
-          withrefnode : tobject; { tnode }
-          constructor create(aowner:TDef;ASymList:TFPHashObjectList;refnode:tobject{tnode});
+          WithRefNode : TObject; { tnode }
+          constructor Create(AOwner:TDef;ASymList:TFPHashObjectList;RefNode:TObject{tnode});
           destructor  Destroy;override;
-          procedure clear;override;
-          procedure insertdef(def:TDefEntry);override;
+          procedure Clear;override;
+          procedure InsertDef(Def:TDefEntry);override;
         end;
 
        TSTTExceptSymTable = class(TSymTable)
        public
-          constructor create;
+          constructor Create;
        end;
 
        TMacroSymTable = class(TStoredSymTable)
        public
-          constructor create(exported: boolean);
+          constructor Create(Exported: Boolean);
        end;
 
        { tenumsymtable }
 
        TEnumSymTable = class(TAbstractSubSymTable)
        public
-          procedure insertsym(sym: TSymEntry; checkdup: boolean = true); override;
-          constructor create(adefowner:TDef);
+          procedure InsertSym(Sym: TSymEntry; CheckDup: Boolean = True); override;
+          constructor Create(ADefOwner:TDef);
        end;
 
        { tarraysymtable }
 
        TArraySymTable = class(TAbstractSubSymTable)
        public
-          procedure insertdef(def:TDefEntry);override;
-          constructor create(adefowner:TDef);
+          procedure InsertDef(Def:TDefEntry);override;
+          constructor Create(ADefOwner:TDef);
        end;
 
     var
-       systemunit     : TGlobalSymTable; { pointer to the system unit }
+       SystemUnit     : TGlobalSymTable; { pointer to the system unit }
 
     type
        TSymbolSearchFlag = (
@@ -279,83 +279,83 @@ interface
 ****************************************************************************}
 
 {*** Misc ***}
-    function  FullTypeName(def,otherdef:TDef):string;
-    function generate_nested_name(SymTable:TSymTable;const delimiter:string):string;
+    function  FullTypeName(Def,OtherDef:TDef):string;
+    function Generate_Nested_Name(SymTable:TSymTable;const Delimiter:string):string;
     { def is the extended type of a helper }
-    function generate_objectpascal_helper_key(def:TDef):TSymStr;
-    procedure incompatibletypes(def1,def2:TDef);
-    procedure hidesym(sym:TSymEntry);
-    procedure duplicatesym(var hashedid: THashedIDString; dupsym, origsym:TSymEntry; warn: boolean);
-    function handle_generic_dummysym(sym:TSymEntry;var symoptions:TSymOptions):boolean;
+    function Generate_ObjectPascal_Helper_Key(Def:TDef):TSymStr;
+    procedure IncompatibleTypes(Def1,Def2:TDef);
+    procedure HideSym(Sym:TSymEntry);
+    procedure DuplicateSym(var HashedID: THashedIDString; DupSym, OrigSym:TSymEntry; Warn: Boolean);
+    function Handle_Generic_DummySym(Sym:TSymEntry;var SymOptions:TSymOptions):Boolean;
     { writes all declarations for the specified system unit symbol }
-    procedure write_system_parameter_lists(const name:string);
+    procedure Write_System_Parameter_Lists(const Name:string);
 
 {*** Search ***}
-    procedure addsymref(sym:TSym);inline;
-    procedure addsymref(sym:TSym;def:TDef);
-    function  is_owned_by(nesteddef,ownerdef:TDef):boolean;
-    function  sym_is_owned_by(childsym:TSym;SymTable:TSymTable):boolean;
-    function  defs_belong_to_same_generic(def1,def2:TDef):boolean;
-    function  get_generic_in_hierarchy_by_name(srsym:TSym;def:TDef):TDef;
-    function  return_specialization_of_generic(nesteddef,genericdef:TDef;out resultdef:TDef):boolean;
-    function  is_visible_for_object(symst:TSymTable;symvisibility:TVisibility;contextobjdef:TAbstractRecordDef):boolean;
-    function  is_visible_for_object(pd:TProcDef;contextobjdef:TAbstractRecordDef):boolean;
-    function  is_visible_for_object(sym:TSym;contextobjdef:TAbstractRecordDef):boolean;
-    function  searchsym(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
-    function  searchsym_with_flags(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
-    function  searchsym_maybe_with_symoption(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags;option:TSymOption):boolean;
+    procedure AddSymRef(Sym:TSym);inline;
+    procedure AddSymRef(Sym:TSym;Def:TDef);
+    function  Is_Owned_By(NestedDef,OwnerDef:TDef):Boolean;
+    function  Sym_Is_Owned_By(ChildSym:TSym;SymTable:TSymTable):Boolean;
+    function  Defs_Belong_To_Same_Generic(Def1,Def2:TDef):Boolean;
+    function  Get_Generic_In_Hierarchy_By_Name(SRSym:TSym;Def:TDef):TDef;
+    function  Return_Specialization_Of_Generic(NestedDef,GenericDef:TDef;out ResultDef:TDef):Boolean;
+    function  Is_Visible_For_Object(SymST:TSymTable;SymVisibility:TVisibility;ContextObjDef:TAbstractRecordDef):Boolean;
+    function  Is_Visible_For_Object(PD:TProcDef;ContextObjDef:TAbstractRecordDef):Boolean;
+    function  Is_Visible_For_Object(Sym:TSym;ContextObjDef:TAbstractRecordDef):Boolean;
+    function  SearchSym(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
+    function  SearchSym_With_Flags(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
+    function  SearchSym_Maybe_With_SymOption(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags;Option:TSymOption):Boolean;
     { searches for a symbol with the given name that has the given option in
       symoptions set }
-    function  searchsym_with_symoption(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;option:TSymOption):boolean;
-    function  searchsym_type(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
-    function  searchsym_in_module(pm:pointer;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
-    function  searchsym_in_named_module(const unitname, symname: TIDString; out srsym: TSym; out srsymtable: TSymTable): boolean;
-    function  searchsym_in_class(classh: TObjectDef; contextclassh:TAbstractRecordDef;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
-    function  searchsym_in_record(recordh:TAbstractRecordDef;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
-    function  searchsym_in_class_by_msgint(classh:TObjectDef;msgid:LongInt;out srdef : TDef;out srsym:TSym;out srsymtable:TSymTable):boolean;
-    function  searchsym_in_class_by_msgstr(classh:TObjectDef;const s:string;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function  SearchSym_With_SymOption(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Option:TSymOption):Boolean;
+    function  SearchSym_Type(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
+    function  SearchSym_In_Module(PM:Pointer;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
+    function  SearchSym_In_Named_Module(const UnitName, SymName: TIDString; out SRSym: TSym; out SRSymTable: TSymTable): Boolean;
+    function  SearchSym_In_Class(ClassH: TObjectDef; ContextClassH:TAbstractRecordDef;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
+    function  SearchSym_In_Record(RecordH:TAbstractRecordDef;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
+    function  SearchSym_In_Class_By_MsgInt(ClassH:TObjectDef;MsgID:LongInt;out SRDef : TDef;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
+    function  SearchSym_In_Class_By_MsgStr(ClassH:TObjectDef;const S:string;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
     { searches symbols inside of a helper's implementation }
-    function  searchsym_in_helper(classh,contextclassh:TObjectDef;const s: TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
-    function  search_system_type(const s: TIDString): TTypeSym;
-    function  try_search_system_type(const s: TIDString): TTypeSym;
-    function  try_search_current_module_type(const s: TIDString): TTypeSym;
-    function  search_system_proc(const s: TIDString): TProcDef;
-    function  search_named_unit_globaltype(const unitname, typename: TIDString; throwerror: boolean): TTypeSym;
-    function  search_struct_member(pd : TAbstractRecordDef;const s : string):TSym;
-    function  search_struct_member_no_helper(pd : TAbstractRecordDef;const s : string):TSym;
-    function  search_assignment_operator(from_def,to_def:TDef;explicit:boolean):TProcDef;
-    function  search_enumerator_operator(from_def,to_def:TDef):TProcDef;
-    function  search_management_operator(mop:TManagementOperator;pd:TDef):TProcDef;
+    function  SearchSym_In_Helper(ClassH,ContextClassH:TObjectDef;const S: TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
+    function  Search_System_Type(const S: TIDString): TTypeSym;
+    function  Try_Search_System_Type(const S: TIDString): TTypeSym;
+    function  Try_Search_Current_Module_Type(const S: TIDString): TTypeSym;
+    function  Search_System_Proc(const S: TIDString): TProcDef;
+    function  Search_Named_Unit_GlobalType(const UnitName, TypeName: TIDString; ThrowError: Boolean): TTypeSym;
+    function  Search_Struct_Member(PD : TAbstractRecordDef;const S : string):TSym;
+    function  Search_Struct_Member_No_Helper(PD : TAbstractRecordDef;const S : string):TSym;
+    function  Search_Assignment_Operator(FromDef,ToDef:TDef;Explicit:Boolean):TProcDef;
+    function  Search_Enumerator_Operator(FromDef,ToDef:TDef):TProcDef;
+    function  Search_Management_Operator(MOP:TManagementOperator;PD:TDef):TProcDef;
     { searches for the helper definition that's currently active for pd }
-    function  search_last_objectpascal_helper(pd : TDef;contextclassh : TAbstractRecordDef;out odef : TObjectDef):boolean;
+    function  Search_Last_ObjectPascal_Helper(PD : TDef;ContextClassH : TAbstractRecordDef;out ODef : TObjectDef):Boolean;
     { searches whether the symbol s is available in the currently active }
     { helper for pd }
-    function  search_objectpascal_helper(pd : TDef;contextclassh : TAbstractRecordDef;const s : string; out srsym: TSym; out srsymtable: TSymTable):boolean;
-    function  search_objc_helper(pd : TObjectDef;const s : string; out srsym: TSym; out srsymtable: TSymTable):boolean;
-    function  search_objc_method(const s : string; out srsym: TSym; out srsymtable: TSymTable):boolean;
+    function  Search_ObjectPascal_Helper(PD : TDef;ContextClassH : TAbstractRecordDef;const S : string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
+    function  Search_ObjC_Helper(PD : TObjectDef;const S : string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
+    function  Search_ObjC_Method(const S : string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
     {Looks for macro s (must be given in upper case) in the macrosymbolstack, }
     {and returns it if found. Returns nil otherwise.}
-    function  search_macro(const s : string):TSym;
+    function  Search_Macro(const S : string):TSym;
     { Additionally to searching for a macro, also checks whether it's still }
     { actually defined (could be disable using "undef")                     }
-    function  defined_macro(const s : string):boolean;
+    function  Defined_Macro(const S : string):Boolean;
     { Look for a system procedure (no overloads supported) }
     { returns a list of helpers in the current module for the def }
-    function get_objectpascal_helpers(pd : TDef):TFPObjectList;
+    function Get_ObjectPascal_Helpers(PD : TDef):TFPObjectList;
 
 {*** Object Helpers ***}
-    function search_default_property(pd : TAbstractRecordDef) : TPropertySym;
-    function maybe_find_real_class_definition(pd: TDef; erroronfailure: boolean): TDef;
-    function find_real_class_definition(pd: TObjectDef; erroronfailure: boolean): TObjectDef;
+    function Search_Default_Property(PD : TAbstractRecordDef) : TPropertySym;
+    function Maybe_Find_Real_Class_Definition(PD: TDef; ErrorOnFailure: Boolean): TDef;
+    function Find_Real_Class_Definition(PD: TObjectDef; ErrorOnFailure: Boolean): TObjectDef;
 
 {*** Macro Helpers ***}
     {If called initially, the following procedures manipulate macros in }
     {initialmacrotable, otherwise they manipulate system macros local to a module.}
     {Name can be given in any case (it will be converted to upper case).}
-    procedure def_system_macro(const name : string);
-    procedure set_system_macro(const name, value : string);
-    procedure set_system_compvar(const name, value : string);
-    procedure undef_system_macro(const name : string);
+    procedure Def_System_Macro(const Name : string);
+    procedure Set_System_Macro(const Name, Value : string);
+    procedure Set_System_CompVar(const Name, Value : string);
+    procedure Undef_System_Macro(const Name : string);
 
 {*** symtable stack ***}
 { $ifdef DEBUG
@@ -367,23 +367,23 @@ interface
     type
        PUnitAlias = ^TUnitAlias;
        TUnitAlias = object(TNamedIndexItem)
-          newname : PShortString;
-          constructor init(const n:string);
-          destructor  done;virtual;
+          NewName : PShortString;
+          constructor Init(const N:string);
+          destructor  Done;virtual;
        end;
     var
-       unitaliases : pdictionary;
+       UnitAliases : PDictionary;
 
-    procedure addunitalias(const n:string);
-    function getunitalias(const n:string):string;
+    procedure AddUnitAlias(const N:string);
+    function GetUnitAlias(const N:string):string;
 {$endif UNITALIASES}
 
 {*** Init / Done ***}
-    procedure InitSymtable;
-    procedure DoneSymtable;
+    procedure InitSymTable;
+    procedure DoneSymTable;
 
     const
-      overloaded_names : array [NOTOKEN..last_overloaded] of string[16] = (
+      Overloaded_Names : array [NOTOKEN..last_overloaded] of string[16] = (
     { NOTOKEN        }  'error',
     { _PLUS          }  'plus',
     { _MINUS         }  'minus',
@@ -418,7 +418,7 @@ interface
     { _OP_INC        }  'inc',
     { _OP_DEC        }  'dec');
 
-      managementoperator2tok:array[TManagementOperator] of TToken = (
+      ManagementOperator2Tok:array[TManagementOperator] of TToken = (
     { mop_none       }  NOTOKEN,
     { mop_initialize }  _OP_INITIALIZE,
     { mop_finalize   }  _OP_FINALIZE,
@@ -434,7 +434,7 @@ implementation
       { global }
       Verbose,Globals,Systems,
       { symtable }
-      symutil,defutil,defcmp,objcdef,
+      SymUtil,DefUtil,DefCmp,ObjCDef,
       { module }
       FModule,
       { codegen }
@@ -447,401 +447,401 @@ implementation
 
 
     var
-      dupnr : LongInt; { unique number for duplicate symbols }
+      DupNr : LongInt; { unique number for duplicate symbols }
 
 {*****************************************************************************
                              TStoredSymtable
 *****************************************************************************}
 
-    constructor TStoredSymTable.create(const s:string);
+    constructor TStoredSymTable.Create(const S:string);
       begin
-        inherited create(s);
+        inherited Create(S);
         { Note: this happens for the initial macro symtable, so no error here }
         if not Assigned(CurrentModule) then
-          comment(VDebug,'Current module not available for module id')
+          Comment(VDebug,'Current module not available for module id')
         else
           ModuleID:=CurrentModule.ModuleID;
       end;
 
 
-    procedure TStoredSymTable.insertsym(sym:TSymEntry;checkdup:boolean=true);
+    procedure TStoredSymTable.InsertSym(Sym:TSymEntry;CheckDup:Boolean=True);
       begin
-        inherited insertsym(sym,checkdup);
-        init_final_check_done:=false;
+        inherited InsertSym(Sym,CheckDup);
+        FInitFinalCheckDone:=False;
       end;
 
 
-    procedure TStoredSymTable.deletesym(sym:TSymEntry);
+    procedure TStoredSymTable.DeleteSym(Sym:TSymEntry);
       begin
-        inherited deletesym(sym);
-        init_final_check_done:=false;
+        inherited DeleteSym(Sym);
+        FInitFinalCheckDone:=False;
       end;
 
 
-    procedure TStoredSymTable.ppuload(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.PPULoad(PPUFile:TCompilerPPUFile);
       begin
         { load the table's flags }
-        if ppufile.ReadEntry<>IBSymTableOptions then
+        if PPUFile.ReadEntry<>IBSymTableOptions then
           Message(unit_f_ppu_read_error);
-        ppufile.GetSet(TPPUSet1(tableoptions));
+        PPUFile.GetSet(TPPUSet1(TableOptions));
 
         { load definitions }
-        loaddefs(ppufile);
+        LoadDefs(PPUFile);
 
         { load symbols }
-        loadsyms(ppufile);
+        LoadSyms(PPUFile);
 
-        init_final_check_done:=true;
+        FInitFinalCheckDone:=True;
       end;
 
 
-    procedure TStoredSymTable.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
          { ensure that we have the sto_needs_init_final flag set if needed }
-         if not init_final_check_done then
-           needs_init_final;
+         if not FInitFinalCheckDone then
+           Needs_Init_Final;
 
          { write the table's flags }
-         ppufile.PutSet(TPPUSet1(tableoptions));
-         ppufile.WriteEntry(IBSymTableOptions);
+         PPUFile.PutSet(TPPUSet1(TableOptions));
+         PPUFile.WriteEntry(IBSymTableOptions);
 
          { write definitions }
-         writedefs(ppufile);
+         WriteDefs(PPUFile);
 
          { write symbols }
-         writesyms(ppufile);
+         WriteSyms(PPUFile);
       end;
 
 
-    procedure TStoredSymTable.loaddefs(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.LoadDefs(PPUFile:TCompilerPPUFile);
       var
-        def : TDef;
-        b   : byte;
+        Def : TDef;
+        B   : Byte;
       begin
          { load start of definition section, which holds the amount of defs }
-         if ppufile.ReadEntry<>IBStartDefs then
+         if PPUFile.ReadEntry<>IBStartDefs then
            Message(unit_f_ppu_read_error);
          { read definitions }
          repeat
-           b:=ppufile.ReadEntry;
-           def:=nil;
-           case b of
-             IBPointerDef : def:=CPointerDef.ppuload(ppufile);
-             IBArrayDef : def:=CArrayDef.ppuload(ppufile);
-             IBOrdDef : def:=COrdDef.ppuload(ppufile);
-             IBFloatDef : def:=CFloatDef.ppuload(ppufile);
-             IBProcDef : def:=CProcDef.ppuload(ppufile);
-             IBShortStringDef : def:=CStringDef.loadshort(ppufile);
-             IBLongStringDef : def:=CStringDef.loadlong(ppufile);
-             IBAnsiStringDef : def:=CStringDef.loadansi(ppufile);
-             IBWideStringDef : def:=CStringDef.loadwide(ppufile);
-             IBUnicodeStringDef : def:=CStringDef.loadunicode(ppufile);
-             IBRecordDef : def:=CRecordDef.ppuload(ppufile);
-             IBObjectDef : def:=CObjectDef.ppuload(ppufile);
-             IBEnumDef : def:=CEnumDef.ppuload(ppufile);
-             IBSetDef : def:=CSetDef.ppuload(ppufile);
-             IBProcVarDef : def:=CProcVarDef.ppuload(ppufile);
-             IBFileDef : def:=CFileDef.ppuload(ppufile);
-             IBClassRefDef : def:=CClassRefDef.ppuload(ppufile);
-             IBFormalDef : def:=CFormalDef.ppuload(ppufile);
-             IBVariantDef : def:=CVariantDef.ppuload(ppufile);
-             IBUndefinedDef : def:=CUndefinedDef.ppuload(ppufile);
-             IBEndDefs : break;
+           B:=PPUFile.ReadEntry;
+           Def:=nil;
+           case B of
+             IBPointerDef : Def:=CPointerDef.PPULoad(PPUFile);
+             IBArrayDef : Def:=CArrayDef.PPULoad(PPUFile);
+             IBOrdDef : Def:=COrdDef.PPULoad(PPUFile);
+             IBFloatDef : Def:=CFloatDef.PPULoad(PPUFile);
+             IBProcDef : Def:=CProcDef.PPULoad(PPUFile);
+             IBShortStringDef : Def:=CStringDef.LoadShort(PPUFile);
+             IBLongStringDef : Def:=CStringDef.LoadLong(PPUFile);
+             IBAnsiStringDef : Def:=CStringDef.LoadAnsi(PPUFile);
+             IBWideStringDef : Def:=CStringDef.LoadWide(PPUFile);
+             IBUnicodeStringDef : Def:=CStringDef.LoadUnicode(PPUFile);
+             IBRecordDef : Def:=CRecordDef.PPULoad(PPUFile);
+             IBObjectDef : Def:=CObjectDef.PPULoad(PPUFile);
+             IBEnumDef : Def:=CEnumDef.PPULoad(PPUFile);
+             IBSetDef : Def:=CSetDef.PPULoad(PPUFile);
+             IBProcVarDef : Def:=CProcVarDef.PPULoad(PPUFile);
+             IBFileDef : Def:=CFileDef.PPULoad(PPUFile);
+             IBClassRefDef : Def:=CClassRefDef.PPULoad(PPUFile);
+             IBFormalDef : Def:=CFormalDef.PPULoad(PPUFile);
+             IBVariantDef : Def:=CVariantDef.PPULoad(PPUFile);
+             IBUndefinedDef : Def:=CUndefinedDef.PPULoad(PPUFile);
+             IBEndDefs : Break;
              IBEnd : Message(unit_f_ppu_read_error);
            else
-             Message1(unit_f_ppu_invalid_entry,ToStr(b));
+             Message1(unit_f_ppu_invalid_entry,ToStr(B));
            end;
-           if Assigned(def) then
-             TStoredDef(def).PPULoadSubEntries(ppufile);
-           InsertDef(def);
-         until false;
+           if Assigned(Def) then
+             TStoredDef(Def).PPULoadSubEntries(PPUFile);
+           InsertDef(Def);
+         until False;
       end;
 
 
-    procedure TStoredSymTable.loadsyms(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.LoadSyms(PPUFile:TCompilerPPUFile);
       var
-        b   : byte;
-        sym : TSym;
+        B   : Byte;
+        Sym : TSym;
       begin
          { load start of definition section, which holds the amount of defs }
-         if ppufile.ReadEntry<>IBStartSyms then
+         if PPUFile.ReadEntry<>IBStartSyms then
           Message(unit_f_ppu_read_error);
          { now read the symbols }
          repeat
-           sym:=nil;
-           b:=ppufile.ReadEntry;
-           case b of
-                IBTypeSym : sym:=CTypeSym.ppuload(ppufile);
-                IBProcSym : sym:=CProcSym.ppuload(ppufile);
-               IBConstSym : sym:=CConstSym.ppuload(ppufile);
-           IBStaticVarSym : sym:=CStaticVarSym.ppuload(ppufile);
-            IBLocalVarSym : sym:=CLocalVarSym.ppuload(ppufile);
-             IBParaVarSym : sym:=CParaVarSym.ppuload(ppufile);
-            IBFieldVarSym : sym:=CFieldVarSym.ppuload(ppufile);
-         IBAbsoluteVarSym : sym:=CAbsoluteVarSym.ppuload(ppufile);
-                IBEnumSym : sym:=CEnumSym.ppuload(ppufile);
-            IBPropertySym : sym:=CPropertySym.ppuload(ppufile);
-                IBUnitSym : sym:=CUnitSym.ppuload(ppufile);
-               IBLabelSym : sym:=CLabelSym.ppuload(ppufile);
-                 IBSysSym : sym:=CSysSym.ppuload(ppufile);
-               IBMacroSym : sym:=TMacro.ppuload(ppufile);
-           IBNamespaceSym : sym:=CNamespaceSym.ppuload(ppufile);
-                IBEndSyms : break;
+           Sym:=nil;
+           B:=PPUFile.ReadEntry;
+           case B of
+                IBTypeSym : Sym:=CTypeSym.PPULoad(PPUFile);
+                IBProcSym : Sym:=CProcSym.PPULoad(PPUFile);
+               IBConstSym : Sym:=CConstSym.PPULoad(PPUFile);
+           IBStaticVarSym : Sym:=CStaticVarSym.PPULoad(PPUFile);
+            IBLocalVarSym : Sym:=CLocalVarSym.PPULoad(PPUFile);
+             IBParaVarSym : Sym:=CParaVarSym.PPULoad(PPUFile);
+            IBFieldVarSym : Sym:=CFieldVarSym.PPULoad(PPUFile);
+         IBAbsoluteVarSym : Sym:=CAbsoluteVarSym.PPULoad(PPUFile);
+                IBEnumSym : Sym:=CEnumSym.PPULoad(PPUFile);
+            IBPropertySym : Sym:=CPropertySym.PPULoad(PPUFile);
+                IBUnitSym : Sym:=CUnitSym.PPULoad(PPUFile);
+               IBLabelSym : Sym:=CLabelSym.PPULoad(PPUFile);
+                 IBSysSym : Sym:=CSysSym.PPULoad(PPUFile);
+               IBMacroSym : Sym:=TMacro.PPULoad(PPUFile);
+           IBNamespaceSym : Sym:=CNamespaceSym.PPULoad(PPUFile);
+                IBEndSyms : Break;
                     IBEnd : Message(unit_f_ppu_read_error);
            else
-             Message1(unit_f_ppu_invalid_entry,ToStr(b));
+             Message1(unit_f_ppu_invalid_entry,ToStr(B));
            end;
-           if Assigned(sym) then
-             TStoredSym(sym).PPULoadSubEntries(ppufile);
-           InsertSym(sym,false);
-         until false;
+           if Assigned(Sym) then
+             TStoredSym(Sym).PPULoadSubEntries(PPUFile);
+           InsertSym(Sym,False);
+         until False;
       end;
 
 
-    procedure TStoredSymTable.writedefs(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.WriteDefs(PPUFile:TCompilerPPUFile);
       var
-        defcount,
-        i   : LongInt;
-        def : TStoredDef;
+        DefCount,
+        I   : LongInt;
+        Def : TStoredDef;
       begin
-        defcount:=0;
-        for i:=0 to DefList.Count-1 do
-          if TStoredDef(DefList[i]).IsRegistered then
-            inc(defcount);
+        DefCount:=0;
+        for I:=0 to DefList.Count-1 do
+          if TStoredDef(DefList[I]).IsRegistered then
+            Inc(DefCount);
         { each definition get a number, write then the amount of defs to the
           ibstartdef entry }
-        ppufile.PutLongInt(defcount);
-        ppufile.WriteEntry(IBStartDefs);
+        PPUFile.PutLongInt(DefCount);
+        PPUFile.WriteEntry(IBStartDefs);
         { now write the definition }
-        for i:=0 to DefList.Count-1 do
+        for I:=0 to DefList.Count-1 do
           begin
-            def:=TStoredDef(DefList[i]);
-            if def.IsRegistered then
+            Def:=TStoredDef(DefList[I]);
+            if Def.IsRegistered then
               begin
-                def.ppuwrite(ppufile);
-                def.PPUWriteSubEntries(ppufile);
+                Def.PPUWrite(PPUFile);
+                Def.PPUWriteSubEntries(PPUFile);
               end;
           end;
         { write end of definitions }
-        ppufile.WriteEntry(IBEndDefs);
+        PPUFile.WriteEntry(IBEndDefs);
       end;
 
 
-    procedure TStoredSymTable.writesyms(ppufile:TCompilerPPUFile);
+    procedure TStoredSymTable.WriteSyms(PPUFile:TCompilerPPUFile);
       var
-        symcount,
-        i   : LongInt;
-        sym : TStoredSym;
+        SymCount,
+        I   : LongInt;
+        Sym : TStoredSym;
       begin
-        symcount:=0;
-        for i:=0 to SymList.Count-1 do
-          if TStoredSym(SymList[i]).IsRegistered then
-            inc(symcount);
+        SymCount:=0;
+        for I:=0 to SymList.Count-1 do
+          if TStoredSym(SymList[I]).IsRegistered then
+            Inc(SymCount);
         { each definition get a number, write then the amount of syms and the
           datasize to the ibsymdef entry }
-        ppufile.PutLongInt(symcount);
-        ppufile.WriteEntry(IBStartSyms);
+        PPUFile.PutLongInt(SymCount);
+        PPUFile.WriteEntry(IBStartSyms);
         { foreach is used to write all symbols }
-        for i:=0 to SymList.Count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TStoredSym(SymList[i]);
-            if sym.IsRegistered then
+            Sym:=TStoredSym(SymList[I]);
+            if Sym.IsRegistered then
               begin
-                sym.ppuwrite(ppufile);
-                sym.PPUWriteSubEntries(ppufile);
+                Sym.PPUWrite(PPUFile);
+                Sym.PPUWriteSubEntries(PPUFile);
               end;
           end;
         { end of symbols }
-        ppufile.WriteEntry(IBEndSyms);
+        PPUFile.WriteEntry(IBEndSyms);
       end;
 
-    function TStoredSymTable.is_deref_built: boolean;
+    function TStoredSymTable.Is_Deref_Built: Boolean;
     begin
-      Result:=deref_built;
+      Result:=FDerefBuilt;
     end;
 
-    function TStoredSymTable.is_derefimpl_built: boolean;
+    function TStoredSymTable.Is_DerefImpl_Built: Boolean;
     begin
-      Result:=derefimpl_built;
+      Result:=FDerefImplBuilt;
     end;
 
-    procedure TStoredSymTable.buildderef;
+    procedure TStoredSymTable.BuildDeref;
       var
-        i   : LongInt;
-        def : TStoredDef;
-        sym : TStoredSym;
+        I   : LongInt;
+        Def : TStoredDef;
+        Sym : TStoredSym;
       begin
         { interface definitions }
-        for i:=0 to DefList.Count-1 do
+        for I:=0 to DefList.Count-1 do
           begin
-            def:=TStoredDef(DefList[i]);
-            def.buildderef;
+            Def:=TStoredDef(DefList[I]);
+            Def.BuildDeref;
           end;
         { interface symbols }
-        for i:=0 to SymList.Count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TStoredSym(SymList[i]);
-            sym.buildderef;
+            Sym:=TStoredSym(SymList[I]);
+            Sym.BuildDeref;
           end;
-        deref_built:=True;
+        FDerefBuilt:=True;
       end;
 
 
-    procedure TStoredSymTable.buildderefimpl;
+    procedure TStoredSymTable.BuildDerefImpl;
       var
-        i   : LongInt;
-        def : TStoredDef;
+        I   : LongInt;
+        Def : TStoredDef;
       begin
         { implementation definitions }
-        for i:=0 to DefList.Count-1 do
+        for I:=0 to DefList.Count-1 do
           begin
-            def:=TStoredDef(DefList[i]);
-            def.buildderefimpl;
+            Def:=TStoredDef(DefList[I]);
+            Def.BuildDerefImpl;
           end;
-        derefimpl_built:=True;
+        FDerefImplBuilt:=True;
       end;
 
 
-    procedure TStoredSymTable.buildderef_registered;
+    procedure TStoredSymTable.BuildDeref_Registered;
       var
-        def : TStoredDef;
-        sym : TStoredSym;
-        i   : LongInt;
-        defidmax,
-        symidmax: LongInt;
-        newbuiltdefderefs,
-        builtdefderefs,
-        builtsymderefs: array of boolean;
-        changed: boolean;
+        Def : TStoredDef;
+        Sym : TStoredSym;
+        I   : LongInt;
+        DefIDMax,
+        SymIDMax: LongInt;
+        NewBuiltDefDerefs,
+        BuiltDefDerefs,
+        BuiltSymDerefs: array of Boolean;
+        Changed: Boolean;
       begin
-        newbuiltdefderefs:=nil;
-        builtdefderefs:=nil;
-        builtsymderefs:=nil;
+        NewBuiltDefDerefs:=nil;
+        BuiltDefDerefs:=nil;
+        BuiltSymDerefs:=nil;
         { tdefs for which we already built the deref }
-        SetLength(builtdefderefs,deflist.count);
+        SetLength(BuiltDefDerefs,DefList.Count);
         { tdefs for which we built the deref in this iteration }
-        SetLength(newbuiltdefderefs,deflist.count);
+        SetLength(NewBuiltDefDerefs,DefList.Count);
         { syms for which we already built the deref }
-        SetLength(builtsymderefs,symlist.count);
+        SetLength(BuiltSymDerefs,SymList.Count);
         repeat
           { we only have to store the defs (recursively) referred by wpo info
             or inlined routines in the static symbtable }
 
           { current number of registered defs/syms }
-          defidmax:=CurrentModule.deflist.count;
-          symidmax:=CurrentModule.symlist.count;
-          changed:=false;
+          DefIDMax:=CurrentModule.DefList.Count;
+          SymIDMax:=CurrentModule.SymList.Count;
+          Changed:=False;
 
           { build the derefs for the registered defs we haven't processed yet }
-          for i:=0 to DefList.Count-1 do
+          for I:=0 to DefList.Count-1 do
             begin
-              if not builtdefderefs[i] then
+              if not BuiltDefDerefs[I] then
                 begin
-                  def:=TStoredDef(DefList[i]);
-                  if def.IsRegistered then
+                  Def:=TStoredDef(DefList[I]);
+                  if Def.IsRegistered then
                     begin
-                      def.buildderef;
-                      newbuiltdefderefs[i]:=true;
-                      builtdefderefs[i]:=true;
-                      changed:=true;
+                      Def.BuildDeref;
+                      NewBuiltDefDerefs[I]:=True;
+                      BuiltDefDerefs[I]:=True;
+                      Changed:=True;
                     end;
                 end;
             end;
           { same for the syms }
-          for i:=0 to SymList.Count-1 do
+          for I:=0 to SymList.Count-1 do
             begin
-              if not builtsymderefs[i] then
+              if not BuiltSymDerefs[I] then
                 begin
-                  sym:=TStoredSym(SymList[i]);
-                  if sym.IsRegistered then
+                  Sym:=TStoredSym(SymList[I]);
+                  if Sym.IsRegistered then
                     begin
-                      sym.buildderef;
-                      builtsymderefs[i]:=true;
-                      changed:=true;
+                      Sym.BuildDeref;
+                      BuiltSymDerefs[I]:=True;
+                      Changed:=True;
                     end;
                 end;
             end;
           { now buildderefimpl for the defs we processed in this iteration }
-          for i:=0 to DefList.Count-1 do
+          for I:=0 to DefList.Count-1 do
             begin
-              if newbuiltdefderefs[i] then
+              if NewBuiltDefDerefs[I] then
                 begin
-                  newbuiltdefderefs[i]:=false;
-                  TStoredDef(DefList[i]).buildderefimpl;
-                  changed:=true;
+                  NewBuiltDefDerefs[I]:=False;
+                  TStoredDef(DefList[I]).BuildDerefImpl;
+                  Changed:=True;
                 end;
             end;
         { stop when no new defs or syms have been registered while processing
           the currently registered ones (defs/syms get added to the module's
           deflist/symlist when they are registered) }
-        until not changed and
-          (defidmax=CurrentModule.deflist.count) and
-          (symidmax=CurrentModule.symlist.count);
+        until not Changed and
+          (DefIDMax=CurrentModule.DefList.Count) and
+          (SymIDMax=CurrentModule.SymList.Count);
       end;
 
 
-    procedure TStoredSymTable.deref(only_registered: boolean);
+    procedure TStoredSymTable.Deref(OnlyRegistered: Boolean);
       var
-        i   : LongInt;
-        def : TStoredDef;
-        sym : TStoredSym;
+        I   : LongInt;
+        Def : TStoredDef;
+        Sym : TStoredSym;
       begin
         { first deref the interface ttype symbols. This needs
           to be done before the interface defs are derefed, because
           the interface defs can contain references to the type symbols
           which then already need to contain a resolved typedef field (PFV) }
-        for i:=0 to SymList.Count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TStoredSym(SymList[i]);
-            if (sym.typ=typesym) and
-               (not only_registered or
-                sym.IsRegistered) then
-              sym.deref;
+            Sym:=TStoredSym(SymList[I]);
+            if (Sym.Typ=TypeSym) and
+               (not OnlyRegistered or
+                Sym.IsRegistered) then
+              Sym.Deref;
           end;
         { interface definitions }
-        for i:=0 to DefList.Count-1 do
+        for I:=0 to DefList.Count-1 do
           begin
-            def:=TStoredDef(DefList[i]);
-            if not only_registered or
-               def.IsRegistered then
-              def.deref;
+            Def:=TStoredDef(DefList[I]);
+            if not OnlyRegistered or
+               Def.IsRegistered then
+              Def.Deref;
           end;
         { interface symbols }
-        for i:=0 to SymList.Count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TStoredSym(SymList[i]);
-            if (not only_registered or
-                sym.IsRegistered) and
-               (sym.typ<>typesym) then
-              sym.deref;
+            Sym:=TStoredSym(SymList[I]);
+            if (not OnlyRegistered or
+                Sym.IsRegistered) and
+               (Sym.Typ<>TypeSym) then
+              Sym.Deref;
           end;
       end;
 
 
-    procedure TStoredSymTable.derefimpl(only_registered: boolean);
+    procedure TStoredSymTable.DerefImpl(OnlyRegistered: Boolean);
       var
-        i   : LongInt;
-        def : TStoredDef;
+        I   : LongInt;
+        Def : TStoredDef;
       begin
         { implementation definitions }
-        for i:=0 to DefList.Count-1 do
+        for I:=0 to DefList.Count-1 do
           begin
-            def:=TStoredDef(DefList[i]);
-            if not only_registered or
-               def.IsRegistered then
-              def.derefimpl;
+            Def:=TStoredDef(DefList[I]);
+            if not OnlyRegistered or
+               Def.IsRegistered then
+              Def.DerefImpl;
           end;
       end;
 
 
-    function TStoredSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TStoredSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       var
-        hsym : TSym;
+        HSym : TSym;
       begin
-        hsym:=TSym(FindWithHash(hashedid));
-        if Assigned(hsym) then
-          DuplicateSym(hashedid,sym,hsym,false);
-        result:=Assigned(hsym);
+        HSym:=TSym(FindWithHash(HashedID));
+        if Assigned(HSym) then
+          DuplicateSym(HashedID,Sym,HSym,False);
+        Result:=Assigned(HSym);
       end;
 
 
@@ -849,68 +849,68 @@ implementation
              Callbacks
 **************************************}
 
-    procedure TStoredSymTable.check_forward(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.CheckForward(Sym:TObject;Arg:Pointer);
       begin
-         if TSym(sym).typ=procsym then
-           TProcSym(sym).check_forward
+         if TSym(Sym).Typ=ProcSym then
+           TProcSym(Sym).Check_Forward
          { check also object method table            }
          { we needn't to test the def list          }
          { because each object has to have a type sym,
            only test objects declarations, not type renamings }
          else
-          if (TSym(sym).typ=typesym) and
-             Assigned(TTypeSym(sym).typedef) and
-             (TTypeSym(sym).typedef.typesym=TTypeSym(sym)) and
-             (TTypeSym(sym).typedef.typ in [objectdef,recorddef]) then
-           TAbstractRecordDef(TTypeSym(sym).typedef).check_forwards;
+          if (TSym(Sym).Typ=TypeSym) and
+             Assigned(TTypeSym(Sym).TypeDef) and
+             (TTypeSym(Sym).TypeDef.TypeSym=TTypeSym(Sym)) and
+             (TTypeSym(Sym).TypeDef.Typ in [ObjectDef,RecordDef]) then
+           TAbstractRecordDef(TTypeSym(Sym).TypeDef).Check_Forwards;
       end;
 
 
-    procedure TStoredSymTable.check_block_valid(def: TObject; arg: pointer);
+    procedure TStoredSymTable.CheckBlockValid(Def: TObject; Arg: Pointer);
       var
-        founderrordef: TDef;
+        FoundErrorDef: TDef;
       begin
         { all parameters passed to a block must be handled by the Objective-C
           runtime }
-        if is_block(TDef(def)) and
-           not objcchecktype(TDef(def),founderrordef) then
-          if Assigned(TDef(def).typesym) then
-            MessagePos1(TDef(def).typesym.fileinfo,type_e_objc_type_unsupported,founderrordef.typename)
+        if is_block(TDef(Def)) and
+           not ObjCCheckType(TDef(Def),FoundErrorDef) then
+          if Assigned(TDef(Def).TypeSym) then
+            MessagePos1(TDef(Def).TypeSym.FileInfo,type_e_objc_type_unsupported,FoundErrorDef.TypeName)
           else
-            Message1(type_e_objc_type_unsupported,TProcVarDef(def).typename)
+            Message1(type_e_objc_type_unsupported,TProcVarDef(Def).TypeName)
       end;
 
 
-    procedure TStoredSymTable.register_syms(sym:tobject;arg:pointer);
+    procedure TStoredSymTable.RegisterSyms(Sym:TObject;Arg:Pointer);
       begin
-        TSym(sym).RegisterSym;
+        TSym(Sym).RegisterSym;
       end;
 
 
-    procedure TStoredSymTable.register_defs(def:tobject;arg:pointer);
+    procedure TStoredSymTable.RegisterDefs(Def:TObject;Arg:Pointer);
       begin
-        TDef(def).RegisterDef;
+        TDef(Def).RegisterDef;
       end;
 
 
-    procedure TStoredSymTable.labeldefined(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.LabelDefined(Sym:TObject;Arg:Pointer);
       begin
-        if (TSym(sym).typ=labelsym) and
-           not(TLabelSym(sym).defined) then
+        if (TSym(Sym).Typ=LabelSym) and
+           not(TLabelSym(Sym).Defined) then
          begin
-           if TLabelSym(sym).used then
-            Message1(sym_e_label_used_and_not_defined,TLabelSym(sym).realname)
+           if TLabelSym(Sym).Used then
+            Message1(sym_e_label_used_and_not_defined,TLabelSym(Sym).RealName)
            else
-            Message1(sym_w_label_not_defined,TLabelSym(sym).realname);
+            Message1(sym_w_label_not_defined,TLabelSym(Sym).RealName);
          end;
       end;
 
 
-    procedure TStoredSymTable.varsymbolused(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.VarSymbolUsed(Sym:TObject;Arg:Pointer);
       begin
-         if (TSym(sym).typ in [staticvarsym,localvarsym,paravarsym,fieldvarsym]) and
-            ((TSym(sym).owner.symtabletype in
-             [parasymtable,localsymtable,ObjectSymtable,recordsymtable,staticsymtable])) then
+         if (TSym(Sym).Typ in [StaticVarSym,LocalVarSym,ParaVarSym,FieldVarSym]) and
+            ((TSym(Sym).Owner.SymTableType in
+             [ParaSymTable,LocalSymTable,ObjectSymTable,RecordSymTable,StaticSymTable])) then
            begin
             { unused symbol should be reported only if no                    }
             { error is reported                                              }
@@ -921,122 +921,122 @@ implementation
             { and methods                                                    }
             { and neither in abstract methods                                }
             if (ErrorCount<>0) or
-               ([vo_is_hidden_para,vo_is_funcret] * TAbstractVarSym(sym).varoptions = [vo_is_hidden_para]) or
-               (sp_internal in TSym(sym).symoptions) or
-               ((Assigned(TSym(sym).owner.defowner) and
-                (TSym(sym).owner.defowner.typ=procdef) and
-                ((df_generic in TProcDef(TSym(sym).owner.defowner).defoptions) or
-                 (po_abstractmethod in TProcDef(TSym(sym).owner.defowner).procoptions)))) then
-              exit;
-            if (TStoredSym(sym).refs=0) then
+               ([vo_is_hidden_para,vo_is_funcret] * TAbstractVarSym(Sym).VarOptions = [vo_is_hidden_para]) or
+               (sp_internal in TSym(Sym).SymOptions) or
+               ((Assigned(TSym(Sym).Owner.DefOwner) and
+                (TSym(Sym).Owner.DefOwner.Typ=ProcDef) and
+                ((df_generic in TProcDef(TSym(Sym).Owner.DefOwner).DefOptions) or
+                 (po_abstractmethod in TProcDef(TSym(Sym).Owner.DefOwner).ProcOptions)))) then
+              Exit;
+            if (TStoredSym(Sym).Refs=0) then
               begin
-                 if (vo_is_funcret in TAbstractVarSym(sym).varoptions) then
+                 if (vo_is_funcret in TAbstractVarSym(Sym).VarOptions) then
                    begin
                      { don't warn about the result of constructors }
                      { or the synthetic helper functions for class-attributes }
-                     if ((TSym(sym).owner.symtabletype<>localsymtable) or
-                        (TProcDef(TSym(sym).owner.defowner).proctypeoption<>potype_constructor)) and
-                        not (po_noreturn in TProcDef(TSym(sym).owner.defowner).procoptions) and
+                     if ((TSym(Sym).Owner.SymTableType<>LocalSymTable) or
+                        (TProcDef(TSym(Sym).Owner.DefOwner).ProcTypeOption<>potype_constructor)) and
+                        not (po_noreturn in TProcDef(TSym(Sym).Owner.DefOwner).ProcOptions) and
                         not(cs_opt_nodedfa in CurrentSettings.OptimizerSwitches) then
-                       MessagePos(TSym(sym).fileinfo,sym_w_function_result_not_set)
+                       MessagePos(TSym(Sym).FileInfo,sym_w_function_result_not_set)
                    end
-                 else if (TSym(sym).owner.symtabletype=parasymtable) then
-                   MessagePos1(TSym(sym).fileinfo,sym_h_para_identifier_not_used,TSym(sym).prettyname)
-                 else if (TSym(sym).owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-                   MessagePos2(TSym(sym).fileinfo,sym_n_private_identifier_not_used,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname)
+                 else if (TSym(Sym).Owner.SymTableType=ParaSymTable) then
+                   MessagePos1(TSym(Sym).FileInfo,sym_h_para_identifier_not_used,TSym(Sym).PrettyName)
+                 else if (TSym(Sym).Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+                   MessagePos2(TSym(Sym).FileInfo,sym_n_private_identifier_not_used,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName)
                  else
-                   MessagePos1(TSym(sym).fileinfo,sym_n_local_identifier_not_used,TSym(sym).prettyname);
+                   MessagePos1(TSym(Sym).FileInfo,sym_n_local_identifier_not_used,TSym(Sym).PrettyName);
               end
-            else if TAbstractVarSym(sym).varstate in [vs_written,vs_initialised] then
+            else if TAbstractVarSym(Sym).VarState in [vs_written,vs_initialised] then
               begin
-                 if (TSym(sym).owner.symtabletype=parasymtable) then
+                 if (TSym(Sym).Owner.SymTableType=ParaSymTable) then
                    begin
-                     if not(TAbstractVarSym(sym).varspez in [vs_var,vs_out,vs_constref]) and
-                        not(vo_is_funcret in TAbstractVarSym(sym).varoptions) then
-                       MessagePos1(TSym(sym).fileinfo,sym_h_para_identifier_only_set,TSym(sym).prettyname)
+                     if not(TAbstractVarSym(Sym).VarSpez in [vs_var,vs_out,vs_constref]) and
+                        not(vo_is_funcret in TAbstractVarSym(Sym).VarOptions) then
+                       MessagePos1(TSym(Sym).FileInfo,sym_h_para_identifier_only_set,TSym(Sym).PrettyName)
                    end
-                 else if (TSym(sym).owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-                   MessagePos2(TSym(sym).fileinfo,sym_n_private_identifier_only_set,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname)
-                 else if TAbstractVarSym(sym).varoptions*[vo_is_funcret,vo_is_public,vo_is_external]=[] then
-                   MessagePos1(TSym(sym).fileinfo,sym_n_local_identifier_only_set,TSym(sym).prettyname);
+                 else if (TSym(Sym).Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+                   MessagePos2(TSym(Sym).FileInfo,sym_n_private_identifier_only_set,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName)
+                 else if TAbstractVarSym(Sym).VarOptions*[vo_is_funcret,vo_is_public,vo_is_external]=[] then
+                   MessagePos1(TSym(Sym).FileInfo,sym_n_local_identifier_only_set,TSym(Sym).PrettyName);
               end
-            else if (TAbstractVarSym(sym).varstate = vs_read_not_warned) and
-                    ([vo_is_public,vo_is_external] * TAbstractVarSym(sym).varoptions = []) then
-              MessagePos1(TSym(sym).fileinfo,sym_w_identifier_only_read,TSym(sym).prettyname)
+            else if (TAbstractVarSym(Sym).VarState = vs_read_not_warned) and
+                    ([vo_is_public,vo_is_external] * TAbstractVarSym(Sym).VarOptions = []) then
+              MessagePos1(TSym(Sym).FileInfo,sym_w_identifier_only_read,TSym(Sym).PrettyName)
           end
-        else if ((TSym(sym).owner.symtabletype in
-              [ObjectSymtable,parasymtable,localsymtable,staticsymtable,recordsymtable])) then
+        else if ((TSym(Sym).Owner.SymTableType in
+              [ObjectSymTable,ParaSymTable,LocalSymTable,StaticSymTable,RecordSymTable])) then
           begin
            if (ErrorCount<>0) or
-              (sp_internal in TSym(sym).symoptions) then
-             exit;
+              (sp_internal in TSym(Sym).SymOptions) then
+             Exit;
            { do not claim for inherited private fields !! }
-           if (TSym(sym).refs=0) and (TSym(sym).owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-             case TSym(sym).typ of
-               typesym:
-                 MessagePos2(TSym(sym).fileinfo,sym_n_private_type_not_used,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname);
-               constsym:
-                 MessagePos2(TSym(sym).fileinfo,sym_n_private_const_not_used,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname);
-               propertysym:
-                 MessagePos2(TSym(sym).fileinfo,sym_n_private_property_not_used,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname);
+           if (TSym(Sym).Refs=0) and (TSym(Sym).Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+             case TSym(Sym).Typ of
+               TypeSym:
+                 MessagePos2(TSym(Sym).FileInfo,sym_n_private_type_not_used,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName);
+               ConstSym:
+                 MessagePos2(TSym(Sym).FileInfo,sym_n_private_const_not_used,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName);
+               PropertySym:
+                 MessagePos2(TSym(Sym).FileInfo,sym_n_private_property_not_used,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName);
              else
-               MessagePos2(TSym(sym).fileinfo,sym_n_private_method_not_used,TAbstractRecordDef(TSym(sym).owner.defowner).GetTypeName,TSym(sym).prettyname);
+               MessagePos2(TSym(Sym).FileInfo,sym_n_private_method_not_used,TAbstractRecordDef(TSym(Sym).Owner.DefOwner).GetTypeName,TSym(Sym).PrettyName);
              end
            { units references are problematic }
            else
             begin
-              if (TSym(sym).refs=0) and
-                 not(TSym(sym).typ in [enumsym,unitsym,namespacesym]) and
-                 not(is_funcret_sym(TSym(sym))) and
+              if (TSym(Sym).Refs=0) and
+                 not(TSym(Sym).Typ in [EnumSym,UnitSym,NamespaceSym]) and
+                 not(is_funcret_sym(TSym(Sym))) and
                  { don't complain about compiler generated syms for specializations, see also #13405 }
-                 not((TSym(sym).typ=typesym) and (df_specialization in TTypeSym(sym).typedef.defoptions) and
-                    (pos('$',TTypeSym(sym).Realname)<>0)) and
+                 not((TSym(Sym).Typ=TypeSym) and (df_specialization in TTypeSym(Sym).TypeDef.DefOptions) and
+                    (Pos('$',TTypeSym(Sym).RealName)<>0)) and
                  (
-                  (TSym(sym).typ<>procsym) or
-                  ((TSym(sym).owner.symtabletype=staticsymtable) and
-                   not CurrentModule.is_unit)
+                  (TSym(Sym).Typ<>ProcSym) or
+                  ((TSym(Sym).Owner.SymTableType=StaticSymTable) and
+                   not CurrentModule.IsUnit)
                  ) and
                  { don't complain about alias for hidden _cmd parameter to
                    obj-c methods }
-                 not((TSym(sym).typ in [localvarsym,paravarsym,absolutevarsym]) and
-                     (vo_is_msgsel in TAbstractVarSym(sym).varoptions)) then
-                MessagePos2(TSym(sym).fileinfo,sym_h_local_symbol_not_used,SymTypeName[TSym(sym).typ],TSym(sym).prettyname);
+                 not((TSym(Sym).Typ in [LocalVarSym,ParaVarSym,AbsoluteVarSym]) and
+                     (vo_is_msgsel in TAbstractVarSym(Sym).VarOptions)) then
+                MessagePos2(TSym(Sym).FileInfo,sym_h_local_symbol_not_used,SymTypeName[TSym(Sym).Typ],TSym(Sym).PrettyName);
             end;
           end;
       end;
 
 
-    procedure TStoredSymTable.TestPrivate(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.TestPrivate(Sym:TObject;Arg:Pointer);
       begin
-        if TSym(sym).visibility in [vis_private,vis_strictprivate] then
-          varsymbolused(sym,arg);
+        if TSym(Sym).Visibility in [vis_private,vis_strictprivate] then
+          VarSymbolUsed(Sym,Arg);
       end;
 
 
-    procedure TStoredSymTable.objectprivatesymbolused(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.ObjectPrivateSymbolUsed(Sym:TObject;Arg:Pointer);
       begin
          {
            Don't test simple object aliases PM
          }
-         if (TSym(sym).typ=typesym) and
-            (TTypeSym(sym).typedef.typ in [objectdef,recorddef]) and
-            (TTypeSym(sym).typedef.typesym=TSym(sym)) then
-           TAbstractRecordDef(TTypeSym(sym).typedef).SymTable.SymList.ForEachCall(@TestPrivate,nil);
+         if (TSym(Sym).Typ=TypeSym) and
+            (TTypeSym(Sym).TypeDef.Typ in [ObjectDef,RecordDef]) and
+            (TTypeSym(Sym).TypeDef.TypeSym=TSym(Sym)) then
+           TAbstractRecordDef(TTypeSym(Sym).TypeDef).SymTable.SymList.ForEachCall(@TestPrivate,nil);
       end;
 
 
-   procedure TStoredSymTable.testfordefaultproperty(sym:TObject;arg:pointer);
+   procedure TStoredSymTable.TestForDefaultProperty(Sym:TObject;Arg:Pointer);
      begin
-        if (TSym(sym).typ=propertysym) and
-           (ppo_defaultproperty in TPropertySym(sym).propoptions) then
-          ppointer(arg)^:=sym;
+        if (TSym(Sym).Typ=PropertySym) and
+           (ppo_defaultproperty in TPropertySym(Sym).PropOptions) then
+          PPointer(Arg)^:=Sym;
      end;
 
 
-   procedure TStoredSymTable.register_children;
+   procedure TStoredSymTable.Register_Children;
      begin
-       SymList.ForEachCall(@register_syms,nil);
-       DefList.ForEachCall(@register_defs,nil);
+       SymList.ForEachCall(@RegisterSyms,nil);
+       DefList.ForEachCall(@RegisterDefs,nil);
      end;
 
 
@@ -1045,53 +1045,53 @@ implementation
 ***********************************************}
 
     { checks, if all procsyms and methods are defined }
-    procedure TStoredSymTable.check_forwards;
+    procedure TStoredSymTable.Check_Forwards;
       begin
-         SymList.ForEachCall(@check_forward,nil);
+         SymList.ForEachCall(@CheckForward,nil);
          { check whether all block definitions contain valid Objective-C types
            (now that all forward definitions have been resolved) }
-         DefList.ForEachCall(@check_block_valid,nil);
+         DefList.ForEachCall(@CheckBlockValid,nil);
       end;
 
 
-    procedure TStoredSymTable.checklabels;
+    procedure TStoredSymTable.CheckLabels;
       begin
-         SymList.ForEachCall(@labeldefined,nil);
+         SymList.ForEachCall(@LabelDefined,nil);
       end;
 
 
-    procedure TStoredSymTable.allsymbolsused;
+    procedure TStoredSymTable.AllSymbolsUsed;
       begin
-         SymList.ForEachCall(@varsymbolused,nil);
+         SymList.ForEachCall(@VarSymbolUsed,nil);
       end;
 
 
-    procedure TStoredSymTable.allprivatesused;
+    procedure TStoredSymTable.AllPrivatesUsed;
       begin
-         SymList.ForEachCall(@objectprivatesymbolused,nil);
+         SymList.ForEachCall(@ObjectPrivateSymbolUsed,nil);
       end;
 
 
-    procedure TStoredSymTable._needs_init_final(sym:TObject;arg:pointer);
+    procedure TStoredSymTable.NeedsInitFinal(Sym:TObject;Arg:Pointer);
       begin
-         if [sto_needs_init_final,sto_has_non_trivial_init] <= tableoptions then
-           exit;
+         if [sto_needs_init_final,sto_has_non_trivial_init] <= TableOptions then
+           Exit;
          { don't check static symbols - they can be present in structures only and
            always have a reference to a symbol defined on unit level }
-         if sp_static in TSym(sym).symoptions then
-           exit;
-         case TSym(sym).typ of
-           fieldvarsym,
-           staticvarsym,
-           localvarsym,
-           paravarsym :
+         if sp_static in TSym(Sym).SymOptions then
+           Exit;
+         case TSym(Sym).Typ of
+           FieldVarSym,
+           StaticVarSym,
+           LocalVarSym,
+           ParaVarSym :
              begin
-               if Assigned(TAbstractVarSym(sym).vardef) and
-                  is_managed_type(TAbstractVarSym(sym).vardef) then
-                 include(tableoptions,sto_needs_init_final);
-               if is_record((TAbstractVarSym(sym).vardef)) and
-                   (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(sym).vardef).SymTable).managementoperators) then
-                 include(tableoptions,sto_has_non_trivial_init);
+               if Assigned(TAbstractVarSym(Sym).VarDef) and
+                  is_managed_type(TAbstractVarSym(Sym).VarDef) then
+                 Include(TableOptions,sto_needs_init_final);
+               if Is_Record((TAbstractVarSym(Sym).VarDef)) and
+                   (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(Sym).VarDef).SymTable).ManagementOperators) then
+                 Include(TableOptions,sto_has_non_trivial_init);
              end;
            else
              ;
@@ -1099,29 +1099,29 @@ implementation
       end;
 
 
-    procedure TStoredSymTable.do_init_final_check;
+    procedure TStoredSymTable.DoInitFinalCheck;
       begin
-         if not init_final_check_done then
+         if not FInitFinalCheckDone then
            begin
-             exclude(tableoptions,sto_needs_init_final);
-             exclude(tableoptions,sto_has_non_trivial_init);
-             SymList.ForEachCall(@_needs_init_final,nil);
-             init_final_check_done:=true;
+             Exclude(TableOptions,sto_needs_init_final);
+             Exclude(TableOptions,sto_has_non_trivial_init);
+             SymList.ForEachCall(@NeedsInitFinal,nil);
+             FInitFinalCheckDone:=True;
            end;
       end;
 
     { returns true, if p contains data which needs init/final code }
-    function TStoredSymTable.needs_init_final : boolean;
+    function TStoredSymTable.Needs_Init_Final : Boolean;
       begin
-         do_init_final_check;
-         result:=sto_needs_init_final in tableoptions;
+         DoInitFinalCheck;
+         Result:=sto_needs_init_final in TableOptions;
       end;
 
 
-    function TStoredSymTable.has_non_trivial_init:boolean;
+    function TStoredSymTable.Has_Non_Trivial_Init:Boolean;
       begin
-        do_init_final_check;
-        result:=sto_has_non_trivial_init in tableoptions;
+        DoInitFinalCheck;
+        Result:=sto_has_non_trivial_init in TableOptions;
       end;
 
 
@@ -1131,663 +1131,663 @@ implementation
 
 
 
-    constructor TAbstractRecordSymTable.create(const n:string;usealign,recordminalign:shortint);
+    constructor TAbstractRecordSymTable.Create(const N:string;UseAlign,RecordMinAlign:ShortInt);
       begin
-        inherited create(n);
-        _datasize:=0;
-        databitsize:=0;
-        recordalignment:=1;
-        explicitrecordalignment:=0;
-        usefieldalignment:=usealign;
-        RecordAlignMin:=recordminalign;
-        padalignment:=1;
+        inherited Create(N);
+        FDataSize:=0;
+        DataBitSize:=0;
+        RecordAlignment:=1;
+        ExplicitRecordAlignment:=0;
+        UseFieldAlignment:=UseAlign;
+        RecordAlignMin:=RecordMinAlign;
+        PadAlignment:=1;
         { recordalign C_alignment means C record packing, that starts
           with an alignment of 1 }
-        case usealign of
+        case UseAlign of
           C_alignment,
           bit_alignment:
-            fieldalignment:=1;
+            FieldAlignment:=1;
           mac68k_alignment:
-            fieldalignment:=2;
+            FieldAlignment:=2;
           else
-            fieldalignment:=usealign;
+            FieldAlignment:=UseAlign;
         end;
       end;
 
 
     destructor TAbstractRecordSymTable.Destroy;
       var
-        mop : TManagementOperator;
+        MOP : TManagementOperator;
       begin
-        if refcount>1 then
-          exit;
+        if RefCount>1 then
+          Exit;
 
-        for mop:=low(TManagementOperator) to high(TManagementOperator) do
-          TFPList.FreeAndNilDisposing(mop_list[mop],TypeInfo(TManagementOperatorOffsetEntry));
+        for MOP:=Low(TManagementOperator) to High(TManagementOperator) do
+          TFPList.FreeAndNilDisposing(MOPList[MOP],TypeInfo(TManagementOperatorOffsetEntry));
         inherited Destroy;
       end;
 
 
-    procedure TAbstractRecordSymTable.ppuload(ppufile:TCompilerPPUFile);
+    procedure TAbstractRecordSymTable.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-        if ppufile.ReadEntry<>IBRecSymTableOptions then
+        if PPUFile.ReadEntry<>IBRecSymTableOptions then
           Message(unit_f_ppu_read_error);
-        recordalignment:=shortint(ppufile.GetByte);
-        explicitrecordalignment:=shortint(ppufile.GetByte);
-        usefieldalignment:=shortint(ppufile.GetByte);
-        RecordAlignMin:=shortint(ppufile.GetByte);
-        if (usefieldalignment=C_alignment) then
-          fieldalignment:=shortint(ppufile.GetByte);
-        ppufile.GetSet(TPPUSet1(has_fields_with_mop));
-        inherited ppuload(ppufile);
+        RecordAlignment:=ShortInt(PPUFile.GetByte);
+        ExplicitRecordAlignment:=ShortInt(PPUFile.GetByte);
+        UseFieldAlignment:=ShortInt(PPUFile.GetByte);
+        RecordAlignMin:=ShortInt(PPUFile.GetByte);
+        if (UseFieldAlignment=C_alignment) then
+          FieldAlignment:=ShortInt(PPUFile.GetByte);
+        PPUFile.GetSet(TPPUSet1(HasFieldsWithMOP));
+        inherited PPULoad(PPUFile);
       end;
 
 
-    procedure TAbstractRecordSymTable.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbstractRecordSymTable.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldtyp : byte;
+        OldTyp : Byte;
       begin
-         oldtyp:=ppufile.entrytyp;
-         ppufile.entrytyp:=SubEntryID;
+         OldTyp:=PPUFile.EntryTyp;
+         PPUFile.EntryTyp:=SubEntryID;
          { in case of classes using C alignment, the alignment of the parent
            affects the alignment of fields of the childs }
-         ppufile.PutByte(byte(recordalignment));
-         ppufile.PutByte(byte(explicitrecordalignment));
-         ppufile.PutByte(byte(usefieldalignment));
-         ppufile.PutByte(byte(RecordAlignMin));
-         if (usefieldalignment=C_alignment) then
-           ppufile.PutByte(byte(fieldalignment));
+         PPUFile.PutByte(Byte(RecordAlignment));
+         PPUFile.PutByte(Byte(ExplicitRecordAlignment));
+         PPUFile.PutByte(Byte(UseFieldAlignment));
+         PPUFile.PutByte(Byte(RecordAlignMin));
+         if (UseFieldAlignment=C_alignment) then
+           PPUFile.PutByte(Byte(FieldAlignment));
          { it's not really a "symtableoption", but loading this from the record
            def requires storing the set in the recorddef at least between
            ppuload and deref/derefimpl }
-         ppufile.PutSet(TPPUSet1(has_fields_with_mop));
-         ppufile.WriteEntry(IBRecSymTableOptions);
+         PPUFile.PutSet(TPPUSet1(HasFieldsWithMOP));
+         PPUFile.WriteEntry(IBRecSymTableOptions);
 
-         inherited ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
 
-         ppufile.entrytyp:=oldtyp;
+         PPUFile.EntryTyp:=OldTyp;
       end;
 
 
-    function field2recordalignment(fieldoffs, fieldalign: asizeint): asizeint;
+    function Field2RecordAlignment(FieldOffs, FieldAlign: ASizeInt): ASizeInt;
       begin
         { optimal alignment of the record when declaring a variable of this }
         { type is independent of the packrecords setting                    }
-        if (fieldoffs mod fieldalign) = 0 then
-          result:=fieldalign
-        else if (fieldalign >= 16) and
-                ((fieldoffs mod 16) = 0) and
-                ((fieldalign mod 16) = 0) then
-          result:=16
-        else if (fieldalign >= 8) and
-                ((fieldoffs mod 8) = 0) and
-                ((fieldalign mod 8) = 0) then
-          result:=8
-        else if (fieldalign >= 4) and
-                ((fieldoffs mod 4) = 0) and
-                ((fieldalign mod 4) = 0) then
-          result:=4
-        else if (fieldalign >= 2) and
-                ((fieldoffs mod 2) = 0) and
-                ((fieldalign mod 2) = 0) then
-          result:=2
+        if (FieldOffs mod FieldAlign) = 0 then
+          Result:=FieldAlign
+        else if (FieldAlign >= 16) and
+                ((FieldOffs mod 16) = 0) and
+                ((FieldAlign mod 16) = 0) then
+          Result:=16
+        else if (FieldAlign >= 8) and
+                ((FieldOffs mod 8) = 0) and
+                ((FieldAlign mod 8) = 0) then
+          Result:=8
+        else if (FieldAlign >= 4) and
+                ((FieldOffs mod 4) = 0) and
+                ((FieldAlign mod 4) = 0) then
+          Result:=4
+        else if (FieldAlign >= 2) and
+                ((FieldOffs mod 2) = 0) and
+                ((FieldAlign mod 2) = 0) then
+          Result:=2
         else
-          result:=1;
+          Result:=1;
       end;
 
-    procedure TAbstractRecordSymTable.alignrecord(fieldoffset:asizeint;varalign:shortint);
+    procedure TAbstractRecordSymTable.AlignRecord(FieldOffset:ASizeInt;VarAlign:ShortInt);
       var
-        varalignrecord: shortint;
+        VarAlignRecord: ShortInt;
       begin
-        case usefieldalignment of
+        case UseFieldAlignment of
           C_alignment:
-            varalignrecord:=Used_Align(varalign,RecordAlignMin,CurrentSettings.alignment.MaxCRecordAlign);
+            VarAlignRecord:=Used_Align(VarAlign,RecordAlignMin,CurrentSettings.Alignment.MaxCRecordAlign);
           mac68k_alignment:
-            varalignrecord:=2;
+            VarAlignRecord:=2;
           else
-            varalignrecord:=field2recordalignment(fieldoffset,varalign);
+            VarAlignRecord:=Field2RecordAlignment(FieldOffset,VarAlign);
         end;
-        recordalignment:=max(recordalignment,varalignrecord);
+        RecordAlignment:=Max(RecordAlignment,VarAlignRecord);
       end;
 
-    procedure TAbstractRecordSymTable.addfield(sym:TFieldVarSym;vis:TVisibility);
+    procedure TAbstractRecordSymTable.AddField(Sym:TFieldVarSym;Vis:TVisibility);
       var
-        l      : asizeint;
-        varalign : shortint;
-        vardef : TDef;
+        L      : ASizeInt;
+        VarAlign : ShortInt;
+        VarDef : TDef;
       begin
-        if (sym.owner<>self) then
+        if (Sym.Owner<>Self) then
           InternalError(200602031);
-        if sym.fieldoffset<>-1 then
+        if Sym.FieldOffset<>-1 then
           InternalError(200602032);
         { set visibility for the symbol }
-        sym.visibility:=vis;
+        Sym.Visibility:=Vis;
         { this symbol can't be loaded to a register }
-        sym.varregable:=vr_none;
+        Sym.VarRegable:=vr_none;
         { management operators }
-        if sym.vardef.typ in [recorddef,objectdef] then
-          has_fields_with_mop:=has_fields_with_mop + TAbstractRecordSymTable(TAbstractRecordDef(sym.vardef).SymTable).has_fields_with_mop;
-        if sym.vardef.typ=recorddef then
-          has_fields_with_mop:=has_fields_with_mop + TRecordSymTable(TRecordDef(sym.vardef).SymTable).managementoperators;
+        if Sym.VarDef.Typ in [RecordDef,ObjectDef] then
+          HasFieldsWithMOP:=HasFieldsWithMOP + TAbstractRecordSymTable(TAbstractRecordDef(Sym.VarDef).SymTable).HasFieldsWithMOP;
+        if Sym.VarDef.Typ=RecordDef then
+          HasFieldsWithMOP:=HasFieldsWithMOP + TRecordSymTable(TRecordDef(Sym.VarDef).SymTable).ManagementOperators;
         { Calculate field offset }
-        l:=sym.getsize;
-        vardef:=sym.vardef;
-        varalign:=vardef.structalignment;
-        case usefieldalignment of
+        L:=Sym.GetSize;
+        VarDef:=Sym.VarDef;
+        VarAlign:=VarDef.StructAlignment;
+        case UseFieldAlignment of
           bit_alignment:
             begin
               { bitpacking only happens for ordinals, the rest is aligned at }
               { 1 byte (compatible with GPC/GCC)                             }
-              if is_ordinal(vardef) then
+              if is_ordinal(VarDef) then
                 begin
-                  sym.fieldoffset:=databitsize;
-                  l:=sym.getpackedbitsize;
+                  Sym.FieldOffset:=DataBitSize;
+                  L:=Sym.GetPackedBitSize;
                 end
               else
                 begin
-                  databitsize:=_datasize*8;
-                  sym.fieldoffset:=databitsize;
-                  if (l>high(asizeint) div 8) then
+                  DataBitSize:=FDataSize*8;
+                  Sym.FieldOffset:=DataBitSize;
+                  if (L>High(ASizeInt) div 8) then
                     Message(sym_e_segment_too_large);
-                  l:=l*8;
+                  L:=L*8;
                 end;
-              if varalign=0 then
-                varalign:=Size_2_Align(l);
-              recordalignment:=max(recordalignment,field2recordalignment(databitsize mod 8,varalign));
+              if VarAlign=0 then
+                VarAlign:=Size_2_Align(L);
+              RecordAlignment:=Max(RecordAlignment,Field2RecordAlignment(DataBitSize mod 8,VarAlign));
               { bit packed records are limited to high(aint) bits }
               { instead of bytes to avoid double precision        }
               { arithmetic in offset calculations                 }
-              if int64(l)>high(asizeint)-sym.fieldoffset then
+              if Int64(L)>High(ASizeInt)-Sym.FieldOffset then
                 begin
                   Message(sym_e_segment_too_large);
-                  _datasize:=high(asizeint);
-                  databitsize:=high(asizeint);
+                  FDataSize:=High(ASizeInt);
+                  DataBitSize:=High(ASizeInt);
                 end
               else
                 begin
-                  databitsize:=sym.fieldoffset+l;
-                  _datasize:=(databitsize+7) div 8;
+                  DataBitSize:=Sym.FieldOffset+L;
+                  FDataSize:=(DataBitSize+7) div 8;
                 end;
               { rest is not applicable }
-              exit;
+              Exit;
             end;
           else
             begin
-              sym.fieldoffset:=getfieldoffset(sym,_datasize,fieldalignment);
-              if l>high(asizeint)-sym.fieldoffset then
+              Sym.FieldOffset:=GetFieldOffset(Sym,FDataSize,FieldAlignment);
+              if L>High(ASizeInt)-Sym.FieldOffset then
                 begin
                   Message(sym_e_segment_too_large);
-                  _datasize:=high(asizeint);
+                  FDataSize:=High(ASizeInt);
                 end
               else
-                _datasize:=sym.fieldoffset+l;
+                FDataSize:=Sym.FieldOffset+L;
               { Calc alignment needed for this record }
-              alignrecord(sym.fieldoffset,varalign);
+              AlignRecord(Sym.FieldOffset,VarAlign);
             end;
         end;
       end;
 
 
-    function field_alignment_compare(item1, item2: pointer): integer;
+    function FieldAlignmentCompare(Item1, Item2: Pointer): Integer;
       var
-        field1: TFieldVarSym absolute item1;
-        field2: TFieldVarSym absolute item2;
+        Field1: TFieldVarSym absolute Item1;
+        Field2: TFieldVarSym absolute Item2;
       begin
         { we don't care about static fields, those become global variables }
-        if (sp_static in field1.symoptions) or
-           (sp_static in field2.symoptions) then
-          exit(0);
+        if (sp_static in Field1.SymOptions) or
+           (sp_static in Field2.SymOptions) then
+          Exit(0);
         { sort from large to small alignment, and in case of the same alignment
           in declaration order (items declared close together are possibly
           also related and hence possibly used together -> putting them next
           to each other can improve cache behaviour) }
-        result:=field2.vardef.alignment-field1.vardef.alignment;
-        if result=0 then
-          result:=field1.fieldoffset-field2.fieldoffset;
+        Result:=Field2.VarDef.Alignment-Field1.VarDef.Alignment;
+        if Result=0 then
+          Result:=Field1.FieldOffset-Field2.FieldOffset;
       end;
 
 
-    procedure TAbstractRecordSymTable.addfieldlist(list: TFPObjectList; maybereorder: boolean);
+    procedure TAbstractRecordSymTable.AddFieldList(List: TFPObjectList; MaybeReorder: Boolean);
       var
-        fieldvs, insertfieldvs: TFieldVarSym;
-        base, fieldoffset, space, insertfieldsize, insertfieldoffset, bestinsertfieldoffset, bestspaceleft: asizeint;
-        i, j, bestfieldindex: LongInt;
-        globalfieldalignment,
-        prevglobalfieldalignment,
-        newfieldalignment: shortint;
-        changed: boolean;
+        FieldVS, InsertFieldVS: TFieldVarSym;
+        Base, FieldOffset, Space, InsertFieldSize, InsertFieldOffset, BestInsertFieldOffset, BestSpaceLeft: ASizeInt;
+        I, J, BestFieldIndex: LongInt;
+        GlobalFieldAlignment,
+        PrevGlobalFieldAlignment,
+        NewFieldAlignment: ShortInt;
+        Changed: Boolean;
       begin
-        if maybereorder and
+        if MaybeReorder and
            (cs_opt_reorder_fields in CurrentSettings.OptimizerSwitches) and
-           (list.count>1) then
+           (List.Count>1) then
           begin
             { assign dummy field offsets so we can know their order in the
               sorting routine }
-            for i:=0 to list.count-1 do
+            for I:=0 to List.Count-1 do
               begin
-                fieldvs:=TFieldVarSym(list[i]);
-                if sp_static in fieldvs.symoptions then
-                  continue;
-                fieldvs.fieldoffset:=i;
+                FieldVS:=TFieldVarSym(List[I]);
+                if sp_static in FieldVS.SymOptions then
+                  Continue;
+                FieldVS.FieldOffset:=I;
               end;
             { sort the non-class fields to minimise losses due to alignment }
-            list.sort(@field_alignment_compare);
+            List.Sort(@FieldAlignmentCompare);
             { now fill up gaps caused by alignment skips with smaller fields
               where possible }
             repeat
-              i:=0;
-              base:=_datasize;
-              globalfieldalignment:=fieldalignment;
-              changed:=false;
-              while i<list.count do
+              I:=0;
+              Base:=FDataSize;
+              GlobalFieldAlignment:=FieldAlignment;
+              Changed:=False;
+              while I<List.Count do
                 begin
-                  fieldvs:=TFieldVarSym(list[i]);
-                  if sp_static in fieldvs.symoptions then
+                  FieldVS:=TFieldVarSym(List[I]);
+                  if sp_static in FieldVS.SymOptions then
                     begin
-                      inc(i);
-                      continue;
+                      Inc(I);
+                      Continue;
                     end;
-                  prevglobalfieldalignment:=globalfieldalignment;
-                  fieldoffset:=getfieldoffset(fieldvs,base,globalfieldalignment);
-                  newfieldalignment:=globalfieldalignment;
+                  PrevGlobalFieldAlignment:=GlobalFieldAlignment;
+                  FieldOffset:=GetFieldOffset(FieldVS,Base,GlobalFieldAlignment);
+                  NewFieldAlignment:=GlobalFieldAlignment;
 
                   { size of the gap between the end of the previous field and
                     the start of the current one }
-                  space:=fieldoffset-base;
-                  bestspaceleft:=space;
-                  while space>0 do
+                  Space:=FieldOffset-Base;
+                  BestSpaceLeft:=Space;
+                  while Space>0 do
                     begin
-                      bestfieldindex:=-1;
-                      bestinsertfieldoffset:=-1;
-                      for j:=i+1 to list.count-1 do
+                      BestFieldIndex:=-1;
+                      BestInsertFieldOffset:=-1;
+                      for J:=I+1 to List.Count-1 do
                         begin
-                          insertfieldvs:=TFieldVarSym(list[j]);
-                          if sp_static in insertfieldvs.symoptions then
-                            continue;
-                          insertfieldsize:=insertfieldvs.getsize;
+                          InsertFieldVS:=TFieldVarSym(List[J]);
+                          if sp_static in InsertFieldVS.SymOptions then
+                            Continue;
+                          InsertFieldSize:=InsertFieldVS.GetSize;
                           { can the new field fit possibly in the gap? }
-                          if insertfieldsize<=space then
+                          if InsertFieldSize<=Space then
                             begin
                              { restore globalfieldalignment to situation before
                                the original field was inserted }
-                              globalfieldalignment:=prevglobalfieldalignment;
+                              GlobalFieldAlignment:=PrevGlobalFieldAlignment;
                               { at what offset would it be inserted? (this new
                                 field has its own alignment requirements, which
                                 may make it impossible to fit after all) }
-                              insertfieldoffset:=getfieldoffset(insertfieldvs,base,globalfieldalignment);
-                              globalfieldalignment:=prevglobalfieldalignment;
+                              InsertFieldOffset:=GetFieldOffset(InsertFieldVS,Base,GlobalFieldAlignment);
+                              GlobalFieldAlignment:=PrevGlobalFieldAlignment;
                               { taking into account the alignment, does it still
                                 fit and if so, does it fit better than the
                                 previously found best fit? }
-                              if (insertfieldoffset+insertfieldsize<=fieldoffset) and
-                                 (fieldoffset-insertfieldoffset-insertfieldsize<bestspaceleft) then
+                              if (InsertFieldOffset+InsertFieldSize<=FieldOffset) and
+                                 (FieldOffset-InsertFieldOffset-InsertFieldSize<BestSpaceLeft) then
                                 begin
                                   { new best fit }
-                                  bestfieldindex:=j;
-                                  bestinsertfieldoffset:=insertfieldoffset;
-                                  bestspaceleft:=fieldoffset-insertfieldoffset-insertfieldsize;
-                                  if bestspaceleft=0 then
-                                    break;
+                                  BestFieldIndex:=J;
+                                  BestInsertFieldOffset:=InsertFieldOffset;
+                                  BestSpaceLeft:=FieldOffset-InsertFieldOffset-InsertFieldSize;
+                                  if BestSpaceLeft=0 then
+                                    Break;
                                 end;
                             end;
                         end;
                       { if we didn't find any field to fit, stop trying for this
                         gap }
-                      if bestfieldindex=-1 then
-                        break;
-                      changed:=true;
+                      if BestFieldIndex=-1 then
+                        Break;
+                      Changed:=True;
                       { we found a field to insert -> adjust the new base
                         address }
-                      base:=bestinsertfieldoffset+TFieldVarSym(list[bestfieldindex]).getsize;
+                      Base:=BestInsertFieldOffset+TFieldVarSym(List[BestFieldIndex]).GetSize;
                       { update globalfieldalignment for this newly inserted
                         field }
-                      getfieldoffset(TFieldVarSym(list[bestfieldindex]),base,globalfieldalignment);
+                      GetFieldOffset(TFieldVarSym(List[BestFieldIndex]),Base,GlobalFieldAlignment);
                       { move the new field before the current one }
-                      list.move(bestfieldindex,i);
+                      List.Move(BestFieldIndex,I);
                       { and skip the new field (which is now at position i) }
-                      inc(i);
+                      Inc(I);
                       { there may be more space left -> continue }
-                      space:=bestspaceleft;
+                      Space:=BestSpaceLeft;
                     end;
-                  if base>fieldoffset then
+                  if Base>FieldOffset then
                     InternalError(2012071302);
                   { check the next field }
-                  base:=fieldoffset+fieldvs.getsize;
+                  Base:=FieldOffset+FieldVS.GetSize;
                   { since the original field had the same or greater alignment
                     than anything we inserted before it, the global field
                     alignment is still the same now as it was originally after
                     inserting that field }
-                  globalfieldalignment:=newfieldalignment;
-                  inc(i);
+                  GlobalFieldAlignment:=NewFieldAlignment;
+                  Inc(I);
                 end;
             { there may be small gaps left *before* inserted fields }
-          until not changed;
+          until not Changed;
         end;
         { reset the dummy field offsets }
-        for i:=0 to list.count-1 do
+        for I:=0 to List.Count-1 do
           begin
-            fieldvs:=TFieldVarSym(list[i]);
-            if sp_static in fieldvs.symoptions then
-              continue;
-            fieldvs.fieldoffset:=-1;
+            FieldVS:=TFieldVarSym(List[I]);
+            if sp_static in FieldVS.SymOptions then
+              Continue;
+            FieldVS.FieldOffset:=-1;
           end;
         { finally, set the actual field offsets }
-        for i:=0 to list.count-1 do
+        for I:=0 to List.Count-1 do
           begin
-            fieldvs:=TFieldVarSym(list[i]);
+            FieldVS:=TFieldVarSym(List[I]);
             { static data fields are already inserted in the globalsymtable }
-            if not(sp_static in fieldvs.symoptions) then
+            if not(sp_static in FieldVS.SymOptions) then
               begin
                 { read_record_fields already set the visibility of the fields,
                   because a single list can contain symbols with different
                   visibility }
-                addfield(fieldvs,fieldvs.visibility);
+                AddField(FieldVS,FieldVS.Visibility);
               end;
           end;
       end;
 
 
-    function TAbstractRecordSymTable.findfieldbyoffset(offset: asizeint): TFieldVarSym;
+    function TAbstractRecordSymTable.FindFieldByOffset(Offset: ASizeInt): TFieldVarSym;
       var
-        i: LongInt;
-        sym: TSym;
+        I: LongInt;
+        Sym: TSym;
       begin
         { there could be multiple fields in case of a variant record }
-        if (defowner.typ=recorddef) and
-           TRecordDef(defowner).isunion then
+        if (DefOwner.Typ=RecordDef) and
+           TRecordDef(DefOwner).IsUnion then
           InternalError(2014090403);
-        for i:=0 to SymList.count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TSym(symlist[i]);
-            if is_normal_fieldvarsym(sym) and
-               (TFieldVarSym(sym).fieldoffset>=offset) then
+            Sym:=TSym(SymList[I]);
+            if is_normal_fieldvarsym(Sym) and
+               (TFieldVarSym(Sym).FieldOffset>=Offset) then
               begin
-                result:=TFieldVarSym(sym);
-                exit;
+                Result:=TFieldVarSym(Sym);
+                Exit;
               end;
           end;
-        result:=nil;
+        Result:=nil;
       end;
 
 
-    procedure TAbstractRecordSymTable.addalignmentpadding;
+    procedure TAbstractRecordSymTable.AddAlignmentPadding;
       var
-        padded_datasize: asizeint;
+        PaddedDataSize: ASizeInt;
       begin
         { make the record size aligned correctly so it can be
           used as elements in an array. For C records we
           use the fieldalignment, because that is updated with the
           used alignment. }
-        if (padalignment = 1) then
-          case usefieldalignment of
+        if (PadAlignment = 1) then
+          case UseFieldAlignment of
             C_alignment:
-              padalignment:=fieldalignment;
+              PadAlignment:=FieldAlignment;
             { bitpacked }
             bit_alignment:
-              padalignment:=1;
+              PadAlignment:=1;
             { mac68k: always round to multiple of 2 }
             mac68k_alignment:
-              padalignment:=2;
+              PadAlignment:=2;
             { default/no packrecords specified }
             0:
-              padalignment:=recordalignment
+              PadAlignment:=RecordAlignment
             { specific packrecords setting -> use as upper limit }
             else
-              padalignment:=min(recordalignment,usefieldalignment);
+              PadAlignment:=Min(RecordAlignment,UseFieldAlignment);
           end;
-        padded_datasize:=align(_datasize,padalignment);
-        _paddingsize:=padded_datasize-_datasize;
-        _datasize:=padded_datasize;
+        PaddedDataSize:=Align(FDataSize,PadAlignment);
+        FPaddingSize:=PaddedDataSize-FDataSize;
+        FDataSize:=PaddedDataSize;
       end;
 
 
-    procedure TAbstractRecordSymTable.insertdef(def:TDefEntry);
+    procedure TAbstractRecordSymTable.InsertDef(Def:TDefEntry);
       begin
         { Enums must also be available outside the record scope,
           insert in the owner of this symtable }
-        if def.typ=enumdef then
-          defowner.owner.insertdef(def)
+        if Def.Typ=EnumDef then
+          DefOwner.Owner.InsertDef(Def)
         else
-          inherited insertdef(def);
+          inherited InsertDef(Def);
       end;
 
 
-    function TAbstractRecordSymTable.is_packed: boolean;
+    function TAbstractRecordSymTable.Is_Packed: Boolean;
       begin
-        result:=usefieldalignment=bit_alignment;
+        Result:=UseFieldAlignment=bit_alignment;
       end;
 
 
-    function TAbstractRecordSymTable.has_double_field(out def1,def2:TDef; out offset:integer): integer;
+    function TAbstractRecordSymTable.Has_Double_Field(out Def1,Def2:TDef; out Offset:Integer): Integer;
       var
-        i,cnt: LongInt;
-        currentsymlist: TFPHashObjectList;
-        sym: TFieldVarSym;
+        I,Cnt: LongInt;
+        CurrentSymList: TFPHashObjectList;
+        Sym: TFieldVarSym;
       begin
-        has_double_field := 0;
-        offset := 0;
-        if (defowner.typ=recorddef) and
-           TRecordDef(defowner).isunion then
-          exit;
-        currentsymlist:=symlist;
-        if currentsymlist = nil then
-          exit;
-        if currentsymlist.Count <> 2 then
-          exit;
-        if is_normal_fieldvarsym(TSym(currentsymlist[0])) then
+        Has_Double_Field := 0;
+        Offset := 0;
+        if (DefOwner.Typ=RecordDef) and
+           TRecordDef(DefOwner).IsUnion then
+          Exit;
+        CurrentSymList:=SymList;
+        if CurrentSymList = nil then
+          Exit;
+        if CurrentSymList.Count <> 2 then
+          Exit;
+        if is_normal_fieldvarsym(TSym(CurrentSymList[0])) then
           begin
-            sym:=TFieldVarSym(currentsymlist[0]);
-            def1 := sym.vardef;
+            Sym:=TFieldVarSym(CurrentSymList[0]);
+            Def1 := Sym.VarDef;
           end
         else
-          exit;
-        if is_normal_fieldvarsym(TSym(currentsymlist[1])) then
+          Exit;
+        if is_normal_fieldvarsym(TSym(CurrentSymList[1])) then
           begin
-            sym:=TFieldVarSym(currentsymlist[1]);
-            def2 := sym.vardef;
+            Sym:=TFieldVarSym(CurrentSymList[1]);
+            Def2 := Sym.VarDef;
           end
         else
-          exit;
-        offset := sym.fieldoffset;
-        if def2.typ = def1.typ then
-          cnt := 2
+          Exit;
+        Offset := Sym.FieldOffset;
+        if Def2.Typ = Def1.Typ then
+          Cnt := 2
         else
-          cnt := 1;
-        if offset = 0 then
-          cnt := 0;
-        has_double_field := cnt;
+          Cnt := 1;
+        if Offset = 0 then
+          Cnt := 0;
+        Has_Double_Field := Cnt;
       end;
 
 
-    function TAbstractRecordSymTable.has_single_field(out def:TDef): boolean;
+    function TAbstractRecordSymTable.Has_Single_Field(out Def:TDef): Boolean;
       var
-        i: LongInt;
-        currentsymlist: TFPHashObjectList;
-        currentdef: TDef;
-        sym: TFieldVarSym;
+        I: LongInt;
+        CurrentSymList: TFPHashObjectList;
+        CurrentDef: TDef;
+        Sym: TFieldVarSym;
       begin
-        result:=false;
-        def:=generrordef;
+        Result:=False;
+        Def:=GenErrorDef;
         { If a record contains a union, it does not contain a "single
           non-composite field" in the context of certain ABIs requiring
           special treatment for such records }
-        if (defowner.typ=recorddef) and
-           TRecordDef(defowner).isunion then
-          exit;
+        if (DefOwner.Typ=RecordDef) and
+           TRecordDef(DefOwner).IsUnion then
+          Exit;
         { a record/object can contain other things than fields }
-        currentsymlist:=symlist;
+        CurrentSymList:=SymList;
         { recurse in arrays and records }
-        while true do
+        while True do
           begin
-            sym:=nil;
+            Sym:=nil;
             { record has one field? }
-            for i:=0 to currentsymlist.Count-1 do
+            for I:=0 to CurrentSymList.Count-1 do
               begin
-                if is_normal_fieldvarsym(TSym(currentsymlist[i])) then
+                if is_normal_fieldvarsym(TSym(CurrentSymList[I])) then
                   begin
-                    if result then
+                    if Result then
                       begin
-                        result:=false;
-                        exit;
+                        Result:=False;
+                        Exit;
                       end;
-                    result:=true;
-                    sym:=TFieldVarSym(currentsymlist[i]);
+                    Result:=True;
+                    Sym:=TFieldVarSym(CurrentSymList[I]);
                   end;
               end;
-            if Assigned(sym) then
+            if Assigned(Sym) then
               begin
                 { if the field is an array, does it contain one element? }
-                currentdef:=sym.vardef;
-                while (currentdef.typ=arraydef) and
-                      not is_special_array(currentdef) do
+                CurrentDef:=Sym.VarDef;
+                while (CurrentDef.Typ=ArrayDef) and
+                      not is_special_array(CurrentDef) do
                   begin
-                    if TArrayDef(currentdef).elecount<>1 then
+                    if TArrayDef(CurrentDef).EleCount<>1 then
                       begin
-                        result:=false;
-                        exit;
+                        Result:=False;
+                        Exit;
                       end;
-                    currentdef:=TArrayDef(currentdef).elementdef;
+                    CurrentDef:=TArrayDef(CurrentDef).ElementDef;
                   end;
                 { if the array element is again a record, continue descending }
-                if currentdef.typ=recorddef then
+                if CurrentDef.Typ=RecordDef then
                   begin
                     { the record might be empty, so reset the result until we've
                       really found something }
-                    result:=false;
-                    currentsymlist:=TRecordDef(currentdef).SymTable.SymList
+                    Result:=False;
+                    CurrentSymList:=TRecordDef(CurrentDef).SymTable.SymList
                   end
                 else
                   begin
                     { otherwise we found the type of the single element }
-                    def:=currentdef;
-                    exit;
+                    Def:=CurrentDef;
+                    Exit;
                   end;
               end
             else
-              exit
+              Exit
           end;
       end;
 
 
-    procedure TAbstractRecordSymTable.do_get_managementoperator_offset_list(data:tobject;arg:pointer);
+    procedure TAbstractRecordSymTable.Do_Get_ManagementOperator_Offset_List(Data:TObject;Arg:Pointer);
       var
-        sym : TSym absolute data;
-        fsym : TFieldVarSym absolute data;
-        mop : TManagementOperator;
-        entry : PManagementOperatorOffsetEntry;
-        sublist : TFPList;
-        i : LongInt;
+        Sym : TSym absolute Data;
+        FSym : TFieldVarSym absolute Data;
+        MOP : TManagementOperator;
+        Entry : PManagementOperatorOffsetEntry;
+        SubList : TFPList;
+        I : LongInt;
       begin
-        if not is_normal_fieldvarsym(sym) then
-          exit;
-        if not is_record(fsym.vardef) and not is_object(fsym.vardef) and not is_cppclass(fsym.vardef) then
-          exit;
-        mop:=TManagementOperator(ptruint(arg));
-        if not Assigned(mop_list[mop]) then
+        if not is_normal_fieldvarsym(Sym) then
+          Exit;
+        if not Is_Record(FSym.VarDef) and not Is_Object(FSym.VarDef) and not Is_CPPClass(FSym.VarDef) then
+          Exit;
+        MOP:=TManagementOperator(PtrUInt(Arg));
+        if not Assigned(MOPList[MOP]) then
           InternalError(2018082303);
 
-        if is_record(fsym.vardef) then
+        if Is_Record(FSym.VarDef) then
           begin
-            if mop in TRecordSymTable(TRecordDef(fsym.vardef).SymTable).managementoperators then
+            if MOP in TRecordSymTable(TRecordDef(FSym.VarDef).SymTable).ManagementOperators then
               begin
-                new(entry);
-                entry^.pd:=search_management_operator(mop,fsym.vardef);
-                if not Assigned(entry^.pd) then
+                New(Entry);
+                Entry^.PD:=Search_Management_Operator(MOP,FSym.VarDef);
+                if not Assigned(Entry^.PD) then
                   InternalError(2018082302);
-                entry^.offset:=fsym.fieldoffset;
-                mop_list[mop].add(entry);
+                Entry^.Offset:=FSym.FieldOffset;
+                MOPList[MOP].Add(Entry);
               end;
           end;
 
-        sublist:=TFPList.create;
-        TAbstractRecordSymTable(TAbstractRecordDef(fsym.vardef).SymTable).get_managementoperator_offset_list(mop,sublist);
-        mop_list[mop].capacity:=mop_list[mop].count+sublist.count;
-        for i:=0 to sublist.count-1 do
+        SubList:=TFPList.Create;
+        TAbstractRecordSymTable(TAbstractRecordDef(FSym.VarDef).SymTable).Get_ManagementOperator_Offset_List(MOP,SubList);
+        MOPList[MOP].Capacity:=MOPList[MOP].Count+SubList.Count;
+        for I:=0 to SubList.Count-1 do
           begin
-            entry:=PManagementOperatorOffsetEntry(sublist[i]);
-            entry^.offset:=entry^.offset+fsym.fieldoffset;
-            mop_list[mop].add(entry);
+            Entry:=PManagementOperatorOffsetEntry(SubList[I]);
+            Entry^.Offset:=Entry^.Offset+FSym.FieldOffset;
+            MOPList[MOP].Add(Entry);
           end;
         { we don't need to remove the entries as they become part of list }
-        sublist.free;
-        sublist := nil;
+        SubList.Free;
+        SubList := nil;
       end;
 
-    procedure TAbstractRecordSymTable.get_managementoperator_offset_list(mop:TManagementOperator;list:TFPList);
+    procedure TAbstractRecordSymTable.Get_ManagementOperator_Offset_List(MOP:TManagementOperator;List:TFPList);
       var
-        i : LongInt;
-        entry,entrycopy : PManagementOperatorOffsetEntry;
+        I : LongInt;
+        Entry,EntryCopy : PManagementOperatorOffsetEntry;
       begin
-        if not Assigned(list) then
+        if not Assigned(List) then
           InternalError(2018082301);
-        if mop=mop_none then
-          exit;
-        if not (mop in has_fields_with_mop) then
+        if MOP=mop_none then
+          Exit;
+        if not (MOP in HasFieldsWithMOP) then
           { none of the fields or one of the field's fields has the requested operator }
-          exit;
-        if not Assigned(mop_list[mop]) then
+          Exit;
+        if not Assigned(MOPList[MOP]) then
           begin
-            mop_list[mop]:=TFPList.create;
-            SymList.ForEachCall(@do_get_managementoperator_offset_list,pointer(ptruint(mop)));
+            MOPList[MOP]:=TFPList.Create;
+            SymList.ForEachCall(@Do_Get_ManagementOperator_Offset_List,Pointer(PtrUInt(MOP)));
           end;
-        for i:=0 to mop_list[mop].count-1 do
+        for I:=0 to MOPList[MOP].Count-1 do
           begin
-            entry:=PManagementOperatorOffsetEntry(mop_list[mop][i]);
-            New(entrycopy);
-            entrycopy^:=entry^;
-            list.add(entrycopy);
+            Entry:=PManagementOperatorOffsetEntry(MOPList[MOP][I]);
+            New(EntryCopy);
+            EntryCopy^:=Entry^;
+            List.Add(EntryCopy);
           end;
       end;
 
-    procedure TAbstractRecordSymTable.setdatasize(val: asizeint);
+    procedure TAbstractRecordSymTable.SetDataSize(Val: ASizeInt);
       begin
-        _datasize:=val;
-        if (usefieldalignment=bit_alignment) then
+        FDataSize:=Val;
+        if (UseFieldAlignment=bit_alignment) then
           { can overflow in non bitpacked records }
-          databitsize:=val*8;
+          DataBitSize:=Val*8;
       end;
 
-    function TAbstractRecordSymTable.getfieldoffset(sym: TFieldVarSym; base: asizeint; var globalfieldalignment: shortint): asizeint;
+    function TAbstractRecordSymTable.GetFieldOffset(Sym: TFieldVarSym; Base: ASizeInt; var GlobalFieldAlignment: ShortInt): ASizeInt;
       var
-        l      : asizeint;
-        varalignfield,
-        varalign : shortint;
-        vardef : TDef;
+        L      : ASizeInt;
+        VarAlignField,
+        VarAlign : ShortInt;
+        VarDef : TDef;
       begin
         { Calculate field offset }
-        l:=sym.getsize;
-        vardef:=sym.vardef;
-        varalign:=vardef.structalignment;
-        case usefieldalignment of
+        L:=Sym.GetSize;
+        VarDef:=Sym.VarDef;
+        VarAlign:=VarDef.StructAlignment;
+        case UseFieldAlignment of
           bit_alignment:
             { has to be handled separately }
             InternalError(2012071301);
           C_alignment:
             begin
               { Calc the alignment size for C style records }
-              if (varalign>4) and
-                ((varalign mod 4)<>0) and
-                (vardef.typ=arraydef) then
-                Message1(sym_w_wrong_C_pack,vardef.typename);
-              if varalign=0 then
-                varalign:=l;
-              if (globalfieldalignment<CurrentSettings.alignment.MaxCRecordAlign) then
+              if (VarAlign>4) and
+                ((VarAlign mod 4)<>0) and
+                (VarDef.Typ=ArrayDef) then
+                Message1(sym_w_wrong_C_pack,VarDef.TypeName);
+              if VarAlign=0 then
+                VarAlign:=L;
+              if (GlobalFieldAlignment<CurrentSettings.Alignment.MaxCRecordAlign) then
                 begin
-                  if (varalign>16) and (globalfieldalignment<32) then
-                    globalfieldalignment:=32
-                  else if (varalign>12) and (globalfieldalignment<16) then
-                    globalfieldalignment:=16
+                  if (VarAlign>16) and (GlobalFieldAlignment<32) then
+                    GlobalFieldAlignment:=32
+                  else if (VarAlign>12) and (GlobalFieldAlignment<16) then
+                    GlobalFieldAlignment:=16
                   { 12 is needed for long double }
-                  else if (varalign>8) and (globalfieldalignment<12) then
-                    globalfieldalignment:=12
-                  else if (varalign>4) and (globalfieldalignment<8) then
-                    globalfieldalignment:=8
-                  else if (varalign>2) and (globalfieldalignment<4) then
-                    globalfieldalignment:=4
-                  else if (varalign>1) and (globalfieldalignment<2) then
-                    globalfieldalignment:=2;
+                  else if (VarAlign>8) and (GlobalFieldAlignment<12) then
+                    GlobalFieldAlignment:=12
+                  else if (VarAlign>4) and (GlobalFieldAlignment<8) then
+                    GlobalFieldAlignment:=8
+                  else if (VarAlign>2) and (GlobalFieldAlignment<4) then
+                    GlobalFieldAlignment:=4
+                  else if (VarAlign>1) and (GlobalFieldAlignment<2) then
+                    GlobalFieldAlignment:=2;
                 end;
-              globalfieldalignment:=min(globalfieldalignment,CurrentSettings.alignment.MaxCRecordAlign);
+              GlobalFieldAlignment:=Min(GlobalFieldAlignment,CurrentSettings.Alignment.MaxCRecordAlign);
             end;
           mac68k_alignment:
             begin
@@ -1796,21 +1796,21 @@ implementation
                  * everything else (except vector) is aligned to 2 bytes
                  * vector is aligned to 16 bytes
               }
-              if l>1 then
-                globalfieldalignment:=2
+              if L>1 then
+                GlobalFieldAlignment:=2
               else
-                globalfieldalignment:=1;
-              varalign:=2;
+                GlobalFieldAlignment:=1;
+              VarAlign:=2;
             end;
         end;
-        if varalign=0 then
-          varalign:=Size_2_Align(l);
-        varalignfield:=Used_Align(varalign,RecordAlignMin,globalfieldalignment);
+        if VarAlign=0 then
+          VarAlign:=Size_2_Align(L);
+        VarAlignField:=Used_Align(VarAlign,RecordAlignMin,GlobalFieldAlignment);
 
-        result:=align(base,varalignfield);
+        Result:=Align(Base,VarAlignField);
       end;
 
-    function TAbstractRecordSymTable.iscurrentunit: boolean;
+    function TAbstractRecordSymTable.IsCurrentUnit: Boolean;
       begin
         Result:=Assigned(CurrentModule)and(CurrentModule.ModuleID=ModuleID);
       end;
@@ -1819,10 +1819,10 @@ implementation
                               TRecordSymtable
 ****************************************************************************}
 
-    constructor TRecordSymTable.create(const n:string;usealign,recordminalign:shortint);
+    constructor TRecordSymTable.Create(const N:string;UseAlign,RecordMinAlign:ShortInt);
       begin
-        inherited create(n,usealign,recordminalign);
-        symtabletype:=recordsymtable;
+        inherited Create(N,UseAlign,RecordMinAlign);
+        SymTableType:=RecordSymTable;
       end;
 
 
@@ -1831,114 +1831,114 @@ implementation
     { the offset is the location of the start of the variant
       and datasize and dataalignment corresponds to
       the complete size (see code in pdecl unit) PM }
-    procedure TRecordSymTable.insertunionst(unionst : TRecordSymTable;offset : asizeint);
+    procedure TRecordSymTable.InsertUnionST(UnionST : TRecordSymTable;Offset : ASizeInt);
       var
-        sym : TSym;
-        def : TDef;
-        i : integer;
-        varalignrecord,varalign,
-        storesize,storealign : asizeint;
-        bitsize: TCGInt;
+        Sym : TSym;
+        Def : TDef;
+        I : Integer;
+        VarAlignRecord,VarAlign,
+        StoreSize,StoreAlign : ASizeInt;
+        BitSize: TCGInt;
       begin
-        storesize:=_datasize;
-        storealign:=fieldalignment;
-        _datasize:=offset;
-        if (usefieldalignment=bit_alignment) then
-          databitsize:=offset*8;
+        StoreSize:=FDataSize;
+        StoreAlign:=FieldAlignment;
+        FDataSize:=Offset;
+        if (UseFieldAlignment=bit_alignment) then
+          DataBitSize:=Offset*8;
 
         { We move the ownership of the defs and symbols to the new recordsymtable.
           The old unionsymtable keeps the references, but doesn't own the
           objects anymore }
-        unionst.DefList.OwnsObjects:=false;
-        unionst.SymList.OwnsObjects:=false;
+        UnionST.DefList.OwnsObjects:=False;
+        UnionST.SymList.OwnsObjects:=False;
 
         { copy symbols }
-        for i:=0 to unionst.SymList.Count-1 do
+        for I:=0 to UnionST.SymList.Count-1 do
           begin
-            sym:=TSym(unionst.SymList[i]);
-            if not is_normal_fieldvarsym(sym) then
+            Sym:=TSym(UnionST.SymList[I]);
+            if not is_normal_fieldvarsym(Sym) then
               InternalError(200601272);
-            if TFieldVarSym(sym).fieldoffset=0 then
-              include(TFieldVarSym(sym).varoptions,vo_is_first_field);
+            if TFieldVarSym(Sym).FieldOffset=0 then
+              Include(TFieldVarSym(Sym).VarOptions,vo_is_first_field);
 
             { add to this record symtable, checking for duplicate names }
 //            unionst.SymList.List.List^[i].Data:=nil;
-            insertsym(sym);
-            varalign:=TFieldVarSym(sym).vardef.alignment;
-            if varalign=0 then
-              varalign:=Size_2_Align(TFieldVarSym(sym).getsize);
+            InsertSym(Sym);
+            VarAlign:=TFieldVarSym(Sym).VarDef.Alignment;
+            if VarAlign=0 then
+              VarAlign:=Size_2_Align(TFieldVarSym(Sym).GetSize);
             { retrieve size }
-            if (usefieldalignment=bit_alignment) then
+            if (UseFieldAlignment=bit_alignment) then
               begin
                 { bit packed records are limited to high(aint) bits }
                 { instead of bytes to avoid double precision        }
                 { arithmetic in offset calculations                 }
-                if is_ordinal(TFieldVarSym(sym).vardef) then
-                  bitsize:=TFieldVarSym(sym).getpackedbitsize
+                if is_ordinal(TFieldVarSym(Sym).VarDef) then
+                  BitSize:=TFieldVarSym(Sym).GetPackedBitSize
                 else
                   begin
-                    bitsize:=TFieldVarSym(sym).getsize;
-                    if (bitsize>high(asizeint) div 8) then
+                    BitSize:=TFieldVarSym(Sym).GetSize;
+                    if (BitSize>High(ASizeInt) div 8) then
                       Message(sym_e_segment_too_large);
-                    bitsize:=bitsize*8;
+                    BitSize:=BitSize*8;
                   end;
-                if bitsize>high(asizeint)-databitsize then
+                if BitSize>High(ASizeInt)-DataBitSize then
                   begin
                     Message(sym_e_segment_too_large);
-                    _datasize:=high(asizeint);
-                    databitsize:=high(asizeint);
+                    FDataSize:=High(ASizeInt);
+                    DataBitSize:=High(ASizeInt);
                   end
                 else
                   begin
-                    databitsize:=TFieldVarSym(sym).fieldoffset+offset*8;
-                    _datasize:=(databitsize+7) div 8;
+                    DataBitSize:=TFieldVarSym(Sym).FieldOffset+Offset*8;
+                    FDataSize:=(DataBitSize+7) div 8;
                   end;
-                TFieldVarSym(sym).fieldoffset:=databitsize;
-              varalignrecord:=field2recordalignment(TFieldVarSym(sym).fieldoffset div 8,varalign);
+                TFieldVarSym(Sym).FieldOffset:=DataBitSize;
+              VarAlignRecord:=Field2RecordAlignment(TFieldVarSym(Sym).FieldOffset div 8,VarAlign);
               end
             else
               begin
-                if TFieldVarSym(sym).getsize>high(asizeint)-_datasize then
+                if TFieldVarSym(Sym).GetSize>High(ASizeInt)-FDataSize then
                   begin
                     Message(sym_e_segment_too_large);
-                    _datasize:=high(asizeint);
+                    FDataSize:=High(ASizeInt);
                   end
                 else
-                  _datasize:=TFieldVarSym(sym).fieldoffset+offset;
+                  FDataSize:=TFieldVarSym(Sym).FieldOffset+Offset;
                 { update address }
-                TFieldVarSym(sym).fieldoffset:=_datasize;
-                varalignrecord:=field2recordalignment(TFieldVarSym(sym).fieldoffset,varalign);
+                TFieldVarSym(Sym).FieldOffset:=FDataSize;
+                VarAlignRecord:=Field2RecordAlignment(TFieldVarSym(Sym).FieldOffset,VarAlign);
               end;
             { update alignment of this record }
-            if (usefieldalignment<>C_alignment) and
-               (usefieldalignment<>mac68k_alignment) then
-              recordalignment:=max(recordalignment,varalignrecord);
+            if (UseFieldAlignment<>C_alignment) and
+               (UseFieldAlignment<>mac68k_alignment) then
+              RecordAlignment:=Max(RecordAlignment,VarAlignRecord);
           end;
         { update alignment for C records }
-        if (usefieldalignment=C_alignment) and
-           (usefieldalignment<>mac68k_alignment) then
-          recordalignment:=max(recordalignment,unionst.recordalignment);
+        if (UseFieldAlignment=C_alignment) and
+           (UseFieldAlignment<>mac68k_alignment) then
+          RecordAlignment:=Max(RecordAlignment,UnionST.RecordAlignment);
         { Register defs in the new record symtable }
-        for i:=0 to unionst.DefList.Count-1 do
+        for I:=0 to UnionST.DefList.Count-1 do
           begin
-            def:=TDef(unionst.DefList[i]);
-            def.ChangeOwner(self);
+            Def:=TDef(UnionST.DefList[I]);
+            Def.ChangeOwner(Self);
           end;
-        _datasize:=storesize;
-        fieldalignment:=storealign;
+        FDataSize:=StoreSize;
+        FieldAlignment:=StoreAlign;
         { If a record contains a union, it does not contain a "single
           non-composite field" in the context of certain ABIs requiring
           special treatment for such records }
-        if defowner.typ=recorddef then
-          TRecordDef(defowner).isunion:=true;
+        if DefOwner.Typ=RecordDef then
+          TRecordDef(DefOwner).IsUnion:=True;
       end;
 
 
-    procedure TRecordSymTable.includemanagementoperator(mop:TManagementOperator);
+    procedure TRecordSymTable.IncludeManagementOperator(MOP:TManagementOperator);
       begin
-        if mop in managementoperators then
-          exit;
-        include(managementoperators,mop);
+        if MOP in ManagementOperators then
+          Exit;
+        Include(ManagementOperators,MOP);
       end;
 
 
@@ -1946,37 +1946,37 @@ implementation
                               TObjectSymtable
 ****************************************************************************}
 
-    constructor TObjectSymTable.create(adefowner:TDef;const n:string;usealign,recordminalign:shortint);
+    constructor TObjectSymTable.Create(ADefOwner:TDef;const N:string;UseAlign,RecordMinAlign:ShortInt);
       begin
-        inherited create(n,usealign,recordminalign);
-        symtabletype:=ObjectSymtable;
-        defowner:=adefowner;
+        inherited Create(N,UseAlign,RecordMinAlign);
+        SymTableType:=ObjectSymTable;
+        DefOwner:=ADefOwner;
       end;
 
 
-    function TObjectSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TObjectSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       var
-         hsym: TSym;
-         warn: boolean;
+         HSym: TSym;
+         Warn: Boolean;
       begin
-         result:=false;
-         if not Assigned(defowner) then
+         Result:=False;
+         if not Assigned(DefOwner) then
            InternalError(200602061);
 
          { procsym and propertysym have special code
            to override values in inherited classes. For other
            symbols check for duplicates (but for internal symbols only in this
            symtable, not the whole hierarchy) }
-         if not(sym.typ in [procsym,propertysym]) and
-            not (sp_internal in TSym(sym).symoptions) then
+         if not(Sym.Typ in [ProcSym,PropertySym]) and
+            not (sp_internal in TSym(Sym).SymOptions) then
            begin
               { but private ids can be reused }
-              hsym:=search_struct_member(TObjectDef(defowner),hashedid.id);
-              if Assigned(hsym) and
+              HSym:=Search_Struct_Member(TObjectDef(DefOwner),HashedID.ID);
+              if Assigned(HSym) and
                  (
                   (
                    not(m_delphi in CurrentSettings.ModeSwitches) and
-                   is_visible_for_object(hsym,TObjectDef(defowner))
+                   Is_Visible_For_Object(HSym,TObjectDef(DefOwner))
                   ) or
                   (
                    { In Delphi, you can repeat members of a parent class. You can't }
@@ -1984,8 +1984,8 @@ implementation
                    { declare two fields with the same name in a single class        }
                    (m_delphi in CurrentSettings.ModeSwitches) and
                    (
-                    is_object(TDef(defowner)) or
-                    (hsym.owner = self)
+                    Is_Object(TDef(DefOwner)) or
+                    (HSym.Owner = Self)
                    )
                   )
                  ) then
@@ -1994,16 +1994,16 @@ implementation
                     conflicts with a category method, because this can easily
                     happen due to all possible categories being imported via
                     CocoaAll }
-                  warn:=
-                    (is_objccategory(TDef(hsym.owner.defowner)) or
-                     is_classhelper(TDef(hsym.owner.defowner))) and
-                    (sym.typ in [paravarsym,localvarsym,fieldvarsym]);
-                  DuplicateSym(hashedid,sym,hsym,warn);
-                  result:=true;
+                  Warn:=
+                    (Is_ObjCCategory(TDef(HSym.Owner.DefOwner)) or
+                     Is_ClassHelper(TDef(HSym.Owner.DefOwner))) and
+                    (Sym.Typ in [ParaVarSym,LocalVarSym,FieldVarSym]);
+                  DuplicateSym(HashedID,Sym,HSym,Warn);
+                  Result:=True;
                 end;
            end
          else
-           result:=inherited checkduplicate(hashedid,sym);
+           Result:=inherited CheckDuplicate(HashedID,Sym);
       end;
 
 
@@ -2013,16 +2013,16 @@ implementation
                           TAbstractSubSymtable
 ****************************************************************************}
 
-   procedure TAbstractSubSymTable.ppuwrite(ppufile:TCompilerPPUFile);
+   procedure TAbstractSubSymTable.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldtyp : byte;
+        OldTyp : Byte;
       begin
-         oldtyp:=ppufile.entrytyp;
-         ppufile.entrytyp:=SubEntryID;
+         OldTyp:=PPUFile.EntryTyp;
+         PPUFile.EntryTyp:=SubEntryID;
 
-         inherited ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
 
-         ppufile.entrytyp:=oldtyp;
+         PPUFile.EntryTyp:=OldTyp;
       end;
 
 
@@ -2030,29 +2030,29 @@ implementation
                           TAbstractLocalSymtable
 ****************************************************************************}
 
-    function TAbstractLocalSymTable.count_locals:LongInt;
+    function TAbstractLocalSymTable.Count_Locals:LongInt;
       var
-        i   : LongInt;
-        sym : TSym;
+        I   : LongInt;
+        Sym : TSym;
       begin
-        result:=0;
-        for i:=0 to SymList.Count-1 do
+        Result:=0;
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TSym(SymList[i]);
+            Sym:=TSym(SymList[I]);
             { Count only varsyms, but ignore the funcretsym }
-            if (TSym(sym).typ in [localvarsym,paravarsym]) and
-               (TSym(sym)<>CurrentProcInfo.procdef.funcretsym) and
-               (not(vo_is_parentfp in TAbstractVarSym(sym).varoptions) or
-                (TStoredSym(sym).refs>0)) then
-              inc(result);
+            if (TSym(Sym).Typ in [LocalVarSym,ParaVarSym]) and
+               (TSym(Sym)<>CurrentProcInfo.ProcDef.FuncRetSym) and
+               (not(vo_is_parentfp in TAbstractVarSym(Sym).VarOptions) or
+                (TStoredSym(Sym).Refs>0)) then
+              Inc(Result);
          end;
       end;
 
-    function TAbstractLocalSymTable.iscurrentunit: boolean;
+    function TAbstractLocalSymTable.IsCurrentUnit: Boolean;
       begin
         Result:=
-          Assigned(defowner) and
-          defowner.owner.iscurrentunit;
+          Assigned(DefOwner) and
+          DefOwner.Owner.IsCurrentUnit;
       end;
 
 
@@ -2060,73 +2060,73 @@ implementation
                               TLocalSymtable
 ****************************************************************************}
 
-    constructor TLocalSymTable.create(adefowner:TDef;level:byte);
+    constructor TLocalSymTable.Create(ADefOwner:TDef;Level:Byte);
       begin
-        inherited create('');
-        defowner:=adefowner;
-        symtabletype:=localsymtable;
-        symtablelevel:=level;
+        inherited Create('');
+        DefOwner:=ADefOwner;
+        SymTableType:=LocalSymTable;
+        SymTableLevel:=Level;
       end;
 
 
-    function TLocalSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TLocalSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       var
-        hsym : TSym;
+        HSym : TSym;
       begin
-        if not Assigned(defowner) or
-           (defowner.typ<>procdef) then
+        if not Assigned(DefOwner) or
+           (DefOwner.Typ<>ProcDef) then
           InternalError(200602042);
 
-        result:=false;
-        hsym:=TSym(FindWithHash(hashedid));
-        if Assigned(hsym) then
+        Result:=False;
+        HSym:=TSym(FindWithHash(HashedID));
+        if Assigned(HSym) then
           begin
             { a local and the function can have the same
               name in TP and Delphi, but RESULT not }
             if (m_duplicate_names in CurrentSettings.ModeSwitches) and
-               (hsym.typ in [absolutevarsym,localvarsym]) and
-               (vo_is_funcret in TAbstractVarSym(hsym).varoptions) and
+               (HSym.Typ in [AbsoluteVarSym,LocalVarSym]) and
+               (vo_is_funcret in TAbstractVarSym(HSym).VarOptions) and
                not((m_result in CurrentSettings.ModeSwitches) and
-                   (vo_is_result in TAbstractVarSym(hsym).varoptions)) then
-              HideSym(hsym)
+                   (vo_is_result in TAbstractVarSym(HSym).VarOptions)) then
+              HideSym(HSym)
             else
-              DuplicateSym(hashedid,sym,hsym,false);
-            result:=true;
-            exit;
+              DuplicateSym(HashedID,Sym,HSym,False);
+            Result:=True;
+            Exit;
           end;
 
         { check also parasymtable, this needs to be done here because
           of the special situation with the funcret sym that needs to be
           hidden for tp and delphi modes }
-        hsym:=TSym(TAbstractProcDef(defowner).parast.FindWithHash(hashedid));
-        if Assigned(hsym) then
+        HSym:=TSym(TAbstractProcDef(DefOwner).ParaST.FindWithHash(HashedID));
+        if Assigned(HSym) then
           begin
             { a local and the function can have the same
               name in TP and Delphi, but RESULT not }
             if (m_duplicate_names in CurrentSettings.ModeSwitches) and
-               (sym.typ in [absolutevarsym,localvarsym]) and
-               (vo_is_funcret in TAbstractVarSym(sym).varoptions) and
+               (Sym.Typ in [AbsoluteVarSym,LocalVarSym]) and
+               (vo_is_funcret in TAbstractVarSym(Sym).VarOptions) and
                not((m_result in CurrentSettings.ModeSwitches) and
-                   (vo_is_result in TAbstractVarSym(sym).varoptions)) then
-              Hidesym(sym)
+                   (vo_is_result in TAbstractVarSym(Sym).VarOptions)) then
+              HideSym(Sym)
             else
-              DuplicateSym(hashedid,sym,hsym,false);
-            result:=true;
-            exit;
+              DuplicateSym(HashedID,Sym,HSym,False);
+            Result:=True;
+            Exit;
           end;
 
         { check ObjectSymtable, skip this for funcret sym because
           that will always be positive because it has the same name
           as the procsym }
-        if not is_funcret_sym(sym) and
-           (defowner.typ=procdef) and
-           Assigned(TProcDef(defowner).struct) and
-           (TProcDef(defowner).owner.defowner=TProcDef(defowner).struct) and
+        if not is_funcret_sym(Sym) and
+           (DefOwner.Typ=ProcDef) and
+           Assigned(TProcDef(DefOwner).Struct) and
+           (TProcDef(DefOwner).Owner.DefOwner=TProcDef(DefOwner).Struct) and
            (
             not(m_duplicate_names in CurrentSettings.ModeSwitches) or
-            is_object(TProcDef(defowner).struct)
+            Is_Object(TProcDef(DefOwner).Struct)
            ) then
-          result:=TProcDef(defowner).struct.SymTable.checkduplicate(hashedid,sym);
+          Result:=TProcDef(DefOwner).Struct.SymTable.CheckDuplicate(HashedID,Sym);
       end;
 
 
@@ -2134,30 +2134,30 @@ implementation
                               TParaSymtable
 ****************************************************************************}
 
-    constructor TParaSymTable.create(adefowner:TDef;level:byte);
+    constructor TParaSymTable.Create(ADefOwner:TDef;Level:Byte);
       begin
-        inherited create('');
-        defowner:=adefowner;
-        symtabletype:=parasymtable;
-        symtablelevel:=level;
+        inherited Create('');
+        DefOwner:=ADefOwner;
+        SymTableType:=ParaSymTable;
+        SymTableLevel:=Level;
       end;
 
 
-    function TParaSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TParaSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       begin
-        result:=inherited checkduplicate(hashedid,sym);
-        if result then
-          exit;
+        Result:=inherited CheckDuplicate(HashedID,Sym);
+        if Result then
+          Exit;
         if not(m_duplicate_names in CurrentSettings.ModeSwitches) and
-           Assigned(defowner) and (defowner.typ=procdef) and
-           Assigned(TProcDef(defowner).struct) and
-           Assigned(TProcDef(defowner).owner) and
-           (TProcDef(defowner).owner.defowner=TProcDef(defowner).struct) and
+           Assigned(DefOwner) and (DefOwner.Typ=ProcDef) and
+           Assigned(TProcDef(DefOwner).Struct) and
+           Assigned(TProcDef(DefOwner).Owner) and
+           (TProcDef(DefOwner).Owner.DefOwner=TProcDef(DefOwner).Struct) and
            (
             not(m_delphi in CurrentSettings.ModeSwitches) or
-            is_object(TProcDef(defowner).struct)
+            Is_Object(TProcDef(DefOwner).Struct)
            ) then
-          result:=TProcDef(defowner).struct.SymTable.checkduplicate(hashedid,sym);
+          Result:=TProcDef(DefOwner).Struct.SymTable.CheckDuplicate(HashedID,Sym);
       end;
 
 
@@ -2165,34 +2165,34 @@ implementation
                          TAbstractUniTSymtable
 ****************************************************************************}
 
-    constructor TAbstractUnitSymTable.create(const n : string;id:word);
+    constructor TAbstractUnitSymTable.Create(const N : string;ID:Word);
       begin
-        inherited create(n);
-        ModuleID:=id;
+        inherited Create(N);
+        ModuleID:=ID;
       end;
 
 
-    function TAbstractUnitSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TAbstractUnitSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       var
-        hsym : TSym;
+        HSym : TSym;
       begin
-        result:=false;
-        hsym:=TSym(FindWithHash(hashedid));
-        if Assigned(hsym) then
+        Result:=False;
+        HSym:=TSym(FindWithHash(HashedID));
+        if Assigned(HSym) then
           begin
-            if (sym is TStoredSym) and handle_generic_dummysym(hsym,TStoredSym(sym).symoptions) then
-              exit;
-            if hsym.typ=symconst.namespacesym then
+            if (Sym is TStoredSym) and Handle_Generic_DummySym(HSym,TStoredSym(Sym).SymOptions) then
+              Exit;
+            if HSym.Typ=SymConst.NamespaceSym then
               begin
-                case sym.typ of
-                  symconst.namespacesym:;
-                  symconst.unitsym:
+                case Sym.Typ of
+                  SymConst.NamespaceSym:;
+                  SymConst.UnitSym:
                     begin
-                      HideSym(sym); { if we add a unit and there is a namespace with the same name then hide the unit name and not the namespace }
-                      TNamespaceSym(hsym).unitsym:=TSym(sym);
+                      HideSym(Sym); { if we add a unit and there is a namespace with the same name then hide the unit name and not the namespace }
+                      TNamespaceSym(HSym).UnitSym:=TSym(Sym);
                     end
                 else
-                  HideSym(hsym);
+                  HideSym(HSym);
                 end;
               end
             else
@@ -2200,158 +2200,158 @@ implementation
               unit, the unit can then not be accessed anymore using
               <unit>.<id>, so we can hide the symbol.
               Do the same if we add a namespace and there is a unit with the same name }
-            if (hsym.typ=symconst.unitsym) and
-               ((m_delphi in CurrentSettings.ModeSwitches) or (sym.typ=symconst.namespacesym)) then
+            if (HSym.Typ=SymConst.UnitSym) and
+               ((m_delphi in CurrentSettings.ModeSwitches) or (Sym.Typ=SymConst.NamespaceSym)) then
               begin
-                HideSym(hsym);
-                if sym.typ=symconst.namespacesym then
-                  TNamespaceSym(sym).unitsym:=TSym(hsym);
+                HideSym(HSym);
+                if Sym.Typ=SymConst.NamespaceSym then
+                  TNamespaceSym(Sym).UnitSym:=TSym(HSym);
               end
             { iso mode program parameters: staticvarsyms might have the same name as a program parameters,
               in this case, copy the isoindex and make the original symbol invisible }
-            else if (m_isolike_program_para in CurrentSettings.ModeSwitches) and (hsym.typ=programparasym) and (sym.typ=staticvarsym)
-              and (TProgramParaSym(hsym).isoindex<>0) then
+            else if (m_isolike_program_para in CurrentSettings.ModeSwitches) and (HSym.Typ=ProgramParaSym) and (Sym.Typ=StaticVarSym)
+              and (TProgramParaSym(HSym).IsoIndex<>0) then
               begin
-                HideSym(hsym);
-                TStaticVarSym(sym).isoindex:=TProgramParaSym(hsym).isoindex;
+                HideSym(HSym);
+                TStaticVarSym(Sym).IsoIndex:=TProgramParaSym(HSym).IsoIndex;
               end
-            else if (m_iso in CurrentSettings.ModeSwitches) and (hsym.typ=unitsym) then
-              HideSym(hsym)
+            else if (m_iso in CurrentSettings.ModeSwitches) and (HSym.Typ=UnitSym) then
+              HideSym(HSym)
             else
-              DuplicateSym(hashedid,sym,hsym,false);
-            result:=true;
-            exit;
+              DuplicateSym(HashedID,Sym,HSym,False);
+            Result:=True;
+            Exit;
           end;
       end;
 
-    function TAbstractUnitSymTable.findnamespace(const n:string):TSymEntry;
+    function TAbstractUnitSymTable.FindNamespace(const N:string):TSymEntry;
       begin
-        result:=find(n);
-        if Assigned(result)and(result.typ<>namespacesym)then
-          result:=nil;
+        Result:=Find(N);
+        if Assigned(Result)and(Result.Typ<>NamespaceSym)then
+          Result:=nil;
       end;
 
-    function TAbstractUnitSymTable.iscurrentunit:boolean;
+    function TAbstractUnitSymTable.IsCurrentUnit:Boolean;
       begin
-        result:=Assigned(CurrentModule) and
+        Result:=Assigned(CurrentModule) and
                 (
-                 (CurrentModule.GlobalSymTable=self) or
-                 (CurrentModule.localsymtable=self)
+                 (CurrentModule.GlobalSymTable=Self) or
+                 (CurrentModule.LocalSymTable=Self)
                 );
       end;
 
 
-    function TAbstractUnitSymTable.needs_init_final: boolean;
+    function TAbstractUnitSymTable.Needs_Init_Final: Boolean;
       begin
-        if not init_final_check_done then
+        if not FInitFinalCheckDone then
           begin
-            result:=inherited needs_init_final;
-            if not result then
+            Result:=inherited Needs_Init_Final;
+            if not Result then
               begin
-                result:=has_class_condestructors;
-                if result then
-                  include(tableoptions,sto_needs_init_final);
+                Result:=Has_Class_ConDestructors;
+                if Result then
+                  Include(TableOptions,sto_needs_init_final);
               end;
           end;
-        result:=sto_needs_init_final in tableoptions;
+        Result:=sto_needs_init_final in TableOptions;
       end;
 
 
-    procedure TAbstractUnitSymTable.insertunit(sym:TSymEntry);
+    procedure TAbstractUnitSymTable.InsertUnit(Sym:TSymEntry);
       var
-        p:integer;
-        n,ns:string;
-        oldsym:TSymEntry;
+        P:Integer;
+        N,NS:string;
+        OldSym:TSymEntry;
       begin
-        insertsym(sym);
-        n:=sym.realname;
-        p:=pos('.',n);
-        ns:='';
-        while p>0 do
+        InsertSym(Sym);
+        N:=Sym.RealName;
+        P:=Pos('.',N);
+        NS:='';
+        while P>0 do
           begin
-            if ns='' then
-              ns:=copy(n,1,p-1)
+            if NS='' then
+              NS:=Copy(N,1,P-1)
             else
-              ns:=ns+'.'+copy(n,1,p-1);
-            system.delete(n,1,p);
-            oldsym:=findnamespace(upper(ns));
-            if not Assigned(oldsym) then
-              insertsym(CNamespaceSym.create(ns));
-            p:=pos('.',n);
+              NS:=NS+'.'+Copy(N,1,P-1);
+            System.Delete(N,1,P);
+            OldSym:=FindNamespace(Upper(NS));
+            if not Assigned(OldSym) then
+              InsertSym(CNamespaceSym.Create(NS));
+            P:=Pos('.',N);
           end;
       end;
 
 
-    procedure CheckForClassConDestructors(p:TObject;arg:pointer);
+    procedure CheckForClassConDestructors(P:TObject;Arg:Pointer);
       var
-        result: PBoolean absolute arg;
+        Result: PBoolean absolute Arg;
       begin
-        if result^ then
-          exit;
-        if (TDef(p).typ in [objectdef,recorddef]) and
-           not (df_generic in TDef(p).defoptions) then
+        if Result^ then
+          Exit;
+        if (TDef(P).Typ in [ObjectDef,RecordDef]) and
+           not (df_generic in TDef(P).DefOptions) then
           begin
             { first check the class... }
-            if ([oo_has_class_constructor,oo_has_class_destructor] * TAbstractRecordDef(p).objectoptions <> []) then
-              result^:=true;
+            if ([oo_has_class_constructor,oo_has_class_destructor] * TAbstractRecordDef(P).ObjectOptions <> []) then
+              Result^:=True;
             { ... and then also check all subclasses }
-            if not result^ then
-              TAbstractRecordDef(p).SymTable.deflist.foreachcall(@CheckForClassConDestructors,arg);
+            if not Result^ then
+              TAbstractRecordDef(P).SymTable.DefList.ForEachCall(@CheckForClassConDestructors,Arg);
           end;
       end;
 
 
-    function TAbstractUnitSymTable.has_class_condestructors: boolean;
+    function TAbstractUnitSymTable.Has_Class_ConDestructors: Boolean;
       begin
-        result:=false;
-        deflist.foreachcall(@CheckForClassConDestructors,@result);
+        Result:=False;
+        DefList.ForEachCall(@CheckForClassConDestructors,@Result);
       end;
 
 {****************************************************************************
                               TStaticSymtable
 ****************************************************************************}
 
-    constructor TStaticSymTable.create(const n : string;id:word);
+    constructor TStaticSymTable.Create(const N : string;ID:Word);
       begin
-        inherited create(n,id);
-        symtabletype:=staticsymtable;
-        symtablelevel:=main_program_level;
-        currentvisibility:=vis_private;
+        inherited Create(N,ID);
+        SymTableType:=StaticSymTable;
+        SymTableLevel:=main_program_level;
+        CurrentVisibility:=vis_private;
       end;
 
 
-    procedure TStaticSymTable.ppuload(ppufile:TCompilerPPUFile);
+    procedure TStaticSymTable.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-        inherited ppuload(ppufile);
+        inherited PPULoad(PPUFile);
 
         { now we can deref the syms and defs }
-        deref(false);
+        Deref(False);
       end;
 
 
-    procedure TStaticSymTable.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStaticSymTable.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
+        inherited PPUWrite(PPUFile);
       end;
 
 
-    function TStaticSymTable.checkduplicate(var hashedid:THashedIDString;sym:TSymEntry):boolean;
+    function TStaticSymTable.CheckDuplicate(var HashedID:THashedIDString;Sym:TSymEntry):Boolean;
       begin
-        result:=inherited checkduplicate(hashedid,sym);
+        Result:=inherited CheckDuplicate(HashedID,Sym);
 
-        if not result and
-           (CurrentModule.localsymtable=self) and
+        if not Result and
+           (CurrentModule.LocalSymTable=Self) and
            Assigned(CurrentModule.GlobalSymTable) then
-          result:=TGlobalSymTable(CurrentModule.GlobalSymTable).checkduplicate(hashedid,sym);
+          Result:=TGlobalSymTable(CurrentModule.GlobalSymTable).CheckDuplicate(HashedID,Sym);
       end;
 
-    function TStaticSymTable.findnamespace(const n:string):TSymEntry;
+    function TStaticSymTable.FindNamespace(const N:string):TSymEntry;
       begin
-        result:=inherited findnamespace(n);
-        if not Assigned(result) and
-           (CurrentModule.localsymtable=self) and
+        Result:=inherited FindNamespace(N);
+        if not Assigned(Result) and
+           (CurrentModule.LocalSymTable=Self) and
            Assigned(CurrentModule.GlobalSymTable) then
-          result:=TGlobalSymTable(CurrentModule.GlobalSymTable).findnamespace(n);
+          Result:=TGlobalSymTable(CurrentModule.GlobalSymTable).FindNamespace(N);
      end;
 
 
@@ -2359,27 +2359,27 @@ implementation
                               TGlobalSymtable
 ****************************************************************************}
 
-    constructor TGlobalSymTable.create(const n : string;id:word);
+    constructor TGlobalSymTable.Create(const N : string;ID:Word);
       begin
-         inherited create(n,id);
-         symtabletype:=GlobalSymTable;
-         symtablelevel:=main_program_level;
+         inherited Create(N,ID);
+         SymTableType:=GlobalSymTable;
+         SymTableLevel:=main_program_level;
       end;
 
 
-    procedure TGlobalSymTable.ppuload(ppufile:TCompilerPPUFile);
+    procedure TGlobalSymTable.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(ppufile);
+         inherited PPULoad(PPUFile);
 
          { now we can deref the syms and defs }
-         deref(false);
+         Deref(False);
       end;
 
 
-    procedure TGlobalSymTable.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TGlobalSymTable.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
         { write the symtable entries }
-        inherited ppuwrite(ppufile);
+        inherited PPUWrite(PPUFile);
       end;
 
 
@@ -2387,19 +2387,19 @@ implementation
                              tspecializesymtable
 *****************************************************************************}
 
-    constructor TSpecializeSymTable.create(const n : string;id:word);
+    constructor TSpecializeSymTable.Create(const N : string;ID:Word);
       begin
-        inherited create(n,id);
+        inherited Create(N,ID);
         { the specialize symtable does not own the syms and defs as they are all
           moved to a different symtable before the symtable is destroyed; this
           avoids calls to "extract" }
-        symlist.ownsobjects:=false;
-        deflist.ownsobjects:=false;
+        SymList.OwnsObjects:=False;
+        DefList.OwnsObjects:=False;
       end;
 
-    function TSpecializeSymTable.iscurrentunit: boolean;
+    function TSpecializeSymTable.IsCurrentUnit: Boolean;
       begin
-        Result:=true;
+        Result:=True;
       end;
 
 
@@ -2407,38 +2407,38 @@ implementation
                               TWITHSYMTABLE
 ****************************************************************************}
 
-    constructor TWithSymTable.create(aowner:TDef;ASymList:TFPHashObjectList;refnode:tobject{tnode});
+    constructor TWithSymTable.Create(AOwner:TDef;ASymList:TFPHashObjectList;RefNode:TObject{tnode});
       begin
-         inherited create('');
-         symtabletype:=withsymtable;
-         withrefnode:=refnode;
+         inherited Create('');
+         SymTableType:=WithSymTable;
+         WithRefNode:=RefNode;
          { Replace SymList with the passed symlist }
-         SymList.free;
+         SymList.Free;
          SymList:=ASymList;
-         defowner:=aowner;
+         DefOwner:=AOwner;
       end;
 
 
     destructor TWithSymTable.Destroy;
       begin
-        if refcount>1 then
-          exit;
-        withrefnode.free;
-        withrefnode := nil;
+        if RefCount>1 then
+          Exit;
+        WithRefNode.Free;
+        WithRefNode := nil;
         { Disable SymList because we don't Own it }
         SymList:=nil;
         inherited Destroy;
       end;
 
 
-    procedure TWithSymTable.clear;
+    procedure TWithSymTable.Clear;
       begin
          { remove no entry from a withsymtable as it is only a pointer to the
            recorddef  or objectdef symtable }
       end;
 
 
-    procedure TWithSymTable.insertdef(def:TDefEntry);
+    procedure TWithSymTable.InsertDef(Def:TDefEntry);
       begin
         { Definitions can't be registered in the withsymtable
           because the withsymtable is removed after the with block.
@@ -2451,10 +2451,10 @@ implementation
                           TSTT_ExceptionSymtable
 ****************************************************************************}
 
-    constructor TSTTExceptSymTable.create;
+    constructor TSTTExceptSymTable.Create;
       begin
-        inherited create('');
-        symtabletype:=exceptsymtable;
+        inherited Create('');
+        SymTableType:=ExceptSymTable;
       end;
 
 
@@ -2462,189 +2462,189 @@ implementation
                           TMacroSymtable
 ****************************************************************************}
 
-    constructor TMacroSymTable.create(exported: boolean);
+    constructor TMacroSymTable.Create(Exported: Boolean);
       begin
-        inherited create('');
-        if exported then
-          symtabletype:=exportedmacrosymtable
+        inherited Create('');
+        if Exported then
+          SymTableType:=ExportedMacroSymTable
         else
-          symtabletype:=localmacrosymtable;
-        symtablelevel:=main_program_level;
+          SymTableType:=LocalMacroSymTable;
+        SymTableLevel:=main_program_level;
       end;
 
 {****************************************************************************
                           TEnumSymtable
 ****************************************************************************}
 
-    procedure TEnumSymTable.insertsym(sym: TSymEntry; checkdup: boolean);
+    procedure TEnumSymTable.InsertSym(Sym: TSymEntry; CheckDup: Boolean);
       var
-        value: LongInt;
-        def: TEnumDef;
+        Value: LongInt;
+        Def: TEnumDef;
       begin
         // defowner = nil only when we are loading from ppu
-        if defowner<>nil then
+        if DefOwner<>nil then
           begin
             { First entry? Then we need to set the minval }
-            value:=TEnumSym(sym).value;
-            def:=TEnumDef(defowner);
-            if SymList.count=0 then
+            Value:=TEnumSym(Sym).Value;
+            Def:=TEnumDef(DefOwner);
+            if SymList.Count=0 then
               begin
-                if value>0 then
-                  def.has_jumps:=true;
-                def.setmin(value);
-                def.setmax(value);
+                if Value>0 then
+                  Def.HasJumps:=True;
+                Def.SetMin(Value);
+                Def.SetMax(Value);
               end
             else
               begin
                 { check for jumps }
-                if value>def.max+1 then
-                  def.has_jumps:=true;
+                if Value>Def.Max+1 then
+                  Def.HasJumps:=True;
                 { update low and high }
-                if def.min>value then
-                  def.setmin(value);
-                if def.max<value then
-                  def.setmax(value);
+                if Def.Min>Value then
+                  Def.SetMin(Value);
+                if Def.Max<Value then
+                  Def.SetMax(Value);
               end;
           end;
-        inherited insertsym(sym, checkdup);
+        inherited InsertSym(Sym, CheckDup);
       end;
 
-    constructor TEnumSymTable.create(adefowner: TDef);
+    constructor TEnumSymTable.Create(ADefOwner: TDef);
       begin
         inherited Create('');
-        symtabletype:=enumsymtable;
-        defowner:=adefowner;
+        SymTableType:=EnumSymTable;
+        DefOwner:=ADefOwner;
       end;
 
 {****************************************************************************
                           TArraySymtable
 ****************************************************************************}
 
-    procedure TArraySymTable.insertdef(def: TDefEntry);
+    procedure TArraySymTable.InsertDef(Def: TDefEntry);
       begin
         { Enums must also be available outside the record scope,
           insert in the owner of this symtable }
-        if def.typ=enumdef then
-          defowner.owner.insertdef(def)
+        if Def.Typ=EnumDef then
+          DefOwner.Owner.InsertDef(Def)
         else
-          inherited insertdef(def);
+          inherited InsertDef(Def);
       end;
 
-    constructor TArraySymTable.create(adefowner: TDef);
+    constructor TArraySymTable.Create(ADefOwner: TDef);
       begin
         inherited Create('');
-        symtabletype:=arraysymtable;
-        defowner:=adefowner;
+        SymTableType:=ArraySymTable;
+        DefOwner:=ADefOwner;
       end;
 
 {*****************************************************************************
                              Helper Routines
 *****************************************************************************}
 
-    function FullTypeName(def,otherdef:TDef):string;
+    function FullTypeName(Def,OtherDef:TDef):string;
       var
-        s1,s2 : string;
+        S1,S2 : string;
       begin
-        if def.typ in [objectdef,recorddef] then
-          s1:=TAbstractRecordDef(def).RttiName
+        if Def.Typ in [ObjectDef,RecordDef] then
+          S1:=TAbstractRecordDef(Def).RTTIName
         else
-          s1:=def.typename;
+          S1:=Def.TypeName;
         { When the names are the same try to include the unit name }
-        if Assigned(otherdef) and
-           (def.owner.symtabletype in [GlobalSymTable,staticsymtable]) then
+        if Assigned(OtherDef) and
+           (Def.Owner.SymTableType in [GlobalSymTable,StaticSymTable]) then
           begin
-            s2:=otherdef.typename;
-            if upper(s1)=upper(s2) then
-              s1:=def.owner.realname^+'.'+s1;
+            S2:=OtherDef.TypeName;
+            if Upper(S1)=Upper(S2) then
+              S1:=Def.Owner.RealName^+'.'+S1;
           end;
-        FullTypeName:=s1;
+        FullTypeName:=S1;
       end;
 
-    function generate_nested_name(SymTable:TSymTable;const delimiter:string):string;
+    function Generate_Nested_Name(SymTable:TSymTable;const Delimiter:string):string;
       begin
-        result:='';
-        while Assigned(SymTable) and (SymTable.symtabletype in [ObjectSymtable,recordsymtable]) do
+        Result:='';
+        while Assigned(SymTable) and (SymTable.SymTableType in [ObjectSymTable,RecordSymTable]) do
           begin
-            if (result='') then
-              if SymTable.name<>nil then
-                result:=SymTable.name^
+            if (Result='') then
+              if SymTable.Name<>nil then
+                Result:=SymTable.Name^
               else
             else
-              if SymTable.name<>nil then
-                result:=SymTable.name^+delimiter+result
+              if SymTable.Name<>nil then
+                Result:=SymTable.Name^+Delimiter+Result
               else
-                result:=delimiter+result;
-            SymTable:=SymTable.defowner.owner;
+                Result:=Delimiter+Result;
+            SymTable:=SymTable.DefOwner.Owner;
           end;
       end;
 
 
-    function generate_objectpascal_helper_key(def:TDef):TSymStr;
+    function Generate_ObjectPascal_Helper_Key(Def:TDef):TSymStr;
       begin
-        if not Assigned(def) then
+        if not Assigned(Def) then
           InternalError(2013020501);
-        if def.typ in [recorddef,objectdef] then
-          result:=make_mangledname('',TAbstractRecordDef(def).SymTable,'')
+        if Def.Typ in [RecordDef,ObjectDef] then
+          Result:=Make_MangledName('',TAbstractRecordDef(Def).SymTable,'')
         else
-          result:=make_mangledname('',def.owner,def.typesym.name);
+          Result:=Make_MangledName('',Def.Owner,Def.TypeSym.Name);
       end;
 
 
-    procedure incompatibletypes(def1,def2:TDef);
+    procedure IncompatibleTypes(Def1,Def2:TDef);
       begin
         { When there is an errordef there is already an error message show }
-        if (def2.typ=errordef) or
-           (def1.typ=errordef) then
-          exit;
-        CGMessage2(type_e_incompatible_types,FullTypeName(def1,def2),FullTypeName(def2,def1));
+        if (Def2.Typ=ErrorDef) or
+           (Def1.Typ=ErrorDef) then
+          Exit;
+        CGMessage2(type_e_incompatible_types,FullTypeName(Def1,Def2),FullTypeName(Def2,Def1));
       end;
 
 
-    procedure hidesym(sym:TSymEntry);
+    procedure HideSym(Sym:TSymEntry);
       begin
-        sym.realname:='$hidden'+sym.realname;
-        TSym(sym).visibility:=vis_hidden;
+        Sym.RealName:='$hidden'+Sym.RealName;
+        TSym(Sym).Visibility:=vis_hidden;
       end;
 
 
-    procedure duplicatesym(var hashedid: THashedIDString; dupsym, origsym: TSymEntry; warn: boolean);
+    procedure DuplicateSym(var HashedID: THashedIDString; DupSym, OrigSym: TSymEntry; Warn: Boolean);
       var
-        st : TSymTable;
+        ST : TSymTable;
         FileName : TIDString;
       begin
-        if not warn then
-          Message1(sym_e_duplicate_id,TSym(origsym).realname)
+        if not Warn then
+          Message1(sym_e_duplicate_id,TSym(OrigSym).RealName)
         else
-         Message1(sym_w_duplicate_id,TSym(origsym).realname);
+         Message1(sym_w_duplicate_id,TSym(OrigSym).RealName);
         { Write hint where the original symbol was found }
-        st:=finduniTSymtable(origsym.owner);
-        with TSym(origsym).fileinfo do
+        ST:=FindUnitSymTable(OrigSym.Owner);
+        with TSym(OrigSym).FileInfo do
           begin
-            if Assigned(st) and
-               (st.symtabletype=GlobalSymTable) and
-               st.iscurrentunit then
-              Message2(sym_h_duplicate_id_where,CurrentModule.SourceFiles.Get_File_Name(fileindex),ToStr(line))
-            else if Assigned(st.name) then
+            if Assigned(ST) and
+               (ST.SymTableType=GlobalSymTable) and
+               ST.IsCurrentUnit then
+              Message2(sym_h_duplicate_id_where,CurrentModule.SourceFiles.Get_File_Name(FileIndex),ToStr(Line))
+            else if Assigned(ST.Name) then
               begin
-                FileName:=find_module_from_symtable(st).SourceFiles.Get_File_Name(fileindex);
+                FileName:=Find_Module_From_SymTable(ST).SourceFiles.Get_File_Name(FileIndex);
                 if FileName<>'' then
-                  Message2(sym_h_duplicate_id_where,'unit '+st.name^+': '+FileName,ToStr(line))
+                  Message2(sym_h_duplicate_id_where,'unit '+ST.Name^+': '+FileName,ToStr(Line))
                 else
-                  Message2(sym_h_duplicate_id_where,'unit '+st.name^,ToStr(line))
+                  Message2(sym_h_duplicate_id_where,'unit '+ST.Name^,ToStr(Line))
               end;
           end;
         { Rename duplicate sym to an unreachable name, but it can be
           inserted in the symtable without errors }
-        inc(dupnr);
-        hashedid.id:='dup'+ToStr(dupnr)+hashedid.id;
-        if Assigned(dupsym) then
-          include(TSym(dupsym).symoptions,sp_implicitrename);
+        Inc(DupNr);
+        HashedID.ID:='dup'+ToStr(DupNr)+HashedID.ID;
+        if Assigned(DupSym) then
+          Include(TSym(DupSym).SymOptions,sp_implicitrename);
       end;
 
-    function handle_generic_dummysym(sym:TSymEntry;var symoptions:TSymOptions):boolean;
+    function Handle_Generic_DummySym(Sym:TSymEntry;var SymOptions:TSymOptions):Boolean;
       begin
-        result:=false;
-        if not Assigned(sym) or not (sym is TStoredSym) then
+        Result:=False;
+        if not Assigned(Sym) or not (Sym is TStoredSym) then
           InternalError(2011081101);
         { For generics a dummy symbol without the parameter count is created
           if such a symbol not yet exists so that different parts of the
@@ -2652,34 +2652,34 @@ implementation
           undefineddef we replace the generic dummy symbol's
           name with a "dup" name and use the new symbol as the generic dummy
           symbol }
-        if (sp_generic_dummy in TStoredSym(sym).symoptions) and
-            (sym.typ=typesym) and (TTypeSym(sym).typedef.typ=undefineddef) and
+        if (sp_generic_dummy in TStoredSym(Sym).SymOptions) and
+            (Sym.Typ=TypeSym) and (TTypeSym(Sym).TypeDef.Typ=UndefinedDef) and
             (m_delphi in CurrentSettings.ModeSwitches) then
           begin
-            inc(dupnr);
-            sym.Owner.SymList.Rename(upper(sym.realname),'dup_'+ToStr(dupnr)+sym.realname);
-            include(TSym(sym).symoptions,sp_implicitrename);
+            Inc(DupNr);
+            Sym.Owner.SymList.Rename(Upper(Sym.RealName),'dup_'+ToStr(DupNr)+Sym.RealName);
+            Include(TSym(Sym).SymOptions,sp_implicitrename);
             { we need to find the new symbol now if checking for a dummy }
-            include(symoptions,sp_generic_dummy);
-            result:=true;
+            Include(SymOptions,sp_generic_dummy);
+            Result:=True;
           end;
       end;
 
-    procedure check_systemunit_loaded; inline;
+    procedure CheckSystemUnitLoaded; inline;
     begin
-      if systemunit=nil then
+      if SystemUnit=nil then
        Message(sym_f_systemunitnotloaded);
     end;
 
-    procedure write_system_parameter_lists(const name:string);
+    procedure Write_System_Parameter_Lists(const Name:string);
       var
-        srsym:TProcSym;
+        SRSym:TProcSym;
       begin
-        check_systemunit_loaded;
-        srsym:=TProcSym(systemunit.find(name));
-        if not Assigned(srsym) or not (srsym.typ=procsym) then
+        CheckSystemUnitLoaded;
+        SRSym:=TProcSym(SystemUnit.Find(Name));
+        if not Assigned(SRSym) or not (SRSym.Typ=ProcSym) then
           InternalError(2016060302);
-        srsym.write_parameter_lists(nil);
+        SRSym.Write_Parameter_Lists(nil);
       end;
 
 
@@ -2687,154 +2687,154 @@ implementation
                                   Search
 *****************************************************************************}
 
-     procedure addsymref(sym:TSym;def:TDef);
+     procedure AddSymRef(Sym:TSym;Def:TDef);
        var
-         owner,procowner : TSymTable;
+         Owner,ProcOwner : TSymTable;
        begin
          { for symbols used in preprocessor expressions, we don't want to
            increase references count (for smaller final binaries) }
          if not Assigned(CurrentScanner) then
            InternalError(2017050601);
          if CurrentScanner.in_preproc_comp_expr then
-           exit;
+           Exit;
          { symbol uses count }
-         sym.IncRefCount;
-         owner:=sym.owner;
-         while owner.symtabletype in [objectsymtable,recordsymtable,enumsymtable] do
-           owner:=TDef(owner.defowner).owner;
+         Sym.IncRefCount;
+         Owner:=Sym.Owner;
+         while Owner.SymTableType in [ObjectSymTable,RecordSymTable,EnumSymTable] do
+           Owner:=TDef(Owner.DefOwner).Owner;
          if Assigned(CurrentModule) and
-            (owner.symtabletype=GlobalSymTable) then
+            (Owner.SymTableType=GlobalSymTable) then
              begin
-               if TGlobalSymTable(owner).ModuleID>=CurrentModule.unitmapsize then
+               if TGlobalSymTable(Owner).ModuleID>=CurrentModule.UnitMapSize then
                  InternalError(200501152);
                { unit uses count }
-               inc(CurrentModule.unitmap[TGlobalSymTable(owner).ModuleID].refs);
+               Inc(CurrentModule.UnitMap[TGlobalSymTable(Owner).ModuleID].Refs);
                { Note: don't check the symtable directly as owner might be
                        a specialize symtable which is a globalsymtable as well }
                if (
                      Assigned(CurrentModule.GlobalSymTable) and
-                     (CurrentModule.GlobalSymTable.ModuleID<>owner.ModuleID)
+                     (CurrentModule.GlobalSymTable.ModuleID<>Owner.ModuleID)
                   ) or (
-                     Assigned(CurrentModule.localsymtable) and
-                     (CurrentModule.localsymtable.ModuleID<>owner.ModuleID)
+                     Assigned(CurrentModule.LocalSymTable) and
+                     (CurrentModule.LocalSymTable.ModuleID<>Owner.ModuleID)
                   ) then
                  { symbol is imported from another unit }
-                 CurrentModule.addimportedsym(sym);
+                 CurrentModule.AddImportedSym(Sym);
              end;
          { static symbols that are used in public functions must be exported
            for packages as well }
          { A private overload can share its procsym with public overloads.
            Use the selected definition's implementation owner in that case. }
-         if (sym.typ=procsym) and Assigned(def) and
-            (def.typ=procdef) and (def.owner.symtabletype=staticsymtable) then
-           owner:=def.owner;
-         if ([tf_supports_packages,tf_supports_hidden_symbols]<=TargetInfo.flags) and
-             (owner.symtabletype=staticsymtable) and
+         if (Sym.Typ=ProcSym) and Assigned(Def) and
+            (Def.Typ=ProcDef) and (Def.Owner.SymTableType=StaticSymTable) then
+           Owner:=Def.Owner;
+         if ([tf_supports_packages,tf_supports_hidden_symbols]<=TargetInfo.Flags) and
+             (Owner.SymTableType=StaticSymTable) and
              Assigned(CurrentProcInfo) and
              (
                (
-                 (sym.typ=staticvarsym) and
-                 ([vo_is_public,vo_has_global_ref]*TStaticVarSym(sym).varoptions=[])
+                 (Sym.Typ=StaticVarSym) and
+                 ([vo_is_public,vo_has_global_ref]*TStaticVarSym(Sym).VarOptions=[])
                ) or (
-                 (sym.typ=localvarsym) and
-                 Assigned(TLocalVarSym(sym).defaultconstsym) and
-                 ([vo_is_public,vo_has_global_ref]*TStaticVarSym(TLocalVarSym(sym).defaultconstsym).varoptions=[])
+                 (Sym.Typ=LocalVarSym) and
+                 Assigned(TLocalVarSym(Sym).DefaultConstSym) and
+                 ([vo_is_public,vo_has_global_ref]*TStaticVarSym(TLocalVarSym(Sym).DefaultConstSym).VarOptions=[])
                ) or (
-                 (sym.typ=procsym) and
-                 Assigned(def) and
-                 (def.typ=procdef) and
-                 not (df_has_global_ref in def.defoptions) and
-                 not (po_public in TProcDef(def).procoptions)
+                 (Sym.Typ=ProcSym) and
+                 Assigned(Def) and
+                 (Def.Typ=ProcDef) and
+                 not (df_has_global_ref in Def.DefOptions) and
+                 not (po_public in TProcDef(Def).ProcOptions)
                )
              ) then
            begin
-             procowner:=CurrentProcInfo.procdef.owner;
-             while procowner.symtabletype in [objectsymtable,recordsymtable] do
-               procowner:=TDef(procowner.defowner).owner;
-             if procowner.symtabletype=GlobalSymTable then
+             ProcOwner:=CurrentProcInfo.ProcDef.Owner;
+             while ProcOwner.SymTableType in [ObjectSymTable,RecordSymTable] do
+               ProcOwner:=TDef(ProcOwner.DefOwner).Owner;
+             if ProcOwner.SymTableType=GlobalSymTable then
                begin
-                 if sym.typ=procsym then
-                   CurrentProcInfo.add_local_ref_def(def)
-                 else if sym.typ=staticvarsym then
-                   CurrentProcInfo.add_local_ref_sym(sym)
+                 if Sym.Typ=ProcSym then
+                   CurrentProcInfo.add_local_ref_def(Def)
+                 else if Sym.Typ=StaticVarSym then
+                   CurrentProcInfo.add_local_ref_sym(Sym)
                  else
-                   CurrentProcInfo.add_local_ref_sym(TLocalVarSym(sym).defaultconstsym);
+                   CurrentProcInfo.add_local_ref_sym(TLocalVarSym(Sym).DefaultConstSym);
                end;
            end;
        end;
 
-     procedure addsymref(sym:TSym);
+     procedure AddSymRef(Sym:TSym);
        begin
-         addsymref(sym,nil);
+         AddSymRef(Sym,nil);
        end;
 
-    function is_owned_by(nesteddef,ownerdef:TDef):boolean;
+    function Is_Owned_By(NestedDef,OwnerDef:TDef):Boolean;
       begin
-        result:=nesteddef=ownerdef;
-        if not result and
+        Result:=NestedDef=OwnerDef;
+        if not Result and
            { types declared locally in a record method are not defined in the
              record itself }
-           not(nesteddef.owner.symtabletype in [localsymtable,parasymtable]) and
-           Assigned(nesteddef.owner.defowner) then
-          result:=is_owned_by(TDef(nesteddef.owner.defowner),ownerdef);
+           not(NestedDef.Owner.SymTableType in [LocalSymTable,ParaSymTable]) and
+           Assigned(NestedDef.Owner.DefOwner) then
+          Result:=Is_Owned_By(TDef(NestedDef.Owner.DefOwner),OwnerDef);
       end;
 
-    function sym_is_owned_by(childsym:TSym;SymTable:TSymTable):boolean;
+    function Sym_Is_Owned_By(ChildSym:TSym;SymTable:TSymTable):Boolean;
       begin
-        result:=Assigned(childsym) and (childsym.owner=SymTable);
-        if not result and Assigned(childsym) and
-            (childsym.owner.symtabletype in [objectsymtable,recordsymtable]) then
-          result:=sym_is_owned_by(TAbstractRecordDef(childsym.owner.defowner).typesym,SymTable);
+        Result:=Assigned(ChildSym) and (ChildSym.Owner=SymTable);
+        if not Result and Assigned(ChildSym) and
+            (ChildSym.Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+          Result:=Sym_Is_Owned_By(TAbstractRecordDef(ChildSym.Owner.DefOwner).TypeSym,SymTable);
       end;
 
-    function defs_belong_to_same_generic(def1, def2: TDef): boolean;
+    function Defs_Belong_To_Same_Generic(Def1, Def2: TDef): Boolean;
     begin
-      result:=false;
-      if not Assigned(def1) or not Assigned(def2) then
-        exit;
+      Result:=False;
+      if not Assigned(Def1) or not Assigned(Def2) then
+        Exit;
       { for both defs walk to the topmost generic }
-      while Assigned(def1.owner.defowner) and (df_generic in TStoredDef(def1.owner.defowner).defoptions) do
-        def1:=TDef(def1.owner.defowner);
-      while Assigned(def2.owner.defowner) and (df_generic in TStoredDef(def2.owner.defowner).defoptions) do
-        def2:=TDef(def2.owner.defowner);
-      result:=def1=def2;
+      while Assigned(Def1.Owner.DefOwner) and (df_generic in TStoredDef(Def1.Owner.DefOwner).DefOptions) do
+        Def1:=TDef(Def1.Owner.DefOwner);
+      while Assigned(Def2.Owner.DefOwner) and (df_generic in TStoredDef(Def2.Owner.DefOwner).DefOptions) do
+        Def2:=TDef(Def2.Owner.DefOwner);
+      Result:=Def1=Def2;
     end;
 
-    function get_generic_in_hierarchy_by_name(srsym: TSym; def: TDef): TDef;
+    function Get_Generic_In_Hierarchy_By_Name(SRSym: TSym; Def: TDef): TDef;
       var
-        uname : string;
+        UName : string;
       begin
         { TODO : check regarding arrays and records declared as their type }
-        if not (def.typ in [recorddef,objectdef]) then
+        if not (Def.Typ in [RecordDef,ObjectDef]) then
           InternalError(2012051501);
-        uname:=upper(srsym.realname);
+        UName:=Upper(SRSym.RealName);
         repeat
-          if uname=copy(TAbstractRecordDef(def).objname^,1,pos('$',TAbstractRecordDef(def).objname^)-1) then
+          if UName=Copy(TAbstractRecordDef(Def).ObjName^,1,Pos('$',TAbstractRecordDef(Def).ObjName^)-1) then
             begin
-              result:=def;
-              exit;
+              Result:=Def;
+              Exit;
             end;
-          def:=TDef(def.owner.defowner);
-        until not Assigned(def) or not (def.typ in [recorddef,objectdef]);
-        result:=nil;
+          Def:=TDef(Def.Owner.DefOwner);
+        until not Assigned(Def) or not (Def.Typ in [RecordDef,ObjectDef]);
+        Result:=nil;
       end;
 
-    function return_specialization_of_generic(nesteddef,genericdef:TDef; out resultdef:TDef):boolean;
+    function Return_Specialization_Of_Generic(NestedDef,GenericDef:TDef; out ResultDef:TDef):Boolean;
       begin
         { TODO : check regarding arrays and records declared as their type }
-        if not (nesteddef.typ in [recorddef,objectdef]) then
+        if not (NestedDef.Typ in [RecordDef,ObjectDef]) then
           InternalError(2012051601);
         repeat
-          if TStoredDef(nesteddef).genericdef=genericdef then
+          if TStoredDef(NestedDef).GenericDef=GenericDef then
             begin
-              resultdef:=nesteddef;
-              result:=true;
-              exit;
+              ResultDef:=NestedDef;
+              Result:=True;
+              Exit;
             end;
-          nesteddef:=TDef(nesteddef.owner.defowner);
-        until not Assigned(nesteddef) or not (nesteddef.typ in [recorddef,objectdef]);
-        resultdef:=nil;
-        result:=false;
+          NestedDef:=TDef(NestedDef.Owner.DefOwner);
+        until not Assigned(NestedDef) or not (NestedDef.Typ in [RecordDef,ObjectDef]);
+        ResultDef:=nil;
+        Result:=False;
       end;
 
     { symst: symboltable that contains the symbol (-> symowner def: record/objectdef in which the symbol is defined)
@@ -2843,458 +2843,458 @@ implementation
         fieldname:=1 -> contextobjdef = current_structdef
         objfield.fieldname:=1 -> contextobjdef = def of objfield
     }
-    function is_visible_for_object(symst:TSymTable;symvisibility:TVisibility;contextobjdef:TAbstractRecordDef):boolean;
+    function Is_Visible_For_Object(SymST:TSymTable;SymVisibility:TVisibility;ContextObjDef:TAbstractRecordDef):Boolean;
       var
-        curstruct : TAbstractRecordDef;
+        CurStruct : TAbstractRecordDef;
 
-      function is_current_unit(st:TSymTable):boolean;
+      function IsCurrentUnitForContext(ST:TSymTable):Boolean;
         begin
-          result :=
+          Result :=
             (
               (
-                Assigned(curstruct) and
-                (st.ModuleID=curstruct.SymTable.ModuleID)
+                Assigned(CurStruct) and
+                (ST.ModuleID=CurStruct.SymTable.ModuleID)
               ) or
               (
-                not Assigned(curstruct) and
-                st.iscurrentunit
+                not Assigned(CurStruct) and
+                ST.IsCurrentUnit
               )
             );
         end;
 
       var
-        orgcontextobjdef,
-        orgsymownerdef,
-        symownerdef : TAbstractRecordDef;
-        nonlocalst : TSymTable;
-        isspezproc : boolean;
+        OrgContextObjDef,
+        OrgSymOwnerDef,
+        SymOwnerDef : TAbstractRecordDef;
+        NonLocalST : TSymTable;
+        IsSpezProc : Boolean;
 
-      function check_strict_private:boolean;
+      function CheckStrictPrivate:Boolean;
         begin
-          result:=Assigned(curstruct) and
-                  is_owned_by(curstruct,symownerdef);
+          Result:=Assigned(CurStruct) and
+                  Is_Owned_By(CurStruct,SymOwnerDef);
         end;
 
-      function check_strict_protected:boolean;
-        function is_childof(child, potentialparent: TDef):boolean;
+      function CheckStrictProtected:Boolean;
+        function IsChildOf(Child, PotentialParent: TDef):Boolean;
           begin
-            result:=true;
-            if def_is_related(child, potentialparent) then
-              exit;
-            if (child.typ=objectdef) and
-               (potentialparent.typ=objectdef) and
-               (TObjectDef(potentialparent).defoptions*[df_generic,df_specialization]=[df_generic]) then
+            Result:=True;
+            if def_is_related(Child, PotentialParent) then
+              Exit;
+            if (Child.Typ=ObjectDef) and
+               (PotentialParent.Typ=ObjectDef) and
+               (TObjectDef(PotentialParent).DefOptions*[df_generic,df_specialization]=[df_generic]) then
               begin
                  repeat
-                   if TObjectDef(child).genericdef<>nil then
+                   if TObjectDef(Child).GenericDef<>nil then
                      begin
-                       if TObjectDef(child).genericdef.typ<>objectdef then
-                         break;
-                       child:=TObjectDef(child).genericdef as TObjectDef
+                       if TObjectDef(Child).GenericDef.Typ<>ObjectDef then
+                         Break;
+                       Child:=TObjectDef(Child).GenericDef as TObjectDef
                      end
                    else
-                     child:=TObjectDef(child).childof;
-                   if (child<>nil) and equal_defs(child, potentialparent) then
-                     exit;
-                 until child=nil;
+                     Child:=TObjectDef(Child).ChildOf;
+                   if (Child<>nil) and equal_defs(Child, PotentialParent) then
+                     Exit;
+                 until Child=nil;
               end;
 
-            result:=false;
+            Result:=False;
           end;
 
-        function owner_hierarchy_related(nested,check:TAbstractRecordDef):boolean;
+        function OwnerHierarchyRelated(Nested,Check:TAbstractRecordDef):Boolean;
           var
-            owner:TAbstractRecordDef;
+            Owner:TAbstractRecordDef;
           begin
-            result:=true;
+            Result:=True;
             repeat
-              if is_childof(nested,check) then
-                exit;
-              if nested.owner.symtabletype in [recordsymtable,objectsymtable] then
-                nested:=TAbstractRecordDef(nested.owner.defowner)
+              if IsChildOf(Nested,Check) then
+                Exit;
+              if Nested.Owner.SymTableType in [RecordSymTable,ObjectSymTable] then
+                Nested:=TAbstractRecordDef(Nested.Owner.DefOwner)
               else
-                break;
-            until not Assigned(nested);
-            result:=false;
+                Break;
+            until not Assigned(Nested);
+            Result:=False;
           end;
 
         begin
-          result:=(
+          Result:=(
                     { access from nested class (specialization case) }
-                    Assigned(curstruct) and
-                    is_owned_by(curstruct,symownerdef)
+                    Assigned(CurStruct) and
+                    Is_Owned_By(CurStruct,SymOwnerDef)
                   ) or
                   (
                     { access from nested class (non-specialization case) }
-                    (orgsymownerdef<>symownerdef) and
-                    Assigned(curstruct) and
-                    is_owned_by(curstruct,orgsymownerdef)
+                    (OrgSymOwnerDef<>SymOwnerDef) and
+                    Assigned(CurStruct) and
+                    Is_Owned_By(CurStruct,OrgSymOwnerDef)
                   ) or
                   (
                     { access from child class (specialization case) }
-                    Assigned(contextobjdef) and
-                    Assigned(curstruct) and
-                    owner_hierarchy_related(contextobjdef,symownerdef) and
-                    is_childof(curstruct,contextobjdef)
+                    Assigned(ContextObjDef) and
+                    Assigned(CurStruct) and
+                    OwnerHierarchyRelated(ContextObjDef,SymOwnerDef) and
+                    IsChildOf(CurStruct,ContextObjDef)
                   ) or
                   (
                     { access from child class (non-specialization case) }
-                    Assigned(orgcontextobjdef) and
+                    Assigned(OrgContextObjDef) and
                     (
-                      (orgcontextobjdef<>contextobjdef) or
-                      (orgsymownerdef<>symownerdef)
+                      (OrgContextObjDef<>ContextObjDef) or
+                      (OrgSymOwnerDef<>SymOwnerDef)
                     ) and
-                    Assigned(curstruct) and
-                    owner_hierarchy_related(orgcontextobjdef,orgsymownerdef) and
-                    is_childof(curstruct,orgcontextobjdef)
+                    Assigned(CurStruct) and
+                    OwnerHierarchyRelated(OrgContextObjDef,OrgSymOwnerDef) and
+                    IsChildOf(CurStruct,OrgContextObjDef)
                   ) or
                   (
                     { helpers can access strict protected symbols }
-                    is_objectpascal_helper(contextobjdef) and
-                    is_childof(TObjectDef(contextobjdef).extendeddef,symownerdef)
+                    Is_ObjectPascal_Helper(ContextObjDef) and
+                    IsChildOf(TObjectDef(ContextObjDef).ExtendedDef,SymOwnerDef)
                   ) or
                   (
                     { same as above, but from context of call node inside
                       helper method }
-                    is_objectpascal_helper(curstruct) and
-                    is_childof(TObjectDef(curstruct).extendeddef,symownerdef)
+                    Is_ObjectPascal_Helper(CurStruct) and
+                    IsChildOf(TObjectDef(CurStruct).ExtendedDef,SymOwnerDef)
                   );
         end;
 
       begin
-        result:=false;
+        Result:=False;
 
         { Get objdectdef owner of the symtable for the is_related checks }
-        if not Assigned(symst) or
-           not (symst.symtabletype in [objectsymtable,recordsymtable]) then
+        if not Assigned(SymST) or
+           not (SymST.SymTableType in [ObjectSymTable,RecordSymTable]) then
           InternalError(200810285);
-        symownerdef:=TAbstractRecordDef(symst.defowner);
-        orgsymownerdef:=symownerdef;
-        orgcontextobjdef:=contextobjdef;
+        SymOwnerDef:=TAbstractRecordDef(SymST.DefOwner);
+        OrgSymOwnerDef:=SymOwnerDef;
+        OrgContextObjDef:=ContextObjDef;
         { for specializations we need to check the visibility of the generic,
           not the specialization (at least when comparing outside of the
           specialization }
-        if df_specialization in symownerdef.defoptions then
+        if df_specialization in SymOwnerDef.DefOptions then
           begin
-            if not Assigned(symownerdef.genericdef) then
+            if not Assigned(SymOwnerDef.GenericDef) then
               InternalError(2024041201);
-            if not (symownerdef.genericdef.typ in [objectdef,recorddef]) then
+            if not (SymOwnerDef.GenericDef.Typ in [ObjectDef,RecordDef]) then
               InternalError(2024020901);
-            orgsymownerdef:=symownerdef;
-            symownerdef:=TAbstractRecordDef(symownerdef.genericdef);
+            OrgSymOwnerDef:=SymOwnerDef;
+            SymOwnerDef:=TAbstractRecordDef(SymOwnerDef.GenericDef);
           end;
-        if Assigned(contextobjdef) and (df_specialization in contextobjdef.defoptions) then
+        if Assigned(ContextObjDef) and (df_specialization in ContextObjDef.DefOptions) then
           begin
-            if not Assigned(contextobjdef.genericdef) then
+            if not Assigned(ContextObjDef.GenericDef) then
               InternalError(2024041202);
-            if not (contextobjdef.genericdef.typ in [objectdef,recorddef]) then
+            if not (ContextObjDef.GenericDef.Typ in [ObjectDef,RecordDef]) then
               InternalError(2024020902);
-            orgcontextobjdef:=contextobjdef;
-            contextobjdef:=TAbstractRecordDef(contextobjdef.genericdef);
+            OrgContextObjDef:=ContextObjDef;
+            ContextObjDef:=TAbstractRecordDef(ContextObjDef.GenericDef);
           end;
-        if Assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.defoptions) then
+        if Assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.DefOptions) then
           begin
-            if not Assigned(CurrentStructDef.genericdef) then
+            if not Assigned(CurrentStructDef.GenericDef) then
               InternalError(2024041203);
-            if not (CurrentStructDef.genericdef.typ in [objectdef,recorddef]) then
+            if not (CurrentStructDef.GenericDef.Typ in [ObjectDef,RecordDef]) then
               InternalError(2024030903);
-            curstruct:=TAbstractRecordDef(CurrentStructDef.genericdef)
+            CurStruct:=TAbstractRecordDef(CurrentStructDef.GenericDef)
           end
         else
-          curstruct:=CurrentStructDef;
+          CurStruct:=CurrentStructDef;
         { specializations might belong to a localsymtable or parasymtable }
-        nonlocalst:=symownerdef.owner;
-        if TStoredDef(symownerdef).is_specialization then
-          while nonlocalst.symtabletype in [localsymtable,parasymtable] do
-            nonlocalst:=nonlocalst.defowner.owner;
-        isspezproc:=false;
+        NonLocalST:=SymOwnerDef.Owner;
+        if TStoredDef(SymOwnerDef).Is_Specialization then
+          while NonLocalST.SymTableType in [LocalSymTable,ParaSymTable] do
+            NonLocalST:=NonLocalST.DefOwner.Owner;
+        IsSpezProc:=False;
         if Assigned(CurrentProcInfo) then
           begin
-            if CurrentProcInfo.procdef.is_specialization and
-                Assigned(CurrentProcInfo.procdef.struct) then
-              isspezproc:=true;
+            if CurrentProcInfo.ProcDef.Is_Specialization and
+                Assigned(CurrentProcInfo.ProcDef.Struct) then
+              IsSpezProc:=True;
           end;
-        case symvisibility of
+        case SymVisibility of
           vis_private :
             begin
               { private symbols are allowed when we are in the same
                 module as they are defined }
-              result:=check_strict_private or
+              Result:=CheckStrictPrivate or
                       (
-                       (nonlocalst.symtabletype in [GlobalSymTable,staticsymtable]) and
-                       is_current_unit(nonlocalst)
+                       (NonLocalST.SymTableType in [GlobalSymTable,StaticSymTable]) and
+                       IsCurrentUnitForContext(NonLocalST)
                       ) or
                       ( // the case of specialize inside the generic declaration and nested types
-                       (nonlocalst.symtabletype in [objectsymtable,recordsymtable]) and
+                       (NonLocalST.SymTableType in [ObjectSymTable,RecordSymTable]) and
                        (
-                         Assigned(curstruct) and
+                         Assigned(CurStruct) and
                          (
-                           (curstruct=symownerdef) or
-                           (curstruct.owner.ModuleID=symownerdef.SymTable.ModuleID)
+                           (CurStruct=SymOwnerDef) or
+                           (CurStruct.Owner.ModuleID=SymOwnerDef.SymTable.ModuleID)
                          )
                        ) or
                        (
-                         not Assigned(curstruct) and
-                         (symownerdef.owner.iscurrentunit)
+                         not Assigned(CurStruct) and
+                         (SymOwnerDef.Owner.IsCurrentUnit)
                        ) or
                        { access from a generic method that belongs to the class
                          but that is specialized elsewhere }
                        (
-                         isspezproc and
-                         (CurrentProcInfo.procdef.struct=curstruct)
+                         IsSpezProc and
+                         (CurrentProcInfo.ProcDef.Struct=CurStruct)
                        ) or
                        { specializations may access private symbols that their
                          generics are allowed to access }
                        (
-                         Assigned(curstruct) and
-                         (df_specialization in curstruct.defoptions) and
-                         (symst.ModuleID=curstruct.genericdef.owner.ModuleID)
+                         Assigned(CurStruct) and
+                         (df_specialization in CurStruct.DefOptions) and
+                         (SymST.ModuleID=CurStruct.GenericDef.Owner.ModuleID)
                        )
                       );
             end;
           vis_strictprivate :
             begin
-              result:=check_strict_private;
+              Result:=CheckStrictPrivate;
             end;
           vis_strictprotected :
             begin
-              result:=check_strict_protected;
+              Result:=CheckStrictProtected;
             end;
           vis_protected :
             begin
               { protected symbols are visible in the module that defines them and
                 also visible to related objects. The related object must be defined
                 in the current module }
-              result:=check_strict_protected or
+              Result:=CheckStrictProtected or
                       (
                        (
-                        (nonlocalst.symtabletype in [GlobalSymTable,staticsymtable]) and
-                        is_current_unit(nonlocalst)
+                        (NonLocalST.SymTableType in [GlobalSymTable,StaticSymTable]) and
+                        IsCurrentUnitForContext(NonLocalST)
                        ) or
                        (
                         { context object is inside the current unit and related to
                           the symbol owner (specialization case) }
-                        Assigned(contextobjdef) and
-                        (contextobjdef.owner.symtabletype in [GlobalSymTable,staticsymtable,ObjectSymtable,recordsymtable,localsymtable]) and
-                        is_current_unit(contextobjdef.owner) and
-                        def_is_related(contextobjdef,symownerdef)
+                        Assigned(ContextObjDef) and
+                        (ContextObjDef.Owner.SymTableType in [GlobalSymTable,StaticSymTable,ObjectSymTable,RecordSymTable,LocalSymTable]) and
+                        IsCurrentUnitForContext(ContextObjDef.Owner) and
+                        def_is_related(ContextObjDef,SymOwnerDef)
                        ) or
                        (
                         { context object is inside the current unit and related to
                           the symbol owner (non-specialization case) }
-                        Assigned(orgcontextobjdef) and
+                        Assigned(OrgContextObjDef) and
                         (
-                          (orgcontextobjdef<>contextobjdef) or
-                          (orgsymownerdef<>symownerdef)
+                          (OrgContextObjDef<>ContextObjDef) or
+                          (OrgSymOwnerDef<>SymOwnerDef)
                         ) and
-                        (orgcontextobjdef.owner.symtabletype in [GlobalSymTable,staticsymtable,ObjectSymtable,recordsymtable,localsymtable]) and
-                        is_current_unit(orgcontextobjdef.owner) and
-                        def_is_related(orgcontextobjdef,orgsymownerdef)
+                        (OrgContextObjDef.Owner.SymTableType in [GlobalSymTable,StaticSymTable,ObjectSymTable,RecordSymTable,LocalSymTable]) and
+                        IsCurrentUnitForContext(OrgContextObjDef.Owner) and
+                        def_is_related(OrgContextObjDef,OrgSymOwnerDef)
                        ) or
                        ( // the case of specialize inside the generic declaration and nested types
-                        (nonlocalst.symtabletype in [objectsymtable,recordsymtable]) and
+                        (NonLocalST.SymTableType in [ObjectSymTable,RecordSymTable]) and
                         (
-                          Assigned(curstruct) and
+                          Assigned(CurStruct) and
                           (
-                            (curstruct=symownerdef) or
-                            (curstruct.owner.ModuleID=symownerdef.SymTable.ModuleID)
+                            (CurStruct=SymOwnerDef) or
+                            (CurStruct.Owner.ModuleID=SymOwnerDef.SymTable.ModuleID)
                           )
                         ) or
                         (
-                          not Assigned(curstruct) and
-                          (symownerdef.owner.iscurrentunit)
+                          not Assigned(CurStruct) and
+                          (SymOwnerDef.Owner.IsCurrentUnit)
                         )
                        ) or
                        { access from a generic method that belongs to the class
                          but that is specialized elsewhere }
                        (
-                         isspezproc and
-                         (CurrentProcInfo.procdef.struct=curstruct)
+                         IsSpezProc and
+                         (CurrentProcInfo.ProcDef.Struct=CurStruct)
                        ) or
                        { specializations may access private symbols that their
                          generics are allowed to access }
                        (
-                         Assigned(curstruct) and
-                         (df_specialization in curstruct.defoptions) and
-                         (symst.ModuleID=curstruct.genericdef.owner.ModuleID)
+                         Assigned(CurStruct) and
+                         (df_specialization in CurStruct.DefOptions) and
+                         (SymST.ModuleID=CurStruct.GenericDef.Owner.ModuleID)
                        )
                       );
             end;
           vis_public,
           vis_published :
-            result:=true;
+            Result:=True;
           else
             InternalError(2019050702);
         end;
 
-        if not result then
+        if not Result then
           begin
             { capturers have access to anything as we assume checks were done
               before the procdef was inserted into the capturer }
-            result:=Assigned(curstruct) and
-                    (curstruct.typ=objectdef) and
-                    (oo_is_capturer in TObjectDef(curstruct).objectoptions);
+            Result:=Assigned(CurStruct) and
+                    (CurStruct.Typ=ObjectDef) and
+                    (oo_is_capturer in TObjectDef(CurStruct).ObjectOptions);
           end;
       end;
 
 
-    function is_visible_for_object(pd:TProcDef;contextobjdef:TAbstractRecordDef):boolean;
+    function Is_Visible_For_Object(PD:TProcDef;ContextObjDef:TAbstractRecordDef):Boolean;
       begin
-        result:=is_visible_for_object(pd.owner,pd.visibility,contextobjdef);
+        Result:=Is_Visible_For_Object(PD.Owner,PD.Visibility,ContextObjDef);
       end;
 
 
-    function is_visible_for_object(sym:TSym;contextobjdef:TAbstractRecordDef):boolean;
+    function Is_Visible_For_Object(Sym:TSym;ContextObjDef:TAbstractRecordDef):Boolean;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        if sym.typ=procsym then
+        if Sym.Typ=ProcSym then
           begin
-            result:=false;
+            Result:=False;
             { A procsym is visible, when there is at least one of the procdefs visible }
-            for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
+            for I:=0 to TProcSym(Sym).ProcDefList.Count-1 do
               begin
-                pd:=TProcDef(TProcSym(sym).ProcdefList[i]);
-                if (pd.owner=sym.owner) and
-                   is_visible_for_object(pd,contextobjdef) then
+                PD:=TProcDef(TProcSym(Sym).ProcDefList[I]);
+                if (PD.Owner=Sym.Owner) and
+                   Is_Visible_For_Object(PD,ContextObjDef) then
                   begin
-                    result:=true;
-                    exit;
+                    Result:=True;
+                    Exit;
                   end;
               end;
             { check dummy sym visibility by following associated procsyms }
-            if TProcSym(sym).could_be_implicitly_specialized then
+            if TProcSym(Sym).Could_Be_Implicitly_Specialized then
               begin
-                for i:=0 to TProcSym(sym).genprocsymovlds.count-1 do
-                  if is_visible_for_object(TSym(TProcSym(sym).genprocsymovlds[i]),contextobjdef) then
+                for I:=0 to TProcSym(Sym).GenProcSymOvlds.Count-1 do
+                  if Is_Visible_For_Object(TSym(TProcSym(Sym).GenProcSymOvlds[I]),ContextObjDef) then
                     begin
-                      result:=true;
-                      exit;
+                      Result:=True;
+                      Exit;
                     end;
               end;
-            if (TProcSym(sym).procdeflist.count=0) and (sp_generic_dummy in TProcSym(sym).symoptions) then
-              result:=is_visible_for_object(sym.owner,sym.visibility,contextobjdef);
+            if (TProcSym(Sym).ProcDefList.Count=0) and (sp_generic_dummy in TProcSym(Sym).SymOptions) then
+              Result:=Is_Visible_For_Object(Sym.Owner,Sym.Visibility,ContextObjDef);
           end
         else
-          result:=is_visible_for_object(sym.owner,sym.visibility,contextobjdef);
+          Result:=Is_Visible_For_Object(Sym.Owner,Sym.Visibility,ContextObjDef);
       end;
 
 
-    function  searchsym(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function  SearchSym(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       begin
-        case s[1] of
+        case S[1] of
           internal_macro_escape_unit_namespace_name:
-            result:=searchsym_maybe_with_symoption(copy(s,2,length(s)-1),srsym,srsymtable,[ssf_unit_or_namespace_only],sp_none)
+            Result:=SearchSym_Maybe_With_SymOption(Copy(S,2,Length(S)-1),SRSym,SRSymTable,[ssf_unit_or_namespace_only],sp_none)
           else
-            result:=searchsym_maybe_with_symoption(s,srsym,srsymtable,[],sp_none);
+            Result:=SearchSym_Maybe_With_SymOption(S,SRSym,SRSymTable,[],sp_none);
         end
       end;
 
 
-    function  searchsym_with_flags(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
+    function  SearchSym_With_Flags(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
       begin
-        result:=searchsym_maybe_with_symoption(s,srsym,srsymtable,flags,sp_none);
+        Result:=SearchSym_Maybe_With_SymOption(S,SRSym,SRSymTable,Flags,sp_none);
       end;
 
 
-    function  searchsym_maybe_with_symoption(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags;option:TSymOption):boolean;
+    function  SearchSym_Maybe_With_SymOption(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags;Option:TSymOption):Boolean;
       var
-        hashedid: THashedIDString;
-        contextstructdef: TAbstractRecordDef;
-        stackitem: PSymTableStackItem;
+        HashedID: THashedIDString;
+        ContextStructDef: TAbstractRecordDef;
+        StackItem: PSymTableStackItem;
       begin
-        result:=false;
-        hashedid.id:=s;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        Result:=False;
+        HashedID.ID:=S;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            srsymtable:=stackitem^.SymTable;
-            if not(ssf_unit_or_namespace_only in flags) and
-               (srsymtable.symtabletype=objectsymtable) then
+            SRSymTable:=StackItem^.SymTable;
+            if not(ssf_unit_or_namespace_only in Flags) and
+               (SRSymTable.SymTableType=ObjectSymTable) then
               begin
                 { TODO : implement the search for an option in classes as well }
-                if ssf_search_option in flags then
+                if ssf_search_option in Flags then
                   begin
-                    result:=false;
-                    exit;
+                    Result:=False;
+                    Exit;
                   end;
-                if searchsym_in_class(TObjectDef(srsymtable.defowner),TObjectDef(srsymtable.defowner),s,srsym,srsymtable,flags+[ssf_search_helper]) then
+                if SearchSym_In_Class(TObjectDef(SRSymTable.DefOwner),TObjectDef(SRSymTable.DefOwner),S,SRSym,SRSymTable,Flags+[ssf_search_helper]) then
                   begin
-                    result:=true;
-                    exit;
+                    Result:=True;
+                    Exit;
                   end;
               end
-            else if not((srsymtable.symtabletype=withsymtable) and Assigned(srsymtable.defowner) and
-              (srsymtable.defowner.typ=undefineddef)) then
+            else if not((SRSymTable.SymTableType=WithSymTable) and Assigned(SRSymTable.DefOwner) and
+              (SRSymTable.DefOwner.Typ=UndefinedDef)) then
               begin
-                srsym:=TSym(srsymtable.FindWithHash(hashedid));
+                SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
                 { First check if it is a unit/namespace symbol.
                   They are visible only if they are from the current unit or
                   unit of generic of currently processed specialization. }
-                if Assigned(srsym) and
-                   (not(ssf_unit_or_namespace_only in flags) or
-                    (srsym.typ in [unitsym,namespacesym])) and
+                if Assigned(SRSym) and
+                   (not(ssf_unit_or_namespace_only in Flags) or
+                    (SRSym.Typ in [UnitSym,NamespaceSym])) and
                    (
-                     not(srsym.typ in [unitsym,namespacesym]) or
-                     srsymtable.iscurrentunit or
-                     (Assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.genericdef.owner.ModuleID=srsymtable.ModuleID)) or
+                     not(SRSym.Typ in [UnitSym,NamespaceSym]) or
+                     SRSymTable.IsCurrentUnit or
+                     (Assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.GenericDef.Owner.ModuleID=SRSymTable.ModuleID)) or
                      (
                        Assigned(CurrentProcInfo) and
-                       (df_specialization in CurrentProcInfo.procdef.defoptions) and
-                       (CurrentProcInfo.procdef.genericdef.owner.ModuleID=srsymtable.ModuleID)
+                       (df_specialization in CurrentProcInfo.ProcDef.DefOptions) and
+                       (CurrentProcInfo.ProcDef.GenericDef.Owner.ModuleID=SRSymTable.ModuleID)
                      )
                    ) and
-                   (not (ssf_search_option in flags) or (option in srsym.symoptions))then
+                   (not (ssf_search_option in Flags) or (Option in SRSym.SymOptions))then
                   begin
                     { use the class from withsymtable only when it is
                       defined in this unit }
-                    if (srsymtable.symtabletype=withsymtable) and
-                       Assigned(srsymtable.defowner) and
-                       (srsymtable.defowner.typ in [recorddef,objectdef]) and
-                       (srsymtable.defowner.owner.symtabletype in [GlobalSymTable,staticsymtable,objectsymtable,recordsymtable]) and
-                       (srsymtable.defowner.owner.iscurrentunit) then
-                      contextstructdef:=TAbstractRecordDef(srsymtable.defowner)
+                    if (SRSymTable.SymTableType=WithSymTable) and
+                       Assigned(SRSymTable.DefOwner) and
+                       (SRSymTable.DefOwner.Typ in [RecordDef,ObjectDef]) and
+                       (SRSymTable.DefOwner.Owner.SymTableType in [GlobalSymTable,StaticSymTable,ObjectSymTable,RecordSymTable]) and
+                       (SRSymTable.DefOwner.Owner.IsCurrentUnit) then
+                      ContextStructDef:=TAbstractRecordDef(SRSymTable.DefOwner)
                     else
-                      contextstructdef:=CurrentStructDef;
-                    if not(srsym.owner.symtabletype in [objectsymtable,recordsymtable]) or
-                       is_visible_for_object(srsym,contextstructdef) then
+                      ContextStructDef:=CurrentStructDef;
+                    if not(SRSym.Owner.SymTableType in [ObjectSymTable,RecordSymTable]) or
+                       Is_Visible_For_Object(SRSym,ContextStructDef) then
                       begin
                         { we need to know if a procedure references symbols
                           in the static symtable, because then it can't be
                           inlined from outside this unit }
                         if Assigned(CurrentProcInfo) and
-                           (srsym.owner.symtabletype=staticsymtable) then
-                          include(CurrentProcInfo.flags,pi_uses_static_symtable);
-                        if not (ssf_no_addsymref in flags) then
-                          addsymref(srsym);
-                        result:=true;
-                        exit;
+                           (SRSym.Owner.SymTableType=StaticSymTable) then
+                          Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
+                        if not (ssf_no_addsymref in Flags) then
+                          AddSymRef(SRSym);
+                        Result:=True;
+                        Exit;
                       end;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        srsym:=nil;
-        srsymtable:=nil;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
-    function searchsym_with_symoption(const s: TIDString;out srsym:TSym;out
-      srsymtable:TSymTable;option:TSymOption):boolean;
+    function SearchSym_With_SymOption(const S: TIDString;out SRSym:TSym;out
+      SRSymTable:TSymTable;Option:TSymOption):Boolean;
       begin
-        result:=searchsym_maybe_with_symoption(s,srsym,srsymtable,[ssf_search_option],option);
+        Result:=SearchSym_Maybe_With_SymOption(S,SRSym,SRSymTable,[ssf_search_option],Option);
       end;
 
-    function searchsym_type(const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function SearchSym_Type(const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       var
-        hashedid  : THashedIDString;
-        stackitem : PSymTableStackItem;
-        classh : TObjectDef;
+        HashedID  : THashedIDString;
+        StackItem : PSymTableStackItem;
+        ClassH : TObjectDef;
       begin
-        result:=false;
-        hashedid.id:=s;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        Result:=False;
+        HashedID.ID:=S;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
             {
               It is not possible to have type symbols in:
@@ -3302,791 +3302,791 @@ implementation
               Exception are classes, objects, records, generic definitions and specializations
               that have the parameterized types inserted in the symtable.
             }
-            srsymtable:=stackitem^.SymTable;
-            if (srsymtable.symtabletype=ObjectSymtable) then
+            SRSymTable:=StackItem^.SymTable;
+            if (SRSymTable.SymTableType=ObjectSymTable) then
               begin
-                classh:=TObjectDef(srsymtable.defowner);
-                while Assigned(classh) do
+                ClassH:=TObjectDef(SRSymTable.DefOwner);
+                while Assigned(ClassH) do
                   begin
-                    srsymtable:=classh.SymTable;
-                    srsym:=TSym(srsymtable.FindWithHash(hashedid));
-                     if Assigned(srsym) and
-                        not(srsym.typ in [fieldvarsym,paravarsym,propertysym,procsym,labelsym]) and
-                        is_visible_for_object(srsym,CurrentStructDef) then
+                    SRSymTable:=ClassH.SymTable;
+                    SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+                     if Assigned(SRSym) and
+                        not(SRSym.Typ in [FieldVarSym,ParaVarSym,PropertySym,ProcSym,LabelSym]) and
+                        Is_Visible_For_Object(SRSym,CurrentStructDef) then
                        begin
-                        addsymref(srsym);
-                        result:=true;
-                        exit;
+                        AddSymRef(SRSym);
+                        Result:=True;
+                        Exit;
                       end;
-                    classh:=classh.childof;
+                    ClassH:=ClassH.ChildOf;
                   end;
               end
             else
               begin
-                srsym:=TSym(srsymtable.FindWithHash(hashedid));
-                if Assigned(srsym) and
+                SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+                if Assigned(SRSym) and
                    (
-                     not(srsym.typ in [unitsym,namespacesym]) or
-                     srsymtable.iscurrentunit or
-                     (Assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.genericdef.owner.ModuleID=srsymtable.ModuleID))
+                     not(SRSym.Typ in [UnitSym,NamespaceSym]) or
+                     SRSymTable.IsCurrentUnit or
+                     (Assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.GenericDef.Owner.ModuleID=SRSymTable.ModuleID))
                    ) and
-                   not(srsym.typ in [fieldvarsym,paravarsym,propertysym,procsym,labelsym]) and
-                   (not (srsym.owner.symtabletype in [objectsymtable,recordsymtable]) or is_visible_for_object(srsym,CurrentStructDef)) then
+                   not(SRSym.Typ in [FieldVarSym,ParaVarSym,PropertySym,ProcSym,LabelSym]) and
+                   (not (SRSym.Owner.SymTableType in [ObjectSymTable,RecordSymTable]) or Is_Visible_For_Object(SRSym,CurrentStructDef)) then
                   begin
                     { we need to know if a procedure references symbols
                       in the static symtable, because then it can't be
                       inlined from outside this unit }
                     if Assigned(CurrentProcInfo) and
-                       (srsym.owner.symtabletype=staticsymtable) then
-                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
-                    addsymref(srsym);
-                    result:=true;
-                    exit;
+                       (SRSym.Owner.SymTableType=StaticSymTable) then
+                      Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
+                    AddSymRef(SRSym);
+                    Result:=True;
+                    Exit;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        result:=false;
-        srsym:=nil;
-        srsymtable:=nil;
+        Result:=False;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
 
-    function searchsym_in_module(pm:pointer;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function SearchSym_In_Module(PM:Pointer;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       var
-        pmod : TModule;
+        PMod : TModule;
       begin
-        result:=false;
-        if not Assigned(pm) then exit;
-        pmod:=TModule(pm);
-        if Assigned(pmod.GlobalSymTable) then
+        Result:=False;
+        if not Assigned(PM) then Exit;
+        PMod:=TModule(PM);
+        if Assigned(PMod.GlobalSymTable) then
           begin
-            srsym:=TSym(pmod.GlobalSymTable.Find(s));
-            if Assigned(srsym) then
+            SRSym:=TSym(PMod.GlobalSymTable.Find(S));
+            if Assigned(SRSym) then
               begin
-                srsymtable:=pmod.GlobalSymTable;
-                addsymref(srsym);
-                result:=true;
-                exit;
+                SRSymTable:=PMod.GlobalSymTable;
+                AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
           end;
         { If the module is the current unit we also need
           to search the local symtable }
-        if (pmod=CurrentModule) and
-           Assigned(pmod.localsymtable) then
+        if (PMod=CurrentModule) and
+           Assigned(PMod.LocalSymTable) then
           begin
-            srsym:=TSym(pmod.localsymtable.Find(s));
-            if Assigned(srsym) then
+            SRSym:=TSym(PMod.LocalSymTable.Find(S));
+            if Assigned(SRSym) then
               begin
-                srsymtable:=pmod.localsymtable;
-                addsymref(srsym);
-                result:=true;
-                exit;
+                SRSymTable:=PMod.LocalSymTable;
+                AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
           end;
-        srsym:=nil;
-        srsymtable:=nil;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
 
-    function searchsym_in_named_module(const unitname, symname: TIDString; out srsym: TSym; out srsymtable: TSymTable): boolean;
+    function SearchSym_In_Named_Module(const UnitName, SymName: TIDString; out SRSym: TSym; out SRSymTable: TSymTable): Boolean;
       var
-        stackitem  : PSymTableStackItem;
+        StackItem  : PSymTableStackItem;
       begin
-        result:=false;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        Result:=False;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            srsymtable:=stackitem^.SymTable;
-            if (srsymtable.symtabletype=GlobalSymTable) and
-               (srsymtable.name^=unitname) then
+            SRSymTable:=StackItem^.SymTable;
+            if (SRSymTable.SymTableType=GlobalSymTable) and
+               (SRSymTable.Name^=UnitName) then
               begin
-                srsym:=TSym(srsymtable.find(symname));
-                if not Assigned(srsym) then
-                  break;
-                result:=true;
-                exit;
+                SRSym:=TSym(SRSymTable.Find(SymName));
+                if not Assigned(SRSym) then
+                  Break;
+                Result:=True;
+                Exit;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
 
         { If the module is the current unit we also need
           to search the local symtable }
-        if Assigned(CurrentModule.localsymtable) and
-           (CurrentModule.localsymtable.name^=unitname) then
+        if Assigned(CurrentModule.LocalSymTable) and
+           (CurrentModule.LocalSymTable.Name^=UnitName) then
           begin
-            srsymtable:=CurrentModule.localsymtable;
-            srsym:=TSym(srsymtable.find(symname));
-            if Assigned(srsym) then
+            SRSymTable:=CurrentModule.LocalSymTable;
+            SRSym:=TSym(SRSymTable.Find(SymName));
+            if Assigned(SRSym) then
               begin
-                result:=true;
-                exit;
+                Result:=True;
+                Exit;
               end;
           end;
       end;
 
 
-    function maybe_find_real_class_definition(pd: TDef; erroronfailure: boolean): TDef;
+    function Maybe_Find_Real_Class_Definition(PD: TDef; ErrorOnFailure: Boolean): TDef;
       begin
-        result:=pd;
-        if pd.typ<>objectdef then
-          exit;
-        result:=find_real_class_definition(TObjectDef(pd),erroronfailure);
+        Result:=PD;
+        if PD.Typ<>ObjectDef then
+          Exit;
+        Result:=Find_Real_Class_Definition(TObjectDef(PD),ErrorOnFailure);
       end;
 
 
-    function find_real_class_definition(pd: TObjectDef; erroronfailure: boolean): TObjectDef;
+    function Find_Real_Class_Definition(PD: TObjectDef; ErrorOnFailure: Boolean): TObjectDef;
       var
-        hashedid   : THashedIDString;
-        stackitem  : PSymTableStackItem;
-        srsymtable : TSymTable;
-        srsym      : TSym;
-        formalname,
-        foundname : shortstring;
-        formalnameptr,
-        foundnameptr: PShortString;
+        HashedID   : THashedIDString;
+        StackItem  : PSymTableStackItem;
+        SRSymTable : TSymTable;
+        SRSym      : TSym;
+        FormalName,
+        FoundName : ShortString;
+        FormalNamePtr,
+        FoundNamePtr: PShortString;
       begin
-        while pd.is_unique_objpasdef do
+        while PD.Is_Unique_ObjPasDef do
           begin
-            pd:=pd.childof;
+            PD:=PD.ChildOf;
           end;
         { not a formal definition -> return it }
-        if not(oo_is_formal in pd.objectoptions) then
+        if not(oo_is_formal in PD.ObjectOptions) then
           begin
-            result:=pd;
-            exit;
+            Result:=PD;
+            Exit;
           end;
-        hashedid.id:=pd.typesym.name;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        HashedID.ID:=PD.TypeSym.Name;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            srsymtable:=stackitem^.SymTable;
+            SRSymTable:=StackItem^.SymTable;
 
-            if not(srsymtable.symtabletype in [recordsymtable,parasymtable]) then
+            if not(SRSymTable.SymTableType in [RecordSymTable,ParaSymTable]) then
               begin
-                srsym:=TSym(srsymtable.FindWithHash(hashedid));
-                if Assigned(srsym) and
-                   (srsym.typ=typesym) and
-                   (TTypeSym(srsym).typedef.typ=objectdef) and
-                   (TObjectDef(TTypeSym(srsym).typedef).objecttype=pd.objecttype) and
-                   not(oo_is_formal in TObjectDef(TTypeSym(srsym).typedef).objectoptions) then
+                SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+                if Assigned(SRSym) and
+                   (SRSym.Typ=TypeSym) and
+                   (TTypeSym(SRSym).TypeDef.Typ=ObjectDef) and
+                   (TObjectDef(TTypeSym(SRSym).TypeDef).ObjectType=PD.ObjectType) and
+                   not(oo_is_formal in TObjectDef(TTypeSym(SRSym).TypeDef).ObjectOptions) then
                   begin
-                    if not(oo_is_forward in TObjectDef(TTypeSym(srsym).typedef).objectoptions) then
+                    if not(oo_is_forward in TObjectDef(TTypeSym(SRSym).TypeDef).ObjectOptions) then
                       begin
                         { the external name for the formal and the real
                           definition must match }
-                        if Assigned(TObjectDef(TTypeSym(srsym).typedef).import_lib) or
-                           Assigned(pd.import_lib) then
+                        if Assigned(TObjectDef(TTypeSym(SRSym).TypeDef).ImportLib) or
+                           Assigned(PD.ImportLib) then
                           begin
-                            if Assigned(pd.import_lib) then
-                              formalname:=pd.import_lib^+'.'
+                            if Assigned(PD.ImportLib) then
+                              FormalName:=PD.ImportLib^+'.'
                             else
-                              formalname:='';
-                            formalname:=formalname+pd.objextname^;
-                            if Assigned(TObjectDef(TTypeSym(srsym).typedef).import_lib) then
-                              foundname:=TObjectDef(TTypeSym(srsym).typedef).import_lib^+'.'
+                              FormalName:='';
+                            FormalName:=FormalName+PD.ObjExtName^;
+                            if Assigned(TObjectDef(TTypeSym(SRSym).TypeDef).ImportLib) then
+                              FoundName:=TObjectDef(TTypeSym(SRSym).TypeDef).ImportLib^+'.'
                             else
-                              foundname:='';
-                            foundname:=foundname+TObjectDef(TTypeSym(srsym).typedef).objextname^;
+                              FoundName:='';
+                            FoundName:=FoundName+TObjectDef(TTypeSym(SRSym).TypeDef).ObjExtName^;
 
-                            formalnameptr:=@formalname;
-                            foundnameptr:=@foundname;
+                            FormalNamePtr:=@FormalName;
+                            FoundNamePtr:=@FoundName;
                           end
                         else
                           begin
-                            formalnameptr:=pd.objextname;
-                            foundnameptr:=TObjectDef(TTypeSym(srsym).typedef).objextname;
+                            FormalNamePtr:=PD.ObjExtName;
+                            FoundNamePtr:=TObjectDef(TTypeSym(SRSym).TypeDef).ObjExtName;
                           end;
-                        if foundnameptr^<>formalnameptr^ then
+                        if FoundNamePtr^<>FormalNamePtr^ then
                           begin
-                            MessagePos2(pd.typesym.fileinfo,sym_e_external_class_name_mismatch1,formalnameptr^,pd.typename);
-                            MessagePos1(srsym.fileinfo,sym_e_external_class_name_mismatch2,foundnameptr^);
+                            MessagePos2(PD.TypeSym.FileInfo,sym_e_external_class_name_mismatch1,FormalNamePtr^,PD.TypeName);
+                            MessagePos1(SRSym.FileInfo,sym_e_external_class_name_mismatch2,FoundNamePtr^);
                           end;
                       end;
-                    result:=TObjectDef(TTypeSym(srsym).typedef);
+                    Result:=TObjectDef(TTypeSym(SRSym).TypeDef);
                     if Assigned(CurrentProcInfo) and
-                       (srsym.owner.symtabletype=staticsymtable) then
-                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
-                    addsymref(srsym);
-                    exit;
+                       (SRSym.Owner.SymTableType=StaticSymTable) then
+                      Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
+                    AddSymRef(SRSym);
+                    Exit;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
         { nothing found: optionally give an error and return the original
           (empty) one }
-        if erroronfailure then
-          Message1(sym_e_formal_class_not_resolved,pd.objrealname^);
-        result:=pd;
+        if ErrorOnFailure then
+          Message1(sym_e_formal_class_not_resolved,PD.ObjRealName^);
+        Result:=PD;
       end;
 
 
-    function searchsym_in_class(classh: TObjectDef;contextclassh:TAbstractRecordDef;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
+    function SearchSym_In_Class(ClassH: TObjectDef;ContextClassH:TAbstractRecordDef;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
       var
-        hashedid : THashedIDString;
-        orgclass : TObjectDef;
-        i        : LongInt;
+        HashedID : THashedIDString;
+        OrgClass : TObjectDef;
+        I        : LongInt;
       begin
-        orgclass:=classh;
+        OrgClass:=ClassH;
         { in case this is a formal class, first find the real definition }
-        if Assigned(classh) then
+        if Assigned(ClassH) then
           begin
-            if (oo_is_formal in classh.objectoptions) then
-              classh:=find_real_class_definition(classh,true);
+            if (oo_is_formal in ClassH.ObjectOptions) then
+              ClassH:=Find_Real_Class_Definition(ClassH,True);
             { The contextclassh is used for visibility. The classh must be equal to
               or be a parent of contextclassh. E.g. for inherited searches the classh is the
               parent or a class helper. }
-            if not (def_is_related(contextclassh,classh) or
-                (is_classhelper(contextclassh) and
-                 Assigned(TObjectDef(contextclassh).extendeddef) and
-                (TObjectDef(contextclassh).extendeddef.typ=objectdef) and
-                def_is_related(TObjectDef(contextclassh).extendeddef,classh))) then
+            if not (def_is_related(ContextClassH,ClassH) or
+                (Is_ClassHelper(ContextClassH) and
+                 Assigned(TObjectDef(ContextClassH).ExtendedDef) and
+                (TObjectDef(ContextClassH).ExtendedDef.Typ=ObjectDef) and
+                def_is_related(TObjectDef(ContextClassH).ExtendedDef,ClassH))) then
               InternalError(200811161);
           end;
-        result:=false;
-        hashedid.id:=s;
+        Result:=False;
+        HashedID.ID:=S;
 
-        if is_objcprotocol(classh) then
+        if Is_ObjCProtocol(ClassH) then
           begin
-            srsymtable:=classh.SymTable;
-            srsym:=TSym(srsymtable.FindWithHash(hashedid));
-            if Assigned(srsym) and
-               is_visible_for_object(srsym,contextclassh) then
+            SRSymTable:=ClassH.SymTable;
+            SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) and
+               Is_Visible_For_Object(SRSym,ContextClassH) then
               begin
-                if not (ssf_no_addsymref in flags) then
-                  addsymref(srsym);
-                result:=true;
-                exit;
+                if not (ssf_no_addsymref in Flags) then
+                  AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
-            for i:=0 to classh.ImplementedInterfaces.count-1 do
+            for I:=0 to ClassH.ImplementedInterfaces.Count-1 do
               begin
-                if searchsym_in_class(TImplementedInterface(classh.ImplementedInterfaces[i]).intfdef,contextclassh,s,srsym,srsymtable,flags-[ssf_search_helper]) then
+                if SearchSym_In_Class(TImplementedInterface(ClassH.ImplementedInterfaces[I]).IntfDef,ContextClassH,S,SRSym,SRSymTable,Flags-[ssf_search_helper]) then
                   begin
-                    result:=true;
-                    exit;
+                    Result:=True;
+                    Exit;
                   end;
               end;
           end
         else
-        if is_objectpascal_helper(classh) then
+        if Is_ObjectPascal_Helper(ClassH) then
           begin
             { helpers have their own obscure search logic... }
-            result:=searchsym_in_helper(classh,TObjectDef(contextclassh),s,srsym,srsymtable,flags-[ssf_has_inherited]);
-            if result then
-              exit;
+            Result:=SearchSym_In_Helper(ClassH,TObjectDef(ContextClassH),S,SRSym,SRSymTable,Flags-[ssf_has_inherited]);
+            if Result then
+              Exit;
           end
         else
           begin
-            while Assigned(classh) do
+            while Assigned(ClassH) do
               begin
                 { search for a class helper method first if this is an Object
                   Pascal class and we haven't yet found a helper symbol }
-                if (classh.objecttype in objecttypes_with_helpers) and
-                    (ssf_search_helper in flags) then
+                if (ClassH.ObjectType in objecttypes_with_helpers) and
+                    (ssf_search_helper in Flags) then
                   begin
-                    result:=search_objectpascal_helper(classh,contextclassh,s,srsym,srsymtable);
+                    Result:=Search_ObjectPascal_Helper(ClassH,ContextClassH,S,SRSym,SRSymTable);
                     { an eventual overload inside the extended type's hierarchy
                       will be found by tcallcandidates }
-                    if result then
-                      exit;
+                    if Result then
+                      Exit;
                   end;
-                srsymtable:=classh.SymTable;
-                srsym:=TSym(srsymtable.FindWithHash(hashedid));
-                if Assigned(srsym) and
-                   is_visible_for_object(srsym,contextclassh) then
+                SRSymTable:=ClassH.SymTable;
+                SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+                if Assigned(SRSym) and
+                   Is_Visible_For_Object(SRSym,ContextClassH) then
                   begin
-                    if not (ssf_no_addsymref in flags) then
-                      addsymref(srsym);
-                    result:=true;
-                    exit;
+                    if not (ssf_no_addsymref in Flags) then
+                      AddSymRef(SRSym);
+                    Result:=True;
+                    Exit;
                   end;
-                classh:=classh.childof;
+                ClassH:=ClassH.ChildOf;
               end;
           end;
-        if is_objcclass(orgclass) then
-          result:=search_objc_helper(orgclass,s,srsym,srsymtable)
+        if Is_ObjCClass(OrgClass) then
+          Result:=Search_ObjC_Helper(OrgClass,S,SRSym,SRSymTable)
         else
           begin
-            srsym:=nil;
-            srsymtable:=nil;
+            SRSym:=nil;
+            SRSymTable:=nil;
           end;
       end;
 
-    function  searchsym_in_record(recordh:TAbstractRecordDef;const s : TIDString;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function  SearchSym_In_Record(RecordH:TAbstractRecordDef;const S : TIDString;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       var
-        hashedid : THashedIDString;
+        HashedID : THashedIDString;
       begin
-        result:=false;
-        hashedid.id:=s;
+        Result:=False;
+        HashedID.ID:=S;
         { search for a record helper method first }
-        result:=search_objectpascal_helper(recordh,recordh,s,srsym,srsymtable);
-        if result then
+        Result:=Search_ObjectPascal_Helper(RecordH,RecordH,S,SRSym,SRSymTable);
+        if Result then
           { an eventual overload inside the extended type's hierarchy
             will be found by tcallcandidates }
-          exit;
-        srsymtable:=recordh.SymTable;
-        srsym:=TSym(srsymtable.FindWithHash(hashedid));
-        if Assigned(srsym) and is_visible_for_object(srsym,recordh) then
+          Exit;
+        SRSymTable:=RecordH.SymTable;
+        SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+        if Assigned(SRSym) and Is_Visible_For_Object(SRSym,RecordH) then
           begin
-            addsymref(srsym);
-            result:=true;
-            exit;
+            AddSymRef(SRSym);
+            Result:=True;
+            Exit;
           end;
-        srsym:=nil;
-        srsymtable:=nil;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
-    function searchsym_in_class_by_msgint(classh:TObjectDef;msgid:LongInt;out srdef : TDef;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function SearchSym_In_Class_By_MsgInt(ClassH:TObjectDef;MsgID:LongInt;out SRDef : TDef;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       var
-        def : TDef;
-        i   : LongInt;
+        Def : TDef;
+        I   : LongInt;
       begin
         { in case this is a formal class, first find the real definition }
-        if Assigned(classh) and
-           (oo_is_formal in classh.objectoptions) then
-          classh:=find_real_class_definition(classh,true);
-        result:=false;
-        def:=nil;
-        while Assigned(classh) do
+        if Assigned(ClassH) and
+           (oo_is_formal in ClassH.ObjectOptions) then
+          ClassH:=Find_Real_Class_Definition(ClassH,True);
+        Result:=False;
+        Def:=nil;
+        while Assigned(ClassH) do
           begin
-            for i:=0 to classh.SymTable.DefList.Count-1 do
+            for I:=0 to ClassH.SymTable.DefList.Count-1 do
               begin
-                def:=TStoredDef(classh.SymTable.DefList[i]);
+                Def:=TStoredDef(ClassH.SymTable.DefList[I]);
                 { Find also all hidden private methods to
                   be compatible with delphi, see tw6203 (PFV) }
-                if (def.typ=procdef) and
-                   (po_msgint in TProcDef(def).procoptions) and
-                   (TProcDef(def).messageinf.i=msgid) then
+                if (Def.Typ=ProcDef) and
+                   (po_msgint in TProcDef(Def).ProcOptions) and
+                   (TProcDef(Def).MessageInf.I=MsgID) then
                   begin
-                    srdef:=def;
-                    srsym:=TProcDef(def).procsym;
-                    srsymtable:=classh.SymTable;
-                    addsymref(srsym);
-                    result:=true;
-                    exit;
+                    SRDef:=Def;
+                    SRSym:=TProcDef(Def).ProcSym;
+                    SRSymTable:=ClassH.SymTable;
+                    AddSymRef(SRSym);
+                    Result:=True;
+                    Exit;
                   end;
               end;
-            classh:=classh.childof;
+            ClassH:=ClassH.ChildOf;
           end;
-        srdef:=nil;
-        srsym:=nil;
-        srsymtable:=nil;
+        SRDef:=nil;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
 
-    function searchsym_in_class_by_msgstr(classh:TObjectDef;const s:string;out srsym:TSym;out srsymtable:TSymTable):boolean;
+    function SearchSym_In_Class_By_MsgStr(ClassH:TObjectDef;const S:string;out SRSym:TSym;out SRSymTable:TSymTable):Boolean;
       var
-        def : TDef;
-        i   : LongInt;
+        Def : TDef;
+        I   : LongInt;
       begin
         { in case this is a formal class, first find the real definition }
-        if Assigned(classh) and
-           (oo_is_formal in classh.objectoptions) then
-          classh:=find_real_class_definition(classh,true);
-        result:=false;
-        def:=nil;
-        while Assigned(classh) do
+        if Assigned(ClassH) and
+           (oo_is_formal in ClassH.ObjectOptions) then
+          ClassH:=Find_Real_Class_Definition(ClassH,True);
+        Result:=False;
+        Def:=nil;
+        while Assigned(ClassH) do
           begin
-            for i:=0 to classh.SymTable.DefList.Count-1 do
+            for I:=0 to ClassH.SymTable.DefList.Count-1 do
               begin
-                def:=TStoredDef(classh.SymTable.DefList[i]);
+                Def:=TStoredDef(ClassH.SymTable.DefList[I]);
                 { Find also all hidden private methods to
                   be compatible with delphi, see tw6203 (PFV) }
-                if (def.typ=procdef) and
-                   (po_msgstr in TProcDef(def).procoptions) and
-                   (TProcDef(def).messageinf.str^=s) then
+                if (Def.Typ=ProcDef) and
+                   (po_msgstr in TProcDef(Def).ProcOptions) and
+                   (TProcDef(Def).MessageInf.Str^=S) then
                   begin
-                    srsym:=TProcDef(def).procsym;
-                    srsymtable:=classh.SymTable;
-                    addsymref(srsym);
-                    result:=true;
-                    exit;
+                    SRSym:=TProcDef(Def).ProcSym;
+                    SRSymTable:=ClassH.SymTable;
+                    AddSymRef(SRSym);
+                    Result:=True;
+                    Exit;
                   end;
               end;
-            classh:=classh.childof;
+            ClassH:=ClassH.ChildOf;
           end;
-        srsym:=nil;
-        srsymtable:=nil;
+        SRSym:=nil;
+        SRSymTable:=nil;
       end;
 
-    function search_best_objectpascal_helper(const name: string;pd : TDef;contextclassh : TAbstractRecordDef;out srsym: TSym;out srsymtable: TSymTable):boolean;forward;
+    function SearchBestObjectPascalHelper(const Name: string;PD : TDef;ContextClassH : TAbstractRecordDef;out SRSym: TSym;out SRSymTable: TSymTable):Boolean;forward;
 
-    function searchsym_in_helper(classh,contextclassh:TObjectDef;const s: TIDString;out srsym:TSym;out srsymtable:TSymTable;flags:TSymbolSearchFlags):boolean;
+    function SearchSym_In_Helper(ClassH,ContextClassH:TObjectDef;const S: TIDString;out SRSym:TSym;out SRSymTable:TSymTable;Flags:TSymbolSearchFlags):Boolean;
       var
-        hashedid      : THashedIDString;
-        parentclassh  : TObjectDef;
+        HashedID      : THashedIDString;
+        ParentClassH  : TObjectDef;
       begin
-        result:=false;
-        if not is_objectpascal_helper(classh) then
+        Result:=False;
+        if not Is_ObjectPascal_Helper(ClassH) then
           InternalError(2011030101);
-        hashedid.id:=s;
+        HashedID.ID:=S;
         { in a helper things are a bit more complex:
           1. search the symbol in the helper (if not "inherited")
           2. search the symbol in the extended type
           3. search the symbol in the parent helpers
           4. only classes: search the symbol in the parents of the extended type
         }
-        if not (ssf_has_inherited in flags) then
+        if not (ssf_has_inherited in Flags) then
           begin
             { search in the helper itself }
-            srsymtable:=classh.SymTable;
-            srsym:=TSym(srsymtable.FindWithHash(hashedid));
-            if Assigned(srsym) and
-               is_visible_for_object(srsym,contextclassh) then
+            SRSymTable:=ClassH.SymTable;
+            SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) and
+               Is_Visible_For_Object(SRSym,ContextClassH) then
               begin
-                if not (ssf_no_addsymref in flags) then
-                  addsymref(srsym);
-                result:=true;
-                exit;
+                if not (ssf_no_addsymref in Flags) then
+                  AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
           end;
         { now search in the extended type itself }
         { Note: the extendeddef might be Nil if we are currently parsing the
                 extended type itself and the identifier was not found }
-        if Assigned(classh.extendeddef) and (classh.extendeddef.typ in [recorddef,objectdef]) then
+        if Assigned(ClassH.ExtendedDef) and (ClassH.ExtendedDef.Typ in [RecordDef,ObjectDef]) then
           begin
-            srsymtable:=TAbstractRecordDef(classh.extendeddef).SymTable;
-            srsym:=TSym(srsymtable.FindWithHash(hashedid));
-            if Assigned(srsym) and
-               is_visible_for_object(srsym,contextclassh) then
+            SRSymTable:=TAbstractRecordDef(ClassH.ExtendedDef).SymTable;
+            SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) and
+               Is_Visible_For_Object(SRSym,ContextClassH) then
               begin
-                if not (ssf_no_addsymref in flags) then
-                  addsymref(srsym);
-                result:=true;
-                exit;
+                if not (ssf_no_addsymref in Flags) then
+                  AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
           end;
         { now search in the parent helpers }
-        parentclassh:=classh.childof;
-        while Assigned(parentclassh) do
+        ParentClassH:=ClassH.ChildOf;
+        while Assigned(ParentClassH) do
           begin
-            srsymtable:=parentclassh.SymTable;
-            srsym:=TSym(srsymtable.FindWithHash(hashedid));
-            if Assigned(srsym) and
-               is_visible_for_object(srsym,contextclassh) then
+            SRSymTable:=ParentClassH.SymTable;
+            SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) and
+               Is_Visible_For_Object(SRSym,ContextClassH) then
               begin
-                if not (ssf_no_addsymref in flags) then
-                  addsymref(srsym);
-                result:=true;
-                exit;
+                if not (ssf_no_addsymref in Flags) then
+                  AddSymRef(SRSym);
+                Result:=True;
+                Exit;
               end;
-            parentclassh:=parentclassh.childof;
+            ParentClassH:=ParentClassH.ChildOf;
           end;
         { now search in the parents of the extended class (with helpers!) }
-        if is_class(classh.extendeddef) then
+        if Is_Class(ClassH.ExtendedDef) then
           begin
-            result:=searchsym_in_class(TObjectDef(classh.extendeddef).childof,contextclassh,s,srsym,srsymtable,flags+[ssf_search_helper]);
+            Result:=SearchSym_In_Class(TObjectDef(ClassH.ExtendedDef).ChildOf,ContextClassH,S,SRSym,SRSymTable,Flags+[ssf_search_helper]);
             { addsymref is already called by searchsym_in_class }
-            if result then
-              exit;
+            if Result then
+              Exit;
           end;
         { now search all helpers using the extendeddef as the starting point }
         if (m_multi_helpers in CurrentSettings.ModeSwitches) and
             (
-              (CurrentStructDef<>classh) or
-              Assigned(classh.extendeddef)
+              (CurrentStructDef<>ClassH) or
+              Assigned(ClassH.ExtendedDef)
             ) then
           begin
             { this is only allowed if classh is currently parsed }
-            if not Assigned(classh.extendeddef) then
+            if not Assigned(ClassH.ExtendedDef) then
               InternalError(2019110101);
-            result:=search_best_objectpascal_helper(s,classh.extendeddef,contextclassh,srsym,srsymtable);
+            Result:=SearchBestObjectPascalHelper(S,ClassH.ExtendedDef,ContextClassH,SRSym,SRSymTable);
           end;
       end;
 
-    function search_specific_assignment_operator(assignment_type:TToken;from_def,to_def:TDef):TProcDef;
+    function SearchSpecificAssignmentOperator(AssignmentType:TToken;FromDef,ToDef:TDef):TProcDef;
       var
-        sym : TProcSym;
-        hashedid : THashedIDString;
-        curreq,
-        besteq : TEqualType;
-        currpd,
-        bestpd : TProcDef;
-        stackitem : PSymTableStackItem;
-        shortstringcount : LongInt;
-        isexplicit,
-        checkshortstring : boolean;
+        Sym : TProcSym;
+        HashedID : THashedIDString;
+        CurReq,
+        BestEq : TEqualType;
+        CurrPD,
+        BestPD : TProcDef;
+        StackItem : PSymTableStackItem;
+        ShortStringCount : LongInt;
+        IsExplicit,
+        CheckShortString : Boolean;
       begin
-        hashedid.id:=overloaded_names[assignment_type];
-        besteq:=te_incompatible;
-        bestpd:=nil;
-        stackitem:=SymTableStack.stack;
+        HashedID.ID:=Overloaded_Names[AssignmentType];
+        BestEq:=te_incompatible;
+        BestPD:=nil;
+        StackItem:=SymTableStack.Stack;
         { special handling for assignments to shortstrings with a specific length:
           - if we get an operator to ShortString we use that
           - if we get only a single String[x] operator we use that
           - otherwise it's a nogo }
-        isexplicit:=assignment_type=_OP_EXPLICIT;
-        shortstringcount:=0;
-        checkshortstring:=not isexplicit and is_shortstring(to_def) and (TStringDef(to_def).len<>255);
-        while Assigned(stackitem) do
+        IsExplicit:=AssignmentType=_OP_EXPLICIT;
+        ShortStringCount:=0;
+        CheckShortString:=not IsExplicit and is_shortstring(ToDef) and (TStringDef(ToDef).Len<>255);
+        while Assigned(StackItem) do
           begin
-            sym:=TProcSym(stackitem^.SymTable.FindWithHash(hashedid));
-            if sym<>nil then
+            Sym:=TProcSym(StackItem^.SymTable.FindWithHash(HashedID));
+            if Sym<>nil then
               begin
-                if sym.typ<>procsym then
+                if Sym.Typ<>ProcSym then
                   InternalError(200402031);
                 { if the source type is an alias then this is only the second choice,
                   if you mess with this code, check tw4093 }
-                currpd:=sym.find_procdef_assignment_operator(from_def,to_def,curreq,isexplicit);
+                CurrPD:=Sym.Find_ProcDef_Assignment_Operator(FromDef,ToDef,CurReq,IsExplicit);
                 { we found a ShortString overload, use that and be done }
-                if checkshortstring and
-                    Assigned(currpd) and
-                    is_shortstring(currpd.returndef) and
-                    (TStringDef(currpd.returndef).len=255) then
+                if CheckShortString and
+                    Assigned(CurrPD) and
+                    is_shortstring(CurrPD.ReturnDef) and
+                    (TStringDef(CurrPD.ReturnDef).Len=255) then
                   begin
-                    besteq:=curreq;
-                    bestpd:=currpd;
-                    break;
+                    BestEq:=CurReq;
+                    BestPD:=CurrPD;
+                    Break;
                   end;
                 { independently of the operator being better count if we encountered
                   multiple String[x] operators }
-                if checkshortstring and Assigned(currpd) and is_shortstring(currpd.returndef) then
-                  inc(shortstringcount);
-                if curreq>besteq then
+                if CheckShortString and Assigned(CurrPD) and is_shortstring(CurrPD.ReturnDef) then
+                  Inc(ShortStringCount);
+                if CurReq>BestEq then
                   begin
-                    besteq:=curreq;
-                    bestpd:=currpd;
+                    BestEq:=CurReq;
+                    BestPD:=CurrPD;
                     { don't stop searching if we have a String[x] operator cause
                       we might find a ShortString one or multiple ones (which
                       leads to no operator use) }
-                    if (besteq=te_exact) and not checkshortstring then
-                      break;
+                    if (BestEq=te_exact) and not CheckShortString then
+                      Break;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        if checkshortstring and (shortstringcount>1) then
-          bestpd:=nil;
-        result:=bestpd;
+        if CheckShortString and (ShortStringCount>1) then
+          BestPD:=nil;
+        Result:=BestPD;
       end;
 
 
-    function search_assignment_operator(from_def,to_def:TDef;explicit:boolean):TProcDef;
+    function Search_Assignment_Operator(FromDef,ToDef:TDef;Explicit:Boolean):TProcDef;
       begin
         { search record/object symtable first for a suitable operator }
-        if from_def.typ in [recorddef,objectdef] then
-          SymTableStack.push(TAbstractRecordDef(from_def).SymTable);
-        if to_def.typ in [recorddef,objectdef] then
-          SymTableStack.push(TAbstractRecordDef(to_def).SymTable);
+        if FromDef.Typ in [RecordDef,ObjectDef] then
+          SymTableStack.Push(TAbstractRecordDef(FromDef).SymTable);
+        if ToDef.Typ in [RecordDef,ObjectDef] then
+          SymTableStack.Push(TAbstractRecordDef(ToDef).SymTable);
 
         { if type conversion is explicit then search first for explicit
           operator overload and if not found then use implicit operator }
-        if explicit then
-          result:=search_specific_assignment_operator(_OP_EXPLICIT,from_def,to_def)
+        if Explicit then
+          Result:=SearchSpecificAssignmentOperator(_OP_EXPLICIT,FromDef,ToDef)
         else
-          result:=nil;
-        if result=nil then
-          result:=search_specific_assignment_operator(_ASSIGNMENT,from_def,to_def);
+          Result:=nil;
+        if Result=nil then
+          Result:=SearchSpecificAssignmentOperator(_ASSIGNMENT,FromDef,ToDef);
 
         { if we're assigning to a typed pointer, but we did not find a suitable assignment
           operator then we also check for a untyped pointer assignment operator }
-        if not Assigned(result) and is_pointer(to_def) and not is_voidpointer(to_def) then
+        if not Assigned(Result) and is_pointer(ToDef) and not is_voidpointer(ToDef) then
           begin
-            if explicit then
-              result:=search_specific_assignment_operator(_OP_EXPLICIT,from_def,voidpointertype);
-            if not Assigned(result) then
-              result:=search_specific_assignment_operator(_ASSIGNMENT,from_def,voidpointertype);
+            if Explicit then
+              Result:=SearchSpecificAssignmentOperator(_OP_EXPLICIT,FromDef,VoidPointerType);
+            if not Assigned(Result) then
+              Result:=SearchSpecificAssignmentOperator(_ASSIGNMENT,FromDef,VoidPointerType);
           end;
 
         { restore symtable stack }
-        if to_def.typ in [recorddef,objectdef] then
-          SymTableStack.pop(TAbstractRecordDef(to_def).SymTable);
-        if from_def.typ in [recorddef,objectdef] then
-          SymTableStack.pop(TAbstractRecordDef(from_def).SymTable);
+        if ToDef.Typ in [RecordDef,ObjectDef] then
+          SymTableStack.Pop(TAbstractRecordDef(ToDef).SymTable);
+        if FromDef.Typ in [RecordDef,ObjectDef] then
+          SymTableStack.Pop(TAbstractRecordDef(FromDef).SymTable);
       end;
 
 
-    function search_enumerator_operator(from_def,to_def:TDef): TProcDef;
+    function Search_Enumerator_Operator(FromDef,ToDef:TDef): TProcDef;
       var
-        sym : TProcSym;
-        hashedid : THashedIDString;
-        curreq,
-        besteq : TEqualType;
-        currpd,
-        bestpd : TProcDef;
-        stackitem : PSymTableStackItem;
+        Sym : TProcSym;
+        HashedID : THashedIDString;
+        CurReq,
+        BestEq : TEqualType;
+        CurrPD,
+        BestPD : TProcDef;
+        StackItem : PSymTableStackItem;
       begin
-        hashedid.id:='enumerator';
-        besteq:=te_incompatible;
-        bestpd:=nil;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        HashedID.ID:='enumerator';
+        BestEq:=te_incompatible;
+        BestPD:=nil;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            sym:=TProcSym(stackitem^.SymTable.FindWithHash(hashedid));
-            if sym<>nil then
+            Sym:=TProcSym(StackItem^.SymTable.FindWithHash(HashedID));
+            if Sym<>nil then
               begin
-                if sym.typ<>procsym then
+                if Sym.Typ<>ProcSym then
                   InternalError(200910241);
                 { if the source type is an alias then this is only the second choice,
                   if you mess with this code, check tw4093 }
-                currpd:=sym.find_procdef_enumerator_operator(from_def,to_def,curreq);
-                if curreq>besteq then
+                CurrPD:=Sym.Find_ProcDef_Enumerator_Operator(FromDef,ToDef,CurReq);
+                if CurReq>BestEq then
                   begin
-                    besteq:=curreq;
-                    bestpd:=currpd;
-                    if (besteq=te_exact) then
-                      break;
+                    BestEq:=CurReq;
+                    BestPD:=CurrPD;
+                    if (BestEq=te_exact) then
+                      Break;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        result:=bestpd;
+        Result:=BestPD;
     end;
 
 
-    function search_management_operator(mop:TManagementOperator;pd:TDef):TProcDef;
+    function Search_Management_Operator(MOP:TManagementOperator;PD:TDef):TProcDef;
       var
-        sym : TProcSym;
-        hashedid : THashedIDString;
-        optoken: TToken;
+        Sym : TProcSym;
+        HashedID : THashedIDString;
+        OpToken: TToken;
       begin
-        optoken := managementoperator2tok[mop];
-        if (optoken<first_managment_operator) or
-           (optoken>last_managment_operator) then
+        OpToken := ManagementOperator2Tok[MOP];
+        if (OpToken<first_managment_operator) or
+           (OpToken>last_managment_operator) then
           InternalError(201602280);
-        hashedid.id:=overloaded_names[optoken];
-        if not (pd.typ in [recorddef]) then
+        HashedID.ID:=Overloaded_Names[OpToken];
+        if not (PD.Typ in [RecordDef]) then
           InternalError(201602281);
-        sym:=TProcSym(TAbstractRecordDef(pd).SymTable.FindWithHash(hashedid));
-        if sym<>nil then
+        Sym:=TProcSym(TAbstractRecordDef(PD).SymTable.FindWithHash(HashedID));
+        if Sym<>nil then
           begin
-            if sym.typ<>procsym then
+            if Sym.Typ<>ProcSym then
               InternalError(201602282);
-            result:=sym.find_procdef_bytype(potype_operator);
+            Result:=Sym.Find_ProcDef_ByType(potype_operator);
           end
         else
-          result:=nil;
+          Result:=nil;
       end;
 
 
-    function search_system_type(const s: TIDString): TTypeSym;
+    function Search_System_Type(const S: TIDString): TTypeSym;
       var
-        sym : TSym;
+        Sym : TSym;
       begin
-        check_systemunit_loaded;
-        sym:=TSym(systemunit.Find(s));
-        if not Assigned(sym) or
-           (sym.typ<>typesym) then
-          message1(cg_f_unknown_system_type,s);
-        result:=TTypeSym(sym);
+        CheckSystemUnitLoaded;
+        Sym:=TSym(SystemUnit.Find(S));
+        if not Assigned(Sym) or
+           (Sym.Typ<>TypeSym) then
+          Message1(cg_f_unknown_system_type,S);
+        Result:=TTypeSym(Sym);
       end;
 
 
-    function try_search_system_type(const s: TIDString): TTypeSym;
+    function Try_Search_System_Type(const S: TIDString): TTypeSym;
       var
-        sym : TSym;
+        Sym : TSym;
       begin
-        check_systemunit_loaded;
-        sym:=TSym(systemunit.Find(s));
-        if not Assigned(sym) then
-          result:=nil
+        CheckSystemUnitLoaded;
+        Sym:=TSym(SystemUnit.Find(S));
+        if not Assigned(Sym) then
+          Result:=nil
         else
           begin
-            if sym.typ<>typesym then
-              message1(cg_f_unknown_system_type,s);
-            result:=TTypeSym(sym);
+            if Sym.Typ<>TypeSym then
+              Message1(cg_f_unknown_system_type,S);
+            Result:=TTypeSym(Sym);
           end;
       end;
 
 
-    function try_search_current_module_type(const s: TIDString): TTypeSym;
+    function Try_Search_Current_Module_Type(const S: TIDString): TTypeSym;
       var
-        found: boolean;
-        srsymtable: TSymTable;
-        srsym: TSym;
+        Found: Boolean;
+        SRSymTable: TSymTable;
+        SRSym: TSym;
       begin
-        found:=searchsym_in_module(CurrentModule,TSymTable.maybe_adjust_symname(s),srsym,srsymtable);
-        if found then
+        Found:=SearchSym_In_Module(CurrentModule,TSymTable.Maybe_Adjust_SymName(S),SRSym,SRSymTable);
+        if Found then
           begin
-            if (srsym.typ<>typesym) then
+            if (SRSym.Typ<>TypeSym) then
               InternalError(2014091207);
-            result:=TTypeSym(srsym);
+            Result:=TTypeSym(SRSym);
           end
         else
-          result:=nil;
+          Result:=nil;
       end;
 
 
-    function  search_system_proc(const s: TIDString): TProcDef;
+    function  Search_System_Proc(const S: TIDString): TProcDef;
       var
-        srsym: TSym;
+        SRSym: TSym;
       begin
-        check_systemunit_loaded;
-        srsym:=TSym(systemunit.find(s));
-        if not Assigned(srsym) and
+        CheckSystemUnitLoaded;
+        SRSym:=TSym(SystemUnit.Find(S));
+        if not Assigned(SRSym) and
            (cs_compilesystem in CurrentSettings.ModuleSwitches) then
-          srsym:=TSym(systemunit.Find(upper(s)));
-        if not Assigned(srsym) or
-           (srsym.typ<>procsym) then
-          message1(cg_f_unknown_compilerproc,s);
-        result:=TProcDef(TProcSym(srsym).procdeflist[0]);
+          SRSym:=TSym(SystemUnit.Find(Upper(S)));
+        if not Assigned(SRSym) or
+           (SRSym.Typ<>ProcSym) then
+          Message1(cg_f_unknown_compilerproc,S);
+        Result:=TProcDef(TProcSym(SRSym).ProcDefList[0]);
     end;
 
 
-    function search_named_unit_globaltype(const unitname, typename: TIDString; throwerror: boolean): TTypeSym;
+    function Search_Named_Unit_GlobalType(const UnitName, TypeName: TIDString; ThrowError: Boolean): TTypeSym;
       var
-        srsymtable: TSymTable;
-        sym: TSym;
+        SRSymTable: TSymTable;
+        Sym: TSym;
       begin
-        sym:=nil;
-        if searchsym_in_named_module(unitname,typename,sym,srsymtable) and
-           (sym.typ=typesym) then
+        Sym:=nil;
+        if SearchSym_In_Named_Module(UnitName,TypeName,Sym,SRSymTable) and
+           (Sym.Typ=TypeSym) then
           begin
-            result:=TTypeSym(sym);
-            exit;
+            Result:=TTypeSym(Sym);
+            Exit;
           end
         else
           begin
-            if throwerror then
-              message2(cg_f_unknown_type_in_unit,typename,unitname);
-            result:=nil;
+            if ThrowError then
+              Message2(cg_f_unknown_type_in_unit,TypeName,UnitName);
+            Result:=nil;
           end;
       end;
 
-    function search_sym_in_helperdef(const s: string;classh : TObjectDef;contextclassh : TAbstractRecordDef;out srsym: TSym;out srsymtable: TSymTable): boolean;
+    function SearchSymInHelperDef(const S: string;ClassH : TObjectDef;ContextClassH : TAbstractRecordDef;out SRSym: TSym;out SRSymTable: TSymTable): Boolean;
       var
-        hashedid : THashedIDString;
-        pdef : TProcDef;
-        i : integer;
+        HashedID : THashedIDString;
+        PDef : TProcDef;
+        I : Integer;
       begin
-        hashedid.id:=s;
-        result:=false;
+        HashedID.ID:=S;
+        Result:=False;
         repeat
-          srsymtable:=classh.SymTable;
-          srsym:=TSym(srsymtable.FindWithHash(hashedid));
-          if srsym<>nil then
+          SRSymTable:=ClassH.SymTable;
+          SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+          if SRSym<>nil then
             begin
-              case srsym.typ of
-                procsym:
+              case SRSym.Typ of
+                ProcSym:
                   begin
-                    for i:=0 to TProcSym(srsym).procdeflist.count-1 do
+                    for I:=0 to TProcSym(SRSym).ProcDefList.Count-1 do
                       begin
-                        pdef:=TProcDef(TProcSym(srsym).procdeflist[i]);
-                        if not is_visible_for_object(pdef.owner,pdef.visibility,contextclassh) then
-                          continue;
-                        srsym:=TProcDef(TProcSym(srsym).procdeflist[i]).procsym;
-                        srsymtable:=srsym.owner;
-                        result:=true;
-                        exit;
+                        PDef:=TProcDef(TProcSym(SRSym).ProcDefList[I]);
+                        if not Is_Visible_For_Object(PDef.Owner,PDef.Visibility,ContextClassH) then
+                          Continue;
+                        SRSym:=TProcDef(TProcSym(SRSym).ProcDefList[I]).ProcSym;
+                        SRSymTable:=SRSym.Owner;
+                        Result:=True;
+                        Exit;
                       end;
-                    if (sp_generic_dummy in TProcSym(srsym).symoptions) and
-                        (TProcSym(srsym).procdeflist.count=0) and
-                        is_visible_for_object(srsym.owner,srsym.visibility,contextclassh) then
+                    if (sp_generic_dummy in TProcSym(SRSym).SymOptions) and
+                        (TProcSym(SRSym).ProcDefList.Count=0) and
+                        Is_Visible_For_Object(SRSym.Owner,SRSym.Visibility,ContextClassH) then
                       begin
-                        srsymtable:=srsym.owner;
-                        result:=true;
-                        exit;
+                        SRSymTable:=SRSym.Owner;
+                        Result:=True;
+                        Exit;
                       end;
                   end;
-                typesym,
-                fieldvarsym,
-                constsym,
-                enumsym,
-                undefinedsym,
-                propertysym:
+                TypeSym,
+                FieldVarSym,
+                ConstSym,
+                EnumSym,
+                UndefinedSym,
+                PropertySym:
                   begin
-                    result:=true;
-                    exit;
+                    Result:=True;
+                    Exit;
                   end;
                 else
                   InternalError(2014041101);
@@ -4094,159 +4094,159 @@ implementation
             end;
 
           { try the helper parent if available }
-          classh:=classh.childof;
-        until classh=nil;
+          ClassH:=ClassH.ChildOf;
+        until ClassH=nil;
       end;
 
-    function get_objectpascal_helpers(pd : TDef):TFPObjectList;
+    function Get_ObjectPascal_Helpers(PD : TDef):TFPObjectList;
       var
-        s : TSymStr;
-        st : TSymTable;
+        S : TSymStr;
+        ST : TSymTable;
       begin
-        result:=nil;
+        Result:=nil;
         { when there are no helpers active currently then we don't need to do
           anything }
-        if CurrentModule.extendeddefs.count=0 then
-          exit;
-        if (df_genconstraint in pd.defoptions) then
+        if CurrentModule.ExtendedDefs.Count=0 then
+          Exit;
+        if (df_genconstraint in PD.DefOptions) then
           begin
             { if we have a constraint for a class type or a single interface we
               use that to resolve helpers at declaration time of the generic,
               otherwise there can't be any helpers as the type isn't known yet }
-            if pd.typ=objectdef then
-              pd:=TObjectDef(pd).getparentdef
+            if PD.Typ=ObjectDef then
+              PD:=TObjectDef(PD).GetParentDef
             else
-              exit;
+              Exit;
           end;
         { no helpers for anonymous types }
-        if ((pd.typ in [recorddef,objectdef]) and
+        if ((PD.Typ in [RecordDef,ObjectDef]) and
             (
-              not Assigned(TAbstractRecordDef(pd).objrealname) or
-              (TAbstractRecordDef(pd).objrealname^='')
+              not Assigned(TAbstractRecordDef(PD).ObjRealName) or
+              (TAbstractRecordDef(PD).ObjRealName^='')
             )
            ) or
-           not Assigned(pd.typesym) then
-          exit;
+           not Assigned(PD.TypeSym) then
+          Exit;
         { if pd is defined inside a procedure we must not use make_mangledname
           (as a helper may not be defined in a procedure this is no problem...)}
-        st:=pd.owner;
-        while st.symtabletype in [objectsymtable,recordsymtable] do
-          st:=st.defowner.owner;
-        if st.symtabletype=localsymtable then
-          exit;
+        ST:=PD.Owner;
+        while ST.SymTableType in [ObjectSymTable,RecordSymTable] do
+          ST:=ST.DefOwner.Owner;
+        if ST.SymTableType=LocalSymTable then
+          Exit;
         { the mangled name is used as the key for tmodule.extendeddefs }
-        s:=generate_objectpascal_helper_key(pd);
-        result:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
+        S:=Generate_ObjectPascal_Helper_Key(PD);
+        Result:=TFPObjectList(CurrentModule.ExtendedDefs.Find(S));
       end;
 
-    function search_best_objectpascal_helper(const name: string;pd : TDef;contextclassh : TAbstractRecordDef;out srsym: TSym;out srsymtable: TSymTable):boolean;
+    function SearchBestObjectPascalHelper(const Name: string;PD : TDef;ContextClassH : TAbstractRecordDef;out SRSym: TSym;out SRSymTable: TSymTable):Boolean;
       var
-        list : TFPObjectList;
-        i : integer;
-        odef : TObjectDef;
+        List : TFPObjectList;
+        I : Integer;
+        ODef : TObjectDef;
       begin
-        result:=false;
-        list:=get_objectpascal_helpers(pd);
-        if Assigned(list) and (list.count>0) then
+        Result:=False;
+        List:=Get_ObjectPascal_Helpers(PD);
+        if Assigned(List) and (List.Count>0) then
           begin
-            i:=list.count-1;
+            I:=List.Count-1;
             repeat
-              odef:=TObjectDef(list[i]);
-              result:=(odef.owner.symtabletype in [staticsymtable,GlobalSymTable]) or
-                      is_visible_for_object(TObjectDef(list[i]).typesym,contextclassh);
-              if result then
-                result:=search_sym_in_helperdef(name,odef,contextclassh,srsym,srsymtable);
-              dec(i);
-            until result or (i<0);
+              ODef:=TObjectDef(List[I]);
+              Result:=(ODef.Owner.SymTableType in [StaticSymTable,GlobalSymTable]) or
+                      Is_Visible_For_Object(TObjectDef(List[I]).TypeSym,ContextClassH);
+              if Result then
+                Result:=SearchSymInHelperDef(Name,ODef,ContextClassH,SRSym,SRSymTable);
+              Dec(I);
+            until Result or (I<0);
           end;
       end;
 
-    function search_last_objectpascal_helper(pd : TDef;contextclassh : TAbstractRecordDef;out odef : TObjectDef):boolean;
+    function Search_Last_ObjectPascal_Helper(PD : TDef;ContextClassH : TAbstractRecordDef;out ODef : TObjectDef):Boolean;
       var
-        list : TFPObjectList;
-        i : integer;
+        List : TFPObjectList;
+        I : Integer;
       begin
-        result:=false;
-        odef:=nil;
-        list:=get_objectpascal_helpers(pd);
-        if Assigned(list) and (list.count>0) then
+        Result:=False;
+        ODef:=nil;
+        List:=Get_ObjectPascal_Helpers(PD);
+        if Assigned(List) and (List.Count>0) then
           begin
-            i:=list.count-1;
+            I:=List.Count-1;
             repeat
-              odef:=TObjectDef(list[list.count-1]);
-              result:=(odef.owner.symtabletype in [staticsymtable,GlobalSymTable]) or
-                      is_visible_for_object(TObjectDef(list[i]).typesym,contextclassh);
-              dec(i);
-            until result or (i<0);
-            if not result then
+              ODef:=TObjectDef(List[List.Count-1]);
+              Result:=(ODef.Owner.SymTableType in [StaticSymTable,GlobalSymTable]) or
+                      Is_Visible_For_Object(TObjectDef(List[I]).TypeSym,ContextClassH);
+              Dec(I);
+            until Result or (I<0);
+            if not Result then
               { just to be sure that none uses odef }
-              odef:=nil;
+              ODef:=nil;
           end;
       end;
 
-    function search_objectpascal_helper(pd : TDef;contextclassh : TAbstractRecordDef;const s: string; out srsym: TSym; out srsymtable: TSymTable):boolean;
+    function Search_ObjectPascal_Helper(PD : TDef;ContextClassH : TAbstractRecordDef;const S: string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
       var
-        classh : TObjectDef;
+        ClassH : TObjectDef;
       begin
-        result:=false;
+        Result:=False;
 
         { if there is no class helper for the class then there is no need to
           search further }
         if m_multi_helpers in CurrentSettings.ModeSwitches then
-          result:=search_best_objectpascal_helper(s,pd,contextclassh,srsym,srsymtable)
+          Result:=SearchBestObjectPascalHelper(S,PD,ContextClassH,SRSym,SRSymTable)
         else
           begin
-            if search_last_objectpascal_helper(pd,contextclassh,classh) and
-               search_sym_in_helperdef(s,classh,contextclassh,srsym,srsymtable) then
-                result:=true;
+            if Search_Last_ObjectPascal_Helper(PD,ContextClassH,ClassH) and
+               SearchSymInHelperDef(S,ClassH,ContextClassH,SRSym,SRSymTable) then
+                Result:=True;
           end;
 
-        if result then
+        if Result then
           begin
             { we need to know if a procedure references symbols
               in the static symtable, because then it can't be
               inlined from outside this unit }
-            if (srsym.typ=procsym) and
+            if (SRSym.Typ=ProcSym) and
                Assigned(CurrentProcInfo) and
-               (srsym.owner.symtabletype=staticsymtable) then
-              include(CurrentProcInfo.flags,pi_uses_static_symtable);
-            addsymref(srsym);
+               (SRSym.Owner.SymTableType=StaticSymTable) then
+              Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
+            AddSymRef(SRSym);
           end
         else
           begin
-            srsym:=nil;
-            srsymtable:=nil;
+            SRSym:=nil;
+            SRSymTable:=nil;
           end;
       end;
 
-    function search_objc_helper(pd : TObjectDef;const s : string; out srsym: TSym; out srsymtable: TSymTable):boolean;
+    function Search_ObjC_Helper(PD : TObjectDef;const S : string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
       var
-        searchst   : TSymTable;
-        searchsym  : TSym;
-        hashedid   : THashedIDString;
-        stackitem  : PSymTableStackItem;
-        i          : LongInt;
-        founddefowner,
-        defowner   : TObjectDef;
+        SearchST   : TSymTable;
+        SearchSym  : TSym;
+        HashedID   : THashedIDString;
+        StackItem  : PSymTableStackItem;
+        I          : LongInt;
+        FoundDefOwner,
+        DefOwner   : TObjectDef;
       begin
-        hashedid.id:=class_helper_prefix+s;
-        stackitem:=SymTableStack.stack;
-        result:=false;
-        srsym:=nil;
-        srsymtable:=nil;
-        founddefowner:=nil;
-        while Assigned(stackitem) do
+        HashedID.ID:=class_helper_prefix+S;
+        StackItem:=SymTableStack.Stack;
+        Result:=False;
+        SRSym:=nil;
+        SRSymTable:=nil;
+        FoundDefOwner:=nil;
+        while Assigned(StackItem) do
           begin
-            searchst:=stackitem^.SymTable;
-            searchsym:=TSym(searchst.FindWithHash(hashedid));
-            if Assigned(searchsym) then
+            SearchST:=StackItem^.SymTable;
+            SearchSym:=TSym(SearchST.FindWithHash(HashedID));
+            if Assigned(SearchSym) then
               begin
-                if not(searchst.symtabletype in [GlobalSymTable,staticsymtable]) or
-                   not(searchsym.owner.symtabletype in [GlobalSymTable,staticsymtable]) or
-                   (searchsym.typ<>procsym) then
+                if not(SearchST.SymTableType in [GlobalSymTable,StaticSymTable]) or
+                   not(SearchSym.Owner.SymTableType in [GlobalSymTable,StaticSymTable]) or
+                   (SearchSym.Typ<>ProcSym) then
                   InternalError(2009111505);
                 { check whether this procsym includes a helper for this particular class }
-                for i:=0 to TProcSym(searchsym).procdeflist.count-1 do
+                for I:=0 to TProcSym(SearchSym).ProcDefList.Count-1 do
                   begin
                     { does pd inherit from (or is the same as) the class
                       that this method's category extended?
@@ -4254,80 +4254,80 @@ implementation
                       Warning: this list contains both category and objcclass methods
                        (for id.randommethod), so only check category methods here
                     }
-                    defowner:=TObjectDef(TProcDef(TProcSym(searchsym).procdeflist[i]).owner.defowner);
-                    if is_objccategory(defowner) and
-                       def_is_related(pd,defowner.childof) then
+                    DefOwner:=TObjectDef(TProcDef(TProcSym(SearchSym).ProcDefList[I]).Owner.DefOwner);
+                    if Is_ObjCCategory(DefOwner) and
+                       def_is_related(PD,DefOwner.ChildOf) then
                       begin
                         { we need to know if a procedure references symbols
                           in the static symtable, because then it can't be
                           inlined from outside this unit }
                         if Assigned(CurrentProcInfo) and
-                           (searchsym.owner.symtabletype=staticsymtable) then
-                          include(CurrentProcInfo.flags,pi_uses_static_symtable);
+                           (SearchSym.Owner.SymTableType=StaticSymTable) then
+                          Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
                         { Stop looking if this is a category that extends the specified
                           class itself. There might be other categories that extend this,
                           but that doesn't matter. If it extens a parent, keep looking
                           in case we find the symbol in a category that extends this class
                           (or a closer parent).
                         }
-                        if not result or
-                           def_is_related(defowner.childof,founddefowner) then
+                        if not Result or
+                           def_is_related(DefOwner.ChildOf,FoundDefOwner) then
                           begin
-                            founddefowner:=defowner.childof;
-                            srsym:=TProcDef(TProcSym(searchsym).procdeflist[i]).procsym;
-                            srsymtable:=srsym.owner;
-                            result:=true;
-                            if pd=founddefowner then
+                            FoundDefOwner:=DefOwner.ChildOf;
+                            SRSym:=TProcDef(TProcSym(SearchSym).ProcDefList[I]).ProcSym;
+                            SRSymTable:=SRSym.Owner;
+                            Result:=True;
+                            if PD=FoundDefOwner then
                               begin
-                                addsymref(srsym);
-                                exit;
+                                AddSymRef(SRSym);
+                                Exit;
                               end;
                           end;
                       end;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        if result then
+        if Result then
           begin
-            addsymref(srsym);
-            exit;
+            AddSymRef(SRSym);
+            Exit;
           end;
       end;
 
 
-    function search_objc_method(const s : string; out srsym: TSym; out srsymtable: TSymTable):boolean;
+    function Search_ObjC_Method(const S : string; out SRSym: TSym; out SRSymTable: TSymTable):Boolean;
       var
-        hashedid   : THashedIDString;
-        stackitem  : PSymTableStackItem;
-        i          : LongInt;
+        HashedID   : THashedIDString;
+        StackItem  : PSymTableStackItem;
+        I          : LongInt;
       begin
-        hashedid.id:=class_helper_prefix+s;
-        stackitem:=SymTableStack.stack;
-        while Assigned(stackitem) do
+        HashedID.ID:=class_helper_prefix+S;
+        StackItem:=SymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            srsymtable:=stackitem^.SymTable;
-            srsym:=TSym(srsymtable.FindWithHash(hashedid));
-            if Assigned(srsym) then
+            SRSymTable:=StackItem^.SymTable;
+            SRSym:=TSym(SRSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) then
               begin
-                if not(srsymtable.symtabletype in [GlobalSymTable,staticsymtable]) or
-                   not(srsym.owner.symtabletype in [GlobalSymTable,staticsymtable]) or
-                   (srsym.typ<>procsym) then
+                if not(SRSymTable.SymTableType in [GlobalSymTable,StaticSymTable]) or
+                   not(SRSym.Owner.SymTableType in [GlobalSymTable,StaticSymTable]) or
+                   (SRSym.Typ<>ProcSym) then
                   InternalError(2009112005);
                 { check whether this procsym includes a helper for this particular class }
-                for i:=0 to TProcSym(srsym).procdeflist.count-1 do
+                for I:=0 to TProcSym(SRSym).ProcDefList.Count-1 do
                   begin
                     { we need to know if a procedure references symbols
                       in the static symtable, because then it can't be
                       inlined from outside this unit }
                     if Assigned(CurrentProcInfo) and
-                       (srsym.owner.symtabletype=staticsymtable) then
-                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
+                       (SRSym.Owner.SymTableType=StaticSymTable) then
+                      Include(CurrentProcInfo.Flags,pi_uses_static_symtable);
                     { no need to keep looking. There might be other
                       methods with the same name, but that doesn't matter
                       as far as the basic procsym is concerned.
                     }
-                    srsym:=TProcDef(TProcSym(srsym).procdeflist[i]).procsym;
+                    SRSym:=TProcDef(TProcSym(SRSym).ProcDefList[I]).ProcSym;
                     { We need the symtable in which the classhelper-like sym
                       is located, not the objectdef. The reason is that the
                       callnode will climb the symtablestack until it encounters
@@ -4337,123 +4337,123 @@ implementation
 
                     srsymtable:=srsym.owner;
                     }
-                    addsymref(srsym);
-                    result:=true;
-                    exit;
+                    AddSymRef(SRSym);
+                    Result:=True;
+                    Exit;
                   end;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        srsym:=nil;
-        srsymtable:=nil;
-        result:=false;
+        SRSym:=nil;
+        SRSymTable:=nil;
+        Result:=False;
       end;
 
 
-    function search_struct_member(pd : TAbstractRecordDef;const s : string):TSym;
+    function Search_Struct_Member(PD : TAbstractRecordDef;const S : string):TSym;
     { searches n in symtable of pd and all anchestors }
       var
-        srsymtable : TSymTable;
+        SRSymTable : TSymTable;
       begin
         { in case this is a formal class, first find the real definition }
-        if (oo_is_formal in pd.objectoptions) then
-          pd:=find_real_class_definition(TObjectDef(pd),true);
+        if (oo_is_formal in PD.ObjectOptions) then
+          PD:=Find_Real_Class_Definition(TObjectDef(PD),True);
 
-        if search_objectpascal_helper(pd, pd, s, result, srsymtable) then
-          exit;
+        if Search_ObjectPascal_Helper(PD, PD, S, Result, SRSymTable) then
+          Exit;
 
-        result:=search_struct_member_no_helper(pd,s);
-        if Assigned(result) then
-          exit;
+        Result:=Search_Struct_Member_No_Helper(PD,S);
+        if Assigned(Result) then
+          Exit;
 
         { not found, now look for class helpers }
-        if is_objcclass(pd) then
-          search_objc_helper(TObjectDef(pd),s,result,srsymtable)
+        if Is_ObjCClass(PD) then
+          Search_ObjC_Helper(TObjectDef(PD),S,Result,SRSymTable)
       end;
 
 
-    function search_struct_member_no_helper(pd: TAbstractRecordDef; const s: string): TSym;
+    function Search_Struct_Member_No_Helper(PD: TAbstractRecordDef; const S: string): TSym;
       var
-        hashedid   : THashedIDString;
-        srsym      : TSym;
+        HashedID   : THashedIDString;
+        SRSym      : TSym;
       begin
-        hashedid.id:=s;
-        while Assigned(pd) do
+        HashedID.ID:=S;
+        while Assigned(PD) do
          begin
-            srsym:=TSym(pd.SymTable.FindWithHash(hashedid));
-            if Assigned(srsym) then
+            SRSym:=TSym(PD.SymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) then
               begin
-                result:=srsym;
-                exit;
+                Result:=SRSym;
+                Exit;
               end;
-            if pd.typ=objectdef then
-              pd:=TObjectDef(pd).childof
+            if PD.Typ=ObjectDef then
+              PD:=TObjectDef(PD).ChildOf
             else
-              pd:=nil;
+              PD:=nil;
           end;
-        result:=nil;
+        Result:=nil;
       end;
 
 
-    function search_macro(const s : string):TSym;
+    function Search_Macro(const S : string):TSym;
       var
-        stackitem  : PSymTableStackItem;
-        hashedid   : THashedIDString;
-        srsym      : TSym;
+        StackItem  : PSymTableStackItem;
+        HashedID   : THashedIDString;
+        SRSym      : TSym;
       begin
-        hashedid.id:=s;
+        HashedID.ID:=S;
 
         { The default text model is selected once for the compiler invocation.
           A unit-local or imported macro must not shadow its define. }
-        if upper(s)='FPC_UNICODESTRINGS' then
+        if Upper(S)='FPC_UNICODESTRINGS' then
           begin
-            hashedid.id:='FPC_UNICODESTRINGS';
-            if Assigned(initialmacrosymtable) then
-              result:=TSym(initialmacrosymtable.FindWithHash(hashedid))
+            HashedID.ID:='FPC_UNICODESTRINGS';
+            if Assigned(InitialMacroSymTable) then
+              Result:=TSym(InitialMacroSymTable.FindWithHash(HashedID))
             else
-              result:=nil;
-            exit;
+              Result:=nil;
+            Exit;
           end;
 
         { First search the localmacrosymtable before searching the
           global macrosymtables from the units }
         if Assigned(CurrentModule) then
           begin
-            srsym:=TSym(CurrentModule.localmacrosymtable.FindWithHash(hashedid));
-            if Assigned(srsym) then
+            SRSym:=TSym(CurrentModule.LocalMacroSymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) then
               begin
-                result:= srsym;
-                exit;
+                Result:= SRSym;
+                Exit;
               end;
           end;
 
-        stackitem:=MacroSymTableStack.stack;
-        while Assigned(stackitem) do
+        StackItem:=MacroSymTableStack.Stack;
+        while Assigned(StackItem) do
           begin
-            srsym:=TSym(stackitem^.SymTable.FindWithHash(hashedid));
-            if Assigned(srsym) then
+            SRSym:=TSym(StackItem^.SymTable.FindWithHash(HashedID));
+            if Assigned(SRSym) then
               begin
-                result:= srsym;
-                exit;
+                Result:= SRSym;
+                Exit;
               end;
-            stackitem:=stackitem^.next;
+            StackItem:=StackItem^.Next;
           end;
-        result:= nil;
+        Result:= nil;
       end;
 
 
-    function defined_macro(const s : string):boolean;
+    function Defined_Macro(const S : string):Boolean;
       var
-        mac: TMacro;
+        Mac: TMacro;
       begin
-        mac:=TMacro(search_macro(s));
-        if Assigned(mac) then
+        Mac:=TMacro(Search_Macro(S));
+        if Assigned(Mac) then
           begin
-            mac.is_used:=true;
-            defined_macro:=mac.defined;
+            Mac.IsUsed:=True;
+            Defined_Macro:=Mac.Defined;
           end
         else
-          defined_macro:=false;
+          Defined_Macro:=False;
       end;
 
 
@@ -4461,39 +4461,39 @@ implementation
                               Object Helpers
 ****************************************************************************}
 
-   function search_default_property(pd : TAbstractRecordDef) : TPropertySym;
+   function Search_Default_Property(PD : TAbstractRecordDef) : TPropertySym;
    { returns the default property of a class, searches also anchestors }
      var
        _defaultprop : TPropertySym;
-       helperpd : TObjectDef;
+       HelperPD : TObjectDef;
      begin
         _defaultprop:=nil;
         { first search in helper's hierarchy }
-        if search_last_objectpascal_helper(pd,nil,helperpd) then
-          while Assigned(helperpd) do
+        if Search_Last_ObjectPascal_Helper(PD,nil,HelperPD) then
+          while Assigned(HelperPD) do
             begin
-              helperpd.SymTable.SymList.ForEachCall(@TStoredSymTable(helperpd.SymTable).testfordefaultproperty,@_defaultprop);
+              HelperPD.SymTable.SymList.ForEachCall(@TStoredSymTable(HelperPD.SymTable).TestForDefaultProperty,@_defaultprop);
               if Assigned(_defaultprop) then
-                break;
-              helperpd:=helperpd.childof;
+                Break;
+              HelperPD:=HelperPD.ChildOf;
             end;
         if Assigned(_defaultprop) then
           begin
-            search_default_property:=_defaultprop;
-            exit;
+            Search_Default_Property:=_defaultprop;
+            Exit;
           end;
         { now search in the type's hierarchy itself }
-        while Assigned(pd) do
+        while Assigned(PD) do
           begin
-             pd.SymTable.SymList.ForEachCall(@TStoredSymTable(pd.SymTable).testfordefaultproperty,@_defaultprop);
+             PD.SymTable.SymList.ForEachCall(@TStoredSymTable(PD.SymTable).TestForDefaultProperty,@_defaultprop);
              if Assigned(_defaultprop) then
-               break;
-             if (pd.typ=objectdef) then
-               pd:=TObjectDef(pd).childof
+               Break;
+             if (PD.Typ=ObjectDef) then
+               PD:=TObjectDef(PD).ChildOf
              else
-               break;
+               Break;
           end;
-        search_default_property:=_defaultprop;
+        Search_Default_Property:=_defaultprop;
      end;
 
 
@@ -4501,101 +4501,101 @@ implementation
                               Macro Helpers
 ****************************************************************************}
 
-    procedure def_system_macro(const name : string);
+    procedure Def_System_Macro(const Name : string);
       var
-        mac : TMacro;
-        s: string;
+        Mac : TMacro;
+        S: string;
       begin
-         if name = '' then
+         if Name = '' then
            InternalError(2004121202);
-         s:= upper(name);
-         mac:=TMacro(search_macro(s));
-         if not Assigned(mac) then
+         S:= Upper(Name);
+         Mac:=TMacro(Search_Macro(S));
+         if not Assigned(Mac) then
            begin
-             mac:=TMacro.create(s);
+             Mac:=TMacro.Create(S);
              if Assigned(CurrentModule) then
-               CurrentModule.localmacrosymtable.insertsym(mac)
+               CurrentModule.LocalMacroSymTable.InsertSym(Mac)
              else
-               initialmacrosymtable.insertsym(mac);
+               InitialMacroSymTable.InsertSym(Mac);
            end;
-         Message1(parser_c_macro_defined,mac.name);
-         mac.defined:=true;
+         Message1(parser_c_macro_defined,Mac.Name);
+         Mac.Defined:=True;
       end;
 
 
-    procedure set_system_macro(const name, value : string);
+    procedure Set_System_Macro(const Name, Value : string);
       var
-        mac : TMacro;
-        s: string;
+        Mac : TMacro;
+        S: string;
       begin
-        if name = '' then
+        if Name = '' then
           InternalError(2004121203);
-         s:= upper(name);
-         mac:=TMacro(search_macro(s));
-         if not Assigned(mac) then
+         S:= Upper(Name);
+         Mac:=TMacro(Search_Macro(S));
+         if not Assigned(Mac) then
            begin
-             mac:=TMacro.create(s);
+             Mac:=TMacro.Create(S);
              if Assigned(CurrentModule) then
-               CurrentModule.localmacrosymtable.insertsym(mac)
+               CurrentModule.LocalMacroSymTable.InsertSym(Mac)
              else
-               initialmacrosymtable.insertsym(mac);
+               InitialMacroSymTable.InsertSym(Mac);
            end
          else
            begin
-             mac.is_compiler_var:=false;
-             mac.free_buftext;
+             Mac.IsCompilerVar:=False;
+             Mac.Free_BufText;
            end;
-           mac.is_c_macro:=true;
-         Message2(parser_c_macro_set_to,mac.name,value);
-         move(value[1],mac.allocate_buftext(length(value))^,length(value));
-         mac.defined:=true;
+           Mac.IsCMacro:=True;
+         Message2(parser_c_macro_set_to,Mac.Name,Value);
+         Move(Value[1],Mac.Allocate_BufText(Length(Value))^,Length(Value));
+         Mac.Defined:=True;
       end;
 
 
-    procedure set_system_compvar(const name, value : string);
+    procedure Set_System_CompVar(const Name, Value : string);
       var
-        mac : TMacro;
-        s: string;
+        Mac : TMacro;
+        S: string;
       begin
-        if name = '' then
+        if Name = '' then
           InternalError(2004121204);
-         s:= upper(name);
-         mac:=TMacro(search_macro(s));
-         if not Assigned(mac) then
+         S:= Upper(Name);
+         Mac:=TMacro(Search_Macro(S));
+         if not Assigned(Mac) then
            begin
-             mac:=TMacro.create(s);
-             mac.is_compiler_var:=true;
+             Mac:=TMacro.Create(S);
+             Mac.IsCompilerVar:=True;
              if Assigned(CurrentModule) then
-               CurrentModule.localmacrosymtable.insertsym(mac)
+               CurrentModule.LocalMacroSymTable.InsertSym(Mac)
              else
-               initialmacrosymtable.insertsym(mac);
+               InitialMacroSymTable.InsertSym(Mac);
            end
          else
-           mac.is_compiler_var:=true;
-         Message2(parser_c_macro_set_to,mac.name,value);
-         move(value[1],mac.allocate_buftext(length(value))^,length(value));
-         mac.defined:=true;
+           Mac.IsCompilerVar:=True;
+         Message2(parser_c_macro_set_to,Mac.Name,Value);
+         Move(Value[1],Mac.Allocate_BufText(Length(Value))^,Length(Value));
+         Mac.Defined:=True;
       end;
 
 
-    procedure undef_system_macro(const name : string);
+    procedure Undef_System_Macro(const Name : string);
       var
-        mac : TMacro;
-        s: string;
+        Mac : TMacro;
+        S: string;
       begin
-         if name = '' then
+         if Name = '' then
            InternalError(2004121205);
-         s:= upper(name);
-         mac:=TMacro(search_macro(s));
-         if not Assigned(mac) then
+         S:= Upper(Name);
+         Mac:=TMacro(Search_Macro(S));
+         if not Assigned(Mac) then
            {If not found, then it's already undefined.}
          else
            begin
-             Message1(parser_c_macro_undefined,mac.name);
-             mac.defined:=false;
-             mac.is_compiler_var:=false;
+             Message1(parser_c_macro_undefined,Mac.Name);
+             Mac.Defined:=False;
+             Mac.IsCompilerVar:=False;
              { delete old definition }
-             mac.free_buftext;
+             Mac.Free_BufText;
            end;
       end;
 
@@ -4605,40 +4605,40 @@ implementation
                               TUNIT_ALIAS
  ****************************************************************************}
 
-    constructor TUnitAlias.create(const n:string);
+    constructor TUnitAlias.Create(const N:string);
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        i:=pos('=',n);
-        if i=0 then
-         fail;
-        inherited createname(Copy(n,1,i-1));
-        newname:=StringDup(Copy(n,i+1,255));
+        I:=Pos('=',N);
+        if I=0 then
+         Fail;
+        inherited CreateName(Copy(N,1,I-1));
+        NewName:=StringDup(Copy(N,I+1,255));
       end;
 
 
     destructor TUnitAlias.Destroy;
       begin
-        StringDispose(newname);
+        StringDispose(NewName);
         inherited Destroy;
       end;
 
 
-    procedure addunitalias(const n:string);
+    procedure AddUnitAlias(const N:string);
       begin
-        unitaliases^.insert(TUnitAlias,init(Upper(n))));
+        UnitAliases^.Insert(TUnitAlias,Init(Upper(N))));
       end;
 
 
-    function getunitalias(const n:string):string;
+    function GetUnitAlias(const N:string):string;
       var
-        p : PUnitAlias;
+        P : PUnitAlias;
       begin
-        p:=PUnitAlias(unitaliases^.Find(Upper(n)));
-        if Assigned(p) then
-         getunitalias:=PUnitAlias(p).newname^
+        P:=PUnitAlias(UnitAliases^.Find(Upper(N)));
+        if Assigned(P) then
+         GetUnitAlias:=PUnitAlias(P).NewName^
         else
-         getunitalias:=n;
+         GetUnitAlias:=N;
       end;
 {$endif UNITALIASES}
 
@@ -4647,46 +4647,46 @@ implementation
                            Init/Done Symtable
 ****************************************************************************}
 
-   procedure InitSymtable;
+   procedure InitSymTable;
      var
-       textmodemacro: TMacro;
+       TextModeMacro: TMacro;
      begin
        { Reset symbolstack }
        SymTableStack:=nil;
-       systemunit:=nil;
+       SystemUnit:=nil;
        { create error syms and def }
-       generrorsym:=TErrorSym.create;
-       generrordef:=CErrorDef.create;
+       GenErrorSym:=TErrorSym.Create;
+       GenErrorDef:=CErrorDef.Create;
        { macros }
-       initialmacrosymtable:=TMacroSymTable.create(false);
-       textmodemacro:=TMacro.create('FPC_UNICODESTRINGS');
-       textmodemacro.defined:=false;
-       initialmacrosymtable.insertsym(textmodemacro);
-       MacroSymTableStack:=TSymTableStack.create;
-       MacroSymTableStack.push(initialmacrosymtable);
+       InitialMacroSymTable:=TMacroSymTable.Create(False);
+       TextModeMacro:=TMacro.Create('FPC_UNICODESTRINGS');
+       TextModeMacro.Defined:=False;
+       InitialMacroSymTable.InsertSym(TextModeMacro);
+       MacroSymTableStack:=TSymTableStack.Create;
+       MacroSymTableStack.Push(InitialMacroSymTable);
 {$ifdef UNITALIASES}
        { unit aliases }
-       unitaliases:=TFPHashObjectList.create;
+       UnitAliases:=TFPHashObjectList.Create;
 {$endif}
-       dupnr:=0;
+       DupNr:=0;
      end;
 
 
-   procedure DoneSymtable;
+   procedure DoneSymTable;
       begin
-        generrorsym.owner:=nil;
-        generrorsym.free;
-        generrorsym := nil;
-        generrordef.owner:=nil;
-        generrordef.free;
-        generrordef := nil;
-        initialmacrosymtable.free;
-        initialmacrosymtable := nil;
-        MacroSymTableStack.free;
+        GenErrorSym.Owner:=nil;
+        GenErrorSym.Free;
+        GenErrorSym := nil;
+        GenErrorDef.Owner:=nil;
+        GenErrorDef.Free;
+        GenErrorDef := nil;
+        InitialMacroSymTable.Free;
+        InitialMacroSymTable := nil;
+        MacroSymTableStack.Free;
         MacroSymTableStack := nil;
 {$ifdef UNITALIASES}
-        unitaliases.free;
-        unitaliases := nil;
+        UnitAliases.Free;
+        UnitAliases := nil;
 {$endif}
      end;
 

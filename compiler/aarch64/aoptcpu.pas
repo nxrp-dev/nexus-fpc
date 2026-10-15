@@ -1739,7 +1739,7 @@ Implementation
     begin
       Result := NR_NO;
       RegSet :=
-        paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption) +
+        paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.ProcCallOption) +
         CurrentProcInfo.saved_regs_int;
 (*
       { Don't use the frame register unless explicitly allowed (fixes i40111) }
@@ -2301,7 +2301,7 @@ Implementation
                                 UsedRegs through AllocRegBetween below) }
                               if not RegisterTracking[R_INTREGISTER].IsUsed(ConstRegs[Count]) then
                                 begin
-                                  hp_new := TAI(hp1.getcopy);
+                                  hp_new := TAI(hp1.GetCopy);
                                   TAICPU(hp_new).oper[0]^.reg := ConstRegs[Count];
                                   TAICPU(hp_new).fileinfo := TAICPU(fInitialJump).fileinfo;
 
@@ -2388,7 +2388,7 @@ Implementation
                         AllocRegBetween below) }
                       if not RegisterTracking[R_INTREGISTER].IsUsed(ConstRegs[Count]) then
                         begin
-                          hp_new := TAI(hp1.getcopy);
+                          hp_new := TAI(hp1.GetCopy);
                           TAICPU(hp_new).oper[0]^.reg := ConstRegs[Count];
                           TAICPU(hp_new).fileinfo := TAICPU(fInitialJump).fileinfo;
 

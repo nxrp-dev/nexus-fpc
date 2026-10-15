@@ -165,7 +165,7 @@ implementation
         href2:=href;
         if _size.typ<>floatdef then
           InternalError(2014012211);
-        case TFloatDef(_size).floattype of
+        case TFloatDef(_size).FloatType of
           S64Real,
           s64comp,
           s64currency:
@@ -177,7 +177,7 @@ implementation
             InternalError(200406021);
         end;
         { flip sign-bit (bit 31/63) of single/double }
-        hlcg.a_op_const_ref(CurrentAsmData.CurrAsmList,OP_XOR,u32inttype,
+        hlcg.a_op_const_ref(CurrentAsmData.CurrAsmList,OP_XOR,U32IntType,
 {$ifdef cpu64bitalu}
           aint($80000000),
 {$else cpu64bitalu}
@@ -354,9 +354,9 @@ implementation
          if is_64bit(resultdef) then
            begin
              if is_signed(left.resultdef) then
-               opdef:=s64inttype
+               opdef:=S64IntType
              else
-               opdef:=u64inttype;
+               opdef:=U64IntType;
 
              { this code valid for 64-bit cpu's only ,
                otherwise helpers are called in pass_1
@@ -374,12 +374,12 @@ implementation
               if is_signed(left.resultdef) then
                 begin
                   opsize:=OS_SINT;
-                  opdef:=ossinttype;
+                  opdef:=OSSIntType;
                 end
               else
                 begin
                   opsize:=OS_INT;
-                  opdef:=osuinttype;
+                  opdef:=OSUIntType;
                 end;
 
               { put numerator in register }
@@ -419,7 +419,7 @@ implementation
                   if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) then
                     begin
                       hdenom := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-                      hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,osuinttype,right.location,hdenom);
+                      hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,OSUIntType,right.location,hdenom);
                     end
                   else
                     hdenom:=right.location.register;
@@ -432,7 +432,7 @@ implementation
                       CurrentAsmData.getjumplabel(hl);
                       cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_INT,OC_NE,0,hdenom,hl);
                       paraloc1.init;
-                      pd:=search_system_proc('fpc_handleerror');
+                      pd:=Search_System_Proc('fpc_handleerror');
                       paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                       cg.a_load_const_cgpara(CurrentAsmData.CurrAsmList,OS_S32,aint(200),paraloc1);
                       paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
@@ -494,11 +494,11 @@ implementation
                    (left.resultdef.size<=sizeof(aint)) then
                   begin
                     opsize:=OS_SINT;
-                    opdef:=sinttype;
+                    opdef:=SIntType;
                   end
                 else
                   begin
-                    opdef:=s32inttype;
+                    opdef:=S32IntType;
                     opsize:=OS_S32;
                   end;
 
@@ -511,11 +511,11 @@ implementation
                    (left.resultdef.size<=sizeof(aint)) then
                   begin
                     opsize:=OS_INT;
-                    opdef:=uinttype;
+                    opdef:=UIntType;
                   end
                 else
                   begin
-                    opdef:=u32inttype;
+                    opdef:=U32IntType;
                     opsize:=OS_32;
                   end;
 
@@ -527,12 +527,12 @@ implementation
           begin
             if is_signed(left.resultdef) then
               begin
-                opdef:=s64inttype;
+                opdef:=S64IntType;
                 opsize:=OS_S64;
               end
             else
               begin
-                opdef:=u64inttype;
+                opdef:=U64IntType;
                 opsize:=OS_64;
               end;
             shiftcountdef:=opdef;

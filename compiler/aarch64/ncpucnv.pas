@@ -83,10 +83,10 @@ implementation
         begin
           { convert the equivalent int64 value to double without conversion
             (internal typecast -> will set nf_is_currency flag) }
-          result:=CTypeConvNode.create_internal(left,s64floattype);
+          result:=CTypeConvNode.Create_Internal(left,S64FloatType);
           { turn into currency with conversion, which will divide by 10000
             (regular typecast) }
-          result:=CTypeConvNode.create(result,s64currencytype);
+          result:=CTypeConvNode.create(result,S64CurrencyType);
           exit;
         end;
       { The only other thing we have to take care of: convert values < 32 bit
@@ -94,9 +94,9 @@ implementation
       if left.resultdef.size<4 then
         begin
           if is_signed(left.resultdef) then
-            inserttypeconv(left,s32inttype)
+            inserttypeconv(left,S32IntType)
           else
-            inserttypeconv(left,u32inttype)
+            inserttypeconv(left,U32IntType)
         end;
       result:=inherited;
     end;

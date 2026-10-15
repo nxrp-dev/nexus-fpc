@@ -100,7 +100,7 @@ implementation
       U:=TModule(Loaded_Units.First);
       while Assigned(U) do
         begin
-          if U.is_unit and not Assigned(U.Package) then
+          if U.IsUnit and not Assigned(U.Package) then
             begin
               B.emit_pooled_shortstring_const_ref(U.ModuleName^);
               Inc(UnitCount);
@@ -159,7 +159,7 @@ implementation
       Number(21*8);
       Number(NexusCompilerIdentity(CurrentPPUVersion,WordVersion,CurrentPPULongVersion));
       Number(Ord(TargetInfo.System));
-      Number(find_module_from_symtable(SystemUnit).CRC);
+      Number(Find_Module_From_SymTable(SystemUnit).CRC);
       B.emit_pooled_shortstring_const_ref(CurrentModule.ModuleName^);
       Number(UnitCount);
       Address('FPC_PACKAGE_UNITS');
@@ -259,7 +259,7 @@ implementation
         ProcSym:
           begin
             { don't export methods of interfaces }
-            if is_interface(TDef(TAbstractRecordSymTable(Arg).DefOwner)) then
+            if Is_Interface(TDef(TAbstractRecordSymTable(Arg).DefOwner)) then
               Exit;
             ExportProcSym(TProcSym(Sym),TSymTable(Arg));
           end;
@@ -296,12 +296,12 @@ implementation
       if Def.Typ=ObjectDef then
         begin
           if (oo_has_vmt in TObjectDef(Def).ObjectOptions) then
-            ExportName(TObjectDef(Def).vmt_mangledname);
-          if is_interface(Def) then
+            ExportName(TObjectDef(Def).VMT_MangledName);
+          if Is_Interface(Def) then
             begin
               if Assigned(TObjectDef(Def).IIDGUID) then
-                ExportName(make_mangledname('IID',Def.Owner,Def.ObjName^));
-              ExportName(make_mangledname('IIDSTR',Def.Owner,Def.ObjName^));
+                ExportName(Make_MangledName('IID',Def.Owner,Def.ObjName^));
+              ExportName(Make_MangledName('IIDSTR',Def.Owner,Def.ObjName^));
             end;
         end;
     end;
@@ -309,7 +309,7 @@ implementation
 
   procedure ExportTypeDef(Def:TDef;SymTable:TSymTable;Global:Boolean);
     begin
-      if not (Global or is_class(Def)) or
+      if not (Global or Is_Class(Def)) or
           ([df_internal,df_generic]*Def.DefOptions<>[]) or
           { happens with type renaming declarations ("abc = xyz") }
           (Def.Owner<>SymTable) then
@@ -347,7 +347,7 @@ implementation
         ConstSym:
           begin
             if TConstSym(Sym).ConstTyp=ConstResourceString then
-              VarExport(make_mangledname('RESSTR',TSym(Sym).Owner,TSym(Sym).Name));
+              VarExport(Make_MangledName('RESSTR',TSym(Sym).Owner,TSym(Sym).Name));
           end;
         TypeSym:
           begin
@@ -400,11 +400,11 @@ implementation
 
       { create special exports }
       if mf_init in U.ModuleFlags then
-        ProcExport(make_mangledname('INIT$',U.GlobalSymTable,''));
+        ProcExport(Make_MangledName('INIT$',U.GlobalSymTable,''));
       if mf_finalize in U.ModuleFlags then
-        ProcExport(make_mangledname('FINALIZE$',U.GlobalSymTable,''));
+        ProcExport(Make_MangledName('FINALIZE$',U.GlobalSymTable,''));
       if mf_threadvars in U.ModuleFlags then
-        VarExport(make_mangledname('THREADVARLIST',U.GlobalSymTable,''));
+        VarExport(Make_MangledName('THREADVARLIST',U.GlobalSymTable,''));
       if mf_has_resourcestrings in U.ModuleFlags then
         begin
           VarExport(CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',U.LocalSymTable,[]).Name);
@@ -876,7 +876,7 @@ implementation
                     for K:=0 to TProcSym(PSym).ProcDefList.Count-1 do
                       begin
                         PD:=TProcDef(TProcSym(PSym).ProcDefList[K]);
-                        if PD.has_alias_name(SymName) or
+                        if PD.Has_Alias_Name(SymName) or
                             (
                               ([po_external,po_has_importdll]*PD.ProcOptions=[po_external,po_has_importdll]) and
                               (SymName=proc_get_importname(PD))
@@ -893,7 +893,7 @@ implementation
                     begin
                       if TConstSym(PSym).ConstTyp<>ConstResourceString then
                         InternalError(2016072202);
-                      if make_mangledname('RESSTR',PSym.Owner,PSym.Name)=SymName then
+                      if Make_MangledName('RESSTR',PSym.Owner,PSym.Name)=SymName then
                         Found:=True;
                     end;
                   else
@@ -998,7 +998,7 @@ implementation
                             begin
                               if TConstSym(Sym).ConstTyp<>ConstResourceString then
                                 InternalError(2016072201);
-                              Name:=make_mangledname('RESSTR',Sym.Owner,Sym.Name);
+                              Name:=Make_MangledName('RESSTR',Sym.Owner,Sym.Name);
                               CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+suffix_indirect,0,True,False);
                             end;
                           StaticVarSym:

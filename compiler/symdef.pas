@@ -29,16 +29,16 @@ interface
     { common }
        CClasses,WideStr,
        { global }
-       GlobType,Globals,tokens,ConstExp,
+       GlobType,Globals,Tokens,ConstExp,
        { symtable }
-       symconst,SymBase,symtype,
+       SymConst,SymBase,SymType,
        { node }
-       node,
+       Node,
        { aasm }
-       aasmtai,
+       AAsmTAI,
        CPUInfo,
-       cgbase,
-       parabase
+       CGBase,
+       ParaBase
        ;
 
 
@@ -48,56 +48,56 @@ interface
 ************************************************}
 
        TGenericConstraintData=class
-         interfaces : TFPObjectList;
-         interfacesderef : TFPList;
-         flags : TGenericConstraintFlags;
+         Interfaces : TFPObjectList;
+         InterfacesDeref : TFPList;
+         Flags : TGenericConstraintFlags;
          { only required while parsing }
-         fileinfo : TFilePosInfo;
-         constructor create;
+         FileInfo : TFilePosInfo;
+         constructor Create;
          destructor Destroy;override;
-         procedure ppuload(ppufile:TCompilerPPUFile);
-         procedure ppuwrite(ppufile:TCompilerPPUFile);
-         procedure buildderef;
-         procedure deref;
+         procedure PPULoad(PPUFile:TCompilerPPUFile);
+         procedure PPUWrite(PPUFile:TCompilerPPUFile);
+         procedure BuildDeref;
+         procedure Deref;
        end;
 
        { trtti_attribute_list }
 
        TRTTIAttribute = class
-          typesym         : TSym;
-          typesymderef    : TDeref;
-          typeconstr      : TDef;
-          typeconstrderef : TDeref;
+          TypeSym         : TSym;
+          TypeSymDeref    : TDeref;
+          TypeConstr      : TDef;
+          TypeConstrDeref : TDeref;
           { these two are not stored in PPU }
-          constructorcall : TNode;
-          constructorpd   : TDef;
-          paras           : array of TNode;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          procedure ppuwrite(ppufile:TCompilerPPUFile);
-          procedure PPULoadSubEntries(ppufile:TCompilerPPUFile);
-          procedure PPUWriteSubEntries(ppufile:TCompilerPPUFile);
+          ConstructorCall : TNode;
+          ConstructorPD   : TDef;
+          Paras           : array of TNode;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);
+          procedure PPULoadSubEntries(PPUFile:TCompilerPPUFile);
+          procedure PPUWriteSubEntries(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
-          procedure buildderef;
-          procedure deref;
+          procedure BuildDeref;
+          procedure Deref;
        end;
 
        TRTTIAttributeList = class
           RTTIAttributes : TFPObjectList;
           { if the attribute list is bound to a def or symbol }
           IsBound : Boolean;
-          class procedure bind(var dangling,owned:TRTTIAttributeList);
-          class procedure copyandbind(alist :TRTTIAttributeList; var owned : TRTTIAttributeList);
-          procedure addattribute(atypesym:TSym;typeconstr:TDef;constructorcall:TNode;constref paras:array of TNode);
-          procedure addattribute(attr:TRTTIAttribute);
+          class procedure Bind(var Dangling,Owned:TRTTIAttributeList);
+          class procedure CopyAndBind(AList :TRTTIAttributeList; var Owned : TRTTIAttributeList);
+          procedure AddAttribute(ATypeSym:TSym;TypeConstr:TDef;ConstructorCall:TNode;constref Paras:array of TNode);
+          procedure AddAttribute(Attr:TRTTIAttribute);
           destructor Destroy; override;
           function GetAttributeCount:LongInt;
-          procedure buildderef;
-          procedure deref;
+          procedure BuildDeref;
+          procedure Deref;
 
-          class function ppuload(ppufile:TCompilerPPUFile):TRTTIAttributeList;
-          class procedure ppuwrite(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
-          class procedure PPULoadSubEntries(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
-          class procedure PPUWriteSubEntries(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
+          class function PPULoad(PPUFile:TCompilerPPUFile):TRTTIAttributeList;
+          class procedure PPUWrite(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
+          class procedure PPULoadSubEntries(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
+          class procedure PPUWriteSubEntries(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
        end;
 
        { tstoreddef }
@@ -105,15 +105,15 @@ interface
        TStoredDef = class(TDef)
        private
 {$ifdef symansistr}
-          _fullownerhierarchyname : AnsiString;
+          FFullOwnerHierarchyName : AnsiString;
 {$else symansistr}
-          _fullownerhierarchyname : PShortString;
+          FFullOwnerHierarchyName : PShortString;
 {$endif symansistr}
-          procedure WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
+          procedure WriteEntry(PPUFile: TCompilerPPUFile; IBNR: Byte);
        protected
-          typesymderef  : TDeref;
-          procedure PPUWritePlatform(ppufile:TCompilerPPUFile);virtual;
-          procedure PPULoadPlatform(ppufile:TCompilerPPUFile);virtual;
+          TypeSymDeref  : TDeref;
+          procedure PPUWritePlatform(PPUFile:TCompilerPPUFile);virtual;
+          procedure PPULoadPlatform(PPUFile:TCompilerPPUFile);virtual;
           { a (possibly) reusable def is always created on the basis of another
             def, and contains a reference to this other def. If this other
             def is in a non-persistent symboltable, the new def cannot actually
@@ -121,206 +121,206 @@ interface
             abstracts that checking, and also restores the symtable stack
             (which had to be reset before creating the new def, so that the new
              def did not automatically get added to its top) }
-          class procedure SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; OldSymTableStack: TSymTableStack);
+          class procedure SetupReusableDef(OrigDef, NewDef: TDef; Res: PHashSetItem; OldSymTableStack: TSymTableStack);
        public
 {$ifdef EXTDEBUG}
-          fileinfo   : TFilePosInfo;
+          FileInfo   : TFilePosInfo;
 {$endif}
           { generic support }
-          genericdef      : TStoredDef;
-          genericdefderef : TDeref;
-          generictokenbuf : TDynamicArray;
+          GenericDef      : TStoredDef;
+          GenericDefDeref : TDeref;
+          GenericTokenBuf : TDynamicArray;
           { this list contains references to the symbols that make up the
             generic parameters; the symbols are not owned by this list
             Note: this list is allocated on demand! }
-          genericparas    : TFPHashObjectList;
-          genericparaderefs : TFPList;
+          GenericParas    : TFPHashObjectList;
+          GenericParaDerefs : TFPList;
           { contains additional data if this def is a generic constraint
             Note: this class is allocated on demand! }
-          genconstraintdata : TGenericConstraintData;
+          GenConstraintData : TGenericConstraintData;
           { this is Nil if the def has no RTTI attributes }
           RTTIAttributeList : TRTTIAttributeList;
           { original def for "type <name>" declarations }
-          orgdef          : TStoredDef;
-          orgdefderef     : TDeref;
-          constructor create(dt:TDefTyp;doregister:boolean);
-          constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+          OrgDef          : TStoredDef;
+          OrgDefDeref     : TDeref;
+          constructor Create(DT:TDefTyp;DoRegister:Boolean);
+          constructor PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
           destructor  Destroy;override;
-          function getcopy : TStoredDef;virtual;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
+          function GetCopy : TStoredDef;virtual;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);virtual;
           { this is called directly after ppuload }
-          procedure PPULoadSubEntries(ppufile:TCompilerPPUFile);virtual;
+          procedure PPULoadSubEntries(PPUFile:TCompilerPPUFile);virtual;
           { this is called directly after ppuwrite }
-          procedure PPUWriteSubEntries(ppufile:TCompilerPPUFile);virtual;
-          procedure buildderef;override;
-          procedure buildderefimpl;override;
-          procedure deref;override;
-          procedure derefimpl;override;
-          function  size:asizeint;override;
-          function  getvardef:LongInt;override;
-          function  alignment:shortint;override;
+          procedure PPUWriteSubEntries(PPUFile:TCompilerPPUFile);virtual;
+          procedure BuildDeref;override;
+          procedure BuildDerefImpl;override;
+          procedure Deref;override;
+          procedure DerefImpl;override;
+          function  Size:ASizeInt;override;
+          function  GetVarDef:LongInt;override;
+          function  Alignment:ShortInt;override;
           function  IsPublishable : TPublishProperty;override;
-          function  NeedsInitTable : boolean;override;
-          function  HasNonTrivialInitChild(check_parent:boolean):boolean;override;
-          function  RTTIMangledName(rt:TRTTIType):TSymStr;override;
+          function  NeedsInitTable : Boolean;override;
+          function  HasNonTrivialInitChild(CheckParent:Boolean):Boolean;override;
+          function  RTTIMangledName(RT:TRTTIType):TSymStr;override;
           function  OwnerHierarchyName: string; override;
           function  OwnerHierarchyPrettyName: string; override;
-          function  fullownerhierarchyname(skipprocparams:boolean;use_pretty : boolean):TSymStr;override;
+          function  FullOwnerHierarchyName(SkipProcParams:Boolean;UsePretty : Boolean):TSymStr;override;
 
-          function  NeedsSeparateInitRTTI:boolean;override;
-          function  in_currentunit: boolean;
+          function  NeedsSeparateInitRTTI:Boolean;override;
+          function  In_CurrentUnit: Boolean;
           { regvars }
-          function is_intregable : boolean;
-          function is_fpuregable : boolean;
+          function Is_IntRegable : Boolean;
+          function Is_FPURegable : Boolean;
           { def can be put into a register if it is const/immutable }
-          function is_const_intregable : boolean;
+          function Is_Const_IntRegable : Boolean;
           { generics }
-          procedure initgeneric;
+          procedure InitGeneric;
           { this function can be used to determine whether a def is really a
             generic declaration or just a normal type declared inside another
             generic }
-          function is_generic:boolean;
+          function Is_Generic:Boolean;
           { same as above for specializations }
-          function is_specialization:boolean;
+          function Is_Specialization:Boolean;
           { generic utilities }
-          function is_generic_param_const(index:integer):boolean;inline;
-          function get_generic_param_def(index:integer):TDef;inline;
+          function Is_Generic_Param_Const(Index:Integer):Boolean;inline;
+          function Get_Generic_Param_Def(Index:Integer):TDef;inline;
           { registers this def in the unit's deflist; no-op if already registered }
           procedure RegisterDef; override;
           { add the def to the top of the symtable stack if it's not yet owned
             by another symtable }
-          procedure maybe_put_in_symtable_stack;
+          procedure Maybe_Put_In_SymTable_Stack;
        private
-          savesize  : ASizeUInt;
+          SaveSize  : ASizeUInt;
        end;
 
        TFileTyp = (ft_text,ft_typed,ft_untyped);
 
        TFileDef = class(TStoredDef)
-          filetyp : TFileTyp;
-          typedfiledef : TDef;
-          typedfiledefderef : TDeref;
-          constructor createtext;virtual;
-          constructor createuntyped;virtual;
-          constructor createtyped(def : TDef);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          FileTyp : TFileTyp;
+          TypedFileDef : TDef;
+          TypedFileDefDeref : TDeref;
+          constructor CreateText;virtual;
+          constructor CreateUntyped;virtual;
+          constructor CreateTyped(Def : TDef);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
           function  GetTypeName:string;override;
-          function  getmangledparaname:TSymStr;override;
-          function  size:asizeint;override;
-          procedure setsize;
-          function alignment: shortint; override;
+          function  GetMangledParaName:TSymStr;override;
+          function  Size:ASizeInt;override;
+          procedure SetSize;
+          function Alignment: ShortInt; override;
        end;
        TFileDefClass = class of TFileDef;
 
        TVariantDef = class(TStoredDef)
-          varianttype : TVariantType;
-          constructor create(v : TVariantType);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          VariantType : TVariantType;
+          constructor Create(V : TVariantType);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           function GetTypeName:string;override;
-          function alignment : shortint;override;
+          function Alignment : ShortInt;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function  getvardef:LongInt;override;
-          procedure setsize;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function  GetVarDef:LongInt;override;
+          procedure SetSize;
           function IsPublishable : TPublishProperty;override;
-          function NeedsInitTable : boolean;override;
+          function NeedsInitTable : Boolean;override;
        end;
        TVariantDefClass = class of TVariantDef;
 
        TFormalDef = class(TStoredDef)
-          typed:boolean;
-          constructor create(Atyped:boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          Typed:Boolean;
+          constructor Create(ATyped:Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
        end;
        TFormalDefClass = class of TFormalDef;
 
        TForwardDef = class(TStoredDef)
-          tosymname : PShortString;
-          forwardpos : TFilePosInfo;
-          constructor create(const s:string;const pos:TFilePosInfo);virtual;
+          ToSymName : PShortString;
+          ForwardPos : TFilePosInfo;
+          constructor Create(const S:string;const Pos:TFilePosInfo);virtual;
           destructor Destroy;override;
-          function getcopy:TStoredDef;override;
+          function GetCopy:TStoredDef;override;
           function GetTypeName:string;override;
        end;
        TForwardDefClass = class of TForwardDef;
 
        TUndefinedDef = class(TStoredDef)
-          constructor create(doregister:boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(DoRegister:Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
        end;
        TUndefinedDefClass = class of TUndefinedDef;
 
        TErrorDef = class(TStoredDef)
-          constructor create;virtual;
+          constructor Create;virtual;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
-          function  getmangledparaname : TSymStr;override;
+          function  GetMangledParaName : TSymStr;override;
        end;
        TErrorDefClass = class of TErrorDef;
 
        TAbstractPointerDef = class(TStoredDef)
-          pointeddef : TDef;
-          pointeddefderef : TDeref;
-          constructor create(dt:TDefTyp;def:TDef);
-          constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderef;override;
-          procedure deref;override;
-          function size:asizeint;override;
-          function alignment:shortint;override;
+          PointedDef : TDef;
+          PointedDefDeref : TDeref;
+          constructor Create(DT:TDefTyp;Def:TDef);
+          constructor PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function Size:ASizeInt;override;
+          function Alignment:ShortInt;override;
        end;
 
        TPointerDef = class(TAbstractPointerDef)
-          has_pointer_math : boolean;
-          constructor create(def:TDef);virtual;
+          HasPointerMath : Boolean;
+          constructor Create(Def:TDef);virtual;
           { returns a pointerdef for def, reusing an existing one in case it
             exists in the current module }
-          class function getreusable(def: TDef): TPointerDef; virtual;
+          class function GetReusable(Def: TDef): TPointerDef; virtual;
           { same as above, but in case the def must never be freed after the
             current module has been compiled -- even if the def was not written
             to the ppu file (for defs in para locations, as we don't reset them
             so we don't have to recalculate them all the time) }
-          class function getreusable_no_free(def: TDef): TPointerDef;
-          function size:asizeint;override;
-          function getcopy:TStoredDef;override;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          class function GetReusable_No_Free(Def: TDef): TPointerDef;
+          function Size:ASizeInt;override;
+          function GetCopy:TStoredDef;override;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
           {# returns the appropriate int type for pointer arithmetic with the given pointer type.
              When adding or subtracting a number to/from a pointer, this function returns the
              int type to which that number has to be converted, before the operation can be performed.
              Normally, this is sinttype, except on i8086, where it takes into account the
              special i8086 pointer types (near, far, huge). }
-          function pointer_arithmetic_int_type:TDef;virtual;
+          function Pointer_Arithmetic_Int_Type:TDef;virtual;
           {# the unsigned version of pointer_arithmetic_int_type. Used with inc/dec. }
-          function pointer_arithmetic_uint_type:TDef;virtual;
+          function Pointer_Arithmetic_UInt_Type:TDef;virtual;
           {# returns the int type produced when subtracting two pointers of the given type.
              Normally, this is sinttype, except on i8086, where it takes into account the
              special i8086 pointer types (near, far, huge). }
-          function pointer_subtraction_result_type:TDef;virtual;
-          function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; virtual;
+          function Pointer_Subtraction_Result_Type:TDef;virtual;
+          function Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean; virtual;
           {# the integer index type used to convert the pointer to array (i.e. denotes int_type in: ptr[int_type]) }
-          function converted_pointer_to_array_range_type:TDef;virtual;
+          function Converted_Pointer_To_Array_Range_Type:TDef;virtual;
        end;
        TPointerDefClass = class of TPointerDef;
 
@@ -328,50 +328,50 @@ interface
 
        TAbstractRecordDef= class(TStoredDef)
        private
-          rttistring     : string;
+          RTTIString     : string;
 {$ifdef DEBUG_NODE_XML}
        protected
           procedure XMLPrintDefData(var T: Text; Sym: TSym); override;
 {$endif DEBUG_NODE_XML}
        public
-          objname,
-          objrealname    : PShortString;
+          ObjName,
+          ObjRealName    : PShortString;
           { for C++ classes: name of the library this class is imported from }
-          import_lib     : PShortString;
+          ImportLib     : PShortString;
           SymTable       : TSymTable;
-          cloneddef      : TAbstractRecordDef;
-          cloneddefderef : TDeref;
-          objectoptions  : TObjectOptions;
-          rtti           : TRTTIDirective;
+          ClonedDef      : TAbstractRecordDef;
+          ClonedDefDeref : TDeref;
+          ObjectOptions  : TObjectOptions;
+          RTTI           : TRTTIDirective;
           { for targets that initialise typed constants via explicit assignments
             instead of by generating an initialised data section }
-          tcinitcode     : TNode;
-          constructor create(const n:string; dt:TDefTyp;doregister:boolean);
-          constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
+          TCInitCode     : TNode;
+          constructor Create(const N:string; DT:TDefTyp;DoRegister:Boolean);
+          constructor PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
           destructor Destroy; override;
-          procedure buildderefimpl;override;
-          procedure derefimpl;override;
-          procedure check_forwards; virtual;
-          function find_procdef_bytype(pt:TProcTypeOption): TProcDef;
-          function GetSymtable(t:TGetSymTable):TSymTable;override;
-          function is_packed:boolean;
-          function RttiName: string;
+          procedure BuildDerefImpl;override;
+          procedure DerefImpl;override;
+          procedure Check_Forwards; virtual;
+          function Find_ProcDef_ByType(PT:TProcTypeOption): TProcDef;
+          function GetSymTable(T:TGetSymTable):TSymTable;override;
+          function Is_Packed:Boolean;
+          function RTTIName: string;
           { enumerator support }
-          function search_enumerator_get: TProcDef; virtual;
-          function search_enumerator_move: TProcDef; virtual;
-          function search_enumerator_current: TSym; virtual;
+          function Search_Enumerator_Get: TProcDef; virtual;
+          function Search_Enumerator_Move: TProcDef; virtual;
+          function Search_Enumerator_Current: TSym; virtual;
           { check if the symtable contains a float field }
-          function contains_float_field : boolean;
+          function Contains_Float_Field : Boolean;
           { check if the symtable contains a field that spans an aword boundary }
-          function contains_cross_aword_field: boolean;
+          function Contains_Cross_AWord_Field: Boolean;
           { extended RTTI }
-          procedure apply_rtti_directive(dir: TRTTIDirective); virtual;
-          function is_visible_for_rtti(option: TRTTIOption; vis: TVisibility): boolean; inline;
-          function rtti_visibilities_for_option(option: TRTTIOption): TVisibilities; inline;
-          function has_extended_rtti: boolean; inline;
+          procedure Apply_RTTI_Directive(Dir: TRTTIDirective); virtual;
+          function Is_Visible_For_RTTI(Option: TRTTIOption; Vis: TVisibility): Boolean; inline;
+          function RTTI_Visibilities_For_Option(Option: TRTTIOption): TVisibilities; inline;
+          function Has_Extended_RTTI: Boolean; inline;
           { update the name of the object, typically needed after getcopy }
-          procedure setobjrealname(const n: string);
+          procedure SetObjRealName(const N: string);
        end;
 
        PVariantRecDesc = ^TVariantRecDesc;
@@ -379,16 +379,16 @@ interface
        TVariantRecBranch = record
          { we store only single values here and no ranges because tvariantrecdesc is only needed in iso mode
            which does not support range expressions in variant record definitions }
-         values : array of TConstExprInt;
-         nestedvariant : PVariantRecDesc;
+         Values : array of TConstExprInt;
+         NestedVariant : PVariantRecDesc;
        end;
 
        PPVariantRecDesc = ^PVariantRecDesc;
 
        TVariantRecDesc = record
-         variantselector : TSym;
-         variantselectorderef : TDeref;
-         branches : array of TVariantRecBranch;
+         VariantSelector : TSym;
+         VariantSelectorDeref : TDeref;
+         Branches : array of TVariantRecBranch;
        end;
 
        TRecordDef = class(TAbstractRecordDef)
@@ -397,29 +397,29 @@ interface
           function XMLPrintType: AnsiString; override;
 {$endif DEBUG_NODE_XML}
        public
-          variantrecdesc : PVariantRecDesc;
-          isunion       : boolean;
-          constructor create(const n:string; p:TSymTable);virtual;
-          constructor create_global_internal(const n: string; PackRecords, RecordAlignMin: shortint); virtual;
-          constructor create_internal(const n: string; PackRecords, RecordAlignMin: shortint; where: TSymTable); virtual;
-          function add_field_by_def(const optionalname: TIDString; def: TDef): TSym;
-          procedure add_fields_from_deflist(fieldtypes: TFPList);
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          VariantRecDesc : PVariantRecDesc;
+          IsUnion       : Boolean;
+          constructor Create(const N:string; P:TSymTable);virtual;
+          constructor Create_Global_Internal(const N: string; PackRecords, RecordAlignMin: ShortInt); virtual;
+          constructor Create_Internal(const N: string; PackRecords, RecordAlignMin: ShortInt; Where: TSymTable); virtual;
+          function Add_Field_By_Def(const OptionalName: TIDString; Def: TDef): TSym;
+          procedure Add_Fields_From_DefList(FieldTypes: TFPList);
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
-          function getcopy : TStoredDef;override;
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
-          function  size:asizeint;override;
-          function  alignment : shortint;override;
-          function  padalignment: shortint;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function  Size:ASizeInt;override;
+          function  Alignment : ShortInt;override;
+          function  PadAlignment: ShortInt;
           function  GetTypeName:string;override;
           { debug }
-          function  NeedsInitTable : boolean;override;
-          function  NeedsSeparateInitRTTI:boolean;override;
-          function  HasNonTrivialInitChild(check_parent:boolean):boolean;override;
+          function  NeedsInitTable : Boolean;override;
+          function  NeedsSeparateInitRTTI:Boolean;override;
+          function  HasNonTrivialInitChild(CheckParent:Boolean):Boolean;override;
        end;
        TRecordDefClass = class of TRecordDef;
 
@@ -429,7 +429,7 @@ interface
 
        TImplementedInterface = class
         private
-         fIOffset      : LongInt;
+         FIOffset      : LongInt;
          function GetIOffset: LongInt;
         public
          IntfDef      : TObjectDef;
@@ -441,25 +441,25 @@ interface
          ImplementsGetter :  TSym;
          ImplementsGetterDeref : TDeref;
          ImplementsField : TSym;
-         constructor create(aintf: TObjectDef);virtual;
-         constructor create_deref(intfd,getterd:TDeref);virtual;
+         constructor Create(AIntf: TObjectDef);virtual;
+         constructor Create_Deref(IntfD,GetterD:TDeref);virtual;
          destructor  Destroy; override;
-         function getcopy:TImplementedInterface;
-         procedure buildderef;
-         procedure deref;
-         procedure AddMapping(const origname, newname: string);
-         function  GetMapping(const origname: string):string;
-         procedure AddImplProc(pd:TProcDef);
-         function  IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: LongInt): boolean;
-         property  IOffset: LongInt read GetIOffset write fIOffset;
+         function GetCopy:TImplementedInterface;
+         procedure BuildDeref;
+         procedure Deref;
+         procedure AddMapping(const OrigName, NewName: string);
+         function  GetMapping(const OrigName: string):string;
+         procedure AddImplProc(PD:TProcDef);
+         function  IsImplMergePossible(MergingIntf:TImplementedInterface;out Weight: LongInt): Boolean;
+         property  IOffset: LongInt read GetIOffset write FIOffset;
        end;
        TImplementedInterfaceClass = class of TImplementedInterface;
 
        { tvmtentry }
        TVMTEntry = record
-         procdef      : TProcDef;
-         procdefderef : TDeref;
-         visibility   : TVisibility;
+         ProcDef      : TProcDef;
+         ProcDefDeref : TDeref;
+         Visibility   : TVisibility;
        end;
        PVMTEntry = ^TVMTEntry;
 
@@ -470,7 +470,7 @@ interface
        TMVCallStaticInfo = array[0..1024*1024-1] of TVMCallStatic;
        TObjectDef = class(TAbstractRecordDef)
        private
-          fcurrent_dispid: LongInt;
+          FCurrentDispID: LongInt;
 {$ifdef DEBUG_NODE_XML}
        protected
           function XMLPrintType: AnsiString; override;
@@ -478,199 +478,199 @@ interface
           procedure XMLPrintDefData(var T: Text; Sym: TSym); override;
 {$endif DEBUG_NODE_XML}
        public
-          childof        : TObjectDef;
-          childofderef   : TDeref;
+          ChildOf        : TObjectDef;
+          ChildOfDeref   : TDeref;
 
           { for Object Pascal helpers }
-          extendeddef   : TDef;
-          extendeddefderef: TDeref;
-          helpertype : THelperType;
+          ExtendedDef   : TDef;
+          ExtendedDefDeref: TDeref;
+          HelperType : THelperType;
           { for Objective-C: protocols and classes can have the same name there }
-          objextname     : PShortString;
+          ObjExtName     : PShortString;
           { to be able to have a variable vmt position }
           { and no vmt field for objects without virtuals }
-          vmtentries     : TFPList;
-          vmcallstaticinfo : PMVCallStaticInfo;
-          vmt_field       : TSym;
-          vmt_fieldderef  : TDeref;
-          iidguid        : PGUID;
-          iidstr         : PShortString;
+          VMTEntries     : TFPList;
+          VMCallStaticInfo : PMVCallStaticInfo;
+          VMTField       : TSym;
+          VMTFieldDeref  : TDeref;
+          IIDGUID        : PGUID;
+          IIDStr         : PShortString;
           { store implemented interfaces defs and name mappings }
           ImplementedInterfaces : TFPObjectList;
 
           { Number of abstract methods, including inherited methods. }
-          abstractcnt    : LongInt;
-          writing_class_record_dbginfo,
+          AbstractCnt    : LongInt;
+          WritingClassRecordDbgInfo,
           { a class of this type has been created in this module }
-          created_in_current_module,
+          CreatedInCurrentModule,
           { a loadvmtnode for this class has been created in this
             module, so if a classrefdef variable of this or a parent
             class is used somewhere to instantiate a class, then this
             class may be instantiated
           }
-          maybe_created_in_current_module,
+          MaybeCreatedInCurrentModule,
           { a "class of" this particular class has been created in
             this module
           }
-          classref_created_in_current_module : boolean;
-          objecttype     : TObjectTyp;
+          ClassRefCreatedInCurrentModule : Boolean;
+          ObjectType     : TObjectTyp;
           { for interfaces that can be invoked using Invoke(),
             this is the definition of the hidden class that is generated by the compiler.
             we need this definition to reference it in the RTTI.
             Since interfaces can inherit, so can these hidden classes,
             so we need to write this to the ppu to be able to reference the parents.
           }
-          hiddenclassdef : TObjectDef;
-          hiddenclassdefref : TDeref;
-          constructor create(ot:TObjectTyp;const n:string;c:TObjectDef;doregister:boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          HiddenClassDef : TObjectDef;
+          HiddenClassDefRef : TDeref;
+          constructor Create(OT:TObjectTyp;const N:string;C:TObjectDef;DoRegister:Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor  Destroy;override;
-          function getcopy : TStoredDef;override;
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function GetTypeName:string;override;
-          procedure buildderef;override;
-          procedure deref;override;
-          procedure derefimpl;override;
-          procedure copyvmtentries(objdef:TObjectDef);
-          function  getparentdef:TDef;override;
-          function  size : asizeint;override;
-          function  alignment:shortint;override;
-          function  vmtmethodoffset(index:LongInt):LongInt;
-          function  members_need_inittable : boolean;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          procedure DerefImpl;override;
+          procedure CopyVMTEntries(ObjDef:TObjectDef);
+          function  GetParentDef:TDef;override;
+          function  Size : ASizeInt;override;
+          function  Alignment:ShortInt;override;
+          function  VMTMethodOffset(Index:LongInt):LongInt;
+          function  Members_Need_InitTable : Boolean;
           { this should be called when this class implements an interface }
-          procedure prepareguid;
+          procedure PrepareGUID;
           function  IsPublishable : TPublishProperty;override;
-          function  NeedsInitTable : boolean;override;
-          function  NeedsSeparateInitRTTI : boolean;override;
-          function  HasNonTrivialInitChild(check_parent:boolean):boolean;override;
-          function  RTTIMangledName(rt:TRTTIType):TSymStr;override;
-          function  is_unique_objpasdef: boolean;
-          function  vmt_mangledname : TSymStr;
-          function  vmt_def: TRecordDef;
-          procedure check_forwards; override;
-          procedure insertvmt;
-          function  vmt_offset: asizeint;
-          procedure set_parent(c : TObjectDef);
-          function find_destructor: TProcDef;
-          function implements_any_interfaces: boolean;
-          function register_implemented_interface(intfdef:TObjectDef;useguid:boolean):TImplementedInterface;
+          function  NeedsInitTable : Boolean;override;
+          function  NeedsSeparateInitRTTI : Boolean;override;
+          function  HasNonTrivialInitChild(CheckParent:Boolean):Boolean;override;
+          function  RTTIMangledName(RT:TRTTIType):TSymStr;override;
+          function  Is_Unique_ObjPasDef: Boolean;
+          function  VMT_MangledName : TSymStr;
+          function  VMT_Def: TRecordDef;
+          procedure Check_Forwards; override;
+          procedure InsertVMT;
+          function  VMT_Offset: ASizeInt;
+          procedure Set_Parent(C : TObjectDef);
+          function Find_Destructor: TProcDef;
+          function Implements_Any_Interfaces: Boolean;
+          function Register_Implemented_Interface(IntfDef:TObjectDef;UseGUID:Boolean):TImplementedInterface;
           { dispinterface support }
-          function get_next_dispid: LongInt;
+          function Get_Next_DispID: LongInt;
           { enumerator support }
-          function search_enumerator_get: TProcDef; override;
-          function search_enumerator_move: TProcDef; override;
-          function search_enumerator_current: TSym; override;
+          function Search_Enumerator_Get: TProcDef; override;
+          function Search_Enumerator_Move: TProcDef; override;
+          function Search_Enumerator_Current: TSym; override;
           { WPO }
           procedure RegisterCreatedObjectType;override;
-          procedure register_maybe_created_object_type;
+          procedure Register_Maybe_Created_Object_Type;
           procedure RegisterCreatedClassRefType;
-          procedure register_vmt_call(index:LongInt);
+          procedure Register_VMT_Call(Index:LongInt);
           { ObjC }
-          procedure finish_objc_data;
-          function check_objc_types: boolean;
+          procedure Finish_ObjC_Data;
+          function Check_ObjC_Types: Boolean;
           { C++ }
-          procedure finish_cpp_data;
-          procedure apply_rtti_directive(dir: TRTTIDirective); override;
+          procedure Finish_CPP_Data;
+          procedure Apply_RTTI_Directive(Dir: TRTTIDirective); override;
        end;
        TObjectDefClass = class of TObjectDef;
 
        TClassRefDef = class(TAbstractPointerDef)
-          constructor create(def:TDef);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(Def:TDef);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function getcopy:TStoredDef;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function GetCopy:TStoredDef;override;
           function GetTypeName:string;override;
           function IsPublishable : TPublishProperty;override;
-          function RTTIMangledName(rt:TRTTIType):TSymStr;override;
+          function RTTIMangledName(RT:TRTTIType):TSymStr;override;
           procedure RegisterCreatedObjectType;override;
        end;
        TClassRefDefClass = class of TClassRefDef;
 
        TArrayDef = class(TStoredDef)
-          lowrange,
-          highrange     : asizeint;
-          rangedef      : TDef;
-          rangedefderef : TDeref;
-          arrayoptions  : TArrayDefOptions;
+          LowRange,
+          HighRange     : ASizeInt;
+          RangeDef      : TDef;
+          RangeDefDeref : TDeref;
+          ArrayOptions  : TArrayDefOptions;
           SymTable      : TSymTable;
        protected
-          _elementdef      : TDef;
-          _elementdefderef : TDeref;
-          procedure setelementdef(def:TDef);
-          class function getreusable_intern(def: TDef; elems: asizeint; const options: TArrayDefOptions): TArrayDef;
+          FElementDef      : TDef;
+          FElementDefDeref : TDeref;
+          procedure SetElementDef(Def:TDef);
+          class function GetReusable_Intern(Def: TDef; Elems: ASizeInt; const Options: TArrayDefOptions): TArrayDef;
        public
-          function elesize : asizeint;
-          function elepackedbitsize : asizeint;
-          function elecount : ASizeUInt;
-          constructor create_from_pointer(def: TPointerDef);virtual;
-          constructor create(l, h: asizeint; def: TDef);virtual;
-          constructor create_vector(l,h:asizeint; def:TDef);
-          constructor create_openarray;virtual;
-          class function getreusable(def: TDef; elems: asizeint): TArrayDef;
-          class function getreusable_vector(def: TDef; elems: asizeint): TArrayDef;
+          function EleSize : ASizeInt;
+          function ElePackedBitSize : ASizeInt;
+          function EleCount : ASizeUInt;
+          constructor Create_From_Pointer(Def: TPointerDef);virtual;
+          constructor Create(L, H: ASizeInt; Def: TDef);virtual;
+          constructor Create_Vector(L,H:ASizeInt; Def:TDef);
+          constructor Create_OpenArray;virtual;
+          class function GetReusable(Def: TDef; Elems: ASizeInt): TArrayDef;
+          class function GetReusable_Vector(Def: TDef; Elems: ASizeInt): TArrayDef;
           { same as above, but in case the def must never be freed after the
             current module has been compiled -- even if the def was not written
             to the ppu file (for defs in para locations, as we don't reset them
             so we don't have to recalculate them all the time) }
-          class function getreusable_no_free(def: TDef; elems: asizeint): TArrayDef;
-          class function getreusable_no_free_vector(def: TDef; elems: asizeint): TArrayDef;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          class function GetReusable_No_Free(Def: TDef; Elems: ASizeInt): TArrayDef;
+          class function GetReusable_No_Free_Vector(Def: TDef; Elems: ASizeInt): TArrayDef;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy; override;
-          function getcopy : TStoredDef;override;
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
-          function  getmangledparaname : TSymStr;override;
-          procedure buildderef;override;
-          procedure deref;override;
-          function size : asizeint;override;
-          function alignment : shortint;override;
+          function  GetMangledParaName : TSymStr;override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function Size : ASizeInt;override;
+          function Alignment : ShortInt;override;
           { returns the label of the range check string }
-          function NeedsInitTable : boolean;override;
-          function NeedsSeparateInitRTTI : boolean;override;
-          property elementdef : TDef read _elementdef write setelementdef;
+          function NeedsInitTable : Boolean;override;
+          function NeedsSeparateInitRTTI : Boolean;override;
+          property ElementDef : TDef read FElementDef write SetElementDef;
           function IsPublishable : TPublishProperty;override;
-          function is_hwvector: boolean;
+          function Is_HWVector: Boolean;
        end;
        TArrayDefClass = class of TArrayDef;
 
        TOrdDef = class(TStoredDef)
-          low,high : TConstExprInt;
-          ordtype  : TOrdType;
-          constructor create(t : TOrdType;v,b : TConstExprInt; doregister: boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          Low,High : TConstExprInt;
+          OrdType  : TOrdType;
+          constructor Create(T : TOrdType;V,B : TConstExprInt; DoRegister: Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  IsPublishable : TPublishProperty;override;
           function  GetTypeName:string;override;
-          function alignment:shortint;override;
-          procedure setsize;
-          function  packedbitsize: asizeint; override;
-          function getvardef : LongInt;override;
+          function Alignment:ShortInt;override;
+          procedure SetSize;
+          function  PackedBitSize: ASizeInt; override;
+          function GetVarDef : LongInt;override;
        end;
        TOrdDefClass = class of TOrdDef;
 
        TFloatDef = class(TStoredDef)
-          floattype : TFloatType;
-          constructor create(t: TFloatType; doregister: boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          FloatType : TFloatType;
+          constructor Create(T: TFloatType; DoRegister: Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          function alignment:shortint;override;
-          function structalignment: shortint;override;
-          procedure setsize;
-          function  getvardef:LongInt;override;
+          function Alignment:ShortInt;override;
+          function StructAlignment: ShortInt;override;
+          procedure SetSize;
+          function  GetVarDef:LongInt;override;
        end;
        TFloatDefClass = class of TFloatDef;
 
@@ -698,115 +698,115 @@ interface
 
        TAbstractProcDef = class(TStoredDef)
           { saves a definition to the return type }
-          returndef       : TDef;
-          returndefderef  : TDeref;
-          parast          : TSymTable;
-          paras           : TParaList;
-          proctypeoption  : TProcTypeOption;
-          proccalloption  : TProcCallOption;
-          procoptions     : TProcOptions;
-          callerargareasize,
-          calleeargareasize: PInt;
-          funcretloc : array[callerside..calleeside] of TCGPara;
-          has_paraloc_info : TCallerCallee; { paraloc info is available }
+          ReturnDef       : TDef;
+          ReturnDefDeref  : TDeref;
+          ParaST          : TSymTable;
+          Paras           : TParaList;
+          ProcTypeOption  : TProcTypeOption;
+          ProcCallOption  : TProcCallOption;
+          ProcOptions     : TProcOptions;
+          CallerArgAreaSize,
+          CalleeArgAreaSize: PInt;
+          FuncRetLoc : array[CallerSide..CalleeSide] of TCGPara;
+          HasParaLocInfo : TCallerCallee; { paraloc info is available }
           { number of user visible parameters }
-          maxparacount,
-          minparacount    : word;
-          constructor create(dt:TDefTyp;level:byte;doregister:boolean);
-          constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+          MaxParaCount,
+          MinParaCount    : Word;
+          constructor Create(DT:TDefTyp;Level:Byte;DoRegister:Boolean);
+          constructor PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
-          procedure  ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderef;override;
-          procedure deref;override;
-          procedure calcparas;
-          function mangledprocparanames(oldlen : LongInt) : string;
-          function  typename_paras(pno: TProcNameOptions): AnsiString;
-          function  is_methodpointer:boolean;virtual;
-          function  is_addressonly:boolean;virtual;
-          function  no_self_node:boolean;
+          procedure  PPUWrite(PPUFile:TCompilerPPUFile);override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          procedure CalcParas;
+          function MangledProcParaNames(OldLen : LongInt) : string;
+          function  TypeName_Paras(PNo: TProcNameOptions): AnsiString;
+          function  Is_MethodPointer:Boolean;virtual;
+          function  Is_AddressOnly:Boolean;virtual;
+          function  No_Self_Node:Boolean;
           { get either a copy as a procdef or procvardef }
-          function  getcopyas(newtyp:TDefTyp;copytyp:TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef; virtual;
-          function  compatible_with_pointerdef_size(ptr: TPointerDef): boolean; virtual;
-          procedure check_mark_as_nested;
-          procedure init_paraloc_info(side: TCallerCallee);
-          procedure done_paraloc_info(side: TCallerCallee);
-          function stack_tainting_parameter(side: TCallerCallee): boolean;
-          function is_pushleftright: boolean;virtual;
-          function address_type:TDef;virtual;
+          function  GetCopyAs(NewTyp:TDefTyp;CopyTyp:TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef; virtual;
+          function  Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean; virtual;
+          procedure Check_Mark_As_Nested;
+          procedure Init_ParaLoc_Info(Side: TCallerCallee);
+          procedure Done_ParaLoc_Info(Side: TCallerCallee);
+          function Stack_Tainting_Parameter(Side: TCallerCallee): Boolean;
+          function Is_PushLeftRight: Boolean;virtual;
+          function Address_Type:TDef;virtual;
           { address type, generated for ofs() }
-          function ofs_address_type:TDef;virtual;
-          function generate_safecall_wrapper: boolean; virtual;
+          function Ofs_Address_Type:TDef;virtual;
+          function Generate_SafeCall_Wrapper: Boolean; virtual;
           { returns true if the def is a generic param of the procdef }
-          function is_generic_param(def:TDef): boolean;
+          function Is_Generic_Param(Def:TDef): Boolean;
 
-          function wpo_may_create_instance(optionalmethodpointer: TNode): boolean;
+          function WPO_May_Create_Instance(OptionalMethodPointer: TNode): Boolean;
        private
-          procedure count_para(p:TObject;arg:pointer);
-          procedure insert_para(p:TObject;arg:pointer);
+          procedure CountPara(P:TObject;Arg:Pointer);
+          procedure InsertPara(P:TObject;Arg:Pointer);
        end;
 
        TProcVarDef = class(TAbstractProcDef)
-          constructor create(level:byte;doregister:boolean);virtual;
+          constructor Create(Level:Byte;DoRegister:Boolean);virtual;
           { returns a procvardef that represents the address of a proc(var)def }
-          class function getreusableprocaddr(def: TAbstractProcDef; copytyp: TCacheableProcCopyType): TProcVarDef; virtual;
+          class function GetReusableProcAddr(Def: TAbstractProcDef; CopyTyp: TCacheableProcCopyType): TProcVarDef; virtual;
           { same as above, but in case the def must never be freed after the
             current module has been compiled -- even if the def was not written
             to the ppu file (for defs in para locations, as we don't reset them
             so we don't have to recalculate them all the time) }
-          class function getreusableprocaddr_no_free(def: TAbstractProcDef): TProcVarDef;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          class function GetReusableProcAddr_No_Free(Def: TAbstractProcDef): TProcVarDef;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function  GetSymtable(t:TGetSymTable):TSymTable;override;
-          function  size : asizeint;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function  GetSymTable(T:TGetSymTable):TSymTable;override;
+          function  Size : ASizeInt;override;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          function  is_methodpointer:boolean;override;
-          function  is_addressonly:boolean;override;
-          function  getmangledparaname:TSymStr;override;
-          function getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef; override;
+          function  Is_MethodPointer:Boolean;override;
+          function  Is_AddressOnly:Boolean;override;
+          function  GetMangledParaName:TSymStr;override;
+          function GetCopyAs(NewTyp: TDefTyp; CopyTyp: TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef; override;
        end;
        TProcVarDefClass = class of TProcVarDef;
 
        TMessageInf = record
-         case integer of
-           0 : (str : PShortString);
-           1 : (i : LongInt);
+         case Integer of
+           0 : (Str : PShortString);
+           1 : (I : LongInt);
        end;
 
        TInliningInfo = record
           { node tree }
-          code  : TNode;
-          flags : TProcInfoFlags;
+          Code  : TNode;
+          Flags : TProcInfoFlags;
        end;
        PInliningInfo = ^TInliningInfo;
 
        TCapturedSymInfo = record
-         sym : TSym;
-         def : TDef;
+         Sym : TSym;
+         Def : TDef;
          { the location where the symbol was first encountered }
-         fileinfo : TFilePosInfo;
+         FileInfo : TFilePosInfo;
        end;
        PCapturedSymInfo = ^TCapturedSymInfo;
 
        TImplProcDefInfo = record
-          resultname : PShortString;
-          parentfpstruct: TSym;
-          parentfpstructptrtype: TDef;
-          parentfpinitblock: TNode;
-          procstarttai,
-          procendtai   : TAI;
-          skpara: pointer;
-          personality: TProcDef;
-          was_anonymous,
-          has_capturer,
-          forwarddef,
-          interfacedef : boolean;
-          hasforward  : boolean;
-          is_implemented : boolean;
-          capturedsyms : TFPList;
+          ResultName : PShortString;
+          ParentFPStruct: TSym;
+          ParentFPStructPtrType: TDef;
+          ParentFPInitBlock: TNode;
+          ProcStartTAI,
+          ProcEndTAI   : TAI;
+          SKPara: Pointer;
+          Personality: TProcDef;
+          WasAnonymous,
+          HasCapturer,
+          ForwardDef,
+          InterfaceDef : Boolean;
+          HasForward  : Boolean;
+          IsImplemented : Boolean;
+          CapturedSyms : TFPList;
        end;
        PImplProcDefInfo = ^TImplProcDefInfo;
 
@@ -815,16 +815,16 @@ interface
        TProcDef = class(TAbstractProcDef)
        protected
 {$ifdef symansistr}
-         _mangledname : AnsiString;
+         FMangledName : AnsiString;
 {$else symansistr}
-         _mangledname : PShortString;
+         FMangledName : PShortString;
 {$endif}
-         _parentfpsym : TSym;
+         FParentFPSym : TSym;
          { information that is only required until the implementation of the
            procdef has been handled }
-         implprocdefinfo : PImplProcDefInfo;
+         ImplProcDefInfo : PImplProcDefInfo;
 
-         function store_localst:boolean;
+         function Store_LocalST:Boolean;
 
          function GetResultName: PShortString;
          procedure SetResultName(AValue: PShortString);
@@ -834,93 +834,93 @@ interface
          procedure SetParentFPStructPtrType(AValue: TDef);
          function GetParentFPInitBlock: TNode;
          procedure SetParentFPInitBlock(AValue: TNode);
-         function Getprocstarttai: TAI;
-         procedure Setprocstarttai(AValue: TAI);
-         function Getprocendtai: TAI;
-         procedure Setprocendtai(AValue: TAI);
-         function Getskpara: pointer;
-         procedure Setskpara(AValue: pointer);
-         function Getpersonality: TProcDef;
-         procedure Setpersonality(AValue: TProcDef);
-         function Getforwarddef: boolean;
-         procedure Setforwarddef(AValue: boolean);
-         function Getinterfacedef: boolean;
-         procedure Setinterfacedef(AValue: boolean);virtual;
-         function Gethasforward: boolean;
-         procedure Sethasforward(AValue: boolean);
-         function GetIsEmpty: boolean;
-         procedure SetIsEmpty(AValue: boolean);
-         function GetHasInliningInfo: boolean;
-         procedure SetHasInliningInfo(AValue: boolean);
-         function Getis_implemented: boolean;
-         procedure Setis_implemented(AValue: boolean);
-         function getwas_anonymous:boolean;
-         procedure setwas_anonymous(avalue:boolean);
-         function gethas_capturer:boolean;
-         procedure sethas_capturer(avalue:boolean);
-         function Getcapturedsyms:TFPList;
-         function getparentfpsym: TSym;
+         function GetProcStartTAI: TAI;
+         procedure SetProcStartTAI(AValue: TAI);
+         function GetProcEndTAI: TAI;
+         procedure SetProcEndTAI(AValue: TAI);
+         function GetSKPara: Pointer;
+         procedure SetSKPara(AValue: Pointer);
+         function GetPersonality: TProcDef;
+         procedure SetPersonality(AValue: TProcDef);
+         function GetForwardDef: Boolean;
+         procedure SetForwardDef(AValue: Boolean);
+         function GetInterfaceDef: Boolean;
+         procedure SetInterfaceDef(AValue: Boolean);virtual;
+         function GetHasForward: Boolean;
+         procedure SetHasForward(AValue: Boolean);
+         function GetIsEmpty: Boolean;
+         procedure SetIsEmpty(AValue: Boolean);
+         function GetHasInliningInfo: Boolean;
+         procedure SetHasInliningInfo(AValue: Boolean);
+         function GetIs_Implemented: Boolean;
+         procedure SetIs_Implemented(AValue: Boolean);
+         function GetWas_Anonymous:Boolean;
+         procedure SetWas_Anonymous(AValue:Boolean);
+         function GetHas_Capturer:Boolean;
+         procedure SetHas_Capturer(AValue:Boolean);
+         function GetCapturedSyms:TFPList;
+         function GetParentFPSym: TSym;
        public
-          messageinf : TMessageInf;
-          dispid : LongInt;
+          MessageInf : TMessageInf;
+          DispID : LongInt;
 {$ifndef EXTDEBUG}
           { where is this function defined and what were the symbol
             flags, needed here because there
             is only one symbol for all overloaded functions
             EXTDEBUG has fileinfo in tdef (PFV) }
-          fileinfo : TFilePosInfo;
+          FileInfo : TFilePosInfo;
 {$endif}
-          symoptions : TSymOptions;
-          deprecatedmsg : PShortString;
+          SymOptions : TSymOptions;
+          DeprecatedMsg : PShortString;
           { generic support }
-          genericdecltokenbuf : TDynamicArray;
+          GenericDeclTokenBuf : TDynamicArray;
           { symbol owning this definition }
-          procsym : TSym;
-          procsymderef : TDeref;
+          ProcSym : TSym;
+          ProcSymDeref : TDeref;
           { alias names }
-          aliasnames : TCmdStrList;
+          AliasNames : TCmdStrList;
           { symtables }
-          localst : TSymTable;
-          funcretsym : TSym;
-          funcretsymderef : TDeref;
-          struct : TAbstractRecordDef;
-          structderef : TDeref;
-          implprocoptions: TImplProcOptions;
+          LocalST : TSymTable;
+          FuncRetSym : TSym;
+          FuncRetSymDeref : TDeref;
+          Struct : TAbstractRecordDef;
+          StructDeref : TDeref;
+          ImplProcOptions: TImplProcOptions;
           { import info }
-          import_dll,
-          import_name : PShortString;
+          ImportDLL,
+          ImportName : PShortString;
           { info for inlining the subroutine, if this pointer is nil,
             the procedure can't be inlined }
-          inlininginfo : PInliningInfo;
-          import_nr    : word;
-          extnumber    : word;
+          InliningInfo : PInliningInfo;
+          ImportNr    : Word;
+          ExtNumber    : Word;
           { set to a value different from tsk_none in case this procdef is for
             a routine that has to be internally generated by the compiler }
-          synthetickind: TSyntheticKind;
-          visibility   : TVisibility;
+          SyntheticKind: TSyntheticKind;
+          Visibility   : TVisibility;
 {$ifndef DISABLE_FAST_OVERLOAD_PATCH}
-          seenmarker : pointer; // used for filtering in tcandidate
+          SeenMarker : Pointer; // used for filtering in tcandidate
 {$endif}
 {$ifdef symansistr}
-          section: AnsiString;
+          Section: AnsiString;
 {$else symansistr}
-          section: PShortString;
+          Section: PShortString;
 {$endif}
           { only needed when actually compiling a unit, no need to save/load from ppu }
-          invoke_helper : TProcDef;
-          copied_from : TProcDef;
-          constructor create(level:byte;doregister:boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          InvokeHelper : TProcDef;
+          CopiedFrom : TProcDef;
+          constructor Create(Level:Byte;DoRegister:Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor  Destroy;override;
-          procedure   freeimplprocdefinfo;
+          procedure   FreeImplProcDefInfo;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure buildderefimpl;override;
-          procedure deref;override;
-          procedure derefimpl;override;
-          function  GetSymtable(t:TGetSymTable):TSymTable;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure BuildDerefImpl;override;
+          procedure Deref;override;
+          procedure DerefImpl;override;
+          function  GetSymTable(T:TGetSymTable):TSymTable;override;
           { warnings:
               * the symtablestack top has to be the symtable to which the copy
                 should be added
@@ -928,192 +928,192 @@ interface
                 needs to be finalised afterwards by calling
                 symcreat.finish_copied_procdef() afterwards
           }
-          function  getcopyas(newtyp:TDefTyp;copytyp:TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef; override;
-          function  getcopy: TStoredDef; override;
+          function  GetCopyAs(NewTyp:TDefTyp;CopyTyp:TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef; override;
+          function  GetCopy: TStoredDef; override;
           function  GetTypeName : string;override;
-          function  mangledname : TSymStr; virtual;
-          procedure setmangledname(const s : TSymStr);
-          function  needsglobalasmsym: boolean;
-          procedure setcompilerprocname;
-          function  fullprocname(showhidden:boolean):AnsiString;
-          function  customprocname(pno: TProcNameOptions):AnsiString;
-          function  defaultmangledname: TSymStr;
-          function  cplusplusmangledname : TSymStr;
-          function  objcmangledname : TSymStr;
-          function  is_methodpointer:boolean;override;
-          function  is_addressonly:boolean;override;
-          procedure make_external;
-          procedure init_genericdecl;
-          procedure reset_after_conv;
+          function  MangledName : TSymStr; virtual;
+          procedure SetMangledName(const S : TSymStr);
+          function  NeedsGlobalAsmSym: Boolean;
+          procedure SetCompilerProcName;
+          function  FullProcName(ShowHidden:Boolean):AnsiString;
+          function  CustomProcName(PNo: TProcNameOptions):AnsiString;
+          function  DefaultMangledName: TSymStr;
+          function  CPlusPlusMangledName : TSymStr;
+          function  ObjCMangledName : TSymStr;
+          function  Is_MethodPointer:Boolean;override;
+          function  Is_AddressOnly:Boolean;override;
+          procedure Make_External;
+          procedure Init_GenericDecl;
+          procedure Reset_After_Conv;
 
-          function get_funcretsym_info(out ressym: TSym; out resdef: TDef): boolean; virtual;
-          function get_safecall_funcretsym_info(out ressym: TSym; out resdef: TDef): boolean; virtual;
+          function Get_FuncRetSym_Info(out ResSym: TSym; out ResDef: TDef): Boolean; virtual;
+          function Get_SafeCall_FuncRetSym_Info(out ResSym: TSym; out ResDef: TDef): Boolean; virtual;
 
-          procedure add_captured_sym(sym:TSym;def:TDef;const filepos:TFilePosInfo);
+          procedure Add_Captured_Sym(Sym:TSym;Def:TDef;const FilePos:TFilePosInfo);
 
           { returns whether the mangled name or any of its aliases is equal to
             s }
-          function  has_alias_name(const s: TSymStr):boolean;
+          function  Has_Alias_Name(const S: TSymStr):Boolean;
 
           { aliases to fields only required when a function is implemented in
             the current unit }
-          property resultname: PShortString read GetResultName write SetResultName;
+          property ResultName: PShortString read GetResultName write SetResultName;
 
-          property parentfpstruct: TSym read GetParentFPStruct write SetParentFPStruct;
+          property ParentFPStruct: TSym read GetParentFPStruct write SetParentFPStruct;
           { pointer to parentfpstruct's type (not yet valid during parsing, so
             cannot be used for $parentfp parameter) (no need to save to ppu) }
-          property parentfpstructptrtype: TDef read GetParentFPStructPtrType write SetParentFPStructPtrType;
+          property ParentFPStructPtrType: TDef read GetParentFPStructPtrType write SetParentFPStructPtrType;
           { code to copy the parameters accessed from nested routines into the
             parentfpstruct (no need to save to ppu) }
-          property parentfpinitblock: TNode read GetParentFPInitBlock write SetParentFPInitBlock;
+          property ParentFPInitBlock: TNode read GetParentFPInitBlock write SetParentFPInitBlock;
           { First/last assembler symbol/instruction in aasmoutput list.
             Note: initialised after compiling the code for the procdef, but
               not saved to/restored from ppu. Used when inserting debug info }
-          property procstarttai: TAI read Getprocstarttai write Setprocstarttai;
-          property procendtai: TAI read Getprocendtai write Setprocendtai;
+          property ProcStartTAI: TAI read GetProcStartTAI write SetProcStartTAI;
+          property ProcEndTAI: TAI read GetProcEndTAI write SetProcEndTAI;
           { optional parameter for the synthetic routine generation logic }
-          property skpara: pointer read Getskpara write Setskpara;
+          property SKPara: Pointer read GetSKPara write SetSKPara;
           { ABI-conformant exception handling personality function }
-          property personality: TProcDef read Getpersonality write Setpersonality;
+          property Personality: TProcDef read GetPersonality write SetPersonality;
           { true, if the procedure is only declared
             (forward procedure) }
-          property forwarddef: boolean read Getforwarddef write Setforwarddef;
+          property ForwardDef: Boolean read GetForwardDef write SetForwardDef;
           { true if the procedure is declared in the interface }
-          property interfacedef: boolean read Getinterfacedef write Setinterfacedef;
+          property InterfaceDef: Boolean read GetInterfaceDef write SetInterfaceDef;
           { true if the procedure has a forward declaration }
-          property hasforward: boolean read Gethasforward write Sethasforward;
+          property HasForward: Boolean read GetHasForward write SetHasForward;
           { true if the routine's body is empty }
-          property isempty: boolean read GetIsEmpty write SetIsEmpty;
+          property IsEmpty: Boolean read GetIsEmpty write SetIsEmpty;
           { true if all information required to inline this routine is available }
-          property has_inlininginfo: boolean read GetHasInliningInfo write SetHasInliningInfo;
+          property HasInliningInfo: Boolean read GetHasInliningInfo write SetHasInliningInfo;
           { returns the $parentfp parameter for nested routines }
-          property parentfpsym: TSym read getparentfpsym;
+          property ParentFPSym: TSym read GetParentFPSym;
           { true if the implementation part for this procdef has been handled }
-          property is_implemented: boolean read Getis_implemented write Setis_implemented;
+          property IsImplemented: Boolean read GetIs_Implemented write SetIs_Implemented;
           { valid if the procdef captures any symbols from outer scopes }
-          property capturedsyms:TFPList read Getcapturedsyms;
+          property CapturedSyms:TFPList read GetCapturedSyms;
           { true if this procdef was originally an anonymous function }
-          property was_anonymous:boolean read getwas_anonymous write setwas_anonymous;
+          property WasAnonymous:Boolean read GetWas_Anonymous write SetWas_Anonymous;
           { true if the procdef has a capturer for anonymous functions }
-          property has_capturer:boolean read gethas_capturer write sethas_capturer;
+          property HasCapturer:Boolean read GetHas_Capturer write SetHas_Capturer;
        end;
        TProcDefClass = class of TProcDef;
 
        { single linked list of overloaded procs }
        PProcDefList = ^TProcDefList;
        TProcDefList = record
-         def  : TProcDef;
-         defderef : TDeref;
-         next : PProcDefList;
+         Def  : TProcDef;
+         DefDeref : TDeref;
+         Next : PProcDefList;
        end;
 
        TStringDef = class(TStoredDef)
-          encoding   : TStringEncoding;
-          stringtype : TStringType;
-          len        : asizeint;
-          constructor createshort(l: byte; doregister: boolean);virtual;
-          constructor loadshort(ppufile:TCompilerPPUFile);
-          constructor createlong(l: asizeint; doregister: boolean);virtual;
-          constructor loadlong(ppufile:TCompilerPPUFile);
-          constructor createansi(aencoding: TStringEncoding; doregister: boolean);virtual;
-          constructor loadansi(ppufile:TCompilerPPUFile);
-          constructor createwide(doregister: boolean);virtual;
-          constructor loadwide(ppufile:TCompilerPPUFile);
-          constructor createunicode(doregister: boolean);virtual;
-          constructor loadunicode(ppufile:TCompilerPPUFile);virtual;
-          function getcopy : TStoredDef;override;
-          function  stringtypname:string;
+          Encoding   : TStringEncoding;
+          StringType : TStringType;
+          Len        : ASizeInt;
+          constructor CreateShort(L: Byte; DoRegister: Boolean);virtual;
+          constructor LoadShort(PPUFile:TCompilerPPUFile);
+          constructor CreateLong(L: ASizeInt; DoRegister: Boolean);virtual;
+          constructor LoadLong(PPUFile:TCompilerPPUFile);
+          constructor CreateAnsi(AEncoding: TStringEncoding; DoRegister: Boolean);virtual;
+          constructor LoadAnsi(PPUFile:TCompilerPPUFile);
+          constructor CreateWide(DoRegister: Boolean);virtual;
+          constructor LoadWide(PPUFile:TCompilerPPUFile);
+          constructor CreateUnicode(DoRegister: Boolean);virtual;
+          constructor LoadUnicode(PPUFile:TCompilerPPUFile);virtual;
+          function GetCopy : TStoredDef;override;
+          function  StringTypName:string;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           function  GetTypeName:string;override;
-          function  getmangledparaname:TSymStr;override;
+          function  GetMangledParaName:TSymStr;override;
           function  IsPublishable : TPublishProperty;override;
-          function  size:asizeint;override;
-          function alignment : shortint;override;
-          function  NeedsInitTable : boolean;override;
-          function  getvardef:LongInt;override;
+          function  Size:ASizeInt;override;
+          function Alignment : ShortInt;override;
+          function  NeedsInitTable : Boolean;override;
+          function  GetVarDef:LongInt;override;
           { returns the default char type def for the string }
-          function get_default_char_type: TDef;
+          function Get_Default_Char_Type: TDef;
           { returns the default string type }
-          function get_default_string_type: TDef;
+          function Get_Default_String_Type: TDef;
        end;
        TStringDefClass = class of TStringDef;
 
        TEnumDef = class(TStoredDef)
-          minval,
-          maxval    : asizeint;
-          basedef   : TEnumDef;
-          basedefderef : TDeref;
+          MinVal,
+          MaxVal    : ASizeInt;
+          BaseDef   : TEnumDef;
+          BaseDefDeref : TDeref;
           SymTable  : TSymTable;
-          has_jumps : boolean;
-          constructor create;virtual;
-          constructor create_subrange(_basedef:TEnumDef;_min,_max:asizeint);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          HasJumps : Boolean;
+          constructor Create;virtual;
+          constructor Create_Subrange(ABaseDef:TEnumDef;AMin,AMax:ASizeInt);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
-          function getcopy : TStoredDef;override;
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          procedure calcsavesize(PackEnum: shortint);
-          function  packedbitsize: asizeint; override;
-          procedure setmax(_max:asizeint);
-          procedure setmin(_min:asizeint);
-          function  min:asizeint;
-          function  max:asizeint;
-          function  getfirstsym:TSym;
-          function  int2enumsym(l: asizeint): TSym;
+          procedure CalcSaveSize(PackEnum: ShortInt);
+          function  PackedBitSize: ASizeInt; override;
+          procedure SetMax(AMax:ASizeInt);
+          procedure SetMin(AMin:ASizeInt);
+          function  Min:ASizeInt;
+          function  Max:ASizeInt;
+          function  GetFirstSym:TSym;
+          function  Int2EnumSym(L: ASizeInt): TSym;
           { returns basedef if assigned, otherwise self }
-          function getbasedef: TEnumDef;
+          function GetBaseDef: TEnumDef;
        end;
        TEnumDefClass = class of TEnumDef;
 
        TSetDef = class(TStoredDef)
-          elementdef : TDef;
-          elementdefderef : TDeref;
+          ElementDef : TDef;
+          ElementDefDeref : TDeref;
           { setbase is the value of the lowest value being representable by the set, this could
             be lower then the lowest value being a valid value from the declaration: a set [3..4] might
             have a setbase of 0 for code generation/alignment reasons }
-          setbase,
+          SetBase,
           { setlow is the lowest value valid according to the declaration of a set, i.e. for a set [3..4] it is really 3 }
-          setlow,
-          setmax   : asizeint;
-          constructor create(def: TDef; low, high: asizeint; doregister: boolean);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function getcopy : TStoredDef;override;
+          SetLow,
+          SetMax   : ASizeInt;
+          constructor Create(Def: TDef; Low, High: ASizeInt; DoRegister: Boolean);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function GetCopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          function alignment: shortint; override;
+          function Alignment: ShortInt; override;
        end;
        TSetDefClass = class of TSetDef;
 
 
        TGenericDummyEntry = class
-         dummysym : TSym;
-         resolvedsym : TSym;
+         DummySym : TSym;
+         ResolvedSym : TSym;
        end;
 
 
        TDefAwareSymTableStack = class(TSymTableStack)
        private
-         procedure add_helpers_and_generics(st:TSymTable;addgenerics:boolean);
-         procedure remove_helpers_and_generics(st:TSymTable);inline;
-         procedure remove_helpers(st:TSymTable);
-         procedure remove_generics(st:TSymTable);
-         procedure pushcommon(st:TSymTable);inline;
+         procedure AddHelpersAndGenerics(ST:TSymTable;AddGenerics:Boolean);
+         procedure RemoveHelpersAndGenerics(ST:TSymTable);inline;
+         procedure RemoveHelpers(ST:TSymTable);
+         procedure RemoveGenerics(ST:TSymTable);
+         procedure PushCommon(ST:TSymTable);inline;
        public
-         procedure push(st: TSymTable); override;
-         procedure pushafter(st,afterst:TSymTable); override;
-         procedure pop(st: TSymTable); override;
+         procedure Push(ST: TSymTable); override;
+         procedure PushAfter(ST,AfterST:TSymTable); override;
+         procedure Pop(ST: TSymTable); override;
        end;
 
 
@@ -1130,7 +1130,7 @@ interface
        CErrorDef: TErrorDefClass;
        CPointerDef: TPointerDefClass;
        CRecordDef: TRecordDefClass;
-       cimplementedinterface: TImplementedInterfaceClass;
+       CImplementedInterface: TImplementedInterfaceClass;
        CObjectDef: TObjectDefClass;
        CClassRefDef: TClassRefDefClass;
        CArrayDef: TArrayDefClass;
@@ -1144,192 +1144,192 @@ interface
 
 
     { default types }
-       generrordef,               { error in definition }
-       voidpointertype,           { pointer for Void-pointeddef }
-       charpointertype,           { pointer for Char-pointeddef }
-       widecharpointertype,       { pointer for WideChar-pointeddef }
-       voidcodepointertype,       { pointer to code; corresponds to System.CodePointer }
-       voidstackpointertype,      { the pointer type used for accessing parameters and local vars on the stack }
-       parentfpvoidpointertype,   { void pointer with the size of the hidden parentfp parameter, passed to nested functions }
+       GenErrorDef,               { error in definition }
+       VoidPointerType,           { pointer for Void-pointeddef }
+       CharPointerType,           { pointer for Char-pointeddef }
+       WideCharPointerType,       { pointer for WideChar-pointeddef }
+       VoidCodePointerType,       { pointer to code; corresponds to System.CodePointer }
+       VoidStackPointerType,      { the pointer type used for accessing parameters and local vars on the stack }
+       ParentFPVoidPointerType,   { void pointer with the size of the hidden parentfp parameter, passed to nested functions }
 {$ifdef x86}
-       voidnearpointertype,
-       voidnearcspointertype,
-       voidneardspointertype,
-       voidnearsspointertype,
-       voidnearespointertype,
-       voidnearfspointertype,
-       voidneargspointertype,
+       VoidNearPointerType,
+       VoidNearCSPointerType,
+       VoidNearDSPointerType,
+       VoidNearSSPointerType,
+       VoidNearESPointerType,
+       VoidNearFSPointerType,
+       VoidNearGSPointerType,
 
 {$endif x86}
-       cundefinedtype,
-       cformaltype,               { unique formal definition }
-       ctypedformaltype,          { unique typed formal definition }
-       voidtype,                  { Void (procedure) }
-       cansichartype,             { Char }
-       cwidechartype,             { WideChar }
-       cchartype,                 { either cansichartype or cwidechartype. Do not free }
-       pasbool1type,              { boolean type }
-       pasbool8type,
-       pasbool16type,
-       pasbool32type,
-       pasbool64type,
-       bool8type,
-       bool16type,
-       bool32type,
-       bool64type,                { implement me }
+       CUndefinedType,
+       CFormalType,               { unique formal definition }
+       CTypedFormalType,          { unique typed formal definition }
+       VoidType,                  { Void (procedure) }
+       CAnsiCharType,             { Char }
+       CWideCharType,             { WideChar }
+       CCharType,                 { either cansichartype or cwidechartype. Do not free }
+       PasBool1Type,              { boolean type }
+       PasBool8Type,
+       PasBool16Type,
+       PasBool32Type,
+       PasBool64Type,
+       Bool8Type,
+       Bool16Type,
+       Bool32Type,
+       Bool64Type,                { implement me }
 
-       u8inttype,                 { 8-Bit unsigned integer }
-       s8inttype,                 { 8-Bit signed integer }
-       u16inttype,                { 16-Bit unsigned integer }
-       s16inttype,                { 16-Bit signed integer }
-       u24inttype,                { 24-Bit unsigned integer }
-       s24inttype,                { 24-Bit signed integer }
-       u32inttype,                { 32-Bit unsigned integer }
-       s32inttype,                { 32-Bit signed integer }
-       u40inttype,                { 40-Bit unsigned integer }
-       s40inttype,                { 40-Bit signed integer }
-       u48inttype,                { 48-Bit unsigned integer }
-       s48inttype,                { 48-Bit signed integer }
-       u56inttype,                { 56-Bit unsigned integer }
-       s56inttype,                { 56-Bit signed integer }
-       u64inttype,                { 64-bit unsigned integer }
-       s64inttype,                { 64-bit signed integer }
-       u128inttype,               { 128-bit unsigned integer }
-       s128inttype,               { 128-bit signed integer }
-       s32floattype,              { 32 bit floating point number }
-       s64floattype,              { 64 bit floating point number }
-       s80floattype,              { 80 bit floating point number }
-       sc80floattype,             { 80 bit floating point number but stored like in C }
-       s64currencytype,           { pointer to a currency type }
-       cshortstringtype,          { pointer to type of short string const   }
-       clongstringtype,           { pointer to type of long string const   }
-       cansistringtype,           { pointer to type of ansi string const  }
-       cwidestringtype,           { pointer to type of wide string const  }
-       cunicodestringtype,
-       openshortstringtype,       { pointer to type of an open shortstring,
+       U8IntType,                 { 8-Bit unsigned integer }
+       S8IntType,                 { 8-Bit signed integer }
+       U16IntType,                { 16-Bit unsigned integer }
+       S16IntType,                { 16-Bit signed integer }
+       U24IntType,                { 24-Bit unsigned integer }
+       S24IntType,                { 24-Bit signed integer }
+       U32IntType,                { 32-Bit unsigned integer }
+       S32IntType,                { 32-Bit signed integer }
+       U40IntType,                { 40-Bit unsigned integer }
+       S40IntType,                { 40-Bit signed integer }
+       U48IntType,                { 48-Bit unsigned integer }
+       S48IntType,                { 48-Bit signed integer }
+       U56IntType,                { 56-Bit unsigned integer }
+       S56IntType,                { 56-Bit signed integer }
+       U64IntType,                { 64-bit unsigned integer }
+       S64IntType,                { 64-bit signed integer }
+       U128IntType,               { 128-bit unsigned integer }
+       S128IntType,               { 128-bit signed integer }
+       S32FloatType,              { 32 bit floating point number }
+       S64FloatType,              { 64 bit floating point number }
+       S80FloatType,              { 80 bit floating point number }
+       SC80FloatType,             { 80 bit floating point number but stored like in C }
+       S64CurrencyType,           { pointer to a currency type }
+       CShortStringType,          { pointer to type of short string const   }
+       CLongStringType,           { pointer to type of long string const   }
+       CAnsiStringType,           { pointer to type of ansi string const  }
+       CWideStringType,           { pointer to type of wide string const  }
+       CUnicodeStringType,
+       OpenShortStringType,       { pointer to type of an open shortstring,
                                     needed for readln() }
-       openchararraytype,         { pointer to type of an open array of char,
+       OpenCharArrayType,         { pointer to type of an open array of char,
                                     needed for readln() }
-       cfiletype,                 { get the same definition for all file }
+       CFileType,                 { get the same definition for all file }
                                   { shared file type }
-       methodpointertype,         { typecasting of methodpointers to extract self }
-       nestedprocpointertype,     { typecasting of nestedprocpointers to extract parentfp }
-       hresultdef,
-       typekindtype,              { def of TTypeKind for correct handling of GetTypeKind parameters }
+       MethodPointerType,         { typecasting of methodpointers to extract self }
+       NestedProcPointerType,     { typecasting of nestedprocpointers to extract parentfp }
+       HResultDef,
+       TypeKindType,              { def of TTypeKind for correct handling of GetTypeKind parameters }
        { we use only one variant def for every variant class }
        CVariantType,
-       colevarianttype,
+       COleVariantType,
        { default integer type, normally s32inttype on 32 bit systems and s64bittype on 64 bit systems }
-       sinttype,
-       uinttype,
+       SIntType,
+       UIntType,
        { integer types corresponding to OS_SINT/OS_INT }
-       ossinttype,
-       osuinttype,
+       OSSIntType,
+       OSUIntType,
        { integer types corresponding to the ALU size, sizeof(aint) and the ALUSInt/ALUUInt types in the system unit }
-       alusinttype,
-       aluuinttype,
+       ALUSIntType,
+       ALUUIntType,
        { integer types corresponding to SizeInt and SizeUInt for the target platform }
-       sizeuinttype,
-       sizesinttype,
+       SizeUIntType,
+       SizeSIntType,
        { unsigned and signed ord type with the same size as a pointer }
-       ptruinttype,
-       ptrsinttype,
+       PtrUIntType,
+       PtrSIntType,
        { unsigned and signed ord type with the same size as a codepointer }
-       codeptruinttype,
-       codeptrsinttype,
+       CodePtrUIntType,
+       CodePtrSIntType,
        { several types to simulate more or less C++ objects for GDB }
-       vmttype,
-       vmtarraytype,
+       VMTType,
+       VMTArrayType,
        { type of classrefs used for debug information }
-       pvmttype,
+       PVMTType,
        { return type of the setjmp function }
-       exceptionreasontype      : TDef;
+       ExceptionReasonType      : TDef;
 
        { pointer to the ancestor of all classes }
-       class_tobject : TObjectDef;
+       Class_TObject : TObjectDef;
        { pointer to the base type for custom attributes }
-       class_tcustomattribute : TObjectDef;
+       Class_TCustomAttribute : TObjectDef;
        { pointer to the ancestor of all COM interfaces }
-       interface_iunknown : TObjectDef;
+       Interface_IUnknown : TObjectDef;
        { pointer to the ancestor of all dispinterfaces }
-       interface_idispatch : TObjectDef;
+       Interface_IDispatch : TObjectDef;
        { pointer to the TGUID type
          of all interfaces         }
-       rec_tguid : TRecordDef;
+       Rec_TGUID : TRecordDef;
 
        { jump buffer type, used by setjmp }
-       rec_jmp_buf : TRecordDef;
+       Rec_Jmp_Buf : TRecordDef;
 
        { system.texceptaddr type, used by fpc_pushexceptaddr }
-       rec_exceptaddr: TRecordDef;
+       Rec_ExceptAddr: TRecordDef;
 
        { Objective-C base types }
-       objc_metaclasstype,
-       objc_superclasstype,
-       objc_idtype,
-       objc_seltype              : TPointerDef;
-       objc_objecttype           : TRecordDef;
+       ObjC_MetaClassType,
+       ObjC_SuperClassType,
+       ObjC_IDType,
+       ObjC_SelType              : TPointerDef;
+       ObjC_ObjectType           : TRecordDef;
        { base type of @protocol(protocolname) Objective-C statements }
-       objc_protocoltype         : TObjectDef;
+       ObjC_ProtocolType         : TObjectDef;
        { helper types for for-in "fast enumeration" support in Objective-C 2.0 }
-       objc_fastenumeration      : TObjectDef;
-       objc_fastenumerationstate : TRecordDef;
+       ObjC_FastEnumeration      : TObjectDef;
+       ObjC_FastEnumerationState : TRecordDef;
 
 
 
        { x86 vector types }
-       x86_m64type,
-       x86_m128type,
-       x86_m128dtype,
-       x86_m128itype,
-       x86_m256type,
-       x86_m256dtype,
-       x86_m256itype             : TDef;
+       X86_M64Type,
+       X86_M128Type,
+       X86_M128DType,
+       X86_M128IType,
+       X86_M256Type,
+       X86_M256DType,
+       X86_M256IType             : TDef;
 
 
-    function make_mangledname(const typeprefix:TSymStr;st:TSymTable;const suffix:TSymStr):TSymStr;
-    function make_dllmangledname(const dllname,importname:TSymStr;
-                                 import_nr : word; pco : TProcCallOption):TSymStr;
+    function Make_MangledName(const TypePrefix:TSymStr;ST:TSymTable;const Suffix:TSymStr):TSymStr;
+    function Make_DLLMangledName(const DLLName,ImportName:TSymStr;
+                                 ImportNr : Word; PCo : TProcCallOption):TSymStr;
 
     { should be in the types unit, but the types unit uses the node stuff :( }
-    function is_interfacecom(def: TDef): boolean;
-    function is_interfacecom_or_dispinterface(def: TDef): boolean;
-    function is_any_interface_kind(def: TDef): boolean;
-    function is_interfacecorba(def: TDef): boolean;
-    function is_interface(def: TDef): boolean;
-    function is_dispinterface(def: TDef): boolean;
-    function is_object(def: TDef): boolean;
-    function is_class(def: TDef): boolean;
-    function is_cppclass(def: TDef): boolean;
-    function is_objectpascal_helper(def: TDef): boolean;
-    function is_objcclass(def: TDef): boolean;
-    function is_objcclassref(def: TDef): boolean;
-    function is_objcprotocol(def: TDef): boolean;
-    function is_objccategory(def: TDef): boolean;
-    function is_objc_class_or_protocol(def: TDef): boolean;
-    function is_objc_protocol_or_category(def: TDef): boolean;
-    function is_classhelper(def: TDef): boolean;
-    function is_class_or_interface(def: TDef): boolean;
-    function is_class_or_interface_or_objc(def: TDef): boolean;
-    function is_class_or_interface_or_dispinterface_or_objc(def: TDef): boolean;
-    function is_class_or_interface_or_object(def: TDef): boolean;
-    function is_class_or_interface_or_dispinterface(def: TDef): boolean;
-    function is_implicit_pointer_object_type(def: TDef): boolean;
+    function Is_InterfaceCOM(Def: TDef): Boolean;
+    function Is_InterfaceCOM_Or_DispInterface(Def: TDef): Boolean;
+    function Is_Any_Interface_Kind(Def: TDef): Boolean;
+    function Is_InterfaceCORBA(Def: TDef): Boolean;
+    function Is_Interface(Def: TDef): Boolean;
+    function Is_DispInterface(Def: TDef): Boolean;
+    function Is_Object(Def: TDef): Boolean;
+    function Is_Class(Def: TDef): Boolean;
+    function Is_CPPClass(Def: TDef): Boolean;
+    function Is_ObjectPascal_Helper(Def: TDef): Boolean;
+    function Is_ObjCClass(Def: TDef): Boolean;
+    function Is_ObjCClassRef(Def: TDef): Boolean;
+    function Is_ObjCProtocol(Def: TDef): Boolean;
+    function Is_ObjCCategory(Def: TDef): Boolean;
+    function Is_ObjC_Class_Or_Protocol(Def: TDef): Boolean;
+    function Is_ObjC_Protocol_Or_Category(Def: TDef): Boolean;
+    function Is_ClassHelper(Def: TDef): Boolean;
+    function Is_Class_Or_Interface(Def: TDef): Boolean;
+    function Is_Class_Or_Interface_Or_ObjC(Def: TDef): Boolean;
+    function Is_Class_Or_Interface_Or_DispInterface_Or_ObjC(Def: TDef): Boolean;
+    function Is_Class_Or_Interface_Or_Object(Def: TDef): Boolean;
+    function Is_Class_Or_Interface_Or_DispInterface(Def: TDef): Boolean;
+    function Is_Implicit_Pointer_Object_Type(Def: TDef): Boolean;
     { returns true, if def is a type which is an implicit pointer to an array (dyn. array or dyn. string) }
-    function is_implicit_array_pointer(def: TDef): boolean;
-    function is_class_or_object(def: TDef): boolean;
-    function is_record(def: TDef): boolean;
+    function Is_Implicit_Array_Pointer(Def: TDef): Boolean;
+    function Is_Class_Or_Object(Def: TDef): Boolean;
+    function Is_Record(Def: TDef): Boolean;
 
-    procedure loadobjctypes;
-    procedure maybeloadcocoatypes;
+    procedure LoadObjCTypes;
+    procedure MaybeLoadCocoaTypes;
 
-    function use_vectorfpu(def : TDef) : boolean;
+    function Use_VectorFPU(Def : TDef) : Boolean;
 
-    function getansistringcodepage:TStringEncoding; inline;
-    function getansistringdef:TStringDef;
-    function getparaencoding(def:TDef):TStringEncoding; inline;
+    function GetAnsiStringCodePage:TStringEncoding; inline;
+    function GetAnsiStringDef:TStringDef;
+    function GetParaEncoding(Def:TDef):TStringEncoding; inline;
 
-    function get_recorddef(prefix:TInternalTypePrefix;const fields:array of TDef; PackRecords:shortint): TRecordDef;
+    function Get_RecordDef(Prefix:TInternalTypePrefix;const Fields:array of TDef; PackRecords:ShortInt): TRecordDef;
     { get a table def of the form
         record
           count: countdef;
@@ -1337,10 +1337,10 @@ interface
         end;
       Returns both the outer record and the inner arraydef
     }
-    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:LongInt;PackRecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
+    procedure Get_TableDef(Prefix:TInternalTypePrefix;CountDef,ElementDef:TDef;Count:LongInt;PackRecords:ShortInt;out RecDef:TRecordDef;out ArrDef:TArrayDef);
 
-    function fileinfo_of_typesym_in_def(def:TDef;sym:TSym;out filepos:TFilePosInfo):boolean;
-    procedure reset_all_default_types; {housekeeping for Textmode IDE sanity}
+    function FileInfo_Of_TypeSym_In_Def(Def:TDef;Sym:TSym;out FilePos:TFilePosInfo):Boolean;
+    procedure Reset_All_Default_Types; {housekeeping for Textmode IDE sanity}
 
 implementation
 
@@ -1350,16 +1350,16 @@ implementation
       { global }
       Verbose,
       { target }
-      Systems,paramgr,
+      Systems,ParaMgr,
       { symtable }
-      SymSym,SymTable,defutil,objcdef,
+      SymSym,SymTable,DefUtil,ObjCDef,
       { parser }
-      pgenutil,
+      PGenUtil,
       { module }
       FModule,PPU,
       { other }
-      aasmbase,
-      gendef,
+      AAsmBase,
+      GenDef,
       FPCHash,
       EntFile
       ;
@@ -1369,45 +1369,45 @@ implementation
 ****************************************************************************}
 
 
-    function fileinfo_of_typesym_in_def(def:TDef;sym:TSym;out filepos:TFilePosInfo):boolean;
+    function FileInfo_Of_TypeSym_In_Def(Def:TDef;Sym:TSym;out FilePos:TFilePosInfo):Boolean;
       var
-        gst : TGetSymTable;
-        st : TSymTable;
-        i : LongInt;
-        srsym : TSym;
+        GST : TGetSymTable;
+        ST : TSymTable;
+        I : LongInt;
+        SRSym : TSym;
       begin
-        result:=false;
-        if sym.typ<>typesym then
-          exit;
-        for gst:=low(TGetSymTable) to high(TGetSymTable) do
+        Result:=False;
+        if Sym.Typ<>TypeSym then
+          Exit;
+        for GST:=Low(TGetSymTable) to High(TGetSymTable) do
           begin
-            st:=def.getsymtable(gst);
-            if not Assigned(st) then
-              continue;
-            for i:=0 to st.symlist.count-1 do
+            ST:=Def.GetSymTable(GST);
+            if not Assigned(ST) then
+              Continue;
+            for I:=0 to ST.SymList.Count-1 do
               begin
-                srsym:=TSym(st.symlist[i]);
-                case srsym.typ of
-                  fieldvarsym,
-                  paravarsym:
-                    if TAbstractVarSym(srsym).vardef.typesym=sym then
+                SRSym:=TSym(ST.SymList[I]);
+                case SRSym.Typ of
+                  FieldVarSym,
+                  ParaVarSym:
+                    if TAbstractVarSym(SRSym).VarDef.TypeSym=Sym then
                       begin
-                        filepos:=srsym.fileinfo;
-                        result:=true;
-                        break;
+                        FilePos:=SRSym.FileInfo;
+                        Result:=True;
+                        Break;
                       end;
-                  typesym:
+                  TypeSym:
                     begin
-                      result:=fileinfo_of_typesym_in_def(TTypeSym(srsym).typedef,sym,filepos);
-                      if result then
-                        break;
+                      Result:=FileInfo_Of_TypeSym_In_Def(TTypeSym(SRSym).TypeDef,Sym,FilePos);
+                      if Result then
+                        Break;
                     end
                   else
                     ;
                 end;
               end;
-            if result then
-              break;
+            if Result then
+              Break;
           end;
         { for this we would need the position of the result declaration :/ }
         {if not result and
@@ -1421,18 +1421,18 @@ implementation
       end;
 
 
-    function getansistringcodepage:TStringEncoding; inline;
+    function GetAnsiStringCodePage:TStringEncoding; inline;
       begin
         if ([cs_explicit_codepage,cs_system_codepage]*CurrentSettings.ModuleSwitches)<>[] then
-          result:=CurrentSettings.SourceCodePage
+          Result:=CurrentSettings.SourceCodePage
         else
-          result:=0;
+          Result:=0;
       end;
 
-    function getansistringdef:TStringDef;
+    function GetAnsiStringDef:TStringDef;
       var
         SymTable:TSymTable;
-        oldstack : TSymTableStack;
+        OldStack : TSymTableStack;
       begin
         { if a codepage is explicitly defined in this mudule we need to return
           a replacement for ansistring def }
@@ -1442,31 +1442,31 @@ implementation
               InternalError(2011101301);
             { codepage can be redeclared only once per unit so we don't need a list of
               redefined ansistring but only one pointer }
-            if not Assigned(CurrentModule.ansistrdef) then
+            if not Assigned(CurrentModule.AnsiStrDef) then
               begin
                 { if we did not create it yet we need to do this now }
-                if CurrentModule.in_interface then
+                if CurrentModule.InInterface then
                   SymTable:=CurrentModule.GlobalSymTable
                 else
-                  SymTable:=CurrentModule.localsymtable;
+                  SymTable:=CurrentModule.LocalSymTable;
                 { create a temporary stack as it's not good (TM) to mess around
                   with the order if the unit contains generics or helpers; don't
                   use a def aware symtablestack though }
-                oldstack:=SymTableStack;
-                SymTableStack:=TSymTableStack.create;
-                SymTableStack.push(SymTable);
-                CurrentModule.ansistrdef:=CStringDef.createansi(CurrentSettings.SourceCodePage,true);
-                SymTableStack.pop(SymTable);
-                SymTableStack.free;
-                SymTableStack:=oldstack;
+                OldStack:=SymTableStack;
+                SymTableStack:=TSymTableStack.Create;
+                SymTableStack.Push(SymTable);
+                CurrentModule.AnsiStrDef:=CStringDef.CreateAnsi(CurrentSettings.SourceCodePage,True);
+                SymTableStack.Pop(SymTable);
+                SymTableStack.Free;
+                SymTableStack:=OldStack;
               end;
-            result:=TStringDef(CurrentModule.ansistrdef);
+            Result:=TStringDef(CurrentModule.AnsiStrDef);
           end
         else
-          result:=TStringDef(cansistringtype);
+          Result:=TStringDef(CAnsiStringType);
       end;
 
-    function getparaencoding(def:TDef):TStringEncoding; inline;
+    function GetParaEncoding(Def:TDef):TStringEncoding; inline;
       begin
         { don't pass CP_NONE encoding to internal functions
           they expect 0 encoding instead
@@ -1474,152 +1474,152 @@ implementation
           result of a string concatenation to a rawbytestring, the result of
           that concatenation shouldn't be converted to defaultsystemcodepage
           if all strings have the same type }
-        result:=TStringDef(def).encoding;
-        if result=Globals.CP_NONE then
-          result:=0
+        Result:=TStringDef(Def).Encoding;
+        if Result=Globals.CP_NONE then
+          Result:=0
       end;
 
 
-    function get_recorddef(prefix:TInternalTypePrefix; const fields:array of TDef; PackRecords:shortint): TRecordDef;
+    function Get_RecordDef(Prefix:TInternalTypePrefix; const Fields:array of TDef; PackRecords:ShortInt): TRecordDef;
       var
-        fieldlist: TFPList;
-        srsym: TSym;
-        srsymtable: TSymTable;
-        i: LongInt;
-        name : TIDString;
+        FieldList: TFPList;
+        SRSym: TSym;
+        SRSymTable: TSymTable;
+        I: LongInt;
+        Name : TIDString;
       begin
-        name:=copy(internaltypeprefixName[prefix],2,length(internaltypeprefixName[prefix]));
-        if searchsym_type(name,srsym,srsymtable) then
+        Name:=Copy(InternaltypeprefixName[Prefix],2,Length(InternaltypeprefixName[Prefix]));
+        if SearchSym_Type(Name,SRSym,SRSymTable) then
           begin
-            result:=TRecordDef(TTypeSym(srsym).typedef);
-            exit
+            Result:=TRecordDef(TTypeSym(SRSym).TypeDef);
+            Exit
           end;
         { also always search in the current module (symtables are popped for
           RTTI related code already) }
-        if searchsym_in_module(pointer(CurrentModule),name,srsym,srsymtable) then
+        if SearchSym_In_Module(Pointer(CurrentModule),Name,SRSym,SRSymTable) then
           begin
-            result:=TRecordDef(TTypeSym(srsym).typedef);
-            exit;
+            Result:=TRecordDef(TTypeSym(SRSym).TypeDef);
+            Exit;
           end;
-        fieldlist:=TFPList.create;
-        for i:=low(fields) to high(fields) do
-          fieldlist.add(fields[i]);
-        result:=CRecordDef.create_global_internal(internaltypeprefixName[prefix],PackRecords,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-        result.add_fields_from_deflist(fieldlist);
-        fieldlist.free;
-        fieldlist := nil;
+        FieldList:=TFPList.Create;
+        for I:=Low(Fields) to High(Fields) do
+          FieldList.Add(Fields[I]);
+        Result:=CRecordDef.Create_Global_Internal(InternaltypeprefixName[Prefix],PackRecords,
+          TargetInfos[Ord(TargetInfo.System)]^.Alignment.RecordAlignMin);
+        Result.Add_Fields_From_DefList(FieldList);
+        FieldList.Free;
+        FieldList := nil;
       end;
 
 
-    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:LongInt;PackRecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
+    procedure Get_TableDef(Prefix:TInternalTypePrefix;CountDef,ElementDef:TDef;Count:LongInt;PackRecords:ShortInt;out RecDef:TRecordDef;out ArrDef:TArrayDef);
       var
-        fields: TFPList;
-        name: TIDString;
-        srsym: TSym;
-        fieldvarsym: TFieldVarSym;
-        srsymtable: TSymTable;
+        Fields: TFPList;
+        Name: TIDString;
+        SRSym: TSym;
+        FieldVarSym: TFieldVarSym;
+        SRSymTable: TSymTable;
       begin
         { already created a message string table with this number of elements
           in this unit -> reuse the def }
-        name:=internaltypeprefixName[prefix]+ToStr(count);
-        if searchsym_type(copy(name,2,length(name)),srsym,srsymtable) then
+        Name:=InternaltypeprefixName[Prefix]+ToStr(Count);
+        if SearchSym_Type(Copy(Name,2,Length(Name)),SRSym,SRSymTable) then
           begin
-            recdef:=TRecordDef(TTypeSym(srsym).typedef);
-            fieldvarsym:=TRecordSymTable(recdef.SymTable).findfieldbyoffset(countdef.size);
-            if fieldvarsym<>nil then
-              arrdef:=TArrayDef(fieldvarsym.vardef)
+            RecDef:=TRecordDef(TTypeSym(SRSym).TypeDef);
+            FieldVarSym:=TRecordSymTable(RecDef.SymTable).FindFieldByOffset(CountDef.Size);
+            if FieldVarSym<>nil then
+              ArrDef:=TArrayDef(FieldVarSym.VarDef)
             else
-              arrdef:=nil;
-            exit
+              ArrDef:=nil;
+            Exit
           end;
         { also always search in the current module (symtables are popped for
           RTTI related code already) }
-        if searchsym_in_module(pointer(CurrentModule),copy(name,2,length(name)),srsym,srsymtable) then
+        if SearchSym_In_Module(Pointer(CurrentModule),Copy(Name,2,Length(Name)),SRSym,SRSymTable) then
           begin
-            recdef:=TRecordDef(TTypeSym(srsym).typedef);
-            fieldvarsym:=TRecordSymTable(recdef.SymTable).findfieldbyoffset(countdef.size);
-            if fieldvarsym<>nil then
-              arrdef:=TArrayDef(fieldvarsym.vardef)
+            RecDef:=TRecordDef(TTypeSym(SRSym).TypeDef);
+            FieldVarSym:=TRecordSymTable(RecDef.SymTable).FindFieldByOffset(CountDef.Size);
+            if FieldVarSym<>nil then
+              ArrDef:=TArrayDef(FieldVarSym.VarDef)
             else
-              arrdef:=nil;
-            exit;
+              ArrDef:=nil;
+            Exit;
           end;
-        recdef:=CRecordDef.create_global_internal(name,PackRecords,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
-        fields:=TFPList.create;
-        fields.add(countdef);
-        if count>0 then
+        RecDef:=CRecordDef.Create_Global_Internal(Name,PackRecords,
+          TargetInfos[Ord(TargetInfo.System)]^.Alignment.RecordAlignMin);
+        Fields:=TFPList.Create;
+        Fields.Add(CountDef);
+        if Count>0 then
           begin
-            arrdef:=CArrayDef.create(0,count-1,sizeuinttype);
-            arrdef.elementdef:=elementdef;
-            fields.add(arrdef);
+            ArrDef:=CArrayDef.Create(0,Count-1,SizeUIntType);
+            ArrDef.ElementDef:=ElementDef;
+            Fields.Add(ArrDef);
           end
         else
-          arrdef:=nil;
-        recdef.add_fields_from_deflist(fields);
-        fields.free;
-        fields := nil;
+          ArrDef:=nil;
+        RecDef.Add_Fields_From_DefList(Fields);
+        Fields.Free;
+        Fields := nil;
       end;
 
-    function make_mangledname(const typeprefix:TSymStr;st:TSymTable;const suffix:TSymStr):TSymStr;
+    function Make_MangledName(const TypePrefix:TSymStr;ST:TSymTable;const Suffix:TSymStr):TSymStr;
       var
-        s,
-        prefix : TSymStr;
-        hash : qword;
+        S,
+        Prefix : TSymStr;
+        Hash : QWord;
       begin
-        prefix:='';
-        if not Assigned(st) then
+        Prefix:='';
+        if not Assigned(ST) then
          InternalError(200204212);
         repeat
           { sub procedures }
-          while (st.symtabletype in [localsymtable,parasymtable]) do
+          while (ST.SymTableType in [LocalSymTable,ParaSymTable]) do
            begin
-             if st.defowner.typ<>procdef then
+             if ST.DefOwner.Typ<>ProcDef then
               InternalError(200204173);
              { Add the full mangledname of the routine to prevent
                conflicts with two overloads both having a local entity
                -- routine (tb0314), class, interface -- with the same name }
-             s:=TProcDef(st.defowner).procsym.name;
-             s:=s+TProcDef(st.defowner).mangledprocparanames(Length(s));
-             if prefix<>'' then
+             S:=TProcDef(ST.DefOwner).ProcSym.Name;
+             S:=S+TProcDef(ST.DefOwner).MangledProcParaNames(Length(S));
+             if Prefix<>'' then
                begin
-                 if length(prefix)>(maxidlen-length(s)-1) then
+                 if Length(Prefix)>(MaxIDLen-Length(S)-1) then
                    begin
-                     hash:=InitFNV64;
-                     hash:=UpdateFNV64(hash,prefix[1],length(prefix));
-                     prefix:='$H'+Base64Mangle(hash);
+                     Hash:=InitFNV64;
+                     Hash:=UpdateFNV64(Hash,Prefix[1],Length(Prefix));
+                     Prefix:='$H'+Base64Mangle(Hash);
                    end;
-                 prefix:=s+'_'+prefix
+                 Prefix:=S+'_'+Prefix
                end
              else
-               prefix:=s;
-             st:=st.defowner.owner;
+               Prefix:=S;
+             ST:=ST.DefOwner.Owner;
            end;
           { object/classes symtable, nested type definitions in classes require the while loop }
-          while st.symtabletype in [ObjectSymtable,recordsymtable] do
+          while ST.SymTableType in [ObjectSymTable,RecordSymTable] do
            begin
-             if not (st.defowner.typ in [objectdef,recorddef]) then
+             if not (ST.DefOwner.Typ in [ObjectDef,RecordDef]) then
               InternalError(200204174);
-             if length(prefix)>(maxidlen-length(TAbstractRecordDef(st.defowner).objname^)-3) then
+             if Length(Prefix)>(MaxIDLen-Length(TAbstractRecordDef(ST.DefOwner).ObjName^)-3) then
                begin
-                 hash:=InitFNV64;
-                 hash:=UpdateFNV64(hash,prefix[1],length(prefix));
-                 prefix:='$H'+Base64Mangle(hash);
+                 Hash:=InitFNV64;
+                 Hash:=UpdateFNV64(Hash,Prefix[1],Length(Prefix));
+                 Prefix:='$H'+Base64Mangle(Hash);
                end;
-             prefix:=TAbstractRecordDef(st.defowner).objname^+'_$_'+prefix;
-             st:=st.defowner.owner;
+             Prefix:=TAbstractRecordDef(ST.DefOwner).ObjName^+'_$_'+Prefix;
+             ST:=ST.DefOwner.Owner;
            end;
           { local classes & interfaces are possible (because of closures)
             or parasymtable for this case:
              class function Trace<TResult>(const Func: TFunc<TLogToken, TResult>): TResult;
           }
-          if not (st.symtabletype in [localsymtable,parasymtable]) then
-            break;
-          prefix:='$'+prefix;
-        until false;
+          if not (ST.SymTableType in [LocalSymTable,ParaSymTable]) then
+            Break;
+          Prefix:='$'+Prefix;
+        until False;
         { symtable must now be static or global }
-        if not(st.symtabletype in [staticsymtable,GlobalSymTable]) then
+        if not(ST.SymTableType in [StaticSymTable,GlobalSymTable]) then
           InternalError(200204175);
 
         { The mangled name is made out of at most 4 parts:
@@ -1632,25 +1632,25 @@ implementation
          4) suffix as given as third parameter,
             also optional (i.e. can be empty)
             prepended by '_$$_' if not empty }
-        result:='';
-        if typeprefix<>'' then
-          result:=result+typeprefix+'_$';
+        Result:='';
+        if TypePrefix<>'' then
+          Result:=Result+TypePrefix+'_$';
         { Add P$ for program, which can have the same name as
           a unit }
-        if (TSymTable(main_module.localsymtable)=st) and
-           (not main_module.is_unit) then
-          result:=result+'P$'+st.name^
+        if (TSymTable(Main_Module.LocalSymTable)=ST) and
+           (not Main_Module.IsUnit) then
+          Result:=Result+'P$'+ST.Name^
         else
-          result:=result+st.name^;
-        if prefix<>'' then
-          result:=result+'$_$'+prefix;
-        if suffix<>'' then
-          result:=result+'_$$_'+suffix;
-        if length(result)>(maxidlen-1) then
+          Result:=Result+ST.Name^;
+        if Prefix<>'' then
+          Result:=Result+'$_$'+Prefix;
+        if Suffix<>'' then
+          Result:=Result+'_$$_'+Suffix;
+        if Length(Result)>(MaxIDLen-1) then
           begin
-            hash:=InitFNV64;
-            hash:=UpdateFNV64(hash,result[1],length(result));
-            result:=copy(result,1,maxidlen-(high(Base64OfUInt64String)-low(Base64OfUInt64String)+1)-2)+'$H'+Base64Mangle(hash);
+            Hash:=InitFNV64;
+            Hash:=UpdateFNV64(Hash,Result[1],Length(Result));
+            Result:=Copy(Result,1,MaxIDLen-(High(Base64OfUInt64String)-Low(Base64OfUInt64String)+1)-2)+'$H'+Base64Mangle(Hash);
           end;
         { the Darwin assembler assumes that all symbols starting with 'L' are local }
         { Further, the Mac OS X 10.5 linker does not consider symbols which do not  }
@@ -1659,65 +1659,65 @@ implementation
         { add an underscore on darwin.                                              }
         { LLVM's i386 COFF assembler also treats names beginning with 'L' as
           local; prefix Pascal-mangled names when using Clang for Win32. }
-        if (TargetInfo.system in systems_darwin) or
-           ((TargetInfo.system=system_i386_win32) and
-            (TargetAsm.id=as_clang_gas)) then
-          result := '_' + result;
+        if (TargetInfo.System in systems_darwin) or
+           ((TargetInfo.System=system_i386_win32) and
+            (TargetAsm.ID=as_clang_gas)) then
+          Result := '_' + Result;
       end;
 
-    function make_dllmangledname(const dllname,importname:TSymStr;import_nr : word; pco : TProcCallOption):TSymStr;
+    function Make_DLLMangledName(const DLLName,ImportName:TSymStr;ImportNr : Word; PCo : TProcCallOption):TSymStr;
        var
-         crc : cardinal;
-         i : LongInt;
-         use_crc : boolean;
-         dllprefix : TSymStr;
+         CRC : Cardinal;
+         I : LongInt;
+         UseCRC : Boolean;
+         DLLPrefix : TSymStr;
       begin
-        if (TargetInfo.system in systems_all_windows)
-            and (dllname <> '') then
+        if (TargetInfo.System in systems_all_windows)
+            and (DLLName <> '') then
           begin
-            dllprefix:=lower(ExtractFileName(dllname));
+            DLLPrefix:=Lower(ExtractFileName(DLLName));
             { Remove .dll suffix if present }
-            if copy(dllprefix,length(dllprefix)-3,length(dllprefix))='.dll' then
-              dllprefix:=copy(dllprefix,1,length(dllprefix)-4);
-            use_crc:=false;
-            for i:=1 to length(dllprefix) do
-              if not (dllprefix[i] in ['a'..'z','A'..'Z','_','0'..'9']) then
+            if Copy(DLLPrefix,Length(DLLPrefix)-3,Length(DLLPrefix))='.dll' then
+              DLLPrefix:=Copy(DLLPrefix,1,Length(DLLPrefix)-4);
+            UseCRC:=False;
+            for I:=1 to Length(DLLPrefix) do
+              if not (DLLPrefix[I] in ['a'..'z','A'..'Z','_','0'..'9']) then
                 begin
-                  use_crc:=true;
-                  break;
+                  UseCRC:=True;
+                  Break;
                 end;
-            if use_crc then
+            if UseCRC then
               begin
-                crc:=0;
-                crc:=UpdateCRC32(crc,dllprefix[1],length(dllprefix));
-                dllprefix:='_$dll$crc$'+HexStr(crc,8)+'$';
+                CRC:=0;
+                CRC:=UpdateCRC32(CRC,DLLPrefix[1],Length(DLLPrefix));
+                DLLPrefix:='_$dll$crc$'+HexStr(CRC,8)+'$';
               end
             else
-              dllprefix:='_$dll$'+dllprefix+'$';
+              DLLPrefix:='_$dll$'+DLLPrefix+'$';
 
-            if importname<>'' then
-              result:=dllprefix+importname
+            if ImportName<>'' then
+              Result:=DLLPrefix+ImportName
             else
-              result:=dllprefix+'_index_'+ToStr(import_nr);
+              Result:=DLLPrefix+'_index_'+ToStr(ImportNr);
             { Replace ? and @ in import name, since GNU AS does not allow these characters in symbol names. }
             { This allows to import VC++ mangled names from DLLs. }
             { Do not perform replacement, if external symbol is not imported from DLL. }
-            if (dllname<>'') then
+            if (DLLName<>'') then
               begin
-                Replace(result,'?','__q$$');
+                Replace(Result,'?','__q$$');
              end;
           end
         else
           begin
-            if importname<>'' then
+            if ImportName<>'' then
              begin
-               if not(pco in [pocall_cdecl,pocall_cppdecl]) then
-                 result:=importname
+               if not(PCo in [pocall_cdecl,pocall_cppdecl]) then
+                 Result:=ImportName
                else
-                 result:=TargetInfo.Cprefix+importname;
+                 Result:=TargetInfo.Cprefix+ImportName;
              end
             else
-              result:='_index_'+ToStr(import_nr);
+              Result:='_index_'+ToStr(ImportNr);
           end;
 
       end;
@@ -1728,152 +1728,152 @@ implementation
            the pushed/popped symtables)
 ****************************************************************************}
 
-    procedure TDefAwareSymTableStack.add_helpers_and_generics(st:TSymTable;addgenerics:boolean);
+    procedure TDefAwareSymTableStack.AddHelpersAndGenerics(ST:TSymTable;AddGenerics:Boolean);
       var
-        s: TSymStr;
-        list: TFPObjectList;
-        def: TDef;
-        sym : TSym;
-        i: integer;
+        S: TSymStr;
+        List: TFPObjectList;
+        Def: TDef;
+        Sym : TSym;
+        I: Integer;
       begin
         { search the symtable from first to last; the helper to use will be the
           last one in the list }
-        for i:=0 to st.symlist.count-1 do
+        for I:=0 to ST.SymList.Count-1 do
           begin
-            sym:=TSym(st.symlist[i]);
-            if not (sym.typ in [typesym,procsym]) then
-              continue;
-            if sym.typ=typesym then
-              def:=TTypeSym(st.SymList[i]).typedef
+            Sym:=TSym(ST.SymList[I]);
+            if not (Sym.Typ in [TypeSym,ProcSym]) then
+              Continue;
+            if Sym.Typ=TypeSym then
+              Def:=TTypeSym(ST.SymList[I]).TypeDef
             else
-              def:=nil;
-            if is_objectpascal_helper(def) then
+              Def:=nil;
+            if Is_ObjectPascal_Helper(Def) then
               begin
-                s:=generate_objectpascal_helper_key(TObjectDef(def).extendeddef);
-                Message1(sym_d_adding_helper_for,s);
-                list:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
-                if not Assigned(list) then
+                S:=Generate_ObjectPascal_Helper_Key(TObjectDef(Def).ExtendedDef);
+                Message1(sym_d_adding_helper_for,S);
+                List:=TFPObjectList(CurrentModule.ExtendedDefs.Find(S));
+                if not Assigned(List) then
                   begin
-                    list:=TFPObjectList.Create(false);
-                    CurrentModule.extendeddefs.Add(s,list);
+                    List:=TFPObjectList.Create(False);
+                    CurrentModule.ExtendedDefs.Add(S,List);
                   end;
-                list.Add(def);
+                List.Add(Def);
               end
             else
               begin
-                if addgenerics then
-                  add_generic_dummysym(sym,'');
+                if AddGenerics then
+                  add_generic_dummysym(Sym,'');
                 { add nested helpers as well }
-                if Assigned(def) and
-                    (def.typ in [recorddef,objectdef]) and
-                    (sto_has_helper in TAbstractRecordDef(def).SymTable.tableoptions) and
-                    not is_owned_by(def,TDef(st.defowner)) then
-                  add_helpers_and_generics(TAbstractRecordDef(def).SymTable,false);
+                if Assigned(Def) and
+                    (Def.Typ in [RecordDef,ObjectDef]) and
+                    (sto_has_helper in TAbstractRecordDef(Def).SymTable.TableOptions) and
+                    not Is_Owned_By(Def,TDef(ST.DefOwner)) then
+                  AddHelpersAndGenerics(TAbstractRecordDef(Def).SymTable,False);
               end;
           end;
       end;
 
 
-    procedure TDefAwareSymTableStack.remove_helpers_and_generics(st:TSymTable);
+    procedure TDefAwareSymTableStack.RemoveHelpersAndGenerics(ST:TSymTable);
       begin
-        if sto_has_helper in st.tableoptions then
-          remove_helpers(st);
-        if sto_has_generic in st.tableoptions then
-          remove_generics(st);
+        if sto_has_helper in ST.TableOptions then
+          RemoveHelpers(ST);
+        if sto_has_generic in ST.TableOptions then
+          RemoveGenerics(ST);
       end;
 
 
-    procedure TDefAwareSymTableStack.remove_helpers(st:TSymTable);
+    procedure TDefAwareSymTableStack.RemoveHelpers(ST:TSymTable);
       var
-        i, j: integer;
-        tmpst: TSymTable;
-        list: TFPObjectList;
+        I, J: Integer;
+        TmpST: TSymTable;
+        List: TFPObjectList;
       begin
-        for i:=CurrentModule.extendeddefs.count-1 downto 0 do
+        for I:=CurrentModule.ExtendedDefs.Count-1 downto 0 do
           begin
-            list:=TFPObjectList(CurrentModule.extendeddefs[i]);
-            for j:=list.count-1 downto 0 do
+            List:=TFPObjectList(CurrentModule.ExtendedDefs[I]);
+            for J:=List.Count-1 downto 0 do
               begin
-                if not (list[j] is TObjectDef) then
+                if not (List[J] is TObjectDef) then
                   InternalError(2011031501);
-                tmpst:=TObjectDef(list[j]).owner;
+                TmpST:=TObjectDef(List[J]).Owner;
                 repeat
-                  if tmpst=st then
+                  if TmpST=ST then
                     begin
-                      list.delete(j);
-                      break;
+                      List.Delete(J);
+                      Break;
                     end
                   else
                     begin
-                      if Assigned(tmpst.defowner) then
-                        tmpst:=tmpst.defowner.owner
+                      if Assigned(TmpST.DefOwner) then
+                        TmpST:=TmpST.DefOwner.Owner
                       else
-                        tmpst:=nil;
+                        TmpST:=nil;
                     end;
-                until not Assigned(tmpst) or (tmpst.symtabletype in [GlobalSymTable,staticsymtable]);
+                until not Assigned(TmpST) or (TmpST.SymTableType in [GlobalSymTable,StaticSymTable]);
               end;
-            if list.count=0 then
-              CurrentModule.extendeddefs.delete(i);
+            if List.Count=0 then
+              CurrentModule.ExtendedDefs.Delete(I);
           end;
       end;
 
 
-    procedure TDefAwareSymTableStack.remove_generics(st:TSymTable);
+    procedure TDefAwareSymTableStack.RemoveGenerics(ST:TSymTable);
       var
-        i,j : LongInt;
-        entry : TGenericDummyEntry;
-        list : TFPObjectList;
+        I,J : LongInt;
+        Entry : TGenericDummyEntry;
+        List : TFPObjectList;
       begin
-        for i:=CurrentModule.genericdummysyms.count-1 downto 0 do
+        for I:=CurrentModule.GenericDummySyms.Count-1 downto 0 do
           begin
-            list:=TFPObjectList(CurrentModule.genericdummysyms[i]);
-            if not Assigned(list) then
-              continue;
-            for j:=list.count-1 downto 0 do
+            List:=TFPObjectList(CurrentModule.GenericDummySyms[I]);
+            if not Assigned(List) then
+              Continue;
+            for J:=List.Count-1 downto 0 do
               begin
-                entry:=TGenericDummyEntry(list[j]);
-                if entry.dummysym.owner=st then
-                  list.delete(j);
+                Entry:=TGenericDummyEntry(List[J]);
+                if Entry.DummySym.Owner=ST then
+                  List.Delete(J);
               end;
-            if list.count=0 then
-              CurrentModule.genericdummysyms.delete(i);
+            if List.Count=0 then
+              CurrentModule.GenericDummySyms.Delete(I);
           end;
       end;
 
 
-    procedure TDefAwareSymTableStack.pushcommon(st:TSymTable);
+    procedure TDefAwareSymTableStack.PushCommon(ST:TSymTable);
       begin
-        if (sto_has_generic in st.tableoptions) or
+        if (sto_has_generic in ST.TableOptions) or
             (
-              (st.symtabletype in [GlobalSymTable,staticsymtable]) and
-              (sto_has_helper in st.tableoptions)
+              (ST.SymTableType in [GlobalSymTable,StaticSymTable]) and
+              (sto_has_helper in ST.TableOptions)
             ) then
           { nested helpers will be added as well }
-          add_helpers_and_generics(st,true);
+          AddHelpersAndGenerics(ST,True);
       end;
 
-    procedure TDefAwareSymTableStack.push(st: TSymTable);
+    procedure TDefAwareSymTableStack.Push(ST: TSymTable);
       begin
-        pushcommon(st);
-        inherited push(st);
+        PushCommon(ST);
+        inherited Push(ST);
       end;
 
-    procedure TDefAwareSymTableStack.pushafter(st,afterst:TSymTable);
+    procedure TDefAwareSymTableStack.PushAfter(ST,AfterST:TSymTable);
       begin
-        pushcommon(st);
-        inherited pushafter(st,afterst);
+        PushCommon(ST);
+        inherited PushAfter(ST,AfterST);
       end;
 
-    procedure TDefAwareSymTableStack.pop(st: TSymTable);
+    procedure TDefAwareSymTableStack.Pop(ST: TSymTable);
       begin
-        inherited pop(st);
-        if (sto_has_generic in st.tableoptions) or
+        inherited Pop(ST);
+        if (sto_has_generic in ST.TableOptions) or
             (
-              (st.symtabletype in [GlobalSymTable,staticsymtable]) and
-              (sto_has_helper in st.tableoptions)
+              (ST.SymTableType in [GlobalSymTable,StaticSymTable]) and
+              (sto_has_helper in ST.TableOptions)
             ) then
           { nested helpers will be removed as well }
-          remove_helpers_and_generics(st);
+          RemoveHelpersAndGenerics(ST);
       end;
 
 
@@ -1881,122 +1881,122 @@ implementation
                      TDEF (base class for definitions)
 ****************************************************************************}
 
-    constructor TGenericConstraintData.create;
+    constructor TGenericConstraintData.Create;
       begin
-        interfaces:=TFPObjectList.create(false);
-        interfacesderef:=TFPList.create;
+        Interfaces:=TFPObjectList.Create(False);
+        InterfacesDeref:=TFPList.Create;
       end;
 
 
     destructor TGenericConstraintData.Destroy;
       begin
-        TFPList.FreeAndNilDisposing(interfacesderef,typeinfo(TDeref));
-        interfaces.free;
-        interfaces := nil;
+        TFPList.FreeAndNilDisposing(InterfacesDeref,TypeInfo(TDeref));
+        Interfaces.Free;
+        Interfaces := nil;
         inherited Destroy;
       end;
 
-    procedure TGenericConstraintData.ppuload(ppufile: TCompilerPPUFile);
+    procedure TGenericConstraintData.PPULoad(PPUFile: TCompilerPPUFile);
       var
-        cnt,i : LongInt;
-        intfderef : PDeref;
+        Cnt,I : LongInt;
+        IntfDeref : PDeref;
       begin
-        ppufile.GetSet(TPPUSet1(flags));
-        cnt:=ppufile.GetLongInt;
-        for i:=0 to cnt-1 do
+        PPUFile.GetSet(TPPUSet1(Flags));
+        Cnt:=PPUFile.GetLongInt;
+        for I:=0 to Cnt-1 do
           begin
-            new(intfderef);
-            ppufile.getderef(intfderef^);
-            interfacesderef.add(intfderef);
+            New(IntfDeref);
+            PPUFile.GetDeref(IntfDeref^);
+            InterfacesDeref.Add(IntfDeref);
           end;
       end;
 
 
-    procedure TGenericConstraintData.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TGenericConstraintData.PPUWrite(PPUFile: TCompilerPPUFile);
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        ppufile.PutSet(TPPUSet1(flags));
-        ppufile.PutLongInt(interfacesderef.count);
-        for i:=0 to interfacesderef.count-1 do
-          ppufile.putderef(PDeref(interfacesderef[i])^);
+        PPUFile.PutSet(TPPUSet1(Flags));
+        PPUFile.PutLongInt(InterfacesDeref.Count);
+        for I:=0 to InterfacesDeref.Count-1 do
+          PPUFile.PutDeref(PDeref(InterfacesDeref[I])^);
       end;
 
-    procedure TGenericConstraintData.buildderef;
+    procedure TGenericConstraintData.BuildDeref;
       var
-        intfderef : PDeref;
-        i : LongInt;
+        IntfDeref : PDeref;
+        I : LongInt;
       begin
-        interfacesderef.capacity:=interfacesderef.count+interfaces.count;
-        for i:=0 to interfaces.count-1 do
+        InterfacesDeref.Capacity:=InterfacesDeref.Count+Interfaces.Count;
+        for I:=0 to Interfaces.Count-1 do
           begin
-            new(intfderef);
-            intfderef^.build(TObjectDef(interfaces[i]));
-            interfacesderef.add(intfderef);
+            New(IntfDeref);
+            IntfDeref^.Build(TObjectDef(Interfaces[I]));
+            InterfacesDeref.Add(IntfDeref);
           end;
       end;
 
-    procedure TGenericConstraintData.deref;
+    procedure TGenericConstraintData.Deref;
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        interfaces.capacity:=interfaces.count+interfacesderef.count;
-        for i:=0 to interfacesderef.count-1 do
-          interfaces.add(PDeref(interfacesderef[i])^.resolve);
+        Interfaces.Capacity:=Interfaces.Count+InterfacesDeref.Count;
+        for I:=0 to InterfacesDeref.Count-1 do
+          Interfaces.Add(PDeref(InterfacesDeref[I])^.Resolve);
       end;
 
 
-    procedure TStoredDef.WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
+    procedure TStoredDef.WriteEntry(PPUFile: TCompilerPPUFile; IBNR: Byte);
       begin
-        PPUWritePlatform(ppufile);
-        ppufile.WriteEntry(ibnr);
+        PPUWritePlatform(PPUFile);
+        PPUFile.WriteEntry(IBNR);
       end;
 
 
-    procedure TStoredDef.PPUWritePlatform(ppufile: TCompilerPPUFile);
+    procedure TStoredDef.PPUWritePlatform(PPUFile: TCompilerPPUFile);
       begin
         { by default: do nothing }
       end;
 
 
-    procedure TStoredDef.PPULoadPlatform(ppufile: TCompilerPPUFile);
+    procedure TStoredDef.PPULoadPlatform(PPUFile: TCompilerPPUFile);
       begin
         { by default: do nothing }
       end;
 
 
-    class procedure TStoredDef.SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; OldSymTableStack: TSymTableStack);
+    class procedure TStoredDef.SetupReusableDef(OrigDef, NewDef: TDef; Res: PHashSetItem; OldSymTableStack: TSymTableStack);
       var
-        reusablesymtab: TSymTable;
+        ReusableSymTab: TSymTable;
       begin
         { must not yet belong to a symtable }
-        if Assigned(newdef.owner) then
+        if Assigned(NewDef.Owner) then
           InternalError(2015111503);
-        reusablesymtab:=origdef.getreusablesymtab;
-        res^.Data:=newdef;
-        reusablesymtab.insertdef(newdef);
+        ReusableSymTab:=OrigDef.GetReusableSymTab;
+        Res^.Data:=NewDef;
+        ReusableSymTab.InsertDef(NewDef);
         SymTableStack:=OldSymTableStack;
       end;
 
 
-    constructor TStoredDef.create(dt:TDefTyp;doregister:boolean);
+    constructor TStoredDef.Create(DT:TDefTyp;DoRegister:Boolean);
       begin
-         inherited create(dt);
-         savesize := 0;
+         inherited Create(DT);
+         SaveSize := 0;
 {$ifdef EXTDEBUG}
-         fileinfo := CurrentFilePos;
+         FileInfo := CurrentFilePos;
 {$endif}
-         generictokenbuf:=nil;
-         genericdef:=nil;
-         typesymderef.reset;
-         genericdefderef.reset;
+         GenericTokenBuf:=nil;
+         GenericDef:=nil;
+         TypeSymDeref.Reset;
+         GenericDefDeref.Reset;
 
          { Don't register forwarddefs, they are disposed at the
            end of an type block }
-         if (dt=forwarddef) then
-           exit;
+         if (DT=ForwardDef) then
+           Exit;
          { Register in symtable stack }
-         if doregister then
+         if DoRegister then
            begin
              { immediately register interface defs, as they will always be
                written to the ppu, their defid influences the interface crc and
@@ -2006,10 +2006,10 @@ implementation
                procedure is called in the implementation, that may change its
                defid otherwise) }
              if Assigned(CurrentModule) and
-                CurrentModule.in_interface then
+                CurrentModule.InInterface then
                RegisterDef
              else
-               maybe_put_in_symtable_stack;
+               Maybe_Put_In_SymTable_Stack;
            end;
       end;
 
@@ -2017,317 +2017,317 @@ implementation
     destructor TStoredDef.Destroy;
       begin
         { Direct calls are not allowed, use symtable.deletedef() }
-        if Assigned(owner) then
+        if Assigned(Owner) then
           InternalError(200612311);
-        if Assigned(generictokenbuf) then
+        if Assigned(GenericTokenBuf) then
           begin
-            generictokenbuf.free;
-            generictokenbuf:=nil;
+            GenericTokenBuf.Free;
+            GenericTokenBuf:=nil;
           end;
-        RTTIAttributeList.free;
+        RTTIAttributeList.Free;
         RTTIAttributeList := nil;
-        genericparas.free;
-        genericparas := nil;
-        TFPList.FreeAndNilDisposing(genericparaderefs,typeinfo(TDeref));
-        genconstraintdata.free;
-        genconstraintdata := nil;
+        GenericParas.Free;
+        GenericParas := nil;
+        TFPList.FreeAndNilDisposing(GenericParaDerefs,TypeInfo(TDeref));
+        GenConstraintData.Free;
+        GenConstraintData := nil;
 {$ifndef symansistr}
-        StringDispose(_fullownerhierarchyname);
+        StringDispose(FFullOwnerHierarchyName);
 {$endif not symansistr}
         inherited Destroy;
       end;
 
 
-    constructor TStoredDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+    constructor TStoredDef.PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
       var
-        sizeleft,i,cnt : LongInt;
-        buf  : array[0..255] of byte;
-        symderef : PDeref;
+        SizeLeft,I,Cnt : LongInt;
+        Buf  : array[0..255] of Byte;
+        SymDeref : PDeref;
       begin
-         inherited create(dt);
-         DefId:=ppufile.GetLongInt;
-         CurrentModule.deflist[DefId]:=self;
+         inherited Create(DT);
+         DefID:=PPUFile.GetLongInt;
+         CurrentModule.DefList[DefID]:=Self;
 {$ifdef EXTDEBUG}
-         fillchar(fileinfo,sizeof(fileinfo),0);
+         FillChar(FileInfo,SizeOf(FileInfo),0);
 {$endif}
          { load }
-         ppufile.getderef(typesymderef);
-         ppufile.GetSet(TPPUSet2(defoptions));
-         ppufile.GetSet(TPPUSet1(defstates));
-         if df_unique in defoptions then
-           ppufile.getderef(orgdefderef);
-         if df_genconstraint in defoptions then
+         PPUFile.GetDeref(TypeSymDeref);
+         PPUFile.GetSet(TPPUSet2(DefOptions));
+         PPUFile.GetSet(TPPUSet1(DefStates));
+         if df_unique in DefOptions then
+           PPUFile.GetDeref(OrgDefDeref);
+         if df_genconstraint in DefOptions then
            begin
-             genconstraintdata:=TGenericConstraintData.create;
-             genconstraintdata.ppuload(ppufile);
+             GenConstraintData:=TGenericConstraintData.Create;
+             GenConstraintData.PPULoad(PPUFile);
            end;
-         if [df_generic,df_specialization]*defoptions<>[] then
+         if [df_generic,df_specialization]*DefOptions<>[] then
            begin
-             cnt:=ppufile.GetLongInt;
-             if cnt>0 then
+             Cnt:=PPUFile.GetLongInt;
+             if Cnt>0 then
                begin
-                 genericparas:=TFPHashObjectList.create(false);
-                 genericparaderefs:=TFPList.create;
-                 for i:=0 to cnt-1 do
+                 GenericParas:=TFPHashObjectList.Create(False);
+                 GenericParaDerefs:=TFPList.Create;
+                 for I:=0 to Cnt-1 do
                    begin
-                     genericparas.add(ppufile.GetString,nil);
-                     New(symderef);
-                     ppufile.getderef(symderef^);
-                     genericparaderefs.add(symderef);
+                     GenericParas.Add(PPUFile.GetString,nil);
+                     New(SymDeref);
+                     PPUFile.GetDeref(SymDeref^);
+                     GenericParaDerefs.Add(SymDeref);
                    end;
                end;
            end;
-         if df_generic in defoptions then
+         if df_generic in DefOptions then
            begin
-             sizeleft:=ppufile.GetLongInt;
-             initgeneric;
-             while sizeleft>0 do
+             SizeLeft:=PPUFile.GetLongInt;
+             InitGeneric;
+             while SizeLeft>0 do
                begin
-                 if sizeleft>sizeof(buf) then
-                   i:=sizeof(buf)
+                 if SizeLeft>SizeOf(Buf) then
+                   I:=SizeOf(Buf)
                  else
-                   i:=sizeleft;
-                 ppufile.GetData(buf,i);
-                 generictokenbuf.write(buf,i);
-                 dec(sizeleft,i);
+                   I:=SizeLeft;
+                 PPUFile.GetData(Buf,I);
+                 GenericTokenBuf.write(Buf,I);
+                 Dec(SizeLeft,I);
                end;
            end;
-        if df_specialization in defoptions then
-          ppufile.getderef(genericdefderef);
-        RTTIAttributeList:=TRTTIAttributeList.ppuload(ppufile);
+        if df_specialization in DefOptions then
+          PPUFile.GetDeref(GenericDefDeref);
+        RTTIAttributeList:=TRTTIAttributeList.PPULoad(PPUFile);
       end;
 
 
-    function TStoredDef.NeedsSeparateInitRTTI:boolean;
+    function TStoredDef.NeedsSeparateInitRTTI:Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
 
-    function TStoredDef.RTTIMangledName(rt : TRTTIType) : TSymStr;
+    function TStoredDef.RTTIMangledName(RT : TRTTIType) : TSymStr;
       var
-        prefix : string[4];
+        Prefix : string[4];
       begin
-        if (rt=fullrtti) or (not NeedsSeparateInitRTTI) then
+        if (RT=FullRTTI) or (not NeedsSeparateInitRTTI) then
           begin
-            prefix:='RTTI';
-            include(defstates,ds_rtti_table_used);
+            Prefix:='RTTI';
+            Include(DefStates,ds_rtti_table_used);
           end
         else
           begin
-            prefix:='INIT';
-            include(defstates,ds_init_table_used);
+            Prefix:='INIT';
+            Include(DefStates,ds_init_table_used);
           end;
-        if Assigned(typesym) and
-           (owner.symtabletype in [staticsymtable,GlobalSymTable]) then
-          result:=make_mangledname(prefix,typesym.owner,typesym.name)
+        if Assigned(TypeSym) and
+           (Owner.SymTableType in [StaticSymTable,GlobalSymTable]) then
+          Result:=Make_MangledName(Prefix,TypeSym.Owner,TypeSym.Name)
         else
-          result:=make_mangledname(prefix,findunitsymtable(owner),'def'+UniqueIDStr)
+          Result:=Make_MangledName(Prefix,FindUnitSymTable(Owner),'def'+UniqueIDStr)
       end;
 
 
     function TStoredDef.OwnerHierarchyName: string;
       var
-        tmp: TDef;
+        Tmp: TDef;
       begin
-        tmp:=self;
-        result:='';
+        Tmp:=Self;
+        Result:='';
         repeat
           { can be not assigned in case of a forwarddef }
-          if Assigned(tmp.owner) and
-             (tmp.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-            tmp:=TDef(tmp.owner.defowner)
+          if Assigned(Tmp.Owner) and
+             (Tmp.Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+            Tmp:=TDef(Tmp.Owner.DefOwner)
           else
-            break;
-          result:=TAbstractRecordDef(tmp).objrealname^+'.'+result;
-        until tmp=nil;
+            Break;
+          Result:=TAbstractRecordDef(Tmp).ObjRealName^+'.'+Result;
+        until Tmp=nil;
       end;
 
 
     function TStoredDef.OwnerHierarchyPrettyName: string;
       var
-        tmp: TDef;
+        Tmp: TDef;
       begin
-        tmp:=self;
-        result:='';
+        Tmp:=Self;
+        Result:='';
         repeat
           { can be not assigned in case of a forwarddef }
-          if Assigned(tmp.owner) and
-             (tmp.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-            tmp:=TDef(tmp.owner.defowner)
+          if Assigned(Tmp.Owner) and
+             (Tmp.Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+            Tmp:=TDef(Tmp.Owner.DefOwner)
           else
-            break;
-          result:=TAbstractRecordDef(tmp).typesymbolprettyname+'.'+result;
-        until tmp=nil;
+            Break;
+          Result:=TAbstractRecordDef(Tmp).TypeSymbolPrettyName+'.'+Result;
+        until Tmp=nil;
       end;
 
 
-    function TStoredDef.fullownerhierarchyname(skipprocparams:boolean; use_pretty : boolean): TSymStr;
+    function TStoredDef.FullOwnerHierarchyName(SkipProcParams:Boolean; UsePretty : Boolean): TSymStr;
       var
-        lastowner: TSymTable;
-        tmp: TDef;
-        pno: TProcNameOptions;
+        LastOwner: TSymTable;
+        Tmp: TDef;
+        PNo: TProcNameOptions;
       begin
 {$ifdef symansistr}
-        if not skipprocparams and (_fullownerhierarchyname<>'') then
-          exit(_fullownerhierarchyname);
+        if not SkipProcParams and (FFullOwnerHierarchyName<>'') then
+          Exit(FFullOwnerHierarchyName);
 {$else symansistr}
-        if not skipprocparams and Assigned(_fullownerhierarchyname) then
-          exit(_fullownerhierarchyname^);
+        if not SkipProcParams and Assigned(FFullOwnerHierarchyName) then
+          Exit(FFullOwnerHierarchyName^);
 {$endif symansistr}
         { the def can only reside inside structured types or
           procedures/functions/methods }
-        tmp:=self;
-        result:='';
+        Tmp:=Self;
+        Result:='';
         repeat
-          lastowner:=tmp.owner;
+          LastOwner:=Tmp.Owner;
           { can be not assigned in case of a forwarddef }
-          if not Assigned(lastowner) then
-            break
+          if not Assigned(LastOwner) then
+            Break
           else
-            tmp:=TDef(lastowner.defowner);
-          if not Assigned(tmp) then
-            break;
-          if tmp.typ in [recorddef,objectdef] then
+            Tmp:=TDef(LastOwner.DefOwner);
+          if not Assigned(Tmp) then
+            Break;
+          if Tmp.Typ in [RecordDef,ObjectDef] then
             begin
-              if use_pretty then
-                result:=TAbstractRecordDef(tmp).typesymbolprettyname+'.'+result
+              if UsePretty then
+                Result:=TAbstractRecordDef(Tmp).TypeSymbolPrettyName+'.'+Result
               else
-                result:=TAbstractRecordDef(tmp).objrealname^+'.'+result;
+                Result:=TAbstractRecordDef(Tmp).ObjRealName^+'.'+Result;
             end
           else
-            if tmp.typ=procdef then
+            if Tmp.Typ=ProcDef then
               begin
-                pno:=[pno_paranames,pno_proctypeoption];
-                if skipprocparams then
-                  include(pno,pno_noparams);
-                result:=TProcDef(tmp).customprocname(pno)+'.'+result;
+                PNo:=[pno_paranames,pno_proctypeoption];
+                if SkipProcParams then
+                  Include(PNo,pno_noparams);
+                Result:=TProcDef(Tmp).CustomProcName(PNo)+'.'+Result;
               end;
-        until tmp=nil;
+        until Tmp=nil;
         { add the unit name }
-        if Assigned(lastowner) and
-           Assigned(lastowner.realname) then
-          result:=lastowner.realname^+'.'+result;
-        if not skipprocparams then
+        if Assigned(LastOwner) and
+           Assigned(LastOwner.RealName) then
+          Result:=LastOwner.RealName^+'.'+Result;
+        if not SkipProcParams then
           { don't store the name in this case }
 {$ifdef symansistr}
-          _fullownerhierarchyname:=result;
+          FFullOwnerHierarchyName:=Result;
 {$else symansistr}
-          _fullownerhierarchyname:=StringDup(result);
+          FFullOwnerHierarchyName:=StringDup(Result);
 {$endif symansistr}
       end;
 
 
-    function TStoredDef.in_currentunit: boolean;
+    function TStoredDef.In_CurrentUnit: Boolean;
       var
-        st: TSymTable;
+        ST: TSymTable;
       begin
-        st:=owner;
-        while not(st.symtabletype in [GlobalSymTable,staticsymtable]) do
-          st:=st.defowner.owner;
-        result:=st.iscurrentunit;
+        ST:=Owner;
+        while not(ST.SymTableType in [GlobalSymTable,StaticSymTable]) do
+          ST:=ST.DefOwner.Owner;
+        Result:=ST.IsCurrentUnit;
       end;
 
 
-    function TStoredDef.getcopy : TStoredDef;
+    function TStoredDef.GetCopy : TStoredDef;
       begin
         Message(sym_e_cant_create_unique_type);
-        getcopy:=CErrorDef.create;
+        GetCopy:=CErrorDef.Create;
       end;
 
 
-    procedure TStoredDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStoredDef.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        sizeleft,i : LongInt;
-        buf  : array[0..255] of byte;
-        oldintfcrc : boolean;
+        SizeLeft,I : LongInt;
+        Buf  : array[0..255] of Byte;
+        OldIntfCRC : Boolean;
       begin
-        if defid<0 then
+        if DefID<0 then
           InternalError(2015101401);
-        ppufile.PutLongInt(DefId);
-        ppufile.putderef(typesymderef);
-        ppufile.PutSet(TPPUSet2(defoptions));
-        oldintfcrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
-        ppufile.PutSet(TPPUSet1(defstates));
-        if df_unique in defoptions then
-          ppufile.putderef(orgdefderef);
-        if df_genconstraint in defoptions then
-          genconstraintdata.ppuwrite(ppufile);
-        if [df_generic,df_specialization]*defoptions<>[] then
+        PPUFile.PutLongInt(DefID);
+        PPUFile.PutDeref(TypeSymDeref);
+        PPUFile.PutSet(TPPUSet2(DefOptions));
+        OldIntfCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
+        PPUFile.PutSet(TPPUSet1(DefStates));
+        if df_unique in DefOptions then
+          PPUFile.PutDeref(OrgDefDeref);
+        if df_genconstraint in DefOptions then
+          GenConstraintData.PPUWrite(PPUFile);
+        if [df_generic,df_specialization]*DefOptions<>[] then
           begin
-            if not Assigned(genericparas) then
-              ppufile.PutLongInt(0)
+            if not Assigned(GenericParas) then
+              PPUFile.PutLongInt(0)
             else
               begin
-                if not Assigned(genericparaderefs) then
+                if not Assigned(GenericParaDerefs) then
                   InternalError(2014052305);
-                ppufile.PutLongInt(genericparas.count);
-                for i:=0 to genericparas.count-1 do
+                PPUFile.PutLongInt(GenericParas.Count);
+                for I:=0 to GenericParas.Count-1 do
                   begin
-                    ppufile.PutString(genericparas.nameofindex(i));
-                    ppufile.putderef(PDeref(genericparaderefs[i])^);
+                    PPUFile.PutString(GenericParas.NameOfIndex(I));
+                    PPUFile.PutDeref(PDeref(GenericParaDerefs[I])^);
                   end;
               end;
           end;
-        if df_generic in defoptions then
+        if df_generic in DefOptions then
           begin
             { crc generic implementation }
-            ppufile.DoCRC:=true;
-            if Assigned(generictokenbuf) then
+            PPUFile.DoCRC:=True;
+            if Assigned(GenericTokenBuf) then
               begin
-                sizeleft:=generictokenbuf.size;
-                generictokenbuf.seek(0);
+                SizeLeft:=GenericTokenBuf.Size;
+                GenericTokenBuf.Seek(0);
               end
             else
-              sizeleft:=0;
-            ppufile.PutLongInt(sizeleft);
-            while sizeleft>0 do
+              SizeLeft:=0;
+            PPUFile.PutLongInt(SizeLeft);
+            while SizeLeft>0 do
               begin
-                if sizeleft>sizeof(buf) then
-                  i:=sizeof(buf)
+                if SizeLeft>SizeOf(Buf) then
+                  I:=SizeOf(Buf)
                 else
-                  i:=sizeleft;
-                generictokenbuf.read(buf,i);
-                ppufile.PutData(buf,i);
-                dec(sizeleft,i);
+                  I:=SizeLeft;
+                GenericTokenBuf.read(Buf,I);
+                PPUFile.PutData(Buf,I);
+                Dec(SizeLeft,I);
               end;
           end;
-        ppufile.DoCRC:=oldintfcrc;
-        if df_specialization in defoptions then
-          ppufile.putderef(genericdefderef);
-        TRTTIAttributeList.ppuwrite(RTTIAttributeList,ppufile);
+        PPUFile.DoCRC:=OldIntfCRC;
+        if df_specialization in DefOptions then
+          PPUFile.PutDeref(GenericDefDeref);
+        TRTTIAttributeList.PPUWrite(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredDef.PPULoadSubEntries(ppufile: TCompilerPPUFile);
+    procedure TStoredDef.PPULoadSubEntries(PPUFile: TCompilerPPUFile);
       begin
-        TRTTIAttributeList.PPULoadSubEntries(RTTIAttributeList,ppufile);
+        TRTTIAttributeList.PPULoadSubEntries(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredDef.PPUWriteSubEntries(ppufile: TCompilerPPUFile);
+    procedure TStoredDef.PPUWriteSubEntries(PPUFile: TCompilerPPUFile);
       begin
-        TRTTIAttributeList.PPUWriteSubEntries(RTTIAttributeList,ppufile);
+        TRTTIAttributeList.PPUWriteSubEntries(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredDef.buildderef;
+    procedure TStoredDef.BuildDeref;
       var
-        i : LongInt;
-        sym : TSym;
-        symderef : PDeref;
+        I : LongInt;
+        Sym : TSym;
+        SymDeref : PDeref;
       begin
-        if not registered then
+        if not Registered then
           RegisterDef;
-        typesymderef.build(typesym);
-        orgdefderef.build(orgdef);
-        genericdefderef.build(genericdef);
+        TypeSymDeref.Build(TypeSym);
+        OrgDefDeref.Build(OrgDef);
+        GenericDefDeref.Build(GenericDef);
         if Assigned(RTTIAttributeList) then
-          RTTIAttributeList.buildderef;
-        if Assigned(genconstraintdata) then
-          genconstraintdata.buildderef;
-        if Assigned(genericparas) then
+          RTTIAttributeList.BuildDeref;
+        if Assigned(GenConstraintData) then
+          GenConstraintData.BuildDeref;
+        if Assigned(GenericParas) then
           begin
            { buildderef may be called more than once (getppucrc is called at
              end-of-interface and again at end-of-implementation; system units
@@ -2335,86 +2335,86 @@ implementation
              previously accumulated entries so that genericparaderefs.count
              stays equal to genericparas.count and does not trigger
              internalerror 2014052303 in deref. }
-           if Assigned(genericparaderefs) then
+           if Assigned(GenericParaDerefs) then
              begin
-               for i:=0 to genericparaderefs.count-1 do
-                 dispose(PDeref(genericparaderefs[i]));
-               genericparaderefs.clear;
+               for I:=0 to GenericParaDerefs.Count-1 do
+                 Dispose(PDeref(GenericParaDerefs[I]));
+               GenericParaDerefs.Clear;
              end
            else
-             genericparaderefs:=TFPList.create;
-           genericparaderefs.capacity:=genericparas.count;
-            for i:=0 to genericparas.count-1 do
+             GenericParaDerefs:=TFPList.Create;
+           GenericParaDerefs.Capacity:=GenericParas.Count;
+            for I:=0 to GenericParas.Count-1 do
               begin
-                sym:=TSym(genericparas.items[i]);
-                new(symderef);
-                symderef^.build(sym);
-                genericparaderefs.add(symderef);
+                Sym:=TSym(GenericParas.Items[I]);
+                New(SymDeref);
+                SymDeref^.Build(Sym);
+                GenericParaDerefs.Add(SymDeref);
               end;
           end;
       end;
 
 
-    procedure TStoredDef.buildderefimpl;
+    procedure TStoredDef.BuildDerefImpl;
       begin
       end;
 
 
-    procedure TStoredDef.deref;
+    procedure TStoredDef.Deref;
       var
-        symderef : PDeref;
-        i : LongInt;
+        SymDeref : PDeref;
+        I : LongInt;
       begin
-        typesym:=TTypeSym(typesymderef.resolve);
-        if df_unique in defoptions then
-          orgdef:=TStoredDef(orgdefderef.resolve);
-        if df_specialization in defoptions then
-          genericdef:=TStoredDef(genericdefderef.resolve);
+        TypeSym:=TTypeSym(TypeSymDeref.Resolve);
+        if df_unique in DefOptions then
+          OrgDef:=TStoredDef(OrgDefDeref.Resolve);
+        if df_specialization in DefOptions then
+          GenericDef:=TStoredDef(GenericDefDeref.Resolve);
         if Assigned(RTTIAttributeList) then
-          RTTIAttributeList.deref;
-        if Assigned(genconstraintdata) then
-          genconstraintdata.deref;
-        if Assigned(genericparas) then
+          RTTIAttributeList.Deref;
+        if Assigned(GenConstraintData) then
+          GenConstraintData.Deref;
+        if Assigned(GenericParas) then
           begin
-            if not Assigned(genericparaderefs) then
+            if not Assigned(GenericParaDerefs) then
               InternalError(2014052302);
-            if genericparas.count<>genericparaderefs.count then
+            if GenericParas.Count<>GenericParaDerefs.Count then
               InternalError(2014052303);
-            for i:=0 to genericparaderefs.count-1 do
+            for I:=0 to GenericParaDerefs.Count-1 do
               begin
-                symderef:=PDeref(genericparaderefs[i]);
-                genericparas.items[i]:=symderef^.resolve;
+                SymDeref:=PDeref(GenericParaDerefs[I]);
+                GenericParas.Items[I]:=SymDeref^.Resolve;
               end;
           end;
       end;
 
 
-    procedure TStoredDef.derefimpl;
+    procedure TStoredDef.DerefImpl;
       begin
       end;
 
 
-    function TStoredDef.size : asizeint;
+    function TStoredDef.Size : ASizeInt;
       begin
-         size:=savesize;
+         Size:=SaveSize;
       end;
 
 
-    function TStoredDef.getvardef:LongInt;
+    function TStoredDef.GetVarDef:LongInt;
       begin
-        result:=varUndefined;
+        Result:=VarUndefined;
       end;
 
 
-    function TStoredDef.alignment : shortint;
+    function TStoredDef.Alignment : ShortInt;
       begin
          { natural alignment by default }
-         alignment:=Size_2_Align(savesize);
+         Alignment:=Size_2_Align(SaveSize);
          { can happen if savesize = 0, e.g. for voiddef or
            an empty record
          }
-         if (alignment=0) then
-           alignment:=1;
+         if (Alignment=0) then
+           Alignment:=1;
       end;
 
 
@@ -2426,238 +2426,238 @@ implementation
 
 
     { needs an init table }
-    function TStoredDef.NeedsInitTable : boolean;
+    function TStoredDef.NeedsInitTable : Boolean;
       begin
-         NeedsInitTable:=false;
+         NeedsInitTable:=False;
       end;
 
 
-    function TStoredDef.HasNonTrivialInitChild(check_parent:boolean):boolean;
+    function TStoredDef.HasNonTrivialInitChild(CheckParent:Boolean):Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
 
-   function TStoredDef.is_intregable : boolean;
+   function TStoredDef.Is_IntRegable : Boolean;
 {$ifndef cpuhighleveltarget}
      var
-       recsize,temp: LongInt;
+       RecSize,Temp: LongInt;
 {$endif cpuhighleveltarget}
      begin
-        case typ of
-          orddef,
-          pointerdef,
-          enumdef,
-          classrefdef:
-            is_intregable:=true;
-          procvardef :
-            is_intregable:=TProcVarDef(self).is_addressonly or (po_methodpointer in TProcVarDef(self).procoptions);
-          objectdef:
-            is_intregable:=(is_implicit_pointer_object_type(self)) and not NeedsInitTable;
-          setdef:
-            is_intregable:=is_smallset(self);
-          arraydef:
+        case Typ of
+          OrdDef,
+          PointerDef,
+          EnumDef,
+          ClassRefDef:
+            Is_IntRegable:=True;
+          ProcVarDef :
+            Is_IntRegable:=TProcVarDef(Self).Is_AddressOnly or (po_methodpointer in TProcVarDef(Self).ProcOptions);
+          ObjectDef:
+            Is_IntRegable:=(Is_Implicit_Pointer_Object_Type(Self)) and not NeedsInitTable;
+          SetDef:
+            Is_IntRegable:=is_smallset(Self);
+          ArrayDef:
 {$ifdef cpuhighleveltarget}
-            is_intregable:=false
+            Is_IntRegable:=False
 {$else cpuhighleveltarget}
-            is_intregable:=not(is_special_array(self)) and
-              (TArrayDef(self).size<=8) and (TArrayDef(self).size in [1,2,4,8]) and
-              TStoredDef(TArrayDef(self).elementdef).is_intregable
+            Is_IntRegable:=not(is_special_array(Self)) and
+              (TArrayDef(Self).Size<=8) and (TArrayDef(Self).Size in [1,2,4,8]) and
+              TStoredDef(TArrayDef(Self).ElementDef).Is_IntRegable
 {$ifdef SUPPORT_MMX}
               and not((cs_mmx in CurrentSettings.LocalSwitches) and
-                 is_mmx_able_array(self))
+                 is_mmx_able_array(Self))
 {$endif SUPPORT_MMX}
 {$endif cpuhighleveltarget}
               ;
-          recorddef:
+          RecordDef:
             begin
 {$ifdef cpuhighleveltarget}
-              is_intregable:=false;
+              Is_IntRegable:=False;
 {$else cpuhighleveltarget}
-              recsize:=size;
-              is_intregable:=
-                IsPowerOf2(recsize,temp) and
-                ((recsize<=sizeof(aint)*2) and
-                 not TRecordDef(self).contains_cross_aword_field and
+              RecSize:=Size;
+              Is_IntRegable:=
+                IsPowerOf2(RecSize,Temp) and
+                ((RecSize<=SizeOf(AInt)*2) and
+                 not TRecordDef(Self).Contains_Cross_AWord_Field and
                  { records cannot go into registers on 16 bit targets for now }
-                 (sizeof(aint)>2) and
-                 not TRecordDef(self).contains_float_field
+                 (SizeOf(AInt)>2) and
+                 not TRecordDef(Self).Contains_Float_Field
                 ) and
                 not NeedsInitTable;
 {$endif cpuhighleveltarget}
             end;
           else
-           is_intregable:=false;
+           Is_IntRegable:=False;
         end;
      end;
 
 
-   function TStoredDef.is_fpuregable : boolean;
+   function TStoredDef.Is_FPURegable : Boolean;
      begin
 {$ifdef x86}
-       result:=use_vectorfpu(self);
+       Result:=Use_VectorFPU(Self);
 {$else x86}
-       result:=(typ=floatdef)
+       Result:=(Typ=FloatDef)
          ;
 {$endif x86}
      end;
 
 
-   function TStoredDef.is_const_intregable : boolean;
+   function TStoredDef.Is_Const_IntRegable : Boolean;
      begin
-       case typ of
-         stringdef:
-           result:=TStringDef(self).stringtype in [st_ansistring,st_unicodestring,st_widestring];
-         arraydef:
-           result:=is_dynamic_array(self);
-         objectdef:
-           result:=is_interface(self);
+       case Typ of
+         StringDef:
+           Result:=TStringDef(Self).StringType in [st_ansistring,st_unicodestring,st_widestring];
+         ArrayDef:
+           Result:=is_dynamic_array(Self);
+         ObjectDef:
+           Result:=Is_Interface(Self);
          else
-           result:=false;
+           Result:=False;
        end;
      end;
 
 
-   procedure TStoredDef.initgeneric;
+   procedure TStoredDef.InitGeneric;
      begin
-       if Assigned(generictokenbuf) then
+       if Assigned(GenericTokenBuf) then
          InternalError(200512131);
-       generictokenbuf:=TDynamicArray.create(256);
+       GenericTokenBuf:=TDynamicArray.Create(256);
      end;
 
 
-   function TStoredDef.is_generic: boolean;
+   function TStoredDef.Is_Generic: Boolean;
      var
-       sym: TSym;
-       i: LongInt;
+       Sym: TSym;
+       I: LongInt;
      begin
-       result:=Assigned(genericparas) and
-                 (genericparas.count>0) and
-                 (df_generic in defoptions);
-       if result then
+       Result:=Assigned(GenericParas) and
+                 (GenericParas.Count>0) and
+                 (df_generic in DefOptions);
+       if Result then
          { if any of the type parameters does *not* belong to us (meaning it was passed
            in from outside) then we aren't a generic, but a specialization }
-         for i:=0 to genericparas.count-1 do
+         for I:=0 to GenericParas.Count-1 do
            begin
-             sym:=TSym(genericparas[i]);
+             Sym:=TSym(GenericParas[I]);
              { sym must be either a type or const }
-             if not (sym.typ in [symconst.typesym,symconst.constsym]) then
+             if not (Sym.Typ in [SymConst.TypeSym,SymConst.ConstSym]) then
                InternalError(2014050903);
-             if (sym.owner.defowner<>self) or (sp_generic_unnamed_type in sym.symoptions) then
-               exit(false);
-             if (sym.typ=symconst.constsym) and (sp_generic_const in sym.symoptions) then
-               exit(false);
+             if (Sym.Owner.DefOwner<>Self) or (sp_generic_unnamed_type in Sym.SymOptions) then
+               Exit(False);
+             if (Sym.Typ=SymConst.ConstSym) and (sp_generic_const in Sym.SymOptions) then
+               Exit(False);
            end;
      end;
 
 
-   function TStoredDef.is_generic_param_const(index:integer):boolean;
+   function TStoredDef.Is_Generic_Param_Const(Index:Integer):Boolean;
      begin
-       result:=TSym(genericparas[index]).typ=constsym;
+       Result:=TSym(GenericParas[Index]).Typ=ConstSym;
      end;
 
 
-   function TStoredDef.get_generic_param_def(index:integer):TDef;
+   function TStoredDef.Get_Generic_Param_Def(Index:Integer):TDef;
      begin
-       if TSym(genericparas[index]).typ=constsym then
-         result:=TConstSym(genericparas[index]).constdef
+       if TSym(GenericParas[Index]).Typ=ConstSym then
+         Result:=TConstSym(GenericParas[Index]).ConstDef
        else
-         result:=TTypeSym(genericparas[index]).typedef;
+         Result:=TTypeSym(GenericParas[Index]).TypeDef;
      end;
 
 
-   function TStoredDef.is_specialization: boolean;
+   function TStoredDef.Is_Specialization: Boolean;
      var
-       i : LongInt;
-       sym : TSym;
+       I : LongInt;
+       Sym : TSym;
      begin
-       result:=Assigned(genericparas) and
-                 (genericparas.count>0) and
-                 (df_specialization in defoptions);
-       if result then
+       Result:=Assigned(GenericParas) and
+                 (GenericParas.Count>0) and
+                 (df_specialization in DefOptions);
+       if Result then
          begin
            { if at least one of the generic parameters is not owned by us (meaning it was
              passed in from outside) then we have a specialization, otherwise we have a generic }
-           for i:=0 to genericparas.count-1 do
+           for I:=0 to GenericParas.Count-1 do
              begin
-               sym:=TSym(genericparas[i]);
+               Sym:=TSym(GenericParas[I]);
                { sym must be either a type or const }
-               if not (sym.typ in [symconst.typesym,symconst.constsym]) then
+               if not (Sym.Typ in [SymConst.TypeSym,SymConst.ConstSym]) then
                  InternalError(2014050904);
-               if (sym.owner.defowner<>self) or (sp_generic_unnamed_type in sym.symoptions) then
-                 exit(true);
-               if (sym.typ=symconst.constsym) and (sp_generic_const in sym.symoptions) then
-                 exit(true);
+               if (Sym.Owner.DefOwner<>Self) or (sp_generic_unnamed_type in Sym.SymOptions) then
+                 Exit(True);
+               if (Sym.Typ=SymConst.ConstSym) and (sp_generic_const in Sym.SymOptions) then
+                 Exit(True);
              end;
-           result:=false;
+           Result:=False;
          end;
      end;
 
 
    procedure TStoredDef.RegisterDef;
      var
-       gst : TGetSymTable;
-       st : TSymTable;
-       tmod : TModule;
+       GST : TGetSymTable;
+       ST : TSymTable;
+       TMod : TModule;
      begin
-       if registered then
-         exit;
-       if Assigned(owner) then
+       if Registered then
+         Exit;
+       if Assigned(Owner) then
          begin
-           tmod:=find_module_from_symtable(owner);
-            if Assigned(tmod) and Assigned(CurrentModule) and (tmod<>CurrentModule) then
+           TMod:=Find_Module_From_SymTable(Owner);
+            if Assigned(TMod) and Assigned(CurrentModule) and (TMod<>CurrentModule) then
               begin
-                comment(VError,'Definition '+fullownerhierarchyname(false,true)+' from module '+tmod.MainSource+' registered with current module '+CurrentModule.MainSource);
+                Comment(VError,'Definition '+FullOwnerHierarchyName(False,True)+' from module '+TMod.MainSource+' registered with current module '+CurrentModule.MainSource);
               end;
-           if not Assigned(tmod) then
-             tmod:=CurrentModule;
+           if not Assigned(TMod) then
+             TMod:=CurrentModule;
          end
        else
-         tmod:=CurrentModule;
+         TMod:=CurrentModule;
        { Register in current_module }
-       if Assigned(tmod) then
+       if Assigned(TMod) then
          begin
-           exclude(defoptions,df_not_registered_no_free);
-           for gst:=low(TGetSymTable) to high(TGetSymTable) do
+           Exclude(DefOptions,df_not_registered_no_free);
+           for GST:=Low(TGetSymTable) to High(TGetSymTable) do
              begin
-               st:=getsymtable(gst);
-               if Assigned(st) then
-                 TStoredSymTable(st).register_children;
+               ST:=GetSymTable(GST);
+               if Assigned(ST) then
+                 TStoredSymTable(ST).Register_Children;
              end;
-           if defid<defid_not_registered then
-             defid:=DefListIndex
+           if DefID<defid_not_registered then
+             DefID:=DefListIndex
            else
              begin
-               tmod.deflist.Add(self);
-               defid:=tmod.deflist.Count-1;
-               registered_in_module:=tmod;
+               TMod.DefList.Add(Self);
+               DefID:=TMod.DefList.Count-1;
+               RegisteredInModule:=TMod;
              end;
-           maybe_put_in_symtable_stack;
+           Maybe_Put_In_SymTable_Stack;
          end
        else
-         DefId:=defid_registered_nost;
+         DefID:=defid_registered_nost;
      end;
 
 
-   procedure TStoredDef.maybe_put_in_symtable_stack;
+   procedure TStoredDef.Maybe_Put_In_SymTable_Stack;
      var
-       insertstack: PSymTableStackItem;
+       InsertStack: PSymTableStackItem;
      begin
        if Assigned(SymTableStack) and
-          not Assigned(self.owner) then
+          not Assigned(Self.Owner) then
          begin
-           insertstack:=SymTableStack.stack;
+           InsertStack:=SymTableStack.Stack;
            { don't insert defs in exception symtables, as they are freed before
              the module is compiled, so we can get crashes on high level targets
              if they still need it while e.g. writing assembler code }
-           while Assigned(insertstack) and
-                 (insertstack^.SymTable.symtabletype in [exceptsymtable,withsymtable]) do
-             insertstack:=insertstack^.next;
-           if not Assigned(insertstack) then
+           while Assigned(InsertStack) and
+                 (InsertStack^.SymTable.SymTableType in [ExceptSymTable,WithSymTable]) do
+             InsertStack:=InsertStack^.Next;
+           if not Assigned(InsertStack) then
              InternalError(200602044);
-           if insertstack^.SymTable.sealed then
+           if InsertStack^.SymTable.Sealed then
              InternalError(2015022301);
-           insertstack^.SymTable.insertdef(self);
+           InsertStack^.SymTable.InsertDef(Self);
          end;
      end;
 
@@ -2666,242 +2666,242 @@ implementation
                                Tstringdef
 ****************************************************************************}
 
-    constructor TStringDef.createshort(l: byte; doregister: boolean);
+    constructor TStringDef.CreateShort(L: Byte; DoRegister: Boolean);
       begin
-         inherited create(stringdef,doregister);
-         stringtype:=st_shortstring;
-         encoding:=0;
-         len:=l;
+         inherited Create(StringDef,DoRegister);
+         StringType:=st_shortstring;
+         Encoding:=0;
+         Len:=L;
       end;
 
 
-    constructor TStringDef.loadshort(ppufile:TCompilerPPUFile);
+    constructor TStringDef.LoadShort(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(stringdef,ppufile);
-         stringtype:=st_shortstring;
-         encoding:=0;
-         len:=ppufile.GetByte;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(StringDef,PPUFile);
+         StringType:=st_shortstring;
+         Encoding:=0;
+         Len:=PPUFile.GetByte;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    constructor TStringDef.createlong(l: asizeint; doregister: boolean);
+    constructor TStringDef.CreateLong(L: ASizeInt; DoRegister: Boolean);
       begin
-         inherited create(stringdef,doregister);
-         stringtype:=st_longstring;
-         encoding:=0;
-         len:=l;
+         inherited Create(StringDef,DoRegister);
+         StringType:=st_longstring;
+         Encoding:=0;
+         Len:=L;
       end;
 
 
-    constructor TStringDef.loadlong(ppufile:TCompilerPPUFile);
+    constructor TStringDef.LoadLong(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(stringdef,ppufile);
-         stringtype:=st_longstring;
-         encoding:=0;
-         len:=ppufile.GetASizeInt;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(StringDef,PPUFile);
+         StringType:=st_longstring;
+         Encoding:=0;
+         Len:=PPUFile.GetASizeInt;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    constructor TStringDef.createansi(aencoding: TStringEncoding; doregister: boolean);
+    constructor TStringDef.CreateAnsi(AEncoding: TStringEncoding; DoRegister: Boolean);
       begin
-         inherited create(stringdef,doregister);
-         stringtype:=st_ansistring;
-         encoding:=aencoding;
-         len:=-1;
+         inherited Create(StringDef,DoRegister);
+         StringType:=st_ansistring;
+         Encoding:=AEncoding;
+         Len:=-1;
       end;
 
 
-    constructor TStringDef.loadansi(ppufile:TCompilerPPUFile);
+    constructor TStringDef.LoadAnsi(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(stringdef,ppufile);
-         stringtype:=st_ansistring;
-         len:=ppufile.GetASizeInt;
-         encoding:=ppufile.GetWord;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(StringDef,PPUFile);
+         StringType:=st_ansistring;
+         Len:=PPUFile.GetASizeInt;
+         Encoding:=PPUFile.GetWord;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    constructor TStringDef.createwide(doregister: boolean);
+    constructor TStringDef.CreateWide(DoRegister: Boolean);
       begin
-         inherited create(stringdef,doregister);
-         stringtype:=st_widestring;
-         if TargetInfo.endian=endian_little then
-           encoding:=CP_UTF16LE
+         inherited Create(StringDef,DoRegister);
+         StringType:=st_widestring;
+         if TargetInfo.Endian=endian_little then
+           Encoding:=CP_UTF16LE
          else
-           encoding:=CP_UTF16BE;
-         len:=-1;
+           Encoding:=CP_UTF16BE;
+         Len:=-1;
       end;
 
 
-    constructor TStringDef.loadwide(ppufile:TCompilerPPUFile);
+    constructor TStringDef.LoadWide(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(stringdef,ppufile);
-         stringtype:=st_widestring;
-         if TargetInfo.endian=endian_little then
-           encoding:=CP_UTF16LE
+         inherited PPULoad(StringDef,PPUFile);
+         StringType:=st_widestring;
+         if TargetInfo.Endian=endian_little then
+           Encoding:=CP_UTF16LE
          else
-           encoding:=CP_UTF16BE;
-         len:=ppufile.GetASizeInt;
-         PPULoadPlatform(ppufile);
+           Encoding:=CP_UTF16BE;
+         Len:=PPUFile.GetASizeInt;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    constructor TStringDef.createunicode(doregister: boolean);
+    constructor TStringDef.CreateUnicode(DoRegister: Boolean);
       begin
-         inherited create(stringdef,doregister);
-         stringtype:=st_unicodestring;
-         if TargetInfo.endian=endian_little then
-           encoding:=CP_UTF16LE
+         inherited Create(StringDef,DoRegister);
+         StringType:=st_unicodestring;
+         if TargetInfo.Endian=endian_little then
+           Encoding:=CP_UTF16LE
          else
-           encoding:=CP_UTF16BE;
-         len:=-1;
+           Encoding:=CP_UTF16BE;
+         Len:=-1;
       end;
 
 
-    constructor TStringDef.loadunicode(ppufile:TCompilerPPUFile);
+    constructor TStringDef.LoadUnicode(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(stringdef,ppufile);
-         stringtype:=st_unicodestring;
-         len:=ppufile.GetASizeInt;
-         encoding:=ppufile.GetWord;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(StringDef,PPUFile);
+         StringType:=st_unicodestring;
+         Len:=PPUFile.GetASizeInt;
+         Encoding:=PPUFile.GetWord;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TStringDef.getcopy : TStoredDef;
+    function TStringDef.GetCopy : TStoredDef;
       begin
-        result:=CStringDef.create(typ,true);
-        result.typ:=stringdef;
-        TStringDef(result).stringtype:=stringtype;
-        TStringDef(result).encoding:=encoding;
-        TStringDef(result).len:=len;
+        Result:=CStringDef.Create(Typ,True);
+        Result.Typ:=StringDef;
+        TStringDef(Result).StringType:=StringType;
+        TStringDef(Result).Encoding:=Encoding;
+        TStringDef(Result).Len:=Len;
       end;
 
 
-    function TStringDef.stringtypname:string;
+    function TStringDef.StringTypName:string;
       const
-        typname:array[TStringType] of string[10]=(
+        TypName:array[TStringType] of string[10]=(
           'shortstr','longstr','ansistr','widestr','unicodestr'
         );
       begin
-        stringtypname:=typname[stringtype];
+        StringTypName:=TypName[StringType];
       end;
 
 
-    procedure TStringDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStringDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         if stringtype=st_shortstring then
+         inherited PPUWrite(PPUFile);
+         if StringType=st_shortstring then
            begin
 {$ifdef extdebug}
-            if len > 255 then InternalError(12122002);
+            if Len > 255 then InternalError(12122002);
 {$endif}
-            ppufile.PutByte(byte(len))
+            PPUFile.PutByte(Byte(Len))
            end
          else
-           ppufile.PutASizeInt(len);
-         if stringtype in [st_ansistring,st_unicodestring] then
-           ppufile.PutWord(encoding);
-         case stringtype of
-            st_shortstring : WriteEntry(ppufile,IBShortStringDef);
-            st_longstring : WriteEntry(ppufile,IBLongStringDef);
-            st_ansistring : WriteEntry(ppufile,IBAnsiStringDef);
-            st_widestring : WriteEntry(ppufile,IBWideStringDef);
-            st_unicodestring : WriteEntry(ppufile,IBUnicodeStringDef);
+           PPUFile.PutASizeInt(Len);
+         if StringType in [st_ansistring,st_unicodestring] then
+           PPUFile.PutWord(Encoding);
+         case StringType of
+            st_shortstring : WriteEntry(PPUFile,IBShortStringDef);
+            st_longstring : WriteEntry(PPUFile,IBLongStringDef);
+            st_ansistring : WriteEntry(PPUFile,IBAnsiStringDef);
+            st_widestring : WriteEntry(PPUFile,IBWideStringDef);
+            st_unicodestring : WriteEntry(PPUFile,IBUnicodeStringDef);
          end;
       end;
 
 
-    function TStringDef.NeedsInitTable : boolean;
+    function TStringDef.NeedsInitTable : Boolean;
       begin
-         NeedsInitTable:=stringtype in [st_ansistring,st_widestring,st_unicodestring];
+         NeedsInitTable:=StringType in [st_ansistring,st_widestring,st_unicodestring];
       end;
 
 
     function TStringDef.GetTypeName : string;
       const
-         names : array[TStringType] of string[15] = (
+         Names : array[TStringType] of string[15] = (
            'ShortString','LongString','AnsiString','WideString','UnicodeString');
       begin
-         GetTypeName:=names[stringtype];
-         case stringtype of
+         GetTypeName:=Names[StringType];
+         case StringType of
            st_ansistring,st_unicodestring:
-             GetTypeName:=GetTypeName+'('+ToStr(encoding)+')';
+             GetTypeName:=GetTypeName+'('+ToStr(Encoding)+')';
            st_shortstring:
-             GetTypeName:=GetTypeName+'['+ToStr(len)+']';
+             GetTypeName:=GetTypeName+'['+ToStr(Len)+']';
            else
              ;
          end;
       end;
 
 
-    function TStringDef.getvardef : LongInt;
+    function TStringDef.GetVarDef : LongInt;
       const
-        vardef : array[TStringType] of LongInt = (
-          varUndefined,varUndefined,varString,varOleStr,varUString);
+        VarDef : array[TStringType] of LongInt = (
+          VarUndefined,VarUndefined,VarString,VarOleStr,VarUString);
       begin
-        result:=vardef[stringtype];
+        Result:=VarDef[StringType];
       end;
 
 
-    function TStringDef.get_default_char_type: TDef;
+    function TStringDef.Get_Default_Char_Type: TDef;
       begin
-        case stringtype of
+        case StringType of
           st_shortstring,
           st_longstring,
           st_ansistring:
-            result:=cansichartype;
+            Result:=CAnsiCharType;
           st_unicodestring,
           st_widestring:
-            result:=cwidechartype;
+            Result:=CWideCharType;
         end;
       end;
 
 
-    function TStringDef.get_default_string_type: TDef;
+    function TStringDef.Get_Default_String_Type: TDef;
       begin
-        case stringtype of
+        case StringType of
           st_shortstring:
-            result:=cshortstringtype;
+            Result:=CShortStringType;
           { st_longstring is currently not supported but
             when it is this case will need to be supplied }
           st_longstring:
             InternalError(2021040801);
           st_ansistring:
-            result:=cansistringtype;
+            Result:=CAnsiStringType;
           st_widestring:
-            result:=cwidestringtype;
+            Result:=CWideStringType;
           st_unicodestring:
-            result:=cunicodestringtype;
+            Result:=CUnicodeStringType;
         end
       end;
 
 
-    function TStringDef.alignment : shortint;
+    function TStringDef.Alignment : ShortInt;
       begin
-        case stringtype of
+        case StringType of
           st_unicodestring,
           st_widestring,
           st_ansistring:
-            alignment:=voidpointertype.alignment;
+            Alignment:=VoidPointerType.Alignment;
           st_longstring,
           st_shortstring:
               { char to string accesses byte 0 and 1 with one word access }
-            if (tf_requires_proper_alignment in TargetInfo.flags) or
+            if (tf_requires_proper_alignment in TargetInfo.Flags) or
               { macpas needs an alignment of 2 (MetroWerks compatible) }
                (m_mac in CurrentSettings.ModeSwitches) then
-              alignment:=Size_2_Align(2)
+              Alignment:=Size_2_Align(2)
             else
-              alignment:=Size_2_Align(1);
+              Alignment:=Size_2_Align(1);
         end;
       end;
 
 
-    function TStringDef.getmangledparaname : TSymStr;
+    function TStringDef.GetMangledParaName : TSymStr;
       begin
-        getmangledparaname:='STRING';
+        GetMangledParaName:='STRING';
       end;
 
 
@@ -2911,16 +2911,16 @@ implementation
       end;
 
 
-    function TStringDef.size: asizeint;
+    function TStringDef.Size: ASizeInt;
       begin
-        case stringtype of
+        case StringType of
           st_shortstring:
-            Result:=len+1;
+            Result:=Len+1;
           st_longstring,
           st_ansistring,
           st_widestring,
           st_unicodestring:
-            Result:=voidpointertype.size;
+            Result:=VoidPointerType.Size;
         end;
       end;
 
@@ -2929,236 +2929,236 @@ implementation
                                  TENUMDEF
 ****************************************************************************}
 
-    constructor TEnumDef.create;
+    constructor TEnumDef.Create;
       begin
-         inherited create(enumdef,true);
-         minval:=0;
-         maxval:=0;
-         calcsavesize(CurrentSettings.PackEnum);
-         has_jumps:=false;
-         basedef:=nil;
-         basedefderef.reset;
-         SymTable:=TEnumSymTable.create(self);
+         inherited Create(EnumDef,True);
+         MinVal:=0;
+         MaxVal:=0;
+         CalcSaveSize(CurrentSettings.PackEnum);
+         HasJumps:=False;
+         BaseDef:=nil;
+         BaseDefDeref.Reset;
+         SymTable:=TEnumSymTable.Create(Self);
       end;
 
 
-    constructor TEnumDef.create_subrange(_basedef:TEnumDef;_min,_max:asizeint);
+    constructor TEnumDef.Create_Subrange(ABaseDef:TEnumDef;AMin,AMax:ASizeInt);
       begin
-         inherited create(enumdef,true);
-         minval:=_min;
-         maxval:=_max;
-         basedef:=_basedef;
-         calcsavesize(CurrentSettings.PackEnum);
-         has_jumps:=false;
-         SymTable:=basedef.SymTable.getcopy;
-         include(defoptions, df_copied_def);
+         inherited Create(EnumDef,True);
+         MinVal:=AMin;
+         MaxVal:=AMax;
+         BaseDef:=ABaseDef;
+         CalcSaveSize(CurrentSettings.PackEnum);
+         HasJumps:=False;
+         SymTable:=BaseDef.SymTable.GetCopy;
+         Include(DefOptions, df_copied_def);
        end;
 
 
-    constructor TEnumDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TEnumDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(enumdef,ppufile);
-         minval:=ppufile.GetAInt;
-         maxval:=ppufile.GetAInt;
-         savesize:=ppufile.GetAInt;
-         has_jumps:=false;
-         if df_copied_def in defoptions then
+         inherited PPULoad(EnumDef,PPUFile);
+         MinVal:=PPUFile.GetAInt;
+         MaxVal:=PPUFile.GetAInt;
+         SaveSize:=PPUFile.GetAInt;
+         HasJumps:=False;
+         if df_copied_def in DefOptions then
            begin
              SymTable:=nil;
-             ppufile.getderef(basedefderef);
-             PPULoadPlatform(ppufile);
+             PPUFile.GetDeref(BaseDefDeref);
+             PPULoadPlatform(PPUFile);
            end
          else
            begin
-             PPULoadPlatform(ppufile);
+             PPULoadPlatform(PPUFile);
              // create with nil defowner first to prevent values changes on insert
-             SymTable:=TEnumSymTable.create(nil);
-             TEnumSymTable(SymTable).ppuload(ppufile);
-             SymTable.defowner:=self;
+             SymTable:=TEnumSymTable.Create(nil);
+             TEnumSymTable(SymTable).PPULoad(PPUFile);
+             SymTable.DefOwner:=Self;
            end;
       end;
 
     destructor TEnumDef.Destroy;
       begin
-        SymTable.free;
+        SymTable.Free;
         SymTable:=nil;
         inherited Destroy;
       end;
 
 
-    function TEnumDef.getcopy : TStoredDef;
+    function TEnumDef.GetCopy : TStoredDef;
       begin
-        if Assigned(basedef) then
-          result:=CEnumDef.create_subrange(basedef,minval,maxval)
+        if Assigned(BaseDef) then
+          Result:=CEnumDef.Create_Subrange(BaseDef,MinVal,MaxVal)
         else
           begin
-            result:=CEnumDef.create;
-            TEnumDef(result).minval:=minval;
-            TEnumDef(result).maxval:=maxval;
-            TEnumDef(result).SymTable.free;
-            TEnumDef(result).SymTable:=SymTable.getcopy;
-            TEnumDef(result).basedef:=self;
+            Result:=CEnumDef.Create;
+            TEnumDef(Result).MinVal:=MinVal;
+            TEnumDef(Result).MaxVal:=MaxVal;
+            TEnumDef(Result).SymTable.Free;
+            TEnumDef(Result).SymTable:=SymTable.GetCopy;
+            TEnumDef(Result).BaseDef:=Self;
           end;
-        TEnumDef(result).has_jumps:=has_jumps;
-        TEnumDef(result).basedefderef:=basedefderef;
-        include(TEnumDef(result).defoptions,df_copied_def);
+        TEnumDef(Result).HasJumps:=HasJumps;
+        TEnumDef(Result).BaseDefDeref:=BaseDefDeref;
+        Include(TEnumDef(Result).DefOptions,df_copied_def);
       end;
 
 
-    procedure TEnumDef.calcsavesize(PackEnum: shortint);
+    procedure TEnumDef.CalcSaveSize(PackEnum: ShortInt);
       begin
 {$IFNDEF cpu64bitaddr} {$push}{$warnings off} {$ENDIF} //comparison always false warning
-        if (PackEnum=8) or (int64(min)<low(LongInt)) or (int64(max)>high(cardinal)) or ((min<0) and (max>high(LongInt))) then
-         savesize:=8
+        if (PackEnum=8) or (Int64(Min)<Low(LongInt)) or (Int64(Max)>High(Cardinal)) or ((Min<0) and (Max>High(LongInt))) then
+         SaveSize:=8
 {$IFNDEF cpu64bitaddr} {$pop} {$ENDIF}
         else
  //comparison always false warning
-         if (PackEnum=4) or (min<low(smallint)) or (max>high(word)) or ((min<0) and (max>high(smallint))) then
-          savesize:=4
+         if (PackEnum=4) or (Min<Low(SmallInt)) or (Max>High(Word)) or ((Min<0) and (Max>High(SmallInt))) then
+          SaveSize:=4
 
         else
-         if (PackEnum=2) or (min<low(shortint)) or (max>high(byte)) or ((min<0) and (max>high(shortint))) then
-          savesize:=2
+         if (PackEnum=2) or (Min<Low(ShortInt)) or (Max>High(Byte)) or ((Min<0) and (Max>High(ShortInt))) then
+          SaveSize:=2
         else
-         savesize:=1;
+         SaveSize:=1;
       end;
 
 
-    function TEnumDef.packedbitsize: asizeint;
+    function TEnumDef.PackedBitSize: ASizeInt;
       var
-        sizeval: TConstExprInt;
-        power: LongInt;
+        SizeVal: TConstExprInt;
+        Power: LongInt;
       begin
-        result := 0;
-        if (minval >= 0) and
-           (maxval <= 1) then
-          result := 1
+        Result := 0;
+        if (MinVal >= 0) and
+           (MaxVal <= 1) then
+          Result := 1
         else
           begin
-            if (minval>=0) then
-              sizeval:=maxval
+            if (MinVal>=0) then
+              SizeVal:=MaxVal
             else
              { don't count 0 twice, but take into account that range goes from -n-1..n }
-              sizeval:=(CUtils.max(-minval,maxval+1)*2)-1;
+              SizeVal:=(CUtils.Max(-MinVal,MaxVal+1)*2)-1;
             { 256 must become 512 etc. }
-            NextPowerOf2(sizeval+1,power);
-            result := power;
+            NextPowerOf2(SizeVal+1,Power);
+            Result := Power;
           end;
       end;
 
 
-    procedure TEnumDef.setmax(_max:asizeint);
+    procedure TEnumDef.SetMax(AMax:ASizeInt);
       begin
-        maxval:=_max;
-        calcsavesize(CurrentSettings.PackEnum);
+        MaxVal:=AMax;
+        CalcSaveSize(CurrentSettings.PackEnum);
       end;
 
 
-    procedure TEnumDef.setmin(_min:asizeint);
+    procedure TEnumDef.SetMin(AMin:ASizeInt);
       begin
-        minval:=_min;
-        calcsavesize(CurrentSettings.PackEnum);
+        MinVal:=AMin;
+        CalcSaveSize(CurrentSettings.PackEnum);
       end;
 
 
-    function TEnumDef.min:asizeint;
+    function TEnumDef.Min:ASizeInt;
       begin
-        min:=minval;
+        Min:=MinVal;
       end;
 
 
-    function TEnumDef.max:asizeint;
+    function TEnumDef.Max:ASizeInt;
       begin
-        max:=maxval;
+        Max:=MaxVal;
       end;
 
-    function TEnumDef.getfirstsym: TSym;
+    function TEnumDef.GetFirstSym: TSym;
       var
-        i:integer;
+        I:Integer;
       begin
-        for i := 0 to SymTable.SymList.Count - 1 do
+        for I := 0 to SymTable.SymList.Count - 1 do
           begin
-            result:=TSym(SymTable.SymList[i]);
-            if TEnumSym(result).value=minval then
-              exit;
+            Result:=TSym(SymTable.SymList[I]);
+            if TEnumSym(Result).Value=MinVal then
+              Exit;
           end;
-        result:=nil;
+        Result:=nil;
       end;
 
 
-    function TEnumDef.int2enumsym(l: asizeint): TSym;
+    function TEnumDef.Int2EnumSym(L: ASizeInt): TSym;
       var
-        i: LongInt;
-        sym: TSym;
-        bdef: TEnumDef;
+        I: LongInt;
+        Sym: TSym;
+        BDef: TEnumDef;
       begin
-        result:=nil;
-        if (l<minval) or
-           (l>maxval) then
-          exit;
-        bdef:=getbasedef;
-        for i:=0 to bdef.SymTable.symlist.count-1 do
+        Result:=nil;
+        if (L<MinVal) or
+           (L>MaxVal) then
+          Exit;
+        BDef:=GetBaseDef;
+        for I:=0 to BDef.SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(bdef.SymTable.symlist[i]);
-            if (sym.typ=enumsym) and
-               (TEnumSym(sym).value=l) then
+            Sym:=TSym(BDef.SymTable.SymList[I]);
+            if (Sym.Typ=EnumSym) and
+               (TEnumSym(Sym).Value=L) then
               begin
-                result:=sym;
-                exit;
+                Result:=Sym;
+                Exit;
               end;
           end;
       end;
 
 
-    function TEnumDef.getbasedef: TEnumDef;
+    function TEnumDef.GetBaseDef: TEnumDef;
       begin
-        if not Assigned(basedef) then
-          result:=self
+        if not Assigned(BaseDef) then
+          Result:=Self
         else
-          result:=basedef;
+          Result:=BaseDef;
       end;
 
 
-    procedure TEnumDef.buildderef;
+    procedure TEnumDef.BuildDeref;
       begin
-        inherited buildderef;
-        if df_copied_def in defoptions then
-          basedefderef.build(basedef)
+        inherited BuildDeref;
+        if df_copied_def in DefOptions then
+          BaseDefDeref.Build(BaseDef)
         else
-          TEnumSymTable(SymTable).buildderef;
+          TEnumSymTable(SymTable).BuildDeref;
       end;
 
 
-    procedure TEnumDef.deref;
+    procedure TEnumDef.Deref;
       begin
-        inherited deref;
-        if df_copied_def in defoptions then
+        inherited Deref;
+        if df_copied_def in DefOptions then
           begin
-            basedef:=TEnumDef(basedefderef.resolve);
-            SymTable:=basedef.SymTable.getcopy;
+            BaseDef:=TEnumDef(BaseDefDeref.Resolve);
+            SymTable:=BaseDef.SymTable.GetCopy;
           end
         else
-          TEnumSymTable(SymTable).deref(false);
+          TEnumSymTable(SymTable).Deref(False);
       end;
 
 
-    procedure TEnumDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TEnumDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutAInt(min);
-         ppufile.PutAInt(max);
-         ppufile.PutAInt(savesize);
-         if df_copied_def in defoptions then
-           ppufile.putderef(basedefderef);
-         WriteEntry(ppufile,IBEnumDef);
-         if not (df_copied_def in defoptions) then
-           TEnumSymTable(SymTable).ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutAInt(Min);
+         PPUFile.PutAInt(Max);
+         PPUFile.PutAInt(SaveSize);
+         if df_copied_def in DefOptions then
+           PPUFile.PutDeref(BaseDefDeref);
+         WriteEntry(PPUFile,IBEnumDef);
+         if not (df_copied_def in DefOptions) then
+           TEnumSymTable(SymTable).PPUWrite(PPUFile);
       end;
 
 
     function TEnumDef.IsPublishable : TPublishProperty;
       begin
-         if not has_jumps then
+         if not HasJumps then
            IsPublishable:=pp_publish
          else
          if m_delphi in CurrentSettings.ModeSwitches then
@@ -3178,136 +3178,136 @@ implementation
 ****************************************************************************}
 
 
-    constructor TRTTIAttribute.ppuload(ppufile: TCompilerPPUFile);
+    constructor TRTTIAttribute.PPULoad(PPUFile: TCompilerPPUFile);
       begin
-        ppufile.getderef(typesymderef);
-        ppufile.getderef(typeconstrderef);
-        SetLength(paras,ppufile.GetLongInt);
+        PPUFile.GetDeref(TypeSymDeref);
+        PPUFile.GetDeref(TypeConstrDeref);
+        SetLength(Paras,PPUFile.GetLongInt);
       end;
 
 
-    procedure TRTTIAttribute.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TRTTIAttribute.PPUWrite(PPUFile: TCompilerPPUFile);
       begin
-        ppufile.putderef(typesymderef);
-        ppufile.putderef(typeconstrderef);
-        ppufile.PutLongInt(length(paras));
+        PPUFile.PutDeref(TypeSymDeref);
+        PPUFile.PutDeref(TypeConstrDeref);
+        PPUFile.PutLongInt(Length(Paras));
       end;
 
 
-    procedure TRTTIAttribute.PPULoadSubEntries(ppufile: TCompilerPPUFile);
+    procedure TRTTIAttribute.PPULoadSubEntries(PPUFile: TCompilerPPUFile);
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        for i:=0 to high(paras) do
-          paras[i]:=ppuloadnodetree(ppufile);
+        for I:=0 to High(Paras) do
+          Paras[I]:=PPULoadNodeTree(PPUFile);
       end;
 
 
-    procedure TRTTIAttribute.PPUWriteSubEntries(ppufile: TCompilerPPUFile);
+    procedure TRTTIAttribute.PPUWriteSubEntries(PPUFile: TCompilerPPUFile);
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        for i:=0 to high(paras) do
-          ppuwritenodetree(ppufile,paras[i]);
+        for I:=0 to High(Paras) do
+          PPUWriteNodeTree(PPUFile,Paras[I]);
       end;
 
 
     destructor TRTTIAttribute.Destroy;
       var
-        n : TNode;
+        N : TNode;
       begin
-        constructorcall.free;
-        constructorcall := nil;
-        for n in paras do
-          n.free;
-          n := nil;
+        ConstructorCall.Free;
+        ConstructorCall := nil;
+        for N in Paras do
+          N.Free;
+          N := nil;
         inherited Destroy;
       end;
 
 
-    procedure TRTTIAttribute.buildderef;
+    procedure TRTTIAttribute.BuildDeref;
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        typesymderef.build(typesym);
-        typeconstrderef.build(typeconstr);
-        for i:=0 to high(paras) do
-          paras[i].buildderefimpl;
+        TypeSymDeref.Build(TypeSym);
+        TypeConstrDeref.Build(TypeConstr);
+        for I:=0 to High(Paras) do
+          Paras[I].BuildDerefImpl;
       end;
 
 
-    procedure TRTTIAttribute.deref;
+    procedure TRTTIAttribute.Deref;
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        typesym:=TSym(typesymderef.resolve);
-        typeconstr:=TDef(typeconstrderef.resolve);
-        for i:=0 to high(paras) do
-          paras[i].derefimpl;
+        TypeSym:=TSym(TypeSymDeref.Resolve);
+        TypeConstr:=TDef(TypeConstrDeref.Resolve);
+        for I:=0 to High(Paras) do
+          Paras[I].DerefImpl;
       end;
 
 
-    class procedure TRTTIAttributeList.bind(var dangling,owned:TRTTIAttributeList);
+    class procedure TRTTIAttributeList.Bind(var Dangling,Owned:TRTTIAttributeList);
       begin
-        if Assigned(owned) then
+        if Assigned(Owned) then
           InternalError(2019071001);
-        if not Assigned(dangling) then
-          exit;
-        if dangling.IsBound then
+        if not Assigned(Dangling) then
+          Exit;
+        if Dangling.IsBound then
           InternalError(2019071002);
-        CurrentModule.used_rtti_attrs.ConcatListCopy(dangling.RTTIAttributes);
-        dangling.IsBound:=true;
-        owned:=dangling;
-        dangling:=nil;
+        CurrentModule.UsedRTTIAttrs.ConcatListCopy(Dangling.RTTIAttributes);
+        Dangling.IsBound:=True;
+        Owned:=Dangling;
+        Dangling:=nil;
       end;
 
-    class procedure TRTTIAttributeList.copyandbind(alist : TRTTIAttributeList; var owned: TRTTIAttributeList);
+    class procedure TRTTIAttributeList.CopyAndBind(AList : TRTTIAttributeList; var Owned: TRTTIAttributeList);
     var
-      i,j : Integer;
-      attr,newattribute : TRTTIAttribute;
+      I,J : Integer;
+      Attr,NewAttribute : TRTTIAttribute;
     begin
-      if owned=Nil then
-        owned:=TRTTIAttributeList.Create;
-      owned.IsBound:=True;
-      for i:=0 to aList.RTTIAttributes.Count-1 do
+      if Owned=Nil then
+        Owned:=TRTTIAttributeList.Create;
+      Owned.IsBound:=True;
+      for I:=0 to AList.RTTIAttributes.Count-1 do
         begin
-        attr:=TRTTIAttribute(alist.RTTIAttributes[i]);
-        newattribute:=TRTTIAttribute.Create;
-        newattribute.typesym:=attr.typesym;
-        newattribute.typeconstr:=attr.typeconstr;
-        newattribute.constructorcall:=attr.constructorcall.getcopy;
-        SetLength(newattribute.paras,length(attr.paras));
-        for j:=0 to length(attr.paras)-1 do
-          newattribute.paras[j]:=attr.paras[j].getcopy;
-        owned.AddAttribute(newattribute);
+        Attr:=TRTTIAttribute(AList.RTTIAttributes[I]);
+        NewAttribute:=TRTTIAttribute.Create;
+        NewAttribute.TypeSym:=Attr.TypeSym;
+        NewAttribute.TypeConstr:=Attr.TypeConstr;
+        NewAttribute.ConstructorCall:=Attr.ConstructorCall.GetCopy;
+        SetLength(NewAttribute.Paras,Length(Attr.Paras));
+        for J:=0 to Length(Attr.Paras)-1 do
+          NewAttribute.Paras[J]:=Attr.Paras[J].GetCopy;
+        Owned.AddAttribute(NewAttribute);
         end;
-      CurrentModule.used_rtti_attrs.ConcatListCopy(owned.RTTIAttributes);
+      CurrentModule.UsedRTTIAttrs.ConcatListCopy(Owned.RTTIAttributes);
     end;
 
 
-    procedure TRTTIAttributeList.addattribute(atypesym:TSym;typeconstr:TDef;constructorcall:TNode;constref paras:array of TNode);
+    procedure TRTTIAttributeList.AddAttribute(ATypeSym:TSym;TypeConstr:TDef;ConstructorCall:TNode;constref Paras:array of TNode);
       var
-        newattribute : TRTTIAttribute;
-        i : sizeint;
+        NewAttribute : TRTTIAttribute;
+        I : SizeInt;
       begin
         if not Assigned(RTTIAttributes) then
-          RTTIAttributes:=TFPObjectList.Create(true);
-        newattribute:=TRTTIAttribute.Create;
-        newattribute.typesym:=atypesym;
-        newattribute.typeconstr:=typeconstr;
-        newattribute.constructorcall:=constructorcall;
-        SetLength(newattribute.paras,length(paras));
-        for i:=0 to high(paras) do
-          newattribute.paras[i]:=paras[i];
-        RTTIAttributes.Add(newattribute);
+          RTTIAttributes:=TFPObjectList.Create(True);
+        NewAttribute:=TRTTIAttribute.Create;
+        NewAttribute.TypeSym:=ATypeSym;
+        NewAttribute.TypeConstr:=TypeConstr;
+        NewAttribute.ConstructorCall:=ConstructorCall;
+        SetLength(NewAttribute.Paras,Length(Paras));
+        for I:=0 to High(Paras) do
+          NewAttribute.Paras[I]:=Paras[I];
+        RTTIAttributes.Add(NewAttribute);
       end;
 
 
-    procedure TRTTIAttributeList.addattribute(attr:TRTTIAttribute);
+    procedure TRTTIAttributeList.AddAttribute(Attr:TRTTIAttribute);
       begin
         if not Assigned(RTTIAttributes) then
-          RTTIAttributes:=TFPObjectList.Create(true);
-        RTTIAttributes.add(attr);
+          RTTIAttributes:=TFPObjectList.Create(True);
+        RTTIAttributes.Add(Attr);
       end;
 
 
@@ -3322,88 +3322,88 @@ implementation
     function TRTTIAttributeList.GetAttributeCount:LongInt;
       begin
         if Assigned(RTTIAttributes) then
-          result:=RTTIAttributes.Count
+          Result:=RTTIAttributes.Count
         else
-          result:=0;
+          Result:=0;
       end;
 
 
-    procedure TRTTIAttributeList.buildderef;
+    procedure TRTTIAttributeList.BuildDeref;
       var
-        i : sizeint;
+        I : SizeInt;
       begin
         if not Assigned(RTTIAttributes) then
-          exit;
-        for i:=0 to RTTIAttributes.count-1 do
-          TRTTIAttribute(RTTIAttributes[i]).buildderef;
+          Exit;
+        for I:=0 to RTTIAttributes.Count-1 do
+          TRTTIAttribute(RTTIAttributes[I]).BuildDeref;
       end;
 
 
-    procedure TRTTIAttributeList.deref;
+    procedure TRTTIAttributeList.Deref;
       var
-        i : sizeint;
+        I : SizeInt;
       begin
         if not Assigned(RTTIAttributes) then
-          exit;
-        for i:=0 to RTTIAttributes.count-1 do
-          TRTTIAttribute(RTTIAttributes[i]).deref;
+          Exit;
+        for I:=0 to RTTIAttributes.Count-1 do
+          TRTTIAttribute(RTTIAttributes[I]).Deref;
       end;
 
 
-    class procedure TRTTIAttributeList.PPULoadSubEntries(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
+    class procedure TRTTIAttributeList.PPULoadSubEntries(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        if Assigned(attrlist) then
+        if Assigned(AttrList) then
           begin
-            if not Assigned(attrlist.RTTIAttributes) then
+            if not Assigned(AttrList.RTTIAttributes) then
               InternalError(2019071101);
-            for i:=0 to attrlist.RTTIAttributes.count-1 do
-              TRTTIAttribute(attrlist.RTTIAttributes[i]).PPULoadSubEntries(ppufile);
+            for I:=0 to AttrList.RTTIAttributes.Count-1 do
+              TRTTIAttribute(AttrList.RTTIAttributes[I]).PPULoadSubEntries(PPUFile);
           end;
       end;
 
 
-    class procedure TRTTIAttributeList.PPUWriteSubEntries(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
+    class procedure TRTTIAttributeList.PPUWriteSubEntries(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
       var
-        i : sizeint;
+        I : SizeInt;
       begin
-        if Assigned(attrlist) and Assigned(attrlist.RTTIAttributes) then
+        if Assigned(AttrList) and Assigned(AttrList.RTTIAttributes) then
           begin
-            for i:=0 to attrlist.RTTIAttributes.count-1 do
-              TRTTIAttribute(attrlist.RTTIAttributes[i]).PPUWriteSubEntries(ppufile);
+            for I:=0 to AttrList.RTTIAttributes.Count-1 do
+              TRTTIAttribute(AttrList.RTTIAttributes[I]).PPUWriteSubEntries(PPUFile);
           end;
       end;
 
 
-    class function TRTTIAttributeList.ppuload(ppufile:TCompilerPPUFile):TRTTIAttributeList;
+    class function TRTTIAttributeList.PPULoad(PPUFile:TCompilerPPUFile):TRTTIAttributeList;
       var
-        cnt,i : LongInt;
+        Cnt,I : LongInt;
       begin
-        cnt:=ppufile.GetLongInt;
-        if cnt>0 then
+        Cnt:=PPUFile.GetLongInt;
+        if Cnt>0 then
           begin
-            result:=TRTTIAttributeList.create;
-            for i:=0 to cnt-1 do
-              result.addattribute(TRTTIAttribute.ppuload(ppufile));
+            Result:=TRTTIAttributeList.Create;
+            for I:=0 to Cnt-1 do
+              Result.AddAttribute(TRTTIAttribute.PPULoad(PPUFile));
           end
         else
-          result:=nil;
+          Result:=nil;
       end;
 
 
-    class procedure TRTTIAttributeList.ppuwrite(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
+    class procedure TRTTIAttributeList.PPUWrite(AttrList:TRTTIAttributeList;PPUFile:TCompilerPPUFile);
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        if Assigned(attrlist) and Assigned(attrlist.RTTIAttributes) then
+        if Assigned(AttrList) and Assigned(AttrList.RTTIAttributes) then
           begin
-            ppufile.PutLongInt(attrlist.RTTIAttributes.count);
-            for i:=0 to attrlist.RTTIAttributes.count-1 do
-              TRTTIAttribute(attrlist.RTTIAttributes[i]).ppuwrite(ppufile);
+            PPUFile.PutLongInt(AttrList.RTTIAttributes.Count);
+            for I:=0 to AttrList.RTTIAttributes.Count-1 do
+              TRTTIAttribute(AttrList.RTTIAttributes[I]).PPUWrite(PPUFile);
           end
         else
-          ppufile.PutLongInt(0);
+          PPUFile.PutLongInt(0);
       end;
 
 
@@ -3411,135 +3411,135 @@ implementation
                                  TORDDEF
 ****************************************************************************}
 
-    constructor TOrdDef.create(t : TOrdType;v,b : TConstExprInt; doregister: boolean);
+    constructor TOrdDef.Create(T : TOrdType;V,B : TConstExprInt; DoRegister: Boolean);
       begin
-         inherited create(orddef,doregister);
-         low:=v;
-         high:=b;
-         ordtype:=t;
-         setsize;
+         inherited Create(OrdDef,DoRegister);
+         Low:=V;
+         High:=B;
+         OrdType:=T;
+         SetSize;
       end;
 
 
-    constructor TOrdDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TOrdDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(orddef,ppufile);
-         ordtype:=TOrdType(ppufile.GetByte);
-         low:=ppufile.getexprint;
-         high:=ppufile.getexprint;
-         setsize;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(OrdDef,PPUFile);
+         OrdType:=TOrdType(PPUFile.GetByte);
+         Low:=PPUFile.GetExprInt;
+         High:=PPUFile.GetExprInt;
+         SetSize;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TOrdDef.getcopy : TStoredDef;
+    function TOrdDef.GetCopy : TStoredDef;
       begin
-         result:=COrdDef.create(ordtype,low,high,true);
-         result.typ:=orddef;
-         TOrdDef(result).low:=low;
-         TOrdDef(result).high:=high;
-         TOrdDef(result).ordtype:=ordtype;
-         TOrdDef(result).savesize:=savesize;
+         Result:=COrdDef.Create(OrdType,Low,High,True);
+         Result.Typ:=OrdDef;
+         TOrdDef(Result).Low:=Low;
+         TOrdDef(Result).High:=High;
+         TOrdDef(Result).OrdType:=OrdType;
+         TOrdDef(Result).SaveSize:=SaveSize;
       end;
 
 
-    function TOrdDef.alignment:shortint;
+    function TOrdDef.Alignment:ShortInt;
       begin
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
-           (ordtype in [s64bit,u64bit]) then
-          result := 4
+        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) and
+           (OrdType in [S64Bit,U64Bit]) then
+          Result := 4
         else
-          result := inherited alignment;
+          Result := inherited Alignment;
       end;
 
 
-    procedure TOrdDef.setsize;
+    procedure TOrdDef.SetSize;
       const
-        sizetbl : array[TOrdType] of LongInt = (
+        SizeTbl : array[TOrdType] of LongInt = (
           0,
           1,2,4,8,16,
           1,2,4,8,16,
           1,1,2,4,8,
           1,2,4,8,
-          1,2,8,system.high(LongInt)
+          1,2,8,System.High(LongInt)
         );
       begin
-        savesize:=sizetbl[ordtype];
-        if savesize=system.high(LongInt) then
-          savesize:=packedbitsize div 8;
+        SaveSize:=SizeTbl[OrdType];
+        if SaveSize=System.High(LongInt) then
+          SaveSize:=PackedBitSize div 8;
       end;
 
 
-    function TOrdDef.packedbitsize: asizeint;
+    function TOrdDef.PackedBitSize: ASizeInt;
       var
-        sizeval: TConstExprInt;
-        power: LongInt;
+        SizeVal: TConstExprInt;
+        Power: LongInt;
       begin
-        result := 0;
-        if ordtype = uvoid then
-          exit;
+        Result := 0;
+        if OrdType = UVoid then
+          Exit;
 
 {$ifndef cpu64bitalu}
-        if (ordtype in [s64bit,u64bit]) then
+        if (OrdType in [S64Bit,U64Bit]) then
 {$else not cpu64bitalu}
-        if ((ordtype = u64bit) and
-            (high > system.high(int64))) or
-           ((ordtype = s64bit) and
-            ((low <= (system.low(int64) div 2)) or
-             ((low < 0) and
-              (high > (system.high(int64) div 2))))) then
+        if ((OrdType = U64Bit) and
+            (High > System.High(Int64))) or
+           ((OrdType = S64Bit) and
+            ((Low <= (System.Low(Int64) div 2)) or
+             ((Low < 0) and
+              (High > (System.High(Int64) div 2))))) then
 {$endif cpu64bitalu}
-          result := 64
+          Result := 64
         else if (
-            (low >= 0) and
-            (high <= 1)
+            (Low >= 0) and
+            (High <= 1)
            ) or (
-             ordtype in [pasbool1,pasbool8,pasbool16,pasbool32,pasbool64,bool8bit,bool16bit,bool32bit,bool64bit]
+             OrdType in [PasBool1,PasBool8,PasBool16,PasBool32,PasBool64,Bool8Bit,Bool16Bit,Bool32Bit,Bool64Bit]
            ) then
-          result := 1
+          Result := 1
         else
           begin
-            if (low>=0) then
-              sizeval:=high
+            if (Low>=0) then
+              SizeVal:=High
             else
               { don't count 0 twice, but take into account that range goes from -n-1..n }
-              sizeval:=(CUtils.max(-low,high+1)*2)-1;
+              SizeVal:=(CUtils.Max(-Low,High+1)*2)-1;
             { 256 must become 512 etc. }
-            NextPowerOf2(sizeval+1,power);
-            result := power;
+            NextPowerOf2(SizeVal+1,Power);
+            Result := Power;
          end;
       end;
 
 
-    function TOrdDef.getvardef : LongInt;
+    function TOrdDef.GetVarDef : LongInt;
       const
-        basetype2vardef : array[TOrdType] of LongInt = (
-          varUndefined,
-          varbyte,varword,varlongword,varqword,varUndefined,
-          varshortint,varsmallint,varinteger,varint64,varUndefined,
-          varboolean,varboolean,varboolean,varboolean,varboolean,
-          varboolean,varboolean,varUndefined,varUndefined,
-          varUndefined,varUndefined,varCurrency,varEmpty);
+        BaseType2VarDef : array[TOrdType] of LongInt = (
+          VarUndefined,
+          VarByte,VarWord,VarLongWord,VarQWord,VarUndefined,
+          VarShortInt,VarSmallInt,VarInteger,VarInt64,VarUndefined,
+          VarBoolean,VarBoolean,VarBoolean,VarBoolean,VarBoolean,
+          VarBoolean,VarBoolean,VarUndefined,VarUndefined,
+          VarUndefined,VarUndefined,VarCurrency,VarEmpty);
       begin
-        result:=basetype2vardef[ordtype];
-        if result=varEmpty then
-          result:=basetype2vardef[range_to_basetype(low,high)];
+        Result:=BaseType2VarDef[OrdType];
+        if Result=VarEmpty then
+          Result:=BaseType2VarDef[range_to_basetype(Low,High)];
       end;
 
 
-    procedure TOrdDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TOrdDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(ordtype));
-         ppufile.putexprint(low);
-         ppufile.putexprint(high);
-         WriteEntry(ppufile,IBOrdDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(OrdType));
+         PPUFile.PutExprInt(Low);
+         PPUFile.PutExprInt(High);
+         WriteEntry(PPUFile,IBOrdDef);
       end;
 
 
     function TOrdDef.IsPublishable : TPublishProperty;
       begin
-         if ordtype<>uvoid then
+         if OrdType<>UVoid then
            IsPublishable:=pp_publish
          else
            IsPublishable:=pp_error;
@@ -3548,7 +3548,7 @@ implementation
 
     function TOrdDef.GetTypeName : string;
       const
-        names : array[TOrdType] of string[20] = (
+        Names : array[TOrdType] of string[20] = (
           'untyped',
           'Byte','Word','DWord','QWord','UInt128',
           'ShortInt','SmallInt','LongInt','Int64','Int128',
@@ -3557,7 +3557,7 @@ implementation
           'AnsiChar','WideChar','Currency','CustomRange');
 
       begin
-         GetTypeName:=names[ordtype];
+         GetTypeName:=Names[OrdType];
       end;
 
 
@@ -3565,95 +3565,95 @@ implementation
                                 TFLOATDEF
 ****************************************************************************}
 
-    constructor TFloatDef.create(t: TFloatType; doregister: boolean);
+    constructor TFloatDef.Create(T: TFloatType; DoRegister: Boolean);
       begin
-         inherited create(floatdef,doregister);
-         floattype:=t;
-         setsize;
+         inherited Create(FloatDef,DoRegister);
+         FloatType:=T;
+         SetSize;
       end;
 
 
-    constructor TFloatDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TFloatDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(floatdef,ppufile);
-         floattype:=TFloatType(ppufile.GetByte);
-         setsize;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(FloatDef,PPUFile);
+         FloatType:=TFloatType(PPUFile.GetByte);
+         SetSize;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TFloatDef.getcopy : TStoredDef;
+    function TFloatDef.GetCopy : TStoredDef;
       begin
-         result:=CFloatDef.create(floattype,true);
-         result.typ:=floatdef;
-         TFloatDef(result).savesize:=savesize;
+         Result:=CFloatDef.Create(FloatType,True);
+         Result.Typ:=FloatDef;
+         TFloatDef(Result).SaveSize:=SaveSize;
       end;
 
 
-    function TFloatDef.alignment:shortint;
+    function TFloatDef.Alignment:ShortInt;
       begin
-        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
-          case floattype of
-            sc80real,
-            s80real: result:=16;
+        if (TargetInfo.System in [system_i386_darwin,system_i386_iphonesim]) then
+          case FloatType of
+            SC80Real,
+            S80Real: Result:=16;
             S64Real,
-            s64currency,
-            s64comp : result:=4;
+            S64Currency,
+            S64Comp : Result:=4;
             else
-              result := inherited alignment;
+              Result := inherited Alignment;
           end
         else
-          result := inherited alignment;
+          Result := inherited Alignment;
       end;
 
 
-    function TFloatDef.structalignment: shortint;
+    function TFloatDef.StructAlignment: ShortInt;
       begin
-        result:=alignment;
+        Result:=Alignment;
       end;
 
 
-    procedure TFloatDef.setsize;
+    procedure TFloatDef.SetSize;
       begin
-         case floattype of
-           S32Real : savesize:=4;
-           s80real : savesize:=10;
-           sc80real:
-             if TargetInfo.system in [system_i386_darwin,
+         case FloatType of
+           S32Real : SaveSize:=4;
+           S80Real : SaveSize:=10;
+           SC80Real:
+             if TargetInfo.System in [system_i386_darwin,
                   system_i386_iphonesim,system_x86_64_darwin,
                   system_x86_64_iphonesim,
                   system_x86_64_linux] then
-               savesize:=16
+               SaveSize:=16
              else
-               savesize:=12;
+               SaveSize:=12;
            S64Real,
-           s64currency,
-           s64comp : savesize:=8;
+           S64Currency,
+           S64Comp : SaveSize:=8;
          end;
       end;
 
 
-    function TFloatDef.getvardef : LongInt;
+    function TFloatDef.GetVarDef : LongInt;
       const
-        floattype2vardef : array[TFloatType] of LongInt = (
-          varSingle,varDouble,varUndefined,varUndefined,
-          varUndefined,varCurrency);
+        FloatType2VarDef : array[TFloatType] of LongInt = (
+          VarSingle,VarDouble,VarUndefined,VarUndefined,
+          VarUndefined,VarCurrency);
       begin
-        if (upper(typename)='TDATETIME') and
-          Assigned(owner) and
-          Assigned(owner.name) and
-          (owner.name^='SYSTEM') then
-          result:=varDate
+        if (Upper(TypeName)='TDATETIME') and
+          Assigned(Owner) and
+          Assigned(Owner.Name) and
+          (Owner.Name^='SYSTEM') then
+          Result:=VarDate
         else
-          result:=floattype2vardef[floattype];
+          Result:=FloatType2VarDef[FloatType];
       end;
 
 
-    procedure TFloatDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TFloatDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(floattype));
-         WriteEntry(ppufile,IBFloatDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(FloatType));
+         WriteEntry(PPUFile,IBFloatDef);
       end;
 
 
@@ -3665,10 +3665,10 @@ implementation
 
     function TFloatDef.GetTypeName : string;
       const
-        names : array[TFloatType] of string[20] = (
+        Names : array[TFloatType] of string[20] = (
           'Single','Double','Extended','CExtended','Comp','Currency');
       begin
-         GetTypeName:=names[floattype];
+         GetTypeName:=Names[FloatType];
       end;
 
 
@@ -3676,142 +3676,142 @@ implementation
                                 TFILEDEF
 ****************************************************************************}
 
-    constructor TFileDef.createtext;
+    constructor TFileDef.CreateText;
       begin
-         inherited create(filedef,true);
-         filetyp:=ft_text;
-         typedfiledef:=nil;
-         typedfiledefderef.reset;
+         inherited Create(FileDef,True);
+         FileTyp:=ft_text;
+         TypedFileDef:=nil;
+         TypedFileDefDeref.Reset;
       end;
 
 
-    constructor TFileDef.createuntyped;
+    constructor TFileDef.CreateUntyped;
       begin
-         inherited create(filedef,true);
-         filetyp:=ft_untyped;
-         typedfiledef:=nil;
+         inherited Create(FileDef,True);
+         FileTyp:=ft_untyped;
+         TypedFileDef:=nil;
       end;
 
 
-    constructor TFileDef.createtyped(def:TDef);
+    constructor TFileDef.CreateTyped(Def:TDef);
       begin
-         inherited create(filedef,true);
-         filetyp:=ft_typed;
-         typedfiledef:=def;
+         inherited Create(FileDef,True);
+         FileTyp:=ft_typed;
+         TypedFileDef:=Def;
       end;
 
 
-    constructor TFileDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TFileDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(filedef,ppufile);
-         filetyp:=TFileTyp(ppufile.GetByte);
-         if filetyp=ft_typed then
-           ppufile.getderef(typedfiledefderef)
+         inherited PPULoad(FileDef,PPUFile);
+         FileTyp:=TFileTyp(PPUFile.GetByte);
+         if FileTyp=ft_typed then
+           PPUFile.GetDeref(TypedFileDefDeref)
          else
-           typedfiledef:=nil;
-         PPULoadPlatform(ppufile);
+           TypedFileDef:=nil;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TFileDef.getcopy : TStoredDef;
+    function TFileDef.GetCopy : TStoredDef;
       begin
-        case filetyp of
+        case FileTyp of
           ft_typed:
-            result:=CFileDef.createtyped(typedfiledef);
+            Result:=CFileDef.CreateTyped(TypedFileDef);
           ft_untyped:
-            result:=CFileDef.createuntyped;
+            Result:=CFileDef.CreateUntyped;
           ft_text:
-            result:=CFileDef.createtext;
+            Result:=CFileDef.CreateText;
         end;
       end;
 
 
-    procedure TFileDef.buildderef;
+    procedure TFileDef.BuildDeref;
       begin
-        inherited buildderef;
-        if filetyp=ft_typed then
-          typedfiledefderef.build(typedfiledef);
+        inherited BuildDeref;
+        if FileTyp=ft_typed then
+          TypedFileDefDeref.Build(TypedFileDef);
       end;
 
 
-    procedure TFileDef.deref;
+    procedure TFileDef.Deref;
       begin
-        inherited deref;
-        if filetyp=ft_typed then
-          typedfiledef:=TDef(typedfiledefderef.resolve);
+        inherited Deref;
+        if FileTyp=ft_typed then
+          TypedFileDef:=TDef(TypedFileDefDeref.Resolve);
       end;
 
 
-    function  TFileDef.size:asizeint;
+    function  TFileDef.Size:ASizeInt;
       begin
-        if savesize=0 then
-          setsize;
-        size:=savesize;
+        if SaveSize=0 then
+          SetSize;
+        Size:=SaveSize;
       end;
 
 
-    procedure TFileDef.setsize;
+    procedure TFileDef.SetSize;
       begin
-       case filetyp of
+       case FileTyp of
          ft_text:
-           savesize:=search_system_type('TEXTREC').typedef.size;
+           SaveSize:=Search_System_Type('TEXTREC').TypeDef.Size;
          ft_typed:
            begin
-             savesize:=search_system_type('FILEREC').typedef.size;
+             SaveSize:=Search_System_Type('FILEREC').TypeDef.Size;
              { allocate put/get buffer in iso mode }
              if m_isolike_io in CurrentSettings.ModeSwitches then
-               inc(savesize,typedfiledef.size);
+               Inc(SaveSize,TypedFileDef.Size);
            end;
          ft_untyped:
-           savesize:=search_system_type('FILEREC').typedef.size;
+           SaveSize:=Search_System_Type('FILEREC').TypeDef.Size;
          end;
       end;
 
 
-    function TFileDef.alignment: shortint;
+    function TFileDef.Alignment: ShortInt;
       begin
-        case filetyp of
+        case FileTyp of
           ft_text:
-            result:=search_system_type('TEXTREC').typedef.alignment;
+            Result:=Search_System_Type('TEXTREC').TypeDef.Alignment;
           ft_typed,
           ft_untyped:
-            result:=search_system_type('FILEREC').typedef.alignment;
+            Result:=Search_System_Type('FILEREC').TypeDef.Alignment;
           end;
       end;
 
 
-    procedure TFileDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TFileDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(filetyp));
-         if filetyp=ft_typed then
-           ppufile.putderef(typedfiledefderef);
-         WriteEntry(ppufile,IBFileDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(FileTyp));
+         if FileTyp=ft_typed then
+           PPUFile.PutDeref(TypedFileDefDeref);
+         WriteEntry(PPUFile,IBFileDef);
       end;
 
 
     function TFileDef.GetTypeName : string;
       begin
-         case filetyp of
+         case FileTyp of
            ft_untyped:
              GetTypeName:='File';
            ft_typed:
-             GetTypeName:='File Of '+typedfiledef.typename;
+             GetTypeName:='File Of '+TypedFileDef.TypeName;
            ft_text:
              GetTypeName:='Text'
          end;
       end;
 
 
-    function TFileDef.getmangledparaname : TSymStr;
+    function TFileDef.GetMangledParaName : TSymStr;
       begin
-         case filetyp of
+         case FileTyp of
            ft_untyped:
-             getmangledparaname:='FILE';
+             GetMangledParaName:='FILE';
            ft_typed:
-             getmangledparaname:='FILE$OF$'+typedfiledef.mangledparaname;
+             GetMangledParaName:='FILE$OF$'+TypedFileDef.MangledParaName;
            ft_text:
-             getmangledparaname:='TEXT'
+             GetMangledParaName:='TEXT'
          end;
       end;
 
@@ -3820,62 +3820,62 @@ implementation
                                TVARIANTDEF
 ****************************************************************************}
 
-    constructor TVariantDef.create(v : TVariantType);
+    constructor TVariantDef.Create(V : TVariantType);
       begin
-         inherited create(variantdef,true);
-         varianttype:=v;
-         setsize;
+         inherited Create(VariantDef,True);
+         VariantType:=V;
+         SetSize;
       end;
 
 
-    constructor TVariantDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TVariantDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(variantdef,ppufile);
-         varianttype:=TVariantType(ppufile.GetByte);
-         setsize;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(VariantDef,PPUFile);
+         VariantType:=TVariantType(PPUFile.GetByte);
+         SetSize;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TVariantDef.getcopy : TStoredDef;
+    function TVariantDef.GetCopy : TStoredDef;
       begin
-        result:=CVariantDef.create(varianttype);
+        Result:=CVariantDef.Create(VariantType);
       end;
 
 
-    function TVariantDef.alignment: shortint;
+    function TVariantDef.Alignment: ShortInt;
       begin
-        result:=search_system_type('TVARDATA').typedef.alignment;
+        Result:=Search_System_Type('TVARDATA').TypeDef.Alignment;
       end;
 
 
-    procedure TVariantDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TVariantDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(varianttype));
-         WriteEntry(ppufile,IBVariantDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(VariantType));
+         WriteEntry(PPUFile,IBVariantDef);
       end;
 
 
-    function TVariantDef.getvardef : LongInt;
+    function TVariantDef.GetVarDef : LongInt;
       begin
-        Result:=varVariant;
+        Result:=VarVariant;
       end;
 
 
-    procedure TVariantDef.setsize;
+    procedure TVariantDef.SetSize;
       begin
 {$ifdef cpu64bitaddr}
-        savesize:=24;
+        SaveSize:=24;
 {$else cpu64bitaddr}
-        savesize:=16;
+        SaveSize:=16;
 {$endif cpu64bitaddr}
       end;
 
 
     function TVariantDef.GetTypeName : string;
       begin
-         case varianttype of
+         case VariantType of
            vt_normalvariant:
              GetTypeName:='Variant';
            vt_olevariant:
@@ -3884,9 +3884,9 @@ implementation
       end;
 
 
-    function TVariantDef.NeedsInitTable : boolean;
+    function TVariantDef.NeedsInitTable : Boolean;
       begin
-         NeedsInitTable:=true;
+         NeedsInitTable:=True;
       end;
 
 
@@ -3900,55 +3900,55 @@ implementation
                             TABSTRACtpointerdef
 ****************************************************************************}
 
-    constructor TAbstractPointerDef.create(dt:TDefTyp;def:TDef);
+    constructor TAbstractPointerDef.Create(DT:TDefTyp;Def:TDef);
       begin
-        inherited create(dt,true);
-        pointeddef:=def;
-        pointeddefderef.reset;
-        if df_generic in pointeddef.defoptions then
-          include(defoptions,df_generic);
-        if df_specialization in pointeddef.defoptions then
-          include(defoptions,df_specialization);
+        inherited Create(DT,True);
+        PointedDef:=Def;
+        PointedDefDeref.Reset;
+        if df_generic in PointedDef.DefOptions then
+          Include(DefOptions,df_generic);
+        if df_specialization in PointedDef.DefOptions then
+          Include(DefOptions,df_specialization);
       end;
 
 
-    constructor TAbstractPointerDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+    constructor TAbstractPointerDef.PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(dt,ppufile);
-         ppufile.getderef(pointeddefderef);
+         inherited PPULoad(DT,PPUFile);
+         PPUFile.GetDeref(PointedDefDeref);
       end;
 
 
-    procedure TAbstractPointerDef.buildderef;
+    procedure TAbstractPointerDef.BuildDeref;
       begin
-        inherited buildderef;
-        pointeddefderef.build(pointeddef);
+        inherited BuildDeref;
+        PointedDefDeref.Build(PointedDef);
       end;
 
 
-    procedure TAbstractPointerDef.deref;
+    procedure TAbstractPointerDef.Deref;
       begin
-        inherited deref;
-        pointeddef:=TDef(pointeddefderef.resolve);
+        inherited Deref;
+        PointedDef:=TDef(PointedDefDeref.Resolve);
       end;
 
 
-    function TAbstractPointerDef.size: asizeint;
+    function TAbstractPointerDef.Size: ASizeInt;
       begin
-        Result:=voidpointertype.size;
+        Result:=VoidPointerType.Size;
       end;
 
 
-    function TAbstractPointerDef.alignment: shortint;
+    function TAbstractPointerDef.Alignment: ShortInt;
       begin
-        alignment:=Size_2_Align(voidpointertype.size);
+        Alignment:=Size_2_Align(VoidPointerType.Size);
       end;
 
 
-    procedure TAbstractPointerDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbstractPointerDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(pointeddefderef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(PointedDefDeref);
       end;
 
 
@@ -3956,30 +3956,30 @@ implementation
                                tpointerdef
 ****************************************************************************}
 
-    constructor TPointerDef.create(def:TDef);
+    constructor TPointerDef.Create(Def:TDef);
       begin
-        inherited create(pointerdef,def);
-        has_pointer_math:=cs_pointermath in CurrentSettings.LocalSwitches;
-        if (df_specialization in TStoredDef(def).defoptions)
+        inherited Create(PointerDef,Def);
+        HasPointerMath:=cs_pointermath in CurrentSettings.LocalSwitches;
+        if (df_specialization in TStoredDef(Def).DefOptions)
 {$ifndef genericdef_for_nested}
            { currently, nested procdefs of generic routines get df_specialization,
              but no genericdef }
-           and Assigned(TStoredDef(def).genericdef)
+           and Assigned(TStoredDef(Def).GenericDef)
 {$endif}
            then
-          genericdef:=CPointerDef.getreusable(TStoredDef(def).genericdef);
+          GenericDef:=CPointerDef.GetReusable(TStoredDef(Def).GenericDef);
       end;
 
 
-    class function TPointerDef.getreusable(def: TDef): TPointerDef;
+    class function TPointerDef.GetReusable(Def: TDef): TPointerDef;
       var
-        res: PHashSetItem;
+        Res: PHashSetItem;
         OldSymTableStack: TSymTableStack;
       begin
         if not Assigned(CurrentModule) then
           InternalError(2011071101);
-        res:=CurrentModule.ptrdefs.FindOrAdd(@def,sizeof(def));
-        if not Assigned(res^.Data) then
+        Res:=CurrentModule.PtrDefs.FindOrAdd(@Def,SizeOf(Def));
+        if not Assigned(Res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
@@ -3990,56 +3990,56 @@ implementation
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
             SymTableStack:=nil;
-            result:=CPointerDef.create(def);
-            SetupReusableDef(def,result,res,OldSymTableStack);
+            Result:=CPointerDef.Create(Def);
+            SetupReusableDef(Def,Result,Res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
-            exit;
+            Exit;
           end;
-        result:=TPointerDef(res^.Data);
+        Result:=TPointerDef(Res^.Data);
       end;
 
 
-    class function TPointerDef.getreusable_no_free(def: TDef): TPointerDef;
+    class function TPointerDef.GetReusable_No_Free(Def: TDef): TPointerDef;
       begin
-        result:=getreusable(def);
-        if not result.IsRegistered then
-          include(result.defoptions,df_not_registered_no_free);
+        Result:=GetReusable(Def);
+        if not Result.IsRegistered then
+          Include(Result.DefOptions,df_not_registered_no_free);
       end;
 
 
-    function TPointerDef.size: asizeint;
+    function TPointerDef.Size: ASizeInt;
       begin
-        result:=sizeof(PInt);
+        Result:=SizeOf(PInt);
       end;
 
 
-    constructor TPointerDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TPointerDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(pointerdef,ppufile);
-         has_pointer_math:=(ppufile.GetByte<>0);
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(PointerDef,PPUFile);
+         HasPointerMath:=(PPUFile.GetByte<>0);
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TPointerDef.getcopy : TStoredDef;
+    function TPointerDef.GetCopy : TStoredDef;
       begin
         { don't use direct pointeddef if it is a forwarddef because in other case
           one of them will be destroyed on forward type resolve and the second will
           point to garbage }
-        if pointeddef.typ=forwarddef then
-          result:=CPointerDef.create(TForwardDef(pointeddef).getcopy)
+        if PointedDef.Typ=ForwardDef then
+          Result:=CPointerDef.Create(TForwardDef(PointedDef).GetCopy)
         else
-          result:=CPointerDef.create(pointeddef);
-        TPointerDef(result).has_pointer_math:=has_pointer_math;
-        TPointerDef(result).savesize:=savesize;
+          Result:=CPointerDef.Create(PointedDef);
+        TPointerDef(Result).HasPointerMath:=HasPointerMath;
+        TPointerDef(Result).SaveSize:=SaveSize;
       end;
 
 
-    procedure TPointerDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TPointerDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(has_pointer_math));
-         WriteEntry(ppufile,IBPointerDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(HasPointerMath));
+         WriteEntry(PPUFile,IBPointerDef);
       end;
 
 
@@ -4050,41 +4050,41 @@ implementation
           use the typesym's name instead if it exists (if it doesn't, such as
           for anonymous procedure types in macpas/iso mode, then there cannot
           be any recursive references to it either) }
-        if (pointeddef.typ<>procvardef) or
-           not Assigned(pointeddef.typesym) then
-          GetTypeName:='^'+pointeddef.typename
+        if (PointedDef.Typ<>ProcVarDef) or
+           not Assigned(PointedDef.TypeSym) then
+          GetTypeName:='^'+PointedDef.TypeName
         else
-          GetTypeName:='^'+pointeddef.typesym.realname;
+          GetTypeName:='^'+PointedDef.TypeSym.RealName;
       end;
 
 
-    function TPointerDef.pointer_arithmetic_int_type:TDef;
+    function TPointerDef.Pointer_Arithmetic_Int_Type:TDef;
       begin
-        result:=ptrsinttype;
+        Result:=PtrSIntType;
       end;
 
 
-    function TPointerDef.pointer_arithmetic_uint_type:TDef;
+    function TPointerDef.Pointer_Arithmetic_UInt_Type:TDef;
       begin
-        result:=ptruinttype;
+        Result:=PtrUIntType;
       end;
 
 
-    function TPointerDef.pointer_subtraction_result_type:TDef;
+    function TPointerDef.Pointer_Subtraction_Result_Type:TDef;
       begin
-        result:=ptrsinttype;
+        Result:=PtrSIntType;
       end;
 
 
-    function TPointerDef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
+    function TPointerDef.Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean;
       begin
-        result:=true;
+        Result:=True;
       end;
 
 
-    function TPointerDef.converted_pointer_to_array_range_type:TDef;
+    function TPointerDef.Converted_Pointer_To_Array_Range_Type:TDef;
       begin
-        result:=ptrsinttype;
+        Result:=PtrSIntType;
       end;
 
 
@@ -4092,42 +4092,42 @@ implementation
                               TCLASSREFDEF
 ****************************************************************************}
 
-    constructor TClassRefDef.create(def:TDef);
+    constructor TClassRefDef.Create(Def:TDef);
       begin
-         while (def.typ=objectdef) and TObjectDef(def).is_unique_objpasdef do
-           def:=TObjectDef(def).childof;
-         inherited create(classrefdef,def);
-         if df_specialization in TStoredDef(def).defoptions then
-           genericdef:=CClassRefDef.create(TStoredDef(def).genericdef);
+         while (Def.Typ=ObjectDef) and TObjectDef(Def).Is_Unique_ObjPasDef do
+           Def:=TObjectDef(Def).ChildOf;
+         inherited Create(ClassRefDef,Def);
+         if df_specialization in TStoredDef(Def).DefOptions then
+           GenericDef:=CClassRefDef.Create(TStoredDef(Def).GenericDef);
       end;
 
 
-    constructor TClassRefDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TClassRefDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(classrefdef,ppufile);
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(ClassRefDef,PPUFile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TClassRefDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TClassRefDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         WriteEntry(ppufile,IBClassRefDef);
+         inherited PPUWrite(PPUFile);
+         WriteEntry(PPUFile,IBClassRefDef);
       end;
 
 
-    function TClassRefDef.getcopy:TStoredDef;
+    function TClassRefDef.GetCopy:TStoredDef;
       begin
-        if pointeddef.typ=forwarddef then
-          result:=CClassRefDef.create(TForwardDef(pointeddef).getcopy)
+        if PointedDef.Typ=ForwardDef then
+          Result:=CClassRefDef.Create(TForwardDef(PointedDef).GetCopy)
         else
-          result:=CClassRefDef.create(pointeddef);
+          Result:=CClassRefDef.Create(PointedDef);
       end;
 
 
     function TClassRefDef.GetTypeName : string;
       begin
-         GetTypeName:='Class Of '+pointeddef.typesymbolprettyname;
+         GetTypeName:='Class Of '+PointedDef.TypeSymbolPrettyName;
       end;
 
 
@@ -4137,127 +4137,127 @@ implementation
       end;
 
 
-    function TClassRefDef.RTTIMangledName(rt: TRTTIType): TSymStr;
+    function TClassRefDef.RTTIMangledName(RT: TRTTIType): TSymStr;
       begin
-        if (TObjectDef(pointeddef).objecttype<>odt_objcclass) then
-          result:=inherited RTTIMangledName(rt)
+        if (TObjectDef(PointedDef).ObjectType<>odt_objcclass) then
+          Result:=inherited RTTIMangledName(RT)
         else
-          result:=TObjectDef(pointeddef).RTTIMangledName(objcmetartti);
+          Result:=TObjectDef(PointedDef).RTTIMangledName(ObjCMetaRTTI);
       end;
 
 
     procedure TClassRefDef.RegisterCreatedObjectType;
       begin
-        TObjectDef(pointeddef).RegisterCreatedClassRefType;
+        TObjectDef(PointedDef).RegisterCreatedClassRefType;
       end;
 
 {***************************************************************************
                                    TSETDEF
 ***************************************************************************}
 
-    constructor TSetDef.create(def: TDef; low, high: asizeint; doregister: boolean);
+    constructor TSetDef.Create(Def: TDef; Low, High: ASizeInt; DoRegister: Boolean);
       var
-        setallocbits: aint;
-        packedsavesize: aint;
-        actual_setalloc: ShortInt;
+        SetAllocBits: AInt;
+        PackedSaveSize: AInt;
+        ActualSetAlloc: ShortInt;
       begin
-         inherited create(setdef,doregister);
-         elementdef:=def;
-         elementdefderef.reset;
-         setmax:=high;
-         setlow:=low;
-         actual_setalloc:=CurrentSettings.SetAlloc;
+         inherited Create(SetDef,DoRegister);
+         ElementDef:=Def;
+         ElementDefDeref.Reset;
+         SetMax:=High;
+         SetLow:=Low;
+         ActualSetAlloc:=CurrentSettings.SetAlloc;
 
-         if (actual_setalloc=0) then
+         if (ActualSetAlloc=0) then
            begin
-             setbase:=0;
-             if (high<32) then
-               savesize:=Sizeof(LongInt)
-             else if (high<256) then
-               savesize:=32
+             SetBase:=0;
+             if (High<32) then
+               SaveSize:=SizeOf(LongInt)
+             else if (High<256) then
+               SaveSize:=32
              else
-               savesize:=(high+7) div 8
+               SaveSize:=(High+7) div 8
            end
          else
            begin
-             setallocbits:=actual_setalloc*8;
-             setbase:=low and not(setallocbits-1);
-             packedsavesize:=actual_setalloc*((((high+setallocbits)-setbase)) DIV setallocbits);
-             savesize:=packedsavesize;
+             SetAllocBits:=ActualSetAlloc*8;
+             SetBase:=Low and not(SetAllocBits-1);
+             PackedSaveSize:=ActualSetAlloc*((((High+SetAllocBits)-SetBase)) DIV SetAllocBits);
+             SaveSize:=PackedSaveSize;
 
-             if savesize=3 then
-               savesize:=4;
+             if SaveSize=3 then
+               SaveSize:=4;
 
            end;
       end;
 
 
-    constructor TSetDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TSetDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(setdef,ppufile);
-         ppufile.getderef(elementdefderef);
-         savesize:=ppufile.GetASizeInt;
-         setbase:=ppufile.GetASizeInt;
-         setlow:=ppufile.GetASizeInt;
-         setmax:=ppufile.GetASizeInt;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(SetDef,PPUFile);
+         PPUFile.GetDeref(ElementDefDeref);
+         SaveSize:=PPUFile.GetASizeInt;
+         SetBase:=PPUFile.GetASizeInt;
+         SetLow:=PPUFile.GetASizeInt;
+         SetMax:=PPUFile.GetASizeInt;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    function TSetDef.getcopy : TStoredDef;
+    function TSetDef.GetCopy : TStoredDef;
       begin
-        result:=CSetDef.create(elementdef,setbase,setmax,true);
+        Result:=CSetDef.Create(ElementDef,SetBase,SetMax,True);
         { the copy might have been created with a different setalloc setting }
-        TSetDef(result).savesize:=savesize;
+        TSetDef(Result).SaveSize:=SaveSize;
       end;
 
 
-    procedure TSetDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TSetDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(elementdefderef);
-         ppufile.PutASizeInt(savesize);
-         ppufile.PutASizeInt(setbase);
-         ppufile.PutASizeInt(setlow);
-         ppufile.PutASizeInt(setmax);
-         WriteEntry(ppufile,IBSetDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(ElementDefDeref);
+         PPUFile.PutASizeInt(SaveSize);
+         PPUFile.PutASizeInt(SetBase);
+         PPUFile.PutASizeInt(SetLow);
+         PPUFile.PutASizeInt(SetMax);
+         WriteEntry(PPUFile,IBSetDef);
       end;
 
 
-    procedure TSetDef.buildderef;
+    procedure TSetDef.BuildDeref;
       begin
-        inherited buildderef;
-        elementdefderef.build(elementdef);
+        inherited BuildDeref;
+        ElementDefDeref.Build(ElementDef);
       end;
 
 
-    procedure TSetDef.deref;
+    procedure TSetDef.Deref;
       begin
-        inherited deref;
-        elementdef:=TDef(elementdefderef.resolve);
+        inherited Deref;
+        ElementDef:=TDef(ElementDefDeref.Resolve);
       end;
 
 
     function TSetDef.IsPublishable : TPublishProperty;
       begin
-         if savesize in [1,2,4] then
+         if SaveSize in [1,2,4] then
            IsPublishable:=pp_publish
          else
            IsPublishable:=pp_error;
       end;
 
-    function TSetDef.alignment: shortint;
+    function TSetDef.Alignment: ShortInt;
       begin
         Result:=inherited;
-        if result>sizeof(aint) then
-          result:=sizeof(aint);
+        if Result>SizeOf(AInt) then
+          Result:=SizeOf(AInt);
       end;
 
 
     function TSetDef.GetTypeName : string;
       begin
-         if Assigned(elementdef) then
-          GetTypeName:='Set Of '+elementdef.typename
+         if Assigned(ElementDef) then
+          GetTypeName:='Set Of '+ElementDef.TypeName
          else
           GetTypeName:='Empty Set';
       end;
@@ -4267,34 +4267,34 @@ implementation
                                  TFORMALDEF
 ***************************************************************************}
 
-    constructor TFormalDef.create(Atyped:boolean);
+    constructor TFormalDef.Create(ATyped:Boolean);
       begin
-         inherited create(formaldef,true);
-         typed:=Atyped;
-         savesize:=0;
+         inherited Create(FormalDef,True);
+         Typed:=ATyped;
+         SaveSize:=0;
       end;
 
 
-    constructor TFormalDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TFormalDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(formaldef,ppufile);
-         typed:=boolean(ppufile.GetByte);
-         savesize:=0;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(FormalDef,PPUFile);
+         Typed:=Boolean(PPUFile.GetByte);
+         SaveSize:=0;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TFormalDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TFormalDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(typed));
-         WriteEntry(ppufile,IBFormalDef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(Typed));
+         WriteEntry(PPUFile,IBFormalDef);
       end;
 
 
     function TFormalDef.GetTypeName : string;
       begin
-         if typed then
+         if Typed then
            GetTypeName:='<Typed formal type>'
          else
            GetTypeName:='<Formal type>';
@@ -4305,51 +4305,51 @@ implementation
                            TARRAYDEF
 ***************************************************************************}
 
-    constructor TArrayDef.create(l, h: asizeint; def: TDef);
+    constructor TArrayDef.Create(L, H: ASizeInt; Def: TDef);
       begin
-         inherited create(arraydef,true);
-         lowrange:=l;
-         highrange:=h;
-         rangedef:=def;
-         rangedefderef.reset;
-         _elementdef:=nil;
-         _elementdefderef.reset;
-         arrayoptions:=[];
-         SymTable:=TArraySymTable.create(self);
+         inherited Create(ArrayDef,True);
+         LowRange:=L;
+         HighRange:=H;
+         RangeDef:=Def;
+         RangeDefDeref.Reset;
+         FElementDef:=nil;
+         FElementDefDeref.Reset;
+         ArrayOptions:=[];
+         SymTable:=TArraySymTable.Create(Self);
       end;
 
 
-    constructor TArrayDef.create_vector(l ,h: asizeint; def: TDef);
+    constructor TArrayDef.Create_Vector(L ,H: ASizeInt; Def: TDef);
       begin
-        self.create(l,h,def);
-        include(arrayoptions,ado_IsVector);
+        Self.Create(L,H,Def);
+        Include(ArrayOptions,ado_IsVector);
       end;
 
 
-    constructor TArrayDef.create_openarray;
+    constructor TArrayDef.Create_OpenArray;
       begin
-        self.create(0,-1,sizesinttype);
-        include(arrayoptions,ado_OpenArray);
+        Self.Create(0,-1,SizeSIntType);
+        Include(ArrayOptions,ado_OpenArray);
       end;
 
 
-    class function TArrayDef.getreusable_intern(def: TDef; elems: asizeint; const options: TArrayDefOptions): TArrayDef;
+    class function TArrayDef.GetReusable_Intern(Def: TDef; Elems: ASizeInt; const Options: TArrayDefOptions): TArrayDef;
       var
-        res: PHashSetItem;
+        Res: PHashSetItem;
         OldSymTableStack: TSymTableStack;
-        arrdesc: packed record
-          def: TDef;
-          elecount: asizeint;
-          options: TArrayDefOptions
+        ArrDesc: packed record
+          Def: TDef;
+          EleCount: ASizeInt;
+          Options: TArrayDefOptions
         end;
       begin
         if not Assigned(CurrentModule) then
           InternalError(2011081301);
-        arrdesc.def:=def;
-        arrdesc.elecount:=elems;
-        arrdesc.options:=options;
-        res:=CurrentModule.arraydefs.FindOrAdd(@arrdesc,sizeof(arrdesc));
-        if not Assigned(res^.Data) then
+        ArrDesc.Def:=Def;
+        ArrDesc.EleCount:=Elems;
+        ArrDesc.Options:=Options;
+        Res:=CurrentModule.ArrayDefs.FindOrAdd(@ArrDesc,SizeOf(ArrDesc));
+        if not Assigned(Res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
@@ -4360,306 +4360,306 @@ implementation
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
             SymTableStack:=nil;
-            result:=CArrayDef.create(0,elems-1,sizesinttype);
-            result.elementdef:=def;
-            result.arrayoptions:=options;
-            SetupReusableDef(def,result,res,OldSymTableStack);
+            Result:=CArrayDef.Create(0,Elems-1,SizeSIntType);
+            Result.ElementDef:=Def;
+            Result.ArrayOptions:=Options;
+            SetupReusableDef(Def,Result,Res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
-            exit;
+            Exit;
           end;
-        result:=TArrayDef(res^.Data);
+        Result:=TArrayDef(Res^.Data);
       end;
 
 
-    class function TArrayDef.getreusable(def: TDef; elems: asizeint): TArrayDef;
+    class function TArrayDef.GetReusable(Def: TDef; Elems: ASizeInt): TArrayDef;
       begin
-        result:=getreusable_intern(def,elems,[]);
+        Result:=GetReusable_Intern(Def,Elems,[]);
       end;
 
 
-    class function TArrayDef.getreusable_vector(def: TDef; elems: asizeint): TArrayDef;
+    class function TArrayDef.GetReusable_Vector(Def: TDef; Elems: ASizeInt): TArrayDef;
       begin
-        result:=getreusable_intern(def,elems,[ado_IsVector]);
+        Result:=GetReusable_Intern(Def,Elems,[ado_IsVector]);
       end;
 
 
-    class function TArrayDef.getreusable_no_free(def: TDef; elems: asizeint): TArrayDef;
+    class function TArrayDef.GetReusable_No_Free(Def: TDef; Elems: ASizeInt): TArrayDef;
       begin
-        result:=getreusable(def,elems);
-        if not result.IsRegistered then
-          include(result.defoptions,df_not_registered_no_free);
+        Result:=GetReusable(Def,Elems);
+        if not Result.IsRegistered then
+          Include(Result.DefOptions,df_not_registered_no_free);
       end;
 
-    class function TArrayDef.getreusable_no_free_vector(def: TDef; elems: asizeint): TArrayDef;
+    class function TArrayDef.GetReusable_No_Free_Vector(Def: TDef; Elems: ASizeInt): TArrayDef;
       begin
-        result:=getreusable_vector(def,elems);
-        if not result.IsRegistered then
-          include(result.defoptions,df_not_registered_no_free);
+        Result:=GetReusable_Vector(Def,Elems);
+        if not Result.IsRegistered then
+          Include(Result.DefOptions,df_not_registered_no_free);
       end;
 
 
     destructor TArrayDef.Destroy;
       begin
-        SymTable.free;
+        SymTable.Free;
         SymTable:=nil;
         inherited;
       end;
 
 
-    constructor TArrayDef.create_from_pointer(def:TPointerDef);
+    constructor TArrayDef.Create_From_Pointer(Def:TPointerDef);
       begin
          { divide by the element size and do -1 so the array will have a valid size,
            further, the element size might be 0 e.g. for empty records, so use max(...,1)
            to avoid a division by zero }
-         self.create(0,(high(asizeint) div max(def.pointeddef.size,1))-1,
-           def.converted_pointer_to_array_range_type);
-         arrayoptions:=[ado_IsConvertedPointer];
-         setelementdef(def.pointeddef);
+         Self.Create(0,(High(ASizeInt) div Max(Def.PointedDef.Size,1))-1,
+           Def.Converted_Pointer_To_Array_Range_Type);
+         ArrayOptions:=[ado_IsConvertedPointer];
+         SetElementDef(Def.PointedDef);
       end;
 
 
-    constructor TArrayDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TArrayDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(arraydef,ppufile);
+         inherited PPULoad(ArrayDef,PPUFile);
          { the addresses are calculated later }
-         ppufile.getderef(_elementdefderef);
-         ppufile.getderef(rangedefderef);
-         lowrange:=ppufile.GetASizeInt;
-         highrange:=ppufile.GetASizeInt;
-         ppufile.GetSet(TPPUSet2(arrayoptions));
-         PPULoadPlatform(ppufile);
-         SymTable:=TArraySymTable.create(self);
-         TArraySymTable(SymTable).ppuload(ppufile)
+         PPUFile.GetDeref(FElementDefDeref);
+         PPUFile.GetDeref(RangeDefDeref);
+         LowRange:=PPUFile.GetASizeInt;
+         HighRange:=PPUFile.GetASizeInt;
+         PPUFile.GetSet(TPPUSet2(ArrayOptions));
+         PPULoadPlatform(PPUFile);
+         SymTable:=TArraySymTable.Create(Self);
+         TArraySymTable(SymTable).PPULoad(PPUFile)
       end;
 
 
-    function TArrayDef.getcopy : TStoredDef;
+    function TArrayDef.GetCopy : TStoredDef;
       begin
-        result:=CArrayDef.create(lowrange,highrange,rangedef);
-        TArrayDef(result).arrayoptions:=arrayoptions;
-        TArrayDef(result)._elementdef:=_elementdef;
+        Result:=CArrayDef.Create(LowRange,HighRange,RangeDef);
+        TArrayDef(Result).ArrayOptions:=ArrayOptions;
+        TArrayDef(Result).FElementDef:=FElementDef;
       end;
 
 
-    procedure TArrayDef.buildderef;
+    procedure TArrayDef.BuildDeref;
       begin
-        inherited buildderef;
-        TArraySymTable(SymTable).buildderef;
-        _elementdefderef.build(_elementdef);
-        rangedefderef.build(rangedef);
+        inherited BuildDeref;
+        TArraySymTable(SymTable).BuildDeref;
+        FElementDefDeref.Build(FElementDef);
+        RangeDefDeref.Build(RangeDef);
       end;
 
 
-    procedure TArrayDef.deref;
+    procedure TArrayDef.Deref;
       begin
-        inherited deref;
-        TArraySymTable(SymTable).deref(false);
-        _elementdef:=TDef(_elementdefderef.resolve);
-        rangedef:=TDef(rangedefderef.resolve);
+        inherited Deref;
+        TArraySymTable(SymTable).Deref(False);
+        FElementDef:=TDef(FElementDefDeref.Resolve);
+        RangeDef:=TDef(RangeDefDeref.Resolve);
       end;
 
 
-    procedure TArrayDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TArrayDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(_elementdefderef);
-         ppufile.putderef(rangedefderef);
-         ppufile.PutASizeInt(lowrange);
-         ppufile.PutASizeInt(highrange);
-         ppufile.PutSet(TPPUSet2(arrayoptions));
-         WriteEntry(ppufile,IBArrayDef);
-         TArraySymTable(SymTable).ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(FElementDefDeref);
+         PPUFile.PutDeref(RangeDefDeref);
+         PPUFile.PutASizeInt(LowRange);
+         PPUFile.PutASizeInt(HighRange);
+         PPUFile.PutSet(TPPUSet2(ArrayOptions));
+         WriteEntry(PPUFile,IBArrayDef);
+         TArraySymTable(SymTable).PPUWrite(PPUFile);
       end;
 
 
-    function TArrayDef.elesize : asizeint;
+    function TArrayDef.EleSize : ASizeInt;
       begin
-        if (ado_IsBitPacked in arrayoptions) then
+        if (ado_IsBitPacked in ArrayOptions) then
           InternalError(2006080101);
-        if Assigned(_elementdef) then
-          result:=_elementdef.size
+        if Assigned(FElementDef) then
+          Result:=FElementDef.Size
         else
-          result:=0;
+          Result:=0;
       end;
 
 
-    function TArrayDef.elepackedbitsize : asizeint;
+    function TArrayDef.ElePackedBitSize : ASizeInt;
       begin
-        if not(ado_IsBitPacked in arrayoptions) then
+        if not(ado_IsBitPacked in ArrayOptions) then
           InternalError(2006080102);
-	if Assigned(_elementdef) then
-          result:=_elementdef.packedbitsize
+	if Assigned(FElementDef) then
+          Result:=FElementDef.PackedBitSize
 	else
-	  result:=0;
+	  Result:=0;
       end;
 
 
-    function TArrayDef.elecount : ASizeUInt;
+    function TArrayDef.EleCount : ASizeUInt;
       var
-        qhigh,qlow : qword;
+        QHigh,QLow : QWord;
       begin
-        if ado_IsDynamicArray in arrayoptions then
+        if ado_IsDynamicArray in ArrayOptions then
           begin
-            result:=0;
-            exit;
+            Result:=0;
+            Exit;
           end;
         { check whether the range might be larger than high(asizeint). Has
           to include 0..high(sizeint), since that's high(sizeint)+1 elements }
-        if (highrange>=0) and (lowrange<=0) then
+        if (HighRange>=0) and (LowRange<=0) then
           begin
-            qhigh:=highrange;
-            if lowrange=low(asizeint) then
-              qlow:=high(asizeint) + 1
+            QHigh:=HighRange;
+            if LowRange=Low(ASizeInt) then
+              QLow:=High(ASizeInt) + 1
             else
-              qlow:=qword(-lowrange);
+              QLow:=QWord(-LowRange);
             { prevent overflow, return 0 to indicate overflow }
-            if qhigh+qlow>qword(high(asizeint)-1) then
-              result:=0
+            if QHigh+QLow>QWord(High(ASizeInt)-1) then
+              Result:=0
             else
-              result:=qhigh+qlow+1;
+              Result:=QHigh+QLow+1;
           end
         else
-          result:=int64(highrange)-lowrange+1;
+          Result:=Int64(HighRange)-LowRange+1;
       end;
 
 
-    function TArrayDef.size : asizeint;
+    function TArrayDef.Size : ASizeInt;
       var
-        cachedelecount : ASizeUInt;
-        cachedelesize : asizeint;
+        CachedEleCount : ASizeUInt;
+        CachedEleSize : ASizeInt;
       begin
-        if ado_IsDynamicArray in arrayoptions then
+        if ado_IsDynamicArray in ArrayOptions then
           begin
-            size:=voidpointertype.size;
-            exit;
+            Size:=VoidPointerType.Size;
+            Exit;
           end;
 
         { Tarraydef.size may never be called for an open array! }
-        if ado_OpenArray in arrayoptions then
+        if ado_OpenArray in ArrayOptions then
           InternalError(99080501);
-        if not (ado_IsBitPacked in arrayoptions) then
-          cachedelesize:=elesize
+        if not (ado_IsBitPacked in ArrayOptions) then
+          CachedEleSize:=EleSize
         else
-          cachedelesize := elepackedbitsize;
-        cachedelecount:=elecount;
+          CachedEleSize := ElePackedBitSize;
+        CachedEleCount:=EleCount;
 
-        if (cachedelesize = 0) then
+        if (CachedEleSize = 0) then
           begin
-            size := 0;
-            exit;
+            Size := 0;
+            Exit;
           end;
 
-        if (cachedelecount = 0) then
+        if (CachedEleCount = 0) then
           begin
-            if ado_isconststring in arrayoptions then
-              size := 0
+            if ado_isconststring in ArrayOptions then
+              Size := 0
             else
-              size := -1;
-            exit;
+              Size := -1;
+            Exit;
           end;
 
         { prevent overflow, return -1 to indicate overflow }
         { also make sure we don't need 64/128 bit arithmetic to calculate offsets }
-        if (cachedelecount > ASizeUInt(high(asizeint))) or
-           ((high(asizeint) div cachedelesize) < asizeint(cachedelecount)) or
+        if (CachedEleCount > ASizeUInt(High(ASizeInt))) or
+           ((High(ASizeInt) div CachedEleSize) < ASizeInt(CachedEleCount)) or
            { also lowrange*elesize must be < high(asizeint) to prevent overflow when
              accessing the array, see ncgmem (PFV) }
-           ((high(asizeint) div cachedelesize) < abs(lowrange)) then
+           ((High(ASizeInt) div CachedEleSize) < Abs(LowRange)) then
           begin
-            result:=-1;
-            exit;
+            Result:=-1;
+            Exit;
           end;
 
-        result:=cachedelesize*asizeint(cachedelecount);
-        if (ado_IsBitPacked in arrayoptions) then
+        Result:=CachedEleSize*ASizeInt(CachedEleCount);
+        if (ado_IsBitPacked in ArrayOptions) then
           { can't just add 7 and divide by 8, because that may overflow }
-          result:=result div 8 + ord((result mod 8)<>0);
+          Result:=Result div 8 + Ord((Result mod 8)<>0);
 
       end;
 
 
-    procedure TArrayDef.setelementdef(def:TDef);
+    procedure TArrayDef.SetElementDef(Def:TDef);
       begin
-        _elementdef:=def;
+        FElementDef:=Def;
         if not(
-               (ado_IsDynamicArray in arrayoptions) or
-               (ado_IsConvertedPointer in arrayoptions) or
-               (ado_IsConstructor in arrayoptions) or
-               (ado_IsGeneric in arrayoptions) or
-               (highrange<lowrange)
+               (ado_IsDynamicArray in ArrayOptions) or
+               (ado_IsConvertedPointer in ArrayOptions) or
+               (ado_IsConstructor in ArrayOptions) or
+               (ado_IsGeneric in ArrayOptions) or
+               (HighRange<LowRange)
 	      ) and
-           (size=-1) then
+           (Size=-1) then
           Message(sym_e_segment_too_large);
       end;
 
 
-    function TArrayDef.alignment : shortint;
+    function TArrayDef.Alignment : ShortInt;
       begin
-        if ado_IsVector in arrayoptions then
-           alignment:=size
+        if ado_IsVector in ArrayOptions then
+           Alignment:=Size
          { alignment of dyn. arrays doesn't depend on the element size }
-         else if ado_IsDynamicArray in arrayoptions then
-           alignment:=voidpointertype.alignment
+         else if ado_IsDynamicArray in ArrayOptions then
+           Alignment:=VoidPointerType.Alignment
          { alignment is the target alignment for the used load size }
-         else if (ado_IsBitPacked in arrayoptions) and
-            (elementdef.typ in [enumdef,orddef]) then
-           alignment:=cgsize_orddef(int_cgsize(PackedBitsLoadSize(elepackedbitsize))).alignment
+         else if (ado_IsBitPacked in ArrayOptions) and
+            (ElementDef.Typ in [EnumDef,OrdDef]) then
+           Alignment:=cgsize_orddef(int_cgsize(PackedBitsLoadSize(ElePackedBitSize))).Alignment
          { alignment is the alignment of the elements }
          else
-           alignment:=elementdef.alignment
+           Alignment:=ElementDef.Alignment
       end;
 
 
-    function TArrayDef.NeedsInitTable : boolean;
+    function TArrayDef.NeedsInitTable : Boolean;
       begin
-         NeedsInitTable:=(ado_IsDynamicArray in arrayoptions) or elementdef.NeedsInitTable;
+         NeedsInitTable:=(ado_IsDynamicArray in ArrayOptions) or ElementDef.NeedsInitTable;
       end;
 
-    function TArrayDef.NeedsSeparateInitRTTI : boolean;
+    function TArrayDef.NeedsSeparateInitRTTI : Boolean;
       begin
-        if ado_IsBitPacked in arrayoptions then
-          result:=false
+        if ado_IsBitPacked in ArrayOptions then
+          Result:=False
         else
-          result:=elementdef.NeedsSeparateInitRTTI;
+          Result:=ElementDef.NeedsSeparateInitRTTI;
       end;
 
     function TArrayDef.GetTypeName : string;
       begin
-         if (ado_IsConstString in arrayoptions) then
-           result:='Constant String'
-         else if (ado_isarrayofconst in arrayoptions) or
-                 (ado_isConstructor in arrayoptions) then
+         if (ado_IsConstString in ArrayOptions) then
+           Result:='Constant String'
+         else if (ado_isarrayofconst in ArrayOptions) or
+                 (ado_isConstructor in ArrayOptions) then
            begin
-             if (ado_isvariant in arrayoptions) or ((highrange=-1) and (lowrange=0)) then
+             if (ado_isvariant in ArrayOptions) or ((HighRange=-1) and (LowRange=0)) then
                GetTypeName:='Array Of Const'
              else
-               GetTypeName:='{Array Of Const/Constant Open} Array of '+elementdef.typename;
+               GetTypeName:='{Array Of Const/Constant Open} Array of '+ElementDef.TypeName;
            end
-         else if (ado_IsDynamicArray in arrayoptions) then
-           GetTypeName:='{Dynamic} Array Of '+elementdef.typename
-         else if (ado_OpenArray in arrayoptions) then
-           GetTypeName:='{Open} Array Of '+elementdef.typename
+         else if (ado_IsDynamicArray in ArrayOptions) then
+           GetTypeName:='{Dynamic} Array Of '+ElementDef.TypeName
+         else if (ado_OpenArray in ArrayOptions) then
+           GetTypeName:='{Open} Array Of '+ElementDef.TypeName
          else
            begin
-              result := '';
-              if (ado_IsBitPacked in arrayoptions) then
-                result:='BitPacked ';
-              if rangedef.typ=enumdef then
-                result:=result+'Array['+rangedef.typename+'] Of '+elementdef.typename
+              Result := '';
+              if (ado_IsBitPacked in ArrayOptions) then
+                Result:='BitPacked ';
+              if RangeDef.Typ=EnumDef then
+                Result:=Result+'Array['+RangeDef.TypeName+'] Of '+ElementDef.TypeName
               else
-                result:=result+'Array['+ToStr(lowrange)+'..'+
-                  ToStr(highrange)+'] Of '+elementdef.typename
+                Result:=Result+'Array['+ToStr(LowRange)+'..'+
+                  ToStr(HighRange)+'] Of '+ElementDef.TypeName
            end;
       end;
 
 
-    function TArrayDef.getmangledparaname : TSymStr;
+    function TArrayDef.GetMangledParaName : TSymStr;
       begin
-         if ado_isarrayofconst in arrayoptions then
-          getmangledparaname:='array_of_const'
+         if ado_isarrayofconst in ArrayOptions then
+          GetMangledParaName:='array_of_const'
          else
-          if ((highrange=-1) and (lowrange=0)) then
-           getmangledparaname:='array_of_'+elementdef.mangledparaname
+          if ((HighRange=-1) and (LowRange=0)) then
+           GetMangledParaName:='array_of_'+ElementDef.MangledParaName
          else
           InternalError(200204176);
       end;
@@ -4667,443 +4667,443 @@ implementation
 
     function TArrayDef.IsPublishable : TPublishProperty;
       begin
-         if ado_IsDynamicArray in arrayoptions then
+         if ado_IsDynamicArray in ArrayOptions then
            IsPublishable:=pp_publish
          else
            IsPublishable:=pp_error;
       end;
 
 
-    function TArrayDef.is_hwvector: boolean;
+    function TArrayDef.Is_HWVector: Boolean;
       begin
-        result:=ado_IsVector in arrayoptions;
+        Result:=ado_IsVector in ArrayOptions;
       end;
 
 {***************************************************************************
                               tabstractrecorddef
 ***************************************************************************}
 
-    constructor TAbstractRecordDef.create(const n:string; dt:TDefTyp;doregister:boolean);
+    constructor TAbstractRecordDef.Create(const N:string; DT:TDefTyp;DoRegister:Boolean);
       begin
-        inherited create(dt,doregister);
-        objname:=StringDup(upper(n));
-        objrealname:=StringDup(n);
-        objectoptions:=[];
+        inherited Create(DT,DoRegister);
+        ObjName:=StringDup(Upper(N));
+        ObjRealName:=StringDup(N);
+        ObjectOptions:=[];
       end;
 
-    constructor TAbstractRecordDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+    constructor TAbstractRecordDef.PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
       var
-        ro: TRTTIOption;
+        RO: TRTTIOption;
       begin
-        inherited ppuload(dt,ppufile);
-        objrealname:=ppufile.GetPShortString;
-        objname:=StringDup(upper(objrealname^));
-        import_lib:=ppufile.GetPShortString;
+        inherited PPULoad(DT,PPUFile);
+        ObjRealName:=PPUFile.GetPShortString;
+        ObjName:=StringDup(Upper(ObjRealName^));
+        ImportLib:=PPUFile.GetPShortString;
 
-        if (import_lib^='') then
-          StringDispose(import_lib);
-        ppufile.GetSet(TPPUSet4(objectoptions));
-        rtti.clause:=TRTTIClause(ppufile.GetByte);
-        for ro in TRTTIOption do
-          ppufile.GetSet(TPPUSet1(rtti.options[ro]));
+        if (ImportLib^='') then
+          StringDispose(ImportLib);
+        PPUFile.GetSet(TPPUSet4(ObjectOptions));
+        RTTI.Clause:=TRTTIClause(PPUFile.GetByte);
+        for RO in TRTTIOption do
+          PPUFile.GetSet(TPPUSet1(RTTI.Options[RO]));
       end;
 
-    procedure TAbstractRecordDef.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TAbstractRecordDef.PPUWrite(PPUFile: TCompilerPPUFile);
       var
-        ro: TRTTIOption;
+        RO: TRTTIOption;
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutString(objrealname^);
-        if Assigned(import_lib) then
-          ppufile.PutString(import_lib^)
+        inherited PPUWrite(PPUFile);
+        PPUFile.PutString(ObjRealName^);
+        if Assigned(ImportLib) then
+          PPUFile.PutString(ImportLib^)
         else
-          ppufile.PutString('');
-        ppufile.PutSet(TPPUSet4(objectoptions));
-        ppufile.PutByte(byte(rtti.clause));
-        for ro in TRTTIOption do
-          ppufile.PutSet(TPPUSet1(rtti.options[ro]));
+          PPUFile.PutString('');
+        PPUFile.PutSet(TPPUSet4(ObjectOptions));
+        PPUFile.PutByte(Byte(RTTI.Clause));
+        for RO in TRTTIOption do
+          PPUFile.PutSet(TPPUSet1(RTTI.Options[RO]));
       end;
 
     destructor TAbstractRecordDef.Destroy;
       begin
-        StringDispose(objname);
-        StringDispose(objrealname);
-        StringDispose(import_lib);
-        tcinitcode.free;
-        tcinitcode := nil;
+        StringDispose(ObjName);
+        StringDispose(ObjRealName);
+        StringDispose(ImportLib);
+        TCInitCode.Free;
+        TCInitCode := nil;
         inherited Destroy;
       end;
 
 
-    procedure TAbstractRecordDef.buildderefimpl;
+    procedure TAbstractRecordDef.BuildDerefImpl;
       begin
-         inherited buildderefimpl;
-         if not (df_copied_def in defoptions) then
-           TStoredSymTable(SymTable).buildderefimpl;
+         inherited BuildDerefImpl;
+         if not (df_copied_def in DefOptions) then
+           TStoredSymTable(SymTable).BuildDerefImpl;
       end;
 
 
-    procedure TAbstractRecordDef.derefimpl;
+    procedure TAbstractRecordDef.DerefImpl;
       begin
-        inherited derefimpl;
-        if not (df_copied_def in defoptions) then
-          TStoredSymTable(SymTable).derefimpl(false);
+        inherited DerefImpl;
+        if not (df_copied_def in DefOptions) then
+          TStoredSymTable(SymTable).DerefImpl(False);
       end;
 
 
-    procedure TAbstractRecordDef.check_forwards;
+    procedure TAbstractRecordDef.Check_Forwards;
       begin
         { the defs of a copied def are defined for the original type only }
-        if not(df_copied_def in defoptions) then
-          TStoredSymTable(SymTable).check_forwards;
+        if not(df_copied_def in DefOptions) then
+          TStoredSymTable(SymTable).Check_Forwards;
       end;
 
-    function TAbstractRecordDef.find_procdef_bytype(pt:TProcTypeOption): TProcDef;
+    function TAbstractRecordDef.Find_ProcDef_ByType(PT:TProcTypeOption): TProcDef;
       var
-        i: LongInt;
-        sym: TSym;
+        I: LongInt;
+        Sym: TSym;
       begin
-        for i:=0 to SymTable.SymList.Count-1 do
+        for I:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(SymTable.SymList[i]);
-            if sym.typ=procsym then
+            Sym:=TSym(SymTable.SymList[I]);
+            if Sym.Typ=ProcSym then
               begin
-                result:=TProcSym(sym).find_procdef_bytype(pt);
-                if Assigned(result) then
-                  exit;
+                Result:=TProcSym(Sym).Find_ProcDef_ByType(PT);
+                if Assigned(Result) then
+                  Exit;
               end;
           end;
-          result:=nil;
+          Result:=nil;
       end;
 
-    function TAbstractRecordDef.GetSymtable(t:TGetSymTable):TSymTable;
+    function TAbstractRecordDef.GetSymTable(T:TGetSymTable):TSymTable;
       begin
-        if t=gs_record then
-          GetSymtable:=SymTable
+        if T=gs_record then
+          GetSymTable:=SymTable
         else
-          GetSymtable:=nil;
+          GetSymTable:=nil;
       end;
 
 
-    function TAbstractRecordDef.is_packed:boolean;
+    function TAbstractRecordDef.Is_Packed:Boolean;
       begin
-        result:=TAbstractRecordSymTable(SymTable).is_packed;
+        Result:=TAbstractRecordSymTable(SymTable).Is_Packed;
       end;
 
-    function TAbstractRecordDef.RttiName: string;
+    function TAbstractRecordDef.RTTIName: string;
 
-        function generate_full_paramname(maxlength:LongInt):string;
+        function GenerateFullParamName(MaxLength:LongInt):string;
           const
-            commacount : array[boolean] of LongInt = (0,1);
+            CommaCount : array[Boolean] of LongInt = (0,1);
           var
-            fullparas,
-            paramname : AnsiString;
-            module : TModule;
-            sym : TSym;
-            def : TDef;
-            i : LongInt;
+            FullParas,
+            ParamName : AnsiString;
+            Module : TModule;
+            Sym : TSym;
+            Def : TDef;
+            I : LongInt;
           begin
             { we want at least enough space for an ellipsis }
-            if maxlength<3 then
+            if MaxLength<3 then
               InternalError(2014121203);
-            fullparas:='';
-            for i:=0 to genericparas.count-1 do
+            FullParas:='';
+            for I:=0 to GenericParas.Count-1 do
               begin
-                sym:=TSym(genericparas[i]);
-                module:=find_module_from_symtable(sym.owner);
-                if not Assigned(module) then
+                Sym:=TSym(GenericParas[I]);
+                Module:=Find_Module_From_SymTable(Sym.Owner);
+                if not Assigned(Module) then
                   InternalError(2014121202);
-                if not (sym.typ in [constsym,symconst.typesym]) then
+                if not (Sym.Typ in [ConstSym,SymConst.TypeSym]) then
                   InternalError(2020042501);
-                if sym.typ=constsym then
-                  def:=TConstSym(sym).constdef
+                if Sym.Typ=ConstSym then
+                  Def:=TConstSym(Sym).ConstDef
                 else
-                  def:=TTypeSym(sym).typedef;
-                paramname:=module.RealModuleName^;
-                if def.typ in [objectdef,recorddef] then
-                  paramname:=paramname+'.'+TAbstractRecordDef(def).rttiname
+                  Def:=TTypeSym(Sym).TypeDef;
+                ParamName:=Module.RealModuleName^;
+                if Def.Typ in [ObjectDef,RecordDef] then
+                  ParamName:=ParamName+'.'+TAbstractRecordDef(Def).RTTIName
                 else
-                  paramname:=paramname+'.'+def.typename;
-                if length(fullparas)+commacount[i>0]+length(paramname)>maxlength then
+                  ParamName:=ParamName+'.'+Def.TypeName;
+                if Length(FullParas)+CommaCount[I>0]+Length(ParamName)>MaxLength then
                   begin
-                    if i>0 then
-                      fullparas:=fullparas+',...'
+                    if I>0 then
+                      FullParas:=FullParas+',...'
                     else
-                      fullparas:=fullparas+'...';
-                    break;
+                      FullParas:=FullParas+'...';
+                    Break;
                   end;
                 { could we fit an ellipsis after this parameter if it should be too long? }
-                if (maxlength-(length(fullparas)+commacount[i>0]+length(paramname))<4) and (i<genericparas.count-1) then
+                if (MaxLength-(Length(FullParas)+CommaCount[I>0]+Length(ParamName))<4) and (I<GenericParas.Count-1) then
                   begin
                     { then omit already this parameter }
-                    if i>0 then
-                      fullparas:=fullparas+',...'
+                    if I>0 then
+                      FullParas:=FullParas+',...'
                     else
-                      fullparas:=fullparas+'...';
-                    break;
+                      FullParas:=FullParas+'...';
+                    Break;
                   end;
-                if i>0 then
-                  fullparas:=fullparas+',';
-                fullparas:=fullparas+paramname;
+                if I>0 then
+                  FullParas:=FullParas+',';
+                FullParas:=FullParas+ParamName;
               end;
-            result:=fullparas;
+            Result:=FullParas;
           end;
 
       var
-        nongeneric,
-        basename : string;
-        i,
-        remlength,
-        paramcount,
-        crcidx : LongInt;
+        NonGeneric,
+        BaseName : string;
+        I,
+        RemLength,
+        ParamCount,
+        CRCIdx : LongInt;
       begin
-        if rttistring='' then
+        if RTTIString='' then
           begin
-            if is_specialization then
+            if Is_Specialization then
               begin
-                rttistring:=OwnerHierarchyName;
+                RTTIString:=OwnerHierarchyName;
                 { there should be two $ characters, one before the CRC and one before the count }
-                crcidx:=-1;
-                for i:=length(objrealname^) downto 1 do
-                  if objrealname^[i]='$' then
+                CRCIdx:=-1;
+                for I:=Length(ObjRealName^) downto 1 do
+                  if ObjRealName^[I]='$' then
                     begin
-                      crcidx:=i;
-                      break;
+                      CRCIdx:=I;
+                      Break;
                     end;
-                if crcidx<0 then
+                if CRCIdx<0 then
                   InternalError(2014121201);
-                basename:=copy(objrealname^,1,crcidx-1);
-                split_generic_name(basename,nongeneric,paramcount);
-                rttistring:=rttistring+nongeneric+'<';
-                remlength:=255-length(rttistring)-1;
-                if remlength<4 then
-                  rttistring:=rttistring+'>'
+                BaseName:=Copy(ObjRealName^,1,CRCIdx-1);
+                split_generic_name(BaseName,NonGeneric,ParamCount);
+                RTTIString:=RTTIString+NonGeneric+'<';
+                RemLength:=255-Length(RTTIString)-1;
+                if RemLength<4 then
+                  RTTIString:=RTTIString+'>'
                 else
-                  rttistring:=rttistring+generate_full_paramname(remlength)+'>';
+                  RTTIString:=RTTIString+GenerateFullParamName(RemLength)+'>';
               end
             else
-              if is_generic then
+              if Is_Generic then
                 begin
-                  rttistring:=OwnerHierarchyName;
-                  split_generic_name(objrealname^,nongeneric,paramcount);
-                  rttistring:=rttistring+nongeneric+'<';
+                  RTTIString:=OwnerHierarchyName;
+                  split_generic_name(ObjRealName^,NonGeneric,ParamCount);
+                  RTTIString:=RTTIString+NonGeneric+'<';
                   { we don't want any ',' if there is only one parameter }
-                  for i:=0 to paramcount-1 do
-                    rttistring:=rttistring+',';
-                  rttistring:=rttistring+'>';
+                  for I:=0 to ParamCount-1 do
+                    RTTIString:=RTTIString+',';
+                  RTTIString:=RTTIString+'>';
                 end
               else
-                rttistring:=OwnerHierarchyName+objrealname^;
+                RTTIString:=OwnerHierarchyName+ObjRealName^;
           end;
-        result:=rttistring;
+        Result:=RTTIString;
       end;
 
-    function TAbstractRecordDef.search_enumerator_get: TProcDef;
+    function TAbstractRecordDef.Search_Enumerator_Get: TProcDef;
       var
-        sym : TSym;
-        i : integer;
-        pd : TProcDef;
-        hashedid : THashedIDString;
+        Sym : TSym;
+        I : Integer;
+        PD : TProcDef;
+        HashedID : THashedIDString;
       begin
-        result:=nil;
-        hashedid.id:='GETENUMERATOR';
-        sym:=TSym(SymTable.FindWithHash(hashedid));
-        if Assigned(sym) and (sym.typ=procsym) then
+        Result:=nil;
+        HashedID.ID:='GETENUMERATOR';
+        Sym:=TSym(SymTable.FindWithHash(HashedID));
+        if Assigned(Sym) and (Sym.Typ=ProcSym) then
           begin
-            for i := 0 to TProcSym(sym).ProcdefList.Count - 1 do
+            for I := 0 to TProcSym(Sym).ProcDefList.Count - 1 do
             begin
-              pd := TProcDef(TProcSym(sym).ProcdefList[i]);
-              if (pd.proctypeoption = potype_function) and
-                 (is_class_or_interface_or_object(pd.returndef) or is_record(pd.returndef)) and
-                 (pd.visibility >= vis_public) then
+              PD := TProcDef(TProcSym(Sym).ProcDefList[I]);
+              if (PD.ProcTypeOption = potype_function) and
+                 (Is_Class_Or_Interface_Or_Object(PD.ReturnDef) or Is_Record(PD.ReturnDef)) and
+                 (PD.Visibility >= vis_public) then
               begin
-                result:=pd;
-                exit;
+                Result:=PD;
+                Exit;
               end;
             end;
           end;
       end;
 
-    function TAbstractRecordDef.search_enumerator_move: TProcDef;
+    function TAbstractRecordDef.Search_Enumerator_Move: TProcDef;
       var
-        sym : TSym;
-        i : integer;
-        pd : TProcDef;
-        hashedid : THashedIDString;
+        Sym : TSym;
+        I : Integer;
+        PD : TProcDef;
+        HashedID : THashedIDString;
       begin
-        result:=nil;
+        Result:=nil;
         // first search for po_enumerator_movenext method modifier
         // then search for public function MoveNext: Boolean
-        for i:=0 to SymTable.SymList.Count-1 do
+        for I:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(SymTable.SymList[i]);
-            if (sym.typ=procsym) then
+            Sym:=TSym(SymTable.SymList[I]);
+            if (Sym.Typ=ProcSym) then
             begin
-              pd:=TProcSym(sym).find_procdef_byoptions([po_enumerator_movenext]);
-              if Assigned(pd) then
+              PD:=TProcSym(Sym).Find_ProcDef_ByOptions([po_enumerator_movenext]);
+              if Assigned(PD) then
                 begin
-                  result:=pd;
-                  exit;
+                  Result:=PD;
+                  Exit;
                 end;
             end;
           end;
-        hashedid.id:='MOVENEXT';
-        sym:=TSym(SymTable.FindWithHash(hashedid));
-        if Assigned(sym) and (sym.typ=procsym) then
+        HashedID.ID:='MOVENEXT';
+        Sym:=TSym(SymTable.FindWithHash(HashedID));
+        if Assigned(Sym) and (Sym.Typ=ProcSym) then
           begin
-            for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
+            for I:=0 to TProcSym(Sym).ProcDefList.Count-1 do
             begin
-              pd := TProcDef(TProcSym(sym).ProcdefList[i]);
-              if (pd.proctypeoption = potype_function) and
-                 is_boolean(pd.returndef) and
-                 (pd.minparacount = 0) and
-                 (pd.visibility >= vis_public) then
+              PD := TProcDef(TProcSym(Sym).ProcDefList[I]);
+              if (PD.ProcTypeOption = potype_function) and
+                 is_boolean(PD.ReturnDef) and
+                 (PD.MinParaCount = 0) and
+                 (PD.Visibility >= vis_public) then
               begin
-                result:=pd;
-                exit;
+                Result:=PD;
+                Exit;
               end;
             end;
           end;
       end;
 
-    function TAbstractRecordDef.search_enumerator_current: TSym;
+    function TAbstractRecordDef.Search_Enumerator_Current: TSym;
       var
-        sym: TSym;
-        i: integer;
-        hashedid : THashedIDString;
+        Sym: TSym;
+        I: Integer;
+        HashedID : THashedIDString;
       begin
-        result:=nil;
+        Result:=nil;
         // first search for ppo_enumerator_current property modifier
         // then search for public property Current
-        for i:=0 to SymTable.SymList.Count-1 do
+        for I:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(SymTable.SymList[i]);
-            if (sym.typ=propertysym) and (ppo_enumerator_current in TPropertySym(sym).propoptions) then
+            Sym:=TSym(SymTable.SymList[I]);
+            if (Sym.Typ=PropertySym) and (ppo_enumerator_current in TPropertySym(Sym).PropOptions) then
             begin
-              result:=sym;
-              exit;
+              Result:=Sym;
+              Exit;
             end;
           end;
-        hashedid.id:='CURRENT';
-        sym:=TSym(SymTable.FindWithHash(hashedid));
-        if Assigned(sym) and (sym.typ=propertysym) and
-           (sym.visibility >= vis_public) and not TPropertySym(sym).propaccesslist[palt_read].empty then
+        HashedID.ID:='CURRENT';
+        Sym:=TSym(SymTable.FindWithHash(HashedID));
+        if Assigned(Sym) and (Sym.Typ=PropertySym) and
+           (Sym.Visibility >= vis_public) and not TPropertySym(Sym).PropAccessList[palt_read].Empty then
           begin
-            result:=sym;
-            exit;
+            Result:=Sym;
+            Exit;
           end;
       end;
 
 
-    function TAbstractRecordDef.contains_float_field: boolean;
+    function TAbstractRecordDef.Contains_Float_Field: Boolean;
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        result:=true;
-        for i:=0 to SymTable.symlist.count-1 do
+        Result:=True;
+        for I:=0 to SymTable.SymList.Count-1 do
           begin
-            if (TSym(SymTable.symlist[i]).typ<>fieldvarsym) or
-               (sp_static in TSym(SymTable.symlist[i]).symoptions) then
-              continue;
-            if Assigned(TFieldVarSym(SymTable.symlist[i]).vardef) then
+            if (TSym(SymTable.SymList[I]).Typ<>FieldVarSym) or
+               (sp_static in TSym(SymTable.SymList[I]).SymOptions) then
+              Continue;
+            if Assigned(TFieldVarSym(SymTable.SymList[I]).VarDef) then
               begin
-                if TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).is_fpuregable then
-                  exit;
+                if TStoredDef(TFieldVarSym(SymTable.SymList[I]).VarDef).Is_FPURegable then
+                  Exit;
                 { search recursively }
-                if (TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).typ=recorddef) and
-                  (TAbstractRecordDef(TFieldVarSym(SymTable.symlist[i]).vardef).contains_float_field) then
-                  exit;
+                if (TStoredDef(TFieldVarSym(SymTable.SymList[I]).VarDef).Typ=RecordDef) and
+                  (TAbstractRecordDef(TFieldVarSym(SymTable.SymList[I]).VarDef).Contains_Float_Field) then
+                  Exit;
               end;
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    function TAbstractRecordDef.contains_cross_aword_field: boolean;
+    function TAbstractRecordDef.Contains_Cross_AWord_Field: Boolean;
       var
-        i : LongInt;
-        foffset, fsize: aword;
+        I : LongInt;
+        FOffset, FSize: AWord;
       begin
-        result:=true;
-        for i:=0 to SymTable.symlist.count-1 do
+        Result:=True;
+        for I:=0 to SymTable.SymList.Count-1 do
           begin
-            if (TSym(SymTable.symlist[i]).typ<>fieldvarsym) or
-               (sp_static in TSym(SymTable.symlist[i]).symoptions) then
-              continue;
-            if Assigned(TFieldVarSym(SymTable.symlist[i]).vardef) then
+            if (TSym(SymTable.SymList[I]).Typ<>FieldVarSym) or
+               (sp_static in TSym(SymTable.SymList[I]).SymOptions) then
+              Continue;
+            if Assigned(TFieldVarSym(SymTable.SymList[I]).VarDef) then
               begin
-                if is_packed then
+                if Is_Packed then
                   begin
-                    foffset:=TFieldVarSym(SymTable.symlist[i]).fieldoffset;
-                    fsize:=TFieldVarSym(SymTable.symlist[i]).vardef.packedbitsize;
+                    FOffset:=TFieldVarSym(SymTable.SymList[I]).FieldOffset;
+                    FSize:=TFieldVarSym(SymTable.SymList[I]).VarDef.PackedBitSize;
                   end
                 else
                   begin
-                    foffset:=TFieldVarSym(SymTable.symlist[i]).fieldoffset*8;
-                    fsize:=TFieldVarSym(SymTable.symlist[i]).vardef.size*8;
+                    FOffset:=TFieldVarSym(SymTable.SymList[I]).FieldOffset*8;
+                    FSize:=TFieldVarSym(SymTable.SymList[I]).VarDef.Size*8;
                   end;
-                if (fsize>0) and ((foffset div (sizeof(aword)*8)) <> ((foffset+fsize-1) div (sizeof(aword)*8))) then
-                  exit;
+                if (FSize>0) and ((FOffset div (SizeOf(AWord)*8)) <> ((FOffset+FSize-1) div (SizeOf(AWord)*8))) then
+                  Exit;
                 { search recursively }
-                if (TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).typ=recorddef) and
-                  (TAbstractRecordDef(TFieldVarSym(SymTable.symlist[i]).vardef).contains_cross_aword_field) then
-                  exit;
+                if (TStoredDef(TFieldVarSym(SymTable.SymList[I]).VarDef).Typ=RecordDef) and
+                  (TAbstractRecordDef(TFieldVarSym(SymTable.SymList[I]).VarDef).Contains_Cross_AWord_Field) then
+                  Exit;
               end;
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    procedure TAbstractRecordDef.apply_rtti_directive(dir: TRTTIDirective);
+    procedure TAbstractRecordDef.Apply_RTTI_Directive(Dir: TRTTIDirective);
       begin
         { records don't support the inherit clause but shouldn't
           give an error either if used (for Delphi compatibility),
           so we silently enforce the clause as explicit. }
-        rtti.clause:=rtc_explicit;
-        rtti.options:=dir.options;
+        RTTI.Clause:=rtc_explicit;
+        RTTI.Options:=Dir.Options;
       end;
 
 
-    function TAbstractRecordDef.is_visible_for_rtti(option: TRTTIOption; vis: TVisibility): boolean;
+    function TAbstractRecordDef.Is_Visible_For_RTTI(Option: TRTTIOption; Vis: TVisibility): Boolean;
       begin
-        case vis of
+        case Vis of
           vis_private,
-          vis_strictprivate:   result:=rv_private in rtti.options[option];
+          vis_strictprivate:   Result:=rv_private in RTTI.Options[Option];
           vis_protected,
-          vis_strictprotected: result:=rv_protected in rtti.options[option];
-          vis_public:          result:=rv_public in rtti.options[option];
-          vis_published:       result:=rv_published in rtti.options[option];
+          vis_strictprotected: Result:=rv_protected in RTTI.Options[Option];
+          vis_public:          Result:=rv_public in RTTI.Options[Option];
+          vis_published:       Result:=rv_published in RTTI.Options[Option];
           otherwise
-            result:=false;
+            Result:=False;
         end;
       end;
 
 
-    function TAbstractRecordDef.rtti_visibilities_for_option(option: TRTTIOption): TVisibilities;
+    function TAbstractRecordDef.RTTI_Visibilities_For_Option(Option: TRTTIOption): TVisibilities;
       begin
-        result:=[];
-        if rv_private in rtti.options[option] then
+        Result:=[];
+        if rv_private in RTTI.Options[Option] then
           begin
-            include(result,vis_private);
-            include(result,vis_strictprivate);
+            Include(Result,vis_private);
+            Include(Result,vis_strictprivate);
           end;
-        if rv_protected in rtti.options[option] then
+        if rv_protected in RTTI.Options[Option] then
           begin
-            include(result,vis_protected);
-            include(result,vis_strictprotected);
+            Include(Result,vis_protected);
+            Include(Result,vis_strictprotected);
           end;
-        if rv_public in rtti.options[option] then
-          include(result,vis_public);
-        if rv_published in rtti.options[option] then
-          include(result,vis_published);
+        if rv_public in RTTI.Options[Option] then
+          Include(Result,vis_public);
+        if rv_published in RTTI.Options[Option] then
+          Include(Result,vis_published);
       end;
 
 
-    function TAbstractRecordDef.has_extended_rtti: boolean;
+    function TAbstractRecordDef.Has_Extended_RTTI: Boolean;
       begin
-        result := (rtti.options[ro_fields]<>[]) or
-                  (rtti.options[ro_methods]<>[]) or
-                  (rtti.options[ro_properties]<>[]);
+        Result := (RTTI.Options[ro_fields]<>[]) or
+                  (RTTI.Options[ro_methods]<>[]) or
+                  (RTTI.Options[ro_properties]<>[]);
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -5111,45 +5111,45 @@ implementation
 
       procedure WriteSymOptions(SourceSym: TSym);
         var
-          i: TSymOption;
-          first: Boolean;
+          I: TSymOption;
+          First: Boolean;
         begin
           First := True;
-          for i := Low(TSymOption) to High(TSymOption) do
-            if i in SourceSym.symoptions then
+          for I := Low(TSymOption) to High(TSymOption) do
+            if I in SourceSym.SymOptions then
               begin
                 if First then
                   begin
-                    Write(T, '" symoptions="', i);
+                    Write(T, '" symoptions="', I);
                     First := False;
                   end
                 else
-                  Write(T, ',', i)
+                  Write(T, ',', I)
               end;
         end;
 
       var
         List: TFPHashObjectList;
-        i: Integer;
+        I: Integer;
       begin
-        WriteLn(T, PrintNodeIndention, '<size>', size, '</size>');
+        WriteLn(T, PrintNodeIndention, '<size>', Size, '</size>');
 
-        if (alignment = structalignment) and (alignment = aggregatealignment) then
+        if (Alignment = StructAlignment) and (Alignment = AggregateAlignment) then
           begin
             { Straightforward and simple }
-            WriteLn(T, PrintNodeIndention, '<alignment>', alignment, '</alignment>');
+            WriteLn(T, PrintNodeIndention, '<alignment>', Alignment, '</alignment>');
           end
         else
           begin
             WriteLn(T, PrintNodeIndention, '<alignment>');
             PrintNodeIndent;
-            WriteLn(T, PrintNodeIndention, '<basic>', alignment, '</basic>');
+            WriteLn(T, PrintNodeIndention, '<basic>', Alignment, '</basic>');
 
-            if (structalignment <> alignment) then
-              WriteLn(T, PrintNodeIndention, '<struct>', structalignment, '</struct>');
+            if (StructAlignment <> Alignment) then
+              WriteLn(T, PrintNodeIndention, '<struct>', StructAlignment, '</struct>');
 
-            if (aggregatealignment <> alignment) and (aggregatealignment <> structalignment) then
-              WriteLn(T, PrintNodeIndention, '<aggregate>', aggregatealignment, '</aggregate>');
+            if (AggregateAlignment <> Alignment) and (AggregateAlignment <> StructAlignment) then
+              WriteLn(T, PrintNodeIndention, '<aggregate>', AggregateAlignment, '</aggregate>');
 
             PrintNodeUnindent;
             WriteLn(T, PrintNodeIndention, '</alignment>');
@@ -5157,15 +5157,15 @@ implementation
 
         { List the fields }
         List := SymTable.SymList;
-        for i := 0 to List.Count - 1 do
-          case TSym(List[i]).typ of
+        for I := 0 to List.Count - 1 do
+          case TSym(List[I]).Typ of
 {            staticvarsym,localvarsym,paravarsym,fieldvarsym,
             typesym,procsym,unitsym,}
-            constsym:
-              with TConstSym(List[i]) do
+            ConstSym:
+              with TConstSym(List[I]) do
                 begin
-                  Write(T, PrintNodeIndention, '<const name="', RealName, '" pos="', fileinfo.line, ',', fileinfo.column);
-                  WriteSymOptions(TSym(List[i]));
+                  Write(T, PrintNodeIndention, '<const name="', RealName, '" pos="', FileInfo.Line, ',', FileInfo.Column);
+                  WriteSymOptions(TSym(List[I]));
                   WriteLn(T, '">');
                   PrintNodeIndent;
                   XMLPrintConstData(T);
@@ -5176,11 +5176,11 @@ implementation
             errorsym,syssym,labelsym,absolutevarsym,propertysym,
             macrosym,namespacesym,undefinedsym,programparasym
 }
-            fieldvarsym:
-              with TFieldVarSym(List[i]) do
+            FieldVarSym:
+              with TFieldVarSym(List[I]) do
                 begin
-                  Write(T, PrintNodeIndention, '<field name="', RealName, '" pos="', fileinfo.line, ',', fileinfo.column);
-                  WriteSymOptions(TSym(List[i]));
+                  Write(T, PrintNodeIndention, '<field name="', RealName, '" pos="', FileInfo.Line, ',', FileInfo.Column);
+                  WriteSymOptions(TSym(List[I]));
                   WriteLn(T, '">');
                   PrintNodeIndent;
                   XMLPrintFieldData(T);
@@ -5193,311 +5193,311 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    procedure TAbstractRecordDef.setobjrealname(const n:string);
+    procedure TAbstractRecordDef.SetObjRealName(const N:string);
       begin
-        FreeMem(objrealname);
-        objrealname:=StringDup(n);
+        FreeMem(ObjRealName);
+        ObjRealName:=StringDup(N);
       end;
 
 {***************************************************************************
                                   trecorddef
 ***************************************************************************}
 
-    constructor TRecordDef.create(const n:string; p:TSymTable);
+    constructor TRecordDef.Create(const N:string; P:TSymTable);
       begin
-         inherited create(n,recorddef,true);
-         SymTable:=p;
+         inherited Create(N,RecordDef,True);
+         SymTable:=P;
          { we can own the symtable only if nobody else owns a copy so far }
-         if SymTable.refcount=1 then
-           SymTable.defowner:=self;
-         isunion:=false;
-         cloneddefderef.reset;
+         if SymTable.RefCount=1 then
+           SymTable.DefOwner:=Self;
+         IsUnion:=False;
+         ClonedDefDeref.Reset;
       end;
 
 
-    constructor TRecordDef.create_internal(const n: string; PackRecords, RecordAlignMin: shortint; where: TSymTable);
+    constructor TRecordDef.Create_Internal(const N: string; PackRecords, RecordAlignMin: ShortInt; Where: TSymTable);
       var
-        name : string;
+        Name : string;
         OldSymTableStack: TSymTableStack;
-        ts: TTypeSym;
+        TS: TTypeSym;
       begin
         { construct name }
-        if n<>'' then
-          name:=n
+        if N<>'' then
+          Name:=N
         else
           begin
             InitDefID;
-            name:='$InternalRec'+UniqueIDStr;
+            Name:='$InternalRec'+UniqueIDStr;
           end;
         OldSymTableStack:=SymTableStack;
         { do not simply push/pop current_module.localsymtable, because
           that can have side-effects (e.g., it removes helpers) }
         SymTableStack:=nil;
 
-        SymTable:=TRecordSymTable.create(name,PackRecords,RecordAlignMin);
-        SymTable.defowner:=self;
-        isunion:=false;
-        inherited create(name,recorddef,true);
-        where.insertdef(self);
+        SymTable:=TRecordSymTable.Create(Name,PackRecords,RecordAlignMin);
+        SymTable.DefOwner:=Self;
+        IsUnion:=False;
+        inherited Create(Name,RecordDef,True);
+        Where.InsertDef(Self);
         { if we specified a name, then we'll probably want to look up the
           type again by name too -> create typesym }
-        if n<>'' then
+        if N<>'' then
           begin
-            ts:=CTypeSym.create(n,self);
-            include(ts.symoptions,sp_internal);
+            TS:=CTypeSym.Create(N,Self);
+            Include(TS.SymOptions,sp_internal);
             { avoid hints about unused types (these may only be used for
               typed constant data) }
-            ts.increfcount;
-            where.insertsym(ts);
+            TS.IncRefCount;
+            Where.InsertSym(TS);
           end;
         SymTableStack:=OldSymTableStack;
         { don't create RTTI for internal types, these are not exported }
-        defstates:=defstates+[ds_rtti_table_written,ds_init_table_written];
-        include(defoptions,df_internal);
+        DefStates:=DefStates+[ds_rtti_table_written,ds_init_table_written];
+        Include(DefOptions,df_internal);
       end;
 
 
-    constructor TRecordDef.create_global_internal(const n: string; PackRecords, RecordAlignMin: shortint);
+    constructor TRecordDef.Create_Global_Internal(const N: string; PackRecords, RecordAlignMin: ShortInt);
       var
-        where : TSymTable;
+        Where : TSymTable;
       begin
-        where:=CurrentModule.localsymtable;
-        if not Assigned(where) then
-          where:=CurrentModule.GlobalSymTable;
-        create_internal(n,PackRecords,RecordAlignMin,where);
+        Where:=CurrentModule.LocalSymTable;
+        if not Assigned(Where) then
+          Where:=CurrentModule.GlobalSymTable;
+        Create_Internal(N,PackRecords,RecordAlignMin,Where);
       end;
 
 
-    function TRecordDef.add_field_by_def(const optionalname: TIDString; def: TDef): TSym;
+    function TRecordDef.Add_Field_By_Def(const OptionalName: TIDString; Def: TDef): TSym;
       var
-        sym: TFieldVarSym;
-        name: TIDString;
-        pname: ^TIDString;
+        Sym: TFieldVarSym;
+        Name: TIDString;
+        PName: ^TIDString;
       begin
-        if optionalname='' then
+        if OptionalName='' then
           begin
-            name:='$f'+ToStr(TRecordSymTable(SymTable).symlist.count);
-            pname:=@name
+            Name:='$f'+ToStr(TRecordSymTable(SymTable).SymList.Count);
+            PName:=@Name
           end
         else
-          pname:=@optionalname;
-        sym:=CFieldVarSym.create(pname^,vs_value,def,[]);
-        SymTable.insertsym(sym);
-        TRecordSymTable(SymTable).addfield(sym,vis_hidden);
-        result:=sym;
+          PName:=@OptionalName;
+        Sym:=CFieldVarSym.Create(PName^,vs_value,Def,[]);
+        SymTable.InsertSym(Sym);
+        TRecordSymTable(SymTable).AddField(Sym,vis_hidden);
+        Result:=Sym;
       end;
 
 
-    procedure TRecordDef.add_fields_from_deflist(fieldtypes: TFPList);
+    procedure TRecordDef.Add_Fields_From_DefList(FieldTypes: TFPList);
       var
-        i: LongInt;
+        I: LongInt;
       begin
-        for i:=0 to fieldtypes.count-1 do
-          add_field_by_def('',TDef(fieldtypes[i]));
+        for I:=0 to FieldTypes.Count-1 do
+          Add_Field_By_Def('',TDef(FieldTypes[I]));
       end;
 
 
-    constructor TRecordDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TRecordDef.PPULoad(PPUFile:TCompilerPPUFile);
 
-      procedure readvariantrecdesc(var variantrecdesc : PVariantRecDesc);
+      procedure ReadVariantRecDesc(var VariantRecDesc : PVariantRecDesc);
         var
-          i,j : LongInt;
+          I,J : LongInt;
         begin
-         if ppufile.GetByte=1 then
+         if PPUFile.GetByte=1 then
            begin
-             new(variantrecdesc);
-             ppufile.getderef(variantrecdesc^.variantselectorderef);
-             SetLength(variantrecdesc^.branches,ppufile.GetASizeInt);
-             for i:=0 to high(variantrecdesc^.branches) do
+             New(VariantRecDesc);
+             PPUFile.GetDeref(VariantRecDesc^.VariantSelectorDeref);
+             SetLength(VariantRecDesc^.Branches,PPUFile.GetASizeInt);
+             for I:=0 to High(VariantRecDesc^.Branches) do
                begin
-                 SetLength(variantrecdesc^.branches[i].values,ppufile.GetASizeInt);
-                 for j:=0 to high(variantrecdesc^.branches[i].values) do
-                   variantrecdesc^.branches[i].values[j]:=ppufile.getexprint;
-                 readvariantrecdesc(variantrecdesc^.branches[i].nestedvariant);
+                 SetLength(VariantRecDesc^.Branches[I].Values,PPUFile.GetASizeInt);
+                 for J:=0 to High(VariantRecDesc^.Branches[I].Values) do
+                   VariantRecDesc^.Branches[I].Values[J]:=PPUFile.GetExprInt;
+                 ReadVariantRecDesc(VariantRecDesc^.Branches[I].NestedVariant);
                end;
            end
          else
-           variantrecdesc:=nil;
+           VariantRecDesc:=nil;
         end;
 
       begin
-         inherited ppuload(recorddef,ppufile);
-         if df_copied_def in defoptions then
+         inherited PPULoad(RecordDef,PPUFile);
+         if df_copied_def in DefOptions then
            begin
-             ppufile.getderef(cloneddefderef);
-             PPULoadPlatform(ppufile);
+             PPUFile.GetDeref(ClonedDefDeref);
+             PPULoadPlatform(PPUFile);
            end
          else
            begin
-             SymTable:=TRecordSymTable.create(objrealname^,0,0);
-             TRecordSymTable(SymTable).fieldalignment:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).recordalignment:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).explicitrecordalignment:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).padalignment:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).usefieldalignment:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).RecordAlignMin:=shortint(ppufile.GetByte);
-             TRecordSymTable(SymTable).DataSize:=ppufile.GetASizeInt;
-             TRecordSymTable(SymTable).paddingsize:=ppufile.GetWord;
-             ppufile.GetSet(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
+             SymTable:=TRecordSymTable.Create(ObjRealName^,0,0);
+             TRecordSymTable(SymTable).FieldAlignment:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).RecordAlignment:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).ExplicitRecordAlignment:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).PadAlignment:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).UseFieldAlignment:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).RecordAlignMin:=ShortInt(PPUFile.GetByte);
+             TRecordSymTable(SymTable).DataSize:=PPUFile.GetASizeInt;
+             TRecordSymTable(SymTable).PaddingSize:=PPUFile.GetWord;
+             PPUFile.GetSet(TPPUSet1(TRecordSymTable(SymTable).ManagementOperators));
              { position of ppuload_platform call must correspond
                to position of writeentry in ppuwrite method }
-             PPULoadPlatform(ppufile);
-             TRecordSymTable(SymTable).ppuload(ppufile);
+             PPULoadPlatform(PPUFile);
+             TRecordSymTable(SymTable).PPULoad(PPUFile);
              { the variantrecdesc is needed only for iso-like new statements new(prec,1,2,3 ...);
                but because iso mode supports no units, there is no need to store the variantrecdesc
                in the ppu
              }
              // readvariantrecdesc(variantrecdesc);
              { requires usefieldalignment to be set }
-             SymTable.defowner:=self;
+             SymTable.DefOwner:=Self;
            end;
-         isunion:=false;
+         IsUnion:=False;
       end;
 
 
     destructor TRecordDef.Destroy;
 
-      procedure free_variantrecdesc(var variantrecdesc : PVariantRecDesc);
+      procedure FreeVariantRecDesc(var VariantRecDesc : PVariantRecDesc);
         var
-          i : LongInt;
+          I : LongInt;
         begin
-         while Assigned(variantrecdesc) do
+         while Assigned(VariantRecDesc) do
            begin
-             for i:=0 to high(variantrecdesc^.branches) do
+             for I:=0 to High(VariantRecDesc^.Branches) do
                begin
-                 free_variantrecdesc(variantrecdesc^.branches[i].nestedvariant);
-                 SetLength(variantrecdesc^.branches[i].values,0);
+                 FreeVariantRecDesc(VariantRecDesc^.Branches[I].NestedVariant);
+                 SetLength(VariantRecDesc^.Branches[I].Values,0);
                end;
-             SetLength(variantrecdesc^.branches,0);
-             dispose(variantrecdesc);
-             variantrecdesc:=nil;
+             SetLength(VariantRecDesc^.Branches,0);
+             Dispose(VariantRecDesc);
+             VariantRecDesc:=nil;
            end;
         end;
 
       begin
-         if Assigned(variantrecdesc) then
-           free_variantrecdesc(variantrecdesc);
+         if Assigned(VariantRecDesc) then
+           FreeVariantRecDesc(VariantRecDesc);
          if Assigned(SymTable) then
            begin
-             SymTable.free;
+             SymTable.Free;
              SymTable:=nil;
            end;
          inherited Destroy;
       end;
 
 
-    function TRecordDef.getcopy : TStoredDef;
+    function TRecordDef.GetCopy : TStoredDef;
       begin
-        result:=CRecordDef.create(objrealname^,SymTable.getcopy);
-        TRecordDef(result).isunion:=isunion;
-        include(TRecordDef(result).defoptions,df_copied_def);
-        if Assigned(tcinitcode) then
-          TRecordDef(result).tcinitcode:=tcinitcode.getcopy;
-         if Assigned(import_lib) then
-           TRecordDef(result).import_lib:=StringDup(import_lib^);
+        Result:=CRecordDef.Create(ObjRealName^,SymTable.GetCopy);
+        TRecordDef(Result).IsUnion:=IsUnion;
+        Include(TRecordDef(Result).DefOptions,df_copied_def);
+        if Assigned(TCInitCode) then
+          TRecordDef(Result).TCInitCode:=TCInitCode.GetCopy;
+         if Assigned(ImportLib) then
+           TRecordDef(Result).ImportLib:=StringDup(ImportLib^);
       end;
 
 
-    function TRecordDef.NeedsInitTable : boolean;
+    function TRecordDef.NeedsInitTable : Boolean;
       begin
         { each record with managed field or with any management operator needs
           init table }
-        NeedsInitTable:=(TRecordSymTable(SymTable).managementoperators<>[]) or
-          TRecordSymTable(SymTable).needs_init_final
+        NeedsInitTable:=(TRecordSymTable(SymTable).ManagementOperators<>[]) or
+          TRecordSymTable(SymTable).Needs_Init_Final
       end;
 
-    function TRecordDef.NeedsSeparateInitRTTI : boolean;
+    function TRecordDef.NeedsSeparateInitRTTI : Boolean;
       begin
-        result:=true;
-      end;
-
-
-    function TRecordDef.HasNonTrivialInitChild(check_parent:boolean):boolean;
-      begin
-        result:=TRecordSymTable(SymTable).has_non_trivial_init;
+        Result:=True;
       end;
 
 
-    procedure TRecordDef.buildderef;
+    function TRecordDef.HasNonTrivialInitChild(CheckParent:Boolean):Boolean;
       begin
-         inherited buildderef;
-         if df_copied_def in defoptions then
-           cloneddefderef.build(SymTable.defowner)
+        Result:=TRecordSymTable(SymTable).Has_Non_Trivial_Init;
+      end;
+
+
+    procedure TRecordDef.BuildDeref;
+      begin
+         inherited BuildDeref;
+         if df_copied_def in DefOptions then
+           ClonedDefDeref.Build(SymTable.DefOwner)
          else
-           TStoredSymTable(SymTable).buildderef;
+           TStoredSymTable(SymTable).BuildDeref;
       end;
 
 
-    procedure TRecordDef.deref;
+    procedure TRecordDef.Deref;
       begin
-         inherited deref;
+         inherited Deref;
          { now dereference the definitions }
-         if df_copied_def in defoptions then
+         if df_copied_def in DefOptions then
            begin
-             cloneddef:=TRecordDef(cloneddefderef.resolve);
-             SymTable:=cloneddef.SymTable.getcopy;
+             ClonedDef:=TRecordDef(ClonedDefDeref.Resolve);
+             SymTable:=ClonedDef.SymTable.GetCopy;
            end
          else
-           TStoredSymTable(SymTable).deref(false);
+           TStoredSymTable(SymTable).Deref(False);
 
          { internal types, only load from the system unit }
-         if Assigned(owner) and
-            Assigned(owner.name) and
-            (owner.name^='SYSTEM') then
+         if Assigned(Owner) and
+            Assigned(Owner.Name) and
+            (Owner.Name^='SYSTEM') then
            begin
              { TGUID  }
-             if not Assigned(rec_tguid) and
-                (upper(typename)='TGUID') then
-               rec_tguid:=self
+             if not Assigned(Rec_TGUID) and
+                (Upper(TypeName)='TGUID') then
+               Rec_TGUID:=Self
              { JMP_BUF }
-             else if not Assigned(rec_jmp_buf) and
-                (upper(typename)='JMP_BUF') then
-               rec_jmp_buf:=self
-             else if not Assigned(rec_exceptaddr) and
-                (upper(typename)='TEXCEPTADDR') then
-               rec_exceptaddr:=self;
+             else if not Assigned(Rec_Jmp_Buf) and
+                (Upper(TypeName)='JMP_BUF') then
+               Rec_Jmp_Buf:=Self
+             else if not Assigned(Rec_ExceptAddr) and
+                (Upper(TypeName)='TEXCEPTADDR') then
+               Rec_ExceptAddr:=Self;
            end;
       end;
 
 
-    procedure TRecordDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TRecordDef.PPUWrite(PPUFile:TCompilerPPUFile);
 
-      procedure writevariantrecdesc(variantrecdesc : PVariantRecDesc);
+      procedure WriteVariantRecDesc(VariantRecDesc : PVariantRecDesc);
         var
-          i,j : LongInt;
+          I,J : LongInt;
         begin
-         if Assigned(variantrecdesc) then
+         if Assigned(VariantRecDesc) then
            begin
-             ppufile.PutByte(1);
-             ppufile.putderef(variantrecdesc^.variantselectorderef);
-             ppufile.PutASizeInt(length(variantrecdesc^.branches));
-             for i:=0 to high(variantrecdesc^.branches) do
+             PPUFile.PutByte(1);
+             PPUFile.PutDeref(VariantRecDesc^.VariantSelectorDeref);
+             PPUFile.PutASizeInt(Length(VariantRecDesc^.Branches));
+             for I:=0 to High(VariantRecDesc^.Branches) do
                begin
-                 ppufile.PutASizeInt(length(variantrecdesc^.branches[i].values));
-                 for j:=0 to high(variantrecdesc^.branches[i].values) do
-                   ppufile.putexprint(variantrecdesc^.branches[i].values[j]);
-                 writevariantrecdesc(variantrecdesc^.branches[i].nestedvariant);
+                 PPUFile.PutASizeInt(Length(VariantRecDesc^.Branches[I].Values));
+                 for J:=0 to High(VariantRecDesc^.Branches[I].Values) do
+                   PPUFile.PutExprInt(VariantRecDesc^.Branches[I].Values[J]);
+                 WriteVariantRecDesc(VariantRecDesc^.Branches[I].NestedVariant);
                end;
            end
          else
-           ppufile.PutByte(0);
+           PPUFile.PutByte(0);
         end;
 
       begin
-         inherited ppuwrite(ppufile);
-         if df_copied_def in defoptions then
-           ppufile.putderef(cloneddefderef)
+         inherited PPUWrite(PPUFile);
+         if df_copied_def in DefOptions then
+           PPUFile.PutDeref(ClonedDefDeref)
          else
            begin
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).fieldalignment));
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).recordalignment));
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).explicitrecordalignment));
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).padalignment));
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).usefieldalignment));
-             ppufile.PutByte(byte(TRecordSymTable(SymTable).RecordAlignMin));
-             ppufile.PutASizeInt(TRecordSymTable(SymTable).DataSize);
-             ppufile.PutWord(TRecordSymTable(SymTable).paddingsize);
-             ppufile.PutSet(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).FieldAlignment));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).RecordAlignment));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).ExplicitRecordAlignment));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).PadAlignment));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).UseFieldAlignment));
+             PPUFile.PutByte(Byte(TRecordSymTable(SymTable).RecordAlignMin));
+             PPUFile.PutASizeInt(TRecordSymTable(SymTable).DataSize);
+             PPUFile.PutWord(TRecordSymTable(SymTable).PaddingSize);
+             PPUFile.PutSet(TPPUSet1(TRecordSymTable(SymTable).ManagementOperators));
              { the variantrecdesc is needed only for iso-like new statements new(prec,1,2,3 ...);
                but because iso mode supports no units, there is no need to store the variantrecdesc
                in the ppu
@@ -5505,35 +5505,35 @@ implementation
              // writevariantrecdesc(variantrecdesc);
            end;
 
-         WriteEntry(ppufile,IBRecordDef);
+         WriteEntry(PPUFile,IBRecordDef);
 
-         if not(df_copied_def in defoptions) then
-           TRecordSymTable(SymTable).ppuwrite(ppufile);
+         if not(df_copied_def in DefOptions) then
+           TRecordSymTable(SymTable).PPUWrite(PPUFile);
       end;
 
 
-    function TRecordDef.size:asizeint;
+    function TRecordDef.Size:ASizeInt;
       begin
-        result:=TRecordSymTable(SymTable).DataSize;
+        Result:=TRecordSymTable(SymTable).DataSize;
       end;
 
 
-    function TRecordDef.alignment:shortint;
+    function TRecordDef.Alignment:ShortInt;
       begin
-        alignment:=TRecordSymTable(SymTable).recordalignment;
+        Alignment:=TRecordSymTable(SymTable).RecordAlignment;
       end;
 
 
-    function TRecordDef.padalignment:shortint;
+    function TRecordDef.PadAlignment:ShortInt;
       begin
-        padalignment := TRecordSymTable(SymTable).padalignment;
+        PadAlignment := TRecordSymTable(SymTable).PadAlignment;
       end;
 
 
     function TRecordDef.GetTypeName : string;
       begin
-        if Assigned(typesym) then
-          GetTypeName:='<record type '+typesymbolprettyname+'>'
+        if Assigned(TypeSym) then
+          GetTypeName:='<record type '+TypeSymbolPrettyName+'>'
         else
           GetTypeName:='<record type>';
       end;
@@ -5549,174 +5549,174 @@ implementation
                        TABSTRACTPROCDEF
 ***************************************************************************}
 
-    constructor TAbstractProcDef.create(dt:TDefTyp;level:byte;doregister:boolean);
+    constructor TAbstractProcDef.Create(DT:TDefTyp;Level:Byte;DoRegister:Boolean);
       begin
-         inherited create(dt,doregister);
-         parast:=TParaSymTable.create(self,level);
-         paras:=nil;
-         minparacount:=0;
-         maxparacount:=0;
-         proctypeoption:=potype_none;
-         proccalloption:=pocall_none;
-         procoptions:=[];
-         returndef:=voidtype;
-         returndefderef.reset;
-         savesize:=sizeof(PInt);
-         callerargareasize:=0;
-         calleeargareasize:=0;
-         has_paraloc_info:=callnoside;
-         funcretloc[callerside].init;
-         funcretloc[calleeside].init;
-         check_mark_as_nested;
+         inherited Create(DT,DoRegister);
+         ParaST:=TParaSymTable.Create(Self,Level);
+         Paras:=nil;
+         MinParaCount:=0;
+         MaxParaCount:=0;
+         ProcTypeOption:=potype_none;
+         ProcCallOption:=pocall_none;
+         ProcOptions:=[];
+         ReturnDef:=VoidType;
+         ReturnDefDeref.Reset;
+         SaveSize:=SizeOf(PInt);
+         CallerArgAreaSize:=0;
+         CalleeArgAreaSize:=0;
+         HasParaLocInfo:=CallNoSide;
+         FuncRetLoc[CallerSide].Init;
+         FuncRetLoc[CalleeSide].Init;
+         Check_Mark_As_Nested;
       end;
 
 
     destructor TAbstractProcDef.Destroy;
       begin
-         if Assigned(paras) then
+         if Assigned(Paras) then
            begin
 {$ifdef MEMDEBUG}
-             memprocpara.start;
+             MemProcPara.Start;
 {$endif MEMDEBUG}
-             paras.free;
-             paras:=nil;
+             Paras.Free;
+             Paras:=nil;
 {$ifdef MEMDEBUG}
-             memprocpara.stop;
+             MemProcPara.Stop;
 {$endif MEMDEBUG}
           end;
-         if Assigned(parast) then
+         if Assigned(ParaST) then
           begin
 {$ifdef MEMDEBUG}
-            memprocparast.start;
+            MemProcParaST.Start;
 {$endif MEMDEBUG}
-            parast.free;
-            parast:=nil;
+            ParaST.Free;
+            ParaST:=nil;
 {$ifdef MEMDEBUG}
-            memprocparast.stop;
+            MemProcParaST.Stop;
 {$endif MEMDEBUG}
           end;
-         funcretloc[callerside].done;
-         funcretloc[calleeside].done;
+         FuncRetLoc[CallerSide].Done;
+         FuncRetLoc[CalleeSide].Done;
          inherited Destroy;
       end;
 
 
-    procedure TAbstractProcDef.count_para(p:TObject;arg:pointer);
+    procedure TAbstractProcDef.CountPara(P:TObject;Arg:Pointer);
       begin
-        if (TSym(p).typ<>paravarsym) then
-          exit;
-        inc(PLongInt(arg)^);
-        if not(vo_is_hidden_para in TParaVarSym(p).varoptions) then
+        if (TSym(P).Typ<>ParaVarSym) then
+          Exit;
+        Inc(PLongInt(Arg)^);
+        if not(vo_is_hidden_para in TParaVarSym(P).VarOptions) then
          begin
-           if not Assigned(TParaVarSym(p).defaultconstsym) then
-             inc(minparacount);
-           inc(maxparacount);
+           if not Assigned(TParaVarSym(P).DefaultConstSym) then
+             Inc(MinParaCount);
+           Inc(MaxParaCount);
          end;
       end;
 
 
-    procedure TAbstractProcDef.insert_para(p:TObject;arg:pointer);
+    procedure TAbstractProcDef.InsertPara(P:TObject;Arg:Pointer);
       begin
-        if (TSym(p).typ<>paravarsym) then
-          exit;
-        paras.add(p);
+        if (TSym(P).Typ<>ParaVarSym) then
+          Exit;
+        Paras.Add(P);
       end;
 
 
-    procedure TAbstractProcDef.calcparas;
+    procedure TAbstractProcDef.CalcParas;
       var
-        paracount : LongInt;
+        ParaCount : LongInt;
       begin
         { This can already be assigned when
           we need to reresolve this unit (PFV) }
-        if Assigned(paras) then
-          paras.free;
-        paras:=TParaList.create(false);
-        paracount:=0;
-        minparacount:=0;
-        maxparacount:=0;
-        parast.SymList.ForEachCall(@count_para,@paracount);
-        paras.capacity:=paracount;
+        if Assigned(Paras) then
+          Paras.Free;
+        Paras:=TParaList.Create(False);
+        ParaCount:=0;
+        MinParaCount:=0;
+        MaxParaCount:=0;
+        ParaST.SymList.ForEachCall(@CountPara,@ParaCount);
+        Paras.Capacity:=ParaCount;
         { Insert parameters in table }
-        parast.SymList.ForEachCall(@insert_para,nil);
+        ParaST.SymList.ForEachCall(@InsertPara,nil);
         { Order parameters }
-        paras.sortparas;
+        Paras.SortParas;
       end;
 
 
-    function TAbstractProcDef.mangledprocparanames(oldlen : LongInt) : string;
+    function TAbstractProcDef.MangledProcParaNames(OldLen : LongInt) : string;
       var
-        hash  : qword;
-        hp   : TParaVarSym;
-        hs   : TSymStr;
-        newlen,
-        i    : integer;
+        Hash  : QWord;
+        HP   : TParaVarSym;
+        HS   : TSymStr;
+        NewLen,
+        I    : Integer;
       begin
-        result:='';
-        hp:=nil;
+        Result:='';
+        HP:=nil;
         { add parameter types }
-        for i:=0 to paras.count-1 do
+        for I:=0 to Paras.Count-1 do
          begin
-           hp:=TParaVarSym(paras[i]);
-           if not(vo_is_hidden_para in hp.varoptions) then
+           HP:=TParaVarSym(Paras[I]);
+           if not(vo_is_hidden_para in HP.VarOptions) then
              begin
-               if not Assigned(hp.vardef) then
+               if not Assigned(HP.VarDef) then
                  InternalError(2025122401);
-               result:=result+'$'+hp.vardef.mangledparaname;
+               Result:=Result+'$'+HP.VarDef.MangledParaName;
              end;
          end;
         { add resultdef, add $$ as separator to make it unique from a
           parameter separator }
-        if not is_void(returndef) then
-          result:=result+'$$'+returndef.mangledparaname;
-        newlen:=length(result)+oldlen;
+        if not is_void(ReturnDef) then
+          Result:=Result+'$$'+ReturnDef.MangledParaName;
+        NewLen:=Length(Result)+OldLen;
         { Replace with hash if the parameter line is very long }
-        if (newlen-oldlen>12) and
-           ((newlen>100) or (newlen-oldlen>64)) then
+        if (NewLen-OldLen>12) and
+           ((NewLen>100) or (NewLen-OldLen>64)) then
           begin
-            hash:=InitFNV64;
-            for i:=0 to paras.count-1 do
+            Hash:=InitFNV64;
+            for I:=0 to Paras.Count-1 do
               begin
-                hp:=TParaVarSym(paras[i]);
-                if not(vo_is_hidden_para in hp.varoptions) then
+                HP:=TParaVarSym(Paras[I]);
+                if not(vo_is_hidden_para in HP.VarOptions) then
                   begin
-                    hs:=hp.vardef.mangledparaname;
-                    hash:=UpdateFNV64(hash,hs[1],length(hs));
+                    HS:=HP.VarDef.MangledParaName;
+                    Hash:=UpdateFNV64(Hash,HS[1],Length(HS));
                   end;
               end;
-            if not is_void(returndef) then
+            if not is_void(ReturnDef) then
               begin
                 { add a little prefix so that x(integer; integer) is different from x(integer):integer }
-                hs:='$$'+returndef.mangledparaname;
-                hash:=UpdateFNV64(hash,hs[1],length(hs));
+                HS:='$$'+ReturnDef.MangledParaName;
+                Hash:=UpdateFNV64(Hash,HS[1],Length(HS));
               end;
-            result:='$h'+Base64Mangle(hash);
+            Result:='$h'+Base64Mangle(Hash);
           end;
       end;
 
 
-    procedure TAbstractProcDef.buildderef;
+    procedure TAbstractProcDef.BuildDeref;
       begin
          { released procdef? }
-         if not Assigned(parast) then
-           exit;
-         inherited buildderef;
-         returndefderef.build(returndef);
-         if po_explicitparaloc in procoptions then
-           funcretloc[callerside].buildderef;
+         if not Assigned(ParaST) then
+           Exit;
+         inherited BuildDeref;
+         ReturnDefDeref.Build(ReturnDef);
+         if po_explicitparaloc in ProcOptions then
+           FuncRetLoc[CallerSide].BuildDeref;
          { parast }
-         TParaSymTable(parast).buildderef;
+         TParaSymTable(ParaST).BuildDeref;
       end;
 
 
-    procedure TAbstractProcDef.deref;
+    procedure TAbstractProcDef.Deref;
       begin
-         inherited deref;
-         returndef:=TDef(returndefderef.resolve);
-         if po_explicitparaloc in procoptions then
+         inherited Deref;
+         ReturnDef:=TDef(ReturnDefDeref.Resolve);
+         if po_explicitparaloc in ProcOptions then
            begin
-             funcretloc[callerside].deref;
-             has_paraloc_info:=callerside;
+             FuncRetLoc[CallerSide].Deref;
+             HasParaLocInfo:=CallerSide;
             end
          else
            begin
@@ -5724,256 +5724,256 @@ implementation
                unit has been reloaded/recompiled and all references must be
                re-resolved. Since the funcretloc contains a reference to a tdef,
                reset it so that we won't try to access the stale def }
-             funcretloc[callerside].init;
-             has_paraloc_info:=callnoside;
+             FuncRetLoc[CallerSide].Init;
+             HasParaLocInfo:=CallNoSide;
            end;
          { parast }
-         TParaSymTable(parast).deref(false);
+         TParaSymTable(ParaST).Deref(False);
          { recalculated parameters }
-         calcparas;
+         CalcParas;
       end;
 
 
-    constructor TAbstractProcDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
+    constructor TAbstractProcDef.PPULoad(DT:TDefTyp;PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(dt,ppufile);
-         parast:=nil;
+         inherited PPULoad(DT,PPUFile);
+         ParaST:=nil;
          Paras:=nil;
-         minparacount:=0;
-         maxparacount:=0;
-         ppufile.getderef(returndefderef);
-         proctypeoption:=TProcTypeOption(ppufile.GetByte);
-         proccalloption:=TProcCallOption(ppufile.GetByte);
-         ppufile.GetSet(TPPUSet8(procoptions));
+         MinParaCount:=0;
+         MaxParaCount:=0;
+         PPUFile.GetDeref(ReturnDefDeref);
+         ProcTypeOption:=TProcTypeOption(PPUFile.GetByte);
+         ProcCallOption:=TProcCallOption(PPUFile.GetByte);
+         PPUFile.GetSet(TPPUSet8(ProcOptions));
 
-         funcretloc[callerside].init;
-         if po_explicitparaloc in procoptions then
-           funcretloc[callerside].ppuload(ppufile);
+         FuncRetLoc[CallerSide].Init;
+         if po_explicitparaloc in ProcOptions then
+           FuncRetLoc[CallerSide].PPULoad(PPUFile);
 
-         savesize:=sizeof(PInt);
-         if (po_explicitparaloc in procoptions) then
-           has_paraloc_info:=callerside;
+         SaveSize:=SizeOf(PInt);
+         if (po_explicitparaloc in ProcOptions) then
+           HasParaLocInfo:=CallerSide;
       end;
 
 
-    procedure TAbstractProcDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbstractProcDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
          { released procdef? }
-         if not Assigned(parast) then
-           exit;
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(returndefderef);
-         ppufile.PutByte(ord(proctypeoption));
-         ppufile.PutByte(ord(proccalloption));
-         ppufile.PutSet(TPPUSet8(procoptions));
+         if not Assigned(ParaST) then
+           Exit;
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(ReturnDefDeref);
+         PPUFile.PutByte(Ord(ProcTypeOption));
+         PPUFile.PutByte(Ord(ProcCallOption));
+         PPUFile.PutSet(TPPUSet8(ProcOptions));
 
-         if (po_explicitparaloc in procoptions) then
-           funcretloc[callerside].ppuwrite(ppufile);
+         if (po_explicitparaloc in ProcOptions) then
+           FuncRetLoc[CallerSide].PPUWrite(PPUFile);
       end;
 
 
-    function TAbstractProcDef.typename_paras(pno: TProcNameOptions) : AnsiString;
+    function TAbstractProcDef.TypeName_Paras(PNo: TProcNameOptions) : AnsiString;
       var
-        hs,s  : AnsiString;
-        hp    : TParaVarSym;
-        hpc   : TConstSym;
-        first : boolean;
-        i,j   : integer;
+        HS,S  : AnsiString;
+        HP    : TParaVarSym;
+        HPC   : TConstSym;
+        First : Boolean;
+        I,J   : Integer;
       begin
-        s:='';
-        first:=true;
-        for i:=0 to paras.count-1 do
+        S:='';
+        First:=True;
+        for I:=0 to Paras.Count-1 do
          begin
-           hp:=TParaVarSym(paras[i]);
-           if not(vo_is_hidden_para in hp.varoptions) or
-              (pno_showhidden in pno) then
+           HP:=TParaVarSym(Paras[I]);
+           if not(vo_is_hidden_para in HP.VarOptions) or
+              (pno_showhidden in PNo) then
             begin
-               if first then
+               if First then
                 begin
-                  s:=s+'(';
-                  first:=false;
+                  S:=S+'(';
+                  First:=False;
                 end
                else
-                s:=s+';';
-               if vo_is_hidden_para in hp.varoptions then
-                 s:=s+'<';
-               case hp.varspez of
+                S:=S+';';
+               if vo_is_hidden_para in HP.VarOptions then
+                 S:=S+'<';
+               case HP.VarSpez of
                  vs_var :
-                   s:=s+'var ';
+                   S:=S+'var ';
                  vs_const :
-                   s:=s+'const ';
+                   S:=S+'const ';
                  vs_out :
-                   s:=s+'out ';
+                   S:=S+'out ';
                  vs_constref :
-                   s:=s+'constref ';
+                   S:=S+'constref ';
                  else
                    ;
                end;
-               if (pno_paranames in pno) then
-                 s:=s+hp.realname+':';
-               if hp.univpara then
-                 s:=s+'univ ';
-               if Assigned(hp.vardef.typesym) then
+               if (pno_paranames in PNo) then
+                 S:=S+HP.RealName+':';
+               if HP.UnivPara then
+                 S:=S+'univ ';
+               if Assigned(HP.VarDef.TypeSym) then
                  begin
-                   hs:=hp.vardef.typesym.realname;
-                   if hs[1]<>'$' then
-                     s:=s+hp.vardef.OwnerHierarchyName+hs
+                   HS:=HP.VarDef.TypeSym.RealName;
+                   if HS[1]<>'$' then
+                     S:=S+HP.VarDef.OwnerHierarchyName+HS
                    else
-                     s:=s+hp.vardef.GetTypeName;
+                     S:=S+HP.VarDef.GetTypeName;
                  end
                else
-                 s:=s+hp.vardef.GetTypeName;
+                 S:=S+HP.VarDef.GetTypeName;
                { default value }
-               if Assigned(hp.defaultconstsym) then
+               if Assigned(HP.DefaultConstSym) then
                 begin
-                  hpc:=TConstSym(hp.defaultconstsym);
-                  hs:='';
-                  case hpc.consttyp of
-                    constwresourcestring,
-                    constwstring:
+                  HPC:=TConstSym(HP.DefaultConstSym);
+                  HS:='';
+                  case HPC.ConstTyp of
+                    ConstWResourceString,
+                    ConstWString:
                       begin
-                        if hpc.value.valuews.len>0 then
+                        if HPC.Value.ValueWS.Len>0 then
                           begin
-                            SetLength(hs,hpc.value.valuews.len);
-                            for j:=0 to hpc.value.valuews.len-1 do
+                            SetLength(HS,HPC.Value.ValueWS.Len);
+                            for J:=0 to HPC.Value.ValueWS.Len-1 do
                              begin
-                               if (ord(hpc.value.valuews.data[j])<127) and
-                                  not(byte(hpc.value.valuews.data[j]) in [0,10,13]) then
-                                 hs[j+1]:=char(hpc.value.valuews.data[j])
+                               if (Ord(HPC.Value.ValueWS.Data[J])<127) and
+                                  not(Byte(HPC.Value.ValueWS.Data[J]) in [0,10,13]) then
+                                 HS[J+1]:=Char(HPC.Value.ValueWS.Data[J])
                                else
-                                 hs[j+1]:='.';
+                                 HS[J+1]:='.';
                              end;
                           end;
                       end;
-                    conststring,
-                    constresourcestring :
+                    ConstString,
+                    ConstResourceString :
                       begin
-                        if hpc.value.len>0 then
+                        if HPC.Value.Len>0 then
                           begin
-                            SetLength(hs,hpc.value.len);
+                            SetLength(HS,HPC.Value.Len);
                             { don't write past the end of hs if the constant
                               is > 255 chars }
-                            move(hpc.value.valueptr^,hs[1],length(hs));
+                            Move(HPC.Value.ValuePtr^,HS[1],Length(HS));
                             { make sure that constant strings with newline chars
                               don't create a linebreak in the assembler code,
                               since comments are line-based. Also remove nulls
                               because the comments are written as a pchar. }
-                            ReplaceCase(hs,#0,'.');
-                            ReplaceCase(hs,#10,'.');
-                            ReplaceCase(hs,#13,'.');
+                            ReplaceCase(HS,#0,'.');
+                            ReplaceCase(HS,#10,'.');
+                            ReplaceCase(HS,#13,'.');
                           end;
                       end;
-                    constreal :
-                      hs:=RealToStr(PBestReal(hpc.value.valueptr)^);
-                    constpointer :
-                      hs:=ToStr(hpc.value.valueordptr);
-                    constord :
+                    ConstReal :
+                      HS:=RealToStr(PBestReal(HPC.Value.ValuePtr)^);
+                    ConstPointer :
+                      HS:=ToStr(HPC.Value.ValueOrdPtr);
+                    ConstOrd :
                       begin
-                        if is_boolean(hpc.constdef) then
+                        if is_boolean(HPC.ConstDef) then
                           begin
-                            if hpc.value.valueord<>0 then
-                             hs:='TRUE'
+                            if HPC.Value.ValueOrd<>0 then
+                             HS:='TRUE'
                             else
-                             hs:='FALSE';
+                             HS:='FALSE';
                           end
                         else
-                          hs:=ToStr(hpc.value.valueord);
+                          HS:=ToStr(HPC.Value.ValueOrd);
                       end;
-                    constnil :
-                      hs:='nil';
-                    constset :
-                      hs:='<set>';
-                    constguid:
-                      hs:=GUID2String(PGUID(hpc.value.valueptr)^);
-                    constnone:
+                    ConstNil :
+                      HS:='nil';
+                    ConstSet :
+                      HS:='<set>';
+                    ConstGUID:
+                      HS:=GUID2String(PGUID(HPC.Value.ValuePtr)^);
+                    ConstNone:
                       InternalError(2019050704);
                   end;
-                  if hs<>'' then
-                   s:=s+'=`'+hs+'`';
+                  if HS<>'' then
+                   S:=S+'=`'+HS+'`';
                 end;
-               if vo_is_hidden_para in hp.varoptions then
-                 s:=s+'>';
+               if vo_is_hidden_para in HP.VarOptions then
+                 S:=S+'>';
              end;
          end;
-        if not first then
-         s:=s+')';
-        if (po_varargs in procoptions) then
-         s:=s+';VarArgs';
-        typename_paras:=s;
+        if not First then
+         S:=S+')';
+        if (po_varargs in ProcOptions) then
+         S:=S+';VarArgs';
+        TypeName_Paras:=S;
       end;
 
 
-    function TAbstractProcDef.is_methodpointer:boolean;
+    function TAbstractProcDef.Is_MethodPointer:Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
 
-    function TAbstractProcDef.is_addressonly:boolean;
+    function TAbstractProcDef.Is_AddressOnly:Boolean;
       begin
-        result:=true;
+        Result:=True;
       end;
 
-    function TAbstractProcDef.no_self_node: boolean;
+    function TAbstractProcDef.No_Self_Node: Boolean;
       begin
-        Result:=([po_staticmethod,po_classmethod]<=procoptions)or
-                (proctypeoption in [potype_class_constructor,potype_class_destructor,potype_operator]);
+        Result:=([po_staticmethod,po_classmethod]<=ProcOptions)or
+                (ProcTypeOption in [potype_class_constructor,potype_class_destructor,potype_operator]);
       end;
 
 
-    function TAbstractProcDef.getcopyas(newtyp:TDefTyp;copytyp:TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
+    function TAbstractProcDef.GetCopyAs(NewTyp:TDefTyp;CopyTyp:TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef;
       var
-        j, nestinglevel: LongInt;
-        pvs, npvs: TParaVarSym;
+        J, NestingLevel: LongInt;
+        PVS, NPVS: TParaVarSym;
       begin
-        nestinglevel:=parast.symtablelevel;
-        if newtyp=procdef then
+        NestingLevel:=ParaST.SymTableLevel;
+        if NewTyp=ProcDef then
           begin
-            if (copytyp<>pc_bareproc) then
-              result:=CProcDef.create(nestinglevel,doregister)
+            if (CopyTyp<>pc_bareproc) then
+              Result:=CProcDef.Create(NestingLevel,DoRegister)
             else
-              result:=CProcDef.create(normal_function_level,doregister);
-            TProcDef(result).visibility:=vis_public;
+              Result:=CProcDef.Create(normal_function_level,DoRegister);
+            TProcDef(Result).Visibility:=vis_public;
           end
         else
           begin
-            result:=CProcVarDef.create(nestinglevel,true);
+            Result:=CProcVarDef.Create(NestingLevel,True);
           end;
-        TAbstractProcDef(result).returndef:=returndef;
-        TAbstractProcDef(result).returndefderef:=returndefderef;
-        pvs:=nil;
-        npvs:=nil;
-        if copytyp<>pc_normal_no_paras then
+        TAbstractProcDef(Result).ReturnDef:=ReturnDef;
+        TAbstractProcDef(Result).ReturnDefDeref:=ReturnDefDeref;
+        PVS:=nil;
+        NPVS:=nil;
+        if CopyTyp<>pc_normal_no_paras then
           begin
-            for j:=0 to parast.symlist.count-1 do
+            for J:=0 to ParaST.SymList.Count-1 do
               begin
-                case TSym(parast.symlist[j]).typ of
-                  paravarsym:
+                case TSym(ParaST.SymList[J]).Typ of
+                  ParaVarSym:
                     begin
-                      pvs:=TParaVarSym(parast.symlist[j]);
+                      PVS:=TParaVarSym(ParaST.SymList[J]);
                       { in case of bare proc, don't copy self, vmt or framepointer
                         parameters }
-                      if (copytyp in [pc_bareproc,pc_normal_no_hidden]) and
-                         (([vo_is_self,vo_is_vmt,vo_is_parentfp,vo_is_result,vo_is_funcret,vo_is_high_para]*pvs.varoptions)<>[]) then
-                        continue;
-                      if paraprefix='' then
-                        npvs:=CParaVarSym.create(pvs.realname,pvs.paranr,pvs.varspez,
-                          pvs.vardef,pvs.varoptions)
-                      else if not(vo_is_high_para in pvs.varoptions) then
-                        npvs:=CParaVarSym.create(paraprefix+pvs.realname,pvs.paranr,pvs.varspez,
-                          pvs.vardef,pvs.varoptions)
+                      if (CopyTyp in [pc_bareproc,pc_normal_no_hidden]) and
+                         (([vo_is_self,vo_is_vmt,vo_is_parentfp,vo_is_result,vo_is_funcret,vo_is_high_para]*PVS.VarOptions)<>[]) then
+                        Continue;
+                      if ParaPrefix='' then
+                        NPVS:=CParaVarSym.Create(PVS.RealName,PVS.ParaNr,PVS.VarSpez,
+                          PVS.VarDef,PVS.VarOptions)
+                      else if not(vo_is_high_para in PVS.VarOptions) then
+                        NPVS:=CParaVarSym.Create(ParaPrefix+PVS.RealName,PVS.ParaNr,PVS.VarSpez,
+                          PVS.VarDef,PVS.VarOptions)
                       else
-                        npvs:=CParaVarSym.create('$high'+paraprefix+copy(pvs.name,5,length(pvs.name)),pvs.paranr,pvs.varspez,
-                          pvs.vardef,pvs.varoptions);
-                      npvs.defaultconstsym:=pvs.defaultconstsym;
-                      TAbstractProcDef(result).parast.insertsym(npvs);
+                        NPVS:=CParaVarSym.Create('$high'+ParaPrefix+Copy(PVS.Name,5,Length(PVS.Name)),PVS.ParaNr,PVS.VarSpez,
+                          PVS.VarDef,PVS.VarOptions);
+                      NPVS.DefaultConstSym:=PVS.DefaultConstSym;
+                      TAbstractProcDef(Result).ParaST.InsertSym(NPVS);
                     end;
-                  constsym:
+                  ConstSym:
                     begin
                       // ignore, reuse original constym. Should also be duplicated
                       // be safe though
                     end;
-                  symconst.typesym:
+                  SymConst.TypeSym:
                     begin
                       // reuse original, part of generic declaration
                     end
@@ -5982,211 +5982,211 @@ implementation
                   end;
               end;
           end;
-        TAbstractProcDef(result).savesize:=savesize;
+        TAbstractProcDef(Result).SaveSize:=SaveSize;
 
-        if (typ<>procvardef) and
-           (newtyp=procvardef) then
+        if (Typ<>ProcVarDef) and
+           (NewTyp=ProcVarDef) then
           begin
             { procvars can't be (class)constructors/destructors etc }
-            if proctypeoption=potype_constructor then
+            if ProcTypeOption=potype_constructor then
               begin
-                TAbstractProcDef(result).returndef:=TDef(owner.defowner);
-                if not(is_implicit_pointer_object_type(returndef) or
-                   (returndef.typ<>objectdef)) then
-                  TAbstractProcDef(result).returndef:=CPointerDef.getreusable(TAbstractProcDef(result).returndef);
-                TAbstractProcDef(result).proctypeoption:=potype_function;
+                TAbstractProcDef(Result).ReturnDef:=TDef(Owner.DefOwner);
+                if not(Is_Implicit_Pointer_Object_Type(ReturnDef) or
+                   (ReturnDef.Typ<>ObjectDef)) then
+                  TAbstractProcDef(Result).ReturnDef:=CPointerDef.GetReusable(TAbstractProcDef(Result).ReturnDef);
+                TAbstractProcDef(Result).ProcTypeOption:=potype_function;
               end
-            else if is_void(returndef) then
-              TAbstractProcDef(result).proctypeoption:=potype_procedure
+            else if is_void(ReturnDef) then
+              TAbstractProcDef(Result).ProcTypeOption:=potype_procedure
             else
-              TAbstractProcDef(result).proctypeoption:=potype_function;
+              TAbstractProcDef(Result).ProcTypeOption:=potype_function;
           end
         else
-          TAbstractProcDef(result).proctypeoption:=proctypeoption;
-        TAbstractProcDef(result).proccalloption:=proccalloption;
-        TAbstractProcDef(result).procoptions:=procoptions;
-        if (copytyp=pc_bareproc) then
-          TAbstractProcDef(result).procoptions:=TAbstractProcDef(result).procoptions*[po_explicitparaloc,po_hascallingconvention,po_varargs,po_iocheck,po_has_importname,po_has_importdll];
-        if newtyp=procvardef then
-          TAbstractProcDef(result).procoptions:=TAbstractProcDef(result).procoptions-[po_has_importname,po_has_importdll];
-        if copytyp=pc_address_only then
-          include(TAbstractProcDef(result).procoptions,po_addressonly);
+          TAbstractProcDef(Result).ProcTypeOption:=ProcTypeOption;
+        TAbstractProcDef(Result).ProcCallOption:=ProcCallOption;
+        TAbstractProcDef(Result).ProcOptions:=ProcOptions;
+        if (CopyTyp=pc_bareproc) then
+          TAbstractProcDef(Result).ProcOptions:=TAbstractProcDef(Result).ProcOptions*[po_explicitparaloc,po_hascallingconvention,po_varargs,po_iocheck,po_has_importname,po_has_importdll];
+        if NewTyp=ProcVarDef then
+          TAbstractProcDef(Result).ProcOptions:=TAbstractProcDef(Result).ProcOptions-[po_has_importname,po_has_importdll];
+        if CopyTyp=pc_address_only then
+          Include(TAbstractProcDef(Result).ProcOptions,po_addressonly);
 
-        TAbstractProcDef(result).callerargareasize:=callerargareasize;
-        TAbstractProcDef(result).calleeargareasize:=calleeargareasize;
-        TAbstractProcDef(result).maxparacount:=maxparacount;
-        TAbstractProcDef(result).minparacount:=minparacount;
-        if po_explicitparaloc in procoptions then
-          TAbstractProcDef(result).funcretloc[callerside]:=funcretloc[callerside].getcopy;
+        TAbstractProcDef(Result).CallerArgAreaSize:=CallerArgAreaSize;
+        TAbstractProcDef(Result).CalleeArgAreaSize:=CalleeArgAreaSize;
+        TAbstractProcDef(Result).MaxParaCount:=MaxParaCount;
+        TAbstractProcDef(Result).MinParaCount:=MinParaCount;
+        if po_explicitparaloc in ProcOptions then
+          TAbstractProcDef(Result).FuncRetLoc[CallerSide]:=FuncRetLoc[CallerSide].GetCopy;
         { recalculate parameter info }
-        TAbstractProcDef(result).has_paraloc_info:=callnoside;
-        if (typ=procdef) and
-           (newtyp=procvardef) and
-           (owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-          include(TProcVarDef(result).procoptions,po_methodpointer);
+        TAbstractProcDef(Result).HasParaLocInfo:=CallNoSide;
+        if (Typ=ProcDef) and
+           (NewTyp=ProcVarDef) and
+           (Owner.SymTableType in [ObjectSymTable,RecordSymTable]) then
+          Include(TProcVarDef(Result).ProcOptions,po_methodpointer);
       end;
 
 
-    function TAbstractProcDef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
+    function TAbstractProcDef.Compatible_With_PointerDef_Size(Ptr: TPointerDef): Boolean;
       begin
-        result:=is_addressonly;
+        Result:=Is_AddressOnly;
       end;
 
 
-    procedure TAbstractProcDef.check_mark_as_nested;
+    procedure TAbstractProcDef.Check_Mark_As_Nested;
       begin
          { nested procvars require that nested functions use the Delphi-style
            nested procedure calling convention }
-         if (parast.symtablelevel>normal_function_level) and
+         if (ParaST.SymTableLevel>normal_function_level) and
             (m_nested_procvars in CurrentSettings.ModeSwitches) then
-           include(procoptions,po_delphi_nested_cc);
+           Include(ProcOptions,po_delphi_nested_cc);
       end;
 
 
-    procedure TAbstractProcDef.init_paraloc_info(side: TCallerCallee);
+    procedure TAbstractProcDef.Init_ParaLoc_Info(Side: TCallerCallee);
       begin
-        if (side in [callerside,callbothsides]) and
-           not(has_paraloc_info in [callerside,callbothsides]) then
+        if (Side in [CallerSide,CallBothSides]) and
+           not(HasParaLocInfo in [CallerSide,CallBothSides]) then
           begin
-            if not is_c_variadic(self) then
-              callerargareasize:=paramanager.create_paraloc_info(self,callerside)
+            if not is_c_variadic(Self) then
+              CallerArgAreaSize:=ParaManager.create_paraloc_info(Self,CallerSide)
             else
-              callerargareasize:=paramanager.create_varargs_paraloc_info(self,callerside,nil);
-            if has_paraloc_info in [calleeside,callbothsides] then
-              has_paraloc_info:=callbothsides
+              CallerArgAreaSize:=ParaManager.create_varargs_paraloc_info(Self,CallerSide,nil);
+            if HasParaLocInfo in [CalleeSide,CallBothSides] then
+              HasParaLocInfo:=CallBothSides
             else
-              has_paraloc_info:=callerside;
+              HasParaLocInfo:=CallerSide;
           end;
-        if (side in [calleeside,callbothsides]) and
-           not(has_paraloc_info in [calleeside,callbothsides]) then
+        if (Side in [CalleeSide,CallBothSides]) and
+           not(HasParaLocInfo in [CalleeSide,CallBothSides]) then
           begin
-            if not is_c_variadic(self) then
-              calleeargareasize:=paramanager.create_paraloc_info(self,calleeside)
+            if not is_c_variadic(Self) then
+              CalleeArgAreaSize:=ParaManager.create_paraloc_info(Self,CalleeSide)
             else
-              callerargareasize:=paramanager.create_varargs_paraloc_info(self,calleeside,nil);
-            if has_paraloc_info in [callerside,callbothsides] then
-              has_paraloc_info:=callbothsides
+              CallerArgAreaSize:=ParaManager.create_varargs_paraloc_info(Self,CalleeSide,nil);
+            if HasParaLocInfo in [CallerSide,CallBothSides] then
+              HasParaLocInfo:=CallBothSides
             else
-              has_paraloc_info:=calleeside;
+              HasParaLocInfo:=CalleeSide;
           end;
       end;
 
 
-    procedure TAbstractProcDef.done_paraloc_info(side: TCallerCallee);
+    procedure TAbstractProcDef.Done_ParaLoc_Info(Side: TCallerCallee);
       var
-        i: LongInt;
+        I: LongInt;
       begin
-        if (side in [callerside,callbothsides]) and
-           (has_paraloc_info in [callerside,callbothsides]) then
+        if (Side in [CallerSide,CallBothSides]) and
+           (HasParaLocInfo in [CallerSide,CallBothSides]) then
           begin
-            funcretloc[callerside].done;
-            for i:=0 to paras.count-1 do
-              TParaVarSym(paras[i]).paraloc[callerside].done;
-            if has_paraloc_info=callerside then
-              has_paraloc_info:=callnoside
+            FuncRetLoc[CallerSide].Done;
+            for I:=0 to Paras.Count-1 do
+              TParaVarSym(Paras[I]).ParaLoc[CallerSide].Done;
+            if HasParaLocInfo=CallerSide then
+              HasParaLocInfo:=CallNoSide
             else
-              has_paraloc_info:=calleeside;
+              HasParaLocInfo:=CalleeSide;
           end;
 
-        if (side in [calleeside,callbothsides]) and
-           (has_paraloc_info in [calleeside,callbothsides]) then
+        if (Side in [CalleeSide,CallBothSides]) and
+           (HasParaLocInfo in [CalleeSide,CallBothSides]) then
           begin
-            funcretloc[calleeside].done;
-            for i:=0 to paras.count-1 do
-              TParaVarSym(paras[i]).paraloc[calleeside].done;
-            if has_paraloc_info=calleeside then
-              has_paraloc_info:=callnoside
+            FuncRetLoc[CalleeSide].Done;
+            for I:=0 to Paras.Count-1 do
+              TParaVarSym(Paras[I]).ParaLoc[CalleeSide].Done;
+            if HasParaLocInfo=CalleeSide then
+              HasParaLocInfo:=CallNoSide
             else
-              has_paraloc_info:=callerside;
+              HasParaLocInfo:=CallerSide;
           end;
       end;
 
 
-    function TAbstractProcDef.stack_tainting_parameter(side: TCallerCallee): boolean;
+    function TAbstractProcDef.Stack_Tainting_Parameter(Side: TCallerCallee): Boolean;
       var
-        p: TParaVarSym;
-        ploc: PCGParaLocation;
-        i: LongInt;
+        P: TParaVarSym;
+        PLoc: PCGParaLocation;
+        I: LongInt;
       begin
-        result:=false;
-        init_paraloc_info(side);
-        for i:=0 to parast.SymList.Count-1 do
-          if TSym(parast.SymList[i]).typ=paravarsym then
+        Result:=False;
+        Init_ParaLoc_Info(Side);
+        for I:=0 to ParaST.SymList.Count-1 do
+          if TSym(ParaST.SymList[I]).Typ=ParaVarSym then
             begin
-              p:=TParaVarSym(parast.SymList[i]);
-              if not p.is_used then
-                continue;
+              P:=TParaVarSym(ParaST.SymList[I]);
+              if not P.Is_Used then
+                Continue;
               { check if no parameter is located on the stack }
-              if (is_open_array(p.vardef) or
-                 is_array_of_const(p.vardef)) and (p.varspez=vs_value) then
+              if (is_open_array(P.VarDef) or
+                 is_array_of_const(P.VarDef)) and (P.VarSpez=vs_value) then
                 begin
-                  result:=true;
-                  exit;
+                  Result:=True;
+                  Exit;
                 end;
-              ploc:=p.paraloc[side].location;
-              while Assigned(ploc) do
+              PLoc:=P.ParaLoc[Side].Location;
+              while Assigned(PLoc) do
                 begin
-                  if (ploc^.loc=LOC_REFERENCE) then
+                  if (PLoc^.Loc=LOC_REFERENCE) then
                     begin
-                      result:=true;
-                      exit
+                      Result:=True;
+                      Exit
                     end;
-                  ploc:=ploc^.next;
+                  PLoc:=PLoc^.Next;
                 end;
             end;
       end;
 
-    function TAbstractProcDef.is_pushleftright: boolean;
+    function TAbstractProcDef.Is_PushLeftRight: Boolean;
       begin
-        result:=false;
+        Result:=False;
       end;
 
-    function TAbstractProcDef.address_type: TDef;
+    function TAbstractProcDef.Address_Type: TDef;
       begin
-        result:=voidcodepointertype;
-      end;
-
-
-    function TAbstractProcDef.ofs_address_type:TDef;
-      begin
-        result:=address_type;
+        Result:=VoidCodePointerType;
       end;
 
 
-    function TAbstractProcDef.generate_safecall_wrapper: boolean;
+    function TAbstractProcDef.Ofs_Address_Type:TDef;
+      begin
+        Result:=Address_Type;
+      end;
+
+
+    function TAbstractProcDef.Generate_SafeCall_Wrapper: Boolean;
       begin
 {$ifdef SUPPORT_SAFECALL}
-        result:=
-          (proccalloption=pocall_safecall) and
-          not(po_assembler in procoptions) and
-          (tf_safecall_exceptions in TargetInfo.flags);
+        Result:=
+          (ProcCallOption=pocall_safecall) and
+          not(po_assembler in ProcOptions) and
+          (tf_safecall_exceptions in TargetInfo.Flags);
 {$else SUPPORT_SAFECALL}
-        result:=false;
+        Result:=False;
 {$endif}
       end;
 
 
-    function TAbstractProcDef.is_generic_param(def:TDef): boolean;
+    function TAbstractProcDef.Is_Generic_Param(Def:TDef): Boolean;
       begin
-        if def.typ=undefineddef then
-          result:=def.owner=self.parast
-        else if def.typ=objectdef then
-          result:=(def.owner=self.parast) and (TStoredDef(def).genconstraintdata<>nil)
+        if Def.Typ=UndefinedDef then
+          Result:=Def.Owner=Self.ParaST
+        else if Def.Typ=ObjectDef then
+          Result:=(Def.Owner=Self.ParaST) and (TStoredDef(Def).GenConstraintData<>nil)
         else
-          result:=false;
+          Result:=False;
       end;
 
-    function TAbstractProcDef.wpo_may_create_instance(optionalmethodpointer: TNode): boolean;
+    function TAbstractProcDef.WPO_May_Create_Instance(OptionalMethodPointer: TNode): Boolean;
       begin
-        result:=
-          (proctypeoption=potype_constructor) or
-          ((typ=procdef) and
-           ((not Assigned(optionalmethodpointer) and
-             is_class(TDef(owner.defowner))) or
-            (Assigned(optionalmethodpointer) and
-             ((optionalmethodpointer.resultdef.typ=classrefdef) or
-              (optionalmethodpointer.nodetype=typen)))) and
-           (TProcDef(self).procsym.Name='NEWINSTANCE'))
+        Result:=
+          (ProcTypeOption=potype_constructor) or
+          ((Typ=ProcDef) and
+           ((not Assigned(OptionalMethodPointer) and
+             Is_Class(TDef(Owner.DefOwner))) or
+            (Assigned(OptionalMethodPointer) and
+             ((OptionalMethodPointer.ResultDef.Typ=ClassRefDef) or
+              (OptionalMethodPointer.NodeType=TypeN)))) and
+           (TProcDef(Self).ProcSym.Name='NEWINSTANCE'))
       end;
 
 
@@ -6194,469 +6194,469 @@ implementation
                                   TPROCDEF
 ***************************************************************************}
 
-    function TProcDef.getparentfpsym: TSym;
+    function TProcDef.GetParentFPSym: TSym;
       begin
-        if not Assigned(_parentfpsym) then
+        if not Assigned(FParentFPSym) then
           begin
-            _parentfpsym:=TSym(parast.Find('parentfp'));
-            if not Assigned(_parentfpsym) then
+            FParentFPSym:=TSym(ParaST.Find('parentfp'));
+            if not Assigned(FParentFPSym) then
               InternalError(200309281);
           end;
-        result:=_parentfpsym;
+        Result:=FParentFPSym;
       end;
 
 
-    function TProcDef.Getis_implemented: boolean;
+    function TProcDef.GetIs_Implemented: Boolean;
       begin
-        result:=not Assigned(implprocdefinfo) or implprocdefinfo^.is_implemented;
+        Result:=not Assigned(ImplProcDefInfo) or ImplProcDefInfo^.IsImplemented;
       end;
 
 
-    procedure TProcDef.Setis_implemented(AValue: boolean);
+    procedure TProcDef.SetIs_Implemented(AValue: Boolean);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2020062101);
-        implprocdefinfo^.is_implemented:=AValue;
+        ImplProcDefInfo^.IsImplemented:=AValue;
       end;
 
 
-    function TProcDef.getwas_anonymous:boolean;
+    function TProcDef.GetWas_Anonymous:Boolean;
       begin
-        result:=Assigned(implprocdefinfo) and implprocdefinfo^.was_anonymous;
+        Result:=Assigned(ImplProcDefInfo) and ImplProcDefInfo^.WasAnonymous;
       end;
 
 
-    procedure TProcDef.setwas_anonymous(avalue:boolean);
+    procedure TProcDef.SetWas_Anonymous(AValue:Boolean);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2022020502);
-        implprocdefinfo^.was_anonymous:=avalue;
+        ImplProcDefInfo^.WasAnonymous:=AValue;
       end;
 
 
-    function TProcDef.gethas_capturer:boolean;
+    function TProcDef.GetHas_Capturer:Boolean;
       begin
-        result:=Assigned(implprocdefinfo) and implprocdefinfo^.has_capturer;
+        Result:=Assigned(ImplProcDefInfo) and ImplProcDefInfo^.HasCapturer;
       end;
 
 
-    procedure TProcDef.sethas_capturer(avalue:boolean);
+    procedure TProcDef.SetHas_Capturer(AValue:Boolean);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2022020503);
-        implprocdefinfo^.has_capturer:=avalue;
+        ImplProcDefInfo^.HasCapturer:=AValue;
       end;
 
 
-    function TProcDef.Getcapturedsyms:TFPList;
+    function TProcDef.GetCapturedSyms:TFPList;
       begin
-        if not Assigned(implprocdefinfo) then
-          result:=nil
+        if not Assigned(ImplProcDefInfo) then
+          Result:=nil
         else
-          result:=implprocdefinfo^.capturedsyms;
+          Result:=ImplProcDefInfo^.CapturedSyms;
       end;
 
 
-    function TProcDef.store_localst: boolean;
+    function TProcDef.Store_LocalST: Boolean;
       begin
-        result:=has_inlininginfo or (df_generic in defoptions);
+        Result:=HasInliningInfo or (df_generic in DefOptions);
       end;
 
 
     function TProcDef.GetResultName: PShortString;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010301);
-        result:=implprocdefinfo^.resultname;
+        Result:=ImplProcDefInfo^.ResultName;
       end;
 
 
     procedure TProcDef.SetResultName(AValue: PShortString);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010302);
-        implprocdefinfo^.resultname:=AValue;
+        ImplProcDefInfo^.ResultName:=AValue;
       end;
 
 
     function TProcDef.GetParentFPInitBlock: TNode;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010303);
-        result:=implprocdefinfo^.parentfpinitblock;
+        Result:=ImplProcDefInfo^.ParentFPInitBlock;
       end;
 
 
     function TProcDef.GetParentFPStruct: TSym;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010304);
-        result:=implprocdefinfo^.parentfpstruct;
+        Result:=ImplProcDefInfo^.ParentFPStruct;
       end;
 
 
     function TProcDef.GetParentFPStructPtrType: TDef;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010305);
-        result:=implprocdefinfo^.parentfpstructptrtype;
+        Result:=ImplProcDefInfo^.ParentFPStructPtrType;
       end;
 
 
     procedure TProcDef.SetParentFPInitBlock(AValue: TNode);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010306);
-        implprocdefinfo^.parentfpinitblock:=AValue;
+        ImplProcDefInfo^.ParentFPInitBlock:=AValue;
       end;
 
 
-    function TProcDef.Getprocendtai: TAI;
+    function TProcDef.GetProcEndTAI: TAI;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010307);
-        result:=implprocdefinfo^.procendtai;
+        Result:=ImplProcDefInfo^.ProcEndTAI;
       end;
 
 
-    function TProcDef.Getprocstarttai: TAI;
+    function TProcDef.GetProcStartTAI: TAI;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010308);
-        result:=implprocdefinfo^.procstarttai;
+        Result:=ImplProcDefInfo^.ProcStartTAI;
       end;
 
 
-    procedure TProcDef.Setprocendtai(AValue: TAI);
+    procedure TProcDef.SetProcEndTAI(AValue: TAI);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010309);
-        implprocdefinfo^.procendtai:=AValue;
+        ImplProcDefInfo^.ProcEndTAI:=AValue;
       end;
 
 
-    function TProcDef.Getskpara: pointer;
+    function TProcDef.GetSKPara: Pointer;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010310);
-        result:=implprocdefinfo^.skpara;
+        Result:=ImplProcDefInfo^.SKPara;
       end;
 
 
-    procedure TProcDef.Setskpara(AValue: pointer);
+    procedure TProcDef.SetSKPara(AValue: Pointer);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010311);
-        implprocdefinfo^.skpara:=AValue;
+        ImplProcDefInfo^.SKPara:=AValue;
       end;
 
 
-    function TProcDef.Getpersonality: TProcDef;
+    function TProcDef.GetPersonality: TProcDef;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2016121704);
-         result:=implprocdefinfo^.personality;
+         Result:=ImplProcDefInfo^.Personality;
       end;
 
 
-    procedure TProcDef.Setpersonality(AValue: TProcDef);
+    procedure TProcDef.SetPersonality(AValue: TProcDef);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2016121705);
-        implprocdefinfo^.personality:=AValue;
+        ImplProcDefInfo^.Personality:=AValue;
       end;
 
 
-    function TProcDef.Getforwarddef: boolean;
+    function TProcDef.GetForwardDef: Boolean;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010312);
-        result:=implprocdefinfo^.forwarddef;
+        Result:=ImplProcDefInfo^.ForwardDef;
       end;
 
 
-    function TProcDef.Gethasforward: boolean;
+    function TProcDef.GetHasForward: Boolean;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010313);
-        result:=implprocdefinfo^.hasforward;
+        Result:=ImplProcDefInfo^.HasForward;
       end;
 
 
-    function TProcDef.Getinterfacedef: boolean;
+    function TProcDef.GetInterfaceDef: Boolean;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010314);
-        result:=implprocdefinfo^.interfacedef;
+        Result:=ImplProcDefInfo^.InterfaceDef;
       end;
 
 
-    procedure TProcDef.Setforwarddef(AValue: boolean);
+    procedure TProcDef.SetForwardDef(AValue: Boolean);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010315);
-        implprocdefinfo^.forwarddef:=AValue;
+        ImplProcDefInfo^.ForwardDef:=AValue;
       end;
 
 
-    procedure TProcDef.Sethasforward(AValue: boolean);
+    procedure TProcDef.SetHasForward(AValue: Boolean);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010316);
-        implprocdefinfo^.hasforward:=AValue;
+        ImplProcDefInfo^.HasForward:=AValue;
       end;
 
 
-    function TProcDef.GetIsEmpty: boolean;
+    function TProcDef.GetIsEmpty: Boolean;
       begin
-        result:=pio_empty in implprocoptions;
+        Result:=pio_empty in ImplProcOptions;
       end;
 
 
-    procedure TProcDef.SetIsEmpty(AValue: boolean);
-      begin
-        if AValue then
-          include(implprocoptions,pio_empty)
-        else
-          exclude(implprocoptions,pio_empty);
-      end;
-
-
-    function TProcDef.GetHasInliningInfo: boolean;
-      begin
-        result:=pio_has_inlininginfo in implprocoptions;
-      end;
-
-
-    procedure TProcDef.SetHasInliningInfo(AValue: boolean);
+    procedure TProcDef.SetIsEmpty(AValue: Boolean);
       begin
         if AValue then
-          include(implprocoptions,pio_has_inlininginfo)
+          Include(ImplProcOptions,pio_empty)
         else
-          exclude(implprocoptions,pio_has_inlininginfo);
+          Exclude(ImplProcOptions,pio_empty);
       end;
 
 
-    procedure TProcDef.Setinterfacedef(AValue: boolean);
+    function TProcDef.GetHasInliningInfo: Boolean;
       begin
-        if not Assigned(implprocdefinfo) then
+        Result:=pio_has_inlininginfo in ImplProcOptions;
+      end;
+
+
+    procedure TProcDef.SetHasInliningInfo(AValue: Boolean);
+      begin
+        if AValue then
+          Include(ImplProcOptions,pio_has_inlininginfo)
+        else
+          Exclude(ImplProcOptions,pio_has_inlininginfo);
+      end;
+
+
+    procedure TProcDef.SetInterfaceDef(AValue: Boolean);
+      begin
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010317);
-        implprocdefinfo^.interfacedef:=AValue;
+        ImplProcDefInfo^.InterfaceDef:=AValue;
       end;
 
 
-    procedure TProcDef.Setprocstarttai(AValue: TAI);
+    procedure TProcDef.SetProcStartTAI(AValue: TAI);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010318);
-        implprocdefinfo^.procstarttai:=AValue;
+        ImplProcDefInfo^.ProcStartTAI:=AValue;
       end;
 
 
     procedure TProcDef.SetParentFPStruct(AValue: TSym);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010319);
-        implprocdefinfo^.parentfpstruct:=AValue;
+        ImplProcDefInfo^.ParentFPStruct:=AValue;
       end;
 
 
     procedure TProcDef.SetParentFPStructPtrType(AValue: TDef);
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2014010320);
-        implprocdefinfo^.parentfpstructptrtype:=AValue;
+        ImplProcDefInfo^.ParentFPStructPtrType:=AValue;
       end;
 
 
-    constructor TProcDef.create(level:byte;doregister:boolean);
+    constructor TProcDef.Create(Level:Byte;DoRegister:Boolean);
       begin
-         inherited create(procdef,level,doregister);
-         implprocdefinfo:=allocmem(sizeof(implprocdefinfo^));
-         localst:=TLocalSymTable.create(self,parast.symtablelevel);
+         inherited Create(ProcDef,Level,DoRegister);
+         ImplProcDefInfo:=AllocMem(SizeOf(ImplProcDefInfo^));
+         LocalST:=TLocalSymTable.Create(Self,ParaST.SymTableLevel);
 {$ifdef symansistr}
-         _mangledname:='';
+         FMangledName:='';
 {$else symansistr}
-         _mangledname:=nil;
+         FMangledName:=nil;
 {$endif symansistr}
 {$ifndef DISABLE_FAST_OVERLOAD_PATCH}
-         seenmarker := nil;
+         SeenMarker := nil;
 {$endif}
-         fileinfo:=CurrentFilePos;
-         extnumber:=$ffff;
-         aliasnames:=TCmdStrList.create;
-         funcretsym:=nil;
-         funcretsymderef.reset;
-         procsymderef.reset;
-         forwarddef:=true;
-         interfacedef:=false;
-         hasforward:=false;
-         struct := nil;
-         structderef.reset;
-         import_dll:=nil;
-         import_name:=nil;
-         import_nr:=0;
-         inlininginfo:=nil;
-         deprecatedmsg:=nil;
-         genericdecltokenbuf:=nil;
+         FileInfo:=CurrentFilePos;
+         ExtNumber:=$ffff;
+         AliasNames:=TCmdStrList.Create;
+         FuncRetSym:=nil;
+         FuncRetSymDeref.Reset;
+         ProcSymDeref.Reset;
+         ForwardDef:=True;
+         InterfaceDef:=False;
+         HasForward:=False;
+         Struct := nil;
+         StructDeref.Reset;
+         ImportDLL:=nil;
+         ImportName:=nil;
+         ImportNr:=0;
+         InliningInfo:=nil;
+         DeprecatedMsg:=nil;
+         GenericDeclTokenBuf:=nil;
          if cs_opt_fastmath in CurrentSettings.OptimizerSwitches then
-           include(implprocoptions, pio_fastmath);
+           Include(ImplProcOptions, pio_fastmath);
       end;
 
 
-    constructor TProcDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TProcDef.PPULoad(PPUFile:TCompilerPPUFile);
       var
-        i,aliasnamescount,sizeleft : LongInt;
-        level : byte;
-        buf : array[0..255] of byte;
+        I,AliasNamesCount,SizeLeft : LongInt;
+        Level : Byte;
+        Buf : array[0..255] of Byte;
       begin
-         inherited ppuload(procdef,ppufile);
+         inherited PPULoad(ProcDef,PPUFile);
 {$ifdef symansistr}
-         if po_has_mangledname in procoptions then
-           _mangledname:=ppufile.GetAnsiString
+         if po_has_mangledname in ProcOptions then
+           FMangledName:=PPUFile.GetAnsiString
          else
-           _mangledname:='';
+           FMangledName:='';
 {$else symansistr}
-         if po_has_mangledname in procoptions then
-          _mangledname:=ppufile.GetPShortString
+         if po_has_mangledname in ProcOptions then
+          FMangledName:=PPUFile.GetPShortString
          else
-          _mangledname:=nil;
+          FMangledName:=nil;
 {$endif symansistr}
-         extnumber:=ppufile.GetWord;
-         level:=ppufile.GetByte;
-         ppufile.getderef(structderef);
-         ppufile.getderef(procsymderef);
-         ppufile.getposinfo(fileinfo);
-         visibility:=TVisibility(ppufile.GetByte);
-         ppufile.GetSet(TPPUSet2(symoptions));
-         if sp_has_deprecated_msg in symoptions then
-           deprecatedmsg:=ppufile.GetPShortString
+         ExtNumber:=PPUFile.GetWord;
+         Level:=PPUFile.GetByte;
+         PPUFile.GetDeref(StructDeref);
+         PPUFile.GetDeref(ProcSymDeref);
+         PPUFile.GetPosInfo(FileInfo);
+         Visibility:=TVisibility(PPUFile.GetByte);
+         PPUFile.GetSet(TPPUSet2(SymOptions));
+         if sp_has_deprecated_msg in SymOptions then
+           DeprecatedMsg:=PPUFile.GetPShortString
          else
-           deprecatedmsg:=nil;
+           DeprecatedMsg:=nil;
          { import stuff }
-         if po_has_importdll in procoptions then
-           import_dll:=ppufile.GetPShortString
+         if po_has_importdll in ProcOptions then
+           ImportDLL:=PPUFile.GetPShortString
          else
-           import_dll:=nil;
-         if po_has_importname in procoptions then
-           import_name:=ppufile.GetPShortString
+           ImportDLL:=nil;
+         if po_has_importname in ProcOptions then
+           ImportName:=PPUFile.GetPShortString
          else
-           import_name:=nil;
-         import_nr:=ppufile.GetWord;
-         if (po_msgint in procoptions) then
-           messageinf.i:=ppufile.GetLongInt;
-         if (po_msgstr in procoptions) then
-           messageinf.str:=ppufile.GetPShortString;
-         if (po_dispid in procoptions) then
-           dispid:=ppufile.GetLongInt;
+           ImportName:=nil;
+         ImportNr:=PPUFile.GetWord;
+         if (po_msgint in ProcOptions) then
+           MessageInf.I:=PPUFile.GetLongInt;
+         if (po_msgstr in ProcOptions) then
+           MessageInf.Str:=PPUFile.GetPShortString;
+         if (po_dispid in ProcOptions) then
+           DispID:=PPUFile.GetLongInt;
          { inline stuff }
-         ppufile.GetSet(TPPUSet1(implprocoptions));
-         if has_inlininginfo then
+         PPUFile.GetSet(TPPUSet1(ImplProcOptions));
+         if HasInliningInfo then
            begin
-             ppufile.getderef(funcretsymderef);
-             new(inlininginfo);
-             ppufile.GetSet(TPPUSet4(inlininginfo^.flags));
+             PPUFile.GetDeref(FuncRetSymDeref);
+             New(InliningInfo);
+             PPUFile.GetSet(TPPUSet4(InliningInfo^.Flags));
            end
          else
            begin
-             inlininginfo:=nil;
-             funcretsym:=nil;
+             InliningInfo:=nil;
+             FuncRetSym:=nil;
            end;
 
-         aliasnames:=TCmdStrList.create;
+         AliasNames:=TCmdStrList.Create;
          { count alias names }
-         aliasnamescount:=ppufile.GetByte;
-         for i:=1 to aliasnamescount do
-           aliasnames.insert(ppufile.GetString);
+         AliasNamesCount:=PPUFile.GetByte;
+         for I:=1 to AliasNamesCount do
+           AliasNames.Insert(PPUFile.GetString);
 
          { load the token stream containing the declaration }
-         sizeleft:=ppufile.GetLongInt;
-         if sizeleft>0 then
+         SizeLeft:=PPUFile.GetLongInt;
+         if SizeLeft>0 then
            begin
-             init_genericdecl;
-             while sizeleft>0 do
+             Init_GenericDecl;
+             while SizeLeft>0 do
                begin
-                 if sizeleft>sizeof(buf) then
-                   i:=sizeof(buf)
+                 if SizeLeft>SizeOf(Buf) then
+                   I:=SizeOf(Buf)
                  else
-                   i:=sizeleft;
-                 ppufile.GetData(buf,i);
-                 genericdecltokenbuf.write(buf,i);
-                 dec(sizeleft,i);
+                   I:=SizeLeft;
+                 PPUFile.GetData(Buf,I);
+                 GenericDeclTokenBuf.write(Buf,I);
+                 Dec(SizeLeft,I);
                end;
            end;
 
-         PPULoadPlatform(ppufile);
+         PPULoadPlatform(PPUFile);
 
          { load para symtable }
-         parast:=TParaSymTable.create(self,level);
-         TParaSymTable(parast).ppuload(ppufile);
+         ParaST:=TParaSymTable.Create(Self,Level);
+         TParaSymTable(ParaST).PPULoad(PPUFile);
          { load local symtable }
-         if store_localst then
+         if Store_LocalST then
           begin
-            localst:=TLocalSymTable.create(self,level);
-            TLocalSymTable(localst).ppuload(ppufile);
+            LocalST:=TLocalSymTable.Create(Self,Level);
+            TLocalSymTable(LocalST).PPULoad(PPUFile);
           end
          else
-          localst:=nil;
+          LocalST:=nil;
          { inline stuff }
-         if has_inlininginfo then
-           inlininginfo^.code:=ppuloadnodetree(ppufile);
+         if HasInliningInfo then
+           InliningInfo^.Code:=PPULoadNodeTree(PPUFile);
          { default values for no persistent data }
          if (cs_link_deffile in CurrentSettings.GlobalSwitches) and
-            (tf_need_export in TargetInfo.flags) and
-            (po_exports in procoptions) then
-           deffile.AddExport(mangledname);
+            (tf_need_export in TargetInfo.Flags) and
+            (po_exports in ProcOptions) then
+           DefFile.AddExport(MangledName);
          { Disable po_has_inlining until the derefimpl is done }
-         has_inlininginfo:=false;
+         HasInliningInfo:=False;
       end;
 
 
     destructor TProcDef.Destroy;
       begin
-         aliasnames.free;
-         aliasnames:=nil;
-         if Assigned(localst) and
-           (localst.symtabletype<>staticsymtable) then
+         AliasNames.Free;
+         AliasNames:=nil;
+         if Assigned(LocalST) and
+           (LocalST.SymTableType<>StaticSymTable) then
           begin
 {$ifdef MEMDEBUG}
-            memproclocalst.start;
+            MemProcLocalST.Start;
 {$endif MEMDEBUG}
-            localst.free;
-            localst:=nil;
+            LocalST.Free;
+            LocalST:=nil;
 {$ifdef MEMDEBUG}
-            memproclocalst.start;
+            MemProcLocalST.Start;
 {$endif MEMDEBUG}
           end;
-         if Assigned(inlininginfo) then
+         if Assigned(InliningInfo) then
           begin
 {$ifdef MEMDEBUG}
-            memprocnodetree.start;
+            MemProcNodeTree.Start;
 {$endif MEMDEBUG}
-            FreeAndNil(TNode(inlininginfo^.code));
+            FreeAndNil(TNode(InliningInfo^.Code));
 {$ifdef MEMDEBUG}
-            memprocnodetree.start;
+            MemProcNodeTree.Start;
 {$endif MEMDEBUG}
-            dispose(inlininginfo);
-            inlininginfo:=nil;
+            Dispose(InliningInfo);
+            InliningInfo:=nil;
           end;
-         freeimplprocdefinfo;
-         genericdecltokenbuf.free;
-         genericdecltokenbuf:=nil;
-         StringDispose(import_dll);
-         StringDispose(import_name);
-         StringDispose(deprecatedmsg);
-         if (po_msgstr in procoptions) then
-           StringDispose(messageinf.str);
+         FreeImplProcDefInfo;
+         GenericDeclTokenBuf.Free;
+         GenericDeclTokenBuf:=nil;
+         StringDispose(ImportDLL);
+         StringDispose(ImportName);
+         StringDispose(DeprecatedMsg);
+         if (po_msgstr in ProcOptions) then
+           StringDispose(MessageInf.Str);
 {$ifndef symansistr}
-         if Assigned(_mangledname) then
+         if Assigned(FMangledName) then
           begin
 {$ifdef MEMDEBUG}
-            memmanglednames.start;
+            MemMangledNames.Start;
 {$endif MEMDEBUG}
-            StringDispose(_mangledname);
+            StringDispose(FMangledName);
 {$ifdef MEMDEBUG}
-            memmanglednames.stop;
+            MemMangledNames.Stop;
 {$endif MEMDEBUG}
           end;
 {$endif symansistr}
@@ -6664,440 +6664,440 @@ implementation
       end;
 
 
-    procedure TProcDef.freeimplprocdefinfo;
+    procedure TProcDef.FreeImplProcDefInfo;
       begin
-        if Assigned(implprocdefinfo) then
+        if Assigned(ImplProcDefInfo) then
           begin
-            StringDispose(implprocdefinfo^.resultname);
-            TFPList.FreeAndNilDisposing(implprocdefinfo^.capturedsyms,typeinfo(TCapturedSymInfo));
-            FreeMem(implprocdefinfo);
-            implprocdefinfo:=nil;
+            StringDispose(ImplProcDefInfo^.ResultName);
+            TFPList.FreeAndNilDisposing(ImplProcDefInfo^.CapturedSyms,TypeInfo(TCapturedSymInfo));
+            FreeMem(ImplProcDefInfo);
+            ImplProcDefInfo:=nil;
           end;
       end;
 
 
-    procedure TProcDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TProcDef.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldcrc : boolean;
-        aliasnamescount,i,sizeleft : LongInt;
-        item : TCmdStrListItem;
-        buf : array[0..255] of byte;
+        OldCRC : Boolean;
+        AliasNamesCount,I,SizeLeft : LongInt;
+        Item : TCmdStrListItem;
+        Buf : array[0..255] of Byte;
       begin
          { released procdef? }
-         if not Assigned(parast) then
-           exit;
+         if not Assigned(ParaST) then
+           Exit;
 
-         inherited ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
 {$ifdef symansistr}
-         if po_has_mangledname in procoptions then
-           ppufile.PutAnsiString(_mangledname);
+         if po_has_mangledname in ProcOptions then
+           PPUFile.PutAnsiString(FMangledName);
 {$else symansistr}
-         if po_has_mangledname in procoptions then
-          ppufile.PutString(_mangledname^);
+         if po_has_mangledname in ProcOptions then
+          PPUFile.PutString(FMangledName^);
 {$endif symansistr}
 
-         ppufile.PutWord(extnumber);
-         ppufile.PutByte(parast.symtablelevel);
-         ppufile.putderef(structderef);
-         ppufile.putderef(procsymderef);
-         ppufile.putposinfo(fileinfo);
-         ppufile.PutByte(byte(visibility));
-         ppufile.PutSet(TPPUSet2(symoptions));
-         if sp_has_deprecated_msg in symoptions then
-           ppufile.PutString(deprecatedmsg^);
+         PPUFile.PutWord(ExtNumber);
+         PPUFile.PutByte(ParaST.SymTableLevel);
+         PPUFile.PutDeref(StructDeref);
+         PPUFile.PutDeref(ProcSymDeref);
+         PPUFile.PutPosInfo(FileInfo);
+         PPUFile.PutByte(Byte(Visibility));
+         PPUFile.PutSet(TPPUSet2(SymOptions));
+         if sp_has_deprecated_msg in SymOptions then
+           PPUFile.PutString(DeprecatedMsg^);
          { import }
-         if po_has_importdll in procoptions then
-           ppufile.PutString(import_dll^);
-         if po_has_importname in procoptions then
-           ppufile.PutString(import_name^);
-         ppufile.PutWord(import_nr);
-         if (po_msgint in procoptions) then
-           ppufile.PutLongInt(messageinf.i);
-         if (po_msgstr in procoptions) then
-           ppufile.PutString(messageinf.str^);
-         if (po_dispid in procoptions) then
-           ppufile.PutLongInt(dispid);
+         if po_has_importdll in ProcOptions then
+           PPUFile.PutString(ImportDLL^);
+         if po_has_importname in ProcOptions then
+           PPUFile.PutString(ImportName^);
+         PPUFile.PutWord(ImportNr);
+         if (po_msgint in ProcOptions) then
+           PPUFile.PutLongInt(MessageInf.I);
+         if (po_msgstr in ProcOptions) then
+           PPUFile.PutString(MessageInf.Str^);
+         if (po_dispid in ProcOptions) then
+           PPUFile.PutLongInt(DispID);
          { inline stuff }
-         oldcrc:=ppufile.DoCRC;
-         ppufile.DoCRC:=false;
-         ppufile.PutSet(TPPUSet1(implprocoptions));
-         if has_inlininginfo then
+         OldCRC:=PPUFile.DoCRC;
+         PPUFile.DoCRC:=False;
+         PPUFile.PutSet(TPPUSet1(ImplProcOptions));
+         if HasInliningInfo then
            begin
-             ppufile.putderef(funcretsymderef);
-             ppufile.PutSet(TPPUSet4(inlininginfo^.flags));
+             PPUFile.PutDeref(FuncRetSymDeref);
+             PPUFile.PutSet(TPPUSet4(InliningInfo^.Flags));
            end;
 
          { count alias names }
-         aliasnamescount:=0;
-         item:=TCmdStrListItem(aliasnames.first);
-         while Assigned(item) do
+         AliasNamesCount:=0;
+         Item:=TCmdStrListItem(AliasNames.First);
+         while Assigned(Item) do
            begin
-             inc(aliasnamescount);
-             item:=TCmdStrListItem(item.next);
+             Inc(AliasNamesCount);
+             Item:=TCmdStrListItem(Item.Next);
            end;
-         if aliasnamescount>255 then
+         if AliasNamesCount>255 then
            InternalError(200711021);
-         ppufile.PutByte(aliasnamescount);
-         item:=TCmdStrListItem(aliasnames.first);
-         while Assigned(item) do
+         PPUFile.PutByte(AliasNamesCount);
+         Item:=TCmdStrListItem(AliasNames.First);
+         while Assigned(Item) do
           begin
-            ppufile.PutString(item.str);
-            item:=TCmdStrListItem(item.next);
+            PPUFile.PutString(Item.Str);
+            Item:=TCmdStrListItem(Item.Next);
           end;
 
-         ppufile.DoCRC:=oldcrc;
+         PPUFile.DoCRC:=OldCRC;
 
          { generic tokens for the declaration }
-         if Assigned(genericdecltokenbuf) and (genericdecltokenbuf.size>0) then
+         if Assigned(GenericDeclTokenBuf) and (GenericDeclTokenBuf.Size>0) then
            begin
-             sizeleft:=genericdecltokenbuf.size;
-             genericdecltokenbuf.seek(0);
-             ppufile.PutLongInt(sizeleft);
-             while sizeleft>0 do
+             SizeLeft:=GenericDeclTokenBuf.Size;
+             GenericDeclTokenBuf.Seek(0);
+             PPUFile.PutLongInt(SizeLeft);
+             while SizeLeft>0 do
                begin
-                 if sizeleft>sizeof(buf) then
-                   i:=sizeof(buf)
+                 if SizeLeft>SizeOf(Buf) then
+                   I:=SizeOf(Buf)
                  else
-                   i:=sizeleft;
-                 genericdecltokenbuf.read(buf,i);
-                 ppufile.PutData(buf,i);
-                 dec(sizeleft,i);
+                   I:=SizeLeft;
+                 GenericDeclTokenBuf.read(Buf,I);
+                 PPUFile.PutData(Buf,I);
+                 Dec(SizeLeft,I);
                end;
            end
          else
-           ppufile.PutLongInt(0);
+           PPUFile.PutLongInt(0);
 
          { write this entry }
-         WriteEntry(ppufile,IBProcDef);
+         WriteEntry(PPUFile,IBProcDef);
 
          { Save the para symtable, this is taken from the interface }
-         TParaSymTable(parast).ppuwrite(ppufile);
+         TParaSymTable(ParaST).PPUWrite(PPUFile);
 
          { save localsymtable for inline procedures or when local
            browser info is requested, this has no influence on the crc }
-         if store_localst and not ppufile.CRCOnly then
+         if Store_LocalST and not PPUFile.CRCOnly then
           begin
-            oldcrc:=ppufile.DoCRC;
-            ppufile.DoCRC:=false;
-            TLocalSymTable(localst).ppuwrite(ppufile);
-            ppufile.DoCRC:=oldcrc;
+            OldCRC:=PPUFile.DoCRC;
+            PPUFile.DoCRC:=False;
+            TLocalSymTable(LocalST).PPUWrite(PPUFile);
+            PPUFile.DoCRC:=OldCRC;
           end;
 
          { node tree for inlining }
 
-         if has_inlininginfo then
-           ppuwritenodetree(ppufile,inlininginfo^.code);
+         if HasInliningInfo then
+           PPUWriteNodeTree(PPUFile,InliningInfo^.Code);
       end;
 
 
-    function TProcDef.fullprocname(showhidden:boolean):AnsiString;
+    function TProcDef.FullProcName(ShowHidden:Boolean):AnsiString;
       var
-        pno: TProcNameOptions;
+        PNo: TProcNameOptions;
       begin
-        pno:=[];
-        if showhidden then
-          include(pno,pno_showhidden);
-        result:=customprocname(pno);
+        PNo:=[];
+        if ShowHidden then
+          Include(PNo,pno_showhidden);
+        Result:=CustomProcName(PNo);
       end;
 
 
-    function TProcDef.customprocname(pno: TProcNameOptions):AnsiString;
+    function TProcDef.CustomProcName(PNo: TProcNameOptions):AnsiString;
       var
-        s, hs, rn : AnsiString;
-        t : TToken;
-	module : TModule;
-        syssym : TSysSym;
+        S, HS, RN : AnsiString;
+        T : TToken;
+	Module : TModule;
+        SysSym : TSysSym;
       begin
 {$ifdef EXTDEBUG}
-        include(pno,pno_showhidden);
+        Include(PNo,pno_showhidden);
 {$endif EXTDEBUG}
-        s:='';
-        rn:='';
-        if proctypeoption=potype_operator then
+        S:='';
+        RN:='';
+        if ProcTypeOption=potype_operator then
           begin
-            for t:=NOTOKEN to last_overloaded do
-              if procsym.realname='$'+overloaded_names[t] then
+            for T:=NoToken to last_overloaded do
+              if ProcSym.RealName='$'+Overloaded_Names[T] then
                 begin
-                  s:='operator ';
-                  if (pno_ownername in pno) and
-                     Assigned(struct) then
-                    s:=s+struct.RttiName+'.';
-                  s:=s+arraytokeninfo[t].str;
-                  if not (pno_noparams in pno) then
-                    s:=s+typename_paras(pno);
-                  break;
+                  S:='operator ';
+                  if (pno_ownername in PNo) and
+                     Assigned(Struct) then
+                    S:=S+Struct.RTTIName+'.';
+                  S:=S+ArrayTokenInfo[T].Str;
+                  if not (pno_noparams in PNo) then
+                    S:=S+TypeName_Paras(PNo);
+                  Break;
                 end;
           end
         else
           begin
-            if (po_classmethod in procoptions) and
-               not(pno_noclassmarker in pno) then
-              s:='class ';
-            case proctypeoption of
+            if (po_classmethod in ProcOptions) and
+               not(pno_noclassmarker in PNo) then
+              S:='class ';
+            case ProcTypeOption of
               potype_constructor,
               potype_class_constructor:
-                s:=s+'constructor ';
+                S:=S+'constructor ';
               potype_class_destructor,
               potype_destructor:
-                s:=s+'destructor ';
+                S:=S+'destructor ';
               else
-                if (pno_proctypeoption in pno) and not (po_anonymous in procoptions) then
+                if (pno_proctypeoption in PNo) and not (po_anonymous in ProcOptions) then
                   begin
-                   if Assigned(returndef) and
-                     not(is_void(returndef)) then
-                     s:=s+'function '
+                   if Assigned(ReturnDef) and
+                     not(is_void(ReturnDef)) then
+                     S:=S+'function '
                    else
-                     s:=s+'procedure ';
+                     S:=S+'procedure ';
                   end;
             end;
-            if (pno_ownername in pno) and
-               (owner.symtabletype in [recordsymtable,objectsymtable]) then
-              s:=s+TAbstractRecordDef(owner.defowner).RttiName+'.';
-            if (po_compilerproc in procoptions) and (extnumber<>$ffff) then
+            if (pno_ownername in PNo) and
+               (Owner.SymTableType in [RecordSymTable,ObjectSymTable]) then
+              S:=S+TAbstractRecordDef(Owner.DefOwner).RTTIName+'.';
+            if (po_compilerproc in ProcOptions) and (ExtNumber<>$ffff) then
               begin
-                syssym:=TSysSym.find_by_number(extnumber);
-                if not Assigned(syssym) then
+                SysSym:=TSysSym.Find_By_Number(ExtNumber);
+                if not Assigned(SysSym) then
                   InternalError(2016060305);
-                rn:=syssym.realname;
+                RN:=SysSym.RealName;
               end
-            else if po_anonymous in procoptions then
+            else if po_anonymous in ProcOptions then
               begin
-                s:=s+'anonymous ';
-                if Assigned(returndef) and
-                  not(is_void(returndef)) then
-                  s:=s+'function'
+                S:=S+'anonymous ';
+                if Assigned(ReturnDef) and
+                  not(is_void(ReturnDef)) then
+                  S:=S+'function'
                 else
-                  s:=s+'procedure';
+                  S:=S+'procedure';
               end
-            else if pno_prettynames in pno then
-              rn:=procsym.prettyname
+            else if pno_prettynames in PNo then
+              RN:=ProcSym.PrettyName
             else
-              rn:=procsym.RealName;
-            if (pno_noleadingdollar in pno) and
-               (rn[1]='$') then
-              delete(rn,1,1);
-            s:=s+rn;
-            if not (pno_noparams in pno) then
-              s:=s+typename_paras(pno);
+              RN:=ProcSym.RealName;
+            if (pno_noleadingdollar in PNo) and
+               (RN[1]='$') then
+              Delete(RN,1,1);
+            S:=S+RN;
+            if not (pno_noparams in PNo) then
+              S:=S+TypeName_Paras(PNo);
           end;
-        if not(proctypeoption in [potype_constructor,potype_destructor,
+        if not(ProcTypeOption in [potype_constructor,potype_destructor,
              potype_class_constructor,potype_class_destructor]) and
-           Assigned(returndef) and
-           not(is_void(returndef)) then
+           Assigned(ReturnDef) and
+           not(is_void(ReturnDef)) then
           begin
-            if Assigned(returndef.typesym) then
+            if Assigned(ReturnDef.TypeSym) then
               begin
-                module:=find_module_from_symtable(returndef.typesym.owner);
-		if module <> CurrentModule then
-                  s:=s+':'+module.RealModuleName^+'.'
+                Module:=Find_Module_From_SymTable(ReturnDef.TypeSym.Owner);
+		if Module <> CurrentModule then
+                  S:=S+':'+Module.RealModuleName^+'.'
                 else
-	          s:=s+':';
-                if pno_prettynames in pno then
-                  hs:=returndef.typesym.prettyname
+	          S:=S+':';
+                if pno_prettynames in PNo then
+                  HS:=ReturnDef.TypeSym.PrettyName
                 else
-                  hs:=returndef.typesym.realname;
-                if hs[1]<>'$' then
-                  s:=s+returndef.OwnerHierarchyName+hs
+                  HS:=ReturnDef.TypeSym.RealName;
+                if HS[1]<>'$' then
+                  S:=S+ReturnDef.OwnerHierarchyName+HS
                 else
-                  s:=s+returndef.GetTypeName;
+                  S:=S+ReturnDef.GetTypeName;
               end
             else
-              s:=s+':'+returndef.GetTypeName;
+              S:=S+':'+ReturnDef.GetTypeName;
 	  end;
-        if not (po_anonymous in procoptions) then
-          if Assigned(owner) and (owner.symtabletype=localsymtable) then
-            s:=s+' is nested'
-          else if po_is_block in procoptions then
-            s:=s+' is block';
-        s:=s+';';
+        if not (po_anonymous in ProcOptions) then
+          if Assigned(Owner) and (Owner.SymTableType=LocalSymTable) then
+            S:=S+' is nested'
+          else if po_is_block in ProcOptions then
+            S:=S+' is block';
+        S:=S+';';
         { forced calling convention? }
-        if (po_hascallingconvention in procoptions) then
-          s:=s+' '+ProcCallOptionStr[proccalloption]+';';
-        if (po_staticmethod in procoptions) and
-           not (proctypeoption in [potype_class_constructor,potype_class_destructor]) then
-          s:=s+' Static;';
-        if pno_mangledname in pno then
-          s:=s+' -- mangled name: '+mangledname;
-        customprocname:=s;
+        if (po_hascallingconvention in ProcOptions) then
+          S:=S+' '+ProcCallOptionStr[ProcCallOption]+';';
+        if (po_staticmethod in ProcOptions) and
+           not (ProcTypeOption in [potype_class_constructor,potype_class_destructor]) then
+          S:=S+' Static;';
+        if pno_mangledname in PNo then
+          S:=S+' -- mangled name: '+MangledName;
+        CustomProcName:=S;
       end;
 
 
-    function TProcDef.is_methodpointer:boolean;
+    function TProcDef.Is_MethodPointer:Boolean;
       begin
         { don't check assigned(_class), that's also the case for nested
           procedures inside methods }
-        result:=(owner.symtabletype in [recordsymtable,ObjectSymtable]) and not no_self_node;
+        Result:=(Owner.SymTableType in [RecordSymTable,ObjectSymTable]) and not No_Self_Node;
       end;
 
 
-    function TProcDef.is_addressonly:boolean;
+    function TProcDef.Is_AddressOnly:Boolean;
       begin
-        result:=Assigned(owner) and
-                not is_methodpointer and
+        Result:=Assigned(Owner) and
+                not Is_MethodPointer and
                 (not(m_nested_procvars in CurrentSettings.ModeSwitches) or
-                 not is_nested_pd(self)) and
+                 not is_nested_pd(Self)) and
                  (
-                   not (po_anonymous in procoptions) or
-                   not Assigned(capturedsyms) or
-                   (capturedsyms.count=0)
+                   not (po_anonymous in ProcOptions) or
+                   not Assigned(CapturedSyms) or
+                   (CapturedSyms.Count=0)
                  );
       end;
 
 
-    procedure TProcDef.make_external;
+    procedure TProcDef.Make_External;
       begin
-        include(procoptions,po_external);
-        forwarddef:=false;
+        Include(ProcOptions,po_external);
+        ForwardDef:=False;
       end;
 
 
-    procedure TProcDef.init_genericdecl;
+    procedure TProcDef.Init_GenericDecl;
       begin
-        if Assigned(genericdecltokenbuf) then
+        if Assigned(GenericDeclTokenBuf) then
           InternalError(2015061901);
-        genericdecltokenbuf:=TDynamicArray.create(256);
+        GenericDeclTokenBuf:=TDynamicArray.Create(256);
       end;
 
 
-    procedure TProcDef.reset_after_conv;
+    procedure TProcDef.Reset_After_Conv;
       begin
-        _parentfpsym:=nil;
+        FParentFPSym:=nil;
       end;
 
 
-    function TProcDef.get_funcretsym_info(out ressym: TSym; out resdef: TDef): boolean;
+    function TProcDef.Get_FuncRetSym_Info(out ResSym: TSym; out ResDef: TDef): Boolean;
       begin
-        result:=false;
-        if proctypeoption=potype_constructor then
+        Result:=False;
+        if ProcTypeOption=potype_constructor then
           begin
-            result:=true;
-            ressym:=TSym(parast.Find('self'));
-            resdef:=TAbstractNormalVarSym(ressym).vardef;
+            Result:=True;
+            ResSym:=TSym(ParaST.Find('self'));
+            ResDef:=TAbstractNormalVarSym(ResSym).VarDef;
             { and TP-style constructors return a pointer to self }
-            if is_object(resdef) then
-              resdef:=CPointerDef.getreusable(resdef);
+            if Is_Object(ResDef) then
+              ResDef:=CPointerDef.GetReusable(ResDef);
           end
-        else if (proccalloption=pocall_safecall) and
-           (tf_safecall_exceptions in TargetInfo.flags) then
+        else if (ProcCallOption=pocall_safecall) and
+           (tf_safecall_exceptions in TargetInfo.Flags) then
           begin
-            result:=true;
-            ressym:=TSym(localst.Find('safecallresult'));
-            resdef:=TAbstractNormalVarSym(ressym).vardef;
+            Result:=True;
+            ResSym:=TSym(LocalST.Find('safecallresult'));
+            ResDef:=TAbstractNormalVarSym(ResSym).VarDef;
           end
-        else if not is_void(returndef) then
+        else if not is_void(ReturnDef) then
           begin
-            result:=true;
-            ressym:=funcretsym;
-            resdef:=TAbstractNormalVarSym(ressym).vardef;
+            Result:=True;
+            ResSym:=FuncRetSym;
+            ResDef:=TAbstractNormalVarSym(ResSym).VarDef;
           end;
       end;
 
 
-    function TProcDef.get_safecall_funcretsym_info(out ressym: TSym; out resdef: TDef): boolean;
+    function TProcDef.Get_SafeCall_FuncRetSym_Info(out ResSym: TSym; out ResDef: TDef): Boolean;
       begin
-        result:=false;
-        if (proctypeoption<>potype_constructor) and
-           (proccalloption=pocall_safecall) and
-           (tf_safecall_exceptions in TargetInfo.flags) then
+        Result:=False;
+        if (ProcTypeOption<>potype_constructor) and
+           (ProcCallOption=pocall_safecall) and
+           (tf_safecall_exceptions in TargetInfo.Flags) then
           begin
-            result:=true;
-            ressym:=TSym(localst.Find('safecallresult'));
-            resdef:=TAbstractNormalVarSym(ressym).vardef;
+            Result:=True;
+            ResSym:=TSym(LocalST.Find('safecallresult'));
+            ResDef:=TAbstractNormalVarSym(ResSym).VarDef;
           end
       end;
 
 
-    procedure TProcDef.add_captured_sym(sym:TSym;def:TDef;const filepos:TFilePosInfo);
+    procedure TProcDef.Add_Captured_Sym(Sym:TSym;Def:TDef;const FilePos:TFilePosInfo);
       var
-        i : LongInt;
-        capturedsym : PCapturedSymInfo;
+        I : LongInt;
+        CapturedSym : PCapturedSymInfo;
       begin
-        if not Assigned(implprocdefinfo) then
+        if not Assigned(ImplProcDefInfo) then
           InternalError(2021052601);
-        if not Assigned(implprocdefinfo^.capturedsyms) then
-          implprocdefinfo^.capturedsyms:=TFPList.create;
-        for i:=0 to implprocdefinfo^.capturedsyms.count-1 do
+        if not Assigned(ImplProcDefInfo^.CapturedSyms) then
+          ImplProcDefInfo^.CapturedSyms:=TFPList.Create;
+        for I:=0 to ImplProcDefInfo^.CapturedSyms.Count-1 do
           begin
-            capturedsym:=PCapturedSymInfo(implprocdefinfo^.capturedsyms[i]);
-            if (capturedsym^.sym=sym) and (capturedsym^.def=def) then
-              exit;
+            CapturedSym:=PCapturedSymInfo(ImplProcDefInfo^.CapturedSyms[I]);
+            if (CapturedSym^.Sym=Sym) and (CapturedSym^.Def=Def) then
+              Exit;
           end;
-        new(capturedsym);
-        capturedsym^.sym:=sym;
-        capturedsym^.def:=def;
-        capturedsym^.fileinfo:=filepos;
-        implprocdefinfo^.capturedsyms.add(capturedsym);
+        New(CapturedSym);
+        CapturedSym^.Sym:=Sym;
+        CapturedSym^.Def:=Def;
+        CapturedSym^.FileInfo:=FilePos;
+        ImplProcDefInfo^.CapturedSyms.Add(CapturedSym);
       end;
 
 
-    function TProcDef.has_alias_name(const s: TSymStr): boolean;
+    function TProcDef.Has_Alias_Name(const S: TSymStr): Boolean;
       var
-        item : TCmdStrListItem;
+        Item : TCmdStrListItem;
       begin
-        result:=true;
-        if mangledname=s then
-          exit;
-        item:=TCmdStrListItem(aliasnames.first);
-        while Assigned(item) do
+        Result:=True;
+        if MangledName=S then
+          Exit;
+        Item:=TCmdStrListItem(AliasNames.First);
+        while Assigned(Item) do
           begin
-            if item.str=s then
-              exit;
-            item:=TCmdStrListItem(item.next);
+            if Item.Str=S then
+              Exit;
+            Item:=TCmdStrListItem(Item.Next);
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    function TProcDef.GetSymtable(t:TGetSymTable):TSymTable;
+    function TProcDef.GetSymTable(T:TGetSymTable):TSymTable;
       begin
-        case t of
+        case T of
           gs_local :
-            GetSymtable:=localst;
+            GetSymTable:=LocalST;
           gs_para :
-            GetSymtable:=parast;
+            GetSymTable:=ParaST;
           else
-            GetSymtable:=nil;
+            GetSymTable:=nil;
         end;
       end;
 
 
-    function TProcDef.getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
+    function TProcDef.GetCopyAs(NewTyp: TDefTyp; CopyTyp: TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef;
       var
-        j : LongInt;
+        J : LongInt;
       begin
-        result:=inherited;
-        if newtyp=procvardef then
+        Result:=inherited;
+        if NewTyp=ProcVarDef then
           begin
             { create new paralist }
-            TProcVarDef(result).calcparas;
-            exit;
+            TProcVarDef(Result).CalcParas;
+            Exit;
           end;
         { don't copy mangled name, can be different }
-        TProcDef(result).messageinf:=messageinf;
-        TProcDef(result).dispid:=dispid;
-        if po_msgstr in procoptions then
-          TProcDef(result).messageinf.str:=StringDup(messageinf.str^);
-        TProcDef(result).symoptions:=symoptions;
-        if Assigned(deprecatedmsg) then
-          TProcDef(result).deprecatedmsg:=StringDup(deprecatedmsg^);
+        TProcDef(Result).MessageInf:=MessageInf;
+        TProcDef(Result).DispID:=DispID;
+        if po_msgstr in ProcOptions then
+          TProcDef(Result).MessageInf.Str:=StringDup(MessageInf.Str^);
+        TProcDef(Result).SymOptions:=SymOptions;
+        if Assigned(DeprecatedMsg) then
+          TProcDef(Result).DeprecatedMsg:=StringDup(DeprecatedMsg^);
         { will have to be associated with appropriate procsym }
-        TProcDef(result).procsym:=nil;
+        TProcDef(Result).ProcSym:=nil;
         { don't create aliases for bare copies, nor copy the funcretsym as
           the function result parameter will be inserted again if necessary
           (e.g. if the calling convention is changed) }
-        if not(copytyp in [pc_bareproc,pc_normal_no_hidden]) then
+        if not(CopyTyp in [pc_bareproc,pc_normal_no_hidden]) then
           begin
-            TProcDef(result).aliasnames.ConcatListCopy(aliasnames);
-            if Assigned(funcretsym) then
+            TProcDef(Result).AliasNames.ConcatListCopy(AliasNames);
+            if Assigned(FuncRetSym) then
               begin
-                if funcretsym.owner=parast then
+                if FuncRetSym.Owner=ParaST then
                   begin
-                    j:=parast.symlist.indexof(funcretsym);
-                    if j<0 then
+                    J:=ParaST.SymList.IndexOf(FuncRetSym);
+                    if J<0 then
                       InternalError(2011040606);
-                    TProcDef(result).funcretsym:=TSym(TProcDef(result).parast.symlist[j]);
+                    TProcDef(Result).FuncRetSym:=TSym(TProcDef(Result).ParaST.SymList[J]);
                   end
-                else if funcretsym.owner=localst then
+                else if FuncRetSym.Owner=LocalST then
                   begin
                     { nothing to do, will be inserted for the new procdef while
                       parsing its body (by pdecsub.insert_funcret_local) }
@@ -7107,96 +7107,96 @@ implementation
               end;
           end;
         { will have to be associated with a new struct }
-        TProcDef(result).struct:=nil;
-        if Assigned(implprocdefinfo) then
+        TProcDef(Result).Struct:=nil;
+        if Assigned(ImplProcDefInfo) then
           begin
-            if Assigned(resultname) then
-              TProcDef(result).resultname:=StringDup(resultname^);
-            TProcDef(result).synthetickind:=synthetickind;
+            if Assigned(ResultName) then
+              TProcDef(Result).ResultName:=StringDup(ResultName^);
+            TProcDef(Result).SyntheticKind:=SyntheticKind;
           end;
-        if Assigned(import_dll) then
-          TProcDef(result).import_dll:=StringDup(import_dll^);
-        if Assigned(import_name) then
-          TProcDef(result).import_name:=StringDup(import_name^);
-        TProcDef(result).import_nr:=import_nr;
-        TProcDef(result).extnumber:=$ffff;
-        TProcDef(result).visibility:=visibility;
+        if Assigned(ImportDLL) then
+          TProcDef(Result).ImportDLL:=StringDup(ImportDLL^);
+        if Assigned(ImportName) then
+          TProcDef(Result).ImportName:=StringDup(ImportName^);
+        TProcDef(Result).ImportNr:=ImportNr;
+        TProcDef(Result).ExtNumber:=$ffff;
+        TProcDef(Result).Visibility:=Visibility;
         { we need a separate implementation for the copied def }
-        TProcDef(result).forwarddef:=true;
-        TProcDef(result).interfacedef:=true;
+        TProcDef(Result).ForwardDef:=True;
+        TProcDef(Result).InterfaceDef:=True;
 
         { create new paralist }
-        TProcDef(result).calcparas;
+        TProcDef(Result).CalcParas;
       end;
 
 
-    function TProcDef.getcopy: TStoredDef;
+    function TProcDef.GetCopy: TStoredDef;
       begin
-        result:=getcopyas(procdef,pc_normal,'',true);
+        Result:=GetCopyAs(ProcDef,pc_normal,'',True);
       end;
 
 
-    procedure TProcDef.buildderef;
+    procedure TProcDef.BuildDeref;
       begin
-         inherited buildderef;
-         structderef.build(struct);
+         inherited BuildDeref;
+         StructDeref.Build(Struct);
          { procsym that originally defined this definition, should be in the
            same symtable }
-         procsymderef.build(procsym);
+         ProcSymDeref.Build(ProcSym);
       end;
 
 
-    procedure TProcDef.buildderefimpl;
+    procedure TProcDef.BuildDerefImpl;
       begin
-         inherited buildderefimpl;
+         inherited BuildDerefImpl;
 
          { Localst is not available for main/unit init }
-         if store_localst and Assigned(localst) then
+         if Store_LocalST and Assigned(LocalST) then
            begin
-             TLocalSymTable(localst).buildderef;
-             TLocalSymTable(localst).buildderefimpl;
+             TLocalSymTable(LocalST).BuildDeref;
+             TLocalSymTable(LocalST).BuildDerefImpl;
            end;
 
          { inline tree }
-         if has_inlininginfo then
+         if HasInliningInfo then
            begin
-             funcretsymderef.build(funcretsym);
-             inlininginfo^.code.buildderefimpl;
+             FuncRetSymDeref.Build(FuncRetSym);
+             InliningInfo^.Code.BuildDerefImpl;
            end;
       end;
 
 
-    procedure TProcDef.deref;
+    procedure TProcDef.Deref;
       begin
-         inherited deref;
-         struct:=TAbstractRecordDef(structderef.resolve);
+         inherited Deref;
+         Struct:=TAbstractRecordDef(StructDeref.Resolve);
          { procsym that originally defined this definition, should be in the
            same symtable }
-         procsym:=TProcSym(procsymderef.resolve);
+         ProcSym:=TProcSym(ProcSymDeref.Resolve);
       end;
 
 
-    procedure TProcDef.derefimpl;
+    procedure TProcDef.DerefImpl;
       begin
          { Enable has_inlininginfo when the inlininginfo
            structure is available. The has_inlininginfo was disabled
            after the load, since the data was invalid }
-         if Assigned(inlininginfo) then
-           has_inlininginfo:=true;
+         if Assigned(InliningInfo) then
+           HasInliningInfo:=True;
 
          { Locals }
-         if store_localst and Assigned(localst) then
+         if Store_LocalST and Assigned(LocalST) then
            begin
-             TLocalSymTable(localst).deref(false);
-             TLocalSymTable(localst).derefimpl(false);
+             TLocalSymTable(LocalST).Deref(False);
+             TLocalSymTable(LocalST).DerefImpl(False);
            end;
 
         { Inline }
-        if has_inlininginfo then
+        if HasInliningInfo then
           begin
-            inlininginfo^.code.derefimpl;
+            InliningInfo^.Code.DerefImpl;
             { funcretsym, this is always located in the localst }
-            funcretsym:=TSym(funcretsymderef.resolve);
+            FuncRetSym:=TSym(FuncRetSymDeref.Resolve);
           end
         else
           begin
@@ -7211,62 +7211,62 @@ implementation
 
     function TProcDef.GetTypeName : string;
       begin
-         GetTypeName := FullProcName(false);
+         GetTypeName := FullProcName(False);
       end;
 
 
-    function TProcDef.mangledname : TSymStr;
+    function TProcDef.MangledName : TSymStr;
       begin
 {$ifdef symansistr}
-        if _mangledname='' then
+        if FMangledName='' then
           begin
-            result:=defaultmangledname;
-            _mangledname:=result;
+            Result:=DefaultMangledName;
+            FMangledName:=Result;
           end
         else
-          result:=_mangledname;
+          Result:=FMangledName;
 {$else symansistr}
-        if not Assigned(_mangledname) then
+        if not Assigned(FMangledName) then
           begin
-            result:=defaultmangledname;
-            _mangledname:=StringDup(mangledname);
+            Result:=DefaultMangledName;
+            FMangledName:=StringDup(MangledName);
           end
         else
-          result:=_mangledname^;
+          Result:=FMangledName^;
 {$endif symansistr}
       end;
 
 
-    function TProcDef.defaultmangledname: TSymStr;
+    function TProcDef.DefaultMangledName: TSymStr;
       var
-        n : TSymStr;
+        N : TSymStr;
       begin
-        n:=procsym.name;
+        N:=ProcSym.Name;
         { make sure that the mangled names of these overloadable methods types is
           unique even if it's made lowercase (e.g. for section names) }
-        if proctypeoption in [potype_operator,potype_class_constructor,potype_class_destructor] then
-          n:='$'+n;
+        if ProcTypeOption in [potype_operator,potype_class_constructor,potype_class_destructor] then
+          N:='$'+N;
         { we need to use the symtable where the procsym is inserted,
           because that is visible to the world }
-        defaultmangledname:=make_mangledname('',procsym.owner,n);
-        defaultmangledname:=defaultmangledname+mangledprocparanames(Length(defaultmangledname))
+        DefaultMangledName:=Make_MangledName('',ProcSym.Owner,N);
+        DefaultMangledName:=DefaultMangledName+MangledProcParaNames(Length(DefaultMangledName))
       end;
 
 
-    function TProcDef.cplusplusmangledname : TSymStr;
+    function TProcDef.CPlusPlusMangledName : TSymStr;
 
-      function getcppparaname(p : TDef) : TSymStr;
+      function GetCPPParaName(P : TDef) : TSymStr;
 
         const
 {$ifdef NAMEMANGLING_GCC2}
-           ordtype2str : array[TOrdType] of string[2] = (
+           OrdType2Str : array[TOrdType] of string[2] = (
              '',
              'Uc','Us','Ui','Us','',
              'Sc','s','i','x','',
              'b','b','b','b','b','b',
              'c','w','x');
 {$else NAMEMANGLING_GCC2}
-           ordtype2str : array[TOrdType] of string[1] = (
+           OrdType2Str : array[TOrdType] of string[1] = (
              'v',
              'h','t','j','y','',
              'a','s','i','x','',
@@ -7274,166 +7274,166 @@ implementation
              'b','b','b','b',
              'c','w','x','C');
 
-           floattype2str : array[TFloatType] of string[1] = (
+           FloatType2Str : array[TFloatType] of string[1] = (
              'f','d','e','e',
              'd','d');
 {$endif NAMEMANGLING_GCC2}
 
         var
-           s : TSymStr;
+           S : TSymStr;
 
         begin
-           case p.typ of
-              orddef:
+           case P.Typ of
+              OrdDef:
                 begin
-                  s:=ordtype2str[TOrdDef(p).ordtype];
-                  if s='C' then
-                    s:=ordtype2str[range_to_basetype(TOrdDef(p).low,TOrdDef(p).high)];
+                  S:=OrdType2Str[TOrdDef(P).OrdType];
+                  if S='C' then
+                    S:=OrdType2Str[range_to_basetype(TOrdDef(P).Low,TOrdDef(P).High)];
                 end;
-              pointerdef:
-                s:='P'+getcppparaname(TPointerDef(p).pointeddef);
+              PointerDef:
+                S:='P'+GetCPPParaName(TPointerDef(P).PointedDef);
 {$ifndef NAMEMANGLING_GCC2}
-              floatdef:
-                s:=floattype2str[TFloatDef(p).floattype];
+              FloatDef:
+                S:=FloatType2Str[TFloatDef(P).FloatType];
 {$endif NAMEMANGLING_GCC2}
               else
                 InternalError(2103001);
            end;
-           getcppparaname:=s;
+           GetCPPParaName:=S;
         end;
 
       var
-         s,s2 : TSymStr;
-         hp   : TParaVarSym;
-         i    : integer;
+         S,S2 : TSymStr;
+         HP   : TParaVarSym;
+         I    : Integer;
 
       begin
 {$ifdef NAMEMANGLING_GCC2}
 
         { outdated gcc 2.x name mangling scheme }
-         s := procsym.realname;
-         if procsym.owner.symtabletype=ObjectSymtable then
+         S := ProcSym.RealName;
+         if ProcSym.Owner.SymTableType=ObjectSymTable then
            begin
-              s2:=upper(TObjectDef(procsym.owner.defowner).objrealname^);
-              case proctypeoption of
+              S2:=Upper(TObjectDef(ProcSym.Owner.DefOwner).ObjRealName^);
+              case ProcTypeOption of
                  potype_destructor:
-                   s:='_$_'+ToStr(length(s2))+s2;
+                   S:='_$_'+ToStr(Length(S2))+S2;
                  potype_constructor:
-                   s:='___'+ToStr(length(s2))+s2;
+                   S:='___'+ToStr(Length(S2))+S2;
                  else
-                   s:='_'+s+'__'+ToStr(length(s2))+s2;
+                   S:='_'+S+'__'+ToStr(Length(S2))+S2;
               end;
 
            end
-         else s:=s+'__';
+         else S:=S+'__';
 
-         s:=s+'F';
+         S:=S+'F';
 
          { concat modifiers }
          { !!!!! }
 
          { now we handle the parameters }
-         if maxparacount>0 then
+         if MaxParaCount>0 then
            begin
-             for i:=0 to paras.count-1 do
+             for I:=0 to Paras.Count-1 do
                begin
-                 hp:=TParaVarSym(paras[i]);
+                 HP:=TParaVarSym(Paras[I]);
                  { no hidden parameters form part of a C++ mangled name:
                      a) self is not included
                      b) there are no "high" or other hidden parameters
                  }
-                 if vo_is_hidden_para in hp.varoptions then
-                   continue;
-                 s2:=getcppparaname(hp.vardef);
-                 if hp.varspez in [vs_var,vs_out] then
-                   s2:='R'+s2;
-                 s:=s+s2;
+                 if vo_is_hidden_para in HP.VarOptions then
+                   Continue;
+                 S2:=GetCPPParaName(HP.VarDef);
+                 if HP.VarSpez in [vs_var,vs_out] then
+                   S2:='R'+S2;
+                 S:=S+S2;
                end;
            end
          else
-           s:=s+'v';
-         cplusplusmangledname:=s;
+           S:=S+'v';
+         CPlusPlusMangledName:=S;
 {$else NAMEMANGLING_GCC2}
 
          { gcc 3.x and 4.x name mangling scheme }
          { see http://www.codesourcery.com/public/cxx-abi/abi.html#mangling }
-         if procsym.owner.symtabletype=ObjectSymtable then
+         if ProcSym.Owner.SymTableType=ObjectSymTable then
            begin
-             s:='_ZN';
+             S:='_ZN';
 
-             s2:=TObjectDef(procsym.owner.defowner).objextname^;
-             s:=s+ToStr(length(s2))+s2;
-             case proctypeoption of
+             S2:=TObjectDef(ProcSym.Owner.DefOwner).ObjExtName^;
+             S:=S+ToStr(Length(S2))+S2;
+             case ProcTypeOption of
                 potype_constructor:
-                  s:=s+'C1';
+                  S:=S+'C1';
                 potype_destructor:
-                  s:=s+'D1';
+                  S:=S+'D1';
                 else
-                  s:=s+ToStr(length(procsym.realname))+procsym.realname;
+                  S:=S+ToStr(Length(ProcSym.RealName))+ProcSym.RealName;
              end;
 
-             s:=s+'E';
+             S:=S+'E';
            end
          else
-           s:=procsym.realname;
+           S:=ProcSym.RealName;
 
          { now we handle the parameters }
-         if maxparacount>0 then
+         if MaxParaCount>0 then
            begin
-             for i:=0 to paras.count-1 do
+             for I:=0 to Paras.Count-1 do
                begin
-                 hp:=TParaVarSym(paras[i]);
+                 HP:=TParaVarSym(Paras[I]);
                  { no hidden parameters form part of a C++ mangled name:
                      a) self is not included
                      b) there are no "high" or other hidden parameters
                  }
-                 if vo_is_hidden_para in hp.varoptions then
-                   continue;
-                 s2:=getcppparaname(hp.vardef);
-                 if hp.varspez in [vs_var,vs_out] then
-                   s2:='R'+s2;
-                 s:=s+s2;
+                 if vo_is_hidden_para in HP.VarOptions then
+                   Continue;
+                 S2:=GetCPPParaName(HP.VarDef);
+                 if HP.VarSpez in [vs_var,vs_out] then
+                   S2:='R'+S2;
+                 S:=S+S2;
                end;
            end
          else
-           s:=s+'v';
-         cplusplusmangledname:=s;
+           S:=S+'v';
+         CPlusPlusMangledName:=S;
 {$endif NAMEMANGLING_GCC2}
       end;
 
 
-    function  TProcDef.objcmangledname : TSymStr;
+    function  TProcDef.ObjCMangledName : TSymStr;
       var
-        manglednamelen: LongInt;
-        iscatmethod   : boolean;
+        MangledNameLen: LongInt;
+        IsCatMethod   : Boolean;
       begin
-        if not (po_msgstr in procoptions) then
+        if not (po_msgstr in ProcOptions) then
           InternalError(2009030901);
         { we may very well need longer strings to handle these... }
-        manglednamelen:=length(TObjectDef(procsym.owner.defowner).objextname^)+
-          length('+"[ ]"')+length(messageinf.str^);
-        iscatmethod:=oo_is_classhelper in TObjectDef(procsym.owner.defowner).objectoptions;
-        if (iscatmethod) then
-          inc(manglednamelen,length(TObjectDef(procsym.owner.defowner).childof.objextname^)+length('()'));
-        if manglednamelen>255 then
-          Message1(parser_e_objc_message_name_too_long,messageinf.str^);
-        if not(po_classmethod in procoptions) then
-          result:='"-['
+        MangledNameLen:=Length(TObjectDef(ProcSym.Owner.DefOwner).ObjExtName^)+
+          Length('+"[ ]"')+Length(MessageInf.Str^);
+        IsCatMethod:=oo_is_classhelper in TObjectDef(ProcSym.Owner.DefOwner).ObjectOptions;
+        if (IsCatMethod) then
+          Inc(MangledNameLen,Length(TObjectDef(ProcSym.Owner.DefOwner).ChildOf.ObjExtName^)+Length('()'));
+        if MangledNameLen>255 then
+          Message1(parser_e_objc_message_name_too_long,MessageInf.Str^);
+        if not(po_classmethod in ProcOptions) then
+          Result:='"-['
         else
-          result:='"+[';
+          Result:='"+[';
         { quotes are necessary because the +/- otherwise confuse the assembler
           into expecting a number
         }
-        if iscatmethod then
-          result:=result+TObjectDef(procsym.owner.defowner).childof.objextname^+'(';
-        result:=result+TObjectDef(procsym.owner.defowner).objextname^;
-        if iscatmethod then
-          result:=result+')';
-        result:=result+' '+messageinf.str^+']"';
+        if IsCatMethod then
+          Result:=Result+TObjectDef(ProcSym.Owner.DefOwner).ChildOf.ObjExtName^+'(';
+        Result:=Result+TObjectDef(ProcSym.Owner.DefOwner).ObjExtName^;
+        if IsCatMethod then
+          Result:=Result+')';
+        Result:=Result+' '+MessageInf.Str^+']"';
       end;
 
 
-    procedure TProcDef.setmangledname(const s : TSymStr);
+    procedure TProcDef.SetMangledName(const S : TSymStr);
       begin
         { This is not allowed anymore, the forward declaration
           already needs to create the correct mangledname, no changes
@@ -7441,43 +7441,43 @@ implementation
         { Exception: interface definitions in mode macpas, since in that }
         {   case no reference to the old name can exist yet (JM)         }
 {$ifdef symansistr}
-        if _mangledname<>'' then
+        if FMangledName<>'' then
           if ((m_mac in CurrentSettings.ModeSwitches) and
-              (interfacedef)) then
-            _mangledname:=''
+              (InterfaceDef)) then
+            FMangledName:=''
           else
             InternalError(200411171);
 {$else symansistr}
-        if Assigned(_mangledname) then
+        if Assigned(FMangledName) then
           if ((m_mac in CurrentSettings.ModeSwitches) and
-              (interfacedef)) then
-            StringDispose(_mangledname)
+              (InterfaceDef)) then
+            StringDispose(FMangledName)
           else
             InternalError(200411171);
 {$endif symansistr}
   {$ifdef symansistr}
-        _mangledname:=s;
+        FMangledName:=S;
   {$else symansistr}
-        _mangledname:=StringDup(s);
+        FMangledName:=StringDup(S);
   {$endif symansistr}
-        include(procoptions,po_has_mangledname);
+        Include(ProcOptions,po_has_mangledname);
       end;
 
-    function TProcDef.needsglobalasmsym: boolean;
+    function TProcDef.NeedsGlobalAsmSym: Boolean;
       begin
-        result:=
+        Result:=
           { smart linking using a library requires to promote
             all non-nested procedures to AB_GLOBAL
             otherwise you get undefined symbol error at linking
             for msdos  target with -CX option for instance }
-          (create_smartlink_library and not is_nested_pd(self)) or
-          (po_global in procoptions);
+          (create_smartlink_library and not is_nested_pd(Self)) or
+          (po_global in ProcOptions);
     end;
 
 
-    procedure TProcDef.setcompilerprocname;
+    procedure TProcDef.SetCompilerProcName;
       begin
-        procsym.realname:='$'+lower(procsym.name);
+        ProcSym.RealName:='$'+Lower(ProcSym.Name);
       end;
 
 
@@ -7485,28 +7485,28 @@ implementation
                                  TPROCVARDEF
 ***************************************************************************}
 
-    constructor TProcVarDef.create(level:byte;doregister:boolean);
+    constructor TProcVarDef.Create(Level:Byte;DoRegister:Boolean);
       begin
-         inherited create(procvardef,level,doregister);
+         inherited Create(ProcVarDef,Level,DoRegister);
       end;
 
 
-    class function TProcVarDef.getreusableprocaddr(def: TAbstractProcDef; copytyp: TCacheableProcCopyType): TProcVarDef;
+    class function TProcVarDef.GetReusableProcAddr(Def: TAbstractProcDef; CopyTyp: TCacheableProcCopyType): TProcVarDef;
       var
-        res: PHashSetItem;
+        Res: PHashSetItem;
         OldSymTableStack: TSymTableStack;
-        key: packed record
-          def: TAbstractProcDef;
-          copytyp: TCacheableProcCopyType;
+        Key: packed record
+          Def: TAbstractProcDef;
+          CopyTyp: TCacheableProcCopyType;
         end;
 
       begin
         if not Assigned(CurrentModule) then
           InternalError(2011081302);
-        key.def:=def;
-        key.copytyp:=copytyp;
-        res:=CurrentModule.procaddrdefs.FindOrAdd(@key,sizeof(key));
-        if not Assigned(res^.Data) then
+        Key.Def:=Def;
+        Key.CopyTyp:=CopyTyp;
+        Res:=CurrentModule.ProcAddrDefs.FindOrAdd(@Key,SizeOf(Key));
+        if not Assigned(Res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
@@ -7517,152 +7517,152 @@ implementation
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
             SymTableStack:=nil;
-            result:=TProcVarDef(def.getcopyas(procvardef,copytyp,'',true));
-            SetupReusableDef(def,result,res,OldSymTableStack);
+            Result:=TProcVarDef(Def.GetCopyAs(ProcVarDef,CopyTyp,'',True));
+            SetupReusableDef(Def,Result,Res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
-            exit;
+            Exit;
           end;
-        result:=TProcVarDef(res^.Data);
+        Result:=TProcVarDef(Res^.Data);
       end;
 
 
-    class function TProcVarDef.getreusableprocaddr_no_free(def: TAbstractProcDef): TProcVarDef;
+    class function TProcVarDef.GetReusableProcAddr_No_Free(Def: TAbstractProcDef): TProcVarDef;
       begin
-        result:=getreusableprocaddr(def,pc_address_only);
-        if not result.IsRegistered then
-          include(result.defoptions,df_not_registered_no_free);
+        Result:=GetReusableProcAddr(Def,pc_address_only);
+        if not Result.IsRegistered then
+          Include(Result.DefOptions,df_not_registered_no_free);
       end;
 
 
-    constructor TProcVarDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TProcVarDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(procvardef,ppufile);
+         inherited PPULoad(ProcVarDef,PPUFile);
          { load para symtable }
-         parast:=TParaSymTable.create(self,ppufile.GetByte);
-         PPULoadPlatform(ppufile);
-         TParaSymTable(parast).ppuload(ppufile);
+         ParaST:=TParaSymTable.Create(Self,PPUFile.GetByte);
+         PPULoadPlatform(PPUFile);
+         TParaSymTable(ParaST).PPULoad(PPUFile);
       end;
 
 
-    function TProcVarDef.getcopy : TStoredDef;
+    function TProcVarDef.GetCopy : TStoredDef;
       var
-        i : TCallerCallee;
-        j : LongInt;
+        I : TCallerCallee;
+        J : LongInt;
       begin
-        result:=CProcVarDef.create(parast.symtablelevel,true);
-        TProcVarDef(result).returndef:=returndef;
-        TProcVarDef(result).returndefderef:=returndefderef;
-        TProcVarDef(result).parast:=parast.getcopy;
-        TProcVarDef(result).savesize:=savesize;
+        Result:=CProcVarDef.Create(ParaST.SymTableLevel,True);
+        TProcVarDef(Result).ReturnDef:=ReturnDef;
+        TProcVarDef(Result).ReturnDefDeref:=ReturnDefDeref;
+        TProcVarDef(Result).ParaST:=ParaST.GetCopy;
+        TProcVarDef(Result).SaveSize:=SaveSize;
 
         { create paralist copy }
-        calcparas;
-        TProcVarDef(result).paras:=TParaList.create(false);
-        TProcVarDef(result).paras.count:=paras.count;
-        for j:=0 to paras.count-1 do
-          TProcVarDef(result).paras[j]:=paras[j];
+        CalcParas;
+        TProcVarDef(Result).Paras:=TParaList.Create(False);
+        TProcVarDef(Result).Paras.Count:=Paras.Count;
+        for J:=0 to Paras.Count-1 do
+          TProcVarDef(Result).Paras[J]:=Paras[J];
 
-        TProcVarDef(result).proctypeoption:=proctypeoption;
-        TProcVarDef(result).proccalloption:=proccalloption;
-        TProcVarDef(result).procoptions:=procoptions;
-        TProcVarDef(result).callerargareasize:=callerargareasize;
-        TProcVarDef(result).calleeargareasize:=calleeargareasize;
-        TProcVarDef(result).maxparacount:=maxparacount;
-        TProcVarDef(result).minparacount:=minparacount;
-        for i:=low(funcretloc) to high(funcretloc) do
-          TProcVarDef(result).funcretloc[i]:=funcretloc[i].getcopy;
-        TProcVarDef(result).has_paraloc_info:=has_paraloc_info;
+        TProcVarDef(Result).ProcTypeOption:=ProcTypeOption;
+        TProcVarDef(Result).ProcCallOption:=ProcCallOption;
+        TProcVarDef(Result).ProcOptions:=ProcOptions;
+        TProcVarDef(Result).CallerArgAreaSize:=CallerArgAreaSize;
+        TProcVarDef(Result).CalleeArgAreaSize:=CalleeArgAreaSize;
+        TProcVarDef(Result).MaxParaCount:=MaxParaCount;
+        TProcVarDef(Result).MinParaCount:=MinParaCount;
+        for I:=Low(FuncRetLoc) to High(FuncRetLoc) do
+          TProcVarDef(Result).FuncRetLoc[I]:=FuncRetLoc[I].GetCopy;
+        TProcVarDef(Result).HasParaLocInfo:=HasParaLocInfo;
       end;
 
 
-    procedure TProcVarDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TProcVarDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-        inherited ppuwrite(ppufile);
+        inherited PPUWrite(PPUFile);
 
         { Save the para symtable level (necessary to distinguish nested
           procvars) }
-        ppufile.PutByte(parast.symtablelevel);
+        PPUFile.PutByte(ParaST.SymTableLevel);
 
         { Write this entry }
-        WriteEntry(ppufile,IBProcVarDef);
+        WriteEntry(PPUFile,IBProcVarDef);
 
         { Save the para symtable, this is taken from the interface }
-        TParaSymTable(parast).ppuwrite(ppufile);
+        TParaSymTable(ParaST).PPUWrite(PPUFile);
       end;
 
 
-    function TProcVarDef.GetSymtable(t:TGetSymTable):TSymTable;
+    function TProcVarDef.GetSymTable(T:TGetSymTable):TSymTable;
       begin
-        case t of
+        case T of
           gs_para :
-            GetSymtable:=parast;
+            GetSymTable:=ParaST;
           else
-            GetSymtable:=nil;
+            GetSymTable:=nil;
         end;
       end;
 
 
-    function TProcVarDef.size : asizeint;
+    function TProcVarDef.Size : ASizeInt;
       begin
          { we return false for is_addressonly for a block (because it's not a
            simple pointer to a function), but they are handled as implicit
            pointers to a datastructure that contains everything ->
            voidpointertype.size instead of voidcodepointertype.size }
-         if po_is_block in procoptions then
-           size:=voidpointertype.size
-         else if not is_addressonly then
+         if po_is_block in ProcOptions then
+           Size:=VoidPointerType.Size
+         else if not Is_AddressOnly then
            begin
-             if is_nested_pd(self) then
-               size:=voidcodepointertype.size+parentfpvoidpointertype.size
+             if is_nested_pd(Self) then
+               Size:=VoidCodePointerType.Size+ParentFPVoidPointerType.Size
              else
-               size:=voidcodepointertype.size+voidpointertype.size;
+               Size:=VoidCodePointerType.Size+VoidPointerType.Size;
            end
          else
-           size:=voidcodepointertype.size;
+           Size:=VoidCodePointerType.Size;
       end;
 
 
-    function TProcVarDef.is_methodpointer:boolean;
+    function TProcVarDef.Is_MethodPointer:Boolean;
       begin
-        result:=(po_methodpointer in procoptions);
+        Result:=(po_methodpointer in ProcOptions);
       end;
 
 
-    function TProcVarDef.is_addressonly:boolean;
+    function TProcVarDef.Is_AddressOnly:Boolean;
       begin
-        result:=((not(po_methodpointer in procoptions) or (po_staticmethod in procoptions)) and
-                 not(po_is_block in procoptions) and
-                 not is_nested_pd(self)) or
-                (po_addressonly in procoptions);
+        Result:=((not(po_methodpointer in ProcOptions) or (po_staticmethod in ProcOptions)) and
+                 not(po_is_block in ProcOptions) and
+                 not is_nested_pd(Self)) or
+                (po_addressonly in ProcOptions);
       end;
 
 
-    function TProcVarDef.getmangledparaname:TSymStr;
+    function TProcVarDef.GetMangledParaName:TSymStr;
       begin
-        if not(po_methodpointer in procoptions) then
-          if not is_nested_pd(self) then
-            result:='procvar'
+        if not(po_methodpointer in ProcOptions) then
+          if not is_nested_pd(Self) then
+            Result:='procvar'
           else
             { we need the manglednames here, because nestedprocvars can be anonymous, e.g.
               having not a type name or not an unique one, see tbs/tw27515.pas
 
               Further, use $_ ... _$ delimiters to avoid ambiguous names, see tbs/tw27515.pas }
-            result:='$_nestedprovar'+mangledprocparanames(0)+'_$'
+            Result:='$_nestedprovar'+MangledProcParaNames(0)+'_$'
         else
-          result:='procvarofobj'
+          Result:='procvarofobj'
       end;
 
 
-    function TProcVarDef.getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
+    function TProcVarDef.GetCopyAs(NewTyp: TDefTyp; CopyTyp: TProcCopyTyp; const ParaPrefix: string;DoRegister:Boolean): TStoredDef;
       begin
-        result:=inherited;
-        TAbstractProcDef(result).calcparas;
+        Result:=inherited;
+        TAbstractProcDef(Result).CalcParas;
       end;
 
 
     function TProcVarDef.IsPublishable : TPublishProperty;
       begin
-         if po_methodpointer in procoptions then
+         if po_methodpointer in ProcOptions then
            IsPublishable:=pp_publish
          else
            IsPublishable:=pp_error;
@@ -7671,34 +7671,34 @@ implementation
 
     function TProcVarDef.GetTypeName : string;
       var
-        s: string;
-        pno : TProcNameOptions;
+        S: string;
+        PNo : TProcNameOptions;
       begin
 {$ifdef EXTDEBUG}
-         pno:=[pno_showhidden];
+         PNo:=[pno_showhidden];
 {$else EXTDEBUG}
-         pno:=[];
+         PNo:=[];
 {$endif EXTDEBUG}
-         s:='<';
-         if po_is_block in procoptions then
-           s := s+'reference to'
-         else if po_classmethod in procoptions then
-           s := s+'class method type of'
+         S:='<';
+         if po_is_block in ProcOptions then
+           S := S+'reference to'
+         else if po_classmethod in ProcOptions then
+           S := S+'class method type of'
          else
-           if po_addressonly in procoptions then
-             s := s+'address of'
+           if po_addressonly in ProcOptions then
+             S := S+'address of'
            else
-             s := s+'procedure variable type of';
-         if Assigned(returndef) and
-            (returndef<>voidtype) then
-           s:=s+' function'+typename_paras(pno)+':'+returndef.GetTypeName
+             S := S+'procedure variable type of';
+         if Assigned(ReturnDef) and
+            (ReturnDef<>VoidType) then
+           S:=S+' function'+TypeName_Paras(PNo)+':'+ReturnDef.GetTypeName
          else
-           s:=s+' procedure'+typename_paras(pno);
-         if po_methodpointer in procoptions then
-           s := s+' of object';
-         if is_nested_pd(self) then
-           s := s+' is nested';
-         GetTypeName := s+';'+ProcCallOptionStr[proccalloption]+'>';
+           S:=S+' procedure'+TypeName_Paras(PNo);
+         if po_methodpointer in ProcOptions then
+           S := S+' of object';
+         if is_nested_pd(Self) then
+           S := S+' is nested';
+         GetTypeName := S+';'+ProcCallOptionStr[ProcCallOption]+'>';
       end;
 
 
@@ -7706,112 +7706,112 @@ implementation
                               TOBJECTDEF
 ***************************************************************************}
 
-   constructor TObjectDef.create(ot:TObjectTyp;const n:string;c:TObjectDef;doregister:boolean);
+   constructor TObjectDef.Create(OT:TObjectTyp;const N:string;C:TObjectDef;DoRegister:Boolean);
      begin
-        inherited create(n,objectdef,doregister);
-        fcurrent_dispid:=0;
-        objecttype:=ot;
-        childof:=nil;
-        childofderef.reset;
-        vmt_fieldderef.reset;
-        hiddenclassdefref.reset;
+        inherited Create(N,ObjectDef,DoRegister);
+        FCurrentDispID:=0;
+        ObjectType:=OT;
+        ChildOf:=nil;
+        ChildOfDeref.Reset;
+        VMTFieldDeref.Reset;
+        HiddenClassDefRef.Reset;
 
-        extendeddefderef.reset;
-        cloneddefderef.reset;
-        if objecttype=odt_helper then
-          owner.includeoption(sto_has_helper);
-        SymTable:=TObjectSymTable.create(self,n,CurrentSettings.PackRecords,
-          CurrentSettings.alignment.RecordAlignMin);
+        ExtendedDefDeref.Reset;
+        ClonedDefDeref.Reset;
+        if ObjectType=odt_helper then
+          Owner.IncludeOption(sto_has_helper);
+        SymTable:=TObjectSymTable.Create(Self,N,CurrentSettings.PackRecords,
+          CurrentSettings.Alignment.RecordAlignMin);
         { create space for vmt !! }
-        vmtentries:=TFPList.Create;
-        set_parent(c);
-        if objecttype in [odt_interfacecorba,odt_interfacecom,odt_dispinterface] then
-          prepareguid;
+        VMTEntries:=TFPList.Create;
+        Set_Parent(C);
+        if ObjectType in [odt_interfacecorba,odt_interfacecom,odt_dispinterface] then
+          PrepareGUID;
         { setup implemented interfaces }
-        if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
-          ImplementedInterfaces:=TFPObjectList.Create(true)
+        if ObjectType in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
+          ImplementedInterfaces:=TFPObjectList.Create(True)
         else
           ImplementedInterfaces:=nil;
-        writing_class_record_dbginfo:=false;
+        WritingClassRecordDbgInfo:=False;
      end;
 
 
-    constructor TObjectDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TObjectDef.PPULoad(PPUFile:TCompilerPPUFile);
       var
-         i,
-         implintfcount : LongInt;
-         d, getterd : TDeref;
+         I,
+         ImplIntfCount : LongInt;
+         D, GetterD : TDeref;
          ImplIntf : TImplementedInterface;
-         vmtentry : PVMTEntry;
+         VMTEntry : PVMTEntry;
       begin
-         inherited ppuload(objectdef,ppufile);
-         objecttype:=TObjectTyp(ppufile.GetByte);
-         helpertype:=THelperType(ppufile.GetByte);
-         objextname:=ppufile.GetPShortString;
+         inherited PPULoad(ObjectDef,PPUFile);
+         ObjectType:=TObjectTyp(PPUFile.GetByte);
+         HelperType:=THelperType(PPUFile.GetByte);
+         ObjExtName:=PPUFile.GetPShortString;
          { only used for external Objective-C classes/protocols }
-         if (objextname^='') then
-           StringDispose(objextname);
-         SymTable:=TObjectSymTable.create(self,objrealname^,0,0);
-         TObjectSymTable(SymTable).DataSize:=ppufile.GetASizeInt;
-         TObjectSymTable(SymTable).paddingsize:=ppufile.GetWord;
-         TObjectSymTable(SymTable).fieldalignment:=shortint(ppufile.GetByte);
-         TObjectSymTable(SymTable).recordalignment:=shortint(ppufile.GetByte);
-         TObjectSymTable(SymTable).RecordAlignMin:=shortint(ppufile.GetByte);
-         ppufile.getderef(vmt_fieldderef);
-         ppufile.getderef(childofderef);
+         if (ObjExtName^='') then
+           StringDispose(ObjExtName);
+         SymTable:=TObjectSymTable.Create(Self,ObjRealName^,0,0);
+         TObjectSymTable(SymTable).DataSize:=PPUFile.GetASizeInt;
+         TObjectSymTable(SymTable).PaddingSize:=PPUFile.GetWord;
+         TObjectSymTable(SymTable).FieldAlignment:=ShortInt(PPUFile.GetByte);
+         TObjectSymTable(SymTable).RecordAlignment:=ShortInt(PPUFile.GetByte);
+         TObjectSymTable(SymTable).RecordAlignMin:=ShortInt(PPUFile.GetByte);
+         PPUFile.GetDeref(VMTFieldDeref);
+         PPUFile.GetDeref(ChildOfDeref);
 
          { load guid }
-         iidstr:=nil;
-         if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
+         IIDStr:=nil;
+         if ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
            begin
-              new(iidguid);
-              ppufile.getguid(iidguid^);
-              iidstr:=ppufile.GetPShortString;
+              New(IIDGUID);
+              PPUFile.GetGUID(IIDGUID^);
+              IIDStr:=PPUFile.GetPShortString;
            end;
-         abstractcnt:=ppufile.GetLongInt;
+         AbstractCnt:=PPUFile.GetLongInt;
 
-         if objecttype=odt_helper then
-           ppufile.getderef(extendeddefderef);
+         if ObjectType=odt_helper then
+           PPUFile.GetDeref(ExtendedDefDeref);
 
-         vmtentries:=TFPList.Create;
-         vmtentries.count:=ppufile.GetLongInt;
-         for i:=0 to vmtentries.count-1 do
+         VMTEntries:=TFPList.Create;
+         VMTEntries.Count:=PPUFile.GetLongInt;
+         for I:=0 to VMTEntries.Count-1 do
            begin
-             ppufile.getderef(d);
-             new(vmtentry);
-             vmtentry^.procdef:=nil;
-             vmtentry^.procdefderef:=d;
-             vmtentry^.visibility:=TVisibility(ppufile.GetByte);
-             vmtentries[i]:=vmtentry;
+             PPUFile.GetDeref(D);
+             New(VMTEntry);
+             VMTEntry^.ProcDef:=nil;
+             VMTEntry^.ProcDefDeref:=D;
+             VMTEntry^.Visibility:=TVisibility(PPUFile.GetByte);
+             VMTEntries[I]:=VMTEntry;
            end;
 
          { load implemented interfaces }
-         if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
+         if ObjectType in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
            begin
-             ImplementedInterfaces:=TFPObjectList.Create(true);
-             implintfcount:=ppufile.GetLongInt;
-             for i:=0 to implintfcount-1 do
+             ImplementedInterfaces:=TFPObjectList.Create(True);
+             ImplIntfCount:=PPUFile.GetLongInt;
+             for I:=0 to ImplIntfCount-1 do
                begin
-                 ppufile.getderef(d);
-                 ppufile.getderef(getterd);
-                 ImplIntf:=TImplementedInterface.Create_deref(d,getterd);
-                 ImplIntf.IOffset:=ppufile.GetLongInt;
-                 byte(ImplIntf.IType):=ppufile.GetByte;
+                 PPUFile.GetDeref(D);
+                 PPUFile.GetDeref(GetterD);
+                 ImplIntf:=TImplementedInterface.Create_Deref(D,GetterD);
+                 ImplIntf.IOffset:=PPUFile.GetLongInt;
+                 Byte(ImplIntf.IType):=PPUFile.GetByte;
                  ImplementedInterfaces.Add(ImplIntf);
                end;
            end
          else
            ImplementedInterfaces:=nil;
 
-         if df_copied_def in defoptions then
+         if df_copied_def in DefOptions then
            begin
-             ppufile.getderef(cloneddefderef);
-             PPULoadPlatform(ppufile);
+             PPUFile.GetDeref(ClonedDefDeref);
+             PPULoadPlatform(PPUFile);
            end
          else
            begin
-             PPULoadPlatform(ppufile);
-             TObjectSymTable(SymTable).ppuload(ppufile);
+             PPULoadPlatform(PPUFile);
+             TObjectSymTable(SymTable).PPULoad(PPUFile);
            end;
 
          { handles the predefined class tobject  }
@@ -7821,26 +7821,26 @@ implementation
          { marked as system unit to avoid some   }
          { equally named user's type to override }
          { the internal types!                   }
-         if mf_system_unit in CurrentModule.moduleflags then
+         if mf_system_unit in CurrentModule.ModuleFlags then
            begin
-             if (childof=nil) and
-                (objecttype in [odt_class]) and
-                (objname^='TOBJECT') then
-               class_tobject:=self;
-             if (childof=nil) and
-                (objecttype=odt_interfacecom) then
-                if (objname^='IUNKNOWN') then
-                  interface_iunknown:=self
+             if (ChildOf=nil) and
+                (ObjectType in [odt_class]) and
+                (ObjName^='TOBJECT') then
+               Class_TObject:=Self;
+             if (ChildOf=nil) and
+                (ObjectType=odt_interfacecom) then
+                if (ObjName^='IUNKNOWN') then
+                  Interface_IUnknown:=Self
                 else
-                if (objname^='IDISPATCH') then
-                  interface_idispatch:=self;
+                if (ObjName^='IDISPATCH') then
+                  Interface_IDispatch:=Self;
            end;
-         if (childof=nil) and
-            (objecttype=odt_objcclass) and
-            (objname^='PROTOCOL') then
-           objc_protocoltype:=self;
+         if (ChildOf=nil) and
+            (ObjectType=odt_objcclass) and
+            (ObjName^='PROTOCOL') then
+           ObjC_ProtocolType:=Self;
 
-         writing_class_record_dbginfo:=false;
+         WritingClassRecordDbgInfo:=False;
        end;
 
 
@@ -7848,73 +7848,73 @@ implementation
       begin
          if Assigned(SymTable) then
            begin
-             SymTable.free;
+             SymTable.Free;
              SymTable:=nil;
            end;
-         StringDispose(objextname);
-         StringDispose(iidstr);
+         StringDispose(ObjExtName);
+         StringDispose(IIDStr);
          if Assigned(ImplementedInterfaces) then
            begin
-             ImplementedInterfaces.free;
+             ImplementedInterfaces.Free;
              ImplementedInterfaces:=nil;
            end;
-         if Assigned(iidguid) then
+         if Assigned(IIDGUID) then
            begin
-             dispose(iidguid);
-             iidguid:=nil;
+             Dispose(IIDGUID);
+             IIDGUID:=nil;
            end;
-         TFPList.FreeAndNilDisposing(vmtentries,TypeInfo(TVMTEntry));
-         if Assigned(vmcallstaticinfo) then
+         TFPList.FreeAndNilDisposing(VMTEntries,TypeInfo(TVMTEntry));
+         if Assigned(VMCallStaticInfo) then
            begin
-             FreeMem(vmcallstaticinfo);
-             vmcallstaticinfo:=nil;
+             FreeMem(VMCallStaticInfo);
+             VMCallStaticInfo:=nil;
            end;
          inherited Destroy;
       end;
 
 
-    function TObjectDef.getcopy : TStoredDef;
+    function TObjectDef.GetCopy : TStoredDef;
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        result:=CObjectDef.create(objecttype,objrealname^,childof,true);
+        Result:=CObjectDef.Create(ObjectType,ObjRealName^,ChildOf,True);
         { the constructor allocates a symtable which we release to avoid memory leaks }
-        TObjectDef(result).SymTable.free;
-        TObjectDef(result).SymTable:=SymTable.getcopy;
-        if Assigned(objextname) then
-          TObjectDef(result).objextname:=StringDup(objextname^);
-        if Assigned(import_lib) then
-          TObjectDef(result).import_lib:=StringDup(import_lib^);
-        TObjectDef(result).objectoptions:=objectoptions;
-        include(TObjectDef(result).defoptions,df_copied_def);
-        TObjectDef(result).extendeddef:=extendeddef;
-        if Assigned(tcinitcode) then
-          TObjectDef(result).tcinitcode:=tcinitcode.getcopy;
-        TObjectDef(result).vmt_field:=vmt_field;
-        if Assigned(iidguid) then
+        TObjectDef(Result).SymTable.Free;
+        TObjectDef(Result).SymTable:=SymTable.GetCopy;
+        if Assigned(ObjExtName) then
+          TObjectDef(Result).ObjExtName:=StringDup(ObjExtName^);
+        if Assigned(ImportLib) then
+          TObjectDef(Result).ImportLib:=StringDup(ImportLib^);
+        TObjectDef(Result).ObjectOptions:=ObjectOptions;
+        Include(TObjectDef(Result).DefOptions,df_copied_def);
+        TObjectDef(Result).ExtendedDef:=ExtendedDef;
+        if Assigned(TCInitCode) then
+          TObjectDef(Result).TCInitCode:=TCInitCode.GetCopy;
+        TObjectDef(Result).VMTField:=VMTField;
+        if Assigned(IIDGUID) then
           begin
-            new(TObjectDef(result).iidguid);
-            move(iidguid^,TObjectDef(result).iidguid^,sizeof(iidguid^));
+            New(TObjectDef(Result).IIDGUID);
+            Move(IIDGUID^,TObjectDef(Result).IIDGUID^,SizeOf(IIDGUID^));
           end;
-        if Assigned(iidstr) then
-          TObjectDef(result).iidstr:=StringDup(iidstr^);
-        TObjectDef(result).abstractcnt:=abstractcnt;
+        if Assigned(IIDStr) then
+          TObjectDef(Result).IIDStr:=StringDup(IIDStr^);
+        TObjectDef(Result).AbstractCnt:=AbstractCnt;
         if Assigned(ImplementedInterfaces) then
           begin
-            TObjectDef(result).ImplementedInterfaces.capacity:=TObjectDef(result).ImplementedInterfaces.count+ImplementedInterfaces.count;
-            for i:=0 to ImplementedInterfaces.count-1 do
-              TObjectDef(result).ImplementedInterfaces.Add(TImplementedInterface(ImplementedInterfaces[i]).Getcopy);
+            TObjectDef(Result).ImplementedInterfaces.Capacity:=TObjectDef(Result).ImplementedInterfaces.Count+ImplementedInterfaces.Count;
+            for I:=0 to ImplementedInterfaces.Count-1 do
+              TObjectDef(Result).ImplementedInterfaces.Add(TImplementedInterface(ImplementedInterfaces[I]).GetCopy);
           end;
-        TObjectDef(result).copyvmtentries(self);
+        TObjectDef(Result).CopyVMTEntries(Self);
       end;
 
 
-    procedure TObjectDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TObjectDef.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-         i : LongInt;
-         vmtentry : PVMTEntry;
+         I : LongInt;
+         VMTEntry : PVMTEntry;
          ImplIntf : TImplementedInterface;
-         old_do_indirect_crc: boolean;
+         OldDoIndirectCRC: Boolean;
       begin
          { if class1 in unit A changes, and class2 in unit B inherits from it
            (so unit B uses unit A), then unit B with class2 will be recompiled.
@@ -7923,61 +7923,61 @@ implementation
            to the interface of unit B. Nevertheless, unit C can indirectly
            depend on unit A via derefs, and these must be updated -> the
            indirect crc keeps track of such changes. }
-         old_do_indirect_crc:=ppufile.DoIndirectCRC;
-         ppufile.DoIndirectCRC:=true;
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(objecttype));
-         ppufile.PutByte(byte(helpertype));
-         if Assigned(objextname) then
-           ppufile.PutString(objextname^)
+         OldDoIndirectCRC:=PPUFile.DoIndirectCRC;
+         PPUFile.DoIndirectCRC:=True;
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(ObjectType));
+         PPUFile.PutByte(Byte(HelperType));
+         if Assigned(ObjExtName) then
+           PPUFile.PutString(ObjExtName^)
          else
-           ppufile.PutString('');
-         ppufile.PutASizeInt(TObjectSymTable(SymTable).DataSize);
-         ppufile.PutWord(TObjectSymTable(SymTable).paddingsize);
-         ppufile.PutByte(byte(TObjectSymTable(SymTable).fieldalignment));
-         ppufile.PutByte(byte(TObjectSymTable(SymTable).recordalignment));
-         ppufile.PutByte(byte(TObjectSymTable(SymTable).RecordAlignMin));
-         ppufile.putderef(vmt_fieldderef);
-         ppufile.putderef(childofderef);
-         if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
+           PPUFile.PutString('');
+         PPUFile.PutASizeInt(TObjectSymTable(SymTable).DataSize);
+         PPUFile.PutWord(TObjectSymTable(SymTable).PaddingSize);
+         PPUFile.PutByte(Byte(TObjectSymTable(SymTable).FieldAlignment));
+         PPUFile.PutByte(Byte(TObjectSymTable(SymTable).RecordAlignment));
+         PPUFile.PutByte(Byte(TObjectSymTable(SymTable).RecordAlignMin));
+         PPUFile.PutDeref(VMTFieldDeref);
+         PPUFile.PutDeref(ChildOfDeref);
+         if ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
            begin
-              ppufile.putguid(iidguid^);
-              ppufile.PutString(iidstr^);
+              PPUFile.PutGUID(IIDGUID^);
+              PPUFile.PutString(IIDStr^);
            end;
-         ppufile.PutLongInt(abstractcnt);
-         if objecttype=odt_helper then
-           ppufile.putderef(extendeddefderef);
+         PPUFile.PutLongInt(AbstractCnt);
+         if ObjectType=odt_helper then
+           PPUFile.PutDeref(ExtendedDefDeref);
 
-         ppufile.PutLongInt(vmtentries.count);
-         for i:=0 to vmtentries.count-1 do
+         PPUFile.PutLongInt(VMTEntries.Count);
+         for I:=0 to VMTEntries.Count-1 do
            begin
-             vmtentry:=PVMTEntry(vmtentries[i]);
-             ppufile.putderef(vmtentry^.procdefderef);
-             ppufile.PutByte(byte(vmtentry^.visibility));
+             VMTEntry:=PVMTEntry(VMTEntries[I]);
+             PPUFile.PutDeref(VMTEntry^.ProcDefDeref);
+             PPUFile.PutByte(Byte(VMTEntry^.Visibility));
            end;
 
          if Assigned(ImplementedInterfaces) then
            begin
-             ppufile.PutLongInt(ImplementedInterfaces.Count);
-             for i:=0 to ImplementedInterfaces.Count-1 do
+             PPUFile.PutLongInt(ImplementedInterfaces.Count);
+             for I:=0 to ImplementedInterfaces.Count-1 do
                begin
-                 ImplIntf:=TImplementedInterface(ImplementedInterfaces[i]);
-                 ppufile.putderef(ImplIntf.intfdefderef);
-                 ppufile.putderef(ImplIntf.ImplementsGetterDeref);
-                 ppufile.PutLongInt(ImplIntf.Ioffset);
-                 ppufile.PutByte(byte(ImplIntf.IType));
+                 ImplIntf:=TImplementedInterface(ImplementedInterfaces[I]);
+                 PPUFile.PutDeref(ImplIntf.IntfDefDeref);
+                 PPUFile.PutDeref(ImplIntf.ImplementsGetterDeref);
+                 PPUFile.PutLongInt(ImplIntf.Ioffset);
+                 PPUFile.PutByte(Byte(ImplIntf.IType));
                end;
            end;
 
-         if df_copied_def in defoptions then
-           ppufile.putderef(cloneddefderef);
+         if df_copied_def in DefOptions then
+           PPUFile.PutDeref(ClonedDefDeref);
 
-         WriteEntry(ppufile,IBObjectDef);
+         WriteEntry(PPUFile,IBObjectDef);
 
-         if not(df_copied_def in defoptions) then
-           TObjectSymTable(SymTable).ppuwrite(ppufile);
+         if not(df_copied_def in DefOptions) then
+           TObjectSymTable(SymTable).PPUWrite(PPUFile);
 
-         ppufile.DoIndirectCRC:=old_do_indirect_crc;
+         PPUFile.DoIndirectCRC:=OldDoIndirectCRC;
       end;
 
 
@@ -7987,95 +7987,95 @@ implementation
         { there is no tsym associated yet with the def. It can occur  }
         { (tests/webtbf/tw4757.pas), so for now give a generic name    }
         { instead of the actual type name                             }
-        if not Assigned(typesym) then
-          result:='<Currently Parsed Class>'
+        if not Assigned(TypeSym) then
+          Result:='<Currently Parsed Class>'
         else
-          result:=typesymbolprettyname;
+          Result:=TypeSymbolPrettyName;
       end;
 
 
-    procedure TObjectDef.buildderef;
+    procedure TObjectDef.BuildDeref;
       var
-         i : LongInt;
-         vmtentry : PVMTEntry;
+         I : LongInt;
+         VMTEntry : PVMTEntry;
       begin
-         inherited buildderef;
-         vmt_fieldderef.build(vmt_field);
-         childofderef.build(childof);
+         inherited BuildDeref;
+         VMTFieldDeref.Build(VMTField);
+         ChildOfDeref.Build(ChildOf);
 
-         if df_copied_def in defoptions then
-           cloneddefderef.build(SymTable.defowner)
+         if df_copied_def in DefOptions then
+           ClonedDefDeref.Build(SymTable.DefOwner)
          else
-           TStoredSymTable(SymTable).buildderef;
+           TStoredSymTable(SymTable).BuildDeref;
 
-         if objecttype=odt_helper then
-           extendeddefderef.build(extendeddef);
+         if ObjectType=odt_helper then
+           ExtendedDefDeref.Build(ExtendedDef);
 
-         for i:=0 to vmtentries.count-1 do
+         for I:=0 to VMTEntries.Count-1 do
            begin
-             vmtentry:=PVMTEntry(vmtentries[i]);
-             vmtentry^.procdefderef.build(vmtentry^.procdef);
+             VMTEntry:=PVMTEntry(VMTEntries[I]);
+             VMTEntry^.ProcDefDeref.Build(VMTEntry^.ProcDef);
            end;
 
          if Assigned(ImplementedInterfaces) then
            begin
-             for i:=0 to ImplementedInterfaces.count-1 do
-               TImplementedInterface(ImplementedInterfaces[i]).buildderef;
+             for I:=0 to ImplementedInterfaces.Count-1 do
+               TImplementedInterface(ImplementedInterfaces[I]).BuildDeref;
            end;
       end;
 
 
-    procedure TObjectDef.deref;
+    procedure TObjectDef.Deref;
       var
-         i : LongInt;
-         vmtentry : PVMTEntry;
+         I : LongInt;
+         VMTEntry : PVMTEntry;
       begin
-         inherited deref;
-         vmt_field:=TSym(vmt_fieldderef.resolve);
-         childof:=TObjectDef(childofderef.resolve);
-         if df_copied_def in defoptions then
+         inherited Deref;
+         VMTField:=TSym(VMTFieldDeref.Resolve);
+         ChildOf:=TObjectDef(ChildOfDeref.Resolve);
+         if df_copied_def in DefOptions then
            begin
-             cloneddef:=TObjectDef(cloneddefderef.resolve);
-             SymTable:=cloneddef.SymTable.getcopy;
+             ClonedDef:=TObjectDef(ClonedDefDeref.Resolve);
+             SymTable:=ClonedDef.SymTable.GetCopy;
            end
          else
-           TStoredSymTable(SymTable).deref(false);
-         if objecttype=odt_helper then
-           extendeddef:=TDef(extendeddefderef.resolve);
-         for i:=0 to vmtentries.count-1 do
+           TStoredSymTable(SymTable).Deref(False);
+         if ObjectType=odt_helper then
+           ExtendedDef:=TDef(ExtendedDefDeref.Resolve);
+         for I:=0 to VMTEntries.Count-1 do
            begin
-             vmtentry:=PVMTEntry(vmtentries[i]);
-             vmtentry^.procdef:=TProcDef(vmtentry^.procdefderef.resolve);
+             VMTEntry:=PVMTEntry(VMTEntries[I]);
+             VMTEntry^.ProcDef:=TProcDef(VMTEntry^.ProcDefDeref.Resolve);
            end;
          if Assigned(ImplementedInterfaces) then
            begin
-             for i:=0 to ImplementedInterfaces.count-1 do
-               TImplementedInterface(ImplementedInterfaces[i]).deref;
+             for I:=0 to ImplementedInterfaces.Count-1 do
+               TImplementedInterface(ImplementedInterfaces[I]).Deref;
            end;
       end;
 
 
-    procedure create_class_helper_for_procdef(def: tobject; arg: pointer);
+    procedure CreateClassHelperForProcDef(Def: TObject; Arg: Pointer);
       var
-        pd: TProcDef absolute def;
-        st: TSymTable;
-        psym: TSym;
-        nname: TIDString;
+        PD: TProcDef absolute Def;
+        ST: TSymTable;
+        PSym: TSym;
+        NName: TIDString;
       begin
-        if (TDef(def).typ<>procdef) then
-          exit;
+        if (TDef(Def).Typ<>ProcDef) then
+          Exit;
         { pd.owner = objcclass symtable -> defowner = objcclassdef ->
           owner = symtable in which objcclassdef is defined
         }
-        st:=pd.owner.defowner.owner;
-        nname:=class_helper_prefix+TProcSym(pd.procsym).name;
+        ST:=PD.Owner.DefOwner.Owner;
+        NName:=class_helper_prefix+TProcSym(PD.ProcSym).Name;
         { check for an existing procsym with our special name }
-        psym:=TSym(st.find(nname));
-        if not Assigned(psym) then
+        PSym:=TSym(ST.Find(NName));
+        if not Assigned(PSym) then
           begin
-            psym:=CProcSym.create(nname);
+            PSym:=CProcSym.Create(NName);
             { avoid warning about this symbol being unused }
-            psym.IncRefCount;
+            PSym.IncRefCount;
             { don't check for duplicates:
                a) we checked above
                b) in case we are in the implementation section of a unit, this
@@ -8086,387 +8086,387 @@ implementation
                    in the implementation, and they cannot be merged since only
                    the once in the interface must be saved to the ppu/visible
                    from other units }
-            st.insertsym(psym,false);
+            ST.InsertSym(PSym,False);
           end
-        else if (psym.typ<>procsym) then
+        else if (PSym.Typ<>ProcSym) then
           InternalError(2009111501);
         { add ourselves to this special procsym }
-        TProcSym(psym).procdeflist.add(def);
+        TProcSym(PSym).ProcDefList.Add(Def);
       end;
 
 
-    procedure TObjectDef.derefimpl;
+    procedure TObjectDef.DerefImpl;
       begin
-         inherited derefimpl;
+         inherited DerefImpl;
          { the procdefs are not owned by the class helper procsyms, so they
            are not stored/restored either -> re-add them here }
-         if (objecttype in [odt_objcclass,odt_objcprotocol]) or
-            (oo_is_classhelper in objectoptions) then
-           SymTable.DefList.ForEachCall(@create_class_helper_for_procdef,nil);
+         if (ObjectType in [odt_objcclass,odt_objcprotocol]) or
+            (oo_is_classhelper in ObjectOptions) then
+           SymTable.DefList.ForEachCall(@CreateClassHelperForProcDef,nil);
       end;
 
 
-    procedure TObjectDef.copyvmtentries(objdef:TObjectDef);
+    procedure TObjectDef.CopyVMTEntries(ObjDef:TObjectDef);
       var
-        i : LongInt;
-        vmtentry : PVMTEntry;
+        I : LongInt;
+        VMTEntry : PVMTEntry;
       begin
-        if vmtentries.count<>0 then
+        if VMTEntries.Count<>0 then
           InternalError(2019081401);
-        vmtentries.count:=objdef.vmtentries.count;
-        for i:=0 to objdef.vmtentries.count-1 do
+        VMTEntries.Count:=ObjDef.VMTEntries.Count;
+        for I:=0 to ObjDef.VMTEntries.Count-1 do
           begin
-            new(vmtentry);
-            vmtentry^:=PVMTEntry(objdef.vmtentries[i])^;
-            vmtentries[i]:=vmtentry;
+            New(VMTEntry);
+            VMTEntry^:=PVMTEntry(ObjDef.VMTEntries[I])^;
+            VMTEntries[I]:=VMTEntry;
           end;
        end;
 
 
-    function TObjectDef.getparentdef:TDef;
+    function TObjectDef.GetParentDef:TDef;
       begin
 { TODO: Remove getparentdef hack}
         { With 2 forward declared classes with the child class before the
           parent class the child class is written earlier to the ppu. Leaving it
           possible to have a reference to the parent class for property overriding,
           but the parent class still has the childof not resolved yet (PFV) }
-        if childof=nil then
-          childof:=TObjectDef(childofderef.resolve);
-        result:=childof;
+        if ChildOf=nil then
+          ChildOf:=TObjectDef(ChildOfDeref.Resolve);
+        Result:=ChildOf;
       end;
 
 
-    procedure TObjectDef.prepareguid;
+    procedure TObjectDef.PrepareGUID;
       begin
         { set up guid }
-        if not Assigned(iidguid) then
+        if not Assigned(IIDGUID) then
          begin
-            new(iidguid);
-            fillchar(iidguid^,sizeof(iidguid^),0); { default null guid }
+            New(IIDGUID);
+            FillChar(IIDGUID^,SizeOf(IIDGUID^),0); { default null guid }
          end;
         { setup iidstring }
-        if not Assigned(iidstr) then
-          iidstr:=StringDup(''); { default is empty string }
+        if not Assigned(IIDStr) then
+          IIDStr:=StringDup(''); { default is empty string }
       end;
 
 
-    procedure TObjectDef.set_parent( c : TObjectDef);
+    procedure TObjectDef.Set_Parent( C : TObjectDef);
       begin
-        if Assigned(childof) then
-          exit;
-        childof:=c;
-        if not Assigned(c) then
-          exit;
+        if Assigned(ChildOf) then
+          Exit;
+        ChildOf:=C;
+        if not Assigned(C) then
+          Exit;
         { inherit options and status }
-        objectoptions:=objectoptions+(c.objectoptions*inherited_objectoptions);
+        ObjectOptions:=ObjectOptions+(C.ObjectOptions*inherited_objectoptions);
         { check if parent is a generic parameter }
-        if sp_generic_para in c.typesym.symoptions then
-         objectoptions:=objectoptions+[oo_inherits_not_specialized];
+        if sp_generic_para in C.TypeSym.SymOptions then
+         ObjectOptions:=ObjectOptions+[oo_inherits_not_specialized];
         { initially has the same number of abstract methods as the parent }
-        abstractcnt:=c.abstractcnt;
+        AbstractCnt:=C.AbstractCnt;
         { add the data of the ancestor class/object }
-        if (objecttype in [odt_class,odt_object,odt_objcclass]) then
+        if (ObjectType in [odt_class,odt_object,odt_objcclass]) then
           begin
-            TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize+TObjectSymTable(c.SymTable).DataSize;
+            TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize+TObjectSymTable(C.SymTable).DataSize;
             { inherit recordalignment }
-            TObjectSymTable(SymTable).recordalignment:=TObjectSymTable(c.SymTable).recordalignment;
+            TObjectSymTable(SymTable).RecordAlignment:=TObjectSymTable(C.SymTable).RecordAlignment;
             { if both the parent and this record use C-alignment, also inherit
               the current field alignment }
-            if (TObjectSymTable(c.SymTable).usefieldalignment=C_alignment) and
-               (TObjectSymTable(SymTable).usefieldalignment=C_alignment) then
-              TObjectSymTable(SymTable).fieldalignment:=TObjectSymTable(c.SymTable).fieldalignment;
+            if (TObjectSymTable(C.SymTable).UseFieldAlignment=C_alignment) and
+               (TObjectSymTable(SymTable).UseFieldAlignment=C_alignment) then
+              TObjectSymTable(SymTable).FieldAlignment:=TObjectSymTable(C.SymTable).FieldAlignment;
             { the padding is not inherited for Objective-C classes (maybe not
               for cppclass either?) }
-            if objecttype=odt_objcclass then
-              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-TObjectSymTable(c.SymTable).paddingsize;
-            if (oo_has_vmt in objectoptions) and
-               (oo_has_vmt in c.objectoptions) then
-              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-sizeof(PInt);
+            if ObjectType=odt_objcclass then
+              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-TObjectSymTable(C.SymTable).PaddingSize;
+            if (oo_has_vmt in ObjectOptions) and
+               (oo_has_vmt in C.ObjectOptions) then
+              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-SizeOf(PInt);
             { if parent has a vmt field then the offset is the same for the child PM }
-            if (oo_has_vmt in c.objectoptions) or is_class(self) then
+            if (oo_has_vmt in C.ObjectOptions) or Is_Class(Self) then
               begin
-                vmt_field:=c.vmt_field;
-                include(objectoptions,oo_has_vmt);
+                VMTField:=C.VMTField;
+                Include(ObjectOptions,oo_has_vmt);
               end;
           end;
       end;
 
 
-   procedure TObjectDef.insertvmt;
+   procedure TObjectDef.InsertVMT;
      begin
-        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
-          exit;
-        if (oo_has_vmt in objectoptions) then
+        if ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
+          Exit;
+        if (oo_has_vmt in ObjectOptions) then
           InternalError(2020100816)
         else
           begin
-             TObjectSymTable(SymTable).DataSize:=align(TObjectSymTable(SymTable).DataSize,
-                 TObjectSymTable(SymTable).fieldalignment);
+             TObjectSymTable(SymTable).DataSize:=Align(TObjectSymTable(SymTable).DataSize,
+                 TObjectSymTable(SymTable).FieldAlignment);
 
-             if (tf_requires_proper_alignment in TargetInfo.flags) then
+             if (tf_requires_proper_alignment in TargetInfo.Flags) then
                begin
                  { Align VMT pointer and whole object instance if target CPU requires alignment. }
-                 TObjectSymTable(SymTable).DataSize:=align(TObjectSymTable(SymTable).DataSize,sizeof(PInt));
-                 TObjectSymTable(SymTable).alignrecord(TObjectSymTable(SymTable).DataSize,sizeof(PInt));
+                 TObjectSymTable(SymTable).DataSize:=Align(TObjectSymTable(SymTable).DataSize,SizeOf(PInt));
+                 TObjectSymTable(SymTable).AlignRecord(TObjectSymTable(SymTable).DataSize,SizeOf(PInt));
                end;
-             vmt_field:=CFieldVarSym.create('_vptr$'+objname^,vs_value,voidpointertype,[]);
-             hidesym(vmt_field);
-             TObjectSymTable(SymTable).insertsym(vmt_field);
-             TObjectSymTable(SymTable).addfield(TFieldVarSym(vmt_field),vis_hidden);
-             include(objectoptions,oo_has_vmt);
+             VMTField:=CFieldVarSym.Create('_vptr$'+ObjName^,vs_value,VoidPointerType,[]);
+             HideSym(VMTField);
+             TObjectSymTable(SymTable).InsertSym(VMTField);
+             TObjectSymTable(SymTable).AddField(TFieldVarSym(VMTField),vis_hidden);
+             Include(ObjectOptions,oo_has_vmt);
           end;
      end;
 
 
-   function TObjectDef.vmt_offset: asizeint;
+   function TObjectDef.VMT_Offset: ASizeInt;
      begin
-        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
-          result:=0
-        else if (TObjectSymTable(SymTable).usefieldalignment<>bit_alignment) then
-          result:=TFieldVarSym(vmt_field).fieldoffset
+        if ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
+          Result:=0
+        else if (TObjectSymTable(SymTable).UseFieldAlignment<>bit_alignment) then
+          Result:=TFieldVarSym(VMTField).FieldOffset
         else
-          result:=TFieldVarSym(vmt_field).fieldoffset div 8;
+          Result:=TFieldVarSym(VMTField).FieldOffset div 8;
      end;
 
 
-   procedure TObjectDef.check_forwards;
+   procedure TObjectDef.Check_Forwards;
      begin
-        if not(objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcprotocol]) then
+        if not(ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcprotocol]) then
           inherited;
-        if (oo_is_forward in objectoptions) then
+        if (oo_is_forward in ObjectOptions) then
           begin
              { ok, in future, the forward can be resolved }
-             Message1(sym_e_class_forward_not_resolved,objrealname^);
-             exclude(objectoptions,oo_is_forward);
+             Message1(sym_e_class_forward_not_resolved,ObjRealName^);
+             Exclude(ObjectOptions,oo_is_forward);
           end;
      end;
 
 
-   function TObjectDef.find_destructor: TProcDef;
+   function TObjectDef.Find_Destructor: TProcDef;
      var
-       objdef: TObjectDef;
+       ObjDef: TObjectDef;
      begin
-        objdef:=self;
-        while Assigned(objdef) do
+        ObjDef:=Self;
+        while Assigned(ObjDef) do
           begin
-            result:=objdef.find_procdef_bytype(potype_destructor);
-            if Assigned(result) then
-              exit;
-            objdef:=objdef.childof;
+            Result:=ObjDef.Find_ProcDef_ByType(potype_destructor);
+            if Assigned(Result) then
+              Exit;
+            ObjDef:=ObjDef.ChildOf;
           end;
-        result:=nil;
+        Result:=nil;
      end;
 
-    function TObjectDef.implements_any_interfaces: boolean;
+    function TObjectDef.Implements_Any_Interfaces: Boolean;
       begin
-        result := (ImplementedInterfaces.Count > 0) or
-          (Assigned(childof) and childof.implements_any_interfaces);
+        Result := (ImplementedInterfaces.Count > 0) or
+          (Assigned(ChildOf) and ChildOf.Implements_Any_Interfaces);
       end;
 
 
-    function TObjectDef.register_implemented_interface(intfdef:TObjectDef;useguid:boolean):TImplementedInterface;
+    function TObjectDef.Register_Implemented_Interface(IntfDef:TObjectDef;UseGUID:Boolean):TImplementedInterface;
       begin
         { allocate the GUID only if the class implements at least one interface }
-        if useguid then
-          prepareguid;
-        result:=TImplementedInterface.create(intfdef);
-        ImplementedInterfaces.Add(result);
+        if UseGUID then
+          PrepareGUID;
+        Result:=TImplementedInterface.Create(IntfDef);
+        ImplementedInterfaces.Add(Result);
       end;
 
 
-    function TObjectDef.size : asizeint;
+    function TObjectDef.Size : ASizeInt;
       begin
-        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
-          result:=voidpointertype.size
+        if ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
+          Result:=VoidPointerType.Size
         else
-          result:=TObjectSymTable(SymTable).DataSize;
+          Result:=TObjectSymTable(SymTable).DataSize;
       end;
 
 
-    function TObjectDef.alignment:shortint;
+    function TObjectDef.Alignment:ShortInt;
       begin
-        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
-          alignment:=voidpointertype.alignment
+        if ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
+          Alignment:=VoidPointerType.Alignment
         else
-          alignment:=TObjectSymTable(SymTable).recordalignment;
+          Alignment:=TObjectSymTable(SymTable).RecordAlignment;
       end;
 
 
-    function TObjectDef.vmtmethodoffset(index:LongInt):LongInt;
+    function TObjectDef.VMTMethodOffset(Index:LongInt):LongInt;
       begin
         { for offset of methods for classes, see rtl/inc/objpash.inc }
-        case objecttype of
+        case ObjectType of
         odt_class:
           { the +2*sizeof(pint) is size and -size }
-          vmtmethodoffset:=index*voidcodepointertype.size+10*voidpointertype.size+2*sizeof(PInt);
+          VMTMethodOffset:=Index*VoidCodePointerType.Size+10*VoidPointerType.Size+2*SizeOf(PInt);
         odt_helper,
         odt_objcclass,
         odt_objcprotocol:
-          vmtmethodoffset:=0;
+          VMTMethodOffset:=0;
         odt_interfacecom,odt_interfacecorba,odt_dispinterface:
-          vmtmethodoffset:=index*voidcodepointertype.size;
+          VMTMethodOffset:=Index*VoidCodePointerType.Size;
         else
           { the +2*sizeof(pint) is size and -size }
 {$ifdef WITHDMT}
-          vmtmethodoffset:=index*voidcodepointertype.size+2*voidpointertype.size+2*sizeof(PInt);
+          VMTMethodOffset:=Index*VoidCodePointerType.Size+2*VoidPointerType.Size+2*SizeOf(PInt);
 {$else WITHDMT}
-          vmtmethodoffset:=index*voidcodepointertype.size+1*voidpointertype.size+2*sizeof(PInt);
+          VMTMethodOffset:=Index*VoidCodePointerType.Size+1*VoidPointerType.Size+2*SizeOf(PInt);
 {$endif WITHDMT}
         end;
       end;
 
 
-    function TObjectDef.vmt_mangledname : TSymStr;
+    function TObjectDef.VMT_MangledName : TSymStr;
       begin
-        if not(oo_has_vmt in objectoptions) then
-          Message1(parser_n_object_has_no_vmt,objrealname^);
-        if not is_unique_objpasdef then
-          vmt_mangledname:=make_mangledname('VMT',owner,objname^)
+        if not(oo_has_vmt in ObjectOptions) then
+          Message1(parser_n_object_has_no_vmt,ObjRealName^);
+        if not Is_Unique_ObjPasDef then
+          VMT_MangledName:=Make_MangledName('VMT',Owner,ObjName^)
         else
-          vmt_mangledname:=childof.vmt_mangledname;
+          VMT_MangledName:=ChildOf.VMT_MangledName;
       end;
 
 
-    function TObjectDef.vmt_def: TRecordDef;
+    function TObjectDef.VMT_Def: TRecordDef;
       var
-        vmttypesym: TSymEntry;
+        VMTTypeSym: TSymEntry;
       begin
-        if not is_unique_objpasdef then
+        if not Is_Unique_ObjPasDef then
           begin
-            vmttypesym:=SymTable.Find('vmtdef');
-            if not Assigned(vmttypesym) or
-               (vmttypesym.typ<>symconst.typesym) or
-               (TTypeSym(vmttypesym).typedef.typ<>recorddef) then
+            VMTTypeSym:=SymTable.Find('vmtdef');
+            if not Assigned(VMTTypeSym) or
+               (VMTTypeSym.Typ<>SymConst.TypeSym) or
+               (TTypeSym(VMTTypeSym).TypeDef.Typ<>RecordDef) then
               InternalError(2015052501);
-            result:=TRecordDef(TTypeSym(vmttypesym).typedef);
+            Result:=TRecordDef(TTypeSym(VMTTypeSym).TypeDef);
           end
         else
-          result:=childof.vmt_def;
+          Result:=ChildOf.VMT_Def;
       end;
 
 
-    function TObjectDef.NeedsInitTable : boolean;
+    function TObjectDef.NeedsInitTable : Boolean;
       var
-        hp : TObjectDef;
+        HP : TObjectDef;
       begin
-         case objecttype of
+         case ObjectType of
             odt_helper,
             odt_class :
-              NeedsInitTable:=false;
+              NeedsInitTable:=False;
             odt_dispinterface,
             odt_interfacecom:
-              NeedsInitTable:=true;
+              NeedsInitTable:=True;
             odt_interfacecorba:
               begin
-                hp:=childof;
-                while Assigned(hp) do
+                HP:=ChildOf;
+                while Assigned(HP) do
                   begin
-                    if hp=interface_iunknown then
+                    if HP=Interface_IUnknown then
                       begin
-                        NeedsInitTable:=true;
-                        exit;
+                        NeedsInitTable:=True;
+                        Exit;
                       end;
-                    hp:=hp.childof;
+                    HP:=HP.ChildOf;
                   end;
-                NeedsInitTable:=false;
+                NeedsInitTable:=False;
               end;
             odt_object:
               NeedsInitTable:=
-                TObjectSymTable(SymTable).needs_init_final or
-                (Assigned(childof) and
-                 childof.NeedsInitTable);
+                TObjectSymTable(SymTable).Needs_Init_Final or
+                (Assigned(ChildOf) and
+                 ChildOf.NeedsInitTable);
             odt_cppclass,
             odt_objcclass,
             odt_objcprotocol:
-              NeedsInitTable:=false;
+              NeedsInitTable:=False;
             else
               InternalError(200108267);
          end;
       end;
 
-    function TObjectDef.NeedsSeparateInitRTTI : boolean;
+    function TObjectDef.NeedsSeparateInitRTTI : Boolean;
       begin
-        result:=not (objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface]);
+        Result:=not (ObjectType in [odt_interfacecom,odt_interfacecorba,odt_dispinterface]);
       end;
 
 
-    function TObjectDef.HasNonTrivialInitChild(check_parent:boolean):boolean;
+    function TObjectDef.HasNonTrivialInitChild(CheckParent:Boolean):Boolean;
       begin
-        if objecttype in [odt_class,odt_object] then
+        if ObjectType in [odt_class,odt_object] then
           begin
-            result:=TObjectSymTable(SymTable).has_non_trivial_init or
-                      (check_parent and Assigned(childof) and childof.HasNonTrivialInitChild(true));
+            Result:=TObjectSymTable(SymTable).Has_Non_Trivial_Init or
+                      (CheckParent and Assigned(ChildOf) and ChildOf.HasNonTrivialInitChild(True));
           end
         else
-          result:=false;
+          Result:=False;
       end;
 
 
-    function TObjectDef.RTTIMangledName(rt: TRTTIType): TSymStr;
+    function TObjectDef.RTTIMangledName(RT: TRTTIType): TSymStr;
       begin
-        if not(objecttype in [odt_objcclass,odt_objcprotocol]) then
+        if not(ObjectType in [odt_objcclass,odt_objcprotocol]) then
           begin
-            if not is_unique_objpasdef then
-              result:=inherited RTTIMangledName(rt)
+            if not Is_Unique_ObjPasDef then
+              Result:=inherited RTTIMangledName(RT)
             else
-              result:=childof.RTTIMangledName(rt)
+              Result:=ChildOf.RTTIMangledName(RT)
           end
         else
           begin
             { necessary in case of a dynamic array of nsobject, or
               if an nsobject field appears in a record that needs
               init/finalisation }
-            if rt=initrtti then
+            if RT=InitRTTI then
               begin
-                result:=voidpointertype.RTTIMangledName(rt);
-                exit;
+                Result:=VoidPointerType.RTTIMangledName(RT);
+                Exit;
               end;
 
-            if not(TargetInfo.system in systems_objc_nfabi) then
+            if not(TargetInfo.System in systems_objc_nfabi) then
               begin
-                result:=TargetAsm.labelprefix;
-                case objecttype of
+                Result:=TargetAsm.LabelPrefix;
+                case ObjectType of
                   odt_objcclass:
                     begin
-                      case rt of
-                        objcclassrtti:
-                          if not(oo_is_classhelper in objectoptions) then
-                            result:=result+'_OBJC_CLASS_'
+                      case RT of
+                        ObjCClassRTTI:
+                          if not(oo_is_classhelper in ObjectOptions) then
+                            Result:=Result+'_OBJC_CLASS_'
                           else
-                            result:=result+'_OBJC_CATEGORY_';
-                        objcmetartti:
-                          if not(oo_is_classhelper in objectoptions) then
-                            result:=result+'_OBJC_METACLASS_'
+                            Result:=Result+'_OBJC_CATEGORY_';
+                        ObjCMetaRTTI:
+                          if not(oo_is_classhelper in ObjectOptions) then
+                            Result:=Result+'_OBJC_METACLASS_'
                           else
                             InternalError(2009111511);
-                        objcprotocollist:
-                          if not(oo_is_classhelper in objectoptions) then
-                            result:=result+'_OBJC_CLASS_PROTOCOLS_'
+                        ObjCProtocolList:
+                          if not(oo_is_classhelper in ObjectOptions) then
+                            Result:=Result+'_OBJC_CLASS_PROTOCOLS_'
                           else
-                            result:=result+'_OBJC_CATEGORY_PROTOCOLS_';
-                        objcinstancemethods:
-                          result:=result+'_OBJC_INSTANCE_METHODS_';
-                        objcclassmethods:
-                          result:=result+'_OBJC_CLASS_METHODS_';
+                            Result:=Result+'_OBJC_CATEGORY_PROTOCOLS_';
+                        ObjCInstanceMethods:
+                          Result:=Result+'_OBJC_INSTANCE_METHODS_';
+                        ObjCClassMethods:
+                          Result:=Result+'_OBJC_CLASS_METHODS_';
                         else
                          InternalError(2009092302);
                       end;
                     end;
                   odt_objcprotocol:
                     begin
-                      case rt of
-                        objcclassrtti:
-                          result:=result+'_OBJC_PROTOCOL_';
-                        objcprotocollist:
-                          result:=result+'_OBJC_PROTOCOL_REFS_';
-                        objcinstancemethods:
-                          result:=result+'_OBJC_PROTOCOL_INSTANCE_METHODS_';
-                        objcclassmethods:
-                          result:=result+'_OBJC_PROTOCOL_CLASS_METHODS_';
-                        objcprotinstancemethodsopt:
-                          result:=result+'_OBJC_PROTOCOL_INSTANCE_METHODS_OPT_';
-                        objcprotclassmethodsopt:
-                          result:=result+'_OBJC_PROTOCOL_CLASS_METHODS_OPT_';
+                      case RT of
+                        ObjCClassRTTI:
+                          Result:=Result+'_OBJC_PROTOCOL_';
+                        ObjCProtocolList:
+                          Result:=Result+'_OBJC_PROTOCOL_REFS_';
+                        ObjCInstanceMethods:
+                          Result:=Result+'_OBJC_PROTOCOL_INSTANCE_METHODS_';
+                        ObjCClassMethods:
+                          Result:=Result+'_OBJC_PROTOCOL_CLASS_METHODS_';
+                        ObjCProtInstanceMethodsOpt:
+                          Result:=Result+'_OBJC_PROTOCOL_INSTANCE_METHODS_OPT_';
+                        ObjCProtClassMethodsOpt:
+                          Result:=Result+'_OBJC_PROTOCOL_CLASS_METHODS_OPT_';
                         else
                          InternalError(2026062801);
                       end
@@ -8477,57 +8477,57 @@ implementation
               end
             else
               begin
-                case objecttype of
+                case ObjectType of
                   odt_objcclass:
                     begin
-                      if (oo_is_classhelper in objectoptions) and
-                         not(rt in [objcclassrtti,objcprotocollist]) then
+                      if (oo_is_classhelper in ObjectOptions) and
+                         not(RT in [ObjCClassRTTI,ObjCProtocolList]) then
                         InternalError(2009111512);
-                      case rt of
-                        objcclassrtti:
-                          if not(oo_is_classhelper in objectoptions) then
-                            result:='_OBJC_CLASS_$_'
+                      case RT of
+                        ObjCClassRTTI:
+                          if not(oo_is_classhelper in ObjectOptions) then
+                            Result:='_OBJC_CLASS_$_'
                           else
-                            result:='_OBJC_$_CATEGORY_';
-                        objcmetartti:
-                          result:='_OBJC_METACLASS_$_';
-                        objcclassrortti:
-                          result:='__OBJC_CLASS_RO_$_';
-                        objcmetarortti:
-                          result:='__OBJC_METACLASS_RO_$_';
-                        objcprotocollist:
-                          if not(oo_is_classhelper in objectoptions) then
-                            result:='__OBJC_CLASS_PROTOCOLS_$_'
+                            Result:='_OBJC_$_CATEGORY_';
+                        ObjCMetaRTTI:
+                          Result:='_OBJC_METACLASS_$_';
+                        ObjCClassRORTTI:
+                          Result:='__OBJC_CLASS_RO_$_';
+                        ObjCMetaRORTTI:
+                          Result:='__OBJC_METACLASS_RO_$_';
+                        ObjCProtocolList:
+                          if not(oo_is_classhelper in ObjectOptions) then
+                            Result:='__OBJC_CLASS_PROTOCOLS_$_'
                           else
-                            result:='__OBJC_CATEGORY_PROTOCOLS_$_';
-                        objcinstancemethods:
-                          result:='__OBJC_$_INSTANCE_METHODS_';
-                        objcclassmethods:
-                          result:='__OBJC_$_CLASS_METHODS_';
+                            Result:='__OBJC_CATEGORY_PROTOCOLS_$_';
+                        ObjCInstanceMethods:
+                          Result:='__OBJC_$_INSTANCE_METHODS_';
+                        ObjCClassMethods:
+                          Result:='__OBJC_$_CLASS_METHODS_';
                         else
                          InternalError(2009092303);
                       end;
                     end;
                   odt_objcprotocol:
                     begin
-                      result:=lower(TargetAsm.labelprefix);
-                      case rt of
-                        objcclassrtti:
-                          result:=result+'_OBJC_PROTOCOL_$_';
-                        objcmetartti:
-                          result:=result+'_OBJC_LABEL_PROTOCOL_$_';
-                        objcprotocollist:
-                          result:='__OBJC_$_PROTOCOL_REFS_';
-                        objcprotocolmethodstypelist:
-                          result:='__OBJC_$_PROTOCOL_METHOD_TYPES_';
-                        objcinstancemethods:
-                          result:='__OBJC_$_PROTOCOL_INSTANCE_METHODS_';
-                        objcclassmethods:
-                          result:='__OBJC_$_PROTOCOL_CLASS_METHODS_';
-                        objcprotinstancemethodsopt:
-                          result:='__OBJC_$_PROTOCOL_INSTANCE_METHODS_OPT_';
-                        objcprotclassmethodsopt:
-                          result:='__OBJC_$_PROTOCOL_CLASS_METHODS_OPT_';
+                      Result:=Lower(TargetAsm.LabelPrefix);
+                      case RT of
+                        ObjCClassRTTI:
+                          Result:=Result+'_OBJC_PROTOCOL_$_';
+                        ObjCMetaRTTI:
+                          Result:=Result+'_OBJC_LABEL_PROTOCOL_$_';
+                        ObjCProtocolList:
+                          Result:='__OBJC_$_PROTOCOL_REFS_';
+                        ObjCProtocolMethodsTypeList:
+                          Result:='__OBJC_$_PROTOCOL_METHOD_TYPES_';
+                        ObjCInstanceMethods:
+                          Result:='__OBJC_$_PROTOCOL_INSTANCE_METHODS_';
+                        ObjCClassMethods:
+                          Result:='__OBJC_$_PROTOCOL_CLASS_METHODS_';
+                        ObjCProtInstanceMethodsOpt:
+                          Result:='__OBJC_$_PROTOCOL_INSTANCE_METHODS_OPT_';
+                        ObjCProtClassMethodsOpt:
+                          Result:='__OBJC_$_PROTOCOL_CLASS_METHODS_OPT_';
                         else
                           InternalError(2009092501);
                       end;
@@ -8536,164 +8536,164 @@ implementation
                     InternalError(2013113005);
                 end;
               end;
-            result:=result+objextname^;
+            Result:=Result+ObjExtName^;
           end;
       end;
 
-    function TObjectDef.is_unique_objpasdef: boolean;
+    function TObjectDef.Is_Unique_ObjPasDef: Boolean;
         begin
-          result:=
-            (df_unique in defoptions) and
-            is_class_or_interface_or_dispinterface(self)
+          Result:=
+            (df_unique in DefOptions) and
+            Is_Class_Or_Interface_Or_DispInterface(Self)
         end;
 
 
-    function TObjectDef.members_need_inittable : boolean;
+    function TObjectDef.Members_Need_InitTable : Boolean;
       begin
-        members_need_inittable:=TObjectSymTable(SymTable).needs_init_final or
-                                  HasNonTrivialInitChild(true);
+        Members_Need_InitTable:=TObjectSymTable(SymTable).Needs_Init_Final or
+                                  HasNonTrivialInitChild(True);
       end;
 
 
     function TObjectDef.IsPublishable : TPublishProperty;
       begin
-         if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
+         if ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
            IsPublishable:=pp_publish
          else
            IsPublishable:=pp_error;
       end;
 
 
-    function TObjectDef.get_next_dispid: LongInt;
+    function TObjectDef.Get_Next_DispID: LongInt;
       begin
-        inc(fcurrent_dispid);
-        result:=fcurrent_dispid;
+        Inc(FCurrentDispID);
+        Result:=FCurrentDispID;
       end;
 
-    function TObjectDef.search_enumerator_get: TProcDef;
+    function TObjectDef.Search_Enumerator_Get: TProcDef;
       begin
-        result:=inherited;
-        if not Assigned(result) and Assigned(childof) then
-          result:=childof.search_enumerator_get;
+        Result:=inherited;
+        if not Assigned(Result) and Assigned(ChildOf) then
+          Result:=ChildOf.Search_Enumerator_Get;
       end;
 
-    function TObjectDef.search_enumerator_move: TProcDef;
+    function TObjectDef.Search_Enumerator_Move: TProcDef;
       begin
-        result:=inherited;
-        if not Assigned(result) and Assigned(childof) then
-          result:=childof.search_enumerator_move;
+        Result:=inherited;
+        if not Assigned(Result) and Assigned(ChildOf) then
+          Result:=ChildOf.Search_Enumerator_Move;
       end;
 
-    function TObjectDef.search_enumerator_current: TSym;
+    function TObjectDef.Search_Enumerator_Current: TSym;
       begin
-        result:=inherited;
-        if not Assigned(result) and Assigned(childof) then
-          result:=childof.search_enumerator_current;
+        Result:=inherited;
+        if not Assigned(Result) and Assigned(ChildOf) then
+          Result:=ChildOf.Search_Enumerator_Current;
       end;
 
     procedure TObjectDef.RegisterCreatedClassRefType;
       begin
-        if not classref_created_in_current_module then
+        if not ClassRefCreatedInCurrentModule then
           begin
-            classref_created_in_current_module:=true;
-            if not (owner.symtabletype in [localsymtable]) then
-              CurrentModule.wpoinfo.addcreatedobjtypeforclassref(self);
+            ClassRefCreatedInCurrentModule:=True;
+            if not (Owner.SymTableType in [LocalSymTable]) then
+              CurrentModule.WPOInfo.AddCreatedObjTypeForClassRef(Self);
           end;
       end;
 
 
     procedure TObjectDef.RegisterCreatedObjectType;
       begin
-        if not created_in_current_module then
+        if not CreatedInCurrentModule then
           begin
-            created_in_current_module:=true;
-            if not (owner.symtabletype in [localsymtable]) then
-              CurrentModule.wpoinfo.addcreatedobjtype(self);
+            CreatedInCurrentModule:=True;
+            if not (Owner.SymTableType in [LocalSymTable]) then
+              CurrentModule.WPOInfo.AddCreatedObjType(Self);
           end;
       end;
 
 
-    procedure TObjectDef.register_maybe_created_object_type;
+    procedure TObjectDef.Register_Maybe_Created_Object_Type;
       begin
         { if we know it has been created for sure, no need
           to also record that it maybe can be created in
           this module
         }
-        if not (created_in_current_module) and
-           not (maybe_created_in_current_module) then
+        if not (CreatedInCurrentModule) and
+           not (MaybeCreatedInCurrentModule) then
           begin
-            maybe_created_in_current_module:=true;
-            CurrentModule.wpoinfo.addmaybecreatedbyclassref(self);
+            MaybeCreatedInCurrentModule:=True;
+            CurrentModule.WPOInfo.AddMaybeCreatedByClassRef(Self);
           end;
       end;
 
 
-    procedure TObjectDef.register_vmt_call(index: LongInt);
+    procedure TObjectDef.Register_VMT_Call(Index: LongInt);
       begin
-        if (is_object(self) or is_class(self)) then
-          CurrentModule.wpoinfo.addcalledvmtentry(self,index);
+        if (Is_Object(Self) or Is_Class(Self)) then
+          CurrentModule.WPOInfo.AddCalledVMTEntry(Self,Index);
       end;
 
 
-    procedure check_and_finish_msg(data: tobject; arg: pointer);
+    procedure CheckAndFinishMsg(Data: TObject; Arg: Pointer);
       var
-        def: TDef absolute data;
-        pd: TProcDef absolute data;
-        i,
-        paracount: LongInt;
+        Def: TDef absolute Data;
+        PD: TProcDef absolute Data;
+        I,
+        ParaCount: LongInt;
       begin
-        if (def.typ=procdef) then
+        if (Def.Typ=ProcDef) then
           begin
             { add all messages also under a dummy name to the symtable in
               which the objcclass/protocol/category is declared, so they can
               be called via id.<name>
             }
-            create_class_helper_for_procdef(pd,nil);
+            CreateClassHelperForProcDef(PD,nil);
 
             { we have to wait until now to set the mangled name because it
               depends on the (possibly external) class name, which is defined
               at the very end.  }
-            if not(po_msgstr in pd.procoptions) then
+            if not(po_msgstr in PD.ProcOptions) then
               begin
-                CGMessagePos(pd.fileinfo,parser_e_objc_requires_msgstr);
+                CGMessagePos(PD.FileInfo,parser_e_objc_requires_msgstr);
                 { recover to avoid internalerror later on }
-                include(pd.procoptions,po_msgstr);
-                pd.messageinf.str:=StringDup('MissingDeclaration');
+                Include(PD.ProcOptions,po_msgstr);
+                PD.MessageInf.Str:=StringDup('MissingDeclaration');
               end;
             { Mangled name is already set in case this is a copy of
               another type.  }
-            if not(po_has_mangledname in pd.procoptions) then
+            if not(po_has_mangledname in PD.ProcOptions) then
               begin
                 { check whether the number of formal parameters is correct,
                   and whether they have valid Objective-C types }
-                paracount:=0;
-                for i:=1 to length(pd.messageinf.str^) do
-                  if pd.messageinf.str^[i]=':' then
-                    inc(paracount);
-                for i:=0 to pd.paras.count-1 do
-                  if not(vo_is_hidden_para in TParaVarSym(pd.paras[i]).varoptions) and
-                     not is_array_of_const(TParaVarSym(pd.paras[i]).vardef) then
-                    dec(paracount);
-                if (paracount<>0) then
-                  MessagePos(pd.fileinfo,sym_e_objc_para_mismatch);
+                ParaCount:=0;
+                for I:=1 to Length(PD.MessageInf.Str^) do
+                  if PD.MessageInf.Str^[I]=':' then
+                    Inc(ParaCount);
+                for I:=0 to PD.Paras.Count-1 do
+                  if not(vo_is_hidden_para in TParaVarSym(PD.Paras[I]).VarOptions) and
+                     not is_array_of_const(TParaVarSym(PD.Paras[I]).VarDef) then
+                    Dec(ParaCount);
+                if (ParaCount<>0) then
+                  MessagePos(PD.FileInfo,sym_e_objc_para_mismatch);
 
-                pd.setmangledname(pd.objcmangledname);
+                PD.SetMangledName(PD.ObjCMangledName);
               end
             else
               { all checks already done }
-              exit;
-            if not(oo_is_external in pd.struct.objectoptions) then
+              Exit;
+            if not(oo_is_external in PD.Struct.ObjectOptions) then
               begin
-                if (po_varargs in pd.procoptions) then
-                  MessagePos(pd.fileinfo,parser_e_varargs_need_cdecl_and_external)
+                if (po_varargs in PD.ProcOptions) then
+                  MessagePos(PD.FileInfo,parser_e_varargs_need_cdecl_and_external)
                 else
                   begin
                     { check for "array of const" parameters }
-                    for i:=0 to pd.parast.symlist.count-1 do
+                    for I:=0 to PD.ParaST.SymList.Count-1 do
                       begin
-                        if (TSym(pd.parast.symlist[i]).typ=paravarsym) and
-                           is_array_of_const(TParaVarSym(pd.parast.symlist[i]).vardef) then
-                          MessagePos(pd.fileinfo,parser_e_varargs_need_cdecl_and_external);
+                        if (TSym(PD.ParaST.SymList[I]).Typ=ParaVarSym) and
+                           is_array_of_const(TParaVarSym(PD.ParaST.SymList[I]).VarDef) then
+                          MessagePos(PD.FileInfo,parser_e_varargs_need_cdecl_and_external);
                       end;
                   end;
               end;
@@ -8701,92 +8701,92 @@ implementation
       end;
 
 
-    procedure mark_private_fields_used(data: tobject; arg: pointer);
+    procedure MarkPrivateFieldsUsed(Data: TObject; Arg: Pointer);
       var
-        sym: TSym absolute data;
+        Sym: TSym absolute Data;
       begin
-        if (sym.typ=fieldvarsym) and
-           (TFieldVarSym(sym).visibility in [vis_private,vis_strictprivate]) then
-          sym.IncRefCount;
+        if (Sym.Typ=FieldVarSym) and
+           (TFieldVarSym(Sym).Visibility in [vis_private,vis_strictprivate]) then
+          Sym.IncRefCount;
       end;
 
 
-    procedure TObjectDef.finish_objc_data;
+    procedure TObjectDef.Finish_ObjC_Data;
       begin
-        self.SymTable.DefList.foreachcall(@check_and_finish_msg,nil);
-        if (oo_is_external in objectoptions) then
-          self.SymTable.SymList.ForEachCall(@mark_private_fields_used,nil);
+        Self.SymTable.DefList.ForEachCall(@CheckAndFinishMsg,nil);
+        if (oo_is_external in ObjectOptions) then
+          Self.SymTable.SymList.ForEachCall(@MarkPrivateFieldsUsed,nil);
       end;
 
 
-    procedure verify_objc_vardef(data: tobject; arg: pointer);
+    procedure VerifyObjCVarDef(Data: TObject; Arg: Pointer);
       var
-        sym: TAbstractVarSym absolute data;
-        res: PBoolean absolute arg;
-        founderrordef: TDef;
+        Sym: TAbstractVarSym absolute Data;
+        Res: PBoolean absolute Arg;
+        FoundErrorDef: TDef;
       begin
-        if not(TSym(data).typ in [paravarsym,fieldvarsym]) then
-          exit;
-        if (sym.typ=paravarsym) and
-           ((vo_is_hidden_para in TParaVarSym(sym).varoptions) or
-            is_array_of_const(TParaVarSym(sym).vardef)) then
-          exit;
-        if not objcchecktype(sym.vardef,founderrordef) then
+        if not(TSym(Data).Typ in [ParaVarSym,FieldVarSym]) then
+          Exit;
+        if (Sym.Typ=ParaVarSym) and
+           ((vo_is_hidden_para in TParaVarSym(Sym).VarOptions) or
+            is_array_of_const(TParaVarSym(Sym).VarDef)) then
+          Exit;
+        if not ObjCCheckType(Sym.VarDef,FoundErrorDef) then
           begin
-            MessagePos1(sym.fileinfo,type_e_objc_type_unsupported,founderrordef.typename);
-            res^:=false;
+            MessagePos1(Sym.FileInfo,type_e_objc_type_unsupported,FoundErrorDef.TypeName);
+            Res^:=False;
           end;
       end;
 
 
-    procedure verify_objc_procdef_paras(data: tobject; arg: pointer);
+    procedure VerifyObjCProcDefParas(Data: TObject; Arg: Pointer);
       var
-        def: TDef absolute data;
-        res: PBoolean absolute arg;
-        founderrordef: TDef;
+        Def: TDef absolute Data;
+        Res: PBoolean absolute Arg;
+        FoundErrorDef: TDef;
       begin
-        if (def.typ<>procdef) then
-          exit;
+        if (Def.Typ<>ProcDef) then
+          Exit;
         { check parameter types for validity }
-        TProcDef(def).paras.foreachcall(@verify_objc_vardef,arg);
+        TProcDef(Def).Paras.ForEachCall(@VerifyObjCVarDef,Arg);
         { check the result type for validity }
-        if not objcchecktype(TProcDef(def).returndef,founderrordef) then
+        if not ObjCCheckType(TProcDef(Def).ReturnDef,FoundErrorDef) then
           begin
-            MessagePos1(TProcDef(def).funcretsym.fileinfo,type_e_objc_type_unsupported,founderrordef.typename);
-            res^:=false;
+            MessagePos1(TProcDef(Def).FuncRetSym.FileInfo,type_e_objc_type_unsupported,FoundErrorDef.TypeName);
+            Res^:=False;
           end;
       end;
 
 
-    function TObjectDef.check_objc_types: boolean;
+    function TObjectDef.Check_ObjC_Types: Boolean;
       begin
         { done in separate step from finish_objc_data, because when
           finish_objc_data is called, not all forwarddefs have been resolved
           yet and we need to know all types here }
-        result:=true;
-        self.SymTable.symlist.foreachcall(@verify_objc_vardef,@result);
-        self.SymTable.deflist.foreachcall(@verify_objc_procdef_paras,@result);
+        Result:=True;
+        Self.SymTable.SymList.ForEachCall(@VerifyObjCVarDef,@Result);
+        Self.SymTable.DefList.ForEachCall(@VerifyObjCProcDefParas,@Result);
       end;
 
 
-    procedure do_cpp_import_info(data: tobject; arg: pointer);
+    procedure DoCPPImportInfo(Data: TObject; Arg: Pointer);
       var
-        def: TDef absolute data;
-        pd: TProcDef absolute data;
+        Def: TDef absolute Data;
+        PD: TProcDef absolute Data;
       begin
-        if (def.typ=procdef) then
+        if (Def.Typ=ProcDef) then
           begin
-            pd.setmangledname(TargetInfo.Cprefix+pd.cplusplusmangledname);
-            if (oo_is_external in pd.struct.objectoptions) then
+            PD.SetMangledName(TargetInfo.Cprefix+PD.CPlusPlusMangledName);
+            if (oo_is_external in PD.Struct.ObjectOptions) then
               begin
                 { copied from psub.read_proc }
-                if Assigned(TObjectDef(pd.struct).import_lib) then
-                   CurrentModule.AddExternalImport(TObjectDef(pd.struct).import_lib^,pd.mangledname,pd.mangledname,0,false,false)
+                if Assigned(TObjectDef(PD.Struct).ImportLib) then
+                   CurrentModule.AddExternalImport(TObjectDef(PD.Struct).ImportLib^,PD.MangledName,PD.MangledName,0,False,False)
                  else
                    begin
                      { add import name to external list for DLL scanning }
-                     if tf_has_dllscanner in TargetInfo.flags then
-                       CurrentModule.dllscannerinputlist.Add(pd.mangledname,pd);
+                     if tf_has_dllscanner in TargetInfo.Flags then
+                       CurrentModule.DLLScannerInputList.Add(PD.MangledName,PD);
                    end;
 
               end;
@@ -8794,28 +8794,28 @@ implementation
       end;
 
 
-    procedure TObjectDef.finish_cpp_data;
+    procedure TObjectDef.Finish_CPP_Data;
       begin
-        self.SymTable.DefList.ForEachCall(@do_cpp_import_info,nil);
+        Self.SymTable.DefList.ForEachCall(@DoCPPImportInfo,nil);
       end;
 
 
-    procedure TObjectDef.apply_rtti_directive(dir: TRTTIDirective);
+    procedure TObjectDef.Apply_RTTI_Directive(Dir: TRTTIDirective);
       begin
-        rtti.clause:=dir.clause;
-        rtti.options:=dir.options;
-        if (dir.clause=rtc_inherit) and Assigned(childof) and (childof.rtti.clause<>rtc_none) then
+        RTTI.Clause:=Dir.Clause;
+        RTTI.Options:=Dir.Options;
+        if (Dir.Clause=rtc_inherit) and Assigned(ChildOf) and (ChildOf.RTTI.Clause<>rtc_none) then
           begin
-            rtti.options[ro_methods]:=rtti.options[ro_methods]+childof.rtti.options[ro_methods];
-            rtti.options[ro_fields]:=rtti.options[ro_fields]+childof.rtti.options[ro_fields];
-            rtti.options[ro_properties]:=rtti.options[ro_properties]+childof.rtti.options[ro_properties];
+            RTTI.Options[ro_methods]:=RTTI.Options[ro_methods]+ChildOf.RTTI.Options[ro_methods];
+            RTTI.Options[ro_fields]:=RTTI.Options[ro_fields]+ChildOf.RTTI.Options[ro_fields];
+            RTTI.Options[ro_properties]:=RTTI.Options[ro_properties]+ChildOf.RTTI.Options[ro_properties];
           end;
       end;
 
 {$ifdef DEBUG_NODE_XML}
     function TObjectDef.XMLPrintType: AnsiString;
       begin
-        if (oo_is_forward in objectoptions) then
+        if (oo_is_forward in ObjectOptions) then
           Result := '&lt;class prototype&gt;'
         else
           Result := '&lt;class&gt;';
@@ -8824,25 +8824,25 @@ implementation
 
     procedure TObjectDef.XMLPrintDefInfo(var T: Text; Sym: TSym);
       var
-        i: TObjectOption;
-        first: Boolean;
+        I: TObjectOption;
+        First: Boolean;
       begin
         inherited XMLPrintDefInfo(T, Sym);
 
         First := True;
-        for i := Low(TObjectOption) to High(TObjectOption) do
-          if i in objectoptions then
+        for I := Low(TObjectOption) to High(TObjectOption) do
+          if I in ObjectOptions then
             begin
               if First then
                 begin
-                  Write(T, ' objectoptions="', i);
+                  Write(T, ' objectoptions="', I);
                   First := False;
                 end
               else
-                Write(T, ',', i)
+                Write(T, ',', I)
             end;
 
-        if not first then
+        if not First then
           Write(T, '"');
       end;
 
@@ -8850,10 +8850,10 @@ implementation
     procedure TObjectDef.XMLPrintDefData(var T: Text; Sym: TSym);
       begin
         { There's nothing useful yet if the type is only forward-declared }
-        if not (oo_is_forward in objectoptions) then
+        if not (oo_is_forward in ObjectOptions) then
           begin
-            if Assigned(childof) then
-              WriteLn(T, PrintNodeIndention, '<ancestor>', SanitiseXMLString(childof.typesym.RealName), '</ancestor>');
+            if Assigned(ChildOf) then
+              WriteLn(T, PrintNodeIndention, '<ancestor>', SanitiseXMLString(ChildOf.TypeSym.RealName), '</ancestor>');
 
             inherited XMLPrintDefData(T, Sym);
           end;
@@ -8867,141 +8867,141 @@ implementation
 
     function TImplementedInterface.GetIOffset: LongInt;
       begin
-        if (fIOffset=-1) and
-           (IType in [etFieldValue,etFieldValueClass]) then
-          result:=TFieldVarSym(ImplementsField).fieldoffset
+        if (FIOffset=-1) and
+           (IType in [EtFieldValue,EtFieldValueClass]) then
+          Result:=TFieldVarSym(ImplementsField).FieldOffset
         else
-          result:=fIOffset;
+          Result:=FIOffset;
       end;
 
 
-    constructor TImplementedInterface.create(aintf: TObjectDef);
+    constructor TImplementedInterface.Create(AIntf: TObjectDef);
       begin
-        inherited create;
-        intfdef:=aintf;
-        intfdefderef.reset;
+        inherited Create;
+        IntfDef:=AIntf;
+        IntfDefDeref.Reset;
         IOffset:=-1;
-        IType:=etStandard;
+        IType:=EtStandard;
         NameMappings:=nil;
-        procdefs:=nil;
+        ProcDefs:=nil;
       end;
 
 
-    constructor TImplementedInterface.create_deref(intfd,getterd:TDeref);
+    constructor TImplementedInterface.Create_Deref(IntfD,GetterD:TDeref);
       begin
-        inherited create;
-        intfdef:=nil;
-        intfdefderef:=intfd;
-        ImplementsGetterDeref:=getterd;
+        inherited Create;
+        IntfDef:=nil;
+        IntfDefDeref:=IntfD;
+        ImplementsGetterDeref:=GetterD;
         IOffset:=-1;
-        IType:=etStandard;
+        IType:=EtStandard;
         NameMappings:=nil;
-        procdefs:=nil;
+        ProcDefs:=nil;
       end;
 
 
     destructor  TImplementedInterface.Destroy;
       var
-        i : LongInt;
-        mappedname : PShortString;
+        I : LongInt;
+        MappedName : PShortString;
       begin
         if Assigned(NameMappings) then
           begin
-            for i:=0 to NameMappings.Count-1 do
+            for I:=0 to NameMappings.Count-1 do
               begin
-                mappedname:=PShortString(NameMappings[i]);
-                StringDispose(mappedname);
+                MappedName:=PShortString(NameMappings[I]);
+                StringDispose(MappedName);
               end;
-            NameMappings.free;
+            NameMappings.Free;
             NameMappings:=nil;
           end;
-        if Assigned(procdefs) then
+        if Assigned(ProcDefs) then
           begin
-            procdefs.free;
-            procdefs:=nil;
+            ProcDefs.Free;
+            ProcDefs:=nil;
           end;
         inherited Destroy;
       end;
 
 
-    procedure TImplementedInterface.buildderef;
+    procedure TImplementedInterface.BuildDeref;
       begin
-        intfdefderef.build(intfdef);
-        ImplementsGetterDeref.build(ImplementsGetter);
+        IntfDefDeref.Build(IntfDef);
+        ImplementsGetterDeref.Build(ImplementsGetter);
       end;
 
 
-    procedure TImplementedInterface.deref;
+    procedure TImplementedInterface.Deref;
       begin
-        intfdef:=TObjectDef(intfdefderef.resolve);
-        ImplementsGetter:=TSym(ImplementsGetterDeref.resolve);
+        IntfDef:=TObjectDef(IntfDefDeref.Resolve);
+        ImplementsGetter:=TSym(ImplementsGetterDeref.Resolve);
       end;
 
 
-    procedure TImplementedInterface.AddMapping(const origname,newname: string);
+    procedure TImplementedInterface.AddMapping(const OrigName,NewName: string);
       begin
         if not Assigned(NameMappings) then
           NameMappings:=TFPHashList.Create;
-        NameMappings.Add(origname,StringDup(newname));
+        NameMappings.Add(OrigName,StringDup(NewName));
       end;
 
 
-    function TImplementedInterface.GetMapping(const origname: string):string;
+    function TImplementedInterface.GetMapping(const OrigName: string):string;
       var
-        mappedname : PShortString;
+        MappedName : PShortString;
       begin
-        result:='';
+        Result:='';
         if not Assigned(NameMappings) then
-          exit;
-        mappedname:=PShortString(NameMappings.Find(origname));
-        if Assigned(mappedname) then
-          result:=mappedname^;
+          Exit;
+        MappedName:=PShortString(NameMappings.Find(OrigName));
+        if Assigned(MappedName) then
+          Result:=MappedName^;
       end;
 
 
-    procedure TImplementedInterface.AddImplProc(pd:TProcDef);
+    procedure TImplementedInterface.AddImplProc(PD:TProcDef);
       begin
-        if not Assigned(procdefs) then
-          procdefs:=TFPObjectList.Create(false);
+        if not Assigned(ProcDefs) then
+          ProcDefs:=TFPObjectList.Create(False);
         { duplicate entries must be stored, because multiple }
         { interfaces can declare methods with the same name  }
         { and all of these get their own VMT entry           }
-        procdefs.Add(pd);
+        ProcDefs.Add(PD);
       end;
 
 
-    function TImplementedInterface.IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: LongInt): boolean;
+    function TImplementedInterface.IsImplMergePossible(MergingIntf:TImplementedInterface;out Weight: LongInt): Boolean;
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        result:=false;
+        Result:=False;
         { interfaces being implemented through delegation are not mergeable (FK) }
-        if (IType<>etStandard) or (MergingIntf.IType<>etStandard) or not(Assigned(ProcDefs)) or not(Assigned(MergingIntf.ProcDefs)) then
-          exit;
-        weight:=0;
+        if (IType<>EtStandard) or (MergingIntf.IType<>EtStandard) or not(Assigned(ProcDefs)) or not(Assigned(MergingIntf.ProcDefs)) then
+          Exit;
+        Weight:=0;
         { empty interface is mergeable }
         if ProcDefs.Count=0 then
           begin
-            result:=true;
-            exit;
+            Result:=True;
+            Exit;
           end;
         { The interface to merge must at least the number of
           procedures of this interface }
         if MergingIntf.ProcDefs.Count<ProcDefs.Count then
-          exit;
-        for i:=0 to ProcDefs.Count-1 do
+          Exit;
+        for I:=0 to ProcDefs.Count-1 do
           begin
-            if MergingIntf.ProcDefs[i]<>ProcDefs[i] then
-              exit;
+            if MergingIntf.ProcDefs[I]<>ProcDefs[I] then
+              Exit;
           end;
-        weight:=ProcDefs.Count;
-        result:=true;
+        Weight:=ProcDefs.Count;
+        Result:=True;
       end;
 
 
-    function TImplementedInterface.getcopy:TImplementedInterface;
+    function TImplementedInterface.GetCopy:TImplementedInterface;
       var
-        i : LongInt;
+        I : LongInt;
       begin
         Result:=TImplementedInterface.Create(nil);
         { 1) the procdefs list will be freed once for each copy
@@ -9009,77 +9009,77 @@ implementation
              Nope: procdefs are owned by their symtable, so no copy necessary
           3) idem for the name mappings
         }
-        result.fIOffset:=fIOffset;
-        result.IntfDef:=IntfDef;
-        result.IntfDefDeref.reset;
-        result.IType:=IType;
-        result.VtblImplIntf:=VtblImplIntf;
+        Result.FIOffset:=FIOffset;
+        Result.IntfDef:=IntfDef;
+        Result.IntfDefDeref.Reset;
+        Result.IType:=IType;
+        Result.VtblImplIntf:=VtblImplIntf;
         if Assigned(NameMappings) then
           begin
-            result.NameMappings:=TFPHashList.create;
-            for i:=0 to NameMappings.Count-1 do
-              Result.NameMappings.Add(NameMappings.NameOfIndex(i),
-                                      StringDup(PShortString(NameMappings.Items[i])^));
+            Result.NameMappings:=TFPHashList.Create;
+            for I:=0 to NameMappings.Count-1 do
+              Result.NameMappings.Add(NameMappings.NameOfIndex(I),
+                                      StringDup(PShortString(NameMappings.Items[I])^));
           end;
         if Assigned(ProcDefs) then
           begin
-            result.ProcDefs:=TFPObjectList.create(false);
+            Result.ProcDefs:=TFPObjectList.Create(False);
             { Note: this is probably wrong, because those procdefs are owned by
               the old objectdef from which we copy, what would be the correct way
               of doing this is to lookup the equivalent copy in the new owner
               and reference this instead... But this is complicated so let's try
               it this way until it blows up ok? }
-            for i:=0 to ProcDefs.Count-1 do
-              Result.ProcDefs.add(TProcDef(procdefs[i]).getcopy);
+            for I:=0 to ProcDefs.Count-1 do
+              Result.ProcDefs.Add(TProcDef(ProcDefs[I]).GetCopy);
           end;
-        result.ImplementsGetter:=ImplementsGetter;
-        result.ImplementsGetterDeref.reset;
-        result.ImplementsField:=ImplementsField;
+        Result.ImplementsGetter:=ImplementsGetter;
+        Result.ImplementsGetterDeref.Reset;
+        Result.ImplementsField:=ImplementsField;
       end;
 
 {****************************************************************************
                                 TFORWARDDEF
 ****************************************************************************}
 
-   constructor TForwardDef.create(const s:string;const pos:TFilePosInfo);
+   constructor TForwardDef.Create(const S:string;const Pos:TFilePosInfo);
      begin
-        inherited create(forwarddef,true);
-        tosymname:=StringDup(s);
-        forwardpos:=pos;
+        inherited Create(ForwardDef,True);
+        ToSymName:=StringDup(S);
+        ForwardPos:=Pos;
      end;
 
 
     function TForwardDef.GetTypeName:string;
       begin
-        GetTypeName:='unresolved forward to '+tosymname^;
+        GetTypeName:='unresolved forward to '+ToSymName^;
       end;
 
 
     destructor TForwardDef.Destroy;
       begin
-        StringDispose(tosymname);
+        StringDispose(ToSymName);
         inherited Destroy;
       end;
 
-    function TForwardDef.getcopy:TStoredDef;
+    function TForwardDef.GetCopy:TStoredDef;
       begin
-        result:=CForwardDef.create(tosymname^, forwardpos);
+        Result:=CForwardDef.Create(ToSymName^, ForwardPos);
       end;
 
 {****************************************************************************
                                TUNDEFINEDDEF
 ****************************************************************************}
 
-   constructor TUndefinedDef.create(doregister:boolean);
+   constructor TUndefinedDef.Create(DoRegister:Boolean);
      begin
-        inherited create(undefineddef,doregister);
+        inherited Create(UndefinedDef,DoRegister);
      end;
 
 
-    constructor TUndefinedDef.ppuload(ppufile:TCompilerPPUFile);
+    constructor TUndefinedDef.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(undefineddef,ppufile);
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(UndefinedDef,PPUFile);
+         PPULoadPlatform(PPUFile);
       end;
 
     function TUndefinedDef.GetTypeName:string;
@@ -9088,10 +9088,10 @@ implementation
       end;
 
 
-    procedure TUndefinedDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TUndefinedDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         WriteEntry(ppufile,IBUndefinedDef);
+         inherited PPUWrite(PPUFile);
+         WriteEntry(PPUFile,IBUndefinedDef);
       end;
 
 
@@ -9099,15 +9099,15 @@ implementation
                                   TERRORDEF
 ****************************************************************************}
 
-    constructor TErrorDef.create;
+    constructor TErrorDef.Create;
       begin
-        inherited create(errordef,true);
+        inherited Create(ErrorDef,True);
         { prevent consecutive faults }
-        savesize:=1;
+        SaveSize:=1;
       end;
 
 
-    procedure TErrorDef.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TErrorDef.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
         { Can't write errordefs to ppu }
         InternalError(200411063);
@@ -9120,9 +9120,9 @@ implementation
       end;
 
 
-    function TErrorDef.getmangledparaname:TSymStr;
+    function TErrorDef.GetMangledParaName:TSymStr;
       begin
-        getmangledparaname:='error';
+        GetMangledParaName:='error';
       end;
 
 
@@ -9130,300 +9130,300 @@ implementation
                            Definition Helpers
 ****************************************************************************}
 
-    function is_interfacecom(def: TDef): boolean;
+    function Is_InterfaceCOM(Def: TDef): Boolean;
       begin
-        is_interfacecom:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_interfacecom);
+        Is_InterfaceCOM:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_interfacecom);
       end;
 
-    function is_interfacecom_or_dispinterface(def: TDef): boolean;
+    function Is_InterfaceCOM_Or_DispInterface(Def: TDef): Boolean;
       begin
-        is_interfacecom_or_dispinterface:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface]);
+        Is_InterfaceCOM_Or_DispInterface:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_interfacecom,odt_dispinterface]);
       end;
 
-    function is_any_interface_kind(def: TDef): boolean;
+    function Is_Any_Interface_Kind(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          ((TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface,odt_interfacecorba,odt_objcprotocol]) or
-           is_objccategory(def));
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          ((TObjectDef(Def).ObjectType in [odt_interfacecom,odt_dispinterface,odt_interfacecorba,odt_objcprotocol]) or
+           Is_ObjCCategory(Def));
       end;
 
-    function is_interfacecorba(def: TDef): boolean;
+    function Is_InterfaceCORBA(Def: TDef): Boolean;
       begin
-        is_interfacecorba:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_interfacecorba);
+        Is_InterfaceCORBA:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_interfacecorba);
       end;
 
-    function is_interface(def: TDef): boolean;
+    function Is_Interface(Def: TDef): Boolean;
       begin
-        is_interface:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_interfacecom,odt_interfacecorba]);
-      end;
-
-
-    function is_dispinterface(def: TDef): boolean;
-      begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_dispinterface);
+        Is_Interface:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_interfacecom,odt_interfacecorba]);
       end;
 
 
-    function is_class(def: TDef): boolean;
+    function Is_DispInterface(Def: TDef): Boolean;
       begin
-        is_class:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_class);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_dispinterface);
       end;
 
 
-    function is_object(def: TDef): boolean;
+    function Is_Class(Def: TDef): Boolean;
       begin
-        is_object:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_object);
+        Is_Class:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_class);
       end;
 
 
-    function is_cppclass(def: TDef): boolean;
+    function Is_Object(Def: TDef): Boolean;
       begin
-        is_cppclass:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_cppclass);
+        Is_Object:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_object);
       end;
 
 
-    function is_objcclass(def: TDef): boolean;
+    function Is_CPPClass(Def: TDef): Boolean;
       begin
-        is_objcclass:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_objcclass);
+        Is_CPPClass:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_cppclass);
       end;
 
 
-    function is_objectpascal_helper(def: TDef): boolean;
+    function Is_ObjCClass(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_helper);
+        Is_ObjCClass:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_objcclass);
       end;
 
 
-    function is_objcclassref(def: TDef): boolean;
+    function Is_ObjectPascal_Helper(Def: TDef): Boolean;
       begin
-        is_objcclassref:=
-          Assigned(def) and
-          (def.typ=classrefdef) and
-          is_objcclass(TClassRefDef(def).pointeddef);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_helper);
       end;
 
 
-    function is_objcprotocol(def: TDef): boolean;
+    function Is_ObjCClassRef(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_objcprotocol);
+        Is_ObjCClassRef:=
+          Assigned(Def) and
+          (Def.Typ=ClassRefDef) and
+          Is_ObjCClass(TClassRefDef(Def).PointedDef);
       end;
 
 
-    function is_objccategory(def: TDef): boolean;
+    function Is_ObjCProtocol(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType=odt_objcprotocol);
+      end;
+
+
+    function Is_ObjCCategory(Def: TDef): Boolean;
+      begin
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
           { if used as a forward type }
-          ((TObjectDef(def).objecttype=odt_objccategory) or
+          ((TObjectDef(Def).ObjectType=odt_objccategory) or
           { if used as after it has been resolved }
-           ((TObjectDef(def).objecttype=odt_objcclass) and
-            (oo_is_classhelper in TObjectDef(def).objectoptions)));
+           ((TObjectDef(Def).ObjectType=odt_objcclass) and
+            (oo_is_classhelper in TObjectDef(Def).ObjectOptions)));
       end;
 
-    function is_objc_class_or_protocol(def: TDef): boolean;
+    function Is_ObjC_Class_Or_Protocol(Def: TDef): Boolean;
       begin
-         result:=
-           Assigned(def) and
-           (def.typ=objectdef) and
-           (TObjectDef(def).objecttype in [odt_objcclass,odt_objcprotocol]);
+         Result:=
+           Assigned(Def) and
+           (Def.Typ=ObjectDef) and
+           (TObjectDef(Def).ObjectType in [odt_objcclass,odt_objcprotocol]);
       end;
 
 
-    function is_objc_protocol_or_category(def: TDef): boolean;
+    function Is_ObjC_Protocol_Or_Category(Def: TDef): Boolean;
       begin
-         result:=
-           Assigned(def) and
-           (def.typ=objectdef) and
-           ((TObjectDef(def).objecttype = odt_objcprotocol) or
-            ((TObjectDef(def).objecttype = odt_objcclass) and
-             (oo_is_classhelper in TObjectDef(def).objectoptions)));
+         Result:=
+           Assigned(Def) and
+           (Def.Typ=ObjectDef) and
+           ((TObjectDef(Def).ObjectType = odt_objcprotocol) or
+            ((TObjectDef(Def).ObjectType = odt_objcclass) and
+             (oo_is_classhelper in TObjectDef(Def).ObjectOptions)));
       end;
 
-    function is_classhelper(def: TDef): boolean;
+    function Is_ClassHelper(Def: TDef): Boolean;
       begin
-         result:=
-           is_objectpascal_helper(def) or
-           is_objccategory(def);
+         Result:=
+           Is_ObjectPascal_Helper(Def) or
+           Is_ObjCCategory(Def);
       end;
 
-    function is_class_or_interface(def: TDef): boolean;
+    function Is_Class_Or_Interface(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba]);
       end;
 
 
-    function is_class_or_interface_or_objc(def: TDef): boolean;
+    function Is_Class_Or_Interface_Or_ObjC(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_objcclass,odt_objcprotocol]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_objcclass,odt_objcprotocol]);
       end;
 
 
-    function is_class_or_interface_or_dispinterface_or_objc(def: TDef): boolean;
+    function Is_Class_Or_Interface_Or_DispInterface_Or_ObjC(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol]);
       end;
 
 
-    function is_class_or_interface_or_object(def: TDef): boolean;
+    function Is_Class_Or_Interface_Or_Object(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_object]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_object]);
       end;
 
 
-    function is_class_or_interface_or_dispinterface(def: TDef): boolean;
+    function Is_Class_Or_Interface_Or_DispInterface(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface]);
       end;
 
 
-    function is_implicit_pointer_object_type(def: TDef): boolean;
+    function Is_Implicit_Pointer_Object_Type(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper]);
       end;
 
-    function is_implicit_array_pointer(def: TDef): boolean;
+    function Is_Implicit_Array_Pointer(Def: TDef): Boolean;
       begin
-        result:=is_dynamic_array(def) or is_dynamicstring(def);
+        Result:=is_dynamic_array(Def) or is_dynamicstring(Def);
       end;
 
-    function is_class_or_object(def: TDef): boolean;
+    function Is_Class_Or_Object(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_object]);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=ObjectDef) and
+          (TObjectDef(Def).ObjectType in [odt_class,odt_object]);
       end;
 
-    function is_record(def: TDef): boolean;
+    function Is_Record(Def: TDef): Boolean;
       begin
-        result:=
-          Assigned(def) and
-          (def.typ=recorddef);
+        Result:=
+          Assigned(Def) and
+          (Def.Typ=RecordDef);
       end;
 
-    procedure loadobjctypes;
+    procedure LoadObjCTypes;
       begin
-        objc_metaclasstype:=TPointerDef(search_named_unit_globaltype('OBJC','POBJC_CLASS',true).typedef);
-        objc_superclasstype:=TPointerDef(search_named_unit_globaltype('OBJC','POBJC_SUPER',true).typedef);
-        objc_idtype:=TPointerDef(search_named_unit_globaltype('OBJC','ID',true).typedef);
-        objc_seltype:=TPointerDef(search_named_unit_globaltype('OBJC','SEL',true).typedef);
-        objc_objecttype:=TRecordDef(search_named_unit_globaltype('OBJC','OBJC_OBJECT',true).typedef);
+        ObjC_MetaClassType:=TPointerDef(Search_Named_Unit_GlobalType('OBJC','POBJC_CLASS',True).TypeDef);
+        ObjC_SuperClassType:=TPointerDef(Search_Named_Unit_GlobalType('OBJC','POBJC_SUPER',True).TypeDef);
+        ObjC_IDType:=TPointerDef(Search_Named_Unit_GlobalType('OBJC','ID',True).TypeDef);
+        ObjC_SelType:=TPointerDef(Search_Named_Unit_GlobalType('OBJC','SEL',True).TypeDef);
+        ObjC_ObjectType:=TRecordDef(Search_Named_Unit_GlobalType('OBJC','OBJC_OBJECT',True).TypeDef);
       end;
 
 
-    procedure maybeloadcocoatypes;
+    procedure MaybeLoadCocoaTypes;
       var
         TSym: TTypeSym;
-        cocoaunit: string[15];
+        CocoaUnit: string[15];
       begin
-        if Assigned(objc_fastenumeration) then
-          exit;
-        if not(TargetInfo.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
-          cocoaunit:='COCOAALL'
+        if Assigned(ObjC_FastEnumeration) then
+          Exit;
+        if not(TargetInfo.System in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+          CocoaUnit:='COCOAALL'
         else
-          cocoaunit:='IPHONEALL';
-        TSym:=search_named_unit_globaltype(cocoaunit,'NSFASTENUMERATIONPROTOCOL',false);
+          CocoaUnit:='IPHONEALL';
+        TSym:=Search_Named_Unit_GlobalType(CocoaUnit,'NSFASTENUMERATIONPROTOCOL',False);
         if Assigned(TSym) then
-          objc_fastenumeration:=TObjectDef(TSym.typedef)
+          ObjC_FastEnumeration:=TObjectDef(TSym.TypeDef)
         else
-          objc_fastenumeration:=nil;
-        TSym:=search_named_unit_globaltype(cocoaunit,'NSFASTENUMERATIONSTATE',false);
+          ObjC_FastEnumeration:=nil;
+        TSym:=Search_Named_Unit_GlobalType(CocoaUnit,'NSFASTENUMERATIONSTATE',False);
         if Assigned(TSym) then
-          objc_fastenumerationstate:=TRecordDef(TSym.typedef)
+          ObjC_FastEnumerationState:=TRecordDef(TSym.TypeDef)
         else
-          objc_fastenumerationstate:=nil;
+          ObjC_FastEnumerationState:=nil;
       end;
 
 
-    function use_vectorfpu(def : TDef) : boolean;
+    function Use_VectorFPU(Def : TDef) : Boolean;
       begin
 {$ifdef x86}
 {$define use_vectorfpuimplemented}
-        use_vectorfpu:=(is_single(def) and (CurrentSettings.FPUType in sse_singlescalar)) or
-          (is_double(def) and (CurrentSettings.FPUType in sse_doublescalar)) or
+        Use_VectorFPU:=(is_single(Def) and (CurrentSettings.FPUType in sse_singlescalar)) or
+          (is_double(Def) and (CurrentSettings.FPUType in sse_doublescalar)) or
           { Check vector types }
           (
-            is_normal_array(def) and
-            (ado_IsVector in TArrayDef(def).arrayoptions) and
+            is_normal_array(Def) and
+            (ado_IsVector in TArrayDef(Def).ArrayOptions) and
             (
               (
-                is_single(TArrayDef(def).elementdef) and
+                is_single(TArrayDef(Def).ElementDef) and
                 (
                   { SSE or AVX XMM register }
-                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.FPUType in sse_singlescalar)) or
+                  ((TArrayDef(Def).EleCount = 4) and (CurrentSettings.FPUType in sse_singlescalar)) or
                   { AVX YMM register }
-                  ((TArrayDef(def).elecount = 8) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
+                  ((TArrayDef(Def).EleCount = 8) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
 
                   or
                   { AVX512 ZMM register }
-                  ((TArrayDef(def).elecount = 16) and (CurrentSettings.FPUType in [fpu_avx512f]))
+                  ((TArrayDef(Def).EleCount = 16) and (CurrentSettings.FPUType in [fpu_avx512f]))
 
                 )
               ) or
               (
-                is_double(TArrayDef(def).elementdef) and
+                is_double(TArrayDef(Def).ElementDef) and
                 (
                   { SSE or AVX XMM register }
-                  ((TArrayDef(def).elecount = 2) and (CurrentSettings.FPUType in sse_doublescalar)) or
+                  ((TArrayDef(Def).EleCount = 2) and (CurrentSettings.FPUType in sse_doublescalar)) or
                   { AVX YMM register }
-                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
+                  ((TArrayDef(Def).EleCount = 4) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
 
                   { AVX512 ZMM register }
-                  or ((TArrayDef(def).elecount = 8) and (CurrentSettings.FPUType in [fpu_avx512f]))
+                  or ((TArrayDef(Def).EleCount = 8) and (CurrentSettings.FPUType in [fpu_avx512f]))
 
                 )
               )
@@ -9432,142 +9432,142 @@ implementation
 {$endif x86}
 {$ifdef aarch64}
 {$define use_vectorfpuimplemented}
-        use_vectorfpu:=true;
+        Use_VectorFPU:=True;
 {$endif aarch64}
 
 {$ifndef use_vectorfpuimplemented}
-        use_vectorfpu:=false;
+        Use_VectorFPU:=False;
 {$endif}
       end;
 
-    procedure reset_all_default_types;
+    procedure Reset_All_Default_Types;
     { Those class pointers have to be set to nil manually }
     { after memory they point to have been released.      }
     { Necessary strictly for Textmode IDE.                }
     begin
-       voidpointertype:=nil;           { pointer for Void-pointeddef }
-       charpointertype:=nil;           { pointer for Char-pointeddef }
-       widecharpointertype:=nil;       { pointer for WideChar-pointeddef }
-       voidcodepointertype:=nil;       { pointer to code; corresponds to System.CodePointer }
-       voidstackpointertype:=nil;      { the pointer type used for accessing parameters and local vars on the stack }
-       parentfpvoidpointertype:=nil;   { void pointer with the size of the hidden parentfp parameter, passed to nested functions }
+       VoidPointerType:=nil;           { pointer for Void-pointeddef }
+       CharPointerType:=nil;           { pointer for Char-pointeddef }
+       WideCharPointerType:=nil;       { pointer for WideChar-pointeddef }
+       VoidCodePointerType:=nil;       { pointer to code; corresponds to System.CodePointer }
+       VoidStackPointerType:=nil;      { the pointer type used for accessing parameters and local vars on the stack }
+       ParentFPVoidPointerType:=nil;   { void pointer with the size of the hidden parentfp parameter, passed to nested functions }
 {$ifdef x86}
-       voidnearpointertype:=nil;
-       voidnearcspointertype:=nil;
-       voidneardspointertype:=nil;
-       voidnearsspointertype:=nil;
-       voidnearespointertype:=nil;
-       voidnearfspointertype:=nil;
-       voidneargspointertype:=nil;
+       VoidNearPointerType:=nil;
+       VoidNearCSPointerType:=nil;
+       VoidNearDSPointerType:=nil;
+       VoidNearSSPointerType:=nil;
+       VoidNearESPointerType:=nil;
+       VoidNearFSPointerType:=nil;
+       VoidNearGSPointerType:=nil;
 
 {$endif x86}
-       cundefinedtype:=nil;
-       cformaltype:=nil;               { unique formal definition }
-       ctypedformaltype:=nil;          { unique typed formal definition }
-       voidtype:=nil;                  { Void (procedure) }
-       cansichartype:=nil;             { Char }
-       cwidechartype:=nil;             { WideChar }
-       cchartype:=nil;                 { either cansichartype or cwidechartype. Do not free }
-       pasbool1type:=nil;              { boolean type }
-       pasbool8type:=nil;
-       pasbool16type:=nil;
-       pasbool32type:=nil;
-       pasbool64type:=nil;
-       bool8type:=nil;
-       bool16type:=nil;
-       bool32type:=nil;
-       bool64type:=nil;
+       CUndefinedType:=nil;
+       CFormalType:=nil;               { unique formal definition }
+       CTypedFormalType:=nil;          { unique typed formal definition }
+       VoidType:=nil;                  { Void (procedure) }
+       CAnsiCharType:=nil;             { Char }
+       CWideCharType:=nil;             { WideChar }
+       CCharType:=nil;                 { either cansichartype or cwidechartype. Do not free }
+       PasBool1Type:=nil;              { boolean type }
+       PasBool8Type:=nil;
+       PasBool16Type:=nil;
+       PasBool32Type:=nil;
+       PasBool64Type:=nil;
+       Bool8Type:=nil;
+       Bool16Type:=nil;
+       Bool32Type:=nil;
+       Bool64Type:=nil;
 
-       u8inttype:=nil;                 { 8-Bit unsigned integer }
-       s8inttype:=nil;                 { 8-Bit signed integer }
-       u16inttype:=nil;                { 16-Bit unsigned integer }
-       s16inttype:=nil;                { 16-Bit signed integer }
-       u24inttype:=nil;                { 24-Bit unsigned integer }
-       s24inttype:=nil;                { 24-Bit signed integer }
-       u32inttype:=nil;                { 32-Bit unsigned integer }
-       s32inttype:=nil;                { 32-Bit signed integer }
-       u40inttype:=nil;                { 40-Bit unsigned integer }
-       s40inttype:=nil;                { 40-Bit signed integer }
-       u48inttype:=nil;                { 48-Bit unsigned integer }
-       s48inttype:=nil;                { 48-Bit signed integer }
-       u56inttype:=nil;                { 56-Bit unsigned integer }
-       s56inttype:=nil;                { 56-Bit signed integer }
-       u64inttype:=nil;                { 64-bit unsigned integer }
-       s64inttype:=nil;                { 64-bit signed integer }
-       u128inttype:=nil;               { 128-bit unsigned integer }
-       s128inttype:=nil;               { 128-bit signed integer }
-       s32floattype:=nil;              { 32 bit floating point number }
-       s64floattype:=nil;              { 64 bit floating point number }
-       s80floattype:=nil;              { 80 bit floating point number }
-       sc80floattype:=nil;             { 80 bit floating point number but stored like in C }
-       s64currencytype:=nil;           { pointer to a currency type }
-       cshortstringtype:=nil;          { pointer to type of short string const   }
-       clongstringtype:=nil;           { pointer to type of long string const   }
-       cansistringtype:=nil;           { pointer to type of ansi string const  }
-       cwidestringtype:=nil;           { pointer to type of wide string const  }
-       cunicodestringtype:=nil;
-       openshortstringtype:=nil;
-       openchararraytype:=nil;
-       cfiletype:=nil;
-       methodpointertype:=nil;         { typecasting of methodpointers to extract self }
-       nestedprocpointertype:=nil;     { typecasting of nestedprocpointers to extract parentfp }
-       hresultdef:=nil;
-       typekindtype:=nil;              { def of TTypeKind for correct handling of GetTypeKind parameters }
+       U8IntType:=nil;                 { 8-Bit unsigned integer }
+       S8IntType:=nil;                 { 8-Bit signed integer }
+       U16IntType:=nil;                { 16-Bit unsigned integer }
+       S16IntType:=nil;                { 16-Bit signed integer }
+       U24IntType:=nil;                { 24-Bit unsigned integer }
+       S24IntType:=nil;                { 24-Bit signed integer }
+       U32IntType:=nil;                { 32-Bit unsigned integer }
+       S32IntType:=nil;                { 32-Bit signed integer }
+       U40IntType:=nil;                { 40-Bit unsigned integer }
+       S40IntType:=nil;                { 40-Bit signed integer }
+       U48IntType:=nil;                { 48-Bit unsigned integer }
+       S48IntType:=nil;                { 48-Bit signed integer }
+       U56IntType:=nil;                { 56-Bit unsigned integer }
+       S56IntType:=nil;                { 56-Bit signed integer }
+       U64IntType:=nil;                { 64-bit unsigned integer }
+       S64IntType:=nil;                { 64-bit signed integer }
+       U128IntType:=nil;               { 128-bit unsigned integer }
+       S128IntType:=nil;               { 128-bit signed integer }
+       S32FloatType:=nil;              { 32 bit floating point number }
+       S64FloatType:=nil;              { 64 bit floating point number }
+       S80FloatType:=nil;              { 80 bit floating point number }
+       SC80FloatType:=nil;             { 80 bit floating point number but stored like in C }
+       S64CurrencyType:=nil;           { pointer to a currency type }
+       CShortStringType:=nil;          { pointer to type of short string const   }
+       CLongStringType:=nil;           { pointer to type of long string const   }
+       CAnsiStringType:=nil;           { pointer to type of ansi string const  }
+       CWideStringType:=nil;           { pointer to type of wide string const  }
+       CUnicodeStringType:=nil;
+       OpenShortStringType:=nil;
+       OpenCharArrayType:=nil;
+       CFileType:=nil;
+       MethodPointerType:=nil;         { typecasting of methodpointers to extract self }
+       NestedProcPointerType:=nil;     { typecasting of nestedprocpointers to extract parentfp }
+       HResultDef:=nil;
+       TypeKindType:=nil;              { def of TTypeKind for correct handling of GetTypeKind parameters }
        { we use only one variant def for every variant class }
        CVariantType:=nil;
-       colevarianttype:=nil;
+       COleVariantType:=nil;
        { default integer type, normally s32inttype on 32 bit systems and s64bittype on 64 bit systems }
-       sinttype:=nil;
-       uinttype:=nil;
+       SIntType:=nil;
+       UIntType:=nil;
        { integer types corresponding to OS_SINT/OS_INT }
-       ossinttype:=nil;
-       osuinttype:=nil;
+       OSSIntType:=nil;
+       OSUIntType:=nil;
        { integer types corresponding to the ALU size, sizeof(aint) and the ALUSInt/ALUUInt types in the system unit }
-       alusinttype:=nil;
-       aluuinttype:=nil;
+       ALUSIntType:=nil;
+       ALUUIntType:=nil;
        { integer types corresponding to SizeInt and SizeUInt for the target platform }
-       sizeuinttype:=nil;
-       sizesinttype:=nil;
+       SizeUIntType:=nil;
+       SizeSIntType:=nil;
        { unsigned and signed ord type with the same size as a pointer }
-       ptruinttype:=nil;
-       ptrsinttype:=nil;
+       PtrUIntType:=nil;
+       PtrSIntType:=nil;
        { unsigned and signed ord type with the same size as a codepointer }
-       codeptruinttype:=nil;
-       codeptrsinttype:=nil;
+       CodePtrUIntType:=nil;
+       CodePtrSIntType:=nil;
        { several types to simulate more or less C++ objects for GDB }
-       vmttype:=nil;
-       vmtarraytype:=nil;
+       VMTType:=nil;
+       VMTArrayType:=nil;
        { type of classrefs used for debug information }
-       pvmttype:=nil;
+       PVMTType:=nil;
        { return type of the setjmp function }
-       exceptionreasontype:=nil;
+       ExceptionReasonType:=nil;
 
-       class_tobject:=nil;
-       class_tcustomattribute:=nil;
-       interface_iunknown:=nil;
-       interface_idispatch:=nil;
-       rec_tguid:=nil;
-       rec_jmp_buf:=nil;
-       rec_exceptaddr:=nil;
-       objc_metaclasstype:=nil;
-       objc_superclasstype:=nil;
-       objc_idtype:=nil;
-       objc_seltype:=nil;
-       objc_objecttype:=nil;
-       objc_protocoltype:=nil;
-       objc_fastenumeration:=nil;
-       objc_fastenumerationstate:=nil;
+       Class_TObject:=nil;
+       Class_TCustomAttribute:=nil;
+       Interface_IUnknown:=nil;
+       Interface_IDispatch:=nil;
+       Rec_TGUID:=nil;
+       Rec_Jmp_Buf:=nil;
+       Rec_ExceptAddr:=nil;
+       ObjC_MetaClassType:=nil;
+       ObjC_SuperClassType:=nil;
+       ObjC_IDType:=nil;
+       ObjC_SelType:=nil;
+       ObjC_ObjectType:=nil;
+       ObjC_ProtocolType:=nil;
+       ObjC_FastEnumeration:=nil;
+       ObjC_FastEnumerationState:=nil;
 
 
 
        { x86 vector types }
-       x86_m64type:=nil;
-       x86_m128type:=nil;
-       x86_m128dtype:=nil;
-       x86_m128itype:=nil;
-       x86_m256type:=nil;
-       x86_m256dtype:=nil;
-       x86_m256itype:=nil;
+       X86_M64Type:=nil;
+       X86_M128Type:=nil;
+       X86_M128DType:=nil;
+       X86_M128IType:=nil;
+       X86_M256Type:=nil;
+       X86_M256DType:=nil;
+       X86_M256IType:=nil;
     end;
 
 end.

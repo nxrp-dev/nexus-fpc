@@ -27,102 +27,102 @@ interface
     uses
        TPCompilerReal,
     { common }
-       SysUtils,CUtils,compinnr,
+       SysUtils,CUtils,CompInNr,
        { target }
        GlobType,Globals,WideStr,ConstExp,
        { symtable }
-       symconst,SymBase,symtype,symdef,defcmp,
+       SymConst,SymBase,SymType,SymDef,DefCmp,
        CClasses,
        { aasm }
-       aasmbase,
-       CPUInfo,cgbase,cgutils,parabase
+       AAsmBase,
+       CPUInfo,CGBase,CGUtils,ParaBase
        ;
 
     type
        { this class is the base for all symbol objects }
        TStoredSym = class(TSym)
        private
-          procedure WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
+          procedure WriteEntry(PPUFile: TCompilerPPUFile; IBNR: Byte);
        protected
-          procedure PPUWritePlatform(ppufile: TCompilerPPUFile);virtual;
-          procedure PPULoadPlatform(ppufile: TCompilerPPUFile);virtual;
+          procedure PPUWritePlatform(PPUFile: TCompilerPPUFile);virtual;
+          procedure PPULoadPlatform(PPUFile: TCompilerPPUFile);virtual;
        public
           { this is Nil if the symbol has no RTTI attributes }
           RTTIAttributeList : TRTTIAttributeList;
-          constructor create(st:TSymTyp;const n : TSymStr);
-          constructor ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
+          constructor Create(ST:TSymTyp;const N : TSymStr);
+          constructor PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);virtual;
           { this is called directly after ppuload }
-          procedure PPULoadSubEntries(ppufile:TCompilerPPUFile);virtual;
+          procedure PPULoadSubEntries(PPUFile:TCompilerPPUFile);virtual;
           { this is called directly after ppuwrite }
-          procedure PPUWriteSubEntries(ppufile:TCompilerPPUFile);virtual;
-          procedure deref; override;
-          procedure buildderef; override;
+          procedure PPUWriteSubEntries(PPUFile:TCompilerPPUFile);virtual;
+          procedure Deref; override;
+          procedure BuildDeref; override;
           procedure RegisterSym; override;
        end;
 
        TLabelSym = class(TStoredSym)
-          used,
-          defined,
-          nonlocal : boolean;
+          Used,
+          Defined,
+          NonLocal : Boolean;
           { points to the matching node, only valid resultdef pass is run and
             the goto<->label relation in the node tree is created, should
             be a tnode }
-          code : pointer;
+          Code : Pointer;
 
           { points to the jump buffer }
-          jumpbuf : TStoredSym;
+          JumpBuf : TStoredSym;
 
           { when the label is defined in an asm block, this points to the
             generated asmlabel }
-          asmblocklabel : TAsmLabel;
-          constructor create(const n : TSymStr);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          AsmBlockLabel : TAsmLabel;
+          constructor Create(const N : TSymStr);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function mangledname:TSymStr;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function MangledName:TSymStr;override;
        end;
        TLabelSymClass = class of TLabelSym;
 
        TUnitSym = class(TStoredSym)
-          module : tobject; { tmodule }
-          constructor create(const n : TSymStr;amodule : tobject);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          Module : TObject; { tmodule }
+          constructor Create(const N : TSymStr;AModule : TObject);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
        end;
        TUnitSymClass = class of TUnitSym;
 
        TProgramParaSym = class(TStoredSym)
-          isoindex : dword;
-          constructor create(const n : TSymStr;i : dword);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          IsoIndex : DWord;
+          constructor Create(const N : TSymStr;I : DWord);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
        end;
        TProgramParaSymClass = class of TProgramParaSym;
 
        TNamespaceSym = class(TStoredSym)
-          unitsym:TSym;
-          unitsymderef:TDeref;
-          constructor create(const n : TSymStr);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          UnitSym:TSym;
+          UnitSymDeref:TDeref;
+          constructor Create(const N : TSymStr);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
        end;
        TNamespaceSymClass = class of TNamespaceSym;
 
        TErrorSym = class(TSym)
-          constructor create;
+          constructor Create;
           procedure RegisterSym; override;
        end;
 
@@ -130,115 +130,115 @@ interface
 
        TProcSym = class(TStoredSym)
        protected type
-          TProcDefComparer = function(pd:TProcDef;arg:tobject):TEqualType;
+          TProcDefComparer = function(pd:TProcDef;arg:TObject):TEqualType;
        protected
-          FProcdefList   : TFPObjectList;
-          FProcdefDerefList : TFPList;
-          fgenprocsymovlds : TFPObjectList;
-          fgenprocsymovldsderefs : TFPList;
+          FProcDefList   : TFPObjectList;
+          FProcDefDerefList : TFPList;
+          FGenProcSymOvlds : TFPObjectList;
+          FGenProcSymOvldsDerefs : TFPList;
 
-          function find_procdef_with_comparer(comparer:TProcDefComparer;arg:tobject):TProcDef;
-          class function compare_procvardef(pd:TProcDef;arg:tobject):TEqualType;static;
-          class function compare_funcrefdef(pd:TProcDef;arg:tobject):TEqualType;static;
+          function Find_ProcDef_With_Comparer(Comparer:TProcDefComparer;Arg:TObject):TProcDef;
+          class function Compare_ProcVarDef(PD:TProcDef;Arg:TObject):TEqualType;static;
+          class function Compare_FuncRefDef(PD:TProcDef;Arg:TObject):TEqualType;static;
        public
-          constructor create(const n : TSymStr);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(const N : TSymStr);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
           { writes all declarations except the specified one }
-          procedure write_parameter_lists(skipdef:TProcDef);
+          procedure Write_Parameter_Lists(SkipDef:TProcDef);
           { tests, if all procedures definitions are defined and not }
           { only forward                                             }
-          procedure check_forward; virtual;
+          procedure Check_Forward; virtual;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
-          function find_procdef_bytype(pt:TProcTypeOption):TProcDef;
-          function find_bytype_parameterless(pt:TProcTypeOption):TProcDef;
-          function find_procdef_bypara(para:TFPObjectList;retdef:TDef;cpoptions:TCompareParasOptions):TProcDef;
-          function find_procdef_bytype_and_para(pt:TProcTypeOption;para:TFPObjectList;retdef:TDef;cpoptions:TCompareParasOptions):TProcDef;
-          function find_procdef_byoptions(ops:TProcOptions): TProcDef;
-          function find_procdef_byprocvardef(d:TProcVarDef):TProcDef;
-          function find_procdef_byfuncrefdef(d:TObjectDef):TProcDef;
-          function find_procdef_assignment_operator(fromdef,todef:TDef;var besteq:TEqualType;isexplicit:boolean):TProcDef;
-          function find_procdef_enumerator_operator(fromdef,todef:TDef;var besteq:TEqualType):TProcDef;
-          procedure add_generic_overload(sym:TProcSym);
-          function could_be_implicitly_specialized:boolean;inline;
-          property ProcdefList:TFPObjectList read FProcdefList;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function Find_ProcDef_ByType(PT:TProcTypeOption):TProcDef;
+          function Find_ByType_Parameterless(PT:TProcTypeOption):TProcDef;
+          function Find_ProcDef_ByPara(Para:TFPObjectList;RetDef:TDef;CPOptions:TCompareParasOptions):TProcDef;
+          function Find_ProcDef_ByType_And_Para(PT:TProcTypeOption;Para:TFPObjectList;RetDef:TDef;CPOptions:TCompareParasOptions):TProcDef;
+          function Find_ProcDef_ByOptions(Ops:TProcOptions): TProcDef;
+          function Find_ProcDef_ByProcVarDef(D:TProcVarDef):TProcDef;
+          function Find_ProcDef_ByFuncRefDef(D:TObjectDef):TProcDef;
+          function Find_ProcDef_Assignment_Operator(FromDef,ToDef:TDef;var BestEq:TEqualType;IsExplicit:Boolean):TProcDef;
+          function Find_ProcDef_Enumerator_Operator(FromDef,ToDef:TDef;var BestEq:TEqualType):TProcDef;
+          procedure Add_Generic_Overload(Sym:TProcSym);
+          function Could_Be_Implicitly_Specialized:Boolean;inline;
+          property ProcdefList:TFPObjectList read FProcDefList;
           { only valid if sp_generic_dummy is set and either an overload was
             added using add_generic_overload or this was loaded from a ppu }
-          property genprocsymovlds:TFPObjectList read fgenprocsymovlds;
+          property GenProcSymOvlds:TFPObjectList read FGenProcSymOvlds;
        end;
        TProcSymClass = class of TProcSym;
 
        TTypeSym = class(TStoredSym)
        public
-          typedef      : TDef;
-          typedefderef : TDeref;
-          fprettyname : AnsiString;
-          constructor create(const n : TSymStr;def:TDef);virtual;
+          TypeDef      : TDef;
+          TypeDefDeref : TDeref;
+          FPrettyName : AnsiString;
+          constructor Create(const N : TSymStr;Def:TDef);virtual;
           destructor Destroy;override;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
-          function prettyname : string;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function PrettyName : string;override;
        end;
        TTypeSymClass = class of TTypeSym;
 
        TAbstractVarSym = class(TStoredSym)
-          varoptions    : TVarOptions;
-          varspez       : TVarSpez;  { sets the type of access }
-          varregable    : TVarRegable;
-          varstate      : TVarState;
+          VarOptions    : TVarOptions;
+          VarSpez       : TVarSpez;  { sets the type of access }
+          VarRegable    : TVarRegable;
+          VarState      : TVarState;
           {could also be part of tabstractnormalvarsym, but there's
            one byte left here till the next 4 byte alignment        }
-          varsymaccess  : TVarSymAccessFlags;
-          constructor create(st:TSymTyp;const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
-          constructor ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderef;override;
-          procedure deref;override;
-          function  getsize : asizeint;
-          function  getpackedbitsize : LongInt;
-          function  is_regvar(refpara: boolean):boolean;
+          VarSymAccess  : TVarSymAccessFlags;
+          constructor Create(ST:TSymTyp;const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
+          constructor PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function  GetSize : ASizeInt;
+          function  GetPackedBitSize : LongInt;
+          function  Is_RegVar(RefPara: Boolean):Boolean;
         private
-          _vardef     : TDef;
-          vardefderef : TDeref;
+          FVarDef     : TDef;
+          VarDefDeref : TDeref;
 
-          function get_addr_taken: boolean;
-          function get_different_scope: boolean;
-          procedure setregable;
-          procedure setvardef(const def: TDef);
-          procedure setvardef_and_regable(def:TDef);
-          procedure set_addr_taken(AValue: boolean);
-          procedure set_different_scope(AValue: boolean);
+          function GetAddrTaken: Boolean;
+          function GetDifferentScope: Boolean;
+          procedure SetRegable;
+          procedure SetVarDef(const Def: TDef);
+          procedure SetVarDefAndRegable(Def:TDef);
+          procedure SetAddrTaken(AValue: Boolean);
+          procedure SetDifferentScope(AValue: Boolean);
         public
-          property vardef: TDef read _vardef write setvardef_and_regable;
-          property addr_taken: boolean read get_addr_taken write set_addr_taken;
-          property different_scope: boolean read get_different_scope write set_different_scope;
+          property VarDef: TDef read FVarDef write SetVarDefAndRegable;
+          property AddrTaken: Boolean read GetAddrTaken write SetAddrTaken;
+          property DifferentScope: Boolean read GetDifferentScope write SetDifferentScope;
       end;
 
       TFieldVarSym = class(TAbstractVarSym)
           { offset in record/object, for bitpacked fields the offset is
             given in bit, else in bytes }
-          fieldoffset   : asizeint;
+          FieldOffset   : ASizeInt;
 
 {$ifdef symansistr}
-          cachedmangledname: TSymStr;
+          CachedMangledName: TSymStr;
 {$else symansistr}
-          cachedmangledname: PShortString;
+          CachedMangledName: PShortString;
 {$endif symansistr}
-          constructor create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function bitoffset: ASizeUInt;
-          function mangledname:TSymStr;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function BitOffset: ASizeUInt;
+          function MangledName:TSymStr;override;
           destructor Destroy;override;
 {$ifdef DEBUG_NODE_XML}
         public
@@ -248,116 +248,116 @@ interface
       TFieldVarSymClass = class of TFieldVarSym;
 
       TAbstractNormalVarSym = class(TAbstractVarSym)
-          defaultconstsym : TSym;
-          defaultconstsymderef : TDeref;
+          DefaultConstSym : TSym;
+          DefaultConstSymDeref : TDeref;
           { register/reference for local var }
-          localloc      : TLocation;
+          LocAlloc      : TLocation;
           { initial location so it can still be initialized later after the location was changed by SSA }
-          initialloc    : TLocation;
+          InitialLoc    : TLocation;
           { migrated to a parentfpstruct because of nested access (not written to ppu, because not important and would change interface crc) }
-          inparentfpstruct : boolean;
+          InParentFPStruct : Boolean;
           { the variable is not living at entry of the scope, so it does not need to be initialized if it is a reg. var
             (not written to ppu, because not important and would change interface crc) }
-          noregvarinitneeded : boolean;
+          NoRegVarInitNeeded : Boolean;
           { not stored in PPU! }
-          capture_sym : TSym;
-          constructor create(st:TSymTyp;const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
-          constructor ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
-          function globalasmsym: boolean;
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          procedure buildderef;override;
-          procedure deref;override;
-          function is_captured:boolean;
+          CaptureSym : TSym;
+          constructor Create(ST:TSymTyp;const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
+          constructor PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
+          function GlobalAsmSym: Boolean;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function Is_Captured:Boolean;
       end;
 
       TLocalVarSym = class(TAbstractNormalVarSym)
-          constructor create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
       end;
       TLocalVarSymClass = class of TLocalVarSym;
 
       TParaVarSym = class(TAbstractNormalVarSym)
-          paraloc       : array[callerside..calleeside] of TCGPara;
-          paranr        : word; { position of this parameter }
+          ParaLoc       : array[CallerSide..CalleeSide] of TCGPara;
+          ParaNr        : Word; { position of this parameter }
           { in MacPas mode, "univ" parameters mean that type checking should
             be disabled, except that the size of the passed parameter must
             match the size of the formal parameter }
-          univpara      : boolean;
+          UnivPara      : Boolean;
 {$ifdef EXTDEBUG}
-          eqval         : TEqualType;
+          EqVal         : TEqualType;
 {$endif EXTDEBUG}
-          constructor create(const n : TSymStr;nr:word;vsp:TVarSpez;def:TDef;vopts:TVarOptions);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          constructor Create(const N : TSymStr;NR:Word;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function needs_finalization: boolean;
-          function is_used: boolean;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          function Needs_Finalization: Boolean;
+          function Is_Used: Boolean;
       end;
       TParaVarSymClass = class of TParaVarSym;
 
       TStaticVarSym = class(TAbstractNormalVarSym)
       protected
 {$ifdef symansistr}
-          _mangledbasename,
-          _mangledname : TSymStr;
+          FMangledBaseName,
+          FMangledName : TSymStr;
 {$else symansistr}
-          _mangledbasename,
-          _mangledname : PShortString;
+          FMangledBaseName,
+          FMangledName : PShortString;
 {$endif symansistr}
       public
-          section : AnsiString;
+          Section : AnsiString;
           { if a text buffer has been defined as being initialized from command line
             parameters as it is done by iso pascal with the program symbols,
             isoindex contains the parameter number }
-          isoindex : dword;
+          IsoIndex : DWord;
           { if this static variable was created based on a class field variable then this is set
             to the symbol of the corresponding class field }
-          fieldvarsym : TFieldVarSym;
-          fieldvarsymderef : TDeref;
-          constructor create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);virtual;
-          constructor create_dll(const n : TSymStr;vsp:TVarSpez;def:TDef);virtual;
-          constructor create_C(const n: TSymStr; const mangled : TSymStr;vsp:TVarSpez;def:TDef);virtual;
-          constructor create_from_fieldvar(const n: TSymStr;fieldvar:TFieldVarSym);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          FieldVarSym : TFieldVarSym;
+          FieldVarSymDeref : TDeref;
+          constructor Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);virtual;
+          constructor Create_DLL(const N : TSymStr;VSP:TVarSpez;Def:TDef);virtual;
+          constructor Create_C(const N: TSymStr; const Mangled : TSymStr;VSP:TVarSpez;Def:TDef);virtual;
+          constructor Create_From_FieldVar(const N: TSymStr;FieldVar:TFieldVarSym);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor Destroy;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
-          function mangledname:TSymStr;override;
-          procedure set_mangledbasename(const s: TSymStr);
-          function mangledbasename: TSymStr;
-          procedure set_mangledname(const s:TSymStr);virtual;
-          procedure set_raw_mangledname(const s:TSymStr);
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function MangledName:TSymStr;override;
+          procedure Set_MangledBaseName(const S: TSymStr);
+          function MangledBaseName: TSymStr;
+          procedure Set_MangledName(const S:TSymStr);virtual;
+          procedure Set_Raw_MangledName(const S:TSymStr);
       end;
       TStaticVarSymClass = class of TStaticVarSym;
 
       TAbsoluteVarSym = class(TAbstractVarSym)
       public
-         abstyp  : TAbsoluteTyp;
-         asmname : PShortString;
-         addroffset : PUint;
-         ref     : TPropAccessList;
-         constructor create(const n : TSymStr;def:TDef);virtual;
-         constructor create_ref(const n : TSymStr;def:TDef;_ref:TPropAccessList);virtual;
-	 procedure adjust_varregable;
+         AbsTyp  : TAbsoluteTyp;
+         AsmName : PShortString;
+         AddrOffset : PUint;
+         Ref     : TPropAccessList;
+         constructor Create(const N : TSymStr;Def:TDef);virtual;
+         constructor Create_Ref(const N : TSymStr;Def:TDef;ARef:TPropAccessList);virtual;
+	 procedure Adjust_VarRegable;
          destructor  Destroy;override;
-         constructor ppuload(ppufile:TCompilerPPUFile);
-         procedure buildderef;override;
-         procedure deref;override;
-         function  mangledname : TSymStr;override;
+         constructor PPULoad(PPUFile:TCompilerPPUFile);
+         procedure BuildDeref;override;
+         procedure Deref;override;
+         function  MangledName : TSymStr;override;
          { do not override this routine in platform-specific subclasses,
            override ppuwrite_platform instead }
-         procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+         procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
          { returns the symbol type of the local variable or local parameter
            referenced by the absolute symbol }
-         function reftyp : TSymTyp;
+         function RefTyp : TSymTyp;
       end;
       TAbsoluteVarSymClass = class of TAbsoluteVarSym;
 
@@ -365,69 +365,69 @@ interface
 
        TPropertySym = class(TStoredSym)
          protected
-           procedure finalize_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef); virtual;
+           procedure Finalize_Getter_Or_Setter_For_Sym(GetSet: TPropAccessListTypes; Sym: TSym; FieldDef: TDef; AccessorDef: TProcDef); virtual;
          public
-          propoptions   : TPropertyOptions;
-          overriddenpropsym : TPropertySym;
-          overriddenpropsymderef : TDeref;
-          propdef       : TDef;
-          propdefderef  : TDeref;
-          indexdef      : TDef;
-          indexdefderef : TDeref;
-          index,
+          PropOptions   : TPropertyOptions;
+          OverriddenPropSym : TPropertySym;
+          OverriddenPropSymDeref : TDeref;
+          PropDef       : TDef;
+          PropDefDeref  : TDeref;
+          IndexDef      : TDef;
+          IndexDefDeref : TDeref;
+          Index,
           default       : LongInt;
-          dispid        : LongInt;
-          propaccesslist: array[TPropAccessListTypes] of TPropAccessList;
-          parast : TSymTable;
-          constructor create(const n : TSymStr);virtual;
+          DispID        : LongInt;
+          PropAccessList: array[TPropAccessListTypes] of TPropAccessList;
+          ParaST : TSymTable;
+          constructor Create(const N : TSymStr);virtual;
           destructor  Destroy;override;
-          constructor ppuload(ppufile:TCompilerPPUFile);
-          function  getsize : asizeint;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
+          function  GetSize : ASizeInt;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
-          function getpropaccesslist(pap:TPropAccessListTypes;out plist:TPropAccessList):boolean;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
+          function GetPropAccessList(PAP:TPropAccessListTypes;out PList:TPropAccessList):Boolean;
           { copies the settings of the current propertysym to p; a bit like
             a form of getcopy, but without the name }
-          procedure makeduplicate(p: TPropertySym; readprocdef, writeprocdef: TProcDef; out paranr: word);
-          procedure add_accessor_parameters(readprocdef, writeprocdef: TProcDef);
-          procedure add_index_parameter(var paranr: word; readprocdef, writeprocdef: TProcDef);
+          procedure MakeDuplicate(P: TPropertySym; ReadProcDef, WriteProcDef: TProcDef; out ParaNr: Word);
+          procedure Add_Accessor_Parameters(ReadProcDef, WriteProcDef: TProcDef);
+          procedure Add_Index_Parameter(var ParaNr: Word; ReadProcDef, WriteProcDef: TProcDef);
           { set up the accessors for this property }
-          procedure add_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
-          procedure register_override(overriddenprop: TPropertySym);
+          procedure Add_Getter_Or_Setter_For_Sym(GetSet: TPropAccessListTypes; Sym: TSym; FieldDef: TDef; AccessorDef: TProcDef);
+          procedure Register_Override(OverriddenProp: TPropertySym);
           { inherit the read/write property }
-          procedure inherit_accessor(GetSet: TPropAccessListTypes); virtual;
+          procedure Inherit_Accessor(GetSet: TPropAccessListTypes); virtual;
        end;
        TPropertySymClass = class of TPropertySym;
 
        TConstValue = record
-         case integer of
-         0: (valueord : TConstExprInt);
-         1: (valueordptr : TConstPtrUInt);
-         2: (valueptr : pointer; len : LongInt);
-         3: (valuews : TCompilerWideString);
+         case Integer of
+         0: (ValueOrd : TConstExprInt);
+         1: (ValueOrdPtr : TConstPtrUInt);
+         2: (ValuePtr : Pointer; Len : LongInt);
+         3: (ValueWS : TCompilerWideString);
        end;
 
        TConstSym = class(TStoredSym)
-          constdef    : TDef;
-          constdefderef : TDeref;
-          consttyp    : TConstTyp;
-          value       : TConstValue;
-          constructor create_ord(const n : TSymStr;t : TConstTyp;v : TConstExprInt;def:TDef);virtual;
-          constructor create_ordptr(const n : TSymStr;t : TConstTyp;v : TConstPtrUInt;def:TDef);virtual;
-          constructor create_ptr(const n : TSymStr;t : TConstTyp;v : pointer;def:TDef);virtual;
-          constructor create_string(const n : TSymStr;t : TConstTyp;str:pchar;l:LongInt;def:TDef);virtual;
-          constructor create_wstring(const n : TSymStr;t : TConstTyp;pw:TCompilerWideString);virtual;
-          constructor create_undefined(const n : TSymStr;def:TDef);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          ConstDef    : TDef;
+          ConstDefDeref : TDeref;
+          ConstTyp    : TConstTyp;
+          Value       : TConstValue;
+          constructor Create_Ord(const N : TSymStr;T : TConstTyp;V : TConstExprInt;Def:TDef);virtual;
+          constructor Create_OrdPtr(const N : TSymStr;T : TConstTyp;V : TConstPtrUInt;Def:TDef);virtual;
+          constructor Create_Ptr(const N : TSymStr;T : TConstTyp;V : Pointer;Def:TDef);virtual;
+          constructor Create_String(const N : TSymStr;T : TConstTyp;Str:PChar;L:LongInt;Def:TDef);virtual;
+          constructor Create_WString(const N : TSymStr;T : TConstTyp;PW:TCompilerWideString);virtual;
+          constructor Create_Undefined(const N : TSymStr;Def:TDef);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor  Destroy;override;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure BuildDeref;override;
+          procedure Deref;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
 {$ifdef DEBUG_NODE_XML}
         public
           procedure XMLPrintConstData(var T: Text);
@@ -436,62 +436,62 @@ interface
        TConstSymClass = class of TConstSym;
 
        TEnumSym = class(TStoredSym)
-          value      : LongInt;
-          definition : TEnumDef;
-          definitionderef : TDeref;
-          constructor create(const n : TSymStr;def : TEnumDef;v : LongInt);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          Value      : LongInt;
+          Definition : TEnumDef;
+          DefinitionDeref : TDeref;
+          constructor Create(const N : TSymStr;Def : TEnumDef;V : LongInt);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure buildderef;override;
-          procedure deref;override;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          procedure BuildDeref;override;
+          procedure Deref;override;
        end;
        TEnumSymClass = class of TEnumSym;
 
        TSysSym = class(TStoredSym)
-          number : TInlineNumber;
-          constructor create(const n : TSymStr;l : TInlineNumber);virtual;
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          Number : TInlineNumber;
+          constructor Create(const N : TSymStr;L : TInlineNumber);virtual;
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           destructor  Destroy;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          class function find_by_number(l:LongInt):TSysSym;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
+          class function Find_By_Number(L:LongInt):TSysSym;
        end;
        TSysSymClass = class of TSysSym;
 
     const
-       maxmacrolen=16*1024;
+       MaxMacroLen=16*1024;
 
     type
        TMacro = class(TStoredSym)
           {Normally true, but false when a previously defined macro is undef-ed}
-          defined : boolean;
+          Defined : Boolean;
           {True if this is a mac style compiler variable, in which case no macro
            substitutions shall be done.}
-          is_compiler_var : boolean;
+          IsCompilerVar : Boolean;
           { true if the macro is a C macro, i.e used := }
-          is_c_macro : boolean;
+          IsCMacro : Boolean;
           {Whether the macro was used. NOTE: A use of a macro which was never defined}
           {e. g. an IFDEF which returns false, will not be registered as used,}
           {since there is no place to register its use. }
-          is_used : boolean;
-          buftext : TAnsiCharDynArray;
-          buflen  : LongInt;
-          constructor create(const n : TSymStr);
-          constructor ppuload(ppufile:TCompilerPPUFile);
+          IsUsed : Boolean;
+          BufText : TAnsiCharDynArray;
+          BufLen  : LongInt;
+          constructor Create(const N : TSymStr);
+          constructor PPULoad(PPUFile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
-          procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
+          procedure PPUWrite(PPUFile:TCompilerPPUFile);override;Final;
           destructor  Destroy;override;
-          function allocate_buftext(len:LongInt) : pchar;
-          procedure free_buftext;
+          function Allocate_BufText(Len:LongInt) : PChar;
+          procedure Free_BufText;
           function GetCopy:TMacro;
        end;
 
     var
-       generrorsym : TSym;
+       GenErrorSym : TSym;
 
        CLabelSym: TLabelSymClass;
        CUnitSym: TUnitSymClass;
@@ -510,13 +510,13 @@ interface
        CSysSym: TSysSymClass;
 
     { generate internal static field name based on regular field name }
-    function internal_static_field_name(const fieldname: TSymStr): TSymStr;
-    function get_high_value_sym(vs: TParaVarSym):TAbstractVarSym; { marking it as inline causes IE 200311075 during loading from ppu file }
+    function Internal_Static_Field_Name(const FieldName: TSymStr): TSymStr;
+    function Get_High_Value_Sym(VS: TParaVarSym):TAbstractVarSym; { marking it as inline causes IE 200311075 during loading from ppu file }
 
-    procedure check_hints(const srsym: TSym; const symoptions: TSymOptions; const deprecatedmsg : PShortString);inline;
-    procedure check_hints(const srsym: TSym; const symoptions: TSymOptions; const deprecatedmsg : PShortString;filepos:TFilePosInfo);
+    procedure Check_Hints(const SRSym: TSym; const SymOptions: TSymOptions; const DeprecatedMsg : PShortString);inline;
+    procedure Check_Hints(const SRSym: TSym; const SymOptions: TSymOptions; const DeprecatedMsg : PShortString;FilePos:TFilePosInfo);
 
-    function same_constvalue(consttyp:TConstTyp;const value1,value2:TConstValue):boolean;
+    function Same_ConstValue(ConstTyp:TConstTyp;const Value1,Value2:TConstValue):Boolean;
 
 implementation
 
@@ -526,14 +526,14 @@ implementation
        { target }
        Systems,
        { symtable }
-       defutil,SymTable,
+       DefUtil,SymTable,
        FModule,
        { tree }
-       node,
+       Node,
        { aasm }
        AAsmData,
        { codegen }
-       paramgr,
+       ParaMgr,
        ProcInfo,
        { ppu }
        EntFile,PPU
@@ -543,123 +543,123 @@ implementation
                                Helpers
 ****************************************************************************}
 
-    function internal_static_field_name(const fieldname: TSymStr): TSymStr;
+    function Internal_Static_Field_Name(const FieldName: TSymStr): TSymStr;
       begin
-        result:='$_static_'+fieldname;
+        Result:='$_static_'+FieldName;
       end;
 
 
-    function get_high_value_sym(vs: TParaVarSym):TAbstractVarSym;
+    function Get_High_Value_Sym(VS: TParaVarSym):TAbstractVarSym;
       begin
-        result := TAbstractVarSym(vs.owner.Find('high'+vs.name));
+        Result := TAbstractVarSym(VS.Owner.Find('high'+VS.Name));
       end;
 
 
-    function same_constvalue(consttyp:TConstTyp;const value1,value2:TConstValue):boolean;
+    function Same_ConstValue(ConstTyp:TConstTyp;const Value1,Value2:TConstValue):Boolean;
       begin
-        result:=false;
-        case consttyp of
-          constnone,
-          constnil:
-            result:=true;
-          constord:
-            result:=value1.valueord=value2.valueord;
-          constpointer:
-            result:=value1.valueordptr=value2.valueordptr;
-          conststring,
-          constreal,
-          constset,
-          constresourcestring,
-          constwresourcestring,
-          constwstring,
-          constguid: begin
-            if value1.len<>value2.len then
-              exit(false);
-            result:=CompareByte(value1.valueptr^,value2.valueptr^,value1.len)=0;
+        Result:=False;
+        case ConstTyp of
+          ConstNone,
+          ConstNil:
+            Result:=True;
+          ConstOrd:
+            Result:=Value1.ValueOrd=Value2.ValueOrd;
+          ConstPointer:
+            Result:=Value1.ValueOrdPtr=Value2.ValueOrdPtr;
+          ConstString,
+          ConstReal,
+          ConstSet,
+          ConstResourceString,
+          ConstWResourceString,
+          ConstWString,
+          ConstGUID: begin
+            if Value1.Len<>Value2.Len then
+              Exit(False);
+            Result:=CompareByte(Value1.ValuePtr^,Value2.ValuePtr^,Value1.Len)=0;
           end;
         end;
       end;
 
 
-    procedure check_hints(const srsym: TSym; const symoptions: TSymOptions; const deprecatedmsg : PShortString);
+    procedure Check_Hints(const SRSym: TSym; const SymOptions: TSymOptions; const DeprecatedMsg : PShortString);
       begin
-        check_hints(srsym,symoptions,deprecatedmsg,CurrentFilePos);
+        Check_Hints(SRSym,SymOptions,DeprecatedMsg,CurrentFilePos);
       end;
 
 
-    procedure check_hints(const srsym: TSym; const symoptions: TSymOptions; const deprecatedmsg : PShortString;filepos:TFilePosInfo);
+    procedure Check_Hints(const SRSym: TSym; const SymOptions: TSymOptions; const DeprecatedMsg : PShortString;FilePos:TFilePosInfo);
       var
-        def : TDef;
-        name : TMsgStr;
+        Def : TDef;
+        Name : TMsgStr;
       begin
-        if not Assigned(srsym) then
+        if not Assigned(SRSym) then
           InternalError(200602051);
-        if symoptions*[sp_hint_deprecated,sp_hint_experimental,sp_hint_platform,sp_hint_library,sp_hint_unimplemented]<>[] then
+        if SymOptions*[sp_hint_deprecated,sp_hint_experimental,sp_hint_platform,sp_hint_library,sp_hint_unimplemented]<>[] then
           begin
-            name:=srsym.realname;
-            def:=TDef(srsym.owner.defowner);
-            if Assigned(def) then
-              name:=def.typesymbolprettyname+'.'+name;
+            Name:=SRSym.RealName;
+            Def:=TDef(SRSym.Owner.DefOwner);
+            if Assigned(Def) then
+              Name:=Def.TypeSymbolPrettyName+'.'+Name;
           end
         else
-          name:='';
-        if sp_hint_deprecated in symoptions then
-          if (sp_has_deprecated_msg in symoptions) and (deprecatedmsg <> nil) then
-            MessagePos2(filepos,sym_w_deprecated_symbol_with_msg,name,deprecatedmsg^)
+          Name:='';
+        if sp_hint_deprecated in SymOptions then
+          if (sp_has_deprecated_msg in SymOptions) and (DeprecatedMsg <> nil) then
+            MessagePos2(FilePos,sym_w_deprecated_symbol_with_msg,Name,DeprecatedMsg^)
           else
-            MessagePos1(filepos,sym_w_deprecated_symbol,name);
-        if sp_hint_experimental in symoptions then
-          MessagePos1(filepos,sym_w_experimental_symbol,name);
-        if sp_hint_platform in symoptions then
-          MessagePos1(filepos,sym_w_non_portable_symbol,name);
-        if sp_hint_library in symoptions then
-          MessagePos1(filepos,sym_w_library_symbol,name);
-        if sp_hint_unimplemented in symoptions then
-          MessagePos1(filepos,sym_w_non_implemented_symbol,name);
+            MessagePos1(FilePos,sym_w_deprecated_symbol,Name);
+        if sp_hint_experimental in SymOptions then
+          MessagePos1(FilePos,sym_w_experimental_symbol,Name);
+        if sp_hint_platform in SymOptions then
+          MessagePos1(FilePos,sym_w_non_portable_symbol,Name);
+        if sp_hint_library in SymOptions then
+          MessagePos1(FilePos,sym_w_library_symbol,Name);
+        if sp_hint_unimplemented in SymOptions then
+          MessagePos1(FilePos,sym_w_non_implemented_symbol,Name);
       end;
 
 {****************************************************************************
                           TSYM (base for all symtypes)
 ****************************************************************************}
 
-    constructor TStoredSym.create(st:TSymTyp;const n : TSymStr);
+    constructor TStoredSym.Create(ST:TSymTyp;const N : TSymStr);
       begin
-         inherited create(st,n);
+         inherited Create(ST,N);
       end;
 
 
-    constructor TStoredSym.ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
+    constructor TStoredSym.PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
       begin
 {$ifdef symansistr}
-         inherited Create(st,ppufile.GetAnsiString);
+         inherited Create(ST,PPUFile.GetAnsiString);
 {$else symansistr}
-         inherited Create(st,ppufile.GetString);
+         inherited Create(ST,PPUFile.GetString);
 {$endif symansistr}
-         SymId:=ppufile.GetLongInt;
-         CurrentModule.symlist[SymId]:=self;
-         ppufile.getposinfo(fileinfo);
-         visibility:=TVisibility(ppufile.GetByte);
-         ppufile.GetSet(TPPUSet2(symoptions));
-         if sp_has_deprecated_msg in symoptions then
-           deprecatedmsg:=ppufile.GetPShortString
+         SymID:=PPUFile.GetLongInt;
+         CurrentModule.SymList[SymID]:=Self;
+         PPUFile.GetPosInfo(FileInfo);
+         Visibility:=TVisibility(PPUFile.GetByte);
+         PPUFile.GetSet(TPPUSet2(SymOptions));
+         if sp_has_deprecated_msg in SymOptions then
+           DeprecatedMsg:=PPUFile.GetPShortString
          else
-           deprecatedmsg:=nil;
-         RTTIAttributeList:=TRTTIAttributeList.ppuload(ppufile);
+           DeprecatedMsg:=nil;
+         RTTIAttributeList:=TRTTIAttributeList.PPULoad(PPUFile);
       end;
 
 
-    procedure TStoredSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStoredSym.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldcrc : boolean;
+        OldCRC : Boolean;
       begin
 {$ifdef symansistr}
-         ppufile.PutAnsiString(realname);
+         PPUFile.PutAnsiString(RealName);
 {$else}
-         ppufile.PutString(realname);
+         PPUFile.PutString(RealName);
 {$endif}
-         ppufile.PutLongInt(SymId);
-         ppufile.putposinfo(fileinfo);
-         ppufile.PutByte(byte(visibility));
+         PPUFile.PutLongInt(SymID);
+         PPUFile.PutPosInfo(FileInfo);
+         PPUFile.PutByte(Byte(Visibility));
          { symoptions can differ between interface and implementation, except
            for overload (this is checked in pdecsub.proc_add_definition() )
 
@@ -667,59 +667,59 @@ implementation
            This does mean that changing e.g. the "deprecated" state of a symbol
            by itself will not trigger a recompilation of dependent units.
          }
-         oldcrc:=ppufile.DoCRC;
-         ppufile.DoCRC:=false;
-         ppufile.PutSet(TPPUSet2(symoptions));
-         if sp_has_deprecated_msg in symoptions then
-           ppufile.PutString(deprecatedmsg^);
-         ppufile.DoCRC:=oldcrc;
-         TRTTIAttributeList.ppuwrite(RTTIAttributeList,ppufile);
+         OldCRC:=PPUFile.DoCRC;
+         PPUFile.DoCRC:=False;
+         PPUFile.PutSet(TPPUSet2(SymOptions));
+         if sp_has_deprecated_msg in SymOptions then
+           PPUFile.PutString(DeprecatedMsg^);
+         PPUFile.DoCRC:=OldCRC;
+         TRTTIAttributeList.PPUWrite(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredSym.PPULoadSubEntries(ppufile: TCompilerPPUFile);
+    procedure TStoredSym.PPULoadSubEntries(PPUFile: TCompilerPPUFile);
       begin
-        TRTTIAttributeList.PPULoadSubEntries(RTTIAttributeList,ppufile);
+        TRTTIAttributeList.PPULoadSubEntries(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredSym.PPUWriteSubEntries(ppufile: TCompilerPPUFile);
+    procedure TStoredSym.PPUWriteSubEntries(PPUFile: TCompilerPPUFile);
       begin
-        TRTTIAttributeList.PPUWriteSubEntries(RTTIAttributeList,ppufile);
+        TRTTIAttributeList.PPUWriteSubEntries(RTTIAttributeList,PPUFile);
       end;
 
 
-    procedure TStoredSym.deref;
+    procedure TStoredSym.Deref;
       begin
         inherited;
         if Assigned(RTTIAttributeList) then
-          RTTIAttributeList.deref;
+          RTTIAttributeList.Deref;
       end;
 
 
-    procedure TStoredSym.buildderef;
+    procedure TStoredSym.BuildDeref;
       begin
         inherited;
-        if not registered then
+        if not Registered then
           RegisterSym;
         if Assigned(RTTIAttributeList) then
-          RTTIAttributeList.buildderef;
+          RTTIAttributeList.BuildDeref;
       end;
 
 
-    procedure TStoredSym.WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
+    procedure TStoredSym.WriteEntry(PPUFile: TCompilerPPUFile; IBNR: Byte);
       begin
-        PPUWritePlatform(ppufile);
-        ppufile.WriteEntry(ibnr);
+        PPUWritePlatform(PPUFile);
+        PPUFile.WriteEntry(IBNR);
       end;
 
 
-    procedure TStoredSym.PPUWritePlatform(ppufile: TCompilerPPUFile);
+    procedure TStoredSym.PPUWritePlatform(PPUFile: TCompilerPPUFile);
       begin
         { by default: do nothing }
       end;
 
-    procedure TStoredSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
+    procedure TStoredSym.PPULoadPlatform(PPUFile: TCompilerPPUFile);
       begin
         { by default: do nothing }
       end;
@@ -727,7 +727,7 @@ implementation
 
     destructor TStoredSym.Destroy;
       begin
-        RTTIAttributeList.free;
+        RTTIAttributeList.Free;
         RTTIAttributeList := nil;
         inherited Destroy;
       end;
@@ -735,97 +735,97 @@ implementation
 
     procedure TStoredSym.RegisterSym;
       var
-        tmod : TModule;
+        TMod : TModule;
       begin
-        if registered then
-          exit;
-        if Assigned(owner) then
+        if Registered then
+          Exit;
+        if Assigned(Owner) then
           begin
-            tmod:=find_module_from_symtable(owner);
-            if Assigned(tmod) and Assigned(CurrentModule) and (tmod<>CurrentModule) then
+            TMod:=Find_Module_From_SymTable(Owner);
+            if Assigned(TMod) and Assigned(CurrentModule) and (TMod<>CurrentModule) then
               begin
-                comment(VError,'Symbol '+realname+' from module '+tmod.MainSource+' registered with current module '+CurrentModule.MainSource);
+                Comment(VError,'Symbol '+RealName+' from module '+TMod.MainSource+' registered with current module '+CurrentModule.MainSource);
               end;
-            if not Assigned(tmod) then
-              tmod:=CurrentModule;
+            if not Assigned(TMod) then
+              TMod:=CurrentModule;
           end
         else
-          tmod:=CurrentModule;
+          TMod:=CurrentModule;
         { Register in current_module }
-        if Assigned(tmod) then
+        if Assigned(TMod) then
           begin
-            tmod.symlist.Add(self);
-            SymId:=tmod.symlist.Count-1;
+            TMod.SymList.Add(Self);
+            SymID:=TMod.SymList.Count-1;
           end
         else
-          SymId:=symid_registered_nost;
+          SymID:=symid_registered_nost;
       end;
 
 {****************************************************************************
                                  TLABELSYM
 ****************************************************************************}
 
-    constructor TLabelSym.create(const n : TSymStr);
+    constructor TLabelSym.Create(const N : TSymStr);
       begin
-         inherited create(labelsym,n);
-         used:=false;
-         defined:=false;
-         nonlocal:=false;
-         code:=nil;
+         inherited Create(LabelSym,N);
+         Used:=False;
+         Defined:=False;
+         NonLocal:=False;
+         Code:=nil;
       end;
 
 
-    constructor TLabelSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TLabelSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(labelsym,ppufile);
-         code:=nil;
-         used:=false;
-         nonlocal:=false;
-         defined:=true;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(LabelSym,PPUFile);
+         Code:=nil;
+         Used:=False;
+         NonLocal:=False;
+         Defined:=True;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TLabelSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TLabelSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         if owner.symtabletype=GlobalSymTable then
+         if Owner.SymTableType=GlobalSymTable then
            Message(sym_e_ill_label_decl)
          else
            begin
-              inherited ppuwrite(ppufile);
-              WriteEntry(ppufile,IBLabelSym);
+              inherited PPUWrite(PPUFile);
+              WriteEntry(PPUFile,IBLabelSym);
            end;
       end;
 
 
-   function TLabelSym.mangledname:TSymStr;
+   function TLabelSym.MangledName:TSymStr;
      begin
-       if (asmblocklabel=nil) then
+       if (AsmBlockLabel=nil) then
          begin
-           if nonlocal then
-             CurrentAsmData.getglobaljumplabel(asmblocklabel)
+           if NonLocal then
+             CurrentAsmData.GetGlobalJumpLabel(AsmBlockLabel)
            else
-             CurrentAsmData.getjumplabel(asmblocklabel);
+             CurrentAsmData.GetJumpLabel(AsmBlockLabel);
          end;
-       result:=asmblocklabel.name;
+       Result:=AsmBlockLabel.Name;
      end;
 
 {****************************************************************************
                                   TUNITSYM
 ****************************************************************************}
 
-    constructor TUnitSym.create(const n : TSymStr;amodule : tobject);
+    constructor TUnitSym.Create(const N : TSymStr;AModule : TObject);
       begin
-         inherited create(unitsym,n);
-         module:=amodule;
+         inherited Create(UnitSym,N);
+         Module:=AModule;
       end;
 
-    constructor TUnitSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TUnitSym.PPULoad(PPUFile:TCompilerPPUFile);
 
       begin
-         inherited ppuload(unitsym,ppufile);
-         module:=nil;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(UnitSym,PPUFile);
+         Module:=nil;
+         PPULoadPlatform(PPUFile);
       end;
 
     destructor TUnitSym.Destroy;
@@ -833,23 +833,23 @@ implementation
          inherited Destroy;
       end;
 
-    procedure TUnitSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TUnitSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         WriteEntry(ppufile,IBUnitSym);
+         inherited PPUWrite(PPUFile);
+         WriteEntry(PPUFile,IBUnitSym);
       end;
 
 {****************************************************************************
                              TPROGRAMPARASYM
 ****************************************************************************}
 
-    constructor TProgramParaSym.create(const n : TSymStr; i : dword);
+    constructor TProgramParaSym.Create(const N : TSymStr; I : DWord);
       begin
-         inherited create(programparasym,n);
-         isoindex:=i;
+         inherited Create(ProgramParaSym,N);
+         IsoIndex:=I;
       end;
 
-    constructor TProgramParaSym.ppuload(ppufile : TCompilerPPUFile);
+    constructor TProgramParaSym.PPULoad(PPUFile : TCompilerPPUFile);
       begin
         { program parameter syms (iso pascal style) might be never written to a ppu }
         InternalError(2015050102);
@@ -860,7 +860,7 @@ implementation
        inherited Destroy;
       end;
 
-    procedure TProgramParaSym.ppuwrite(ppufile : TCompilerPPUFile);
+    procedure TProgramParaSym.PPUWrite(PPUFile : TCompilerPPUFile);
       begin
         { program parameter syms (iso pascal style) might be never written to a ppu }
         InternalError(2015050101);
@@ -871,37 +871,37 @@ implementation
                                 TNAMESPACESYM
 ****************************************************************************}
 
-    constructor TNamespaceSym.create(const n : TSymStr);
+    constructor TNamespaceSym.Create(const N : TSymStr);
       begin
-         inherited create(namespacesym,n);
-         unitsym:=nil;
-         unitsymderef.reset;
+         inherited Create(NamespaceSym,N);
+         UnitSym:=nil;
+         UnitSymDeref.Reset;
       end;
 
-    constructor TNamespaceSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TNamespaceSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(namespacesym,ppufile);
-         ppufile.getderef(unitsymderef);
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(NamespaceSym,PPUFile);
+         PPUFile.GetDeref(UnitSymDeref);
+         PPULoadPlatform(PPUFile);
       end;
 
-    procedure TNamespaceSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TNamespaceSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(unitsymderef);
-         WriteEntry(ppufile,IBNamespaceSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(UnitSymDeref);
+         WriteEntry(PPUFile,IBNamespaceSym);
       end;
 
-    procedure TNamespaceSym.buildderef;
+    procedure TNamespaceSym.BuildDeref;
       begin
-        inherited buildderef;
-        unitsymderef.build(unitsym);
+        inherited BuildDeref;
+        UnitSymDeref.Build(UnitSym);
       end;
 
-    procedure TNamespaceSym.deref;
+    procedure TNamespaceSym.Deref;
       begin
-        inherited deref;
-        unitsym:=TSym(unitsymderef.resolve);
+        inherited Deref;
+        UnitSym:=TSym(UnitSymDeref.Resolve);
       end;
 
 
@@ -909,380 +909,380 @@ implementation
                                   TPROCSYM
 ****************************************************************************}
 
-    constructor TProcSym.create(const n : TSymStr);
+    constructor TProcSym.Create(const N : TSymStr);
       begin
-         inherited create(procsym,n);
-         FProcdefList:=TFPObjectList.Create(false);
-         FProcdefderefList:=nil;
+         inherited Create(ProcSym,N);
+         FProcDefList:=TFPObjectList.Create(False);
+         FProcDefDerefList:=nil;
          { the tprocdef have their own symoptions, make the procsym
            always visible }
-         visibility:=vis_public;
+         Visibility:=vis_public;
       end;
 
 
-    constructor TProcSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TProcSym.PPULoad(PPUFile:TCompilerPPUFile);
       var
-         symderef,
-         pdderef : TDeref;
-         i,
-         symcnt,
-         pdcnt : LongInt;
+         SymDeref,
+         PDDeref : TDeref;
+         I,
+         SymCnt,
+         PDCnt : LongInt;
       begin
-         inherited ppuload(procsym,ppufile);
-         FProcdefList:=TFPObjectList.Create(false);
-         FProcdefDerefList:=TFPList.Create;
-         pdcnt:=ppufile.GetWord;
-         for i:=1 to pdcnt do
+         inherited PPULoad(ProcSym,PPUFile);
+         FProcDefList:=TFPObjectList.Create(False);
+         FProcDefDerefList:=TFPList.Create;
+         PDCnt:=PPUFile.GetWord;
+         for I:=1 to PDCnt do
           begin
-            ppufile.getderef(pdderef);
-            FProcdefDerefList.Add(Pointer(PtrInt(pdderef.dataidx)));
+            PPUFile.GetDeref(PDDeref);
+            FProcDefDerefList.Add(Pointer(PtrInt(PDDeref.DataIdx)));
           end;
-         if sp_generic_dummy in symoptions then
+         if sp_generic_dummy in SymOptions then
            begin
-             fgenprocsymovlds:=TFPObjectList.create(false);
-             fgenprocsymovldsderefs:=TFPList.create;
-             symcnt:=ppufile.GetWord;
-             for i:=1 to symcnt do
+             FGenProcSymOvlds:=TFPObjectList.Create(False);
+             FGenProcSymOvldsDerefs:=TFPList.Create;
+             SymCnt:=PPUFile.GetWord;
+             for I:=1 to SymCnt do
                begin
-                 ppufile.getderef(symderef);
-                 fgenprocsymovldsderefs.add(pointer(ptrint(symderef.dataidx)));
+                 PPUFile.GetDeref(SymDeref);
+                 FGenProcSymOvldsDerefs.Add(Pointer(PtrInt(SymDeref.DataIdx)));
                end;
            end;
-         PPULoadPlatform(ppufile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
     destructor TProcSym.Destroy;
       begin
-        FProcdefList.Free;
-        FProcdefList := nil;
-        FProcdefDerefList.Free;
-        FProcdefDerefList := nil;
-        fgenprocsymovlds.free;
-        fgenprocsymovlds := nil;
-        fgenprocsymovldsderefs.free;
-        fgenprocsymovldsderefs := nil;
+        FProcDefList.Free;
+        FProcDefList := nil;
+        FProcDefDerefList.Free;
+        FProcDefDerefList := nil;
+        FGenProcSymOvlds.Free;
+        FGenProcSymOvlds := nil;
+        FGenProcSymOvldsDerefs.Free;
+        FGenProcSymOvldsDerefs := nil;
         inherited Destroy;
       end;
 
 
-    procedure TProcSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TProcSym.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-         i : LongInt;
-         d : TDeref;
+         I : LongInt;
+         D : TDeref;
       begin
-         inherited ppuwrite(ppufile);
-         if fprocdefdereflist=nil then
+         inherited PPUWrite(PPUFile);
+         if FProcDefDerefList=nil then
            InternalError(2013121801);
-         ppufile.PutWord(FProcdefDerefList.Count);
-         for i:=0 to FProcdefDerefList.Count-1 do
+         PPUFile.PutWord(FProcDefDerefList.Count);
+         for I:=0 to FProcDefDerefList.Count-1 do
            begin
-             d.dataidx:=PtrInt(FProcdefDerefList[i]);
-             ppufile.putderef(d);
+             D.DataIdx:=PtrInt(FProcDefDerefList[I]);
+             PPUFile.PutDeref(D);
            end;
-         if sp_generic_dummy in symoptions then
+         if sp_generic_dummy in SymOptions then
            begin
-             if not Assigned(fgenprocsymovldsderefs) then
+             if not Assigned(FGenProcSymOvldsDerefs) then
                InternalError(2021010301);
-             ppufile.PutWord(fgenprocsymovldsderefs.count);
-             for i:=0 to fgenprocsymovldsderefs.count-1 do
+             PPUFile.PutWord(FGenProcSymOvldsDerefs.Count);
+             for I:=0 to FGenProcSymOvldsDerefs.Count-1 do
                begin
-                 d.dataidx:=ptrint(fgenprocsymovldsderefs[i]);
-                 ppufile.putderef(d);
+                 D.DataIdx:=PtrInt(FGenProcSymOvldsDerefs[I]);
+                 PPUFile.PutDeref(D);
                end;
            end;
-         WriteEntry(ppufile,IBProcSym);
+         WriteEntry(PPUFile,IBProcSym);
       end;
 
 
-    procedure TProcSym.write_parameter_lists(skipdef:TProcDef);
+    procedure TProcSym.Write_Parameter_Lists(SkipDef:TProcDef);
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        for i:=0 to ProcdefList.Count-1 do
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if pd<>skipdef then
-              MessagePos1(pd.fileinfo,sym_e_param_list,pd.fullprocname(false));
+            PD:=TProcDef(ProcdefList[I]);
+            if PD<>SkipDef then
+              MessagePos1(PD.FileInfo,sym_e_param_list,PD.FullProcName(False));
            end;
       end;
 
 
-    procedure TProcSym.check_forward;
+    procedure TProcSym.Check_Forward;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        for i:=0 to ProcdefList.Count-1 do
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
+            PD:=TProcDef(ProcdefList[I]);
             { Don't check for is_specialization, but whether it's somehow part
               of a specialization }
-            if (pd.owner=owner) and (pd.forwarddef) and not (df_specialization in pd.defoptions) then
+            if (PD.Owner=Owner) and (PD.ForwardDef) and not (df_specialization in PD.DefOptions) then
               begin
                 { For mode macpas. Make implicit externals (procedures declared in the interface
                   section which do not have a counterpart in the implementation)
                   to be an imported procedure }
                 if (m_mac in CurrentSettings.ModeSwitches) and
-                   (pd.interfacedef) then
+                   (PD.InterfaceDef) then
                   begin
-                    pd.setmangledname(TargetInfo.CPrefix+TProcDef(pd).procsym.realname);
-                    if (not CurrentModule.interface_only) then
-                      MessagePos1(pd.fileinfo,sym_w_forward_not_resolved,pd.fullprocname(false));
+                    PD.SetMangledName(TargetInfo.CPrefix+TProcDef(PD).ProcSym.RealName);
+                    if (not CurrentModule.InterfaceOnly) then
+                      MessagePos1(PD.FileInfo,sym_w_forward_not_resolved,PD.FullProcName(False));
                   end
                 else
                   begin
-                    MessagePos1(pd.fileinfo,sym_e_forward_not_resolved,pd.fullprocname(false));
+                    MessagePos1(PD.FileInfo,sym_e_forward_not_resolved,PD.FullProcName(False));
                   end;
                 { Turn further error messages off }
-                pd.forwarddef:=false;
+                PD.ForwardDef:=False;
               end;
           end;
       end;
 
 
-    procedure TProcSym.buildderef;
+    procedure TProcSym.BuildDeref;
       var
-        i  : LongInt;
-        pd : TProcDef;
-        d  : TDeref;
-        sym : TProcSym;
+        I  : LongInt;
+        PD : TProcDef;
+        D  : TDeref;
+        Sym : TProcSym;
       begin
         inherited;
-        if not Assigned(FProcdefDerefList) then
-          FProcdefDerefList:=TFPList.Create
+        if not Assigned(FProcDefDerefList) then
+          FProcDefDerefList:=TFPList.Create
         else
-          FProcdefDerefList.Clear;
-        for i:=0 to ProcdefList.Count-1 do
+          FProcDefDerefList.Clear;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
+            PD:=TProcDef(ProcdefList[I]);
             { only write the proc definitions that belong
               to this procsym and are in the global symtable }
-            if pd.owner=owner then
+            if PD.Owner=Owner then
               begin
-                d.build(pd);
-                FProcdefDerefList.Add(Pointer(PtrInt(d.dataidx)));
+                D.Build(PD);
+                FProcDefDerefList.Add(Pointer(PtrInt(D.DataIdx)));
               end;
           end;
-        if sp_generic_dummy in symoptions then
+        if sp_generic_dummy in SymOptions then
           begin
-            if not Assigned(fgenprocsymovldsderefs) then
-              fgenprocsymovldsderefs:=TFPList.create
+            if not Assigned(FGenProcSymOvldsDerefs) then
+              FGenProcSymOvldsDerefs:=TFPList.Create
             else
-              fgenprocsymovldsderefs.clear;
+              FGenProcSymOvldsDerefs.Clear;
             { this might happen for procsyms in classes that override symbols
               in a parent class that generic overloads }
-            if Assigned(fgenprocsymovlds) then
+            if Assigned(FGenProcSymOvlds) then
               begin
-                fgenprocsymovldsderefs.capacity:=fgenprocsymovldsderefs.count+fgenprocsymovlds.count;
-                for i:=0 to fgenprocsymovlds.count-1 do
+                FGenProcSymOvldsDerefs.Capacity:=FGenProcSymOvldsDerefs.Count+FGenProcSymOvlds.Count;
+                for I:=0 to FGenProcSymOvlds.Count-1 do
                   begin
-                    sym:=TProcSym(fgenprocsymovlds[i]);
-                    d.build(sym);
-                    fgenprocsymovldsderefs.add(pointer(ptrint(d.dataidx)));
+                    Sym:=TProcSym(FGenProcSymOvlds[I]);
+                    D.Build(Sym);
+                    FGenProcSymOvldsDerefs.Add(Pointer(PtrInt(D.DataIdx)));
                   end;
               end;
           end;
       end;
 
 
-    procedure TProcSym.deref;
+    procedure TProcSym.Deref;
       var
-        i  : LongInt;
-        pd : TProcDef;
-        d  : TDeref;
-        sym : TSym;
+        I  : LongInt;
+        PD : TProcDef;
+        D  : TDeref;
+        Sym : TSym;
       begin
         { Clear all procdefs }
         ProcdefList.Clear;
-        if not Assigned(FProcdefDerefList) then
+        if not Assigned(FProcDefDerefList) then
           InternalError(200611031);
-        ProcdefList.capacity:=FProcdefDerefList.count;
-        for i:=0 to FProcdefDerefList.Count-1 do
+        ProcdefList.Capacity:=FProcDefDerefList.Count;
+        for I:=0 to FProcDefDerefList.Count-1 do
           begin
-            d.dataidx:=PtrInt(FProcdefDerefList[i]);
-            pd:=TProcDef(d.resolve);
-            ProcdefList.Add(pd);
+            D.DataIdx:=PtrInt(FProcDefDerefList[I]);
+            PD:=TProcDef(D.Resolve);
+            ProcdefList.Add(PD);
           end;
-        if sp_generic_dummy in symoptions then
+        if sp_generic_dummy in SymOptions then
           begin
             {if not assigned(fgenprocsymovlds) then
               internalerror(2021010603);}
-            if not Assigned(fgenprocsymovldsderefs) then
+            if not Assigned(FGenProcSymOvldsDerefs) then
               InternalError(2021010302);
-            if Assigned(fgenprocsymovlds) then
+            if Assigned(FGenProcSymOvlds) then
               begin
-                fgenprocsymovlds.clear;
-                fgenprocsymovlds.capacity:=fgenprocsymovldsderefs.count;
-                for i:= 0 to fgenprocsymovldsderefs.count-1 do
+                FGenProcSymOvlds.Clear;
+                FGenProcSymOvlds.Capacity:=FGenProcSymOvldsDerefs.Count;
+                for I:= 0 to FGenProcSymOvldsDerefs.Count-1 do
                   begin
-                    d.dataidx:=ptrint(fgenprocsymovldsderefs[i]);
-                    sym:=TProcSym(d.resolve);
-                    fgenprocsymovlds.add(sym);
+                    D.DataIdx:=PtrInt(FGenProcSymOvldsDerefs[I]);
+                    Sym:=TProcSym(D.Resolve);
+                    FGenProcSymOvlds.Add(Sym);
                   end;
               end;
           end;
       end;
 
-    function TProcSym.Find_procdef_bytype(pt:TProcTypeOption):TProcDef;
+    function TProcSym.Find_ProcDef_ByType(PT:TProcTypeOption):TProcDef;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        result:=nil;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if pd.proctypeoption=pt then
+            PD:=TProcDef(ProcdefList[I]);
+            if PD.ProcTypeOption=PT then
               begin
-                result:=pd;
-                exit;
+                Result:=PD;
+                Exit;
               end;
           end;
       end;
 
 
-    function TProcSym.find_bytype_parameterless(pt: TProcTypeOption): TProcDef;
+    function TProcSym.Find_ByType_Parameterless(PT: TProcTypeOption): TProcDef;
       var
-        i,j : LongInt;
-        pd  : TProcDef;
-        found : boolean;
+        I,J : LongInt;
+        PD  : TProcDef;
+        Found : Boolean;
       begin
-        result:=nil;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if (pd.proctypeoption=pt) then
+            PD:=TProcDef(ProcdefList[I]);
+            if (PD.ProcTypeOption=PT) then
               begin
-                found:=true;
-                for j:=0 to pd.paras.count-1 do
+                Found:=True;
+                for J:=0 to PD.Paras.Count-1 do
                   begin
-                    if not(vo_is_hidden_para in TParaVarSym(pd.paras[j]).varoptions) then
+                    if not(vo_is_hidden_para in TParaVarSym(PD.Paras[J]).VarOptions) then
                       begin
-                        found:=false;
-                        break;
+                        Found:=False;
+                        Break;
                       end;
                   end;
-                if found then
+                if Found then
                   begin
-                    result:=pd;
-                    exit;
+                    Result:=PD;
+                    Exit;
                   end;
               end;
           end;
       end;
 
 
-    function check_procdef_paras(pd:TProcDef;para:TFPObjectList;retdef:TDef;
-                                            cpoptions:TCompareParasOptions): TProcDef;
+    function CheckProcDefParas(PD:TProcDef;Para:TFPObjectList;RetDef:TDef;
+                                            CPOptions:TCompareParasOptions): TProcDef;
       var
-        eq: TEqualType;
+        EQ: TEqualType;
       begin
-        result:=nil;
-        if Assigned(retdef) then
-          eq:=compare_defs(retdef,pd.returndef,nothingn)
+        Result:=nil;
+        if Assigned(RetDef) then
+          EQ:=compare_defs(RetDef,PD.ReturnDef,NothingN)
         else
-          eq:=te_equal;
-        if (eq>=te_equal) or
-           ((cpo_allowconvert in cpoptions) and (eq>te_incompatible)) then
+          EQ:=te_equal;
+        if (EQ>=te_equal) or
+           ((cpo_allowconvert in CPOptions) and (EQ>te_incompatible)) then
           begin
-            eq:=compare_paras(para,pd.paras,cp_value_equal_const,cpoptions);
-            if (eq>=te_equal) or
-               ((cpo_allowconvert in cpoptions) and (eq>te_incompatible)) then
+            EQ:=compare_paras(Para,PD.Paras,cp_value_equal_const,CPOptions);
+            if (EQ>=te_equal) or
+               ((cpo_allowconvert in CPOptions) and (EQ>te_incompatible)) then
               begin
-                result:=pd;
-                exit;
+                Result:=PD;
+                Exit;
               end;
           end;
       end;
 
 
-    function TProcSym.Find_procdef_bypara(para:TFPObjectList;retdef:TDef;
-                                            cpoptions:TCompareParasOptions):TProcDef;
+    function TProcSym.Find_ProcDef_ByPara(Para:TFPObjectList;RetDef:TDef;
+                                            CPOptions:TCompareParasOptions):TProcDef;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        result:=nil;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            result:=check_procdef_paras(pd,para,retdef,cpoptions);
-            if Assigned(result) then
-              exit;
+            PD:=TProcDef(ProcdefList[I]);
+            Result:=CheckProcDefParas(PD,Para,RetDef,CPOptions);
+            if Assigned(Result) then
+              Exit;
           end;
       end;
 
 
-    function TProcSym.find_procdef_bytype_and_para(pt:TProcTypeOption;
-               para:TFPObjectList;retdef:TDef;cpoptions:TCompareParasOptions):TProcDef;
+    function TProcSym.Find_ProcDef_ByType_And_Para(PT:TProcTypeOption;
+               Para:TFPObjectList;RetDef:TDef;CPOptions:TCompareParasOptions):TProcDef;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        result:=nil;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if pd.proctypeoption=pt then
+            PD:=TProcDef(ProcdefList[I]);
+            if PD.ProcTypeOption=PT then
               begin
-                result:=check_procdef_paras(pd,para,retdef,cpoptions);
-                if Assigned(result) then
-                  exit;
+                Result:=CheckProcDefParas(PD,Para,RetDef,CPOptions);
+                if Assigned(Result) then
+                  Exit;
               end;
           end;
       end;
 
 
-    function TProcSym.find_procdef_byoptions(ops: TProcOptions): TProcDef;
+    function TProcSym.Find_ProcDef_ByOptions(Ops: TProcOptions): TProcDef;
       var
-        i  : LongInt;
-        pd : TProcDef;
+        I  : LongInt;
+        PD : TProcDef;
       begin
-        result:=nil;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if ops * pd.procoptions = ops then
+            PD:=TProcDef(ProcdefList[I]);
+            if Ops * PD.ProcOptions = Ops then
               begin
-                result:=pd;
-                exit;
+                Result:=PD;
+                Exit;
               end;
           end;
       end;
 
-    function TProcSym.find_procdef_with_comparer(comparer:TProcDefComparer;arg:tobject):TProcDef;
+    function TProcSym.Find_ProcDef_With_Comparer(Comparer:TProcDefComparer;Arg:TObject):TProcDef;
       var
-        i  : LongInt;
-        bestpd,
-        pd : TProcDef;
-        eq,besteq : TEqualType;
-        sym: TSym;
-        ps: TProcSym;
+        I  : LongInt;
+        BestPD,
+        PD : TProcDef;
+        EQ,BestEq : TEqualType;
+        Sym: TSym;
+        PS: TProcSym;
       begin
         { This function will return the pprocdef of pprocsym that
           is the best match for procvardef. When there are multiple
           matches it returns nil.}
-        result:=nil;
-        bestpd:=nil;
-        besteq:=te_incompatible;
-        ps:=self;
+        Result:=nil;
+        BestPD:=nil;
+        BestEq:=te_incompatible;
+        PS:=Self;
         repeat
-          for i:=0 to ps.ProcdefList.Count-1 do
+          for I:=0 to PS.ProcdefList.Count-1 do
             begin
-              pd:=TProcDef(ps.ProcdefList[i]);
-              eq:=comparer(pd,arg);
-              if eq>=te_convert_l1 then
+              PD:=TProcDef(PS.ProcdefList[I]);
+              EQ:=Comparer(PD,Arg);
+              if EQ>=te_convert_l1 then
                 begin
                   { multiple procvars with the same equal level }
-                  if Assigned(bestpd) and
-                     (besteq=eq) then
-                    exit;
-                  if eq>besteq then
+                  if Assigned(BestPD) and
+                     (BestEq=EQ) then
+                    Exit;
+                  if EQ>BestEq then
                     begin
-                      besteq:=eq;
-                      bestpd:=pd;
+                      BestEq:=EQ;
+                      BestPD:=PD;
                     end;
                 end;
             end;
@@ -1291,258 +1291,258 @@ implementation
             tcallcandidates.collect_overloads_in_struct: keep searching in
             parent types in case the currently found procdef is marked as
             "overload" and we haven't found a proper match yet }
-          if Assigned(ps.owner.defowner) and
-             (ps.owner.defowner.typ=objectdef) and
-             Assigned(TObjectDef(ps.owner.defowner).childof) and
-             (not Assigned(bestpd) or
-              (po_overload in bestpd.procoptions)) then
+          if Assigned(PS.Owner.DefOwner) and
+             (PS.Owner.DefOwner.Typ=ObjectDef) and
+             Assigned(TObjectDef(PS.Owner.DefOwner).ChildOf) and
+             (not Assigned(BestPD) or
+              (po_overload in BestPD.ProcOptions)) then
             begin
-              sym:=TSym(TObjectDef(ps.owner.defowner).childof.SymTable.find(ps.name));
-              if Assigned(sym) and
-                 (sym.typ=procsym) then
-                ps:=TProcSym(sym)
+              Sym:=TSym(TObjectDef(PS.Owner.DefOwner).ChildOf.SymTable.Find(PS.Name));
+              if Assigned(Sym) and
+                 (Sym.Typ=ProcSym) then
+                PS:=TProcSym(Sym)
               else
-                ps:=nil;
+                PS:=nil;
             end
           else
-            ps:=nil;
-        until (besteq>=te_equal) or
-              not Assigned(ps);
-        result:=bestpd;
+            PS:=nil;
+        until (BestEq>=te_equal) or
+              not Assigned(PS);
+        Result:=BestPD;
       end;
 
 
-    class function TProcSym.compare_procvardef(pd:TProcDef;arg:tobject):TEqualType;
+    class function TProcSym.Compare_ProcVarDef(PD:TProcDef;Arg:TObject):TEqualType;
       begin
-        result:=proc_to_procvar_equal(pd,TProcVarDef(arg),false);
+        Result:=proc_to_procvar_equal(PD,TProcVarDef(Arg),False);
       end;
 
 
-    class function TProcSym.compare_funcrefdef(pd:TProcDef;arg:tobject):TEqualType;
+    class function TProcSym.Compare_FuncRefDef(PD:TProcDef;Arg:TObject):TEqualType;
       begin
-        result:=proc_to_funcref_equal(pd,TObjectDef(arg));
+        Result:=proc_to_funcref_equal(PD,TObjectDef(Arg));
       end;
 
 
-    function TProcSym.Find_procdef_byprocvardef(d:TProcVarDef):TProcDef;
+    function TProcSym.Find_ProcDef_ByProcVarDef(D:TProcVarDef):TProcDef;
       begin
-        result:=find_procdef_with_comparer(@compare_procvardef,d);
+        Result:=Find_ProcDef_With_Comparer(@Compare_ProcVarDef,D);
       end;
 
 
-    function TProcSym.Find_procdef_byfuncrefdef(d:TObjectDef):TProcDef;
+    function TProcSym.Find_ProcDef_ByFuncRefDef(D:TObjectDef):TProcDef;
       begin
-        if not is_invokable(d) then
+        if not is_invokable(D) then
           InternalError(2022033001);
-        result:=find_procdef_with_comparer(@compare_funcrefdef,d);
+        Result:=Find_ProcDef_With_Comparer(@Compare_FuncRefDef,D);
       end;
 
 
-    function TProcSym.Find_procdef_assignment_operator(fromdef,todef:TDef;var besteq:TEqualType;isexplicit:boolean):TProcDef;
+    function TProcSym.Find_ProcDef_Assignment_Operator(FromDef,ToDef:TDef;var BestEq:TEqualType;IsExplicit:Boolean):TProcDef;
       var
-        paraidx, realparamcount,
-        i, j : LongInt;
-        bestpd,
-        hpd,
-        pd : TProcDef;
-        convtyp : TConvertType;
-        eq      : TEqualType;
-        shortstringcount : LongInt;
-        checkshortstring,
-        isgenshortstring : boolean;
+        ParaIdx, RealParamCount,
+        I, J : LongInt;
+        BestPD,
+        HPD,
+        PD : TProcDef;
+        ConvTyp : TConvertType;
+        EQ      : TEqualType;
+        ShortStringCount : LongInt;
+        CheckShortString,
+        IsGenShortString : Boolean;
       begin
         { This function will return the pprocdef of pprocsym that
           is the best match for fromdef and todef. }
-        result:=nil;
-        bestpd:=nil;
-        besteq:=te_incompatible;
+        Result:=nil;
+        BestPD:=nil;
+        BestEq:=te_incompatible;
         { special handling for assignment operators overloads to shortstring:
           for implicit assignment we pick the ShortString one if available and
           only pick one with specific length if it is the *only* one }
-        shortstringcount:=0;
-        checkshortstring:=not isexplicit and
-                          is_shortstring(todef) and
-                          (TStringDef(todef).len<>255);
-        for i:=0 to ProcdefList.Count-1 do
+        ShortStringCount:=0;
+        CheckShortString:=not IsExplicit and
+                          is_shortstring(ToDef) and
+                          (TStringDef(ToDef).Len<>255);
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if (pd.owner.symtabletype=staticsymtable) and not pd.owner.iscurrentunit then
-              continue;
-            if (equal_defs(todef,pd.returndef) or
+            PD:=TProcDef(ProcdefList[I]);
+            if (PD.Owner.SymTableType=StaticSymTable) and not PD.Owner.IsCurrentUnit then
+              Continue;
+            if (equal_defs(ToDef,PD.ReturnDef) or
                 { shortstrings of different lengths are ok as result }
-                (not isexplicit and is_shortstring(todef) and is_shortstring(pd.returndef))) and
+                (not IsExplicit and is_shortstring(ToDef) and is_shortstring(PD.ReturnDef))) and
                { the result type must be always really equal and not an alias,
                  if you mess with this code, check tw4093 }
-               ((todef=pd.returndef) or
+               ((ToDef=PD.ReturnDef) or
                 (
-                  not(df_unique in todef.defoptions) and
-                  not(df_unique in pd.returndef.defoptions)
+                  not(df_unique in ToDef.DefOptions) and
+                  not(df_unique in PD.ReturnDef.DefOptions)
                 )
                ) then
               begin
-                paraidx:=0;
+                ParaIdx:=0;
                 { ignore vs_hidden parameters }
-                while (paraidx<pd.paras.count) and
-                      Assigned(pd.paras[paraidx]) and
-                      (vo_is_hidden_para in TParaVarSym(pd.paras[paraidx]).varoptions) do
-                  inc(paraidx);
-                realparamcount:=0;
-                for j := 0 to pd.paras.Count-1 do
-                  if Assigned(pd.paras[j]) and not (vo_is_hidden_para in TParaVarSym(pd.paras[j]).varoptions) then
-                    inc(realparamcount);
-                if (paraidx<pd.paras.count) and
-                   Assigned(pd.paras[paraidx]) and
-                   (realparamcount = 1) then
+                while (ParaIdx<PD.Paras.Count) and
+                      Assigned(PD.Paras[ParaIdx]) and
+                      (vo_is_hidden_para in TParaVarSym(PD.Paras[ParaIdx]).VarOptions) do
+                  Inc(ParaIdx);
+                RealParamCount:=0;
+                for J := 0 to PD.Paras.Count-1 do
+                  if Assigned(PD.Paras[J]) and not (vo_is_hidden_para in TParaVarSym(PD.Paras[J]).VarOptions) then
+                    Inc(RealParamCount);
+                if (ParaIdx<PD.Paras.Count) and
+                   Assigned(PD.Paras[ParaIdx]) and
+                   (RealParamCount = 1) then
                   begin
-                    eq:=compare_defs_ext(fromdef,TParaVarSym(pd.paras[paraidx]).vardef,nothingn,convtyp,hpd,[]);
+                    EQ:=compare_defs_ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
 
                     { alias? if yes, only l1 choice,
                       if you mess with this code, check tw4093 }
-                    if (eq=te_exact) and
-                       (fromdef<>TParaVarSym(pd.paras[paraidx]).vardef) and
-                       ((df_unique in fromdef.defoptions) or
-                       (df_unique in TParaVarSym(pd.paras[paraidx]).vardef.defoptions)) then
-                      eq:=te_convert_l1;
+                    if (EQ=te_exact) and
+                       (FromDef<>TParaVarSym(PD.Paras[ParaIdx]).VarDef) and
+                       ((df_unique in FromDef.DefOptions) or
+                       (df_unique in TParaVarSym(PD.Paras[ParaIdx]).VarDef.DefOptions)) then
+                      EQ:=te_convert_l1;
 
-                    isgenshortstring:=false;
-                    if checkshortstring and is_shortstring(pd.returndef) then
-                      if TStringDef(pd.returndef).len<>255 then
-                        inc(shortstringcount)
+                    IsGenShortString:=False;
+                    if CheckShortString and is_shortstring(PD.ReturnDef) then
+                      if TStringDef(PD.ReturnDef).Len<>255 then
+                        Inc(ShortStringCount)
                       else
-                        isgenshortstring:=true;
+                        IsGenShortString:=True;
 
-                    if (eq=te_exact) and (not checkshortstring or isgenshortstring) then
+                    if (EQ=te_exact) and (not CheckShortString or IsGenShortString) then
                       begin
-                        besteq:=eq;
-                        result:=pd;
-                        exit;
+                        BestEq:=EQ;
+                        Result:=PD;
+                        Exit;
                       end;
-                    if eq>besteq then
+                    if EQ>BestEq then
                       begin
-                        bestpd:=pd;
-                        besteq:=eq;
+                        BestPD:=PD;
+                        BestEq:=EQ;
                       end;
                   end;
               end;
           end;
-        if checkshortstring and (shortstringcount>1) then
+        if CheckShortString and (ShortStringCount>1) then
           begin
-            besteq:=te_incompatible;
-            bestpd:=nil;
+            BestEq:=te_incompatible;
+            BestPD:=nil;
           end;
-        result:=bestpd;
+        Result:=BestPD;
       end;
 
-      function TProcSym.find_procdef_enumerator_operator(fromdef,todef:TDef;var besteq:TEqualType):TProcDef;
+      function TProcSym.Find_ProcDef_Enumerator_Operator(FromDef,ToDef:TDef;var BestEq:TEqualType):TProcDef;
       var
-        paraidx, realparamcount,
-        i, j : LongInt;
-        bestpd,
-        hpd,
-        pd : TProcDef;
-        current : TPropertySym;
-        convtyp : TConvertType;
-        eq      : TEqualType;
+        ParaIdx, RealParamCount,
+        I, J : LongInt;
+        BestPD,
+        HPD,
+        PD : TProcDef;
+        Current : TPropertySym;
+        ConvTyp : TConvertType;
+        EQ      : TEqualType;
       begin
         { This function will return the pprocdef of pprocsym that
           is the best match for fromdef and todef. }
-        result:=nil;
-        bestpd:=nil;
-        besteq:=te_incompatible;
-        for i:=0 to ProcdefList.Count-1 do
+        Result:=nil;
+        BestPD:=nil;
+        BestEq:=te_incompatible;
+        for I:=0 to ProcdefList.Count-1 do
           begin
-            pd:=TProcDef(ProcdefList[i]);
-            if (pd.owner.symtabletype=staticsymtable) and not pd.owner.iscurrentunit then
-              continue;
-            if not (is_class_or_interface_or_object(pd.returndef) or is_record(pd.returndef)) then
-              continue;
-            current := TPropertySym(TAbstractRecordDef(pd.returndef).search_enumerator_current);
-            if (current = nil) then
-              continue;
+            PD:=TProcDef(ProcdefList[I]);
+            if (PD.Owner.SymTableType=StaticSymTable) and not PD.Owner.IsCurrentUnit then
+              Continue;
+            if not (Is_Class_Or_Interface_Or_Object(PD.ReturnDef) or Is_Record(PD.ReturnDef)) then
+              Continue;
+            Current := TPropertySym(TAbstractRecordDef(PD.ReturnDef).Search_Enumerator_Current);
+            if (Current = nil) then
+              Continue;
             // compare current result def with the todef
-            if (equal_defs(todef, current.propdef) or
+            if (equal_defs(ToDef, Current.PropDef) or
                 { shortstrings of different lengths are ok as result }
-                (is_shortstring(todef) and is_shortstring(current.propdef))) and
+                (is_shortstring(ToDef) and is_shortstring(Current.PropDef))) and
                { the result type must be always really equal and not an alias,
                  if you mess with this code, check tw4093 }
-               ((todef=current.propdef) or
+               ((ToDef=Current.PropDef) or
                 (
-                  not(df_unique in todef.defoptions) and
-                  not(df_unique in current.propdef.defoptions)
+                  not(df_unique in ToDef.DefOptions) and
+                  not(df_unique in Current.PropDef.DefOptions)
                 )
                ) then
               begin
-                paraidx:=0;
+                ParaIdx:=0;
                 { ignore vs_hidden parameters }
-                while (paraidx<pd.paras.count) and
-                      Assigned(pd.paras[paraidx]) and
-                      (vo_is_hidden_para in TParaVarSym(pd.paras[paraidx]).varoptions) do
-                  inc(paraidx);
-                realparamcount:=0;
-                for j := 0 to pd.paras.Count-1 do
-                  if Assigned(pd.paras[j]) and not (vo_is_hidden_para in TParaVarSym(pd.paras[j]).varoptions) then
-                    inc(realparamcount);
-                if (paraidx<pd.paras.count) and
-                   Assigned(pd.paras[paraidx]) and
-                   (realparamcount = 1) then
+                while (ParaIdx<PD.Paras.Count) and
+                      Assigned(PD.Paras[ParaIdx]) and
+                      (vo_is_hidden_para in TParaVarSym(PD.Paras[ParaIdx]).VarOptions) do
+                  Inc(ParaIdx);
+                RealParamCount:=0;
+                for J := 0 to PD.Paras.Count-1 do
+                  if Assigned(PD.Paras[J]) and not (vo_is_hidden_para in TParaVarSym(PD.Paras[J]).VarOptions) then
+                    Inc(RealParamCount);
+                if (ParaIdx<PD.Paras.Count) and
+                   Assigned(PD.Paras[ParaIdx]) and
+                   (RealParamCount = 1) then
                   begin
-                    eq:=compare_defs_ext(fromdef,TParaVarSym(pd.paras[paraidx]).vardef,nothingn,convtyp,hpd,[]);
+                    EQ:=compare_defs_ext(FromDef,TParaVarSym(PD.Paras[ParaIdx]).VarDef,NothingN,ConvTyp,HPD,[]);
 
                     { alias? if yes, only l1 choice,
                       if you mess with this code, check tw4093 }
-                    if (eq=te_exact) and
-                       (fromdef<>TParaVarSym(pd.paras[paraidx]).vardef) and
-                       ((df_unique in fromdef.defoptions) or
-                       (df_unique in TParaVarSym(pd.paras[paraidx]).vardef.defoptions)) then
-                      eq:=te_convert_l1;
+                    if (EQ=te_exact) and
+                       (FromDef<>TParaVarSym(PD.Paras[ParaIdx]).VarDef) and
+                       ((df_unique in FromDef.DefOptions) or
+                       (df_unique in TParaVarSym(PD.Paras[ParaIdx]).VarDef.DefOptions)) then
+                      EQ:=te_convert_l1;
 
-                    if eq=te_exact then
+                    if EQ=te_exact then
                       begin
-                        besteq:=eq;
-                        result:=pd;
-                        exit;
+                        BestEq:=EQ;
+                        Result:=PD;
+                        Exit;
                       end;
-                    if eq>besteq then
+                    if EQ>BestEq then
                       begin
-                        bestpd:=pd;
-                        besteq:=eq;
+                        BestPD:=PD;
+                        BestEq:=EQ;
                       end;
                   end;
               end;
           end;
-        result:=bestpd;
+        Result:=BestPD;
       end;
 
 
-    procedure TProcSym.add_generic_overload(sym:TProcSym);
+    procedure TProcSym.Add_Generic_Overload(Sym:TProcSym);
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        if not (sp_generic_dummy in symoptions) then
+        if not (sp_generic_dummy in SymOptions) then
           InternalError(2021010601);
-        if not Assigned(fgenprocsymovlds) then
-          fgenprocsymovlds:=TFPObjectList.create(false);
-        for i:=0 to genprocsymovlds.count-1 do
-          if TProcSym(genprocsymovlds[i])=sym then
-            exit;
-        genprocsymovlds.add(sym);
+        if not Assigned(FGenProcSymOvlds) then
+          FGenProcSymOvlds:=TFPObjectList.Create(False);
+        for I:=0 to GenProcSymOvlds.Count-1 do
+          if TProcSym(GenProcSymOvlds[I])=Sym then
+            Exit;
+        GenProcSymOvlds.Add(Sym);
       end;
 
 
-    function TProcSym.could_be_implicitly_specialized:boolean;
+    function TProcSym.Could_Be_Implicitly_Specialized:Boolean;
       begin
-        result:=(m_implicit_function_specialization in CurrentSettings.ModeSwitches) and
-                (sp_generic_dummy in symoptions) and
-                Assigned(genprocsymovlds);
+        Result:=(m_implicit_function_specialization in CurrentSettings.ModeSwitches) and
+                (sp_generic_dummy in SymOptions) and
+                Assigned(GenProcSymOvlds);
       end;
 
 {****************************************************************************
                                   TERRORSYM
 ****************************************************************************}
 
-    constructor TErrorSym.create;
+    constructor TErrorSym.Create;
       begin
-        inherited create(errorsym,'');
+        inherited Create(ErrorSym,'');
       end;
 
 
@@ -1557,226 +1557,226 @@ implementation
                                 TPROPERTYSYM
 ****************************************************************************}
 
-    procedure TPropertySym.finalize_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
+    procedure TPropertySym.Finalize_Getter_Or_Setter_For_Sym(GetSet: TPropAccessListTypes; Sym: TSym; FieldDef: TDef; AccessorDef: TProcDef);
       begin
         { do nothing by default }
       end;
 
 
-    constructor TPropertySym.create(const n : TSymStr);
+    constructor TPropertySym.Create(const N : TSymStr);
       var
-        pap : TPropAccessListTypes;
+        PAP : TPropAccessListTypes;
       begin
-         inherited create(propertysym,n);
-         propoptions:=[];
-         index:=0;
+         inherited Create(PropertySym,N);
+         PropOptions:=[];
+         Index:=0;
          default:=0;
-         propdef:=nil;
-         propdefderef.reset;
-         indexdef:=nil;
-         indexdefderef.reset;
-         parast:=nil;
-         for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-           propaccesslist[pap]:=TPropAccessList.create;
+         PropDef:=nil;
+         PropDefDeref.Reset;
+         IndexDef:=nil;
+         IndexDefDeref.Reset;
+         ParaST:=nil;
+         for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+           PropAccessList[PAP]:=TPropAccessList.Create;
       end;
 
 
-    constructor TPropertySym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TPropertySym.PPULoad(PPUFile:TCompilerPPUFile);
       type
          TSmallInterval = 0..31;
          TSmallSet = set of TSmallInterval;
          PSmallSet = ^TSmallSet;
       var
-        pap : TPropAccessListTypes;
-        d : BestReal;
-        s : single;
-        aset : TSmallSet;
+        PAP : TPropAccessListTypes;
+        D : BestReal;
+        S : Single;
+        ASet : TSmallSet;
       begin
-         inherited ppuload(propertysym,ppufile);
-         ppufile.GetSet(TPPUSet2(propoptions));
-         if ppo_overrides in propoptions then
-           ppufile.getderef(overriddenpropsymderef);
-         ppufile.getderef(propdefderef);
-         index:=ppufile.GetLongInt;
-         if ppo_default_is_single in propoptions then
+         inherited PPULoad(PropertySym,PPUFile);
+         PPUFile.GetSet(TPPUSet2(PropOptions));
+         if ppo_overrides in PropOptions then
+           PPUFile.GetDeref(OverriddenPropSymDeref);
+         PPUFile.GetDeref(PropDefDeref);
+         Index:=PPUFile.GetLongInt;
+         if ppo_default_is_single in PropOptions then
            begin
-             d:=ppufile.GetReal;
-	     s:=Single(d);
-             default:=PLongInt(@s)^;
+             D:=PPUFile.GetReal;
+	     S:=Single(D);
+             default:=PLongInt(@S)^;
            end
-         else if ppo_default_is_set in propoptions then
+         else if ppo_default_is_set in PropOptions then
            begin
-             ppufile.GetSet(TPPUSet4(aset));
-             default:=PLongInt(@aset)^;
-           end
-         else
-           default:=ppufile.GetLongInt;
-         ppufile.getderef(indexdefderef);
-         for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-           propaccesslist[pap]:=ppufile.getpropaccesslist;
-         PPULoadPlatform(ppufile);
-         if [ppo_hasparameters,ppo_overrides]*propoptions=[ppo_hasparameters] then
-           begin
-             parast:=TParaSymTable.create(nil,0);
-             TParaSymTable(parast).ppuload(ppufile);
+             PPUFile.GetSet(TPPUSet4(ASet));
+             default:=PLongInt(@ASet)^;
            end
          else
-           parast:=nil;
+           default:=PPUFile.GetLongInt;
+         PPUFile.GetDeref(IndexDefDeref);
+         for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+           PropAccessList[PAP]:=PPUFile.GetPropAccessList;
+         PPULoadPlatform(PPUFile);
+         if [ppo_hasparameters,ppo_overrides]*PropOptions=[ppo_hasparameters] then
+           begin
+             ParaST:=TParaSymTable.Create(nil,0);
+             TParaSymTable(ParaST).PPULoad(PPUFile);
+           end
+         else
+           ParaST:=nil;
       end;
 
 
     destructor TPropertySym.Destroy;
       var
-        pap : TPropAccessListTypes;
+        PAP : TPropAccessListTypes;
       begin
-         for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-           FreeAndNil(propaccesslist[pap]);
-         parast.free;
-         parast := nil;
+         for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+           FreeAndNil(PropAccessList[PAP]);
+         ParaST.Free;
+         ParaST := nil;
          inherited Destroy;
       end;
 
 
-    procedure TPropertySym.buildderef;
+    procedure TPropertySym.BuildDeref;
       var
-        pap : TPropAccessListTypes;
+        PAP : TPropAccessListTypes;
       begin
         inherited;
-        propdefderef.build(propdef);
-        indexdefderef.build(indexdef);
-        for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-          propaccesslist[pap].buildderef;
-        if ppo_overrides in propoptions then
-          overriddenpropsymderef.build(overriddenpropsym)
+        PropDefDeref.Build(PropDef);
+        IndexDefDeref.Build(IndexDef);
+        for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+          PropAccessList[PAP].BuildDeref;
+        if ppo_overrides in PropOptions then
+          OverriddenPropSymDeref.Build(OverriddenPropSym)
         else
-        if ppo_hasparameters in propoptions then
-          TParaSymTable(parast).buildderef;
+        if ppo_hasparameters in PropOptions then
+          TParaSymTable(ParaST).BuildDeref;
       end;
 
 
-    procedure TPropertySym.deref;
+    procedure TPropertySym.Deref;
       var
-        pap : TPropAccessListTypes;
+        PAP : TPropAccessListTypes;
       begin
-        indexdef:=TDef(indexdefderef.resolve);
-        propdef:=TDef(propdefderef.resolve);
-        for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-          propaccesslist[pap].resolve;
+        IndexDef:=TDef(IndexDefDeref.Resolve);
+        PropDef:=TDef(PropDefDeref.Resolve);
+        for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+          PropAccessList[PAP].Resolve;
 
-        if ppo_overrides in propoptions then
+        if ppo_overrides in PropOptions then
           begin
-            overriddenpropsym:=TPropertySym(overriddenpropsymderef.resolve);
-            if ppo_hasparameters in propoptions then
-              parast:=overriddenpropsym.parast.getcopy;
+            OverriddenPropSym:=TPropertySym(OverriddenPropSymDeref.Resolve);
+            if ppo_hasparameters in PropOptions then
+              ParaST:=OverriddenPropSym.ParaST.GetCopy;
           end
         else
-        if ppo_hasparameters in propoptions then
-          TParaSymTable(parast).deref(false)
+        if ppo_hasparameters in PropOptions then
+          TParaSymTable(ParaST).Deref(False)
       end;
 
 
-    function TPropertySym.getpropaccesslist(pap:TPropAccessListTypes;out plist:TPropAccessList):boolean;
+    function TPropertySym.GetPropAccessList(PAP:TPropAccessListTypes;out PList:TPropAccessList):Boolean;
     var
-      hpropsym : TPropertySym;
+      HPropSym : TPropertySym;
     begin
-      result:=false;
+      Result:=False;
       { find property in the overridden list }
-      hpropsym:=self;
+      HPropSym:=Self;
       repeat
-        plist:=hpropsym.propaccesslist[pap];
-        if not plist.empty then
+        PList:=HPropSym.PropAccessList[PAP];
+        if not PList.Empty then
           begin
-            result:=true;
-            exit;
+            Result:=True;
+            Exit;
           end;
-        hpropsym:=hpropsym.overriddenpropsym;
-      until not Assigned(hpropsym);
+        HPropSym:=HPropSym.OverriddenPropSym;
+      until not Assigned(HPropSym);
     end;
 
 
-    procedure TPropertySym.add_accessor_parameters(readprocdef, writeprocdef: TProcDef);
+    procedure TPropertySym.Add_Accessor_Parameters(ReadProcDef, WriteProcDef: TProcDef);
       var
-        i: integer;
-        orig, hparavs: TParaVarSym;
+        I: Integer;
+        Orig, HParaVS: TParaVarSym;
       begin
-        for i := 0 to parast.SymList.Count - 1 do
+        for I := 0 to ParaST.SymList.Count - 1 do
           begin
-            orig:=TParaVarSym(parast.SymList[i]);
-            if Assigned(readprocdef) then
+            Orig:=TParaVarSym(ParaST.SymList[I]);
+            if Assigned(ReadProcDef) then
               begin
-                hparavs:=CParaVarSym.create(orig.RealName,orig.paranr,orig.varspez,orig.vardef,[]);
-                readprocdef.parast.insertsym(hparavs);
+                HParaVS:=CParaVarSym.Create(Orig.RealName,Orig.ParaNr,Orig.VarSpez,Orig.VarDef,[]);
+                ReadProcDef.ParaST.InsertSym(HParaVS);
               end;
-            if Assigned(writeprocdef) then
+            if Assigned(WriteProcDef) then
               begin
-                hparavs:=CParaVarSym.create(orig.RealName,orig.paranr,orig.varspez,orig.vardef,[]);
-                writeprocdef.parast.insertsym(hparavs);
+                HParaVS:=CParaVarSym.Create(Orig.RealName,Orig.ParaNr,Orig.VarSpez,Orig.VarDef,[]);
+                WriteProcDef.ParaST.InsertSym(HParaVS);
               end;
           end;
       end;
 
 
-    procedure TPropertySym.add_index_parameter(var paranr: word; readprocdef, writeprocdef: TProcDef);
+    procedure TPropertySym.Add_Index_Parameter(var ParaNr: Word; ReadProcDef, WriteProcDef: TProcDef);
       var
-        hparavs: TParaVarSym;
+        HParaVS: TParaVarSym;
       begin
-        inc(paranr);
-        if Assigned(readprocdef) then
+        Inc(ParaNr);
+        if Assigned(ReadProcDef) then
           begin
-            hparavs:=CParaVarSym.create('$index',10*paranr,vs_value,indexdef,[]);
-            readprocdef.parast.insertsym(hparavs);
+            HParaVS:=CParaVarSym.Create('$index',10*ParaNr,vs_value,IndexDef,[]);
+            ReadProcDef.ParaST.InsertSym(HParaVS);
           end;
-        if Assigned(writeprocdef) then
+        if Assigned(WriteProcDef) then
           begin
-            hparavs:=CParaVarSym.create('$index',10*paranr,vs_value,indexdef,[]);
-            writeprocdef.parast.insertsym(hparavs);
+            HParaVS:=CParaVarSym.Create('$index',10*ParaNr,vs_value,IndexDef,[]);
+            WriteProcDef.ParaST.InsertSym(HParaVS);
           end;
       end;
 
 
-    procedure TPropertySym.add_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
+    procedure TPropertySym.Add_Getter_Or_Setter_For_Sym(GetSet: TPropAccessListTypes; Sym: TSym; FieldDef: TDef; AccessorDef: TProcDef);
       var
-        cpo: TCompareParasOptions;
+        CPO: TCompareParasOptions;
       begin
-        case sym.typ of
-          procsym :
+        case Sym.Typ of
+          ProcSym :
             begin
               { search procdefs matching accessordef }
               { we ignore hidden stuff here because the property access symbol might have
                 non default calling conventions which might change the hidden stuff;
                 see tw3216.pas (FK) }
-              cpo:=[cpo_allowdefaults,cpo_ignorehidden];
+              CPO:=[cpo_allowdefaults,cpo_ignorehidden];
               { allow var-parameters for setters in case of VARPROPSETTER+ }
               if (GetSet=palt_write) and
                  (cs_varpropsetter in CurrentSettings.LocalSwitches) then
-                include(cpo,cpo_ignorevarspez);
-              propaccesslist[GetSet].procdef:=TProcSym(sym).find_procdef_bypara(accessordef.paras,accessordef.returndef,cpo);
-              if not Assigned(propaccesslist[GetSet].procdef) or
+                Include(CPO,cpo_ignorevarspez);
+              PropAccessList[GetSet].ProcDef:=TProcSym(Sym).Find_ProcDef_ByPara(AccessorDef.Paras,AccessorDef.ReturnDef,CPO);
+              if not Assigned(PropAccessList[GetSet].ProcDef) or
                  { because of cpo_ignorehidden we need to compare if it is a static class method and we have a class property }
-                 ((sp_static in symoptions)<>TProcDef(propaccesslist[GetSet].procdef).no_self_node) then
+                 ((sp_static in SymOptions)<>TProcDef(PropAccessList[GetSet].ProcDef).No_Self_Node) then
                 Message(parser_e_ill_property_access_sym)
               else
-                finalize_getter_or_setter_for_sym(GetSet,sym,fielddef,accessordef);
+                Finalize_Getter_Or_Setter_For_Sym(GetSet,Sym,FieldDef,AccessorDef);
             end;
-          fieldvarsym :
+          FieldVarSym :
             begin
-              if not Assigned(fielddef) then
+              if not Assigned(FieldDef) then
                 InternalError(200310071);
-              if compare_defs(fielddef,propdef,nothingn)>=te_equal then
+              if compare_defs(FieldDef,PropDef,NothingN)>=te_equal then
                begin
                  { property parameters are allowed if this is
                    an indexed property, because the index is then
                    the parameter.
                    Note: In the help of Kylix it is written
                    that it isn't allowed, but the compiler accepts it (PFV) }
-                 if (ppo_hasparameters in propoptions) or
-                    ((sp_static in symoptions) <> (sp_static in sym.symoptions)) then
+                 if (ppo_hasparameters in PropOptions) or
+                    ((sp_static in SymOptions) <> (sp_static in Sym.SymOptions)) then
                    Message(parser_e_ill_property_access_sym)
                  else
-                   finalize_getter_or_setter_for_sym(GetSet,sym,fielddef,accessordef);
+                   Finalize_Getter_Or_Setter_For_Sym(GetSet,Sym,FieldDef,AccessorDef);
                end
               else
-               IncompatibleTypes(fielddef,propdef);
+               IncompatibleTypes(FieldDef,PropDef);
             end;
           else
             Message(parser_e_ill_property_access_sym);
@@ -1784,165 +1784,165 @@ implementation
       end;
 
 
-    procedure TPropertySym.register_override(overriddenprop: TPropertySym);
+    procedure TPropertySym.Register_Override(OverriddenProp: TPropertySym);
       begin
-        overriddenpropsym:=TPropertySym(overriddenprop);
-        include(propoptions,ppo_overrides);
+        OverriddenPropSym:=TPropertySym(OverriddenProp);
+        Include(PropOptions,ppo_overrides);
       end;
 
 
-    procedure TPropertySym.inherit_accessor(GetSet: TPropAccessListTypes);
+    procedure TPropertySym.Inherit_Accessor(GetSet: TPropAccessListTypes);
       begin
         { nothing to do by default }
       end;
 
 
-    procedure TPropertySym.makeduplicate(p: TPropertySym; readprocdef, writeprocdef: TProcDef; out paranr: word);
+    procedure TPropertySym.MakeDuplicate(P: TPropertySym; ReadProcDef, WriteProcDef: TProcDef; out ParaNr: Word);
       begin
         { inherit all type related entries }
-        p.indexdef:=indexdef;
-        p.propdef:=propdef;
-        p.index:=index;
-        p.default:=default;
-        p.propoptions:=propoptions;
-        paranr:=0;
-        if ppo_hasparameters in propoptions then
+        P.IndexDef:=IndexDef;
+        P.PropDef:=PropDef;
+        P.Index:=Index;
+        P.default:=default;
+        P.PropOptions:=PropOptions;
+        ParaNr:=0;
+        if ppo_hasparameters in PropOptions then
           begin
-            p.parast:=parast.getcopy;
-            p.add_accessor_parameters(readprocdef,writeprocdef);
-            paranr:=p.parast.SymList.Count;
+            P.ParaST:=ParaST.GetCopy;
+            P.Add_Accessor_Parameters(ReadProcDef,WriteProcDef);
+            ParaNr:=P.ParaST.SymList.Count;
           end;
-        if ppo_indexed in p.propoptions then
-          p.add_index_parameter(paranr,readprocdef,writeprocdef);
+        if ppo_indexed in P.PropOptions then
+          P.Add_Index_Parameter(ParaNr,ReadProcDef,WriteProcDef);
       end;
 
 
-    function TPropertySym.getsize : asizeint;
+    function TPropertySym.GetSize : ASizeInt;
       begin
-         getsize:=0;
+         GetSize:=0;
       end;
 
 
-    procedure TPropertySym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TPropertySym.PPUWrite(PPUFile:TCompilerPPUFile);
       type
          TSmallInterval = 0..31;
          TSmallSet = set of TSmallInterval;
          PSmallSet = ^TSmallSet;
       var
-        pap : TPropAccessListTypes;
-        s : single;
-        aset : TSmallSet;
+        PAP : TPropAccessListTypes;
+        S : Single;
+        ASet : TSmallSet;
       begin
-        inherited ppuwrite(ppufile);
-        ppufile.PutSet(TPPUSet2(propoptions));
-        if ppo_overrides in propoptions then
-          ppufile.putderef(overriddenpropsymderef);
-        ppufile.putderef(propdefderef);
-        ppufile.PutLongInt(index);
-        if ppo_default_is_single in propoptions then
+        inherited PPUWrite(PPUFile);
+        PPUFile.PutSet(TPPUSet2(PropOptions));
+        if ppo_overrides in PropOptions then
+          PPUFile.PutDeref(OverriddenPropSymDeref);
+        PPUFile.PutDeref(PropDefDeref);
+        PPUFile.PutLongInt(Index);
+        if ppo_default_is_single in PropOptions then
           begin
-            s:=psingle(@default)^;
-            ppufile.PutReal(s);
+            S:=PSingle(@default)^;
+            PPUFile.PutReal(S);
           end
-        else if ppo_default_is_set in propoptions then
+        else if ppo_default_is_set in PropOptions then
           begin
-            aset:=PSmallSet(@default)^;
-            ppufile.PutSet(TPPUSet4(aset));
+            ASet:=PSmallSet(@default)^;
+            PPUFile.PutSet(TPPUSet4(ASet));
           end
         else
-          ppufile.PutLongInt(default);
-        ppufile.putderef(indexdefderef);
-        for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
-          ppufile.putpropaccesslist(propaccesslist[pap]);
-        WriteEntry(ppufile,IBPropertySym);
-        if [ppo_hasparameters,ppo_overrides]*propoptions=[ppo_hasparameters] then
-          TParaSymTable(parast).ppuwrite(ppufile);
+          PPUFile.PutLongInt(default);
+        PPUFile.PutDeref(IndexDefDeref);
+        for PAP:=Low(TPropAccessListTypes) to High(TPropAccessListTypes) do
+          PPUFile.PutPropAccessList(PropAccessList[PAP]);
+        WriteEntry(PPUFile,IBPropertySym);
+        if [ppo_hasparameters,ppo_overrides]*PropOptions=[ppo_hasparameters] then
+          TParaSymTable(ParaST).PPUWrite(PPUFile);
       end;
 
 {****************************************************************************
                             TABSTRACTVARSYM
 ****************************************************************************}
 
-    constructor TAbstractVarSym.create(st:TSymTyp;const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TAbstractVarSym.Create(ST:TSymTyp;const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(st,n);
-         vardef:=def;
-         vardefderef.reset;
-         varspez:=vsp;
-         varstate:=vs_declared;
-         varoptions:=vopts;
+         inherited Create(ST,N);
+         VarDef:=Def;
+         VarDefDeref.Reset;
+         VarSpez:=VSP;
+         VarState:=vs_declared;
+         VarOptions:=VOpts;
       end;
 
 
-    constructor TAbstractVarSym.ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
+    constructor TAbstractVarSym.PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(st,ppufile);
-         varstate:=vs_readwritten;
-         varspez:=TVarSpez(ppufile.GetByte);
-         varregable:=TVarRegable(ppufile.GetByte);
-         ppufile.GetSet(TPPUSet1(varsymaccess));
-         ppufile.getderef(vardefderef);
-         ppufile.GetSet(TPPUSet4(varoptions));
+         inherited PPULoad(ST,PPUFile);
+         VarState:=vs_readwritten;
+         VarSpez:=TVarSpez(PPUFile.GetByte);
+         VarRegable:=TVarRegable(PPUFile.GetByte);
+         PPUFile.GetSet(TPPUSet1(VarSymAccess));
+         PPUFile.GetDeref(VarDefDeref);
+         PPUFile.GetSet(TPPUSet4(VarOptions));
       end;
 
 
-    procedure TAbstractVarSym.buildderef;
+    procedure TAbstractVarSym.BuildDeref;
       begin
         inherited;
-        vardefderef.build(vardef);
+        VarDefDeref.Build(VarDef);
       end;
 
 
-    procedure TAbstractVarSym.deref;
+    procedure TAbstractVarSym.Deref;
       begin
         { assigning vardef also updates varregable. We just loaded this   }
         { value from a ppu, so it must not be changed (e.g. tw7817a.pas/   }
         { tw7817b.pas: the address is taken of a local variable in an      }
         { inlined procedure -> must remain non-regable when inlining)     }
-        setvardef(TDef(vardefderef.resolve));
+        SetVarDef(TDef(VarDefDeref.Resolve));
       end;
 
 
-    procedure TAbstractVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbstractVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldcrc : boolean;
+        OldCRC : Boolean;
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(varspez));
-         oldcrc:=ppufile.DoCRC;
-         ppufile.DoCRC:=false;
-         ppufile.PutByte(byte(varregable));
-         ppufile.PutSet(TPPUSet1(varsymaccess));
-         ppufile.DoCRC:=oldcrc;
-         ppufile.putderef(vardefderef);
-         ppufile.PutSet(TPPUSet4(varoptions));
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(VarSpez));
+         OldCRC:=PPUFile.DoCRC;
+         PPUFile.DoCRC:=False;
+         PPUFile.PutByte(Byte(VarRegable));
+         PPUFile.PutSet(TPPUSet1(VarSymAccess));
+         PPUFile.DoCRC:=OldCRC;
+         PPUFile.PutDeref(VarDefDeref);
+         PPUFile.PutSet(TPPUSet4(VarOptions));
       end;
 
 
-    function TAbstractVarSym.getsize : asizeint;
+    function TAbstractVarSym.GetSize : ASizeInt;
       begin
-        if Assigned(vardef) and
-           ((vardef.typ<>arraydef) or
-            is_dynamic_array(vardef) or
-            (TArrayDef(vardef).highrange>=TArrayDef(vardef).lowrange)) then
-          result:=vardef.size
+        if Assigned(VarDef) and
+           ((VarDef.Typ<>ArrayDef) or
+            is_dynamic_array(VarDef) or
+            (TArrayDef(VarDef).HighRange>=TArrayDef(VarDef).LowRange)) then
+          Result:=VarDef.Size
         else
-          result:=0;
+          Result:=0;
       end;
 
 
-    function  TAbstractVarSym.getpackedbitsize : LongInt;
+    function  TAbstractVarSym.GetPackedBitSize : LongInt;
       begin
         { bitpacking is only done for ordinals }
-        if not is_ordinal(vardef) then
+        if not is_ordinal(VarDef) then
           InternalError(2006082010);
-        result:=vardef.packedbitsize;
+        Result:=VarDef.PackedBitSize;
       end;
 
 
-    function TAbstractVarSym.is_regvar(refpara: boolean):boolean;
+    function TAbstractVarSym.Is_RegVar(RefPara: Boolean):Boolean;
       var
-        tempdef : TDef;
+        TempDef : TDef;
       begin
         { Register variables are not allowed in the following cases:
            - regvars are disabled
@@ -1950,106 +1950,106 @@ implementation
                registers is not valid anymore)
            - it has a local copy
            - the value needs to be in memory (i.e. reference counted) }
-        result:=(cs_opt_regvar in CurrentSettings.OptimizerSwitches) and
-                not(pi_has_assembler_block in CurrentProcInfo.flags) and
-                not(pi_uses_exceptions in CurrentProcInfo.flags) and
-                not(pi_has_interproclabel in CurrentProcInfo.flags) and
-                ((refpara and
-                  (varregable <> vr_none)) or
-                 (not refpara and
-                  not(varregable in [vr_none,vr_addr])))
-                and ((vardef.typ <> recorddef) or
-                     (varregable = vr_addr) or
-                     TAbstractRecordSymTable(TAbstractRecordDef(vardef).SymTable).has_single_field(tempdef) or
-                     not(varstate in [vs_written,vs_readwritten]));
+        Result:=(cs_opt_regvar in CurrentSettings.OptimizerSwitches) and
+                not(pi_has_assembler_block in CurrentProcInfo.Flags) and
+                not(pi_uses_exceptions in CurrentProcInfo.Flags) and
+                not(pi_has_interproclabel in CurrentProcInfo.Flags) and
+                ((RefPara and
+                  (VarRegable <> vr_none)) or
+                 (not RefPara and
+                  not(VarRegable in [vr_none,vr_addr])))
+                and ((VarDef.Typ <> RecordDef) or
+                     (VarRegable = vr_addr) or
+                     TAbstractRecordSymTable(TAbstractRecordDef(VarDef).SymTable).Has_Single_Field(TempDef) or
+                     not(VarState in [vs_written,vs_readwritten]));
       end;
 
 
-    procedure TAbstractVarSym.setvardef_and_regable(def:TDef);
+    procedure TAbstractVarSym.SetVarDefAndRegable(Def:TDef);
       begin
-        setvardef(def);
-        setregable;
+        SetVarDef(Def);
+        SetRegable;
       end;
 
 
-    procedure TAbstractVarSym.set_addr_taken(AValue: boolean);
-      begin
-        if AValue then
-          include(varsymaccess, vsa_addr_taken)
-        else
-          exclude(varsymaccess, vsa_addr_taken);
-      end;
-
-
-    procedure TAbstractVarSym.set_different_scope(AValue: boolean);
+    procedure TAbstractVarSym.SetAddrTaken(AValue: Boolean);
       begin
         if AValue then
-          include(varsymaccess, vsa_different_scope)
+          Include(VarSymAccess, vsa_addr_taken)
         else
-          exclude(varsymaccess, vsa_different_scope);
+          Exclude(VarSymAccess, vsa_addr_taken);
       end;
 
 
-    procedure TAbstractVarSym.setregable;
+    procedure TAbstractVarSym.SetDifferentScope(AValue: Boolean);
       begin
-        if vo_volatile in varoptions then
-          exit;
+        if AValue then
+          Include(VarSymAccess, vsa_different_scope)
+        else
+          Exclude(VarSymAccess, vsa_different_scope);
+      end;
+
+
+    procedure TAbstractVarSym.SetRegable;
+      begin
+        if vo_volatile in VarOptions then
+          Exit;
          { can we load the value into a register ? }
-        if not Assigned(owner) or
-           (owner.symtabletype in [localsymtable, parasymtable]) or
+        if not Assigned(Owner) or
+           (Owner.SymTableType in [LocalSymTable, ParaSymTable]) or
            (
-            (owner.symtabletype=staticsymtable) and
+            (Owner.SymTableType=StaticSymTable) and
             not(cs_create_pic in CurrentSettings.ModuleSwitches)
            ) then
           begin
-            if (TStoredDef(vardef).is_intregable and
+            if (TStoredDef(VarDef).Is_IntRegable and
               { we could keep all aint*2 records in registers, but this causes
                 too much spilling for CPUs with 8-16 registers so keep only
                 parameters and function results of this type in register because they are normally
                 passed by register anyways
 
                 This can be changed, as soon as we have full ssa (FK) }
-              ((typ=paravarsym) or
-                (vo_is_funcret in varoptions) or
-                (TStoredDef(vardef).typ<>recorddef) or
-                (TStoredDef(vardef).size<=sizeof(aint)))) or
+              ((Typ=ParaVarSym) or
+                (vo_is_funcret in VarOptions) or
+                (TStoredDef(VarDef).Typ<>RecordDef) or
+                (TStoredDef(VarDef).Size<=SizeOf(AInt)))) or
 
                { const parameters can be put into registers if the def fits into a register }
-               (TStoredDef(vardef).is_const_intregable and
-                (typ=paravarsym) and
-                (varspez=vs_const)) then
-              varregable:=vr_intreg
-            else if TStoredDef(vardef).is_fpuregable then
+               (TStoredDef(VarDef).Is_Const_IntRegable and
+                (Typ=ParaVarSym) and
+                (VarSpez=vs_const)) then
+              VarRegable:=vr_intreg
+            else if TStoredDef(VarDef).Is_FPURegable then
               begin
-                if use_vectorfpu(vardef) then
-                  varregable:=vr_mmreg
+                if Use_VectorFPU(VarDef) then
+                  VarRegable:=vr_mmreg
                 else
-                  varregable:=vr_fpureg;
+                  VarRegable:=vr_fpureg;
               end
-            else if is_vector(vardef) and
-              fits_in_mm_register(vardef) then
+            else if is_vector(VarDef) and
+              fits_in_mm_register(VarDef) then
               begin
-                varregable:=vr_mmreg;
+                VarRegable:=vr_mmreg;
               end;
           end;
       end;
 
 
-    function TAbstractVarSym.get_addr_taken: boolean;
+    function TAbstractVarSym.GetAddrTaken: Boolean;
       begin
-        result:=vsa_addr_taken in varsymaccess;
+        Result:=vsa_addr_taken in VarSymAccess;
       end;
 
 
-    function TAbstractVarSym.get_different_scope: boolean;
+    function TAbstractVarSym.GetDifferentScope: Boolean;
       begin
-        result:=vsa_different_scope in varsymaccess;
+        Result:=vsa_different_scope in VarSymAccess;
       end;
 
 
-    procedure TAbstractVarSym.setvardef(const def: TDef);
+    procedure TAbstractVarSym.SetVarDef(const Def: TDef);
       begin
-        _vardef := def;
+        FVarDef := Def;
       end;
 
 
@@ -2057,82 +2057,82 @@ implementation
                                TFIELDVARSYM
 ****************************************************************************}
 
-    constructor TFieldVarSym.create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TFieldVarSym.Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(fieldvarsym,n,vsp,def,vopts);
-         fieldoffset:=-1;
+         inherited Create(FieldVarSym,N,VSP,Def,VOpts);
+         FieldOffset:=-1;
       end;
 
 
-    constructor TFieldVarSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TFieldVarSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(fieldvarsym,ppufile);
-         fieldoffset:=ppufile.GetASizeInt;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(FieldVarSym,PPUFile);
+         FieldOffset:=PPUFile.GetASizeInt;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TFieldVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TFieldVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutASizeInt(fieldoffset);
-         WriteEntry(ppufile,IBFieldVarSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutASizeInt(FieldOffset);
+         WriteEntry(PPUFile,IBFieldVarSym);
       end;
 
 
-    function TFieldVarSym.bitoffset: ASizeUInt;
+    function TFieldVarSym.BitOffset: ASizeUInt;
       begin
-        result:=fieldoffset;
-        if TAbstractRecordSymTable(owner).fieldalignment<>bit_alignment then
-         result:=result*8;
+        Result:=FieldOffset;
+        if TAbstractRecordSymTable(Owner).FieldAlignment<>bit_alignment then
+         Result:=Result*8;
       end;
 
 
-    function TFieldVarSym.mangledname:TSymStr;
+    function TFieldVarSym.MangledName:TSymStr;
       var
-        srsym : TSym;
-        srsymtable : TSymTable;
+        SRSym : TSym;
+        SRSymTable : TSymTable;
       begin
-        if sp_static in symoptions then
+        if sp_static in SymOptions then
           begin
-            if searchsym(lower(owner.name^)+'_'+name,srsym,srsymtable) then
-              result:=srsym.mangledname
+            if SearchSym(Lower(Owner.Name^)+'_'+Name,SRSym,SRSymTable) then
+              Result:=SRSym.MangledName
             { when generating the debug info for the module in which the }
             { symbol is defined, the localsymtable of that module is     }
             { already popped from the symtablestack                      }
-            else if searchsym_in_module(CurrentModule,lower(owner.name^)+'_'+name,srsym,srsymtable) then
-              result:=srsym.mangledname
+            else if SearchSym_In_Module(CurrentModule,Lower(Owner.Name^)+'_'+Name,SRSym,SRSymTable) then
+              Result:=SRSym.MangledName
             else
               InternalError(2007012501);
           end
-        else if is_objcclass(TDef(owner.defowner)) then
+        else if Is_ObjCClass(TDef(Owner.DefOwner)) then
           begin
 {$ifdef symansistr}
-            if cachedmangledname<>'' then
-              result:=cachedmangledname
+            if CachedMangledName<>'' then
+              Result:=CachedMangledName
 {$else symansistr}
-            if Assigned(cachedmangledname) then
-              result:=cachedmangledname^
+            if Assigned(CachedMangledName) then
+              Result:=CachedMangledName^
 {$endif symansistr}
             else
               begin
-                result:=TargetInfo.cprefix+'OBJC_IVAR_$_'+TObjectDef(owner.defowner).objextname^+'.'+RealName;
+                Result:=TargetInfo.CPrefix+'OBJC_IVAR_$_'+TObjectDef(Owner.DefOwner).ObjExtName^+'.'+RealName;
 {$ifdef symansistr}
-                cachedmangledname:=result;
+                CachedMangledName:=Result;
 {$else symansistr}
-                cachedmangledname:=StringDup(result);
+                CachedMangledName:=StringDup(Result);
 {$endif symansistr}
               end;
           end
         else
-          result:=inherited mangledname;
+          Result:=inherited MangledName;
       end;
 
 
     destructor TFieldVarSym.Destroy;
       begin
 {$ifndef symansistr}
-        StringDispose(cachedmangledname);
+        StringDispose(CachedMangledName);
 {$endif symansistr}
         inherited Destroy;
       end;
@@ -2140,10 +2140,10 @@ implementation
 {$ifdef DEBUG_NODE_XML}
       procedure TFieldVarSym.XMLPrintFieldData(var T: Text);
         begin
-          WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(vardef.GetTypeName), '</type>');
-          WriteLn(T, PrintNodeIndention, '<visibility>', visibility, '</visibility>');
-          WriteLn(T, PrintNodeIndention, '<offset>', fieldoffset, '</offset>');
-          WriteLn(T, PrintNodeIndention, '<size>', vardef.size, '</size>');
+          WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(VarDef.GetTypeName), '</type>');
+          WriteLn(T, PrintNodeIndention, '<visibility>', Visibility, '</visibility>');
+          WriteLn(T, PrintNodeIndention, '<offset>', FieldOffset, '</offset>');
+          WriteLn(T, PrintNodeIndention, '<size>', VarDef.Size, '</size>');
         end;
 {$endif DEBUG_NODE_XML}
 
@@ -2151,67 +2151,67 @@ implementation
                         TABSTRACTNORMALVARSYM
 ****************************************************************************}
 
-    constructor TAbstractNormalVarSym.create(st:TSymTyp;const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TAbstractNormalVarSym.Create(ST:TSymTyp;const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(st,n,vsp,def,vopts);
-         fillchar(localloc,sizeof(localloc),0);
-         fillchar(initialloc,sizeof(initialloc),0);
-         defaultconstsym:=nil;
-         defaultconstsymderef.reset;
+         inherited Create(ST,N,VSP,Def,VOpts);
+         FillChar(LocAlloc,SizeOf(LocAlloc),0);
+         FillChar(InitialLoc,SizeOf(InitialLoc),0);
+         DefaultConstSym:=nil;
+         DefaultConstSymDeref.Reset;
       end;
 
 
-    constructor TAbstractNormalVarSym.ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
+    constructor TAbstractNormalVarSym.PPULoad(ST:TSymTyp;PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(st,ppufile);
-         fillchar(localloc,sizeof(localloc),0);
-         fillchar(initialloc,sizeof(initialloc),0);
-         ppufile.getderef(defaultconstsymderef);
+         inherited PPULoad(ST,PPUFile);
+         FillChar(LocAlloc,SizeOf(LocAlloc),0);
+         FillChar(InitialLoc,SizeOf(InitialLoc),0);
+         PPUFile.GetDeref(DefaultConstSymDeref);
       end;
 
-    function TAbstractNormalVarSym.globalasmsym: boolean;
+    function TAbstractNormalVarSym.GlobalAsmSym: Boolean;
       begin
-        result:=
-          (owner.symtabletype=GlobalSymTable) or
+        Result:=
+          (Owner.SymTableType=GlobalSymTable) or
           (create_smartlink and
-           not(tf_smartlink_sections in TargetInfo.flags)) or
+           not(tf_smartlink_sections in TargetInfo.Flags)) or
           CurrentModule.IsLibrary or
           (Assigned(CurrentProcInfo) and
-           ((po_inline in CurrentProcInfo.procdef.procoptions) or
+           ((po_inline in CurrentProcInfo.ProcDef.ProcOptions) or
             { globalasmsym is called normally before the body of a subroutine is parsed
               so we cannot know if it will be auto inlined, so make all symbols of it
               global if asked }
-            (not(po_noinline in CurrentProcInfo.procdef.procoptions) and
+            (not(po_noinline in CurrentProcInfo.ProcDef.ProcOptions) and
              (cs_opt_autoinline in CurrentSettings.OptimizerSwitches)))
           ) or
-          (vo_is_public in varoptions);
+          (vo_is_public in VarOptions);
       end;
 
 
-    procedure TAbstractNormalVarSym.buildderef;
+    procedure TAbstractNormalVarSym.BuildDeref;
       begin
-        inherited buildderef;
-        defaultconstsymderef.build(defaultconstsym);
+        inherited BuildDeref;
+        DefaultConstSymDeref.Build(DefaultConstSym);
       end;
 
 
-    procedure TAbstractNormalVarSym.deref;
+    procedure TAbstractNormalVarSym.Deref;
       begin
-        inherited deref;
-        defaultconstsym:=TSym(defaultconstsymderef.resolve);
+        inherited Deref;
+        DefaultConstSym:=TSym(DefaultConstSymDeref.Resolve);
       end;
 
 
-    procedure TAbstractNormalVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbstractNormalVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(defaultconstsymderef);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(DefaultConstSymDeref);
       end;
 
 
-    function TAbstractNormalVarSym.is_captured:boolean;
+    function TAbstractNormalVarSym.Is_Captured:Boolean;
       begin
-        result:=Assigned(capture_sym);
+        Result:=Assigned(CaptureSym);
       end;
 
 
@@ -2219,195 +2219,195 @@ implementation
                              Tstaticvarsym
 ****************************************************************************}
 
-    constructor TStaticVarSym.create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TStaticVarSym.Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(staticvarsym,n,vsp,def,vopts);
-         fieldvarsymderef.reset;
+         inherited Create(StaticVarSym,N,VSP,Def,VOpts);
+         FieldVarSymDeref.Reset;
 {$ifdef symansistr}
-         _mangledname:='';
+         FMangledName:='';
 {$else symansistr}
-         _mangledname:=nil;
+         FMangledName:=nil;
 {$endif symansistr}
       end;
 
 
-    constructor TStaticVarSym.create_dll(const n : TSymStr;vsp:TVarSpez;def:TDef);
+    constructor TStaticVarSym.Create_DLL(const N : TSymStr;VSP:TVarSpez;Def:TDef);
       begin
-         TStaticVarSym(self).create(n,vsp,def,[vo_is_dll_var]);
+         TStaticVarSym(Self).Create(N,VSP,Def,[vo_is_dll_var]);
       end;
 
 
-    constructor TStaticVarSym.create_C(const n: TSymStr; const mangled : TSymStr;vsp:TVarSpez;def:TDef);
+    constructor TStaticVarSym.Create_C(const N: TSymStr; const Mangled : TSymStr;VSP:TVarSpez;Def:TDef);
       begin
-         TStaticVarSym(self).create(n,vsp,def,[]);
-         set_mangledname(mangled);
+         TStaticVarSym(Self).Create(N,VSP,Def,[]);
+         Set_MangledName(Mangled);
       end;
 
 
-    constructor TStaticVarSym.create_from_fieldvar(const n: TSymStr;fieldvar:TFieldVarSym);
+    constructor TStaticVarSym.Create_From_FieldVar(const N: TSymStr;FieldVar:TFieldVarSym);
       begin
-        create(internal_static_field_name(n),fieldvar.varspez,fieldvar.vardef,[]);
-        fieldvarsym:=fieldvar;
+        Create(Internal_Static_Field_Name(N),FieldVar.VarSpez,FieldVar.VarDef,[]);
+        FieldVarSym:=FieldVar;
       end;
 
 
-    constructor TStaticVarSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TStaticVarSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(staticvarsym,ppufile);
+         inherited PPULoad(StaticVarSym,PPUFile);
 {$ifdef symansistr}
-         if vo_has_mangledname in varoptions then
-           _mangledname:=ppufile.GetAnsiString
+         if vo_has_mangledname in VarOptions then
+           FMangledName:=PPUFile.GetAnsiString
          else
-           _mangledname:='';
+           FMangledName:='';
 {$else symansistr}
-         if vo_has_mangledname in varoptions then
-           _mangledname:=ppufile.GetPShortString
+         if vo_has_mangledname in VarOptions then
+           FMangledName:=PPUFile.GetPShortString
          else
-           _mangledname:=nil;
+           FMangledName:=nil;
 {$endif symansistr}
-         if vo_has_section in varoptions then
-           section:=ppufile.GetAnsiString;
-         ppufile.getderef(fieldvarsymderef);
-         PPULoadPlatform(ppufile);
+         if vo_has_section in VarOptions then
+           Section:=PPUFile.GetAnsiString;
+         PPUFile.GetDeref(FieldVarSymDeref);
+         PPULoadPlatform(PPUFile);
       end;
 
 
     destructor TStaticVarSym.Destroy;
       begin
 {$ifndef symansistr}
-        if Assigned(_mangledname) then
+        if Assigned(FMangledName) then
           begin
 {$ifdef MEMDEBUG}
-            memmanglednames.start;
+            MemMangledNames.Start;
 {$endif MEMDEBUG}
-            StringDispose(_mangledname);
+            StringDispose(FMangledName);
 {$ifdef MEMDEBUG}
-            memmanglednames.stop;
+            MemMangledNames.Stop;
 {$endif MEMDEBUG}
           end;
-        StringDispose(_mangledbasename);
+        StringDispose(FMangledBaseName);
 {$endif}
         inherited Destroy;
       end;
 
 
-    procedure TStaticVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TStaticVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
+         inherited PPUWrite(PPUFile);
          { write mangledname rather than _mangledname in case the mangledname
            has not been calculated yet (can happen in case only the
            mangledbasename has been set) }
-         if vo_has_mangledname in varoptions then
+         if vo_has_mangledname in VarOptions then
 {$ifdef symansistr}
-           ppufile.PutAnsiString(mangledname);
+           PPUFile.PutAnsiString(MangledName);
 {$else symansistr}
-           ppufile.PutString(mangledname);
+           PPUFile.PutString(MangledName);
 {$endif symansistr}
-         if vo_has_section in varoptions then
-           ppufile.PutAnsiString(section);
-         ppufile.putderef(fieldvarsymderef);
-         WriteEntry(ppufile,IBStaticVarSym);
+         if vo_has_section in VarOptions then
+           PPUFile.PutAnsiString(Section);
+         PPUFile.PutDeref(FieldVarSymDeref);
+         WriteEntry(PPUFile,IBStaticVarSym);
       end;
 
 
-    procedure TStaticVarSym.buildderef;
+    procedure TStaticVarSym.BuildDeref;
       begin
-        inherited buildderef;
-        fieldvarsymderef.build(fieldvarsym);
+        inherited BuildDeref;
+        FieldVarSymDeref.Build(FieldVarSym);
       end;
 
 
-    procedure TStaticVarSym.deref;
+    procedure TStaticVarSym.Deref;
       begin
-        inherited deref;
-        fieldvarsym:=TFieldVarSym(fieldvarsymderef.resolve);
+        inherited Deref;
+        FieldVarSym:=TFieldVarSym(FieldVarSymDeref.Resolve);
       end;
 
-    function TStaticVarSym.mangledname:TSymStr;
+    function TStaticVarSym.MangledName:TSymStr;
       var
-        usename,
-        prefix : TSymStr;
+        UseName,
+        Prefix : TSymStr;
       begin
 {$ifdef symansistr}
-        if _mangledname='' then
+        if FMangledName='' then
 {$else symansistr}
-        if not Assigned(_mangledname) then
+        if not Assigned(FMangledName) then
 {$endif symansistr}
           begin
-            if (vo_is_typed_const in varoptions) then
-              prefix:='TC'
+            if (vo_is_typed_const in VarOptions) then
+              Prefix:='TC'
             else
-              prefix:='U';
+              Prefix:='U';
 {$ifdef symansistr}
-            if _mangledbasename='' then
-              usename:=name
+            if FMangledBaseName='' then
+              UseName:=Name
             else
-              usename:=_mangledbasename;
-            _mangledname:=make_mangledname(prefix,owner,usename);
+              UseName:=FMangledBaseName;
+            FMangledName:=Make_MangledName(Prefix,Owner,UseName);
 {$else symansistr}
-            if not Assigned(_mangledbasename) then
-              usename:=name
+            if not Assigned(FMangledBaseName) then
+              UseName:=Name
             else
-              usename:=_mangledbasename^;
-            _mangledname:=StringDup(make_mangledname(prefix,owner,usename));
+              UseName:=FMangledBaseName^;
+            FMangledName:=StringDup(Make_MangledName(Prefix,Owner,UseName));
 {$endif symansistr}
           end;
 {$ifdef symansistr}
-        result:=_mangledname;
+        Result:=FMangledName;
 {$else symansistr}
-        result:=_mangledname^;
+        Result:=FMangledName^;
 {$endif symansistr}
       end;
 
 
-    procedure TStaticVarSym.set_mangledbasename(const s: TSymStr);
+    procedure TStaticVarSym.Set_MangledBaseName(const S: TSymStr);
       begin
 {$ifdef symansistr}
-        _mangledbasename:=s;
-        _mangledname:='';
+        FMangledBaseName:=S;
+        FMangledName:='';
 {$else symansistr}
-        StringDispose(_mangledname);
-        StringDispose(_mangledbasename);
-        _mangledbasename:=StringDup(s);
+        StringDispose(FMangledName);
+        StringDispose(FMangledBaseName);
+        FMangledBaseName:=StringDup(S);
 {$endif symansistr}
-        include(varoptions,vo_has_mangledname);
+        Include(VarOptions,vo_has_mangledname);
       end;
 
 
-    function TStaticVarSym.mangledbasename: TSymStr;
+    function TStaticVarSym.MangledBaseName: TSymStr;
       begin
 {$ifdef symansistr}
-        result:=_mangledbasename;
+        Result:=FMangledBaseName;
 {$else symansistr}
-        if Assigned(_mangledbasename) then
-          result:=_mangledbasename^
+        if Assigned(FMangledBaseName) then
+          Result:=FMangledBaseName^
         else
-          result:='';
+          Result:='';
 {$endif symansistr}
       end;
 
 
-    procedure TStaticVarSym.set_mangledname(const s:TSymStr);
+    procedure TStaticVarSym.Set_MangledName(const S:TSymStr);
       begin
 {$ifdef symansistr}
-        _mangledname:=s;
+        FMangledName:=S;
 {$else symansistr}
-        StringDispose(_mangledname);
-        _mangledname:=StringDup(s);
+        StringDispose(FMangledName);
+        FMangledName:=StringDup(S);
 {$endif symansistr}
-        include(varoptions,vo_has_mangledname);
+        Include(VarOptions,vo_has_mangledname);
       end;
 
 
-    procedure TStaticVarSym.set_raw_mangledname(const s: TSymStr);
+    procedure TStaticVarSym.Set_Raw_MangledName(const S: TSymStr);
       begin
 {$ifndef symansistr}
-        StringDispose(_mangledname);
-        _mangledname:=StringDup(s);
+        StringDispose(FMangledName);
+        FMangledName:=StringDup(S);
 {$else}
-        _mangledname:=s;
+        FMangledName:=S;
 {$endif}
-        include(varoptions,vo_has_mangledname);
+        Include(VarOptions,vo_has_mangledname);
       end;
 
 
@@ -2415,23 +2415,23 @@ implementation
                                TLOCALVARSYM
 ****************************************************************************}
 
-    constructor TLocalVarSym.create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TLocalVarSym.Create(const N : TSymStr;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(localvarsym,n,vsp,def,vopts);
+         inherited Create(LocalVarSym,N,VSP,Def,VOpts);
       end;
 
 
-    constructor TLocalVarSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TLocalVarSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(localvarsym,ppufile);
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(LocalVarSym,PPUFile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TLocalVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TLocalVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         WriteEntry(ppufile,IBLocalVarSym);
+         inherited PPUWrite(PPUFile);
+         WriteEntry(PPUFile,IBLocalVarSym);
       end;
 
 
@@ -2439,198 +2439,198 @@ implementation
                               TPARAVARSYM
 ****************************************************************************}
 
-    constructor TParaVarSym.create(const n : TSymStr;nr:word;vsp:TVarSpez;def:TDef;vopts:TVarOptions);
+    constructor TParaVarSym.Create(const N : TSymStr;NR:Word;VSP:TVarSpez;Def:TDef;VOpts:TVarOptions);
       begin
-         inherited create(paravarsym,n,vsp,def,vopts);
-         if (vsp in [vs_var,vs_value,vs_const,vs_constref]) and
-            not(vo_is_funcret in vopts) then
-           varstate := vs_initialised;
-         paranr:=nr;
-         paraloc[calleeside].init;
-         paraloc[callerside].init;
+         inherited Create(ParaVarSym,N,VSP,Def,VOpts);
+         if (VSP in [vs_var,vs_value,vs_const,vs_constref]) and
+            not(vo_is_funcret in VOpts) then
+           VarState := vs_initialised;
+         ParaNr:=NR;
+         ParaLoc[CalleeSide].Init;
+         ParaLoc[CallerSide].Init;
       end;
 
 
     destructor TParaVarSym.Destroy;
       begin
-        paraloc[calleeside].done;
-        paraloc[callerside].done;
+        ParaLoc[CalleeSide].Done;
+        ParaLoc[CallerSide].Done;
         inherited Destroy;
       end;
 
 
-    constructor TParaVarSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TParaVarSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(paravarsym,ppufile);
-         paranr:=ppufile.GetWord;
-         univpara:=ppufile.GetBoolean;
+         inherited PPULoad(ParaVarSym,PPUFile);
+         ParaNr:=PPUFile.GetWord;
+         UnivPara:=PPUFile.GetBoolean;
 
          { The var state of parameter symbols is fixed after writing them so
            we write them to the unit file.
            This enables constant folding for inline procedures loaded from units
          }
-         varstate:=TVarState(ppufile.GetByte);
+         VarState:=TVarState(PPUFile.GetByte);
 
          { read usage info }
-         refs:=ppufile.GetByte;
+         Refs:=PPUFile.GetByte;
 
-         paraloc[calleeside].init;
-         paraloc[callerside].init;
-         if vo_has_explicit_paraloc in varoptions then
-           paraloc[callerside].ppuload(ppufile);
+         ParaLoc[CalleeSide].Init;
+         ParaLoc[CallerSide].Init;
+         if vo_has_explicit_paraloc in VarOptions then
+           ParaLoc[CallerSide].PPULoad(PPUFile);
 
-         PPULoadPlatform(ppufile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TParaVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TParaVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       var
-        oldcrc : boolean;
+        OldCRC : Boolean;
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutWord(paranr);
-         ppufile.PutBoolean(univpara);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutWord(ParaNr);
+         PPUFile.PutBoolean(UnivPara);
 
          { The var state of parameter symbols is fixed after writing them so
            we write them to the unit file.
            This enables constant folding for inline procedures loaded from units
          }
-         oldcrc:=ppufile.DoCRC;
-         ppufile.DoCRC:=false;
-         ppufile.PutByte(ord(varstate));
+         OldCRC:=PPUFile.DoCRC;
+         PPUFile.DoCRC:=False;
+         PPUFile.PutByte(Ord(VarState));
          { write also info about the usage of parameters,
            the absolute usage does not matter }
-         ppufile.PutByte(min(1,refs));
-         ppufile.DoCRC:=oldcrc;
+         PPUFile.PutByte(Min(1,Refs));
+         PPUFile.DoCRC:=OldCRC;
 
-         if vo_has_explicit_paraloc in varoptions then
+         if vo_has_explicit_paraloc in VarOptions then
            begin
-             paraloc[callerside].check_simple_location;
-             paraloc[callerside].ppuwrite(ppufile);
+             ParaLoc[CallerSide].check_simple_location;
+             ParaLoc[CallerSide].PPUWrite(PPUFile);
            end;
-         WriteEntry(ppufile,IBParaVarSym);
+         WriteEntry(PPUFile,IBParaVarSym);
       end;
 
-    function TParaVarSym.needs_finalization:boolean;
+    function TParaVarSym.Needs_Finalization:Boolean;
       begin
-        result:=(varspez=vs_value) and
-          (is_managed_type(vardef) or
+        Result:=(VarSpez=vs_value) and
+          (is_managed_type(VarDef) or
             (
-              (not (TAbstractProcDef(owner.defowner).proccalloption in cdecl_pocalls)) and
-              (not paramanager.use_stackalloc) and
-              (is_open_array(vardef) or is_array_of_const(vardef))
+              (not (TAbstractProcDef(Owner.DefOwner).ProcCallOption in cdecl_pocalls)) and
+              (not ParaManager.use_stackalloc) and
+              (is_open_array(VarDef) or is_array_of_const(VarDef))
             )
           );
       end;
 
 
-    function TParaVarSym.is_used: boolean;
+    function TParaVarSym.Is_Used: Boolean;
       begin
         { Only the $parentfp parameter is supported for now }
-        result:=not (vo_is_parentfp in varoptions) or (varstate>vs_initialised);
+        Result:=not (vo_is_parentfp in VarOptions) or (VarState>vs_initialised);
       end;
 
 {****************************************************************************
                                TABSOLUTEVARSYM
 ****************************************************************************}
 
-    constructor TAbsoluteVarSym.create(const n : TSymStr;def:TDef);
+    constructor TAbsoluteVarSym.Create(const N : TSymStr;Def:TDef);
       begin
-        inherited create(absolutevarsym,n,vs_value,def,[]);
-        ref:=nil;
+        inherited Create(AbsoluteVarSym,N,vs_value,Def,[]);
+        Ref:=nil;
       end;
 
 
-    constructor TAbsoluteVarSym.create_ref(const n : TSymStr;def:TDef;_ref:TPropAccessList);
+    constructor TAbsoluteVarSym.Create_Ref(const N : TSymStr;Def:TDef;ARef:TPropAccessList);
       begin
-        inherited create(absolutevarsym,n,vs_value,def,[]);
-        ref:=_ref;
+        inherited Create(AbsoluteVarSym,N,vs_value,Def,[]);
+        Ref:=ARef;
       end;
 
-    procedure TAbsoluteVarSym.adjust_varregable;
+    procedure TAbsoluteVarSym.Adjust_VarRegable;
       var
-        plist : PPropAccessListItem;
+        PList : PPropAccessListItem;
       begin
-        if Assigned(ref) and (abstyp=tovar) then
+        if Assigned(Ref) and (AbsTyp=ToVar) then
           begin
-            plist:=ref.firstsym;
-            if Assigned(plist) and (plist^.sltype=sl_load) and
-               Assigned(plist^.sym) and (plist^.sym is TAbstractVarSym) and
-               (varregable<>TAbstractVarSym(plist^.sym).varregable) then
+            PList:=Ref.FirstSym;
+            if Assigned(PList) and (PList^.SLType=sl_load) and
+               Assigned(PList^.Sym) and (PList^.Sym is TAbstractVarSym) and
+               (VarRegable<>TAbstractVarSym(PList^.Sym).VarRegable) then
               begin
-                varregable:=vr_none;
-	        TAbstractVarSym(plist^.sym).varregable:=vr_none;
+                VarRegable:=vr_none;
+	        TAbstractVarSym(PList^.Sym).VarRegable:=vr_none;
              end;
           end;
       end;
 
     destructor TAbsoluteVarSym.Destroy;
       begin
-        if Assigned(ref) then
-          ref.free;
-          ref := nil;
+        if Assigned(Ref) then
+          Ref.Free;
+          Ref := nil;
         inherited Destroy;
       end;
 
 
-    constructor TAbsoluteVarSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TAbsoluteVarSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(absolutevarsym,ppufile);
-         ref:=nil;
-         asmname:=nil;
-         abstyp:=TAbsoluteTyp(ppufile.GetByte);
-         case abstyp of
-           tovar :
-             ref:=ppufile.getpropaccesslist;
-           toasm :
-             asmname:=ppufile.GetPShortString;
-           toaddr :
-             addroffset:=ppufile.GetPUInt;
+         inherited PPULoad(AbsoluteVarSym,PPUFile);
+         Ref:=nil;
+         AsmName:=nil;
+         AbsTyp:=TAbsoluteTyp(PPUFile.GetByte);
+         case AbsTyp of
+           ToVar :
+             Ref:=PPUFile.GetPropAccessList;
+           ToAsm :
+             AsmName:=PPUFile.GetPShortString;
+           ToAddr :
+             AddrOffset:=PPUFile.GetPUInt;
          end;
-         PPULoadPlatform(ppufile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TAbsoluteVarSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAbsoluteVarSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(abstyp));
-         case abstyp of
-           tovar :
-             ppufile.putpropaccesslist(ref);
-           toasm :
-             ppufile.PutString(asmname^);
-           toaddr :
-             ppufile.PutPUInt(addroffset);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(AbsTyp));
+         case AbsTyp of
+           ToVar :
+             PPUFile.PutPropAccessList(Ref);
+           ToAsm :
+             PPUFile.PutString(AsmName^);
+           ToAddr :
+             PPUFile.PutPUInt(AddrOffset);
          end;
-         WriteEntry(ppufile,IBAbsoluteVarSym);
+         WriteEntry(PPUFile,IBAbsoluteVarSym);
       end;
 
 
-    procedure TAbsoluteVarSym.buildderef;
+    procedure TAbsoluteVarSym.BuildDeref;
       begin
-        inherited buildderef;
-        if (abstyp=tovar) then
-          ref.buildderef;
+        inherited BuildDeref;
+        if (AbsTyp=ToVar) then
+          Ref.BuildDeref;
       end;
 
 
-    procedure TAbsoluteVarSym.deref;
+    procedure TAbsoluteVarSym.Deref;
       begin
-         inherited deref;
+         inherited Deref;
          { own absolute deref }
-         if (abstyp=tovar) then
-           ref.resolve;
+         if (AbsTyp=ToVar) then
+           Ref.Resolve;
       end;
 
 
-    function TAbsoluteVarSym.mangledname : TSymStr;
+    function TAbsoluteVarSym.MangledName : TSymStr;
       begin
-         case abstyp of
-           toasm :
-             mangledname:=asmname^;
-           toaddr :
-             mangledname:='$'+ToStr(addroffset);
+         case AbsTyp of
+           ToAsm :
+             MangledName:=AsmName^;
+           ToAddr :
+             MangledName:='$'+ToStr(AddrOffset);
            else
              InternalError(200411062);
          end;
@@ -2638,17 +2638,17 @@ implementation
 
          { returns the symbol type of the local variable or local parameter
            referenced by the absolute symbol }
-    function TAbsoluteVarSym.reftyp : TSymTyp;
+    function TAbsoluteVarSym.RefTyp : TSymTyp;
       var
-        plist : PPropAccessListItem;
+        PList : PPropAccessListItem;
       begin
-        reftyp:=typ;
-        if abstyp=tovar then
+        RefTyp:=Typ;
+        if AbsTyp=ToVar then
           begin
-            plist:=ref.firstsym;
-            if Assigned(plist) and (plist^.sltype=sl_load) and
-               Assigned(plist^.sym) and not(Assigned(plist^.next)) then
-              reftyp:=plist^.sym.typ;
+            PList:=Ref.FirstSym;
+            if Assigned(PList) and (PList^.SLType=sl_load) and
+               Assigned(PList^.Sym) and not(Assigned(PList^.Next)) then
+              RefTyp:=PList^.Sym.Typ;
           end;
       end;
 
@@ -2656,193 +2656,193 @@ implementation
                                   TCONSTSYM
 ****************************************************************************}
 
-    constructor TConstSym.create_ord(const n : TSymStr;t : TConstTyp;v : TConstExprInt;def:TDef);
+    constructor TConstSym.Create_Ord(const N : TSymStr;T : TConstTyp;V : TConstExprInt;Def:TDef);
       begin
-         inherited create(constsym,n);
-         fillchar(value, sizeof(value), #0);
-         consttyp:=t;
-         value.valueord:=v;
-         constdef:=def;
-         constdefderef.reset;
+         inherited Create(ConstSym,N);
+         FillChar(Value, SizeOf(Value), #0);
+         ConstTyp:=T;
+         Value.ValueOrd:=V;
+         ConstDef:=Def;
+         ConstDefDeref.Reset;
       end;
 
 
-    constructor TConstSym.create_ordptr(const n : TSymStr;t : TConstTyp;v : TConstPtrUInt;def:TDef);
+    constructor TConstSym.Create_OrdPtr(const N : TSymStr;T : TConstTyp;V : TConstPtrUInt;Def:TDef);
       begin
-         inherited create(constsym,n);
-         fillchar(value, sizeof(value), #0);
-         consttyp:=t;
-         value.valueordptr:=v;
-         constdef:=def;
-         constdefderef.reset;
+         inherited Create(ConstSym,N);
+         FillChar(Value, SizeOf(Value), #0);
+         ConstTyp:=T;
+         Value.ValueOrdPtr:=V;
+         ConstDef:=Def;
+         ConstDefDeref.Reset;
       end;
 
 
-    constructor TConstSym.create_ptr(const n : TSymStr;t : TConstTyp;v : pointer;def:TDef);
+    constructor TConstSym.Create_Ptr(const N : TSymStr;T : TConstTyp;V : Pointer;Def:TDef);
       begin
-         inherited create(constsym,n);
-         fillchar(value, sizeof(value), #0);
-         consttyp:=t;
-         value.valueptr:=v;
-         constdef:=def;
-         constdefderef.reset;
+         inherited Create(ConstSym,N);
+         FillChar(Value, SizeOf(Value), #0);
+         ConstTyp:=T;
+         Value.ValuePtr:=V;
+         ConstDef:=Def;
+         ConstDefDeref.Reset;
       end;
 
 
-    constructor TConstSym.create_string(const n : TSymStr;t : TConstTyp;str:pchar;l:LongInt;def: TDef);
+    constructor TConstSym.Create_String(const N : TSymStr;T : TConstTyp;Str:PChar;L:LongInt;Def: TDef);
       begin
-         inherited create(constsym,n);
-         fillchar(value, sizeof(value), #0);
-         consttyp:=t;
-         value.valueptr:=str;
-         if Assigned(def) then
-           constdef:=def
+         inherited Create(ConstSym,N);
+         FillChar(Value, SizeOf(Value), #0);
+         ConstTyp:=T;
+         Value.ValuePtr:=Str;
+         if Assigned(Def) then
+           ConstDef:=Def
          else
-           constdef:=CArrayDef.getreusable(cansichartype,l);
-         constdefderef.reset;
-         value.len:=l;
+           ConstDef:=CArrayDef.GetReusable(CAnsiCharType,L);
+         ConstDefDeref.Reset;
+         Value.Len:=L;
       end;
 
 
-    constructor TConstSym.create_wstring(const n : TSymStr;t : TConstTyp;pw:TCompilerWideString);
+    constructor TConstSym.Create_WString(const N : TSymStr;T : TConstTyp;PW:TCompilerWideString);
       begin
-         inherited create(constsym,n);
-         fillchar(value, sizeof(value), #0);
-         consttyp:=t;
-         value.valuews:=pw;
-         constdef:=CArrayDef.getreusable(cwidechartype,GetLengthWideString(pw));
-         constdefderef.reset;
-         value.len:=GetLengthWideString(pw);
+         inherited Create(ConstSym,N);
+         FillChar(Value, SizeOf(Value), #0);
+         ConstTyp:=T;
+         Value.ValueWS:=PW;
+         ConstDef:=CArrayDef.GetReusable(CWideCharType,GetLengthWideString(PW));
+         ConstDefDeref.Reset;
+         Value.Len:=GetLengthWideString(PW);
       end;
 
 
-    constructor TConstSym.create_undefined(const n : TSymStr;def: TDef);
+    constructor TConstSym.Create_Undefined(const N : TSymStr;Def: TDef);
       begin
-        inherited create(constsym,n);
-        fillchar(value,sizeof(value),#0);
-        consttyp:=constnone;
-        constdef:=def;
+        inherited Create(ConstSym,N);
+        FillChar(Value,SizeOf(Value),#0);
+        ConstTyp:=ConstNone;
+        ConstDef:=Def;
       end;
 
 
-    constructor TConstSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TConstSym.PPULoad(PPUFile:TCompilerPPUFile);
       var
-         pd : PBestReal;
-         ps : PNormalSet;
-         pc : pchar;
-         pw : TCompilerWideString;
-         i  : LongInt;
+         PD : PBestReal;
+         PS : PNormalSet;
+         PC : PChar;
+         PW : TCompilerWideString;
+         I  : LongInt;
 
-         procedure do_widestring_const;
+         procedure DoWideStringConst;
          var
-            i  : LongInt;
+            I  : LongInt;
          begin
-           InitWideString(pw);
-           SetLengthWideString(pw,ppufile.GetLongInt);
+           InitWideString(PW);
+           SetLengthWideString(PW,PPUFile.GetLongInt);
            { don't use getdata, because the compilerwidechars may have to
              be byteswapped
            }
-           for i:=0 to pw.len-1 do
-             pw.data[i]:=ppufile.GetWord;
-           value.valuews:=pw;
+           for I:=0 to PW.Len-1 do
+             PW.Data[I]:=PPUFile.GetWord;
+           Value.ValueWS:=PW;
          end;
 
       begin
-         inherited ppuload(constsym,ppufile);
-         constdef:=nil;
-         consttyp:=TConstTyp(ppufile.GetByte);
-         fillchar(value, sizeof(value), #0);
-         case consttyp of
-           constord :
+         inherited PPULoad(ConstSym,PPUFile);
+         ConstDef:=nil;
+         ConstTyp:=TConstTyp(PPUFile.GetByte);
+         FillChar(Value, SizeOf(Value), #0);
+         case ConstTyp of
+           ConstOrd :
              begin
-               ppufile.getderef(constdefderef);
-               value.valueord:=ppufile.getexprint;
+               PPUFile.GetDeref(ConstDefDeref);
+               Value.ValueOrd:=PPUFile.GetExprInt;
              end;
-           constpointer :
+           ConstPointer :
              begin
-               ppufile.getderef(constdefderef);
-               value.valueordptr:=ppufile.GetPtrUInt;
+               PPUFile.GetDeref(ConstDefDeref);
+               Value.ValueOrdPtr:=PPUFile.GetPtrUInt;
              end;
-           constwstring :
+           ConstWString :
              begin
-               do_widestring_const;
+               DoWideStringConst;
              end;
-           conststring,
-           constresourcestring :
+           ConstString,
+           ConstResourceString :
               begin
-              ppufile.getderef(constdefderef);
-              value.len:=ppufile.GetLongInt;
-              GetMem(pc,value.len+1);
-              ppufile.GetData(pc^,value.len);
-              pc[value.len]:=#0;
-              value.valueptr:=pc;
+              PPUFile.GetDeref(ConstDefDeref);
+              Value.Len:=PPUFile.GetLongInt;
+              GetMem(PC,Value.Len+1);
+              PPUFile.GetData(PC^,Value.Len);
+              PC[Value.Len]:=#0;
+              Value.ValuePtr:=PC;
               end;
-           constwresourcestring :
+           ConstWResourceString :
              begin
-               ppufile.getderef(constdefderef);
-               do_widestring_const;
+               PPUFile.GetDeref(ConstDefDeref);
+               DoWideStringConst;
              end;
-           constreal :
+           ConstReal :
              begin
-               ppufile.getderef(constdefderef);
-               new(pd);
-               pd^:=ppufile.GetReal;
-               value.valueptr:=pd;
+               PPUFile.GetDeref(ConstDefDeref);
+               New(PD);
+               PD^:=PPUFile.GetReal;
+               Value.ValuePtr:=PD;
              end;
-           constset :
+           ConstSet :
              begin
-               ppufile.getderef(constdefderef);
-               new(ps);
-               ppufile.GetSet(TPPUSet32(ps^));
-               value.valueptr:=ps;
+               PPUFile.GetDeref(ConstDefDeref);
+               New(PS);
+               PPUFile.GetSet(TPPUSet32(PS^));
+               Value.ValuePtr:=PS;
              end;
-           constguid :
+           ConstGUID :
              begin
-               ppufile.getderef(constdefderef);
-               new(PGUID(value.valueptr));
-               ppufile.GetData(value.valueptr^,sizeof(TGUID));
+               PPUFile.GetDeref(ConstDefDeref);
+               New(PGUID(Value.ValuePtr));
+               PPUFile.GetData(Value.ValuePtr^,SizeOf(TGUID));
              end;
-           constnil :
-             ppufile.getderef(constdefderef);
+           ConstNil :
+             PPUFile.GetDeref(ConstDefDeref);
            else
-             Message1(unit_f_ppu_invalid_entry,ToStr(ord(consttyp)));
+             Message1(unit_f_ppu_invalid_entry,ToStr(Ord(ConstTyp)));
          end;
-         PPULoadPlatform(ppufile);
+         PPULoadPlatform(PPUFile);
       end;
 
 
     destructor TConstSym.Destroy;
       begin
-        case consttyp of
-          constnone,
-          constord,
-          constpointer,
-          constnil:
+        case ConstTyp of
+          ConstNone,
+          ConstOrd,
+          ConstPointer,
+          ConstNil:
             ;
-          conststring,
-          constresourcestring :
-            FreeMem(pchar(value.valueptr),value.len+1);
-          constwstring,
-          constwresourcestring:
-            DoneWideString(value.valuews);
-          constreal :
-            dispose(PBestReal(value.valueptr));
-          constset :
-            dispose(PNormalSet(value.valueptr));
-          constguid :
-            dispose(PGUID(value.valueptr));
+          ConstString,
+          ConstResourceString :
+            FreeMem(PChar(Value.ValuePtr),Value.Len+1);
+          ConstWString,
+          ConstWResourceString:
+            DoneWideString(Value.ValueWS);
+          ConstReal :
+            Dispose(PBestReal(Value.ValuePtr));
+          ConstSet :
+            Dispose(PNormalSet(Value.ValuePtr));
+          ConstGUID :
+            Dispose(PGUID(Value.ValuePtr));
         end;
         inherited Destroy;
       end;
 
 
-    procedure TConstSym.buildderef;
+    procedure TConstSym.BuildDeref;
       begin
         inherited;
-        case consttyp  of
-          constnil,constord,constreal,constpointer,constset,conststring,constresourcestring,constwresourcestring,constguid:
-            constdefderef.build(constdef);
-          constwstring:
+        case ConstTyp  of
+          ConstNil,ConstOrd,ConstReal,ConstPointer,ConstSet,ConstString,ConstResourceString,ConstWResourceString,ConstGUID:
+            ConstDefDeref.Build(ConstDef);
+          ConstWString:
             ;
           else
             InternalError(2015120802);
@@ -2850,124 +2850,124 @@ implementation
       end;
 
 
-    procedure TConstSym.deref;
+    procedure TConstSym.Deref;
       begin
-        case consttyp of
-          constnil,constord,constreal,constpointer,constset,conststring,constresourcestring,constwresourcestring,constguid:
-            constdef:=TDef(constdefderef.resolve);
-          constwstring:
-            constdef:=CArrayDef.getreusable(cwidechartype,GetLengthWideString(value.valuews));
+        case ConstTyp of
+          ConstNil,ConstOrd,ConstReal,ConstPointer,ConstSet,ConstString,ConstResourceString,ConstWResourceString,ConstGUID:
+            ConstDef:=TDef(ConstDefDeref.Resolve);
+          ConstWString:
+            ConstDef:=CArrayDef.GetReusable(CWideCharType,GetLengthWideString(Value.ValueWS));
           else
             InternalError(2015120801);
         end
       end;
 
 
-    procedure TConstSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TConstSym.PPUWrite(PPUFile:TCompilerPPUFile);
 
-      procedure do_widestring_const;
+      procedure DoWideStringConst;
 
       var
-        len : integer;
+        Len : Integer;
       begin
-        len:=GetLengthWideString(value.valuews);
-        ppufile.PutLongInt(len);
-        if len>0 then
-          ppufile.PutData(value.valuews.data[0],value.valuews.len*sizeof(TCompilerWideChar));
+        Len:=GetLengthWideString(Value.ValueWS);
+        PPUFile.PutLongInt(Len);
+        if Len>0 then
+          PPUFile.PutData(Value.ValueWS.Data[0],Value.ValueWS.Len*SizeOf(TCompilerWideChar));
       end;
 
 
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutByte(byte(consttyp));
-         case consttyp of
-           constnil :
-             ppufile.putderef(constdefderef);
-           constord :
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutByte(Byte(ConstTyp));
+         case ConstTyp of
+           ConstNil :
+             PPUFile.PutDeref(ConstDefDeref);
+           ConstOrd :
              begin
-               ppufile.putderef(constdefderef);
-               ppufile.putexprint(value.valueord);
+               PPUFile.PutDeref(ConstDefDeref);
+               PPUFile.PutExprInt(Value.ValueOrd);
              end;
-           constpointer :
+           ConstPointer :
              begin
-               ppufile.putderef(constdefderef);
-               ppufile.PutPtrUInt(value.valueordptr);
+               PPUFile.PutDeref(ConstDefDeref);
+               PPUFile.PutPtrUInt(Value.ValueOrdPtr);
              end;
-           constwstring :
+           ConstWString :
              begin
                { no need to store the def, we can reconstruct it }
-               do_widestring_const;
+               DoWideStringConst;
              end;
-           conststring,constresourcestring:
+           ConstString,ConstResourceString:
              begin
-             ppufile.putderef(constdefderef);
-             ppufile.PutLongInt(value.len);
-             ppufile.PutData(pchar(value.valueptr)^,value.len);
+             PPUFile.PutDeref(ConstDefDeref);
+             PPUFile.PutLongInt(Value.Len);
+             PPUFile.PutData(PChar(Value.ValuePtr)^,Value.Len);
              end;
-            constwresourcestring:
+            ConstWResourceString:
              begin
-               ppufile.putderef(constdefderef);
-               do_widestring_const
+               PPUFile.PutDeref(ConstDefDeref);
+               DoWideStringConst
              end;
-           constreal :
+           ConstReal :
              begin
-               ppufile.putderef(constdefderef);
-               ppufile.PutReal(PBestReal(value.valueptr)^);
+               PPUFile.PutDeref(ConstDefDeref);
+               PPUFile.PutReal(PBestReal(Value.ValuePtr)^);
              end;
-           constset :
+           ConstSet :
              begin
-               ppufile.putderef(constdefderef);
-               ppufile.PutSet(TPPUSet32(value.valueptr^));
+               PPUFile.PutDeref(ConstDefDeref);
+               PPUFile.PutSet(TPPUSet32(Value.ValuePtr^));
              end;
-           constguid :
+           ConstGUID :
              begin
-               ppufile.putderef(constdefderef);
-               ppufile.PutData(value.valueptr^,sizeof(TGUID));
+               PPUFile.PutDeref(ConstDefDeref);
+               PPUFile.PutData(Value.ValuePtr^,SizeOf(TGUID));
              end;
          else
            InternalError(13);
          end;
-        WriteEntry(ppufile,IBConstSym);
+        WriteEntry(PPUFile,IBConstSym);
       end;
 
 {$ifdef DEBUG_NODE_XML}
     procedure TConstSym.XMLPrintConstData(var T: Text);
       begin
-        WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(constdef.GetTypeName), '</type>');
+        WriteLn(T, PrintNodeIndention, '<type>', SanitiseXMLString(ConstDef.GetTypeName), '</type>');
 
-        case consttyp of
-          constnone:
+        case ConstTyp of
+          ConstNone:
             ;
-          conststring,
-          constresourcestring,
-          constwresourcestring,
-          constwstring:
+          ConstString,
+          ConstResourceString,
+          ConstWResourceString,
+          ConstWString:
             begin
-              WriteLn(T, PrintNodeIndention, '<length>', value.len, '</length>');
-              if value.len = 0 then
+              WriteLn(T, PrintNodeIndention, '<length>', Value.Len, '</length>');
+              if Value.Len = 0 then
                 WriteLn(T, PrintNodeIndention, '<value />')
               else
-                WriteLn(T, PrintNodeIndention, '<value>', SanitiseXMLString(PChar(value.valueptr)), '</value>');
+                WriteLn(T, PrintNodeIndention, '<value>', SanitiseXMLString(PChar(Value.ValuePtr)), '</value>');
             end;
-          constord,
-          constset:
-            WriteLn(T, PrintNodeIndention, '<value>', ToStr(value.valueord), '</value>');
-          constpointer:
-            WriteLn(T, PrintNodeIndention, '<value>', WriteConstPUInt(value.valueordptr), '</value>');
-          constreal:
-            WriteLn(T, PrintNodeIndention, '<value>', PBestReal(value.valueptr)^, '</value>');
-          constnil:
+          ConstOrd,
+          ConstSet:
+            WriteLn(T, PrintNodeIndention, '<value>', ToStr(Value.ValueOrd), '</value>');
+          ConstPointer:
+            WriteLn(T, PrintNodeIndention, '<value>', WriteConstPUInt(Value.ValueOrdPtr), '</value>');
+          ConstReal:
+            WriteLn(T, PrintNodeIndention, '<value>', PBestReal(Value.ValuePtr)^, '</value>');
+          ConstNil:
             WriteLn(T, PrintNodeIndention, '<value>nil</value>');
-          constguid:
-            WriteLn(T, PrintNodeIndention, '<value>', WriteGUID(PGUID(value.valueptr)^), '</value>');
+          ConstGUID:
+            WriteLn(T, PrintNodeIndention, '<value>', WriteGUID(PGUID(Value.ValuePtr)^), '</value>');
         end;
 
-        WriteLn(T, PrintNodeIndention, '<visibility>', visibility, '</visibility>');
+        WriteLn(T, PrintNodeIndention, '<visibility>', Visibility, '</visibility>');
 
-        if not (consttyp in [conststring, constresourcestring, constwresourcestring, constwstring]) then
+        if not (ConstTyp in [ConstString, ConstResourceString, ConstWResourceString, ConstWString]) then
           { constdef.size will return an internal error for string
             constants because constdef is an open array internally }
-          WriteLn(T, PrintNodeIndention, '<size>', constdef.size, '</size>');
+          WriteLn(T, PrintNodeIndention, '<size>', ConstDef.Size, '</size>');
 
 //        WriteLn(T, PrintNodeIndention, '<const_type>', consttyp, '</const_type>');
       end;
@@ -2977,42 +2977,42 @@ implementation
                                   TENUMSYM
 ****************************************************************************}
 
-    constructor TEnumSym.create(const n : TSymStr;def : TEnumDef;v : LongInt);
+    constructor TEnumSym.Create(const N : TSymStr;Def : TEnumDef;V : LongInt);
       begin
-         inherited create(enumsym,n);
-         definition:=def;
-         definitionderef.reset;
-         value:=v;
+         inherited Create(EnumSym,N);
+         Definition:=Def;
+         DefinitionDeref.Reset;
+         Value:=V;
       end;
 
 
-    constructor TEnumSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TEnumSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(enumsym,ppufile);
-         ppufile.getderef(definitionderef);
-         value:=ppufile.GetLongInt;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(EnumSym,PPUFile);
+         PPUFile.GetDeref(DefinitionDeref);
+         Value:=PPUFile.GetLongInt;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TEnumSym.buildderef;
+    procedure TEnumSym.BuildDeref;
       begin
         inherited;
-        definitionderef.build(definition);
+        DefinitionDeref.Build(Definition);
       end;
 
 
-    procedure TEnumSym.deref;
+    procedure TEnumSym.Deref;
       begin
-         definition:=TEnumDef(definitionderef.resolve);
+         Definition:=TEnumDef(DefinitionDeref.Resolve);
       end;
 
-    procedure TEnumSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TEnumSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(definitionderef);
-         ppufile.PutLongInt(value);
-         WriteEntry(ppufile,IBEnumSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(DefinitionDeref);
+         PPUFile.PutLongInt(Value);
+         WriteEntry(PPUFile,IBEnumSym);
       end;
 
 
@@ -3021,17 +3021,17 @@ implementation
 ****************************************************************************}
 
 
-    constructor TTypeSym.create(const n : TSymStr;def:TDef);
+    constructor TTypeSym.Create(const N : TSymStr;Def:TDef);
 
       begin
-        inherited create(typesym,n);
-        typedef:=def;
-        typedefderef.reset;
+        inherited Create(TypeSym,N);
+        TypeDef:=Def;
+        TypeDefDeref.Reset;
         { register the typesym for the definition }
-        if Assigned(typedef) and
-           (typedef.typ<>errordef) and
-           not(Assigned(typedef.typesym)) then
-         typedef.typesym:=self;
+        if Assigned(TypeDef) and
+           (TypeDef.Typ<>ErrorDef) and
+           not(Assigned(TypeDef.TypeSym)) then
+         TypeDef.TypeSym:=Self;
       end;
 
     destructor TTypeSym.Destroy;
@@ -3040,43 +3040,43 @@ implementation
       end;
 
 
-    constructor TTypeSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TTypeSym.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(typesym,ppufile);
-         ppufile.getderef(typedefderef);
-         fprettyname:=ppufile.GetAnsiString;
-         PPULoadPlatform(ppufile);
+         inherited PPULoad(TypeSym,PPUFile);
+         PPUFile.GetDeref(TypeDefDeref);
+         FPrettyName:=PPUFile.GetAnsiString;
+         PPULoadPlatform(PPUFile);
       end;
 
 
-    procedure TTypeSym.buildderef;
+    procedure TTypeSym.BuildDeref;
       begin
         inherited;
-        typedefderef.build(typedef);
+        TypeDefDeref.Build(TypeDef);
       end;
 
 
-    procedure TTypeSym.deref;
+    procedure TTypeSym.Deref;
       begin
-        typedef:=TDef(typedefderef.resolve);
+        TypeDef:=TDef(TypeDefDeref.Resolve);
       end;
 
 
-    procedure TTypeSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TTypeSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.putderef(typedefderef);
-         ppufile.PutAnsiString(fprettyname);
-         WriteEntry(ppufile,IBTypeSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutDeref(TypeDefDeref);
+         PPUFile.PutAnsiString(FPrettyName);
+         WriteEntry(PPUFile,IBTypeSym);
       end;
 
 
-    function TTypeSym.prettyname : string;
+    function TTypeSym.PrettyName : string;
       begin
-        if fprettyname<>'' then
-          result:=fprettyname
+        if FPrettyName<>'' then
+          Result:=FPrettyName
         else
-          result:=inherited prettyname;
+          Result:=inherited PrettyName;
       end;
 
 
@@ -3086,32 +3086,32 @@ implementation
 
 
     var
-      syssym_list : TFPHashObjectList;
+      SysSymList : TFPHashObjectList;
 
 
-    constructor TSysSym.create(const n : TSymStr;l : TInlineNumber);
+    constructor TSysSym.Create(const N : TSymStr;L : TInlineNumber);
       var
-        s : shortstring;
+        S : ShortString;
       begin
-         inherited create(syssym,n);
-         number:=l;
-         str(LongInt(l),s);
-         if Assigned(syssym_list.find(s)) then
+         inherited Create(SysSym,N);
+         Number:=L;
+         Str(LongInt(L),S);
+         if Assigned(SysSymList.Find(S)) then
            InternalError(2016060303);
-         syssym_list.add(s,self);
+         SysSymList.Add(S,Self);
       end;
 
-    constructor TSysSym.ppuload(ppufile:TCompilerPPUFile);
+    constructor TSysSym.PPULoad(PPUFile:TCompilerPPUFile);
       var
-        s : shortstring;
+        S : ShortString;
       begin
-         inherited ppuload(syssym,ppufile);
-         number:=TInlineNumber(ppufile.GetLongInt);
-         PPULoadPlatform(ppufile);
-         str(LongInt(number),s);
-         if Assigned(syssym_list.find(s)) then
+         inherited PPULoad(SysSym,PPUFile);
+         Number:=TInlineNumber(PPUFile.GetLongInt);
+         PPULoadPlatform(PPUFile);
+         Str(LongInt(Number),S);
+         if Assigned(SysSymList.Find(S)) then
            InternalError(2016060304);
-         syssym_list.add(s,self);
+         SysSymList.Add(S,Self);
       end;
 
     destructor TSysSym.Destroy;
@@ -3119,110 +3119,110 @@ implementation
         inherited Destroy;
       end;
 
-    procedure TSysSym.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TSysSym.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutLongInt(LongInt(number));
-         WriteEntry(ppufile,IBSysSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutLongInt(LongInt(Number));
+         WriteEntry(PPUFile,IBSysSym);
       end;
 
 
-    class function TSysSym.find_by_number(l:LongInt):TSysSym;
+    class function TSysSym.Find_By_Number(L:LongInt):TSysSym;
       var
-        s : shortstring;
+        S : ShortString;
       begin
-        str(l,s);
-        result:=TSysSym(syssym_list.find(s));
+        Str(L,S);
+        Result:=TSysSym(SysSymList.Find(S));
       end;
 
 {*****************************************************************************
                                  TMacro
 *****************************************************************************}
 
-    constructor TMacro.create(const n : TSymStr);
+    constructor TMacro.Create(const N : TSymStr);
       begin
-         inherited create(macrosym,n);
-         owner:=nil;
-         defined:=false;
-         is_used:=false;
-         is_compiler_var:=false;
-         buftext:=nil;
-         buflen:=0;
+         inherited Create(MacroSym,N);
+         Owner:=nil;
+         Defined:=False;
+         IsUsed:=False;
+         IsCompilerVar:=False;
+         BufText:=nil;
+         BufLen:=0;
       end;
 
-    constructor TMacro.ppuload(ppufile:TCompilerPPUFile);
+    constructor TMacro.PPULoad(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuload(macrosym,ppufile);
-         defined:=ppufile.GetBoolean;
-         is_compiler_var:=ppufile.GetBoolean;
-         is_used:=false;
-         allocate_buftext(ppufile.GetLongInt);
-         if buflen>0 then
-           ppufile.GetData(buftext)
+         inherited PPULoad(MacroSym,PPUFile);
+         Defined:=PPUFile.GetBoolean;
+         IsCompilerVar:=PPUFile.GetBoolean;
+         IsUsed:=False;
+         Allocate_BufText(PPUFile.GetLongInt);
+         if BufLen>0 then
+           PPUFile.GetData(BufText)
       end;
 
     destructor TMacro.Destroy;
       begin
-         buftext:=nil;
+         BufText:=nil;
          inherited Destroy;
       end;
 
-    procedure TMacro.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TMacro.PPUWrite(PPUFile:TCompilerPPUFile);
       begin
-         inherited ppuwrite(ppufile);
-         ppufile.PutBoolean(defined);
-         ppufile.PutBoolean(is_compiler_var);
-         ppufile.PutLongInt(buflen);
-         if buflen > 0 then
-           ppufile.PutData(buftext);
-         WriteEntry(ppufile,IBMacroSym);
+         inherited PPUWrite(PPUFile);
+         PPUFile.PutBoolean(Defined);
+         PPUFile.PutBoolean(IsCompilerVar);
+         PPUFile.PutLongInt(BufLen);
+         if BufLen > 0 then
+           PPUFile.PutData(BufText);
+         WriteEntry(PPUFile,IBMacroSym);
       end;
 
 
-    function TMacro.allocate_buftext(len:LongInt) : pchar;
+    function TMacro.Allocate_BufText(Len:LongInt) : PChar;
       begin
-        SetLength(buftext,len);
-        buflen:=len;
-        result:=PAnsiChar(buftext);
+        SetLength(BufText,Len);
+        BufLen:=Len;
+        Result:=PAnsiChar(BufText);
       end;
 
 
-    procedure TMacro.free_buftext;
+    procedure TMacro.Free_BufText;
       begin
-        buftext:=nil;
-        buflen:=0;
+        BufText:=nil;
+        BufLen:=0;
       end;
 
 
     function TMacro.GetCopy:TMacro;
       var
-        p : TMacro;
+        P : TMacro;
       begin
-        p:=TMacro.create(realname);
-        p.defined:=defined;
-        p.is_used:=is_used;
-        p.is_compiler_var:=is_compiler_var;
-        p.is_c_macro:=is_c_macro;
-        p.allocate_buftext(buflen);
-        if buflen>0 then
-          move(buftext[0],p.buftext[0],buflen);
-        Result:=p;
+        P:=TMacro.Create(RealName);
+        P.Defined:=Defined;
+        P.IsUsed:=IsUsed;
+        P.IsCompilerVar:=IsCompilerVar;
+        P.IsCMacro:=IsCMacro;
+        P.Allocate_BufText(BufLen);
+        if BufLen>0 then
+          Move(BufText[0],P.BufText[0],BufLen);
+        Result:=P;
       end;
 
 
-    procedure init_symsym;
+    procedure InitSymSym;
       begin
-        syssym_list:=TFPHashObjectList.create(false);
+        SysSymList:=TFPHashObjectList.Create(False);
       end;
 
 
-    procedure done_symsym;
+    procedure DoneSymSym;
       begin
-        syssym_list.free;
-        syssym_list := nil;
+        SysSymList.Free;
+        SysSymList := nil;
       end;
 
 
 initialization
-  Register_InitDone_Proc(@init_symsym,@done_symsym);
+  Register_InitDone_Proc(@InitSymSym,@DoneSymSym);
 end.

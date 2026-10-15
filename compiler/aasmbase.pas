@@ -205,7 +205,7 @@ interface
          cachedobjsymbol : TObject;
          constructor Create(AList:TFPHashObjectList;const s:TSymStr;_bind:TAsmsymbind;_typ:TAsmsymtype);
          function getaltcopy(AList:TFPHashObjectList;altnr: LongInt): TAsmSymbol; virtual;
-         function  is_used:boolean;
+         function  Is_Used:boolean;
          procedure increfs;
          procedure decrefs;
          function getrefs: LongInt;
@@ -332,9 +332,9 @@ implementation
       end;
 
 
-    function TAsmSymbol.is_used:boolean;
+    function TAsmSymbol.Is_Used:boolean;
       begin
-        is_used:=(refs>0);
+        Is_Used:=(refs>0);
       end;
 
 

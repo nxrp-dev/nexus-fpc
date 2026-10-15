@@ -39,7 +39,7 @@ unit cpupara;
           function get_volatile_registers_mm(calloption: TProcCallOption): TCPURegisterSet; override;
           function get_saved_registers_int(calloption: TProcCallOption): TCPURegisterArray; override;
           function get_saved_registers_mm(calloption: TProcCallOption): TCPURegisterArray; override;
-          function push_addr_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean; override;
+          function push_addr_param(VarSpez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean; override;
           function ret_in_param(def: TDef; pd: TAbstractProcDef):boolean;override;
           function create_paraloc_info(p: TAbstractProcDef; side: TCallerCallee):LongInt;override;
           function create_varargs_paraloc_info(p: TAbstractProcDef; side: TCallerCallee; varargspara: TVarArgsParaList):LongInt;override;
@@ -51,7 +51,7 @@ unit cpupara;
           curstackoffset: aword;
 
           procedure init_para_alloc_values;
-          procedure alloc_para(out result: TCGPara; p: TAbstractProcDef; varspez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
+          procedure alloc_para(out result: TCGPara; p: TAbstractProcDef; VarSpez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
           function getparaloc(calloption: TProcCallOption; p: TDef): TCGLoc;
 
           procedure create_paraloc_info_intern(p: TAbstractProcDef; side: TCallerCallee; paras: TParaList; isvariadic: boolean);
@@ -162,19 +162,19 @@ unit cpupara;
       end;
 
 
-    function TCPUParaManager.push_addr_param(varspez: TVarSpez; def :TDef; calloption: TProcCallOption): boolean;
+    function TCPUParaManager.push_addr_param(VarSpez: TVarSpez; def :TDef; calloption: TProcCallOption): boolean;
       var
         hfabasedef: TDef;
       begin
         result:=false;
-        if varspez in [vs_var,vs_out,vs_constref] then
+        if VarSpez in [vs_var,vs_out,vs_constref] then
           begin
             result:=true;
             exit;
           end;
         case def.typ of
           objectdef:
-            result:=is_object(def);
+            result:=Is_Object(def);
           recorddef:
             { ABI: any composite > 16 bytes that not a hfa/hva
               Special case: MWPascal, which passes all const parameters by
@@ -183,7 +183,7 @@ unit cpupara;
                 reference due to the Windows unit (ab)using const to pass
                 pointer parameters }
             result:=
-              ((varspez=vs_const) and
+              ((VarSpez=vs_const) and
                (
                  (calloption=pocall_mwpascal) or
                  (TargetInfo.system=system_aarch64_win64)
@@ -206,14 +206,14 @@ unit cpupara;
               is_open_array(def) or
               is_array_of_const(def) or
               is_array_constructor(def) or
-              ((TArrayDef(def).highrange>=TArrayDef(def).lowrange) and
-               ((varspez=vs_const) or
+              ((TArrayDef(def).HighRange>=TArrayDef(def).LowRange) and
+               ((VarSpez=vs_const) or
                 (not is_hfa(def,hfabasedef) and
                  (def.size>16))));
           setdef :
             result:=def.size>16;
           stringdef :
-            result:=TStringDef(def).stringtype in [st_shortstring,st_longstring];
+            result:=TStringDef(def).StringType in [st_shortstring,st_longstring];
           else
             ;
         end;
@@ -226,7 +226,7 @@ unit cpupara;
           exit;
         { ABI: if the parameter would be passed in registers, it is returned
             in those registers; otherwise, it's returned by reference }
-        result:=push_addr_param(vs_value,def,pd.proccalloption);
+        result:=push_addr_param(vs_value,def,pd.ProcCallOption);
       end;
 
 
@@ -258,26 +258,26 @@ unit cpupara;
               As the ABI says this behaviour is ok for C++ classes with a
               non-trivial copy constructor or destructor, it seems reasonable
               for us to do this for managed types as well.}
-            if (vo_is_funcret in hp.varoptions) and
+            if (vo_is_funcret in hp.VarOptions) and
                not is_managed_type(hp.vardef) then
               begin
-                hp.paraloc[side].reset;
-                hp.paraloc[side].size:=OS_ADDR;
-                hp.paraloc[side].alignment:=voidpointertype.alignment;
-                hp.paraloc[side].intsize:=voidpointertype.size;
-                hp.paraloc[side].def:=CPointerDef.getreusable_no_free(hp.vardef);
-                with hp.paraloc[side].add_location^ do
+                hp.ParaLoc[side].reset;
+                hp.ParaLoc[side].size:=OS_ADDR;
+                hp.ParaLoc[side].alignment:=VoidPointerType.alignment;
+                hp.ParaLoc[side].intsize:=VoidPointerType.size;
+                hp.ParaLoc[side].def:=CPointerDef.GetReusable_No_Free(hp.vardef);
+                with hp.ParaLoc[side].add_location^ do
                   begin
                     size:=OS_ADDR;
-                    def:=hp.paraloc[side].def;
+                    def:=hp.ParaLoc[side].def;
                     loc:=LOC_REGISTER;
                     register:=NR_XR;
                   end
               end
             else
-              alloc_para(hp.paraloc[side],p,hp.varspez,side,hp.vardef,isvariadic,
-                (vo_is_parentfp in hp.varoptions) and
-                (po_delphi_nested_cc in p.procoptions));
+              alloc_para(hp.ParaLoc[side],p,hp.VarSpez,side,hp.vardef,isvariadic,
+                (vo_is_parentfp in hp.VarOptions) and
+                (po_delphi_nested_cc in p.ProcOptions));
           end;
       end;
 
@@ -320,7 +320,7 @@ unit cpupara;
             (result.def.size<8) and is_ordinal(result.def) then
            begin
              result.location^.size:=OS_64;
-             result.location^.def:=u64inttype;
+             result.location^.def:=U64IntType;
            end;
 
       end;
@@ -344,10 +344,10 @@ unit cpupara;
       end;
 
 
-    procedure TCPUParaManager.alloc_para(out result: TCGPara; p: TAbstractProcDef; varspez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
+    procedure TCPUParaManager.alloc_para(out result: TCGPara; p: TAbstractProcDef; VarSpez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
       var
         hfabasedef, locdef: TDef;
-        paraloc: PCGParaLocation;
+        ParaLoc: PCGParaLocation;
         paralen, stackslotlen: asizeint;
         loc: TCGLoc;
         paracgsize, locsize: TCgSize;
@@ -357,25 +357,25 @@ unit cpupara;
 
         { currently only support C-style array of const,
           there should be no location assigned to the vararg array itself }
-        if (p.proccalloption in cstylearrayofconst) and
+        if (p.ProcCallOption in cstylearrayofconst) and
            is_array_of_const(paradef) then
           begin
             result.size:=OS_NO;
             result.def:=paradef;
             result.alignment:=std_param_align;
             result.intsize:=0;
-            paraloc:=result.add_location;
+            ParaLoc:=result.add_location;
             { hack: the paraloc must be valid, but is not actually used }
-            paraloc^.loc:=LOC_REGISTER;
-            paraloc^.register:=NR_X0;
-            paraloc^.size:=OS_ADDR;
-            paraloc^.def:=paradef;
+            ParaLoc^.loc:=LOC_REGISTER;
+            ParaLoc^.register:=NR_X0;
+            ParaLoc^.size:=OS_ADDR;
+            ParaLoc^.def:=paradef;
             exit;
           end;
 
-        if push_addr_param(varspez,paradef,p.proccalloption) then
+        if push_addr_param(VarSpez,paradef,p.ProcCallOption) then
           begin
-            paradef:=CPointerDef.getreusable_no_free(paradef);
+            paradef:=CPointerDef.GetReusable_No_Free(paradef);
             loc:=LOC_REGISTER;
             paracgsize:=OS_ADDR;
             paralen:=tcgsize2size[OS_ADDR];
@@ -386,10 +386,10 @@ unit cpupara;
               paralen:=paradef.size
             else
               paralen:=tcgsize2size[def_cgsize(paradef)];
-            loc:=getparaloc(p.proccalloption,paradef);
+            loc:=getparaloc(p.ProcCallOption,paradef);
             if (paradef.typ in [objectdef,arraydef,recorddef,setdef]) and
                not is_special_array(paradef) and
-               (varspez in [vs_value,vs_const]) then
+               (VarSpez in [vs_value,vs_const]) then
               paracgsize:=int_cgsize(paralen)
             else
               begin
@@ -399,7 +399,7 @@ unit cpupara;
                   begin
                     paracgsize:=OS_ADDR;
                     paralen:=tcgsize2size[OS_ADDR];
-                    paradef:=voidpointertype;
+                    paradef:=VoidPointerType;
                   end;
               end
           end;
@@ -418,10 +418,10 @@ unit cpupara;
          if not is_special_array(paradef) and
             (paradef.size=0) then
            begin
-             paraloc:=result.add_location;
-             paraloc^.loc:=LOC_VOID;
-             paraloc^.def:=paradef;
-             paraloc^.size:=OS_NO;
+             ParaLoc:=result.add_location;
+             ParaLoc^.loc:=LOC_VOID;
+             ParaLoc^.def:=paradef;
+             ParaLoc^.size:=OS_NO;
              exit;
            end;
 
@@ -463,7 +463,7 @@ unit cpupara;
          { allocate registers/stack locations }
          firstparaloc:=true;
          repeat
-           paraloc:=result.add_location;
+           ParaLoc:=result.add_location;
 
            { set paraloc size/def }
            if Assigned(hfabasedef) then
@@ -487,33 +487,33 @@ unit cpupara;
              begin
                if paralen>4 then
                  begin
-                   paraloc^.size:=OS_INT;
-                   paraloc^.def:=u64inttype;
+                   ParaLoc^.size:=OS_INT;
+                   ParaLoc^.def:=U64IntType;
                  end
                else
                  begin
                    { for 3-byte records }
-                   paraloc^.size:=OS_32;
-                   paraloc^.def:=u32inttype;
+                   ParaLoc^.size:=OS_32;
+                   ParaLoc^.def:=U32IntType;
                  end;
              end
            else
              begin
-               paraloc^.size:=locsize;
-               paraloc^.def:=locdef;
+               ParaLoc^.size:=locsize;
+               ParaLoc^.def:=locdef;
 
              end;
 
            { paraloc loc }
-           paraloc^.loc:=loc;
+           ParaLoc^.loc:=loc;
 
            { assign register/stack address }
            case loc of
              LOC_REGISTER:
                begin
-                 paraloc^.register:=newreg(R_INTREGISTER,curintreg,cgsize2subreg(R_INTREGISTER,paraloc^.size));
+                 ParaLoc^.register:=newreg(R_INTREGISTER,curintreg,cgsize2subreg(R_INTREGISTER,ParaLoc^.size));
                  inc(curintreg);
-                 dec(paralen,tcgsize2size[paraloc^.size]);
+                 dec(paralen,tcgsize2size[ParaLoc^.size]);
 
                  { "The general ABI specifies that it is the callee's
                     responsibility to sign or zero-extend arguments having fewer
@@ -529,8 +529,8 @@ unit cpupara;
                        begin
                          if side=callerside then
                            begin
-                             paraloc^.size:=OS_32;
-                             paraloc^.def:=u32inttype;
+                             ParaLoc^.size:=OS_32;
+                             ParaLoc^.def:=U32IntType;
                            end;
                        end
 
@@ -538,8 +538,8 @@ unit cpupara;
                        begin
                          if side=calleeside then
                            begin
-                             paraloc^.size:=OS_32;
-                             paraloc^.def:=u32inttype;
+                             ParaLoc^.size:=OS_32;
+                             ParaLoc^.def:=U32IntType;
                            end;
                        end;
 
@@ -552,31 +552,31 @@ unit cpupara;
                    in case of big endian, values in not completely filled
                    registers must be shifted to the top bits }
                  if (TargetInfo.endian=endian_big) and
-                    not(paraloc^.size in [OS_64,OS_S64]) and
+                    not(ParaLoc^.size in [OS_64,OS_S64]) and
                     (paradef.typ in [setdef,recorddef,arraydef,objectdef]) then
-                   paraloc^.shiftval:=-(8-tcgsize2size[paraloc^.size])*8;
+                   ParaLoc^.shiftval:=-(8-tcgsize2size[ParaLoc^.size])*8;
                end;
              LOC_MMREGISTER:
                begin
-                 paraloc^.register:=newreg(R_MMREGISTER,curmmreg,cgsize2subreg(R_MMREGISTER,paraloc^.size));
+                 ParaLoc^.register:=newreg(R_MMREGISTER,curmmreg,cgsize2subreg(R_MMREGISTER,ParaLoc^.size));
                  inc(curmmreg);
-                 dec(paralen,tcgsize2size[paraloc^.size]);
+                 dec(paralen,tcgsize2size[ParaLoc^.size]);
                end;
              LOC_REFERENCE:
                begin
-                  paraloc^.size:=paracgsize;
-                  paraloc^.loc:=LOC_REFERENCE;
+                  ParaLoc^.size:=paracgsize;
+                  ParaLoc^.loc:=LOC_REFERENCE;
                   if Assigned(hfabasedef) then
-                    paraloc^.def:=CArrayDef.getreusable_no_free(hfabasedef,paralen div hfabasedef.size)
+                    ParaLoc^.def:=CArrayDef.GetReusable_No_Free(hfabasedef,paralen div hfabasedef.size)
                   else
-                    paraloc^.def:=paradef;
+                    ParaLoc^.def:=paradef;
 
                   { the current stack offset may not be properly aligned in
                     case we're on Darwin and have allocated a non-variadic argument
                     < 8 bytes previously }
                   if TargetInfo.abi=abi_aarch64_darwin then
                     begin
-                      curstackoffset:=align(curstackoffset,paraloc^.def.alignment);
+                      curstackoffset:=align(curstackoffset,ParaLoc^.def.alignment);
                       if firstparaloc then
                         result.alignment:=NewAlignment(result.alignment,curstackoffset);
                     end;
@@ -595,15 +595,15 @@ unit cpupara;
                     containing that value which is then stored to memory ->
                     in case of big endian, skip the alignment bytes (if any) }
                   if TargetInfo.endian=endian_little then
-                    paraloc^.reference.offset:=curstackoffset
+                    ParaLoc^.reference.offset:=curstackoffset
                   else
-                    paraloc^.reference.offset:=curstackoffset+stackslotlen-paralen;
+                    ParaLoc^.reference.offset:=curstackoffset+stackslotlen-paralen;
                   if side=callerside then
-                    paraloc^.reference.index:=NR_STACK_POINTER_REG
+                    ParaLoc^.reference.index:=NR_STACK_POINTER_REG
                   else
                     begin
-                      paraloc^.reference.index:=NR_FRAME_POINTER_REG;
-                      inc(paraloc^.reference.offset,16);
+                      ParaLoc^.reference.index:=NR_FRAME_POINTER_REG;
+                      inc(ParaLoc^.reference.offset,16);
                     end;
                   inc(curstackoffset,stackslotlen);
                   paralen:=0
@@ -634,7 +634,7 @@ unit cpupara;
 
         { non-variadic parameters }
         create_paraloc_info_intern(p,side,p.paras,false);
-        if p.proccalloption in cstylearrayofconst then
+        if p.ProcCallOption in cstylearrayofconst then
           begin
             { on Darwin, we cannot use any registers for variadic parameters }
             if TargetInfo.abi=abi_aarch64_darwin then

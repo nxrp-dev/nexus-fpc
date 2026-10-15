@@ -333,7 +333,7 @@ Implementation
               { Check if there is already a base (mostly ebp,esp) than this is
                 not allowed, because it will give crashing code }
               if ((oper.opr.typ=OPR_REFERENCE) and (oper.opr.ref.base<>NR_NO)) or
-                 ((oper.opr.typ=OPR_LOCAL) and (oper.opr.localsym.localloc.loc<>LOC_REGISTER)) then
+                 ((oper.opr.typ=OPR_LOCAL) and (oper.opr.localsym.LocAlloc.loc<>LOC_REGISTER)) then
                 message(asmr_e_cannot_index_relative_var);
               oper.opr.ref.base:=actasmregister;
 {$ifdef x86_64}
@@ -558,7 +558,7 @@ Implementation
 
         procedure MaybeRecordOffset;
           var
-            mangledname: string;
+            MangledName: string;
             hasdot  : boolean;
             l,
             toffset,
@@ -567,15 +567,15 @@ Implementation
             if not(actasmtoken in [AS_DOT,AS_PLUS,AS_MINUS]) then
              exit;
             l:=0;
-            mangledname:='';
+            MangledName:='';
             hasdot:=(actasmtoken=AS_DOT);
             if hasdot then
              begin
                if expr<>'' then
                  begin
-                   BuildRecordOffsetSize(expr,toffset,tsize,mangledname,false);
+                   BuildRecordOffsetSize(expr,toffset,tsize,MangledName,false);
                    if (oper.opr.typ<>OPR_CONSTANT) and
-                      (mangledname<>'') then
+                      (MangledName<>'') then
                     Message(asmr_e_wrong_sym_type);
                    inc(l,toffset);
                    oper.SetSize(tsize,true);
@@ -603,12 +603,12 @@ Implementation
                   inc(oper.opr.localconstoffset,l);
                 end;
               OPR_CONSTANT :
-                if (mangledname<>'') then
+                if (MangledName<>'') then
                   begin
                     if (oper.opr.val<>0) then
                       Message(asmr_e_wrong_sym_type);
                     oper.opr.typ:=OPR_SYMBOL;
-                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(mangledname,AT_FUNCTION);
+                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(MangledName,AT_FUNCTION);
                   end
                 else
                   inc(oper.opr.val,l);
@@ -629,7 +629,7 @@ Implementation
           { Try to create a reference, if not a reference is found then false
             is returned }
           var
-            mangledname: string;
+            MangledName: string;
           begin
             MaybeBuildReference:=true;
             case actasmtoken of
@@ -689,8 +689,8 @@ Implementation
                   { record.field ? }
                   if actasmtoken=AS_DOT then
                    begin
-                     BuildRecordOffsetSize(tempstr,l,k,mangledname,false);
-                     if (mangledname<>'') then
+                     BuildRecordOffsetSize(tempstr,l,k,MangledName,false);
+                     if (MangledName<>'') then
                        Message(asmr_e_invalid_reference_syntax);
                      inc(oper.opr.ref.offset,l);
 

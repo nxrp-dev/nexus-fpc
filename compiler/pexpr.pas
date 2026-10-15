@@ -112,17 +112,17 @@ implementation
         i : LongInt;
       begin
         if (sym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-           (vo_is_funcret in TAbstractVarSym(sym).varoptions) then
+           (vo_is_funcret in TAbstractVarSym(sym).VarOptions) then
           begin
             { the function result symbols are stored uppercase }
-            if vo_is_result in TAbstractVarSym(sym).varoptions then
+            if vo_is_result in TAbstractVarSym(sym).VarOptions then
               exit('Result');
-            if Assigned(sym.owner.defowner) and
-               (TDef(sym.owner.defowner).typ=procdef) then
-              exit(TProcDef(sym.owner.defowner).procsym.realname);
+            if Assigned(sym.owner.DefOwner) and
+               (TDef(sym.owner.DefOwner).typ=procdef) then
+              exit(TProcDef(sym.owner.DefOwner).ProcSym.realname);
           end;
         { use the declared unit name, e.g. the implicit system unit is stored uppercase }
-        if (sym.typ=unitsym) and
+        if (sym.typ=UnitSym) and
            Assigned(TUnitSym(sym).module) and
            Assigned(TModule(TUnitSym(sym).module).RealModuleName) then
           exit(TModule(TUnitSym(sym).module).RealModuleName^);
@@ -143,7 +143,7 @@ implementation
       var
          p : TNode;
       begin
-         def:=cshortstringtype;
+         def:=CShortStringType;
          consume(_STRING);
          if CurrentScanner.token=_LECKKLAMMER then
            begin
@@ -175,11 +175,11 @@ implementation
 {                    t:=cstringdef.createlong(tordconstnode(p).value))}
                     Message(parser_e_invalid_string_size);
                     TOrdConstNode(p).value:=255;
-                    def:=CStringDef.createshort(int64(TOrdConstNode(p).value),true);
+                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).value),true);
                   end
                 else
                   if TOrdConstNode(p).value<>255 then
-                    def:=CStringDef.createshort(int64(TOrdConstNode(p).value),true);
+                    def:=CStringDef.CreateShort(int64(TOrdConstNode(p).value),true);
                 consume(_RECKKLAMMER);
               end;
              p.free;
@@ -193,12 +193,12 @@ implementation
               if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                 begin
                   if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                    def:=cunicodestringtype
+                    def:=CUnicodeStringType
                   else
-                    def:=cansistringtype
+                    def:=CAnsiStringType
                 end
               else
-                def:=cshortstringtype;
+                def:=CShortStringType;
             end;
        end;
 
@@ -295,7 +295,7 @@ implementation
              hdef:=CPointerDef.getreusable(p1.resultdef);
              temp:=CTempCreateNode.create(hdef,sizeof(PInt),tt_persistent,false);
              addstatement(newstatement,temp);
-             addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(temp),CAddrNode.create_internal(p1)));
+             addstatement(newstatement,CAssignmentNode.create(CTempRefNode.create(temp),CAddrNode.Create_Internal(p1)));
              addstatement(newstatement,CAssignmentNode.create(
                  CDerefNode.create(CTempRefNode.create(temp)),
                  CAddNode.create(ntyp,
@@ -304,7 +304,7 @@ implementation
              addstatement(newstatement,CTempDeleteNode.create(temp));
            end
          else
-           result:=CAssignmentNode.create(p1,CAddNode.create(ntyp,p1.getcopy,p2));
+           result:=CAssignmentNode.create(p1,CAddNode.create(ntyp,p1.GetCopy,p2));
        end;
 
 
@@ -359,8 +359,8 @@ implementation
                           p1:=comp_expr([ef_accept_equal]);
                           consume(_RKLAMMER);
                           if not Assigned(CurrentProcInfo) or
-                             (CurrentProcInfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
-                             is_void(CurrentProcInfo.procdef.returndef) then
+                             (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
+                             is_void(CurrentProcInfo.procdef.ReturnDef) then
                             begin
                               Message(parser_e_void_function);
                               { recovery }
@@ -374,12 +374,12 @@ implementation
                   else
                     begin
                       { non local exit ? }
-                      if CurrentProcInfo.procdef.procsym.name<>CurrentScanner.pattern then
+                      if CurrentProcInfo.procdef.ProcSym.name<>CurrentScanner.pattern then
                         begin
                           exit_procinfo:=CurrentProcInfo.parent;
                           while Assigned(exit_procinfo) do
                             begin
-                              if exit_procinfo.procdef.procsym.name=CurrentScanner.pattern then
+                              if exit_procinfo.procdef.ProcSym.name=CurrentScanner.pattern then
                                 break;
                               exit_procinfo:=exit_procinfo.parent;
                             end;
@@ -388,9 +388,9 @@ implementation
                               if not(Assigned(exit_procinfo.nestedexitlabel)) then
                                 begin
                                   include(CurrentProcInfo.flags,pi_has_nested_exit);
-                                  exclude(CurrentProcInfo.procdef.procoptions,po_inline);
+                                  exclude(CurrentProcInfo.procdef.ProcOptions,po_inline);
                                   if is_nested_pd(CurrentProcInfo.procdef) then
-                                    CurrentProcInfo.set_needs_parentfp(exit_procinfo.procdef.parast.symtablelevel);
+                                    CurrentProcInfo.set_needs_parentfp(exit_procinfo.procdef.ParaST.SymTableLevel);
 
                                   exit_procinfo.nestedexitlabel:=CLabelSym.create('$nestedexit');
 
@@ -398,9 +398,9 @@ implementation
                                   exit_procinfo.nestedexitlabel.defined:=true;
                                   exit_procinfo.nestedexitlabel.used:=true;
 
-                                  exit_procinfo.nestedexitlabel.jumpbuf:=CLocalVarSym.create('LABEL$_'+exit_procinfo.nestedexitlabel.name,vs_value,rec_jmp_buf,[]);
-                                  exit_procinfo.procdef.localst.insertsym(exit_procinfo.nestedexitlabel);
-                                  exit_procinfo.procdef.localst.insertsym(exit_procinfo.nestedexitlabel.jumpbuf);
+                                  exit_procinfo.nestedexitlabel.JumpBuf:=CLocalVarSym.create('LABEL$_'+exit_procinfo.nestedexitlabel.name,vs_value,Rec_Jmp_Buf,[]);
+                                  exit_procinfo.procdef.LocalST.InsertSym(exit_procinfo.nestedexitlabel);
+                                  exit_procinfo.procdef.LocalST.InsertSym(exit_procinfo.nestedexitlabel.JumpBuf);
                                 end;
 
                               statement_syssym:=CGotoNode.create(exit_procinfo.nestedexitlabel);
@@ -462,11 +462,11 @@ implementation
                 TTypeNode(p1).allowed:=true;
               { Allow classrefdef, which is required for
                 Typeof(self) in static class methods }
-              if not(is_objc_class_or_protocol(p1.resultdef)) and
+              if not(Is_ObjC_Class_Or_Protocol(p1.resultdef)) and
                  ((p1.resultdef.typ = objectdef) or
                   (Assigned(CurrentProcInfo) and
-                   ((po_classmethod in CurrentProcInfo.procdef.procoptions) or
-                    (po_staticmethod in CurrentProcInfo.procdef.procoptions)) and
+                   ((po_classmethod in CurrentProcInfo.procdef.ProcOptions) or
+                    (po_staticmethod in CurrentProcInfo.procdef.ProcOptions)) and
                    (p1.resultdef.typ=classrefdef))) then
                statement_syssym:=geninlinenode(in_typeof_x,false,p1)
               else
@@ -487,8 +487,8 @@ implementation
               consume(_RKLAMMER);
               if ((p1.nodetype<>typen) and
                  (
-                  (is_object(p1.resultdef) and
-                   (oo_has_constructor in TObjectDef(p1.resultdef).objectoptions)) or
+                  (Is_Object(p1.resultdef) and
+                   (oo_has_constructor in TObjectDef(p1.resultdef).ObjectOptions)) or
                   is_open_array(p1.resultdef) or
                   is_array_of_const(p1.resultdef) or
                   is_open_string(p1.resultdef)
@@ -499,9 +499,9 @@ implementation
                   statement_syssym:=geninlinenode(in_sizeof_x,false,p1);
                   { no packed bit support for these things }
                   if l=in_bitsizeof_x then
-                    statement_syssym:=CAddNode.create(muln,statement_syssym,COrdConstNode.create(8,sizesinttype,true));
+                    statement_syssym:=CAddNode.create(muln,statement_syssym,COrdConstNode.create(8,SizeSIntType,true));
                   { type sym is a generic parameter }
-                  if Assigned(p1.resultdef.typesym) and (sp_generic_para in p1.resultdef.typesym.symoptions) then
+                  if Assigned(p1.resultdef.TypeSym) and (sp_generic_para in p1.resultdef.TypeSym.SymOptions) then
                     include(statement_syssym.flags,nf_generic_para);
                 end
               else
@@ -509,22 +509,22 @@ implementation
                  { allow helpers for SizeOf and BitSizeOf }
                  if p1.nodetype=typen then
                    TTypeNode(p1).helperallowed:=true;
-                 if (p1.resultdef.typ=forwarddef) then
-                   Message1(type_e_type_is_not_completly_defined,TForwardDef(p1.resultdef).tosymname^);
+                 if (p1.resultdef.typ=ForwardDef) then
+                   Message1(type_e_type_is_not_completly_defined,TForwardDef(p1.resultdef).ToSymName^);
                  if (l = in_sizeof_x) or
                     (not((p1.nodetype = vecn) and
                          is_packed_array(TVecNode(p1).left.resultdef)) and
                      not((p1.nodetype = subscriptn) and
                          is_packed_record_or_object(TSubscriptNode(p1).left.resultdef))) then
                    begin
-                     statement_syssym:=genintconstnode(p1.resultdef.size,sizesinttype);
+                     statement_syssym:=genintconstnode(p1.resultdef.size,SizeSIntType);
                      if (l = in_bitsizeof_x) then
-                       statement_syssym:=CAddNode.create(muln,statement_syssym,COrdConstNode.create(8,sizesinttype,true));
+                       statement_syssym:=CAddNode.create(muln,statement_syssym,COrdConstNode.create(8,SizeSIntType,true));
                    end
                  else
-                   statement_syssym:=genintconstnode(p1.resultdef.packedbitsize,sizesinttype);
+                   statement_syssym:=genintconstnode(p1.resultdef.PackedBitSize,SizeSIntType);
                  { type def is a struct with generic fields }
-                 if df_has_generic_fields in p1.resultdef.defoptions then
+                 if df_has_generic_fields in p1.resultdef.DefOptions then
                     include(statement_syssym.flags,nf_generic_para);
                  { p1 not needed !}
                  p1.free;
@@ -623,7 +623,7 @@ implementation
                    procvardef,
                    classrefdef : ;
                    objectdef :
-                     if not is_implicit_pointer_object_type(p1.resultdef) then
+                     if not Is_Implicit_Pointer_Object_Type(p1.resultdef) then
                        begin
                          Message(parser_e_illegal_parameter_list);
                          err:=true;
@@ -687,7 +687,7 @@ implementation
               include(TAddrNode(p1).addrnodeflags,anf_ofs);
               got_addrn:=false;
               { Ofs() returns a cardinal/qword, not a pointer }
-              inserttypeconv_internal(p1,uinttype);
+              inserttypeconv_internal(p1,UIntType);
               consume(_RKLAMMER);
               statement_syssym:=p1;
             end;
@@ -948,10 +948,10 @@ implementation
               def:=nil;
               single_type(def,[stoAllowSpecialization]);
               statement_syssym:=CErrorNode.create;
-              if def<>generrordef then
+              if def<>GenErrorDef then
                 { "type expected" error is already done by single_type }
-                if def.typ=forwarddef then
-                  Message1(type_e_type_is_not_completly_defined,TForwardDef(def).tosymname^)
+                if def.typ=ForwardDef then
+                  Message1(type_e_type_is_not_completly_defined,TForwardDef(def).ToSymName^)
                 else
                   begin
                     statement_syssym.free;
@@ -1094,11 +1094,11 @@ implementation
         maybe_load_methodpointer:=false;
         if not Assigned(p1) then
          begin
-           case st.symtabletype of
+           case st.SymTableType of
              withsymtable :
                begin
-                 if (st.defowner.typ=objectdef) then
-                   p1:=TNode(TWithSymTable(st).withrefnode).getcopy;
+                 if (st.DefOwner.typ=objectdef) then
+                   p1:=TNode(TWithSymTable(st).WithRefNode).GetCopy;
                end;
              ObjectSymtable,
              recordsymtable:
@@ -1108,8 +1108,8 @@ implementation
                    begin
                      pd:=CurrentProcInfo.get_normal_proc.procdef;
                      { We are calling from the static class method which has no self node }
-                     if Assigned(pd) and pd.no_self_node then
-                       if st.symtabletype=recordsymtable then
+                     if Assigned(pd) and pd.No_Self_Node then
+                       if st.SymTableType=recordsymtable then
                          p1:=CTypeNode.create(pd.struct)
                        else
                          p1:=CLoadVMTAddrNode.create(CTypeNode.create(pd.struct))
@@ -1119,7 +1119,7 @@ implementation
                  else
                    p1:=load_self_node;
                  { don't try to call the invokable again }
-                 if is_invokable(TDef(st.defowner)) then
+                 if is_invokable(TDef(st.DefOwner)) then
                    include(p1.flags,nf_load_procvar);
                  { We are calling a member }
                  maybe_load_methodpointer:=true;
@@ -1159,9 +1159,9 @@ implementation
                getaddr then
              begin
                if Assigned(getfuncrefdef) then
-                 aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
+                 aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef)
                else
-                 aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
+                 aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
                getaddr:=true;
              end
             else
@@ -1170,9 +1170,9 @@ implementation
                 not(CurrentScanner.token in [_CARET,_POINT,_LKLAMMER]) then
               begin
                 if Assigned(getfuncrefdef) then
-                  aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
+                  aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef)
                 else
-                  aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
+                  aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
                 if Assigned(aprocdef) then
                  getaddr:=true;
               end;
@@ -1205,18 +1205,18 @@ implementation
                aprocdef is already loaded above so we can reuse it }
              if not Assigned(aprocdef) and
                 Assigned(getprocvardef) then
-               aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
+               aprocdef:=TProcSym(sym).Find_ProcDef_ByProcVarDef(getprocvardef);
              if not Assigned(aprocdef) and
                 Assigned(getfuncrefdef) then
-               aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef);
+               aprocdef:=TProcSym(sym).Find_ProcDef_ByFuncRefDef(getfuncrefdef);
 
              { ensure that the correct function is considered as captured }
              if Assigned(CurrentProcInfo) and
                  Assigned(aprocdef) and
-                 (aprocdef.parast.symtablelevel<=CurrentProcInfo.procdef.parast.symtablelevel) and
-                 (aprocdef.parast.symtablelevel>normal_function_level) and
-                 (CurrentProcInfo.procdef.parast.symtablelevel>normal_function_level) then
-               CurrentProcInfo.add_captured_sym(sym,aprocdef,CurrentFilePos);
+                 (aprocdef.ParaST.SymTableLevel<=CurrentProcInfo.procdef.ParaST.SymTableLevel) and
+                 (aprocdef.ParaST.SymTableLevel>normal_function_level) and
+                 (CurrentProcInfo.procdef.ParaST.SymTableLevel>normal_function_level) then
+               CurrentProcInfo.Add_Captured_Sym(sym,aprocdef,CurrentFilePos);
 
              { generate a methodcallnode or proccallnode }
              { we shouldn't convert things like @tcollection.load }
@@ -1269,14 +1269,14 @@ implementation
                 for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
                   begin
                     currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
-                    if not(vo_is_hidden_para in currpara.varoptions) then
+                    if not(vo_is_hidden_para in currpara.VarOptions) then
                       begin
                         { inheritance by msgint? }
                         if Assigned(srdef) then
                           { anonymous inherited via msgid calls only require a var parameter for
                             both methods, so we need some type casting here }
-                          para:=CCallParaNode.create(CTypeConvNode.create_internal(CTypeConvNode.create_internal(
-                            CLoadNode.create(currpara,currpara.owner),cformaltype),TParaVarSym(TProcDef(srdef).paras[i]).vardef),
+                          para:=CCallParaNode.create(CTypeConvNode.Create_Internal(CTypeConvNode.Create_Internal(
+                            CLoadNode.create(currpara,currpara.owner),CFormalType),TParaVarSym(TProcDef(srdef).paras[i]).vardef),
                           para)
                         else
                           para:=CCallParaNode.create(CLoadNode.create(currpara,currpara.owner),para);
@@ -1298,7 +1298,7 @@ implementation
                include(callflags,cnf_member_call);
              if Assigned(obj) then
                begin
-                 if not (st.symtabletype in [ObjectSymtable,recordsymtable]) then
+                 if not (st.SymTableType in [ObjectSymtable,recordsymtable]) then
                    InternalError(200310031);
                  p1:=CCallNode.create(para,TProcSym(sym),obj.SymTable,p1,callflags,spezcontext);
                end
@@ -1306,7 +1306,7 @@ implementation
                p1:=CCallNode.create(para,TProcSym(sym),st,p1,callflags,spezcontext);
              { in case of calling an anonymous function we already know the concrete
                procdef that is going to be called }
-             if (TProcSym(sym).ProcdefList.count=1) and (po_anonymous in TProcDef(TProcSym(sym).procdeflist[0]).procoptions) then
+             if (TProcSym(sym).ProcdefList.count=1) and (po_anonymous in TProcDef(TProcSym(sym).procdeflist[0]).ProcOptions) then
                TCallNode(p1).procdefinition:=TProcDef(TProcSym(sym).procdeflist[0]);
            end;
          afterassignment:=prevafterassn;
@@ -1337,12 +1337,12 @@ implementation
               { a procvar can't have parameters! }
               not Assigned(TCallNode(hp).left) then
             begin
-              currprocdef:=TCallNode(hp).symtableprocentry.Find_procdef_byprocvardef(pv);
+              currprocdef:=TCallNode(hp).symtableprocentry.Find_ProcDef_ByProcVarDef(pv);
               if Assigned(currprocdef) then
                begin
                  hp2:=CLoadNode.create_procvar(TProcSym(TCallNode(hp).symtableprocentry),currprocdef,TCallNode(hp).symtableproc);
-                 if (po_methodpointer in pv.procoptions) then
-                   TLoadNode(hp2).set_mp(TCallNode(hp).methodpointer.getcopy);
+                 if (po_methodpointer in pv.ProcOptions) then
+                   TLoadNode(hp2).set_mp(TCallNode(hp).methodpointer.GetCopy);
                  hp.free;
                  hp := nil;
                  { replace the old callnode with the new loadnode }
@@ -1379,7 +1379,7 @@ implementation
               { a procvar can't have parameters! }
               not Assigned(TCallNode(hp).left) then
             begin
-              currprocdef:=TCallNode(hp).symtableprocentry.Find_procdef_byfuncrefdef(fr);
+              currprocdef:=TCallNode(hp).symtableprocentry.Find_ProcDef_ByFuncRefDef(fr);
               if Assigned(currprocdef) then
                begin
                  hp2:=CLoadNode.create_procvar(TProcSym(TCallNode(hp).symtableprocentry),currprocdef,TCallNode(hp).symtableproc);
@@ -1400,7 +1400,7 @@ implementation
          p2    : TNode;
          membercall : boolean;
          callflags  : TCallNodeFlags;
-         propaccesslist : TPropAccessList;
+         PropAccessList : TPropAccessList;
          sym: TSym;
       begin
          { NameOf(property) needs neither parameters nor read access }
@@ -1413,7 +1413,7 @@ implementation
          { property parameters? read them only if the property really }
          { has parameters                                             }
          paras:=nil;
-         if (ppo_hasparameters in propsym.propoptions) then
+         if (ppo_hasparameters in propsym.PropOptions) then
            begin
              if try_to_consume(_LECKKLAMMER) then
                begin
@@ -1422,20 +1422,20 @@ implementation
                end;
            end;
          { indexed property }
-         if (ppo_indexed in propsym.propoptions) then
+         if (ppo_indexed in propsym.PropOptions) then
            begin
-             p2:=COrdConstNode.create(propsym.index,propsym.indexdef,true);
+             p2:=COrdConstNode.create(propsym.index,propsym.IndexDef,true);
              paras:=CCallParaNode.create(p2,paras);
            end;
          { we need only a write property if a := follows }
          { if not(afterassignment) and not(in_args) then }
          if CurrentScanner.token=_ASSIGNMENT then
            begin
-              if propsym.getpropaccesslist(palt_write,propaccesslist) then
+              if propsym.GetPropAccessList(palt_write,PropAccessList) then
                 begin
-                   sym:=propaccesslist.firstsym^.sym;
+                   sym:=PropAccessList.FirstSym^.sym;
                    case sym.typ of
-                     procsym :
+                     ProcSym :
                        begin
                          callflags:=[];
                          { generate the method call }
@@ -1443,14 +1443,14 @@ implementation
                          if membercall then
                            include(callflags,cnf_member_call);
                          p1:=CCallNode.create(paras,TProcSym(sym),st,p1,callflags,nil);
-                         addsymref(sym);
+                         AddSymRef(sym);
                          paras:=nil;
                          consume(_ASSIGNMENT);
                          { read the expression }
-                         if propsym.propdef.typ=procvardef then
-                           getprocvardef:=TProcVarDef(propsym.propdef)
-                         else if is_invokable(propsym.propdef) then
-                           getfuncrefdef:=TObjectDef(propsym.propdef);
+                         if propsym.PropDef.typ=procvardef then
+                           getprocvardef:=TProcVarDef(propsym.PropDef)
+                         else if is_invokable(propsym.PropDef) then
+                           getfuncrefdef:=TObjectDef(propsym.PropDef);
                          p2:=comp_expr([ef_accept_equal]);
                          if Assigned(getprocvardef) then
                            handle_procvar(getprocvardef,p2)
@@ -1462,18 +1462,18 @@ implementation
                          getprocvardef:=nil;
                          getfuncrefdef:=nil;
                        end;
-                     fieldvarsym :
+                     FieldVarSym :
                        begin
                          { generate access code }
                          if not handle_staticfield_access(sym,p1) then
-                           propaccesslist_to_node(p1,st,propaccesslist);
+                           propaccesslist_to_node(p1,st,PropAccessList);
                          include(p1.flags,nf_isproperty);
                          consume(_ASSIGNMENT);
                          { read the expression }
-                         if propsym.propdef.typ=procvardef then
-                           getprocvardef:=TProcVarDef(propsym.propdef)
-                         else if is_invokable(propsym.propdef) then
-                           getfuncrefdef:=TObjectDef(propsym.propdef);
+                         if propsym.PropDef.typ=procvardef then
+                           getprocvardef:=TProcVarDef(propsym.PropDef)
+                         else if is_invokable(propsym.PropDef) then
+                           getfuncrefdef:=TObjectDef(propsym.PropDef);
                          p2:=comp_expr([ef_accept_equal]);
                          if Assigned(getprocvardef) then
                            handle_procvar(getprocvardef,p2)
@@ -1498,20 +1498,20 @@ implementation
            end
          else
            begin
-              if propsym.getpropaccesslist(palt_read,propaccesslist) then
+              if propsym.GetPropAccessList(palt_read,PropAccessList) then
                 begin
-                   sym := propaccesslist.firstsym^.sym;
+                   sym := PropAccessList.FirstSym^.sym;
                    case sym.typ of
-                     fieldvarsym :
+                     FieldVarSym :
                        begin
                          { generate access code }
                          if not handle_staticfield_access(sym,p1) then
-                           propaccesslist_to_node(p1,st,propaccesslist);
+                           propaccesslist_to_node(p1,st,PropAccessList);
                          include(p1.flags,nf_isproperty);
                          { catch expressions like "(propx):=1;" }
                          include(p1.flags,nf_no_lvalue);
                        end;
-                     procsym :
+                     ProcSym :
                        begin
                           callflags:=[];
                           { generate the method call }
@@ -1572,10 +1572,10 @@ implementation
                    DoTypeCheckPass(p1);
                  isclassref:=(p1.resultdef.typ=classrefdef);
                  isrecordtype:=(p1.nodetype=typen) and (p1.resultdef.typ=recorddef);
-                 isobjecttype:=(p1.nodetype=typen) and is_object(p1.resultdef);
-                 ishelpertype:=is_objectpascal_helper(TDef(sym.owner.defowner)) and
+                 isobjecttype:=(p1.nodetype=typen) and Is_Object(p1.resultdef);
+                 ishelpertype:=Is_ObjectPascal_Helper(TDef(sym.owner.DefOwner)) and
                                (p1.nodetype=typen) and
-                               not is_objectpascal_helper(p1.resultdef)
+                               not Is_ObjectPascal_Helper(p1.resultdef)
                                 {and
                                not (cnf_inherited in callflags)};
                end
@@ -1587,13 +1587,13 @@ implementation
                   ishelpertype:=false;
                 end;
 
-              if Assigned(spezcontext) and not (sym.typ=procsym) then
+              if Assigned(spezcontext) and not (sym.typ=ProcSym) then
                 InternalError(2015091801);
 
               { we assume, that only procsyms and varsyms are in an object }
               { symbol table, for classes, properties are allowed          }
               case sym.typ of
-                 procsym:
+                 ProcSym:
                    begin
                       do_proc_call(sym,sym.owner,structh,
                                    (getaddr and not(CurrentScanner.token in [_CARET,_POINT])),
@@ -1605,7 +1605,7 @@ implementation
                       if p1.nodetype=loadn then
                        begin
                          { an instance method }
-                         if not (po_classmethod in TLoadNode(p1).procdef.procoptions) and
+                         if not (po_classmethod in TLoadNode(p1).procdef.ProcOptions) and
                              { into a method pointer (not just taking a code address) }
                              not getaddr and
                              { and the selfarg is... }
@@ -1632,8 +1632,8 @@ implementation
                         begin
                           if not isobjecttype then
                             begin
-                              if not(po_classmethod in TCallNode(p1).procdefinition.procoptions) and
-                                 not(TCallNode(p1).procdefinition.proctypeoption=potype_constructor) then
+                              if not(po_classmethod in TCallNode(p1).procdefinition.ProcOptions) and
+                                 not(TCallNode(p1).procdefinition.ProcTypeOption=potype_constructor) then
                                 Message(parser_e_only_class_members_via_class_ref);
                             end
                           else
@@ -1657,8 +1657,8 @@ implementation
                                         tparent.test;
                                       end;
                               }
-                              if (TCallNode(p1).procdefinition.proctypeoption<>potype_constructor) and
-                                 not(po_staticmethod in TCallNode(p1).procdefinition.procoptions) and
+                              if (TCallNode(p1).procdefinition.ProcTypeOption<>potype_constructor) and
+                                 not(po_staticmethod in TCallNode(p1).procdefinition.ProcOptions) and
                                  (not Assigned(CurrentStructDef) or
                                   not def_is_related(CurrentStructDef,structh)) then
                                 begin
@@ -1676,14 +1676,14 @@ implementation
                             type of the class
                             Note: structh might be Nil in case of a type helper }
                           if Assigned(structh) and
-                              (TCallNode(p1).procdefinition.proctypeoption=potype_constructor) and
-                              (oo_is_abstract in structh.objectoptions) and
+                              (TCallNode(p1).procdefinition.ProcTypeOption=potype_constructor) and
+                              (oo_is_abstract in structh.ObjectOptions) and
                               Assigned(TCallNode(p1).methodpointer) and
                               (TCallNode(p1).methodpointer.nodetype=loadvmtaddrn) then
-                            Message1(type_w_instance_abstract_class,structh.RttiName);
+                            Message1(type_w_instance_abstract_class,structh.RTTIName);
                         end
                    end;
-                 fieldvarsym:
+                 FieldVarSym:
                    begin
                       if not handle_staticfield_access(sym,p1) then
                         begin
@@ -1691,7 +1691,7 @@ implementation
                             if Assigned(p1) and
                               (
                                 is_self_node(p1) or
-                                (Assigned(CurrentProcInfo) and (CurrentProcInfo.get_normal_proc.procdef.no_self_node) and
+                                (Assigned(CurrentProcInfo) and (CurrentProcInfo.get_normal_proc.procdef.No_Self_Node) and
                                 (CurrentProcInfo.procdef.struct=structh))) then
                               Message(parser_e_only_class_members)
                             else
@@ -1701,11 +1701,11 @@ implementation
                    end;
                  propertysym:
                    begin
-                      if isclassref and not (sp_static in sym.symoptions) then
+                      if isclassref and not (sp_static in sym.SymOptions) then
                         Message(parser_e_only_class_members_via_class_ref);
                       handle_propertysym(TPropertySym(sym),sym.owner,p1);
                    end;
-                 typesym:
+                 TypeSym:
                    begin
                      p1.free;
                      if try_to_consume(_LKLAMMER) then
@@ -1717,8 +1717,8 @@ implementation
                      else
                        begin
                          p1:=CTypeNode.create(TTypeSym(sym).typedef);
-                         if (is_class(TTypeSym(sym).typedef) or
-                             is_objcclass(TTypeSym(sym).typedef)) and
+                         if (Is_Class(TTypeSym(sym).typedef) or
+                             Is_ObjCClass(TTypeSym(sym).typedef)) and
                             not(Block_Type in [bt_type,bt_const_type,bt_var_type]) then
                            p1:=CLoadVMTAddrNode.create(p1);
                        end;
@@ -1759,11 +1759,11 @@ implementation
         if not Assigned(srsym) then
           message1(sym_e_id_no_member,CurrentScanner.orgpattern)
         else
-          if not (srsym.typ in [typesym,procsym]) then
+          if not (srsym.typ in [TypeSym,ProcSym]) then
             message(type_e_type_id_expected)
           else
             begin
-              if srsym.typ=typesym then
+              if srsym.typ=TypeSym then
                 spezdef:=TTypeSym(srsym).typedef
               else if TProcSym(srsym).procdeflist.count>0 then
                 spezdef:=TDef(TProcSym(srsym).procdeflist[0])
@@ -1775,7 +1775,7 @@ implementation
                   begin
                     spezcontext.free;
                     spezcontext:=nil;
-                    srsym:=generrorsym;
+                    srsym:=GenErrorSym;
                   end;
                 procdef:
                   begin
@@ -1784,11 +1784,11 @@ implementation
                         message(parser_e_illegal_expression);
                         spezcontext.free;
                         spezcontext:=nil;
-                        srsym:=generrorsym;
+                        srsym:=GenErrorSym;
                       end
                     else
                       begin
-                        srsym:=TProcDef(spezdef).procsym;
+                        srsym:=TProcDef(spezdef).ProcSym;
                         srsymtable:=srsym.owner;
                         nameof_record_sym(srsym);
                         result:=true;
@@ -1802,11 +1802,11 @@ implementation
                     spezdef:=generate_specialization_phase2(spezcontext,TStoredDef(spezdef),false,'');
                     spezcontext.free;
                     spezcontext:=nil;
-                    if spezdef<>generrordef then
+                    if spezdef<>GenErrorDef then
                       begin
-                        srsym:=spezdef.typesym;
+                        srsym:=spezdef.TypeSym;
                         srsymtable:=srsym.owner;
-                        check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                        Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                         nameof_record_sym(srsym);
                         result:=true;
                       end;
@@ -1829,7 +1829,7 @@ implementation
       begin
          spezcontext:=nil;
          if sym=nil then
-           sym:=hdef.typesym;
+           sym:=hdef.TypeSym;
          { allow Ordinal(Value) for type declarations since it
            can be an enumeration declaration or a set lke:
            (OrdinalType(const1)..OrdinalType(const2) }
@@ -1839,7 +1839,7 @@ implementation
             result:=comp_expr([ef_accept_equal]);
             consume(_RKLAMMER);
             { type casts to class helpers aren't allowed }
-            if is_objectpascal_helper(hdef) then
+            if Is_ObjectPascal_Helper(hdef) then
               Message(parser_e_no_category_as_types)
               { recovery by not creating a conversion node }
             else
@@ -1852,7 +1852,7 @@ implementation
           end
          { not LKLAMMER }
          else if (CurrentScanner.token=_POINT) and
-            (is_object(hdef) or is_record(hdef)) then
+            (Is_Object(hdef) or Is_Record(hdef)) then
            begin
              consume(_POINT);
              { handles calling methods declared in parent objects
@@ -1862,7 +1862,7 @@ implementation
                 def_is_related(CurrentStructDef,hdef) then
                begin
                  result:=CTypeNode.create(hdef);
-                 TTypeNode(result).typesym:=sym;
+                 TTypeNode(result).TypeSym:=sym;
                  if not (m_delphi in CurrentSettings.ModeSwitches) and
                      (Block_Type in inline_specialization_block_types) and
                      (CurrentScanner.token=_ID) and
@@ -1876,7 +1876,7 @@ implementation
                  else
                    isspecialize:=false;
                  { search also in inherited methods }
-                 searchsym_in_class(TObjectDef(hdef),TObjectDef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                 SearchSym_In_Class(TObjectDef(hdef),TObjectDef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                  if isspecialize then
                    begin
                      consume(_ID);
@@ -1889,7 +1889,7 @@ implementation
                  else
                    begin
                      if Assigned(srsym) then
-                       check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                       Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                      consume(_ID);
                    end;
                  if result.nodetype<>errorn then
@@ -1905,7 +1905,7 @@ implementation
                     * @TObject.Load
                     * static methods and variables }
                 result:=CTypeNode.create(hdef);
-                TTypeNode(result).typesym:=sym;
+                TTypeNode(result).TypeSym:=sym;
                 if not (m_delphi in CurrentSettings.ModeSwitches) and
                     (Block_Type in inline_specialization_block_types) and
                     (CurrentScanner.token=_ID) and
@@ -1921,7 +1921,7 @@ implementation
                 erroroutresult:=true;
                 { TP allows also @TMenu.Load if Load is only }
                 { defined in an ancestor class               }
-                srsym:=search_struct_member(TAbstractRecordDef(hdef),CurrentScanner.pattern);
+                srsym:=Search_Struct_Member(TAbstractRecordDef(hdef),CurrentScanner.pattern);
                 if isspecialize and Assigned(srsym) then
                   begin
                     consume(_ID);
@@ -1934,9 +1934,9 @@ implementation
                       begin
                         savedfilepos:=CurrentFilePos;
                         consume(_ID);
-                        if not (sp_generic_dummy in srsym.symoptions) or
+                        if not (sp_generic_dummy in srsym.SymOptions) or
                             not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                          check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,savedfilepos)
+                          Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,savedfilepos)
                         else
                           result:=CSpecializeNode.create(result,getaddr,srsym,false);
                         erroroutresult:=false;
@@ -1963,8 +1963,8 @@ implementation
               (for "TClassHelper" alone) and tcallnode.pass_1
               (for "TClassHelper.Something") }
             { class reference ? }
-            if is_class(hdef) or
-               is_objcclass(hdef) then
+            if Is_Class(hdef) or
+               Is_ObjCClass(hdef) then
              begin
                if getaddr and (CurrentScanner.token=_POINT) then
                 begin
@@ -1972,13 +1972,13 @@ implementation
                   { allows @Object.Method }
                   { also allows static methods and variables }
                   result:=CTypeNode.create(hdef);
-                  TTypeNode(result).typesym:=sym;
+                  TTypeNode(result).TypeSym:=sym;
                   { TP allows also @TMenu.Load if Load is only }
                   { defined in an ancestor class               }
-                  srsym:=search_struct_member(TObjectDef(hdef),CurrentScanner.pattern);
+                  srsym:=Search_Struct_Member(TObjectDef(hdef),CurrentScanner.pattern);
                   if Assigned(srsym) then
                    begin
-                     check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                     Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                      consume(_ID);
                      { in case of @Object.Method1.Method2, we have to call
                        Method1 -> create a loadvmtaddr node as self instead of
@@ -1986,7 +1986,7 @@ implementation
                        current method in case Method1 is a constructor, see
                        mantis #24844) }
                      if not(Block_Type in [bt_type,bt_const_type,bt_var_type]) and
-                        (srsym.typ=procsym) and
+                        (srsym.typ=ProcSym) and
                         (CurrentScanner.token in [_CARET,_POINT]) then
                        result:=CLoadVMTAddrNode.create(result);
                      do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil);
@@ -2000,7 +2000,7 @@ implementation
                else
                 begin
                   result:=CTypeNode.create(hdef);
-                  TTypeNode(result).typesym:=sym;
+                  TTypeNode(result).TypeSym:=sym;
                   { For a type block we simply return only
                     the type. For all other blocks we return
                     a loadvmt node }
@@ -2011,7 +2011,7 @@ implementation
             else
               begin
                 result:=CTypeNode.create(hdef);
-                TTypeNode(result).typesym:=sym;
+                TTypeNode(result).TypeSym:=sym;
               end;
           end;
       end;
@@ -2040,10 +2040,10 @@ implementation
           end;
         if (CurrentSettings.MinFPConstPrec=S32Real) and
            (d = Single(d)) then
-          result:=CRealConstNode.create(d,s32floattype)
+          result:=CRealConstNode.create(d,S32FloatType)
         else if (CurrentSettings.MinFPConstPrec=S64Real) and
                 (d = Double(d)) then
-          result:=CRealConstNode.create(d,s64floattype)
+          result:=CRealConstNode.create(d,S64FloatType)
         else
           result:=CRealConstNode.create(d,pbestrealtype^);
         TRealConstNode(result).SetCurrencyLiteral(s);
@@ -2108,7 +2108,7 @@ implementation
            elements.add(p4);
          until not try_to_consume(_COMMA);
 
-         arraydef:=CArrayDef.getreusable(s32inttype,elements.count);
+         arraydef:=CArrayDef.getreusable(S32IntType,elements.count);
          temp:=CTempCreateNode.create(arraydef,arraydef.size,tt_persistent,false);
          addstatement(newstatement,temp);
          for countindices:=0 to elements.count-1 do
@@ -2137,11 +2137,11 @@ implementation
 
              { create call to fpc_vararray_put }
              paras:=CCallParaNode.create(COrdConstNode.create
-                   (countindices,s32inttype,true),
-                CCallParaNode.create(CAddrNode.create_internal
+                   (countindices,S32IntType,true),
+                CCallParaNode.create(CAddrNode.Create_Internal
                (CVecNode.create(CTempRefNode.create(temp),genintconstnode(0))),
-                CCallParaNode.create(CTypeConvNode.create_internal(p4,CVariantType),
-                CCallParaNode.create(CTypeConvNode.create_internal(p1,CVariantType)
+                CCallParaNode.create(CTypeConvNode.Create_Internal(p4,CVariantType),
+                CCallParaNode.create(CTypeConvNode.Create_Internal(p1,CVariantType)
                   ,nil))));
 
              addstatement(newstatement,CCallNode.createintern('fpc_vararray_put',paras));
@@ -2155,8 +2155,8 @@ implementation
 
              { create call to fpc_vararray_get }
              paras:=CCallParaNode.create(COrdConstNode.create
-                   (countindices,s32inttype,true),
-                CCallParaNode.create(CAddrNode.create_internal
+                   (countindices,S32IntType,true),
+                CCallParaNode.create(CAddrNode.Create_Internal
                (CTempRefNode.create(temp)),
                 CCallParaNode.create(p1,
                 CCallParaNode.create(
@@ -2199,7 +2199,7 @@ implementation
                   CAssignmentNode.create(
                     CVecNode.create(
                       CTempRefNode.create(arrnode),
-                      COrdConstNode.create(paracount,arrdef.rangedef,false)),
+                      COrdConstNode.create(paracount,arrdef.RangeDef,false)),
                     comp_expr([ef_accept_equal])));
                 inc(paracount);
               until not try_to_consume(_COMMA);
@@ -2209,25 +2209,25 @@ implementation
             assnode:=nil;
 
           { get temp for array of lengths }
-          temp2:=CTempCreateNode.create(sinttype,sinttype.size,tt_persistent,false);
+          temp2:=CTempCreateNode.create(SIntType,SIntType.size,tt_persistent,false);
           addstatement(newstatement,temp2);
 
           { one dimensional }
           addstatement(newstatement,CAssignmentNode.create(
               CTempRefNode.create(temp2),
               COrdConstNode.create
-                 (paracount,s32inttype,true)));
+                 (paracount,S32IntType,true)));
           { create call to fpc_dynarr_setlength }
           addstatement(newstatement,CCallNode.createintern('fpc_dynarray_setlength',
-              CCallParaNode.create(CAddrNode.create_internal
+              CCallParaNode.create(CAddrNode.Create_Internal
                     (CTempRefNode.create(temp2)),
                  CCallParaNode.create(COrdConstNode.create
-                    (1,s32inttype,true),
-                 CCallParaNode.create(CAddrNode.create_internal
+                    (1,S32IntType,true),
+                 CCallParaNode.create(CAddrNode.Create_Internal
                     (CRTTINode.create(TStoredDef(arrdef),initrtti,rdt_normal)),
                  CCallParaNode.create(
-                   CTypeConvNode.create_internal(
-                     CTempRefNode.create(arrnode),voidpointertype),
+                   CTypeConvNode.Create_Internal(
+                     CTempRefNode.create(arrnode),VoidPointerType),
                    nil))))
 
             ));
@@ -2259,19 +2259,19 @@ implementation
                 if node.nodetype=addrn then
                   { always use the pointer type for addr nodes as otherwise
                     we'll have an anonymous pointertype with no name }
-                  def:=voidpointertype
+                  def:=VoidPointerType
                 else
                   def:=node.resultdef;
-              result:=search_objectpascal_helper(def,nil,CurrentScanner.pattern,srsym,srsymtable);
+              result:=Search_ObjectPascal_Helper(def,nil,CurrentScanner.pattern,srsym,srsymtable);
               if result then
                 begin
-                  if not (srsymtable.symtabletype=objectsymtable) or
-                      not is_objectpascal_helper(TDef(srsymtable.defowner)) then
+                  if not (srsymtable.SymTableType=objectsymtable) or
+                      not Is_ObjectPascal_Helper(TDef(srsymtable.DefOwner)) then
                     InternalError(2013011401);
                   { convert const node to temp node of the extended type }
                   if node.nodetype in (nodetype_const+[addrn]) then
                     begin
-                      extdef:=TObjectDef(srsymtable.defowner).extendeddef;
+                      extdef:=TObjectDef(srsymtable.DefOwner).ExtendedDef;
                       newstatement:=nil;
                       n:=internalstatements(newstatement);
                       temp:=CTempCreateNode.create(extdef,extdef.size,tt_persistent,false);
@@ -2282,7 +2282,7 @@ implementation
                       node:=n;
                       DoTypeCheckPass(node)
                     end;
-                  check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                  Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                   consume(_ID);
                   do_member_read(nil,getaddr,srsym,node,again,[],nil);
                 end;
@@ -2341,7 +2341,7 @@ implementation
                if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                    (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                   (p1.resultdef.typ=procvardef) and
-                  (TProcVarDef(p1.resultdef).returndef.typ=pointerdef) then
+                  (TProcVarDef(p1.resultdef).ReturnDef.typ=pointerdef) then
                  begin
                    p1:=CCallNode.create_procvar(nil,p1);
                    TypeCheckPass(p1);
@@ -2351,7 +2351,7 @@ implementation
                if (m_isolike_io in CurrentSettings.ModeSwitches) and
                  (p1.resultdef.typ=filedef) then
                  begin
-                   case TFileDef(p1.resultdef).filetyp of
+                   case TFileDef(p1.resultdef).FileTyp of
                      ft_text:
                        begin
                          p1:=CDerefNode.create(CCallNode.createintern('fpc_getbuf_text',CCallParaNode.create(p1,nil)));
@@ -2359,8 +2359,8 @@ implementation
                        end;
                      ft_typed:
                        begin
-                         p1:=CDerefNode.create(CTypeConvNode.create_internal(CCallNode.createintern('fpc_getbuf_typedfile',CCallParaNode.create(p1,nil)),
-                           CPointerDef.getreusable(TFileDef(p1.resultdef).typedfiledef)));
+                         p1:=CDerefNode.create(CTypeConvNode.Create_Internal(CCallNode.createintern('fpc_getbuf_typedfile',CCallParaNode.create(p1,nil)),
+                           CPointerDef.getreusable(TFileDef(p1.resultdef).TypedFileDef)));
                          TypeCheckPass(p1);
                        end;
                      else
@@ -2387,18 +2387,18 @@ implementation
                if ((m_tp_procvar in CurrentSettings.ModeSwitches) or
                    (m_mac_procvar in CurrentSettings.ModeSwitches)) and
                   (p1.resultdef.typ=procvardef) and
-                  (TProcVarDef(p1.resultdef).returndef.typ=arraydef) then
+                  (TProcVarDef(p1.resultdef).ReturnDef.typ=arraydef) then
                  begin
                    p1:=CCallNode.create_procvar(nil,p1);
                    TypeCheckPass(p1);
                  end;
 
-               if is_class_or_interface_or_object(p1.resultdef) or
-                  is_dispinterface(p1.resultdef) or
-                  is_record(p1.resultdef) then
+               if Is_Class_Or_Interface_Or_Object(p1.resultdef) or
+                  Is_DispInterface(p1.resultdef) or
+                  Is_Record(p1.resultdef) then
                  begin
                    { default property }
-                   protsym:=search_default_property(TAbstractRecordDef(p1.resultdef));
+                   protsym:=Search_Default_Property(TAbstractRecordDef(p1.resultdef));
                    if not(Assigned(protsym)) then
                      begin
                         p1.free;
@@ -2422,7 +2422,7 @@ implementation
                        pointerdef:
                          begin
                             { support delphi autoderef }
-                            if (TPointerDef(p1.resultdef).pointeddef.typ=arraydef) and
+                            if (TPointerDef(p1.resultdef).PointedDef.typ=arraydef) and
                                (m_autoderef in CurrentSettings.ModeSwitches) then
                               p1:=CDerefNode.create(p1);
                             p2:=comp_expr([ef_accept_equal]);
@@ -2487,7 +2487,7 @@ implementation
                   (m_autoderef in CurrentSettings.ModeSwitches) and
                   { don't auto-deref objc.id, because then the code
                     below for supporting id.anyobjcmethod isn't triggered }
-                  (p1.resultdef<>objc_idtype) then
+                  (p1.resultdef<>ObjC_IDType) then
                  begin
                    p1:=CDerefNode.create(p1);
                    DoTypeCheckPass(p1);
@@ -2592,20 +2592,20 @@ implementation
                      cst_conststring:
                        if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                          if m_default_unicodestring in CurrentSettings.ModeSwitches then
-                           strdef:=cunicodestringtype
+                           strdef:=CUnicodeStringType
                          else
-                           strdef:=cansistringtype
+                           strdef:=CAnsiStringType
                        else
-                         strdef:=cshortstringtype;
+                         strdef:=CShortStringType;
                      cst_shortstring:
-                       strdef:=cshortstringtype;
+                       strdef:=CShortStringType;
                      cst_ansistring:
                        { use getansistringdef? }
-                       strdef:=cansistringtype;
+                       strdef:=CAnsiStringType;
                      cst_widestring:
-                       strdef:=cwidestringtype;
+                       strdef:=CWideStringType;
                      cst_unicodestring:
-                       strdef:=cunicodestringtype;
+                       strdef:=CUnicodeStringType;
                      cst_longstring:
                        { let's see when someone stumbles upon this...}
                        InternalError(201301111);
@@ -2631,7 +2631,7 @@ implementation
                                consume(_ID)
                              else
                                begin
-                                 searchsym_in_record(structh,CurrentScanner.pattern,srsym,srsymtable);
+                                 SearchSym_In_Record(structh,CurrentScanner.pattern,srsym,srsymtable);
                                  consume(_ID);
                                  if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                    erroroutp1:=false;
@@ -2639,14 +2639,14 @@ implementation
                            end
                          else
                            begin
-                             searchsym_in_record(structh,CurrentScanner.pattern,srsym,srsymtable);
+                             SearchSym_In_Record(structh,CurrentScanner.pattern,srsym,srsymtable);
                              if Assigned(srsym) then
                                begin
                                  old_current_filepos:=CurrentFilePos;
                                  consume(_ID);
-                                 if not (sp_generic_dummy in srsym.symoptions) or
+                                 if not (sp_generic_dummy in srsym.SymOptions) or
                                      not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                   check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
+                                   Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
                                  else
                                    p1:=CSpecializeNode.create(p1,getaddr,srsym,false);
                                  erroroutp1:=false;
@@ -2678,7 +2678,7 @@ implementation
                          if Assigned(srsym) and (srsym.typ=enumsym) and (p1.nodetype=typen) then
                            begin
                              p1.free;
-                             check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                             Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                              p1:=genenumnode(TEnumSym(srsym));
                              consume(_ID);
                              nameof_record_sym(srsym);
@@ -2785,7 +2785,7 @@ implementation
                                   p3:=comp_expr([ef_accept_equal]);
                                   { concat value parameter too }
                                   p2:=CCallParaNode.create(p3,p2);
-                                  p1:=translate_disp_call(p1,p2,dct_propput,dispatchstring,0,voidtype);
+                                  p1:=translate_disp_call(p1,p2,dct_propput,dispatchstring,0,VoidType);
                                 end
                               else
                               { this is only an approximation
@@ -2793,7 +2793,7 @@ implementation
                               if afterassignment or in_args or (CurrentScanner.token<>_SEMICOLON) then
                                 p1:=translate_disp_call(p1,p2,calltype,dispatchstring,0,CVariantType)
                               else
-                                p1:=translate_disp_call(p1,p2,calltype,dispatchstring,0,voidtype);
+                                p1:=translate_disp_call(p1,p2,calltype,dispatchstring,0,VoidType);
                             end;
                         end
                       else { Error }
@@ -2805,7 +2805,7 @@ implementation
                       if CurrentScanner.token=_ID then
                         begin
                           srsym:=nil;
-                          structh:=TObjectDef(TClassRefDef(p1.resultdef).pointeddef);
+                          structh:=TObjectDef(TClassRefDef(p1.resultdef).PointedDef);
                           if isspecialize then
                             begin
                               { consume the specialize }
@@ -2814,7 +2814,7 @@ implementation
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2822,14 +2822,14 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if Assigned(srsym) then
                                 begin
                                   old_current_filepos:=CurrentFilePos;
                                   consume(_ID);
-                                  if not (sp_generic_dummy in srsym.symoptions) or
+                                  if not (sp_generic_dummy in srsym.SymOptions) or
                                       not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                    check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
+                                    Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
                                   else
                                     p1:=CSpecializeNode.create(p1,getaddr,srsym,false);
                                   erroroutp1:=false;
@@ -2868,7 +2868,7 @@ implementation
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2876,14 +2876,14 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              SearchSym_In_Class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if Assigned(srsym) then
                                 begin
                                    old_current_filepos:=CurrentFilePos;
                                    consume(_ID);
-                                   if not (sp_generic_dummy in srsym.symoptions) or
+                                   if not (sp_generic_dummy in srsym.SymOptions) or
                                        not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
-                                     check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
+                                     Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,old_current_filepos)
                                    else
                                      p1:=CSpecializeNode.create(p1,getaddr,srsym,false);
                                    erroroutp1:=false;
@@ -2909,12 +2909,12 @@ implementation
                     end;
                   pointerdef:
                     begin
-                      if (p1.resultdef=objc_idtype) then
+                      if (p1.resultdef=ObjC_IDType) then
                         begin
                           { objc's id type can be used to call any
                             Objective-C method of any Objective-C class
                             type that's currently in scope }
-                          if search_objc_method(CurrentScanner.pattern,srsym,srsymtable) then
+                          if Search_ObjC_Method(CurrentScanner.pattern,srsym,srsymtable) then
                             begin
                               consume(_ID);
                               do_proc_call(srsym,srsymtable,nil,
@@ -2934,7 +2934,7 @@ implementation
                           if not try_type_helper(p1,nil) then
                             begin
                               Message(parser_e_invalid_qualifier);
-                              if TPointerDef(p1.resultdef).pointeddef.typ in [recorddef,objectdef,classrefdef] then
+                              if TPointerDef(p1.resultdef).PointedDef.typ in [recorddef,objectdef,classrefdef] then
                                 Message(parser_h_maybe_deref_caret_missing);
                             end;
                         end
@@ -2976,7 +2976,7 @@ implementation
               if is_invokable(p1.resultdef) and
                   (CurrentScanner.token=_LKLAMMER) then
                 begin
-                  if not searchsym_in_class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
+                  if not SearchSym_In_Class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
                     InternalError(2021040202);
                   include(p1.flags,nf_load_procvar);
                   do_proc_call(srsym,srsymtable,TAbstractRecordDef(p1.resultdef),false,again,p1,[],nil);
@@ -3044,11 +3044,11 @@ implementation
         result:=true;
         memberparentdef:=nil;
 
-        case st.symtabletype of
+        case st.SymTableType of
           ObjectSymtable,
           recordsymtable:
             begin
-              memberparentdef:=TDef(st.defowner);
+              memberparentdef:=TDef(st.DefOwner);
               exit;
             end;
           WithSymtable:
@@ -3056,14 +3056,14 @@ implementation
               if Assigned(p1) then
                InternalError(2007012002);
 
-              hdef:=TNode(TWithSymTable(st).withrefnode).resultdef;
-              p1:=TNode(TWithSymTable(st).withrefnode).getcopy;
+              hdef:=TNode(TWithSymTable(st).WithRefNode).resultdef;
+              p1:=TNode(TWithSymTable(st).WithRefNode).GetCopy;
 
               if not(hdef.typ in [objectdef,classrefdef]) then
                 exit;
 
               if (hdef.typ=classrefdef) then
-                hdef:=TClassRefDef(hdef).pointeddef;
+                hdef:=TClassRefDef(hdef).PointedDef;
               memberparentdef:=hdef;
             end;
           else
@@ -3086,13 +3086,13 @@ implementation
         case srsym.typ of
           absolutevarsym :
             begin
-              if (TAbsoluteVarSym(srsym).abstyp=tovar) then
+              if (TAbsoluteVarSym(srsym).AbsTyp=tovar) then
                 begin
                   result:=nil;
                   propaccesslist_to_node(result,nil,TAbsoluteVarSym(srsym).ref);
                   result:=CTypeConvNode.create(result,TAbsoluteVarSym(srsym).vardef);
                   include(result.flags,nf_absolute);
-                  if TAbsoluteVarSym(srsym).vardef=s64currencytype then
+                  if TAbsoluteVarSym(srsym).vardef=S64CurrencyType then
                     { If a Currency type is connected to another type, we have
                       to make sure a scalar is never applied }
                     include(result.flags,nf_is_currency);
@@ -3104,7 +3104,7 @@ implementation
           staticvarsym,
           localvarsym,
           paravarsym,
-          fieldvarsym :
+          FieldVarSym :
             begin
               { check if we are reading a field of an object/class/   }
               { record. is_member_read() will deal with withsymtables }
@@ -3116,13 +3116,13 @@ implementation
                   { objectsymtable, it means it's part of self  }
                   { if only method from which it was called is  }
                   { not class static                            }
-                  if (srsymtable.symtabletype in [ObjectSymtable,recordsymtable]) then
+                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) then
                     { if we are accessing a owner procsym from the nested }
                     { class we need to call it as a class member          }
                     if Assigned(CurrentStructDef) and
-                        (((CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef)) or
-                         (sp_static in srsym.symoptions)) then
-                      if srsymtable.symtabletype=recordsymtable then
+                        (((CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef)) or
+                         (sp_static in srsym.SymOptions)) then
+                      if srsymtable.SymTableType=recordsymtable then
                         result:=CTypeNode.create(hdef)
                       else
                         result:=CLoadVMTAddrNode.create(CTypeNode.create(hdef))
@@ -3131,7 +3131,7 @@ implementation
                         if Assigned(CurrentProcInfo) then
                           begin
                             pd:=CurrentProcInfo.get_normal_proc.procdef;
-                            if Assigned(pd) and pd.no_self_node then
+                            if Assigned(pd) and pd.No_Self_Node then
                               result:=CLoadVMTAddrNode.create(CTypeNode.create(pd.struct))
                             else
                               result:=load_self_node;
@@ -3143,7 +3143,7 @@ implementation
                   { (it can be even if it was found in a withsymtable,  }
                   {  e.g., "with classinstance do field := 5"), then    }
                   { let do_member_read handle it                        }
-                  if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
+                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                     do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil)
                   else
                     { otherwise it's a regular record subscript }
@@ -3159,7 +3159,7 @@ implementation
               result:=statement_syssym(TSysSym(srsym).number);
             end;
 
-          typesym :
+          TypeSym :
             begin
               hdef:=TTypeSym(srsym).typedef;
               if not Assigned(hdef) then
@@ -3169,12 +3169,12 @@ implementation
               else
                begin
                  if (m_delphi in CurrentSettings.ModeSwitches) and
-                     (sp_generic_dummy in srsym.symoptions) and
+                     (sp_generic_dummy in srsym.SymOptions) and
                      (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                    begin
                      if Block_Type in [bt_type,bt_const_type,bt_var_type] then
                        begin
-                         if not handle_specialize_inline_specialization(srsym,unit_found,srsymtable,spezcontext) or (srsym.typ=procsym) then
+                         if not handle_specialize_inline_specialization(srsym,unit_found,srsymtable,spezcontext) or (srsym.typ=ProcSym) then
                            begin
                              spezcontext.free;
                              spezcontext := nil;
@@ -3187,7 +3187,7 @@ implementation
                            end
                          else
                            begin
-                             if srsym.typ<>typesym then
+                             if srsym.typ<>TypeSym then
                                InternalError(2015071705);
                              hdef:=TTypeSym(srsym).typedef;
                              result:=handle_factor_typenode(hdef,getaddr,again,srsym,ef_type_only in flags);
@@ -3199,9 +3199,9 @@ implementation
                  else
                    begin
                      { We need to know if this unit uses Variants }
-                     if ((hdef=CVariantType) or (hdef=colevarianttype)) and
+                     if ((hdef=CVariantType) or (hdef=COleVariantType)) and
                         not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
-                       include(CurrentModule.moduleflags,mf_uses_variants);
+                       include(CurrentModule.ModuleFlags,mf_uses_variants);
                      result:=handle_factor_typenode(hdef,getaddr,again,srsym,ef_type_only in flags);
                    end;
                end;
@@ -3214,24 +3214,24 @@ implementation
 
           constsym :
             begin
-              if TConstSym(srsym).consttyp in [constresourcestring,constwresourcestring]then
+              if TConstSym(srsym).ConstTyp in [constresourcestring,constwresourcestring]then
                 begin
                   result:=CLoadNode.create(srsym,srsymtable);
                   DoTypeCheckPass(result);
                   if is_systemunit_unicode then
-                    result.resultdef:=CStringDef.createunicode(true)
+                    result.resultdef:=CStringDef.CreateUnicode(true)
                   else
-                    result.resultdef:=getansistringdef;
+                    result.resultdef:=GetAnsiStringDef;
                 end
               else
                 result:=genconstsymtree(TConstSym(srsym));
             end;
 
-          procsym :
+          ProcSym :
             begin
               result:=nil;
               if (m_delphi in CurrentSettings.ModeSwitches) and
-                  (sp_generic_dummy in srsym.symoptions) and
+                  (sp_generic_dummy in srsym.SymOptions) and
                   (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                 begin
                   result:=CSpecializeNode.create(nil,getaddr,srsym,unit_found)
@@ -3241,12 +3241,12 @@ implementation
                 begin
                   { if we are accessing a owner procsym from the nested }
                   { class we need to call it as a class member          }
-                  if (srsymtable.symtabletype in [ObjectSymtable,recordsymtable]) and
-                    Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef) then
+                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) and
+                    Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef) then
                     result:=CLoadVMTAddrNode.create(CTypeNode.create(hdef));
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
-                  if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
+                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                     begin
                       do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],spezcontext);
                       spezcontext:=nil;
@@ -3280,22 +3280,22 @@ implementation
               { property of a class/object? }
               if is_member_read(srsym,srsymtable,result,hdef) then
                 begin
-                  if (srsymtable.symtabletype in [ObjectSymtable,recordsymtable]) then
+                  if (srsymtable.SymTableType in [ObjectSymtable,recordsymtable]) then
                     { if we are accessing a owner procsym from the nested }
                     { class or from a static class method we need to call }
                     { it as a class member                                }
-                    if (Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef)) or
-                       (Assigned(CurrentProcInfo) and CurrentProcInfo.get_normal_proc.procdef.no_self_node) then
+                    if (Assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and Is_Owned_By(CurrentStructDef,hdef)) or
+                       (Assigned(CurrentProcInfo) and CurrentProcInfo.get_normal_proc.procdef.No_Self_Node) then
                       begin
                         result:=CTypeNode.create(hdef);
-                        if not is_record(hdef) then
+                        if not Is_Record(hdef) then
                           result:=CLoadVMTAddrNode.create(result);
                       end
                     else
                       result:=load_self_node;
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
-                  if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
+                  if (srsym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                     do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil)
                   else
                     { no propertysyms in records (yet) }
@@ -3313,7 +3313,7 @@ implementation
               { Support @label }
               if getaddr then
                 begin
-                  if srsym.owner<>CurrentProcInfo.procdef.localst then
+                  if srsym.owner<>CurrentProcInfo.procdef.LocalST then
                     CGMessage(parser_e_label_outside_proc);
                   result:=CLoadNode.create(srsym,srsym.owner)
                 end
@@ -3322,10 +3322,10 @@ implementation
                   consume(_COLON);
                   if TLabelSym(srsym).defined then
                     Message(sym_e_label_already_defined);
-                  if SymTableStack.top.symtablelevel<>srsymtable.symtablelevel then
+                  if SymTableStack.top.SymTableLevel<>srsymtable.SymTableLevel then
                     begin
                       include(CurrentProcInfo.flags,pi_has_interproclabel);
-                      if (CurrentProcInfo.procdef.proctypeoption in [potype_unitinit,potype_unitfinalize]) then
+                      if (CurrentProcInfo.procdef.ProcTypeOption in [potype_unitinit,potype_unitfinalize]) then
                         Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                     end;
                   TLabelSym(srsym).defined:=true;
@@ -3343,7 +3343,7 @@ implementation
               srsym := nil;
             end;
 
-          unitsym,
+          UnitSym,
           namespacesym :
             begin
               if nameof_active then
@@ -3391,7 +3391,7 @@ implementation
              hp:=SymTableStack.stack;
              while Assigned(hp) do
                begin
-                 if hp^.SymTable.symtabletype=withsymtable then
+                 if hp^.SymTable.SymTableType=withsymtable then
                    exit;
                  hp:=hp^.next;
                end;
@@ -3440,7 +3440,7 @@ implementation
            { first check for identifier }
            if CurrentScanner.token<>_ID then
              begin
-               srsym:=generrorsym;
+               srsym:=GenErrorSym;
                srsymtable:=nil;
                consume(_ID);
                unit_found:=false;
@@ -3460,14 +3460,14 @@ implementation
                    consume(_ID);
                    consumeid:=false;
                    if CurrentScanner.token<>_POINT then
-                     searchsym_type(storedpattern+CustomAttributeSuffix,srsym,srsymtable);
+                     SearchSym_Type(storedpattern+CustomAttributeSuffix,srsym,srsymtable);
                  end;
                if not Assigned(srsym) then
                  begin
                    if ef_type_only in flags then
-                     searchsym_type(storedpattern,srsym,srsymtable)
+                     SearchSym_Type(storedpattern,srsym,srsymtable)
                    else
-                     searchsym(storedpattern,srsym,srsymtable);
+                     SearchSym(storedpattern,srsym,srsymtable);
                  end;
                { handle unit specification like System.Writeln }
                if not isspecialize then
@@ -3518,7 +3518,7 @@ implementation
                    if not Assigned(srsym) then
                      begin
                        identifier_not_found(orgstoredpattern,tokenpos);
-                       srsym:=generrorsym;
+                       srsym:=GenErrorSym;
                        srsymtable:=nil;
                      end
                    else
@@ -3529,11 +3529,11 @@ implementation
                        {$warn 5036 off}
                        hdef:=generate_specialization_phase1(spezcontext,nil,unit_found,nil,orgstoredpattern,srsymtable,dummypos);
                        {$pop}
-                       if hdef=generrordef then
+                       if hdef=GenErrorDef then
                          begin
                            spezcontext.free;
                            spezcontext:=nil;
-                           srsym:=generrorsym;
+                           srsym:=GenErrorSym;
                            srsymtable:=nil;
                          end
                        else
@@ -3543,14 +3543,14 @@ implementation
                                hdef:=generate_specialization_phase2(spezcontext,TStoredDef(hdef),false,'');
                                spezcontext.free;
                                spezcontext:=nil;
-                               if hdef<>generrordef then
+                               if hdef<>GenErrorDef then
                                  begin
-                                   srsym:=hdef.typesym;
+                                   srsym:=hdef.TypeSym;
                                    srsymtable:=srsym.owner;
                                  end
                                else
                                  begin
-                                   srsym:=generrorsym;
+                                   srsym:=GenErrorSym;
                                    srsymtable:=nil;
                                  end;
                              end
@@ -3559,7 +3559,7 @@ implementation
                                begin
                                  if not(Block_Type in inline_specialization_block_types) then
                                    message(parser_e_illegal_expression);
-                                 srsym:=TProcDef(hdef).procsym;
+                                 srsym:=TProcDef(hdef).ProcSym;
                                  if Assigned(spezcontext.SymTable) then
                                    srsymtable:=spezcontext.SymTable
                                  else
@@ -3573,18 +3573,18 @@ implementation
 
                wasgenericdummy:=false;
                if Assigned(srsym) and
-                   (sp_generic_dummy in srsym.symoptions) and
-                   (srsym.typ in [procsym,typesym]) and
+                   (sp_generic_dummy in srsym.SymOptions) and
+                   (srsym.typ in [ProcSym,TypeSym]) and
                    (
                      (
                        (m_delphi in CurrentSettings.ModeSwitches) and
                        not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                        (
                          (
-                           (srsym.typ=typesym) and
+                           (srsym.typ=TypeSym) and
                            (TTypeSym(srsym).typedef.typ=undefineddef)
                          ) or (
-                           (srsym.typ=procsym) and
+                           (srsym.typ=ProcSym) and
                            (TProcSym(srsym).procdeflist.count=0)
                          )
                        )
@@ -3597,7 +3597,7 @@ implementation
                          not parse_generic or
                          not (
                            Assigned(CurrentStructDef) and
-                           Assigned(get_generic_in_hierarchy_by_name(srsym,CurrentStructDef))
+                           Assigned(Get_Generic_In_Hierarchy_By_Name(srsym,CurrentStructDef))
                          )
                        )
                      )
@@ -3617,46 +3617,46 @@ implementation
                  that is checked in sub_expr if it isn't a generic }
                if Assigned(srsym) and
                    not (
-                     (srsym.typ=typesym) and
+                     (srsym.typ=TypeSym) and
                      (
                        (TTypeSym(srsym).typedef.typ in [recorddef,objectdef,arraydef,procvardef,undefineddef]) or
                        (
                          (TTypeSym(srsym).typedef.typ=errordef) and
-                         (sp_generic_dummy in srsym.symoptions)
+                         (sp_generic_dummy in srsym.SymOptions)
                        )
                      ) and
-                     not (sp_generic_para in srsym.symoptions) and
+                     not (sp_generic_para in srsym.SymOptions) and
                      (CurrentScanner.token in [_LT, _LSHARPBRACKET])
                    ) then
-                 check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,tokenpos);
+                 Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg,tokenpos);
 
                { if nothing found give error and return errorsym }
                if not Assigned(srsym) or
                    { is this a generic dummy symbol? }
-                   ((srsym.typ=typesym) and
+                   ((srsym.typ=TypeSym) and
                    Assigned(TTypeSym(srsym).typedef) and
                    (TTypeSym(srsym).typedef.typ=undefineddef) and
-                   not (sp_generic_para in srsym.symoptions) and
+                   not (sp_generic_para in srsym.SymOptions) and
                    not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                    not (
                      { in non-Delphi modes the generic class' name without a
                        "specialization" or "<T>" may be used to identify the
                        current class }
-                     (sp_generic_dummy in srsym.symoptions) and
+                     (sp_generic_dummy in srsym.SymOptions) and
                      Assigned(CurrentStructDef) and
-                     (df_generic in CurrentStructDef.defoptions) and
+                     (df_generic in CurrentStructDef.DefOptions) and
                      not (m_delphi in CurrentSettings.ModeSwitches) and
-                     Assigned(get_generic_in_hierarchy_by_name(srsym,CurrentStructDef))
+                     Assigned(Get_Generic_In_Hierarchy_By_Name(srsym,CurrentStructDef))
                    )) and
                    { it could be a rename of a generic para }
                    { Note: if this generates false positives we'll need to
                            include a "basesym" to tsym to track the original
                            symbol }
-                   not (sp_explicitrename in srsym.symoptions) then
+                   not (sp_explicitrename in srsym.SymOptions) then
                  begin
                    { if a generic is parsed and when we are inside an with block,
                      a symbol might not be defined }
-                   if Assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.defoptions) and
+                   if Assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.DefOptions) and
                       findwithsymtable then
                      begin
                        { create dummy symbol, it will be freed later on }
@@ -3669,7 +3669,7 @@ implementation
                          messagepos(tokenpos,parser_e_no_generics_as_types)
                        else
                          identifier_not_found(orgstoredpattern,tokenpos);
-                       srsym:=generrorsym;
+                       srsym:=GenErrorSym;
                        srsymtable:=nil;
                      end;
                  end;
@@ -3677,9 +3677,9 @@ implementation
 
            { Access to funcret or need to call the function? }
            if (srsym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-              (vo_is_funcret in TAbstractVarSym(srsym).varoptions) and
+              (vo_is_funcret in TAbstractVarSym(srsym).VarOptions) and
               { result(x) is not allowed }
-              not(vo_is_result in TAbstractVarSym(srsym).varoptions) and
+              not(vo_is_result in TAbstractVarSym(srsym).VarOptions) and
               (
                (CurrentScanner.token=_LKLAMMER) or
                (
@@ -3688,14 +3688,14 @@ implementation
                )
               ) then
             begin
-              hdef:=TDef(srsym.owner.defowner);
+              hdef:=TDef(srsym.owner.DefOwner);
               if Assigned(hdef) and
                  (hdef.typ=procdef) then
-                srsym:=TProcDef(hdef).procsym
+                srsym:=TProcDef(hdef).ProcSym
               else
                 begin
                   Message(parser_e_illegal_expression);
-                  srsym:=generrorsym;
+                  srsym:=GenErrorSym;
                 end;
               srsymtable:=srsym.owner;
             end;
@@ -3762,7 +3762,7 @@ implementation
               not Assigned(CurrentStructDef) or
               not Assigned(CurrentProcInfo) then
              exit;
-           result:=not CurrentProcInfo.get_normal_proc.procdef.no_self_node;
+           result:=not CurrentProcInfo.get_normal_proc.procdef.No_Self_Node;
          end;
 
 
@@ -3839,10 +3839,10 @@ implementation
                  idstr:='';
                  case p1.nodetype of
                    typen:
-                     idstr:=TTypeNode(p1).typesym.name;
+                     idstr:=TTypeNode(p1).TypeSym.name;
                    loadvmtaddrn:
                      if TLoadVMTAddrNode(p1).left.nodetype=typen then
-                       idstr:=TTypeNode(TLoadVMTAddrNode(p1).left).typesym.name;
+                       idstr:=TTypeNode(TLoadVMTAddrNode(p1).left).TypeSym.name;
                    loadn:
                      idstr:=TLoadNode(p1).symtableentry.name;
                    calln:
@@ -3857,7 +3857,7 @@ implementation
            { TP7 ugliness: @proc^ is parsed as (@proc)^, but @notproc^ is parsed
              as @(notproc^) }
            if (m_tp_procvar in CurrentSettings.ModeSwitches) and (CurrentScanner.token=_CARET) and
-              getaddr and (p1.nodetype=loadn) and (TLoadNode(p1).symtableentry.typ=procsym) then
+              getaddr and (p1.nodetype=loadn) and (TLoadNode(p1).symtableentry.typ=ProcSym) then
              dopostfix:=false;
            { maybe an additional parameter instead of misusing hadspezialize? }
            if dopostfix and not (ef_had_specialize in flags) then
@@ -3875,8 +3875,8 @@ implementation
                     begin
                       p1:=comp_expr([ef_accept_equal]);
                       if not Assigned(CurrentProcInfo) or
-                         (CurrentProcInfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
-                         is_void(CurrentProcInfo.procdef.returndef) then
+                         (CurrentProcInfo.procdef.ProcTypeOption in [potype_constructor,potype_destructor]) or
+                         is_void(CurrentProcInfo.procdef.ReturnDef) then
                         begin
                           Message(parser_e_void_function);
                           { recovery }
@@ -3896,40 +3896,40 @@ implementation
                   begin
                     { for record helpers in mode Delphi "inherited" is not
                       allowed }
-                    if is_objectpascal_helper(CurrentStructDef) and
+                    if Is_ObjectPascal_Helper(CurrentStructDef) and
                         (m_delphi in CurrentSettings.ModeSwitches) and
-                        (TObjectDef(CurrentStructDef).helpertype=ht_record) then
+                        (TObjectDef(CurrentStructDef).HelperType=ht_record) then
                       Message(parser_e_inherited_not_in_record);
-                    hclassdef:=TObjectDef(CurrentStructDef).childof;
+                    hclassdef:=TObjectDef(CurrentStructDef).ChildOf;
                     { Objective-C categories *replace* methods in the class
                       they extend, or add methods to it. So calling an
                       inherited method always calls the method inherited from
                       the parent of the extended class }
-                    if is_objccategory(CurrentStructDef) then
-                      hclassdef:=hclassdef.childof;
+                    if Is_ObjCCategory(CurrentStructDef) then
+                      hclassdef:=hclassdef.ChildOf;
                     spezcontext:=nil;
                     { if inherited; only then we need the method with
                       the same name }
                     if CurrentScanner.token <> _ID then
                      begin
-                       hs:=CurrentProcInfo.procdef.procsym.name;
-                       hsorg:=CurrentProcInfo.procdef.procsym.realname;
+                       hs:=CurrentProcInfo.procdef.ProcSym.name;
+                       hsorg:=CurrentProcInfo.procdef.ProcSym.realname;
                        anon_inherited:=true;
                        { For message methods we need to search using the message
                          number or string }
-                       pd:=TProcDef(TProcSym(CurrentProcInfo.procdef.procsym).ProcdefList[0]);
+                       pd:=TProcDef(TProcSym(CurrentProcInfo.procdef.ProcSym).ProcdefList[0]);
                        srdef:=nil;
-                       if (po_msgint in pd.procoptions) then
-                         searchsym_in_class_by_msgint(hclassdef,pd.messageinf.i,srdef,srsym,srsymtable)
+                       if (po_msgint in pd.ProcOptions) then
+                         SearchSym_In_Class_By_MsgInt(hclassdef,pd.MessageInf.i,srdef,srsym,srsymtable)
                        else
-                        if (po_msgstr in pd.procoptions) then
-                          searchsym_in_class_by_msgstr(hclassdef,pd.messageinf.str^,srsym,srsymtable)
+                        if (po_msgstr in pd.ProcOptions) then
+                          SearchSym_In_Class_By_MsgStr(hclassdef,pd.MessageInf.str^,srsym,srsymtable)
                        else
                        { helpers have their own ways of dealing with inherited }
-                       if is_objectpascal_helper(CurrentStructDef) then
-                         searchsym_in_helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                       if Is_ObjectPascal_Helper(CurrentStructDef) then
+                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
-                         searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
+                         SearchSym_In_Class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                      end
                     else
                      begin
@@ -3950,10 +3950,10 @@ implementation
                        consume(_ID);
                        anon_inherited:=false;
                        { helpers have their own ways of dealing with inherited }
-                       if is_objectpascal_helper(CurrentStructDef) then
-                         searchsym_in_helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                       if Is_ObjectPascal_Helper(CurrentStructDef) then
+                         SearchSym_In_Helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
-                         searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
+                         SearchSym_In_Class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                        if isspecialize and Assigned(srsym) then
                          begin
                            if not handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
@@ -3964,16 +3964,16 @@ implementation
                      begin
                        mightbegeneric:=(m_delphi in CurrentSettings.ModeSwitches) and
                                          (CurrentScanner.token in [_LT,_LSHARPBRACKET]) and
-                                         (sp_generic_dummy in srsym.symoptions);
+                                         (sp_generic_dummy in srsym.SymOptions);
                        { load the procdef from the inherited class and
                          not from self }
                        case srsym.typ of
-                         typesym,
-                         procsym:
+                         TypeSym,
+                         ProcSym:
                            begin
                              { typesym is only a valid choice if we're dealing
                                with a potential generic }
-                             if (srsym.typ=typesym) and not mightbegeneric then
+                             if (srsym.typ=TypeSym) and not mightbegeneric then
                                begin
                                  Message(parser_e_methode_id_expected);
                                  p1:=CErrorNode.create;
@@ -3981,37 +3981,37 @@ implementation
                              else
                                begin
                                  useself:=false;
-                                 if is_objectpascal_helper(CurrentStructDef) then
+                                 if Is_ObjectPascal_Helper(CurrentStructDef) then
                                    begin
                                      { for a helper load the procdef either from the
                                        extended type, from the parent helper or from
                                        the extended type of the parent helper
                                        depending on the def the found symbol belongs
                                        to }
-                                     if (srsym.Owner.defowner.typ=objectdef) and
-                                         is_objectpascal_helper(TObjectDef(srsym.Owner.defowner)) then
-                                       if def_is_related(CurrentStructDef,TDef(srsym.Owner.defowner)) and
-                                           Assigned(TObjectDef(CurrentStructDef).childof) then
-                                         hdef:=TObjectDef(CurrentStructDef).childof
+                                     if (srsym.Owner.DefOwner.typ=objectdef) and
+                                         Is_ObjectPascal_Helper(TObjectDef(srsym.Owner.DefOwner)) then
+                                       if def_is_related(CurrentStructDef,TDef(srsym.Owner.DefOwner)) and
+                                           Assigned(TObjectDef(CurrentStructDef).ChildOf) then
+                                         hdef:=TObjectDef(CurrentStructDef).ChildOf
                                        else
                                          begin
-                                           hdef:=TObjectDef(srsym.Owner.defowner).extendeddef;
+                                           hdef:=TObjectDef(srsym.Owner.DefOwner).ExtendedDef;
                                            useself:=true;
                                          end
                                      else
                                        begin
-                                         hdef:=TDef(srsym.Owner.defowner);
+                                         hdef:=TDef(srsym.Owner.DefOwner);
                                          useself:=true;
                                        end;
                                    end
                                  else
                                    hdef:=hclassdef;
-                                 if (po_classmethod in CurrentProcInfo.procdef.procoptions) or
-                                    (po_staticmethod in CurrentProcInfo.procdef.procoptions) then
+                                 if (po_classmethod in CurrentProcInfo.procdef.ProcOptions) or
+                                    (po_staticmethod in CurrentProcInfo.procdef.ProcOptions) then
                                    hdef:=CClassRefDef.create(hdef);
                                  if useself then
                                    begin
-                                     p1:=CTypeConvNode.create_internal(load_self_node,hdef);
+                                     p1:=CTypeConvNode.Create_Internal(load_self_node,hdef);
                                    end
                                  else
                                    begin
@@ -4036,7 +4036,7 @@ implementation
                        else
                          begin
                            if not isspecialize then
-                             check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
+                             Check_Hints(srsym,srsym.SymOptions,srsym.DeprecatedMsg);
                            callflags:=[cnf_inherited];
                            include(CurrentProcInfo.flags,pi_has_inherited);
                            if anon_inherited then
@@ -4054,12 +4054,12 @@ implementation
                        if anon_inherited then
                         begin
                           { For message methods we need to call DefaultHandler }
-                          if (po_msgint in pd.procoptions) or
-                             (po_msgstr in pd.procoptions) then
+                          if (po_msgint in pd.ProcOptions) or
+                             (po_msgstr in pd.ProcOptions) then
                             begin
-                              searchsym_in_class(hclassdef,hclassdef,'DEFAULTHANDLER',srsym,srsymtable,[ssf_search_helper]);
+                              SearchSym_In_Class(hclassdef,hclassdef,'DEFAULTHANDLER',srsym,srsymtable,[ssf_search_helper]);
                               if not Assigned(srsym) or
-                                 (srsym.typ<>procsym) then
+                                 (srsym.typ<>ProcSym) then
                                 InternalError(200303171);
                               p1:=nil;
                               do_proc_call(srsym,srsym.owner,hclassdef,false,again,p1,[],nil);
@@ -4125,7 +4125,7 @@ implementation
                           Message(parser_e_invalid_integer);
                           consume(_INTCONST);
                           l:=1;
-                          p1:=COrdConstNode.create(l,sinttype,true);
+                          p1:=COrdConstNode.create(l,SIntType,true);
                        end
                      else
                        begin
@@ -4183,7 +4183,7 @@ implementation
 
              _FILE :
                begin
-                 hdef:=cfiletype;
+                 hdef:=CFileType;
                  consume(_FILE);
                  { FILE can be also a type cast }
                  if try_to_consume(_LKLAMMER) then
@@ -4214,7 +4214,7 @@ implementation
 
              _CCHAR :
                begin
-                 p1:=COrdConstNode.create(ord(CurrentScanner.pattern[1]),cansichartype,true);
+                 p1:=COrdConstNode.create(ord(CurrentScanner.pattern[1]),CAnsiCharType,true);
                  consume(_CCHAR);
                  if CurrentScanner.token=_POINT then
                    begin
@@ -4226,7 +4226,7 @@ implementation
              _CWSTRING:
                begin
                  if GetLengthWideString(CurrentScanner.patternw)=1 then
-                   p1:=COrdConstNode.create(ord(GetCharWideString(CurrentScanner.patternw,0)),cwidechartype,true)
+                   p1:=COrdConstNode.create(ord(GetCharWideString(CurrentScanner.patternw,0)),CWideCharType,true)
                  else
                    p1:=CStringConstNode.createunistr(CurrentScanner.patternw);
                  consume(_CWSTRING);
@@ -4239,7 +4239,7 @@ implementation
 
              _CWCHAR:
                begin
-                 p1:=COrdConstNode.create(ord(GetCharWideString(CurrentScanner.patternw,0)),cwidechartype,true);
+                 p1:=COrdConstNode.create(ord(GetCharWideString(CurrentScanner.patternw,0)),CWideCharType,true);
                  consume(_CWCHAR);
                  if CurrentScanner.token=_POINT then
                    begin
@@ -4269,7 +4269,7 @@ implementation
                     not
                     (
                      (m_tp_procvar in CurrentSettings.ModeSwitches) and
-                     (CurrentScanner.token=_CARET) and (p1.nodetype=loadn) and (TLoadNode(p1).symtableentry.typ=procsym)
+                     (CurrentScanner.token=_CARET) and (p1.nodetype=loadn) and (TLoadNode(p1).symtableentry.typ=ProcSym)
                     )
                    then
                   begin
@@ -4411,7 +4411,7 @@ implementation
                      getfuncrefdef:=oldfuncrefdef;
                      { assume that we try to get the address except if certain
                        tokens follow that indicate a call }
-                     do_proc_call(pd.procsym,pd.owner,nil,not (CurrentScanner.token in [_POINT,_CARET,_LECKKLAMMER]),
+                     do_proc_call(pd.ProcSym,pd.owner,nil,not (CurrentScanner.token in [_POINT,_CARET,_LECKKLAMMER]),
                                   again,p1,[],nil);
                      { don't allow @<anon func>, but keep the parsing for recovery }
                      if (p1.nodetype<>errorn) and getaddr then
@@ -4479,7 +4479,7 @@ implementation
         if Assigned(p1) and (p1.nodetype=typen) then
           def:=TTypeNode(p1).typedef
         else
-          def:=generrordef;
+          def:=GenErrorDef;
       end;
 
 {****************************************************************************
@@ -4519,10 +4519,10 @@ implementation
         begin
           result:=nil;
           case sym.typ of
-            typesym:
+            TypeSym:
               result:=TTypeSym(sym).typedef;
-            procsym:
-              if not (sp_generic_dummy in sym.symoptions) or (TProcSym(sym).procdeflist.count>0) then
+            ProcSym:
+              if not (sp_generic_dummy in sym.SymOptions) or (TProcSym(sym).procdeflist.count>0) then
                 result:=TDef(TProcSym(sym).procdeflist[0]);
             else
               InternalError(2015092701);
@@ -4536,11 +4536,11 @@ implementation
           srsym:=nil;
           case n.nodetype of
             typen:
-              srsym:=TTypeNode(n).typedef.typesym;
+              srsym:=TTypeNode(n).typedef.TypeSym;
             loadvmtaddrn:
-              srsym:=TTypeNode(TLoadVMTAddrNode(n).left).typedef.typesym;
+              srsym:=TTypeNode(TLoadVMTAddrNode(n).left).typedef.TypeSym;
             loadn:
-              if not searchsym_with_symoption(TLoadNode(n).symtableentry.Name,srsym,srsymtable,sp_generic_dummy) then
+              if not SearchSym_With_SymOption(TLoadNode(n).symtableentry.Name,srsym,srsymtable,sp_generic_dummy) then
                 srsym:=nil;
             calln:
               srsym:=TCallNode(n).symtableprocentry;
@@ -4594,7 +4594,7 @@ implementation
               begin
                 spezcontext.free;
                 spezcontext:=nil;
-                gensym:=generrorsym;
+                gensym:=GenErrorSym;
               end;
             objectdef,
             recorddef,
@@ -4605,20 +4605,20 @@ implementation
                 spezcontext.free;
                 spezcontext:=nil;
                 if gendef.typ=errordef then
-                  gensym:=generrorsym
+                  gensym:=GenErrorSym
                 else
-                  gensym:=gendef.typesym;
+                  gensym:=gendef.TypeSym;
               end;
             procdef:
               begin
                 if not (Block_Type in [bt_body,bt_except]) then
                   begin
                     message(parser_e_illegal_expression);
-                    gensym:=generrorsym;
+                    gensym:=GenErrorSym;
                   end
                 else
                   begin
-                    gensym:=TProcDef(gendef).procsym;
+                    gensym:=TProcDef(gendef).ProcSym;
                   end;
               end;
             else
@@ -4646,7 +4646,7 @@ implementation
                     end;
                   classrefdef:
                     begin
-                      structdef:=TAbstractRecordDef(TClassRefDef(result.resultdef).pointeddef);
+                      structdef:=TAbstractRecordDef(TClassRefDef(result.resultdef).PointedDef);
                     end;
                   else
                     InternalError(2015092703);
@@ -4665,7 +4665,7 @@ implementation
             end
           else
             begin
-              if gensym.typ=procsym then
+              if gensym.typ=ProcSym then
                 begin
                   result:=nil;
                   { check if it's a method/class method }
@@ -4673,12 +4673,12 @@ implementation
                     begin
                       { if we are accessing a owner procsym from the nested }
                       { class we need to call it as a class member }
-                      if (gensym.owner.symtabletype in [ObjectSymtable,recordsymtable]) and
-                          Assigned(CurrentStructDef) and (CurrentStructDef<>parseddef) and is_owned_by(CurrentStructDef,parseddef) then
+                      if (gensym.owner.SymTableType in [ObjectSymtable,recordsymtable]) and
+                          Assigned(CurrentStructDef) and (CurrentStructDef<>parseddef) and Is_Owned_By(CurrentStructDef,parseddef) then
                         result:=CLoadVMTAddrNode.create(CTypeNode.create(parseddef));
                       { not srsymtable.symtabletype since that can be }
                       { withsymtable as well                          }
-                      if (gensym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
+                      if (gensym.owner.SymTableType in [ObjectSymtable,recordsymtable]) then
                         begin
                           do_member_read(TAbstractRecordDef(parseddef),getaddr,gensym,result,again,[],spezcontext);
                           spezcontext:=nil;
@@ -4745,7 +4745,7 @@ implementation
               parseddef:=gettypedef(p2);
 
               { check the hints for parseddef }
-              check_hints(parseddef.typesym,parseddef.typesym.symoptions,parseddef.typesym.deprecatedmsg,p1.fileinfo);
+              Check_Hints(parseddef.TypeSym,parseddef.TypeSym.SymOptions,parseddef.TypeSym.DeprecatedMsg,p1.fileinfo);
 
               ptmp:=generate_inline_specialization(gendef,p1,filepos,parseddef,gensym,p2);
 
@@ -4829,11 +4829,11 @@ implementation
 
                        if p1.nodetype=specializen then
                          begin
-                           genlist:=TFPObjectList(CurrentModule.genericdummysyms.find(TSpecializeNode(p1).sym.name));
+                           genlist:=TFPObjectList(CurrentModule.GenericDummySyms.find(TSpecializeNode(p1).sym.name));
                            if Assigned(genlist) and (genlist.count>0) then
                              begin
-                               gensym:=TGenericDummyEntry(genlist.last).resolvedsym;
-                               check_hints(gensym,gensym.symoptions,gensym.deprecatedmsg,p1.fileinfo);
+                               gensym:=TGenericDummyEntry(genlist.last).ResolvedSym;
+                               Check_Hints(gensym,gensym.SymOptions,gensym.DeprecatedMsg,p1.fileinfo);
 
                                dummyagain:=false;
                                dummyspezctxt:=nil;
@@ -4868,10 +4868,10 @@ implementation
                             but not a generic parameter }
                        if (p1.nodetype=typen) and
                            (TTypeNode(p1).typedef.typ=undefineddef) and
-                           Assigned(TTypeNode(p1).typedef.typesym) and
-                           not (sp_generic_para in TTypeNode(p1).typedef.typesym.symoptions) then
+                           Assigned(TTypeNode(p1).typedef.TypeSym) and
+                           not (sp_generic_para in TTypeNode(p1).typedef.TypeSym.SymOptions) then
                          begin
-                           identifier_not_found(TTypeNode(p1).typedef.typesym.RealName);
+                           identifier_not_found(TTypeNode(p1).typedef.TypeSym.RealName);
                            p1.Free;
                            p1:=CErrorNode.create;
                          end;
@@ -4881,7 +4881,7 @@ implementation
                          begin
                            gendef:=gettypedef(p1);
                            if gendef.typ in [objectdef,recorddef,arraydef,procvardef] then
-                             check_hints(gendef.typesym,gendef.typesym.symoptions,gendef.typesym.deprecatedmsg);
+                             Check_Hints(gendef.TypeSym,gendef.TypeSym.SymOptions,gendef.TypeSym.DeprecatedMsg);
                          end;
 
                        { Note: the second part of the expression will be needed
@@ -4891,7 +4891,7 @@ implementation
                          begin
                            gendef:=gettypedef(p2);
                            if gendef.typ in [objectdef,recorddef,arraydef,procvardef] then
-                             check_hints(gendef.typesym,gendef.typesym.symoptions,gendef.typesym.deprecatedmsg);
+                             Check_Hints(gendef.TypeSym,gendef.TypeSym.SymOptions,gendef.TypeSym.DeprecatedMsg);
                          end;
 
                        { create the comparison node for "<" }
@@ -4916,10 +4916,10 @@ implementation
                        { for now we're handling this as a generic declaration;
                          there could be cases though (because of operator
                          overloading) where this is the wrong decision... }
-                       if gensym.typ=typesym then
+                       if gensym.typ=TypeSym then
                          gendef:=TTypeSym(gensym).typedef
                        else
-                         if gensym.typ=procsym then
+                         if gensym.typ=ProcSym then
                            gendef:=TDef(TProcSym(gensym).procdeflist[0])
                          else
                            InternalError(2015072401);
@@ -5165,7 +5165,7 @@ implementation
         end
       else if (TStringConstNode(p).cst_type in [cst_unicodestring,cst_widestring]) then
          begin
-           pw:=snode.valuews;
+           pw:=snode.ValueWS;
            len:=GetLengthWideString(pw);
            pc:=GetMem(Len+1);
            pc[len]:=#0;

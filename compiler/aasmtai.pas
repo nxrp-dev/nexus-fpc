@@ -384,7 +384,7 @@ interface
           constructor Create;
           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);virtual;
           procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
-          procedure buildderefimpl;virtual;
+          procedure BuildDerefImpl;virtual;
           procedure derefimpl;virtual;
        end;
 
@@ -420,7 +420,7 @@ interface
           destructor Destroy;override;
           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function getcopy:TLinkedListItem;override;
+          function GetCopy:TLinkedListItem;override;
           function len : integer; inline;
        end;
 
@@ -476,7 +476,7 @@ interface
           destructor Destroy; override;
           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function getcopy:TLinkedListItem;override;
+          function GetCopy:TLinkedListItem;override;
        end;
 
        { Generates a section / segment directive }
@@ -577,7 +577,7 @@ interface
           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
-          function getcopy:TLinkedListItem;override;
+          function GetCopy:TLinkedListItem;override;
           function size:LongInt;
           { sleb128 and uleb128 values have a varying length, by calling FixSize their size can be fixed
             to avoid that other offsets need to be changed. The value to write is stored in fixed_size }
@@ -602,7 +602,7 @@ interface
           constructor create_s64compreal(val: Int64);
           constructor ppuload(t: TAIType;ppufile: TCompilerPPUFile); override;
           procedure ppuwrite(ppufile: TCompilerPPUFile); override;
-          function getcopy:TLinkedListItem;override;
+          function GetCopy:TLinkedListItem;override;
           function DataSize: word;
        end;
 
@@ -697,10 +697,10 @@ interface
            is_jmp    : boolean; { is this instruction a jump? (needed for optimizer) }
            Constructor Create(op : TAsmOp);virtual;
            Destructor Destroy;override;
-           function getcopy:TLinkedListItem;override;
+           function GetCopy:TLinkedListItem;override;
            constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-           procedure buildderefimpl;override;
+           procedure BuildDerefImpl;override;
            procedure derefimpl;override;
            procedure SetCondition(const c:TAsmCond);
            procedure allocate_oper(opers:LongInt);
@@ -757,7 +757,7 @@ interface
 {$endif cpu64bitalu}
            constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-           procedure buildderefimpl;override;
+           procedure BuildDerefImpl;override;
            procedure derefimpl;override;
         end;
 
@@ -992,9 +992,9 @@ implementation
       end;
 
 
-    procedure TAIVarLoc.buildderefimpl;
+    procedure TAIVarLoc.BuildDerefImpl;
       begin
-        inherited buildderefimpl;
+        inherited BuildDerefImpl;
       end;
 
 
@@ -1030,7 +1030,7 @@ implementation
       end;
 
 
-    procedure TAI.buildderefimpl;
+    procedure TAI.BuildDerefImpl;
       begin
       end;
 
@@ -1054,14 +1054,14 @@ implementation
     constructor TAILineInfo.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getposinfo(fileinfo);
+        ppufile.GetPosInfo(fileinfo);
       end;
 
 
     procedure TAILineInfo.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putposinfo(fileinfo);
+        ppufile.PutPosInfo(fileinfo);
       end;
 
 
@@ -1187,7 +1187,7 @@ implementation
     constructor TAIDataBlock.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited Create;
-        sym:=ppufile.getasmsymbol;
+        sym:=ppufile.GetAsmSymbol;
         size:=ppufile.GetAInt;
         is_global:=ppufile.GetBoolean;
       end;
@@ -1196,7 +1196,7 @@ implementation
     procedure TAIDataBlock.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putasmsymbol(sym);
+        ppufile.PutAsmSymbol(sym);
         ppufile.PutAInt(size);
         ppufile.PutBoolean(is_global);
       end;
@@ -1297,7 +1297,7 @@ implementation
     constructor TAISymbol.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        sym:=ppufile.getasmsymbol;
+        sym:=ppufile.GetAsmSymbol;
         size:=ppufile.GetLongInt;
         is_global:=ppufile.GetBoolean;
       end;
@@ -1306,7 +1306,7 @@ implementation
     procedure TAISymbol.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putasmsymbol(sym);
+        ppufile.PutAsmSymbol(sym);
         ppufile.PutLongInt(size);
         ppufile.PutBoolean(is_global);
       end;
@@ -1342,14 +1342,14 @@ implementation
     constructor TAISymbolEnd.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        sym:=ppufile.getasmsymbol;
+        sym:=ppufile.GetAsmSymbol;
       end;
 
 
     procedure TAISymbolEnd.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putasmsymbol(sym);
+        ppufile.PutAsmSymbol(sym);
       end;
 
 
@@ -1774,8 +1774,8 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         consttype:=TAIConstType(ppufile.GetByte);
-        sym:=ppufile.getasmsymbol;
-        endsym:=ppufile.getasmsymbol;
+        sym:=ppufile.GetAsmSymbol;
+        endsym:=ppufile.GetAsmSymbol;
         value:=ppufile.GetInt64;
       end;
 
@@ -1784,8 +1784,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.PutByte(byte(consttype));
-        ppufile.putasmsymbol(sym);
-        ppufile.putasmsymbol(endsym);
+        ppufile.PutAsmSymbol(sym);
+        ppufile.PutAsmSymbol(endsym);
         ppufile.PutInt64(value);
       end;
 
@@ -1795,9 +1795,9 @@ implementation
       end;
 
 
-    function TAIConst.getcopy:TLinkedListItem;
+    function TAIConst.GetCopy:TLinkedListItem;
       begin
-        getcopy:=inherited getcopy;
+        GetCopy:=inherited GetCopy;
         { we need to increase the reference number }
         if Assigned(sym) then
           sym.increfs;
@@ -1973,9 +1973,9 @@ implementation
       end;
 
 
-    function TAIRealConst.getcopy: TLinkedListItem;
+    function TAIRealConst.GetCopy: TLinkedListItem;
       begin
-        result:=inherited getcopy;
+        result:=inherited GetCopy;
         TAIRealConst(result).value:=value;
         TAIRealConst(result).realtyp:=realtyp;
         TAIRealConst(result).savesize:=savesize;
@@ -2067,16 +2067,16 @@ implementation
       end;
 
 
-    function TAIString.getcopy : TLinkedListItem;
+    function TAIString.GetCopy : TLinkedListItem;
       var
         p : TLinkedListItem;
         lWriteLen : integer;
       begin
-        p:=inherited getcopy;
+        p:=inherited GetCopy;
         lWriteLen:=length(str);
         SetLength(TAIString(p).str,lWriteLen);
         move(str[0],TAIString(p).str[0],lWriteLen);
-        getcopy:=p;
+        GetCopy:=p;
       end;
 
     function TAIString.len: integer;
@@ -2101,7 +2101,7 @@ implementation
     constructor TAILabel.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        labsym:=TAsmLabel(ppufile.getasmsymbol);
+        labsym:=TAsmLabel(ppufile.GetAsmSymbol);
         ppufile.GetByte; { was is_global flag, now unused }
       end;
 
@@ -2109,7 +2109,7 @@ implementation
     procedure TAILabel.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putasmsymbol(labsym);
+        ppufile.PutAsmSymbol(labsym);
         ppufile.PutByte(0); { was is_global flag, now unused }
       end;
 
@@ -2161,14 +2161,14 @@ implementation
       end;
 
 
-    function TAIComment.getcopy : TLinkedListItem;
+    function TAIComment.GetCopy : TLinkedListItem;
       var
         p : TLinkedListItem;
       begin
-        p:=inherited getcopy;
+        p:=inherited GetCopy;
         GetMem(TAIComment(p).str,StrLen(str)+1);
         move(str^,TAIComment(p).str^,StrLen(str)+1);
-        getcopy:=p;
+        GetCopy:=p;
       end;
 
 
@@ -2668,12 +2668,12 @@ implementation
       end;
 
 
-    Function TAICPUAbstract.getcopy:TLinkedListItem;
+    Function TAICPUAbstract.GetCopy:TLinkedListItem;
       var
         i : LongInt;
         p : TAICPUAbstract;
       begin
-        p:=TAICPUAbstract(inherited getcopy);
+        p:=TAICPUAbstract(inherited GetCopy);
         { make a copy of the references }
         p.opercnt:=0;
         p.allocate_oper(ops);
@@ -2699,7 +2699,7 @@ implementation
                 ;
             end;
           end;
-        getcopy:=p;
+        GetCopy:=p;
       end;
 
 
@@ -2762,7 +2762,7 @@ implementation
       end;
 
 
-    procedure TAICPUAbstract.buildderefimpl;
+    procedure TAICPUAbstract.BuildDerefImpl;
       var
         i : integer;
       begin
@@ -2819,8 +2819,8 @@ implementation
               ppufile.GetData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
               o.ref^.scalefactor:=ppufile.GetByte;
               o.ref^.offset:=ppufile.GetAInt;
-              o.ref^.symbol:=ppufile.getasmsymbol;
-              o.ref^.relsymbol:=ppufile.getasmsymbol;
+              o.ref^.symbol:=ppufile.GetAsmSymbol;
+              o.ref^.relsymbol:=ppufile.GetAsmSymbol;
             end;
           top_const :
             o.val:=ppufile.GetAInt;
@@ -2829,7 +2829,7 @@ implementation
               new(o.localoper);
               with o.localoper^ do
                 begin
-                  ppufile.getderef(localsymderef);
+                  ppufile.GetDeref(localsymderef);
                   localsymofs:=ppufile.GetAInt;
 {$ifdef x86}
                   localsegment:=TRegister(ppufile.GetLongInt);
@@ -2862,8 +2862,8 @@ implementation
               ppufile.PutData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
               ppufile.PutByte(o.ref^.scalefactor);
               ppufile.PutAInt(o.ref^.offset);
-              ppufile.putasmsymbol(o.ref^.symbol);
-              ppufile.putasmsymbol(o.ref^.relsymbol);
+              ppufile.PutAsmSymbol(o.ref^.symbol);
+              ppufile.PutAsmSymbol(o.ref^.relsymbol);
             end;
           top_const :
             ppufile.PutAInt(o.val);
@@ -2871,7 +2871,7 @@ implementation
             begin
               with o.localoper^ do
                 begin
-                  ppufile.putderef(localsymderef);
+                  ppufile.PutDeref(localsymderef);
                   ppufile.PutAInt(localsymofs);
 {$ifdef x86}
                   ppufile.PutLongInt(LongInt(localsegment));

@@ -114,10 +114,10 @@ procedure TI386OnNode.pass_generate_code;
 
     if Assigned(exceptvarsym) then
       begin
-        exceptvarsym.localloc.loc:=LOC_REFERENCE;
-        exceptvarsym.localloc.size:=OS_ADDR;
-        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),voidpointertype,exceptvarsym.localloc.reference);
-        cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.localloc.reference);
+        exceptvarsym.LocAlloc.loc:=LOC_REFERENCE;
+        exceptvarsym.LocAlloc.size:=OS_ADDR;
+        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),VoidPointerType,exceptvarsym.LocAlloc.reference);
+        cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.LocAlloc.reference);
       end;
     cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
@@ -127,8 +127,8 @@ procedure TI386OnNode.pass_generate_code;
     { deallocate exception symbol }
     if Assigned(exceptvarsym) then
       begin
-        tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.localloc.reference);
-        exceptvarsym.localloc.loc:=LOC_INVALID;
+        tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.LocAlloc.reference);
+        exceptvarsym.LocAlloc.loc:=LOC_INVALID;
       end;
     cg.g_call(CurrentAsmData.CurrAsmList,'FPC_DONEEXCEPTION');
     cg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
@@ -165,10 +165,10 @@ constructor TI386TryFinallyNode.create(l, r: TNode);
         behavior causes compilation errors because real nested procedures
         aren't allowed for generics. Not creating them doesn't harm because
         generic node tree is discarded without generating code. }
-      (df_generic in CurrentProcInfo.procdef.defoptions)
+      (df_generic in CurrentProcInfo.procdef.DefOptions)
       then
       exit;
-    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
     { Regvar optimization for symbols is suppressed when using exceptions, but
       temps may be still placed into registers. This must be fixed. }
     foreachnodestatic(r,@reset_regvars,finalizepi);
@@ -184,13 +184,13 @@ constructor TI386TryFinallyNode.create_implicit(l, r: TNode);
       exit;
 
     { safecall procedures can handle implicit finalization as part of "except" flow }
-    if implicitframe and (CurrentProcInfo.procdef.proccalloption=pocall_safecall) then
+    if implicitframe and (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) then
       exit;
 
-    if df_generic in CurrentProcInfo.procdef.defoptions then
+    if df_generic in CurrentProcInfo.procdef.DefOptions then
       InternalError(2013012501);
 
-    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType,r));
     include(finalizepi.flags,pi_has_assembler_block);
     include(finalizepi.flags,pi_do_call);
     include(finalizepi.flags,pi_uses_exceptions);
@@ -205,13 +205,13 @@ function TI386TryFinallyNode.pass_1: TNode;
     if (TargetInfo.system=system_i386_win32) then
       begin
         { safecall method will access 'self' from except block -> make it non-regable }
-        if implicitframe and (CurrentProcInfo.procdef.proccalloption=pocall_safecall) and
-          is_class(CurrentProcInfo.procdef.struct) then
+        if implicitframe and (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall) and
+          Is_Class(CurrentProcInfo.procdef.struct) then
           begin
-            selfsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('self'));
+            selfsym:=TParaVarSym(CurrentProcInfo.procdef.ParaST.Find('self'));
             if (selfsym=nil) or (selfsym.typ<>paravarsym) then
               InternalError(2011123102);
-            selfsym.varregable:=vr_none;
+            selfsym.VarRegable:=vr_none;
           end;
       end;
   end;
@@ -225,7 +225,7 @@ function TI386TryFinallyNode.dogetcopy: TNode;
       begin
         n.finalizepi:=TCGProcInfo(CProcInfo.create(finalizepi.parent));
         n.finalizepi.force_nested;
-        n.finalizepi.procdef:=create_outline_procdef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype);
+        n.finalizepi.procdef:=create_outline_procdef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,VoidType);
         n.finalizepi.entrypos:=finalizepi.entrypos;
         n.finalizepi.entryswitches:=finalizepi.entryswitches;
         n.finalizepi.exitpos:=finalizepi.exitpos;
@@ -234,8 +234,8 @@ function TI386TryFinallyNode.dogetcopy: TNode;
         { node already transformed? }
         if Assigned(finalizepi.code) then
           begin
-            n.finalizepi.code:=finalizepi.code.getcopy;
-            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
+            n.finalizepi.code:=finalizepi.code.GetCopy;
+            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.ProcSym),nil,nil,[],nil);
             FirstPass(n.right);
           end;
       end;
@@ -253,7 +253,7 @@ function TI386TryFinallyNode.simplify(forinline: boolean): TNode;
       begin
         finalizepi.code:=right;
         foreachnodestatic(right,@copy_parasize,finalizepi);
-        right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
+        right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.ProcSym),nil,nil,[],nil);
         FirstPass(right);
         { For implicit frames, no actual code is available at this time,
           it is added later in assembler form. So store the nested procinfo
@@ -326,7 +326,7 @@ procedure TI386TryFinallyNode.pass_generate_code;
     breakfinallylabel:=nil;
     exceptlabel:=nil;
     safecalllabel:=nil;
-    is_safecall:=implicitframe and (CurrentProcInfo.procdef.proccalloption=pocall_safecall);
+    is_safecall:=implicitframe and (CurrentProcInfo.procdef.ProcCallOption=pocall_safecall);
 
     { check if child nodes do a break/continue/exit }
     oldflowcontrol:=flowcontrol;
@@ -372,16 +372,16 @@ procedure TI386TryFinallyNode.pass_generate_code;
           sym,
           exceptlabel
         );
-        CurrentModule.add_extern_asmsym(sym);
+        CurrentModule.Add_Extern_AsmSym(sym);
       end
     else
       begin
         sym:=CurrentAsmData.RefAsmSymbol('__FPC_finally_handler',AT_FUNCTION);
         emit_scope_start(
           sym,
-          CurrentAsmData.RefAsmSymbol(finalizepi.procdef.mangledname,AT_FUNCTION)
+          CurrentAsmData.RefAsmSymbol(finalizepi.procdef.MangledName,AT_FUNCTION)
         );
-        CurrentModule.add_extern_asmsym(sym);
+        CurrentModule.Add_Extern_AsmSym(sym);
       end;
 
     { try code }
@@ -551,7 +551,7 @@ procedure TI386TryExceptNode.pass_generate_code;
         emit_scope_start(
           sym,
           filterlabel);
-        CurrentModule.add_extern_asmsym(sym);
+        CurrentModule.Add_Extern_AsmSym(sym);
       end
     else
       begin
@@ -559,7 +559,7 @@ procedure TI386TryExceptNode.pass_generate_code;
         emit_scope_start(
           sym,
           exceptlabel);
-        CurrentModule.add_extern_asmsym(sym);
+        CurrentModule.Add_Extern_AsmSym(sym);
       end;
 
     { set control flow labels for the try block }
@@ -627,10 +627,10 @@ procedure TI386TryExceptNode.pass_generate_code;
             if hnode.nodetype<>onn then
               InternalError(2011103101);
             CurrentAsmData.getjumplabel(onlabel);
-            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.vmt_mangledname,AT_DATA,true);
+            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.VMT_MangledName,AT_DATA,true);
             hlist.concat(TAIConst.create_sym(sym));
             hlist.concat(TAIConst.create_sym(onlabel));
-            CurrentModule.add_extern_asmsym(sym);
+            CurrentModule.Add_Extern_AsmSym(sym);
             cg.a_label(CurrentAsmData.CurrAsmList,onlabel);
             SecondPass(hnode);
             inc(onnodecount.value);

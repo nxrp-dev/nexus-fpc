@@ -628,7 +628,7 @@ unit rgobj;
         generate_interference_graph(list,headertai);
 {$ifdef DEBUG_SPILLCOALESCE}
         if maxreg>first_imaginary then
-          WriteLn(CurrentProcInfo.procdef.mangledname, ': register allocation [',regtype,']');
+          WriteLn(CurrentProcInfo.procdef.MangledName, ': register allocation [',regtype,']');
 {$endif DEBUG_SPILLCOALESCE}
 {$ifdef DEBUG_REGALLOC}
         if maxreg>first_imaginary then
@@ -766,9 +766,9 @@ unit rgobj;
     var f:text;
         i,j:cardinal;
     begin
-      assign(f,OutputUnitDir+CurrentProcInfo.procdef.mangledname+'_igraph'+ToStr(loopidx));
+      assign(f,OutputUnitDir+CurrentProcInfo.procdef.MangledName+'_igraph'+ToStr(loopidx));
       rewrite(f);
-      WriteLn(f,'Interference graph of ',CurrentProcInfo.procdef.fullprocname(true));
+      WriteLn(f,'Interference graph of ',CurrentProcInfo.procdef.FullProcName(true));
       WriteLn(f,'Register type: ',regtype,', First imaginary register is ',first_imaginary,' ($',HexStr(first_imaginary,2),')');
       WriteLn(f);
       write(f,'                                   ');
@@ -3035,7 +3035,7 @@ unit rgobj;
         if spillingcounter>0 then
           begin
             d:=(1.0-spill_weight/all_weight)*100.0;
-            WriteLn(CurrentProcInfo.procdef.mangledname,' [',regtype,']: spill stats: NUM: ',spillingcounter, ', EFF: ',d:4:1,'%');
+            WriteLn(CurrentProcInfo.procdef.MangledName,' [',regtype,']: spill stats: NUM: ',spillingcounter, ', EFF: ',d:4:1,'%');
           end;
       end;
 {$endif DEBUG_SPILLCOALESCE}

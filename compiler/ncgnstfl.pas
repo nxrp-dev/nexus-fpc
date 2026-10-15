@@ -47,14 +47,14 @@ implementation
         result:=inherited;
         if (m_non_local_goto in CurrentSettings.ModeSwitches) and
            Assigned(labelsym) and
-           Assigned(labelsym.jumpbuf) then
+           Assigned(labelsym.JumpBuf) then
           begin
             { we will access this jumpbuf local variable from a nested context,
               but the loadnode to do so only gets created in pass_1. This is too
               late for us to detect that it should have been added to the
               parentfpstruct, so temporarily create and typecheckpass a load
               node for the jumpbuf here (so that it can be added now) }
-            with CLoadNode.create(labelsym.jumpbuf,labelsym.jumpbuf.Owner) do
+            with CLoadNode.create(labelsym.JumpBuf,labelsym.JumpBuf.Owner) do
               begin
                 pass_typecheck;
                 free

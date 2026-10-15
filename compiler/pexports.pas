@@ -82,7 +82,7 @@ implementation
         end;
 
       begin
-         include(CurrentModule.moduleflags,mf_has_exports);
+         include(CurrentModule.ModuleFlags,mf_has_exports);
          DefString:='';
          InternalProcName:='';
          consume(_EXPORTS);
@@ -97,27 +97,27 @@ implementation
                 InternalProcName:='';
                 case srsym.typ of
                   staticvarsym :
-                    InternalProcName:=TStaticVarSym(srsym).mangledname;
-                  procsym :
+                    InternalProcName:=TStaticVarSym(srsym).MangledName;
+                  ProcSym :
                     begin
                       pd:=TProcDef(TProcSym(srsym).ProcdefList[0]);
                       if (TProcSym(srsym).ProcdefList.Count>1) or
-                         (po_kylixlocal in pd.procoptions) or
+                         (po_kylixlocal in pd.ProcOptions) or
                          ((tf_need_export in TargetInfo.flags) and
-                          not(po_exports in pd.procoptions)) then
+                          not(po_exports in pd.ProcOptions)) then
                         Message(parser_e_illegal_symbol_exported)
                       else
-                        InternalProcName:=pd.mangledname;
+                        InternalProcName:=pd.MangledName;
                     end;
-                  typesym :
+                  TypeSym :
                     begin
-                      if not is_objcclass(TTypeSym(srsym).typedef) then
+                      if not Is_ObjCClass(TTypeSym(srsym).typedef) then
                         Message(parser_e_illegal_symbol_exported)
                     end;
                   else
                     Message(parser_e_illegal_symbol_exported)
                 end;
-                if (srsym.typ<>typesym) then
+                if (srsym.typ<>TypeSym) then
                   begin
                     if InternalProcName<>'' then
                      begin
@@ -194,7 +194,7 @@ implementation
                 // consumed the symbol. Only do something if there was no error.
                 if ErrorCount=0 then
                   case srsym.typ of
-                    procsym:
+                    ProcSym:
                       begin
                        { if no specific name or index was given, then if }
                        { the procedure has aliases defined export those, }
@@ -203,7 +203,7 @@ implementation
                        { the generic mangled name, because the name of   }
                        { the parent unit is used in that)                }
                        if (options*[eo_name,eo_index]=[]) and
-                          (TProcDef(TProcSym(srsym).procdeflist[0]).aliasnames.count>1) then
+                          (TProcDef(TProcSym(srsym).procdeflist[0]).AliasNames.count>1) then
                          exportallprocsymnames(TProcSym(srsym),options)
                        else
                          begin
@@ -218,10 +218,10 @@ implementation
                                hpname:=orgs
                              { Use set mangled name in case of cdecl/cppdecl/mwpascal }
                              { and no name specified                                  }
-                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
+                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).ProcCallOption in [pocall_cdecl,pocall_mwpascal]) then
                                hpname:=TargetInfo.cprefix+TProcSym(srsym).realname
-                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).proccalloption in [pocall_cppdecl]) then
-                               hpname:=TargetInfo.cprefix+TProcDef(TProcSym(srsym).procdeflist[0]).cplusplusmangledname
+                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).ProcCallOption in [pocall_cppdecl]) then
+                               hpname:=TargetInfo.cprefix+TProcDef(TProcSym(srsym).procdeflist[0]).CPlusPlusMangledName
                              else
                                hpname:=orgs;
 
@@ -232,17 +232,17 @@ implementation
                       begin
                         if not (eo_name in options) then
                           { for "cvar" }
-                          if (vo_has_mangledname in TStaticVarSym(srsym).varoptions) then
-                            hpname:=srsym.mangledname
+                          if (vo_has_mangledname in TStaticVarSym(srsym).VarOptions) then
+                            hpname:=srsym.MangledName
                           else
                             hpname:=orgs;
                         exportvarsym(srsym,hpname,index,options);
                       end;
-                    typesym:
+                    TypeSym:
                       begin
                         case TTypeSym(srsym).typedef.typ of
                           objectdef:
-                            case TObjectDef(TTypeSym(srsym).typedef).objecttype of
+                            case TObjectDef(TTypeSym(srsym).typedef).ObjectType of
                               odt_objcclass:
                                 exportobjcclass(TObjectDef(TTypeSym(srsym).typedef));
                               else

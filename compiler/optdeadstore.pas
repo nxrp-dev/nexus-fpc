@@ -61,17 +61,17 @@ unit optdeadstore;
                    { node must be either a local or parameter load node }
                    (a.left.nodetype=loadn) and
                    { its address cannot have escaped the current routine }
-                   not(TAbstractVarSym(TLoadNode(a.left).symtableentry).addr_taken) and
+                   not(TAbstractVarSym(TLoadNode(a.left).symtableentry).AddrTaken) and
                    ((
                      (TLoadNode(a.left).symtableentry.typ=localvarsym) and
-                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.localst)) or
+                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.LocalST)) or
                     ((TLoadNode(a.left).symtableentry.typ=paravarsym) and
-                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.parast) and
-                     (TParaVarSym(TLoadNode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
+                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.ParaST) and
+                     (TParaVarSym(TLoadNode(a.left).symtableentry).VarSpez in [vs_const,vs_value])) or
                     ((TLoadNode(a.left).symtableentry.typ=staticvarsym) and
-                     (TLoadNode(a.left).SymTable.symtabletype=staticsymtable) and
-                     (CurrentProcInfo.procdef.proctypeoption<>potype_unitinit) and
-                     not(vsa_different_scope in TStaticVarSym(TLoadNode(a.left).symtableentry).varsymaccess)
+                     (TLoadNode(a.left).SymTable.SymTableType=staticsymtable) and
+                     (CurrentProcInfo.procdef.ProcTypeOption<>potype_unitinit) and
+                     not(vsa_different_scope in TStaticVarSym(TLoadNode(a.left).symtableentry).VarSymAccess)
                     )
                    ) and
                     ((a.right.nodetype in [niln,stringconstn,pointerconstn,setconstn,guidconstn]) or

@@ -52,10 +52,10 @@ implementation
     function TX86RealConstNode.pass_1 : TNode;
       begin
          result:=nil;
-         if Is_Number_Float(value_real) and not(use_vectorfpu(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (Get_Real_Sign(value_real)=1)) or
+         if Is_Number_Float(value_real) and not(Use_VectorFPU(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (Get_Real_Sign(value_real)=1)) or
            ((value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches))) then
            expectloc:=LOC_FPUREGISTER
-         else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) and use_vectorfpu(resultdef) then
+         else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) and Use_VectorFPU(resultdef) then
            expectloc:=LOC_MMREGISTER
          else
            expectloc:=LOC_CREFERENCE;
@@ -66,14 +66,14 @@ implementation
       begin
          if Is_Number_Float(value_real) then
            begin
-             if (value_real=1.0) and not(use_vectorfpu(resultdef)) then
+             if (value_real=1.0) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
                   location.register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(use_vectorfpu(resultdef)) then
+             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_reg_reg(A_FADD,S_NO,NR_ST,NR_ST);
@@ -81,7 +81,7 @@ implementation
                   location.register:=NR_ST;
                   TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=-1.0) and not(use_vectorfpu(resultdef)) then
+             else if (value_real=-1.0) and not(Use_VectorFPU(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_none(A_FCHS,S_NO);
@@ -91,7 +91,7 @@ implementation
                end
              else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) then
                begin
-                 if use_vectorfpu(resultdef) then
+                 if Use_VectorFPU(resultdef) then
                    begin
                      location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
                      location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,def_cgsize(resultdef));

@@ -217,7 +217,7 @@ unit opttree;
                             DoFirstPass(TNode(tempcreatenode));
 
                             { rewrite block's last expression: "temp := <expr>" }
-                            res^:=CAssignmentNode.create_internal(CTempRefNode.create(tempcreatenode),res^);
+                            res^:=CAssignmentNode.Create_Internal(CTempRefNode.create(tempcreatenode),res^);
                             DoFirstPass(res^);
                             { replace blockn in source expression with a temprefn }
                             movedblock:=n;

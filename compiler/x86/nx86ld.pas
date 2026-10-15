@@ -64,12 +64,12 @@ implementation
             if TargetInfo.system in [system_i386_win32,system_x86_64_win64] then
               begin
                 paraloc1.init;
-                pd:=search_system_proc('fpc_tls_add');
+                pd:=Search_System_Proc('fpc_tls_add');
                 paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
-                if not(vo_is_weak_external in gvs.varoptions) then
-                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
+                if not(vo_is_weak_external in gvs.VarOptions) then
+                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.MangledName,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
                 else
-                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(PInt),[]);
+                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.MangledName,AT_DATA),0,sizeof(PInt),[]);
                 cg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,href,paraloc1);
                 paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
                 paraloc1.done;

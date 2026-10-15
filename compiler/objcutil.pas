@@ -116,21 +116,21 @@ end;
       var
         vs         : TSym;
       begin
-        vs:=TSym(TAbstractRecordDef(objc_objecttype).SymTable.Find(fieldname));
+        vs:=TSym(TAbstractRecordDef(ObjC_ObjectType).SymTable.Find(fieldname));
         if not Assigned(vs) or
-           (vs.typ<>fieldvarsym) then
+           (vs.typ<>FieldVarSym) then
           InternalError(200911301);
         if fieldname='ISA' then
-          result:=CTypeConvNode.create_internal(
+          result:=CTypeConvNode.Create_Internal(
             CDerefNode.create(
-              CTypeConvNode.create_internal(n,
-                CPointerDef.getreusable(CPointerDef.getreusable(voidpointertype))
+              CTypeConvNode.Create_Internal(n,
+                CPointerDef.getreusable(CPointerDef.getreusable(VoidPointerType))
               )
             ),TFieldVarSym(vs).vardef
           )
         else
           begin
-            result:=CDerefNode.create(CTypeConvNode.create_internal(n,objc_idtype));
+            result:=CDerefNode.create(CTypeConvNode.Create_Internal(n,ObjC_IDType));
             result:=CSubscriptNode.create(vs,result);
           end;
       end;
@@ -141,14 +141,14 @@ end;
         para       : TCallParaNode;
       begin
         { only valid for Objective-C classes and classrefs }
-        if not is_objcclass(def) and
-           not is_objcclassref(def) then
+        if not Is_ObjCClass(def) and
+           not Is_ObjCClassRef(def) then
           InternalError(2009090901);
         { Can be done a lot more efficiently with direct symbol accesses, but
           requires extra node types. Maybe later. }
-        if is_objcclassref(def) then
+        if Is_ObjCClassRef(def) then
           begin
-            if (oo_is_classhelper in TObjectDef(TClassRefDef(def).pointeddef).objectoptions) then
+            if (oo_is_classhelper in TObjectDef(TClassRefDef(def).PointedDef).ObjectOptions) then
               begin
                 { in case we are in a category method, we need the metaclass of the
                   superclass class extended by this category (= metaclass of superclass of superclass)
@@ -158,9 +158,9 @@ end;
                 if (TargetInfo.system in systems_objc_nfabi) and
                    (not MacOSXVersionMin.IsValid or
                     (MacOSXVersionMin.RelationTo(10,6,0)>=0)) then
-                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).pointeddef).childof))
+                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).PointedDef).ChildOf))
                 else
-                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).pointeddef).childof.childof));
+                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).PointedDef).ChildOf.ChildOf));
                 TLoadVMTAddrNode(result).forcall:=true;
                 result:=CLoadVMTAddrNode.create(result);
                 TypeCheckPass(result);
@@ -170,16 +170,16 @@ end;
             else
               begin
                 { otherwise we need the superclass of the metaclass }
-                para:=CCallParaNode.create(CStringConstNode.createstr(TObjectDef(TClassRefDef(def).pointeddef).objextname^),nil);
+                para:=CCallParaNode.create(CStringConstNode.createstr(TObjectDef(TClassRefDef(def).PointedDef).ObjExtName^),nil);
                 result:=CCallNode.createinternfromunit('OBJC','OBJC_GETMETACLASS',para);
               end
           end
         else
           begin
-            if not(oo_is_classhelper in TObjectDef(def).objectoptions) then
+            if not(oo_is_classhelper in TObjectDef(def).ObjectOptions) then
               result:=CLoadVMTAddrNode.create(CTypeNode.create(def))
             else
-              result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(def).childof));
+              result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(def).ChildOf));
             TLoadVMTAddrNode(result).forcall:=true;
           end;
 
@@ -202,7 +202,7 @@ end;
 
     function objcparasize(vs: TParaVarSym): ptrint;
       begin
-        result:=vs.paraloc[callerside].intsize;
+        result:=vs.ParaLoc[callerside].intsize;
         { In Objective-C, all ordinal types are widened to at least the
           size of the C "int" type. Assume __LP64__/4 byte ints for now. }
         if is_ordinal(vs.vardef) and
@@ -222,20 +222,20 @@ end;
       begin
         result:='';
         totalsize:=0;
-        pd.init_paraloc_info(callerside);
+        pd.Init_ParaLoc_Info(callerside);
         for i:=0 to pd.paras.count-1 do
           begin
             vs:=TParaVarSym(pd.paras[i]);
-            if (vo_is_funcret in vs.varoptions) then
+            if (vo_is_funcret in vs.VarOptions) then
               continue;
             { objcaddencodedtype always assumes a value parameter, so add
               a pointer indirection for var/out parameters.  }
             if not paramanager.push_addr_param(vs_value,vs.vardef,pocall_cdecl) and
-               (vs.varspez in [vs_var,vs_out,vs_constref]) then
+               (vs.VarSpez in [vs_var,vs_out,vs_constref]) then
               result:=result+'^';
             { Add the parameter type.  }
-            if (vo_is_parentfp in vs.varoptions) and
-               (po_is_block in pd.procoptions) then
+            if (vo_is_parentfp in vs.VarOptions) and
+               (po_is_block in pd.ProcOptions) then
               { special case: self parameter of block procvars has to be @? }
               result:=result+'@?'
             else if not objcaddencodedtype(vs.vardef,ris_initial,false,result,founderror) then
@@ -252,7 +252,7 @@ end;
         result:=ToStr(totalsize)+result;
         { And the type of the function result (void in case of a procedure).  }
         temp:='';
-        if not objcaddencodedtype(pd.returndef,ris_initial,false,temp,founderror) then
+        if not objcaddencodedtype(pd.ReturnDef,ris_initial,false,temp,founderror) then
           InternalError(2009081801);
         result:=temp+result;
       end;
@@ -268,9 +268,9 @@ end;
       vf: TFieldVarSym;
       prefix: string;
     begin
-      prefix:=TargetInfo.cprefix+'OBJC_IVAR_$_'+objccls.objextname^+'.';
+      prefix:=TargetInfo.cprefix+'OBJC_IVAR_$_'+objccls.ObjExtName^+'.';
       for i:=0 to objccls.SymTable.SymList.Count-1 do
-        if TSym(objccls.SymTable.SymList[i]).typ=fieldvarsym then
+        if TSym(objccls.SymTable.SymList[i]).typ=FieldVarSym then
           begin
             vf:=TFieldVarSym(objccls.SymTable.SymList[i]);
             { TODO: package visibility (private_extern) -- must not be exported
@@ -294,7 +294,7 @@ end;
         else
           begin
              { export the class symbol }
-             exportname('.objc_class_name_'+def.objextname^,[]);
+             exportname('.objc_class_name_'+def.ObjExtName^,[]);
           end;
       end;
 
