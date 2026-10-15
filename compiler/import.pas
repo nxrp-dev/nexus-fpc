@@ -25,10 +25,10 @@ unit import;
 interface
 
 uses
-  systems;
+  Systems;
 
 type
-   timportlib=class
+   TImportLib=class
    private
       notsupmsg : boolean;
       procedure NotSupported;
@@ -59,24 +59,24 @@ procedure DoneImport;
 implementation
 
 uses
-  verbose,globals;
+  Verbose,Globals;
 
 {****************************************************************************
                               TImportLib
 ****************************************************************************}
 
-constructor timportlib.Create;
+constructor TImportLib.Create;
 begin
   notsupmsg:=false;
 end;
 
 
-destructor timportlib.Destroy;
+destructor TImportLib.Destroy;
 begin
 end;
 
 
-procedure timportlib.NotSupported;
+procedure TImportLib.NotSupported;
 begin
   { show the message only once }
   if not notsupmsg then
@@ -87,7 +87,7 @@ begin
 end;
 
 
-procedure timportlib.generatelib;
+procedure TImportLib.generatelib;
 begin
   NotSupported;
 end;
@@ -111,7 +111,7 @@ end;
 
 procedure InitImport;
 begin
-  if assigned(CImportLib[Ord(TargetInfo.system)]) then
+  if Assigned(CImportLib[Ord(TargetInfo.system)]) then
    importlib:=CImportLib[Ord(TargetInfo.system)].Create
   else
    importlib:=TImportLib.Create;
@@ -120,7 +120,7 @@ end;
 
 procedure DoneImport;
 begin
-  if assigned(importlib) then
+  if Assigned(importlib) then
     importlib.free;
     importlib := nil;
 end;

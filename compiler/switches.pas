@@ -26,32 +26,32 @@ unit switches;
 interface
 
 uses
-  systems,globtype;
+  Systems,GlobType;
 
-procedure HandleSwitch(switch,state:char);
-function CheckSwitch(switch,state:char):boolean;
-function IsRecognizedSwitch(switch:char):boolean;
+procedure HandleSwitch(Switch,State:Char);
+function CheckSwitch(Switch,State:Char):Boolean;
+function IsRecognizedSwitch(Switch:Char):Boolean;
 
-procedure recordpendingverbosityswitch(sw: char; state: char);
-procedure recordpendingmessagestate(msg: longint; state: TMsgState);
-procedure recordpendinglocalswitch(sw: TLocalSwitch; state: char);
-procedure recordpendinglocalfullswitch(const switches: TLocalSwitches);
-procedure recordpendingverbosityfullswitch(verbosity: longint);
-procedure recordpendingcallingswitch(const str: shortstring);
-procedure recordpendingalignmentfullswitch(const alignment : TAlignmentInfo);
-procedure recordpendingsetalloc(alloc:shortint);
-procedure recordpendingpackenum(size:shortint);
-procedure recordpendingpackrecords(size:shortint);
-procedure recordpendingasmmode(asmmode:tasmmode);
-procedure recordpendingoptimizerswitches(optimizerswitches:TOptimizerSwitches);
-procedure flushpendingswitchesstate;
+procedure RecordPendingVerbositySwitch(SW: Char; State: Char);
+procedure RecordPendingMessageState(Msg: LongInt; State: TMsgState);
+procedure RecordPendingLocalSwitch(SW: TLocalSwitch; State: Char);
+procedure RecordPendingLocalFullSwitch(const Switches: TLocalSwitches);
+procedure RecordPendingVerbosityFullSwitch(Verbosity: LongInt);
+procedure RecordPendingCallingSwitch(const Str: ShortString);
+procedure RecordPendingAlignmentFullSwitch(const Alignment : TAlignmentInfo);
+procedure RecordPendingSetAlloc(Alloc:ShortInt);
+procedure RecordPendingPackEnum(Size:ShortInt);
+procedure RecordPendingPackRecords(Size:ShortInt);
+procedure RecordPendingAsmMode(AsmMode:TAsmMode);
+procedure RecordPendingOptimizerSwitches(OptimizerSwitches:TOptimizerSwitches);
+procedure FlushPendingSwitchesState;
 
 implementation
 uses
-  cpuinfo,
+  CPUInfo,
 
-  globals,verbose,comphook,dirparse,cclasses,
-  fmodule;
+  Globals,Verbose,CompHook,DirParse,CClasses,
+  FModule;
 
 {****************************************************************************
                           Main Switches Parsing
@@ -60,455 +60,457 @@ uses
 type
   TSwitchType=(ignoredsw,unknownsw,localsw,modulesw,globalsw,illegalsw,removedsw,unsupportedsw,alignsw,optimizersw,packenumsw,pentiumfdivsw,targetsw);
   SwitchRec=record
-    typesw : TSwitchType;
-    setsw  : byte;
+    TypeSW : TSwitchType;
+    SetSW  : Byte;
   end;
-  SwitchRecTable = array['A'..'Z'] of SwitchRec;
+  TSwitchRec = SwitchRec;
+  SwitchRecTable = array['A'..'Z'] of TSwitchRec;
+  TSwitchRecTable = SwitchRecTable;
 
 const
-  turboSwitchTable: SwitchRecTable =(
-   {A} (typesw:alignsw; setsw:ord(cs_localnone)),
-   {B} (typesw:localsw; setsw:ord(cs_full_boolean_eval)),
-   {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
-   {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
-   {E} (typesw:unknownsw; setsw:ord(cs_localnone)),
+  TurboSwitchTable: TSwitchRecTable =(
+   {A} (TypeSW:AlignSW; SetSW:Ord(cs_localnone)),
+   {B} (TypeSW:LocalSW; SetSW:Ord(cs_full_boolean_eval)),
+   {C} (TypeSW:LocalSW; SetSW:Ord(cs_do_assertion)),
+   {D} (TypeSW:ModuleSW; SetSW:Ord(cs_debuginfo)),
+   {E} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
 
-   {F} (typesw:unknownsw; setsw:ord(cs_localnone)),
+   {F} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
 
-   {G} (typesw:removedsw; setsw:ord(cs_localnone)),
-   {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
-   {I} (typesw:localsw; setsw:ord(cs_check_io)),
-   {J} (typesw:localsw; setsw:ord(cs_typed_const_writable)),
-   {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {L} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {M} (typesw:localsw; setsw:ord(cs_generate_rtti)),
-   {N} (typesw:unknownsw; setsw:ord(cs_localnone)),
-   {O} (typesw:optimizersw; setsw:ord(cs_opt_level2)),
-   {P} (typesw:localsw; setsw:ord(cs_openstring)),
-   {Q} (typesw:localsw; setsw:ord(cs_check_overflow)),
-   {R} (typesw:localsw; setsw:ord(cs_check_range)),
-   {S} (typesw:localsw; setsw:ord(cs_check_stack)),
-   {T} (typesw:localsw; setsw:ord(cs_typed_addresses)),
-   {U} (typesw:pentiumfdivsw; setsw:ord(cs_localnone)),
-   {V} (typesw:localsw; setsw:ord(cs_strict_var_strings)),
+   {G} (TypeSW:RemovedSW; SetSW:Ord(cs_localnone)),
+   {H} (TypeSW:IgnoredSW; SetSW:Ord(cs_localnone)),
+   {I} (TypeSW:LocalSW; SetSW:Ord(cs_check_io)),
+   {J} (TypeSW:LocalSW; SetSW:Ord(cs_typed_const_writable)),
+   {K} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {L} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {M} (TypeSW:LocalSW; SetSW:Ord(cs_generate_rtti)),
+   {N} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
+   {O} (TypeSW:OptimizerSW; SetSW:Ord(cs_opt_level2)),
+   {P} (TypeSW:LocalSW; SetSW:Ord(cs_openstring)),
+   {Q} (TypeSW:LocalSW; SetSW:Ord(cs_check_overflow)),
+   {R} (TypeSW:LocalSW; SetSW:Ord(cs_check_range)),
+   {S} (TypeSW:LocalSW; SetSW:Ord(cs_check_stack)),
+   {T} (TypeSW:LocalSW; SetSW:Ord(cs_typed_addresses)),
+   {U} (TypeSW:PentiumFDivSW; SetSW:Ord(cs_localnone)),
+   {V} (TypeSW:LocalSW; SetSW:Ord(cs_strict_var_strings)),
 
-   {W} (typesw:localsw; setsw:ord(cs_generate_stackframes)),
+   {W} (TypeSW:LocalSW; SetSW:Ord(cs_generate_stackframes)),
 
-   {X} (typesw:modulesw; setsw:ord(cs_extsyntax)),
-   {Y} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {Z} (typesw:packenumsw; setsw:ord(cs_localnone))
+   {X} (TypeSW:ModuleSW; SetSW:Ord(cs_extsyntax)),
+   {Y} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {Z} (TypeSW:PackEnumSW; SetSW:Ord(cs_localnone))
     );
 
 
-  macSwitchTable: SwitchRecTable =(
-   {A} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {B} (typesw:localsw; setsw:ord(cs_full_boolean_eval)),
-   {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
-   {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
-   {E} (typesw:unknownsw; setsw:ord(cs_localnone)),
+  MacSwitchTable: TSwitchRecTable =(
+   {A} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {B} (TypeSW:LocalSW; SetSW:Ord(cs_full_boolean_eval)),
+   {C} (TypeSW:LocalSW; SetSW:Ord(cs_do_assertion)),
+   {D} (TypeSW:ModuleSW; SetSW:Ord(cs_debuginfo)),
+   {E} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
 
-   {F} (typesw:unknownsw; setsw:ord(cs_localnone)),
+   {F} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
 
-   {G} (typesw:removedsw; setsw:ord(cs_localnone)),
-   {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
-   {I} (typesw:localsw; setsw:ord(cs_check_io)),
-   {J} (typesw:localsw; setsw:ord(cs_external_var)),
-   {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {L} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {M} (typesw:localsw; setsw:ord(cs_generate_rtti)),
-   {N} (typesw:unknownsw; setsw:ord(cs_localnone)),
-   {O} (typesw:optimizersw; setsw:ord(cs_opt_level2)),
-   {P} (typesw:localsw; setsw:ord(cs_openstring)),
-   {Q} (typesw:localsw; setsw:ord(cs_check_overflow)),
-   {R} (typesw:localsw; setsw:ord(cs_check_range)),
-   {S} (typesw:localsw; setsw:ord(cs_check_stack)),
-   {T} (typesw:localsw; setsw:ord(cs_typed_addresses)),
-   {U} (typesw:illegalsw; setsw:ord(cs_localnone)),
-   {V} (typesw:localsw; setsw:ord(cs_strict_var_strings)),
+   {G} (TypeSW:RemovedSW; SetSW:Ord(cs_localnone)),
+   {H} (TypeSW:IgnoredSW; SetSW:Ord(cs_localnone)),
+   {I} (TypeSW:LocalSW; SetSW:Ord(cs_check_io)),
+   {J} (TypeSW:LocalSW; SetSW:Ord(cs_external_var)),
+   {K} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {L} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {M} (TypeSW:LocalSW; SetSW:Ord(cs_generate_rtti)),
+   {N} (TypeSW:UnknownSW; SetSW:Ord(cs_localnone)),
+   {O} (TypeSW:OptimizerSW; SetSW:Ord(cs_opt_level2)),
+   {P} (TypeSW:LocalSW; SetSW:Ord(cs_openstring)),
+   {Q} (TypeSW:LocalSW; SetSW:Ord(cs_check_overflow)),
+   {R} (TypeSW:LocalSW; SetSW:Ord(cs_check_range)),
+   {S} (TypeSW:LocalSW; SetSW:Ord(cs_check_stack)),
+   {T} (TypeSW:LocalSW; SetSW:Ord(cs_typed_addresses)),
+   {U} (TypeSW:IllegalSW; SetSW:Ord(cs_localnone)),
+   {V} (TypeSW:LocalSW; SetSW:Ord(cs_strict_var_strings)),
 
-   {W} (typesw:localsw; setsw:ord(cs_generate_stackframes)),
+   {W} (TypeSW:LocalSW; SetSW:Ord(cs_generate_stackframes)),
 
-   {X} (typesw:modulesw; setsw:ord(cs_extsyntax)),
-   {Y} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
-   {Z} (typesw:localsw; setsw:ord(cs_externally_visible))
+   {X} (TypeSW:ModuleSW; SetSW:Ord(cs_extsyntax)),
+   {Y} (TypeSW:UnsupportedSW; SetSW:Ord(cs_localnone)),
+   {Z} (TypeSW:LocalSW; SetSW:Ord(cs_externally_visible))
     );
 
-function IsRecognizedSwitch(switch:char):boolean;
+function IsRecognizedSwitch(Switch:Char):Boolean;
   begin
-    switch:=upcase(switch);
-    if not(switch in ['A'..'Z']) then
-      exit(false);
-    if m_mac in CurrentSettings.modeswitches then
-      result:=macSwitchTable[switch].typesw<>unknownsw
+    Switch:=UpCase(Switch);
+    if not(Switch in ['A'..'Z']) then
+      Exit(False);
+    if m_mac in CurrentSettings.ModeSwitches then
+      Result:=MacSwitchTable[Switch].TypeSW<>UnknownSW
     else
-      result:=turboSwitchTable[switch].typesw<>unknownsw;
+      Result:=TurboSwitchTable[Switch].TypeSW<>UnknownSW;
   end;
 
-procedure HandleSwitch(switch,state:char);
+procedure HandleSwitch(Switch,State:Char);
 
 var
-  switchTablePtr: ^SwitchRecTable;
+  SwitchTablePtr: ^TSwitchRecTable;
 
 begin
-  switch:=upcase(switch);
+  Switch:=UpCase(Switch);
   { Kept for source compatibility with the 3.2.2 bootstrap compiler.
     NexusFPC's default String type cannot be changed within a unit. }
-  if (switch='H') and (state in ['+','-']) then
-    exit;
+  if (Switch='H') and (State in ['+','-']) then
+    Exit;
 { Is the Switch in the letters ? }
-  if not ((switch in ['A'..'Z']) and (state in ['-','+'])) then
+  if not ((Switch in ['A'..'Z']) and (State in ['-','+'])) then
    begin
      Message(scan_w_illegal_switch);
-     exit;
+     Exit;
    end;
 
 { Select switch table }
-  if m_mac in CurrentSettings.modeswitches  then
-    switchTablePtr:= @macSwitchTable
+  if m_mac in CurrentSettings.ModeSwitches  then
+    SwitchTablePtr:= @MacSwitchTable
   else
-    switchTablePtr:= @turboSwitchTable;
+    SwitchTablePtr:= @TurboSwitchTable;
 
 { Handle the switch }
-   with switchTablePtr^[switch] do
+   with SwitchTablePtr^[Switch] do
    begin
-     case typesw of
-       alignsw:
+     case TypeSW of
+       AlignSW:
          begin
-           if state='+' then
-             recordpendingpackrecords(4)
+           if State='+' then
+             RecordPendingPackRecords(4)
            else
-             recordpendingpackrecords(1);
+             RecordPendingPackRecords(1);
          end;
-       optimizersw :
+       OptimizerSW :
          begin
-           if state='+' then
-             CurrentSettings.optimizerswitches:=level2optimizerswitches
+           if State='+' then
+             CurrentSettings.OptimizerSwitches:=Level2OptimizerSwitches
            else
-             CurrentSettings.optimizerswitches:=[];
+             CurrentSettings.OptimizerSwitches:=[];
          end;
-       ignoredsw :
-         Message1(scan_n_ignored_switch,'$'+switch);
-       unknownsw :
-         Message1(scan_w_illegal_directive,'$'+switch+state);
-       illegalsw :
-         Message1(scan_w_illegal_switch,'$'+switch);
-       removedsw :
-         Message1(scan_e_illegal_directive,'$'+switch+state);
-       unsupportedsw :
-         Message1(scan_w_unsupported_switch,'$'+switch);
-       localsw :
-         recordpendinglocalswitch(TLocalSwitch(setsw),state);
-       modulesw :
+       IgnoredSW :
+         Message1(scan_n_ignored_switch,'$'+Switch);
+       UnknownSW :
+         Message1(scan_w_illegal_directive,'$'+Switch+State);
+       IllegalSW :
+         Message1(scan_w_illegal_switch,'$'+Switch);
+       RemovedSW :
+         Message1(scan_e_illegal_directive,'$'+Switch+State);
+       UnsupportedSW :
+         Message1(scan_w_unsupported_switch,'$'+Switch);
+       LocalSW :
+         RecordPendingLocalSwitch(TLocalSwitch(SetSW),State);
+       ModuleSW :
          begin
-           if CurrentModule.in_global then
+           if CurrentModule.In_Global then
             begin
                 begin
-                  if state='+' then
-                    include(CurrentSettings.moduleswitches,TModuleSwitch(setsw))
+                  if State='+' then
+                    Include(CurrentSettings.ModuleSwitches,TModuleSwitch(SetSW))
                   else
                     begin
                       { Turning off debuginfo when lineinfo is requested
                         is not possible }
-                      if not((cs_use_lineinfo in CurrentSettings.globalswitches) and
-                             (TModuleSwitch(setsw)=cs_debuginfo)) then
-                        exclude(CurrentSettings.moduleswitches,TModuleSwitch(setsw));
+                      if not((cs_use_lineinfo in CurrentSettings.GlobalSwitches) and
+                             (TModuleSwitch(SetSW)=cs_debuginfo)) then
+                        Exclude(CurrentSettings.ModuleSwitches,TModuleSwitch(SetSW));
                     end;
                 end;
             end
            else
             Message(scan_w_switch_is_global);
          end;
-       globalsw :
+       GlobalSW :
          begin
-           if CurrentModule.in_global and (CurrentModule=main_module) then
+           if CurrentModule.In_Global and (CurrentModule=main_module) then
             begin
-              if state='+' then
-               include(CurrentSettings.globalswitches,TGlobalSwitch(setsw))
+              if State='+' then
+               Include(CurrentSettings.GlobalSwitches,TGlobalSwitch(SetSW))
               else
-               exclude(CurrentSettings.globalswitches,TGlobalSwitch(setsw));
+               Exclude(CurrentSettings.GlobalSwitches,TGlobalSwitch(SetSW));
             end
            else
             Message(scan_w_switch_is_global);
          end;
-       packenumsw:
+       PackEnumSW:
          begin
-           if state='-' then
-             CurrentSettings.packenum:=1
+           if State='-' then
+             CurrentSettings.PackEnum:=1
            else
-             CurrentSettings.packenum:=4;
+             CurrentSettings.PackEnum:=4;
          end;
-       pentiumfdivsw:
+       PentiumFDivSW:
          begin
            { Switch u- means pentium-safe fdiv off -> fpc default. We don't }
            { support u+                                                     }
-           if state='+' then
-             Message1(scan_w_unsupported_switch,'$'+switch);
+           if State='+' then
+             Message1(scan_w_unsupported_switch,'$'+Switch);
          end;
-       targetsw:
-         UpdateTargetSwitchStr(TargetSwitchStr[TTargetSwitch(setsw)].name+state,CurrentSettings.targetswitches,CurrentModule.in_global);
+       TargetSW:
+         UpdateTargetSwitchStr(TargetSwitchStr[TTargetSwitch(SetSW)].Name+State,CurrentSettings.TargetSwitches,CurrentModule.In_Global);
      end;
    end;
 end;
 
 
-function CheckSwitch(switch,state:char):boolean;
+function CheckSwitch(Switch,State:Char):Boolean;
 
 var
-  found : boolean;
-  switchTablePtr: ^SwitchRecTable;
+  Found : Boolean;
+  SwitchTablePtr: ^TSwitchRecTable;
 
 begin
-  switch:=upcase(switch);
+  Switch:=UpCase(Switch);
   { The long-string default is always enabled; $H cannot change it. }
-  if (switch='H') and (state in ['+','-']) then
-    exit(state='+');
+  if (Switch='H') and (State in ['+','-']) then
+    Exit(State='+');
 { Is the Switch in the letters ? }
-  if not ((switch in ['A'..'Z']) and (state in ['-','+'])) then
+  if not ((Switch in ['A'..'Z']) and (State in ['-','+'])) then
    begin
      Message(scan_w_illegal_switch);
-     CheckSwitch:=false;
-     exit;
+     CheckSwitch:=False;
+     Exit;
    end;
 
 { Select switch table }
-  if m_mac in CurrentSettings.modeswitches then
-    switchTablePtr:= @macSwitchTable
+  if m_mac in CurrentSettings.ModeSwitches then
+    SwitchTablePtr:= @MacSwitchTable
   else
-    switchTablePtr:= @turboSwitchTable;
+    SwitchTablePtr:= @TurboSwitchTable;
 
 { Check the switch }
-   with switchTablePtr^[switch] do
+   with SwitchTablePtr^[Switch] do
    begin
-     case typesw of
-      localsw : found:=(TLocalSwitch(setsw) in CurrentSettings.localswitches);
-     modulesw : found:=(TModuleSwitch(setsw) in CurrentSettings.moduleswitches);
-     globalsw : found:=(TGlobalSwitch(setsw) in CurrentSettings.globalswitches);
-     packenumsw : found := (CurrentSettings.packenum = 4);
-      unknownsw :
+     case TypeSW of
+      LocalSW : Found:=(TLocalSwitch(SetSW) in CurrentSettings.LocalSwitches);
+     ModuleSW : Found:=(TModuleSwitch(SetSW) in CurrentSettings.ModuleSwitches);
+     GlobalSW : Found:=(TGlobalSwitch(SetSW) in CurrentSettings.GlobalSwitches);
+     PackEnumSW : Found := (CurrentSettings.PackEnum = 4);
+      UnknownSW :
         begin
-          Message1(scan_w_illegal_switch,switch);
-          exit(false);
+          Message1(scan_w_illegal_switch,Switch);
+          Exit(False);
         end;
-      removedsw :
+      RemovedSW :
         begin
-          Message1(scan_e_illegal_directive,'IFOPT '+switch+state);
-          exit(false);
+          Message1(scan_e_illegal_directive,'IFOPT '+Switch+State);
+          Exit(False);
         end;
      else
-      found:=false;
+      Found:=False;
      end;
-     if state='-' then
-      found:=not found;
-     CheckSwitch:=found;
+     if State='-' then
+      Found:=not Found;
+     CheckSwitch:=Found;
    end;
 end;
 
 
-procedure recordpendingverbosityswitch(sw: char; state: char);
+procedure RecordPendingVerbositySwitch(SW: Char; State: Char);
   begin
-    pendingstate.nextverbositystr:=pendingstate.nextverbositystr+sw+state;
+    PendingState.NextVerbosityStr:=PendingState.NextVerbosityStr+SW+State;
   end;
 
 
-procedure recordpendingmessagestate(msg: longint; state: TMsgState);
+procedure RecordPendingMessageState(Msg: LongInt; State: TMsgState);
   var
-    pstate : PMessageStateRecord;
+    PState : PMessageStateRecord;
   begin
-    new(pstate);
+    New(PState);
     {$IFDEF DEBUG_MESSAGESTATE}
-    pstate^.owner:=CurrentModule; { nil for global option }
+    PState^.Owner:=CurrentModule; { nil for global option }
     {$ENDIF}
-    pstate^.next:=pendingstate.nextmessagerecord;
-    pstate^.value:=msg;
-    pstate^.state:=state;
-    pendingstate.nextmessagerecord:=pstate;
+    PState^.Next:=PendingState.NextMessageRecord;
+    PState^.Value:=Msg;
+    PState^.State:=State;
+    PendingState.NextMessageRecord:=PState;
   end;
 
 
-procedure recordpendinglocalswitch(sw: TLocalSwitch; state: char);
+procedure RecordPendingLocalSwitch(SW: TLocalSwitch; State: Char);
   begin
-    if not (psf_local_switches_changed in pendingstate.flags) then
-       pendingstate.nextlocalswitches:=CurrentSettings.localswitches;
-    if state='-' then
-      exclude(pendingstate.nextlocalswitches,sw)
-    else if state='+' then
-      include(pendingstate.nextlocalswitches,sw)
+    if not (psf_local_switches_changed in PendingState.Flags) then
+       PendingState.NextLocalSwitches:=CurrentSettings.LocalSwitches;
+    if State='-' then
+      Exclude(PendingState.NextLocalSwitches,SW)
+    else if State='+' then
+      Include(PendingState.NextLocalSwitches,SW)
     else { state = '*' }
       begin
-        if sw in InitSettings.localswitches then
-         include(pendingstate.nextlocalswitches,sw)
+        if SW in InitSettings.LocalSwitches then
+         Include(PendingState.NextLocalSwitches,SW)
         else
-         exclude(pendingstate.nextlocalswitches,sw);
+         Exclude(PendingState.NextLocalSwitches,SW);
       end;
-    include(pendingstate.flags,psf_local_switches_changed);
+    Include(PendingState.Flags,psf_local_switches_changed);
   end;
 
 
-procedure recordpendingalignmentfullswitch(const alignment : TAlignmentInfo);
+procedure RecordPendingAlignmentFullSwitch(const Alignment : TAlignmentInfo);
   begin
-    pendingstate.nextalignment:=alignment;
-    include(pendingstate.flags,psf_alignment_changed);
+    PendingState.NextAlignment:=Alignment;
+    Include(PendingState.Flags,psf_alignment_changed);
   end;
 
 
-procedure recordpendinglocalfullswitch(const switches: TLocalSwitches);
+procedure RecordPendingLocalFullSwitch(const Switches: TLocalSwitches);
   begin
-    pendingstate.nextlocalswitches:=switches;
-    include(pendingstate.flags,psf_local_switches_changed);
+    PendingState.NextLocalSwitches:=Switches;
+    Include(PendingState.Flags,psf_local_switches_changed);
   end;
 
 
-procedure recordpendingverbosityfullswitch(verbosity: longint);
+procedure RecordPendingVerbosityFullSwitch(Verbosity: LongInt);
   begin
-    pendingstate.nextverbositystr:='';
-    pendingstate.nextverbosityfullswitch:=verbosity;
-    include(pendingstate.flags,psf_verbosity_full_switched);
+    PendingState.NextVerbosityStr:='';
+    PendingState.NextVerbosityFullSwitch:=Verbosity;
+    Include(PendingState.Flags,psf_verbosity_full_switched);
   end;
 
-procedure recordpendingcallingswitch(const str: shortstring);
+procedure RecordPendingCallingSwitch(const Str: ShortString);
   begin
-    pendingstate.nextcallingstr:=str;
+    PendingState.NextCallingStr:=Str;
   end;
 
 
-procedure recordpendingsetalloc(alloc:shortint);
+procedure RecordPendingSetAlloc(Alloc:ShortInt);
   begin
-    pendingstate.nextsetalloc:=alloc;
-    include(pendingstate.flags,psf_setalloc_changed);
+    PendingState.NextSetAlloc:=Alloc;
+    Include(PendingState.Flags,psf_setalloc_changed);
   end;
 
 
-procedure recordpendingasmmode(asmmode:tasmmode);
+procedure RecordPendingAsmMode(AsmMode:TAsmMode);
   begin
-    pendingstate.nextasmmode:=asmmode;
-    include(pendingstate.flags,psf_asmmode_changed);
+    PendingState.NextAsmMode:=AsmMode;
+    Include(PendingState.Flags,psf_asmmode_changed);
   end;
 
 
-procedure recordpendingpackenum(size:shortint);
+procedure RecordPendingPackEnum(Size:ShortInt);
   begin
-    pendingstate.nextpackenum:=size;
-    include(pendingstate.flags,psf_packenum_changed);
+    PendingState.NextPackEnum:=Size;
+    Include(PendingState.Flags,psf_packenum_changed);
   end;
 
 
-procedure recordpendingpackrecords(size:shortint);
+procedure RecordPendingPackRecords(Size:ShortInt);
   begin
-    pendingstate.nextpackrecords:=size;
-    include(pendingstate.flags,psf_packrecords_changed);
+    PendingState.NextPackRecords:=Size;
+    Include(PendingState.Flags,psf_packrecords_changed);
   end;
 
 
-procedure recordpendingoptimizerswitches(optimizerswitches:TOptimizerSwitches);
+procedure RecordPendingOptimizerSwitches(OptimizerSwitches:TOptimizerSwitches);
   begin
-    pendingstate.nextoptimizerswitches:=optimizerswitches;
-    include(pendingstate.flags,psf_optimizerswitches_changed);
+    PendingState.NextOptimizerSwitches:=OptimizerSwitches;
+    Include(PendingState.Flags,psf_optimizerswitches_changed);
   end;
 
 
-procedure flushpendingswitchesstate;
+procedure FlushPendingSwitchesState;
   var
-    tmpproccal: TProcCallOption;
-    fstate, pstate : PMessageStateRecord;
-    msgset : thashset;
-    msgfound : boolean;
+    TmpProcCall: TProcCallOption;
+    FState, PState : PMessageStateRecord;
+    MsgSet : THashSet;
+    MsgFound : Boolean;
   begin
     { process pending localswitches (range checking, etc) }
-    if psf_local_switches_changed in pendingstate.flags then
+    if psf_local_switches_changed in PendingState.Flags then
       begin
-        CurrentSettings.localswitches:=pendingstate.nextlocalswitches;
-        include(CurrentSettings.localswitches,cs_refcountedstrings);
-        exclude(pendingstate.flags,psf_local_switches_changed);
+        CurrentSettings.LocalSwitches:=PendingState.NextLocalSwitches;
+        Include(CurrentSettings.LocalSwitches,cs_refcountedstrings);
+        Exclude(PendingState.Flags,psf_local_switches_changed);
       end;
     { process pending verbosity changes (warnings on, etc) }
-    if psf_verbosity_full_switched in pendingstate.flags then
+    if psf_verbosity_full_switched in PendingState.Flags then
       begin
-        status.verbosity:=pendingstate.nextverbosityfullswitch;
-        exclude(pendingstate.flags,psf_verbosity_full_switched);
+        Status.Verbosity:=PendingState.NextVerbosityFullSwitch;
+        Exclude(PendingState.Flags,psf_verbosity_full_switched);
       end;
-    if psf_alignment_changed in pendingstate.flags then
+    if psf_alignment_changed in PendingState.Flags then
       begin
-        CurrentSettings.alignment:=pendingstate.nextalignment;
-        exclude(pendingstate.flags,psf_alignment_changed);
+        CurrentSettings.Alignment:=PendingState.NextAlignment;
+        Exclude(PendingState.Flags,psf_alignment_changed);
       end;
-    if psf_packenum_changed in pendingstate.flags then
+    if psf_packenum_changed in PendingState.Flags then
       begin
-        CurrentSettings.packenum:=pendingstate.nextpackenum;
-        exclude(pendingstate.flags,psf_packenum_changed);
+        CurrentSettings.PackEnum:=PendingState.NextPackEnum;
+        Exclude(PendingState.Flags,psf_packenum_changed);
       end;
-    if psf_packrecords_changed in pendingstate.flags then
+    if psf_packrecords_changed in PendingState.Flags then
       begin
-        CurrentSettings.packrecords:=pendingstate.nextpackrecords;
-        exclude(pendingstate.flags,psf_packrecords_changed);
+        CurrentSettings.PackRecords:=PendingState.NextPackRecords;
+        Exclude(PendingState.Flags,psf_packrecords_changed);
       end;
-    if psf_setalloc_changed in pendingstate.flags then
+    if psf_setalloc_changed in PendingState.Flags then
       begin
-        CurrentSettings.setalloc:=pendingstate.nextsetalloc;
-        exclude(pendingstate.flags,psf_setalloc_changed);
+        CurrentSettings.SetAlloc:=PendingState.NextSetAlloc;
+        Exclude(PendingState.Flags,psf_setalloc_changed);
       end;
-    if psf_asmmode_changed in pendingstate.flags then
+    if psf_asmmode_changed in PendingState.Flags then
       begin
-        CurrentSettings.asmmode:=pendingstate.nextasmmode;
-        exclude(pendingstate.flags,psf_asmmode_changed);
+        CurrentSettings.AsmMode:=PendingState.NextAsmMode;
+        Exclude(PendingState.Flags,psf_asmmode_changed);
       end;
-    if psf_optimizerswitches_changed in pendingstate.flags then
+    if psf_optimizerswitches_changed in PendingState.Flags then
       begin
-        CurrentSettings.optimizerswitches:=pendingstate.nextoptimizerswitches;
-        exclude(pendingstate.flags,psf_optimizerswitches_changed);
+        CurrentSettings.OptimizerSwitches:=PendingState.NextOptimizerSwitches;
+        Exclude(PendingState.Flags,psf_optimizerswitches_changed);
       end;
     { process pending verbosity changes (warnings on, etc) }
-    if pendingstate.nextverbositystr<>'' then
+    if PendingState.NextVerbosityStr<>'' then
       begin
-        setverbosity(pendingstate.nextverbositystr);
-        pendingstate.nextverbositystr:='';
+        SetVerbosity(PendingState.NextVerbosityStr);
+        PendingState.NextVerbosityStr:='';
       end;
     { we need to start from a clean slate }
-    if not assigned(CurrentSettings.pmessage) then
+    if not Assigned(CurrentSettings.PMessage) then
       RestoreLocalVerbosity(nil);
-    fstate:=pendingstate.nextmessagerecord;
-    pstate:=pendingstate.nextmessagerecord;
-    if assigned(pstate) then
-      msgset:=thashset.create(10,false,false)
+    FState:=PendingState.NextMessageRecord;
+    PState:=PendingState.NextMessageRecord;
+    if Assigned(PState) then
+      MsgSet:=THashSet.Create(10,False,False)
     else
-      msgset:=nil;
-    while assigned(pstate) do
+      MsgSet:=nil;
+    while Assigned(PState) do
       begin
         {$IFDEF DEBUG_MESSAGESTATE}
-        if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
+        if Assigned(PState^.Owner) and (PState^.Owner<>CurrentModule) then
           begin
-            writeln('flushpendingswitchesstate cur: ',CurrentModule.modulename^,' ',CurrentModule.statestr);
-            writeln('flushpendingswitchesstate pstate: ',tmodule(pstate^.owner).modulename^,' ',tmodule(pstate^.owner).statestr);
-            Internalerror(2026030701);
+            WriteLn('flushpendingswitchesstate cur: ',CurrentModule.ModuleName^,' ',CurrentModule.StateStr);
+            WriteLn('flushpendingswitchesstate pstate: ',TModule(PState^.Owner).ModuleName^,' ',TModule(PState^.Owner).StateStr);
+            InternalError(2026030701);
           end;
         {$ENDIF}
-        pendingstate.nextmessagerecord:=pstate^.next;
+        PendingState.NextMessageRecord:=PState^.Next;
         { the message records are ordered newest to oldest, so only apply the newest change }
-        msgfound:=false;
-        if not assigned(msgset.findoradd(@pstate^.value,sizeof(pstate^.value),msgfound)) or
-            not msgfound then
-          SetMessageVerbosity(pstate^.value,pstate^.state);
-        if not assigned(pstate^.next) then
+        MsgFound:=False;
+        if not Assigned(MsgSet.FindOrAdd(@PState^.Value,SizeOf(PState^.Value),MsgFound)) or
+            not MsgFound then
+          SetMessageVerbosity(PState^.Value,PState^.State);
+        if not Assigned(PState^.Next) then
           begin
-            pstate^.next:=CurrentSettings.pmessage;
-            CurrentSettings.pmessage:=fstate;
-            pstate:=nil;
+            PState^.Next:=CurrentSettings.PMessage;
+            CurrentSettings.PMessage:=FState;
+            PState:=nil;
           end
         else
-          pstate:=pstate^.next;
-        pendingstate.nextmessagerecord:=nil;
+          PState:=PState^.Next;
+        PendingState.NextMessageRecord:=nil;
       end;
-    msgset.free;
-    msgset := nil;
+    MsgSet.Free;
+    MsgSet := nil;
     { process pending calling convention changes (calling x) }
-    if pendingstate.nextcallingstr<>'' then
+    if PendingState.NextCallingStr<>'' then
       begin
-        if not SetAktProcCall(pendingstate.nextcallingstr,tmpproccal) then
-          Message1(parser_w_unknown_proc_directive_ignored,pendingstate.nextcallingstr)
-        else if not(tmpproccal in supported_calling_conventions) then
-          Message1(parser_e_illegal_calling_convention,pendingstate.nextcallingstr)
+        if not SetAktProcCall(PendingState.NextCallingStr,TmpProcCall) then
+          Message1(parser_w_unknown_proc_directive_ignored,PendingState.NextCallingStr)
+        else if not(TmpProcCall in supported_calling_conventions) then
+          Message1(parser_e_illegal_calling_convention,PendingState.NextCallingStr)
         else
-          CurrentSettings.defproccall:=tmpproccal;
-        pendingstate.nextcallingstr:='';
+          CurrentSettings.DefProcCall:=TmpProcCall;
+        PendingState.NextCallingStr:='';
       end;
   end;
 

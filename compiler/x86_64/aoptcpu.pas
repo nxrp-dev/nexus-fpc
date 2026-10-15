@@ -31,26 +31,26 @@ uses cpubase, aasmtai, aopt, aoptx86;
 
 type
   TCpuAsmOptimizer = class(TX86AsmOptimizer)
-    function PrePeepHoleOptsCpu(var p: tai): boolean; override;
-    function PeepHoleOptPass1Cpu(var p: tai): boolean; override;
-    function PeepHoleOptPass2Cpu(var p: tai): boolean; override;
-    function PostPeepHoleOptsCpu(var p : tai) : boolean; override;
+    function PrePeepHoleOptsCpu(var p: TAI): boolean; override;
+    function PeepHoleOptPass1Cpu(var p: TAI): boolean; override;
+    function PeepHoleOptPass2Cpu(var p: TAI): boolean; override;
+    function PostPeepHoleOptsCpu(var p : TAI) : boolean; override;
   end;
 
 implementation
 
 uses
-  globals,
-  globtype,
+  Globals,
+  GlobType,
   aasmcpu;
 
-    function TCpuAsmOptimizer.PrePeepHoleOptsCpu(var p : tai) : boolean;
+    function TCpuAsmOptimizer.PrePeepHoleOptsCpu(var p : TAI) : boolean;
       begin
         result := false;
         case p.typ of
           ait_instruction:
             begin
-              case taicpu(p).opcode of
+              case TAICPU(p).opcode of
                 A_IMUL:
                   result:=PrePeepholeOptIMUL(p);
                 A_SAR,A_SHR:
@@ -76,20 +76,20 @@ uses
                 if (p.typ in SkipInstr) then
                   UpdateUsedRegs(p);
 
-                p := tai(p.Next);
+                p := TAI(p.Next);
                 Result := True;
               end;
           end;
       end;
 
 
-    function TCpuAsmOptimizer.PeepHoleOptPass1Cpu(var p: tai): boolean;
+    function TCpuAsmOptimizer.PeepHoleOptPass1Cpu(var p: TAI): boolean;
       begin
         result:=False;
         case p.typ of
           ait_instruction:
             begin
-              case taicpu(p).opcode of
+              case TAICPU(p).opcode of
                 A_ADD:
                   Result:=OptPass1ADD(p);
                 A_AND:
@@ -208,11 +208,11 @@ uses
                 if (p.typ in SkipInstr) then
                   begin
                     UpdateUsedRegs(p);
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                   end
                 else
                   begin
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                     UpdateUsedRegs(p);
                   end;
                 Result := True;
@@ -221,13 +221,13 @@ uses
       end;
 
 
-    function TCpuAsmOptimizer.PeepHoleOptPass2Cpu(var p : tai) : boolean;
+    function TCpuAsmOptimizer.PeepHoleOptPass2Cpu(var p : TAI) : boolean;
       begin
         Result := False;
         case p.typ of
           ait_instruction:
             begin
-              case taicpu(p).opcode of
+              case TAICPU(p).opcode of
                 A_MOV:
                   Result:=OptPass2MOV(p);
                 A_MOVZX:
@@ -274,11 +274,11 @@ uses
                 if (p.typ in SkipInstr) then
                   begin
                     UpdateUsedRegs(p);
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                   end
                 else
                   begin
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                     UpdateUsedRegs(p);
                   end;
                 Result := True;
@@ -287,13 +287,13 @@ uses
       end;
 
 
-    function TCpuAsmOptimizer.PostPeepHoleOptsCpu(var p: tai): boolean;
+    function TCpuAsmOptimizer.PostPeepHoleOptsCpu(var p: TAI): boolean;
       begin
         result := false;
         case p.typ of
           ait_instruction:
             begin
-              case taicpu(p).opcode of
+              case TAICPU(p).opcode of
                 A_MOV:
                   Result:=PostPeepholeOptMov(p);
                 A_AND:
@@ -338,7 +338,7 @@ uses
               { Optimise any reference-type operands (if Result is True, the
                 instruction will be checked on the next iteration) }
               if not Result then
-                OptimizeRefs(taicpu(p));
+                OptimizeRefs(TAICPU(p));
 
             end;
           else
@@ -355,7 +355,7 @@ uses
                 if (p.typ in SkipInstr) then
                   UpdateUsedRegs(p);
 
-                p := tai(p.Next);
+                p := TAI(p.Next);
                 Result := True;
               end;
           end;

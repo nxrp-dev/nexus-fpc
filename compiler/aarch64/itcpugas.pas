@@ -34,35 +34,35 @@ interface
       opcode strings should conform to the names as defined by the
       processor manufacturer.
     }
-    gas_op2str : op2strtable = {$i a64att.inc}
+    gas_op2str : TOp2StrTable = {$i a64att.inc}
 
-    function gas_regnum_search(const s:string):Tregister;
-    function gas_regname(r:Tregister):string;
+    function gas_regnum_search(const s:string):TRegister;
+    function gas_regname(r:TRegister):string;
 
 
 implementation
 
     uses
-      cutils,verbose,rgbase;
+      CUtils,Verbose,rgbase;
 
     const
       gas_regname_table : TRegNameTable = (
         {$i ra64std.inc}
       );
 
-      gas_regname_index : array[tregisterindex] of tregisterindex = (
+      gas_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i ra64sri.inc}
       );
 
-    function findreg_by_gasname(const s:string):tregisterindex;
+    function findreg_by_gasname(const s:string):TRegisterIndex;
       var
-        i,p : tregisterindex;
+        i,p : TRegisterIndex;
       begin
         {Binary search.}
         p:=0;
         i:=regnumber_count_bsstart;
         repeat
-          if (p+i<=high(tregisterindex)) and (gas_regname_table[gas_regname_index[p+i]]<=s) then
+          if (p+i<=high(TRegisterIndex)) and (gas_regname_table[gas_regname_index[p+i]]<=s) then
             p:=p+i;
           i:=i shr 1;
         until i=0;
@@ -73,15 +73,15 @@ implementation
       end;
 
 
-    function gas_regnum_search(const s:string):Tregister;
+    function gas_regnum_search(const s:string):TRegister;
       begin
         result:=regnumber_table[findreg_by_gasname(s)];
       end;
 
 
-    function gas_regname(r:Tregister):string;
+    function gas_regname(r:TRegister):string;
       var
-        p : tregisterindex;
+        p : TRegisterIndex;
       begin
         p:=findreg_by_number(r);
         if p<>0 then

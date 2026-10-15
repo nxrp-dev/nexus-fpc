@@ -27,345 +27,345 @@ unit constexp;
 
 interface
 
-uses tpcompilerreal;
+uses TPCompilerReal;
 
 type  Tconstexprint=record
-        function is_negative: boolean; inline;
-        function extract_sign_abs(out abs: qword): boolean;
-        procedure div_or_mod(const by: Tconstexprint; isdiv: boolean; out r: Tconstexprint);
-        function tobestreal: bestreal;
+        function Is_Negative: Boolean; inline;
+        function Extract_Sign_Abs(out Abs: QWord): Boolean;
+        procedure Div_Or_Mod(const By: TConstExprInt; IsDiv: Boolean; out R: TConstExprInt);
+        function ToBestReal: BestReal;
       var
-        overflow:boolean;
-        case signed:boolean of
-          false:
-            (uvalue:qword);
-          true:
-            (svalue:int64);
+        Overflow:Boolean;
+        case Signed:Boolean of
+          False:
+            (UValue:QWord);
+          True:
+            (SValue:Int64);
       end;
 
-operator := (const u:qword):Tconstexprint;inline;
-operator := (const s:int64):Tconstexprint;inline;
-operator := (const c:Tconstexprint):qword;
-operator := (const c:Tconstexprint):int64;
-operator := (const c:Tconstexprint):bestreal;
+operator := (const U:QWord):TConstExprInt;inline;
+operator := (const S:Int64):TConstExprInt;inline;
+operator := (const C:TConstExprInt):QWord;
+operator := (const C:TConstExprInt):Int64;
+operator := (const C:TConstExprInt):BestReal;
 
-operator + (const a,b:Tconstexprint):Tconstexprint;
-operator - (const a,b:Tconstexprint):Tconstexprint;
-operator - (const a:Tconstexprint):Tconstexprint;
-operator * (const a,b:Tconstexprint):Tconstexprint;
-operator div (const a,b:Tconstexprint):Tconstexprint; inline;
-operator mod (const a,b:Tconstexprint):Tconstexprint; inline;
-operator / (const a,b:Tconstexprint):bestreal;
+operator + (const A,B:TConstExprInt):TConstExprInt;
+operator - (const A,B:TConstExprInt):TConstExprInt;
+operator - (const A:TConstExprInt):TConstExprInt;
+operator * (const A,B:TConstExprInt):TConstExprInt;
+operator div (const A,B:TConstExprInt):TConstExprInt; inline;
+operator mod (const A,B:TConstExprInt):TConstExprInt; inline;
+operator / (const A,B:TConstExprInt):BestReal;
 
-operator = (const a,b:Tconstexprint):boolean;
-operator > (const a,b:Tconstexprint):boolean; inline; { Are reformulated using <. }
-operator >= (const a,b:Tconstexprint):boolean; inline;
-operator < (const a,b:Tconstexprint):boolean;
-operator <= (const a,b:Tconstexprint):boolean; inline;
+operator = (const A,B:TConstExprInt):Boolean;
+operator > (const A,B:TConstExprInt):Boolean; inline; { Are reformulated using <. }
+operator >= (const A,B:TConstExprInt):Boolean; inline;
+operator < (const A,B:TConstExprInt):Boolean;
+operator <= (const A,B:TConstExprInt):Boolean; inline;
 
-operator and (const a,b:Tconstexprint):Tconstexprint;
-operator or (const a,b:Tconstexprint):Tconstexprint;
-operator xor (const a,b:Tconstexprint):Tconstexprint;
-operator shl (const a,b:Tconstexprint):Tconstexprint;
-operator shr (const a,b:Tconstexprint):Tconstexprint;
+operator and (const A,B:TConstExprInt):TConstExprInt;
+operator or (const A,B:TConstExprInt):TConstExprInt;
+operator xor (const A,B:TConstExprInt):TConstExprInt;
+operator shl (const A,B:TConstExprInt):TConstExprInt;
+operator shr (const A,B:TConstExprInt):TConstExprInt;
 
-function tostr(const i:Tconstexprint):shortstring;overload;
+function ToStr(const I:TConstExprInt):ShortString;overload;
 
 {****************************************************************************}
 implementation
 {****************************************************************************}
 
 uses
-  cutils;
+  CUtils;
 
-function Tconstexprint.is_negative: boolean;
+function TConstExprInt.Is_Negative: Boolean;
 begin
-  result:=signed and (svalue<0);
+  Result:=Signed and (SValue<0);
 end;
 
 {$push} {$q-,r-}
-function Tconstexprint.extract_sign_abs(out abs: qword): boolean;
+function TConstExprInt.Extract_Sign_Abs(out Abs: QWord): Boolean;
 begin
-  result:=is_negative;
-  if result then
-    abs:=qword(-svalue)
+  Result:=Is_Negative;
+  if Result then
+    Abs:=QWord(-SValue)
   else
-    abs:=uvalue;
+    Abs:=UValue;
 end;
 
-procedure Tconstexprint.div_or_mod(const by: Tconstexprint; isdiv: boolean; out r: Tconstexprint);
+procedure TConstExprInt.Div_Or_Mod(const By: TConstExprInt; IsDiv: Boolean; out R: TConstExprInt);
 var
-  aa, bb: qword;
-  negres: boolean;
+  AA, BB: QWord;
+  NegRes: Boolean;
 begin
-  if by.uvalue=0 then
+  if By.UValue=0 then
     begin
-      r:=qword(-int64(isdiv)); { Something. All ones if div, all zeros if mod. }
-      r.overflow:=true;
-      exit;
+      R:=QWord(-Int64(IsDiv)); { Something. All ones if div, all zeros if mod. }
+      R.Overflow:=True;
+      Exit;
     end;
   { the sign of a modulo operation only depends on the sign of the
     dividend }
-  negres:=self.extract_sign_abs(aa) xor by.extract_sign_abs(bb) and isdiv;
-  r.overflow:=self.overflow or by.overflow;
-  if isdiv then
-    r.uvalue:=aa div bb
+  NegRes:=Self.Extract_Sign_Abs(AA) xor By.Extract_Sign_Abs(BB) and IsDiv;
+  R.Overflow:=Self.Overflow or By.Overflow;
+  if IsDiv then
+    R.UValue:=AA div BB
   else
-    r.uvalue:=aa mod bb;
-  r.signed:=negres or (r.svalue>=0);
-  if negres then
+    R.UValue:=AA mod BB;
+  R.Signed:=NegRes or (R.SValue>=0);
+  if NegRes then
     begin
-      r.svalue:=-r.svalue;
-      r.overflow:=r.overflow or (r.svalue>0); { Strictly > 0! }
+      R.SValue:=-R.SValue;
+      R.Overflow:=R.Overflow or (R.SValue>0); { Strictly > 0! }
     end;
 end;
 {$pop}
 
-function Tconstexprint.tobestreal: bestreal;
+function TConstExprInt.ToBestReal: BestReal;
 begin
-  if overflow then
-    internalerrorproc(200706095);
-  if signed then
-    result:=svalue
+  if Overflow then
+    InternalErrorProc(200706095);
+  if Signed then
+    Result:=SValue
   else
-    result:=uvalue;
+    Result:=UValue;
 end;
 
-operator := (const u:qword):Tconstexprint;
+operator := (const U:QWord):TConstExprInt;
 
 begin
-  result.overflow:=false;
-  result.signed:=false;
-  result.uvalue:=u;
+  Result.Overflow:=False;
+  Result.Signed:=False;
+  Result.UValue:=U;
 end;
 
-operator := (const s:int64):Tconstexprint;
+operator := (const S:Int64):TConstExprInt;
 
 begin
-  result.overflow:=false;
-  result.signed:=true;
-  result.svalue:=s;
+  Result.Overflow:=False;
+  Result.Signed:=True;
+  Result.SValue:=S;
 end;
 
-operator := (const c:Tconstexprint):qword;
+operator := (const C:TConstExprInt):QWord;
 
 begin
-  if c.overflow then
-    internalerrorproc(200706091);
-  if c.is_negative then
-    internalerrorproc(200706092);
-  result:=c.uvalue;
+  if C.Overflow then
+    InternalErrorProc(200706091);
+  if C.Is_Negative then
+    InternalErrorProc(200706092);
+  Result:=C.UValue;
 end;
 
-operator := (const c:Tconstexprint):int64;
+operator := (const C:TConstExprInt):Int64;
 
 begin
-  if c.overflow then
-    internalerrorproc(200706093);
-  if not c.signed and (c.svalue<0) then
-    internalerrorproc(200706094);
-  result:=c.svalue;
+  if C.Overflow then
+    InternalErrorProc(200706093);
+  if not C.Signed and (C.SValue<0) then
+    InternalErrorProc(200706094);
+  Result:=C.SValue;
 end;
 
-operator := (const c:Tconstexprint):bestreal;
+operator := (const C:TConstExprInt):BestReal;
 
 begin
-  if c.overflow then
-    internalerrorproc(200706095);
-  if c.signed then
-    result:=c.svalue
+  if C.Overflow then
+    InternalErrorProc(200706095);
+  if C.Signed then
+    Result:=C.SValue
   else
-    result:=c.uvalue;
+    Result:=C.UValue;
 end;
 
 {$push} {$q-,r-}
-operator + (const a,b:Tconstexprint):Tconstexprint;
+operator + (const A,B:TConstExprInt):TConstExprInt;
 
-var aneg:boolean;
+var ANeg:Boolean;
 
 begin
-  result.overflow:=a.overflow or b.overflow;
-  result.uvalue:=a.uvalue+b.uvalue;
-  aneg:=a.is_negative;
-  if aneg<>b.is_negative then
+  Result.Overflow:=A.Overflow or B.Overflow;
+  Result.UValue:=A.UValue+B.UValue;
+  ANeg:=A.Is_Negative;
+  if ANeg<>B.Is_Negative then
     { Negative + positive: cannot overflow, signed if fits (here and below: “fits” means “positive value that fits into svalue”) or if positive operand did fit. }
-    result.signed:=(result.svalue>=0) or (a.svalue xor b.svalue<0)
-  else if aneg then
+    Result.Signed:=(Result.SValue>=0) or (A.SValue xor B.SValue<0)
+  else if ANeg then
     begin
       { Negative + negative: overflow if positive, always signed. }
-      result.overflow:=result.overflow or (result.svalue>=0);
-      result.signed:=true;
+      Result.Overflow:=Result.Overflow or (Result.SValue>=0);
+      Result.Signed:=True;
     end
   else
     begin
       { Positive + positive: overflow if became less, signed if fits. }
-      result.overflow:=result.overflow or (result.uvalue<a.uvalue);
-      result.signed:=result.svalue>=0;
+      Result.Overflow:=Result.Overflow or (Result.UValue<A.UValue);
+      Result.Signed:=Result.SValue>=0;
     end;
 end;
 
-operator - (const a,b:Tconstexprint):Tconstexprint;
+operator - (const A,B:TConstExprInt):TConstExprInt;
 
-var bneg:boolean;
+var BNeg:Boolean;
 
 begin
-  result.overflow:=a.overflow or b.overflow;
-  result.uvalue:=a.uvalue-b.uvalue;
-  bneg:=b.is_negative;
-  if a.is_negative then
+  Result.Overflow:=A.Overflow or B.Overflow;
+  Result.UValue:=A.UValue-B.UValue;
+  BNeg:=B.Is_Negative;
+  if A.Is_Negative then
     begin
       { Negative − negative: cannot overflow, always signed.
         Negative - positive: overflow if positive or b did not fit, always signed. }
-      result.signed:=true;
-      if not bneg then
-        result.overflow:=result.overflow or (b.svalue<0) or (result.svalue>=0);
+      Result.Signed:=True;
+      if not BNeg then
+        Result.Overflow:=Result.Overflow or (B.SValue<0) or (Result.SValue>=0);
     end
-  else if bneg then
+  else if BNeg then
     begin
       { Positive - negative: overflow if became less, signed if fits. }
-      result.overflow:=result.overflow or (result.uvalue<a.uvalue);
-      result.signed:=result.svalue>=0;
+      Result.Overflow:=Result.Overflow or (Result.UValue<A.UValue);
+      Result.Signed:=Result.SValue>=0;
     end
   else
     begin
       { Positive − positive: overflow if a < b but result is positive, signed if a < b or fits. }
-      result.overflow:=result.overflow or (a.uvalue<b.uvalue) and (result.svalue>=0);
-      result.signed:=(a.uvalue<b.uvalue) or (result.svalue>=0);
+      Result.Overflow:=Result.Overflow or (A.UValue<B.UValue) and (Result.SValue>=0);
+      Result.Signed:=(A.UValue<B.UValue) or (Result.SValue>=0);
     end;
 end;
 
-operator - (const a:Tconstexprint):Tconstexprint;
+operator - (const A:TConstExprInt):TConstExprInt;
 
-var aneg:boolean;
+var ANeg:Boolean;
 
 begin
-  aneg:=a.is_negative;
-  result.svalue:=-a.svalue;
-  result.overflow:=a.overflow or not aneg and (result.svalue>0); { Will trigger on > -Low(int64). }
-  result.signed:=not (aneg and (a.svalue=Low(a.svalue))); { Unsigned only if negating Low(int64). }
+  ANeg:=A.Is_Negative;
+  Result.SValue:=-A.SValue;
+  Result.Overflow:=A.Overflow or not ANeg and (Result.SValue>0); { Will trigger on > -Low(int64). }
+  Result.Signed:=not (ANeg and (A.SValue=Low(A.SValue))); { Unsigned only if negating Low(int64). }
 end;
 
-operator * (const a,b:Tconstexprint):Tconstexprint;
+operator * (const A,B:TConstExprInt):TConstExprInt;
 
-var aa,bb:qword;
-    negres:boolean;
+var AA,BB:QWord;
+    NegRes:Boolean;
 
 begin
-  negres:=a.extract_sign_abs(aa) xor b.extract_sign_abs(bb);
-  result.uvalue:=aa*bb;
-  result.overflow:=a.overflow or b.overflow or
-    (Hi(aa) or Hi(bb)<>0) and { Pretest to avoid division in small cases. Must be cheaper than two BsrQWords. }
-    (bb<>0) and (high(qword) div bb<aa);
-  result.signed:=negres or (result.svalue>=0);
-  if negres then
+  NegRes:=A.Extract_Sign_Abs(AA) xor B.Extract_Sign_Abs(BB);
+  Result.UValue:=AA*BB;
+  Result.Overflow:=A.Overflow or B.Overflow or
+    (Hi(AA) or Hi(BB)<>0) and { Pretest to avoid division in small cases. Must be cheaper than two BsrQWords. }
+    (BB<>0) and (High(QWord) div BB<AA);
+  Result.Signed:=NegRes or (Result.SValue>=0);
+  if NegRes then
     begin
-      result.overflow:=result.overflow or (result.svalue<0);
-      result.svalue:=-result.svalue;
+      Result.Overflow:=Result.Overflow or (Result.SValue<0);
+      Result.SValue:=-Result.SValue;
     end;
 end;
 {$pop}
 
-operator div (const a,b:Tconstexprint):Tconstexprint;
+operator div (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  a.div_or_mod(b,true,result);
+  A.Div_Or_Mod(B,True,Result);
 end;
 
-operator mod (const a,b:Tconstexprint):Tconstexprint;
+operator mod (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  a.div_or_mod(b,false,result);
+  A.Div_Or_Mod(B,False,Result);
 end;
 
-operator / (const a,b:Tconstexprint):bestreal;
+operator / (const A,B:TConstExprInt):BestReal;
 
 begin
-  result:=a.tobestreal/b.tobestreal;
+  Result:=A.ToBestReal/B.ToBestReal;
 end;
 
-operator = (const a,b:Tconstexprint):boolean;
+operator = (const A,B:TConstExprInt):Boolean;
 
 begin
-  result:=(a.uvalue=b.uvalue) and (a.is_negative=b.is_negative);
+  Result:=(A.UValue=B.UValue) and (A.Is_Negative=B.Is_Negative);
 end;
 
-operator > (const a,b:Tconstexprint):boolean;
+operator > (const A,B:TConstExprInt):Boolean;
 
 begin
-  result:=b<a;
+  Result:=B<A;
 end;
 
-operator >= (const a,b:Tconstexprint):boolean;
+operator >= (const A,B:TConstExprInt):Boolean;
 
 begin
-  result:=not(a<b);
+  Result:=not(A<B);
 end;
 
-operator < (const a,b:Tconstexprint):boolean;
+operator < (const A,B:TConstExprInt):Boolean;
 
 begin
-  result:=a.is_negative;
-  if result=b.is_negative then
-    result:=a.uvalue<b.uvalue; { Works both with positive < positive and unsigned(negative) < unsigned(negative). }
+  Result:=A.Is_Negative;
+  if Result=B.Is_Negative then
+    Result:=A.UValue<B.UValue; { Works both with positive < positive and unsigned(negative) < unsigned(negative). }
 end;
 
-operator <= (const a,b:Tconstexprint):boolean;
+operator <= (const A,B:TConstExprInt):Boolean;
 
 begin
-  result:=not(b<a);
+  Result:=not(B<A);
 end;
 
-operator and (const a,b:Tconstexprint):Tconstexprint;
+operator and (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  result.overflow:=false;
-  result.signed:=a.signed or b.signed;
-  result.uvalue:=a.uvalue and b.uvalue;
+  Result.Overflow:=False;
+  Result.Signed:=A.Signed or B.Signed;
+  Result.UValue:=A.UValue and B.UValue;
 end;
 
-operator or (const a,b:Tconstexprint):Tconstexprint;
+operator or (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  result.overflow:=false;
-  result.signed:=a.signed or b.signed;
-  result.uvalue:=a.uvalue or b.uvalue;
+  Result.Overflow:=False;
+  Result.Signed:=A.Signed or B.Signed;
+  Result.UValue:=A.UValue or B.UValue;
 end;
 
-operator xor (const a,b:Tconstexprint):Tconstexprint;
+operator xor (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  result.overflow:=false;
-  result.signed:=a.signed or b.signed;
-  result.uvalue:=a.uvalue xor b.uvalue;
+  Result.Overflow:=False;
+  Result.Signed:=A.Signed or B.Signed;
+  Result.UValue:=A.UValue xor B.UValue;
 end;
 
-operator shl (const a,b:Tconstexprint):Tconstexprint;
+operator shl (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  if b.uvalue>=bitsizeof(a.uvalue) then
-    exit(0);
-  result.overflow:=false;
-  result.signed:=a.signed; { signed(1) shl 63 does not fit into signed }
-  result.uvalue:=a.uvalue shl b.uvalue;
+  if B.UValue>=BitSizeOf(A.UValue) then
+    Exit(0);
+  Result.Overflow:=False;
+  Result.Signed:=A.Signed; { signed(1) shl 63 does not fit into signed }
+  Result.UValue:=A.UValue shl B.UValue;
 end;
 
-operator shr (const a,b:Tconstexprint):Tconstexprint;
+operator shr (const A,B:TConstExprInt):TConstExprInt;
 
 begin
-  if b.uvalue>=bitsizeof(a.uvalue) then
-    exit(0);
-  result.overflow:=false;
-  result.signed:=a.signed;
-  result.uvalue:=a.uvalue shr b.uvalue;
+  if B.UValue>=BitSizeOf(A.UValue) then
+    Exit(0);
+  Result.Overflow:=False;
+  Result.Signed:=A.Signed;
+  Result.UValue:=A.UValue shr B.UValue;
 end;
 
-function tostr(const i:Tconstexprint):shortstring;overload;
+function ToStr(const I:TConstExprInt):ShortString;overload;
 
 begin
-  if i.signed then
-    str(i.svalue,result)
+  if I.Signed then
+    Str(I.SValue,Result)
   else
-    str(i.uvalue,result);
+    Str(I.UValue,Result);
 end;
 
 end.

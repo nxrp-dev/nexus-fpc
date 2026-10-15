@@ -25,12 +25,12 @@ unit nx86ld;
 
 interface
     uses
-      globtype,
-      symtype,symsym,
+      GlobType,
+      symtype,SymSym,
       node,nld,ncgld;
 
     type
-      tx86loadnode = class(tcgloadnode)
+      TX86LoadNode = class(TCGLoadNode)
        protected
          procedure generate_threadvar_access(gvs: TStaticVarSym); override;
       end;
@@ -38,24 +38,24 @@ interface
 implementation
 
     uses
-      globals,
-      cutils,verbose,systems,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      Globals,
+      CUtils,Verbose,Systems,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       cgutils,cgobj,
-      symconst,symdef,symtable,
+      symconst,symdef,SymTable,
       cgbase,cpubase,parabase,paramgr,
-      procinfo;
+      ProcInfo;
 
 {*****************************************************************************
                            TX86LOADNODE
 *****************************************************************************}
 
-    procedure tx86loadnode.generate_threadvar_access(gvs: TStaticVarSym);
+    procedure TX86LoadNode.generate_threadvar_access(gvs: TStaticVarSym);
       var
-        paraloc1 : tcgpara;
+        paraloc1 : TCGPara;
         pd: TProcDef;
-        href: treference;
-        hregister : tregister;
+        href: TReference;
+        hregister : TRegister;
         handled: boolean;
       begin
         handled:=false;
@@ -67,9 +67,9 @@ implementation
                 pd:=search_system_proc('fpc_tls_add');
                 paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                 if not(vo_is_weak_external in gvs.varoptions) then
-                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(pint),[])
+                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[])
                 else
-                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(pint),[]);
+                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(PInt),[]);
                 cg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,href,paraloc1);
                 paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
                 paraloc1.done;
@@ -92,7 +92,7 @@ implementation
             case TargetInfo.system of
               system_i386_linux,system_i386_android:
                 begin
-                  case CurrentSettings.tlsmodel of
+                  case CurrentSettings.TLSModel of
                     tlsm_local_exec:
                       begin
                         location.reference.segment:=NR_GS;
@@ -106,7 +106,7 @@ implementation
                         location.reference.scalefactor:=1;
                         location.reference.refaddr:=addr_tlsgd;
                         cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_L,location.reference,NR_EAX));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_L,location.reference,NR_EAX));
                         cg.g_call(CurrentAsmData.CurrAsmList,'___tls_get_addr');
                         cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
                         hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
@@ -115,7 +115,7 @@ implementation
                         location.reference.base:=hregister;
                       end;
                     else
-                      Internalerror(2018110401);
+                      InternalError(2018110401);
                   end;
                 end;
               else
@@ -126,7 +126,7 @@ implementation
             case TargetInfo.system of
               system_x86_64_linux:
                 begin
-                  case CurrentSettings.tlsmodel of
+                  case CurrentSettings.TLSModel of
                     tlsm_local_exec:
                       begin
                         location.reference.segment:=NR_FS;
@@ -134,16 +134,16 @@ implementation
                       end;
                     tlsm_global_dynamic:
                       begin
-                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
                         reference_reset(href,0,[]);
                         location.reference.base:=NR_RIP;
                         location.reference.scalefactor:=1;
                         location.reference.refaddr:=addr_tlsgd;
                         cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_Q,location.reference,NR_RDI));
-                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
-                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
-                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($48));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,S_Q,location.reference,NR_RDI));
+                        CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(TAIConst.Create_8bit($48));
                         cg.g_call(CurrentAsmData.CurrAsmList,'__tls_get_addr');
                         cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
                         cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
@@ -153,7 +153,7 @@ implementation
                         location.reference.base:=hregister;
                       end;
                     else
-                      Internalerror(2019012002);
+                      InternalError(2019012002);
                   end;
                 end;
               else
@@ -165,5 +165,5 @@ implementation
 
 
 begin
-   cloadnode:=tx86loadnode;
+   CLoadNode:=TX86LoadNode;
 end.

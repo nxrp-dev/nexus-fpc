@@ -26,8 +26,8 @@ unit node;
 interface
 
     uses
-       cclasses,
-       globtype,globals,cgbase,cgutils,
+       CClasses,
+       GlobType,Globals,cgbase,cgutils,
        symtype,
        optbase;
 
@@ -287,17 +287,17 @@ interface
       { basic class for the intermediated representation fpc uses }
       TNode = class
       private
-         fppuidx : longint;
-         function getppuidx:longint;
+         fppuidx : LongInt;
+         function getppuidx:LongInt;
       public
          { type of this node }
          nodetype : TNodeType;
          { type of the current code block, general/const/type }
          blocktype : TBlockType;
          { expected location of the result of this node (pass1) }
-         expectloc : tcgloc;
+         expectloc : TCGLoc;
          { the location of the result of this node (pass2) }
-         location : tlocation;
+         location : TLocation;
          { next node in control flow on the same block level, i.e.
            for loop nodes, this is the next node after the end of the loop,
            same for if and case, if this field is nil, the next node is the procedure exit,
@@ -310,15 +310,15 @@ interface
          resultdef     : TDef;
          resultdefderef : TDeref;
          fileinfo      : TFilePosInfo;
-         localswitches : TLocalSwitches;
-         verbosity     : longint;
-         optinfo : poptinfo;
+         LocalSwitches : TLocalSwitches;
+         verbosity     : LongInt;
+         optinfo : POptInfo;
          constructor create(t:TNodeType);
          { this constructor is only for creating copies of class }
          { the fields are copied by getcopy                      }
          constructor createforcopy;
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);virtual;
-         destructor destroy;override;
+         destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
          procedure buildderefimpl;virtual;
          procedure derefimpl;virtual;
@@ -379,13 +379,13 @@ interface
          function ischild(p : TNode) : boolean;virtual;
 
          { ensures that the optimizer info record is allocated }
-         function allocoptinfo : poptinfo;inline;
-         property ppuidx:longint read getppuidx;
+         function allocoptinfo : POptInfo;inline;
+         property ppuidx:LongInt read getppuidx;
       end;
 
       TNodeClass = class of TNode;
 
-      tnodeclassarray = array[TNodeType] of TNodeClass;
+      TNodeClassArray = array[TNodeType] of TNodeClass;
 
       { this node is the ancestor for all nodes with at least    }
       { one child, you have to use it if you want to use         }
@@ -395,7 +395,7 @@ interface
          left : TNode;
          constructor create(t:TNodeType;l : TNode);
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-         destructor destroy;override;
+         destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
@@ -417,7 +417,7 @@ interface
          right : TNode;
          constructor create(t:TNodeType;l,r : TNode);
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-         destructor destroy;override;
+         destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
@@ -442,7 +442,7 @@ interface
          third : TNode;
          constructor create(_t:TNodeType;l,r,t : TNode);
          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
-         destructor destroy;override;
+         destructor Destroy;override;
          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
@@ -469,9 +469,9 @@ interface
 
     var
       { array with all class types for tnodes }
-      nodeclass : tnodeclassarray;
+      nodeclass : TNodeClassArray;
 
-    function nodeppuidxget(i:longint):TNode;
+    function nodeppuidxget(i:LongInt):TNode;
     function ppuloadnode(ppufile:TCompilerPPUFile):TNode;
     procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
     function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
@@ -500,12 +500,12 @@ interface
 implementation
 
     uses
-       verbose,entfile,
-       finput,comphook,
+       Verbose,entfile,
+       FinPut,CompHook,
 {$ifdef DEBUG_NODE_XML}
-       cutils,
+       CUtils,
 {$endif DEBUG_NODE_XML}
-       ppu,fmodule,
+       ppu,FModule,
        symconst,
        nutils,nflw,
        defutil;
@@ -520,7 +520,7 @@ implementation
 
     var
       nodeppulist : TFPObjectList;
-      nodeppuidx  : longint;
+      nodeppuidx  : LongInt;
 
 
     procedure nodeppuidxcreate;
@@ -532,13 +532,13 @@ implementation
 
     procedure nodeppuidxresolve;
       var
-        i : longint;
+        i : LongInt;
         n : TNode;
       begin
         for i:=0 to nodeppulist.count-1 do
           begin
             n:=TNode(nodeppulist[i]);
-            if assigned(n) then
+            if Assigned(n) then
               n.resolveppuidx;
           end;
       end;
@@ -554,11 +554,11 @@ implementation
 
     procedure nodeppuidxadd(n:TNode);
       var
-        i : longint;
+        i : LongInt;
       begin
         i:=n.ppuidx;
         if i<=0 then
-          internalerror(200311072);
+          InternalError(200311072);
         if i>=nodeppulist.capacity then
           nodeppulist.capacity:=((i div 1024)+1)*1024;
         if i>=nodeppulist.count then
@@ -567,10 +567,10 @@ implementation
       end;
 
 
-    function nodeppuidxget(i:longint):TNode;
+    function nodeppuidxget(i:LongInt):TNode;
       begin
         if i<=0 then
-          internalerror(200311073);
+          InternalError(200311073);
         result:=TNode(nodeppulist[i]);
       end;
 
@@ -579,20 +579,20 @@ implementation
       var
         b : byte;
         t : TNodeType;
-        hppuidx : longint;
+        hppuidx : LongInt;
       begin
         { marker }
         b:=ppufile.getbyte;
         if b<>ppunodemarker then
-          internalerror(200208151);
+          InternalError(200208151);
         { load nodetype }
         t:=TNodeType(ppufile.getbyte);
         if t>high(TNodeType) then
-          internalerror(200208152);
+          InternalError(200208152);
         if t<>emptynode then
          begin
-           if not assigned(nodeclass[t]) then
-             internalerror(200208153);
+           if not Assigned(nodeclass[t]) then
+             InternalError(200208153);
            hppuidx:=ppufile.getlongint;
            //writeln('load: ',nodetype2str[t]);
            { generate node of the correct class }
@@ -610,7 +610,7 @@ implementation
         { marker, read by ppuloadnode }
         ppufile.putbyte(ppunodemarker);
         { type, read by ppuloadnode }
-        if assigned(n) then
+        if Assigned(n) then
          begin
            ppufile.putbyte(byte(n.nodetype));
            ppufile.putlongint(n.ppuidx);
@@ -644,30 +644,30 @@ implementation
 
     procedure printnode(var t:text;n:TNode);
       begin
-        if assigned(n) then
+        if Assigned(n) then
          n.printnodetree(t)
         else
-         writeln(t,printnodeindention,'nil');
+         WriteLn(t,PrintNodeIndention,'nil');
       end;
 
 
     procedure dprintnode(n:TNode);
       begin
-        printnode(output,n);
+        printnode(Output,n);
       end;
 
     procedure printfileinfo(var t:text; pos:TFilePosInfo);
       var
 	infile : string;
-	module : tmodule;
-	afile : tinputfile;
+	module : TModule;
+	afile : TInputFile;
       begin
         infile:='inconsistent';
-	module:=get_module(pos.moduleindex);
-	if assigned(module) then
+	module:=Get_Module(pos.moduleindex);
+	if Assigned(module) then
           begin
-            afile:=module.sourcefiles.get_file(pos.fileindex);
-	    if assigned(afile) then
+            afile:=module.SourceFiles.Get_File(pos.fileindex);
+	    if Assigned(afile) then
               infile:=afile.name;
 	  end;
         write(t,'(',infile,':',pos.line,',',pos.column,')');
@@ -675,7 +675,7 @@ implementation
 
     procedure dprintfileinfo(pos:TFilePosInfo);
       begin
-        printfileinfo(output,pos);
+        printfileinfo(Output,pos);
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -767,14 +767,14 @@ implementation
       begin
          inherited create;
          nodetype:=t;
-         blocktype:=block_type;
+         blocktype:=Block_Type;
          { updated by firstpass }
          expectloc:=LOC_INVALID;
          { updated by secondpass }
          location.loc:=LOC_INVALID;
          { save local info }
          fileinfo:=CurrentFilePos;
-         localswitches:=CurrentSettings.localswitches;
+         LocalSwitches:=CurrentSettings.LocalSwitches;
          verbosity:=status.verbosity;
          resultdef:=nil;
          flags:=[];
@@ -792,10 +792,10 @@ implementation
         { tnode fields }
         blocktype:=TBlockType(ppufile.getbyte);
         ppufile.getposinfo(fileinfo);
-        ppufile.getset(tppuset5(localswitches));
+        ppufile.getset(TPPUSet5(LocalSwitches));
         verbosity:=ppufile.getlongint;
         ppufile.getderef(resultdefderef);
-        ppufile.getset(tppuset2(flags));
+        ppufile.getset(TPPUSet2(flags));
         { updated by firstpass }
         expectloc:=LOC_INVALID;
         { updated by secondpass }
@@ -807,14 +807,14 @@ implementation
       begin
         ppufile.putbyte(byte(blocktype));
         ppufile.putposinfo(fileinfo);
-        ppufile.putset(tppuset5(localswitches));
+        ppufile.putset(TPPUSet5(LocalSwitches));
         ppufile.putlongint(verbosity);
         ppufile.putderef(resultdefderef);
-        ppufile.putset(tppuset2(flags));
+        ppufile.putset(TPPUSet2(flags));
       end;
 
 
-    function TNode.getppuidx:longint;
+    function TNode.getppuidx:LongInt;
       begin
         if fppuidx=0 then
           begin
@@ -857,9 +857,9 @@ implementation
       end;
 
 
-    destructor TNode.destroy;
+    destructor TNode.Destroy;
       begin
-         if assigned(optinfo) then
+         if Assigned(optinfo) then
            dispose(optinfo);
       end;
 
@@ -873,7 +873,7 @@ implementation
     procedure TNode.mark_write;
       begin
 {$ifdef EXTDEBUG}
-        Comment(V_Warning,'mark_write not implemented for '+nodetype2str[nodetype]);
+        Comment(VWarning,'mark_write not implemented for '+nodetype2str[nodetype]);
 {$endif EXTDEBUG}
       end;
 
@@ -884,7 +884,7 @@ implementation
         first : boolean;
       begin
         write(t,nodetype2str[nodetype]);
-        if assigned(resultdef) then
+        if Assigned(resultdef) then
           write(t,', resultdef = ',resultdef.typesymbolprettyname,' = "',resultdef.GetTypeName,'" ')
         else
           write(t,', resultdef = <nil> ');
@@ -905,7 +905,7 @@ implementation
         write(t,']');
         if (tnf_pass1_done in transientflags) then
           write(t,', cmplx = ',node_complexity(self));
-        if assigned(optinfo) then
+        if Assigned(optinfo) then
           write(t,', optinfo = ',HexStr(optinfo));
       end;
 
@@ -917,13 +917,13 @@ implementation
 
     procedure TNode.printnodetree(var t:text);
       begin
-         write(t,printnodeindention,'(');
+         write(t,PrintNodeIndention,'(');
          printnodeinfo(t);
-         writeln(t);
-         printnodeindent;
+         WriteLn(t);
+         PrintNodeIndent;
          printnodedata(t);
-         printnodeunindent;
-         writeln(t,printnodeindention,')');
+         PrintNodeUnindent;
+         WriteLn(t,PrintNodeIndention,')');
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -989,8 +989,8 @@ implementation
     function TNode.isequal(p : TNode) : boolean;
       begin
          isequal:=
-           (not assigned(self) and not assigned(p)) or
-           (assigned(self) and assigned(p) and
+           (not Assigned(self) and not Assigned(p)) or
+           (Assigned(self) and Assigned(p) and
             { optimized subclasses have the same nodetype as their        }
             { superclass (for compatibility), so also check the classtype (JM) }
             (p.classtype=classtype) and
@@ -1014,20 +1014,20 @@ implementation
       end;
 
 
-    function cleanupcopiedto(var n : TNode;arg : pointer) : foreachnoderesult;
+    function cleanupcopiedto(var n : TNode;arg : pointer) : TForEachNodeResult;
       begin
         result:=fen_true;
         if n.nodetype=labeln then
-          tlabelnode(n).copiedto:=nil;
+          TLabelNode(n).copiedto:=nil;
       end;
 
 
-    function setuplabelnode(var n : TNode;arg : pointer) : foreachnoderesult;
+    function setuplabelnode(var n : TNode;arg : pointer) : TForEachNodeResult;
       begin
         result:=fen_true;
-        if (n.nodetype=goton) and assigned(tgotonode(n).labelnode) and
-          assigned(tgotonode(n).labelnode.copiedto) then
-          tgotonode(n).labelnode:=tgotonode(n).labelnode.copiedto;
+        if (n.nodetype=goton) and Assigned(TGotoNode(n).labelnode) and
+          Assigned(TGotoNode(n).labelnode.copiedto) then
+          TGotoNode(n).labelnode:=TGotoNode(n).labelnode.copiedto;
       end;
 
 
@@ -1053,7 +1053,7 @@ implementation
          p.transientflags:=transientflags;
          p.resultdef:=resultdef;
          p.fileinfo:=fileinfo;
-         p.localswitches:=localswitches;
+         p.LocalSwitches:=LocalSwitches;
          p.verbosity:=verbosity;
 {         p.list:=list; }
          result:=p;
@@ -1066,9 +1066,9 @@ implementation
 
 
     { ensures that the optimizer info record is allocated }
-    function TNode.allocoptinfo : poptinfo;inline;
+    function TNode.allocoptinfo : POptInfo;inline;
       begin
-        if not(assigned(optinfo)) then
+        if not(Assigned(optinfo)) then
           begin
             new(optinfo);
             fillchar(optinfo^,sizeof(optinfo^),0);
@@ -1084,7 +1084,7 @@ implementation
       begin
          inherited create(t);
          { transfer generic paramater flag }
-         if assigned(l) and (nf_generic_para in l.flags) then
+         if Assigned(l) and (nf_generic_para in l.flags) then
            include(flags,nf_generic_para);
          left:=l;
       end;
@@ -1097,11 +1097,11 @@ implementation
       end;
 
 
-    destructor TUnaryNode.destroy;
+    destructor TUnaryNode.Destroy;
       begin
         left.free;
         left := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -1115,7 +1115,7 @@ implementation
     procedure TUnaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
-        if assigned(left) then
+        if Assigned(left) then
           left.buildderefimpl;
       end;
 
@@ -1123,7 +1123,7 @@ implementation
     procedure TUnaryNode.derefimpl;
       begin
         inherited derefimpl;
-        if assigned(left) then
+        if Assigned(left) then
           left.derefimpl;
       end;
 
@@ -1141,7 +1141,7 @@ implementation
          p : TUnaryNode;
       begin
          p:=TUnaryNode(inherited dogetcopy);
-         if assigned(left) then
+         if Assigned(left) then
            p.left:=left.dogetcopy
          else
            p.left:=nil;
@@ -1192,7 +1192,7 @@ implementation
       begin
          inherited create(t,l);
          { transfer generic paramater flag }
-         if assigned(r) and (nf_generic_para in r.flags) then
+         if Assigned(r) and (nf_generic_para in r.flags) then
            include(flags,nf_generic_para);
          right:=r;
       end;
@@ -1205,11 +1205,11 @@ implementation
       end;
 
 
-    destructor TBinaryNode.destroy;
+    destructor TBinaryNode.Destroy;
       begin
         right.free;
         right := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -1223,7 +1223,7 @@ implementation
     procedure TBinaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
-        if assigned(right) then
+        if Assigned(right) then
           right.buildderefimpl;
       end;
 
@@ -1231,7 +1231,7 @@ implementation
     procedure TBinaryNode.derefimpl;
       begin
         inherited derefimpl;
-        if assigned(right) then
+        if Assigned(right) then
           right.derefimpl;
       end;
 
@@ -1255,7 +1255,7 @@ implementation
          p : TBinaryNode;
       begin
          p:=TBinaryNode(inherited dogetcopy);
-         if assigned(right) then
+         if Assigned(right) then
            p.right:=right.dogetcopy
          else
            p.right:=nil;
@@ -1314,16 +1314,16 @@ implementation
         hp : TBinaryNode;
       begin
         hp:=self;
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
-           write(t,printnodeindention,'(');
-           printnodeindent;
+           write(t,PrintNodeIndention,'(');
+           PrintNodeIndent;
            hp.printnodeinfo(t);
-           writeln(t);
+           WriteLn(t);
            printnode(t,hp.left);
-           writeln(t);
-           printnodeunindent;
-           writeln(t,printnodeindention,')');
+           WriteLn(t);
+           PrintNodeUnindent;
+           WriteLn(t,PrintNodeIndention,')');
            hp:=TBinaryNode(hp.right);
          end;
       end;
@@ -1347,7 +1347,7 @@ implementation
       begin
          inherited create(_t,l,r);
          { transfer generic parameter flag }
-         if assigned(t) and (nf_generic_para in t.flags) then
+         if Assigned(t) and (nf_generic_para in t.flags) then
            include(flags,nf_generic_para);
          third:=t;
       end;
@@ -1360,11 +1360,11 @@ implementation
       end;
 
 
-    destructor TTertiaryNode.destroy;
+    destructor TTertiaryNode.Destroy;
       begin
         third.free;
         third := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -1378,7 +1378,7 @@ implementation
     procedure TTertiaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
-        if assigned(third) then
+        if Assigned(third) then
           third.buildderefimpl;
       end;
 
@@ -1386,7 +1386,7 @@ implementation
     procedure TTertiaryNode.derefimpl;
       begin
         inherited derefimpl;
-        if assigned(third) then
+        if Assigned(third) then
           third.derefimpl;
       end;
 
@@ -1404,7 +1404,7 @@ implementation
          p : TTertiaryNode;
       begin
          p:=TTertiaryNode(inherited dogetcopy);
-         if assigned(third) then
+         if Assigned(third) then
            p.third:=third.dogetcopy
          else
            p.third:=nil;
@@ -1493,7 +1493,7 @@ begin
 {$push}{$warnings off}
   { tvaroption must fit into a 4 byte set for speed reasons }
   if ord(high(TVarOption))>31 then
-    internalerror(201110301);
+    InternalError(201110301);
 (*  { tnodeflags must fit into a 4 byte set for speed reasons }
   if ord(high(tnodeflags))>31 then
     internalerror(2014020701); *)

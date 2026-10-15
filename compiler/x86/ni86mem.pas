@@ -25,12 +25,12 @@ unit ni86mem;
 
 interface
     uses
-      globtype,
-      cgbase,cpuinfo,cpubase,
+      GlobType,
+      cgbase,CPUInfo,cpubase,
       node,nmem,ncgmem,nx86mem;
 
     type
-      ti86addrnode = class(tcgaddrnode)
+      TI86AddrNode = class(TCGAddrNode)
        protected
         procedure set_absvarsym_resultdef; virtual; abstract;
         function typecheck_non_proc(realsource: TNode; out res: TNode): boolean; override;
@@ -39,8 +39,8 @@ interface
 implementation
 
     uses
-      cutils,verbose,
-      aasmtai,aasmdata,
+      CUtils,Verbose,
+      aasmtai,AAsmData,
       cgutils,cgobj,
       nld,
       symconst,symdef,symcpu;
@@ -49,14 +49,14 @@ implementation
                            TI86ADDRNODE
 *****************************************************************************}
 
-  function ti86addrnode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
+  function TI86AddrNode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
     begin
       res:=nil;
       { if we are getting the address of an absolute sym, check whether it's
         a near or a far pointer }
       if (realsource.nodetype=loadn) and
-         ((tloadnode(realsource).symtableentry.typ=absolutevarsym) and
-         tcpuabsolutevarsym(tloadnode(realsource).symtableentry).absseg) then
+         ((TLoadNode(realsource).symtableentry.typ=absolutevarsym) and
+         TCPUAbsoluteVarSym(TLoadNode(realsource).symtableentry).absseg) then
         begin
           set_absvarsym_resultdef;
           result:=true;

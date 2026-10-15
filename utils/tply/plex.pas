@@ -65,97 +65,97 @@ uses
   LexBase, LexTable, LexPos, LexDFA, LexOpt, LexList, LexRules, LexMsgs, SysUtils;
 
 
-procedure get_line;
+procedure GetLine;
   (* obtain line from source file *)
   begin
-    readln(yyin, line);
-    inc(lno);
+    ReadLn(YYIn, Line);
+    Inc(LNo);
   end(*get_line*);
 
-procedure next_section;
+procedure NextSection;
   (* find next section mark (%%) in code template *)
-  var line : String;
+  var Line : String;
   begin
-    while not eof(yycod) do
+    while not EOF(YYCod) do
       begin
-        readln(yycod, line);
-        if line='%%' then exit;
-        writeln(yyout, line);
+        ReadLn(YYCod, Line);
+        if Line='%%' then Exit;
+        WriteLn(YYOut, Line);
       end;
   end(*next_section*);
 
 (* Semantic routines: *)
 
-var n_rules : Integer; (* current number of rules *)
+var NRules : Integer; (* current number of rules *)
 
-procedure define_start_state ( symbol : String; pos : Integer; excl : Boolean );
+procedure DefineStartState ( Symbol : String; POS : Integer; Excl : Boolean );
   (* process start state definition *)
   begin
 {$ifdef fpc}
-    with sym_table^[key(symbol, max_keys, @lookup, @entry)] do
+    with SymTable^[Key(Symbol, MaxKeys, @Lookup, @Entry)] do
 {$else}
-    with sym_table^[key(symbol, max_keys, lookup, entry)] do
+    with SymTable^[Key(Symbol, MaxKeys, Lookup, Entry)] do
 {$endif}
-      if sym_type=none_sym then
+      if SymType=NoneSym then
         begin
-          inc(n_start_states);
-          if n_start_states>max_start_states then
-            fatal(state_table_overflow);
-          sym_type    := start_state_sym;
-          start_state := n_start_states;
-          writeln(yyout, 'const ', symbol, ' = ', 2*start_state, ';');
-          first_pos_table^[2*start_state] := newIntSet;
-          first_pos_table^[2*start_state+1] := newIntSet;
-          start_excl^[start_state] := excl;
+          Inc(NStartStates);
+          if NStartStates>MaxStartStates then
+            Fatal(StateTableOverflow);
+          SymType    := StartStateSym;
+          StartState := NStartStates;
+          WriteLn(YYOut, 'const ', Symbol, ' = ', 2*StartState, ';');
+          FirstPosTable^[2*StartState] := NewIntSet;
+          FirstPosTable^[2*StartState+1] := NewIntSet;
+          StartExcl^[StartState] := Excl;
         end
       else
-        error(symbol_already_defined, pos)
+        Error(SymbolAlreadyDefined, POS)
   end(*define_start_state*);
 
-procedure define_macro ( symbol, replacement : String );
+procedure DefineMacro ( Symbol, Replacement : String );
   (* process macro definition *)
   begin
 {$ifdef fpc}
-    with sym_table^[key('{'+symbol+'}', max_keys, @lookup, @entry)] do
+    with SymTable^[Key('{'+Symbol+'}', MaxKeys, @Lookup, @Entry)] do
 {$else}
-    with sym_table^[key('{'+symbol+'}', max_keys, lookup, entry)] do
+    with SymTable^[Key('{'+Symbol+'}', MaxKeys, Lookup, Entry)] do
 {$endif}
-      if sym_type=none_sym then
+      if SymType=NoneSym then
         begin
-          sym_type := macro_sym;
-          subst    := newStr(strip(replacement));
+          SymType := MacroSym;
+          Subst    := NewStr(Strip(Replacement));
         end
       else
-        error(symbol_already_defined, 1)
+        Error(SymbolAlreadyDefined, 1)
   end(*define_macro*);
 
-procedure add_rule;
+procedure AddRule;
   (* process rule *)
-  var i : Integer;
-      FIRST : IntSet;
+  var I : Integer;
+      First : TIntSet;
   begin
-    addExpr(r, FIRST);
-    if n_st=0 then
-      if cf then
-        setunion(first_pos_table^[1]^, FIRST)
+    AddExpr(R, First);
+    if NSt=0 then
+      if Cf then
+        SetUnion(FirstPosTable^[1]^, First)
       else
         begin
-          setunion(first_pos_table^[0]^, FIRST);
-          setunion(first_pos_table^[1]^, FIRST);
+          SetUnion(FirstPosTable^[0]^, First);
+          SetUnion(FirstPosTable^[1]^, First);
         end
     else
-      if cf then
-        for i := 1 to n_st do
-          setunion(first_pos_table^[2*st[i]+1]^, FIRST)
+      if Cf then
+        for I := 1 to NSt do
+          SetUnion(FirstPosTable^[2*St[I]+1]^, First)
       else
-        for i := 1 to n_st do
+        for I := 1 to NSt do
           begin
-            setunion(first_pos_table^[2*st[i]]^, FIRST);
-            setunion(first_pos_table^[2*st[i]+1]^, FIRST);
+            SetUnion(FirstPosTable^[2*St[I]]^, First);
+            SetUnion(FirstPosTable^[2*St[I]+1]^, First);
           end
   end(*add_rule*);
 
-procedure generate_table;
+procedure GenerateTable;
 
   (* write the DFA table to the output file
 
@@ -195,554 +195,554 @@ procedure generate_table;
 
   *)
 
-  var yynmarks, yynmatches, yyntrans, yynstates : Integer;
-      yykl, yykh,
-      yyml, yymh,
-      yytl, yyth : array [0..max_states-1] of Integer;
+  var YYNMarks, YYNMatches, YYNTrans, YYNStates : Integer;
+      YYKL, YYKH,
+      YYML, YYMH,
+      YYTL, YYTH : array [0..MaxStates-1] of Integer;
 
-  procedure counters;
+  procedure Counters;
     (* compute counters and offsets *)
-    var s, i : Integer;
+    var S, I : Integer;
     begin
-      yynstates := n_states; yyntrans   := n_trans;
-      yynmarks  := 0;        yynmatches := 0;
-      for s := 0 to n_states-1 do with state_table^[s] do
+      YYNStates := NStates; YYNTrans   := NTrans;
+      YYNMarks  := 0;        YYNMatches := 0;
+      for S := 0 to NStates-1 do with StateTable^[S] do
         begin
-          yytl[s] := trans_lo;   yyth[s] := trans_hi;
-          yykl[s] := yynmarks+1; yyml[s] := yynmatches+1;
-          for i := 1 to size(state_pos^) do
-            with pos_table^[state_pos^[i]] do
-              if pos_type=mark_pos then
-                if pos=0 then
-                  inc(yynmatches)
-                else if pos=1 then
-                  inc(yynmarks);
-          yykh[s] := yynmarks; yymh[s] := yynmatches;
+          YYTL[S] := TransLo;   YYTH[S] := TransHi;
+          YYKL[S] := YYNMarks+1; YYML[S] := YYNMatches+1;
+          for I := 1 to Size(StatePos^) do
+            with PosTable^[StatePos^[I]] do
+              if PosType=MarkPos then
+                if POS=0 then
+                  Inc(YYNMatches)
+                else if POS=1 then
+                  Inc(YYNMarks);
+          YYKH[S] := YYNMarks; YYMH[S] := YYNMatches;
         end;
     end(*counters*);
 
-  procedure writecc(var f : Text; cc : CClass);
+  procedure WriteCC(var F : Text; CC : TCClass);
     (* print the given character class *)
-    function charStr(c : Char) : String;
+    function CharStr(C : Char) : String;
       begin
-        case c of
+        case C of
           #0..#31,     (* nonprintable characters *)
-          #127..#255 : charStr := '#'+intStr(ord(c));
-          ''''       : charStr := '''''''''';
-          else         charStr := ''''+c+'''';
+          #127..#255 : CharStr := '#'+IntStr(Ord(C));
+          ''''       : CharStr := '''''''''';
+          else         CharStr := ''''+C+'''';
         end;
       end(*charStr*);
     const
       MaxChar = #255;
     var
-      c1, c2 : Char;
-      col : Integer;
-      tag : String;
+      C1, C2 : Char;
+      Col : Integer;
+      Tag : String;
       Quit: Boolean;
     begin
-      write(f, '[ ');
-      col := 0;
-      c1 := chr(0);
+      Write(F, '[ ');
+      Col := 0;
+      C1 := Chr(0);
       Quit := False;
       while not Quit do begin
-        if c1 in cc then  begin
-          if col>0 then
+        if C1 in CC then  begin
+          if Col>0 then
             begin
-              write(f, ',');
-              inc(col);
+              Write(F, ',');
+              Inc(Col);
             end;
-          if col>40 then
+          if Col>40 then
             { insert line break }
             begin
-              writeln(f);
-              write(f, ' ':12);
-              col := 0;
+              WriteLn(F);
+              Write(F, ' ':12);
+              Col := 0;
             end;
-          c2 := c1;
-          while (c2<MaxChar) and (succ(c2) in cc) do
-            c2 := succ(c2);
-          if c1=c2 then
-            tag := charStr(c1)
-          else if c2=succ(c1) then
-            tag := charStr(c1)+','+charStr(c2)
+          C2 := C1;
+          while (C2<MaxChar) and (Succ(C2) in CC) do
+            C2 := Succ(C2);
+          if C1=C2 then
+            Tag := CharStr(C1)
+          else if C2=Succ(C1) then
+            Tag := CharStr(C1)+','+CharStr(C2)
           else
-            tag := charStr(c1)+'..'+charStr(c2);
-          write(f, tag);
-          col := col + length(tag);
-          c1 := c2;
+            Tag := CharStr(C1)+'..'+CharStr(C2);
+          Write(F, Tag);
+          Col := Col + Length(Tag);
+          C1 := C2;
         end;
-        Quit := c1 = MaxChar;
+        Quit := C1 = MaxChar;
         if not Quit then
-          c1 := Succ(c1);
+          C1 := Succ(C1);
       end; { of while }
-      write(f, ' ]');
+      Write(F, ' ]');
     end(*writecc*);
 
-  procedure tables;
+  procedure Tables;
     (* print tables *)
-    var s, i, count : Integer;
+    var S, I, Count : Integer;
     begin
-      writeln(yyout);
-      writeln(yyout, 'type YYTRec = record');
-      writeln(yyout, '                cc : set of Char;');
-      writeln(yyout, '                s  : Integer;');
-      writeln(yyout, '              end;');
-      writeln(yyout);
-      writeln(yyout, 'const');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'type TYYTRec = record');
+      WriteLn(YYOut, '                CC : set of Char;');
+      WriteLn(YYOut, '                S  : Integer;');
+      WriteLn(YYOut, '              end;');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'const');
       (* table sizes: *)
-      writeln(yyout);
-      writeln(yyout, 'yynmarks   = ', yynmarks, ';');
-      writeln(yyout, 'yynmatches = ', yynmatches, ';');
-      writeln(yyout, 'yyntrans   = ', yyntrans, ';');
-      writeln(yyout, 'yynstates  = ', yynstates, ';');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYNMarks   = ', YYNMarks, ';');
+      WriteLn(YYOut, 'YYNMatches = ', YYNMatches, ';');
+      WriteLn(YYOut, 'YYNTrans   = ', YYNTrans, ';');
+      WriteLn(YYOut, 'YYNStates  = ', YYNStates, ';');
       (* mark table: *)
-      writeln(yyout);
-      writeln(yyout, 'yyk : array [1..yynmarks] of Integer = (');
-      count := 0;
-      for s := 0 to n_states-1 do with state_table^[s] do
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYK : array [1..YYNMarks] of Integer = (');
+      Count := 0;
+      for S := 0 to NStates-1 do with StateTable^[S] do
         begin
-          writeln(yyout, '  { ', s, ': }');
-          for i := 1 to size(state_pos^) do
-            with pos_table^[state_pos^[i]] do
-              if (pos_type=mark_pos) and (pos=1) then
+          WriteLn(YYOut, '  { ', S, ': }');
+          for I := 1 to Size(StatePos^) do
+            with PosTable^[StatePos^[I]] do
+              if (PosType=MarkPos) and (POS=1) then
                 begin
-                  write(yyout, '  ', rule); inc(count);
-                  if count<yynmarks then write(yyout, ',');
-                  writeln(yyout);
+                  Write(YYOut, '  ', Rule); Inc(Count);
+                  if Count<YYNMarks then Write(YYOut, ',');
+                  WriteLn(YYOut);
                 end;
         end;
-      writeln(yyout, ');');
+      WriteLn(YYOut, ');');
       (* match table: *)
-      writeln(yyout);
-      writeln(yyout, 'yym : array [1..yynmatches] of Integer = (');
-      count := 0;
-      for s := 0 to n_states-1 do with state_table^[s] do
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYM : array [1..YYNMatches] of Integer = (');
+      Count := 0;
+      for S := 0 to NStates-1 do with StateTable^[S] do
         begin
-          writeln(yyout, '{ ', s, ': }');
-          for i := 1 to size(state_pos^) do
-            with pos_table^[state_pos^[i]] do
-              if (pos_type=mark_pos) and (pos=0) then
+          WriteLn(YYOut, '{ ', S, ': }');
+          for I := 1 to Size(StatePos^) do
+            with PosTable^[StatePos^[I]] do
+              if (PosType=MarkPos) and (POS=0) then
                 begin
-                  write(yyout, '  ', rule); inc(count);
-                  if count<yynmatches then write(yyout, ',');
-                  writeln(yyout);
+                  Write(YYOut, '  ', Rule); Inc(Count);
+                  if Count<YYNMatches then Write(YYOut, ',');
+                  WriteLn(YYOut);
                 end;
         end;
-      writeln(yyout, ');');
+      WriteLn(YYOut, ');');
       (* transition table: *)
-      writeln(yyout);
-      writeln(yyout, 'yyt : array [1..yyntrans] of YYTrec = (');
-      count := 0;
-      for s := 0 to n_states-1 do with state_table^[s] do
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYT : array [1..YYNTrans] of TYYTRec = (');
+      Count := 0;
+      for S := 0 to NStates-1 do with StateTable^[S] do
         begin
-          writeln(yyout, '{ ', s, ': }');
-          for i := trans_lo to trans_hi do
-            with trans_table^[i] do
+          WriteLn(YYOut, '{ ', S, ': }');
+          for I := TransLo to TransHi do
+            with TransTable^[I] do
               begin
-                write(yyout, '  ( cc: ');
-                writecc(yyout, cc^);
-                write(yyout, '; s: ');
-                write(yyout, next_state, ')');
-                inc(count);
-                if count<yyntrans then write(yyout, ',');
-                writeln(yyout);
+                Write(YYOut, '  ( CC: ');
+                WriteCC(YYOut, CC^);
+                Write(YYOut, '; S: ');
+                Write(YYOut, NextState, ')');
+                Inc(Count);
+                if Count<YYNTrans then Write(YYOut, ',');
+                WriteLn(YYOut);
               end;
         end;
-      writeln(yyout, ');');
+      WriteLn(YYOut, ');');
       (* offset tables: *)
-      writeln(yyout);
-      writeln(yyout, 'yykl : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYKL : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yykl[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYKL[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
-      writeln(yyout, 'yykh : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYKH : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yykh[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYKH[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
-      writeln(yyout, 'yyml : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYML : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yyml[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYML[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
-      writeln(yyout, 'yymh : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYMH : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yymh[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYMH[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
-      writeln(yyout, 'yytl : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYTL : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yytl[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYTL[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
-      writeln(yyout, 'yyth : array [0..yynstates-1] of Integer = (');
-      for s := 0 to n_states-1 do
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
+      WriteLn(YYOut, 'YYTH : array [0..YYNStates-1] of Integer = (');
+      for S := 0 to NStates-1 do
         begin
-          write(yyout, '{ ', s, ': } ', yyth[s]);
-          if s<n_states-1 then write(yyout, ',');
-          writeln(yyout);
+          Write(YYOut, '{ ', S, ': } ', YYTH[S]);
+          if S<NStates-1 then Write(YYOut, ',');
+          WriteLn(YYOut);
         end;
-      writeln(yyout, ');');
-      writeln(yyout);
+      WriteLn(YYOut, ');');
+      WriteLn(YYOut);
     end(*tables*);
 
   begin
-    counters; tables;
+    Counters; Tables;
   end(*generate_table*);
 
 (* Parser: *)
 
 const
 
-max_items = 255;
+MaxItems = 255;
 
 var
 
-itemstr : String;
-itemc   : Integer;
-itempos,
-itemlen : array [1..max_items] of Integer;
+ItemStr : String;
+ItemC   : Integer;
+ItemPos,
+ItemLen : array [1..MaxItems] of Integer;
 
-procedure split ( str : String; count : Integer );
+procedure Split ( Str : String; Count : Integer );
   (* split str into at most count whitespace-delimited items
      (result in itemstr, itemc, itempos, itemlen) *)
-  procedure scan(var act_pos : Integer);
+  procedure Scan(var ActPos : Integer);
     (* scan one item *)
-    var l : Integer;
+    var L : Integer;
     begin
-      while (act_pos<=length(itemstr)) and
-            ((itemstr[act_pos]=' ') or (itemstr[act_pos]=tab)) do
-        inc(act_pos);
-      l := 0;
-      while (act_pos+l<=length(itemstr)) and
-            (itemstr[act_pos+l]<>' ') and (itemstr[act_pos+l]<>tab) do
-        inc(l);
-      inc(itemc);
-      itempos[itemc] := act_pos;
-      itemlen[itemc] := l;
-      inc(act_pos, l+1);
-      while (act_pos<=length(itemstr)) and
-            ((itemstr[act_pos]=' ') or (itemstr[act_pos]=tab)) do
-        inc(act_pos);
+      while (ActPos<=Length(ItemStr)) and
+            ((ItemStr[ActPos]=' ') or (ItemStr[ActPos]=Tab)) do
+        Inc(ActPos);
+      L := 0;
+      while (ActPos+L<=Length(ItemStr)) and
+            (ItemStr[ActPos+L]<>' ') and (ItemStr[ActPos+L]<>Tab) do
+        Inc(L);
+      Inc(ItemC);
+      ItemPos[ItemC] := ActPos;
+      ItemLen[ItemC] := L;
+      Inc(ActPos, L+1);
+      while (ActPos<=Length(ItemStr)) and
+            ((ItemStr[ActPos]=' ') or (ItemStr[ActPos]=Tab)) do
+        Inc(ActPos);
     end(*scan*);
-  var act_pos : Integer;
+  var ActPos : Integer;
   begin
-    itemstr := str; act_pos := 1;
-    itemc := 0;
-    while (itemc<count-1) and (act_pos<=length(itemstr)) do scan(act_pos);
-    if act_pos<=length(itemstr) then
+    ItemStr := Str; ActPos := 1;
+    ItemC := 0;
+    while (ItemC<Count-1) and (ActPos<=Length(ItemStr)) do Scan(ActPos);
+    if ActPos<=Length(ItemStr) then
       begin
-        inc(itemc);
-        itempos[itemc] := act_pos;
-        itemlen[itemc] := length(itemstr)-act_pos+1;
+        Inc(ItemC);
+        ItemPos[ItemC] := ActPos;
+        ItemLen[ItemC] := Length(ItemStr)-ActPos+1;
       end;
   end(*split*);
 
-function itemv ( i : Integer ) : String;
+function ItemV ( I : Integer ) : String;
   (* return ith item in split string (whole string for i=0) *)
   begin
-    if i=0 then
-      itemv := itemstr
-    else if (i<0) or (i>itemc) then
-      itemv := ''
+    if I=0 then
+      ItemV := ItemStr
+    else if (I<0) or (I>ItemC) then
+      ItemV := ''
     else
-      itemv := copy(itemstr, itempos[i], itemlen[i])
+      ItemV := Copy(ItemStr, ItemPos[I], ItemLen[I])
   end(*itemv*);
 
-procedure code;
+procedure Code;
   begin
-    while not eof(yyin) do
+    while not EOF(YYIn) do
       begin
-        get_line;
-        if line='%}' then
-          exit
+        GetLine;
+        if Line='%}' then
+          Exit
         else
-          writeln(yyout, line);
+          WriteLn(YYOut, Line);
       end;
-    error(unmatched_lbrace, length(line)+1);
+    Error(UnmatchedLBrace, Length(Line)+1);
   end(*code*);
 
-procedure definitions;
-  procedure definition;
-    function check_id ( symbol : String ) : Boolean;
-      var i : Integer;
+procedure Definitions;
+  procedure Definition;
+    function CheckId ( Symbol : String ) : Boolean;
+      var I : Integer;
       begin
-        if (symbol='') or not (symbol[1] in letters) then
-          check_id := false
+        if (Symbol='') or not (Symbol[1] in Letters) then
+          CheckId := False
         else
           begin
-            for i := 2 to length(symbol) do
-              if not (symbol[i] in alphanums) then
+            for I := 2 to Length(Symbol) do
+              if not (Symbol[I] in Alphanums) then
                 begin
-                  check_id := false;
-                  exit;
+                  CheckId := False;
+                  Exit;
                 end;
-            check_id := true
+            CheckId := True
           end
       end(*check_id*);
-    var i : Integer;
-        com : String;
+    var I : Integer;
+        Com : String;
     begin
-      split(line, 2);
-      com := upper(itemv(1));
-      if (com='%S') or (com='%START') or (com='%X') then
+      Split(Line, 2);
+      Com := Upper(ItemV(1));
+      if (Com='%S') or (Com='%START') or (Com='%X') then
         begin
-          split(line, max_items);
-          for i := 2 to itemc do
-            if check_id(itemv(i)) then
-              define_start_state(itemv(i), itempos[i], com='%X')
+          Split(Line, MaxItems);
+          for I := 2 to ItemC do
+            if CheckId(ItemV(I)) then
+              DefineStartState(ItemV(I), ItemPos[I], Com='%X')
             else
-              error(syntax_error, itempos[i]);
+              Error(SyntaxError, ItemPos[I]);
         end
-      else if check_id(itemv(1)) then
-        define_macro(itemv(1), itemv(2))
+      else if CheckId(ItemV(1)) then
+        DefineMacro(ItemV(1), ItemV(2))
       else
-        error(syntax_error, 1);
+        Error(SyntaxError, 1);
     end(*definition*);
   begin
-    while not eof(yyin) do
+    while not EOF(YYIn) do
       begin
-        get_line;
-        if line='' then
-          writeln(yyout)
-        else if line='%%' then
-          exit
-        else if line='%{' then
-          code
-        else if (line[1]='%') or (line[1] in letters) then
-          definition
+        GetLine;
+        if Line='' then
+          WriteLn(YYOut)
+        else if Line='%%' then
+          Exit
+        else if Line='%{' then
+          Code
+        else if (Line[1]='%') or (Line[1] in Letters) then
+          Definition
         else
-          writeln(yyout, line)
+          WriteLn(YYOut, Line)
       end;
   end(*definitions*);
 
-procedure rules;
+procedure Rules;
   begin
-    next_section;
-    if line='%%' then
-      while not eof(yyin) do
+    NextSection;
+    if Line='%%' then
+      while not EOF(YYIn) do
         begin
-          get_line;
-          if line='' then
-            writeln(yyout)
-          else if line='%%' then
+          GetLine;
+          if Line='' then
+            WriteLn(YYOut)
+          else if Line='%%' then
             begin
-              next_section;
-              exit;
+              NextSection;
+              Exit;
             end
-          else if line='%{' then
-            code
-          else if (line[1]<>' ') and (line[1]<>tab) then
+          else if Line='%{' then
+            Code
+          else if (Line[1]<>' ') and (Line[1]<>Tab) then
             begin
-              if n_rules=0 then next_section;
-              inc(n_rules);
-              parse_rule(n_rules);
-              if errors=0 then
+              if NRules=0 then NextSection;
+              Inc(NRules);
+              ParseRule(NRules);
+              if Errors=0 then
                 begin
-                  add_rule;
-                  write(yyout, '  ', n_rules);
-                  if strip(stmt)='|' then
-                    writeln(yyout, ',')
+                  AddRule;
+                  Write(YYOut, '  ', NRules);
+                  if Strip(Stmt)='|' then
+                    WriteLn(YYOut, ',')
                   else
                     begin
-                      writeln(yyout, ':');
-                      writeln(yyout, blankStr(expr), stmt);
+                      WriteLn(YYOut, ':');
+                      WriteLn(YYOut, BlankStr(Expr), Stmt);
                     end;
                 end
             end
           else
-            writeln(yyout, line)
+            WriteLn(YYOut, Line)
         end
     else
-      error(unexpected_eof, length(line)+1);
-    next_section;
+      Error(UnexpectedEOF, Length(Line)+1);
+    NextSection;
   end(*rules*);
 
-procedure auxiliary_procs;
+procedure AuxiliaryProcs;
   begin
-    if line='%%' then
+    if Line='%%' then
       begin
-        writeln(yyout);
-        while not eof(yyin) do
+        WriteLn(YYOut);
+        while not EOF(YYIn) do
           begin
-            get_line;
-            writeln(yyout, line);
+            GetLine;
+            WriteLn(YYOut, Line);
           end;
       end;
   end(*auxiliary_procs*);
 
 (* Main program: *)
 
-var i : Integer;
+var I : Integer;
 
 begin
 {$ifdef Unix}
-  codfilepath1:=path(paramstr(0));
-  if (codfilepath1<>'') then
-    codfilepath1:=codfilepath1+'../lib/fpc/lexyacc/'
+  CodFilePath1:=Path(ParamStr(0));
+  if (CodFilePath1<>'') then
+    CodFilePath1:=CodFilePath1+'../lib/fpc/lexyacc/'
   else
-    codfilepath1:='/usr/local/lib/fpc/lexyacc/';
-  codfilepath2:='/usr/lib/fpc/lexyacc/';
+    CodFilePath1:='/usr/local/lib/fpc/lexyacc/';
+  CodFilePath2:='/usr/lib/fpc/lexyacc/';
 {$else}
-  codfilepath1:=path(paramstr(0));
-  codfilepath2:='';
+  CodFilePath1:=Path(ParamStr(0));
+  CodFilePath2:='';
 {$endif}
 
 
   (* sign-on: *)
 
-  writeln(sign_on);
+  WriteLn(SignOn);
 
   (* parse command line: *)
 
-  if paramCount=0 then
+  if ParamCount=0 then
     begin
-      writeln(usage);
-      writeln(options);
-      halt(0);
+      WriteLn(Usage);
+      WriteLn(Options);
+      Halt(0);
     end;
 
-  lfilename := '';
-  pasfilename := '';
+  LFileName := '';
+  PasFileName := '';
 
-  for i := 1 to paramCount do
-    if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-V' then
-        verbose := true
-      else if upper(paramStr(i))='-O' then
-        optimize := true
+  for I := 1 to ParamCount do
+    if Copy(ParamStr(I), 1, 1)='-' then
+      if Upper(ParamStr(I))='-V' then
+        Verbose := True
+      else if Upper(ParamStr(I))='-O' then
+        Optimize := True
       else
         begin
-          writeln(invalid_option, paramStr(i));
-          halt(1);
+          WriteLn(InvalidOption, ParamStr(I));
+          Halt(1);
         end
-    else if lfilename='' then
-      lfilename := addExt(paramStr(i), 'l')
-    else if pasfilename='' then
-      pasfilename := addExt(paramStr(i), 'pas')
+    else if LFileName='' then
+      LFileName := AddExt(ParamStr(I), 'l')
+    else if PasFileName='' then
+      PasFileName := AddExt(ParamStr(I), 'pas')
     else
       begin
-        writeln(illegal_no_args);
-        halt(1);
+        WriteLn(IllegalNoArgs);
+        Halt(1);
       end;
 
-  if lfilename='' then
+  if LFileName='' then
     begin
-      writeln(illegal_no_args);
-      halt(1);
+      WriteLn(IllegalNoArgs);
+      Halt(1);
     end;
 
-  if pasfilename='' then pasfilename := root(lfilename)+'.pas';
-  lstfilename := root(lfilename)+'.lst';
+  if PasFileName='' then PasFileName := Root(LFileName)+'.pas';
+  LstFileName := Root(LFileName)+'.lst';
 
   (* open files: *)
 
-  assign(yyin, lfilename);
-  assign(yyout, pasfilename);
-  assign(yylst, lstfilename);
+  Assign(YYIn, LFileName);
+  Assign(YYOut, PasFileName);
+  Assign(YYLst, LstFileName);
 
-  reset(yyin);    if ioresult<>0 then fatal(cannot_open_file+lfilename);
-  rewrite(yyout); if ioresult<>0 then fatal(cannot_open_file+pasfilename);
-  rewrite(yylst); if ioresult<>0 then fatal(cannot_open_file+lstfilename);
+  Reset(YYIn);    if IOResult<>0 then Fatal(CannotOpenFile+LFileName);
+  Rewrite(YYOut); if IOResult<>0 then Fatal(CannotOpenFile+PasFileName);
+  Rewrite(YYLst); if IOResult<>0 then Fatal(CannotOpenFile+LstFileName);
 
   (* search code template *)
-  codfilename := 'yylex.cod';
-  assign(yycod, codfilename);
-  reset(yycod);
-  if ioresult<>0 then
+  CodFileName := 'yylex.cod';
+  Assign(YYCod, CodFileName);
+  Reset(YYCod);
+  if IOResult<>0 then
     begin
-      codfilename := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yylex.cod';
-      assign(yycod, codfilename);
-      reset(yycod);
-      if ioresult<>0 then
+      CodFileName := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yylex.cod';
+      Assign(YYCod, CodFileName);
+      Reset(YYCod);
+      if IOResult<>0 then
         begin
-          codfilename := codfilepath1+'yylex.cod';
-          assign(yycod, codfilename);
-          reset(yycod);
-          if (codfilepath2<>'') and (ioresult<>0) then
+          CodFileName := CodFilePath1+'yylex.cod';
+          Assign(YYCod, CodFileName);
+          Reset(YYCod);
+          if (CodFilePath2<>'') and (IOResult<>0) then
             begin
-              codfilename := codfilepath2+'yylex.cod';
-              assign(yycod, codfilename);
-              reset(yycod);
-              if ioresult<>0 then
-                fatal(cannot_open_file+codfilename);
+              CodFileName := CodFilePath2+'yylex.cod';
+              Assign(YYCod, CodFileName);
+              Reset(YYCod);
+              if IOResult<>0 then
+                Fatal(CannotOpenFile+CodFileName);
             end;
         end;
     end;
 
   (* parse source grammar: *)
 
-  write('parse ... ');
-  lno := 0; n_rules := 0; next_section;
-  first_pos_table^[0] := newIntSet;
-  first_pos_table^[1] := newIntSet;
-  definitions;
-  rules;
-  if n_rules=0 then error(empty_grammar, length(line)+1);
-  if errors=0 then
+  Write('parse ... ');
+  LNo := 0; NRules := 0; NextSection;
+  FirstPosTable^[0] := NewIntSet;
+  FirstPosTable^[1] := NewIntSet;
+  Definitions;
+  Rules;
+  if NRules=0 then Error(EmptyGrammar, Length(Line)+1);
+  if Errors=0 then
     begin
       (* generate DFA table and listings and write output code: *)
-      write('DFA construction ... ');
-      makeDFATable;
-      if optimize then
+      Write('DFA construction ... ');
+      MakeDFATable;
+      if Optimize then
         begin
-          write('DFA optimization ... ');
-          optimizeDFATable;
+          Write('DFA optimization ... ');
+          OptimizeDFATable;
         end;
-      write('code generation ... ');
-      if verbose then listDFATable;
-      generate_table; next_section;
+      Write('code generation ... ');
+      if Verbose then ListDFATable;
+      GenerateTable; NextSection;
     end;
-  auxiliary_procs;
-  if errors=0 then writeln('DONE');
+  AuxiliaryProcs;
+  if Errors=0 then WriteLn('DONE');
 
   (* close files: *)
 
-  close(yyin); close(yyout); close(yylst); close(yycod);
+  Close(YYIn); Close(YYOut); Close(YYLst); Close(YYCod);
 
   (* print statistics: *)
 
-  if errors>0 then
-    writeln( lno, ' lines, ',
-             errors, ' errors found.' )
+  if Errors>0 then
+    WriteLn( LNo, ' lines, ',
+             Errors, ' errors found.' )
   else
-    writeln( lno, ' lines, ',
-             n_rules, ' rules, ',
-             n_pos, '/', max_pos, ' p, ',
-             n_states, '/', max_states, ' s, ',
-             n_trans, '/', max_trans, ' t.');
+    WriteLn( LNo, ' lines, ',
+             NRules, ' rules, ',
+             NPos, '/', MaxPos, ' p, ',
+             NStates, '/', MaxStates, ' s, ',
+             NTrans, '/', MaxTrans, ' t.');
 
-  if warnings>0 then writeln(warnings, ' warnings.');
+  if Warnings>0 then WriteLn(Warnings, ' warnings.');
 
   (* terminate: *)
 
-  if errors>0 then erase(yyout);
-  if file_size(lstfilename)=0 then
-    erase(yylst)
+  if Errors>0 then Erase(YYOut);
+  if GetFileSize(LstFileName)=0 then
+    Erase(YYLst)
   else
-    writeln('(see ', lstfilename, ' for more information)');
+    WriteLn('(see ', LstFileName, ' for more information)');
 
-  halt(errors);
+  Halt(Errors);
 
 end(*Lex*).

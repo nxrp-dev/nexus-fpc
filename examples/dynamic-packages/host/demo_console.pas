@@ -1,6 +1,6 @@
-program demo_console;
+program DemoConsole;
 {$mode objfpc}{$H+}
 uses DemoHost;
 begin
-  RunDemo(true);
+  RunDemo(True);
 end.

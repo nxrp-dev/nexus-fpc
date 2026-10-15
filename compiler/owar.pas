@@ -26,12 +26,12 @@ unit owar;
 interface
 
 uses
-  globtype,
-  cclasses,
+  GlobType,
+  CClasses,
   owbase;
 
 type
-  tarhdr=packed record
+  TArHdr=packed record
     name : array[0..15] of char;
     date : array[0..11] of char;
     uid  : array[0..5] of char;
@@ -41,50 +41,50 @@ type
     fmag : array[0..1] of char;
   end;
 
-  tarobjectwriter=class(tobjectwriter)
+  TArObjectWriter=class(TObjectWriter)
     constructor createAr(const Aarfn:string);override;
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  createfile(const fn:string):boolean;override;
     procedure closefile;override;
     procedure writesym(const sym:string);override;
-    procedure write(const b;len:longword);override;
+    procedure write(const b;len:LongWord);override;
   private
     arfn        : string;
-    arhdr       : tarhdr;
+    arhdr       : TArHdr;
     symreloc,
     symstr,
     lfnstr,
     ardata      : TDynamicArray;
-    objpos      : longint;
+    objpos      : LongInt;
     objfn       : string;
     timestamp   : string[12];
-    procedure createarhdr(fn:string;asize:longint;const gid,uid,mode:string);
+    procedure createarhdr(fn:string;asize:LongInt;const gid,uid,mode:string);
     procedure writear;
   end;
 
-  tarobjectreader=class(tobjectreader)
+  TArObjectReader=class(TObjectReader)
   private
     ArSymbols : TFPHashObjectList;
     LFNStrs   : TAnsiCharDynArray;
-    LFNSize   : longint;
+    LFNSize   : LongInt;
     CurrMemberPos,
-    CurrMemberSize : longint;
+    CurrMemberSize : LongInt;
     CurrMemberName : string;
     isar: boolean;
     function  DecodeMemberName(ahdr:TArHdr):ShortString;
-    function  DecodeMemberSize(ahdr:TArHdr):longint;
+    function  DecodeMemberSize(ahdr:TArHdr):LongInt;
     procedure ReadArchive;
   protected
     function getfilename:string;override;
-    function GetSize: longint;override;
-    function GetPos: longint;override;
+    function GetSize: LongInt;override;
+    function GetPos: LongInt;override;
     function GetIsArchive: boolean; override;
   public
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);override;
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  openfile(const fn:string):boolean;override;
     procedure closefile;override;
-    procedure seek(len:longint);override;
+    procedure seek(len:LongInt);override;
   end;
 
 
@@ -92,10 +92,10 @@ implementation
 
     uses
       SysUtils,
-      cstreams,
-      systems,
-      globals,
-      verbose;
+      CStreams,
+      Systems,
+      Globals,
+      Verbose;
 
     const
       symrelocbufsize = 4096;
@@ -107,7 +107,7 @@ implementation
 
     type
       TArSymbol = class(TFPHashObject)
-        MemberPos : longint;
+        MemberPos : LongInt;
       end;
 
 
@@ -131,8 +131,8 @@ implementation
            Inc(Month,12);
          End;
         Dec(Month,3);
-        Century:=(longint(DT.Year Div 100)*D1) shr 2;
-        XYear:=(longint(DT.Year Mod 100)*D0) shr 2;
+        Century:=(LongInt(DT.Year Div 100)*D1) shr 2;
+        XYear:=(LongInt(DT.Year Mod 100)*D0) shr 2;
         Gregorian2Julian:=((((Month*153)+2) div 5)+DT.Day)+D2+XYear+Century;
       End;
 
@@ -143,15 +143,15 @@ implementation
       end;
 
 
-    function lsb2msb(l:longint):longint;
+    function lsb2msb(l:LongInt):LongInt;
       type
-        bytearr=array[0..3] of byte;
+        TByteArr=array[0..3] of byte;
       begin
 {$ifndef FPC_BIG_ENDIAN}
-        bytearr(result)[0]:=bytearr(l)[3];
-        bytearr(result)[1]:=bytearr(l)[2];
-        bytearr(result)[2]:=bytearr(l)[1];
-        bytearr(result)[3]:=bytearr(l)[0];
+        TByteArr(result)[0]:=TByteArr(l)[3];
+        TByteArr(result)[1]:=TByteArr(l)[2];
+        TByteArr(result)[2]:=TByteArr(l)[1];
+        TByteArr(result)[3]:=TByteArr(l)[0];
 {$else}
         result:=l;
 {$endif}
@@ -162,7 +162,7 @@ implementation
                                 TArObjectWriter
 *****************************************************************************}
 
-    constructor tarobjectwriter.createAr(const Aarfn:string);
+    constructor TArObjectWriter.createAr(const Aarfn:string);
       var
         time  : TSystemTime;
       begin
@@ -177,9 +177,9 @@ implementation
       end;
 
 
-    destructor tarobjectwriter.destroy;
+    destructor TArObjectWriter.Destroy;
       begin
-        if Errorcount=0 then
+        if ErrorCount=0 then
          writear;
         arData.Free;
         arData := nil;
@@ -192,13 +192,13 @@ implementation
       end;
 
 
-    procedure tarobjectwriter.createarhdr(fn:string;asize:longint;const gid,uid,mode:string);
+    procedure TArObjectWriter.createarhdr(fn:string;asize:LongInt;const gid,uid,mode:string);
       var
         tmp : string[9];
         hfn : string;
       begin
         { create ar header }
-        fillchar(arhdr,sizeof(tarhdr),' ');
+        fillchar(arhdr,sizeof(TArHdr),' ');
         { win32 will change names starting with .\ to ./ when using lfn, corrupting
           the sort order required for the idata sections. To prevent this strip
           always the path from the filename. (PFV) }
@@ -228,24 +228,24 @@ implementation
       end;
 
 
-    function tarobjectwriter.createfile(const fn:string):boolean;
+    function TArObjectWriter.createfile(const fn:string):boolean;
       begin
         objfn:=fn;
         objpos:=ardata.size;
-        ardata.seek(objpos + sizeof(tarhdr));
+        ardata.seek(objpos + sizeof(TArHdr));
         createfile:=true;
         fobjsize:=0;
       end;
 
 
-    procedure tarobjectwriter.closefile;
+    procedure TArObjectWriter.closefile;
       const
         LF:char=#10;
       var
-        filesize:longint;
+        filesize:LongInt;
       begin
         { preserve file size, before aligning on an even boundary }
-        filesize:=ardata.size-objpos-sizeof(tarhdr);
+        filesize:=ardata.size-objpos-sizeof(TArHdr);
         { align on an even boundary, by inserting an LF if necessary }
         if odd(ardata.size) then
           write(LF,1);
@@ -253,12 +253,12 @@ implementation
         createarhdr(objfn,filesize,'42','42','644');
         { write the header }
         ardata.seek(objpos);
-        ardata.write(arhdr,sizeof(tarhdr));
+        ardata.write(arhdr,sizeof(TArHdr));
         fobjsize:=0;
       end;
 
 
-    procedure tarobjectwriter.writesym(const sym:string);
+    procedure TArObjectWriter.writesym(const sym:string);
       var
         c : char;
       begin
@@ -269,7 +269,7 @@ implementation
       end;
 
 
-    procedure tarobjectwriter.write(const b;len:longword);
+    procedure TArObjectWriter.write(const b;len:LongWord);
       begin
         inc(fobjsize,len);
         inc(fsize,len);
@@ -277,11 +277,11 @@ implementation
       end;
 
 
-    procedure tarobjectwriter.writear;
+    procedure TArObjectWriter.writear;
       var
         arf      : TCCustomFileStream;
         fixup,l,
-        relocs,i : longint;
+        relocs,i : LongInt;
       begin
         arf:=CFileStreamClass.Create(arfn,fmCreate);
         if CStreamError<>0 then
@@ -296,9 +296,9 @@ implementation
         if symreloc.size>0 then
          begin
            symstr.align(2);
-           fixup:=12+sizeof(tarhdr)+symreloc.size+symstr.size;
+           fixup:=12+sizeof(TArHdr)+symreloc.size+symstr.size;
            if lfnstr.size>0 then
-            inc(fixup,lfnstr.size+sizeof(tarhdr));
+            inc(fixup,lfnstr.size+sizeof(TArHdr));
            relocs:=symreloc.size div 4;
            { fixup relocs }
            for i:=0to relocs-1 do
@@ -310,7 +310,7 @@ implementation
               symreloc.write(l,4);
             end;
            createarhdr('',4+symreloc.size+symstr.size,'0','0','0');
-           arf.Write(arhdr,sizeof(tarhdr));
+           arf.Write(arhdr,sizeof(TArHdr));
            relocs:=lsb2msb(relocs);
            arf.Write(relocs,4);
            symreloc.WriteStream(arf);
@@ -319,7 +319,7 @@ implementation
         if lfnstr.size>0 then
          begin
            createarhdr('/',lfnstr.size,'','','');
-           arf.Write(arhdr,sizeof(tarhdr));
+           arf.Write(arhdr,sizeof(TArHdr));
            lfnstr.WriteStream(arf);
          end;
         ardata.WriteStream(arf);
@@ -333,7 +333,7 @@ implementation
 *****************************************************************************}
 
 
-    constructor tarobjectreader.createAr(const Aarfn:string;allow_nonar:boolean);
+    constructor TArObjectReader.createAr(const Aarfn:string;allow_nonar:boolean);
       var
         magic:array[0..sizeof(armagic)-1] of char;
       begin
@@ -349,13 +349,13 @@ implementation
             if isar then
               ReadArchive
             else if (not allow_nonar) then
-              Comment(V_Error,'Not a ar file, illegal magic: '+filename);
+              Comment(VError,'Not a ar file, illegal magic: '+FileName);
             Seek(0);
           end;
       end;
 
 
-    destructor  tarobjectreader.destroy;
+    destructor  TArObjectReader.Destroy;
       begin
         inherited closefile;
         ArSymbols.Free;
@@ -365,7 +365,7 @@ implementation
       end;
 
 
-    function tarobjectreader.getfilename : string;
+    function TArObjectReader.getfilename : string;
       begin
         result:=inherited getfilename;
         if CurrMemberName<>'' then
@@ -373,31 +373,31 @@ implementation
       end;
 
 
-    function tarobjectreader.GetSize: longint;
+    function TArObjectReader.GetSize: LongInt;
       begin
         result:=CurrMemberSize;
       end;
 
 
-    function tarobjectreader.GetPos: longint;
+    function TArObjectReader.GetPos: LongInt;
       begin
         result:=inherited GetPos-CurrMemberPos;
       end;
 
 
-    function tarobjectreader.GetIsArchive: boolean;
+    function TArObjectReader.GetIsArchive: boolean;
       begin
         Result:=isar;
       end;
 
 
-    function tarobjectreader.DecodeMemberName(ahdr:TArHdr):ShortString;
+    function TArObjectReader.DecodeMemberName(ahdr:TArHdr):ShortString;
       var
         hs : ShortString;
         code : integer;
         hsp,
         p : pchar;
-        lfnidx : longint;
+        lfnidx : LongInt;
       begin
         result:='';
         p:=@ahdr.name[0];
@@ -415,7 +415,7 @@ implementation
             val(hs,lfnidx,code);
             if (lfnidx<0) or (lfnidx>=LFNSize) then
               begin
-                Comment(V_Error,'Invalid ar member lfn name index in '+filename);
+                Comment(VError,'Invalid ar member lfn name index in '+FileName);
                 exit;
               end;
             p:=@LFNStrs[lfnidx];
@@ -436,7 +436,7 @@ implementation
       end;
 
 
-    function tarobjectreader.DecodeMemberSize(ahdr:TArHdr):longint;
+    function TArObjectReader.DecodeMemberSize(ahdr:TArHdr):LongInt;
       var
         hs : ShortString;
         code : integer;
@@ -454,25 +454,25 @@ implementation
         hs[0]:=chr(hsp-@hs[1]);
         val(hs,result,code);
         if result<=0 then
-          Comment(V_Error,'Invalid ar member size in '+filename);
+          Comment(VError,'Invalid ar member size in '+FileName);
       end;
 
 
-    procedure tarobjectreader.ReadArchive;
+    procedure TArObjectReader.ReadArchive;
       var
-        currarhdr   : tarhdr;
+        currarhdr   : TArHdr;
         nrelocs,
         relocidx,
         currfilesize,
         relocsize,
-        symsize     : longint;
+        symsize     : LongInt;
         arsym       : TArSymbol;
         s           : string;
         currp,
         endp,
         startp      : integer;
         syms : TAnsiCharDynArray;
-        relocs      : Array of longint;
+        relocs      : Array of LongInt;
       begin
         Read(currarhdr,sizeof(currarhdr));
         { Read number of relocs }
@@ -484,14 +484,14 @@ implementation
         symsize:=currfilesize-relocsize-4;
         if symsize<0 then
           begin
-            Comment(V_Error,'Illegal symtable in ar file '+filename);
+            Comment(VError,'Illegal symtable in ar file '+FileName);
             exit;
           end;
         { Read relocs }
-        setlength(Relocs,relocsize);
+        SetLength(Relocs,relocsize);
         Read(relocs[0],relocsize);
         { Read symbols, force terminating #0 to prevent overflow }
-        setlength(syms,symsize+1);
+        SetLength(syms,symsize+1);
         syms[symsize]:=#0;
         Read(syms[0],symsize);
         { Parse symbols }
@@ -510,7 +510,7 @@ implementation
             inc(currp);
             if currp>endp then
               begin
-                Comment(V_Error,'Illegal symtable in ar file '+filename);
+                Comment(VError,'Illegal symtable in ar file '+FileName);
                 break;
               end;
           end;
@@ -521,20 +521,20 @@ implementation
         if DecodeMemberName(currarhdr)='/' then
           begin
             lfnsize:=DecodeMemberSize(currarhdr);
-            setLength(lfnstrs,lfnsize);
+            SetLength(lfnstrs,lfnsize);
             Read(lfnstrs[0],lfnsize);
           end;
       end;
 
 
-    function  tarobjectreader.openfile(const fn:string):boolean;
+    function  TArObjectReader.openfile(const fn:string):boolean;
       var
         arsym : TArSymbol;
         arhdr : TArHdr;
       begin
         result:=false;
         arsym:=TArSymbol(ArSymbols.Find(fn));
-        if not assigned(arsym) then
+        if not Assigned(arsym) then
           exit;
         inherited Seek(arsym.MemberPos);
         Read(arhdr,sizeof(arhdr));
@@ -545,7 +545,7 @@ implementation
       end;
 
 
-    procedure tarobjectreader.closefile;
+    procedure TArObjectReader.closefile;
       begin
         CurrMemberPos:=0;
         CurrMemberSize:=0;
@@ -553,7 +553,7 @@ implementation
       end;
 
 
-    procedure tarobjectreader.seek(len:longint);
+    procedure TArObjectReader.seek(len:LongInt);
       begin
         inherited Seek(CurrMemberPos+len);
       end;

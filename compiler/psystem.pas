@@ -26,7 +26,7 @@ unit psystem;
 interface
 
     uses
-      symbase;
+      SymBase;
 
     procedure create_intern_symbols;
     procedure create_intern_types;
@@ -40,11 +40,11 @@ interface
 implementation
 
     uses
-      globals,globtype,verbose,constexp,cpuinfo,compinnr,
-      systems,
-      symconst,symtype,symsym,symdef,symcpu,symtable,
+      Globals,GlobType,Verbose,ConstExp,CPUInfo,compinnr,
+      Systems,
+      symconst,symtype,SymSym,symdef,symcpu,SymTable,
       aasmtai,aasmcpu,
-      fmodule,
+      FModule,
       node,nbas,nflw,nset,ncon,ncnv,nld,nmem,ncal,nmat,nadd,ninl;
 
 
@@ -53,73 +53,73 @@ implementation
         all intern procedures for the system unit
       }
       begin
-        systemunit.insertsym(csyssym.create('Concat',in_concat_x));
-        systemunit.insertsym(csyssym.create('Write',in_write_x));
-        systemunit.insertsym(csyssym.create('WriteLn',in_writeln_x));
-        systemunit.insertsym(csyssym.create('WriteStr',in_writestr_x));
-        systemunit.insertsym(csyssym.create('Assigned',in_assigned_x));
-        systemunit.insertsym(csyssym.create('Read',in_read_x));
-        systemunit.insertsym(csyssym.create('ReadLn',in_readln_x));
-        systemunit.insertsym(csyssym.create('ReadStr',in_readstr_x));
-        systemunit.insertsym(csyssym.create('Ofs',in_ofs_x));
-        systemunit.insertsym(csyssym.create('SizeOf',in_sizeof_x));
-        systemunit.insertsym(csyssym.create('BitSizeOf',in_bitsizeof_x));
-        systemunit.insertsym(csyssym.create('TypeOf',in_typeof_x));
-        systemunit.insertsym(csyssym.create('Low',in_low_x));
-        systemunit.insertsym(csyssym.create('High',in_high_x));
-        systemunit.insertsym(csyssym.create('Slice',in_slice_x));
-        systemunit.insertsym(csyssym.create('Seg',in_seg_x));
-        systemunit.insertsym(csyssym.create('Ord',in_ord_x));
-        systemunit.insertsym(csyssym.create('Chr',in_chr_byte));
-        systemunit.insertsym(csyssym.create('Pred',in_pred_x));
-        systemunit.insertsym(csyssym.create('Succ',in_succ_x));
-        systemunit.insertsym(csyssym.create('Exclude',in_exclude_x_y));
-        systemunit.insertsym(csyssym.create('Include',in_include_x_y));
-        systemunit.insertsym(csyssym.create('Pack',in_pack_x_y_z));
-        systemunit.insertsym(csyssym.create('Unpack',in_unpack_x_y_z));
-        systemunit.insertsym(csyssym.create('Break',in_break));
-        systemunit.insertsym(csyssym.create('Exit',in_exit));
-        systemunit.insertsym(csyssym.create('Continue',in_continue));
-        systemunit.insertsym(csyssym.create('Leave',in_leave)); {macpas only}
-        systemunit.insertsym(csyssym.create('Cycle',in_cycle)); {macpas only}
-        systemunit.insertsym(csyssym.create('Dec',in_dec_x));
-        systemunit.insertsym(csyssym.create('Inc',in_inc_x));
-        systemunit.insertsym(csyssym.create('Str',in_str_x_string));
-        systemunit.insertsym(csyssym.create('Assert',in_assert_x_y));
-        systemunit.insertsym(csyssym.create('Val',in_val_x));
-        systemunit.insertsym(csyssym.create('Addr',in_addr_x));
+        systemunit.insertsym(CSysSym.create('Concat',in_concat_x));
+        systemunit.insertsym(CSysSym.create('Write',in_write_x));
+        systemunit.insertsym(CSysSym.create('WriteLn',in_writeln_x));
+        systemunit.insertsym(CSysSym.create('WriteStr',in_writestr_x));
+        systemunit.insertsym(CSysSym.create('Assigned',in_assigned_x));
+        systemunit.insertsym(CSysSym.create('Read',in_read_x));
+        systemunit.insertsym(CSysSym.create('ReadLn',in_readln_x));
+        systemunit.insertsym(CSysSym.create('ReadStr',in_readstr_x));
+        systemunit.insertsym(CSysSym.create('Ofs',in_ofs_x));
+        systemunit.insertsym(CSysSym.create('SizeOf',in_sizeof_x));
+        systemunit.insertsym(CSysSym.create('BitSizeOf',in_bitsizeof_x));
+        systemunit.insertsym(CSysSym.create('TypeOf',in_typeof_x));
+        systemunit.insertsym(CSysSym.create('Low',in_low_x));
+        systemunit.insertsym(CSysSym.create('High',in_high_x));
+        systemunit.insertsym(CSysSym.create('Slice',in_slice_x));
+        systemunit.insertsym(CSysSym.create('Seg',in_seg_x));
+        systemunit.insertsym(CSysSym.create('Ord',in_ord_x));
+        systemunit.insertsym(CSysSym.create('Chr',in_chr_byte));
+        systemunit.insertsym(CSysSym.create('Pred',in_pred_x));
+        systemunit.insertsym(CSysSym.create('Succ',in_succ_x));
+        systemunit.insertsym(CSysSym.create('Exclude',in_exclude_x_y));
+        systemunit.insertsym(CSysSym.create('Include',in_include_x_y));
+        systemunit.insertsym(CSysSym.create('Pack',in_pack_x_y_z));
+        systemunit.insertsym(CSysSym.create('Unpack',in_unpack_x_y_z));
+        systemunit.insertsym(CSysSym.create('Break',in_break));
+        systemunit.insertsym(CSysSym.create('Exit',in_exit));
+        systemunit.insertsym(CSysSym.create('Continue',in_continue));
+        systemunit.insertsym(CSysSym.create('Leave',in_leave)); {macpas only}
+        systemunit.insertsym(CSysSym.create('Cycle',in_cycle)); {macpas only}
+        systemunit.insertsym(CSysSym.create('Dec',in_dec_x));
+        systemunit.insertsym(CSysSym.create('Inc',in_inc_x));
+        systemunit.insertsym(CSysSym.create('Str',in_str_x_string));
+        systemunit.insertsym(CSysSym.create('Assert',in_assert_x_y));
+        systemunit.insertsym(CSysSym.create('Val',in_val_x));
+        systemunit.insertsym(CSysSym.create('Addr',in_addr_x));
 
-        systemunit.insertsym(csyssym.create('TypeInfo',in_typeinfo_x));
-        systemunit.insertsym(csyssym.create('SetLength',in_setlength_x));
-        systemunit.insertsym(csyssym.create('Copy',in_copy_x));
-        systemunit.insertsym(csyssym.create('Initialize',in_initialize_x));
-        systemunit.insertsym(csyssym.create('Finalize',in_finalize_x));
-        systemunit.insertsym(csyssym.create('Length',in_length_x));
-        systemunit.insertsym(csyssym.create('New',in_new_x));
-        systemunit.insertsym(csyssym.create('Dispose',in_dispose_x));
+        systemunit.insertsym(CSysSym.create('TypeInfo',in_typeinfo_x));
+        systemunit.insertsym(CSysSym.create('SetLength',in_setlength_x));
+        systemunit.insertsym(CSysSym.create('Copy',in_copy_x));
+        systemunit.insertsym(CSysSym.create('Initialize',in_initialize_x));
+        systemunit.insertsym(CSysSym.create('Finalize',in_finalize_x));
+        systemunit.insertsym(CSysSym.create('Length',in_length_x));
+        systemunit.insertsym(CSysSym.create('New',in_new_x));
+        systemunit.insertsym(CSysSym.create('Dispose',in_dispose_x));
 {$ifdef SUPPORT_GET_FRAME}
-        systemunit.insertsym(csyssym.create('Get_Frame',in_get_frame));
+        systemunit.insertsym(CSysSym.create('Get_Frame',in_get_frame));
 {$endif SUPPORT_GET_FRAME}
-        systemunit.insertsym(csyssym.create('Unaligned',in_unaligned_x));
-        systemunit.insertsym(csyssym.create('Aligned',in_aligned_x));
-        systemunit.insertsym(csyssym.create('Volatile',in_volatile_x));
-        systemunit.insertsym(csyssym.create('ObjCSelector',in_objc_selector_x)); { objc only }
-        systemunit.insertsym(csyssym.create('ObjCEncode',in_objc_encode_x)); { objc only }
-        systemunit.insertsym(csyssym.create('Default',in_default_x));
-        systemunit.insertsym(csyssym.create('SetString',in_setstring_x_y_z));
-        systemunit.insertsym(csyssym.create('Insert',in_insert_x_y_z));
-        systemunit.insertsym(csyssym.create('Delete',in_delete_x_y_z));
-        systemunit.insertsym(csyssym.create('GetTypeKind',in_gettypekind_x));
-        systemunit.insertsym(csyssym.create('IsManagedType',in_ismanagedtype_x));
-        systemunit.insertsym(csyssym.create('IsConstValue',in_isconstvalue_x));
-        systemunit.insertsym(csyssym.create('NameOf',in_nameof_x));
-        systemunit.insertsym(csyssym.create('fpc_eh_return_data_regno', in_const_eh_return_data_regno));
-        systemunit.insertsym(csyssym.create('AtomicIncrement',in_atomic_inc));
-        systemunit.insertsym(csyssym.create('AtomicDecrement',in_atomic_dec));
-        systemunit.insertsym(csyssym.create('AtomicExchange',in_atomic_xchg));
-        systemunit.insertsym(csyssym.create('AtomicCmpExchange',in_atomic_cmp_xchg));
-        systemunit.insertsym(cconstsym.create_ord('False',constord,0,pasbool1type));
-        systemunit.insertsym(cconstsym.create_ord('True',constord,1,pasbool1type));
+        systemunit.insertsym(CSysSym.create('Unaligned',in_unaligned_x));
+        systemunit.insertsym(CSysSym.create('Aligned',in_aligned_x));
+        systemunit.insertsym(CSysSym.create('Volatile',in_volatile_x));
+        systemunit.insertsym(CSysSym.create('ObjCSelector',in_objc_selector_x)); { objc only }
+        systemunit.insertsym(CSysSym.create('ObjCEncode',in_objc_encode_x)); { objc only }
+        systemunit.insertsym(CSysSym.create('Default',in_default_x));
+        systemunit.insertsym(CSysSym.create('SetString',in_setstring_x_y_z));
+        systemunit.insertsym(CSysSym.create('Insert',in_insert_x_y_z));
+        systemunit.insertsym(CSysSym.create('Delete',in_delete_x_y_z));
+        systemunit.insertsym(CSysSym.create('GetTypeKind',in_gettypekind_x));
+        systemunit.insertsym(CSysSym.create('IsManagedType',in_ismanagedtype_x));
+        systemunit.insertsym(CSysSym.create('IsConstValue',in_isconstvalue_x));
+        systemunit.insertsym(CSysSym.create('NameOf',in_nameof_x));
+        systemunit.insertsym(CSysSym.create('fpc_eh_return_data_regno', in_const_eh_return_data_regno));
+        systemunit.insertsym(CSysSym.create('AtomicIncrement',in_atomic_inc));
+        systemunit.insertsym(CSysSym.create('AtomicDecrement',in_atomic_dec));
+        systemunit.insertsym(CSysSym.create('AtomicExchange',in_atomic_xchg));
+        systemunit.insertsym(CSysSym.create('AtomicCmpExchange',in_atomic_cmp_xchg));
+        systemunit.insertsym(CConstSym.create_ord('False',constord,0,pasbool1type));
+        systemunit.insertsym(CConstSym.create_ord('True',constord,1,pasbool1type));
       end;
 
 
@@ -179,7 +179,7 @@ implementation
               codeptrsinttype:=s64inttype;
             end;
           else
-            Internalerror(2015112106);
+            InternalError(2015112106);
         end;
         case voidpointertype.size of
           2:
@@ -198,7 +198,7 @@ implementation
               ptrsinttype:=s64inttype;
             end;
           else
-            Internalerror(2016100301);
+            InternalError(2016100301);
         end;
       end;
 
@@ -209,7 +209,7 @@ implementation
 
         function addtype(const s:string;def:TDef):TTypeSym;
         begin
-          result:=ctypesym.create(s,def);
+          result:=CTypeSym.create(s,def);
           systemunit.insertsym(result);
         end;
 
@@ -221,12 +221,12 @@ implementation
 
         procedure create_fpu_types;
         begin
-          if InitSettings.fputype<>fpu_none then
+          if InitSettings.FPUType<>fpu_none then
             begin
-              s32floattype:=cfloatdef.create(s32real,true);
-              s64floattype:=cfloatdef.create(s64real,true);
-              s80floattype:=cfloatdef.create(s80real,true);
-              sc80floattype:=cfloatdef.create(sc80real,true);
+              s32floattype:=CFloatDef.create(S32Real,true);
+              s64floattype:=CFloatDef.create(S64Real,true);
+              s80floattype:=CFloatDef.create(s80real,true);
+              sc80floattype:=CFloatDef.create(sc80real,true);
             end
           else
             begin
@@ -241,93 +241,93 @@ implementation
         hrecst : TRecordSymTable;
 	pvmt_name : shortstring;
       begin
-        symtablestack.push(systemunit);
-        cundefinedtype:=cundefineddef.create(true);
-        cformaltype:=cformaldef.create(false);
-        ctypedformaltype:=cformaldef.create(true);
-        voidtype:=corddef.create(uvoid,0,0,true);
-        voidpointertype:=cpointerdef.create(voidtype);
-        u8inttype:=corddef.create(u8bit,0,255,true);
-        s8inttype:=corddef.create(s8bit,int64(-128),127,true);
-        u16inttype:=corddef.create(u16bit,0,65535,true);
-        s16inttype:=corddef.create(s16bit,int64(-32768),32767,true);
-        s24inttype:=corddef.create(customint,-(int64(1) shl 23),1 shl 23 - 1,true);
-        u24inttype:=corddef.create(customint,0,1 shl 24 - 1,true);
-        u32inttype:=corddef.create(u32bit,0,high(longword),true);
-        s32inttype:=corddef.create(s32bit,int64(low(longint)),int64(high(longint)),true);
-        s40inttype:=corddef.create(customint,-(int64(1) shl 39),int64(1) shl 39 - 1,true);
-        u40inttype:=corddef.create(customint,0,int64(1) shl 40 - 1,true);
-        s48inttype:=corddef.create(customint,-(int64(1) shl 47),int64(1) shl 47 - 1,true);
-        u48inttype:=corddef.create(customint,0,int64(1) shl 48 - 1,true);
-        s56inttype:=corddef.create(customint,-(int64(1) shl 55),int64(1) shl 55 - 1,true);
-        u56inttype:=corddef.create(customint,0,int64(1) shl 56 - 1,true);
-        u64inttype:=corddef.create(u64bit,low(qword),high(qword),true);
-        s64inttype:=corddef.create(s64bit,low(int64),high(int64),true);
+        SymTableStack.push(systemunit);
+        cundefinedtype:=CUndefinedDef.create(true);
+        cformaltype:=CFormalDef.create(false);
+        ctypedformaltype:=CFormalDef.create(true);
+        voidtype:=COrdDef.create(uvoid,0,0,true);
+        voidpointertype:=CPointerDef.create(voidtype);
+        u8inttype:=COrdDef.create(u8bit,0,255,true);
+        s8inttype:=COrdDef.create(s8bit,int64(-128),127,true);
+        u16inttype:=COrdDef.create(u16bit,0,65535,true);
+        s16inttype:=COrdDef.create(s16bit,int64(-32768),32767,true);
+        s24inttype:=COrdDef.create(customint,-(int64(1) shl 23),1 shl 23 - 1,true);
+        u24inttype:=COrdDef.create(customint,0,1 shl 24 - 1,true);
+        u32inttype:=COrdDef.create(u32bit,0,high(LongWord),true);
+        s32inttype:=COrdDef.create(s32bit,int64(low(LongInt)),int64(high(LongInt)),true);
+        s40inttype:=COrdDef.create(customint,-(int64(1) shl 39),int64(1) shl 39 - 1,true);
+        u40inttype:=COrdDef.create(customint,0,int64(1) shl 40 - 1,true);
+        s48inttype:=COrdDef.create(customint,-(int64(1) shl 47),int64(1) shl 47 - 1,true);
+        u48inttype:=COrdDef.create(customint,0,int64(1) shl 48 - 1,true);
+        s56inttype:=COrdDef.create(customint,-(int64(1) shl 55),int64(1) shl 55 - 1,true);
+        u56inttype:=COrdDef.create(customint,0,int64(1) shl 56 - 1,true);
+        u64inttype:=COrdDef.create(u64bit,low(qword),high(qword),true);
+        s64inttype:=COrdDef.create(s64bit,low(int64),high(int64),true);
         { upper/lower bound not yet properly set for 128 bit types, as we don't
           support them yet at the Pascal level (nor for tconstexprint); they're
           only used internally by the high level code generator for LLVM to
           implement overflow checking }
-        u128inttype:=corddef.create(u128bit,0,0,true);
-        s128inttype:=corddef.create(s128bit,0,0,true);
-        pasbool1type:=corddef.create(pasbool1,0,1,true);
-        pasbool8type:=corddef.create(pasbool8,0,1,true);
-        pasbool16type:=corddef.create(pasbool16,0,1,true);
-        pasbool32type:=corddef.create(pasbool32,0,1,true);
-        pasbool64type:=corddef.create(pasbool64,0,1,true);
-        bool8type:=corddef.create(bool8bit,low(int64),high(int64),true);
-        bool16type:=corddef.create(bool16bit,low(int64),high(int64),true);
-        bool32type:=corddef.create(bool32bit,low(int64),high(int64),true);
-        bool64type:=corddef.create(bool64bit,low(int64),high(int64),true);
+        u128inttype:=COrdDef.create(u128bit,0,0,true);
+        s128inttype:=COrdDef.create(s128bit,0,0,true);
+        pasbool1type:=COrdDef.create(pasbool1,0,1,true);
+        pasbool8type:=COrdDef.create(pasbool8,0,1,true);
+        pasbool16type:=COrdDef.create(pasbool16,0,1,true);
+        pasbool32type:=COrdDef.create(pasbool32,0,1,true);
+        pasbool64type:=COrdDef.create(pasbool64,0,1,true);
+        bool8type:=COrdDef.create(bool8bit,low(int64),high(int64),true);
+        bool16type:=COrdDef.create(bool16bit,low(int64),high(int64),true);
+        bool32type:=COrdDef.create(bool32bit,low(int64),high(int64),true);
+        bool64type:=COrdDef.create(bool64bit,low(int64),high(int64),true);
 
-        cansichartype:=corddef.create(uchar,0,255,true);
-        cwidechartype:=corddef.create(uwidechar,0,65535,true);
-        cshortstringtype:=cstringdef.createshort(255,true);
+        cansichartype:=COrdDef.create(uchar,0,255,true);
+        cwidechartype:=COrdDef.create(uwidechar,0,65535,true);
+        cshortstringtype:=CStringDef.createshort(255,true);
         { should we give a length to the default long and ansi string definition ?? }
-        clongstringtype:=cstringdef.createlong(-1,true);
-        cansistringtype:=cstringdef.createansi(0,true);
+        clongstringtype:=CStringDef.createlong(-1,true);
+        cansistringtype:=CStringDef.createansi(0,true);
         if TargetInfo.system in systems_windows then
-          cwidestringtype:=cstringdef.createwide(true)
+          cwidestringtype:=CStringDef.createwide(true)
         else
-          cwidestringtype:=cstringdef.createunicode(true);
-        cunicodestringtype:=cstringdef.createunicode(true);
+          cwidestringtype:=CStringDef.createunicode(true);
+        cunicodestringtype:=CStringDef.createunicode(true);
         { length=0 for shortstring is open string (needed for readln(string) }
-        openshortstringtype:=cstringdef.createshort(0,true);
+        openshortstringtype:=CStringDef.createshort(0,true);
         pvmt_name:='pvmt';
  {$ifdef x86}
         create_fpu_types;
         if TargetInfo.system=system_x86_64_win64 then
-          s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true)
+          s64currencytype:=COrdDef.create(scurrency,low(int64),high(int64),true)
         else
-          s64currencytype:=cfloatdef.create(s64currency,true);
+          s64currencytype:=CFloatDef.create(s64currency,true);
 {$endif x86}
 {$ifdef aarch64}
         create_fpu_types;
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
+        s64currencytype:=COrdDef.create(scurrency,low(int64),high(int64),true);
 {$endif aarch64}
 
         set_default_int_types;
         { some other definitions }
-        charpointertype:=cpointerdef.create(cansichartype);
-        widecharpointertype:=cpointerdef.create(cwidechartype);
+        charpointertype:=CPointerDef.create(cansichartype);
+        widecharpointertype:=CPointerDef.create(cwidechartype);
 
-        parentfpvoidpointertype:=cpointerdef.create(voidtype);
+        parentfpvoidpointertype:=CPointerDef.create(voidtype);
 
 {$ifdef x86}
-        voidnearpointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near);
-        voidnearcspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_cs);
-        voidneardspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_ds);
-        voidnearsspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_ss);
-        voidnearespointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_es);
-        voidnearfspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_fs);
-        voidneargspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_gs);
+        voidnearpointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near);
+        voidnearcspointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_cs);
+        voidneardspointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_ds);
+        voidnearsspointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_ss);
+        voidnearespointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_es);
+        voidnearfspointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_fs);
+        voidneargspointertype:=TCPUPointerDefClass(CPointerDef).createx86(voidtype,x86pt_near_gs);
 
-        x86_m64type:=carraydef.create_vector(0,1,s32inttype);
-        x86_m128type:=carraydef.create_vector(0,3,s32inttype);
-        x86_m128dtype:=carraydef.create_vector(0,1,s32inttype);
-        x86_m128itype:=carraydef.create_vector(0,3,s32inttype);
-        x86_m256type:=carraydef.create_vector(0,7,s32inttype);
-        x86_m256dtype:=carraydef.create_vector(0,3,s32inttype);
-        x86_m256itype:=carraydef.create_vector(0,7,s32inttype);
+        x86_m64type:=CArrayDef.create_vector(0,1,s32inttype);
+        x86_m128type:=CArrayDef.create_vector(0,3,s32inttype);
+        x86_m128dtype:=CArrayDef.create_vector(0,1,s32inttype);
+        x86_m128itype:=CArrayDef.create_vector(0,3,s32inttype);
+        x86_m256type:=CArrayDef.create_vector(0,7,s32inttype);
+        x86_m256dtype:=CArrayDef.create_vector(0,3,s32inttype);
+        x86_m256itype:=CArrayDef.create_vector(0,7,s32inttype);
 
         TArrayDef(x86_m64type).elementdef:=s32floattype;
         TArrayDef(x86_m128type).elementdef:=s32floattype;
@@ -338,16 +338,16 @@ implementation
         TArrayDef(x86_m256itype).elementdef:=s32floattype;
 {$endif x86}
         set_default_ptr_types;
-        openchararraytype:=carraydef.create_openarray;
+        openchararraytype:=CArrayDef.create_openarray;
         TArrayDef(openchararraytype).elementdef:=cansichartype;
-        cfiletype:=cfiledef.createuntyped;
-        if f_variants in features then
+        cfiletype:=CFileDef.createuntyped;
+        if f_variants in Features then
           begin
-            cvarianttype:=cvariantdef.create(vt_normalvariant);
-            colevarianttype:=cvariantdef.create(vt_olevariant);
+            CVariantType:=CVariantDef.create(vt_normalvariant);
+            colevarianttype:=CVariantDef.create(vt_olevariant);
           end;
 
-        if InitSettings.fputype<>fpu_none then
+        if InitSettings.FPUType<>fpu_none then
           begin
             addtype('Single',s32floattype);
             addtype('Double',s64floattype);
@@ -366,7 +366,7 @@ implementation
           end;
 {$ifdef x86}
         if TargetInfo.system<>system_x86_64_win64 then
-          addtype('Comp',cfloatdef.create(s64comp,true));
+          addtype('Comp',CFloatDef.create(s64comp,true));
 {$endif x86}
         addtype('Currency',s64currencytype);
         addtype('Pointer',voidpointertype);
@@ -416,11 +416,11 @@ implementation
         addtype('Int64',s64inttype);
         addtype('AnsiChar',cansichartype);
         addtype('WideChar',cwidechartype);
-        addtype('Text',cfiledef.createtext);
-        addtype('TypedFile',cfiledef.createtyped(voidtype));
-        if f_variants in features then
+        addtype('Text',CFileDef.createtext);
+        addtype('TypedFile',CFileDef.createtyped(voidtype));
+        if f_variants in Features then
           begin
-            addtype('Variant',cvarianttype);
+            addtype('Variant',CVariantType);
             addtype('OleVariant',colevarianttype);
           end;
         { Internal types }
@@ -487,12 +487,12 @@ implementation
 {$endif x86}
         addtype('$openchararray',openchararraytype);
         addtype('$file',cfiletype);
-        if f_variants in features then
+        if f_variants in Features then
           begin
-            addtype('$variant',cvarianttype);
+            addtype('$variant',CVariantType);
             addtype('$olevariant',colevarianttype);
           end;
-        if InitSettings.fputype<>fpu_none then
+        if InitSettings.FPUType<>fpu_none then
           begin
             addtype('$s32real',s32floattype);
             addtype('$s64real',s64floattype);
@@ -502,43 +502,43 @@ implementation
         addtype('$s64currency',s64currencytype);
           begin
             { Add a type for virtual method tables }
-            hrecst:=TRecordSymTable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
-            vmttype:=crecorddef.create('',hrecst);
-            pvmttype:=cpointerdef.create(vmttype);
+            hrecst:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.alignment.RecordAlignMin);
+            vmttype:=CRecordDef.create('',hrecst);
+            pvmttype:=CPointerDef.create(vmttype);
             { can't use addtype for pvmt because the rtti of the pointed
               type is not available. The rtti for pvmt will be written implicitly
               by thev tblarray below }
-            systemunit.insertsym(ctypesym.create('$'+pvmt_name,pvmttype));
-            addfield(hrecst,cfieldvarsym.create('$length',vs_value,sizesinttype,[]));
-            addfield(hrecst,cfieldvarsym.create('$mlength',vs_value,sizesinttype,[]));
-            addfield(hrecst,cfieldvarsym.create('$parent',vs_value,pvmttype,[]));
+            systemunit.insertsym(CTypeSym.create('$'+pvmt_name,pvmttype));
+            addfield(hrecst,CFieldVarSym.create('$length',vs_value,sizesinttype,[]));
+            addfield(hrecst,CFieldVarSym.create('$mlength',vs_value,sizesinttype,[]));
+            addfield(hrecst,CFieldVarSym.create('$parent',vs_value,pvmttype,[]));
             { it seems vmttype is used both for TP objects and Delphi classes,
               so the next entry could either be the first virtual method (vm1)
               (object) or the class name (class). We can't easily create separate
               vtable formats for both, as gdb is hard coded to search for
               __vtbl_ptr_type in all cases (JM) }
-            addfield(hrecst,cfieldvarsym.create('$vm1_or_classname',vs_value,cpointerdef.create(cshortstringtype),[]));
-            vmtarraytype:=carraydef.create(0,0,s32inttype);
+            addfield(hrecst,CFieldVarSym.create('$vm1_or_classname',vs_value,CPointerDef.create(cshortstringtype),[]));
+            vmtarraytype:=CArrayDef.create(0,0,s32inttype);
             TArrayDef(vmtarraytype).elementdef:=voidpointertype;
-            addfield(hrecst,cfieldvarsym.create('$__pfn',vs_value,vmtarraytype,[]));
+            addfield(hrecst,CFieldVarSym.create('$__pfn',vs_value,vmtarraytype,[]));
             addtype('$__vtbl_ptr_type',vmttype);
-            vmtarraytype:=carraydef.create(0,1,s32inttype);
+            vmtarraytype:=CArrayDef.create(0,1,s32inttype);
             TArrayDef(vmtarraytype).elementdef:=pvmttype;
             addtype('$vtblarray',vmtarraytype);
           end;
         { Add a type for methodpointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.recordalignmin);
-        addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
-        addfield(hrecst,cfieldvarsym.create('$self',vs_value,voidpointertype,[]));
-        methodpointertype:=crecorddef.create('',hrecst);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.RecordAlignMin);
+        addfield(hrecst,CFieldVarSym.create('$proc',vs_value,voidcodepointertype,[]));
+        addfield(hrecst,CFieldVarSym.create('$self',vs_value,voidpointertype,[]));
+        methodpointertype:=CRecordDef.create('',hrecst);
         addtype('$methodpointer',methodpointertype);
         { Add a type for nested proc pointers }
-        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.recordalignmin);
-        addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
-        addfield(hrecst,cfieldvarsym.create('$parentfp',vs_value,parentfpvoidpointertype,[]));
-        nestedprocpointertype:=crecorddef.create('',hrecst);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.RecordAlignMin);
+        addfield(hrecst,CFieldVarSym.create('$proc',vs_value,voidcodepointertype,[]));
+        addfield(hrecst,CFieldVarSym.create('$parentfp',vs_value,parentfpvoidpointertype,[]));
+        nestedprocpointertype:=CRecordDef.create('',hrecst);
         addtype('$nestedprocpointer',nestedprocpointertype);
-        symtablestack.pop(systemunit);
+        SymTableStack.pop(systemunit);
       end;
 
 
@@ -556,7 +556,7 @@ implementation
         end;
 
       var
-        oldcurrentmodule : tmodule;
+        oldcurrentmodule : TModule;
         pvmt_name : shortstring;
       begin
         oldcurrentmodule:=CurrentModule;
@@ -593,7 +593,7 @@ implementation
         loadtype('unicodestring',cunicodestringtype);
         loadtype('openshortstring',openshortstringtype);
         loadtype('openchararray',openchararraytype);
-        if InitSettings.fputype <> fpu_none then
+        if InitSettings.FPUType <> fpu_none then
           begin
             loadtype('s32real',s32floattype);
             loadtype('s64real',s64floattype);
@@ -636,9 +636,9 @@ implementation
         loadtype(pvmt_name,pvmttype);
         loadtype('vtblarray',vmtarraytype);
         loadtype('__vtbl_ptr_type',vmttype);
-        if f_variants in features then
+        if f_variants in Features then
           begin
-            loadtype('variant',cvarianttype);
+            loadtype('variant',CVariantType);
             loadtype('olevariant',colevarianttype);
           end;
         loadtype('methodpointer',methodpointertype);
@@ -657,78 +657,78 @@ implementation
         will be used for loading the nodes from a ppu
       }
       begin
-        nodeclass[addn]:=caddnode;
-        nodeclass[muln]:=caddnode;
-        nodeclass[subn]:=caddnode;
-        nodeclass[divn]:=cmoddivnode;
-        nodeclass[symdifn]:=caddnode;
-        nodeclass[modn]:=cmoddivnode;
-        nodeclass[assignn]:=cassignmentnode;
-        nodeclass[loadn]:=cloadnode;
-        nodeclass[rangen]:=crangenode;
-        nodeclass[ltn]:=caddnode;
-        nodeclass[lten]:=caddnode;
-        nodeclass[gtn]:=caddnode;
-        nodeclass[gten]:=caddnode;
-        nodeclass[equaln]:=caddnode;
-        nodeclass[unequaln]:=caddnode;
-        nodeclass[inn]:=cinnode;
-        nodeclass[orn]:=caddnode;
-        nodeclass[xorn]:=caddnode;
-        nodeclass[shrn]:=cshlshrnode;
-        nodeclass[shln]:=cshlshrnode;
-        nodeclass[slashn]:=caddnode;
-        nodeclass[andn]:=caddnode;
-        nodeclass[subscriptn]:=csubscriptnode;
-        nodeclass[derefn]:=cderefnode;
-        nodeclass[addrn]:=caddrnode;
-        nodeclass[ordconstn]:=cordconstnode;
-        nodeclass[typeconvn]:=ctypeconvnode;
-        nodeclass[calln]:=ccallnode;
-        nodeclass[callparan]:=ccallparanode;
-        nodeclass[realconstn]:=crealconstnode;
-        nodeclass[unaryminusn]:=cunaryminusnode;
-        nodeclass[unaryplusn]:=cunaryplusnode;
-        nodeclass[asmn]:=casmnode;
-        nodeclass[vecn]:=cvecnode;
-        nodeclass[pointerconstn]:=cpointerconstnode;
-        nodeclass[stringconstn]:=cstringconstnode;
-        nodeclass[notn]:=cnotnode;
-        nodeclass[inlinen]:=cinlinenode;
-        nodeclass[niln]:=cnilnode;
-        nodeclass[errorn]:=cerrornode;
-        nodeclass[typen]:=ctypenode;
-        nodeclass[setelementn]:=csetelementnode;
-        nodeclass[setconstn]:=csetconstnode;
-        nodeclass[blockn]:=cblocknode;
-        nodeclass[statementn]:=cstatementnode;
-        nodeclass[ifn]:=cifnode;
-        nodeclass[breakn]:=cbreaknode;
-        nodeclass[continuen]:=ccontinuenode;
-        nodeclass[whilerepeatn]:=cwhilerepeatnode;
-        nodeclass[forn]:=cfornode;
-        nodeclass[exitn]:=cexitnode;
-        nodeclass[casen]:=ccasenode;
-        nodeclass[labeln]:=clabelnode;
-        nodeclass[goton]:=cgotonode;
-        nodeclass[tryexceptn]:=ctryexceptnode;
-        nodeclass[raisen]:=craisenode;
-        nodeclass[tryfinallyn]:=ctryfinallynode;
-        nodeclass[onn]:=connode;
-        nodeclass[isn]:=cisnode;
-        nodeclass[asn]:=casnode;
-        nodeclass[starstarn]:=caddnode;
-        nodeclass[arrayconstructorn]:=carrayconstructornode;
-        nodeclass[arrayconstructorrangen]:=carrayconstructorrangenode;
-        nodeclass[tempcreaten]:=ctempcreatenode;
-        nodeclass[temprefn]:=ctemprefnode;
-        nodeclass[tempdeleten]:=ctempdeletenode;
-        nodeclass[addoptn]:=caddnode;
-        nodeclass[nothingn]:=cnothingnode;
-        nodeclass[loadvmtaddrn]:=cloadvmtaddrnode;
-        nodeclass[guidconstn]:=cguidconstnode;
-        nodeclass[rttin]:=crttinode;
-        nodeclass[loadparentfpn]:=cloadparentfpnode;
+        nodeclass[addn]:=CAddNode;
+        nodeclass[muln]:=CAddNode;
+        nodeclass[subn]:=CAddNode;
+        nodeclass[divn]:=CModDivNode;
+        nodeclass[symdifn]:=CAddNode;
+        nodeclass[modn]:=CModDivNode;
+        nodeclass[assignn]:=CAssignmentNode;
+        nodeclass[loadn]:=CLoadNode;
+        nodeclass[rangen]:=CRangeNode;
+        nodeclass[ltn]:=CAddNode;
+        nodeclass[lten]:=CAddNode;
+        nodeclass[gtn]:=CAddNode;
+        nodeclass[gten]:=CAddNode;
+        nodeclass[equaln]:=CAddNode;
+        nodeclass[unequaln]:=CAddNode;
+        nodeclass[inn]:=CInNode;
+        nodeclass[orn]:=CAddNode;
+        nodeclass[xorn]:=CAddNode;
+        nodeclass[shrn]:=CShlShrNode;
+        nodeclass[shln]:=CShlShrNode;
+        nodeclass[slashn]:=CAddNode;
+        nodeclass[andn]:=CAddNode;
+        nodeclass[subscriptn]:=CSubscriptNode;
+        nodeclass[derefn]:=CDerefNode;
+        nodeclass[addrn]:=CAddrNode;
+        nodeclass[ordconstn]:=COrdConstNode;
+        nodeclass[typeconvn]:=CTypeConvNode;
+        nodeclass[calln]:=CCallNode;
+        nodeclass[callparan]:=CCallParaNode;
+        nodeclass[realconstn]:=CRealConstNode;
+        nodeclass[unaryminusn]:=CUnaryMinusNode;
+        nodeclass[unaryplusn]:=CUnaryPlusNode;
+        nodeclass[asmn]:=CAsmNode;
+        nodeclass[vecn]:=CVecNode;
+        nodeclass[pointerconstn]:=CPointerConstNode;
+        nodeclass[stringconstn]:=CStringConstNode;
+        nodeclass[notn]:=CNotNode;
+        nodeclass[inlinen]:=CInlineNode;
+        nodeclass[niln]:=CNilNode;
+        nodeclass[errorn]:=CErrorNode;
+        nodeclass[typen]:=CTypeNode;
+        nodeclass[setelementn]:=CSetElementNode;
+        nodeclass[setconstn]:=CSetConstNode;
+        nodeclass[blockn]:=CBlockNode;
+        nodeclass[statementn]:=CStatementNode;
+        nodeclass[ifn]:=CIfNode;
+        nodeclass[breakn]:=CBreakNode;
+        nodeclass[continuen]:=CContinueNode;
+        nodeclass[whilerepeatn]:=CWhileRepeatNode;
+        nodeclass[forn]:=CForNode;
+        nodeclass[exitn]:=CExitNode;
+        nodeclass[casen]:=CCaseNode;
+        nodeclass[labeln]:=CLabelNode;
+        nodeclass[goton]:=CGotoNode;
+        nodeclass[tryexceptn]:=CTryExceptNode;
+        nodeclass[raisen]:=CRaiseNode;
+        nodeclass[tryfinallyn]:=CTryFinallyNode;
+        nodeclass[onn]:=COnNode;
+        nodeclass[isn]:=CIsNode;
+        nodeclass[asn]:=CAsNode;
+        nodeclass[starstarn]:=CAddNode;
+        nodeclass[arrayconstructorn]:=CArrayConstructorNode;
+        nodeclass[arrayconstructorrangen]:=CArrayConstructorRangeNode;
+        nodeclass[tempcreaten]:=CTempCreateNode;
+        nodeclass[temprefn]:=CTempRefNode;
+        nodeclass[tempdeleten]:=CTempDeleteNode;
+        nodeclass[addoptn]:=CAddNode;
+        nodeclass[nothingn]:=CNothingNode;
+        nodeclass[loadvmtaddrn]:=CLoadVMTAddrNode;
+        nodeclass[guidconstn]:=CGUIDConstNode;
+        nodeclass[rttin]:=CRTTINode;
+        nodeclass[loadparentfpn]:=CLoadParentFPNode;
       end;
 
 
@@ -739,27 +739,27 @@ implementation
       }
       begin
         aiclass[ait_none]:=nil;
-        aiclass[ait_align]:=tai_align;
-        aiclass[ait_section]:=tai_section;
-        aiclass[ait_comment]:=tai_comment;
-        aiclass[ait_string]:=tai_string;
-        aiclass[ait_instruction]:=taicpu;
-        aiclass[ait_datablock]:=tai_datablock;
-        aiclass[ait_symbol]:=tai_symbol;
-        aiclass[ait_symbol_end]:=tai_symbol_end;
-        aiclass[ait_directive]:=tai_directive;
-        aiclass[ait_label]:=tai_label;
-        aiclass[ait_const]:=tai_const;
-        aiclass[ait_realconst]:=tai_realconst;
-        aiclass[ait_stab]:=tai_stab;
-        aiclass[ait_force_line]:=tai_force_line;
-        aiclass[ait_function_name]:=tai_function_name;
-        aiclass[ait_symbolpair]:=tai_symbolpair;
-        aiclass[ait_cutobject]:=tai_cutobject;
-        aiclass[ait_regalloc]:=tai_regalloc;
-        aiclass[ait_tempalloc]:=tai_tempalloc;
-        aiclass[ait_marker]:=tai_marker;
-        aiclass[ait_seh_directive]:=tai_seh_directive;
+        aiclass[ait_align]:=TAIAlign;
+        aiclass[ait_section]:=TAISection;
+        aiclass[ait_comment]:=TAIComment;
+        aiclass[ait_string]:=TAIString;
+        aiclass[ait_instruction]:=TAICPU;
+        aiclass[ait_datablock]:=TAIDataBlock;
+        aiclass[ait_symbol]:=TAISymbol;
+        aiclass[ait_symbol_end]:=TAISymbolEnd;
+        aiclass[ait_directive]:=TAIDirective;
+        aiclass[ait_label]:=TAILabel;
+        aiclass[ait_const]:=TAIConst;
+        aiclass[ait_realconst]:=TAIRealConst;
+        aiclass[ait_stab]:=TAIStab;
+        aiclass[ait_force_line]:=TAIForceLine;
+        aiclass[ait_function_name]:=TAIFunctionName;
+        aiclass[ait_symbolpair]:=TAISymbolPair;
+        aiclass[ait_cutobject]:=TAICutObject;
+        aiclass[ait_regalloc]:=TAIRegAlloc;
+        aiclass[ait_tempalloc]:=TAITempAlloc;
+        aiclass[ait_marker]:=TAIMarker;
+        aiclass[ait_seh_directive]:=TAISEHDirective;
       end;
 
 end.

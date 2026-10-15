@@ -45,7 +45,7 @@ unit optdfa;
 
         procedure createdfainfo(node : TNode);
         procedure redodfainfo(node : TNode);
-        destructor destroy;override;
+        destructor Destroy;override;
       end;
 
     procedure CheckAndWarn(code : TNode;nodetosearch : TNode);
@@ -53,13 +53,13 @@ unit optdfa;
   implementation
 
     uses
-      globtype,cdynset,
-      systems,
-      constexp,
-      verbose,
-      symconst,symdef,symsym,
+      GlobType,CDynSet,
+      Systems,
+      ConstExp,
+      Verbose,
+      symconst,symdef,SymSym,
       defutil,
-      procinfo,
+      ProcInfo,
       nutils,htypechk,
       nbas,nflw,ncal,nset,nld,nadd,
       optbase;
@@ -106,37 +106,37 @@ unit optdfa;
     }
 
     type
-      tdfainfo = record
+      TDFAInfo = record
         use : PDFASet;
         def : PDFASet;
         map : TIndexedNodeSet
       end;
-      pdfainfo = ^tdfainfo;
+      PDFAInfo = ^TDFAInfo;
 
-    function AddDefUse(var n: TNode; arg: pointer): foreachnoderesult;
+    function AddDefUse(var n: TNode; arg: pointer): TForEachNodeResult;
       begin
         case n.nodetype of
           tempcreaten:
             begin
-              if assigned(ttempcreatenode(n).tempinfo^.tempinitcode) then
+              if Assigned(TTempCreateNode(n).tempinfo^.tempinitcode) then
                 begin
-                  pdfainfo(arg)^.map.Add(n);
-                  DynSetInclude(pdfainfo(arg)^.def^,n.optinfo^.index);
+                  PDFAInfo(arg)^.map.Add(n);
+                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index);
                 end;
             end;
           temprefn,
           loadn:
             begin
-              pdfainfo(arg)^.map.Add(n);
+              PDFAInfo(arg)^.map.Add(n);
               if nf_modify in n.flags then
                 begin
-                  DynSetInclude(pdfainfo(arg)^.use^,n.optinfo^.index);
-                  DynSetInclude(pdfainfo(arg)^.def^,n.optinfo^.index)
+                  DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.index);
+                  DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index)
                 end
               else if nf_write in n.flags then
-                DynSetInclude(pdfainfo(arg)^.def^,n.optinfo^.index)
+                DynSetInclude(PDFAInfo(arg)^.def^,n.optinfo^.index)
               else
-                DynSetInclude(pdfainfo(arg)^.use^,n.optinfo^.index);
+                DynSetInclude(PDFAInfo(arg)^.use^,n.optinfo^.index);
             end;
           else
             ;
@@ -145,7 +145,7 @@ unit optdfa;
       end;
 
 
-    function ResetProcessing(var n: TNode; arg: pointer): foreachnoderesult;
+    function ResetProcessing(var n: TNode; arg: pointer): TForEachNodeResult;
       begin
         exclude(n.transientflags,tnf_processing);
         { dfa works only on normalized trees, so do not recurse into expressions, because
@@ -160,9 +160,9 @@ unit optdfa;
       end;
 
 
-    function ResetDFA(var n: TNode; arg: pointer): foreachnoderesult;
+    function ResetDFA(var n: TNode; arg: pointer): TForEachNodeResult;
       begin
-        if assigned(n.optinfo) then
+        if Assigned(n.optinfo) then
           begin
             with n.optinfo^ do
               begin
@@ -193,9 +193,9 @@ unit optdfa;
 {$ifdef DEBUG_DFA}
             if not(changed) then
               begin
-                writeln('Another DFA pass caused by: ',nodetype2str[n.nodetype],'(',n.fileinfo.line,',',n.fileinfo.column,')');
-                write('  Life info set was:     ');PrintDynSet(Output,n.optinfo^.life);writeln;
-                write('  Life info set will be: ');PrintDynSet(Output,l);writeln;
+                WriteLn('Another DFA pass caused by: ',nodetype2str[n.nodetype],'(',n.fileinfo.line,',',n.fileinfo.column,')');
+                write('  Life info set was:     ');PrintDynSet(Output,n.optinfo^.life);WriteLn;
+                write('  Life info set will be: ');PrintDynSet(Output,l);WriteLn;
               end;
 {$endif DEBUG_DFA}
 
@@ -207,7 +207,7 @@ unit optdfa;
           var
             l : TDFASet;
           begin
-            if assigned(n.successor) then
+            if Assigned(n.successor) then
               begin
                 { ensure we can access optinfo }
                 DynSetDiff(l,n.successor.optinfo^.life,n.optinfo^.def);
@@ -223,11 +223,11 @@ unit optdfa;
           end;
 
         var
-          dfainfo : tdfainfo;
+          dfainfo : TDFAInfo;
           l : TDFASet;
           save: TDFASet;
           lv, hv: TConstExprInt;
-          i : longint;
+          i : LongInt;
           counteruse_after_loop : boolean;
         begin
           if node=nil then
@@ -240,7 +240,7 @@ unit optdfa;
             exit;
           include(node.transientflags,tnf_processing);
 
-          if assigned(node.successor) then
+          if Assigned(node.successor) then
             CreateInfo(node.successor);
 
           { life:=succesorlive-definition+use }
@@ -249,25 +249,25 @@ unit optdfa;
             whilerepeatn:
               begin
                 { analyze the loop condition }
-                if not(assigned(node.optinfo^.def)) and
-                   not(assigned(node.optinfo^.use)) then
+                if not(Assigned(node.optinfo^.def)) and
+                   not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
                     dfainfo.map:=map;
-                    foreachnodestatic(pm_postprocess,twhilerepeatnode(node).left,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TWhileRepeatNode(node).left,@AddDefUse,@dfainfo);
                   end;
 
                 { NB: this node should typically have empty def set }
-                if assigned(node.successor) then
+                if Assigned(node.successor) then
                   DynSetDiff(l,node.successor.optinfo^.life,node.optinfo^.def)
-                else if assigned(resultnode) then
+                else if Assigned(resultnode) then
                   DynSetDiff(l,resultnode.optinfo^.life,node.optinfo^.def)
                 else
                   l:=nil;
 
                 { for repeat..until, node use set in included at the end of loop }
-                if not (lnf_testatbegin in twhilerepeatnode(node).loopflags) then
+                if not (lnf_testatbegin in TWhileRepeatNode(node).loopflags) then
                   DynSetIncludeSet(l,node.optinfo^.use);
 
                 DynSetIncludeSet(l,node.optinfo^.life);
@@ -278,25 +278,25 @@ unit optdfa;
                 node.optinfo^.life:=l;
 
                 { now process the body }
-                CreateInfo(twhilerepeatnode(node).right);
+                CreateInfo(TWhileRepeatNode(node).right);
 
                 { restore, to prevent infinite recursion via changed flag }
                 node.optinfo^.life:=save;
 
                 { for while loops, node use set is included at the beginning of loop }
-                l:=twhilerepeatnode(node).right.optinfo^.life;
-                if lnf_testatbegin in twhilerepeatnode(node).loopflags then
+                l:=TWhileRepeatNode(node).right.optinfo^.life;
+                if lnf_testatbegin in TWhileRepeatNode(node).loopflags then
                   begin
                     DynSetIncludeSet(l,node.optinfo^.use);
                     { ... loop body could be skipped, so include life info of the successor node }
-                    if assigned(node.successor) then
+                    if Assigned(node.successor) then
                       DynSetIncludeSet(l,node.successor.optinfo^.life);
                   end;
 
                 UpdateLifeInfo(node,l);
 
                 { ... and a second iteration for fast convergence }
-                CreateInfo(twhilerepeatnode(node).right);
+                CreateInfo(TWhileRepeatNode(node).right);
               end;
 
             forn:
@@ -308,28 +308,28 @@ unit optdfa;
                   t2: body
                 }
                 node.allocoptinfo;
-                tfornode(node).loopiteration.allocoptinfo;
-                if not(assigned(node.optinfo^.def)) and
-                   not(assigned(node.optinfo^.use)) then
+                TForNode(node).loopiteration.allocoptinfo;
+                if not(Assigned(node.optinfo^.def)) and
+                   not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
                     dfainfo.map:=map;
-                    foreachnodestatic(pm_postprocess,tfornode(node).left,@AddDefUse,@dfainfo);
-                    foreachnodestatic(pm_postprocess,tfornode(node).right,@AddDefUse,@dfainfo);
-                    foreachnodestatic(pm_postprocess,tfornode(node).t1,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TForNode(node).left,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TForNode(node).right,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TForNode(node).t1,@AddDefUse,@dfainfo);
                   end;
 
                 { create life for the body }
-                CreateInfo(tfornode(node).t2);
+                CreateInfo(TForNode(node).t2);
 
                 { is the counter living after the loop?
 
                   if left is a record element, it might not be tracked by dfa, so
                   optinfo might not be assigned
                 }
-                counteruse_after_loop:=assigned(tfornode(node).left.optinfo) and assigned(node.successor) and
-                  DynSetIn(node.successor.optinfo^.life,tfornode(node).left.optinfo^.index);
+                counteruse_after_loop:=Assigned(TForNode(node).left.optinfo) and Assigned(node.successor) and
+                  DynSetIn(node.successor.optinfo^.life,TForNode(node).left.optinfo^.index);
 
                 if counteruse_after_loop then
                   begin
@@ -337,15 +337,15 @@ unit optdfa;
                     { !!!!!! }
                   end
                 else
-                  Include(tfornode(node).loopflags,lnf_dont_mind_loopvar_on_exit);
+                  Include(TForNode(node).loopflags,lnf_dont_mind_loopvar_on_exit);
 
                 { first update the dummy node }
 
                 { get the life of the loop block }
-                l:=copy(tfornode(node).t2.optinfo^.life);
+                l:=copy(TForNode(node).t2.optinfo^.life);
 
                 { take care of the successor }
-                if assigned(node.successor) then
+                if Assigned(node.successor) then
                   DynSetIncludeSet(l,node.successor.optinfo^.life);
 
                 { the counter variable is living as well inside the for loop
@@ -353,20 +353,20 @@ unit optdfa;
                   if left is a record element, it might not be tracked by dfa, so
                   optinfo might not be assigned
                 }
-                if assigned(tfornode(node).left.optinfo) then
-                  DynSetInclude(l,tfornode(node).left.optinfo^.index);
+                if Assigned(TForNode(node).left.optinfo) then
+                  DynSetInclude(l,TForNode(node).left.optinfo^.index);
 
                 { force block node life info }
-                UpdateLifeInfo(tfornode(node).loopiteration,l);
+                UpdateLifeInfo(TForNode(node).loopiteration,l);
 
                 { now update the for node itself }
 
                 { get the life of the loop block }
-                l:=copy(tfornode(node).t2.optinfo^.life);
+                l:=copy(TForNode(node).t2.optinfo^.life);
 
                 { take care of the successor as it's possible that we don't have one execution of the body }
-                if (not(tfornode(node).right.nodetype=ordconstn) or not(tfornode(node).t1.nodetype=ordconstn)) and
-                  assigned(node.successor) then
+                if (not(TForNode(node).right.nodetype=ordconstn) or not(TForNode(node).t1.nodetype=ordconstn)) and
+                  Assigned(node.successor) then
                   DynSetIncludeSet(l,node.successor.optinfo^.life);
 
                 {
@@ -375,8 +375,8 @@ unit optdfa;
                   if left is a record element, it might not be tracked by dfa, so
                     optinfo might not be assigned
                 }
-                if assigned(tfornode(node).left.optinfo) then
-                  DynSetExclude(l,tfornode(node).left.optinfo^.index);
+                if Assigned(TForNode(node).left.optinfo) then
+                  DynSetExclude(l,TForNode(node).left.optinfo^.index);
 
                 { ... but it could be that left/right use it, so do this after
                   removing the def of the counter variable }
@@ -385,7 +385,7 @@ unit optdfa;
                 UpdateLifeInfo(node,l);
 
                 { ... and a second iteration for fast convergence }
-                CreateInfo(tfornode(node).t2);
+                CreateInfo(TForNode(node).t2);
               end;
 
             temprefn,
@@ -394,8 +394,8 @@ unit optdfa;
             derefn,
             assignn:
               begin
-                if not(assigned(node.optinfo^.def)) and
-                  not(assigned(node.optinfo^.use)) then
+                if not(Assigned(node.optinfo^.def)) and
+                  not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
@@ -408,17 +408,17 @@ unit optdfa;
             statementn:
               begin
                 { nested statement }
-                CreateInfo(tstatementnode(node).statement);
+                CreateInfo(TStatementNode(node).statement);
                 { propagate info }
-                node.optinfo^.life:=tstatementnode(node).successor.optinfo^.life;
+                node.optinfo^.life:=TStatementNode(node).successor.optinfo^.life;
               end;
 
             blockn:
               begin
-                CreateInfo(tblocknode(node).statements);
+                CreateInfo(TBlockNode(node).statements);
                 { ensure that we don't remove life info }
                 l:=node.optinfo^.life;
-                if assigned(node.successor) then
+                if Assigned(node.successor) then
                   DynSetIncludeSet(l,node.successor.optinfo^.life);
                 UpdateLifeInfo(node,l);
               end;
@@ -426,39 +426,39 @@ unit optdfa;
             ifn:
               begin
                 { get information from cond. expression }
-                if not(assigned(node.optinfo^.def)) and
-                   not(assigned(node.optinfo^.use)) then
+                if not(Assigned(node.optinfo^.def)) and
+                   not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
                     dfainfo.map:=map;
-                    foreachnodestatic(pm_postprocess,tifnode(node).left,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TIfNode(node).left,@AddDefUse,@dfainfo);
                   end;
 
                 { create life info for then and else node }
-                CreateInfo(tifnode(node).right);
-                CreateInfo(tifnode(node).t1);
+                CreateInfo(TIfNode(node).right);
+                CreateInfo(TIfNode(node).t1);
 
                 { ensure that we don't remove life info }
                 l:=node.optinfo^.life;
 
                 { get life info from then branch }
-                if assigned(tifnode(node).right) then
-                  DynSetIncludeSet(l,tifnode(node).right.optinfo^.life)
-                else if assigned(node.successor) then
+                if Assigned(TIfNode(node).right) then
+                  DynSetIncludeSet(l,TIfNode(node).right.optinfo^.life)
+                else if Assigned(node.successor) then
                   DynSetIncludeSet(l,node.successor.optinfo^.life);
 
                 { get life info from else branch }
-                if assigned(tifnode(node).t1) then
-                  DynSetIncludeSet(l,tifnode(node).t1.optinfo^.life)
-                else if assigned(node.successor) then
+                if Assigned(TIfNode(node).t1) then
+                  DynSetIncludeSet(l,TIfNode(node).t1.optinfo^.life)
+                else if Assigned(node.successor) then
                   DynSetIncludeSet(l,node.successor.optinfo^.life);
 
                 { remove def info from the cond. expression }
-                DynSetExcludeSet(l,tifnode(node).optinfo^.def);
+                DynSetExcludeSet(l,TIfNode(node).optinfo^.def);
 
                 { add use info from the cond. expression }
-                DynSetIncludeSet(l,tifnode(node).optinfo^.use);
+                DynSetIncludeSet(l,TIfNode(node).optinfo^.use);
 
                 { finally, update the life info of the node }
                 UpdateLifeInfo(node,l);
@@ -467,37 +467,37 @@ unit optdfa;
             casen:
               begin
                 { get information from "case" expression }
-                if not(assigned(node.optinfo^.def)) and
-                   not(assigned(node.optinfo^.use)) then
+                if not(Assigned(node.optinfo^.def)) and
+                   not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
                     dfainfo.map:=map;
-                    foreachnodestatic(pm_postprocess,tcasenode(node).left,@AddDefUse,@dfainfo);
+                    foreachnodestatic(pm_postprocess,TCaseNode(node).left,@AddDefUse,@dfainfo);
                   end;
 
                 { create life info for block and else nodes }
-                for i:=0 to tcasenode(node).blocks.count-1 do
-                  CreateInfo(pcaseblock(tcasenode(node).blocks[i])^.statement);
+                for i:=0 to TCaseNode(node).blocks.count-1 do
+                  CreateInfo(PCaseBlock(TCaseNode(node).blocks[i])^.statement);
 
-                CreateInfo(tcasenode(node).elseblock);
+                CreateInfo(TCaseNode(node).elseblock);
 
                 { ensure that we don't remove life info }
                 l:=node.optinfo^.life;
 
                 { get life info from case branches }
-                for i:=0 to tcasenode(node).blocks.count-1 do
-                  DynSetIncludeSet(l,pcaseblock(tcasenode(node).blocks[i])^.statement.optinfo^.life);
+                for i:=0 to TCaseNode(node).blocks.count-1 do
+                  DynSetIncludeSet(l,PCaseBlock(TCaseNode(node).blocks[i])^.statement.optinfo^.life);
 
                 { get life info from else branch or the successor }
-                if assigned(tcasenode(node).elseblock) then
-                  DynSetIncludeSet(l,tcasenode(node).elseblock.optinfo^.life)
-                else if assigned(node.successor) then
+                if Assigned(TCaseNode(node).elseblock) then
+                  DynSetIncludeSet(l,TCaseNode(node).elseblock.optinfo^.life)
+                else if Assigned(node.successor) then
                   begin
-                    if is_ordinal(tcasenode(node).left.resultdef) then
+                    if is_ordinal(TCaseNode(node).left.resultdef) then
                       begin
-                        getrange(tcasenode(node).left.resultdef,lv,hv);
-                        if tcasenode(node).labelcoverage<(hv-lv) then
+                        getrange(TCaseNode(node).left.resultdef,lv,hv);
+                        if TCaseNode(node).labelcoverage<(hv-lv) then
                           DynSetIncludeSet(l,node.successor.optinfo^.life);
                       end
                     else
@@ -505,7 +505,7 @@ unit optdfa;
                   end;
 
                 { add use info from the "case" expression }
-                DynSetIncludeSet(l,tcasenode(node).optinfo^.use);
+                DynSetIncludeSet(l,TCaseNode(node).optinfo^.use);
 
                 { finally, update the life info of the node }
                 UpdateLifeInfo(node,l);
@@ -515,18 +515,18 @@ unit optdfa;
               begin
                 { in case of inlining, an exit node can have a successor, in this case, we do not have to
                   use the faked resultnode }
-                if assigned(node.successor) then
+                if Assigned(node.successor) then
                   begin
                     l:=node.optinfo^.life;
                     DynSetIncludeSet(l,node.successor.optinfo^.life);
                     UpdateLifeInfo(node,l);
                   end
-                else if assigned(resultnode) and (resultnode.nodetype<>nothingn) then
+                else if Assigned(resultnode) and (resultnode.nodetype<>nothingn) then
                   begin
-                    if not(assigned(node.optinfo^.def)) and
-                       not(assigned(node.optinfo^.use)) then
+                    if not(Assigned(node.optinfo^.def)) and
+                       not(Assigned(node.optinfo^.use)) then
                       begin
-                        if assigned(texitnode(node).left) then
+                        if Assigned(TExitNode(node).left) then
                           begin
 {                           this should never happen as
                             texitnode.pass_typecheck converts the left node into a separate node already
@@ -538,7 +538,7 @@ unit optdfa;
                             dfainfo.map:=map;
                             foreachnodestatic(pm_postprocess,texitnode(node).left,@AddDefUse,@dfainfo);
                             calclife(node); }
-                            Internalerror(2020122901);
+                            InternalError(2020122901);
                           end
                         else
                           begin
@@ -556,8 +556,8 @@ unit optdfa;
             inlinen,
             calln:
               begin
-                if not(assigned(node.optinfo^.def)) and
-                  not(assigned(node.optinfo^.use)) then
+                if not(Assigned(node.optinfo^.def)) and
+                  not(Assigned(node.optinfo^.use)) then
                   begin
                     dfainfo.use:=@node.optinfo^.use;
                     dfainfo.def:=@node.optinfo^.def;
@@ -577,7 +577,7 @@ unit optdfa;
                 calclife(node);
               end;
             else
-              internalerror(2007050502);
+              InternalError(2007050502);
           end;
         end;
 
@@ -593,12 +593,12 @@ unit optdfa;
           { the result node is not reached by foreachnodestatic }
           exclude(resultnode.transientflags,tnf_processing);
 {$ifdef DEBUG_DFA}
-          PrintIndexedNodeSet(output,map);
-          PrintDFAInfo(output,node);
+          PrintIndexedNodeSet(Output,map);
+          PrintDFAInfo(Output,node);
 {$endif DEBUG_DFA}
         until not(changed);
 {$ifdef DEBUG_DFA}
-        writeln('DFA solver iterations: ',runs);
+        WriteLn('DFA solver iterations: ',runs);
 {$endif DEBUG_DFA}
       end;
 
@@ -617,9 +617,9 @@ unit optdfa;
 
     procedure TDFABuilder.createdfainfo(node : TNode);
       var
-        dfarec : tdfainfo;
+        dfarec : TDFAInfo;
       begin
-        if not(assigned(nodemap)) then
+        if not(Assigned(nodemap)) then
           nodemap:=TIndexedNodeSet.Create;
 
         { create a fake node using the result which will be the last node }
@@ -641,7 +641,7 @@ unit optdfa;
           end
         else
           begin
-            resultnode:=cnothingnode.create;
+            resultnode:=CNothingNode.create;
             resultnode.allocoptinfo;
           end;
 
@@ -667,7 +667,7 @@ unit optdfa;
         Resultnode := nil;
         nodemap.free;
         nodemap := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
     type
@@ -683,11 +683,11 @@ unit optdfa;
 
     { searches for a given node n and warns if the node is found as being uninitialized. If a node is
       found, searching is stopped so each call issues only one warning/hint }
-    function SearchNode(var n: TNode; arg: pointer): foreachnoderesult;
+    function SearchNode(var n: TNode; arg: pointer): TForEachNodeResult;
 
       function WarnedForLocation(f : TFilePosInfo) : boolean;
         var
-          i : longint;
+          i : LongInt;
         begin
           result:=true;
           for i:=0 to high(PSearchNodeInfo(arg)^.warnedfilelocs) do
@@ -702,7 +702,7 @@ unit optdfa;
 
       procedure AddFilepos(const f : TFilePosInfo);
         begin
-          Setlength(PSearchNodeInfo(arg)^.warnedfilelocs,length(PSearchNodeInfo(arg)^.warnedfilelocs)+1);
+          SetLength(PSearchNodeInfo(arg)^.warnedfilelocs,length(PSearchNodeInfo(arg)^.warnedfilelocs)+1);
           PSearchNodeInfo(arg)^.warnedfilelocs[high(PSearchNodeInfo(arg)^.warnedfilelocs)]:=f;
         end;
 
@@ -741,21 +741,21 @@ unit optdfa;
             begin
               { do not warn about variables passed by var, just issue a hint, this
                 is a workaround for old code e.g. using fillchar }
-              if assigned(tcallparanode(n).parasym) and (tcallparanode(n).parasym.varspez in [vs_var,vs_out]) then
+              if Assigned(TCallParaNode(n).parasym) and (TCallParaNode(n).parasym.varspez in [vs_var,vs_out]) then
                 begin
-                  hpt:=tcallparanode(n).left;
-                  while assigned(hpt) and (hpt.nodetype in [subscriptn,vecn,typeconvn]) do
+                  hpt:=TCallParaNode(n).left;
+                  while Assigned(hpt) and (hpt.nodetype in [subscriptn,vecn,typeconvn]) do
                     hpt:=TUnaryNode(hpt).left;
-                  if assigned(hpt) and (hpt.nodetype=loadn) and not(WarnedForLocation(hpt.fileinfo)) and
-                    SymbolCandidateForWarningOrHint(TAbstractNormalVarSym(tloadnode(hpt).symtableentry)) and
+                  if Assigned(hpt) and (hpt.nodetype=loadn) and not(WarnedForLocation(hpt.fileinfo)) and
+                    SymbolCandidateForWarningOrHint(TAbstractNormalVarSym(TLoadNode(hpt).symtableentry)) and
                     PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) then
                     begin
                       { issue only a hint for var, when encountering the node passed as out, we need only to stop searching }
-                      if tcallparanode(n).parasym.varspez=vs_var then
+                      if TCallParaNode(n).parasym.varspez=vs_var then
                         UninitializedVariableMessage(hpt.fileinfo,false,
-                          tloadnode(hpt).symtable.symtabletype=localsymtable,
-                          is_managed_type(tloadnode(hpt).resultdef),
-                          tloadnode(hpt).symtableentry.RealName);
+                          TLoadNode(hpt).SymTable.symtabletype=localsymtable,
+                          is_managed_type(TLoadNode(hpt).resultdef),
+                          TLoadNode(hpt).symtableentry.RealName);
                       AddFilepos(hpt.fileinfo);
                       result:=fen_norecurse_true;
                     end
@@ -766,20 +766,20 @@ unit optdfa;
             begin
               { take care of short boolean evaluation: if the expression to be search is found in left,
                 we do not need to search right }
-              if foreachnodestatic(pm_postprocess,taddnode(n).left,@optdfa.SearchNode,arg) or
-                foreachnodestatic(pm_postprocess,taddnode(n).right,@optdfa.SearchNode,arg) then
+              if foreachnodestatic(pm_postprocess,TAddNode(n).left,@optdfa.SearchNode,arg) or
+                foreachnodestatic(pm_postprocess,TAddNode(n).right,@optdfa.SearchNode,arg) then
                 result:=fen_norecurse_true
               else
                 result:=fen_norecurse_false;
             end;
           calln:
             begin
-              methodpointer:=tcallnode(n).methodpointer;
-              if assigned(methodpointer) and (methodpointer.nodetype<>typen) then
+              methodpointer:=TCallNode(n).methodpointer;
+              if Assigned(methodpointer) and (methodpointer.nodetype<>typen) then
                begin
                   { Remove all postfix operators }
                   hpt:=methodpointer;
-                  while assigned(hpt) and (hpt.nodetype in [subscriptn,vecn]) do
+                  while Assigned(hpt) and (hpt.nodetype in [subscriptn,vecn]) do
                     hpt:=TUnaryNode(hpt).left;
 
                  { skip (absolute and other simple) type conversions -- only now,
@@ -789,7 +789,7 @@ unit optdfa;
 
                   { R.Init then R will be initialized by the constructor,
                     Also allow it for simple loads }
-                  if (tcallnode(n).procdefinition.proctypeoption=potype_constructor) or
+                  if (TCallNode(n).procdefinition.proctypeoption=potype_constructor) or
                      (PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) and
                       (((methodpointer.resultdef.typ=objectdef) and
                         not(oo_has_virtual in TObjectDef(methodpointer.resultdef).objectoptions)) or
@@ -800,20 +800,20 @@ unit optdfa;
                       { don't warn about the method pointer }
                       AddFilepos(hpt.fileinfo);
 
-                      if not(foreachnodestatic(pm_postprocess,tcallnode(n).left,@optdfa.SearchNode,arg)) then
-                        foreachnodestatic(pm_postprocess,tcallnode(n).right,@optdfa.SearchNode,arg);
+                      if not(foreachnodestatic(pm_postprocess,TCallNode(n).left,@optdfa.SearchNode,arg)) then
+                        foreachnodestatic(pm_postprocess,TCallNode(n).right,@optdfa.SearchNode,arg);
                       result:=fen_norecurse_true
                     end;
                  end;
             end;
           loadn:
             begin
-              if (tloadnode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
+              if (TLoadNode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
                 PSearchNodeInfo(arg)^.nodetosearch.isequal(n) and ((nf_modify in n.flags) or not(nf_write in n.flags)) then
                 begin
-                  varsym:=TAbstractNormalVarSym(tloadnode(n).symtableentry);
+                  varsym:=TAbstractNormalVarSym(TLoadNode(n).symtableentry);
 
-                  if assigned(varsym.owner) and SymbolCandidateForWarningOrHint(varsym) then
+                  if Assigned(varsym.owner) and SymbolCandidateForWarningOrHint(varsym) then
                     begin
                       if (vo_is_funcret in varsym.varoptions) and not(WarnedForLocation(n.fileinfo)) then
                         begin
@@ -837,7 +837,7 @@ unit optdfa;
                     end
 {$ifdef dummy}
                   { if a the variable we are looking for is passed as a var parameter, we stop searching }
-                  else if assigned(varsym.owner) and
+                  else if Assigned(varsym.owner) and
                      (varsym.owner=CurrentProcInfo.procdef.parast) and
                      (varsym.typ=paravarsym) and
                      (CurrentProcInfo.procdef.parast.symtablelevel=varsym.owner.symtablelevel) and
@@ -859,7 +859,7 @@ unit optdfa;
 
       function DoCheck(node : TNode) : boolean;
         var
-          i : longint;
+          i : LongInt;
           touchesnode : Boolean;
 
         procedure MaybeDoCheck(n : TNode);inline;
@@ -883,7 +883,7 @@ unit optdfa;
             exit;
           include(node.transientflags,tnf_processing);
 
-          if not(assigned(node.optinfo)) or not(DynSetIn(node.optinfo^.life,nodetosearch.optinfo^.index)) then
+          if not(Assigned(node.optinfo)) or not(DynSetIn(node.optinfo^.life,nodetosearch.optinfo^.index)) then
             exit;
 
           { we do not need this info always, so try to safe some time here, CheckAndWarn
@@ -897,52 +897,52 @@ unit optdfa;
           case node.nodetype of
             whilerepeatn:
               begin
-                MaybeSearchIn(twhilerepeatnode(node).left);
-                MaybeDoCheck(twhilerepeatnode(node).right);
+                MaybeSearchIn(TWhileRepeatNode(node).left);
+                MaybeDoCheck(TWhileRepeatNode(node).right);
               end;
 
             forn:
               begin
-                MaybeSearchIn(tfornode(node).right);
-                MaybeSearchIn(tfornode(node).t1);
-                MaybeDoCheck(tfornode(node).t2);
+                MaybeSearchIn(TForNode(node).right);
+                MaybeSearchIn(TForNode(node).t1);
+                MaybeDoCheck(TForNode(node).t2);
               end;
 
             statementn:
-              MaybeDoCheck(tstatementnode(node).statement);
+              MaybeDoCheck(TStatementNode(node).statement);
 
             blockn:
-              MaybeDoCheck(tblocknode(node).statements);
+              MaybeDoCheck(TBlockNode(node).statements);
 
             ifn:
               begin
-                MaybeSearchIn(tifnode(node).left);
-                MaybeDoCheck(tifnode(node).right);
-                MaybeDoCheck(tifnode(node).t1);
+                MaybeSearchIn(TIfNode(node).left);
+                MaybeDoCheck(TIfNode(node).right);
+                MaybeDoCheck(TIfNode(node).t1);
               end;
 
             casen:
               begin
-                MaybeSearchIn(tcasenode(node).left);
-                for i:=0 to tcasenode(node).blocks.count-1 do
-                  MaybeDoCheck(pcaseblock(tcasenode(node).blocks[i])^.statement);
+                MaybeSearchIn(TCaseNode(node).left);
+                for i:=0 to TCaseNode(node).blocks.count-1 do
+                  MaybeDoCheck(PCaseBlock(TCaseNode(node).blocks[i])^.statement);
 
-                MaybeDoCheck(tcasenode(node).elseblock);
+                MaybeDoCheck(TCaseNode(node).elseblock);
               end;
 
             { we are aware of the following nodes so if new node types are added to the compiler
               and pop up in the search, the ie below kicks in as a reminder }
             exitn:
               begin
-                MaybeSearchIn(texitnode(node).left);
+                MaybeSearchIn(TExitNode(node).left);
                 { exit uses the resultnode implicitly, so searching for a matching node is
                   useless, if we reach the exit node and found the living node not in left, then
                   it can be only the resultnode
 
                   successor might be assigned in case of an inlined exit node, in this case we do not warn about an unassigned
                   result as this had happened already when the routine has been compiled }
-                if not(assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.returndef)) and
-                  not(assigned(texitnode(node).resultexpr)) and
+                if not(Assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.returndef)) and
+                  not(Assigned(TExitNode(node).resultexpr)) and
                   { don't warn about constructors }
                   not(CurrentProcInfo.procdef.proctypeoption in [potype_class_constructor,potype_constructor]) then
                   begin
@@ -951,7 +951,7 @@ unit optdfa;
                     else
                       MessagePos(node.fileinfo,sym_w_function_result_uninitialized);
 
-                    Setlength(SearchNodeInfo.warnedfilelocs,length(SearchNodeInfo.warnedfilelocs)+1);
+                    SetLength(SearchNodeInfo.warnedfilelocs,length(SearchNodeInfo.warnedfilelocs)+1);
                     SearchNodeInfo.warnedfilelocs[high(SearchNodeInfo.warnedfilelocs)]:=node.fileinfo;
                   end
               end;
@@ -972,14 +972,14 @@ unit optdfa;
             breakn:
               ;
             else
-              internalerror(2013111301);
+              InternalError(2013111301);
           end;
 
           { if already a warning has been issued, then stop }
           if Result then
             exit;
 
-          if assigned(node.successor) then
+          if Assigned(node.successor) then
             MaybeDoCheck(node.successor);
         end;
 

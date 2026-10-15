@@ -26,29 +26,29 @@ unit syscinfo;
 interface
 
 uses
-  systems, tokens, symconst;
+  Systems, tokens, symconst;
 
 type
-  tsyscallinfo = record
-    token: ttoken;
+  TSysCallInfo = record
+    token: TToken;
     procoption: TProcOption;
     validon: set of TSystem;
   end;
-  psyscallinfo = ^tsyscallinfo;
+  PSysCallInfo = ^TSysCallInfo;
 
 const
-  syscall_conventions: array[1..1] of tsyscallinfo = (
+  syscall_conventions: array[1..1] of TSysCallInfo = (
       ( token: NOTOKEN;    procoption: po_syscall;           validon: [] ));
 
-function get_syscall_by_token(const token: ttoken): psyscallinfo;
-function get_syscall_by_name(const name: string): psyscallinfo;
+function get_syscall_by_token(const token: TToken): PSysCallInfo;
+function get_syscall_by_name(const name: string): PSysCallInfo;
 function get_default_syscall: TProcOption;
 procedure set_default_syscall(sc: TProcOption);
 
 implementation
 
 uses
-  verbose;
+  Verbose;
 
 const
   syscall_conventions_po = [ po_syscall, po_syscall_legacy, po_syscall_basenone,
@@ -57,9 +57,9 @@ const
 var
   default_syscall_convention: TProcOption = po_none;
 
-function get_syscall_by_token(const token: ttoken): psyscallinfo;
+function get_syscall_by_token(const token: TToken): PSysCallInfo;
 var
-  i: longint;
+  i: LongInt;
 begin
   result:=nil;
   for i:=low(syscall_conventions) to high(syscall_conventions) do
@@ -70,9 +70,9 @@ begin
       end;
 end;
 
-function get_syscall_by_name(const name: string): psyscallinfo;
+function get_syscall_by_name(const name: string): PSysCallInfo;
 var
-  i: longint;
+  i: LongInt;
 begin
   result:=nil;
   for i:=low(syscall_conventions) to high(syscall_conventions) do
@@ -86,7 +86,7 @@ end;
 function get_default_syscall: TProcOption;
 begin
   if not (default_syscall_convention in syscall_conventions_po) then
-    internalerror(2016090302);
+    InternalError(2016090302);
 
   result:=default_syscall_convention;
 end;
@@ -94,7 +94,7 @@ end;
 procedure set_default_syscall(sc: TProcOption);
 begin
   if not (sc in syscall_conventions_po) then
-    internalerror(2016090301);
+    InternalError(2016090301);
 
   default_syscall_convention:=sc;
 end;

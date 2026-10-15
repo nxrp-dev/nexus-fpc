@@ -38,7 +38,7 @@ unit YaccPars;
 interface
 
 
-procedure parse_table;
+procedure ParseTable;
 
   (* Constructs the parse table from the information in the state,
      transition and reduction table, and writes parse and rule table
@@ -107,7 +107,7 @@ procedure parse_table;
 
   *)
 
-var shift_reduce, reduce_reduce, never_reduced : Integer;
+var ShiftReduce, ReduceReduce, NeverReduced : Integer;
   (* number of parsing conflicts and unreduced rules detected during
      parse table generation *)
 
@@ -115,73 +115,73 @@ implementation
 
 uses YaccBase, YaccTabl;
 
-var reduced : array [1..max_rules] of Boolean;
+var Reduced : array [1..MaxRules] of Boolean;
 
-var yynacts, yyngotos, yynstates : Integer;
-    yyd : array [0..max_states-1] of Integer;
-    yyal, yyah, yygl, yygh : array [0..max_states-1] of Integer;
+var YYNActs, YYNGotos, YYNStates : Integer;
+    YYD : array [0..MaxStates-1] of Integer;
+    YYAL, YYAH, YYGL, YYGH : array [0..MaxStates-1] of Integer;
 
-function ruleStr ( i : Integer ) : String;
+function RuleStr ( I : Integer ) : String;
   (* returns print representation of rule number i *)
-  var str : String; j : Integer;
+  var Str : String; J : Integer;
   begin
-    with rule_table^[i]^ do
+    with RuleTable^[I]^ do
       begin
-        str := pname(lhs_sym)+' :';
-        for j := 1 to rhs_len do
-          str := str+' '+pname(rhs_sym[j]);
+        Str := Pname(LHSSym)+' :';
+        for J := 1 to RHSLen do
+          Str := Str+' '+Pname(RHSSym[J]);
       end;
-    ruleStr := str;
+    RuleStr := Str;
   end(*ruleStr*);
 
-function itemStr ( var item_set : ItemSet; i : Integer ) : String;
+function ItemStr ( var ItemSet : TItemSet; I : Integer ) : String;
   (* returns print representation of item number i in item_set *)
-  var str : String; j : Integer;
+  var Str : String; J : Integer;
   begin
-    with item_set, item[i], rule_table^[rule_no]^ do
+    with ItemSet, Item[I], RuleTable^[RuleNo]^ do
       begin
-        str := pname(lhs_sym)+' :';
-        for j := 1 to pos_no-1 do
-          str := str+' '+pname(rhs_sym[j]);
-        str := str+' _';
-        for j := pos_no to rhs_len do
-          str := str+' '+pname(rhs_sym[j]);
+        Str := Pname(LHSSym)+' :';
+        for J := 1 to PosNo-1 do
+          Str := Str+' '+Pname(RHSSym[J]);
+        Str := Str+' _';
+        for J := PosNo to RHSLen do
+          Str := Str+' '+Pname(RHSSym[J]);
       end;
-    itemStr := str;
+    ItemStr := Str;
   end(*itemStr*);
 
-procedure build;
+procedure Build;
 
   (* build the parse table, resolve conflicts *)
 
   var
 
-    i, j, k, s,
-    n_errors,
-    n_shifts,
-    n_gotos,
-    n_reductions,
-    n_conflicts : Integer;
+    I, J, K, S,
+    NErrors,
+    NShifts,
+    NGotos,
+    NReductions,
+    NConflicts : Integer;
 
-  item_set : ItemSet;
+  ItemSet : TItemSet;
 
   begin
 
     (* initialize: *)
 
-    shift_reduce := 0; reduce_reduce := 0; never_reduced := 0;
-    for i := 1 to n_rules do reduced[i] := false;
+    ShiftReduce := 0; ReduceReduce := 0; NeverReduced := 0;
+    for I := 1 to NRules do Reduced[I] := False;
 
     (* traverse the state table: *)
 
-    for s := 0 to n_states-1 do with state_table^[s] do
+    for S := 0 to NStates-1 do with StateTable^[S] do
 
       begin
 
-        if verbose then
+        if Verbose then
           begin
-            writeln(yylst);
-            writeln(yylst, 'state ', s, ':');
+            WriteLn(YYLst);
+            WriteLn(YYLst, 'state ', S, ':');
           end;
 
         (* Check shift and reduce actions, resolve conflicts.
@@ -190,392 +190,392 @@ procedure build;
            Shift actions ruled out by disambiguating rules are flagged by
            setting the corresponding next_state to -1. *)
 
-        n_errors := 0; n_conflicts := 0;
+        NErrors := 0; NConflicts := 0;
 
-        for i := trans_lo to trans_hi do with trans_table^[i] do
-          if sym>=0 then
-            for j := redns_lo to redns_hi do with redn_table^[j] do
-              if member(sym, symset^) then
-                if (sym_prec^[sym]>0) and (rule_prec^[rule_no]>0) then
+        for I := TransLo to TransHi do with TransTable^[I] do
+          if Sym>=0 then
+            for J := RednsLo to RednsHi do with RednTable^[J] do
+              if Member(Sym, SymSet^) then
+                if (SymPrec^[Sym]>0) and (RulePrec^[RuleNo]>0) then
                   (* resolve conflict using precedence: *)
-                  if rule_prec^[rule_no]=sym_prec^[sym] then
-                    case prec_table^[sym_prec^[sym]] of
-                      left     : (* reduce *)
-                                 next_state := -1;
-                      right    : (* shift *)
-                                 exclude(symset^, sym);
-                      nonassoc : (* error *)
+                  if RulePrec^[RuleNo]=SymPrec^[Sym] then
+                    case PrecTable^[SymPrec^[Sym]] of
+                      Left     : (* reduce *)
+                                 NextState := -1;
+                      Right    : (* shift *)
+                                 Exclude(SymSet^, Sym);
+                      NonAssoc : (* error *)
                                  begin
-                                   inc(n_errors);
-                                   next_state := -1;
-                                   exclude(symset^, sym);
+                                   Inc(NErrors);
+                                   NextState := -1;
+                                   Exclude(SymSet^, Sym);
                                  end;
                     end
-                  else if rule_prec^[rule_no]>sym_prec^[sym] then
+                  else if RulePrec^[RuleNo]>SymPrec^[Sym] then
                     (* reduce *)
-                    next_state := -1
+                    NextState := -1
                   else
                     (* shift *)
-                    exclude(symset^, sym)
+                    Exclude(SymSet^, Sym)
                 else
                   (* shift/reduce conflict: *)
                   begin
-                    if verbose then
+                    if Verbose then
                       begin
-                        if n_conflicts=0 then
+                        if NConflicts=0 then
                           begin
-                            writeln(yylst);
-                            writeln(yylst, tab, '*** conflicts:');
-                            writeln(yylst);
+                            WriteLn(YYLst);
+                            WriteLn(YYLst, Tab, '*** conflicts:');
+                            WriteLn(YYLst);
                           end;
-                        writeln(yylst, tab,
-                                       'shift ', next_state, ', ',
-                                       'reduce ', rule_no-1, ' on ',
-                                       pname(sym));
+                        WriteLn(YYLst, Tab,
+                                       'shift ', NextState, ', ',
+                                       'reduce ', RuleNo-1, ' on ',
+                                       Pname(Sym));
                       end;
-                    inc(n_conflicts); inc(shift_reduce);
-                    exclude(symset^, sym);
+                    Inc(NConflicts); Inc(ShiftReduce);
+                    Exclude(SymSet^, Sym);
                   end;
 
-        for i := redns_lo to redns_hi do
-          for j := i+1 to redns_hi do with redn_table^[j] do
+        for I := RednsLo to RednsHi do
+          for J := I+1 to RednsHi do with RednTable^[J] do
             begin
-              for k := 1 to size(symset^) do
-                if member(symset^[k], redn_table^[i].symset^) then
+              for K := 1 to Size(SymSet^) do
+                if Member(SymSet^[K], RednTable^[I].SymSet^) then
                   (* reduce/reduce conflict: *)
                   begin
-                    if verbose then
+                    if Verbose then
                       begin
-                        if n_conflicts=0 then
+                        if NConflicts=0 then
                           begin
-                            writeln(yylst);
-                            writeln(yylst, tab, '*** conflicts:');
-                            writeln(yylst);
+                            WriteLn(YYLst);
+                            WriteLn(YYLst, Tab, '*** conflicts:');
+                            WriteLn(YYLst);
                           end;
-                        writeln(yylst, tab,
+                        WriteLn(YYLst, Tab,
                                        'reduce ',
-                                       redn_table^[i].rule_no-1, ', ',
-                                       'reduce ', rule_no-1, ' on ',
-                                       pname(symset^[k]));
+                                       RednTable^[I].RuleNo-1, ', ',
+                                       'reduce ', RuleNo-1, ' on ',
+                                       Pname(SymSet^[K]));
                       end;
-                    inc(n_conflicts); inc(reduce_reduce);
+                    Inc(NConflicts); Inc(ReduceReduce);
                   end;
-              setminus(symset^, redn_table^[i].symset^);
+              SetMinus(SymSet^, RednTable^[I].SymSet^);
             end;
 
         (* Count goto, shift and reduce actions to generate. *)
 
-        n_gotos := 0; n_shifts := 0; n_reductions := 0;
+        NGotos := 0; NShifts := 0; NReductions := 0;
 
-        for i := trans_lo to trans_hi do with trans_table^[i] do
-          if next_state<>-1 then
-            if sym<0 then
-              inc(n_gotos)
+        for I := TransLo to TransHi do with TransTable^[I] do
+          if NextState<>-1 then
+            if Sym<0 then
+              Inc(NGotos)
             else
-              inc(n_shifts);
+              Inc(NShifts);
 
-        for i := redns_lo to redns_hi do with redn_table^[i] do
-          if size(symset^)>0 then
-            inc(n_reductions);
+        for I := RednsLo to RednsHi do with RednTable^[I] do
+          if Size(SymSet^)>0 then
+            Inc(NReductions);
 
         (* Determine default action. *)
 
-        if (n_shifts+n_errors=0) and (n_reductions=1) then
+        if (NShifts+NErrors=0) and (NReductions=1) then
           (* default action is the reduction *)
-          with redn_table^[redns_lo] do
-            yyd[s] := -(rule_no-1)
+          with RednTable^[RednsLo] do
+            YYD[S] := -(RuleNo-1)
         else
           (* default action is error *)
-          yyd[s] := 0;
+          YYD[S] := 0;
 
         (* Flag reduced rules. *)
 
-        for i := redns_lo to redns_hi do
-          with redn_table^[i] do
-            reduced[rule_no] := true;
+        for I := RednsLo to RednsHi do
+          with RednTable^[I] do
+            Reduced[RuleNo] := True;
 
-        if verbose then
+        if Verbose then
 
           begin
 
             (* List kernel items. *)
 
-            writeln(yylst);
-            get_item_set(s, item_set);
-            closure(item_set);
-            sort_item_set(item_set);
-            with item_set do
+            WriteLn(YYLst);
+            GetItemSet(S, ItemSet);
+            Closure(ItemSet);
+            SortItemSet(ItemSet);
+            with ItemSet do
               begin
-                for i := 1 to n_items do
-                  with item[i], rule_table^[rule_no]^ do
-                    if (rule_no=1) or (pos_no>1) or (rhs_len=0) then
-                      if pos_no>rhs_len then
-                        writeln(yylst, tab,
-                                       itemStr(item_set, i), tab,
-                                       '(', rule_no-1, ')')
+                for I := 1 to NItems do
+                  with Item[I], RuleTable^[RuleNo]^ do
+                    if (RuleNo=1) or (PosNo>1) or (RHSLen=0) then
+                      if PosNo>RHSLen then
+                        WriteLn(YYLst, Tab,
+                                       ItemStr(ItemSet, I), Tab,
+                                       '(', RuleNo-1, ')')
                       else
-                        writeln(yylst, tab, itemStr(item_set, i));
+                        WriteLn(YYLst, Tab, ItemStr(ItemSet, I));
               end;
 
             (* List parse actions. *)
 
             (* shift, reduce and default actions: *)
 
-            if (n_shifts+n_errors=0) and (n_reductions=1) then
+            if (NShifts+NErrors=0) and (NReductions=1) then
               (* default action is the reduction *)
-              with redn_table^[redns_lo] do
+              with RednTable^[RednsLo] do
                 begin
-                  writeln(yylst);
-                  writeln(yylst, tab, '.', tab, 'reduce ', rule_no-1 );
+                  WriteLn(YYLst);
+                  WriteLn(YYLst, Tab, '.', Tab, 'reduce ', RuleNo-1 );
                 end
             else
               (* default action is error *)
               begin
-                writeln(yylst);
-                for i := trans_lo to trans_hi do with trans_table^[i] do
-                  if next_state<>-1 then
-                    if sym=0 then
+                WriteLn(YYLst);
+                for I := TransLo to TransHi do with TransTable^[I] do
+                  if NextState<>-1 then
+                    if Sym=0 then
                       (* accept action *)
-                      writeln(yylst, tab, pname(sym), tab, 'accept')
-                    else if sym>0 then
+                      WriteLn(YYLst, Tab, Pname(Sym), Tab, 'accept')
+                    else if Sym>0 then
                       (* shift action *)
-                      writeln(yylst, tab,
-                                     pname(sym), tab, 'shift ', next_state);
-                for i := redns_lo to redns_hi do
-                  with redn_table^[i] do
-                    for j := 1 to size(symset^) do
+                      WriteLn(YYLst, Tab,
+                                     Pname(Sym), Tab, 'shift ', NextState);
+                for I := RednsLo to RednsHi do
+                  with RednTable^[I] do
+                    for J := 1 to Size(SymSet^) do
                       (* reduce action *)
-                      writeln(yylst, tab,
-                                     pname(symset^[j]), tab, 'reduce ',
-                                     rule_no-1);
+                      WriteLn(YYLst, Tab,
+                                     Pname(SymSet^[J]), Tab, 'reduce ',
+                                     RuleNo-1);
                 (* error action *)
-                writeln(yylst, tab, '.', tab, 'error');
+                WriteLn(YYLst, Tab, '.', Tab, 'error');
               end;
 
             (* goto actions: *)
 
-            if n_gotos>0 then
+            if NGotos>0 then
               begin
-                writeln(yylst);
-                for i := trans_lo to trans_hi do with trans_table^[i] do
-                  if sym<0 then
-                    writeln(yylst, tab,
-                                   pname(sym), tab, 'goto ', next_state);
+                WriteLn(YYLst);
+                for I := TransLo to TransHi do with TransTable^[I] do
+                  if Sym<0 then
+                    WriteLn(YYLst, Tab,
+                                   Pname(Sym), Tab, 'goto ', NextState);
               end;
 
           end;
 
       end;
 
-    for i := 2 to n_rules do
-      if not reduced[i] then inc(never_reduced);
+    for I := 2 to NRules do
+      if not Reduced[I] then Inc(NeverReduced);
 
-    if verbose then
+    if Verbose then
       begin
-        writeln(yylst);
-        if shift_reduce>0 then
-          writeln(yylst, shift_reduce, ' shift/reduce conflicts.');
-        if reduce_reduce>0 then
-          writeln(yylst, reduce_reduce, ' reduce/reduce conflicts.');
-        if never_reduced>0 then
-          writeln(yylst, never_reduced, ' rules never reduced.');
+        WriteLn(YYLst);
+        if ShiftReduce>0 then
+          WriteLn(YYLst, ShiftReduce, ' shift/reduce conflicts.');
+        if ReduceReduce>0 then
+          WriteLn(YYLst, ReduceReduce, ' reduce/reduce conflicts.');
+        if NeverReduced>0 then
+          WriteLn(YYLst, NeverReduced, ' rules never reduced.');
       end;
 
     (* report rules never reduced: *)
 
-    if (never_reduced>0) and verbose then
+    if (NeverReduced>0) and Verbose then
       begin
-        writeln(yylst);
-        writeln(yylst, '*** rules never reduced:');
-        for i := 2 to n_rules do if not reduced[i] then
+        WriteLn(YYLst);
+        WriteLn(YYLst, '*** rules never reduced:');
+        for I := 2 to NRules do if not Reduced[I] then
           begin
-            writeln(yylst);
-            writeln(yylst, ruleStr(i), tab, '(', i-1, ')');
+            WriteLn(YYLst);
+            WriteLn(YYLst, RuleStr(I), Tab, '(', I-1, ')');
           end;
       end;
 
   end(*build*);
 
-procedure counters;
+procedure Counters;
 
   (* initialize counters and offsets *)
 
-  var s, i : Integer;
+  var S, I : Integer;
 
   begin
 
-    yynstates := n_states; yynacts := 0; yyngotos := 0;
+    YYNStates := NStates; YYNActs := 0; YYNGotos := 0;
 
-    for s := 0 to n_states-1 do with state_table^[s] do
+    for S := 0 to NStates-1 do with StateTable^[S] do
       begin
-        yyal[s] := yynacts+1; yygl[s] := yyngotos+1;
-        if yyd[s]=0 then
+        YYAL[S] := YYNActs+1; YYGL[S] := YYNGotos+1;
+        if YYD[S]=0 then
           begin
-            for i := trans_lo to trans_hi do with trans_table^[i] do
-              if (sym>=0) and (next_state<>-1) then
-                inc(yynacts);
-            for i := redns_lo to redns_hi do with redn_table^[i] do
-              inc(yynacts, size(symset^));
+            for I := TransLo to TransHi do with TransTable^[I] do
+              if (Sym>=0) and (NextState<>-1) then
+                Inc(YYNActs);
+            for I := RednsLo to RednsHi do with RednTable^[I] do
+              Inc(YYNActs, Size(SymSet^));
           end;
-        for i := trans_lo to trans_hi do with trans_table^[i] do
-          if sym<0 then
-            inc(yyngotos);
-        yyah[s] := yynacts; yygh[s] := yyngotos;
+        for I := TransLo to TransHi do with TransTable^[I] do
+          if Sym<0 then
+            Inc(YYNGotos);
+        YYAH[S] := YYNActs; YYGH[S] := YYNGotos;
       end;
 
   end(*counters*);
 
-procedure tables;
+procedure Tables;
 
   (* write tables to output file *)
 
-  var s, i, j, count : Integer;
+  var S, I, J, Count : Integer;
 
   begin
 
-    writeln(yyout);
-    writeln(yyout, 'type YYARec = record');
-    writeln(yyout, '                sym, act : Integer;');
-    writeln(yyout, '              end;');
-    writeln(yyout, '     YYRRec = record');
-    writeln(yyout, '                len, sym : Integer;');
-    writeln(yyout, '              end;');
-    writeln(yyout);
-    writeln(yyout, 'const');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'type TYYARec = record');
+    WriteLn(YYOut, '                Sym, Act : Integer;');
+    WriteLn(YYOut, '              end;');
+    WriteLn(YYOut, '     TYYRRec = record');
+    WriteLn(YYOut, '                Len, Sym : Integer;');
+    WriteLn(YYOut, '              end;');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'const');
 
     (* counters: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yynacts   = ', yynacts, ';');
-    writeln(yyout, 'yyngotos  = ', yyngotos, ';');
-    writeln(yyout, 'yynstates = ', yynstates, ';');
-    writeln(yyout, 'yynrules  = ', n_rules-1, ';');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYNActs   = ', YYNActs, ';');
+    WriteLn(YYOut, 'YYNGotos  = ', YYNGotos, ';');
+    WriteLn(YYOut, 'YYNStates = ', YYNStates, ';');
+    WriteLn(YYOut, 'YYNRules  = ', NRules-1, ';');
 
     (* shift/reduce table: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yya : array [1..yynacts] of YYARec = (');
-    count := 0;
-    for s := 0 to n_states-1 do with state_table^[s] do
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYA : array [1..YYNActs] of TYYARec = (');
+    Count := 0;
+    for S := 0 to NStates-1 do with StateTable^[S] do
       begin
-        writeln(yyout, '{ ', s, ': }');
-        if yyd[s]=0 then
+        WriteLn(YYOut, '{ ', S, ': }');
+        if YYD[S]=0 then
           begin
-            for i := trans_lo to trans_hi do with trans_table^[i] do
-              if (next_state<>-1) and (sym>=0) then
+            for I := TransLo to TransHi do with TransTable^[I] do
+              if (NextState<>-1) and (Sym>=0) then
                 begin
-                  inc(count);
-                  if sym=0 then
-                    write(yyout, '  ( sym: 0; act: 0 )')
+                  Inc(Count);
+                  if Sym=0 then
+                    Write(YYOut, '  ( Sym: 0; Act: 0 )')
                   else
-                    write(yyout, '  ( sym: ', sym, '; act: ',
-                                 next_state, ' )');
-                  if count<yynacts then write(yyout, ',');
-                  writeln(yyout);
+                    Write(YYOut, '  ( Sym: ', Sym, '; Act: ',
+                                 NextState, ' )');
+                  if Count<YYNActs then Write(YYOut, ',');
+                  WriteLn(YYOut);
                 end;
-            for i := redns_lo to redns_hi do with redn_table^[i] do
-              for j := 1 to size(symset^) do
+            for I := RednsLo to RednsHi do with RednTable^[I] do
+              for J := 1 to Size(SymSet^) do
                 begin
-                  inc(count);
-                  write(yyout, '  ( sym: ', symset^[j], '; act: ',
-                               -(rule_no-1), ' )');
-                  if count<yynacts then write(yyout, ',');
-                  writeln(yyout);
+                  Inc(Count);
+                  Write(YYOut, '  ( Sym: ', SymSet^[J], '; Act: ',
+                               -(RuleNo-1), ' )');
+                  if Count<YYNActs then Write(YYOut, ',');
+                  WriteLn(YYOut);
                 end;
         end;
       end;
-    writeln(yyout, ');');
+    WriteLn(YYOut, ');');
 
     (* goto table: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yyg : array [1..yyngotos] of YYARec = (');
-    count := 0;
-    for s := 0 to n_states-1 do with state_table^[s] do
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYG : array [1..YYNGotos] of TYYARec = (');
+    Count := 0;
+    for S := 0 to NStates-1 do with StateTable^[S] do
       begin
-        writeln(yyout, '{ ', s, ': }');
-        for i := trans_lo to trans_hi do with trans_table^[i] do
-          if sym<0 then
+        WriteLn(YYOut, '{ ', S, ': }');
+        for I := TransLo to TransHi do with TransTable^[I] do
+          if Sym<0 then
             begin
-              inc(count);
-              write(yyout, '  ( sym: ', sym, '; act: ', next_state, ' )');
-              if count<yyngotos then write(yyout, ',');
-              writeln(yyout);
+              Inc(Count);
+              Write(YYOut, '  ( Sym: ', Sym, '; Act: ', NextState, ' )');
+              if Count<YYNGotos then Write(YYOut, ',');
+              WriteLn(YYOut);
             end;
       end;
-    writeln(yyout, ');');
+    WriteLn(YYOut, ');');
 
     (* default action table: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yyd : array [0..yynstates-1] of Integer = (');
-    for s := 0 to n_states-1 do
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYD : array [0..YYNStates-1] of Integer = (');
+    for S := 0 to NStates-1 do
       begin
-        write(yyout, '{ ', s, ': } ', yyd[s]);
-        if s<n_states-1 then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', S, ': } ', YYD[S]);
+        if S<NStates-1 then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
+    WriteLn(YYOut, ');');
 
     (* offset tables: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yyal : array [0..yynstates-1] of Integer = (');
-    for s := 0 to n_states-1 do
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYAL : array [0..YYNStates-1] of Integer = (');
+    for S := 0 to NStates-1 do
       begin
-        write(yyout, '{ ', s, ': } ', yyal[s]);
-        if s<n_states-1 then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', S, ': } ', YYAL[S]);
+        if S<NStates-1 then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
-    writeln(yyout);
-    writeln(yyout, 'yyah : array [0..yynstates-1] of Integer = (');
-    for s := 0 to n_states-1 do
+    WriteLn(YYOut, ');');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYAH : array [0..YYNStates-1] of Integer = (');
+    for S := 0 to NStates-1 do
       begin
-        write(yyout, '{ ', s, ': } ', yyah[s]);
-        if s<n_states-1 then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', S, ': } ', YYAH[S]);
+        if S<NStates-1 then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
-    writeln(yyout);
-    writeln(yyout, 'yygl : array [0..yynstates-1] of Integer = (');
-    for s := 0 to n_states-1 do
+    WriteLn(YYOut, ');');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYGL : array [0..YYNStates-1] of Integer = (');
+    for S := 0 to NStates-1 do
       begin
-        write(yyout, '{ ', s, ': } ', yygl[s]);
-        if s<n_states-1 then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', S, ': } ', YYGL[S]);
+        if S<NStates-1 then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
-    writeln(yyout);
-    writeln(yyout, 'yygh : array [0..yynstates-1] of Integer = (');
-    for s := 0 to n_states-1 do
+    WriteLn(YYOut, ');');
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYGH : array [0..YYNStates-1] of Integer = (');
+    for S := 0 to NStates-1 do
       begin
-        write(yyout, '{ ', s, ': } ', yygh[s]);
-        if s<n_states-1 then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', S, ': } ', YYGH[S]);
+        if S<NStates-1 then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
+    WriteLn(YYOut, ');');
 
     (* rule table: *)
 
-    writeln(yyout);
-    writeln(yyout, 'yyr : array [1..yynrules] of YYRRec = (');
-    for i := 2 to n_rules do with rule_table^[i]^ do
+    WriteLn(YYOut);
+    WriteLn(YYOut, 'YYR : array [1..YYNRules] of TYYRRec = (');
+    for I := 2 to NRules do with RuleTable^[I]^ do
       begin
-        write(yyout, '{ ', i-1, ': } ', '( len: ', rhs_len,
-                                        '; sym: ', lhs_sym, ' )');
-        if i<n_rules then write(yyout, ',');
-        writeln(yyout);
+        Write(YYOut, '{ ', I-1, ': } ', '( Len: ', RHSLen,
+                                        '; Sym: ', LHSSym, ' )');
+        if I<NRules then Write(YYOut, ',');
+        WriteLn(YYOut);
       end;
-    writeln(yyout, ');');
+    WriteLn(YYOut, ');');
 
-    writeln(yyout);
+    WriteLn(YYOut);
 
   end(*tables*);
 
-procedure parse_table;
+procedure ParseTable;
   begin
-    build; counters; tables;
+    Build; Counters; Tables;
   end(*parse_table*);
 
 end(*YaccParseTable*).

@@ -26,8 +26,8 @@ unit entfile;
 interface
 
   uses
-    tpcompilerreal,
-    systems,globtype,constexp,cstreams,nxentrybuffer;
+    TPCompilerReal,
+    Systems,GlobType,ConstExp,CStreams,nxentrybuffer;
 
 const
 { buffer sizes }
@@ -143,7 +143,7 @@ const
 { We need to use the correct size of aint and pint for
   the target CPU }
 const
-  CpuAddrBitSize : array[0..MaxStoredCPUId] of longint =
+  CpuAddrBitSize : array[0..MaxStoredCPUId] of LongInt =
     (
     {  0 } 32 {'none'},
     {  1 } 32 {'i386'},
@@ -172,7 +172,7 @@ const
     { 24 } 64 {'mips64el'},
     { 25 } 64 {'loongarch64'}
     );
-  CpuAluBitSize : array[0..MaxStoredCPUId] of longint =
+  CpuAluBitSize : array[0..MaxStoredCPUId] of LongInt =
     (
     {  0 } 32 {'none'},
     {  1 } 32 {'i386'},
@@ -207,7 +207,7 @@ type
   { Compiler constants retain binary80 precision on every host and target. }
 
   { common part of the header for all kinds of entry files }
-  tentryheader=record
+  TEntryHeader=record
     id       : array[1..3] of char;
     ver      : array[1..3] of char;
     compiler : word;
@@ -216,25 +216,25 @@ type
     flags    : dword;
     size     : dword; { size of the ppufile without header }
   end;
-  pentryheader=^tentryheader;
+  PEntryHeader=^TEntryHeader;
 
-  tentry=packed record
-    size : longint;
+  TEntry=packed record
+    size : LongInt;
     id   : byte;
     nr   : byte;
   end;
 
-  tentryfile=class
+  TEntryFile=class
   private
     FBuffer: TNXEntryBuffer;
-    function getposition:longint;
-    procedure setposition(value:longint);
+    function getposition:LongInt;
+    procedure setposition(value:LongInt);
   protected
-    bufstart : integer;
+    BufStart : integer;
     entrybufstart,
     entrystart,
     entryidx : integer;
-    entry    : tentry;
+    entry    : TEntry;
     closed,
     tempclosed : boolean;
     closepos : integer;
@@ -243,24 +243,24 @@ type
 {$ifdef DEBUG_PPU}
     flog     : text;
     flog_open : boolean;
-    ppu_log_level : longint;
+    ppu_log_level : LongInt;
     ppu_log_idx : integer;
 {$endif}
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-    entryfilebufsize :longint;
+    entryfilebufsize :LongInt;
 {$endif CHECK_INPUTPOINTER_LIMITS}
     mode     : byte; {0 - Closed, 1 - Reading, 2 - Writing}
     fisfile  : boolean;
     fname    : string;
     fsize    : integer;
     procedure newheader;virtual;abstract;
-    function readheader:longint;virtual;abstract;
+    function readheader:LongInt;virtual;abstract;
     function outputallowed:boolean;virtual;
     procedure resetfile;virtual;abstract;
-    function getheadersize:longint;virtual;abstract;
-    function getheaderaddr:pentryheader;virtual;abstract;
-    procedure RaiseAssertion(Code: Longint); virtual;
-    function BufferedPosition:longint;inline;
+    function getheadersize:LongInt;virtual;abstract;
+    function getheaderaddr:PEntryHeader;virtual;abstract;
+    procedure RaiseAssertion(Code: LongInt); virtual;
+    function BufferedPosition:LongInt;inline;
   public
     entrytyp : byte;
     size             : integer;
@@ -271,17 +271,17 @@ type
     error         : boolean;
     constructor create(const fn:string
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-        ;aentryfilebufsize : longint = default_entryfilebufsize
+        ;aentryfilebufsize : LongInt = default_entryfilebufsize
 {$endif CHECK_INPUTPOINTER_LIMITS}
 	);
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function getversion:integer;
     procedure flush; {$ifdef USEINLINE}inline;{$endif}
     procedure closefile;virtual;
     procedure newentry;
-    property position:longint read getposition write setposition;
+    property position:LongInt read getposition write setposition;
     { Warning: don't keep the stream open during a tempclose! }
-    function substream(ofs,len:longint):TCStream;
+    function substream(ofs,len:LongInt):TCStream;
     { Warning: don't use the put* or write* functions anymore when writing through this }
     property stream:TCStream read f;
 {$ifdef DEBUG_PPU}
@@ -300,8 +300,8 @@ type
     procedure skipdata(len:integer);
     function  readentry:byte;
     function  EndOfEntry:boolean; {$ifdef USEINLINE}inline;{$endif}
-    function  entrysize:longint; {$ifdef USEINLINE}inline;{$endif}
-    function  entryleft:longint; {$ifdef USEINLINE}inline;{$endif}
+    function  entrysize:LongInt; {$ifdef USEINLINE}inline;{$endif}
+    function  entryleft:LongInt; {$ifdef USEINLINE}inline;{$endif}
     procedure getdatabuf(out b;len:integer;out res:integer);
     procedure getdata(out b;len:integer);
     procedure getdata(b : TByteDynArray);
@@ -309,20 +309,20 @@ type
     function  getbyte:byte;
     function  getword:word;
     function  getdword:dword;
-    function  getlongint:longint;
+    function  getlongint:LongInt;
     function getint64:int64;
     function  getqword:qword;
     function getaint:{$ifdef generic_cpu}int64{$else}aint{$ifdef USEINLINE}; inline{$endif}{$endif};
     function getasizeint:{$ifdef generic_cpu}int64{$else}asizeint{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function getpuint:{$ifdef generic_cpu}qword{$else}puint{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function getpuint:{$ifdef generic_cpu}qword{$else}PUint{$ifdef USEINLINE}; inline{$endif}{$endif};
     function getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$ifdef USEINLINE}; inline{$endif}{$endif};
     function getaword:{$ifdef generic_cpu}qword{$else}aword{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function  getreal:bestreal;
+    function  getreal:BestReal;
     function  getrealbytesize:byte;
     function  getboolean:boolean; {$ifdef USEINLINE}inline;{$endif}
     function  getstring:ShortString;
-    function  getpshortstring:pshortstring;
-    function  getansistring:ansistring;
+    function  getpshortstring:PShortString;
+    function  getansistring:AnsiString;
     procedure getset(out arr: array of byte);
     function  skipuntilentry(untilb:byte):boolean;
   {write}
@@ -336,50 +336,50 @@ type
     procedure putbyte(b:byte); {$ifdef USEINLINE}inline;{$endif}
     procedure putword(w:word); {$ifdef USEINLINE}inline;{$endif}
     procedure putdword(w:dword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putlongint(l:longint); {$ifdef USEINLINE}inline;{$endif}
+    procedure putlongint(l:LongInt); {$ifdef USEINLINE}inline;{$endif}
     procedure putint64(i:int64); {$ifdef USEINLINE}inline;{$endif}
     procedure putqword(q:qword); {$ifdef USEINLINE}inline;{$endif}
     procedure putaint(i:aint); {$ifdef USEINLINE}inline;{$endif}
     procedure putasizeint(i:asizeint); {$ifdef USEINLINE}inline;{$endif}
-    procedure putpuint(i:puint); {$ifdef USEINLINE}inline;{$endif}
+    procedure putpuint(i:PUint); {$ifdef USEINLINE}inline;{$endif}
     procedure putptruint(v:TConstPtrUInt); {$ifdef USEINLINE}inline;{$endif}
     procedure putaword(i:aword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putreal(d:bestreal);
+    procedure putreal(d:BestReal);
     procedure putboolean(b:boolean); {$ifdef USEINLINE}inline;{$endif}
     procedure putstring(const s:ShortString); {$ifdef USEINLINE}inline;{$endif}
-    procedure putansistring(const s:ansistring);
+    procedure putansistring(const s:AnsiString);
 
     procedure putset(const arr: array of byte);
-    procedure tempclose;        // MG: not used, obsolete?
-    function  tempopen:boolean; // MG: not used, obsolete?
+    procedure TempClose;        // MG: not used, obsolete?
+    function  TempOpen:boolean; // MG: not used, obsolete?
   end;
 
 implementation
 
   uses
 
-    cutils;
+    CUtils;
 
 
 {*****************************************************************************
                               tentryfile
 *****************************************************************************}
 
-function tentryfile.outputallowed: boolean;
+function TEntryFile.outputallowed: boolean;
 begin
   result:=true;
 end;
 
 
-function tentryfile.BufferedPosition: longint;
+function TEntryFile.BufferedPosition: LongInt;
 begin
-  result:=bufstart+FBuffer.Position;
+  result:=BufStart+FBuffer.Position;
 end;
 
 
-constructor tentryfile.create(const fn:string
+constructor TEntryFile.create(const fn:string
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-        ;aentryfilebufsize : longint = default_entryfilebufsize
+        ;aentryfilebufsize : LongInt = default_entryfilebufsize
 {$endif CHECK_INPUTPOINTER_LIMITS}
 	);
 begin
@@ -402,7 +402,7 @@ begin
 end;
 
 
-destructor tentryfile.destroy;
+destructor TEntryFile.Destroy;
 begin
   closefile;
 {$ifdef DEBUG_PPU}
@@ -422,7 +422,7 @@ begin
   mainentryid: entryid_name:='main_entry_id';
   subentryid: entryid_name:='sub_entry_id';
   else
-    entryid_name:='unknown entryid '+tostr(nr);
+    entryid_name:='unknown entryid '+ToStr(nr);
   end;
 end;
 
@@ -525,48 +525,48 @@ begin
   iblinkotherframeworks: entry_name:='iblinkotherframeworks';
   ibjvmnamespace: entry_name:='ibjvmnamespace';
   else
-    entry_name:='unknown entry '+tostr(nr);
+    entry_name:='unknown entry '+ToStr(nr);
   end;
 end;
 
-procedure tentryfile.ppu_log(st :string);
+procedure TEntryFile.ppu_log(st :string);
 begin
   if flog_open then
     begin
-      writeln(flog,BufferedPosition,': ',st);
+      WriteLn(flog,BufferedPosition,': ',st);
     end;
 {$ifdef IN_PPUDUMP}
-  writeln(BufferedPosition,': ',st);
+  WriteLn(BufferedPosition,': ',st);
 {$endif}
 end;
 
-procedure tentryfile.inc_log_level;
+procedure TEntryFile.inc_log_level;
 begin
   inc(ppu_log_level);
 end;
 
-procedure tentryfile.ppu_log_val(st :string);
+procedure TEntryFile.ppu_log_val(st :string);
 begin
   if flog_open then
     begin
-      writeln(flog,'(',ppu_log_level,') value: ',st);
+      WriteLn(flog,'(',ppu_log_level,') value: ',st);
     end;
 {$ifdef IN_PPUDUMP}
-  writeln('(',ppu_log_level,') value: ',st);
+  WriteLn('(',ppu_log_level,') value: ',st);
 {$endif}
 end;
 
-procedure tentryfile.dec_log_level;
+procedure TEntryFile.dec_log_level;
 begin
   dec(ppu_log_level);
 end;
 {$endif}
 
-function tentryfile.getversion:integer;
+function TEntryFile.getversion:integer;
   var
     l    : integer;
     code : integer;
-    header : pentryheader;
+    header : PEntryHeader;
   begin
     header:=getheaderaddr;
     Val(header^.ver[1]+header^.ver[2]+header^.ver[3],l,code);
@@ -576,28 +576,28 @@ function tentryfile.getversion:integer;
      result:=0;
   end;
 
-procedure tentryfile.flush;
+procedure TEntryFile.flush;
 begin
   if mode=2 then
    writebuf;
 end;
 
 
-procedure tentryfile.RaiseAssertion(Code: Longint);
+procedure TEntryFile.RaiseAssertion(Code: LongInt);
 begin
   { It's down to descendent classes to raise an internal error as desired. [Kit] }
   error := true;
 end;
 
 
-procedure tentryfile.closefile;
+procedure TEntryFile.closefile;
 begin
   if mode<>0 then
    begin
      flush;
 {$ifdef DEBUG_PPU}
      if (entry.nr<>0) and (mode=1) then
-       ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+tostr(entry.size));
+       ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
 {$endif}
      if fisfile then
        f.Free;
@@ -608,9 +608,9 @@ begin
 end;
 
 
-procedure tentryfile.setposition(value:longint);
+procedure TEntryFile.setposition(value:LongInt);
 begin
-  if assigned(f) then
+  if Assigned(f) then
     f.Position:=value
   else
     if tempclosed then
@@ -618,9 +618,9 @@ begin
 end;
 
 
-function tentryfile.getposition:longint;
+function TEntryFile.getposition:LongInt;
 begin
-  if assigned(f) then
+  if Assigned(f) then
     result:=f.Position
   else
     if tempclosed then
@@ -630,10 +630,10 @@ begin
 end;
 
 
-function tentryfile.substream(ofs,len:longint):TCStream;
+function TEntryFile.substream(ofs,len:LongInt):TCStream;
 begin
   result:=nil;
-  if assigned(f) then
+  if Assigned(f) then
     result:=TCRangeStream.Create(f,ofs,len);
 end;
 
@@ -641,7 +641,7 @@ end;
                               tentryfile Reading
 *****************************************************************************}
 
-function tentryfile.openfile:boolean;
+function TEntryFile.openfile:boolean;
 var
   strm : TCStream;
 begin
@@ -656,9 +656,9 @@ begin
 end;
 
 
-function tentryfile.openstream(strm:TCStream):boolean;
+function TEntryFile.openstream(strm:TCStream):boolean;
 var
-  i : longint;
+  i : LongInt;
 begin
   openstream:=false;
   f:=strm;
@@ -678,10 +678,10 @@ begin
   if i<0 then
     exit;
 {reset buffer}
-  bufstart:=i;
+  BufStart:=i;
   FBuffer.Reset;
   mode:=1;
-  FillChar(entry,sizeof(tentry),0);
+  FillChar(entry,sizeof(TEntry),0);
   entryidx:=0;
   entrystart:=0;
   entrybufstart:=0;
@@ -690,19 +690,19 @@ begin
 end;
 
 
-procedure tentryfile.reloadbuf;
+procedure TEntryFile.reloadbuf;
 var
   RemainingSize: LongInt;
 begin
-  inc(bufstart,FBuffer.Size);
-  RemainingSize:=fsize-bufstart;
+  inc(BufStart,FBuffer.Size);
+  RemainingSize:=fsize-BufStart;
   if RemainingSize<0 then
     RemainingSize:=0;
   FBuffer.LoadFromStream(f,RemainingSize);
 end;
 
 
-procedure tentryfile.readdata(out b;len:integer);
+procedure TEntryFile.readdata(out b;len:integer);
 var
   p : pchar;
   ReadCount : integer;
@@ -730,31 +730,31 @@ begin
 {$ifdef DEBUG_PPU}
   if ppu_log_level <= 0 then
     begin
-      ppu_log('readdata, length='+tostr(StartLength)+' level='+tostr(ppu_log_level));
+      ppu_log('readdata, length='+ToStr(StartLength)+' level='+ToStr(ppu_log_level));
       for i:=0 to StartLength-1 do
-        ppu_log_val('p['+tostr(i)+']=$'+hexstr(byte(StartPointer[i]),2));
+        ppu_log_val('p['+ToStr(i)+']=$'+HexStr(byte(StartPointer[i]),2));
     end;
 {$endif DEBUG_PPU}
 end;
 
-procedure tentryfile.readdata(const b: TByteDynArray);
+procedure TEntryFile.readdata(const b: TByteDynArray);
 begin
   ReadData(B[0],Length(B));
 end;
 
-procedure tentryfile.readdata(const b: TAnsiCharDynArray);
+procedure TEntryFile.readdata(const b: TAnsiCharDynArray);
 begin
   ReadData(B[0],Length(B));
 end;
 
 
-procedure tentryfile.skipdata(len:integer);
+procedure TEntryFile.skipdata(len:integer);
 var
   left : integer;
 begin
 {$ifdef DEBUG_PPU}
   if len>0 then
-    ppu_log('explicit skipdata '+tostr(len));
+    ppu_log('explicit skipdata '+ToStr(len));
 {$endif}
   while len>0 do
    begin
@@ -775,7 +775,7 @@ begin
 end;
 
 
-function tentryfile.readentry:byte;
+function TEntryFile.readentry:byte;
 begin
   if entryidx<entry.size then
     begin
@@ -784,16 +784,16 @@ begin
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
      if entry.size-entryidx>0 then
-       ppu_log('skipdata '+tostr(entry.size-entryidx));
+       ppu_log('skipdata '+ToStr(entry.size-entryidx));
 {$endif}
      skipdata(entry.size-entryidx);
     end;
 {$ifdef DEBUG_PPU}
   if entry.nr<>0 then
-    ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+tostr(entry.size));
+    ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
   ppu_log('entrystart');
 {$endif}
-  readdata(entry,sizeof(tentry));
+  readdata(entry,sizeof(TEntry));
   if change_endian then
     entry.size:=swapendian(entry.size);
   entrystart:=BufferedPosition;
@@ -811,7 +811,7 @@ begin
 end;
 
 
-function tentryfile.endofentry: boolean;
+function TEntryFile.endofentry: boolean;
 begin
 {$ifdef generic_cpu}
   endofentry:=(entryidx=entry.size);
@@ -821,18 +821,18 @@ begin
 end;
 
 
-function tentryfile.entrysize:longint;
+function TEntryFile.entrysize:LongInt;
 begin
   entrysize:=entry.size;
 end;
 
-function tentryfile.entryleft:longint;
+function TEntryFile.entryleft:LongInt;
 begin
   entryleft:=entry.size-entryidx;
 end;
 
 
-procedure tentryfile.getdatabuf(out b;len:integer;out res:integer);
+procedure TEntryFile.getdatabuf(out b;len:integer;out res:integer);
 begin
   if entryidx+len>entry.size then
    res:=entry.size-entryidx
@@ -843,7 +843,7 @@ begin
 end;
 
 
-procedure tentryfile.getdata(out b;len:integer);
+procedure TEntryFile.getdata(out b;len:integer);
 begin
   if entryidx+len>entry.size then
    begin
@@ -854,7 +854,7 @@ begin
   inc(entryidx,len);
 end;
 
-procedure tentryfile.getdata(b: TByteDynArray);
+procedure TEntryFile.getdata(b: TByteDynArray);
 begin
   if entryidx+Length(b)>entry.size then
    begin
@@ -865,7 +865,7 @@ begin
   inc(entryidx,length(b));
 end;
 
-procedure tentryfile.getdata(b: TAnsiCharDynArray);
+procedure TEntryFile.getdata(b: TAnsiCharDynArray);
 begin
   if entryidx+Length(b)>entry.size then
    begin
@@ -877,7 +877,7 @@ begin
 end;
 
 
-function tentryfile.getbyte:byte;
+function TEntryFile.getbyte:byte;
 begin
   if entryidx>=entry.size then
    begin
@@ -897,14 +897,14 @@ begin
   else
     readdata(result,1);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx);
 end;
 
 
-function tentryfile.getword:word;
+function TEntryFile.getword:word;
 begin
   if entryidx+2>entry.size then
    begin
@@ -926,14 +926,14 @@ begin
   if change_endian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx,2);
 end;
 
 
-function tentryfile.getlongint:longint;
+function TEntryFile.getlongint:LongInt;
 begin
   if entryidx+4>entry.size then
    begin
@@ -945,24 +945,24 @@ begin
   ppu_log('putlongint');
   inc_log_level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(longint) then
+  if FBuffer.Remaining>=sizeof(LongInt) then
     begin
       result:=Unaligned(PLongInt(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(longint));
+      FBuffer.Advance(sizeof(LongInt));
     end
   else
-    readdata(result,sizeof(longint));
+    readdata(result,sizeof(LongInt));
   if change_endian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx,4);
 end;
 
 
-function tentryfile.getdword:dword;
+function TEntryFile.getdword:dword;
 begin
   if entryidx+4>entry.size then
    begin
@@ -984,14 +984,14 @@ begin
   if change_endian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx,4);
 end;
 
 
-function tentryfile.getint64:int64;
+function TEntryFile.getint64:int64;
 begin
   if entryidx+8>entry.size then
    begin
@@ -1013,14 +1013,14 @@ begin
   if change_endian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx,8);
 end;
 
 
-function tentryfile.getqword:qword;
+function TEntryFile.getqword:qword;
 begin
   if entryidx+8>entry.size then
    begin
@@ -1042,17 +1042,17 @@ begin
   if change_endian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
   inc(entryidx,8);
 end;
 
 
-function tentryfile.getaint:{$ifdef generic_cpu}int64{$else}aint{$endif};
+function TEntryFile.getaint:{$ifdef generic_cpu}int64{$else}aint{$endif};
 {$ifdef generic_cpu}
 var
-  header : pentryheader;
+  header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
@@ -1088,16 +1088,16 @@ begin
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
 end;
 
 
-function tentryfile.getasizeint:{$ifdef generic_cpu}int64{$else}asizeint{$endif};
+function TEntryFile.getasizeint:{$ifdef generic_cpu}int64{$else}asizeint{$endif};
 {$ifdef generic_cpu}
 var
-  header : pentryheader;
+  header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
@@ -1139,16 +1139,16 @@ begin
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
 end;
 
 
-function tentryfile.getpuint:{$ifdef generic_cpu}qword{$else}puint{$endif};
+function TEntryFile.getpuint:{$ifdef generic_cpu}qword{$else}PUint{$endif};
 {$ifdef generic_cpu}
 var
-header : pentryheader;
+header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
@@ -1169,7 +1169,7 @@ begin
       result:=0;
     end;
 {$else not generic_cpu}
-  case sizeof(puint) of
+  case sizeof(PUint) of
     8: result:=getqword;
     4: result:=getdword;
     2: result:=getword;
@@ -1182,16 +1182,16 @@ begin
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
 end;
 
 
-function tentryfile.getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$endif};
+function TEntryFile.getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$endif};
 {$ifdef generic_cpu}
 var
-header : pentryheader;
+header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
@@ -1205,22 +1205,22 @@ begin
   else result:=getdword;
 {$else not generic_cpu}
   {$ifdef cpu64bitaddr}
-  result:=tconstptruint(getint64);
+  result:=TConstPtrUInt(getint64);
   {$else}
   result:=TConstPtrUInt(getlongint);
   {$endif}
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
 end;
 
 
-function tentryfile.getaword:{$ifdef generic_cpu}qword{$else}aword{$endif};
+function TEntryFile.getaword:{$ifdef generic_cpu}qword{$else}aword{$endif};
 {$ifdef generic_cpu}
 var
-header : pentryheader;
+header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
@@ -1256,14 +1256,14 @@ begin
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(tostr(result));
+  ppu_log_val(ToStr(result));
   dec_log_level;
 {$endif}
 end;
 
 
 
-function tentryfile.getreal:bestreal;
+function TEntryFile.getreal:BestReal;
 var
   lDouble: TDoubleRec;
 {$ifdef FPC_HAS_TYPE_EXTENDED}
@@ -1289,7 +1289,7 @@ begin
     end;
 end;
 
-function tentryfile.getrealbytesize:byte;
+function TEntryFile.getrealbytesize:byte;
 begin
   if TargetInfo.cpu in [cpu_i386,cpu_x86_64] then
     Result:=10
@@ -1297,7 +1297,7 @@ begin
     Result:=8;
 end;
 
-function tentryfile.getboolean:boolean;
+function TEntryFile.getboolean:boolean;
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putboolean');
@@ -1306,11 +1306,11 @@ begin
 end;
 
 
-function tentryfile.getstring:ShortString;
+function TEntryFile.getstring:ShortString;
 begin
   result[0]:=chr(getbyte);
 {$ifdef DEBUG_PPU}
-  ppu_log('putstring,size='+tostr(length(result)+1));
+  ppu_log('putstring,size='+ToStr(length(result)+1));
   inc_log_level;
 {$endif}
   if entryidx+length(result)>entry.size then
@@ -1326,14 +1326,14 @@ begin
   inc(entryidx,length(result));
 end;
 
-function tentryfile.getpshortstring:pshortstring;
+function TEntryFile.getpshortstring:PShortString;
 var
   len: char;
 begin
   result:=nil;
   len:=chr(getbyte);
 {$ifdef DEBUG_PPU}
-  ppu_log('putstring,size='+tostr(ord(len)+1));
+  ppu_log('putstring,size='+ToStr(ord(len)+1));
   inc_log_level;
 {$endif}
   if entryidx+ord(len)>entry.size then
@@ -1341,7 +1341,7 @@ begin
      error:=true;
      exit;
    end;
-  getmem(result,ord(len)+1);
+  GetMem(result,ord(len)+1);
   result^[0]:=len;
   ReadData(result^[1],ord(len));
   inc(entryidx,ord(len));
@@ -1351,9 +1351,9 @@ begin
 {$endif}
 end;
 
-function tentryfile.getansistring:ansistring;
+function TEntryFile.getansistring:AnsiString;
 var
-  len: longint;
+  len: LongInt;
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putansistring');
@@ -1366,7 +1366,7 @@ begin
      result:='';
      exit;
    end;
-  setlength(result,len);
+  SetLength(result,len);
   if len>0 then
     getdata(result[1],len);
 {$ifdef DEBUG_PPU}
@@ -1376,9 +1376,9 @@ begin
 end;
 
 
-procedure tentryfile.getset(out arr: array of byte);
+procedure TEntryFile.getset(out arr: array of byte);
 var
-  i : longint;
+  i : LongInt;
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putset');
@@ -1387,21 +1387,21 @@ begin
   getdata(arr,sizeof(arr));
   if change_endian then
     for i:=low(arr) to high(arr) do
-      arr[i]:=reverse_byte(arr[i]);
+      arr[i]:=Reverse_Byte(arr[i]);
 {$ifdef DEBUG_PPU}
   for i:=low(arr) to high(arr) do
-    ppu_log_val('byte['+tostr(i)+']=$'+hexstr(arr[i],2));
+    ppu_log_val('byte['+ToStr(i)+']=$'+HexStr(arr[i],2));
   dec_log_level;
 {$endif}
 end;
 
 
-function tentryfile.skipuntilentry(untilb:byte):boolean;
+function TEntryFile.skipuntilentry(untilb:byte):boolean;
 var
   b : byte;
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('skipuntilentry '+tostr(untilb));
+  ppu_log('skipuntilentry '+ToStr(untilb));
 {$endif}
   repeat
     b:=readentry;
@@ -1414,7 +1414,7 @@ end;
                               tentryfile Writing
 *****************************************************************************}
 
-function tentryfile.createfile:boolean;
+function TEntryFile.createfile:boolean;
 var
   ok: boolean;
   strm : TCStream;
@@ -1436,7 +1436,7 @@ begin
   fisfile:=result;
 end;
 
-function tentryfile.createstream(strm:TCStream):boolean;
+function TEntryFile.createstream(strm:TCStream):boolean;
 begin
   createstream:=false;
   if outputallowed then
@@ -1446,7 +1446,7 @@ begin
       {write header for sure}
       f.Write(getheaderaddr^,getheadersize);
     end;
-  bufstart:=getheadersize;
+  BufStart:=getheadersize;
   FBuffer.Reset;
 {reset}
   resetfile;
@@ -1468,17 +1468,17 @@ begin
 end;
 
 
-procedure tentryfile.writebuf;
+procedure TEntryFile.writebuf;
 begin
   if outputallowed and
      (FBuffer.Size <> 0) then
     FBuffer.SaveToStream(f);
-  inc(bufstart,FBuffer.Size);
+  inc(BufStart,FBuffer.Size);
   FBuffer.Reset;
 end;
 
 
-procedure tentryfile.writedata(const b;len:integer);
+procedure TEntryFile.writedata(const b;len:integer);
 {$ifdef DEBUG_PPU}
 var
   idx : integer;
@@ -1490,15 +1490,15 @@ begin
 {$ifdef DEBUG_PPU}
   if (len > 0) and (ppu_log_level <= 0) then
     begin
-      ppu_log('writedata, length='+tostr(len)+' level='+tostr(ppu_log_level));
+      ppu_log('writedata, length='+ToStr(len)+' level='+ToStr(ppu_log_level));
       for idx:=0 to len-1 do
-        ppu_log_val('p['+tostr(idx)+']=$'+hexstr(PByte(PtrUInt(@b)+PtrUInt(idx))^,2));
+        ppu_log_val('p['+ToStr(idx)+']=$'+HexStr(PByte(PtrUInt(@b)+PtrUInt(idx))^,2));
     end;
 {$endif DEBUG_PPU}
 end;
 
 
-procedure tentryfile.newentry;
+procedure TEntryFile.newentry;
 begin
   with entry do
    begin
@@ -1508,17 +1508,17 @@ begin
    end;
 {Reset Entry State}
   entryidx:=0;
-  entrybufstart:=bufstart;
+  entrybufstart:=BufStart;
   entrystart:=BufferedPosition;
 {$ifdef DEBUG_PPU}
   ppu_log('entrystart');
 {$endif}
 {Alloc in buffer}
-  writedata(entry,sizeof(tentry));
+  writedata(entry,sizeof(TEntry));
 end;
 
 
-procedure tentryfile.writeentry(ibnr:byte);
+procedure TEntryFile.writeentry(ibnr:byte);
 var
   opos : integer;
 begin
@@ -1527,7 +1527,7 @@ begin
   entry.nr:=ibnr;
   entry.size:=entryidx;
 {it's already been sent to disk ?}
-  if entrybufstart<>bufstart then
+  if entrybufstart<>BufStart then
    begin
     if outputallowed then
       begin
@@ -1536,15 +1536,15 @@ begin
       {write entry}
         opos:=f.Position;
         f.Position:=entrystart;
-        f.write(entry,sizeof(tentry));
+        f.write(entry,sizeof(TEntry));
         f.Position:=opos;
       end;
-     entrybufstart:=bufstart;
+     entrybufstart:=BufStart;
    end
   else
-   FBuffer.Patch(entrystart-bufstart,entry,sizeof(entry));
+   FBuffer.Patch(entrystart-BufStart,entry,sizeof(entry));
 {$ifdef DEBUG_PPU}
-  ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+tostr(entry.size));
+  ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
 {$endif}
 {Add New Entry, which is ibend by default}
   entrystart:=BufferedPosition; {next entry position}
@@ -1552,7 +1552,7 @@ begin
 end;
 
 
-procedure tentryfile.putdata(const b;len:integer);
+procedure TEntryFile.putdata(const b;len:integer);
 begin
   if outputallowed then
     FBuffer.Write(b,len);
@@ -1560,12 +1560,12 @@ begin
 end;
 
 
-procedure tentryfile.putbyte(b:byte);
+procedure TEntryFile.putbyte(b:byte);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putbyte');
   inc_log_level;
-  ppu_log_val(tostr(b));
+  ppu_log_val(ToStr(b));
 {$endif}
   putdata(b,1);
 {$ifdef DEBUG_PPU}
@@ -1574,12 +1574,12 @@ begin
 end;
 
 
-procedure tentryfile.putword(w:word);
+procedure TEntryFile.putword(w:word);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putword');
   inc_log_level;
-  ppu_log_val(tostr(w));
+  ppu_log_val(ToStr(w));
 {$endif}
   putdata(w,2);
 {$ifdef DEBUG_PPU}
@@ -1588,12 +1588,12 @@ begin
 end;
 
 
-procedure tentryfile.putdword(w:dword);
+procedure TEntryFile.putdword(w:dword);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putdword');
   inc_log_level;
-  ppu_log_val(tostr(w));
+  ppu_log_val(ToStr(w));
 {$endif}
   putdata(w,4);
 {$ifdef DEBUG_PPU}
@@ -1602,12 +1602,12 @@ begin
 end;
 
 
-procedure tentryfile.putlongint(l:longint);
+procedure TEntryFile.putlongint(l:LongInt);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putlongint');
   inc_log_level;
-  ppu_log_val(tostr(l));
+  ppu_log_val(ToStr(l));
 {$endif}
   putdata(l,4);
 {$ifdef DEBUG_PPU}
@@ -1616,12 +1616,12 @@ begin
 end;
 
 
-procedure tentryfile.putint64(i:int64);
+procedure TEntryFile.putint64(i:int64);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putint64');
   inc_log_level;
-  ppu_log_val(tostr(i));
+  ppu_log_val(ToStr(i));
 {$endif}
   putdata(i,8);
 {$ifdef DEBUG_PPU}
@@ -1630,12 +1630,12 @@ begin
 end;
 
 
-procedure tentryfile.putqword(q:qword);
+procedure TEntryFile.putqword(q:qword);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putqword');
   inc_log_level;
-  ppu_log_val(tostr(q));
+  ppu_log_val(ToStr(q));
 {$endif}
   putdata(q,sizeof(qword));
 {$ifdef DEBUG_PPU}
@@ -1644,7 +1644,7 @@ begin
 end;
 
 
-procedure tentryfile.putaint(i:aint);
+procedure TEntryFile.putaint(i:aint);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putaint');
@@ -1655,7 +1655,7 @@ begin
     2: ppu_log('putword');
     1: ppu_log('putbyte');
   end;
-  ppu_log_val(tostr(i));
+  ppu_log_val(ToStr(i));
 {$endif}
   putdata(i,sizeof(aint));
 {$ifdef DEBUG_PPU}
@@ -1664,7 +1664,7 @@ begin
 end;
 
 
-procedure tentryfile.putasizeint(i: asizeint);
+procedure TEntryFile.putasizeint(i: asizeint);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putasizeint');
@@ -1675,7 +1675,7 @@ begin
     2: ppu_log('putword');
     1: ppu_log('putbyte');
   end;
-  ppu_log_val(tostr(i));
+  ppu_log_val(ToStr(i));
 {$endif}
   putdata(i,sizeof(asizeint));
 {$ifdef DEBUG_PPU}
@@ -1684,20 +1684,20 @@ begin
 end;
 
 
-procedure tentryfile.putpuint(i : puint);
+procedure TEntryFile.putpuint(i : PUint);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putpuint');
   inc_log_level;
-  ppu_log_val(tostr(i));
+  ppu_log_val(ToStr(i));
 {$endif}
-  putdata(i,sizeof(puint));
+  putdata(i,sizeof(PUint));
 {$ifdef DEBUG_PPU}
   dec_log_level;
 {$endif}
 end;
 
-procedure tentryfile.putptruint(v:TConstPtrUInt);
+procedure TEntryFile.putptruint(v:TConstPtrUInt);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putptruint');
@@ -1706,7 +1706,7 @@ begin
   {$ifdef cpu64bitaddr}
   putint64(int64(v));
   {$else}
-  putlongint(longint(v));
+  putlongint(LongInt(v));
   {$endif}
 {$ifdef DEBUG_PPU}
   dec_log_level;
@@ -1716,12 +1716,12 @@ end;
 
 
 
-procedure tentryfile.putaword(i:aword);
+procedure TEntryFile.putaword(i:aword);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putaword');
   inc_log_level;
-  ppu_log_val(tostr(i));
+  ppu_log_val(ToStr(i));
 {$endif}
   putdata(i,sizeof(aword));
 {$ifdef DEBUG_PPU}
@@ -1730,7 +1730,7 @@ begin
 end;
 
 
-procedure tentryfile.putreal(d:bestreal);
+procedure TEntryFile.putreal(d:BestReal);
 var
   lDouble: TDoubleRec;
 begin
@@ -1745,12 +1745,12 @@ begin
       putqword(TExtended80Rec(d).Frac);
       putword(TExtended80Rec(d)._Exp);
 {$else}
-      internalerrorproc(2026101101);
+      InternalErrorProc(2026101101);
 {$endif}
     end;
 end;
 
-procedure tentryfile.putboolean(b:boolean);
+procedure TEntryFile.putboolean(b:boolean);
 begin
 {$ifdef DEBUG_PPU}
   ppu_log('putboolean');
@@ -1763,14 +1763,14 @@ begin
 end;
 
 
-procedure tentryfile.putstring(const s:ShortString);
+procedure TEntryFile.putstring(const s:ShortString);
 begin
 {$ifdef DEBUG_PPU}
   { The reading method uses getbyte, so fake it here }
   ppu_log('putbyte');
   inc_log_level;
   FBuffer.Advance(1);
-  ppu_log('putstring,size='+tostr(length(s)+1));
+  ppu_log('putstring,size='+ToStr(length(s)+1));
   FBuffer.Retreat(1);
   ppu_log_val(s);
 {$endif}
@@ -1781,9 +1781,9 @@ begin
 end;
 
 
-procedure tentryfile.putansistring(const s:ansistring);
+procedure TEntryFile.putansistring(const s:AnsiString);
   var
-    len: longint;
+    len: LongInt;
   begin
     len:=length(s);
 {$ifdef DEBUG_PPU}
@@ -1800,7 +1800,7 @@ procedure tentryfile.putansistring(const s:ansistring);
   end;
 
 
-procedure tentryfile.putset(const arr: array of byte);
+procedure TEntryFile.putset(const arr: array of byte);
 {$ifdef DEBUG_PPU}
   var
     i : byte;
@@ -1813,13 +1813,13 @@ procedure tentryfile.putset(const arr: array of byte);
     putdata(arr,sizeof(arr));
 {$ifdef DEBUG_PPU}
   for i:=0 to sizeof(arr)-1 do
-    ppu_log_val('byte['+tostr(i)+']=$'+hexstr(arr[i],2));
+    ppu_log_val('byte['+ToStr(i)+']=$'+HexStr(arr[i],2));
   dec_log_level;
 {$endif}
   end;
 
 
-procedure tentryfile.tempclose;
+procedure TEntryFile.TempClose;
   begin
     if not closed then
      begin
@@ -1832,9 +1832,9 @@ procedure tentryfile.tempclose;
   end;
 
 
-function tentryfile.tempopen:boolean;
+function TEntryFile.TempOpen:boolean;
   begin
-    tempopen:=false;
+    TempOpen:=false;
     if not closed or not tempclosed then
      exit;
    { MG: not sure, if this is correct
@@ -1851,7 +1851,7 @@ function tentryfile.tempopen:boolean;
 
   { restore state }
     f.Position:=closepos;
-    tempopen:=true;
+    TempOpen:=true;
   end;
 
 end.

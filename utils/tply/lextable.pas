@@ -48,93 +48,93 @@ const
 
 (* Maximum table sizes: *)
 
-max_keys           =  997;  (* size of hash symbol table (prime number!)   *)
-max_pos            = 1200;  (* maximum number of positions                 *)
-max_states         =  600;  (* number of DFA states                        *)
-max_trans          = 1200;  (* number of transitions                       *)
-max_start_states   =  100;  (* maximum number of user-defined start states *)
+MaxKeys           =  997;  (* size of hash symbol table (prime number!)   *)
+MaxPos            = 1200;  (* maximum number of positions                 *)
+MaxStates         =  600;  (* number of DFA states                        *)
+MaxTrans          = 1200;  (* number of transitions                       *)
+MaxStartStates   =  100;  (* maximum number of user-defined start states *)
 
 var
 
 (* Actual table sizes: *)
 
-n_pos            : Integer;
-n_states         : Integer;
-n_trans          : Integer;
-n_start_states   : Integer;
+NPos            : Integer;
+NStates         : Integer;
+NTrans          : Integer;
+NStartStates   : Integer;
 
 type
 
 (* Table data structures: *)
 
-SymTable = array [1..max_keys] of record
-             pname  : StrPtr;
+TSymTable = array [1..MaxKeys] of record
+             Pname  : PStr;
                (* print name; empty entries are denoted by pname=nil *)
-             case sym_type : ( none_sym, macro_sym, start_state_sym ) of
-             macro_sym : ( subst : StrPtr );
+             case SymType : ( NoneSym, MacroSym, StartStateSym ) of
+             MacroSym : ( Subst : PStr );
                (* macro substitution *)
-             start_state_sym : ( start_state : Integer );
+             StartStateSym : ( StartState : Integer );
                (* start state *)
            end;
 
-PosTableEntry = record
-                  follow_pos    : IntSetPtr;
+TPosTableEntry = record
+                  FollowPos    : PIntSet;
                     (* set of follow positions *)
-                  case pos_type : ( char_pos, cclass_pos, mark_pos ) of
-                  char_pos      : ( c   : Char );
+                  case PosType : ( CharPos, CClassPos, MarkPos ) of
+                  CharPos      : ( C   : Char );
                     (* character position *)
-                  cclass_pos    : ( cc  : CClassPtr );
+                  CClassPos    : ( CC  : PCClass );
                     (* character class position *)
-                  mark_pos      : ( rule, pos : Integer );
+                  MarkPos      : ( Rule, POS : Integer );
                     (* mark position *)
                 end;
 
-PosTable = array [1..max_pos] of PosTableEntry;
+TPosTable = array [1..MaxPos] of TPosTableEntry;
 
-FirstPosTable  = array [0..2*max_start_states+1] of IntSetPtr;
+TFirstPosTable  = array [0..2*MaxStartStates+1] of PIntSet;
                    (* first positions for start states (even states
                       are entered anywhere on the line, odd states only
                       at the beginning of the line; states 0 and 1 denote
                       default, states 2..2*n_start_states+1 user-defined
                       start states) *)
 
-StartStateExclusive = array[0..max_start_states] of Boolean;
+TStartStateExclusive = array[0..MaxStartStates] of Boolean;
 
-StateTableEntry = record
-                    state_pos : IntSetPtr;
+TStateTableEntry = record
+                    StatePos : PIntSet;
                       (* positions covered by state *)
-                    final     : Boolean;
+                    Final     : Boolean;
                       (* final state? *)
-                    trans_lo,
-                    trans_hi  : Integer;
+                    TransLo,
+                    TransHi  : Integer;
                       (* transitions *)
                   end;
 
-StateTable = array [0..max_states-1] of StateTableEntry;
+TStateTable = array [0..MaxStates-1] of TStateTableEntry;
 
-TransTableEntry = record
-                    cc              : CClassPtr;
+TTransTableEntry = record
+                    CC              : PCClass;
                       (* characters of transition *)
-                    follow_pos      : IntSetPtr;
+                    FollowPos      : PIntSet;
                       (* follow positions (positions of next state) *)
-                    next_state      : Integer;
+                    NextState      : Integer;
                       (* next state *)
                   end;
 
-TransTable = array [1..max_trans] of TransTableEntry;
+TTransTable = array [1..MaxTrans] of TTransTableEntry;
 
 
 var
 
-verbose           : Boolean;          (* status of the verbose option *)
-optimize          : Boolean;          (* status of the optimization option *)
+Verbose           : Boolean;          (* status of the verbose option *)
+Optimize          : Boolean;          (* status of the optimization option *)
 
-sym_table         : ^SymTable;        (* symbol table *)
-pos_table         : ^PosTable;        (* position table *)
-first_pos_table   : ^FirstPosTable;   (* first positions table *)
-start_excl        : ^StartStateExclusive; (* user-defined start state type *)
-state_table       : ^StateTable;      (* DFA state table *)
-trans_table       : ^TransTable;      (* DFA transition table *)
+SymTable         : ^TSymTable;        (* symbol table *)
+PosTable         : ^TPosTable;        (* position table *)
+FirstPosTable   : ^TFirstPosTable;   (* first positions table *)
+StartExcl        : ^TStartStateExclusive; (* user-defined start state type *)
+StateTable       : ^TStateTable;      (* DFA state table *)
+TransTable       : ^TTransTable;      (* DFA transition table *)
 
 
 (* Operations: *)
@@ -143,50 +143,50 @@ trans_table       : ^TransTable;      (* DFA transition table *)
    The following routines are supplied to be used with the generic hash table
    routines in LexBase. *)
 
-function lookup(k : Integer) : String;
+function Lookup(K : Integer) : String;
   (* print name of symbol no. k *)
-procedure entry(k : Integer; symbol : String);
+procedure Entry(K : Integer; Symbol : String);
   (* enter symbol into table *)
 
 (* Routines to build the position table: *)
 
-procedure addCharPos(c : Char);
-procedure addCClassPos(cc : CClassPtr);
-procedure addMarkPos(rule, pos : Integer);
+procedure AddCharPos(C : Char);
+procedure AddCClassPos(CC : PCClass);
+procedure AddMarkPos(Rule, POS : Integer);
   (* Positions are allocated in the order of calls to addCharPos, addCClassPos
      and addMarkPos, starting at position 1. These routines also initialize
      the corresponding follow sets. *)
 
 (* Routines to build the state table: *)
 
-var act_state : Integer; (* state currently considered *)
+var ActState : Integer; (* state currently considered *)
 
-function newState(POS : IntSetPtr) : Integer;
+function NewState(POS : PIntSet) : Integer;
   (* Add a new state with the given position set; initialize the state's
      position set to POS (the offsets into the transition table are
      initialized when the state becomes active, see startStateTrans, below).
      Returns: the new state number *)
 
-function addState(POS : IntSetPtr) : Integer;
+function AddState(POS : PIntSet) : Integer;
   (* add a new state, but only if there is not already a state with the
      same position set *)
 
-procedure startStateTrans;
-procedure endStateTrans;
+procedure StartStateTrans;
+procedure EndStateTrans;
   (* initializes act_state's first and last offsets into the transition
      table *)
 
-function n_state_trans(i : Integer) : Integer;
+function NStateTrans(I : Integer) : Integer;
   (* return number of transitions in state i *)
 
-procedure addTrans(cc : CClass; FOLLOW : IntSetPtr);
+procedure AddTrans(CC : TCClass; Follow : PIntSet);
   (* adds a transition to the table *)
 
-procedure mergeTrans;
+procedure MergeTrans;
   (* sorts transitions w.r.t. next states and merges transitions for the
      same next state in the active state *)
 
-procedure sortTrans;
+procedure SortTrans;
   (* sort transitions in act_state lexicographically *)
 
 implementation
@@ -195,93 +195,93 @@ uses LexMsgs;
 
 (* Hash table routines: *)
 
-function lookup(k : Integer) : String;
+function Lookup(K : Integer) : String;
   begin
-    with sym_table^[k] do
-      if pname=nil then
-        lookup := ''
+    with SymTable^[K] do
+      if Pname=nil then
+        Lookup := ''
       else
-        lookup := copy(pname^, 1, length(pname^))
+        Lookup := Copy(Pname^, 1, Length(Pname^))
   end(*lookup*);
-procedure entry(k : Integer; symbol : String);
+procedure Entry(K : Integer; Symbol : String);
   begin
-    with sym_table^[k] do
+    with SymTable^[K] do
       begin
-        pname    := newStr(symbol);
-        sym_type := none_sym;
+        Pname    := NewStr(Symbol);
+        SymType := NoneSym;
       end
   end(*entry*);
 
 (* Routines to build the position table: *)
 
-procedure addCharPos(c : Char);
+procedure AddCharPos(C : Char);
   begin
-    inc(n_pos);
-    if n_pos>max_pos then fatal(pos_table_overflow);
-    pos_table^[n_pos].follow_pos     := newIntSet;
-    pos_table^[n_pos].pos_type       := char_pos;
-    pos_table^[n_pos].c              := c;
+    Inc(NPos);
+    if NPos>MaxPos then Fatal(PosTableOverflow);
+    PosTable^[NPos].FollowPos     := NewIntSet;
+    PosTable^[NPos].PosType       := CharPos;
+    PosTable^[NPos].C              := C;
   end(*addCharPos*);
 
-procedure addCClassPos(cc : CClassPtr);
+procedure AddCClassPos(CC : PCClass);
   begin
-    inc(n_pos);
-    if n_pos>max_pos then fatal(pos_table_overflow);
-    pos_table^[n_pos].follow_pos     := newIntSet;
-    pos_table^[n_pos].pos_type       := cclass_pos;
-    pos_table^[n_pos].cc             := cc;
+    Inc(NPos);
+    if NPos>MaxPos then Fatal(PosTableOverflow);
+    PosTable^[NPos].FollowPos     := NewIntSet;
+    PosTable^[NPos].PosType       := CClassPos;
+    PosTable^[NPos].CC             := CC;
   end(*addCClassPos*);
 
-procedure addMarkPos(rule, pos : Integer);
+procedure AddMarkPos(Rule, POS : Integer);
   begin
-    inc(n_pos);
-    if n_pos>max_pos then fatal(pos_table_overflow);
-    pos_table^[n_pos].follow_pos     := newIntSet;
-    pos_table^[n_pos].pos_type       := mark_pos;
-    pos_table^[n_pos].rule           := rule;
-    pos_table^[n_pos].pos            := pos;
+    Inc(NPos);
+    if NPos>MaxPos then Fatal(PosTableOverflow);
+    PosTable^[NPos].FollowPos     := NewIntSet;
+    PosTable^[NPos].PosType       := MarkPos;
+    PosTable^[NPos].Rule           := Rule;
+    PosTable^[NPos].POS            := POS;
   end(*addMarkPos*);
 
 (* Routines to build the state table: *)
 
-function newState(POS : IntSetPtr) : Integer;
+function NewState(POS : PIntSet) : Integer;
   begin
-    if n_states>=max_states then fatal(state_table_overflow);
-    newState := n_states;
-    with state_table^[n_states] do
+    if NStates>=MaxStates then Fatal(StateTableOverflow);
+    NewState := NStates;
+    with StateTable^[NStates] do
       begin
-        state_pos := POS;
-        final     := false;
+        StatePos := POS;
+        Final     := False;
       end;
-    inc(n_states);
+    Inc(NStates);
   end(*newState*);
 
-function addState(POS : IntSetPtr) : Integer;
-  var i : Integer;
+function AddState(POS : PIntSet) : Integer;
+  var I : Integer;
   begin
-    for i := 0 to pred(n_states) do
-      if equal(POS^, state_table^[i].state_pos^) then
+    for I := 0 to Pred(NStates) do
+      if Equal(POS^, StateTable^[I].StatePos^) then
         begin
-          addState := i;
-          exit;
+          AddState := I;
+          Exit;
         end;
-    addState := newState(POS);
+    AddState := NewState(POS);
   end(*addState*);
 
-procedure startStateTrans;
+procedure StartStateTrans;
   begin
-    state_table^[act_state].trans_lo := succ(n_trans);
+    StateTable^[ActState].TransLo := Succ(NTrans);
   end(*startStateTrans*);
 
-procedure endStateTrans;
+procedure EndStateTrans;
   begin
-    state_table^[act_state].trans_hi := n_trans;
+    StateTable^[ActState].TransHi := NTrans;
   end(*endStateTrans*);
 
-function n_state_trans(i : Integer) : Integer;
+function NStateTrans(I : Integer) : Integer;
   begin
-    with state_table^[i] do
-      n_state_trans := trans_hi-trans_lo+1
+    with StateTable^[I] do
+      NStateTrans := TransHi-TransLo+1
   end(*n_state_trans*);
 
 (* Construction of the transition table:
@@ -305,157 +305,157 @@ function n_state_trans(i : Integer) : Integer;
    character class (which then will be disjoint from all other character
    classes in the transition table). *)
 
-procedure addTrans(cc : CClass; FOLLOW : IntSetPtr);
+procedure AddTrans(CC : TCClass; Follow : PIntSet);
   var
-    i : Integer;
-    cc0, cc1, cc2 : CClass;
+    I : Integer;
+    CC0, CC1, CC2 : TCClass;
   begin
-    for i := state_table^[act_state].trans_lo to n_trans do
-      if trans_table^[i].cc^=cc then
+    for I := StateTable^[ActState].TransLo to NTrans do
+      if TransTable^[I].CC^=CC then
         begin
-          setunion(trans_table^[i].follow_pos^, FOLLOW^);
-          exit
+          SetUnion(TransTable^[I].FollowPos^, Follow^);
+          Exit
         end
       else
         begin
-          cc0 := cc*trans_table^[i].cc^;
-          if cc0<>[] then
+          CC0 := CC*TransTable^[I].CC^;
+          if CC0<>[] then
             begin
-              cc1 := trans_table^[i].cc^-cc;
-              cc2 := cc-trans_table^[i].cc^;
-              if cc1<>[] then
+              CC1 := TransTable^[I].CC^-CC;
+              CC2 := CC-TransTable^[I].CC^;
+              if CC1<>[] then
                 begin
-                  trans_table^[i].cc^ := cc1;
-                  inc(n_trans);
-                  if n_trans>max_trans then fatal(trans_table_overflow);
-                  trans_table^[n_trans].cc := newCClass(cc0);
-                  trans_table^[n_trans].follow_pos := newIntSet;
-                  trans_table^[n_trans].follow_pos^ :=
-                    trans_table^[i].follow_pos^;
-                  setunion(trans_table^[n_trans].follow_pos^, FOLLOW^);
+                  TransTable^[I].CC^ := CC1;
+                  Inc(NTrans);
+                  if NTrans>MaxTrans then Fatal(TransTableOverflow);
+                  TransTable^[NTrans].CC := NewCClass(CC0);
+                  TransTable^[NTrans].FollowPos := NewIntSet;
+                  TransTable^[NTrans].FollowPos^ :=
+                    TransTable^[I].FollowPos^;
+                  SetUnion(TransTable^[NTrans].FollowPos^, Follow^);
                 end
               else
                 begin
-                  trans_table^[i].cc^ := cc0;
-                  setunion(trans_table^[i].follow_pos^, FOLLOW^);
+                  TransTable^[I].CC^ := CC0;
+                  SetUnion(TransTable^[I].FollowPos^, Follow^);
                 end;
-              cc := cc2;
-              if cc=[] then exit;
+              CC := CC2;
+              if CC=[] then Exit;
             end
         end;
-    inc(n_trans);
-    if n_trans>max_trans then fatal(trans_table_overflow);
-    trans_table^[n_trans].cc          := newCClass(cc);
-    trans_table^[n_trans].follow_pos  := newIntSet;
-    trans_table^[n_trans].follow_pos^ := FOLLOW^;
+    Inc(NTrans);
+    if NTrans>MaxTrans then Fatal(TransTableOverflow);
+    TransTable^[NTrans].CC          := NewCClass(CC);
+    TransTable^[NTrans].FollowPos  := NewIntSet;
+    TransTable^[NTrans].FollowPos^ := Follow^;
   end(*addCharTrans*);
 
 (* comparison and swap procedures for sorting transitions: *)
-function transLessNextState(i, j : Integer) : Boolean;
+function TransLessNextState(I, J : Integer) : Boolean;
   (* compare transitions based on next states (used in mergeCharTrans) *)
   begin
-    transLessNextState := trans_table^[i].next_state<
-                          trans_table^[j].next_state
+    TransLessNextState := TransTable^[I].NextState<
+                          TransTable^[J].NextState
   end(*transLessNextState*);
-function transLess(i, j : Integer) : Boolean;
+function TransLess(I, J : Integer) : Boolean;
   (* lexical order on transitions *)
-  var c : Char; xi, xj : Boolean;
+  var C : Char; XI, XJ : Boolean;
   begin
-    for c := #0 to #255 do
+    for C := #0 to #255 do
       begin
-        xi := c in trans_table^[i].cc^;
-        xj := c in trans_table^[j].cc^;
-        if xi<>xj then
+        XI := C in TransTable^[I].CC^;
+        XJ := C in TransTable^[J].CC^;
+        if XI<>XJ then
           begin
-            transLess := ord(xi)>ord(xj);
-            exit
+            TransLess := Ord(XI)>Ord(XJ);
+            Exit
           end;
       end;
-    transLess := false
+    TransLess := False
   end(*transLess*);
-procedure transSwap(i, j : Integer);
+procedure TransSwap(I, J : Integer);
   (* swap transitions i and j *)
-  var x : TransTableEntry;
+  var X : TTransTableEntry;
   begin
-    x := trans_table^[i];
-    trans_table^[i] := trans_table^[j];
-    trans_table^[j] := x;
+    X := TransTable^[I];
+    TransTable^[I] := TransTable^[J];
+    TransTable^[J] := X;
   end(*transSwap*);
 
-procedure mergeTrans;
+procedure MergeTrans;
   var
-    i, j, n_deleted : Integer;
+    I, J, NDeleted : Integer;
   begin
     (* sort transitions w.r.t. next states: *)
-    quicksort(state_table^[act_state].trans_lo,
-              n_trans,
-              {$ifdef fpc}@{$endif}transLessNextState,
-              {$ifdef fpc}@{$endif}transSwap);
+    QuickSort(StateTable^[ActState].TransLo,
+              NTrans,
+              {$ifdef fpc}@{$endif}TransLessNextState,
+              {$ifdef fpc}@{$endif}TransSwap);
     (* merge transitions for the same next state: *)
-    n_deleted := 0;
-    for i := state_table^[act_state].trans_lo to n_trans do
-    if trans_table^[i].cc<>nil then
+    NDeleted := 0;
+    for I := StateTable^[ActState].TransLo to NTrans do
+    if TransTable^[I].CC<>nil then
       begin
-        j := succ(i);
-        while (j<=n_trans) and
-              (trans_table^[i].next_state =
-               trans_table^[j].next_state) do
+        J := Succ(I);
+        while (J<=NTrans) and
+              (TransTable^[I].NextState =
+               TransTable^[J].NextState) do
           begin
             (* merge cclasses of transitions i and j, then mark
                transition j as deleted *)
-            trans_table^[i].cc^ := trans_table^[i].cc^+
-                                   trans_table^[j].cc^;
-            trans_table^[j].cc  := nil;
-            inc(n_deleted);
-            inc(j);
+            TransTable^[I].CC^ := TransTable^[I].CC^+
+                                   TransTable^[J].CC^;
+            TransTable^[J].CC  := nil;
+            Inc(NDeleted);
+            Inc(J);
           end;
       end;
     (* remove deleted transitions: *)
-    j := state_table^[act_state].trans_lo;
-    for i := state_table^[act_state].trans_lo to n_trans do
-      if trans_table^[i].cc<>nil then
-        if i<>j then
+    J := StateTable^[ActState].TransLo;
+    for I := StateTable^[ActState].TransLo to NTrans do
+      if TransTable^[I].CC<>nil then
+        if I<>J then
           begin
-            trans_table^[j] := trans_table^[i];
-            inc(j);
+            TransTable^[J] := TransTable^[I];
+            Inc(J);
           end
         else
-          inc(j);
+          Inc(J);
     (* update transition count: *)
-    dec(n_trans, n_deleted);
+    Dec(NTrans, NDeleted);
   end(*mergeTrans*);
 
-procedure sortTrans;
+procedure SortTrans;
   begin
-    quicksort(state_table^[act_state].trans_lo,
-              n_trans,
-              {$ifdef fpc}@{$endif}transLess,
-              {$ifdef fpc}@{$endif}transSwap);
+    QuickSort(StateTable^[ActState].TransLo,
+              NTrans,
+              {$ifdef fpc}@{$endif}TransLess,
+              {$ifdef fpc}@{$endif}TransSwap);
   end(*sortTrans*);
 
-var i : Integer;
+var I : Integer;
 
 begin
 
-  verbose          := false;
-  optimize         := false;
+  Verbose          := False;
+  Optimize         := False;
 
-  n_pos            := 0;
-  n_states         := 0;
-  n_trans          := 0;
-  n_start_states   := 0;
+  NPos            := 0;
+  NStates         := 0;
+  NTrans          := 0;
+  NStartStates   := 0;
 
   (* allocate tables: *)
 
-  new(sym_table);
-  new(pos_table);
-  new(first_pos_table);
-  new(start_excl);
-  new(state_table);
-  new(trans_table);
+  New(SymTable);
+  New(PosTable);
+  New(FirstPosTable);
+  New(StartExcl);
+  New(StateTable);
+  New(TransTable);
 
   (* initialize symbol table: *)
 
-  for i := 1 to max_keys do sym_table^[i].pname := nil;
+  for I := 1 to MaxKeys do SymTable^[I].Pname := nil;
 
 end(*LexTables*).

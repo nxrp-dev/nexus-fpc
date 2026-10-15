@@ -102,8 +102,8 @@ begin
     fDataCurOfs:=NextAlignedQword(fStrTable.StartOfs+fStrTable.Size)
   else
     fDataCurOfs:=fStrTable.StartOfs;
-  fFileHeader.nodesize:=fStrTable.StartOfs;
-  fFileHeader.hdrsize:=fDataCurOfs;
+  fFileHeader.NodeSize:=fStrTable.StartOfs;
+  fFileHeader.HdrSize:=fDataCurOfs;
 end;
 
 function TExternalResourceWriter.PrescanNode(aNode: TResourceTreeNode
@@ -155,27 +155,27 @@ procedure TExternalResourceWriter.WriteNodeInfo(aStream: TStream;
 var infonode : TResInfoNode;
 begin
   if aNode.Desc.DescType=dtID then
-    infonode.nameid:=aNode.Desc.ID
+    infonode.NameID:=aNode.Desc.ID
   else
-    infonode.nameid:=fStrTable.StartOfs+aNode.NameRVA;
-  infonode.ncount:=aNode.NamedCount;
+    infonode.NameID:=fStrTable.StartOfs+aNode.NameRVA;
+  infonode.NCount:=aNode.NamedCount;
   if aNode.IsLeaf then
   begin
-    infonode.idcountsize:=aNode.Data.RawData.Size;
-    infonode.subptr:=fDataCurOfs;
-    fDataCurOfs:=NextAlignedQword(fDataCurOfs+infonode.idcountsize);
+    infonode.IDCountSize:=aNode.Data.RawData.Size;
+    infonode.SubPtr:=fDataCurOfs;
+    fDataCurOfs:=NextAlignedQword(fDataCurOfs+infonode.IDCountSize);
   end
   else
   begin
-    infonode.idcountsize:=aNode.IDCount;
-    infonode.subptr:=aNode.SubDirRVA;
+    infonode.IDCountSize:=aNode.IDCount;
+    infonode.SubPtr:=aNode.SubDirRVA;
   end;
   if fOppositeEndianess then
   begin
-    infonode.nameid:=SwapEndian(infonode.nameid);
-    infonode.ncount:=SwapEndian(infonode.ncount);
-    infonode.idcountsize:=SwapEndian(infonode.idcountsize);
-    infonode.subptr:=SwapEndian(infonode.subptr);
+    infonode.NameID:=SwapEndian(infonode.NameID);
+    infonode.NCount:=SwapEndian(infonode.NCount);
+    infonode.IDCountSize:=SwapEndian(infonode.IDCountSize);
+    infonode.SubPtr:=SwapEndian(infonode.SubPtr);
   end;
   aStream.WriteBuffer(infonode,sizeof(infonode));
 end;
@@ -230,16 +230,16 @@ procedure TExternalResourceWriter.FixHeader(aResources : TResources;
   aStream: TStream);
 var oldpos : int64;
 begin
-  fFileHeader.magic:=EXTERNAL_RESMAGIC;
-  fFileHeader.version:=EXT_CURRENT_VERSION;
-  fFileHeader.endianess:=fEndianess;
-  fFileHeader.count:=aResources.Count;
+  fFileHeader.Magic:=External_ResMagic;
+  fFileHeader.Version:=ExtCurrentVersion;
+  fFileHeader.Endianess:=fEndianess;
+  fFileHeader.Count:=aResources.Count;
   //nodesize and hdrsize have already been set
   if fOppositeEndianess then
   begin
-    fFileHeader.count:=SwapEndian(fFileHeader.count);
-    fFileHeader.nodesize:=SwapEndian(fFileHeader.nodesize);
-    fFileHeader.hdrsize:=SwapEndian(fFileHeader.hdrsize);
+    fFileHeader.Count:=SwapEndian(fFileHeader.Count);
+    fFileHeader.NodeSize:=SwapEndian(fFileHeader.NodeSize);
+    fFileHeader.HdrSize:=SwapEndian(fFileHeader.HdrSize);
   end;
   oldpos:=aStream.Position;
   aStream.Position:=0;
@@ -249,7 +249,7 @@ end;
 
 procedure TExternalResourceWriter.SetEndianess(aEndianess: byte);
 begin
-  if not (aEndianess in [EXT_ENDIAN_BIG,EXT_ENDIAN_LITTLE]) then
+  if not (aEndianess in [ExtEndianBig,ExtEndianLittle]) then
     raise EExternalResInvalidEndianessException.Create('');
   if aEndianess=fEndianess then exit;
   fEndianess:=aEndianess;
@@ -284,9 +284,9 @@ begin
   fExtensions:='.fpcres .frs';
   fDescription:='External file resource writer';
   {$IFDEF ENDIAN_BIG}
-  fEndianess:=EXT_ENDIAN_BIG;
+  fEndianess:=ExtEndianBig;
   {$ELSE}
-  fEndianess:=EXT_ENDIAN_LITTLE;
+  fEndianess:=ExtEndianLittle;
   {$ENDIF}
   fOppositeEndianess:=false;
   fStrTable:=TResStringTable.Create;

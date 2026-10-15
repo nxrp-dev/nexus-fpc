@@ -27,28 +27,28 @@ unit t_android;
 interface
 
   uses
-    globtype,
-    aasmdata,
-    symsym,symdef,ppu,
+    GlobType,
+    AAsmData,
+    SymSym,symdef,ppu,
     import,export,expunix,link;
 
   type
-    timportlibandroid=class(timportlib)
+    TImportLibAndroid=class(TImportLib)
       procedure generatelib;override;
     end;
 
     { texportlibandroid }
 
-    texportlibandroid=class(texportlibunix)
+    TExportLibAndroid=class(TExportLibUnix)
     public
       procedure setfininame(list: TAsmList; const s: string); override;
-      procedure exportprocedure(hp: texported_item); override;
+      procedure exportprocedure(hp: TExportedItem); override;
       procedure generatelib; override;
     end;
 
     { tlinkerandroid }
 
-    tlinkerandroid=class(texternallinker)
+    TLinkerAndroid=class(TExternalLinker)
     private
       prtobj  : string[80];
       reorder : boolean;
@@ -69,10 +69,10 @@ implementation
 
   uses
     SysUtils,
-    cutils,cfileutl,cclasses,
-    verbose,systems,globals,
-    symconst,cscript,
-    fmodule,
+    CUtils,CFileUtl,CClasses,
+    Verbose,Systems,Globals,
+    symconst,CScript,
+    FModule,
     aasmbase,aasmtai,aasmcpu,cpubase,hlcgcpu,hlcgobj,
     cgbase,cgobj,cgutils,ogbase,ncgutil,
     comprsrc,
@@ -86,9 +86,9 @@ const
                                TIMPORTLIBANDROID
 *****************************************************************************}
 
-    procedure timportlibandroid.generatelib;
+    procedure TImportLibAndroid.generatelib;
       var
-        i : longint;
+        i : LongInt;
         ImportLibrary : TImportLibrary;
       begin
         for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
@@ -103,17 +103,17 @@ const
                                TEXPORTLIBANDROID
 *****************************************************************************}
 
-    procedure texportlibandroid.setfininame(list: TAsmList; const s: string);
+    procedure TExportLibAndroid.setfininame(list: TAsmList; const s: string);
       begin
         { the problem with not having a .fini section is that a finalization
           routine in regular code can get "smart" linked away -> reference it
           just like the debug info }
         new_section(list,sec_fpc,'links',0);
-        list.concat(Tai_const.Createname(s,0));
+        list.concat(TAIConst.Createname(s,0));
         inherited setfininame(list,s);
       end;
 
-    procedure texportlibandroid.exportprocedure(hp: texported_item);
+    procedure TExportLibAndroid.exportprocedure(hp: TExportedItem);
       begin
         {
           Android versions prior to 4.1 do not support recursive dlopen() calls.
@@ -126,22 +126,22 @@ const
           JNI_OnLoad().
         }
         // Check for the JNI_OnLoad export
-        if CurrentModule.islibrary and not hp.is_var and assigned(hp.sym) and
+        if CurrentModule.IsLibrary and not hp.is_var and Assigned(hp.sym) and
            (hp.sym.typ = procsym) and (eo_name in hp.options) and
            (hp.name^ = SJNI_OnLoad) and (TProcSym(hp.sym).procdeflist.count = 1) then
           begin
             // Save the JNI_OnLoad procdef
-            tlinkerandroid(Linker).FJNIOnLoadName:=TProcDef(TProcSym(hp.sym).procdeflist[0]).mangledname;
+            TLinkerAndroid(Linker).FJNIOnLoadName:=TProcDef(TProcSym(hp.sym).procdeflist[0]).mangledname;
             hp.Free;
             exit;
           end;
         inherited exportprocedure(hp);
       end;
 
-    procedure texportlibandroid.generatelib;
+    procedure TExportLibAndroid.generatelib;
       begin
         inherited generatelib;
-        if tlinkerandroid(Linker).FJNIOnLoadName = '' then
+        if TLinkerAndroid(Linker).FJNIOnLoadName = '' then
           exit;
         // If JNI_OnLoad is exported, export a system proxy function instead
         create_hlcodegen(nil);
@@ -188,7 +188,7 @@ procedure TLinkerAndroid.LoadPredefinedLibraryOrder;
 // put your linkorder/linkalias overrides here.
 // Note: assumes only called when reordering/aliasing is used.
 Begin
-   if not (cs_link_no_default_lib_order in  CurrentSettings.globalswitches) Then
+   if not (cs_link_no_default_lib_order in  CurrentSettings.GlobalSwitches) Then
         Begin
           LinkLibraryOrder.add('gcc','',15);
           LinkLibraryOrder.add('c','',100);
@@ -200,7 +200,7 @@ End;
 Procedure TLinkerAndroid.InitSysInitUnitName;
 begin
   reorder := ReOrderEntries;
-  if CurrentModule.islibrary then
+  if CurrentModule.IsLibrary then
     prtobj:='dllprt0'
   else
     prtobj:='prt0';
@@ -209,7 +209,7 @@ end;
 Function TLinkerAndroid.WriteResponseFile(isdll:boolean) : Boolean;
 Var
   linkres      : TLinkRes;
-  i            : longint;
+  i            : LongInt;
   HPath        : TCmdStrListItem;
   s,s1         : TCmdStr;
 begin
@@ -218,20 +218,20 @@ begin
   AddSharedLibrary('c');
 
   { Open link.res file }
-  LinkRes:=TLinkRes.Create(outputexedir+Info.ResName,true);
+  LinkRes:=TLinkRes.Create(OutputExeDir+Info.ResName,true);
   with linkres do
     begin
       { Write path to search libraries }
       HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
-      while assigned(HPath) do
+      while Assigned(HPath) do
        begin
-         Add('SEARCH_DIR('+maybequoted(HPath.Str)+')');
+         Add('SEARCH_DIR('+MaybeQuoted(HPath.Str)+')');
          HPath:=TCmdStrListItem(HPath.Next);
        end;
       HPath:=TCmdStrListItem(LibrarySearchPath.First);
-      while assigned(HPath) do
+      while Assigned(HPath) do
        begin
-         Add('SEARCH_DIR('+maybequoted(HPath.Str)+')');
+         Add('SEARCH_DIR('+MaybeQuoted(HPath.Str)+')');
          HPath:=TCmdStrListItem(HPath.Next);
        end;
 
@@ -240,17 +240,17 @@ begin
       { several RTL symbols of FPC-compiled shared libraries   }
       { will be bound to those of a single shared library or   }
       { to the main program                                    }
-      if isdll or (cs_create_pic in CurrentSettings.moduleswitches) then
+      if isdll or (cs_create_pic in CurrentSettings.ModuleSwitches) then
         begin
           add('VERSION');
           add('{');
           add('  {');
-          if not texportlibunix(exportlib).exportedsymnames.empty then
+          if not TExportLibUnix(exportlib).exportedsymnames.empty then
             begin
               add('    global:');
               repeat
-                add('      '+texportlibunix(exportlib).exportedsymnames.getfirst+';');
-              until texportlibunix(exportlib).exportedsymnames.empty;
+                add('      '+TExportLibUnix(exportlib).exportedsymnames.GetFirst+';');
+              until TExportLibUnix(exportlib).exportedsymnames.empty;
             end;
           add('    local:');
           add('      *;');
@@ -261,23 +261,23 @@ begin
       StartSection('INPUT(');
       { add objectfiles, start with prt0 always }
       if not (TargetInfo.system in systems_internal_sysinit) and (prtobj<>'') then
-        AddFileName(maybequoted(FindObjectFile(prtobj,'',false)));
+        AddFileName(MaybeQuoted(FindObjectFile(prtobj,'',false)));
       { Add libc startup object file }
       if isdll then
         s:='crtbegin_so.o'
       else
-        if cs_link_staticflag in CurrentSettings.globalswitches then
+        if cs_link_staticflag in CurrentSettings.GlobalSwitches then
           s:='crtbegin_static.o'
         else
           s:='crtbegin_dynamic.o';
-      librarysearchpath.FindFile(s,false,s1);
-      AddFileName(maybequoted(s1));
+      LibrarySearchPath.FindFile(s,false,s1);
+      AddFileName(MaybeQuoted(s1));
       { main objectfiles }
       while not ObjectFiles.Empty do
        begin
          s:=ObjectFiles.GetFirst;
          if s<>'' then
-          AddFileName(maybequoted(s));
+          AddFileName(MaybeQuoted(s));
        end;
       EndSection(')');
 
@@ -288,7 +288,7 @@ begin
          While not StaticLibFiles.Empty do
           begin
             S:=StaticLibFiles.GetFirst;
-            AddFileName(maybequoted(s))
+            AddFileName(MaybeQuoted(s))
           end;
          Add(')');
        end;
@@ -314,15 +314,15 @@ begin
              Add(')');
            end;
 
-         if (cs_link_staticflag in CurrentSettings.globalswitches) or
+         if (cs_link_staticflag in CurrentSettings.GlobalSwitches) or
             (not reorder) then
            begin
              Add('GROUP(');
              { when we have -static for the linker the we also need libgcc }
-             if (cs_link_staticflag in CurrentSettings.globalswitches) then
+             if (cs_link_staticflag in CurrentSettings.GlobalSwitches) then
                begin
                  Add('-lgcc');
-                 if librarysearchpath.FindFile('libgcc_eh.a',false,s1) then
+                 if LibrarySearchPath.FindFile('libgcc_eh.a',false,s1) then
                    Add('-lgcc_eh');
                end;
              { be sure that libc is the last lib }
@@ -339,8 +339,8 @@ begin
         s:='crtend_so.o'
       else
         s:='crtend_android.o';
-      librarysearchpath.FindFile(s,false,s1);
-      AddFileName(maybequoted(s1));
+      LibrarySearchPath.FindFile(s,false,s1);
+      AddFileName(MaybeQuoted(s1));
       Add(')');
 
       { Additions to the linker script }
@@ -379,38 +379,38 @@ begin
   WriteResponseFile:=True;
 end;
 
-function tlinkerandroid.DoLink(IsSharedLib: boolean): boolean;
+function TLinkerAndroid.DoLink(IsSharedLib: boolean): boolean;
 var
-  i: longint;
+  i: LongInt;
   binstr, cmdstr: TCmdStr;
   s, opts, outname: string;
   success: boolean;
 begin
   Result:=False;
   if IsSharedLib then
-    outname:=CurrentModule.sharedlibfilename
+    outname:=CurrentModule.SharedLibFileName
   else
-    outname:=CurrentModule.exefilename;
-  if not(cs_link_nolink in CurrentSettings.globalswitches) then
+    outname:=CurrentModule.ExeFileName;
+  if not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
     Message1(exec_i_linking, outname);
 
   opts:='';
-  if not IsSharedLib and (cs_create_pic in CurrentSettings.moduleswitches) then
+  if not IsSharedLib and (cs_create_pic in CurrentSettings.ModuleSwitches) then
     opts:=opts + ' --pic-executable';
-  if (cs_link_strip in CurrentSettings.globalswitches) and
-     not (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
+  if (cs_link_strip in CurrentSettings.GlobalSwitches) and
+     not (cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
     opts:=opts + ' -s';
-  if (cs_link_map in CurrentSettings.globalswitches) then
-    opts:=opts + ' -Map '+maybequoted(ChangeFileExt(outname,'.map'));
+  if (cs_link_map in CurrentSettings.GlobalSwitches) then
+    opts:=opts + ' -Map '+MaybeQuoted(ChangeFileExt(outname,'.map'));
   if create_smartlink_sections then
     opts:=opts + ' --gc-sections';
-  if (cs_link_staticflag in CurrentSettings.globalswitches) then
+  if (cs_link_staticflag in CurrentSettings.GlobalSwitches) then
     opts:=opts + ' -static'
   else
-    if cshared then
+    if CShared then
       opts:=opts + ' -call_shared';
-  if rlinkpath<>'' then
-    opts:=opts+' --rpath-link '+rlinkpath;
+  if RLinkPath<>'' then
+    opts:=opts+' --rpath-link '+RLinkPath;
 
   if not IsSharedLib then
     begin
@@ -431,43 +431,43 @@ begin
   else
     s:=Info.ExeCmd[1];
   SplitBinCmd(s, binstr, cmdstr);
-  Replace(cmdstr,'$EXE',maybequoted(outname));
+  Replace(cmdstr,'$EXE',MaybeQuoted(outname));
   Replace(cmdstr,'$OPT',opts);
-  Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
+  Replace(cmdstr,'$RES',MaybeQuoted(OutputExeDir+Info.ResName));
   if IsSharedLib then
     Replace(cmdstr,'$SONAME',ExtractFileName(outname));
 
   { We should use BFD version of LD, since GOLD version does not support INSERT command in linker scripts }
-  s:=utilsprefix+binstr+'.bfd';
-  if (SourceInfo.exeext<>'') then
-    s:=s+SourceInfo.exeext;
+  s:=UtilsPrefix+binstr+'.bfd';
+  if (SourceInfo.ExeExt<>'') then
+    s:=s+SourceInfo.ExeExt;
   s:=FindUtil(s,false);
   if FileExists(s, True) then
     binstr:=s
   else
     // fallback to ld for very old or custom binutils
-    binstr:=FindUtil(utilsprefix+BinStr);
+    binstr:=FindUtil(UtilsPrefix+BinStr);
 
   success:=DoExec(binstr,CmdStr,true,false);
 
   { Create external .dbg file with debuginfo }
-  if success and (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
+  if success and (cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
     begin
       for i:=1 to 3 do
         begin
           SplitBinCmd(Info.ExtDbgCmd[i],binstr,cmdstr);
-          Replace(cmdstr,'$EXE',maybequoted(outname));
-          Replace(cmdstr,'$DBGFN',maybequoted(extractfilename(CurrentModule.dbgfilename)));
-          Replace(cmdstr,'$DBG',maybequoted(CurrentModule.dbgfilename));
-          success:=DoExec(FindUtil(utilsprefix+BinStr),CmdStr,true,false);
+          Replace(cmdstr,'$EXE',MaybeQuoted(outname));
+          Replace(cmdstr,'$DBGFN',MaybeQuoted(extractfilename(CurrentModule.DbgFileName)));
+          Replace(cmdstr,'$DBG',MaybeQuoted(CurrentModule.DbgFileName));
+          success:=DoExec(FindUtil(UtilsPrefix+BinStr),CmdStr,true,false);
           if not success then
             break;
         end;
     end;
 
   { Remove ResponseFile }
-  if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
-    DeleteFile(outputexedir+Info.ResName);
+  if (success) and not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
+    DeleteFile(OutputExeDir+Info.ResName);
 
   Result:=success;   { otherwise a recursive call to link method }
 end;
@@ -489,13 +489,13 @@ end;
 initialization
   RegisterLinker(ld_android,TLinkerAndroid);
 {$ifdef AARCH64}
-  RegisterImport(system_aarch64_android,timportlibandroid);
-  RegisterExport(system_aarch64_android,texportlibandroid);
+  RegisterImport(system_aarch64_android,TImportLibAndroid);
+  RegisterExport(system_aarch64_android,TExportLibAndroid);
   RegisterTarget(system_aarch64_android_info);
 {$endif AARCH64}
 {$ifdef X86_64}
-  RegisterImport(system_x86_64_android,timportlibandroid);
-  RegisterExport(system_x86_64_android,texportlibandroid);
+  RegisterImport(system_x86_64_android,TImportLibAndroid);
+  RegisterExport(system_x86_64_android,TExportLibAndroid);
   RegisterTarget(system_x86_64_android_info);
 {$endif X86_64}
   RegisterRes(res_elf_info,TWinLikeResourceFile);

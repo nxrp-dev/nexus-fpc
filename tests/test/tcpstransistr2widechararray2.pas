@@ -25,7 +25,7 @@ uses
   fpwidestring,
  {$endif}
  {$ifdef USE_CPALL_UNIT}
-  cpall,
+  CPAll,
  {$endif}
  { The unit strings is not really used here,
    but simplifies the conditional construction

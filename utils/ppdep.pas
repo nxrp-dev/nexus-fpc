@@ -14,16 +14,16 @@
 
 { Program to create a depend makefile for a program with multiple units }
 
-program ppdep;
+program PPDep;
 uses Dos;
 
 {.$define debug}
 
 const
 {$ifdef unix}
-  exeext='';
+  ExeExt='';
 {$else}
-  exeext='.EXE';
+  ExeExt='.EXE';
 {$endif}
 
 type
@@ -37,7 +37,7 @@ type
     UsesList : PUses;
     PasFn,
     Name     : string[32];
-    IsUnit   : boolean;
+    IsUnit   : Boolean;
     Next     : PUnit;
   end;
   PDefine=^TDefine;
@@ -51,8 +51,8 @@ var
   UnitList         : PUnit;
   Define           : PDefine;
   ParaFile         : string;
-  Verbose          : boolean;
-  AddCall          : byte;
+  Verbose          : Boolean;
+  AddCall          : Byte;
   CallLine,
   OutFile          : String;
   UnitExt          : String;
@@ -61,41 +61,41 @@ var
                            Handy Routines
 ****************************************************************************}
 
-function UCase(Const Hstr:string):string;
+function UCase(Const HStr:string):string;
 var
-  i : longint;
+  I : LongInt;
 begin
-  SetLength(UCase,Length(Hstr));
-  for i:=1to Length(Hstr) do
-   UCase[i]:=Upcase(Hstr[i]);
+  SetLength(UCase,Length(HStr));
+  for I:=1to Length(HStr) do
+   UCase[I]:=UpCase(HStr[I]);
 end;
 
 
-function FixFn(const s:string):string;
+function FixFn(const S:string):string;
 var
-  i      : longint;
-  NoPath : boolean;
+  I      : LongInt;
+  NoPath : Boolean;
 begin
-  SetLength(FixFn,Length(s));
-  NoPath:=true;
-  for i:=length(s) downto 1 do
+  SetLength(FixFn,Length(S));
+  NoPath:=True;
+  for I:=Length(S) downto 1 do
    begin
-     case s[i] of
+     case S[I] of
  {$ifdef unix}
   '/','\' : begin
-              FixFn[i]:='/';
-              NoPath:=false; {Skip lowercasing path: 'X11'<>'x11' }
+              FixFn[I]:='/';
+              NoPath:=False; {Skip lowercasing path: 'X11'<>'x11' }
             end;
  'A'..'Z' : if NoPath then
-             FixFn[i]:=char(byte(s[i])+32)
+             FixFn[I]:=Char(Byte(S[I])+32)
             else
-             FixFn[i]:=s[i];
+             FixFn[I]:=S[I];
  {$else}
-      '/' : FixFn[i]:='\';
- 'A'..'Z' : FixFn[i]:=char(byte(s[i])+32); { everything lowercase }
+      '/' : FixFn[I]:='\';
+ 'A'..'Z' : FixFn[I]:=Char(Byte(S[I])+32); { everything lowercase }
  {$endif}
      else
-      FixFn[i]:=s[i];
+      FixFn[I]:=S[I];
      end;
    end;
 end;
@@ -105,47 +105,47 @@ end;
                              Main Program
 ****************************************************************************}
 
-Function SearchPas(const fn:string):string;
+Function SearchPas(const Fn:string):string;
 begin
-  SearchPas:=FixFn(fn+'.PAS');
+  SearchPas:=FixFn(Fn+'.PAS');
 end;
 
 
-Function UnitDone(const fn:string):boolean;
+Function UnitDone(const Fn:string):Boolean;
 var
-  hp : PUnit;
+  HP : PUnit;
 begin
-  hp:=UnitList;
-  while not (hp=nil) do
+  HP:=UnitList;
+  while not (HP=nil) do
    begin
-     if hp^.Name=fn then
+     if HP^.Name=Fn then
       begin
-        UnitDone:=true;
+        UnitDone:=True;
         exit;
       end;
-     hp:=hp^.Next;
+     HP:=HP^.Next;
    end;
-  UnitDone:=false;
+  UnitDone:=False;
 end;
 
 
-Function CheckDefine(const s:string):boolean;
+Function CheckDefine(const S:string):Boolean;
 var
-  ss : string[32];
+  SS : string[32];
   P : PDefine;
 begin
-  ss:=ucase(s);
+  SS:=UCase(S);
   P:=Define;
-  while (p<>Nil) do
+  while (P<>Nil) do
    begin
-     if ss=p^.name then
+     if SS=P^.Name then
       begin
-        CheckDefine:=true;
+        CheckDefine:=True;
         exit;
       end;
      P:=P^.Next;
    end;
-  CheckDefine:=false;
+  CheckDefine:=False;
 end;
 
 Procedure AddDefine(Const S : String);
@@ -153,284 +153,284 @@ Var
   P : PDefine;
 begin
   New(P);
-  P^.Name:=Ucase(S);
+  P^.Name:=UCase(S);
   P^.Next:=Define;
   Define:=P;
 end;
 
 
-procedure RemoveSep(var fn:string);
+procedure RemoveSep(var Fn:string);
 var
-  i : longint;
+  I : LongInt;
 begin
-  i:=0;
-  while (i<length(fn)) and (fn[i+1] in [',',' ',#9]) do
-   inc(i);
-  Delete(fn,1,i);
+  I:=0;
+  while (I<Length(Fn)) and (Fn[I+1] in [',',' ',#9]) do
+   Inc(I);
+  Delete(Fn,1,I);
 end;
 
 
-function GetName(var fn:string):string;
+function GetName(var Fn:string):string;
 var
-  i : longint;
+  I : LongInt;
 begin
-  i:=0;
-  while (i<length(fn)) and (fn[i+1] in ['A'..'Z','0'..'9','_','-']) do
-   inc(i);
-  GetName:=Copy(fn,1,i);
-  Delete(fn,1,i);
+  I:=0;
+  while (I<Length(Fn)) and (Fn[I+1] in ['A'..'Z','0'..'9','_','-']) do
+   Inc(I);
+  GetName:=Copy(Fn,1,I);
+  Delete(Fn,1,I);
 end;
 
 
-procedure ListDepend(const fn:string);
+procedure ListDepend(const Fn:string);
 
 {$ifndef FPC}
-  procedure readln(var t:text;var s:string);
+  procedure ReadLn(var T:Text;var S:string);
   var
-    c : char;
-    i : longint;
+    C : Char;
+    I : LongInt;
   begin
-    c:=#0;
-    i:=0;
-    while (not eof(t)) and (c<>#10) do
+    C:=#0;
+    I:=0;
+    while (not EOF(T)) and (C<>#10) do
      begin
-       read(t,c);
-       if c<>#10 then
+       Read(T,C);
+       if C<>#10 then
         begin
-          inc(i);
-          s[i]:=c;
+          Inc(I);
+          S[I]:=C;
         end;
      end;
-    if (i>0) and (s[i]=#13) then
-     dec(i);
-    SetLength(s,i);
+    if (I>0) and (S[I]=#13) then
+     Dec(I);
+    SetLength(S,I);
   end;
 {$endif}
 
 const
   MaxLevel=200;
 var
-  f  : text;
-  hs : ^string;
-  curruses,lastuses : PUses;
-  currunit,lastunit : PUnit;
-  i,j : longint;
+  F  : Text;
+  HS : ^string;
+  CurrUses,LastUses : PUses;
+  CurrUnit,LastUnit : PUnit;
+  I,J : LongInt;
   UsesDone,
   OldComment,
   Done,Comment,
-  InImplementation : boolean;
-  Skip : array[0..MaxLevel] of boolean;
-  Level : byte;
+  InImplementation : Boolean;
+  Skip : array[0..MaxLevel] of Boolean;
+  Level : Byte;
 begin
-  if UnitDone(fn) then
+  if UnitDone(Fn) then
    exit;
-  new(hs);
-  new(currunit);
-  currunit^.next:=nil;
-  currunit^.Name:=fn;
-  currunit^.IsUnit:=true;
-  currunit^.PasFn:=SearchPas(fn);
-  currunit^.useslist:=nil;
-  assign(f,currunit^.PasFn);
+  New(HS);
+  New(CurrUnit);
+  CurrUnit^.Next:=nil;
+  CurrUnit^.Name:=Fn;
+  CurrUnit^.IsUnit:=True;
+  CurrUnit^.PasFn:=SearchPas(Fn);
+  CurrUnit^.UsesList:=nil;
+  Assign(F,CurrUnit^.PasFn);
   {$I-}
-   reset(f);
+   Reset(F);
   {$I+}
-  if ioresult=0 then
+  if IOResult=0 then
    begin
-     if verbose then
-      Writeln('Processing ',currunit^.PasFn);
+     if Verbose then
+      WriteLn('Processing ',CurrUnit^.PasFn);
    {Add to Linked List}
-     if unitlist=nil then
-      unitlist:=currunit
+     if UnitList=nil then
+      UnitList:=CurrUnit
      else
       begin
-        lastunit:=UnitList;
-        while not (lastunit^.Next=nil) do
-         lastunit:=lastunit^.next;
-        lastunit^.next:=currunit;
+        LastUnit:=UnitList;
+        while not (LastUnit^.Next=nil) do
+         LastUnit:=LastUnit^.Next;
+        LastUnit^.Next:=CurrUnit;
       end;
    {Parse file}
-     InImplementation:=false;
-     done:=false;
-     usesdone:=true;
-     Comment:=false;
-     OldComment:=false;
-     FillChar(skip,sizeof(Skip),0);
-     hs^:='';
+     InImplementation:=False;
+     Done:=False;
+     UsesDone:=True;
+     Comment:=False;
+     OldComment:=False;
+     FillChar(Skip,SizeOf(Skip),0);
+     HS^:='';
      Level:=0;
-     while (not done) and (not Eof(f)) do
+     while (not Done) and (not EOF(F)) do
       begin
         repeat
-          if hs^='' then
+          if HS^='' then
            begin
-             ReadLn(f,hs^);
-             hs^:=UCase(hs^);
+             ReadLn(F,HS^);
+             HS^:=UCase(HS^);
            end;
-          RemoveSep(hs^);
-        until (hs^<>'') or Eof(f);
+          RemoveSep(HS^);
+        until (HS^<>'') or EOF(F);
         if Comment then
          begin
-           i:=pos('}',hs^);
-           if (i>0) then
+           I:=Pos('}',HS^);
+           if (I>0) then
             begin
-              j:=pos('{',hs^);
-              if (j>0) and (j<i) then
+              J:=Pos('{',HS^);
+              if (J>0) and (J<I) then
                begin
-                 Comment:=true;
-                 Delete(hs^,1,j-1);
+                 Comment:=True;
+                 Delete(HS^,1,J-1);
                end
               else
                begin
-                 Comment:=false;
-                 Delete(hs^,1,i-1);
+                 Comment:=False;
+                 Delete(HS^,1,I-1);
                end;
             end
            else
-            hs^:='';
+            HS^:='';
          end;
-        if (pos('(*',hs^)>0) or OldComment then
+        if (Pos('(*',HS^)>0) or OldComment then
          begin
-           i:=pos('*)',hs^);
-           if (i>0) then
+           I:=Pos('*)',HS^);
+           if (I>0) then
             begin
-              OldComment:=false;
-              Delete(hs^,1,i+1);
+              OldComment:=False;
+              Delete(HS^,1,I+1);
             end
            else
             begin
-              OldComment:=true;
-              hs^:='';
+              OldComment:=True;
+              HS^:='';
             end;
          end;
-        if (hs^<>'') then
+        if (HS^<>'') then
          begin
-           case hs^[1] of
+           case HS^[1] of
             '}' : begin
-                    Comment:=false;
-                    hs^:='';
+                    Comment:=False;
+                    HS^:='';
                   end;
             '{' : begin
-                    if (Copy(hs^,2,6)='$IFDEF') then
+                    if (Copy(HS^,2,6)='$IFDEF') then
                      begin
-                       Delete(hs^,1,7);
-                       RemoveSep(hs^);
-                       inc(Level);
+                       Delete(HS^,1,7);
+                       RemoveSep(HS^);
+                       Inc(Level);
                        if Level>=MaxLevel then
                         begin
-                          Writeln('Too many IF(N)DEFs');
+                          WriteLn('Too many IF(N)DEFs');
                           Halt(1);
                         end;
-                       skip[level]:=skip[level-1] or (not CheckDefine(GetName(hs^)));
-                       hs^:='';
+                       Skip[Level]:=Skip[Level-1] or (not CheckDefine(GetName(HS^)));
+                       HS^:='';
                      end
                     else
-                     if (Copy(hs^,2,7)='$IFNDEF') then
+                     if (Copy(HS^,2,7)='$IFNDEF') then
                       begin
-                        Delete(hs^,1,7);
-                        RemoveSep(hs^);
-                        inc(Level);
+                        Delete(HS^,1,7);
+                        RemoveSep(HS^);
+                        Inc(Level);
                         if Level>=MaxLevel then
                          begin
-                           Writeln('Too many IF(N)DEFs');
+                           WriteLn('Too many IF(N)DEFs');
                            Halt(1);
                          end;
-                        skip[level]:=skip[level-1] or (CheckDefine(GetName(hs^)));
-                        hs^:='';
+                        Skip[Level]:=Skip[Level-1] or (CheckDefine(GetName(HS^)));
+                        HS^:='';
                       end
                     else
-                     if (Copy(hs^,2,5)='$ELSE') then
+                     if (Copy(HS^,2,5)='$ELSE') then
                       begin
-                        skip[level]:=skip[level-1] or (not skip[level]);
-                        hs^:='';
+                        Skip[Level]:=Skip[Level-1] or (not Skip[Level]);
+                        HS^:='';
                       end
                     else
-                     if (Copy(hs^,2,6)='$ENDIF') then
+                     if (Copy(HS^,2,6)='$ENDIF') then
                       begin
-                        skip[level]:=false;
+                        Skip[Level]:=False;
                         if Level=0 then
                          begin
-                           Writeln('Too many ENDIFs');
+                           WriteLn('Too many ENDIFs');
                            Halt(1);
                          end;
-                        dec(level);
-                        hs^:='';
+                        Dec(Level);
+                        HS^:='';
                       end
                     else
-                     if (Copy(hs^,2,6)='$IFOPT') then
+                     if (Copy(HS^,2,6)='$IFOPT') then
                       begin
-                        inc(Level);
+                        Inc(Level);
                         if Level>=MaxLevel then
                          begin
-                           Writeln('Too many IF(N)DEFs');
+                           WriteLn('Too many IF(N)DEFs');
                            Halt(1);
                          end;
-                        skip[level]:=true;
-                        hs^:='';
+                        Skip[Level]:=True;
+                        HS^:='';
                       end
                     else
                      begin
-                       i:=pos('}',hs^);
-                       if i>0 then
+                       I:=Pos('}',HS^);
+                       if I>0 then
                         begin
-                          Delete(hs^,1,i);
-                          Comment:=false;
+                          Delete(HS^,1,I);
+                          Comment:=False;
                         end
                        else
-                        Comment:=true;
+                        Comment:=True;
                      end;
                   end;
             ';' : begin
-                    UsesDone:=true;
+                    UsesDone:=True;
                     Done:=(UsesDone and InImplementation);
-                    hs^:='';
+                    HS^:='';
                   end;
            else
             begin
-              if skip[level] then
-               hs^:=''
+              if Skip[Level] then
+               HS^:=''
               else
                begin
                  if (not UsesDone) then
                   begin
-                    new(curruses);
-                    curruses^.Name:=GetName(hs^);
-                    curruses^.next:=nil;
-                    if currunit^.useslist=nil then
-                     currunit^.useslist:=curruses
+                    New(CurrUses);
+                    CurrUses^.Name:=GetName(HS^);
+                    CurrUses^.Next:=nil;
+                    if CurrUnit^.UsesList=nil then
+                     CurrUnit^.UsesList:=CurrUses
                     else
                      begin
-                       lastuses:=currunit^.useslist;
-                       while not (lastuses^.Next=nil) do
-                        lastuses:=lastuses^.next;
-                       lastuses^.next:=curruses;
+                       LastUses:=CurrUnit^.UsesList;
+                       while not (LastUses^.Next=nil) do
+                        LastUses:=LastUses^.Next;
+                       LastUses^.Next:=CurrUses;
                      end;
    {$ifndef debug}
-                    ListDepend(curruses^.Name);
+                    ListDepend(CurrUses^.Name);
    {$endif}
-                    RemoveSep(hs^);
+                    RemoveSep(HS^);
                   end
                  else
                   begin
-                    if (Copy(hs^,1,4)='USES') and ((length(hs^)=4) or (hs^[5] in [' ',#9])) then
+                    if (Copy(HS^,1,4)='USES') and ((Length(HS^)=4) or (HS^[5] in [' ',#9])) then
                      begin
-                       Delete(hs^,1,4);
-                       UsesDone:=false;
+                       Delete(HS^,1,4);
+                       UsesDone:=False;
                      end
                     else
                      begin
-                       if (hs^='IMPLEMENTATION') then
-                        InImplementation:=true
+                       if (HS^='IMPLEMENTATION') then
+                        InImplementation:=True
                        else
-                        if (Copy(hs^,1,7)='PROGRAM') then
+                        if (Copy(HS^,1,7)='PROGRAM') then
                          begin
-                           currunit^.IsUnit:=false;
-                           InImplementation:=true; {there can be only 1 uses}
+                           CurrUnit^.IsUnit:=False;
+                           InImplementation:=True; {there can be only 1 uses}
                          end
                        else
-                         if InImplementation and ((copy(hs^,1,5)='CONST') or
-                            (copy(hs^,1,3)='VAR') or (copy(hs^,1,5)='BEGIN')) then
-                          done:=true;
-                       hs^:='';
+                         if InImplementation and ((Copy(HS^,1,5)='CONST') or
+                            (Copy(HS^,1,3)='VAR') or (Copy(HS^,1,5)='BEGIN')) then
+                          Done:=True;
+                       HS^:='';
                      end;
                   end;
                end;
@@ -438,21 +438,21 @@ begin
            end;
          end;
       end;
-     Close(f);
+     Close(F);
    end
   else
-   dispose(currunit);
-  dispose(hs);
+   Dispose(CurrUnit);
+  Dispose(HS);
 end;
 
 
 procedure ShowDepend;
 var
-  currunit : PUnit;
-  curruses : PUses;
-  t        : text;
+  CurrUnit : PUnit;
+  CurrUses : PUses;
+  T        : Text;
   P        : PDefine;
-  First    : boolean;
+  First    : Boolean;
 begin
   if CallLine='' then
    begin
@@ -464,64 +464,64 @@ begin
         P:=P^.Next;
       end;
    end;
-  assign(t,OutFile);
-  rewrite(t);
-  currunit:=UnitList;
-  First:=true;
-  while not (currunit=nil) do
+  Assign(T,OutFile);
+  Rewrite(T);
+  CurrUnit:=UnitList;
+  First:=True;
+  while not (CurrUnit=nil) do
    begin
-     if currunit^.IsUnit then
-      Write(t,FixFn(currunit^.Name+'.'+unitext)+': '+currunit^.PasFn)
+     if CurrUnit^.IsUnit then
+      Write(T,FixFn(CurrUnit^.Name+'.'+UnitExt)+': '+CurrUnit^.PasFn)
      else
-      Write(t,FixFn(currunit^.Name+exeext)+': '+currunit^.PasFn);
-     curruses:=currunit^.useslist;
-     while not (curruses=nil) do
+      Write(T,FixFn(CurrUnit^.Name+ExeExt)+': '+CurrUnit^.PasFn);
+     CurrUses:=CurrUnit^.UsesList;
+     while not (CurrUses=nil) do
       begin
 {$ifndef debug}
-        if UnitDone(curruses^.name) then
+        if UnitDone(CurrUses^.Name) then
 {$endif}
          begin
-           writeln(t,' \');
-           write(t,#9+FixFn(curruses^.name+'.'+unitext));
+           WriteLn(T,' \');
+           Write(T,#9+FixFn(CurrUses^.Name+'.'+UnitExt));
          end;
-        curruses:=curruses^.next;
+        CurrUses:=CurrUses^.Next;
       end;
-     writeln(t,'');
+     WriteLn(T,'');
      If (AddCall=2) or (First and (AddCall=1)) then
-      writeln(t,#9,CallLine,' ',currunit^.PasFn);
-     writeln(t,'');
-     currunit:=currunit^.next;
-     First:=false;
+      WriteLn(T,#9,CallLine,' ',CurrUnit^.PasFn);
+     WriteLn(T,'');
+     CurrUnit:=CurrUnit^.Next;
+     First:=False;
    end;
-  close(t);
+  Close(T);
 end;
 
 
-procedure getpara;
+procedure GetPara;
 var
-  ch   : char;
-  para : string[128];
-  i    : word;
+  Ch   : Char;
+  Para : string[128];
+  I    : Word;
 
-  procedure helpscreen;
+  procedure HelpScreen;
   begin
-    writeln('ppdep [Options] <File>');
-    Writeln;
-    Writeln('Options can be: -D<define>   Define a symbol');
-    Writeln('                -oFile       Write output to file');
-    WRiteln('                             (default stdout)');
-    Writeln('                -eext        Set unit extension to ext');
-    Writeln('                             (default ppu)');
-    Writeln('                -V           Be more verbose');
-    Writeln('          -? or -H           This HelpScreen');
-    Writeln('                -A[call]     Add compiler calls to makefile (all files)');
-    Writeln('                -F[call]     Add compiler calls to makefile (only top file)');
-    halt(1);
+    WriteLn('ppdep [Options] <File>');
+    WriteLn;
+    WriteLn('Options can be: -D<define>   Define a symbol');
+    WriteLn('                -oFile       Write output to file');
+    WriteLn('                             (default stdout)');
+    WriteLn('                -eext        Set unit extension to ext');
+    WriteLn('                             (default ppu)');
+    WriteLn('                -V           Be more verbose');
+    WriteLn('          -? or -H           This HelpScreen');
+    WriteLn('                -A[call]     Add compiler calls to makefile (all files)');
+    WriteLn('                -F[call]     Add compiler calls to makefile (only top file)');
+    Halt(1);
   end;
 
 begin
   Define:=Nil;
-  Outfile:='';
+  OutFile:='';
   AddCall:=0;
   Verbose:=False;
 {$IFDEF Unix}
@@ -529,14 +529,14 @@ begin
 {$ELSE}
   UnitExt:='NXU';
 {$endif}
-  for i:=1 to paramcount do
+  for I:=1 to ParamCount do
    begin
-     para:=Paramstr(i);
-     if (para[1]='-') then
+     Para:=ParamStr(I);
+     if (Para[1]='-') then
       begin
-        ch:=Upcase(para[2]);
-        delete(para,1,2);
-        case ch of
+        Ch:=UpCase(Para[2]);
+        Delete(Para,1,2);
+        case Ch of
          'A' : begin
                  AddCall:=2;
                  CallLine:=Para;
@@ -545,18 +545,18 @@ begin
                  AddCall:=1;
                  CallLine:=Para;
                end;
-         'D' : AddDefine(para);
+         'D' : AddDefine(Para);
          'O' : OutFile:=Para;
          'E' : UnitExt:=Para;
-         'V' : verbose:=true;
-     '?','H' : helpscreen;
+         'V' : Verbose:=True;
+     '?','H' : HelpScreen;
         end;
      end
     else
      begin
        ParaFile:=Para;
        if Pos('.',ParaFile)>0 then
-        Delete(Parafile,Pos('.',ParaFile),255);
+        Delete(ParaFile,Pos('.',ParaFile),255);
      end;
     end;
   if (ParaFile='') then

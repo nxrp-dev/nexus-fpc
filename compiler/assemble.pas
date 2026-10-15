@@ -32,13 +32,13 @@ interface
 
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
       SysUtils,
-      systems,globtype,globals,aasmbase,aasmtai,aasmdata,ogbase,owbase,finput;
+      Systems,GlobType,Globals,aasmbase,aasmtai,AAsmData,ogbase,owbase,FinPut;
 
     const
        { maximum of aasmoutput lists there will be }
-       maxoutputlists = ord(high(tasmlisttype))+1;
+       maxoutputlists = ord(high(TAsmListType))+1;
        { buffer size for writing the .s file }
        AsmOutSize=32768*4;
 
@@ -52,14 +52,14 @@ interface
         name        : string;
         AsmFileName,         { current .s and .o file }
         ObjFileName,
-        ppufilename  : TPathStr;
+        PPUFileName  : TPathStr;
         asmprefix    : string;
         SmartAsm     : boolean;
         SmartFilesCount,
-        SmartHeaderCount : longint;
+        SmartHeaderCount : LongInt;
         Constructor Create(info: PAsmInfo; smart:boolean);virtual;
         Destructor Destroy;override;
-        procedure NextSmartName(place:tcutplace);
+        procedure NextSmartName(place:TCutPlace);
         procedure MakeObject;virtual;abstract;
       end;
 
@@ -80,7 +80,7 @@ interface
       {outfile}
         AsmSize,
         AsmStartSize,
-        outcnt   : longint;
+        outcnt   : LongInt;
         outbuf   : array[0..AsmOutSize-1] of char;
         outfile  : file;
         fioerror : boolean;
@@ -90,7 +90,7 @@ interface
         Procedure MaybeAddLinePrefix;
         Procedure MaybeAddLinePostfix;
 
-        Procedure AsmWriteAnsiStringUnfiltered(const s: ansistring);
+        Procedure AsmWriteAnsiStringUnfiltered(const s: AnsiString);
       public
         Constructor Create(_owner: TExternalAssembler);
 
@@ -107,13 +107,13 @@ interface
           according to the current decorator }
         procedure AsmWriteFiltered(const c:char);
         procedure AsmWriteFiltered(const s:ShortString);
-        procedure AsmWriteFiltered(const s:ansistring);
-        procedure AsmWriteFiltered(p:pchar; len: longint);
+        procedure AsmWriteFiltered(const s:AnsiString);
+        procedure AsmWriteFiltered(p:pchar; len: LongInt);
 
         {# Write a string to the assembler file }
         Procedure AsmWrite(const c:char);
         Procedure AsmWrite(const s:ShortString);
-        Procedure AsmWrite(const s:ansistring);
+        Procedure AsmWrite(const s:AnsiString);
 
         {# Write a string to the assembler file }
         Procedure AsmWritePChar(p:pchar);
@@ -121,12 +121,12 @@ interface
         {# Write a string to the assembler file followed by a new line }
         Procedure AsmWriteLn(const c:char);
         Procedure AsmWriteLn(const s:ShortString);
-        Procedure AsmWriteLn(const s:ansistring);
+        Procedure AsmWriteLn(const s:AnsiString);
 
         {# Write a new line to the assembler file }
         Procedure AsmLn; virtual;
 
-        procedure AsmCreate(Aplace:tcutplace);
+        procedure AsmCreate(Aplace:TCutPlace);
         procedure AsmClose;
 
         property ioerror: boolean read fioerror;
@@ -148,14 +148,14 @@ interface
       {input source info}
         lastfileinfo : TFilePosInfo;
         infile,
-        lastinfile   : tinputfile;
+        lastinfile   : TInputFile;
       {last section type written}
-        lastsectype : TAsmSectionType;
+        lastsectype : TAsmSectiontype;
         procedure ResetSourceLines;
-        procedure WriteSourceLine(hp: tailineinfo);
-        procedure WriteTempalloc(hp: tai_tempalloc);
-        procedure WriteRealConstAsBytes(hp: tai_realconst; const dbdir: string; do_line: boolean);
-        function WriteComments(var hp: tai): boolean;
+        procedure WriteSourceLine(hp: TAILineInfo);
+        procedure WriteTempalloc(hp: TAITempAlloc);
+        procedure WriteRealConstAsBytes(hp: TAIRealConst; const dbdir: string; do_line: boolean);
+        function WriteComments(var hp: TAI): boolean;
         function single2str(d : single) : string; virtual;
         function double2str(d : double) : string; virtual;
         function sleb128tostr(a : int64) : string;
@@ -208,7 +208,7 @@ interface
 
       TInternalAssembler=class(TAssembler)
       private
-        FCObjOutput : TObjOutputclass;
+        FCObjOutput : TObjOutputClass;
         FCInternalAr : TObjectWriterClass;
         { the aasmoutput lists that need to be processed }
         lists        : byte;
@@ -217,21 +217,21 @@ interface
         currlistidx  : byte;
         currlist     : TAsmList;
         procedure WriteStab(p:pchar);
-        function  MaybeNextList(var hp:Tai):boolean;
-        function  SetIndirectToSymbol(hp: Tai; const indirectname: string): Boolean;
-        function  TreePass0(hp:Tai):Tai;
-        function  TreePass1(hp:Tai):Tai;
-        function  TreePass2(hp:Tai):Tai;
+        function  MaybeNextList(var hp:TAI):boolean;
+        function  SetIndirectToSymbol(hp: TAI; const indirectname: string): Boolean;
+        function  TreePass0(hp:TAI):TAI;
+        function  TreePass1(hp:TAI):TAI;
+        function  TreePass2(hp:TAI):TAI;
         procedure writetree;
         procedure writetreesmart;
       protected
         ObjData   : TObjData;
-        ObjOutput : tObjOutput;
-        property CObjOutput:TObjOutputclass read FCObjOutput write FCObjOutput;
+        ObjOutput : TObjOutput;
+        property CObjOutput:TObjOutputClass read FCObjOutput write FCObjOutput;
         property CInternalAr : TObjectWriterClass read FCInternalAr write FCInternalAr;
       public
         constructor Create(info: PAsmInfo; smart: boolean);override;
-        destructor  destroy;override;
+        destructor  Destroy;override;
         procedure MakeObject;override;
       end;
 
@@ -255,21 +255,21 @@ Implementation
 {$ifdef hasunix}
       unix,
 {$endif}
-      cutils,cfileutl,comphook,nxclangassembler,
+      CUtils,CFileUtl,CompHook,nxclangassembler,
 {$ifdef memdebug}
-      cclasses,
+      CClasses,
 {$endif memdebug}
 {$ifdef OMFOBJSUPPORT}
       omfbase,
       ogomf,
 {$endif OMFOBJSUPPORT}
 
-      cscript,fmodule,verbose,
-      cpubase,cpuinfo,triplet,
+      CScript,FModule,Verbose,
+      cpubase,CPUInfo,triplet,
       aasmcpu;
 
     var
-      CAssembler : array[tasm] of TAssemblerClass;
+      CAssembler : array[TAsm] of TAssemblerClass;
       ClangAssemblerFailureReported: Boolean;
 
     function fixline(const s:string):string;
@@ -299,15 +299,15 @@ Implementation
       begin
         asminfo:=info;
       { load start values }
-        AsmFileName:=CurrentModule.AsmFilename;
+        AsmFileName:=CurrentModule.AsmFileName;
         ObjFileName:=CurrentModule.ObjFileName;
-        name:=Lower(CurrentModule.modulename^);
-        path:=CurrentModule.outputpath;
+        name:=Lower(CurrentModule.ModuleName^);
+        path:=CurrentModule.OutputPath;
         asmprefix := CurrentModule.asmprefix^;
-        if CurrentModule.outputpath = '' then
-          ppufilename := ''
+        if CurrentModule.OutputPath = '' then
+          PPUFileName := ''
         else
-          ppufilename := CurrentModule.ppufilename;
+          PPUFileName := CurrentModule.PPUFileName;
         SmartAsm:=smart;
         SmartFilesCount:=0;
         SmartHeaderCount:=0;
@@ -320,7 +320,7 @@ Implementation
       end;
 
 
-    procedure TAssembler.NextSmartName(place:tcutplace);
+    procedure TAssembler.NextSmartName(place:TCutPlace);
       var
         s : string;
       begin
@@ -331,15 +331,15 @@ Implementation
           cut_begin :
             begin
               inc(SmartHeaderCount);
-              s:=asmprefix+tostr(SmartHeaderCount)+'h';
+              s:=asmprefix+ToStr(SmartHeaderCount)+'h';
             end;
           cut_normal :
-            s:=asmprefix+tostr(SmartHeaderCount)+'s';
+            s:=asmprefix+ToStr(SmartHeaderCount)+'s';
           cut_end :
-            s:=asmprefix+tostr(SmartHeaderCount)+'t';
+            s:=asmprefix+ToStr(SmartHeaderCount)+'t';
         end;
-        AsmFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+TargetInfo.asmext);
-        ObjFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+TargetInfo.objext);
+        AsmFileName:=Path+FixFileName(s+ToStr(SmartFilesCount)+TargetInfo.asmext);
+        ObjFileName:=Path+FixFileName(s+ToStr(SmartFilesCount)+TargetInfo.objext);
         { insert in container so it can be cleared after the linking }
         SmartLinkOFiles.Insert(ObjFileName);
       end;
@@ -355,9 +355,9 @@ Implementation
       var
         g : file;
       begin
-        if cs_asm_leave in CurrentSettings.globalswitches then
+        if cs_asm_leave in CurrentSettings.GlobalSwitches then
          exit;
-        if cs_asm_extern in CurrentSettings.globalswitches then
+        if cs_asm_extern in CurrentSettings.GlobalSwitches then
          AsmRes.AddDeleteCommand(owner.AsmFileName)
         else
          begin
@@ -365,7 +365,7 @@ Implementation
            {$push} {$I-}
             erase(g);
            {$pop}
-           if ioresult<>0 then;
+           if IOResult<>0 then;
          end;
       end;
 
@@ -378,7 +378,7 @@ Implementation
            {$push} {$I-}
            BlockWrite(outfile,outbuf,outcnt);
            {$pop}
-           fioerror:=fioerror or (ioresult<>0);
+           fioerror:=fioerror or (IOResult<>0);
            outcnt:=0;
          end;
       end;
@@ -411,20 +411,20 @@ Implementation
       end;
 
 
-    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(const s: ansistring);
+    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(const s: AnsiString);
       begin
         MaybeAddLinePrefix;
         AsmWriteAnsiStringUnfiltered(decorator.LineFilter(s));
       end;
 
 
-    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(p: pchar; len: longint);
+    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(p: pchar; len: LongInt);
       var
-        s: ansistring;
+        s: AnsiString;
       begin
         MaybeAddLinePrefix;
         s:='';
-        setlength(s,len);
+        SetLength(s,len);
         move(p^,s[1],len);
         AsmWriteAnsiStringUnfiltered(decorator.LineFilter(s));
       end;
@@ -438,7 +438,7 @@ Implementation
 
     procedure TExternalAssemblerOutputFile.MaybeAddLinePrefix;
       begin
-        if assigned(decorator) and
+        if Assigned(decorator) and
            linestart then
           begin
             AsmWriteAnsiStringUnfiltered(decorator.LinePrefix);
@@ -449,7 +449,7 @@ Implementation
 
     procedure TExternalAssemblerOutputFile.MaybeAddLinePostfix;
       begin
-        if assigned(decorator) and
+        if Assigned(decorator) and
            not linestart then
           begin
             AsmWriteAnsiStringUnfiltered(decorator.LinePostfix);
@@ -458,9 +458,9 @@ Implementation
       end;
 
 
-    procedure TExternalAssemblerOutputFile.AsmWriteAnsiStringUnfiltered(const s: ansistring);
+    procedure TExternalAssemblerOutputFile.AsmWriteAnsiStringUnfiltered(const s: AnsiString);
       var
-        StartIndex, ToWrite: longint;
+        StartIndex, ToWrite: LongInt;
       begin
         if s='' then
           exit;
@@ -492,7 +492,7 @@ Implementation
 
     Procedure TExternalAssemblerOutputFile.AsmWrite(const c: char);
       begin
-        if assigned(decorator) then
+        if Assigned(decorator) then
           AsmWriteFiltered(c)
         else
           begin
@@ -509,7 +509,7 @@ Implementation
       begin
         if s='' then
           exit;
-        if assigned(decorator) then
+        if Assigned(decorator) then
           AsmWriteFiltered(s)
         else
           begin
@@ -522,11 +522,11 @@ Implementation
       end;
 
 
-    Procedure TExternalAssemblerOutputFile.AsmWrite(const s:ansistring);
+    Procedure TExternalAssemblerOutputFile.AsmWrite(const s:AnsiString);
       begin
         if s='' then
           exit;
-        if assigned(decorator) then
+        if Assigned(decorator) then
           AsmWriteFiltered(s)
         else
          AsmWriteAnsiStringUnfiltered(s);
@@ -547,7 +547,7 @@ Implementation
       end;
 
 
-    Procedure TExternalAssemblerOutputFile.AsmWriteLn(const s: ansistring);
+    Procedure TExternalAssemblerOutputFile.AsmWriteLn(const s: AnsiString);
       begin
         AsmWrite(s);
         AsmLn;
@@ -556,12 +556,12 @@ Implementation
 
     Procedure TExternalAssemblerOutputFile.AsmWritePChar(p:pchar);
       var
-        i,j : longint;
+        i,j : LongInt;
       begin
         i:=StrLen(p);
         if i=0 then
           exit;
-        if assigned(decorator) then
+        if Assigned(decorator) then
           AsmWriteFiltered(p,i)
         else
           begin
@@ -583,16 +583,16 @@ Implementation
 
     Procedure TExternalAssemblerOutputFile.AsmLn;
       var
-        newline: pshortstring;
+        newline: PShortString;
         newlineres: shortstring;
-        index: longint;
+        index: LongInt;
       begin
         MaybeAddLinePostfix;
-        if (cs_assemble_on_target in CurrentSettings.globalswitches) then
+        if (cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
           newline:=@TargetInfo.newline
         else
           newline:=@SourceInfo.newline;
-        if assigned(decorator) then
+        if Assigned(decorator) then
           begin
             newlineres:=decorator.LineEnding(newline^);
             newline:=@newlineres;
@@ -609,7 +609,7 @@ Implementation
       end;
 
 
-    procedure TExternalAssemblerOutputFile.AsmCreate(Aplace:tcutplace);
+    procedure TExternalAssemblerOutputFile.AsmCreate(Aplace:TCutPlace);
       begin
         if owner.SmartAsm then
          owner.NextSmartName(Aplace);
@@ -623,10 +623,10 @@ Implementation
             end
            else
              Message1(exec_i_assembling_pipe,owner.AsmFileName);
-           if checkverbosity(V_Executable) then
-             comment(V_Executable,'Executing "'+maybequoted(owner.FindAssembler)+'" with command line "'+
+           if checkverbosity(VExecutable) then
+             comment(VExecutable,'Executing "'+MaybeQuoted(owner.FindAssembler)+'" with command line "'+
                owner.MakeCmdLine+'"');
-           POpen(outfile,maybequoted(owner.FindAssembler)+' '+owner.MakeCmdLine,'W');
+           POpen(outfile,MaybeQuoted(owner.FindAssembler)+' '+owner.MakeCmdLine,'W');
          end
         else
 {$endif}
@@ -635,7 +635,7 @@ Implementation
            {$push} {$I-}
            Rewrite(outfile,1);
            {$pop}
-           if ioresult<>0 then
+           if IOResult<>0 then
              begin
                fioerror:=true;
                Message1(exec_d_cant_create_asmfile,owner.AsmFileName);
@@ -650,7 +650,7 @@ Implementation
     procedure TExternalAssemblerOutputFile.AsmClose;
       var
         f : file;
-        FileAge : longint;
+        FileAge : LongInt;
       begin
         AsmFlush;
 {$ifdef hasunix}
@@ -663,13 +663,13 @@ Implementation
 {$endif}
          begin
          {Touch Assembler time to ppu time is there is a ppufilename}
-           if owner.ppufilename<>'' then
+           if owner.PPUFileName<>'' then
             begin
-              Assign(f,owner.ppufilename);
+              Assign(f,owner.PPUFileName);
               {$push} {$I-}
               reset(f,1);
               {$pop}
-              if ioresult=0 then
+              if IOResult=0 then
                begin
                  FileAge := FileGetDate(GetFileHandle(f));
                  close(f);
@@ -711,31 +711,31 @@ Implementation
 
     function TExternalAssembler.sleb128tostr(a: int64): string;
       var
-        i,len : longint;
+        i,len : LongInt;
         buf   : array[0..31] of byte;
       begin
         result:='';
-        len:=EncodeSleb128(a,buf,0);
+        len:=EncodeSLEB128(a,buf,0);
         for i:=0 to len-1 do
           begin
             if (i > 0) then
               result:=result+',';
-            result:=result+tostr(buf[i]);
+            result:=result+ToStr(buf[i]);
           end;
       end;
 
     function TExternalAssembler.uleb128tostr(a: qword): string;
     var
-      i,len : longint;
+      i,len : LongInt;
       buf   : array[0..31] of byte;
     begin
       result:='';
-      len:=EncodeUleb128(a,buf,0);
+      len:=EncodeULEB128(a,buf,0);
       for i:=0 to len-1 do
         begin
           if (i > 0) then
             result:=result+',';
-          result:=result+tostr(buf[i]);
+          result:=result+ToStr(buf[i]);
         end;
     end;
 
@@ -743,8 +743,8 @@ Implementation
     Function TExternalAssembler.DoPipe:boolean;
       begin
 {$ifdef hasunix}
-        DoPipe:=(cs_asm_pipe in CurrentSettings.globalswitches) and
-                (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * CurrentSettings.globalswitches) = []) and
+        DoPipe:=(cs_asm_pipe in CurrentSettings.GlobalSwitches) and
+                (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * CurrentSettings.GlobalSwitches) = []) and
                 ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin]));
 {$else hasunix}
         DoPipe:=false;
@@ -809,7 +809,7 @@ Implementation
            {$push} {$I-}
             mkdir(hs);
            {$pop}
-           if ioresult<>0 then;
+           if IOResult<>0 then;
          end;
       end;
 
@@ -826,27 +826,27 @@ Implementation
         asfound:=false;
         asmbin:=asminfo^.asmbin;
         if (af_llvm in asminfo^.flags) then
-          asmbin:=asmbin+llvmutilssuffix;
-        if cs_assemble_on_target in CurrentSettings.globalswitches then
+          asmbin:=asmbin+LLVMUtilsSuffix;
+        if cs_assemble_on_target in CurrentSettings.GlobalSwitches then
          begin
            { If assembling on target, don't add any path PM }
-           FindAssembler:=utilsprefix+ChangeFileExt(asmbin,TargetInfo.exeext);
+           FindAssembler:=UtilsPrefix+ChangeFileExt(asmbin,TargetInfo.ExeExt);
            exit;
          end
         else
-         UtilExe:=utilsprefix+ChangeFileExt(asmbin,SourceInfo.exeext);
+         UtilExe:=UtilsPrefix+ChangeFileExt(asmbin,SourceInfo.ExeExt);
         if lastas<>ord(asminfo^.id) then
          begin
            lastas:=ord(asminfo^.id);
            { is an assembler passed ? }
-           if utilsdirectory<>'' then
-             asfound:=FindFile(UtilExe,utilsdirectory,false,LastASBin);
+           if UtilsDirectory<>'' then
+             asfound:=FindFile(UtilExe,UtilsDirectory,false,LastASBin);
            if not AsFound then
              asfound:=FindExe(UtilExe,false,LastASBin);
-           if (not asfound) and not(cs_asm_extern in CurrentSettings.globalswitches) then
+           if (not asfound) and not(cs_asm_extern in CurrentSettings.GlobalSwitches) then
             begin
               Message1(exec_e_assembler_not_found,LastASBin);
-              CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_asm_extern];
+              CurrentSettings.GlobalSwitches:=CurrentSettings.GlobalSwitches+[cs_asm_extern];
             end;
            if asfound then
             Message1(exec_t_using_assembler,LastASBin);
@@ -860,10 +860,10 @@ Implementation
         DosExitCode : Integer;
       begin
         result:=true;
-        if (cs_asm_extern in CurrentSettings.globalswitches) then
+        if (cs_asm_extern in CurrentSettings.GlobalSwitches) then
           begin
             if SmartAsm then
-              AsmRes.AddAsmCommand(command,para,Name+'('+TosTr(SmartFilesCount)+')')
+              AsmRes.AddAsmCommand(command,para,Name+'('+ToStr(SmartFilesCount)+')')
             else
               AsmRes.AddAsmCommand(command,para,name);
             exit;
@@ -873,13 +873,13 @@ Implementation
           DosExitCode:=RequotedExecuteProcess(command,para);
           if DosExitCode<>0
           then begin
-            Message1(exec_e_error_while_assembling,tostr(dosexitcode));
+            Message1(exec_e_error_while_assembling,ToStr(dosexitcode));
             result:=false;
           end;
         except on E:EOSError do
           begin
-            Message1(exec_e_cant_call_assembler,tostr(E.ErrorCode));
-            CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_asm_extern];
+            Message1(exec_e_cant_call_assembler,ToStr(E.ErrorCode));
+            CurrentSettings.GlobalSwitches:=CurrentSettings.GlobalSwitches+[cs_asm_extern];
             result:=false;
           end;
         end;
@@ -894,7 +894,7 @@ Implementation
         result:=true;
         if DoPipe then
          exit;
-        if not(cs_asm_extern in CurrentSettings.globalswitches) then
+        if not(cs_asm_extern in CurrentSettings.GlobalSwitches) then
          begin
            if SmartAsm then
             begin
@@ -906,25 +906,25 @@ Implementation
          end;
 
         if (asminfo^.id in [as_clang_gas,as_clang_asdarwin]) and
-           not(cs_asm_extern in CurrentSettings.globalswitches) and
-           not(cs_assemble_on_target in CurrentSettings.globalswitches) then
+           not(cs_asm_extern in CurrentSettings.GlobalSwitches) and
+           not(cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
           begin
             command:=FindAssembler;
             para:=MakeCmdLine;
-            if do_checkverbosity(V_Executable) then
-              do_comment(V_Executable,'Executing "'+command+
+            if Do_CheckVerbosity(VExecutable) then
+              Do_Comment(VExecutable,'Executing "'+command+
                 '" with command line "'+para+'"');
             FlushOutput;
             try
               result:=NXQueueClangAssembly(command,para,AsmFileName,
-                not(cs_asm_leave in CurrentSettings.globalswitches));
+                not(cs_asm_leave in CurrentSettings.GlobalSwitches));
               if not result and not ClangAssemblerFailureReported then
                 Message1(exec_e_error_while_assembling,
-                  tostr(NXClangAssemblyExitCode));
+                  ToStr(NXClangAssemblyExitCode));
             except
               on E:EOSError do
                 begin
-                  Message1(exec_e_cant_call_assembler,tostr(E.ErrorCode));
+                  Message1(exec_e_cant_call_assembler,ToStr(E.ErrorCode));
                   result:=false;
                 end;
             end;
@@ -953,7 +953,7 @@ Implementation
           begin
             ClangAssemblerFailureReported:=true;
             Message1(exec_e_error_while_assembling,
-              tostr(NXClangAssemblyExitCode));
+              ToStr(NXClangAssemblyExitCode));
             GenerateError;
           end;
       end;
@@ -961,12 +961,12 @@ Implementation
 
     function TExternalAssembler.MakeCmdLine: TCmdStr;
 
-      function section_high_bound:longint;
+      function section_high_bound:LongInt;
         var
-          alt : tasmlisttype;
+          alt : TAsmListType;
         begin
           result:=0;
-          for alt:=low(tasmlisttype) to high(tasmlisttype) do
+          for alt:=low(TAsmListType) to high(TAsmListType) do
             result:=result+CurrentAsmData.asmlists[alt].section_count;
         end;
 
@@ -977,10 +977,10 @@ Implementation
         result:=asminfo^.asmcmd;
         if af_llvm in TargetAsm.flags then
           Replace(result,'$TRIPLET',targettriplet(triplet_llvm));
-        if (cs_assemble_on_target in CurrentSettings.globalswitches) then
+        if (cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
          begin
-           Replace(result,'$ASM',maybequoted(ScriptFixFileName(AsmFileName)));
-           Replace(result,'$OBJ',maybequoted(ScriptFixFileName(ObjFileName)));
+           Replace(result,'$ASM',MaybeQuoted(ScriptFixFileName(AsmFileName)));
+           Replace(result,'$OBJ',MaybeQuoted(ScriptFixFileName(ObjFileName)));
          end
         else
          begin
@@ -992,16 +992,16 @@ Implementation
               Replace(result,'$ASM','-')
           else
 {$endif}
-             Replace(result,'$ASM',maybequoted(AsmFileName));
-           Replace(result,'$OBJ',maybequoted(ObjFileName));
+             Replace(result,'$ASM',MaybeQuoted(AsmFileName));
+           Replace(result,'$OBJ',MaybeQuoted(ObjFileName));
          end;
 
-         if (cs_create_pic in CurrentSettings.moduleswitches) then
+         if (cs_create_pic in CurrentSettings.ModuleSwitches) then
            Replace(result,'$PIC','-KPIC')
          else
            Replace(result,'$PIC','');
 
-         if (cs_asm_source in CurrentSettings.globalswitches) then
+         if (cs_asm_source in CurrentSettings.GlobalSwitches) then
            Replace(result,'$NOWARN','')
          else
            Replace(result,'$NOWARN','-W');
@@ -1019,7 +1019,7 @@ Implementation
          else
            Replace(result,'$BIGOBJ','-mbig-obj');
 
-         Replace(result,'$EXTRAOPT',asmextraopt);
+         Replace(result,'$EXTRAOPT',AsmExtraOpt);
       end;
 
 
@@ -1031,15 +1031,15 @@ Implementation
 
     procedure TExternalAssembler.ResetSourceLines;
 
-      procedure DoReset(f:tinputfile);
+      procedure DoReset(f:TInputFile);
         var
-          i : longint;
+          i : LongInt;
         begin
-          if not assigned(f) then
+          if not Assigned(f) then
             exit;
-          for i:=0 to f.maxlinebuf-1 do
-            if f.linebuf[i]<0 then
-              f.linebuf[i]:=-f.linebuf[i]-1;
+          for i:=0 to f.MaxLineBuf-1 do
+            if f.LineBuf[i]<0 then
+              f.LineBuf[i]:=-f.LineBuf[i]-1;
         end;
 
       begin
@@ -1048,29 +1048,29 @@ Implementation
       end;
 
 
-    procedure TExternalAssembler.WriteSourceLine(hp: tailineinfo);
+    procedure TExternalAssembler.WriteSourceLine(hp: TAILineInfo);
       var
-        module : tmodule;
+        module : TModule;
       begin
         { load infile }
         if (lastfileinfo.moduleindex<>hp.fileinfo.moduleindex) or
             (lastfileinfo.fileindex<>hp.fileinfo.fileindex) then
           begin
             { in case of a generic the module can be different }
-            if CurrentModule.moduleid=hp.fileinfo.moduleindex then
+            if CurrentModule.ModuleID=hp.fileinfo.moduleindex then
               module:=CurrentModule
             else
-              module:=get_module(hp.fileinfo.moduleindex);
+              module:=Get_Module(hp.fileinfo.moduleindex);
             { during the compilation of the system unit there are cases when
               the fileinfo contains just zeros => invalid }
-            if assigned(module) then
-              infile:=module.sourcefiles.get_file(hp.fileinfo.fileindex)
+            if Assigned(module) then
+              infile:=module.SourceFiles.Get_File(hp.fileinfo.fileindex)
             else
               infile:=nil;
-            if assigned(infile) then
+            if Assigned(infile) then
               begin
                 { open only if needed !! }
-                if (cs_asm_source in CurrentSettings.globalswitches) then
+                if (cs_asm_source in CurrentSettings.GlobalSwitches) then
                   infile.open;
               end;
             { avoid unnecessary reopens of the same file !! }
@@ -1080,95 +1080,95 @@ Implementation
             lastfileinfo.line:=-1;
           end;
         { write source }
-        if (cs_asm_source in CurrentSettings.globalswitches) and
-          assigned(infile) then
+        if (cs_asm_source in CurrentSettings.GlobalSwitches) and
+          Assigned(infile) then
           begin
             if (infile<>lastinfile) then
               begin
                 writer.AsmWriteLn(asminfo^.comment+'['+infile.name+']');
-                if assigned(lastinfile) then
+                if Assigned(lastinfile) then
                   lastinfile.close;
               end;
             if (hp.fileinfo.line<>lastfileinfo.line) and
-              (hp.fileinfo.line<infile.maxlinebuf) then
+              (hp.fileinfo.line<infile.MaxLineBuf) then
               begin
                 if (hp.fileinfo.line<>0) and
-                  (infile.linebuf[hp.fileinfo.line]>=0) then
-                  writer.AsmWriteLn(asminfo^.comment+'['+tostr(hp.fileinfo.line)+'] '+
+                  (infile.LineBuf[hp.fileinfo.line]>=0) then
+                  writer.AsmWriteLn(asminfo^.comment+'['+ToStr(hp.fileinfo.line)+'] '+
                   fixline(infile.GetLineStr(hp.fileinfo.line)));
                 { set it to a negative value !
                   to make that is has been read already !! PM }
-                if (infile.linebuf[hp.fileinfo.line]>=0) then
-                  infile.linebuf[hp.fileinfo.line]:=-infile.linebuf[hp.fileinfo.line]-1;
+                if (infile.LineBuf[hp.fileinfo.line]>=0) then
+                  infile.LineBuf[hp.fileinfo.line]:=-infile.LineBuf[hp.fileinfo.line]-1;
               end;
           end;
         lastfileinfo:=hp.fileinfo;
         lastinfile:=infile;
       end;
 
-    procedure TExternalAssembler.WriteTempalloc(hp: tai_tempalloc);
+    procedure TExternalAssembler.WriteTempalloc(hp: TAITempAlloc);
       begin
 {$ifdef EXTDEBUG}
-        if assigned(hp.problem) then
-          writer.AsmWriteLn(asminfo^.comment+'Temp '+tostr(hp.temppos)+','+
-          tostr(hp.tempsize)+' '+hp.problem^)
+        if Assigned(hp.problem) then
+          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.temppos)+','+
+          ToStr(hp.tempsize)+' '+hp.problem^)
         else
 {$endif EXTDEBUG}
-          writer.AsmWriteLn(asminfo^.comment+'Temp '+tostr(hp.temppos)+','+
-            tostr(hp.tempsize)+' '+tempallocstr[hp.allocation]);
+          writer.AsmWriteLn(asminfo^.comment+'Temp '+ToStr(hp.temppos)+','+
+            ToStr(hp.tempsize)+' '+tempallocstr[hp.allocation]);
       end;
 
 
-    procedure TExternalAssembler.WriteRealConstAsBytes(hp: tai_realconst; const dbdir: string; do_line: boolean);
+    procedure TExternalAssembler.WriteRealConstAsBytes(hp: TAIRealConst; const dbdir: string; do_line: boolean);
       var
-        pdata: pbyte;
-        index, step, real_byte_count: longint;
+        pdata: PByte;
+        index, step, real_byte_count: LongInt;
         ssingle: single;
         ddouble: double;
         ccomp: int64;
-        eextended: bestreal;
+        eextended: BestReal;
       begin
 
         if do_line then
           begin
-            case tai_realconst(hp).realtyp of
+            case TAIRealConst(hp).realtyp of
               aitrealconst_s32bit:
-                writer.AsmWriteLn(asminfo^.comment+'s32bit real value: '+single2str(tai_realconst(hp).value.s32val));
+                writer.AsmWriteLn(asminfo^.comment+'s32bit real value: '+single2str(TAIRealConst(hp).value.s32val));
               aitrealconst_s64bit:
-                writer.AsmWriteLn(asminfo^.comment+'s64bit real value: '+double2str(tai_realconst(hp).value.s64val));
+                writer.AsmWriteLn(asminfo^.comment+'s64bit real value: '+double2str(TAIRealConst(hp).value.s64val));
               aitrealconst_s80bit:
-                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+realtostr(tai_realconst(hp).value.s80val));
+                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+RealToStr(TAIRealConst(hp).value.s80val));
               aitrealconst_s64comp:
                 begin
-                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+tostr(tai_realconst(hp).value.s64compval));
+                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+ToStr(TAIRealConst(hp).value.s64compval));
                 end
             end;
           end;
         writer.AsmWrite(dbdir);
         { Write the exact stored representation, including binary80 and Comp. }
-        case tai_realconst(hp).realtyp of
+        case TAIRealConst(hp).realtyp of
           aitrealconst_s32bit:
             begin
-              ssingle:=single(tai_realconst(hp).value.s32val);
+              ssingle:=single(TAIRealConst(hp).value.s32val);
               pdata:=@ssingle;
             end;
           aitrealconst_s64bit:
             begin
-              ddouble:=double(tai_realconst(hp).value.s64val);
+              ddouble:=double(TAIRealConst(hp).value.s64val);
               pdata:=@ddouble;
             end;
           aitrealconst_s80bit:
             begin
-              eextended:=tai_realconst(hp).value.s80val;
+              eextended:=TAIRealConst(hp).value.s80val;
               pdata:=@eextended;
             end;
           aitrealconst_s64comp:
             begin
-              ccomp:=tai_realconst(hp).value.s64compval;
+              ccomp:=TAIRealConst(hp).value.s64compval;
               pdata:=@ccomp;
             end;
         end;
-        real_byte_count:=tai_realconst(hp).datasize;
+        real_byte_count:=TAIRealConst(hp).DataSize;
         { write bytes in inverse order if source and target endianess don't
           match }
         if SourceInfo.endian<>TargetInfo.endian then
@@ -1185,64 +1185,64 @@ Implementation
           end;
         repeat
 
-          writer.AsmWrite(tostr(pdata[index]));
+          writer.AsmWrite(ToStr(pdata[index]));
           inc(index,step);
           dec(real_byte_count);
           if real_byte_count<>0 then
             writer.AsmWrite(',');
         until real_byte_count=0;
         { padding }
-        for real_byte_count:=tai_realconst(hp).datasize+1 to tai_realconst(hp).savesize do
+        for real_byte_count:=TAIRealConst(hp).DataSize+1 to TAIRealConst(hp).savesize do
           writer.AsmWrite(',0');
         writer.AsmLn;
       end;
 
 
-    function TExternalAssembler.WriteComments(var hp: tai): boolean;
+    function TExternalAssembler.WriteComments(var hp: TAI): boolean;
       begin
         result:=true;
         case hp.typ of
           ait_comment :
             Begin
               writer.AsmWrite(asminfo^.comment);
-              writer.AsmWritePChar(tai_comment(hp).str);
+              writer.AsmWritePChar(TAIComment(hp).str);
               writer.AsmLn;
             End;
 
           ait_regalloc :
             begin
-              if (cs_asm_regalloc in CurrentSettings.globalswitches) then
+              if (cs_asm_regalloc in CurrentSettings.GlobalSwitches) then
                 begin
                   writer.AsmWrite(#9+asminfo^.comment+'Register ');
                   repeat
-                    writer.AsmWrite(std_regname(Tai_regalloc(hp).reg));
+                    writer.AsmWrite(std_regname(TAIRegAlloc(hp).reg));
                     if (hp.next=nil) or
-                       (tai(hp.next).typ<>ait_regalloc) or
-                       (tai_regalloc(hp.next).ratype<>tai_regalloc(hp).ratype) then
+                       (TAI(hp.next).typ<>ait_regalloc) or
+                       (TAIRegAlloc(hp.next).ratype<>TAIRegAlloc(hp).ratype) then
                       break;
-                    hp:=tai(hp.next);
+                    hp:=TAI(hp.next);
                     writer.AsmWrite(',');
                   until false;
                   writer.AsmWrite(' ');
-                  writer.AsmWriteLn(regallocstr[tai_regalloc(hp).ratype]);
+                  writer.AsmWriteLn(regallocstr[TAIRegAlloc(hp).ratype]);
                 end;
             end;
 
           ait_tempalloc :
             begin
-              if (cs_asm_tempalloc in CurrentSettings.globalswitches) then
-                WriteTempalloc(tai_tempalloc(hp));
+              if (cs_asm_tempalloc in CurrentSettings.GlobalSwitches) then
+                WriteTempalloc(TAITempAlloc(hp));
             end;
 
           ait_varloc:
             begin
               { ait_varloc is present here only when register allocation is not done ( -sr option ) }
-              if tai_varloc(hp).newlocationhi<>NR_NO then
-                writer.AsmWriteLn(asminfo^.comment+'Var '+tai_varloc(hp).varsym.realname+' located in register '+
-                  std_regname(tai_varloc(hp).newlocationhi)+':'+std_regname(tai_varloc(hp).newlocation))
+              if TAIVarLoc(hp).newlocationhi<>NR_NO then
+                writer.AsmWriteLn(asminfo^.comment+'Var '+TAIVarLoc(hp).varsym.realname+' located in register '+
+                  std_regname(TAIVarLoc(hp).newlocationhi)+':'+std_regname(TAIVarLoc(hp).newlocation))
               else
-                writer.AsmWriteLn(asminfo^.comment+'Var '+tai_varloc(hp).varsym.realname+' located in register '+
-                  std_regname(tai_varloc(hp).newlocation));
+                writer.AsmWriteLn(asminfo^.comment+'Var '+TAIVarLoc(hp).varsym.realname+' located in register '+
+                  std_regname(TAIVarLoc(hp).newlocation));
             end;
           else
             result:=false;
@@ -1295,12 +1295,12 @@ Implementation
       end;
 
 
-   destructor TInternalAssembler.destroy;
+   destructor TInternalAssembler.Destroy;
       begin
-        if assigned(ObjData) then
+        if Assigned(ObjData) then
           ObjData.free;
           ObjData := nil;
-        if assigned(ObjOutput) then
+        if Assigned(ObjOutput) then
           ObjOutput.free;
           ObjOutput := nil;
       end;
@@ -1316,7 +1316,7 @@ Implementation
           inc(p);
         end;
 
-        function consumenumber(var p:pchar;out value:longint):boolean;
+        function consumenumber(var p:pchar;out value:LongInt):boolean;
         var
           hs : ShortString;
           len,
@@ -1342,14 +1342,14 @@ Implementation
           result:=(code=0);
         end;
 
-        function consumeoffset(var p:pchar;out relocsym:tobjsymbol;out value:longint):boolean;
+        function consumeoffset(var p:pchar;out relocsym:TObjSymbol;out value:LongInt):boolean;
         var
           hs        : ShortString;
           len,
           code      : integer;
           pstart    : pchar;
-          sym       : tobjsymbol;
-          exprvalue : longint;
+          sym       : TObjSymbol;
+          exprvalue : LongInt;
           gotmin,
           have_first_symbol,
           have_second_symbol,
@@ -1388,7 +1388,7 @@ Implementation
                   hs[0]:=chr(len);
                   val(hs,exprvalue,code);
                   if code<>0 then
-                    internalerror(200702251);
+                    InternalError(200702251);
                 end;
               '.','_',
               'A'..'Z',
@@ -1399,23 +1399,23 @@ Implementation
                     inc(p);
                   len:=p-pstart;
                   if len>255 then
-                    internalerror(200509187);
+                    InternalError(200509187);
                   hs[0]:=chr(len);
                   move(pstart^,hs[1],len);
                   sym:=objdata.symbolref(hs);
                   { Second symbol? }
-                  if assigned(relocsym) then
+                  if Assigned(relocsym) then
                     begin
                       if have_second_symbol then
-                        internalerror(2007032201);
+                        InternalError(2007032201);
                       have_second_symbol:=true;
                       if not have_first_symbol then
-                        internalerror(2007032202);
+                        InternalError(2007032202);
                       { second symbol should subtracted to first }
                       if not dosub then
-                        internalerror(2007032203);
+                        InternalError(2007032203);
                       if (relocsym.objsection<>sym.objsection) then
-                        internalerror(2005091810);
+                        InternalError(2005091810);
                       exprvalue:=relocsym.address-sym.address;
                       relocsym:=nil;
                       dosub:=false;
@@ -1423,11 +1423,11 @@ Implementation
                   else
                     begin
                       relocsym:=sym;
-                      if assigned(sym.objsection) then
+                      if Assigned(sym.objsection) then
                         begin
                           { first symbol should be + }
                           if not have_first_symbol and dosub then
-                            internalerror(2007032204);
+                            InternalError(2007032204);
                           have_first_symbol:=true;
                         end;
                     end;
@@ -1443,7 +1443,7 @@ Implementation
                   inc(p);
                 end;
               else
-                internalerror(200509189);
+                InternalError(200509189);
             end;
             if dosub then
               dec(value,exprvalue)
@@ -1459,7 +1459,7 @@ Implementation
         nline,
         nidx,
         nother,
-        i         : longint;
+        i         : LongInt;
         stab      : TObjStabEntry;
         relocsym  : TObjSymbol;
         pstr,
@@ -1486,7 +1486,7 @@ Implementation
             pendquote^:=#0;
             pcurr:=@p[i+1];
             if not consumecomma(pcurr) then
-              internalerror(200509181);
+              InternalError(200509181);
           end
         else
           pcurr:=p;
@@ -1495,36 +1495,36 @@ Implementation
         if ObjData.currpass=1 then
           begin
             ObjData.StabsSec.Alloc(sizeof(TObjStabEntry));
-            if assigned(pstr) and (pstr[0]<>#0) then
-              ObjData.StabStrSec.Alloc(strlen(pstr)+1);
+            if Assigned(pstr) and (pstr[0]<>#0) then
+              ObjData.StabStrSec.Alloc(StrLen(pstr)+1);
           end
         else
           begin
             { Stabs format: nidx,nother,nline[,offset] }
             if not consumenumber(pcurr,nidx) then
-              internalerror(200509182);
+              InternalError(200509182);
             if not consumecomma(pcurr) then
-              internalerror(200509183);
+              InternalError(200509183);
             if not consumenumber(pcurr,nother) then
-              internalerror(200509184);
+              InternalError(200509184);
             if not consumecomma(pcurr) then
-              internalerror(200509185);
+              InternalError(200509185);
             if not consumenumber(pcurr,nline) then
-              internalerror(200509186);
+              InternalError(200509186);
             if consumecomma(pcurr) then
               consumeoffset(pcurr,relocsym,ofs);
 
             { Generate stab entry }
-            if assigned(pstr) and (pstr[0]<>#0) then
+            if Assigned(pstr) and (pstr[0]<>#0) then
               begin
-                stabstrlen:=strlen(pstr);
+                stabstrlen:=StrLen(pstr);
 {$ifdef optimizestabs}
                 StabStrEntry:=nil;
                 if (nidx=N_SourceFile) or (nidx=N_IncludeFile) then
                   begin
-                    hs:=strpas(pstr);
+                    hs:=StrPas(pstr);
                     StabstrEntry:=StabStrDict.Find(hs);
-                    if not assigned(StabstrEntry) then
+                    if not Assigned(StabstrEntry) then
                       begin
                         StabstrEntry:=TStabStrEntry.Create(hs);
                         StabstrEntry:=StabStrSec.Size;
@@ -1533,7 +1533,7 @@ Implementation
                         StabstrEntry:=nil;
                       end;
                   end;
-                if assigned(StabstrEntry) then
+                if Assigned(StabstrEntry) then
                   stab.strpos:=StabstrEntry.strpos
                 else
 {$endif optimizestabs}
@@ -1558,21 +1558,21 @@ Implementation
             ObjData.Writereloc(stab.nvalue,4,relocsym,RELOC_ABSOLUTE32);
             ObjData.setsection(oldsec);
           end;
-        if assigned(pendquote) then
+        if Assigned(pendquote) then
           pendquote^:='"';
       end;
 
 
-    function TInternalAssembler.MaybeNextList(var hp:Tai):boolean;
+    function TInternalAssembler.MaybeNextList(var hp:TAI):boolean;
       begin
         { maybe end of list }
-        while not assigned(hp) do
+        while not Assigned(hp) do
          begin
            if currlistidx<lists then
             begin
               inc(currlistidx);
               currlist:=list[currlistidx];
-              hp:=Tai(currList.first);
+              hp:=TAI(currList.first);
             end
            else
             begin
@@ -1584,7 +1584,7 @@ Implementation
       end;
 
 
-    function TInternalAssembler.SetIndirectToSymbol(hp: Tai; const indirectname: string): Boolean;
+    function TInternalAssembler.SetIndirectToSymbol(hp: TAI; const indirectname: string): Boolean;
       var
         objsym  : TObjSymbol;
         indsym  : TObjSymbol;
@@ -1594,7 +1594,7 @@ Implementation
           (hp.typ=ait_symbol);
         if not Result then
           Exit;
-        objsym:=Objdata.SymbolRef(tai_symbol(hp).sym);
+        objsym:=Objdata.SymbolRef(TAISymbol(hp).sym);
         objsym.size:=0;
 
         indsym := TObjSymbol(ObjData.ObjSymbolList.Find(indirectname));
@@ -1611,93 +1611,93 @@ Implementation
       end;
 
 
-    function TInternalAssembler.TreePass0(hp:Tai):Tai;
+    function TInternalAssembler.TreePass0(hp:TAI):TAI;
       var
         objsym,
         objsymend : TObjSymbol;
-        cpu: tcputype;
+        cpu: TCPUType;
         eabi_section, TmpSection: TObjSection;
       begin
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             CurrentFilePos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=TAILineInfo(hp).fileinfo;
 {$endif DEBUG}
             case hp.typ of
              ait_align :
                begin
-                 if tai_align_abstract(hp).aligntype>1 then
+                 if TAIAlignAbstract(hp).aligntype>1 then
                    begin
                      { always use the maximum fillsize in this pass to avoid possible
                        short jumps to become out of range }
-                     Tai_align_abstract(hp).fillsize:=Tai_align_abstract(hp).aligntype;
-                     ObjData.alloc(Tai_align_abstract(hp).fillsize);
+                     TAIAlignAbstract(hp).fillsize:=TAIAlignAbstract(hp).aligntype;
+                     ObjData.alloc(TAIAlignAbstract(hp).fillsize);
                      { may need to increase alignment of section }
-                     if tai_align_abstract(hp).aligntype>ObjData.CurrObjSec.secalign then
-                       ObjData.CurrObjSec.secalign:=tai_align_abstract(hp).aligntype;
+                     if TAIAlignAbstract(hp).aligntype>ObjData.CurrObjSec.secalign then
+                       ObjData.CurrObjSec.secalign:=TAIAlignAbstract(hp).aligntype;
                    end
                  else
-                   Tai_align_abstract(hp).fillsize:=0;
+                   TAIAlignAbstract(hp).fillsize:=0;
                end;
              ait_datablock :
                begin
 {$ifdef USE_COMM_IN_BSS}
                  if writingpackages and
-                    Tai_datablock(hp).is_global then
-                   ObjData.SymbolDefine(Tai_datablock(hp).sym)
+                    TAIDataBlock(hp).is_global then
+                   ObjData.SymbolDefine(TAIDataBlock(hp).sym)
                  else
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(used_align(size_2_align(Tai_datablock(hp).size),0,ObjData.CurrObjSec.secalign));
-                     ObjData.SymbolDefine(Tai_datablock(hp).sym);
-                     ObjData.alloc(Tai_datablock(hp).size);
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
+                     ObjData.SymbolDefine(TAIDataBlock(hp).sym);
+                     ObjData.alloc(TAIDataBlock(hp).size);
                    end;
                end;
              ait_realconst:
-               ObjData.alloc(tai_realconst(hp).savesize);
+               ObjData.alloc(TAIRealConst(hp).savesize);
              ait_const:
                begin
                  { if symbols are provided we can calculate the value for relative symbols.
                    This is required for length calculation of leb128 constants }
-                 if assigned(tai_const(hp).sym) then
+                 if Assigned(TAIConst(hp).sym) then
                    begin
-                     objsym:=Objdata.SymbolRef(tai_const(hp).sym);
+                     objsym:=Objdata.SymbolRef(TAIConst(hp).sym);
                      { objsym already defined and there is endsym? }
-                     if assigned(objsym.objsection) and assigned(tai_const(hp).endsym) then
+                     if Assigned(objsym.objsection) and Assigned(TAIConst(hp).endsym) then
                        begin
-                         objsymend:=Objdata.SymbolRef(tai_const(hp).endsym);
+                         objsymend:=Objdata.SymbolRef(TAIConst(hp).endsym);
                          { objsymend already defined? }
-                         if assigned(objsymend.objsection) then
+                         if Assigned(objsymend.objsection) then
                            begin
                              if objsymend.objsection<>objsym.objsection then
                                begin
                                  { leb128 relative constants are not relocatable, but other types are,
                                    given that objsym belongs to the current section. }
-                                 if (Tai_const(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
+                                 if (TAIConst(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
                                     (objsym.objsection<>ObjData.CurrObjSec) then
                                    InternalError(200404124);
                                end
 {$push} {$R-}{$Q-}
                              else
-                               Tai_const(hp).value:=objsymend.address-objsym.address+Tai_const(hp).symofs;
+                               TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                            end;
 {$pop}
                        end;
                    end;
-                 ObjData.alloc(tai_const(hp).size);
+                 ObjData.alloc(TAIConst(hp).size);
                end;
              ait_directive:
                begin
-                 case tai_directive(hp).directive of
+                 case TAIDirective(hp).directive of
                    asd_indirect_symbol:
                      { handled in TreePass1 }
                      ;
                    asd_lazy_reference:
                      begin
-                       if tai_directive(hp).name='' then
-                         Internalerror(2009112101);
-                       objsym:=ObjData.symbolref(tai_directive(hp).name);
+                       if TAIDirective(hp).name='' then
+                         InternalError(2009112101);
+                       objsym:=ObjData.symbolref(TAIDirective(hp).name);
                        objsym.bind:=AB_LAZY;
                      end;
                    asd_reference:
@@ -1706,8 +1706,8 @@ Implementation
                    asd_cpu:
                      begin
                        ObjData.CPUType:=cpu_none;
-                       for cpu:=low(tcputype) to high(tcputype) do
-                         if cputypestr[cpu]=tai_directive(hp).name then
+                       for cpu:=low(TCPUType) to high(TCPUType) do
+                         if CPUTypeStr[cpu]=TAIDirective(hp).name then
                            begin
                              ObjData.CPUType:=cpu;
                              break;
@@ -1715,9 +1715,9 @@ Implementation
                      end;
                    asd_weak_definition:
                      begin
-                       if tai_directive(hp).name='' then
-                         Internalerror(2022040901);
-                       objsym:=ObjData.symbolref(tai_directive(hp).name);
+                       if TAIDirective(hp).name='' then
+                         InternalError(2022040901);
+                       objsym:=ObjData.symbolref(TAIDirective(hp).name);
                        objsym.bind:=AB_WEAK;
                      end;
 {$ifdef OMFOBJSUPPORT}
@@ -1726,16 +1726,16 @@ Implementation
                      ;
 {$endif OMFOBJSUPPORT}
                    else
-                     internalerror(2010011101);
+                     InternalError(2010011101);
                  end;
                end;
              ait_section:
                begin
-                 if Tai_section(hp).sectype=sec_user then
-                   ObjData.CreateSection(Tai_section(hp).sectype,Tai_section(hp).secflags,Tai_section(hp).secprogbits,Tai_section(hp).name^,Tai_section(hp).secorder)
+                 if TAISection(hp).sectype=sec_user then
+                   ObjData.CreateSection(TAISection(hp).sectype,TAISection(hp).secflags,TAISection(hp).secprogbits,TAISection(hp).name^,TAISection(hp).secorder)
                  else
-                   ObjData.CreateSection(Tai_section(hp).sectype,Tai_section(hp).name^,Tai_section(hp).secorder);
-                 Tai_section(hp).sec:=ObjData.CurrObjSec;
+                   ObjData.CreateSection(TAISection(hp).sectype,TAISection(hp).name^,TAISection(hp).secorder);
+                 TAISection(hp).sec:=ObjData.CurrObjSec;
                end;
              ait_symbol :
                begin
@@ -1743,20 +1743,20 @@ Implementation
                  { the value is just ignored }
                  {if tai_symbol(hp).has_value then
                       internalerror(2009090804); ;}
-                 ObjData.SymbolDefine(Tai_symbol(hp).sym);
+                 ObjData.SymbolDefine(TAISymbol(hp).sym);
                end;
              ait_symbolpair :
-               with tai_symbolpair(hp) do
+               with TAISymbolPair(hp) do
                  ObjData.SymbolPairDefine(kind,sym^,value^);
              ait_label :
-               ObjData.SymbolDefine(Tai_label(hp).labsym);
+               ObjData.SymbolDefine(TAILabel(hp).labsym);
              ait_string :
-               ObjData.alloc(Tai_string(hp).len);
+               ObjData.alloc(TAIString(hp).len);
              ait_instruction :
                begin
                  { reset instructions which could change in pass 2 }
-                 Taicpu(hp).resetpass2;
-                 ObjData.alloc(Taicpu(hp).Pass1(ObjData));
+                 TAICPU(hp).resetpass2;
+                 ObjData.alloc(TAICPU(hp).Pass1(ObjData));
                end;
              ait_cutobject :
                if SmartAsm then
@@ -1764,7 +1764,7 @@ Implementation
              ait_eabi_attribute :
                begin
                  eabi_section:=ObjData.findsection('.ARM.attributes');
-                 if not(assigned(eabi_section)) then
+                 if not(Assigned(eabi_section)) then
                    begin
                      TmpSection:=ObjData.CurrObjSec;
                      ObjData.CreateSection(sec_arm_attribute,[],SPB_ARM_ATTRIBUTES,'',secorder_default);
@@ -1773,57 +1773,57 @@ Implementation
                    end;
                  if eabi_section.Size=0 then
                    eabi_section.alloc(16);
-                 eabi_section.alloc(LengthUleb128(tai_attribute(hp).tag));
-                 case tai_attribute(hp).eattr_typ of
+                 eabi_section.alloc(LengthULEB128(TAIAttribute(hp).tag));
+                 case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
-                     eabi_section.alloc(LengthUleb128(tai_attribute(hp).value));
+                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).value));
                    eattrtype_ntbs:
-                     if assigned(tai_attribute(hp).valuestr) then
-                       eabi_section.alloc(Length(tai_attribute(hp).valuestr^)+1)
+                     if Assigned(TAIAttribute(hp).valuestr) then
+                       eabi_section.alloc(Length(TAIAttribute(hp).valuestr^)+1)
                      else
                        eabi_section.alloc(1);
                    else
-                     Internalerror(2019100701);
+                     InternalError(2019100701);
                  end;
                end;
              else
                ;
            end;
-           hp:=Tai(hp.next);
+           hp:=TAI(hp.next);
          end;
         TreePass0:=hp;
       end;
 
 
-    function TInternalAssembler.TreePass1(hp:Tai):Tai;
+    function TInternalAssembler.TreePass1(hp:TAI):TAI;
       var
         objsym,
         objsymend : TObjSymbol;
-        cpu: tcputype;
+        cpu: TCPUType;
         eabi_section: TObjSection;
       begin
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             CurrentFilePos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=TAILineInfo(hp).fileinfo;
 {$endif DEBUG}
            case hp.typ of
              ait_align :
                begin
-                 if tai_align_abstract(hp).aligntype>1 then
+                 if TAIAlignAbstract(hp).aligntype>1 then
                    begin
                      { here we must determine the fillsize which is used in pass2 }
-                     Tai_align_abstract(hp).fillsize:=align(ObjData.CurrObjSec.Size,Tai_align_abstract(hp).aligntype)-
+                     TAIAlignAbstract(hp).fillsize:=align(ObjData.CurrObjSec.Size,TAIAlignAbstract(hp).aligntype)-
                        ObjData.CurrObjSec.Size;
 
                      { maximum number of bytes for alignment exceeded? }
-                     if (Tai_align_abstract(hp).aligntype<>Tai_align_abstract(hp).maxbytes) and
-                       (Tai_align_abstract(hp).fillsize>Tai_align_abstract(hp).maxbytes) then
-                       Tai_align_abstract(hp).fillsize:=align(ObjData.CurrObjSec.Size,Byte(Tai_align_abstract(hp).aligntype div 2))-
+                     if (TAIAlignAbstract(hp).aligntype<>TAIAlignAbstract(hp).maxbytes) and
+                       (TAIAlignAbstract(hp).fillsize>TAIAlignAbstract(hp).maxbytes) then
+                       TAIAlignAbstract(hp).fillsize:=align(ObjData.CurrObjSec.Size,Byte(TAIAlignAbstract(hp).aligntype div 2))-
                          ObjData.CurrObjSec.Size;
 
-                     ObjData.alloc(Tai_align_abstract(hp).fillsize);
+                     ObjData.alloc(TAIAlignAbstract(hp).fillsize);
                    end;
                end;
              ait_datablock :
@@ -1833,90 +1833,90 @@ Implementation
                    Message(asmw_e_alloc_data_only_in_bss);
 {$ifdef USE_COMM_IN_BSS}
                  if writingpackages and
-                    Tai_datablock(hp).is_global then
+                    TAIDataBlock(hp).is_global then
                    begin
-                     objsym:=ObjData.SymbolDefine(Tai_datablock(hp).sym);
-                     objsym.size:=Tai_datablock(hp).size;
+                     objsym:=ObjData.SymbolDefine(TAIDataBlock(hp).sym);
+                     objsym.size:=TAIDataBlock(hp).size;
                      objsym.bind:=AB_COMMON;
                      objsym.alignment:=needtowritealignmentalsoforELF;
                    end
                  else
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(used_align(size_2_align(Tai_datablock(hp).size),0,ObjData.CurrObjSec.secalign));
-                     objsym:=ObjData.SymbolDefine(Tai_datablock(hp).sym);
-                     objsym.size:=Tai_datablock(hp).size;
-                     ObjData.alloc(Tai_datablock(hp).size);
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
+                     objsym:=ObjData.SymbolDefine(TAIDataBlock(hp).sym);
+                     objsym.size:=TAIDataBlock(hp).size;
+                     ObjData.alloc(TAIDataBlock(hp).size);
                    end;
                end;
              ait_realconst:
-               ObjData.alloc(tai_realconst(hp).savesize);
+               ObjData.alloc(TAIRealConst(hp).savesize);
              ait_const:
                begin
                  { Recalculate relative symbols }
-                 if assigned(tai_const(hp).sym) and
-                    assigned(tai_const(hp).endsym) then
+                 if Assigned(TAIConst(hp).sym) and
+                    Assigned(TAIConst(hp).endsym) then
                    begin
-                     objsym:=Objdata.SymbolRef(tai_const(hp).sym);
-                     objsymend:=Objdata.SymbolRef(tai_const(hp).endsym);
-                     if Tai_const(hp).consttype in [aitconst_gottpoff,aitconst_tlsgd,aitconst_tlsdesc] then
+                     objsym:=Objdata.SymbolRef(TAIConst(hp).sym);
+                     objsymend:=Objdata.SymbolRef(TAIConst(hp).endsym);
+                     if TAIConst(hp).consttype in [aitconst_gottpoff,aitconst_tlsgd,aitconst_tlsdesc] then
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
-                           Internalerror(2019092801);
-                         Tai_const(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+Tai_const(hp).symofs;
+                           InternalError(2019092801);
+                         TAIConst(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
                        end
                      else if objsymend.objsection<>objsym.objsection then
                        begin
-                         if (Tai_const(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
+                         if (TAIConst(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
                             (objsym.objsection<>ObjData.CurrObjSec) then
-                           internalerror(200905042);
+                           InternalError(200905042);
                        end
 {$push} {$R-}{$Q-}
                      else
-                       Tai_const(hp).value:=objsymend.address-objsym.address+Tai_const(hp).symofs;
+                       TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                    end;
 {$pop}
-                 if (Tai_const(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) then
-                   Tai_const(hp).fixsize;
-                 ObjData.alloc(tai_const(hp).size);
+                 if (TAIConst(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) then
+                   TAIConst(hp).fixsize;
+                 ObjData.alloc(TAIConst(hp).size);
                end;
              ait_section:
                begin
                  { use cached value }
-                 ObjData.setsection(Tai_section(hp).sec);
+                 ObjData.setsection(TAISection(hp).sec);
                end;
              ait_stab :
                begin
-                 if assigned(Tai_stab(hp).str) then
-                   WriteStab(Tai_stab(hp).str);
+                 if Assigned(TAIStab(hp).str) then
+                   WriteStab(TAIStab(hp).str);
                end;
              ait_symbol :
-               ObjData.SymbolDefine(Tai_symbol(hp).sym);
+               ObjData.SymbolDefine(TAISymbol(hp).sym);
              ait_symbol_end :
                begin
-                 objsym:=ObjData.SymbolRef(Tai_symbol_end(hp).sym);
+                 objsym:=ObjData.SymbolRef(TAISymbolEnd(hp).sym);
                  objsym.size:=ObjData.CurrObjSec.Size-objsym.offset;
                end;
              ait_symbolpair:
-               with tai_symbolpair(hp) do
+               with TAISymbolPair(hp) do
                  ObjData.SymbolPairDefine(kind,sym^,value^);
              ait_label :
-               ObjData.SymbolDefine(Tai_label(hp).labsym);
+               ObjData.SymbolDefine(TAILabel(hp).labsym);
              ait_string :
-               ObjData.alloc(Tai_string(hp).len);
+               ObjData.alloc(TAIString(hp).len);
              ait_instruction :
-               ObjData.alloc(Taicpu(hp).Pass1(ObjData));
+               ObjData.alloc(TAICPU(hp).Pass1(ObjData));
              ait_cutobject :
                if SmartAsm then
                 break;
              ait_directive :
                begin
-                 case tai_directive(hp).directive of
+                 case TAIDirective(hp).directive of
                    asd_indirect_symbol:
-                     if tai_directive(hp).name='' then
-                       Internalerror(2009101103)
-                     else if not SetIndirectToSymbol(Tai(hp.Previous), tai_directive(hp).name) then
-                       Internalerror(2009101102);
+                     if TAIDirective(hp).name='' then
+                       InternalError(2009101103)
+                     else if not SetIndirectToSymbol(TAI(hp.Previous), TAIDirective(hp).name) then
+                       InternalError(2009101102);
                    asd_lazy_reference:
                      { handled in TreePass0 }
                      ;
@@ -1946,49 +1946,49 @@ Implementation
                    asd_cpu:
                      begin
                        ObjData.CPUType:=cpu_none;
-                       for cpu:=low(tcputype) to high(tcputype) do
-                         if cputypestr[cpu]=tai_directive(hp).name then
+                       for cpu:=low(TCPUType) to high(TCPUType) do
+                         if CPUTypeStr[cpu]=TAIDirective(hp).name then
                            begin
                              ObjData.CPUType:=cpu;
                              break;
                            end;
                      end;
                    else
-                     internalerror(2010011102);
+                     InternalError(2010011102);
                  end;
                end;
              ait_eabi_attribute :
                begin
                  eabi_section:=ObjData.findsection('.ARM.attributes');
-                 if not(assigned(eabi_section)) then
-                   Internalerror(2019100702);
+                 if not(Assigned(eabi_section)) then
+                   InternalError(2019100702);
                  if eabi_section.Size=0 then
                    eabi_section.alloc(16);
-                 eabi_section.alloc(LengthUleb128(tai_attribute(hp).tag));
-                 case tai_attribute(hp).eattr_typ of
+                 eabi_section.alloc(LengthULEB128(TAIAttribute(hp).tag));
+                 case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
-                     eabi_section.alloc(LengthUleb128(tai_attribute(hp).value));
+                     eabi_section.alloc(LengthULEB128(TAIAttribute(hp).value));
                    eattrtype_ntbs:
-                     if assigned(tai_attribute(hp).valuestr) then
-                       eabi_section.alloc(Length(tai_attribute(hp).valuestr^)+1)
+                     if Assigned(TAIAttribute(hp).valuestr) then
+                       eabi_section.alloc(Length(TAIAttribute(hp).valuestr^)+1)
                      else
                        eabi_section.alloc(1);
                    else
-                     Internalerror(2019100703);
+                     InternalError(2019100703);
                  end;
                end;
              else
                ;
            end;
-           hp:=Tai(hp.next);
+           hp:=TAI(hp.next);
          end;
         TreePass1:=hp;
       end;
 
 
-    function TInternalAssembler.TreePass2(hp:Tai):Tai;
+    function TInternalAssembler.TreePass2(hp:TAI):TAI;
       var
-        fillbuffer : tfillbuffer;
+        fillbuffer : TFillBuffer;
         leblen : byte;
         lebbuf : array[0..63] of byte;
         objsym,
@@ -1997,13 +1997,13 @@ Implementation
         zerobuf : array[0..63] of byte;
         relative_reloc: boolean;
         pdata : pointer;
-	real_byte_count, index : longint;
+	real_byte_count, index : LongInt;
         ssingle : single;
         ddouble : double;
-        eextended: bestreal;
+        eextended: BestReal;
         ccomp: Int64;
         tmp    : word;
-        cpu: tcputype;
+        cpu: TCPUType;
         ddword : dword;
         b : byte;
         w : word;
@@ -2018,122 +2018,122 @@ Implementation
         fillchar(objsymend,sizeof(objsymend),0);
 
         { main loop }
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             CurrentFilePos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=TAILineInfo(hp).fileinfo;
 {$endif DEBUG}
            case hp.typ of
              ait_align :
                begin
-                 if tai_align_abstract(hp).aligntype>ObjData.CurrObjSec.secalign then
+                 if TAIAlignAbstract(hp).aligntype>ObjData.CurrObjSec.secalign then
                    InternalError(2012072301);
                  if oso_data in ObjData.CurrObjSec.secoptions then
-                   ObjData.writebytes(Tai_align_abstract(hp).calculatefillbuf(fillbuffer,oso_executable in ObjData.CurrObjSec.secoptions)^,
-                     Tai_align_abstract(hp).fillsize)
+                   ObjData.writebytes(TAIAlignAbstract(hp).calculatefillbuf(fillbuffer,oso_executable in ObjData.CurrObjSec.secoptions)^,
+                     TAIAlignAbstract(hp).fillsize)
                  else
-                   ObjData.alloc(Tai_align_abstract(hp).fillsize);
+                   ObjData.alloc(TAIAlignAbstract(hp).fillsize);
                end;
              ait_section :
                begin
                  { use cached value }
-                 ObjData.setsection(Tai_section(hp).sec);
+                 ObjData.setsection(TAISection(hp).sec);
                end;
              ait_symbol :
                begin
-                 ObjOutput.exportsymbol(ObjData.SymbolRef(Tai_symbol(hp).sym));
+                 ObjOutput.exportsymbol(ObjData.SymbolRef(TAISymbol(hp).sym));
                end;
             ait_symbol_end :
                begin
                  { recalculate size, as some preceding instructions
                    could have been changed to smaller size }
-                 objsym:=ObjData.SymbolRef(Tai_symbol_end(hp).sym);
+                 objsym:=ObjData.SymbolRef(TAISymbolEnd(hp).sym);
                  objsym.size:=ObjData.CurrObjSec.Size-objsym.offset;
                end;
              ait_datablock :
                begin
-                 ObjOutput.exportsymbol(ObjData.SymbolRef(Tai_datablock(hp).sym));
+                 ObjOutput.exportsymbol(ObjData.SymbolRef(TAIDataBlock(hp).sym));
 {$ifdef USE_COMM_IN_BSS}
                  if not(writingpackages and
-                        Tai_datablock(hp).is_global) then
+                        TAIDataBlock(hp).is_global) then
 {$endif USE_COMM_IN_BSS}
                    begin
-                     ObjData.allocalign(used_align(size_2_align(Tai_datablock(hp).size),0,ObjData.CurrObjSec.secalign));
-                     ObjData.alloc(Tai_datablock(hp).size);
+                     ObjData.allocalign(Used_Align(Size_2_Align(TAIDataBlock(hp).size),0,ObjData.CurrObjSec.secalign));
+                     ObjData.alloc(TAIDataBlock(hp).size);
                    end;
                end;
              ait_realconst:
                begin
-                 real_byte_count:=tai_realconst(hp).datasize;
-                 case tai_realconst(hp).realtyp of
+                 real_byte_count:=TAIRealConst(hp).DataSize;
+                 case TAIRealConst(hp).realtyp of
                    aitrealconst_s32bit:
                      begin
-                       ssingle:=tai_realconst(hp).value.s32val;
+                       ssingle:=TAIRealConst(hp).value.s32val;
                        pdata:=@ssingle;
                      end;
                    aitrealconst_s64bit:
                      begin
-                       ddouble:=tai_realconst(hp).value.s64val;
+                       ddouble:=TAIRealConst(hp).value.s64val;
                        pdata:=@ddouble;
                      end;
                    aitrealconst_s80bit:
                      begin
-                       eextended:=tai_realconst(hp).value.s80val;
+                       eextended:=TAIRealConst(hp).value.s80val;
                        pdata:=@eextended;
                      end;
                    aitrealconst_s64comp:
                      begin
-                       ccomp:=tai_realconst(hp).value.s64compval;
+                       ccomp:=TAIRealConst(hp).value.s64compval;
                        pdata:=@ccomp;
                      end;
                  end;
                  if SourceInfo.endian<>TargetInfo.endian then
                    begin
                      for index:=0 to real_byte_count-1 do
-                       lebbuf[index]:=pbyte(pdata)[real_byte_count-1-index];
+                       lebbuf[index]:=PByte(pdata)[real_byte_count-1-index];
                      pdata:=@lebbuf;
                    end;
                  ObjData.writebytes(pdata^,real_byte_count);
-                 ObjData.writebytes(zerobuf,tai_realconst(hp).savesize-real_byte_count);
+                 ObjData.writebytes(zerobuf,TAIRealConst(hp).savesize-real_byte_count);
                end;
              ait_string :
-               ObjData.writebytes(Tai_string(hp).str,Tai_string(hp).len);
+               ObjData.writebytes(TAIString(hp).str,TAIString(hp).len);
              ait_const :
                begin
                  { Recalculate relative symbols, addresses of forward references
                    can be changed in treepass1 }
                  relative_reloc:=false;
-                 if assigned(tai_const(hp).sym) and
-                    assigned(tai_const(hp).endsym) then
+                 if Assigned(TAIConst(hp).sym) and
+                    Assigned(TAIConst(hp).endsym) then
                    begin
-                     objsym:=Objdata.SymbolRef(tai_const(hp).sym);
-                     objsymend:=Objdata.SymbolRef(tai_const(hp).endsym);
+                     objsym:=Objdata.SymbolRef(TAIConst(hp).sym);
+                     objsymend:=Objdata.SymbolRef(TAIConst(hp).endsym);
                      relative_reloc:=(objsym.objsection<>objsymend.objsection);
-                     if Tai_const(hp).consttype in [aitconst_gottpoff] then
+                     if TAIConst(hp).consttype in [aitconst_gottpoff] then
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
-                           Internalerror(2019092802);
-                         Tai_const(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+Tai_const(hp).symofs;
+                           InternalError(2019092802);
+                         TAIConst(hp).value:=objsymend.address-ObjData.CurrObjSec.Size+TAIConst(hp).symofs;
                        end
-                     else if Tai_const(hp).consttype in [aitconst_tlsgd,aitconst_tlsdesc] then
+                     else if TAIConst(hp).consttype in [aitconst_tlsgd,aitconst_tlsdesc] then
                        begin
                          if objsymend.objsection<>ObjData.CurrObjSec then
-                           Internalerror(2019092803);
-                         Tai_const(hp).value:=ObjData.CurrObjSec.Size-objsymend.address+Tai_const(hp).symofs;
+                           InternalError(2019092803);
+                         TAIConst(hp).value:=ObjData.CurrObjSec.Size-objsymend.address+TAIConst(hp).symofs;
                        end
                      else if objsymend.objsection<>objsym.objsection then
                        begin
-                         if (Tai_const(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
+                         if (TAIConst(hp).consttype in [aitconst_uleb128bit,aitconst_sleb128bit]) or
                             (objsym.objsection<>ObjData.CurrObjSec) then
-                           internalerror(2019010301);
+                           InternalError(2019010301);
                        end
                      else
 {$push} {$R-}{$Q-}
-                       Tai_const(hp).value:=objsymend.address-objsym.address+Tai_const(hp).symofs;
+                       TAIConst(hp).value:=objsymend.address-objsym.address+TAIConst(hp).symofs;
                    end;
 {$pop}
-                 case tai_const(hp).consttype of
+                 case TAIConst(hp).consttype of
                    aitconst_64bit,
                    aitconst_32bit,
                    aitconst_16bit,
@@ -2142,96 +2142,96 @@ Implementation
                    aitconst_16bit_unaligned,
                    aitconst_8bit :
                      begin
-                       if assigned(tai_const(hp).sym) and
-                          not assigned(tai_const(hp).endsym) then
-                         ObjData.writereloc(Tai_const(hp).symofs,tai_const(hp).size,Objdata.SymbolRef(tai_const(hp).sym),RELOC_ABSOLUTE)
+                       if Assigned(TAIConst(hp).sym) and
+                          not Assigned(TAIConst(hp).endsym) then
+                         ObjData.writereloc(TAIConst(hp).symofs,TAIConst(hp).size,Objdata.SymbolRef(TAIConst(hp).sym),RELOC_ABSOLUTE)
                        else if relative_reloc then
-                         ObjData.writereloc(ObjData.CurrObjSec.size+tai_const(hp).size-objsym.address+tai_const(hp).symofs,tai_const(hp).size,objsymend,RELOC_RELATIVE)
+                         ObjData.writereloc(ObjData.CurrObjSec.size+TAIConst(hp).size-objsym.address+TAIConst(hp).symofs,TAIConst(hp).size,objsymend,RELOC_RELATIVE)
                        else
                          if SourceInfo.endian<>TargetInfo.endian then
                            begin
-                             case tai_const(hp).size of
+                             case TAIConst(hp).size of
                                 1 : begin
-                                      b:=byte(Tai_const(hp).value);
+                                      b:=byte(TAIConst(hp).value);
                                       ObjData.writebytes(b,1);
                                     end;
                                 2 : begin
-                                      w:=word(Tai_const(hp).value);
+                                      w:=word(TAIConst(hp).value);
                                       w:=swapendian(w);
                                       ObjData.writebytes(w,2);
                                     end;
                                 4 : begin
-                                      d:=dword(Tai_const(hp).value);
+                                      d:=dword(TAIConst(hp).value);
                                       d:=swapendian(d);
                                       ObjData.writebytes(d,4);
                                     end;
                                 8 : begin
-                                      q:=qword(Tai_const(hp).value);
+                                      q:=qword(TAIConst(hp).value);
                                       q:=swapendian(q);
                                       ObjData.writebytes(q,8);
                                     end;
                              else
-                               internalerror(2024012502);
+                               InternalError(2024012502);
                              end;
                            end
                          else
-                           ObjData.writebytes(Tai_const(hp).value,tai_const(hp).size);
+                           ObjData.writebytes(TAIConst(hp).value,TAIConst(hp).size);
                      end;
                    aitconst_rva_symbol :
                      begin
                        { PE32+? }
                        if TargetInfo.system in systems_peoptplus then
-                         ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_RVA)
+                         ObjData.writereloc(TAIConst(hp).symofs,sizeof(LongInt),Objdata.SymbolRef(TAIConst(hp).sym),RELOC_RVA)
                        else
-                         ObjData.writereloc(Tai_const(hp).symofs,sizeof(pint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_RVA);
+                         ObjData.writereloc(TAIConst(hp).symofs,sizeof(PInt),Objdata.SymbolRef(TAIConst(hp).sym),RELOC_RVA);
                      end;
                    aitconst_secrel32_symbol :
                      begin
                        { Required for DWARF debug information under Windows }
-                       ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_SECREL32);
+                       ObjData.writereloc(TAIConst(hp).symofs,sizeof(LongInt),Objdata.SymbolRef(TAIConst(hp).sym),RELOC_SECREL32);
                      end;
 
                    aitconst_dtpoff:
                      { so far, the size of dtpoff is fixed to 4 bytes }
-                     ObjData.writereloc(Tai_const(hp).symofs,4,Objdata.SymbolRef(tai_const(hp).sym),RELOC_DTPOFF);
+                     ObjData.writereloc(TAIConst(hp).symofs,4,Objdata.SymbolRef(TAIConst(hp).sym),RELOC_DTPOFF);
                    aitconst_gotoff_symbol:
-                     ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_GOTOFF);
+                     ObjData.writereloc(TAIConst(hp).symofs,sizeof(LongInt),Objdata.SymbolRef(TAIConst(hp).sym),RELOC_GOTOFF);
                    aitconst_uleb128bit,
                    aitconst_sleb128bit :
                      begin
-                       if Tai_const(hp).fixed_size=0 then
-                         Internalerror(2019030302);
-                       if tai_const(hp).consttype=aitconst_uleb128bit then
-                         leblen:=EncodeUleb128(qword(Tai_const(hp).value),lebbuf,Tai_const(hp).fixed_size)
+                       if TAIConst(hp).fixed_size=0 then
+                         InternalError(2019030302);
+                       if TAIConst(hp).consttype=aitconst_uleb128bit then
+                         leblen:=EncodeULEB128(qword(TAIConst(hp).value),lebbuf,TAIConst(hp).fixed_size)
                        else
-                         leblen:=EncodeSleb128(Tai_const(hp).value,lebbuf,Tai_const(hp).fixed_size);
-                       if leblen<>tai_const(hp).fixed_size then
-                         internalerror(200709271);
+                         leblen:=EncodeSLEB128(TAIConst(hp).value,lebbuf,TAIConst(hp).fixed_size);
+                       if leblen<>TAIConst(hp).fixed_size then
+                         InternalError(200709271);
                        ObjData.writebytes(lebbuf,leblen);
                      end;
                    aitconst_darwin_dwarf_delta32,
                    aitconst_darwin_dwarf_delta64:
-                     ObjData.writebytes(Tai_const(hp).value,tai_const(hp).size);
+                     ObjData.writebytes(TAIConst(hp).value,TAIConst(hp).size);
                    aitconst_half16bit,
                    aitconst_gs:
                      begin
-                       tmp:=Tai_const(hp).value div 2;
+                       tmp:=TAIConst(hp).value div 2;
                        ObjData.writebytes(tmp,2);
                      end;
                    else
-                     internalerror(200603254);
+                     InternalError(200603254);
                  end;
                end;
              ait_label :
                begin
                  { exporting shouldn't be necessary as labels are local,
                    but it's better to be on the safe side (PFV) }
-                 ObjOutput.exportsymbol(ObjData.SymbolRef(Tai_label(hp).labsym));
+                 ObjOutput.exportsymbol(ObjData.SymbolRef(TAILabel(hp).labsym));
                end;
              ait_instruction :
-               Taicpu(hp).Pass2(ObjData);
+               TAICPU(hp).Pass2(ObjData);
              ait_stab :
-               WriteStab(Tai_stab(hp).str);
+               WriteStab(TAIStab(hp).str);
              ait_function_name,
              ait_force_line : ;
              ait_cutobject :
@@ -2239,11 +2239,11 @@ Implementation
                 break;
              ait_directive :
                begin
-                 case tai_directive(hp).directive of
+                 case TAIDirective(hp).directive of
                    asd_weak_definition,
                    asd_weak_reference:
                      begin
-                       objsym:=ObjData.symbolref(tai_directive(hp).name);
+                       objsym:=ObjData.symbolref(TAIDirective(hp).name);
                        if objsym.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL] then
                          objsym.bind:=AB_WEAK_EXTERNAL
                        else
@@ -2254,8 +2254,8 @@ Implementation
                    asd_cpu:
                      begin
                        ObjData.CPUType:=cpu_none;
-                       for cpu:=low(tcputype) to high(tcputype) do
-                         if cputypestr[cpu]=tai_directive(hp).name then
+                       for cpu:=low(TCPUType) to high(TCPUType) do
+                         if CPUTypeStr[cpu]=TAIDirective(hp).name then
                            begin
                              ObjData.CPUType:=cpu;
                              break;
@@ -2265,8 +2265,8 @@ Implementation
                    asd_omf_linnum_line:
                      begin
                        TOmfObjSection(ObjData.CurrObjSec).LinNumEntries.Add(
-                         TOmfSubRecord_LINNUM_MsLink_Entry.Create(
-                           strtoint(tai_directive(hp).name),
+                         TOMFSubRecordLINNUMMsLinkEntry.Create(
+                           strtoint(TAIDirective(hp).name),
                            ObjData.CurrObjSec.Size
                          ));
                      end;
@@ -2277,10 +2277,10 @@ Implementation
                end;
              ait_symbolpair:
                begin
-                 if tai_symbolpair(hp).kind=spk_set then
+                 if TAISymbolPair(hp).kind=spk_set then
                    begin
-                     objsym:=ObjData.symbolref(tai_symbolpair(hp).sym^);
-                     ref:=objdata.symbolref(tai_symbolpair(hp).value^);
+                     objsym:=ObjData.symbolref(TAISymbolPair(hp).sym^);
+                     ref:=objdata.symbolref(TAISymbolPair(hp).value^);
 
                      objsym.offset:=ref.offset;
                      objsym.objsection:=ref.objsection;
@@ -2288,13 +2288,13 @@ Implementation
                end;
 {$ifndef DISABLE_WIN64_SEH}
              ait_seh_directive :
-               tai_seh_directive(hp).generate_code(objdata);
+               TAISEHDirective(hp).generate_code(objdata);
 {$endif DISABLE_WIN64_SEH}
              ait_eabi_attribute :
                begin
                  eabi_section:=ObjData.findsection('.ARM.attributes');
-                 if not(assigned(eabi_section)) then
-                   Internalerror(2019100704);
+                 if not(Assigned(eabi_section)) then
+                   InternalError(2019100704);
                  if eabi_section.Size=0 then
                    begin
                      s:='A';
@@ -2312,25 +2312,25 @@ Implementation
                        ddword:=SwapEndian(ddword);
                      eabi_section.write(ddword,4);
                    end;
-                 leblen:=EncodeUleb128(tai_attribute(hp).tag,lebbuf,0);
+                 leblen:=EncodeULEB128(TAIAttribute(hp).tag,lebbuf,0);
                  eabi_section.write(lebbuf,leblen);
 
-                 case tai_attribute(hp).eattr_typ of
+                 case TAIAttribute(hp).eattr_typ of
                    eattrtype_dword:
                      begin
-                       leblen:=EncodeUleb128(tai_attribute(hp).value,lebbuf,0);
+                       leblen:=EncodeULEB128(TAIAttribute(hp).value,lebbuf,0);
                        eabi_section.write(lebbuf,leblen);
                      end;
                    eattrtype_ntbs:
                      begin
-                       if assigned(tai_attribute(hp).valuestr) then
-                         s:=tai_attribute(hp).valuestr^+#0
+                       if Assigned(TAIAttribute(hp).valuestr) then
+                         s:=TAIAttribute(hp).valuestr^+#0
                        else
                          s:=#0;
                        eabi_section.write(s[1],Length(s));
                      end
                    else
-                     Internalerror(2019100705);
+                     InternalError(2019100705);
                  end;
                  { update size of attributes section, write directly to the dyn. arrays as
                    we do not increase the size of section }
@@ -2350,7 +2350,7 @@ Implementation
              else
                ;
            end;
-           hp:=Tai(hp.next);
+           hp:=TAI(hp.next);
          end;
         TreePass2:=hp;
       end;
@@ -2360,10 +2360,10 @@ Implementation
       label
         doexit;
       var
-        hp : Tai;
+        hp : TAI;
         ObjWriter : TObjectWriter;
       begin
-        ObjWriter:=TObjectwriter.create;
+        ObjWriter:=TObjectWriter.create;
         ObjOutput:=CObjOutput.Create(ObjWriter);
         ObjData:=ObjOutput.newObjData(ObjFileName);
 
@@ -2374,15 +2374,15 @@ Implementation
         { start with list 1 }
         currlistidx:=1;
         currlist:=list[currlistidx];
-        hp:=Tai(currList.first);
-        while assigned(hp) do
+        hp:=TAI(currList.first);
+        while Assigned(hp) do
          begin
            hp:=TreePass0(hp);
            MaybeNextList(hp);
          end;
         ObjData.afteralloc;
         { leave if errors have occurred }
-        if errorcount>0 then
+        if ErrorCount>0 then
          goto doexit;
 
         { Pass 1 }
@@ -2393,8 +2393,8 @@ Implementation
         { start with list 1 }
         currlistidx:=1;
         currlist:=list[currlistidx];
-        hp:=Tai(currList.first);
-        while assigned(hp) do
+        hp:=TAI(currList.first);
+        while Assigned(hp) do
          begin
            hp:=TreePass1(hp);
            MaybeNextList(hp);
@@ -2403,7 +2403,7 @@ Implementation
         ObjData.afteralloc;
 
         { leave if errors have occurred }
-        if errorcount>0 then
+        if ErrorCount>0 then
          goto doexit;
 
         { Pass 2 }
@@ -2414,8 +2414,8 @@ Implementation
         { start with list 1 }
         currlistidx:=1;
         currlist:=list[currlistidx];
-        hp:=Tai(currList.first);
-        while assigned(hp) do
+        hp:=TAI(currList.first);
+        while Assigned(hp) do
          begin
            hp:=TreePass2(hp);
            MaybeNextList(hp);
@@ -2424,7 +2424,7 @@ Implementation
         ObjData.afterwrite;
 
         { don't write the .o file if errors have occurred }
-        if errorcount=0 then
+        if ErrorCount=0 then
          begin
            { write objectfile }
            ObjOutput.startobjectfile(ObjFileName);
@@ -2442,18 +2442,18 @@ Implementation
 
     procedure TInternalAssembler.writetreesmart;
       var
-        hp : Tai;
+        hp : TAI;
         startsectype : TAsmSectiontype;
-        place: tcutplace;
+        place: TCutPlace;
         ObjWriter : TObjectWriter;
         startsecname: String;
         startsecorder: TAsmSectionOrder;
       begin
-        if not(cs_asm_leave in CurrentSettings.globalswitches) and
+        if not(cs_asm_leave in CurrentSettings.GlobalSwitches) and
            not(af_needar in asminfo^.flags) then
-          ObjWriter:=CInternalAr.CreateAr(CurrentModule.staticlibfilename)
+          ObjWriter:=CInternalAr.CreateAr(CurrentModule.StaticLibFileName)
         else
-          ObjWriter:=TObjectwriter.create;
+          ObjWriter:=TObjectWriter.create;
 
         NextSmartName(cut_normal);
         ObjOutput:=CObjOutput.Create(ObjWriter);
@@ -2464,8 +2464,8 @@ Implementation
         { start with list 1 }
         currlistidx:=1;
         currlist:=list[currlistidx];
-        hp:=Tai(currList.first);
-        while assigned(hp) do
+        hp:=TAI(currList.first);
+        while Assigned(hp) do
          begin
            ObjData:=ObjOutput.newObjData(ObjFileName);
 
@@ -2478,7 +2478,7 @@ Implementation
            TreePass0(hp);
            ObjData.afteralloc;
            { leave if errors have occurred }
-           if errorcount>0 then
+           if ErrorCount>0 then
              break;
 
            { Pass 1 }
@@ -2491,7 +2491,7 @@ Implementation
            ObjData.afteralloc;
 
            { leave if errors have occurred }
-           if errorcount>0 then
+           if ErrorCount>0 then
              break;
 
            { Pass 2 }
@@ -2505,7 +2505,7 @@ Implementation
            ObjData.afterwrite;
 
            { leave if errors have occurred }
-           if errorcount>0 then
+           if ErrorCount>0 then
              break;
 
            { write the current objectfile }
@@ -2521,7 +2521,7 @@ Implementation
            { The place can still change in the next while loop, so don't init }
            { the writer yet (JM)                                              }
            if (hp.typ=ait_cutobject) then
-             place := Tai_cutobject(hp).place
+             place := TAICutObject(hp).place
            else
              place := cut_normal;
 
@@ -2529,18 +2529,18 @@ Implementation
            startsectype:=sec_none;
            startsecname:='';
            startsecorder:=secorder_default;
-           while assigned(hp) and
-                 (Tai(hp).typ in [ait_marker,ait_comment,ait_section,ait_cutobject]) do
+           while Assigned(hp) and
+                 (TAI(hp).typ in [ait_marker,ait_comment,ait_section,ait_cutobject]) do
             begin
-              if Tai(hp).typ=ait_section then
+              if TAI(hp).typ=ait_section then
                 begin
-                  startsectype:=Tai_section(hp).sectype;
-                  startsecname:=Tai_section(hp).name^;
-                  startsecorder:=Tai_section(hp).secorder;
+                  startsectype:=TAISection(hp).sectype;
+                  startsecname:=TAISection(hp).name^;
+                  startsecorder:=TAISection(hp).secorder;
                 end;
-              if (Tai(hp).typ=ait_cutobject) then
-                place:=Tai_cutobject(hp).place;
-              hp:=Tai(hp.next);
+              if (TAI(hp).typ=ait_cutobject) then
+                place:=TAICutObject(hp).place;
+              hp:=TAI(hp.next);
             end;
 
            if not MaybeNextList(hp) then
@@ -2558,8 +2558,8 @@ Implementation
 
     procedure TInternalAssembler.MakeObject;
 
-    var to_do:set of TasmlistType;
-        i:TasmlistType;
+    var to_do:set of TAsmListType;
+        i:TAsmListType;
 
         procedure addlist(p:TAsmList);
         begin
@@ -2568,12 +2568,12 @@ Implementation
         end;
 
       begin
-        to_do:=[low(Tasmlisttype)..high(Tasmlisttype)];
-        if usedeffileforexports then
+        to_do:=[low(TAsmListType)..high(TAsmListType)];
+        if UseDefFileForExports then
           exclude(to_do,al_exports);
         if not(tf_section_threadvars in TargetInfo.flags) then
           exclude(to_do,al_threadvars);
-        for i:=low(TasmlistType) to high(TasmlistType) do
+        for i:=low(TAsmListType) to high(TAsmListType) do
           if (i in to_do) and (CurrentAsmData.asmlists[i]<>nil) and
              (not CurrentAsmData.asmlists[i].empty) then
             addlist(CurrentAsmData.asmlists[i]);
@@ -2593,7 +2593,7 @@ Implementation
       var
         a : TAssembler;
       begin
-        if not assigned(CAssembler[TargetAsm.id]) then
+        if not Assigned(CAssembler[TargetAsm.id]) then
           Message(asmw_f_assembler_output_not_supported);
         a:=CAssembler[TargetAsm.id].Create(@TargetAsm,smart);
         a.MakeObject;
@@ -2604,16 +2604,16 @@ Implementation
 
     function GetExternalGnuAssemblerWithAsmInfoWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
       var
-        asmkind: tasm;
+        asmkind: TAsm;
       begin
         for asmkind in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin] do
-          if assigned(asminfos[asmkind]) and
+          if Assigned(asminfos[asmkind]) and
              (TargetInfo.system in asminfos[asmkind]^.supported_targets) then
             begin
               result:=TExternalAssemblerClass(CAssembler[asmkind]).CreateWithWriter(asminfos[asmkind],wr,false,false);
               exit;
             end;
-        Internalerror(2015090604);
+        InternalError(2015090604);
       end;
 
 {*****************************************************************************
@@ -2622,11 +2622,11 @@ Implementation
 
     procedure RegisterAssembler(const r:TAsmInfo;c:TAssemblerClass);
       var
-        t : tasm;
+        t : TAsm;
       begin
         t:=r.id;
-        if assigned(asminfos[t]) then
-          writeln('Warning: Assembler is already registered!')
+        if Assigned(asminfos[t]) then
+          WriteLn('Warning: Assembler is already registered!')
         else
           new(asminfos[t]);
         asminfos[t]^:=r;

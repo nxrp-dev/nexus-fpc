@@ -6,13 +6,13 @@ uses
  ImpDef;
 var
 binname:string;
-function Ofound(const short,full:string):longint;
+function Ofound(const short,full:string):LongInt;
 var
-  i:longint;
+  i:LongInt;
 begin
   Ofound:=-1;
   for i:=1 to ParamCount do
-   if(paramstr(i)=short)or(paramstr(i)=full)then
+   if(ParamStr(i)=short)or(ParamStr(i)=full)then
     begin
      Ofound:=i;
      exit;
@@ -20,11 +20,11 @@ begin
 end;
 function GetOption(const short,full:string):string;
 var
-  i:longint;
+  i:LongInt;
 begin
   i:=Ofound(short,full);
   if i>0 then
-   GetOption:=paramstr(succ(i))
+   GetOption:=ParamStr(succ(i))
   else
    GetOption:='';
 end;
@@ -33,28 +33,28 @@ var
   fn:string[255];
   jj:cardinal;
 begin
-  fn:=paramstr(0);
+  fn:=ParamStr(0);
   for jj:=length(fn)downto 1 do
    if fn[jj] in [':','\','/']then
     begin
      fn:=copy(fn,succ(jj),255);
      break;
     end;
-  writeln('Usage: ',fn,' [options]');
-  writeln('Options:');
-  writeln('-i | --input     <file> - set input file;');
-  writeln('-o | --output    <file> - set output .def file');
-  writeln('-l | --library   <file> - set output static library');
-  writeln('-s | --assembler <name> - use <name> for assembler (default asw)');
-  writeln('-r | --archiver  <name> - use <name> for archiver (default arw)');
-  writeln('-h | --help             - show this screen');
+  WriteLn('Usage: ',fn,' [options]');
+  WriteLn('Options:');
+  WriteLn('-i | --input     <file> - set input file;');
+  WriteLn('-o | --output    <file> - set output .def file');
+  WriteLn('-l | --library   <file> - set output static library');
+  WriteLn('-s | --assembler <name> - use <name> for assembler (default asw)');
+  WriteLn('-r | --archiver  <name> - use <name> for archiver (default arw)');
+  WriteLn('-h | --help             - show this screen');
   halt;
 end;
 {$ifndef UNIX}
 procedure AddExt(var s:string);
  var
   s1:string;
-  i:longint;
+  i:LongInt;
  begin
   s1:=copy(s,length(s)-3,4);
   for i:=1 to length(s1)do
@@ -86,7 +86,7 @@ if(binname='')or(Ofound('-h','--help')>0)then
  ar_name:=FSearch(ar_name,EnvPath);
 if not makedef(binname,GetOption('-o','--output'),GetOption('-l','--library'))then
   begin
-   writeln('Export names not found');
+   WriteLn('Export names not found');
    halt(1);
   end;
 end.

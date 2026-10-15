@@ -49,15 +49,15 @@ interface
 uses LexBase, LexTable;
 
 
-procedure addExpr(r : RegExpr; var FIRST : IntSet);
+procedure AddExpr(R : PRegExpr; var First : TIntSet);
   (* Add the positions in r to the position table, and return the set of
      first positions of r. *)
 
 implementation
 
-procedure eval(r : RegExpr;
-               var FIRST, LAST : IntSet;
-               var nullable : Boolean);
+procedure Eval(R : PRegExpr;
+               var First, Last : TIntSet;
+               var Nullable : Boolean);
   (* Evaluates the expression r, adding the positions in r to the position
      table and assigning FIRST, LAST and FOLLOW sets accordingly (cf. Aho/
      Sethi/Ullman, Compilers : Principles, Techniques and Tools, Section 3.9).
@@ -67,100 +67,100 @@ procedure eval(r : RegExpr;
      - nullable: denotes whether the r is nullable (i.e. is matched by the
        empty string). *)
   var
-    c : Char;
-    str : StrPtr;
-    cc : CClassPtr;
-    rule, pos : Integer;
-    r1, r2 : RegExpr;
-    FIRST1, LAST1 : IntSet;
-    nullable1 : Boolean;
-    i : integer;
+    C : Char;
+    Str : PStr;
+    CC : PCClass;
+    Rule, POS : Integer;
+    R1, R2 : PRegExpr;
+    First1, Last1 : TIntSet;
+    Nullable1 : Boolean;
+    I : Integer;
   begin
-    if is_epsExpr(r) then
+    if IsEpsExpr(R) then
       begin
-        empty(FIRST); empty(LAST);
-        nullable := true
+        Empty(First); Empty(Last);
+        Nullable := True
       end
-    else if is_markExpr(r, rule, pos) then
+    else if IsMarkExpr(R, Rule, POS) then
       begin
-        addMarkPos(rule, pos);
-        singleton(FIRST, n_pos); singleton(LAST, n_pos);
-        nullable := true
+        AddMarkPos(Rule, POS);
+        Singleton(First, NPos); Singleton(Last, NPos);
+        Nullable := True
       end
-    else if is_charExpr(r, c) then
+    else if IsCharExpr(R, C) then
       begin
-        addCharPos(c);
-        singleton(FIRST, n_pos); singleton(LAST, n_pos);
-        nullable := false
+        AddCharPos(C);
+        Singleton(First, NPos); Singleton(Last, NPos);
+        Nullable := False
       end
-    else if is_strExpr(r, str) then
-      if length(str^)=0 then
+    else if IsStrExpr(R, Str) then
+      if Length(Str^)=0 then
         (* empty string is treated as empty expression *)
         begin
-          empty(FIRST); empty(LAST);
-          nullable := true
+          Empty(First); Empty(Last);
+          Nullable := True
         end
       else
         begin
-          addCharPos(str^[1]);
-          singleton(FIRST, n_pos);
-          for i := 2 to length(str^) do
+          AddCharPos(Str^[1]);
+          Singleton(First, NPos);
+          for I := 2 to Length(Str^) do
             begin
-              addCharPos(str^[i]);
-              singleton(pos_table^[pred(n_pos)].follow_pos^, n_pos);
+              AddCharPos(Str^[I]);
+              Singleton(PosTable^[Pred(NPos)].FollowPos^, NPos);
             end;
-          singleton(LAST, n_pos);
-          nullable := false
+          Singleton(Last, NPos);
+          Nullable := False
         end
-    else if is_CClassExpr(r, cc) then
+    else if IsCClassExpr(R, CC) then
       begin
-        addCClassPos(cc);
-        singleton(FIRST, n_pos); singleton(LAST, n_pos);
-        nullable := false
+        AddCClassPos(CC);
+        Singleton(First, NPos); Singleton(Last, NPos);
+        Nullable := False
       end
-    else if is_starExpr(r, r1) then
+    else if IsStarExpr(R, R1) then
       begin
-        eval(r1, FIRST, LAST, nullable);
-        for i := 1 to size(LAST) do
-          setunion(pos_table^[LAST[i]].follow_pos^, FIRST);
-        nullable := true
+        Eval(R1, First, Last, Nullable);
+        for I := 1 to Size(Last) do
+          SetUnion(PosTable^[Last[I]].FollowPos^, First);
+        Nullable := True
       end
-    else if is_plusExpr(r, r1) then
+    else if IsPlusExpr(R, R1) then
       begin
-        eval(r1, FIRST, LAST, nullable);
-        for i := 1 to size(LAST) do
-          setunion(pos_table^[LAST[i]].follow_pos^, FIRST);
+        Eval(R1, First, Last, Nullable);
+        for I := 1 to Size(Last) do
+          SetUnion(PosTable^[Last[I]].FollowPos^, First);
       end
-    else if is_optExpr(r, r1) then
+    else if IsOptExpr(R, R1) then
       begin
-        eval(r1, FIRST, LAST, nullable);
-        nullable := true
+        Eval(R1, First, Last, Nullable);
+        Nullable := True
       end
-    else if is_catExpr(r, r1, r2) then
+    else if IsCatExpr(R, R1, R2) then
       begin
-        eval(r1, FIRST, LAST1, nullable);
-        eval(r2, FIRST1, LAST, nullable1);
-        for i := 1 to size(LAST1) do
-          setunion(pos_table^[LAST1[i]].follow_pos^, FIRST1);
-        if nullable then setunion(FIRST, FIRST1);
-        if nullable1 then setunion(LAST, LAST1);
-        nullable := nullable and nullable1
+        Eval(R1, First, Last1, Nullable);
+        Eval(R2, First1, Last, Nullable1);
+        for I := 1 to Size(Last1) do
+          SetUnion(PosTable^[Last1[I]].FollowPos^, First1);
+        if Nullable then SetUnion(First, First1);
+        if Nullable1 then SetUnion(Last, Last1);
+        Nullable := Nullable and Nullable1
       end
-    else if is_altExpr(r, r1, r2) then
+    else if IsAltExpr(R, R1, R2) then
       begin
-        eval(r1, FIRST, LAST, nullable);
-        eval(r2, FIRST1, LAST1, nullable1);
-        setunion(FIRST, FIRST1);
-        setunion(LAST, LAST1);
-        nullable := nullable or nullable1
+        Eval(R1, First, Last, Nullable);
+        Eval(R2, First1, Last1, Nullable1);
+        SetUnion(First, First1);
+        SetUnion(Last, Last1);
+        Nullable := Nullable or Nullable1
       end
   end(*eval*);
 
-procedure addExpr(r : RegExpr; var FIRST : IntSet);
-  var LAST : IntSet;
-      nullable : Boolean;
+procedure AddExpr(R : PRegExpr; var First : TIntSet);
+  var Last : TIntSet;
+      Nullable : Boolean;
   begin
-    eval(r, FIRST, LAST, nullable);
+    Eval(R, First, Last, Nullable);
   end(*addExpr*);
 
 end(*LexPos*).

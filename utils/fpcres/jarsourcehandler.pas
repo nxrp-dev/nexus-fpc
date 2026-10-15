@@ -14,17 +14,17 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit jarsourcehandler;
+unit JarSourceHandler;
 
 {$MODE OBJFPC} {$H+}
 
 interface
 
 uses
-  Classes, SysUtils, sourcehandler, zipper;
+  Classes, SysUtils, SourceHandler, Zipper;
 
 const
-  resbasedir = 'org'+DirectorySeparator+'freepascal'+DirectorySeparator+'rawresources'+DirectorySeparator;
+  ResBaseDir = 'org'+DirectorySeparator+'freepascal'+DirectorySeparator+'rawresources'+DirectorySeparator;
 
 type
   ESourceFilesException = class(Exception);
@@ -39,38 +39,38 @@ type
   private
   protected
   public
-    procedure Load(aResources : TZipper);reintroduce;
+    procedure Load(AResources : TZipper);reintroduce;
   end;
 
 implementation
 
-uses msghandler, closablefilestream;
+uses MsgHandler, ClosableFileStream;
 
 { TJarSourceFiles }
 
-procedure TJarSourceFiles.Load(aResources: TZipper);
-var aStream : TClosableFileStream;
-    i : integer;
+procedure TJarSourceFiles.Load(AResources: TZipper);
+var AStream : TClosableFileStream;
+    I : Integer;
 begin
-  if fFileList.Count<>0 then
+  if FFileList.Count<>0 then
     begin
-      aResources.Entries.AddFileEntry('org/');
-      aResources.Entries.AddFileEntry('org/freepascal/');
-      aResources.Entries.AddFileEntry(resbasedir);
+      AResources.Entries.AddFileEntry('org/');
+      AResources.Entries.AddFileEntry('org/freepascal/');
+      AResources.Entries.AddFileEntry(ResBaseDir);
     end;
   try
-    for i:=0 to fFileList.Count-1 do
+    for I:=0 to FFileList.Count-1 do
     begin
-      Messages.DoVerbose(Format('Trying to open file %s...',[fFileList[i]]));
+      Messages.DoVerbose(Format('Trying to open file %s...',[FFileList[I]]));
       try
-        aStream:=TClosableFileStream.Create(fFileList[i],fmOpenRead or fmShareDenyWrite);
+        AStream:=TClosableFileStream.Create(FFileList[I],fmOpenRead or fmShareDenyWrite);
       except
-        raise ECantOpenFileException.Create(fFileList[i]);
+        raise ECantOpenFileException.Create(FFileList[I]);
       end;
-      astream.Free;
-      aResources.Entries.AddFileEntry(fFileList[i],resbasedir+fFileList[i]);
+      AStream.Free;
+      AResources.Entries.AddFileEntry(FFileList[I],ResBaseDir+FFileList[I]);
     end;
-    Messages.DoVerbose(Format('%d resources read.',[aResources.Entries.Count]));
+    Messages.DoVerbose(Format('%d resources read.',[AResources.Entries.Count]));
   finally
   end;
 end;

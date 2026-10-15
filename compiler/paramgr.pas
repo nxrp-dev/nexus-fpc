@@ -28,11 +28,11 @@ unit paramgr;
   interface
 
     uses
-       globtype,
+       GlobType,
        cpubase,cgbase,cgutils,
        parabase,
-       aasmdata,
-       symconst,symtype,symsym,symdef;
+       AAsmData,
+       symconst,symtype,SymSym,symdef;
 
     type
        {# This class defines some methods to take care of routine
@@ -41,9 +41,9 @@ unit paramgr;
 
        { tparamanager }
 
-       tparamanager = class
+       TParaManager = class
           { true if the location in paraloc can be reused as localloc }
-          function param_use_paraloc(const cgpara:tcgpara):boolean;virtual;
+          function param_use_paraloc(const cgpara:TCGPara):boolean;virtual;
           { Returns true if the return value is actually a parameter pointer }
           function ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;virtual;
           { Returns true if a result variable should be allocated for an assembler routine }
@@ -61,7 +61,7 @@ unit paramgr;
           }
           function push_copyout_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
           { return the size of a push }
-          function push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : longint;virtual;
+          function push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;virtual;
           {# Returns a structure giving the information on
             the storage of the parameter (which must be
             an integer parameter). This is only used when calling
@@ -77,11 +77,11 @@ unit paramgr;
             @param(nr Parameter number of routine, starting from 1)
           }
           function get_para_align(calloption : TProcCallOption):byte;virtual;
-          function get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;virtual;
-          function get_volatile_registers_address(calloption : TProcCallOption):tcpuregisterset;virtual;
-          function get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;virtual;
-          function get_volatile_registers_flags(calloption : TProcCallOption):tcpuregisterset;virtual;
-          function get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;virtual;
+          function get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;virtual;
+          function get_volatile_registers_address(calloption : TProcCallOption):TCPURegisterSet;virtual;
+          function get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;virtual;
+          function get_volatile_registers_flags(calloption : TProcCallOption):TCPURegisterSet;virtual;
+          function get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;virtual;
           {# Registers which must be saved when calling a routine declared as
             cppdecl, cdecl, stdcall, safecall, palmossyscall. The registers
             saved should be the ones as defined in the target ABI and / or GCC.
@@ -89,21 +89,21 @@ unit paramgr;
             This value can be deduced from the CALLED_USED_REGISTERS array in the
             GCC source.
           }
-          function get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;virtual;
-          function get_saved_registers_address(calloption : TProcCallOption):tcpuregisterarray;virtual;
-          function get_saved_registers_fpu(calloption : TProcCallOption):tcpuregisterarray;virtual;
-          function get_saved_registers_mm(calloption : TProcCallOption):tcpuregisterarray;virtual;
+          function get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;virtual;
+          function get_saved_registers_address(calloption : TProcCallOption):TCPURegisterArray;virtual;
+          function get_saved_registers_fpu(calloption : TProcCallOption):TCPURegisterArray;virtual;
+          function get_saved_registers_mm(calloption : TProcCallOption):TCPURegisterArray;virtual;
 
           { \brief Get a parameter location for calling a procdef directly instead of via a call node }
           { \returns parameter location in \c cgpara for parameter \c nr of \c pd }
-          procedure getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : longint; var cgpara: tcgpara);virtual;
+          procedure getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : LongInt; var cgpara: TCGPara);virtual;
 
           {# allocate an individual pcgparalocation that's part of a tcgpara
 
             @param(list Current assembler list)
             @param(loc Parameter location element)
           }
-          procedure allocparaloc(list: TAsmList; const paraloc: pcgparalocation);
+          procedure allocparaloc(list: TAsmList; const paraloc: PCGParaLocation);
 
           {# allocate a parameter location created with create_paraloc_info
 
@@ -123,31 +123,31 @@ unit paramgr;
             for the routine as seen in either the caller or the callee. It returns
             the size allocated on the stack
           }
-          function  create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):longint;virtual;abstract;
+          function  create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):LongInt;virtual;abstract;
 
           { Returns the location of the function result if p had def as
             function result instead of its actual result. Used if the compiler
             forces the function result to something different than the real
             result.  }
-          function  get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): tcgpara;virtual;abstract;
-          function  get_safecallresult_funcretloc(p : TAbstractProcDef; side: TCallerCallee): tcgpara; virtual;
+          function  get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;virtual;abstract;
+          function  get_safecallresult_funcretloc(p : TAbstractProcDef; side: TCallerCallee): TCGPara; virtual;
           procedure create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
 
           { This is used to populate the location information on all parameters
             for the routine when it is being inlined. It returns
             the size allocated on the stack
           }
-          function  create_inline_paraloc_info(p : TAbstractProcDef):longint;virtual;
+          function  create_inline_paraloc_info(p : TAbstractProcDef):LongInt;virtual;
 
           { This is used to populate the location information on all parameters
             for the routine that are passed as varargs. It returns
             the size allocated on the stack (including the normal parameters)
           }
-          function  create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:tvarargsparalist):longint;virtual;abstract;
+          function  create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;virtual;abstract;
 
-          function is_stack_paraloc(paraloc: pcgparalocation): boolean;virtual;
+          function is_stack_paraloc(paraloc: PCGParaLocation): boolean;virtual;
           procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
-          procedure duplicatecgparaloc(const orgparaloc: pcgparalocation; intonewparaloc: pcgparalocation);
+          procedure duplicatecgparaloc(const orgparaloc: PCGParaLocation; intonewparaloc: PCGParaLocation);
           procedure duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
 
           function parseparaloc(parasym : TParaVarSym;const s : string) : boolean;virtual;
@@ -155,7 +155,7 @@ unit paramgr;
 
           { Convert a list of CGParaLocation entries to a RTTIParaLoc array that
             can be written by ncgrtti }
-          function cgparalocs_to_rttiparalocs(paralocs:pcgparalocation):trttiparalocs;
+          function cgparalocs_to_rttiparalocs(paralocs:PCGParaLocation):TRTTIParaLocs;
 
           { allocate room for parameters on the stack in the entry code? }
           function use_fixed_stack: boolean;
@@ -170,7 +170,7 @@ unit paramgr;
          strict protected
           { common part of get_funcretloc; returns true if retloc is completely
             initialized afterwards }
-          function set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
+          function set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: TCgSize; out retloc: TCGPara): boolean;
           { common part of ret_in_param; is called by ret_in_param at the
             beginning and every tparamanager descendant can decide to call it
             itself as well; parameter retinparam is only valid if function
@@ -185,32 +185,32 @@ unit paramgr;
           { convert a single CGParaLocation to a RTTIParaLoc; the method *might*
             be overridden by targets to provide backwards compatibility with
             older versions in case register indices changed }
-          function cgparaloc_to_rttiparaloc(paraloc:pcgparalocation):trttiparaloc;virtual;
+          function cgparaloc_to_rttiparaloc(paraloc:PCGParaLocation):TRTTIParaLoc;virtual;
        end;
 
 
     var
-       paramanager : tparamanager;
+       paramanager : TParaManager;
 
 
 implementation
 
     uses
-       systems,
-       globals,
+       Systems,
+       Globals,
        cgobj,tgobj,
-       defutil,verbose,
+       defutil,Verbose,
        hlcgobj;
 
     { true if the location in paraloc can be reused as localloc }
-    function tparamanager.param_use_paraloc(const cgpara:tcgpara):boolean;
+    function TParaManager.param_use_paraloc(const cgpara:TCGPara):boolean;
       begin
         result:=false;
       end;
 
 
     { true if uses a parameter as return value }
-    function tparamanager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
+    function TParaManager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
       begin
          { This handles all managed types, including COM interfaces and Variants }
          if handle_common_ret_in_param(def,pd,result) then
@@ -225,15 +225,15 @@ implementation
 
 
     { true if a result variable should be allocated for an assembler routine }
-    function tparamanager.asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;
+    function TParaManager.asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;
       begin
         if not(po_assembler in pd.procoptions) then
-          internalerror(2018021501);
+          InternalError(2018021501);
         result:=true;
       end;
 
 
-    function tparamanager.push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
+    function TParaManager.push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
       begin
          push_high_param:=not(calloption in cdecl_pocalls) and
                           (
@@ -244,20 +244,20 @@ implementation
       end;
 
 
-    function tparamanager.keep_para_array_range(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
+    function TParaManager.keep_para_array_range(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
         result:=push_high_param(varspez,def,calloption);
       end;
 
 
-    function tparamanager.push_copyout_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
+    function TParaManager.push_copyout_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
         push_copyout_param:=false;
       end;
 
 
     { return the size of a push }
-    function tparamanager.push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : longint;
+    function TParaManager.push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : LongInt;
       begin
         push_size:=-1;
         case varspez of
@@ -287,74 +287,74 @@ implementation
       end;
 
 
-    function tparamanager.get_para_align(calloption : TProcCallOption):byte;
+    function TParaManager.get_para_align(calloption : TProcCallOption):byte;
       begin
         result:=std_param_align;
       end;
 
 
-    function tparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
+    function TParaManager.get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_address(calloption : TProcCallOption):tcpuregisterset;
+    function TParaManager.get_volatile_registers_address(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
+    function TParaManager.get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_flags(calloption : TProcCallOption):tcpuregisterset;
+    function TParaManager.get_volatile_registers_flags(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;
+    function TParaManager.get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;
+    function TParaManager.get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;
       const
-        inv: tcpuregisterarray = (RS_INVALID);
+        inv: TCPURegisterArray = (RS_INVALID);
       begin
         result:=inv;
       end;
 
 
-    function tparamanager.get_saved_registers_address(calloption : TProcCallOption):tcpuregisterarray;
+    function TParaManager.get_saved_registers_address(calloption : TProcCallOption):TCPURegisterArray;
       const
-        inv: tcpuregisterarray = (RS_INVALID);
+        inv: TCPURegisterArray = (RS_INVALID);
       begin
         result:=inv;
       end;
 
 
-    function tparamanager.get_saved_registers_fpu(calloption : TProcCallOption):tcpuregisterarray;
+    function TParaManager.get_saved_registers_fpu(calloption : TProcCallOption):TCPURegisterArray;
       const
-        inv: tcpuregisterarray = (RS_INVALID);
+        inv: TCPURegisterArray = (RS_INVALID);
       begin
         result:=inv;
       end;
 
 
-    function tparamanager.get_saved_registers_mm(calloption : TProcCallOption):tcpuregisterarray;
+    function TParaManager.get_saved_registers_mm(calloption : TProcCallOption):TCPURegisterArray;
       const
-        inv: tcpuregisterarray = (RS_INVALID);
+        inv: TCPURegisterArray = (RS_INVALID);
       begin
         result:=inv;
       end;
 
-    procedure tparamanager.allocparaloc(list: TAsmList; const paraloc: pcgparalocation);
+    procedure TParaManager.allocparaloc(list: TAsmList; const paraloc: PCGParaLocation);
       begin
         case paraloc^.loc of
           LOC_REGISTER,
@@ -384,12 +384,12 @@ implementation
       end;
 
 
-    procedure tparamanager.alloccgpara(list: TAsmList; const cgpara: TCGPara);
+    procedure TParaManager.alloccgpara(list: TAsmList; const cgpara: TCGPara);
       var
-        paraloc : pcgparalocation;
+        paraloc : PCGParaLocation;
       begin
         paraloc:=cgpara.location;
-        while assigned(paraloc) do
+        while Assigned(paraloc) do
           begin
             allocparaloc(list,paraloc);
             paraloc:=paraloc^.next;
@@ -397,13 +397,13 @@ implementation
       end;
 
 
-    procedure tparamanager.freecgpara(list: TAsmList; const cgpara: TCGPara);
+    procedure TParaManager.freecgpara(list: TAsmList; const cgpara: TCGPara);
       var
-        paraloc : Pcgparalocation;
-        href : treference;
+        paraloc : PCGParaLocation;
+        href : TReference;
       begin
         paraloc:=cgpara.location;
-        while assigned(paraloc) do
+        while Assigned(paraloc) do
           begin
             case paraloc^.loc of
               LOC_VOID:
@@ -440,16 +440,16 @@ implementation
                     end;
                 end;
               else
-                internalerror(2004110212);
+                InternalError(2004110212);
             end;
             paraloc:=paraloc^.next;
           end;
       end;
 
 
-    function tparamanager.get_safecallresult_funcretloc(p: TAbstractProcDef; side: TCallerCallee): tcgpara;
+    function TParaManager.get_safecallresult_funcretloc(p: TAbstractProcDef; side: TCallerCallee): TCGPara;
       var
-        paraloc: pcgparalocation;
+        paraloc: PCGParaLocation;
       begin
         result.init;
         result.def:=ossinttype;
@@ -468,21 +468,21 @@ implementation
       end;
 
 
-    function tparamanager.is_stack_paraloc(paraloc: pcgparalocation): boolean;
+    function TParaManager.is_stack_paraloc(paraloc: PCGParaLocation): boolean;
       begin
         result:=
-          assigned(paraloc) and
+          Assigned(paraloc) and
           (paraloc^.loc=LOC_REFERENCE) and
           (paraloc^.reference.index=NR_STACK_POINTER_REG);
       end;
 
 
-    procedure tparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure TParaManager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
       var
-        href : treference;
+        href : TReference;
         len  : aint;
         paraloc,
-        newparaloc : pcgparalocation;
+        newparaloc : PCGParaLocation;
       begin
         paraloc:=parasym.paraloc[callerside].location;
         cgpara.reset;
@@ -490,7 +490,7 @@ implementation
         cgpara.intsize:=parasym.paraloc[callerside].intsize;
         cgpara.alignment:=parasym.paraloc[callerside].alignment;
         cgpara.def:=parasym.paraloc[callerside].def;
-        while assigned(paraloc) do
+        while Assigned(paraloc) do
           begin
             if paraloc^.size=OS_NO then
               len:=push_size(parasym.varspez,parasym.vardef,calloption)
@@ -512,7 +512,7 @@ implementation
             if ((not can_use_final_stack_loc and
                  use_fixed_stack) or
                 not is_stack_paraloc(paraloc)) and
-               (len<=sizeof(pint)) and
+               (len<=sizeof(PInt)) and
                (paraloc^.size in [OS_8,OS_16,OS_32,OS_64,OS_128,OS_S8,OS_S16,OS_S32,OS_S64,OS_S128]) then
               newparaloc^.loc:=LOC_REGISTER
             else
@@ -547,7 +547,7 @@ implementation
                     duplicatecgparaloc(paraloc,newparaloc)
                   else
                     begin
-                      if assigned(cgpara.def) then
+                      if Assigned(cgpara.def) then
                         tg.gethltemp(list,cgpara.def,len,tt_persistent,href)
                       else
                         tg.gettemp(list,len,cgpara.alignment,tt_persistent,href);
@@ -563,24 +563,24 @@ implementation
       end;
 
 
-    procedure tparamanager.duplicatecgparaloc(const orgparaloc: pcgparalocation; intonewparaloc: pcgparalocation);
+    procedure TParaManager.duplicatecgparaloc(const orgparaloc: PCGParaLocation; intonewparaloc: PCGParaLocation);
       begin
         move(orgparaloc^,intonewparaloc^,sizeof(intonewparaloc^));
         intonewparaloc^.next:=nil;
       end;
 
 
-    procedure tparamanager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
+    procedure TParaManager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
       var
         paraloc,
-        newparaloc : pcgparalocation;
+        newparaloc : PCGParaLocation;
       begin
         cgpara.reset;
         cgpara.size:=parasym.paraloc[callerside].size;
         cgpara.intsize:=parasym.paraloc[callerside].intsize;
         cgpara.alignment:=parasym.paraloc[callerside].alignment;
         paraloc:=parasym.paraloc[callerside].location;
-        while assigned(paraloc) do
+        while Assigned(paraloc) do
           begin
             newparaloc:=cgpara.add_location;
             duplicatecgparaloc(paraloc,newparaloc);
@@ -589,14 +589,14 @@ implementation
       end;
 
 
-    procedure tparamanager.create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
+    procedure TParaManager.create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
       begin
-        if not assigned(p.funcretloc[side].Location) then
+        if not Assigned(p.funcretloc[side].Location) then
           p.funcretloc[side]:=get_funcretloc(p,side,nil);
       end;
 
 
-    function tparamanager.create_inline_paraloc_info(p : TAbstractProcDef):longint;
+    function TParaManager.create_inline_paraloc_info(p : TAbstractProcDef):LongInt;
       begin
         { We need to return the size allocated }
         p.init_paraloc_info(callbothsides);
@@ -606,11 +606,11 @@ implementation
 
     { used by syscall conventions which require explicit paralocation support }
     { this is the standard implementation, CGs might overwrite it }
-    function tparamanager.parseparaloc(parasym: TParaVarSym; const s: string): boolean;
+    function TParaManager.parseparaloc(parasym: TParaVarSym; const s: string): boolean;
       var
-        paraloc : pcgparalocation;
+        paraloc : PCGParaLocation;
       begin
-        parasym.paraloc[callerside].alignment:=sizeof(pint);
+        parasym.paraloc[callerside].alignment:=sizeof(PInt);
         paraloc:=parasym.paraloc[callerside].add_location;
         paraloc^.loc:=LOC_REGISTER;
         paraloc^.size:=def_cgsize(parasym.vardef);
@@ -625,14 +625,14 @@ implementation
       end;
 
 
-    function tparamanager.parsefuncretloc(p: TAbstractProcDef; const s: string): boolean;
+    function TParaManager.parsefuncretloc(p: TAbstractProcDef; const s: string): boolean;
       begin
         Result:=False;
-        internalerror(200807236);
+        InternalError(200807236);
       end;
 
 
-    function tparamanager.use_fixed_stack: boolean;
+    function TParaManager.use_fixed_stack: boolean;
       begin
 {$ifdef i386}
         result := TargetInfo.stackalign > 4;
@@ -648,25 +648,25 @@ implementation
     { This is a separate function because at least win64 allows stack allocations
       despite of fixed stack semantics (actually supporting it requires generating
       a compliant stack frame, not yet possible) }
-    function tparamanager.use_stackalloc: boolean;
+    function TParaManager.use_stackalloc: boolean;
       begin
         result:=not use_fixed_stack;
       end;
 
 
-    function tparamanager.has_strict_proc_signature: boolean;
+    function TParaManager.has_strict_proc_signature: boolean;
       begin
         result:=false;
       end;
 
 
-    function tparamanager.set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
+    function TParaManager.set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: TCgSize; out retloc: TCGPara): boolean;
       var
-        paraloc : pcgparalocation;
+        paraloc : PCGParaLocation;
       begin
         result:=true;
         retloc.init;
-        if not assigned(forcetempdef) then
+        if not Assigned(forcetempdef) then
           retloc.def:=p.returndef
         else
           begin
@@ -692,7 +692,7 @@ implementation
             retloc.def:=TDef(p.owner.defowner);
             if not (is_implicit_pointer_object_type(retloc.def) or
                (retloc.def.typ<>objectdef)) then
-              retloc.def:=cpointerdef.getreusable_no_free(retloc.def);
+              retloc.def:=CPointerDef.getreusable_no_free(retloc.def);
           end;
         retcgsize:=def_cgsize(retloc.def);
         retloc.intsize:=retloc.def.size;
@@ -700,7 +700,7 @@ implementation
         { Return is passed as var parameter }
         if ret_in_param(retloc.def,p) then
           begin
-            retloc.def:=cpointerdef.getreusable_no_free(retloc.def);
+            retloc.def:=CPointerDef.getreusable_no_free(retloc.def);
             paraloc:=retloc.add_location;
             paraloc^.loc:=LOC_REFERENCE;
             paraloc^.size:=retcgsize;
@@ -711,7 +711,7 @@ implementation
       end;
 
 
-    function tparamanager.handle_common_ret_in_param(def: TDef;
+    function TParaManager.handle_common_ret_in_param(def: TDef;
       pd: TAbstractProcDef; out retinparam: boolean): boolean;
       begin
         { This must be system independent: safecall and record constructor result
@@ -744,7 +744,7 @@ implementation
       end;
 
 
-    function tparamanager.get_paraloc_def(paradef: TDef; restlen: aint; fullsize: boolean): TDef;
+    function TParaManager.get_paraloc_def(paradef: TDef; restlen: aint; fullsize: boolean): TDef;
       begin
         if fullsize then
           result:=paradef
@@ -753,11 +753,11 @@ implementation
         else if restlen in [1,2,4,8] then
           result:=cgsize_orddef(int_cgsize(restlen))
         else
-          result:=carraydef.getreusable_no_free(u8inttype,restlen);
+          result:=CArrayDef.getreusable_no_free(u8inttype,restlen);
       end;
 
 
-    procedure tparamanager.getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : longint; var cgpara: tcgpara);
+    procedure TParaManager.getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : LongInt; var cgpara: TCGPara);
       begin
         if (nr<1) or (nr>pd.paras.count) then
           InternalError(2013060101);
@@ -766,25 +766,25 @@ implementation
       end;
 
 
-    function tparamanager.cgparalocs_to_rttiparalocs(paralocs:pcgparalocation):trttiparalocs;
+    function TParaManager.cgparalocs_to_rttiparalocs(paralocs:PCGParaLocation):TRTTIParaLocs;
       var
-        c : longint;
-        tmploc : pcgparalocation;
+        c : LongInt;
+        tmploc : PCGParaLocation;
       begin
         c:=0;
         tmploc:=paralocs;
         result:=nil;
-        while assigned(tmploc) do
+        while Assigned(tmploc) do
           begin
             inc(c);
             tmploc:=tmploc^.next;
           end;
 
-        setlength(result,c);
+        SetLength(result,c);
 
         c:=0;
         tmploc:=paralocs;
-        while assigned(tmploc) do
+        while Assigned(tmploc) do
           begin
             result[c]:=cgparaloc_to_rttiparaloc(tmploc);
             inc(c);
@@ -793,25 +793,25 @@ implementation
       end;
 
 
-    function tparamanager.cgparaloc_to_rttiparaloc(paraloc:pcgparalocation):trttiparaloc;
+    function TParaManager.cgparaloc_to_rttiparaloc(paraloc:PCGParaLocation):TRTTIParaLoc;
       var
-        reg : tregisterrec;
+        reg : TRegisterRec;
       begin
         { Explicitly zero the whole record, to avoid
           trouble as this record is used as is in a
           hash calculation, which might give unreliable
           results if the record as gaps between fields
           due to field alignment. PM 2021-05-06 }
-        fillchar(result,sizeof(trttiparaloc),#0);
+        fillchar(result,sizeof(TRTTIParaLoc),#0);
         if paraloc^.Loc=LOC_REFERENCE then
           begin
-            reg:=tregisterrec(paraloc^.reference.index);
+            reg:=TRegisterRec(paraloc^.reference.index);
             result.offset:=paraloc^.reference.offset;
             result.loctype:=$80;
           end
         else
           begin
-            reg:=tregisterrec(paraloc^.register);
+            reg:=TRegisterRec(paraloc^.register);
             { use sign extension }
             result.offset:=paraloc^.shiftval;
             result.loctype:=$00;
@@ -838,7 +838,7 @@ implementation
       end;
 
 
-    function tparamanager.can_opt_unused_para(parasym: TParaVarSym): boolean;
+    function TParaManager.can_opt_unused_para(parasym: TParaVarSym): boolean;
       var
         pd: TProcDef;
       begin
@@ -849,8 +849,8 @@ implementation
             and the parameter is not used by the routine
             and implementation of the routine is already processed.
         }
-        result:=(cs_opt_unused_para in CurrentSettings.optimizerswitches) and
-          assigned(parasym.Owner) and
+        result:=(cs_opt_unused_para in CurrentSettings.OptimizerSwitches) and
+          Assigned(parasym.Owner) and
           (parasym.Owner.defowner.typ=procdef);
         if not result then
           exit;

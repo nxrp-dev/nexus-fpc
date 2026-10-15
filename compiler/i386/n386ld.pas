@@ -26,12 +26,12 @@ unit n386ld;
 interface
 
     uses
-      globtype,
-      symsym,
+      GlobType,
+      SymSym,
       node,ncgld,nx86ld,pass_1;
 
     type
-      ti386loadnode = class(tx86loadnode)
+      TI386LoadNode = class(TX86LoadNode)
          procedure generate_absaddr_access(vs: TAbsoluteVarSym); override;
       end;
 
@@ -39,7 +39,7 @@ interface
 implementation
 
     uses
-      globals,
+      Globals,
       symcpu,
       nld,
       cpubase;
@@ -48,14 +48,14 @@ implementation
                             TI386LOADNODE
 *****************************************************************************}
 
-    procedure ti386loadnode.generate_absaddr_access(vs: TAbsoluteVarSym);
+    procedure TI386LoadNode.generate_absaddr_access(vs: TAbsoluteVarSym);
       begin
-        if tcpuabsolutevarsym(symtableentry).absseg then
+        if TCPUAbsoluteVarSym(symtableentry).absseg then
           location.reference.segment:=NR_FS;
         inherited;
       end;
 
 
 begin
-   cloadnode:=ti386loadnode;
+   CLoadNode:=TI386LoadNode;
 end.

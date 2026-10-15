@@ -48,7 +48,7 @@ unit cprofile;
 interface
 
   uses
-    globals;
+    Globals;
 
   type
     TCTimer = (
@@ -101,10 +101,10 @@ initialization
     timers[t]:=TEpikTimer.Create;
   currenttimer:=ct_none;
 finalization
-  writeln(StdErr,'Compiler profiler results:');
+  WriteLn(StdErr,'Compiler profiler results:');
   timers[currenttimer].Stop;
   for t:=low(timers) to high(timers) do
-    writeln(StdErr,'  ',t,' ',timers[t].Elapsed:0:9,' s');
+    WriteLn(StdErr,'  ',t,' ',timers[t].Elapsed:0:9,' s');
   for t:=low(timers) to high(timers) do
     FreeAndNil(timers[t]);
 {$endif COMPILER_TIMINGS}

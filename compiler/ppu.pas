@@ -26,7 +26,7 @@ unit ppu;
 interface
 
   uses
-    globtype,constexp,entfile,nxartifactid;
+    GlobType,ConstExp,entfile,nxartifactid;
 
 { Also write the ppu if only crc if done, this can be used with ppudump to
   see the differences between the intf and implementation }
@@ -59,61 +59,61 @@ type
   { set type aliases. We cast all sets to a corresponding array type so
     that if the set changes size, compilation will fail and we know that
     we have have to increase the ppu version }
-  tppuset1 = array[0..0] of byte;
-  tppuset2 = array[0..1] of byte;
+  TPPUSet1 = array[0..0] of byte;
+  TPPUSet2 = array[0..1] of byte;
   { tppuset3 = array[0..2] of byte; (sets of 3 bytes are rounded up to 4 bytes) }
-  tppuset4 = array[0..3] of byte;
-  tppuset5 = array[0..4] of byte;
-  tppuset6 = array[0..5] of byte;
-  tppuset7 = array[0..6] of byte;
-  tppuset8 = array[0..7] of byte;
-  tppuset9 = array[0..8] of byte;
-  tppuset10 = array[0..9] of byte;
-  tppuset11 = array[0..10] of byte;
-  tppuset12 = array[0..11] of byte;
-  tppuset13 = array[0..12] of byte;
-  tppuset14 = array[0..13] of byte;
-  tppuset15 = array[0..14] of byte;
-  tppuset16 = array[0..15] of byte;
-  tppuset17 = array[0..16] of byte;
-  tppuset18 = array[0..17] of byte;
-  tppuset19 = array[0..18] of byte;
-  tppuset20 = array[0..19] of byte;
-  tppuset21 = array[0..20] of byte;
-  tppuset22 = array[0..21] of byte;
-  tppuset23 = array[0..22] of byte;
-  tppuset24 = array[0..23] of byte;
-  tppuset25 = array[0..24] of byte;
-  tppuset26 = array[0..25] of byte;
-  tppuset27 = array[0..26] of byte;
-  tppuset28 = array[0..27] of byte;
-  tppuset29 = array[0..28] of byte;
-  tppuset30 = array[0..29] of byte;
-  tppuset31 = array[0..30] of byte;
-  tppuset32 = array[0..31] of byte;
+  TPPUSet4 = array[0..3] of byte;
+  TPPUSet5 = array[0..4] of byte;
+  TPPUSet6 = array[0..5] of byte;
+  TPPUSet7 = array[0..6] of byte;
+  TPPUSet8 = array[0..7] of byte;
+  TPPUSet9 = array[0..8] of byte;
+  TPPUSet10 = array[0..9] of byte;
+  TPPUSet11 = array[0..10] of byte;
+  TPPUSet12 = array[0..11] of byte;
+  TPPUSet13 = array[0..12] of byte;
+  TPPUSet14 = array[0..13] of byte;
+  TPPUSet15 = array[0..14] of byte;
+  TPPUSet16 = array[0..15] of byte;
+  TPPUSet17 = array[0..16] of byte;
+  TPPUSet18 = array[0..17] of byte;
+  TPPUSet19 = array[0..18] of byte;
+  TPPUSet20 = array[0..19] of byte;
+  TPPUSet21 = array[0..20] of byte;
+  TPPUSet22 = array[0..21] of byte;
+  TPPUSet23 = array[0..22] of byte;
+  TPPUSet24 = array[0..23] of byte;
+  TPPUSet25 = array[0..24] of byte;
+  TPPUSet26 = array[0..25] of byte;
+  TPPUSet27 = array[0..26] of byte;
+  TPPUSet28 = array[0..27] of byte;
+  TPPUSet29 = array[0..28] of byte;
+  TPPUSet30 = array[0..29] of byte;
+  TPPUSet31 = array[0..30] of byte;
+  TPPUSet32 = array[0..31] of byte;
 
-  tppuerror=(ppuentrytoobig,ppuentryerror);
+  TPPUError=(ppuentrytoobig,ppuentryerror);
 
-  tppuheader=record
-    common   : tentryheader;
+  TPPUHeader=record
+    common   : TEntryHeader;
     checksum : cardinal; { checksum for this ppufile }
     interface_checksum : cardinal;
     deflistsize,
-    symlistsize : longint;
+    symlistsize : LongInt;
     indirect_checksum: cardinal;
   end;
 
-  tppuentry=tentry;
+  TPPUEntry=TEntry;
 
-  tunitasmlisttype=(ualt_public,ualt_extern);
+  TUnitAsmListType=(ualt_public,ualt_extern);
 
-  tppufile=class(tentryfile)
+  TPPUFile=class(TEntryFile)
   protected
     procedure newheader;override;
-    function readheader: longint;override;
+    function readheader: LongInt;override;
     function outputallowed: boolean;override;
-    function getheadersize:longint;override;
-    function getheaderaddr:pentryheader;override;
+    function getheadersize:LongInt;override;
+    function getheaderaddr:PEntryHeader;override;
     procedure resetfile;override;
 {$ifdef DEBUG_PPU}
     procedure ppu_log(st :string);override;
@@ -123,7 +123,7 @@ type
     writing_interface_ppu : boolean;
 {$endif DEBUG_GENERATE_INTERFACE_PPU}
   public
-    header           : tppuheader;
+    header           : TPPUHeader;
     { crc for the entire unit }
     crc,
     { crc for the interface definitions in this unit }
@@ -138,10 +138,10 @@ type
     crc_only         : boolean;    { used to calculate interface_crc before implementation }
     function  CheckPPUId:boolean;
     procedure putdata(const b;len:integer);override;
-    procedure putdata(b : tbytedynarray);
-    procedure putdata(b : tansichardynarray);
+    procedure putdata(b : TByteDynArray);
+    procedure putdata(b : TAnsiCharDynArray);
     constructor Create(const fn:string);
-    destructor destroy;override;
+    destructor Destroy;override;
   {read}
   { nothing special currently }
   {write}
@@ -152,16 +152,16 @@ type
 implementation
 
   uses
-    comphook,
-    globals,
-    fpchash;
+    CompHook,
+    Globals,
+    FPCHash;
 
 
 {*****************************************************************************
                                   TPPUFile
 *****************************************************************************}
 
-constructor tppufile.Create(const fn:string);
+constructor TPPUFile.Create(const fn:string);
 begin
   inherited Create(fn);
   crc_only:=false;
@@ -170,12 +170,12 @@ begin
 {$endif}
 end;
 
-destructor tppufile.destroy;
+destructor TPPUFile.Destroy;
 begin
-  inherited destroy;
+  inherited Destroy;
 end;
 
-function tppufile.CheckPPUId:boolean;
+function TPPUFile.CheckPPUId:boolean;
 begin
   CheckPPUId:=((Header.common.Id[1]=NexusPPUSignature[1]) and
                 (Header.common.Id[2]=NexusPPUSignature[2]) and
@@ -183,11 +183,11 @@ begin
 end;
 
 
-procedure tppufile.newheader;
+procedure TPPUFile.newheader;
 var
   s : string;
 begin
-  fillchar(header,sizeof(tppuheader),0);
+  fillchar(header,sizeof(TPPUHeader),0);
   str(currentppuversion,s);
   while length(s)<3 do
    s:='0'+s;
@@ -203,21 +203,21 @@ begin
 end;
 
 
-function tppufile.readheader: longint;
+function TPPUFile.readheader: LongInt;
 var
   is_valid : boolean;
 begin
   is_valid:=true;
   result:=fsize;
-  if result<sizeof(tppuheader) then
+  if result<sizeof(TPPUHeader) then
     is_valid:=false;
-  result:=f.Read(header,sizeof(tppuheader));
-  if (result<>sizeof(tppuheader)) then
+  result:=f.Read(header,sizeof(TPPUHeader));
+  if (result<>sizeof(TPPUHeader)) then
     is_valid:=false;
   if not is_valid then
     begin
-      fillchar(header,sizeof(tppuheader),#0);
-      do_comment(V_Error,' Invalid header size '+tostr(result)+' (expecting '+tostr(sizeof(tppuheader))+')');
+      fillchar(header,sizeof(TPPUHeader),#0);
+      Do_Comment(VError,' Invalid header size '+ToStr(result)+' (expecting '+ToStr(sizeof(TPPUHeader))+')');
       exit(-1);
     end;
   { The header is always stored in little endian order }
@@ -241,33 +241,33 @@ begin
 {$ENDIF}
 end;
 
-function tppufile.outputallowed: boolean;
+function TPPUFile.outputallowed: boolean;
 begin
   result:=not crc_only;
 end;
 
 {$ifdef DEBUG_PPU}
-procedure tppufile.ppu_log(st :string);
+procedure TPPUFile.ppu_log(st :string);
 begin
   inherited ppu_log(st);
   if flog_open then
     begin
       if do_crc and (ppu_log_idx < BufferedPosition) then
         begin
-          write(flog,'New crc : ',hexstr(dword(crc),8));
-          writeln(flog);
-          write(flog,'New interface crc : ',hexstr(dword(interface_crc),8));
-          writeln(flog);
-          write(flog,'New indirect crc : ',hexstr(dword(indirect_crc),8));
-          writeln(flog);
+          write(flog,'New crc : ',HexStr(dword(crc),8));
+          WriteLn(flog);
+          write(flog,'New interface crc : ',HexStr(dword(interface_crc),8));
+          WriteLn(flog);
+          write(flog,'New indirect crc : ',HexStr(dword(indirect_crc),8));
+          WriteLn(flog);
          end;
     end;
 {$ifdef IN_PPUDUMP}
   if update_crc then
     begin
-      writeln('New crc : ',hexstr(dword(crc),8));
-      writeln('New interface crc : ',hexstr(dword(interface_crc),8));
-      writeln('New indirect crc : ',hexstr(dword(indirect_crc),8));
+      WriteLn('New crc : ',HexStr(dword(crc),8));
+      WriteLn('New interface crc : ',HexStr(dword(interface_crc),8));
+      WriteLn('New indirect crc : ',HexStr(dword(indirect_crc),8));
     end;
 {$endif}
 end;
@@ -283,7 +283,7 @@ end;
                                 TPPUFile Writing
 *****************************************************************************}
 
-function tppufile.createfile:boolean;
+function TPPUFile.createfile:boolean;
 begin
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
   if crc_only then
@@ -297,7 +297,7 @@ begin
 end;
 
 
-procedure tppufile.writeheader;
+procedure TPPUFile.writeheader;
 var
   opos : integer;
 begin
@@ -306,7 +306,7 @@ begin
   { flush buffer }
   writebuf;
   { update size (w/o header!) in the header }
-  header.common.size:=bufstart-sizeof(tppuheader);
+  header.common.size:=BufStart-sizeof(TPPUHeader);
   { set the endian flag }
 {$ifndef FPC_BIG_ENDIAN}
     header.common.flags := header.common.flags or uf_little_endian;
@@ -327,25 +327,25 @@ begin
 { write header and restore filepos after it }
   opos:=f.Position;
   f.Position:=0;
-  f.Write(header,sizeof(tppuheader));
+  f.Write(header,sizeof(TPPUHeader));
   f.Position:=opos;
 end;
 
 
-procedure tppufile.putdata(const b;len:integer);
+procedure TPPUFile.putdata(const b;len:integer);
 begin
   if do_crc then
    begin
-     crc:=UpdateCrc32(crc,b,len);
+     crc:=UpdateCRC32(crc,b,len);
      if do_interface_crc then
        begin
-         interface_crc:=UpdateCrc32(interface_crc,b,len);
+         interface_crc:=UpdateCRC32(interface_crc,b,len);
          { indirect crc must only be calculated for the interface; changes
            to a class in the implementation cannot require another unit to
            be recompiled }
          if do_indirect_crc then
            begin
-             indirect_crc:=UpdateCrc32(indirect_crc,b,len);
+             indirect_crc:=UpdateCRC32(indirect_crc,b,len);
            end;
        end;
     end;
@@ -355,27 +355,27 @@ begin
   inc(entryidx,len);*)
 end;
 
-procedure tppufile.putdata(b: tbytedynarray);
+procedure TPPUFile.putdata(b: TByteDynArray);
 begin
   putdata(b[0],length(b));
 end;
 
-procedure tppufile.putdata(b: tansichardynarray);
+procedure TPPUFile.putdata(b: TAnsiCharDynArray);
 begin
   putdata(b[0],length(b));
 end;
 
-function tppufile.getheadersize: longint;
+function TPPUFile.getheadersize: LongInt;
 begin
   result:=sizeof(header);
 end;
 
-function tppufile.getheaderaddr: pentryheader;
+function TPPUFile.getheaderaddr: PEntryHeader;
 begin
   result:=@header;
 end;
 
-procedure tppufile.resetfile;
+procedure TPPUFile.resetfile;
 begin
   crc:=0;
   interface_crc:=0;

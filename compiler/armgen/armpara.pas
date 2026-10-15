@@ -29,26 +29,26 @@ uses
   paramgr;
 
 type
-  tarmgenparamanager = class(tparamanager)
+  TArmGenParaManager = class(TParaManager)
    protected
     { Returns whether a def is a "homogeneous float array" at the machine level.
       This means that in the memory layout, the def only consists of maximally
       4 floating point values that appear consecutively in memory }
     function is_hfa(p: TDef; out basedef: TDef) : boolean;
    private
-    function is_hfa_internal(p: TDef; var basedef: TDef; var elecount: longint): boolean;
+    function is_hfa_internal(p: TDef; var basedef: TDef; var elecount: LongInt): boolean;
   end;
 
 
 implementation
 
   uses
-    symconst,symdef,symsym,symutil,defutil;
+    symconst,symdef,SymSym,symutil,defutil;
 
 
-  function tarmgenparamanager.is_hfa(p: TDef; out basedef: TDef): boolean;
+  function TArmGenParaManager.is_hfa(p: TDef; out basedef: TDef): boolean;
     var
-      elecount: longint;
+      elecount: LongInt;
     begin
       result:=false;
       basedef:=nil;
@@ -62,11 +62,11 @@ implementation
       end;
 
 
-  function tarmgenparamanager.is_hfa_internal(p: TDef; var basedef: TDef; var elecount: longint): boolean;
+  function TArmGenParaManager.is_hfa_internal(p: TDef; var basedef: TDef; var elecount: LongInt): boolean;
     var
-      i: longint;
+      i: LongInt;
       sym: TSym;
-      tmpelecount: longint;
+      tmpelecount: LongInt;
     begin
       result:=false;
       case p.typ of
@@ -94,7 +94,7 @@ implementation
           end;
         floatdef:
           begin
-            if not assigned(basedef) then
+            if not Assigned(basedef) then
               basedef:=p
             else if basedef<>p then
               exit;
@@ -103,9 +103,9 @@ implementation
           end;
         recorddef:
           begin
-            for i:=0 to TAbstractRecordDef(p).symtable.symlist.count-1 do
+            for i:=0 to TAbstractRecordDef(p).SymTable.symlist.count-1 do
               begin
-                sym:=TSym(TAbstractRecordDef(p).symtable.symlist[i]);
+                sym:=TSym(TAbstractRecordDef(p).SymTable.symlist[i]);
                 if not is_normal_fieldvarsym(sym) then
                   continue;
                 if not is_hfa_internal(TFieldVarSym(sym).vardef,basedef,elecount) then

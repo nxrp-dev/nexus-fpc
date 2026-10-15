@@ -1,5 +1,5 @@
 uses
-  unicodeducet, fpwidestring, cp1251, cp1253;
+  unicodeducet, fpwidestring, CP1251, CP1253;
 
 type
   tcpstr1 = type AnsiString(1253);

@@ -26,15 +26,15 @@ unit wpobase;
 interface
 
 uses
-  globtype,
-  cclasses,
+  GlobType,
+  CClasses,
   symtype;
 
 type
   { the types of available whole program optimization }
-  twpotype = (wpo_devirtualization_context_insensitive,wpo_live_symbol_information);
+  TWPOType = (wpo_devirtualization_context_insensitive,wpo_live_symbol_information);
 const
-  wpo2str: array[twpotype] of string[16] = ('devirtualization','symbol liveness');
+  wpo2str: array[TWPOType] of string[16] = ('devirtualization','symbol liveness');
 
 type
   { ************************************************************************* }
@@ -42,14 +42,14 @@ type
   { ************************************************************************* }
 
   { interface to reading a section from a file with wpo info }
-  twposectionreaderintf = interface
+  TWPOSectionReaderIntf = interface
     ['{51BE3F89-C9C5-4965-9C83-AE7490C92E3E}']
     function sectiongetnextline(out s: ShortString): boolean;
   end;
 
 
   { interface to writing sections to a file with wpoinfo }
-  twposectionwriterintf = interface
+  TWPOSectionWriterIntf = interface
     ['{C056F0DD-62B1-4612-86C7-2D39944C4437}']
     procedure startsection(const name: ShortString);
     procedure sectionputline(const s: ShortString);
@@ -60,14 +60,14 @@ type
 
   { twpocomponentbase }
 
-  twpocomponentbase = class
+  TWPOComponentBase = class
    public
     constructor create; reintroduce; virtual;
 
     { type of whole program optimization information collected/provided by
       this class
     }
-    class function getwpotype: twpotype; virtual; abstract;
+    class function getwpotype: TWPOType; virtual; abstract;
 
     { whole program optimizations for which this class generates information }
     class function generatesinfoforwposwitches: TWPOptimizerSwitches; virtual; abstract;
@@ -86,12 +86,12 @@ type
     { loads the information pertinent to this whole program optimization from
       the current section being processed by reader
     }
-    procedure loadfromwpofilesection(reader: twposectionreaderintf); virtual; abstract;
+    procedure loadfromwpofilesection(reader: TWPOSectionReaderIntf); virtual; abstract;
 
     { stores the information of this component to a file in a format that can
       be loaded again using loadfromwpofilesection()
     }
-    procedure storewpofilesection(writer: twposectionwriterintf); virtual; abstract;
+    procedure storewpofilesection(writer: TWPOSectionWriterIntf); virtual; abstract;
 
     { extracts the information pertinent to this whole program optimization
       from the current compiler state (loaded units, ...)
@@ -99,29 +99,29 @@ type
     procedure constructfromcompilerstate; virtual; abstract;
   end;
 
-  twpocomponentbaseclass = class of twpocomponentbase;
+  TWPOComponentBaseClass = class of TWPOComponentBase;
 
 
   { forward declaration of overall wpo info manager class }
 
-  twpoinfomanagerbase = class;
+  TWPOInfoManagerBase = class;
 
   { ************************************************************************* }
   { ** Information created per unit for use during subsequent compilation *** }
   { ************************************************************************* }
 
   { information about called vmt entries for a class }
-  tcalledvmtentries = class
+  TCalledVMTEntries = class
    protected
     { the class }
     fobjdef: TDef;
     fobjdefderef: TDeref;
     { the vmt entries }
-    fcalledentries: tbitset;
+    fcalledentries: TBitSet;
    public
-    constructor create(_objdef: TDef; nentries: longint);
+    constructor create(_objdef: TDef; nentries: LongInt);
     constructor ppuload(ppufile: TCompilerPPUFile);
-    destructor destroy; override;
+    destructor Destroy; override;
     procedure ppuwrite(ppufile: TCompilerPPUFile);
 
     procedure buildderef;
@@ -131,7 +131,7 @@ type
 
     property objdef: TDef read fobjdef write fobjdef;
     property objdefderef: TDeref read fobjdefderef write fobjdefderef;
-    property calledentries: tbitset read fcalledentries write fcalledentries;
+    property calledentries: TBitSet read fcalledentries write fcalledentries;
   end;
 
 
@@ -140,37 +140,37 @@ type
     to devirtualization.
   }
 
-  tunitwpoinfobase = class
+  TUnitWPOInfoBase = class
    protected
     { created object types }
-    fcreatedobjtypes: tfpobjectlist;
+    fcreatedobjtypes: TFPObjectList;
     { objectdefs pointed to by created classrefdefs }
-    fcreatedclassrefobjtypes: tfpobjectlist;
+    fcreatedclassrefobjtypes: TFPObjectList;
     { objtypes potentially instantiated by fcreatedclassrefobjtypes
       (objdectdefs pointed to by classrefdefs that are
        passed as a regular parameter, loaded in a variable, ...
        so they can end up in a classrefdef var and be instantiated)
     }
-    fmaybecreatedbyclassrefdeftypes: tfpobjectlist;
+    fmaybecreatedbyclassrefdeftypes: TFPObjectList;
 
     { called virtual methods for all classes (hashed by mangled classname,
       entries bitmaps indicating which vmt entries per class are called --
       tcalledvmtentries)
     }
-    fcalledvmtentries: tfphashlist;
+    fcalledvmtentries: TFPHashList;
    public
     constructor create; reintroduce; virtual;
-    destructor destroy; override;
+    destructor Destroy; override;
 
-    property createdobjtypes: tfpobjectlist read fcreatedobjtypes;
-    property createdclassrefobjtypes: tfpobjectlist read fcreatedclassrefobjtypes;
-    property maybecreatedbyclassrefdeftypes: tfpobjectlist read fmaybecreatedbyclassrefdeftypes;
-    property calledvmtentries: tfphashlist read fcalledvmtentries;
+    property createdobjtypes: TFPObjectList read fcreatedobjtypes;
+    property createdclassrefobjtypes: TFPObjectList read fcreatedclassrefobjtypes;
+    property maybecreatedbyclassrefdeftypes: TFPObjectList read fmaybecreatedbyclassrefdeftypes;
+    property calledvmtentries: TFPHashList read fcalledvmtentries;
 
     procedure addcreatedobjtype(def: TDef);
     procedure addcreatedobjtypeforclassref(def: TDef);
     procedure addmaybecreatedbyclassref(def: TDef);
-    procedure addcalledvmtentry(def: TDef; index: longint);
+    procedure addcalledvmtentry(def: TDef; index: LongInt);
 
     { resets the "I've been registered with wpo" flags for all defs in the
       above lists }
@@ -185,19 +185,19 @@ type
 
   { tavailablewpofilewriter }
 
-  twpofilewriter = class(tobject,twposectionwriterintf)
+  TWPOFileWriter = class(tobject,TWPOSectionWriterIntf)
    private
     { array of class *instances* that wish to be written out to the
       whole program optimization feedback file
     }
-    fsectioncontents: tfpobjectlist;
+    fsectioncontents: TFPObjectList;
 
-    ffilename: tcmdstr;
+    ffilename: TCmdStr;
     foutputfile: text;
 
    public
-    constructor create(const fn: tcmdstr);
-    destructor destroy; override;
+    constructor create(const fn: TCmdStr);
+    destructor Destroy; override;
 
     procedure writefile;
 
@@ -209,7 +209,7 @@ type
     { register a component instance that needs to be written
       to the wpo feedback file
     }
-    procedure registerwpocomponent(component: twpocomponentbase);
+    procedure registerwpocomponent(component: TWPOComponentBase);
   end;
 
   { ************************************************************************* }
@@ -217,22 +217,22 @@ type
   { ************************************************************************* }
 
   { class to read a file with wpo information }
-  twpofilereader = class(tobject,twposectionreaderintf)
+  TWPOFileReader = class(tobject,TWPOSectionReaderIntf)
    private
-    ffilename: tcmdstr;
-    flinenr: longint;
+    ffilename: TCmdStr;
+    flinenr: LongInt;
     finputfile: text;
      fcurline: ShortString;
     fusecurline: boolean;
 
     { destination for the read information }
-    fdest: twpoinfomanagerbase;
+    fdest: TWPOInfoManagerBase;
 
      function getnextnoncommentline(out s: ShortString): boolean;
    public
 
-     constructor create(const fn: tcmdstr; dest: twpoinfomanagerbase);
-     destructor destroy; override;
+     constructor create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
+     destructor Destroy; override;
 
      { processes the wpo info in the file }
      procedure processfile;
@@ -249,7 +249,7 @@ type
   { ************************************************************************* }
 
   { method devirtualisation }
-  twpodevirtualisationhandler = class(twpocomponentbase)
+  TWPODevirtualisationHandler = class(TWPOComponentBase)
     { checks whether procdef (a procdef for a virtual method) can be replaced with
       a static call when it's called as objdef.procdef, and if so returns the
       mangled name in staticname.
@@ -262,7 +262,7 @@ type
     function staticnameforvmtentry(objdef, procdef: TDef; out staticname: TSymStr): boolean; virtual; abstract;
   end;
 
-  twpodeadcodehandler = class(twpocomponentbase)
+  TWPODeadCodeHandler = class(TWPOComponentBase)
     { checks whether a mangledname was removed as dead code from the final
       binary (WARNING: must *not* be called for functions marked as inline,
       since if all call sites are inlined, it won't appear in the final
@@ -278,28 +278,28 @@ type
 
   { class doing all the bookkeeping for everything  }
 
-  twpoinfomanagerbase = class
+  TWPOInfoManagerBase = class
    private
     { array of classrefs of handler classes for the various kinds of whole
       program optimizations that we support
     }
-    fwpocomponents: tfphashlist;
+    fwpocomponents: TFPHashList;
 
-    freader: twpofilereader;
-    fwriter: twpofilewriter;
+    freader: TWPOFileReader;
+    fwriter: TWPOFileWriter;
    public
     { instances of the various optimizers/information collectors (for
       information used during this compilation)
     }
-    wpoinfouse: array[twpotype] of twpocomponentbase;
+    wpoinfouse: array[TWPOType] of TWPOComponentBase;
 
     { register a whole program optimization class type }
-    procedure registerwpocomponentclass(wpocomponent: twpocomponentbaseclass);
+    procedure registerwpocomponentclass(wpocomponent: TWPOComponentBaseClass);
 
     { get the program optimization class type that can parse the contents
       of the section with name "secname" in the wpo feedback file
     }
-     function gethandlerforsection(const secname: ShortString): twpocomponentbaseclass;
+     function gethandlerforsection(const secname: ShortString): TWPOComponentBaseClass;
 
     { tell all instantiated wpo component classes to collect the information
       from the global compiler state that they need (done at the very end of
@@ -310,12 +310,12 @@ type
     { set the name of the feedback file from which all whole-program information
       to be used during the current compilation will be read
     }
-    procedure setwpoinputfile(const fn: tcmdstr);
+    procedure setwpoinputfile(const fn: TCmdStr);
 
     { set the name of the feedback file to which all whole-program information
       collected during the current compilation will be written
     }
-    procedure setwpooutputfile(const fn: tcmdstr);
+    procedure setwpooutputfile(const fn: TCmdStr);
 
     { check whether the specified wpo options (-FW/-Fw/-OW/-Ow) are complete
       and sensical, and parse the wpo feedback file specified with
@@ -336,38 +336,38 @@ type
     function symbol_live_in_currentproc(fordef: TDef): boolean;
 
     constructor create; reintroduce;
-    destructor destroy; override;
+    destructor Destroy; override;
   end;
 
 
   var
-    wpoinfomanager: twpoinfomanagerbase;
+    wpoinfomanager: TWPOInfoManagerBase;
 
 implementation
 
   uses
-    globals,
-    cutils,
-    sysutils,
+    Globals,
+    CUtils,
+    SysUtils,
     symconst,symdef,
-    procinfo,
-    verbose;
+    ProcInfo,
+    Verbose;
 
 
   { tcreatedwpoinfobase }
 
-  constructor tunitwpoinfobase.create;
+  constructor TUnitWPOInfoBase.create;
     begin
-      fcreatedobjtypes:=tfpobjectlist.create(false);
-      fcreatedclassrefobjtypes:=tfpobjectlist.create(false);
-      fmaybecreatedbyclassrefdeftypes:=tfpobjectlist.create(false);
-      fcalledvmtentries:=tfphashlist.create;
+      fcreatedobjtypes:=TFPObjectList.create(false);
+      fcreatedclassrefobjtypes:=TFPObjectList.create(false);
+      fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
+      fcalledvmtentries:=TFPHashList.create;
     end;
 
 
-  destructor tunitwpoinfobase.destroy;
+  destructor TUnitWPOInfoBase.Destroy;
     var
-      i: longint;
+      i: LongInt;
     begin
       { don't call resetdefs here, because the defs may have been freed
         already }
@@ -381,62 +381,62 @@ implementation
       { may not be assigned in case the info was loaded from a ppu and we
         are not generating a wpo feedback file (see tunitwpoinfo.ppuload)
       }
-      if assigned(fcalledvmtentries) then
+      if Assigned(fcalledvmtentries) then
         begin
           for i:=0 to fcalledvmtentries.count-1 do
-            tcalledvmtentries(fcalledvmtentries[i]).free; // no nil needed
+            TCalledVMTEntries(fcalledvmtentries[i]).free; // no nil needed
           fcalledvmtentries.free;
           fcalledvmtentries:=nil;
         end;
 
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
-  procedure tunitwpoinfobase.resetdefs;
+  procedure TUnitWPOInfoBase.resetdefs;
     var
       i: ptrint;
     begin
-      if assigned(fcreatedobjtypes) then
+      if Assigned(fcreatedobjtypes) then
         for i:=0 to fcreatedobjtypes.count-1 do
           TObjectDef(fcreatedobjtypes[i]).created_in_current_module:=false;
-      if assigned(fcreatedclassrefobjtypes) then
+      if Assigned(fcreatedclassrefobjtypes) then
         for i:=0 to fcreatedclassrefobjtypes.count-1 do
           TObjectDef(fcreatedclassrefobjtypes[i]).classref_created_in_current_module:=false;
-      if assigned(fmaybecreatedbyclassrefdeftypes) then
+      if Assigned(fmaybecreatedbyclassrefdeftypes) then
         for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
           TObjectDef(fmaybecreatedbyclassrefdeftypes[i]).maybe_created_in_current_module:=false;
     end;
 
 
-  procedure tunitwpoinfobase.addcreatedobjtype(def: TDef);
+  procedure TUnitWPOInfoBase.addcreatedobjtype(def: TDef);
     begin
       fcreatedobjtypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addcreatedobjtypeforclassref(def: TDef);
+  procedure TUnitWPOInfoBase.addcreatedobjtypeforclassref(def: TDef);
     begin
       fcreatedclassrefobjtypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addmaybecreatedbyclassref(def: TDef);
+  procedure TUnitWPOInfoBase.addmaybecreatedbyclassref(def: TDef);
     begin
       fmaybecreatedbyclassrefdeftypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addcalledvmtentry(def: TDef; index: longint);
+  procedure TUnitWPOInfoBase.addcalledvmtentry(def: TDef; index: LongInt);
     var
-      entries: tcalledvmtentries;
+      entries: TCalledVMTEntries;
       key: shortstring;
     begin
       key:=TObjectDef(def).vmt_mangledname;
-      entries:=tcalledvmtentries(fcalledvmtentries.find(key));
-      if not assigned(entries) then
+      entries:=TCalledVMTEntries(fcalledvmtentries.find(key));
+      if not Assigned(entries) then
         begin
-          entries:=tcalledvmtentries.create(def,TObjectDef(def).vmtentries.count);
+          entries:=TCalledVMTEntries.create(def,TObjectDef(def).vmtentries.count);
           fcalledvmtentries.add(key,entries);
         end;
       entries.calledentries.include(index);
@@ -445,7 +445,7 @@ implementation
 
   { twpofilereader }
 
-  function twpofilereader.getnextnoncommentline(out s: ShortString):
+  function TWPOFileReader.getnextnoncommentline(out s: ShortString):
     boolean;
     begin
       if (fusecurline) then
@@ -469,13 +469,13 @@ implementation
       result:=true;
     end;
 
-  constructor twpofilereader.create(const fn: tcmdstr; dest: twpoinfomanagerbase);
+  constructor TWPOFileReader.create(const fn: TCmdStr; dest: TWPOInfoManagerBase);
     begin
       if not FileExists(fn) or
          { FileExists also returns true for directories }
          DirectoryExists(fn) then
         begin
-          cgmessage1(wpo_cant_find_file,fn);
+          CGMessage1(wpo_cant_find_file,fn);
           exit;
         end;
       assign(finputfile,fn);
@@ -484,20 +484,20 @@ implementation
       fdest:=dest;
     end;
 
-  destructor twpofilereader.destroy;
+  destructor TWPOFileReader.Destroy;
     begin
-      inherited destroy;
+      inherited Destroy;
     end;
 
-  procedure twpofilereader.processfile;
+  procedure TWPOFileReader.processfile;
     var
-      sectionhandler: twpocomponentbaseclass;
-      i: longint;
-      wpotype: twpotype;
+      sectionhandler: TWPOComponentBaseClass;
+      i: LongInt;
+      wpotype: TWPOType;
       s,
       sectionname: ShortString;
     begin
-      cgmessage1(wpo_begin_processing,ffilename);
+      CGMessage1(wpo_begin_processing,ffilename);
       reset(finputfile);
       flinenr:=0;
       while getnextnoncommentline(s) do
@@ -507,7 +507,7 @@ implementation
           { format: "% sectionname" }
           if (s[1]<>'%') then
             begin
-              cgmessage2(wpo_expected_section,tostr(flinenr),s);
+              CGMessage2(wpo_expected_section,ToStr(flinenr),s);
               break;
             end;
           i:=2;
@@ -518,26 +518,26 @@ implementation
 
           { find handler for section and process }
           sectionhandler:=fdest.gethandlerforsection(sectionname);
-          if assigned(sectionhandler) then
+          if Assigned(sectionhandler) then
             begin
               wpotype:=sectionhandler.getwpotype;
-              cgmessage2(wpo_found_section,sectionname,wpo2str[wpotype]);
+              CGMessage2(wpo_found_section,sectionname,wpo2str[wpotype]);
               { do we need this information? }
-              if ((sectionhandler.performswpoforswitches * InitSettings.dowpoptimizerswitches) <> []) then
+              if ((sectionhandler.performswpoforswitches * InitSettings.DoWPOptimizerSwitches) <> []) then
                 begin
                   { did some other section already generate this type of information? }
-                  if assigned(fdest.wpoinfouse[wpotype]) then
+                  if Assigned(fdest.wpoinfouse[wpotype]) then
                     begin
-                      cgmessage2(wpo_duplicate_wpotype,wpo2str[wpotype],sectionname);
+                      CGMessage2(wpo_duplicate_wpotype,wpo2str[wpotype],sectionname);
                       FreeAndNil(fdest.wpoinfouse[wpotype]);
                     end;
                   { process the section }
                   fdest.wpoinfouse[wpotype]:=sectionhandler.create;
-                  twpocomponentbase(fdest.wpoinfouse[wpotype]).loadfromwpofilesection(self);
+                  TWPOComponentBase(fdest.wpoinfouse[wpotype]).loadfromwpofilesection(self);
                 end
               else
                 begin
-                  cgmessage1(wpo_skipping_unnecessary_section,sectionname);
+                  CGMessage1(wpo_skipping_unnecessary_section,sectionname);
                   { skip the current section }
                   while sectiongetnextline(s) do
                     ;
@@ -545,17 +545,17 @@ implementation
             end
           else
             begin
-              cgmessage1(wpo_no_section_handler,sectionname);
+              CGMessage1(wpo_no_section_handler,sectionname);
               { skip the current section }
               while sectiongetnextline(s) do
                 ;
             end;
         end;
       close(finputfile);
-      cgmessage1(wpo_end_processing,ffilename);
+      CGMessage1(wpo_end_processing,ffilename);
     end;
 
-  function twpofilereader.sectiongetnextline(out s: ShortString): boolean;
+  function TWPOFileReader.sectiongetnextline(out s: ShortString): boolean;
     begin
       result:=getnextnoncommentline(s);
       if not result then
@@ -574,129 +574,129 @@ implementation
 
   { twpocomponentbase }
 
-  constructor twpocomponentbase.create;
+  constructor TWPOComponentBase.create;
     begin
       { do nothing }
     end;
 
 
-  class procedure twpocomponentbase.checkoptions;
+  class procedure TWPOComponentBase.checkoptions;
     begin
       { do nothing }
     end;
 
   { twpofilewriter }
 
-  constructor twpofilewriter.create(const fn: tcmdstr);
+  constructor TWPOFileWriter.create(const fn: TCmdStr);
     begin
       assign(foutputfile,fn);
       ffilename:=fn;
-      fsectioncontents:=tfpobjectlist.create(true);
+      fsectioncontents:=TFPObjectList.create(true);
     end;
 
-  destructor twpofilewriter.destroy;
+  destructor TWPOFileWriter.Destroy;
     begin
       fsectioncontents.free;
       fsectioncontents := nil;
-      inherited destroy;
+      inherited Destroy;
     end;
 
-  procedure twpofilewriter.writefile;
+  procedure TWPOFileWriter.writefile;
     var
-      i: longint;
+      i: LongInt;
     begin
       {$push}{$i-}
       rewrite(foutputfile);
       {$pop}
-      if (ioresult <> 0) then
+      if (IOResult <> 0) then
         begin
-          cgmessage1(wpo_cant_create_feedback_file,ffilename);
+          CGMessage1(wpo_cant_create_feedback_file,ffilename);
           exit;
         end;
       for i:=0 to fsectioncontents.count-1 do
-        twpocomponentbase(fsectioncontents[i]).storewpofilesection(self);
+        TWPOComponentBase(fsectioncontents[i]).storewpofilesection(self);
       close(foutputfile);
     end;
 
-  procedure twpofilewriter.startsection(const name: ShortString);
+  procedure TWPOFileWriter.startsection(const name: ShortString);
     begin
-      writeln(foutputfile,'% ',name);
+      WriteLn(foutputfile,'% ',name);
     end;
 
-  procedure twpofilewriter.sectionputline(const s: ShortString);
+  procedure TWPOFileWriter.sectionputline(const s: ShortString);
     begin
-      writeln(foutputfile,s);
+      WriteLn(foutputfile,s);
     end;
 
-  procedure twpofilewriter.registerwpocomponent(
-    component: twpocomponentbase);
+  procedure TWPOFileWriter.registerwpocomponent(
+    component: TWPOComponentBase);
     begin
       fsectioncontents.add(component);
     end;
 
 { twpoinfomanagerbase }
 
-  procedure twpoinfomanagerbase.registerwpocomponentclass(wpocomponent: twpocomponentbaseclass);
+  procedure TWPOInfoManagerBase.registerwpocomponentclass(wpocomponent: TWPOComponentBaseClass);
     begin
       fwpocomponents.add(wpocomponent.sectionname,wpocomponent);
     end;
 
 
-  function twpoinfomanagerbase.gethandlerforsection(const secname: ShortString
-      ): twpocomponentbaseclass;
+  function TWPOInfoManagerBase.gethandlerforsection(const secname: ShortString
+      ): TWPOComponentBaseClass;
     begin
-      result:=twpocomponentbaseclass(fwpocomponents.find(secname));
+      result:=TWPOComponentBaseClass(fwpocomponents.find(secname));
     end;
 
-  procedure twpoinfomanagerbase.setwpoinputfile(const fn: tcmdstr);
+  procedure TWPOInfoManagerBase.setwpoinputfile(const fn: TCmdStr);
     begin
-      freader:=twpofilereader.create(fn,self);
+      freader:=TWPOFileReader.create(fn,self);
     end;
 
-  procedure twpoinfomanagerbase.setwpooutputfile(const fn: tcmdstr);
+  procedure TWPOInfoManagerBase.setwpooutputfile(const fn: TCmdStr);
     begin
-      fwriter:=twpofilewriter.create(fn);
+      fwriter:=TWPOFileWriter.create(fn);
     end;
 
-  procedure twpoinfomanagerbase.parseandcheckwpoinfo;
+  procedure TWPOInfoManagerBase.parseandcheckwpoinfo;
     var
-      i: longint;
+      i: LongInt;
     begin
       { error if we don't have to optimize yet have an input feedback file }
-      if (InitSettings.dowpoptimizerswitches=[]) and
-         assigned(freader) then
+      if (InitSettings.DoWPOptimizerSwitches=[]) and
+         Assigned(freader) then
         begin
-          cgmessage(wpo_input_without_info_use);
+          CGMessage(wpo_input_without_info_use);
           exit;
         end;
 
       { error if we have to optimize yet don't have an input feedback file }
-      if (InitSettings.dowpoptimizerswitches<>[]) and
-         not assigned(freader) then
+      if (InitSettings.DoWPOptimizerSwitches<>[]) and
+         not Assigned(freader) then
         begin
-          cgmessage(wpo_no_input_specified);
+          CGMessage(wpo_no_input_specified);
           exit;
         end;
 
       { if we have to generate wpo information, check that a file has been
         specified and that we have something to write to it
       }
-      if (InitSettings.genwpoptimizerswitches<>[]) and
-         not assigned(fwriter) then
+      if (InitSettings.GenWPOptimizerSwitches<>[]) and
+         not Assigned(fwriter) then
         begin
-          cgmessage(wpo_no_output_specified);
+          CGMessage(wpo_no_output_specified);
           exit;
         end;
 
-      if (InitSettings.genwpoptimizerswitches=[]) and
-         assigned(fwriter) then
+      if (InitSettings.GenWPOptimizerSwitches=[]) and
+         Assigned(fwriter) then
         begin
-          cgmessage(wpo_output_without_info_gen);
+          CGMessage(wpo_output_without_info_gen);
           exit;
         end;
 
       { now read the input feedback file }
-      if assigned(freader) then
+      if Assigned(freader) then
         begin
           freader.processfile;
           freader.free;
@@ -706,17 +706,17 @@ implementation
       { and for each specified optimization check whether the input feedback
         file contained the necessary information
       }
-      if (([cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts] * InitSettings.dowpoptimizerswitches) <> []) and
-         not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) then
+      if (([cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts] * InitSettings.DoWPOptimizerSwitches) <> []) and
+         not Assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) then
         begin
-          cgmessage1(wpo_not_enough_info,wpo2str[wpo_devirtualization_context_insensitive]);
+          CGMessage1(wpo_not_enough_info,wpo2str[wpo_devirtualization_context_insensitive]);
           exit;
         end;
 
-      if (cs_wpo_symbol_liveness in InitSettings.dowpoptimizerswitches) and
-         not assigned(wpoinfouse[wpo_live_symbol_information]) then
+      if (cs_wpo_symbol_liveness in InitSettings.DoWPOptimizerSwitches) and
+         not Assigned(wpoinfouse[wpo_live_symbol_information]) then
         begin
-          cgmessage1(wpo_not_enough_info,wpo2str[wpo_live_symbol_information]);
+          CGMessage1(wpo_not_enough_info,wpo2str[wpo_live_symbol_information]);
           exit;
         end;
 
@@ -724,11 +724,11 @@ implementation
         the selected optimizations and other switches
       }
       for i:=0 to fwpocomponents.count-1 do
-        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*InitSettings.genwpoptimizerswitches)<>[] then
-          twpocomponentbaseclass(fwpocomponents[i]).checkoptions
+        if (TWPOComponentBaseClass(fwpocomponents[i]).generatesinfoforwposwitches*InitSettings.GenWPOptimizerSwitches)<>[] then
+          TWPOComponentBaseClass(fwpocomponents[i]).checkoptions
     end;
 
-  function twpoinfomanagerbase.symbol_live_in_currentproc(fordef: TDef): boolean;
+  function TWPOInfoManagerBase.symbol_live_in_currentproc(fordef: TDef): boolean;
 
     function alias_symbol_live: boolean;
       var
@@ -736,7 +736,7 @@ implementation
       begin
         result:=true;
         item:=TCmdStrListItem(CurrentProcInfo.procdef.aliasnames.first);
-        while assigned(item) do
+        while Assigned(item) do
           begin
             if symbol_live(item.Str) then
               exit;
@@ -746,13 +746,13 @@ implementation
       end;
 
     begin
-      if assigned(CurrentProcInfo) and
+      if Assigned(CurrentProcInfo) and
          not(po_inline in CurrentProcInfo.procdef.procoptions) and
          not symbol_live(CurrentProcInfo.procdef.mangledname) and
          not alias_symbol_live then
         begin
 {$ifdef debug_deadcode}
-          writeln(' NOT adding creation of ',fordef.typename,' because performed in dead stripped proc: ',CurrentProcInfo.procdef.typename);
+          WriteLn(' NOT adding creation of ',fordef.typename,' because performed in dead stripped proc: ',CurrentProcInfo.procdef.typename);
 {$endif debug_deadcode}
           result:=false;
         end
@@ -760,20 +760,20 @@ implementation
         result:=true;
     end;
 
-  procedure twpoinfomanagerbase.extractwpoinfofromprogram;
+  procedure TWPOInfoManagerBase.extractwpoinfofromprogram;
     var
-      i: longint;
-      info: twpocomponentbase;
+      i: LongInt;
+      info: TWPOComponentBase;
     begin
       { if don't have to write anything, fwriter has not been created }
-      if not assigned(fwriter) then
+      if not Assigned(fwriter) then
         exit;
 
       { let all wpo components gather the necessary info from the compiler state }
       for i:=0 to fwpocomponents.count-1 do
-        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*CurrentSettings.genwpoptimizerswitches)<>[] then
+        if (TWPOComponentBaseClass(fwpocomponents[i]).generatesinfoforwposwitches*CurrentSettings.GenWPOptimizerSwitches)<>[] then
           begin
-            info:=twpocomponentbaseclass(fwpocomponents[i]).create;
+            info:=TWPOComponentBaseClass(fwpocomponents[i]).create;
             info.constructfromcompilerstate;
             fwriter.registerwpocomponent(info);
           end;
@@ -783,15 +783,15 @@ implementation
       fwriter:=nil;
     end;
 
-  constructor twpoinfomanagerbase.create;
+  constructor TWPOInfoManagerBase.create;
     begin
       inherited create;
-      fwpocomponents:=tfphashlist.create;
+      fwpocomponents:=TFPHashList.create;
     end;
 
-  destructor twpoinfomanagerbase.destroy;
+  destructor TWPOInfoManagerBase.Destroy;
     var
-      i: twpotype;
+      i: TWPOType;
     begin
       freader.free;
       freader:=nil;
@@ -800,67 +800,67 @@ implementation
       fwpocomponents.free;
       fwpocomponents:=nil;
       for i:=low(wpoinfouse) to high(wpoinfouse) do
-        if assigned(wpoinfouse[i]) then
+        if Assigned(wpoinfouse[i]) then
           FreeAndNil(wpoinfouse[i]);
-      inherited destroy;
+      inherited Destroy;
     end;
 
   { tcalledvmtentries }
 
-  constructor tcalledvmtentries.create(_objdef: TDef; nentries: longint);
+  constructor TCalledVMTEntries.create(_objdef: TDef; nentries: LongInt);
     begin
       objdef:=_objdef;
-      calledentries:=tbitset.create(nentries);
+      calledentries:=TBitSet.create(nentries);
     end;
 
 
-  constructor tcalledvmtentries.ppuload(ppufile: TCompilerPPUFile);
+  constructor TCalledVMTEntries.ppuload(ppufile: TCompilerPPUFile);
     var
-      len: longint;
+      len: LongInt;
     begin
       ppufile.getderef(fobjdefderef);
       len:=ppufile.getlongint;
-      calledentries:=tbitset.create_bytesize(len);
-      if (len <> calledentries.datasize) then
-        internalerror(2009060301);
+      calledentries:=TBitSet.Create_ByteSize(len);
+      if (len <> calledentries.DataSize) then
+        InternalError(2009060301);
       ppufile.readdata(calledentries.data);
     end;
 
 
-  destructor tcalledvmtentries.destroy;
+  destructor TCalledVMTEntries.Destroy;
     begin
       fcalledentries.free;
       fcalledentries := nil;
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
-  procedure tcalledvmtentries.ppuwrite(ppufile: TCompilerPPUFile);
+  procedure TCalledVMTEntries.ppuwrite(ppufile: TCompilerPPUFile);
     begin
       ppufile.putderef(objdefderef);
-      ppufile.putlongint(calledentries.datasize);
+      ppufile.putlongint(calledentries.DataSize);
       ppufile.putdata(calledentries.data);
     end;
 
 
-  procedure tcalledvmtentries.buildderef;
+  procedure TCalledVMTEntries.buildderef;
     begin
       objdefderef.build(objdef);
     end;
 
 
-  procedure tcalledvmtentries.buildderefimpl;
+  procedure TCalledVMTEntries.buildderefimpl;
     begin
     end;
 
 
-  procedure tcalledvmtentries.deref;
+  procedure TCalledVMTEntries.deref;
     begin
       objdef:=TDef(objdefderef.resolve);
     end;
 
 
-  procedure tcalledvmtentries.derefimpl;
+  procedure TCalledVMTEntries.derefimpl;
     begin
     end;
 

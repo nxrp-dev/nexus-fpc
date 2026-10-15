@@ -26,11 +26,11 @@ unit nx86con;
 interface
 
     uses
-       tpcompilerreal,
+       TPCompilerReal,
        node,ncon,ncgcon;
 
     type
-       tx86realconstnode = class(tcgrealconstnode)
+       TX86RealConstNode = class(TCGRealConstNode)
           function pass_1 : TNode;override;
           procedure pass_generate_code;override;
        end;
@@ -38,48 +38,48 @@ interface
 implementation
 
     uses
-      systems,globals,globtype,
+      Systems,Globals,GlobType,
       symdef,
       defutil,
       cpubase,
-      aasmdata,
+      AAsmData,
       cga,cgx86,cgobj,cgbase,cgutils;
 
 {*****************************************************************************
                            TX86REALCONSTNODE
 *****************************************************************************}
 
-    function tx86realconstnode.pass_1 : TNode;
+    function TX86RealConstNode.pass_1 : TNode;
       begin
          result:=nil;
-         if is_number_float(value_real) and not(use_vectorfpu(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (get_real_sign(value_real)=1)) or
-           ((value_real=2.0) and (cs_create_pic in CurrentSettings.moduleswitches))) then
+         if Is_Number_Float(value_real) and not(use_vectorfpu(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (Get_Real_Sign(value_real)=1)) or
+           ((value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches))) then
            expectloc:=LOC_FPUREGISTER
-         else if (value_real=0.0) and (get_real_sign(value_real)=1) and use_vectorfpu(resultdef) then
+         else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) and use_vectorfpu(resultdef) then
            expectloc:=LOC_MMREGISTER
          else
            expectloc:=LOC_CREFERENCE;
       end;
 
 
-    procedure tx86realconstnode.pass_generate_code;
+    procedure TX86RealConstNode.pass_generate_code;
       begin
-         if is_number_float(value_real) then
+         if Is_Number_Float(value_real) then
            begin
              if (value_real=1.0) and not(use_vectorfpu(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
                   location.register:=NR_ST;
-                  tcgx86(cg).inc_fpu_stack;
+                  TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.moduleswitches) and not(use_vectorfpu(resultdef)) then
+             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.ModuleSwitches) and not(use_vectorfpu(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_reg_reg(A_FADD,S_NO,NR_ST,NR_ST);
                   location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
                   location.register:=NR_ST;
-                  tcgx86(cg).inc_fpu_stack;
+                  TCGX86(cg).inc_fpu_stack;
                end
              else if (value_real=-1.0) and not(use_vectorfpu(resultdef)) then
                begin
@@ -87,9 +87,9 @@ implementation
                   emit_none(A_FCHS,S_NO);
                   location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
                   location.register:=NR_ST;
-                  tcgx86(cg).inc_fpu_stack;
+                  TCGX86(cg).inc_fpu_stack;
                end
-             else if (value_real=0.0) and (get_real_sign(value_real)=1) then
+             else if (value_real=0.0) and (Get_Real_Sign(value_real)=1) then
                begin
                  if use_vectorfpu(resultdef) then
                    begin
@@ -113,11 +113,11 @@ implementation
                  else
                    begin
                       emit_none(A_FLDZ,S_NO);
-                      if (get_real_sign(value_real) < 0) then
+                      if (Get_Real_Sign(value_real) < 0) then
                         emit_none(A_FCHS,S_NO);
                       location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
                       location.register:=NR_ST;
-                      tcgx86(cg).inc_fpu_stack;
+                      TCGX86(cg).inc_fpu_stack;
                    end;
                end
             else
@@ -129,5 +129,5 @@ implementation
 
 
 begin
-   crealconstnode:=tx86realconstnode;
+   CRealConstNode:=TX86RealConstNode;
 end.

@@ -41,45 +41,45 @@ interface
 
 
 
-procedure makeDFATable;
+procedure MakeDFATable;
   (* construct DFA from position table *)
 
 implementation
 
 uses LexBase, LexTable;
 
-procedure makeDFATable;
-  var i : Integer;
+procedure MakeDFATable;
+  var I : Integer;
   begin
     (* initialize start states: *)
-    for i := 2 to 2*n_start_states+1 do
-      if not start_excl^[i div 2] then
-        setunion(first_pos_table^[i]^, first_pos_table^[i mod 2]^);
-    for i := 0 to 2*n_start_states+1 do
-      act_state := newState(first_pos_table^[i]);
-    act_state := -1;
-    while succ(act_state)<n_states do
+    for I := 2 to 2*NStartStates+1 do
+      if not StartExcl^[I div 2] then
+        SetUnion(FirstPosTable^[I]^, FirstPosTable^[I mod 2]^);
+    for I := 0 to 2*NStartStates+1 do
+      ActState := NewState(FirstPosTable^[I]);
+    ActState := -1;
+    while Succ(ActState)<NStates do
       begin
-        inc(act_state);
+        Inc(ActState);
         (* add transitions for active state: *)
-        startStateTrans;
-        for i := 1 to size(state_table^[act_state].state_pos^) do
-          with pos_table^[state_table^[act_state].state_pos^[i]] do
-            if pos_type=char_pos then
-              addTrans([c], follow_pos)
-            else if pos_type=cclass_pos then
-              addTrans(cc^, follow_pos)
-            else if pos=0 then
-              state_table^[act_state].final := true;
+        StartStateTrans;
+        for I := 1 to Size(StateTable^[ActState].StatePos^) do
+          with PosTable^[StateTable^[ActState].StatePos^[I]] do
+            if PosType=CharPos then
+              AddTrans([C], FollowPos)
+            else if PosType=CClassPos then
+              AddTrans(CC^, FollowPos)
+            else if POS=0 then
+              StateTable^[ActState].Final := True;
         (* assign next states: *)
-        for i := state_table^[act_state].trans_lo to n_trans do
-          with trans_table^[i] do
-            next_state := addState(follow_pos);
+        for I := StateTable^[ActState].TransLo to NTrans do
+          with TransTable^[I] do
+            NextState := AddState(FollowPos);
         (* merge transitions for the same next state: *)
-        mergeTrans;
+        MergeTrans;
         (* sort transitions: *)
-        sortTrans;
-        endStateTrans;
+        SortTrans;
+        EndStateTrans;
       end;
   end(*makeDFATable*);
 

@@ -23,13 +23,13 @@ program fpc;
 {$mode objfpc}{$H+}
 
   uses
-     Sysutils;
+     SysUtils;
 
   const
 {$ifdef UNIX}
-    exeext='';
+    ExeExt='';
 {$else UNIX}
-      exeext='.exe';
+      ExeExt='.exe';
 {$endif UNIX}
 
 Const
@@ -48,7 +48,7 @@ Const
   procedure error(const s : string);noreturn;
 
   begin
-     writeln('Error: ',s);
+     WriteLn('Error: ',s);
      halt(1);
   end;
 
@@ -93,7 +93,7 @@ Const
 
   function SplitPath(Const HStr:String):String;
     var
-      i : longint;
+      i : LongInt;
     begin
       i:=Length(Hstr);
       while (i>0) and not(Hstr[i] in ['\','/']) do
@@ -113,7 +113,7 @@ Const
   var
     warn : Boolean;
     ShowErrno : Boolean;
-    extrapath : ansistring;
+    extrapath : AnsiString;
 
   function findexe(var ppcbin:string): boolean;
     var
@@ -121,12 +121,12 @@ Const
     begin
       { add .exe extension }
       findexe:=false;
-      ppcbin:=ppcbin+exeext;
+      ppcbin:=ppcbin+ExeExt;
 
       if (extrapath<>'') and (extrapath[length(extrapath)]<>DirectorySeparator) then
         extrapath:=extrapath+DirectorySeparator;
       { get path of fpc.exe }
-      path:=splitpath(paramstr(0));
+      path:=splitpath(ParamStr(0));
       { don't try with an empty extra patch, this might have strange results
         if the current directory contains a compiler
       }
@@ -179,7 +179,7 @@ Const
       if processorstr='B' then
         begin
           { report the full name of the ppcbin }
-          writeln(findcompiler(ppcbin,cpusuffix,exesuffix));
+          WriteLn(findcompiler(ppcbin,cpusuffix,exesuffix));
           halt(0);
         end;
       { -PP is a special code that will show the
@@ -188,7 +188,7 @@ Const
       if processorstr='P' then
         begin
           { report the processor }
-          writeln(processorname);
+          WriteLn(processorname);
           halt(0);
         end;
       end;
@@ -215,7 +215,7 @@ Function FindConfigFile(const aFile : string; const aCompiler : String) : String
 
 var
   {$ifdef unix}sl : rawbytestring;{$endif}
-  {$ifdef unix}hs,{$endif} aSearchPath,exepath,configpath : string;
+  {$ifdef unix}hs,{$endif} aSearchPath,ExePath,configpath : string;
 
   Procedure AddToPath(aDir : String);
 
@@ -229,7 +229,7 @@ var
 begin
   if FileExists(aFile) then
     Exit(aFile);
-  ExePath:=SetDirSeparators(ExtractFilePath(paramstr(0)));
+  ExePath:=SetDirSeparators(ExtractFilePath(ParamStr(0)));
   aSearchPath:='';
   { retrieve configpath }
   configpath:=SetDirSeparators(GetEnvironmentVariable('PPC_CONFIG_PATH'));
@@ -267,7 +267,7 @@ begin
 {$ifdef Unix}
   AddToPath('/etc/');
 {$else}
-  AddToPath(exepath);
+  AddToPath(ExePath);
 {$endif}
   Result:=FileSearch(aFile,aSearchPath);
 end;
@@ -298,7 +298,7 @@ begin
     Write('Warning: ');
     if ShowErrNo then
       Write('(99999) ');
-    Writeln('Compiler version already set to: ',ExeSuffix);
+    WriteLn('Compiler version already set to: ',ExeSuffix);
     end;
 end;
 
@@ -327,7 +327,7 @@ begin
   filemode:=0;
   Reset(aFile);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
     Error('Cannot open config file: '+aFileName);
   While not EOF(aFile) do
     begin
@@ -343,12 +343,12 @@ begin
 end;
 
   var
-     s,CfgFile: ansistring;
+     s,CfgFile: AnsiString;
      CPUSuffix, ExeSuffix, SourceCPU, ppcbin, TargetName, TargetCPU: string;
-     PPCCommandLine: array of ansistring;
-     PPCCommandLineLen: longint;
-     i : longint;
-     errorvalue     : Longint;
+     PPCCommandLine: array of AnsiString;
+     PPCCommandLineLen: LongInt;
+     i : LongInt;
+     errorvalue     : LongInt;
 
      Procedure AddToCommandLine(S : String);
 
@@ -359,7 +359,7 @@ end;
 
 begin
   ppccommandline := [];
-  setlength(ppccommandline, paramcount);
+  SetLength(ppccommandline, paramcount);
   ppccommandlinelen := 0;
   cpusuffix := '';        // if not empty, signals attempt at cross
   // compiler.

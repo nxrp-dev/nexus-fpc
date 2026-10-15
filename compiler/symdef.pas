@@ -25,18 +25,18 @@ unit symdef;
 interface
 
     uses
-       tpcompilerreal,
+       TPCompilerReal,
     { common }
-       cclasses,widestr,
+       CClasses,WideStr,
        { global }
-       globtype,globals,tokens,constexp,
+       GlobType,Globals,tokens,ConstExp,
        { symtable }
-       symconst,symbase,symtype,
+       symconst,SymBase,symtype,
        { node }
        node,
        { aasm }
        aasmtai,
-       cpuinfo,
+       CPUInfo,
        cgbase,
        parabase
        ;
@@ -48,13 +48,13 @@ interface
 ************************************************}
 
        TGenericConstraintData=class
-         interfaces : tfpobjectlist;
-         interfacesderef : tfplist;
+         interfaces : TFPObjectList;
+         interfacesderef : TFPList;
          flags : TGenericConstraintFlags;
          { only required while parsing }
          fileinfo : TFilePosInfo;
          constructor create;
-         destructor destroy;override;
+         destructor Destroy;override;
          procedure ppuload(ppufile:TCompilerPPUFile);
          procedure ppuwrite(ppufile:TCompilerPPUFile);
          procedure buildderef;
@@ -76,7 +76,7 @@ interface
           procedure ppuwrite(ppufile:TCompilerPPUFile);
           procedure PPULoadSubEntries(ppufile:TCompilerPPUFile);
           procedure PPUWriteSubEntries(ppufile:TCompilerPPUFile);
-          destructor destroy;override;
+          destructor Destroy;override;
           procedure buildderef;
           procedure deref;
        end;
@@ -89,8 +89,8 @@ interface
           class procedure copyandbind(alist :TRTTIAttributeList; var owned : TRTTIAttributeList);
           procedure addattribute(atypesym:TSym;typeconstr:TDef;constructorcall:TNode;constref paras:array of TNode);
           procedure addattribute(attr:TRTTIAttribute);
-          destructor destroy; override;
-          function GetAttributeCount:longint;
+          destructor Destroy; override;
+          function GetAttributeCount:LongInt;
           procedure buildderef;
           procedure deref;
 
@@ -105,9 +105,9 @@ interface
        TStoredDef = class(TDef)
        private
 {$ifdef symansistr}
-          _fullownerhierarchyname : ansistring;
+          _fullownerhierarchyname : AnsiString;
 {$else symansistr}
-          _fullownerhierarchyname : pshortstring;
+          _fullownerhierarchyname : PShortString;
 {$endif symansistr}
           procedure writeentry(ppufile: TCompilerPPUFile; ibnr: byte);
        protected
@@ -121,7 +121,7 @@ interface
             abstracts that checking, and also restores the symtable stack
             (which had to be reset before creating the new def, so that the new
              def did not automatically get added to its top) }
-          class procedure SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; oldsymtablestack: TSymTableStack);
+          class procedure SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; OldSymTableStack: TSymTableStack);
        public
 {$ifdef EXTDEBUG}
           fileinfo   : TFilePosInfo;
@@ -129,12 +129,12 @@ interface
           { generic support }
           genericdef      : TStoredDef;
           genericdefderef : TDeref;
-          generictokenbuf : tdynamicarray;
+          generictokenbuf : TDynamicArray;
           { this list contains references to the symbols that make up the
             generic parameters; the symbols are not owned by this list
             Note: this list is allocated on demand! }
-          genericparas    : tfphashobjectlist;
-          genericparaderefs : tfplist;
+          genericparas    : TFPHashObjectList;
+          genericparaderefs : TFPList;
           { contains additional data if this def is a generic constraint
             Note: this class is allocated on demand! }
           genconstraintdata : TGenericConstraintData;
@@ -145,7 +145,7 @@ interface
           orgdefderef     : TDeref;
           constructor create(dt:TDefTyp;doregister:boolean);
           constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
-          destructor  destroy;override;
+          destructor  Destroy;override;
           function getcopy : TStoredDef;virtual;
           procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
           { this is called directly after ppuload }
@@ -157,7 +157,7 @@ interface
           procedure deref;override;
           procedure derefimpl;override;
           function  size:asizeint;override;
-          function  getvardef:longint;override;
+          function  getvardef:LongInt;override;
           function  alignment:shortint;override;
           function  IsPublishable : TPublishProperty;override;
           function  NeedsInitTable : boolean;override;
@@ -191,7 +191,7 @@ interface
             by another symtable }
           procedure maybe_put_in_symtable_stack;
        private
-          savesize  : asizeuint;
+          savesize  : ASizeUInt;
        end;
 
        TFileTyp = (ft_text,ft_typed,ft_untyped);
@@ -228,7 +228,7 @@ interface
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          function  getvardef:longint;override;
+          function  getvardef:LongInt;override;
           procedure setsize;
           function IsPublishable : TPublishProperty;override;
           function NeedsInitTable : boolean;override;
@@ -247,10 +247,10 @@ interface
        TFormalDefClass = class of TFormalDef;
 
        TForwardDef = class(TStoredDef)
-          tosymname : pshortstring;
+          tosymname : PShortString;
           forwardpos : TFilePosInfo;
           constructor create(const s:string;const pos:TFilePosInfo);virtual;
-          destructor destroy;override;
+          destructor Destroy;override;
           function getcopy:TStoredDef;override;
           function GetTypeName:string;override;
        end;
@@ -339,7 +339,7 @@ interface
           { for C++ classes: name of the library this class is imported from }
           { for Java classes/records: package name }
           import_lib     : PShortString;
-          symtable       : TSymTable;
+          SymTable       : TSymTable;
           cloneddef      : TAbstractRecordDef;
           cloneddefderef : TDeref;
           objectoptions  : TObjectOptions;
@@ -350,7 +350,7 @@ interface
           constructor create(const n:string; dt:TDefTyp;doregister:boolean);
           constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          destructor destroy; override;
+          destructor Destroy; override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           procedure check_forwards; virtual;
@@ -382,7 +382,7 @@ interface
        TVariantRecBranch = record
          { we store only single values here and no ranges because tvariantrecdesc is only needed in iso mode
            which does not support range expressions in variant record definitions }
-         values : array of Tconstexprint;
+         values : array of TConstExprInt;
          nestedvariant : PVariantRecDesc;
        end;
 
@@ -397,18 +397,18 @@ interface
        TRecordDef = class(TAbstractRecordDef)
 {$ifdef DEBUG_NODE_XML}
        protected
-          function XMLPrintType: ansistring; override;
+          function XMLPrintType: AnsiString; override;
 {$endif DEBUG_NODE_XML}
        public
           variantrecdesc : PVariantRecDesc;
           isunion       : boolean;
           constructor create(const n:string; p:TSymTable);virtual;
-          constructor create_global_internal(const n: string; packrecords, recordalignmin: shortint); virtual;
-          constructor create_internal(const n: string; packrecords, recordalignmin: shortint; where: TSymTable); virtual;
+          constructor create_global_internal(const n: string; PackRecords, RecordAlignMin: shortint); virtual;
+          constructor create_internal(const n: string; PackRecords, RecordAlignMin: shortint; where: TSymTable); virtual;
           function add_field_by_def(const optionalname: TIDString; def: TDef): TSym;
-          procedure add_fields_from_deflist(fieldtypes: tfplist);
+          procedure add_fields_from_deflist(fieldtypes: TFPList);
           constructor ppuload(ppufile:TCompilerPPUFile);
-          destructor destroy;override;
+          destructor Destroy;override;
           function getcopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
@@ -432,8 +432,8 @@ interface
 
        TImplementedInterface = class
         private
-         fIOffset      : longint;
-         function GetIOffset: longint;
+         fIOffset      : LongInt;
+         function GetIOffset: LongInt;
         public
          IntfDef      : TObjectDef;
          IntfDefDeref : TDeref;
@@ -446,17 +446,17 @@ interface
          ImplementsField : TSym;
          constructor create(aintf: TObjectDef);virtual;
          constructor create_deref(intfd,getterd:TDeref);virtual;
-         destructor  destroy; override;
+         destructor  Destroy; override;
          function getcopy:TImplementedInterface;
          procedure buildderef;
          procedure deref;
          procedure AddMapping(const origname, newname: string);
          function  GetMapping(const origname: string):string;
          procedure AddImplProc(pd:TProcDef);
-         function  IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: longint): boolean;
-         property  IOffset: longint read GetIOffset write fIOffset;
+         function  IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: LongInt): boolean;
+         property  IOffset: LongInt read GetIOffset write fIOffset;
        end;
-       TImplementedInterfaceClass = class of timplementedinterface;
+       TImplementedInterfaceClass = class of TImplementedInterface;
 
        { tvmtentry }
        TVMTEntry = record
@@ -473,10 +473,10 @@ interface
        TMVCallStaticInfo = array[0..1024*1024-1] of TVMCallStatic;
        TObjectDef = class(TAbstractRecordDef)
        private
-          fcurrent_dispid: longint;
+          fcurrent_dispid: LongInt;
 {$ifdef DEBUG_NODE_XML}
        protected
-          function XMLPrintType: ansistring; override;
+          function XMLPrintType: AnsiString; override;
           procedure XMLPrintDefInfo(var T: Text; Sym: TSym); override;
           procedure XMLPrintDefData(var T: Text; Sym: TSym); override;
 {$endif DEBUG_NODE_XML}
@@ -489,21 +489,21 @@ interface
           extendeddefderef: TDeref;
           helpertype : THelperType;
           { for Objective-C: protocols and classes can have the same name there }
-          objextname     : pshortstring;
+          objextname     : PShortString;
           { to be able to have a variable vmt position }
           { and no vmt field for objects without virtuals }
           vmtentries     : TFPList;
           vmcallstaticinfo : PMVCallStaticInfo;
           vmt_field       : TSym;
           vmt_fieldderef  : TDeref;
-          iidguid        : pguid;
-          iidstr         : pshortstring;
+          iidguid        : PGUID;
+          iidstr         : PShortString;
           { store implemented interfaces defs and name mappings }
           ImplementedInterfaces : TFPObjectList;
           { number of abstract methods (used by JVM target to determine whether
             or not the class should be marked as abstract: must be done if 1 or
             more abstract methods) }
-          abstractcnt    : longint;
+          abstractcnt    : LongInt;
           writing_class_record_dbginfo,
           { a class of this type has been created in this module }
           created_in_current_module,
@@ -528,7 +528,7 @@ interface
           hiddenclassdefref : TDeref;
           constructor create(ot:TObjectTyp;const n:string;c:TObjectDef;doregister:boolean);virtual;
           constructor ppuload(ppufile:TCompilerPPUFile);
-          destructor  destroy;override;
+          destructor  Destroy;override;
           function getcopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
@@ -541,7 +541,7 @@ interface
           function  getparentdef:TDef;override;
           function  size : asizeint;override;
           function  alignment:shortint;override;
-          function  vmtmethodoffset(index:longint):longint;
+          function  vmtmethodoffset(index:LongInt):LongInt;
           function  members_need_inittable : boolean;
           { this should be called when this class implements an interface }
           procedure prepareguid;
@@ -559,9 +559,9 @@ interface
           procedure set_parent(c : TObjectDef);
           function find_destructor: TProcDef;
           function implements_any_interfaces: boolean;
-          function register_implemented_interface(intfdef:TObjectDef;useguid:boolean):timplementedinterface;
+          function register_implemented_interface(intfdef:TObjectDef;useguid:boolean):TImplementedInterface;
           { dispinterface support }
-          function get_next_dispid: longint;
+          function get_next_dispid: LongInt;
           { enumerator support }
           function search_enumerator_get: TProcDef; override;
           function search_enumerator_move: TProcDef; override;
@@ -570,7 +570,7 @@ interface
           procedure RegisterCreatedObjectType;override;
           procedure register_maybe_created_object_type;
           procedure RegisterCreatedClassRefType;
-          procedure register_vmt_call(index:longint);
+          procedure register_vmt_call(index:LongInt);
           { ObjC }
           procedure finish_objc_data;
           function check_objc_types: boolean;
@@ -600,7 +600,7 @@ interface
           rangedef      : TDef;
           rangedefderef : TDeref;
           arrayoptions  : TArrayDefOptions;
-          symtable      : TSymTable;
+          SymTable      : TSymTable;
        protected
           _elementdef      : TDef;
           _elementdefderef : TDeref;
@@ -609,7 +609,7 @@ interface
        public
           function elesize : asizeint;
           function elepackedbitsize : asizeint;
-          function elecount : asizeuint;
+          function elecount : ASizeUInt;
           constructor create_from_pointer(def: TPointerDef);virtual;
           constructor create(l, h: asizeint; def: TDef);virtual;
           constructor create_vector(l,h:asizeint; def:TDef);
@@ -623,7 +623,7 @@ interface
           class function getreusable_no_free(def: TDef; elems: asizeint): TArrayDef;
           class function getreusable_no_free_vector(def: TDef; elems: asizeint): TArrayDef;
           constructor ppuload(ppufile:TCompilerPPUFile);
-          destructor destroy; override;
+          destructor Destroy; override;
           function getcopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
@@ -657,7 +657,7 @@ interface
           function alignment:shortint;override;
           procedure setsize;
           function  packedbitsize: asizeint; override;
-          function getvardef : longint;override;
+          function getvardef : LongInt;override;
        end;
        TOrdDefClass = class of TOrdDef;
 
@@ -674,7 +674,7 @@ interface
           function alignment:shortint;override;
           function structalignment: shortint;override;
           procedure setsize;
-          function  getvardef:longint;override;
+          function  getvardef:LongInt;override;
        end;
        TFloatDefClass = class of TFloatDef;
 
@@ -698,19 +698,19 @@ interface
                          special parameters (self, vmt, parentfp, ...) }
                        pc_bareproc
                        );
-       tcacheableproccopytyp = pc_normal..pc_address_only;
+       TCacheableProcCopyType = pc_normal..pc_address_only;
 
        TAbstractProcDef = class(TStoredDef)
           { saves a definition to the return type }
           returndef       : TDef;
           returndefderef  : TDeref;
           parast          : TSymTable;
-          paras           : tparalist;
+          paras           : TParaList;
           proctypeoption  : TProcTypeOption;
           proccalloption  : TProcCallOption;
           procoptions     : TProcOptions;
           callerargareasize,
-          calleeargareasize: pint;
+          calleeargareasize: PInt;
           funcretloc : array[callerside..calleeside] of TCGPara;
           has_paraloc_info : TCallerCallee; { paraloc info is available }
           { number of user visible parameters }
@@ -718,13 +718,13 @@ interface
           minparacount    : word;
           constructor create(dt:TDefTyp;level:byte;doregister:boolean);
           constructor ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
-          destructor destroy;override;
+          destructor Destroy;override;
           procedure  ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderef;override;
           procedure deref;override;
           procedure calcparas;
-          function mangledprocparanames(oldlen : longint) : string;
-          function  typename_paras(pno: TProcNameOptions): ansistring;
+          function mangledprocparanames(oldlen : LongInt) : string;
+          function  typename_paras(pno: TProcNameOptions): AnsiString;
           function  is_methodpointer:boolean;virtual;
           function  is_addressonly:boolean;virtual;
           function  no_self_node:boolean;
@@ -752,7 +752,7 @@ interface
        TProcVarDef = class(TAbstractProcDef)
           constructor create(level:byte;doregister:boolean);virtual;
           { returns a procvardef that represents the address of a proc(var)def }
-          class function getreusableprocaddr(def: TAbstractProcDef; copytyp: tcacheableproccopytyp): TProcVarDef; virtual;
+          class function getreusableprocaddr(def: TAbstractProcDef; copytyp: TCacheableProcCopyType): TProcVarDef; virtual;
           { same as above, but in case the def must never be freed after the
             current module has been compiled -- even if the def was not written
             to the ppu file (for defs in para locations, as we don't reset them
@@ -776,8 +776,8 @@ interface
 
        TMessageInf = record
          case integer of
-           0 : (str : pshortstring);
-           1 : (i : longint);
+           0 : (str : PShortString);
+           1 : (i : LongInt);
        end;
 
        TInliningInfo = record
@@ -796,12 +796,12 @@ interface
        PCapturedSymInfo = ^TCapturedSymInfo;
 
        TImplProcDefInfo = record
-          resultname : pshortstring;
+          resultname : PShortString;
           parentfpstruct: TSym;
           parentfpstructptrtype: TDef;
           parentfpinitblock: TNode;
           procstarttai,
-          procendtai   : tai;
+          procendtai   : TAI;
           skpara: pointer;
           personality: TProcDef;
           was_anonymous,
@@ -810,7 +810,7 @@ interface
           interfacedef : boolean;
           hasforward  : boolean;
           is_implemented : boolean;
-          capturedsyms : tfplist;
+          capturedsyms : TFPList;
        end;
        PImplProcDefInfo = ^TImplProcDefInfo;
 
@@ -819,9 +819,9 @@ interface
        TProcDef = class(TAbstractProcDef)
        protected
 {$ifdef symansistr}
-         _mangledname : ansistring;
+         _mangledname : AnsiString;
 {$else symansistr}
-         _mangledname : pshortstring;
+         _mangledname : PShortString;
 {$endif}
          _parentfpsym : TSym;
          { information that is only required until the implementation of the
@@ -838,10 +838,10 @@ interface
          procedure SetParentFPStructPtrType(AValue: TDef);
          function GetParentFPInitBlock: TNode;
          procedure SetParentFPInitBlock(AValue: TNode);
-         function Getprocstarttai: tai;
-         procedure Setprocstarttai(AValue: tai);
-         function Getprocendtai: tai;
-         procedure Setprocendtai(AValue: tai);
+         function Getprocstarttai: TAI;
+         procedure Setprocstarttai(AValue: TAI);
+         function Getprocendtai: TAI;
+         procedure Setprocendtai(AValue: TAI);
          function Getskpara: pointer;
          procedure Setskpara(AValue: pointer);
          function Getpersonality: TProcDef;
@@ -862,11 +862,11 @@ interface
          procedure setwas_anonymous(avalue:boolean);
          function gethas_capturer:boolean;
          procedure sethas_capturer(avalue:boolean);
-         function Getcapturedsyms:tfplist;
+         function Getcapturedsyms:TFPList;
          function getparentfpsym: TSym;
        public
           messageinf : TMessageInf;
-          dispid : longint;
+          dispid : LongInt;
 {$ifndef EXTDEBUG}
           { where is this function defined and what were the symbol
             flags, needed here because there
@@ -875,9 +875,9 @@ interface
           fileinfo : TFilePosInfo;
 {$endif}
           symoptions : TSymOptions;
-          deprecatedmsg : pshortstring;
+          deprecatedmsg : PShortString;
           { generic support }
-          genericdecltokenbuf : tdynamicarray;
+          genericdecltokenbuf : TDynamicArray;
           { symbol owning this definition }
           procsym : TSym;
           procsymderef : TDeref;
@@ -892,7 +892,7 @@ interface
           implprocoptions: TImplProcOptions;
           { import info }
           import_dll,
-          import_name : pshortstring;
+          import_name : PShortString;
           { info for inlining the subroutine, if this pointer is nil,
             the procedure can't be inlined }
           inlininginfo : PInliningInfo;
@@ -906,16 +906,16 @@ interface
           seenmarker : pointer; // used for filtering in tcandidate
 {$endif}
 {$ifdef symansistr}
-          section: ansistring;
+          section: AnsiString;
 {$else symansistr}
-          section: pshortstring;
+          section: PShortString;
 {$endif}
           { only needed when actually compiling a unit, no need to save/load from ppu }
           invoke_helper : TProcDef;
           copied_from : TProcDef;
           constructor create(level:byte;doregister:boolean);virtual;
           constructor ppuload(ppufile:TCompilerPPUFile);
-          destructor  destroy;override;
+          destructor  Destroy;override;
           procedure   freeimplprocdefinfo;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
@@ -939,8 +939,8 @@ interface
           procedure setmangledname(const s : TSymStr);
           function  needsglobalasmsym: boolean;
           procedure setcompilerprocname;
-          function  fullprocname(showhidden:boolean):ansistring;
-          function  customprocname(pno: TProcNameOptions):ansistring;
+          function  fullprocname(showhidden:boolean):AnsiString;
+          function  customprocname(pno: TProcNameOptions):AnsiString;
           function  defaultmangledname: TSymStr;
           function  cplusplusmangledname : TSymStr;
           function  objcmangledname : TSymStr;
@@ -978,8 +978,8 @@ interface
           { First/last assembler symbol/instruction in aasmoutput list.
             Note: initialised after compiling the code for the procdef, but
               not saved to/restored from ppu. Used when inserting debug info }
-          property procstarttai: tai read Getprocstarttai write Setprocstarttai;
-          property procendtai: tai read Getprocendtai write Setprocendtai;
+          property procstarttai: TAI read Getprocstarttai write Setprocstarttai;
+          property procendtai: TAI read Getprocendtai write Setprocendtai;
           { optional parameter for the synthetic routine generation logic }
           property skpara: pointer read Getskpara write Setskpara;
           { ABI-conformant exception handling personality function }
@@ -1000,7 +1000,7 @@ interface
           { true if the implementation part for this procdef has been handled }
           property is_implemented: boolean read Getis_implemented write Setis_implemented;
           { valid if the procdef captures any symbols from outer scopes }
-          property capturedsyms:tfplist read Getcapturedsyms;
+          property capturedsyms:TFPList read Getcapturedsyms;
           { true if this procdef was originally an anonymous function }
           property was_anonymous:boolean read getwas_anonymous write setwas_anonymous;
           { true if the procdef has a capturer for anonymous functions }
@@ -1041,7 +1041,7 @@ interface
           function  size:asizeint;override;
           function alignment : shortint;override;
           function  NeedsInitTable : boolean;override;
-          function  getvardef:longint;override;
+          function  getvardef:LongInt;override;
           { returns the default char type def for the string }
           function get_default_char_type: TDef;
           { returns the default string type }
@@ -1054,12 +1054,12 @@ interface
           maxval    : asizeint;
           basedef   : TEnumDef;
           basedefderef : TDeref;
-          symtable  : TSymTable;
+          SymTable  : TSymTable;
           has_jumps : boolean;
           constructor create;virtual;
           constructor create_subrange(_basedef:TEnumDef;_min,_max:asizeint);virtual;
           constructor ppuload(ppufile:TCompilerPPUFile);
-          destructor destroy;override;
+          destructor Destroy;override;
           function getcopy : TStoredDef;override;
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
@@ -1068,7 +1068,7 @@ interface
           procedure deref;override;
           function  GetTypeName:string;override;
           function  IsPublishable : TPublishProperty;override;
-          procedure calcsavesize(packenum: shortint);
+          procedure calcsavesize(PackEnum: shortint);
           function  packedbitsize: asizeint; override;
           procedure setmax(_max:asizeint);
           procedure setmin(_min:asizeint);
@@ -1131,25 +1131,25 @@ interface
        CurrentGenericDef: TStoredDef;        { used to reject declaration of generic class inside generic class }
        CurrentSpecializeDef: TStoredDef;     { used to implement usage of generic class in itself }
 
-       cfiledef: TFileDefClass;
-       cvariantdef: TVariantDefClass;
-       cformaldef: TFormalDefClass;
-       cforwarddef: TForwardDefClass;
-       cundefineddef: TUndefinedDefClass;
-       cerrordef: TErrorDefClass;
-       cpointerdef: TPointerDefClass;
-       crecorddef: TRecordDefClass;
+       CFileDef: TFileDefClass;
+       CVariantDef: TVariantDefClass;
+       CFormalDef: TFormalDefClass;
+       CForwardDef: TForwardDefClass;
+       CUndefinedDef: TUndefinedDefClass;
+       CErrorDef: TErrorDefClass;
+       CPointerDef: TPointerDefClass;
+       CRecordDef: TRecordDefClass;
        cimplementedinterface: TImplementedInterfaceClass;
-       cobjectdef: TObjectDefClass;
-       cclassrefdef: TClassRefDefClass;
-       carraydef: TArrayDefClass;
-       corddef: TOrdDefClass;
-       cfloatdef: TFloatDefClass;
-       cprocvardef: TProcVarDefClass;
-       cprocdef: TProcDefClass;
-       cstringdef: TStringDefClass;
-       cenumdef: TEnumDefClass;
-       csetdef: TSetDefClass;
+       CObjectDef: TObjectDefClass;
+       CClassRefDef: TClassRefDefClass;
+       CArrayDef: TArrayDefClass;
+       COrdDef: TOrdDefClass;
+       CFloatDef: TFloatDefClass;
+       CProcVarDef: TProcVarDefClass;
+       CProcDef: TProcDefClass;
+       CStringDef: TStringDefClass;
+       CEnumDef: TEnumDefClass;
+       CSetDef: TSetDefClass;
 
 
     { default types }
@@ -1226,7 +1226,7 @@ interface
        hresultdef,
        typekindtype,              { def of TTypeKind for correct handling of GetTypeKind parameters }
        { we use only one variant def for every variant class }
-       cvarianttype,
+       CVariantType,
        colevarianttype,
        { default integer type, normally s32inttype on 32 bit systems and s64bittype on 64 bit systems }
        sinttype,
@@ -1366,7 +1366,7 @@ interface
     function getansistringdef:TStringDef;
     function getparaencoding(def:TDef):TStringEncoding; inline;
 
-    function get_recorddef(prefix:TInternalTypePrefix;const fields:array of TDef; packrecords:shortint): TRecordDef;
+    function get_recorddef(prefix:TInternalTypePrefix;const fields:array of TDef; PackRecords:shortint): TRecordDef;
     { get a table def of the form
         record
           count: countdef;
@@ -1374,7 +1374,7 @@ interface
         end;
       Returns both the outer record and the inner arraydef
     }
-    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:longint;packrecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
+    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:LongInt;PackRecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
 
     function fileinfo_of_typesym_in_def(def:TDef;sym:TSym;out filepos:TFilePosInfo):boolean;
     procedure reset_all_default_types; {housekeeping for Textmode IDE sanity}
@@ -1383,21 +1383,21 @@ implementation
 
     uses
       SysUtils,
-      cutils,
+      CUtils,
       { global }
-      verbose,
+      Verbose,
       { target }
-      systems,paramgr,
+      Systems,paramgr,
       { symtable }
-      symsym,symtable,defutil,objcdef,
+      SymSym,SymTable,defutil,objcdef,
       { parser }
       pgenutil,
       { module }
-      fmodule,ppu,
+      FModule,ppu,
       { other }
       aasmbase,
       gendef,
-      fpchash,
+      FPCHash,
       entfile
       ;
 
@@ -1410,7 +1410,7 @@ implementation
       var
         gst : TGetSymTable;
         st : TSymTable;
-        i : longint;
+        i : LongInt;
         srsym : TSym;
       begin
         result:=false;
@@ -1419,7 +1419,7 @@ implementation
         for gst:=low(TGetSymTable) to high(TGetSymTable) do
           begin
             st:=def.getsymtable(gst);
-            if not assigned(st) then
+            if not Assigned(st) then
               continue;
             for i:=0 to st.symlist.count-1 do
               begin
@@ -1460,42 +1460,42 @@ implementation
 
     function getansistringcodepage:TStringEncoding; inline;
       begin
-        if ([cs_explicit_codepage,cs_system_codepage]*CurrentSettings.moduleswitches)<>[] then
-          result:=CurrentSettings.sourcecodepage
+        if ([cs_explicit_codepage,cs_system_codepage]*CurrentSettings.ModuleSwitches)<>[] then
+          result:=CurrentSettings.SourceCodePage
         else
           result:=0;
       end;
 
     function getansistringdef:TStringDef;
       var
-        symtable:TSymTable;
+        SymTable:TSymTable;
         oldstack : TSymTableStack;
       begin
         { if a codepage is explicitly defined in this mudule we need to return
           a replacement for ansistring def }
-        if ([cs_explicit_codepage,cs_system_codepage]*CurrentSettings.moduleswitches)<>[] then
+        if ([cs_explicit_codepage,cs_system_codepage]*CurrentSettings.ModuleSwitches)<>[] then
           begin
-            if not assigned(CurrentModule) then
-              internalerror(2011101301);
+            if not Assigned(CurrentModule) then
+              InternalError(2011101301);
             { codepage can be redeclared only once per unit so we don't need a list of
               redefined ansistring but only one pointer }
-            if not assigned(CurrentModule.ansistrdef) then
+            if not Assigned(CurrentModule.ansistrdef) then
               begin
                 { if we did not create it yet we need to do this now }
                 if CurrentModule.in_interface then
-                  symtable:=CurrentModule.globalsymtable
+                  SymTable:=CurrentModule.GlobalSymTable
                 else
-                  symtable:=CurrentModule.localsymtable;
+                  SymTable:=CurrentModule.localsymtable;
                 { create a temporary stack as it's not good (TM) to mess around
                   with the order if the unit contains generics or helpers; don't
                   use a def aware symtablestack though }
-                oldstack:=symtablestack;
-                symtablestack:=TSymTableStack.create;
-                symtablestack.push(symtable);
-                CurrentModule.ansistrdef:=cstringdef.createansi(CurrentSettings.sourcecodepage,true);
-                symtablestack.pop(symtable);
-                symtablestack.free;
-                symtablestack:=oldstack;
+                oldstack:=SymTableStack;
+                SymTableStack:=TSymTableStack.create;
+                SymTableStack.push(SymTable);
+                CurrentModule.ansistrdef:=CStringDef.createansi(CurrentSettings.SourceCodePage,true);
+                SymTableStack.pop(SymTable);
+                SymTableStack.free;
+                SymTableStack:=oldstack;
               end;
             result:=TStringDef(CurrentModule.ansistrdef);
           end
@@ -1512,17 +1512,17 @@ implementation
           that concatenation shouldn't be converted to defaultsystemcodepage
           if all strings have the same type }
         result:=TStringDef(def).encoding;
-        if result=globals.CP_NONE then
+        if result=Globals.CP_NONE then
           result:=0
       end;
 
 
-    function get_recorddef(prefix:TInternalTypePrefix; const fields:array of TDef; packrecords:shortint): TRecordDef;
+    function get_recorddef(prefix:TInternalTypePrefix; const fields:array of TDef; PackRecords:shortint): TRecordDef;
       var
-        fieldlist: tfplist;
+        fieldlist: TFPList;
         srsym: TSym;
         srsymtable: TSymTable;
-        i: longint;
+        i: LongInt;
         name : TIDString;
       begin
         name:=copy(internaltypeprefixName[prefix],2,length(internaltypeprefixName[prefix]));
@@ -1538,20 +1538,20 @@ implementation
             result:=TRecordDef(TTypeSym(srsym).typedef);
             exit;
           end;
-        fieldlist:=tfplist.create;
+        fieldlist:=TFPList.create;
         for i:=low(fields) to high(fields) do
           fieldlist.add(fields[i]);
-        result:=crecorddef.create_global_internal(internaltypeprefixName[prefix],packrecords,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
+        result:=CRecordDef.create_global_internal(internaltypeprefixName[prefix],PackRecords,
+          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
         result.add_fields_from_deflist(fieldlist);
         fieldlist.free;
         fieldlist := nil;
       end;
 
 
-    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:longint;packrecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
+    procedure get_tabledef(prefix:TInternalTypePrefix;countdef,elementdef:TDef;count:LongInt;PackRecords:shortint;out recdef:TRecordDef;out arrdef:TArrayDef);
       var
-        fields: tfplist;
+        fields: TFPList;
         name: TIDString;
         srsym: TSym;
         fieldvarsym: TFieldVarSym;
@@ -1559,11 +1559,11 @@ implementation
       begin
         { already created a message string table with this number of elements
           in this unit -> reuse the def }
-        name:=internaltypeprefixName[prefix]+tostr(count);
+        name:=internaltypeprefixName[prefix]+ToStr(count);
         if searchsym_type(copy(name,2,length(name)),srsym,srsymtable) then
           begin
             recdef:=TRecordDef(TTypeSym(srsym).typedef);
-            fieldvarsym:=TRecordSymTable(recdef.symtable).findfieldbyoffset(countdef.size);
+            fieldvarsym:=TRecordSymTable(recdef.SymTable).findfieldbyoffset(countdef.size);
             if fieldvarsym<>nil then
               arrdef:=TArrayDef(fieldvarsym.vardef)
             else
@@ -1575,20 +1575,20 @@ implementation
         if searchsym_in_module(pointer(CurrentModule),copy(name,2,length(name)),srsym,srsymtable) then
           begin
             recdef:=TRecordDef(TTypeSym(srsym).typedef);
-            fieldvarsym:=TRecordSymTable(recdef.symtable).findfieldbyoffset(countdef.size);
+            fieldvarsym:=TRecordSymTable(recdef.SymTable).findfieldbyoffset(countdef.size);
             if fieldvarsym<>nil then
               arrdef:=TArrayDef(fieldvarsym.vardef)
             else
               arrdef:=nil;
             exit;
           end;
-        recdef:=crecorddef.create_global_internal(name,packrecords,
-          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
-        fields:=tfplist.create;
+        recdef:=CRecordDef.create_global_internal(name,PackRecords,
+          targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
+        fields:=TFPList.create;
         fields.add(countdef);
         if count>0 then
           begin
-            arrdef:=carraydef.create(0,count-1,sizeuinttype);
+            arrdef:=CArrayDef.create(0,count-1,sizeuinttype);
             arrdef.elementdef:=elementdef;
             fields.add(arrdef);
           end
@@ -1606,14 +1606,14 @@ implementation
         hash : qword;
       begin
         prefix:='';
-        if not assigned(st) then
-         internalerror(200204212);
+        if not Assigned(st) then
+         InternalError(200204212);
         repeat
           { sub procedures }
           while (st.symtabletype in [localsymtable,parasymtable]) do
            begin
              if st.defowner.typ<>procdef then
-              internalerror(200204173);
+              InternalError(200204173);
              { Add the full mangledname of the routine to prevent
                conflicts with two overloads both having a local entity
                -- routine (tb0314), class, interface -- with the same name }
@@ -1623,8 +1623,8 @@ implementation
                begin
                  if length(prefix)>(maxidlen-length(s)-1) then
                    begin
-                     hash:=InitFnv64;
-                     hash:=UpdateFnv64(hash,prefix[1],length(prefix));
+                     hash:=InitFNV64;
+                     hash:=UpdateFNV64(hash,prefix[1],length(prefix));
                      prefix:='$H'+Base64Mangle(hash);
                    end;
                  prefix:=s+'_'+prefix
@@ -1637,11 +1637,11 @@ implementation
           while st.symtabletype in [ObjectSymtable,recordsymtable] do
            begin
              if not (st.defowner.typ in [objectdef,recorddef]) then
-              internalerror(200204174);
+              InternalError(200204174);
              if length(prefix)>(maxidlen-length(TAbstractRecordDef(st.defowner).objname^)-3) then
                begin
-                 hash:=InitFnv64;
-                 hash:=UpdateFnv64(hash,prefix[1],length(prefix));
+                 hash:=InitFNV64;
+                 hash:=UpdateFNV64(hash,prefix[1],length(prefix));
                  prefix:='$H'+Base64Mangle(hash);
                end;
              prefix:=TAbstractRecordDef(st.defowner).objname^+'_$_'+prefix;
@@ -1656,8 +1656,8 @@ implementation
           prefix:='$'+prefix;
         until false;
         { symtable must now be static or global }
-        if not(st.symtabletype in [staticsymtable,globalsymtable]) then
-          internalerror(200204175);
+        if not(st.symtabletype in [staticsymtable,GlobalSymTable]) then
+          InternalError(200204175);
 
         { The mangled name is made out of at most 4 parts:
          1) Optional typeprefix given as first parameter
@@ -1685,9 +1685,9 @@ implementation
           result:=result+'_$$_'+suffix;
         if length(result)>(maxidlen-1) then
           begin
-            hash:=InitFnv64;
-            hash:=UpdateFnv64(hash,result[1],length(result));
-            result:=copy(result,1,maxidlen-(high(Base64OfUint64String)-low(Base64OfUint64String)+1)-2)+'$H'+Base64Mangle(hash);
+            hash:=InitFNV64;
+            hash:=UpdateFNV64(hash,result[1],length(result));
+            result:=copy(result,1,maxidlen-(high(Base64OfUInt64String)-low(Base64OfUInt64String)+1)-2)+'$H'+Base64Mangle(hash);
           end;
         { the Darwin assembler assumes that all symbols starting with 'L' are local }
         { Further, the Mac OS X 10.5 linker does not consider symbols which do not  }
@@ -1705,7 +1705,7 @@ implementation
     function make_dllmangledname(const dllname,importname:TSymStr;import_nr : word; pco : TProcCallOption):TSymStr;
        var
          crc : cardinal;
-         i : longint;
+         i : LongInt;
          use_crc : boolean;
          dllprefix : TSymStr;
       begin
@@ -1726,8 +1726,8 @@ implementation
             if use_crc then
               begin
                 crc:=0;
-                crc:=UpdateCrc32(crc,dllprefix[1],length(dllprefix));
-                dllprefix:='_$dll$crc$'+hexstr(crc,8)+'$';
+                crc:=UpdateCRC32(crc,dllprefix[1],length(dllprefix));
+                dllprefix:='_$dll$crc$'+HexStr(crc,8)+'$';
               end
             else
               dllprefix:='_$dll$'+dllprefix+'$';
@@ -1735,7 +1735,7 @@ implementation
             if importname<>'' then
               result:=dllprefix+importname
             else
-              result:=dllprefix+'_index_'+tostr(import_nr);
+              result:=dllprefix+'_index_'+ToStr(import_nr);
             { Replace ? and @ in import name, since GNU AS does not allow these characters in symbol names. }
             { This allows to import VC++ mangled names from DLLs. }
             { Do not perform replacement, if external symbol is not imported from DLL. }
@@ -1754,7 +1754,7 @@ implementation
                  result:=TargetInfo.Cprefix+importname;
              end
             else
-              result:='_index_'+tostr(import_nr);
+              result:='_index_'+ToStr(import_nr);
           end;
 
       end;
@@ -1789,7 +1789,7 @@ implementation
                 s:=generate_objectpascal_helper_key(TObjectDef(def).extendeddef);
                 Message1(sym_d_adding_helper_for,s);
                 list:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
-                if not assigned(list) then
+                if not Assigned(list) then
                   begin
                     list:=TFPObjectList.Create(false);
                     CurrentModule.extendeddefs.Add(s,list);
@@ -1801,11 +1801,11 @@ implementation
                 if addgenerics then
                   add_generic_dummysym(sym,'');
                 { add nested helpers as well }
-                if assigned(def) and
+                if Assigned(def) and
                     (def.typ in [recorddef,objectdef]) and
-                    (sto_has_helper in TAbstractRecordDef(def).symtable.tableoptions) and
+                    (sto_has_helper in TAbstractRecordDef(def).SymTable.tableoptions) and
                     not is_owned_by(def,TDef(st.defowner)) then
-                  add_helpers_and_generics(TAbstractRecordDef(def).symtable,false);
+                  add_helpers_and_generics(TAbstractRecordDef(def).SymTable,false);
               end;
           end;
       end;
@@ -1832,7 +1832,7 @@ implementation
             for j:=list.count-1 downto 0 do
               begin
                 if not (list[j] is TObjectDef) then
-                  Internalerror(2011031501);
+                  InternalError(2011031501);
                 tmpst:=TObjectDef(list[j]).owner;
                 repeat
                   if tmpst=st then
@@ -1842,12 +1842,12 @@ implementation
                     end
                   else
                     begin
-                      if assigned(tmpst.defowner) then
+                      if Assigned(tmpst.defowner) then
                         tmpst:=tmpst.defowner.owner
                       else
                         tmpst:=nil;
                     end;
-                until not assigned(tmpst) or (tmpst.symtabletype in [globalsymtable,staticsymtable]);
+                until not Assigned(tmpst) or (tmpst.symtabletype in [GlobalSymTable,staticsymtable]);
               end;
             if list.count=0 then
               CurrentModule.extendeddefs.delete(i);
@@ -1857,14 +1857,14 @@ implementation
 
     procedure TDefAwareSymTableStack.remove_generics(st:TSymTable);
       var
-        i,j : longint;
+        i,j : LongInt;
         entry : TGenericDummyEntry;
-        list : tfpobjectlist;
+        list : TFPObjectList;
       begin
         for i:=CurrentModule.genericdummysyms.count-1 downto 0 do
           begin
-            list:=tfpobjectlist(CurrentModule.genericdummysyms[i]);
-            if not assigned(list) then
+            list:=TFPObjectList(CurrentModule.genericdummysyms[i]);
+            if not Assigned(list) then
               continue;
             for j:=list.count-1 downto 0 do
               begin
@@ -1882,7 +1882,7 @@ implementation
       begin
         if (sto_has_generic in st.tableoptions) or
             (
-              (st.symtabletype in [globalsymtable,staticsymtable]) and
+              (st.symtabletype in [GlobalSymTable,staticsymtable]) and
               (sto_has_helper in st.tableoptions)
             ) then
           { nested helpers will be added as well }
@@ -1906,7 +1906,7 @@ implementation
         inherited pop(st);
         if (sto_has_generic in st.tableoptions) or
             (
-              (st.symtabletype in [globalsymtable,staticsymtable]) and
+              (st.symtabletype in [GlobalSymTable,staticsymtable]) and
               (sto_has_helper in st.tableoptions)
             ) then
           { nested helpers will be removed as well }
@@ -1920,25 +1920,25 @@ implementation
 
     constructor TGenericConstraintData.create;
       begin
-        interfaces:=tfpobjectlist.create(false);
-        interfacesderef:=tfplist.create;
+        interfaces:=TFPObjectList.create(false);
+        interfacesderef:=TFPList.create;
       end;
 
 
-    destructor TGenericConstraintData.destroy;
+    destructor TGenericConstraintData.Destroy;
       begin
         TFPList.FreeAndNilDisposing(interfacesderef,typeinfo(TDeref));
         interfaces.free;
         interfaces := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
     procedure TGenericConstraintData.ppuload(ppufile: TCompilerPPUFile);
       var
-        cnt,i : longint;
+        cnt,i : LongInt;
         intfderef : PDeref;
       begin
-        ppufile.getset(tppuset1(flags));
+        ppufile.getset(TPPUSet1(flags));
         cnt:=ppufile.getlongint;
         for i:=0 to cnt-1 do
           begin
@@ -1951,9 +1951,9 @@ implementation
 
     procedure TGenericConstraintData.ppuwrite(ppufile: TCompilerPPUFile);
       var
-        i : longint;
+        i : LongInt;
       begin
-        ppufile.putset(tppuset1(flags));
+        ppufile.putset(TPPUSet1(flags));
         ppufile.putlongint(interfacesderef.count);
         for i:=0 to interfacesderef.count-1 do
           ppufile.putderef(PDeref(interfacesderef[i])^);
@@ -1962,7 +1962,7 @@ implementation
     procedure TGenericConstraintData.buildderef;
       var
         intfderef : PDeref;
-        i : longint;
+        i : LongInt;
       begin
         interfacesderef.capacity:=interfacesderef.count+interfaces.count;
         for i:=0 to interfaces.count-1 do
@@ -1975,7 +1975,7 @@ implementation
 
     procedure TGenericConstraintData.deref;
       var
-        i : longint;
+        i : LongInt;
       begin
         interfaces.capacity:=interfaces.count+interfacesderef.count;
         for i:=0 to interfacesderef.count-1 do
@@ -2002,17 +2002,17 @@ implementation
       end;
 
 
-    class procedure TStoredDef.SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; oldsymtablestack: TSymTableStack);
+    class procedure TStoredDef.SetupReusableDef(origdef, newdef: TDef; res: PHashSetItem; OldSymTableStack: TSymTableStack);
       var
         reusablesymtab: TSymTable;
       begin
         { must not yet belong to a symtable }
-        if assigned(newdef.owner) then
-          internalerror(2015111503);
+        if Assigned(newdef.owner) then
+          InternalError(2015111503);
         reusablesymtab:=origdef.getreusablesymtab;
         res^.Data:=newdef;
         reusablesymtab.insertdef(newdef);
-        symtablestack:=oldsymtablestack;
+        SymTableStack:=OldSymTableStack;
       end;
 
 
@@ -2042,7 +2042,7 @@ implementation
                registered, so depending on whether or not, or when, an interface
                procedure is called in the implementation, that may change its
                defid otherwise) }
-             if assigned(CurrentModule) and
+             if Assigned(CurrentModule) and
                 CurrentModule.in_interface then
                RegisterDef
              else
@@ -2051,12 +2051,12 @@ implementation
       end;
 
 
-    destructor TStoredDef.destroy;
+    destructor TStoredDef.Destroy;
       begin
         { Direct calls are not allowed, use symtable.deletedef() }
-        if assigned(owner) then
-          internalerror(200612311);
-        if assigned(generictokenbuf) then
+        if Assigned(owner) then
+          InternalError(200612311);
+        if Assigned(generictokenbuf) then
           begin
             generictokenbuf.free;
             generictokenbuf:=nil;
@@ -2069,15 +2069,15 @@ implementation
         genconstraintdata.free;
         genconstraintdata := nil;
 {$ifndef symansistr}
-        stringdispose(_fullownerhierarchyname);
+        StringDispose(_fullownerhierarchyname);
 {$endif not symansistr}
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
     constructor TStoredDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
       var
-        sizeleft,i,cnt : longint;
+        sizeleft,i,cnt : LongInt;
         buf  : array[0..255] of byte;
         symderef : PDeref;
       begin
@@ -2089,8 +2089,8 @@ implementation
 {$endif}
          { load }
          ppufile.getderef(typesymderef);
-         ppufile.getset(tppuset2(defoptions));
-         ppufile.getset(tppuset1(defstates));
+         ppufile.getset(TPPUSet2(defoptions));
+         ppufile.getset(TPPUSet1(defstates));
          if df_unique in defoptions then
            ppufile.getderef(orgdefderef);
          if df_genconstraint in defoptions then
@@ -2103,8 +2103,8 @@ implementation
              cnt:=ppufile.getlongint;
              if cnt>0 then
                begin
-                 genericparas:=tfphashobjectlist.create(false);
-                 genericparaderefs:=tfplist.create;
+                 genericparas:=TFPHashObjectList.create(false);
+                 genericparaderefs:=TFPList.create;
                  for i:=0 to cnt-1 do
                    begin
                      genericparas.add(ppufile.getstring,nil);
@@ -2155,8 +2155,8 @@ implementation
             prefix:='INIT';
             include(defstates,ds_init_table_used);
           end;
-        if assigned(typesym) and
-           (owner.symtabletype in [staticsymtable,globalsymtable]) then
+        if Assigned(typesym) and
+           (owner.symtabletype in [staticsymtable,GlobalSymTable]) then
           result:=make_mangledname(prefix,typesym.owner,typesym.name)
         else
           result:=make_mangledname(prefix,findunitsymtable(owner),'def'+UniqueIDStr)
@@ -2171,7 +2171,7 @@ implementation
         result:='';
         repeat
           { can be not assigned in case of a forwarddef }
-          if assigned(tmp.owner) and
+          if Assigned(tmp.owner) and
              (tmp.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
             tmp:=TDef(tmp.owner.defowner)
           else
@@ -2189,7 +2189,7 @@ implementation
         result:='';
         repeat
           { can be not assigned in case of a forwarddef }
-          if assigned(tmp.owner) and
+          if Assigned(tmp.owner) and
              (tmp.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
             tmp:=TDef(tmp.owner.defowner)
           else
@@ -2209,7 +2209,7 @@ implementation
         if not skipprocparams and (_fullownerhierarchyname<>'') then
           exit(_fullownerhierarchyname);
 {$else symansistr}
-        if not skipprocparams and assigned(_fullownerhierarchyname) then
+        if not skipprocparams and Assigned(_fullownerhierarchyname) then
           exit(_fullownerhierarchyname^);
 {$endif symansistr}
         { the def can only reside inside structured types or
@@ -2219,11 +2219,11 @@ implementation
         repeat
           lastowner:=tmp.owner;
           { can be not assigned in case of a forwarddef }
-          if not assigned(lastowner) then
+          if not Assigned(lastowner) then
             break
           else
             tmp:=TDef(lastowner.defowner);
-          if not assigned(tmp) then
+          if not Assigned(tmp) then
             break;
           if tmp.typ in [recorddef,objectdef] then
             begin
@@ -2242,15 +2242,15 @@ implementation
               end;
         until tmp=nil;
         { add the unit name }
-        if assigned(lastowner) and
-           assigned(lastowner.realname) then
+        if Assigned(lastowner) and
+           Assigned(lastowner.realname) then
           result:=lastowner.realname^+'.'+result;
         if not skipprocparams then
           { don't store the name in this case }
 {$ifdef symansistr}
           _fullownerhierarchyname:=result;
 {$else symansistr}
-          _fullownerhierarchyname:=stringdup(result);
+          _fullownerhierarchyname:=StringDup(result);
 {$endif symansistr}
       end;
 
@@ -2260,7 +2260,7 @@ implementation
         st: TSymTable;
       begin
         st:=owner;
-        while not(st.symtabletype in [globalsymtable,staticsymtable]) do
+        while not(st.symtabletype in [GlobalSymTable,staticsymtable]) do
           st:=st.defowner.owner;
         result:=st.iscurrentunit;
       end;
@@ -2269,36 +2269,36 @@ implementation
     function TStoredDef.getcopy : TStoredDef;
       begin
         Message(sym_e_cant_create_unique_type);
-        getcopy:=cerrordef.create;
+        getcopy:=CErrorDef.create;
       end;
 
 
     procedure TStoredDef.ppuwrite(ppufile:TCompilerPPUFile);
       var
-        sizeleft,i : longint;
+        sizeleft,i : LongInt;
         buf  : array[0..255] of byte;
         oldintfcrc : boolean;
       begin
         if defid<0 then
-          internalerror(2015101401);
+          InternalError(2015101401);
         ppufile.putlongint(DefId);
         ppufile.putderef(typesymderef);
-        ppufile.putset(tppuset2(defoptions));
+        ppufile.putset(TPPUSet2(defoptions));
         oldintfcrc:=ppufile.do_crc;
         ppufile.do_crc:=false;
-        ppufile.putset(tppuset1(defstates));
+        ppufile.putset(TPPUSet1(defstates));
         if df_unique in defoptions then
           ppufile.putderef(orgdefderef);
         if df_genconstraint in defoptions then
           genconstraintdata.ppuwrite(ppufile);
         if [df_generic,df_specialization]*defoptions<>[] then
           begin
-            if not assigned(genericparas) then
+            if not Assigned(genericparas) then
               ppufile.putlongint(0)
             else
               begin
-                if not assigned(genericparaderefs) then
-                  internalerror(2014052305);
+                if not Assigned(genericparaderefs) then
+                  InternalError(2014052305);
                 ppufile.putlongint(genericparas.count);
                 for i:=0 to genericparas.count-1 do
                   begin
@@ -2311,7 +2311,7 @@ implementation
           begin
             { crc generic implementation }
             ppufile.do_crc:=true;
-            if assigned(generictokenbuf) then
+            if Assigned(generictokenbuf) then
               begin
                 sizeleft:=generictokenbuf.size;
                 generictokenbuf.seek(0);
@@ -2351,7 +2351,7 @@ implementation
 
     procedure TStoredDef.buildderef;
       var
-        i : longint;
+        i : LongInt;
         sym : TSym;
         symderef : PDeref;
       begin
@@ -2360,11 +2360,11 @@ implementation
         typesymderef.build(typesym);
         orgdefderef.build(orgdef);
         genericdefderef.build(genericdef);
-        if assigned(RTTIAttributeList) then
+        if Assigned(RTTIAttributeList) then
           RTTIAttributeList.buildderef;
-        if assigned(genconstraintdata) then
+        if Assigned(genconstraintdata) then
           genconstraintdata.buildderef;
-        if assigned(genericparas) then
+        if Assigned(genericparas) then
           begin
            { buildderef may be called more than once (getppucrc is called at
              end-of-interface and again at end-of-implementation; system units
@@ -2372,14 +2372,14 @@ implementation
              previously accumulated entries so that genericparaderefs.count
              stays equal to genericparas.count and does not trigger
              internalerror 2014052303 in deref. }
-           if assigned(genericparaderefs) then
+           if Assigned(genericparaderefs) then
              begin
                for i:=0 to genericparaderefs.count-1 do
                  dispose(PDeref(genericparaderefs[i]));
                genericparaderefs.clear;
              end
            else
-             genericparaderefs:=tfplist.create;
+             genericparaderefs:=TFPList.create;
            genericparaderefs.capacity:=genericparas.count;
             for i:=0 to genericparas.count-1 do
               begin
@@ -2400,23 +2400,23 @@ implementation
     procedure TStoredDef.deref;
       var
         symderef : PDeref;
-        i : longint;
+        i : LongInt;
       begin
         typesym:=TTypeSym(typesymderef.resolve);
         if df_unique in defoptions then
           orgdef:=TStoredDef(orgdefderef.resolve);
         if df_specialization in defoptions then
           genericdef:=TStoredDef(genericdefderef.resolve);
-        if assigned(RTTIAttributeList) then
+        if Assigned(RTTIAttributeList) then
           RTTIAttributeList.deref;
-        if assigned(genconstraintdata) then
+        if Assigned(genconstraintdata) then
           genconstraintdata.deref;
-        if assigned(genericparas) then
+        if Assigned(genericparas) then
           begin
-            if not assigned(genericparaderefs) then
-              internalerror(2014052302);
+            if not Assigned(genericparaderefs) then
+              InternalError(2014052302);
             if genericparas.count<>genericparaderefs.count then
-              internalerror(2014052303);
+              InternalError(2014052303);
             for i:=0 to genericparaderefs.count-1 do
               begin
                 symderef:=PDeref(genericparaderefs[i]);
@@ -2437,7 +2437,7 @@ implementation
       end;
 
 
-    function TStoredDef.getvardef:longint;
+    function TStoredDef.getvardef:LongInt;
       begin
         result:=varUndefined;
       end;
@@ -2446,7 +2446,7 @@ implementation
     function TStoredDef.alignment : shortint;
       begin
          { natural alignment by default }
-         alignment:=size_2_align(savesize);
+         alignment:=Size_2_Align(savesize);
          { can happen if savesize = 0, e.g. for voiddef or
            an empty record
          }
@@ -2478,7 +2478,7 @@ implementation
    function TStoredDef.is_intregable : boolean;
 {$ifndef cpuhighleveltarget}
      var
-       recsize,temp: longint;
+       recsize,temp: LongInt;
 {$endif cpuhighleveltarget}
      begin
         case typ of
@@ -2501,7 +2501,7 @@ implementation
               (TArrayDef(self).size<=8) and (TArrayDef(self).size in [1,2,4,8]) and
               TStoredDef(TArrayDef(self).elementdef).is_intregable
 {$ifdef SUPPORT_MMX}
-              and not((cs_mmx in CurrentSettings.localswitches) and
+              and not((cs_mmx in CurrentSettings.LocalSwitches) and
                  is_mmx_able_array(self))
 {$endif SUPPORT_MMX}
 {$endif cpuhighleveltarget}
@@ -2513,7 +2513,7 @@ implementation
 {$else cpuhighleveltarget}
               recsize:=size;
               is_intregable:=
-                ispowerof2(recsize,temp) and
+                IsPowerOf2(recsize,temp) and
                 ((recsize<=sizeof(aint)*2) and
                  not TRecordDef(self).contains_cross_aword_field and
                  { records cannot go into registers on 16 bit targets for now }
@@ -2557,18 +2557,18 @@ implementation
 
    procedure TStoredDef.initgeneric;
      begin
-       if assigned(generictokenbuf) then
-         internalerror(200512131);
-       generictokenbuf:=tdynamicarray.create(256);
+       if Assigned(generictokenbuf) then
+         InternalError(200512131);
+       generictokenbuf:=TDynamicArray.create(256);
      end;
 
 
    function TStoredDef.is_generic: boolean;
      var
        sym: TSym;
-       i: longint;
+       i: LongInt;
      begin
-       result:=assigned(genericparas) and
+       result:=Assigned(genericparas) and
                  (genericparas.count>0) and
                  (df_generic in defoptions);
        if result then
@@ -2579,7 +2579,7 @@ implementation
              sym:=TSym(genericparas[i]);
              { sym must be either a type or const }
              if not (sym.typ in [symconst.typesym,symconst.constsym]) then
-               internalerror(2014050903);
+               InternalError(2014050903);
              if (sym.owner.defowner<>self) or (sp_generic_unnamed_type in sym.symoptions) then
                exit(false);
              if (sym.typ=symconst.constsym) and (sp_generic_const in sym.symoptions) then
@@ -2605,10 +2605,10 @@ implementation
 
    function TStoredDef.is_specialization: boolean;
      var
-       i : longint;
+       i : LongInt;
        sym : TSym;
      begin
-       result:=assigned(genericparas) and
+       result:=Assigned(genericparas) and
                  (genericparas.count>0) and
                  (df_specialization in defoptions);
        if result then
@@ -2620,7 +2620,7 @@ implementation
                sym:=TSym(genericparas[i]);
                { sym must be either a type or const }
                if not (sym.typ in [symconst.typesym,symconst.constsym]) then
-                 internalerror(2014050904);
+                 InternalError(2014050904);
                if (sym.owner.defowner<>self) or (sp_generic_unnamed_type in sym.symoptions) then
                  exit(true);
                if (sym.typ=symconst.constsym) and (sp_generic_const in sym.symoptions) then
@@ -2635,30 +2635,30 @@ implementation
      var
        gst : TGetSymTable;
        st : TSymTable;
-       tmod : tmodule;
+       tmod : TModule;
      begin
        if registered then
          exit;
-       if assigned(owner) then
+       if Assigned(owner) then
          begin
            tmod:=find_module_from_symtable(owner);
-            if assigned(tmod) and assigned(CurrentModule) and (tmod<>CurrentModule) then
+            if Assigned(tmod) and Assigned(CurrentModule) and (tmod<>CurrentModule) then
               begin
-                comment(v_error,'Definition '+fullownerhierarchyname(false,true)+' from module '+tmod.mainsource+' registered with current module '+CurrentModule.mainsource);
+                comment(VError,'Definition '+fullownerhierarchyname(false,true)+' from module '+tmod.MainSource+' registered with current module '+CurrentModule.MainSource);
               end;
-           if not assigned(tmod) then
+           if not Assigned(tmod) then
              tmod:=CurrentModule;
          end
        else
          tmod:=CurrentModule;
        { Register in current_module }
-       if assigned(tmod) then
+       if Assigned(tmod) then
          begin
            exclude(defoptions,df_not_registered_no_free);
            for gst:=low(TGetSymTable) to high(TGetSymTable) do
              begin
                st:=getsymtable(gst);
-               if assigned(st) then
+               if Assigned(st) then
                  TStoredSymTable(st).register_children;
              end;
            if defid<defid_not_registered then
@@ -2680,21 +2680,21 @@ implementation
      var
        insertstack: PSymTableStackItem;
      begin
-       if assigned(symtablestack) and
-          not assigned(self.owner) then
+       if Assigned(SymTableStack) and
+          not Assigned(self.owner) then
          begin
-           insertstack:=symtablestack.stack;
+           insertstack:=SymTableStack.stack;
            { don't insert defs in exception symtables, as they are freed before
              the module is compiled, so we can get crashes on high level targets
              if they still need it while e.g. writing assembler code }
-           while assigned(insertstack) and
-                 (insertstack^.symtable.symtabletype in [exceptsymtable,withsymtable]) do
+           while Assigned(insertstack) and
+                 (insertstack^.SymTable.symtabletype in [exceptsymtable,withsymtable]) do
              insertstack:=insertstack^.next;
-           if not assigned(insertstack) then
-             internalerror(200602044);
-           if insertstack^.symtable.sealed then
-             internalerror(2015022301);
-           insertstack^.symtable.insertdef(self);
+           if not Assigned(insertstack) then
+             InternalError(200602044);
+           if insertstack^.SymTable.sealed then
+             InternalError(2015022301);
+           insertstack^.SymTable.insertdef(self);
          end;
      end;
 
@@ -2809,7 +2809,7 @@ implementation
 
     function TStringDef.getcopy : TStoredDef;
       begin
-        result:=cstringdef.create(typ,true);
+        result:=CStringDef.create(typ,true);
         result.typ:=stringdef;
         TStringDef(result).stringtype:=stringtype;
         TStringDef(result).encoding:=encoding;
@@ -2833,7 +2833,7 @@ implementation
          if stringtype=st_shortstring then
            begin
 {$ifdef extdebug}
-            if len > 255 then internalerror(12122002);
+            if len > 255 then InternalError(12122002);
 {$endif}
             ppufile.putbyte(byte(len))
            end
@@ -2865,18 +2865,18 @@ implementation
          GetTypeName:=names[stringtype];
          case stringtype of
            st_ansistring,st_unicodestring:
-             GetTypeName:=GetTypeName+'('+tostr(encoding)+')';
+             GetTypeName:=GetTypeName+'('+ToStr(encoding)+')';
            st_shortstring:
-             GetTypeName:=GetTypeName+'['+tostr(len)+']';
+             GetTypeName:=GetTypeName+'['+ToStr(len)+']';
            else
              ;
          end;
       end;
 
 
-    function TStringDef.getvardef : longint;
+    function TStringDef.getvardef : LongInt;
       const
-        vardef : array[TStringType] of longint = (
+        vardef : array[TStringType] of LongInt = (
           varUndefined,varUndefined,varString,varOleStr,varUString);
       begin
         result:=vardef[stringtype];
@@ -2905,7 +2905,7 @@ implementation
           { st_longstring is currently not supported but
             when it is this case will need to be supplied }
           st_longstring:
-            internalerror(2021040801);
+            InternalError(2021040801);
           st_ansistring:
             result:=cansistringtype;
           st_widestring:
@@ -2928,10 +2928,10 @@ implementation
               { char to string accesses byte 0 and 1 with one word access }
             if (tf_requires_proper_alignment in TargetInfo.flags) or
               { macpas needs an alignment of 2 (MetroWerks compatible) }
-               (m_mac in CurrentSettings.modeswitches) then
-              alignment:=size_2_align(2)
+               (m_mac in CurrentSettings.ModeSwitches) then
+              alignment:=Size_2_Align(2)
             else
-              alignment:=size_2_align(1);
+              alignment:=Size_2_Align(1);
         end;
       end;
 
@@ -2971,11 +2971,11 @@ implementation
          inherited create(enumdef,true);
          minval:=0;
          maxval:=0;
-         calcsavesize(CurrentSettings.packenum);
+         calcsavesize(CurrentSettings.PackEnum);
          has_jumps:=false;
          basedef:=nil;
          basedefderef.reset;
-         symtable:=TEnumSymTable.create(self);
+         SymTable:=TEnumSymTable.create(self);
       end;
 
 
@@ -2985,9 +2985,9 @@ implementation
          minval:=_min;
          maxval:=_max;
          basedef:=_basedef;
-         calcsavesize(CurrentSettings.packenum);
+         calcsavesize(CurrentSettings.PackEnum);
          has_jumps:=false;
-         symtable:=basedef.symtable.getcopy;
+         SymTable:=basedef.SymTable.getcopy;
          include(defoptions, df_copied_def);
        end;
 
@@ -3001,7 +3001,7 @@ implementation
          has_jumps:=false;
          if df_copied_def in defoptions then
            begin
-             symtable:=nil;
+             SymTable:=nil;
              ppufile.getderef(basedefderef);
              PPULoadPlatform(ppufile);
            end
@@ -3009,31 +3009,31 @@ implementation
            begin
              PPULoadPlatform(ppufile);
              // create with nil defowner first to prevent values changes on insert
-             symtable:=TEnumSymTable.create(nil);
-             TEnumSymTable(symtable).ppuload(ppufile);
-             symtable.defowner:=self;
+             SymTable:=TEnumSymTable.create(nil);
+             TEnumSymTable(SymTable).ppuload(ppufile);
+             SymTable.defowner:=self;
            end;
       end;
 
-    destructor TEnumDef.destroy;
+    destructor TEnumDef.Destroy;
       begin
-        symtable.free;
-        symtable:=nil;
-        inherited destroy;
+        SymTable.free;
+        SymTable:=nil;
+        inherited Destroy;
       end;
 
 
     function TEnumDef.getcopy : TStoredDef;
       begin
-        if assigned(basedef) then
-          result:=cenumdef.create_subrange(basedef,minval,maxval)
+        if Assigned(basedef) then
+          result:=CEnumDef.create_subrange(basedef,minval,maxval)
         else
           begin
-            result:=cenumdef.create;
+            result:=CEnumDef.create;
             TEnumDef(result).minval:=minval;
             TEnumDef(result).maxval:=maxval;
-            TEnumDef(result).symtable.free;
-            TEnumDef(result).symtable:=symtable.getcopy;
+            TEnumDef(result).SymTable.free;
+            TEnumDef(result).SymTable:=SymTable.getcopy;
             TEnumDef(result).basedef:=self;
           end;
         TEnumDef(result).has_jumps:=has_jumps;
@@ -3042,19 +3042,19 @@ implementation
       end;
 
 
-    procedure TEnumDef.calcsavesize(packenum: shortint);
+    procedure TEnumDef.calcsavesize(PackEnum: shortint);
       begin
 {$IFNDEF cpu64bitaddr} {$push}{$warnings off} {$ENDIF} //comparison always false warning
-        if (packenum=8) or (int64(min)<low(longint)) or (int64(max)>high(cardinal)) or ((min<0) and (max>high(longint))) then
+        if (PackEnum=8) or (int64(min)<low(LongInt)) or (int64(max)>high(cardinal)) or ((min<0) and (max>high(LongInt))) then
          savesize:=8
 {$IFNDEF cpu64bitaddr} {$pop} {$ENDIF}
         else
  //comparison always false warning
-         if (packenum=4) or (min<low(smallint)) or (max>high(word)) or ((min<0) and (max>high(smallint))) then
+         if (PackEnum=4) or (min<low(smallint)) or (max>high(word)) or ((min<0) and (max>high(smallint))) then
           savesize:=4
 
         else
-         if (packenum=2) or (min<low(shortint)) or (max>high(byte)) or ((min<0) and (max>high(shortint))) then
+         if (PackEnum=2) or (min<low(shortint)) or (max>high(byte)) or ((min<0) and (max>high(shortint))) then
           savesize:=2
         else
          savesize:=1;
@@ -3063,8 +3063,8 @@ implementation
 
     function TEnumDef.packedbitsize: asizeint;
       var
-        sizeval: tconstexprint;
-        power: longint;
+        sizeval: TConstExprInt;
+        power: LongInt;
       begin
         result := 0;
         if (minval >= 0) and
@@ -3076,9 +3076,9 @@ implementation
               sizeval:=maxval
             else
              { don't count 0 twice, but take into account that range goes from -n-1..n }
-              sizeval:=(cutils.max(-minval,maxval+1)*2)-1;
+              sizeval:=(CUtils.max(-minval,maxval+1)*2)-1;
             { 256 must become 512 etc. }
-            nextpowerof2(sizeval+1,power);
+            NextPowerOf2(sizeval+1,power);
             result := power;
           end;
       end;
@@ -3087,14 +3087,14 @@ implementation
     procedure TEnumDef.setmax(_max:asizeint);
       begin
         maxval:=_max;
-        calcsavesize(CurrentSettings.packenum);
+        calcsavesize(CurrentSettings.PackEnum);
       end;
 
 
     procedure TEnumDef.setmin(_min:asizeint);
       begin
         minval:=_min;
-        calcsavesize(CurrentSettings.packenum);
+        calcsavesize(CurrentSettings.PackEnum);
       end;
 
 
@@ -3113,9 +3113,9 @@ implementation
       var
         i:integer;
       begin
-        for i := 0 to symtable.SymList.Count - 1 do
+        for i := 0 to SymTable.SymList.Count - 1 do
           begin
-            result:=TSym(symtable.SymList[i]);
+            result:=TSym(SymTable.SymList[i]);
             if TEnumSym(result).value=minval then
               exit;
           end;
@@ -3125,7 +3125,7 @@ implementation
 
     function TEnumDef.int2enumsym(l: asizeint): TSym;
       var
-        i: longint;
+        i: LongInt;
         sym: TSym;
         bdef: TEnumDef;
       begin
@@ -3134,9 +3134,9 @@ implementation
            (l>maxval) then
           exit;
         bdef:=getbasedef;
-        for i:=0 to bdef.symtable.symlist.count-1 do
+        for i:=0 to bdef.SymTable.symlist.count-1 do
           begin
-            sym:=TSym(bdef.symtable.symlist[i]);
+            sym:=TSym(bdef.SymTable.symlist[i]);
             if (sym.typ=enumsym) and
                (TEnumSym(sym).value=l) then
               begin
@@ -3149,7 +3149,7 @@ implementation
 
     function TEnumDef.getbasedef: TEnumDef;
       begin
-        if not assigned(basedef) then
+        if not Assigned(basedef) then
           result:=self
         else
           result:=basedef;
@@ -3162,7 +3162,7 @@ implementation
         if df_copied_def in defoptions then
           basedefderef.build(basedef)
         else
-          TEnumSymTable(symtable).buildderef;
+          TEnumSymTable(SymTable).buildderef;
       end;
 
 
@@ -3172,10 +3172,10 @@ implementation
         if df_copied_def in defoptions then
           begin
             basedef:=TEnumDef(basedefderef.resolve);
-            symtable:=basedef.symtable.getcopy;
+            SymTable:=basedef.SymTable.getcopy;
           end
         else
-          TEnumSymTable(symtable).deref(false);
+          TEnumSymTable(SymTable).deref(false);
       end;
 
 
@@ -3189,7 +3189,7 @@ implementation
            ppufile.putderef(basedefderef);
          writeentry(ppufile,ibenumdef);
          if not (df_copied_def in defoptions) then
-           TEnumSymTable(symtable).ppuwrite(ppufile);
+           TEnumSymTable(SymTable).ppuwrite(ppufile);
       end;
 
 
@@ -3198,7 +3198,7 @@ implementation
          if not has_jumps then
            IsPublishable:=pp_publish
          else
-         if m_delphi in CurrentSettings.modeswitches then
+         if m_delphi in CurrentSettings.ModeSwitches then
            IsPublishable:=pp_ignore
          else
            IsPublishable:=pp_error;
@@ -3219,7 +3219,7 @@ implementation
       begin
         ppufile.getderef(typesymderef);
         ppufile.getderef(typeconstrderef);
-        setlength(paras,ppufile.getlongint);
+        SetLength(paras,ppufile.getlongint);
       end;
 
 
@@ -3249,7 +3249,7 @@ implementation
       end;
 
 
-    destructor TRTTIAttribute.destroy;
+    destructor TRTTIAttribute.Destroy;
       var
         n : TNode;
       begin
@@ -3258,7 +3258,7 @@ implementation
         for n in paras do
           n.free;
           n := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -3286,13 +3286,13 @@ implementation
 
     class procedure TRTTIAttributeList.bind(var dangling,owned:TRTTIAttributeList);
       begin
-        if assigned(owned) then
-          internalerror(2019071001);
-        if not assigned(dangling) then
+        if Assigned(owned) then
+          InternalError(2019071001);
+        if not Assigned(dangling) then
           exit;
         if dangling.IsBound then
-          internalerror(2019071002);
-        CurrentModule.used_rtti_attrs.concatlistcopy(dangling.RTTIAttributes);
+          InternalError(2019071002);
+        CurrentModule.used_rtti_attrs.ConcatListCopy(dangling.RTTIAttributes);
         dangling.IsBound:=true;
         owned:=dangling;
         dangling:=nil;
@@ -3313,12 +3313,12 @@ implementation
         newattribute.typesym:=attr.typesym;
         newattribute.typeconstr:=attr.typeconstr;
         newattribute.constructorcall:=attr.constructorcall.getcopy;
-        setlength(newattribute.paras,length(attr.paras));
+        SetLength(newattribute.paras,length(attr.paras));
         for j:=0 to length(attr.paras)-1 do
           newattribute.paras[j]:=attr.paras[j].getcopy;
         owned.AddAttribute(newattribute);
         end;
-      CurrentModule.used_rtti_attrs.concatlistcopy(owned.RTTIAttributes);
+      CurrentModule.used_rtti_attrs.ConcatListCopy(owned.RTTIAttributes);
     end;
 
 
@@ -3327,13 +3327,13 @@ implementation
         newattribute : TRTTIAttribute;
         i : sizeint;
       begin
-        if not assigned(RTTIAttributes) then
+        if not Assigned(RTTIAttributes) then
           RTTIAttributes:=TFPObjectList.Create(true);
         newattribute:=TRTTIAttribute.Create;
         newattribute.typesym:=atypesym;
         newattribute.typeconstr:=typeconstr;
         newattribute.constructorcall:=constructorcall;
-        setlength(newattribute.paras,length(paras));
+        SetLength(newattribute.paras,length(paras));
         for i:=0 to high(paras) do
           newattribute.paras[i]:=paras[i];
         RTTIAttributes.Add(newattribute);
@@ -3342,23 +3342,23 @@ implementation
 
     procedure TRTTIAttributeList.addattribute(attr:TRTTIAttribute);
       begin
-        if not assigned(RTTIAttributes) then
+        if not Assigned(RTTIAttributes) then
           RTTIAttributes:=TFPObjectList.Create(true);
         RTTIAttributes.add(attr);
       end;
 
 
-    destructor TRTTIAttributeList.destroy;
+    destructor TRTTIAttributeList.Destroy;
       begin
         RTTIAttributes.Free;
         RTTIAttributes := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    function TRTTIAttributeList.GetAttributeCount:longint;
+    function TRTTIAttributeList.GetAttributeCount:LongInt;
       begin
-        if assigned(RTTIAttributes) then
+        if Assigned(RTTIAttributes) then
           result:=RTTIAttributes.Count
         else
           result:=0;
@@ -3369,7 +3369,7 @@ implementation
       var
         i : sizeint;
       begin
-        if not assigned(RTTIAttributes) then
+        if not Assigned(RTTIAttributes) then
           exit;
         for i:=0 to RTTIAttributes.count-1 do
           TRTTIAttribute(RTTIAttributes[i]).buildderef;
@@ -3380,7 +3380,7 @@ implementation
       var
         i : sizeint;
       begin
-        if not assigned(RTTIAttributes) then
+        if not Assigned(RTTIAttributes) then
           exit;
         for i:=0 to RTTIAttributes.count-1 do
           TRTTIAttribute(RTTIAttributes[i]).deref;
@@ -3391,10 +3391,10 @@ implementation
       var
         i : sizeint;
       begin
-        if assigned(attrlist) then
+        if Assigned(attrlist) then
           begin
-            if not assigned(attrlist.RTTIAttributes) then
-              internalerror(2019071101);
+            if not Assigned(attrlist.RTTIAttributes) then
+              InternalError(2019071101);
             for i:=0 to attrlist.RTTIAttributes.count-1 do
               TRTTIAttribute(attrlist.RTTIAttributes[i]).PPULoadSubEntries(ppufile);
           end;
@@ -3405,7 +3405,7 @@ implementation
       var
         i : sizeint;
       begin
-        if assigned(attrlist) and assigned(attrlist.RTTIAttributes) then
+        if Assigned(attrlist) and Assigned(attrlist.RTTIAttributes) then
           begin
             for i:=0 to attrlist.RTTIAttributes.count-1 do
               TRTTIAttribute(attrlist.RTTIAttributes[i]).PPUWriteSubEntries(ppufile);
@@ -3415,7 +3415,7 @@ implementation
 
     class function TRTTIAttributeList.ppuload(ppufile:TCompilerPPUFile):TRTTIAttributeList;
       var
-        cnt,i : longint;
+        cnt,i : LongInt;
       begin
         cnt:=ppufile.getlongint;
         if cnt>0 then
@@ -3431,9 +3431,9 @@ implementation
 
     class procedure TRTTIAttributeList.ppuwrite(attrlist:TRTTIAttributeList;ppufile:TCompilerPPUFile);
       var
-        i : longint;
+        i : LongInt;
       begin
-        if assigned(attrlist) and assigned(attrlist.RTTIAttributes) then
+        if Assigned(attrlist) and Assigned(attrlist.RTTIAttributes) then
           begin
             ppufile.putlongint(attrlist.RTTIAttributes.count);
             for i:=0 to attrlist.RTTIAttributes.count-1 do
@@ -3471,7 +3471,7 @@ implementation
 
     function TOrdDef.getcopy : TStoredDef;
       begin
-         result:=corddef.create(ordtype,low,high,true);
+         result:=COrdDef.create(ordtype,low,high,true);
          result.typ:=orddef;
          TOrdDef(result).low:=low;
          TOrdDef(result).high:=high;
@@ -3492,25 +3492,25 @@ implementation
 
     procedure TOrdDef.setsize;
       const
-        sizetbl : array[TOrdType] of longint = (
+        sizetbl : array[TOrdType] of LongInt = (
           0,
           1,2,4,8,16,
           1,2,4,8,16,
           1,1,2,4,8,
           1,2,4,8,
-          1,2,8,system.high(longint)
+          1,2,8,system.high(LongInt)
         );
       begin
         savesize:=sizetbl[ordtype];
-        if savesize=system.high(longint) then
+        if savesize=system.high(LongInt) then
           savesize:=packedbitsize div 8;
       end;
 
 
     function TOrdDef.packedbitsize: asizeint;
       var
-        sizeval: tconstexprint;
-        power: longint;
+        sizeval: TConstExprInt;
+        power: LongInt;
       begin
         result := 0;
         if ordtype = uvoid then
@@ -3540,17 +3540,17 @@ implementation
               sizeval:=high
             else
               { don't count 0 twice, but take into account that range goes from -n-1..n }
-              sizeval:=(cutils.max(-low,high+1)*2)-1;
+              sizeval:=(CUtils.max(-low,high+1)*2)-1;
             { 256 must become 512 etc. }
-            nextpowerof2(sizeval+1,power);
+            NextPowerOf2(sizeval+1,power);
             result := power;
          end;
       end;
 
 
-    function TOrdDef.getvardef : longint;
+    function TOrdDef.getvardef : LongInt;
       const
-        basetype2vardef : array[TOrdType] of longint = (
+        basetype2vardef : array[TOrdType] of LongInt = (
           varUndefined,
           varbyte,varword,varlongword,varqword,varUndefined,
           varshortint,varsmallint,varinteger,varint64,varUndefined,
@@ -3621,7 +3621,7 @@ implementation
 
     function TFloatDef.getcopy : TStoredDef;
       begin
-         result:=cfloatdef.create(floattype,true);
+         result:=CFloatDef.create(floattype,true);
          result.typ:=floatdef;
          TFloatDef(result).savesize:=savesize;
       end;
@@ -3633,7 +3633,7 @@ implementation
           case floattype of
             sc80real,
             s80real: result:=16;
-            s64real,
+            S64Real,
             s64currency,
             s64comp : result:=4;
             else
@@ -3653,7 +3653,7 @@ implementation
     procedure TFloatDef.setsize;
       begin
          case floattype of
-           s32real : savesize:=4;
+           S32Real : savesize:=4;
            s80real : savesize:=10;
            sc80real:
              if TargetInfo.system in [system_i386_darwin,
@@ -3663,22 +3663,22 @@ implementation
                savesize:=16
              else
                savesize:=12;
-           s64real,
+           S64Real,
            s64currency,
            s64comp : savesize:=8;
          end;
       end;
 
 
-    function TFloatDef.getvardef : longint;
+    function TFloatDef.getvardef : LongInt;
       const
-        floattype2vardef : array[TFloatType] of longint = (
+        floattype2vardef : array[TFloatType] of LongInt = (
           varSingle,varDouble,varUndefined,varUndefined,
           varUndefined,varCurrency);
       begin
         if (upper(typename)='TDATETIME') and
-          assigned(owner) and
-          assigned(owner.name) and
+          Assigned(owner) and
+          Assigned(owner.name) and
           (owner.name^='SYSTEM') then
           result:=varDate
         else
@@ -3754,11 +3754,11 @@ implementation
       begin
         case filetyp of
           ft_typed:
-            result:=cfiledef.createtyped(typedfiledef);
+            result:=CFileDef.createtyped(typedfiledef);
           ft_untyped:
-            result:=cfiledef.createuntyped;
+            result:=CFileDef.createuntyped;
           ft_text:
-            result:=cfiledef.createtext;
+            result:=CFileDef.createtext;
         end;
       end;
 
@@ -3796,7 +3796,7 @@ implementation
            begin
              savesize:=search_system_type('FILEREC').typedef.size;
              { allocate put/get buffer in iso mode }
-             if m_isolike_io in CurrentSettings.modeswitches then
+             if m_isolike_io in CurrentSettings.ModeSwitches then
                inc(savesize,typedfiledef.size);
            end;
          ft_untyped:
@@ -3876,7 +3876,7 @@ implementation
 
     function TVariantDef.getcopy : TStoredDef;
       begin
-        result:=cvariantdef.create(varianttype);
+        result:=CVariantDef.create(varianttype);
       end;
 
 
@@ -3894,7 +3894,7 @@ implementation
       end;
 
 
-    function TVariantDef.getvardef : longint;
+    function TVariantDef.getvardef : LongInt;
       begin
         Result:=varVariant;
       end;
@@ -3978,7 +3978,7 @@ implementation
 
     function TAbstractPointerDef.alignment: shortint;
       begin
-        alignment:=size_2_align(voidpointertype.size);
+        alignment:=Size_2_Align(voidpointertype.size);
       end;
 
 
@@ -3996,39 +3996,39 @@ implementation
     constructor TPointerDef.create(def:TDef);
       begin
         inherited create(pointerdef,def);
-        has_pointer_math:=cs_pointermath in CurrentSettings.localswitches;
+        has_pointer_math:=cs_pointermath in CurrentSettings.LocalSwitches;
         if (df_specialization in TStoredDef(def).defoptions)
 {$ifndef genericdef_for_nested}
            { currently, nested procdefs of generic routines get df_specialization,
              but no genericdef }
-           and assigned(TStoredDef(def).genericdef)
+           and Assigned(TStoredDef(def).genericdef)
 {$endif}
            then
-          genericdef:=cpointerdef.getreusable(TStoredDef(def).genericdef);
+          genericdef:=CPointerDef.getreusable(TStoredDef(def).genericdef);
       end;
 
 
     class function TPointerDef.getreusable(def: TDef): TPointerDef;
       var
         res: PHashSetItem;
-        oldsymtablestack: TSymTableStack;
+        OldSymTableStack: TSymTableStack;
       begin
-        if not assigned(CurrentModule) then
-          internalerror(2011071101);
+        if not Assigned(CurrentModule) then
+          InternalError(2011071101);
         res:=CurrentModule.ptrdefs.FindOrAdd(@def,sizeof(def));
-        if not assigned(res^.Data) then
+        if not Assigned(res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
               if they're a local def, because otherwise they'll be saved
               to the ppu referencing a local symtable entry that doesn't
               exist in the ppu) }
-            oldsymtablestack:=symtablestack;
+            OldSymTableStack:=SymTableStack;
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
-            symtablestack:=nil;
-            result:=cpointerdef.create(def);
-            SetupReusableDef(def,result,res,oldsymtablestack);
+            SymTableStack:=nil;
+            result:=CPointerDef.create(def);
+            SetupReusableDef(def,result,res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
             exit;
           end;
@@ -4046,7 +4046,7 @@ implementation
 
     function TPointerDef.size: asizeint;
       begin
-        result:=sizeof(pint);
+        result:=sizeof(PInt);
       end;
 
 
@@ -4064,9 +4064,9 @@ implementation
           one of them will be destroyed on forward type resolve and the second will
           point to garbage }
         if pointeddef.typ=forwarddef then
-          result:=cpointerdef.create(TForwardDef(pointeddef).getcopy)
+          result:=CPointerDef.create(TForwardDef(pointeddef).getcopy)
         else
-          result:=cpointerdef.create(pointeddef);
+          result:=CPointerDef.create(pointeddef);
         TPointerDef(result).has_pointer_math:=has_pointer_math;
         TPointerDef(result).savesize:=savesize;
       end;
@@ -4088,7 +4088,7 @@ implementation
           for anonymous procedure types in macpas/iso mode, then there cannot
           be any recursive references to it either) }
         if (pointeddef.typ<>procvardef) or
-           not assigned(pointeddef.typesym) then
+           not Assigned(pointeddef.typesym) then
           GetTypeName:='^'+pointeddef.typename
         else
           GetTypeName:='^'+pointeddef.typesym.realname;
@@ -4135,7 +4135,7 @@ implementation
            def:=TObjectDef(def).childof;
          inherited create(classrefdef,def);
          if df_specialization in TStoredDef(def).defoptions then
-           genericdef:=cclassrefdef.create(TStoredDef(def).genericdef);
+           genericdef:=CClassRefDef.create(TStoredDef(def).genericdef);
       end;
 
 
@@ -4156,9 +4156,9 @@ implementation
     function TClassRefDef.getcopy:TStoredDef;
       begin
         if pointeddef.typ=forwarddef then
-          result:=cclassrefdef.create(TForwardDef(pointeddef).getcopy)
+          result:=CClassRefDef.create(TForwardDef(pointeddef).getcopy)
         else
-          result:=cclassrefdef.create(pointeddef);
+          result:=CClassRefDef.create(pointeddef);
       end;
 
 
@@ -4203,13 +4203,13 @@ implementation
          elementdefderef.reset;
          setmax:=high;
          setlow:=low;
-         actual_setalloc:=CurrentSettings.setalloc;
+         actual_setalloc:=CurrentSettings.SetAlloc;
 
          if (actual_setalloc=0) then
            begin
              setbase:=0;
              if (high<32) then
-               savesize:=Sizeof(longint)
+               savesize:=Sizeof(LongInt)
              else if (high<256) then
                savesize:=32
              else
@@ -4243,7 +4243,7 @@ implementation
 
     function TSetDef.getcopy : TStoredDef;
       begin
-        result:=csetdef.create(elementdef,setbase,setmax,true);
+        result:=CSetDef.create(elementdef,setbase,setmax,true);
         { the copy might have been created with a different setalloc setting }
         TSetDef(result).savesize:=savesize;
       end;
@@ -4293,7 +4293,7 @@ implementation
 
     function TSetDef.GetTypeName : string;
       begin
-         if assigned(elementdef) then
+         if Assigned(elementdef) then
           GetTypeName:='Set Of '+elementdef.typename
          else
           GetTypeName:='Empty Set';
@@ -4352,7 +4352,7 @@ implementation
          _elementdef:=nil;
          _elementdefderef.reset;
          arrayoptions:=[];
-         symtable:=TArraySymTable.create(self);
+         SymTable:=TArraySymTable.create(self);
       end;
 
 
@@ -4373,34 +4373,34 @@ implementation
     class function TArrayDef.getreusable_intern(def: TDef; elems: asizeint; const options: TArrayDefOptions): TArrayDef;
       var
         res: PHashSetItem;
-        oldsymtablestack: TSymTableStack;
+        OldSymTableStack: TSymTableStack;
         arrdesc: packed record
           def: TDef;
           elecount: asizeint;
           options: TArrayDefOptions
         end;
       begin
-        if not assigned(CurrentModule) then
-          internalerror(2011081301);
+        if not Assigned(CurrentModule) then
+          InternalError(2011081301);
         arrdesc.def:=def;
         arrdesc.elecount:=elems;
         arrdesc.options:=options;
         res:=CurrentModule.arraydefs.FindOrAdd(@arrdesc,sizeof(arrdesc));
-        if not assigned(res^.Data) then
+        if not Assigned(res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
               if they're a local def, because otherwise they'll be saved
               to the ppu referencing a local symtable entry that doesn't
               exist in the ppu) }
-            oldsymtablestack:=symtablestack;
+            OldSymTableStack:=SymTableStack;
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
-            symtablestack:=nil;
-            result:=carraydef.create(0,elems-1,sizesinttype);
+            SymTableStack:=nil;
+            result:=CArrayDef.create(0,elems-1,sizesinttype);
             result.elementdef:=def;
             result.arrayoptions:=options;
-            SetupReusableDef(def,result,res,oldsymtablestack);
+            SetupReusableDef(def,result,res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
             exit;
           end;
@@ -4435,10 +4435,10 @@ implementation
       end;
 
 
-    destructor TArrayDef.destroy;
+    destructor TArrayDef.Destroy;
       begin
-        symtable.free;
-        symtable:=nil;
+        SymTable.free;
+        SymTable:=nil;
         inherited;
       end;
 
@@ -4463,16 +4463,16 @@ implementation
          ppufile.getderef(rangedefderef);
          lowrange:=ppufile.getasizeint;
          highrange:=ppufile.getasizeint;
-         ppufile.getset(tppuset2(arrayoptions));
+         ppufile.getset(TPPUSet2(arrayoptions));
          PPULoadPlatform(ppufile);
-         symtable:=TArraySymTable.create(self);
-         TArraySymTable(symtable).ppuload(ppufile)
+         SymTable:=TArraySymTable.create(self);
+         TArraySymTable(SymTable).ppuload(ppufile)
       end;
 
 
     function TArrayDef.getcopy : TStoredDef;
       begin
-        result:=carraydef.create(lowrange,highrange,rangedef);
+        result:=CArrayDef.create(lowrange,highrange,rangedef);
         TArrayDef(result).arrayoptions:=arrayoptions;
         TArrayDef(result)._elementdef:=_elementdef;
       end;
@@ -4481,7 +4481,7 @@ implementation
     procedure TArrayDef.buildderef;
       begin
         inherited buildderef;
-        TArraySymTable(symtable).buildderef;
+        TArraySymTable(SymTable).buildderef;
         _elementdefderef.build(_elementdef);
         rangedefderef.build(rangedef);
       end;
@@ -4490,7 +4490,7 @@ implementation
     procedure TArrayDef.deref;
       begin
         inherited deref;
-        TArraySymTable(symtable).deref(false);
+        TArraySymTable(SymTable).deref(false);
         _elementdef:=TDef(_elementdefderef.resolve);
         rangedef:=TDef(rangedefderef.resolve);
       end;
@@ -4503,17 +4503,17 @@ implementation
          ppufile.putderef(rangedefderef);
          ppufile.putasizeint(lowrange);
          ppufile.putasizeint(highrange);
-         ppufile.putset(tppuset2(arrayoptions));
+         ppufile.putset(TPPUSet2(arrayoptions));
          writeentry(ppufile,ibarraydef);
-         TArraySymTable(symtable).ppuwrite(ppufile);
+         TArraySymTable(SymTable).ppuwrite(ppufile);
       end;
 
 
     function TArrayDef.elesize : asizeint;
       begin
         if (ado_IsBitPacked in arrayoptions) then
-          internalerror(2006080101);
-        if assigned(_elementdef) then
+          InternalError(2006080101);
+        if Assigned(_elementdef) then
           result:=_elementdef.size
         else
           result:=0;
@@ -4523,15 +4523,15 @@ implementation
     function TArrayDef.elepackedbitsize : asizeint;
       begin
         if not(ado_IsBitPacked in arrayoptions) then
-          internalerror(2006080102);
-	if assigned(_elementdef) then
+          InternalError(2006080102);
+	if Assigned(_elementdef) then
           result:=_elementdef.packedbitsize
 	else
 	  result:=0;
       end;
 
 
-    function TArrayDef.elecount : asizeuint;
+    function TArrayDef.elecount : ASizeUInt;
       var
         qhigh,qlow : qword;
       begin
@@ -4562,7 +4562,7 @@ implementation
 
     function TArrayDef.size : asizeint;
       var
-        cachedelecount : asizeuint;
+        cachedelecount : ASizeUInt;
         cachedelesize : asizeint;
       begin
         if ado_IsDynamicArray in arrayoptions then
@@ -4573,7 +4573,7 @@ implementation
 
         { Tarraydef.size may never be called for an open array! }
         if ado_OpenArray in arrayoptions then
-          internalerror(99080501);
+          InternalError(99080501);
         if not (ado_IsBitPacked in arrayoptions) then
           cachedelesize:=elesize
         else
@@ -4597,7 +4597,7 @@ implementation
 
         { prevent overflow, return -1 to indicate overflow }
         { also make sure we don't need 64/128 bit arithmetic to calculate offsets }
-        if (cachedelecount > asizeuint(high(asizeint))) or
+        if (cachedelecount > ASizeUInt(high(asizeint))) or
            ((high(asizeint) div cachedelesize) < asizeint(cachedelecount)) or
            { also lowrange*elesize must be < high(asizeint) to prevent overflow when
              accessing the array, see ncgmem (PFV) }
@@ -4640,7 +4640,7 @@ implementation
          { alignment is the target alignment for the used load size }
          else if (ado_IsBitPacked in arrayoptions) and
             (elementdef.typ in [enumdef,orddef]) then
-           alignment:=cgsize_orddef(int_cgsize(packedbitsloadsize(elepackedbitsize))).alignment
+           alignment:=cgsize_orddef(int_cgsize(PackedBitsLoadSize(elepackedbitsize))).alignment
          { alignment is the alignment of the elements }
          else
            alignment:=elementdef.alignment
@@ -4684,8 +4684,8 @@ implementation
               if rangedef.typ=enumdef then
                 result:=result+'Array['+rangedef.typename+'] Of '+elementdef.typename
               else
-                result:=result+'Array['+tostr(lowrange)+'..'+
-                  tostr(highrange)+'] Of '+elementdef.typename
+                result:=result+'Array['+ToStr(lowrange)+'..'+
+                  ToStr(highrange)+'] Of '+elementdef.typename
            end;
       end;
 
@@ -4698,7 +4698,7 @@ implementation
           if ((highrange=-1) and (lowrange=0)) then
            getmangledparaname:='array_of_'+elementdef.mangledparaname
          else
-          internalerror(200204176);
+          InternalError(200204176);
       end;
 
 
@@ -4723,12 +4723,12 @@ implementation
     constructor TAbstractRecordDef.create(const n:string; dt:TDefTyp;doregister:boolean);
       begin
         inherited create(dt,doregister);
-        objname:=stringdup(upper(n));
-        objrealname:=stringdup(n);
+        objname:=StringDup(upper(n));
+        objrealname:=StringDup(n);
         objectoptions:=[];
-        if assigned(CurrentModule.namespace) then
+        if Assigned(CurrentModule.namespace) then
           begin
-            import_lib:=stringdup(CurrentModule.namespace^);
+            import_lib:=StringDup(CurrentModule.namespace^);
             replace(import_lib^,'.','/');
           end;
       end;
@@ -4739,15 +4739,15 @@ implementation
       begin
         inherited ppuload(dt,ppufile);
         objrealname:=ppufile.getpshortstring;
-        objname:=stringdup(upper(objrealname^));
+        objname:=StringDup(upper(objrealname^));
         import_lib:=ppufile.getpshortstring;
         { only used for external C++ classes and Java classes/records }
         if (import_lib^='') then
-          stringdispose(import_lib);
-        ppufile.getset(tppuset4(objectoptions));
+          StringDispose(import_lib);
+        ppufile.getset(TPPUSet4(objectoptions));
         rtti.clause:=TRTTIClause(ppufile.getbyte);
         for ro in TRTTIOption do
-          ppufile.getset(tppuset1(rtti.options[ro]));
+          ppufile.getset(TPPUSet1(rtti.options[ro]));
       end;
 
     procedure TAbstractRecordDef.ppuwrite(ppufile: TCompilerPPUFile);
@@ -4756,24 +4756,24 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putstring(objrealname^);
-        if assigned(import_lib) then
+        if Assigned(import_lib) then
           ppufile.putstring(import_lib^)
         else
           ppufile.putstring('');
-        ppufile.putset(tppuset4(objectoptions));
+        ppufile.putset(TPPUSet4(objectoptions));
         ppufile.putbyte(byte(rtti.clause));
         for ro in TRTTIOption do
-          ppufile.putset(tppuset1(rtti.options[ro]));
+          ppufile.putset(TPPUSet1(rtti.options[ro]));
       end;
 
-    destructor TAbstractRecordDef.destroy;
+    destructor TAbstractRecordDef.Destroy;
       begin
-        stringdispose(objname);
-        stringdispose(objrealname);
-        stringdispose(import_lib);
+        StringDispose(objname);
+        StringDispose(objrealname);
+        StringDispose(import_lib);
         tcinitcode.free;
         tcinitcode := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -4781,7 +4781,7 @@ implementation
       begin
          inherited buildderefimpl;
          if not (df_copied_def in defoptions) then
-           TStoredSymTable(symtable).buildderefimpl;
+           TStoredSymTable(SymTable).buildderefimpl;
       end;
 
 
@@ -4789,7 +4789,7 @@ implementation
       begin
         inherited derefimpl;
         if not (df_copied_def in defoptions) then
-          TStoredSymTable(symtable).derefimpl(false);
+          TStoredSymTable(SymTable).derefimpl(false);
       end;
 
 
@@ -4797,21 +4797,21 @@ implementation
       begin
         { the defs of a copied def are defined for the original type only }
         if not(df_copied_def in defoptions) then
-          TStoredSymTable(symtable).check_forwards;
+          TStoredSymTable(SymTable).check_forwards;
       end;
 
     function TAbstractRecordDef.find_procdef_bytype(pt:TProcTypeOption): TProcDef;
       var
-        i: longint;
+        i: LongInt;
         sym: TSym;
       begin
-        for i:=0 to symtable.SymList.Count-1 do
+        for i:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(symtable.SymList[i]);
+            sym:=TSym(SymTable.SymList[i]);
             if sym.typ=procsym then
               begin
                 result:=TProcSym(sym).find_procdef_bytype(pt);
-                if assigned(result) then
+                if Assigned(result) then
                   exit;
               end;
           end;
@@ -4821,7 +4821,7 @@ implementation
     function TAbstractRecordDef.GetSymtable(t:TGetSymTable):TSymTable;
       begin
         if t=gs_record then
-          GetSymtable:=symtable
+          GetSymtable:=SymTable
         else
           GetSymtable:=nil;
       end;
@@ -4829,39 +4829,39 @@ implementation
 
     function TAbstractRecordDef.is_packed:boolean;
       begin
-        result:=TAbstractRecordSymTable(symtable).is_packed;
+        result:=TAbstractRecordSymTable(SymTable).is_packed;
       end;
 
     function TAbstractRecordDef.RttiName: string;
 
-        function generate_full_paramname(maxlength:longint):string;
+        function generate_full_paramname(maxlength:LongInt):string;
           const
-            commacount : array[boolean] of longint = (0,1);
+            commacount : array[boolean] of LongInt = (0,1);
           var
             fullparas,
-            paramname : ansistring;
-            module : tmodule;
+            paramname : AnsiString;
+            module : TModule;
             sym : TSym;
             def : TDef;
-            i : longint;
+            i : LongInt;
           begin
             { we want at least enough space for an ellipsis }
             if maxlength<3 then
-              internalerror(2014121203);
+              InternalError(2014121203);
             fullparas:='';
             for i:=0 to genericparas.count-1 do
               begin
                 sym:=TSym(genericparas[i]);
                 module:=find_module_from_symtable(sym.owner);
-                if not assigned(module) then
-                  internalerror(2014121202);
+                if not Assigned(module) then
+                  InternalError(2014121202);
                 if not (sym.typ in [constsym,symconst.typesym]) then
-                  internalerror(2020042501);
+                  InternalError(2020042501);
                 if sym.typ=constsym then
                   def:=TConstSym(sym).constdef
                 else
                   def:=TTypeSym(sym).typedef;
-                paramname:=module.realmodulename^;
+                paramname:=module.RealModuleName^;
                 if def.typ in [objectdef,recorddef] then
                   paramname:=paramname+'.'+TAbstractRecordDef(def).rttiname
                 else
@@ -4897,7 +4897,7 @@ implementation
         i,
         remlength,
         paramcount,
-        crcidx : longint;
+        crcidx : LongInt;
       begin
         if rttistring='' then
           begin
@@ -4913,7 +4913,7 @@ implementation
                       break;
                     end;
                 if crcidx<0 then
-                  internalerror(2014121201);
+                  InternalError(2014121201);
                 basename:=copy(objrealname^,1,crcidx-1);
                 split_generic_name(basename,nongeneric,paramcount);
                 rttistring:=rttistring+nongeneric+'<';
@@ -4949,8 +4949,8 @@ implementation
       begin
         result:=nil;
         hashedid.id:='GETENUMERATOR';
-        sym:=TSym(symtable.FindWithHash(hashedid));
-        if assigned(sym) and (sym.typ=procsym) then
+        sym:=TSym(SymTable.FindWithHash(hashedid));
+        if Assigned(sym) and (sym.typ=procsym) then
           begin
             for i := 0 to TProcSym(sym).ProcdefList.Count - 1 do
             begin
@@ -4976,13 +4976,13 @@ implementation
         result:=nil;
         // first search for po_enumerator_movenext method modifier
         // then search for public function MoveNext: Boolean
-        for i:=0 to symtable.SymList.Count-1 do
+        for i:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(symtable.SymList[i]);
+            sym:=TSym(SymTable.SymList[i]);
             if (sym.typ=procsym) then
             begin
               pd:=TProcSym(sym).find_procdef_byoptions([po_enumerator_movenext]);
-              if assigned(pd) then
+              if Assigned(pd) then
                 begin
                   result:=pd;
                   exit;
@@ -4990,8 +4990,8 @@ implementation
             end;
           end;
         hashedid.id:='MOVENEXT';
-        sym:=TSym(symtable.FindWithHash(hashedid));
-        if assigned(sym) and (sym.typ=procsym) then
+        sym:=TSym(SymTable.FindWithHash(hashedid));
+        if Assigned(sym) and (sym.typ=procsym) then
           begin
             for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
             begin
@@ -5017,9 +5017,9 @@ implementation
         result:=nil;
         // first search for ppo_enumerator_current property modifier
         // then search for public property Current
-        for i:=0 to symtable.SymList.Count-1 do
+        for i:=0 to SymTable.SymList.Count-1 do
           begin
-            sym:=TSym(symtable.SymList[i]);
+            sym:=TSym(SymTable.SymList[i]);
             if (sym.typ=propertysym) and (ppo_enumerator_current in TPropertySym(sym).propoptions) then
             begin
               result:=sym;
@@ -5027,8 +5027,8 @@ implementation
             end;
           end;
         hashedid.id:='CURRENT';
-        sym:=TSym(symtable.FindWithHash(hashedid));
-        if assigned(sym) and (sym.typ=propertysym) and
+        sym:=TSym(SymTable.FindWithHash(hashedid));
+        if Assigned(sym) and (sym.typ=propertysym) and
            (sym.visibility >= vis_public) and not TPropertySym(sym).propaccesslist[palt_read].empty then
           begin
             result:=sym;
@@ -5044,11 +5044,11 @@ implementation
       begin
         if typ=objectdef then
           result:=TObjectDef(self).objextname^
-        else if assigned(typesym) then
+        else if Assigned(typesym) then
           result:=typesym.realname
         { have to generate anonymous nested type in current unit/class/record }
         else
-          internalerror(2011032601);
+          InternalError(2011032601);
 
         { in case of specializations, add some extras to prevent name conflicts
           with nested classes }
@@ -5056,45 +5056,45 @@ implementation
           result:='$'+result+'$specialization$';
 
         st:=owner;
-        while assigned(st) and
+        while Assigned(st) and
               (st.symtabletype in [objectsymtable,recordsymtable,localsymtable]) do
           begin
             { nested classes are named as "OuterClass$InnerClass" }
             enclosingdef:=TDef(st.defowner);
             if enclosingdef.typ=procdef then
-              result:=result+TProcDef(enclosingdef).procsym.realname+'$$'+tostr(TProcDef(enclosingdef).procsym.symid)+'$'
+              result:=result+TProcDef(enclosingdef).procsym.realname+'$$'+ToStr(TProcDef(enclosingdef).procsym.symid)+'$'
             else if enclosingdef.typ=objectdef then
               result:=TObjectDef(enclosingdef).objextname^+'$'+result
-            else if assigned(enclosingdef.typesym) then
+            else if Assigned(enclosingdef.typesym) then
               result:=enclosingdef.typesym.realname+'$'+result
             else
-              internalerror(2011060305);
+              InternalError(2011060305);
             st:=enclosingdef.owner;
           end;
 
         if with_package_name and
-           assigned(import_lib) then
+           Assigned(import_lib) then
           result:=import_lib^+'/'+result;
       end;
 
 
     function TAbstractRecordDef.contains_float_field: boolean;
       var
-        i : longint;
+        i : LongInt;
       begin
         result:=true;
-        for i:=0 to symtable.symlist.count-1 do
+        for i:=0 to SymTable.symlist.count-1 do
           begin
-            if (TSym(symtable.symlist[i]).typ<>fieldvarsym) or
-               (sp_static in TSym(symtable.symlist[i]).symoptions) then
+            if (TSym(SymTable.symlist[i]).typ<>fieldvarsym) or
+               (sp_static in TSym(SymTable.symlist[i]).symoptions) then
               continue;
-            if assigned(TFieldVarSym(symtable.symlist[i]).vardef) then
+            if Assigned(TFieldVarSym(SymTable.symlist[i]).vardef) then
               begin
-                if TStoredDef(TFieldVarSym(symtable.symlist[i]).vardef).is_fpuregable then
+                if TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).is_fpuregable then
                   exit;
                 { search recursively }
-                if (TStoredDef(TFieldVarSym(symtable.symlist[i]).vardef).typ=recorddef) and
-                  (TAbstractRecordDef(TFieldVarSym(symtable.symlist[i]).vardef).contains_float_field) then
+                if (TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).typ=recorddef) and
+                  (TAbstractRecordDef(TFieldVarSym(SymTable.symlist[i]).vardef).contains_float_field) then
                   exit;
               end;
           end;
@@ -5104,32 +5104,32 @@ implementation
 
     function TAbstractRecordDef.contains_cross_aword_field: boolean;
       var
-        i : longint;
+        i : LongInt;
         foffset, fsize: aword;
       begin
         result:=true;
-        for i:=0 to symtable.symlist.count-1 do
+        for i:=0 to SymTable.symlist.count-1 do
           begin
-            if (TSym(symtable.symlist[i]).typ<>fieldvarsym) or
-               (sp_static in TSym(symtable.symlist[i]).symoptions) then
+            if (TSym(SymTable.symlist[i]).typ<>fieldvarsym) or
+               (sp_static in TSym(SymTable.symlist[i]).symoptions) then
               continue;
-            if assigned(TFieldVarSym(symtable.symlist[i]).vardef) then
+            if Assigned(TFieldVarSym(SymTable.symlist[i]).vardef) then
               begin
                 if is_packed then
                   begin
-                    foffset:=TFieldVarSym(symtable.symlist[i]).fieldoffset;
-                    fsize:=TFieldVarSym(symtable.symlist[i]).vardef.packedbitsize;
+                    foffset:=TFieldVarSym(SymTable.symlist[i]).fieldoffset;
+                    fsize:=TFieldVarSym(SymTable.symlist[i]).vardef.packedbitsize;
                   end
                 else
                   begin
-                    foffset:=TFieldVarSym(symtable.symlist[i]).fieldoffset*8;
-                    fsize:=TFieldVarSym(symtable.symlist[i]).vardef.size*8;
+                    foffset:=TFieldVarSym(SymTable.symlist[i]).fieldoffset*8;
+                    fsize:=TFieldVarSym(SymTable.symlist[i]).vardef.size*8;
                   end;
                 if (fsize>0) and ((foffset div (sizeof(aword)*8)) <> ((foffset+fsize-1) div (sizeof(aword)*8))) then
                   exit;
                 { search recursively }
-                if (TStoredDef(TFieldVarSym(symtable.symlist[i]).vardef).typ=recorddef) and
-                  (TAbstractRecordDef(TFieldVarSym(symtable.symlist[i]).vardef).contains_cross_aword_field) then
+                if (TStoredDef(TFieldVarSym(SymTable.symlist[i]).vardef).typ=recorddef) and
+                  (TAbstractRecordDef(TFieldVarSym(SymTable.symlist[i]).vardef).contains_cross_aword_field) then
                   exit;
               end;
           end;
@@ -5225,7 +5225,7 @@ implementation
         else
           begin
             WriteLn(T, PrintNodeIndention, '<alignment>');
-            printnodeindent;
+            PrintNodeIndent;
             WriteLn(T, PrintNodeIndention, '<basic>', alignment, '</basic>');
 
             if (structalignment <> alignment) then
@@ -5234,12 +5234,12 @@ implementation
             if (aggregatealignment <> alignment) and (aggregatealignment <> structalignment) then
               WriteLn(T, PrintNodeIndention, '<aggregate>', aggregatealignment, '</aggregate>');
 
-            printnodeunindent;
+            PrintNodeUnindent;
             WriteLn(T, PrintNodeIndention, '</alignment>');
           end;
 
         { List the fields }
-        List := Symtable.SymList;
+        List := SymTable.SymList;
         for i := 0 to List.Count - 1 do
           case TSym(List[i]).typ of
 {            staticvarsym,localvarsym,paravarsym,fieldvarsym,
@@ -5278,8 +5278,8 @@ implementation
 
     procedure TAbstractRecordDef.setobjrealname(const n:string);
       begin
-        Freemem(objrealname);
-        objrealname:=stringdup(n);
+        FreeMem(objrealname);
+        objrealname:=StringDup(n);
       end;
 
 {***************************************************************************
@@ -5289,19 +5289,19 @@ implementation
     constructor TRecordDef.create(const n:string; p:TSymTable);
       begin
          inherited create(n,recorddef,true);
-         symtable:=p;
+         SymTable:=p;
          { we can own the symtable only if nobody else owns a copy so far }
-         if symtable.refcount=1 then
-           symtable.defowner:=self;
+         if SymTable.refcount=1 then
+           SymTable.defowner:=self;
          isunion:=false;
          cloneddefderef.reset;
       end;
 
 
-    constructor TRecordDef.create_internal(const n: string; packrecords, recordalignmin: shortint; where: TSymTable);
+    constructor TRecordDef.create_internal(const n: string; PackRecords, RecordAlignMin: shortint; where: TSymTable);
       var
         name : string;
-        oldsymtablestack: TSymTableStack;
+        OldSymTableStack: TSymTableStack;
         ts: TTypeSym;
       begin
         { construct name }
@@ -5312,13 +5312,13 @@ implementation
             InitDefID;
             name:='$InternalRec'+UniqueIDStr;
           end;
-        oldsymtablestack:=symtablestack;
+        OldSymTableStack:=SymTableStack;
         { do not simply push/pop current_module.localsymtable, because
           that can have side-effects (e.g., it removes helpers) }
-        symtablestack:=nil;
+        SymTableStack:=nil;
 
-        symtable:=TRecordSymTable.create(name,packrecords,recordalignmin);
-        symtable.defowner:=self;
+        SymTable:=TRecordSymTable.create(name,PackRecords,RecordAlignMin);
+        SymTable.defowner:=self;
         isunion:=false;
         inherited create(name,recorddef,true);
         where.insertdef(self);
@@ -5326,28 +5326,28 @@ implementation
           type again by name too -> create typesym }
         if n<>'' then
           begin
-            ts:=ctypesym.create(n,self);
+            ts:=CTypeSym.create(n,self);
             include(ts.symoptions,sp_internal);
             { avoid hints about unused types (these may only be used for
               typed constant data) }
             ts.increfcount;
             where.insertsym(ts);
           end;
-        symtablestack:=oldsymtablestack;
+        SymTableStack:=OldSymTableStack;
         { don't create RTTI for internal types, these are not exported }
         defstates:=defstates+[ds_rtti_table_written,ds_init_table_written];
         include(defoptions,df_internal);
       end;
 
 
-    constructor TRecordDef.create_global_internal(const n: string; packrecords, recordalignmin: shortint);
+    constructor TRecordDef.create_global_internal(const n: string; PackRecords, RecordAlignMin: shortint);
       var
         where : TSymTable;
       begin
         where:=CurrentModule.localsymtable;
-        if not assigned(where) then
-          where:=CurrentModule.globalsymtable;
-        create_internal(n,packrecords,recordalignmin,where);
+        if not Assigned(where) then
+          where:=CurrentModule.GlobalSymTable;
+        create_internal(n,PackRecords,RecordAlignMin,where);
       end;
 
 
@@ -5359,21 +5359,21 @@ implementation
       begin
         if optionalname='' then
           begin
-            name:='$f'+tostr(TRecordSymTable(symtable).symlist.count);
+            name:='$f'+ToStr(TRecordSymTable(SymTable).symlist.count);
             pname:=@name
           end
         else
           pname:=@optionalname;
-        sym:=cfieldvarsym.create(pname^,vs_value,def,[]);
-        symtable.insertsym(sym);
-        TRecordSymTable(symtable).addfield(sym,vis_hidden);
+        sym:=CFieldVarSym.create(pname^,vs_value,def,[]);
+        SymTable.insertsym(sym);
+        TRecordSymTable(SymTable).addfield(sym,vis_hidden);
         result:=sym;
       end;
 
 
-    procedure TRecordDef.add_fields_from_deflist(fieldtypes: tfplist);
+    procedure TRecordDef.add_fields_from_deflist(fieldtypes: TFPList);
       var
-        i: longint;
+        i: LongInt;
       begin
         for i:=0 to fieldtypes.count-1 do
           add_field_by_def('',TDef(fieldtypes[i]));
@@ -5384,7 +5384,7 @@ implementation
 
       procedure readvariantrecdesc(var variantrecdesc : PVariantRecDesc);
         var
-          i,j : longint;
+          i,j : LongInt;
         begin
          if ppufile.getbyte=1 then
            begin
@@ -5412,39 +5412,39 @@ implementation
            end
          else
            begin
-             symtable:=TRecordSymTable.create(objrealname^,0,0);
-             TRecordSymTable(symtable).fieldalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).recordalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).explicitrecordalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).padalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).usefieldalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).recordalignmin:=shortint(ppufile.getbyte);
-             TRecordSymTable(symtable).datasize:=ppufile.getasizeint;
-             TRecordSymTable(symtable).paddingsize:=ppufile.getword;
-             ppufile.getset(tppuset1(TRecordSymTable(symtable).managementoperators));
+             SymTable:=TRecordSymTable.create(objrealname^,0,0);
+             TRecordSymTable(SymTable).fieldalignment:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).recordalignment:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).explicitrecordalignment:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).padalignment:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).usefieldalignment:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).RecordAlignMin:=shortint(ppufile.getbyte);
+             TRecordSymTable(SymTable).DataSize:=ppufile.getasizeint;
+             TRecordSymTable(SymTable).paddingsize:=ppufile.getword;
+             ppufile.getset(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
              { position of ppuload_platform call must correspond
                to position of writeentry in ppuwrite method }
              PPULoadPlatform(ppufile);
-             TRecordSymTable(symtable).ppuload(ppufile);
+             TRecordSymTable(SymTable).ppuload(ppufile);
              { the variantrecdesc is needed only for iso-like new statements new(prec,1,2,3 ...);
                but because iso mode supports no units, there is no need to store the variantrecdesc
                in the ppu
              }
              // readvariantrecdesc(variantrecdesc);
              { requires usefieldalignment to be set }
-             symtable.defowner:=self;
+             SymTable.defowner:=self;
            end;
          isunion:=false;
       end;
 
 
-    destructor TRecordDef.destroy;
+    destructor TRecordDef.Destroy;
 
       procedure free_variantrecdesc(var variantrecdesc : PVariantRecDesc);
         var
-          i : longint;
+          i : LongInt;
         begin
-         while assigned(variantrecdesc) do
+         while Assigned(variantrecdesc) do
            begin
              for i:=0 to high(variantrecdesc^.branches) do
                begin
@@ -5458,26 +5458,26 @@ implementation
         end;
 
       begin
-         if assigned(variantrecdesc) then
+         if Assigned(variantrecdesc) then
            free_variantrecdesc(variantrecdesc);
-         if assigned(symtable) then
+         if Assigned(SymTable) then
            begin
-             symtable.free;
-             symtable:=nil;
+             SymTable.free;
+             SymTable:=nil;
            end;
-         inherited destroy;
+         inherited Destroy;
       end;
 
 
     function TRecordDef.getcopy : TStoredDef;
       begin
-        result:=crecorddef.create(objrealname^,symtable.getcopy);
+        result:=CRecordDef.create(objrealname^,SymTable.getcopy);
         TRecordDef(result).isunion:=isunion;
         include(TRecordDef(result).defoptions,df_copied_def);
-        if assigned(tcinitcode) then
+        if Assigned(tcinitcode) then
           TRecordDef(result).tcinitcode:=tcinitcode.getcopy;
-         if assigned(import_lib) then
-           TRecordDef(result).import_lib:=stringdup(import_lib^);
+         if Assigned(import_lib) then
+           TRecordDef(result).import_lib:=StringDup(import_lib^);
       end;
 
 
@@ -5485,8 +5485,8 @@ implementation
       begin
         { each record with managed field or with any management operator needs
           init table }
-        NeedsInitTable:=(TRecordSymTable(symtable).managementoperators<>[]) or
-          TRecordSymTable(symtable).needs_init_final
+        NeedsInitTable:=(TRecordSymTable(SymTable).managementoperators<>[]) or
+          TRecordSymTable(SymTable).needs_init_final
       end;
 
     function TRecordDef.NeedsSeparateInitRTTI : boolean;
@@ -5497,7 +5497,7 @@ implementation
 
     function TRecordDef.HasNonTrivialInitChild(check_parent:boolean):boolean;
       begin
-        result:=TRecordSymTable(symtable).has_non_trivial_init;
+        result:=TRecordSymTable(SymTable).has_non_trivial_init;
       end;
 
 
@@ -5505,9 +5505,9 @@ implementation
       begin
          inherited buildderef;
          if df_copied_def in defoptions then
-           cloneddefderef.build(symtable.defowner)
+           cloneddefderef.build(SymTable.defowner)
          else
-           TStoredSymTable(symtable).buildderef;
+           TStoredSymTable(SymTable).buildderef;
       end;
 
 
@@ -5518,25 +5518,25 @@ implementation
          if df_copied_def in defoptions then
            begin
              cloneddef:=TRecordDef(cloneddefderef.resolve);
-             symtable:=cloneddef.symtable.getcopy;
+             SymTable:=cloneddef.SymTable.getcopy;
            end
          else
-           TStoredSymTable(symtable).deref(false);
+           TStoredSymTable(SymTable).deref(false);
 
          { internal types, only load from the system unit }
-         if assigned(owner) and
-            assigned(owner.name) and
+         if Assigned(owner) and
+            Assigned(owner.name) and
             (owner.name^='SYSTEM') then
            begin
              { TGUID  }
-             if not assigned(rec_tguid) and
+             if not Assigned(rec_tguid) and
                 (upper(typename)='TGUID') then
                rec_tguid:=self
              { JMP_BUF }
-             else if not assigned(rec_jmp_buf) and
+             else if not Assigned(rec_jmp_buf) and
                 (upper(typename)='JMP_BUF') then
                rec_jmp_buf:=self
-             else if not assigned(rec_exceptaddr) and
+             else if not Assigned(rec_exceptaddr) and
                 (upper(typename)='TEXCEPTADDR') then
                rec_exceptaddr:=self;
            end;
@@ -5547,9 +5547,9 @@ implementation
 
       procedure writevariantrecdesc(variantrecdesc : PVariantRecDesc);
         var
-          i,j : longint;
+          i,j : LongInt;
         begin
-         if assigned(variantrecdesc) then
+         if Assigned(variantrecdesc) then
            begin
              ppufile.putbyte(1);
              ppufile.putderef(variantrecdesc^.variantselectorderef);
@@ -5572,15 +5572,15 @@ implementation
            ppufile.putderef(cloneddefderef)
          else
            begin
-             ppufile.putbyte(byte(TRecordSymTable(symtable).fieldalignment));
-             ppufile.putbyte(byte(TRecordSymTable(symtable).recordalignment));
-             ppufile.putbyte(byte(TRecordSymTable(symtable).explicitrecordalignment));
-             ppufile.putbyte(byte(TRecordSymTable(symtable).padalignment));
-             ppufile.putbyte(byte(TRecordSymTable(symtable).usefieldalignment));
-             ppufile.putbyte(byte(TRecordSymTable(symtable).recordalignmin));
-             ppufile.putasizeint(TRecordSymTable(symtable).datasize);
-             ppufile.putword(TRecordSymTable(symtable).paddingsize);
-             ppufile.putset(tppuset1(TRecordSymTable(symtable).managementoperators));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).fieldalignment));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).recordalignment));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).explicitrecordalignment));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).padalignment));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).usefieldalignment));
+             ppufile.putbyte(byte(TRecordSymTable(SymTable).RecordAlignMin));
+             ppufile.putasizeint(TRecordSymTable(SymTable).DataSize);
+             ppufile.putword(TRecordSymTable(SymTable).paddingsize);
+             ppufile.putset(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
              { the variantrecdesc is needed only for iso-like new statements new(prec,1,2,3 ...);
                but because iso mode supports no units, there is no need to store the variantrecdesc
                in the ppu
@@ -5591,38 +5591,38 @@ implementation
          writeentry(ppufile,ibrecorddef);
 
          if not(df_copied_def in defoptions) then
-           TRecordSymTable(symtable).ppuwrite(ppufile);
+           TRecordSymTable(SymTable).ppuwrite(ppufile);
       end;
 
 
     function TRecordDef.size:asizeint;
       begin
-        result:=TRecordSymTable(symtable).datasize;
+        result:=TRecordSymTable(SymTable).DataSize;
       end;
 
 
     function TRecordDef.alignment:shortint;
       begin
-        alignment:=TRecordSymTable(symtable).recordalignment;
+        alignment:=TRecordSymTable(SymTable).recordalignment;
       end;
 
 
     function TRecordDef.padalignment:shortint;
       begin
-        padalignment := TRecordSymTable(symtable).padalignment;
+        padalignment := TRecordSymTable(SymTable).padalignment;
       end;
 
 
     function TRecordDef.GetTypeName : string;
       begin
-        if assigned(typesym) then
+        if Assigned(typesym) then
           GetTypeName:='<record type '+typesymbolprettyname+'>'
         else
           GetTypeName:='<record type>';
       end;
 
 {$ifdef DEBUG_NODE_XML}
-    function TRecordDef.XMLPrintType: ansistring;
+    function TRecordDef.XMLPrintType: AnsiString;
       begin
         Result := '&lt;record&gt;';
       end;
@@ -5644,7 +5644,7 @@ implementation
          procoptions:=[];
          returndef:=voidtype;
          returndefderef.reset;
-         savesize:=sizeof(pint);
+         savesize:=sizeof(PInt);
          callerargareasize:=0;
          calleeargareasize:=0;
          has_paraloc_info:=callnoside;
@@ -5654,9 +5654,9 @@ implementation
       end;
 
 
-    destructor TAbstractProcDef.destroy;
+    destructor TAbstractProcDef.Destroy;
       begin
-         if assigned(paras) then
+         if Assigned(paras) then
            begin
 {$ifdef MEMDEBUG}
              memprocpara.start;
@@ -5667,7 +5667,7 @@ implementation
              memprocpara.stop;
 {$endif MEMDEBUG}
           end;
-         if assigned(parast) then
+         if Assigned(parast) then
           begin
 {$ifdef MEMDEBUG}
             memprocparast.start;
@@ -5680,7 +5680,7 @@ implementation
           end;
          funcretloc[callerside].done;
          funcretloc[calleeside].done;
-         inherited destroy;
+         inherited Destroy;
       end;
 
 
@@ -5688,10 +5688,10 @@ implementation
       begin
         if (TSym(p).typ<>paravarsym) then
           exit;
-        inc(plongint(arg)^);
+        inc(PLongInt(arg)^);
         if not(vo_is_hidden_para in TParaVarSym(p).varoptions) then
          begin
-           if not assigned(TParaVarSym(p).defaultconstsym) then
+           if not Assigned(TParaVarSym(p).defaultconstsym) then
              inc(minparacount);
            inc(maxparacount);
          end;
@@ -5708,13 +5708,13 @@ implementation
 
     procedure TAbstractProcDef.calcparas;
       var
-        paracount : longint;
+        paracount : LongInt;
       begin
         { This can already be assigned when
           we need to reresolve this unit (PFV) }
-        if assigned(paras) then
+        if Assigned(paras) then
           paras.free;
-        paras:=tparalist.create(false);
+        paras:=TParaList.create(false);
         paracount:=0;
         minparacount:=0;
         maxparacount:=0;
@@ -5727,7 +5727,7 @@ implementation
       end;
 
 
-    function TAbstractProcDef.mangledprocparanames(oldlen : longint) : string;
+    function TAbstractProcDef.mangledprocparanames(oldlen : LongInt) : string;
       var
         hash  : qword;
         hp   : TParaVarSym;
@@ -5743,8 +5743,8 @@ implementation
            hp:=TParaVarSym(paras[i]);
            if not(vo_is_hidden_para in hp.varoptions) then
              begin
-               if not assigned(hp.vardef) then
-                 internalerror(2025122401);
+               if not Assigned(hp.vardef) then
+                 InternalError(2025122401);
                result:=result+'$'+hp.vardef.mangledparaname;
              end;
          end;
@@ -5757,21 +5757,21 @@ implementation
         if (newlen-oldlen>12) and
            ((newlen>100) or (newlen-oldlen>64)) then
           begin
-            hash:=InitFnv64;
+            hash:=InitFNV64;
             for i:=0 to paras.count-1 do
               begin
                 hp:=TParaVarSym(paras[i]);
                 if not(vo_is_hidden_para in hp.varoptions) then
                   begin
                     hs:=hp.vardef.mangledparaname;
-                    hash:=UpdateFnv64(hash,hs[1],length(hs));
+                    hash:=UpdateFNV64(hash,hs[1],length(hs));
                   end;
               end;
             if not is_void(returndef) then
               begin
                 { add a little prefix so that x(integer; integer) is different from x(integer):integer }
                 hs:='$$'+returndef.mangledparaname;
-                hash:=UpdateFnv64(hash,hs[1],length(hs));
+                hash:=UpdateFNV64(hash,hs[1],length(hs));
               end;
             result:='$h'+Base64Mangle(hash);
           end;
@@ -5781,7 +5781,7 @@ implementation
     procedure TAbstractProcDef.buildderef;
       begin
          { released procdef? }
-         if not assigned(parast) then
+         if not Assigned(parast) then
            exit;
          inherited buildderef;
          returndefderef.build(returndef);
@@ -5827,13 +5827,13 @@ implementation
          ppufile.getderef(returndefderef);
          proctypeoption:=TProcTypeOption(ppufile.getbyte);
          proccalloption:=TProcCallOption(ppufile.getbyte);
-         ppufile.getset(tppuset8(procoptions));
+         ppufile.getset(TPPUSet8(procoptions));
 
          funcretloc[callerside].init;
          if po_explicitparaloc in procoptions then
            funcretloc[callerside].ppuload(ppufile);
 
-         savesize:=sizeof(pint);
+         savesize:=sizeof(PInt);
          if (po_explicitparaloc in procoptions) then
            has_paraloc_info:=callerside;
       end;
@@ -5842,22 +5842,22 @@ implementation
     procedure TAbstractProcDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          { released procdef? }
-         if not assigned(parast) then
+         if not Assigned(parast) then
            exit;
          inherited ppuwrite(ppufile);
          ppufile.putderef(returndefderef);
          ppufile.putbyte(ord(proctypeoption));
          ppufile.putbyte(ord(proccalloption));
-         ppufile.putset(tppuset8(procoptions));
+         ppufile.putset(TPPUSet8(procoptions));
 
          if (po_explicitparaloc in procoptions) then
            funcretloc[callerside].ppuwrite(ppufile);
       end;
 
 
-    function TAbstractProcDef.typename_paras(pno: TProcNameOptions) : ansistring;
+    function TAbstractProcDef.typename_paras(pno: TProcNameOptions) : AnsiString;
       var
-        hs,s  : ansistring;
+        hs,s  : AnsiString;
         hp    : TParaVarSym;
         hpc   : TConstSym;
         first : boolean;
@@ -5896,7 +5896,7 @@ implementation
                  s:=s+hp.realname+':';
                if hp.univpara then
                  s:=s+'univ ';
-               if assigned(hp.vardef.typesym) then
+               if Assigned(hp.vardef.typesym) then
                  begin
                    hs:=hp.vardef.typesym.realname;
                    if hs[1]<>'$' then
@@ -5907,7 +5907,7 @@ implementation
                else
                  s:=s+hp.vardef.GetTypeName;
                { default value }
-               if assigned(hp.defaultconstsym) then
+               if Assigned(hp.defaultconstsym) then
                 begin
                   hpc:=TConstSym(hp.defaultconstsym);
                   hs:='';
@@ -5917,7 +5917,7 @@ implementation
                       begin
                         if hpc.value.valuews.len>0 then
                           begin
-                            setlength(hs,hpc.value.valuews.len);
+                            SetLength(hs,hpc.value.valuews.len);
                             for j:=0 to hpc.value.valuews.len-1 do
                              begin
                                if (ord(hpc.value.valuews.data[j])<127) and
@@ -5933,7 +5933,7 @@ implementation
                       begin
                         if hpc.value.len>0 then
                           begin
-                            setLength(hs,hpc.value.len);
+                            SetLength(hs,hpc.value.len);
                             { don't write past the end of hs if the constant
                               is > 255 chars }
                             move(hpc.value.valueptr^,hs[1],length(hs));
@@ -5947,9 +5947,9 @@ implementation
                           end;
                       end;
                     constreal :
-                      hs:=realtostr(pbestreal(hpc.value.valueptr)^);
+                      hs:=RealToStr(PBestReal(hpc.value.valueptr)^);
                     constpointer :
-                      hs:=tostr(hpc.value.valueordptr);
+                      hs:=ToStr(hpc.value.valueordptr);
                     constord :
                       begin
                         if is_boolean(hpc.constdef) then
@@ -5960,16 +5960,16 @@ implementation
                              hs:='FALSE';
                           end
                         else
-                          hs:=tostr(hpc.value.valueord);
+                          hs:=ToStr(hpc.value.valueord);
                       end;
                     constnil :
                       hs:='nil';
                     constset :
                       hs:='<set>';
                     constguid:
-                      hs:=guid2string(pguid(hpc.value.valueptr)^);
+                      hs:=GUID2String(PGUID(hpc.value.valueptr)^);
                     constnone:
-                      internalerror(2019050704);
+                      InternalError(2019050704);
                   end;
                   if hs<>'' then
                    s:=s+'=`'+hs+'`';
@@ -6006,21 +6006,21 @@ implementation
 
     function TAbstractProcDef.getcopyas(newtyp:TDefTyp;copytyp:TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
       var
-        j, nestinglevel: longint;
+        j, nestinglevel: LongInt;
         pvs, npvs: TParaVarSym;
       begin
         nestinglevel:=parast.symtablelevel;
         if newtyp=procdef then
           begin
             if (copytyp<>pc_bareproc) then
-              result:=cprocdef.create(nestinglevel,doregister)
+              result:=CProcDef.create(nestinglevel,doregister)
             else
-              result:=cprocdef.create(normal_function_level,doregister);
+              result:=CProcDef.create(normal_function_level,doregister);
             TProcDef(result).visibility:=vis_public;
           end
         else
           begin
-            result:=cprocvardef.create(nestinglevel,true);
+            result:=CProcVarDef.create(nestinglevel,true);
           end;
         TAbstractProcDef(result).returndef:=returndef;
         TAbstractProcDef(result).returndefderef:=returndefderef;
@@ -6040,13 +6040,13 @@ implementation
                          (([vo_is_self,vo_is_vmt,vo_is_parentfp,vo_is_result,vo_is_funcret,vo_is_high_para]*pvs.varoptions)<>[]) then
                         continue;
                       if paraprefix='' then
-                        npvs:=cparavarsym.create(pvs.realname,pvs.paranr,pvs.varspez,
+                        npvs:=CParaVarSym.create(pvs.realname,pvs.paranr,pvs.varspez,
                           pvs.vardef,pvs.varoptions)
                       else if not(vo_is_high_para in pvs.varoptions) then
-                        npvs:=cparavarsym.create(paraprefix+pvs.realname,pvs.paranr,pvs.varspez,
+                        npvs:=CParaVarSym.create(paraprefix+pvs.realname,pvs.paranr,pvs.varspez,
                           pvs.vardef,pvs.varoptions)
                       else
-                        npvs:=cparavarsym.create('$high'+paraprefix+copy(pvs.name,5,length(pvs.name)),pvs.paranr,pvs.varspez,
+                        npvs:=CParaVarSym.create('$high'+paraprefix+copy(pvs.name,5,length(pvs.name)),pvs.paranr,pvs.varspez,
                           pvs.vardef,pvs.varoptions);
                       npvs.defaultconstsym:=pvs.defaultconstsym;
                       TAbstractProcDef(result).parast.insertsym(npvs);
@@ -6061,7 +6061,7 @@ implementation
                       // reuse original, part of generic declaration
                     end
                   else
-                    internalerror(201160604);
+                    InternalError(201160604);
                   end;
               end;
           end;
@@ -6076,7 +6076,7 @@ implementation
                 TAbstractProcDef(result).returndef:=TDef(owner.defowner);
                 if not(is_implicit_pointer_object_type(returndef) or
                    (returndef.typ<>objectdef)) then
-                  TAbstractProcDef(result).returndef:=cpointerdef.getreusable(TAbstractProcDef(result).returndef);
+                  TAbstractProcDef(result).returndef:=CPointerDef.getreusable(TAbstractProcDef(result).returndef);
                 TAbstractProcDef(result).proctypeoption:=potype_function;
               end
             else if is_void(returndef) then
@@ -6121,7 +6121,7 @@ implementation
          { nested procvars require that nested functions use the Delphi-style
            nested procedure calling convention }
          if (parast.symtablelevel>normal_function_level) and
-            (m_nested_procvars in CurrentSettings.modeswitches) then
+            (m_nested_procvars in CurrentSettings.ModeSwitches) then
            include(procoptions,po_delphi_nested_cc);
       end;
 
@@ -6157,7 +6157,7 @@ implementation
 
     procedure TAbstractProcDef.done_paraloc_info(side: TCallerCallee);
       var
-        i: longint;
+        i: LongInt;
       begin
         if (side in [callerside,callbothsides]) and
            (has_paraloc_info in [callerside,callbothsides]) then
@@ -6188,8 +6188,8 @@ implementation
     function TAbstractProcDef.stack_tainting_parameter(side: TCallerCallee): boolean;
       var
         p: TParaVarSym;
-        ploc: PCGParalocation;
-        i: longint;
+        ploc: PCGParaLocation;
+        i: LongInt;
       begin
         result:=false;
         init_paraloc_info(side);
@@ -6207,7 +6207,7 @@ implementation
                   exit;
                 end;
               ploc:=p.paraloc[side].location;
-              while assigned(ploc) do
+              while Assigned(ploc) do
                 begin
                   if (ploc^.loc=LOC_REFERENCE) then
                     begin
@@ -6264,9 +6264,9 @@ implementation
         result:=
           (proctypeoption=potype_constructor) or
           ((typ=procdef) and
-           ((not assigned(optionalmethodpointer) and
+           ((not Assigned(optionalmethodpointer) and
              is_class(TDef(owner.defowner))) or
-            (assigned(optionalmethodpointer) and
+            (Assigned(optionalmethodpointer) and
              ((optionalmethodpointer.resultdef.typ=classrefdef) or
               (optionalmethodpointer.nodetype=typen)))) and
            (TProcDef(self).procsym.Name='NEWINSTANCE'))
@@ -6279,11 +6279,11 @@ implementation
 
     function TProcDef.getparentfpsym: TSym;
       begin
-        if not assigned(_parentfpsym) then
+        if not Assigned(_parentfpsym) then
           begin
             _parentfpsym:=TSym(parast.Find('parentfp'));
-            if not assigned(_parentfpsym) then
-              internalerror(200309281);
+            if not Assigned(_parentfpsym) then
+              InternalError(200309281);
           end;
         result:=_parentfpsym;
       end;
@@ -6291,49 +6291,49 @@ implementation
 
     function TProcDef.Getis_implemented: boolean;
       begin
-        result:=not assigned(implprocdefinfo) or implprocdefinfo^.is_implemented;
+        result:=not Assigned(implprocdefinfo) or implprocdefinfo^.is_implemented;
       end;
 
 
     procedure TProcDef.Setis_implemented(AValue: boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2020062101);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2020062101);
         implprocdefinfo^.is_implemented:=AValue;
       end;
 
 
     function TProcDef.getwas_anonymous:boolean;
       begin
-        result:=assigned(implprocdefinfo) and implprocdefinfo^.was_anonymous;
+        result:=Assigned(implprocdefinfo) and implprocdefinfo^.was_anonymous;
       end;
 
 
     procedure TProcDef.setwas_anonymous(avalue:boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2022020502);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2022020502);
         implprocdefinfo^.was_anonymous:=avalue;
       end;
 
 
     function TProcDef.gethas_capturer:boolean;
       begin
-        result:=assigned(implprocdefinfo) and implprocdefinfo^.has_capturer;
+        result:=Assigned(implprocdefinfo) and implprocdefinfo^.has_capturer;
       end;
 
 
     procedure TProcDef.sethas_capturer(avalue:boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2022020503);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2022020503);
         implprocdefinfo^.has_capturer:=avalue;
       end;
 
 
-    function TProcDef.Getcapturedsyms:tfplist;
+    function TProcDef.Getcapturedsyms:TFPList;
       begin
-        if not assigned(implprocdefinfo) then
+        if not Assigned(implprocdefinfo) then
           result:=nil
         else
           result:=implprocdefinfo^.capturedsyms;
@@ -6348,144 +6348,144 @@ implementation
 
     function TProcDef.GetResultName: PShortString;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010301);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010301);
         result:=implprocdefinfo^.resultname;
       end;
 
 
     procedure TProcDef.SetResultName(AValue: PShortString);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010302);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010302);
         implprocdefinfo^.resultname:=AValue;
       end;
 
 
     function TProcDef.GetParentFPInitBlock: TNode;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010303);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010303);
         result:=implprocdefinfo^.parentfpinitblock;
       end;
 
 
     function TProcDef.GetParentFPStruct: TSym;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010304);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010304);
         result:=implprocdefinfo^.parentfpstruct;
       end;
 
 
     function TProcDef.GetParentFPStructPtrType: TDef;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010305);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010305);
         result:=implprocdefinfo^.parentfpstructptrtype;
       end;
 
 
     procedure TProcDef.SetParentFPInitBlock(AValue: TNode);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010306);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010306);
         implprocdefinfo^.parentfpinitblock:=AValue;
       end;
 
 
-    function TProcDef.Getprocendtai: tai;
+    function TProcDef.Getprocendtai: TAI;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010307);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010307);
         result:=implprocdefinfo^.procendtai;
       end;
 
 
-    function TProcDef.Getprocstarttai: tai;
+    function TProcDef.Getprocstarttai: TAI;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010308);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010308);
         result:=implprocdefinfo^.procstarttai;
       end;
 
 
-    procedure TProcDef.Setprocendtai(AValue: tai);
+    procedure TProcDef.Setprocendtai(AValue: TAI);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010309);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010309);
         implprocdefinfo^.procendtai:=AValue;
       end;
 
 
     function TProcDef.Getskpara: pointer;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010310);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010310);
         result:=implprocdefinfo^.skpara;
       end;
 
 
     procedure TProcDef.Setskpara(AValue: pointer);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010311);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010311);
         implprocdefinfo^.skpara:=AValue;
       end;
 
 
     function TProcDef.Getpersonality: TProcDef;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2016121704);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2016121704);
          result:=implprocdefinfo^.personality;
       end;
 
 
     procedure TProcDef.Setpersonality(AValue: TProcDef);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2016121705);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2016121705);
         implprocdefinfo^.personality:=AValue;
       end;
 
 
     function TProcDef.Getforwarddef: boolean;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010312);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010312);
         result:=implprocdefinfo^.forwarddef;
       end;
 
 
     function TProcDef.Gethasforward: boolean;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010313);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010313);
         result:=implprocdefinfo^.hasforward;
       end;
 
 
     function TProcDef.Getinterfacedef: boolean;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010314);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010314);
         result:=implprocdefinfo^.interfacedef;
       end;
 
 
     procedure TProcDef.Setforwarddef(AValue: boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010315);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010315);
         implprocdefinfo^.forwarddef:=AValue;
       end;
 
 
     procedure TProcDef.Sethasforward(AValue: boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010316);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010316);
         implprocdefinfo^.hasforward:=AValue;
       end;
 
@@ -6522,32 +6522,32 @@ implementation
 
     procedure TProcDef.Setinterfacedef(AValue: boolean);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010317);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010317);
         implprocdefinfo^.interfacedef:=AValue;
       end;
 
 
-    procedure TProcDef.Setprocstarttai(AValue: tai);
+    procedure TProcDef.Setprocstarttai(AValue: TAI);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010318);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010318);
         implprocdefinfo^.procstarttai:=AValue;
       end;
 
 
     procedure TProcDef.SetParentFPStruct(AValue: TSym);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010319);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010319);
         implprocdefinfo^.parentfpstruct:=AValue;
       end;
 
 
     procedure TProcDef.SetParentFPStructPtrType(AValue: TDef);
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2014010320);
+        if not Assigned(implprocdefinfo) then
+          InternalError(2014010320);
         implprocdefinfo^.parentfpstructptrtype:=AValue;
       end;
 
@@ -6582,14 +6582,14 @@ implementation
          inlininginfo:=nil;
          deprecatedmsg:=nil;
          genericdecltokenbuf:=nil;
-         if cs_opt_fastmath in CurrentSettings.optimizerswitches then
+         if cs_opt_fastmath in CurrentSettings.OptimizerSwitches then
            include(implprocoptions, pio_fastmath);
       end;
 
 
     constructor TProcDef.ppuload(ppufile:TCompilerPPUFile);
       var
-        i,aliasnamescount,sizeleft : longint;
+        i,aliasnamescount,sizeleft : LongInt;
         level : byte;
         buf : array[0..255] of byte;
       begin
@@ -6611,7 +6611,7 @@ implementation
          ppufile.getderef(procsymderef);
          ppufile.getposinfo(fileinfo);
          visibility:=TVisibility(ppufile.getbyte);
-         ppufile.getset(tppuset2(symoptions));
+         ppufile.getset(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
            deprecatedmsg:=ppufile.getpshortstring
          else
@@ -6633,12 +6633,12 @@ implementation
          if (po_dispid in procoptions) then
            dispid:=ppufile.getlongint;
          { inline stuff }
-         ppufile.getset(tppuset1(implprocoptions));
+         ppufile.getset(TPPUSet1(implprocoptions));
          if has_inlininginfo then
            begin
              ppufile.getderef(funcretsymderef);
              new(inlininginfo);
-             ppufile.getset(tppuset4(inlininginfo^.flags));
+             ppufile.getset(TPPUSet4(inlininginfo^.flags));
            end
          else
            begin
@@ -6686,7 +6686,7 @@ implementation
          if has_inlininginfo then
            inlininginfo^.code:=ppuloadnodetree(ppufile);
          { default values for no persistent data }
-         if (cs_link_deffile in CurrentSettings.globalswitches) and
+         if (cs_link_deffile in CurrentSettings.GlobalSwitches) and
             (tf_need_export in TargetInfo.flags) and
             (po_exports in procoptions) then
            deffile.AddExport(mangledname);
@@ -6695,11 +6695,11 @@ implementation
       end;
 
 
-    destructor TProcDef.destroy;
+    destructor TProcDef.Destroy;
       begin
          aliasnames.free;
          aliasnames:=nil;
-         if assigned(localst) and
+         if Assigned(localst) and
            (localst.symtabletype<>staticsymtable) then
           begin
 {$ifdef MEMDEBUG}
@@ -6711,7 +6711,7 @@ implementation
             memproclocalst.start;
 {$endif MEMDEBUG}
           end;
-         if assigned(inlininginfo) then
+         if Assigned(inlininginfo) then
           begin
 {$ifdef MEMDEBUG}
             memprocnodetree.start;
@@ -6726,34 +6726,34 @@ implementation
          freeimplprocdefinfo;
          genericdecltokenbuf.free;
          genericdecltokenbuf:=nil;
-         stringdispose(import_dll);
-         stringdispose(import_name);
-         stringdispose(deprecatedmsg);
+         StringDispose(import_dll);
+         StringDispose(import_name);
+         StringDispose(deprecatedmsg);
          if (po_msgstr in procoptions) then
-           stringdispose(messageinf.str);
+           StringDispose(messageinf.str);
 {$ifndef symansistr}
-         if assigned(_mangledname) then
+         if Assigned(_mangledname) then
           begin
 {$ifdef MEMDEBUG}
             memmanglednames.start;
 {$endif MEMDEBUG}
-            stringdispose(_mangledname);
+            StringDispose(_mangledname);
 {$ifdef MEMDEBUG}
             memmanglednames.stop;
 {$endif MEMDEBUG}
           end;
 {$endif symansistr}
-         inherited destroy;
+         inherited Destroy;
       end;
 
 
     procedure TProcDef.freeimplprocdefinfo;
       begin
-        if assigned(implprocdefinfo) then
+        if Assigned(implprocdefinfo) then
           begin
-            stringdispose(implprocdefinfo^.resultname);
+            StringDispose(implprocdefinfo^.resultname);
             TFPList.FreeAndNilDisposing(implprocdefinfo^.capturedsyms,typeinfo(TCapturedSymInfo));
-            freemem(implprocdefinfo);
+            FreeMem(implprocdefinfo);
             implprocdefinfo:=nil;
           end;
       end;
@@ -6762,12 +6762,12 @@ implementation
     procedure TProcDef.ppuwrite(ppufile:TCompilerPPUFile);
       var
         oldcrc : boolean;
-        aliasnamescount,i,sizeleft : longint;
+        aliasnamescount,i,sizeleft : LongInt;
         item : TCmdStrListItem;
         buf : array[0..255] of byte;
       begin
          { released procdef? }
-         if not assigned(parast) then
+         if not Assigned(parast) then
            exit;
 
          inherited ppuwrite(ppufile);
@@ -6785,7 +6785,7 @@ implementation
          ppufile.putderef(procsymderef);
          ppufile.putposinfo(fileinfo);
          ppufile.putbyte(byte(visibility));
-         ppufile.putset(tppuset2(symoptions));
+         ppufile.putset(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
            ppufile.putstring(deprecatedmsg^);
          { import }
@@ -6803,26 +6803,26 @@ implementation
          { inline stuff }
          oldcrc:=ppufile.do_crc;
          ppufile.do_crc:=false;
-         ppufile.putset(tppuset1(implprocoptions));
+         ppufile.putset(TPPUSet1(implprocoptions));
          if has_inlininginfo then
            begin
              ppufile.putderef(funcretsymderef);
-             ppufile.putset(tppuset4(inlininginfo^.flags));
+             ppufile.putset(TPPUSet4(inlininginfo^.flags));
            end;
 
          { count alias names }
          aliasnamescount:=0;
          item:=TCmdStrListItem(aliasnames.first);
-         while assigned(item) do
+         while Assigned(item) do
            begin
              inc(aliasnamescount);
              item:=TCmdStrListItem(item.next);
            end;
          if aliasnamescount>255 then
-           internalerror(200711021);
+           InternalError(200711021);
          ppufile.putbyte(aliasnamescount);
          item:=TCmdStrListItem(aliasnames.first);
-         while assigned(item) do
+         while Assigned(item) do
           begin
             ppufile.putstring(item.str);
             item:=TCmdStrListItem(item.next);
@@ -6831,7 +6831,7 @@ implementation
          ppufile.do_crc:=oldcrc;
 
          { generic tokens for the declaration }
-         if assigned(genericdecltokenbuf) and (genericdecltokenbuf.size>0) then
+         if Assigned(genericdecltokenbuf) and (genericdecltokenbuf.size>0) then
            begin
              sizeleft:=genericdecltokenbuf.size;
              genericdecltokenbuf.seek(0);
@@ -6873,7 +6873,7 @@ implementation
       end;
 
 
-    function TProcDef.fullprocname(showhidden:boolean):ansistring;
+    function TProcDef.fullprocname(showhidden:boolean):AnsiString;
       var
         pno: TProcNameOptions;
       begin
@@ -6884,11 +6884,11 @@ implementation
       end;
 
 
-    function TProcDef.customprocname(pno: TProcNameOptions):ansistring;
+    function TProcDef.customprocname(pno: TProcNameOptions):AnsiString;
       var
-        s, hs, rn : ansistring;
-        t : ttoken;
-	module : tmodule;
+        s, hs, rn : AnsiString;
+        t : TToken;
+	module : TModule;
         syssym : TSysSym;
       begin
 {$ifdef EXTDEBUG}
@@ -6903,7 +6903,7 @@ implementation
                 begin
                   s:='operator ';
                   if (pno_ownername in pno) and
-                     assigned(struct) then
+                     Assigned(struct) then
                     s:=s+struct.RttiName+'.';
                   s:=s+arraytokeninfo[t].str;
                   if not (pno_noparams in pno) then
@@ -6926,7 +6926,7 @@ implementation
               else
                 if (pno_proctypeoption in pno) and not (po_anonymous in procoptions) then
                   begin
-                   if assigned(returndef) and
+                   if Assigned(returndef) and
                      not(is_void(returndef)) then
                      s:=s+'function '
                    else
@@ -6939,14 +6939,14 @@ implementation
             if (po_compilerproc in procoptions) and (extnumber<>$ffff) then
               begin
                 syssym:=TSysSym.find_by_number(extnumber);
-                if not assigned(syssym) then
-                  internalerror(2016060305);
+                if not Assigned(syssym) then
+                  InternalError(2016060305);
                 rn:=syssym.realname;
               end
             else if po_anonymous in procoptions then
               begin
                 s:=s+'anonymous ';
-                if assigned(returndef) and
+                if Assigned(returndef) and
                   not(is_void(returndef)) then
                   s:=s+'function'
                 else
@@ -6965,14 +6965,14 @@ implementation
           end;
         if not(proctypeoption in [potype_constructor,potype_destructor,
              potype_class_constructor,potype_class_destructor]) and
-           assigned(returndef) and
+           Assigned(returndef) and
            not(is_void(returndef)) then
           begin
-            if assigned(returndef.typesym) then
+            if Assigned(returndef.typesym) then
               begin
                 module:=find_module_from_symtable(returndef.typesym.owner);
 		if module <> CurrentModule then
-                  s:=s+':'+module.realmodulename^+'.'
+                  s:=s+':'+module.RealModuleName^+'.'
                 else
 	          s:=s+':';
                 if pno_prettynames in pno then
@@ -6988,7 +6988,7 @@ implementation
               s:=s+':'+returndef.GetTypeName;
 	  end;
         if not (po_anonymous in procoptions) then
-          if assigned(owner) and (owner.symtabletype=localsymtable) then
+          if Assigned(owner) and (owner.symtabletype=localsymtable) then
             s:=s+' is nested'
           else if po_is_block in procoptions then
             s:=s+' is block';
@@ -7015,13 +7015,13 @@ implementation
 
     function TProcDef.is_addressonly:boolean;
       begin
-        result:=assigned(owner) and
+        result:=Assigned(owner) and
                 not is_methodpointer and
-                (not(m_nested_procvars in CurrentSettings.modeswitches) or
+                (not(m_nested_procvars in CurrentSettings.ModeSwitches) or
                  not is_nested_pd(self)) and
                  (
                    not (po_anonymous in procoptions) or
-                   not assigned(capturedsyms) or
+                   not Assigned(capturedsyms) or
                    (capturedsyms.count=0)
                  );
       end;
@@ -7036,9 +7036,9 @@ implementation
 
     procedure TProcDef.init_genericdecl;
       begin
-        if assigned(genericdecltokenbuf) then
-          internalerror(2015061901);
-        genericdecltokenbuf:=tdynamicarray.create(256);
+        if Assigned(genericdecltokenbuf) then
+          InternalError(2015061901);
+        genericdecltokenbuf:=TDynamicArray.create(256);
       end;
 
 
@@ -7058,7 +7058,7 @@ implementation
             resdef:=TAbstractNormalVarSym(ressym).vardef;
             { and TP-style constructors return a pointer to self }
             if is_object(resdef) then
-              resdef:=cpointerdef.getreusable(resdef);
+              resdef:=CPointerDef.getreusable(resdef);
           end
         else if (proccalloption=pocall_safecall) and
            (tf_safecall_exceptions in TargetInfo.flags) then
@@ -7092,13 +7092,13 @@ implementation
 
     procedure TProcDef.add_captured_sym(sym:TSym;def:TDef;const filepos:TFilePosInfo);
       var
-        i : longint;
+        i : LongInt;
         capturedsym : PCapturedSymInfo;
       begin
-        if not assigned(implprocdefinfo) then
-          internalerror(2021052601);
-        if not assigned(implprocdefinfo^.capturedsyms) then
-          implprocdefinfo^.capturedsyms:=tfplist.create;
+        if not Assigned(implprocdefinfo) then
+          InternalError(2021052601);
+        if not Assigned(implprocdefinfo^.capturedsyms) then
+          implprocdefinfo^.capturedsyms:=TFPList.create;
         for i:=0 to implprocdefinfo^.capturedsyms.count-1 do
           begin
             capturedsym:=PCapturedSymInfo(implprocdefinfo^.capturedsyms[i]);
@@ -7121,7 +7121,7 @@ implementation
         if mangledname=s then
           exit;
         item:=TCmdStrListItem(aliasnames.first);
-        while assigned(item) do
+        while Assigned(item) do
           begin
             if item.str=s then
               exit;
@@ -7146,7 +7146,7 @@ implementation
 
     function TProcDef.getcopyas(newtyp: TDefTyp; copytyp: TProcCopyTyp; const paraprefix: string;doregister:boolean): TStoredDef;
       var
-        j : longint;
+        j : LongInt;
       begin
         result:=inherited;
         if newtyp=procvardef then
@@ -7159,10 +7159,10 @@ implementation
         TProcDef(result).messageinf:=messageinf;
         TProcDef(result).dispid:=dispid;
         if po_msgstr in procoptions then
-          TProcDef(result).messageinf.str:=stringdup(messageinf.str^);
+          TProcDef(result).messageinf.str:=StringDup(messageinf.str^);
         TProcDef(result).symoptions:=symoptions;
-        if assigned(deprecatedmsg) then
-          TProcDef(result).deprecatedmsg:=stringdup(deprecatedmsg^);
+        if Assigned(deprecatedmsg) then
+          TProcDef(result).deprecatedmsg:=StringDup(deprecatedmsg^);
         { will have to be associated with appropriate procsym }
         TProcDef(result).procsym:=nil;
         { don't create aliases for bare copies, nor copy the funcretsym as
@@ -7170,14 +7170,14 @@ implementation
           (e.g. if the calling convention is changed) }
         if not(copytyp in [pc_bareproc,pc_normal_no_hidden]) then
           begin
-            TProcDef(result).aliasnames.concatListcopy(aliasnames);
-            if assigned(funcretsym) then
+            TProcDef(result).aliasnames.ConcatListCopy(aliasnames);
+            if Assigned(funcretsym) then
               begin
                 if funcretsym.owner=parast then
                   begin
                     j:=parast.symlist.indexof(funcretsym);
                     if j<0 then
-                      internalerror(2011040606);
+                      InternalError(2011040606);
                     TProcDef(result).funcretsym:=TSym(TProcDef(result).parast.symlist[j]);
                   end
                 else if funcretsym.owner=localst then
@@ -7186,21 +7186,21 @@ implementation
                       parsing its body (by pdecsub.insert_funcret_local) }
                   end
                 else
-                  internalerror(2011040605);
+                  InternalError(2011040605);
               end;
           end;
         { will have to be associated with a new struct }
         TProcDef(result).struct:=nil;
-        if assigned(implprocdefinfo) then
+        if Assigned(implprocdefinfo) then
           begin
-            if assigned(resultname) then
-              TProcDef(result).resultname:=stringdup(resultname^);
+            if Assigned(resultname) then
+              TProcDef(result).resultname:=StringDup(resultname^);
             TProcDef(result).synthetickind:=synthetickind;
           end;
-        if assigned(import_dll) then
-          TProcDef(result).import_dll:=stringdup(import_dll^);
-        if assigned(import_name) then
-          TProcDef(result).import_name:=stringdup(import_name^);
+        if Assigned(import_dll) then
+          TProcDef(result).import_dll:=StringDup(import_dll^);
+        if Assigned(import_name) then
+          TProcDef(result).import_name:=StringDup(import_name^);
         TProcDef(result).import_nr:=import_nr;
         TProcDef(result).extnumber:=$ffff;
         TProcDef(result).visibility:=visibility;
@@ -7234,7 +7234,7 @@ implementation
          inherited buildderefimpl;
 
          { Localst is not available for main/unit init }
-         if store_localst and assigned(localst) then
+         if store_localst and Assigned(localst) then
            begin
              TLocalSymTable(localst).buildderef;
              TLocalSymTable(localst).buildderefimpl;
@@ -7264,11 +7264,11 @@ implementation
          { Enable has_inlininginfo when the inlininginfo
            structure is available. The has_inlininginfo was disabled
            after the load, since the data was invalid }
-         if assigned(inlininginfo) then
+         if Assigned(inlininginfo) then
            has_inlininginfo:=true;
 
          { Locals }
-         if store_localst and assigned(localst) then
+         if store_localst and Assigned(localst) then
            begin
              TLocalSymTable(localst).deref(false);
              TLocalSymTable(localst).derefimpl(false);
@@ -7309,10 +7309,10 @@ implementation
         else
           result:=_mangledname;
 {$else symansistr}
-        if not assigned(_mangledname) then
+        if not Assigned(_mangledname) then
           begin
             result:=defaultmangledname;
-            _mangledname:=stringdup(mangledname);
+            _mangledname:=StringDup(mangledname);
           end
         else
           result:=_mangledname^;
@@ -7380,7 +7380,7 @@ implementation
                 s:=floattype2str[TFloatDef(p).floattype];
 {$endif NAMEMANGLING_GCC2}
               else
-                internalerror(2103001);
+                InternalError(2103001);
            end;
            getcppparaname:=s;
         end;
@@ -7400,11 +7400,11 @@ implementation
               s2:=upper(TObjectDef(procsym.owner.defowner).objrealname^);
               case proctypeoption of
                  potype_destructor:
-                   s:='_$_'+tostr(length(s2))+s2;
+                   s:='_$_'+ToStr(length(s2))+s2;
                  potype_constructor:
-                   s:='___'+tostr(length(s2))+s2;
+                   s:='___'+ToStr(length(s2))+s2;
                  else
-                   s:='_'+s+'__'+tostr(length(s2))+s2;
+                   s:='_'+s+'__'+ToStr(length(s2))+s2;
               end;
 
            end
@@ -7445,14 +7445,14 @@ implementation
              s:='_ZN';
 
              s2:=TObjectDef(procsym.owner.defowner).objextname^;
-             s:=s+tostr(length(s2))+s2;
+             s:=s+ToStr(length(s2))+s2;
              case proctypeoption of
                 potype_constructor:
                   s:=s+'C1';
                 potype_destructor:
                   s:=s+'D1';
                 else
-                  s:=s+tostr(length(procsym.realname))+procsym.realname;
+                  s:=s+ToStr(length(procsym.realname))+procsym.realname;
              end;
 
              s:=s+'E';
@@ -7487,11 +7487,11 @@ implementation
 
     function  TProcDef.objcmangledname : TSymStr;
       var
-        manglednamelen: longint;
+        manglednamelen: LongInt;
         iscatmethod   : boolean;
       begin
         if not (po_msgstr in procoptions) then
-          internalerror(2009030901);
+          InternalError(2009030901);
         { we may very well need longer strings to handle these... }
         manglednamelen:=length(TObjectDef(procsym.owner.defowner).objextname^)+
           length('+"[ ]"')+length(messageinf.str^);
@@ -7525,23 +7525,23 @@ implementation
         {   case no reference to the old name can exist yet (JM)         }
 {$ifdef symansistr}
         if _mangledname<>'' then
-          if ((m_mac in CurrentSettings.modeswitches) and
+          if ((m_mac in CurrentSettings.ModeSwitches) and
               (interfacedef)) then
             _mangledname:=''
           else
-            internalerror(200411171);
+            InternalError(200411171);
 {$else symansistr}
-        if assigned(_mangledname) then
-          if ((m_mac in CurrentSettings.modeswitches) and
+        if Assigned(_mangledname) then
+          if ((m_mac in CurrentSettings.ModeSwitches) and
               (interfacedef)) then
-            stringdispose(_mangledname)
+            StringDispose(_mangledname)
           else
-            internalerror(200411171);
+            InternalError(200411171);
 {$endif symansistr}
   {$ifdef symansistr}
         _mangledname:=s;
   {$else symansistr}
-        _mangledname:=stringdup(s);
+        _mangledname:=StringDup(s);
   {$endif symansistr}
         include(procoptions,po_has_mangledname);
       end;
@@ -7574,34 +7574,34 @@ implementation
       end;
 
 
-    class function TProcVarDef.getreusableprocaddr(def: TAbstractProcDef; copytyp: tcacheableproccopytyp): TProcVarDef;
+    class function TProcVarDef.getreusableprocaddr(def: TAbstractProcDef; copytyp: TCacheableProcCopyType): TProcVarDef;
       var
         res: PHashSetItem;
-        oldsymtablestack: TSymTableStack;
+        OldSymTableStack: TSymTableStack;
         key: packed record
           def: TAbstractProcDef;
-          copytyp: tcacheableproccopytyp;
+          copytyp: TCacheableProcCopyType;
         end;
 
       begin
-        if not assigned(CurrentModule) then
-          internalerror(2011081302);
+        if not Assigned(CurrentModule) then
+          InternalError(2011081302);
         key.def:=def;
         key.copytyp:=copytyp;
         res:=CurrentModule.procaddrdefs.FindOrAdd(@key,sizeof(key));
-        if not assigned(res^.Data) then
+        if not Assigned(res^.Data) then
           begin
             { since these pointerdefs can be reused anywhere in the current
               unit, add them to the global/staticsymtable (or local symtable
               if they're a local def, because otherwise they'll be saved
               to the ppu referencing a local symtable entry that doesn't
               exist in the ppu) }
-            oldsymtablestack:=symtablestack;
+            OldSymTableStack:=SymTableStack;
             { do not simply push/pop current_module.localsymtable, because
               that can have side-effects (e.g., it removes helpers) }
-            symtablestack:=nil;
+            SymTableStack:=nil;
             result:=TProcVarDef(def.getcopyas(procvardef,copytyp,'',true));
-            SetupReusableDef(def,result,res,oldsymtablestack);
+            SetupReusableDef(def,result,res,OldSymTableStack);
             { res^.Data may still be nil -> don't overwrite result }
             exit;
           end;
@@ -7630,9 +7630,9 @@ implementation
     function TProcVarDef.getcopy : TStoredDef;
       var
         i : TCallerCallee;
-        j : longint;
+        j : LongInt;
       begin
-        result:=cprocvardef.create(parast.symtablelevel,true);
+        result:=CProcVarDef.create(parast.symtablelevel,true);
         TProcVarDef(result).returndef:=returndef;
         TProcVarDef(result).returndefderef:=returndefderef;
         TProcVarDef(result).parast:=parast.getcopy;
@@ -7640,7 +7640,7 @@ implementation
 
         { create paralist copy }
         calcparas;
-        TProcVarDef(result).paras:=tparalist.create(false);
+        TProcVarDef(result).paras:=TParaList.create(false);
         TProcVarDef(result).paras.count:=paras.count;
         for j:=0 to paras.count-1 do
           TProcVarDef(result).paras[j]:=paras[j];
@@ -7772,7 +7772,7 @@ implementation
              s := s+'address of'
            else
              s := s+'procedure variable type of';
-         if assigned(returndef) and
+         if Assigned(returndef) and
             (returndef<>voidtype) then
            s:=s+' function'+typename_paras(pno)+':'+returndef.GetTypeName
          else
@@ -7803,8 +7803,8 @@ implementation
         cloneddefderef.reset;
         if objecttype=odt_helper then
           owner.includeoption(sto_has_helper);
-        symtable:=TObjectSymTable.create(self,n,CurrentSettings.packrecords,
-          CurrentSettings.alignment.recordalignmin);
+        SymTable:=TObjectSymTable.create(self,n,CurrentSettings.PackRecords,
+          CurrentSettings.alignment.RecordAlignMin);
         { create space for vmt !! }
         vmtentries:=TFPList.Create;
         set_parent(c);
@@ -7822,7 +7822,7 @@ implementation
     constructor TObjectDef.ppuload(ppufile:TCompilerPPUFile);
       var
          i,
-         implintfcount : longint;
+         implintfcount : LongInt;
          d, getterd : TDeref;
          ImplIntf : TImplementedInterface;
          vmtentry : PVMTEntry;
@@ -7833,13 +7833,13 @@ implementation
          objextname:=ppufile.getpshortstring;
          { only used for external Objective-C classes/protocols }
          if (objextname^='') then
-           stringdispose(objextname);
-         symtable:=TObjectSymTable.create(self,objrealname^,0,0);
-         TObjectSymTable(symtable).datasize:=ppufile.getasizeint;
-         TObjectSymTable(symtable).paddingsize:=ppufile.getword;
-         TObjectSymTable(symtable).fieldalignment:=shortint(ppufile.getbyte);
-         TObjectSymTable(symtable).recordalignment:=shortint(ppufile.getbyte);
-         TObjectSymTable(symtable).recordalignmin:=shortint(ppufile.getbyte);
+           StringDispose(objextname);
+         SymTable:=TObjectSymTable.create(self,objrealname^,0,0);
+         TObjectSymTable(SymTable).DataSize:=ppufile.getasizeint;
+         TObjectSymTable(SymTable).paddingsize:=ppufile.getword;
+         TObjectSymTable(SymTable).fieldalignment:=shortint(ppufile.getbyte);
+         TObjectSymTable(SymTable).recordalignment:=shortint(ppufile.getbyte);
+         TObjectSymTable(SymTable).RecordAlignMin:=shortint(ppufile.getbyte);
          ppufile.getderef(vmt_fieldderef);
          ppufile.getderef(childofderef);
 
@@ -7894,7 +7894,7 @@ implementation
          else
            begin
              PPULoadPlatform(ppufile);
-             TObjectSymTable(symtable).ppuload(ppufile);
+             TObjectSymTable(SymTable).ppuload(ppufile);
            end;
 
          { handles the predefined class tobject  }
@@ -7951,62 +7951,62 @@ implementation
        end;
 
 
-    destructor TObjectDef.destroy;
+    destructor TObjectDef.Destroy;
       begin
-         if assigned(symtable) then
+         if Assigned(SymTable) then
            begin
-             symtable.free;
-             symtable:=nil;
+             SymTable.free;
+             SymTable:=nil;
            end;
-         stringdispose(objextname);
-         stringdispose(iidstr);
-         if assigned(ImplementedInterfaces) then
+         StringDispose(objextname);
+         StringDispose(iidstr);
+         if Assigned(ImplementedInterfaces) then
            begin
              ImplementedInterfaces.free;
              ImplementedInterfaces:=nil;
            end;
-         if assigned(iidguid) then
+         if Assigned(iidguid) then
            begin
              dispose(iidguid);
              iidguid:=nil;
            end;
          TFPList.FreeAndNilDisposing(vmtentries,TypeInfo(TVMTEntry));
-         if assigned(vmcallstaticinfo) then
+         if Assigned(vmcallstaticinfo) then
            begin
-             freemem(vmcallstaticinfo);
+             FreeMem(vmcallstaticinfo);
              vmcallstaticinfo:=nil;
            end;
-         inherited destroy;
+         inherited Destroy;
       end;
 
 
     function TObjectDef.getcopy : TStoredDef;
       var
-        i : longint;
+        i : LongInt;
       begin
-        result:=cobjectdef.create(objecttype,objrealname^,childof,true);
+        result:=CObjectDef.create(objecttype,objrealname^,childof,true);
         { the constructor allocates a symtable which we release to avoid memory leaks }
-        TObjectDef(result).symtable.free;
-        TObjectDef(result).symtable:=symtable.getcopy;
-        if assigned(objextname) then
-          TObjectDef(result).objextname:=stringdup(objextname^);
-        if assigned(import_lib) then
-          TObjectDef(result).import_lib:=stringdup(import_lib^);
+        TObjectDef(result).SymTable.free;
+        TObjectDef(result).SymTable:=SymTable.getcopy;
+        if Assigned(objextname) then
+          TObjectDef(result).objextname:=StringDup(objextname^);
+        if Assigned(import_lib) then
+          TObjectDef(result).import_lib:=StringDup(import_lib^);
         TObjectDef(result).objectoptions:=objectoptions;
         include(TObjectDef(result).defoptions,df_copied_def);
         TObjectDef(result).extendeddef:=extendeddef;
-        if assigned(tcinitcode) then
+        if Assigned(tcinitcode) then
           TObjectDef(result).tcinitcode:=tcinitcode.getcopy;
         TObjectDef(result).vmt_field:=vmt_field;
-        if assigned(iidguid) then
+        if Assigned(iidguid) then
           begin
             new(TObjectDef(result).iidguid);
             move(iidguid^,TObjectDef(result).iidguid^,sizeof(iidguid^));
           end;
-        if assigned(iidstr) then
-          TObjectDef(result).iidstr:=stringdup(iidstr^);
+        if Assigned(iidstr) then
+          TObjectDef(result).iidstr:=StringDup(iidstr^);
         TObjectDef(result).abstractcnt:=abstractcnt;
-        if assigned(ImplementedInterfaces) then
+        if Assigned(ImplementedInterfaces) then
           begin
             TObjectDef(result).ImplementedInterfaces.capacity:=TObjectDef(result).ImplementedInterfaces.count+ImplementedInterfaces.count;
             for i:=0 to ImplementedInterfaces.count-1 do
@@ -8018,7 +8018,7 @@ implementation
 
     procedure TObjectDef.ppuwrite(ppufile:TCompilerPPUFile);
       var
-         i : longint;
+         i : LongInt;
          vmtentry : PVMTEntry;
          ImplIntf : TImplementedInterface;
          old_do_indirect_crc: boolean;
@@ -8035,15 +8035,15 @@ implementation
          inherited ppuwrite(ppufile);
          ppufile.putbyte(byte(objecttype));
          ppufile.putbyte(byte(helpertype));
-         if assigned(objextname) then
+         if Assigned(objextname) then
            ppufile.putstring(objextname^)
          else
            ppufile.putstring('');
-         ppufile.putasizeint(TObjectSymTable(symtable).datasize);
-         ppufile.putword(TObjectSymTable(symtable).paddingsize);
-         ppufile.putbyte(byte(TObjectSymTable(symtable).fieldalignment));
-         ppufile.putbyte(byte(TObjectSymTable(symtable).recordalignment));
-         ppufile.putbyte(byte(TObjectSymTable(symtable).recordalignmin));
+         ppufile.putasizeint(TObjectSymTable(SymTable).DataSize);
+         ppufile.putword(TObjectSymTable(SymTable).paddingsize);
+         ppufile.putbyte(byte(TObjectSymTable(SymTable).fieldalignment));
+         ppufile.putbyte(byte(TObjectSymTable(SymTable).recordalignment));
+         ppufile.putbyte(byte(TObjectSymTable(SymTable).RecordAlignMin));
          ppufile.putderef(vmt_fieldderef);
          ppufile.putderef(childofderef);
          if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
@@ -8063,7 +8063,7 @@ implementation
              ppufile.putbyte(byte(vmtentry^.visibility));
            end;
 
-         if assigned(ImplementedInterfaces) then
+         if Assigned(ImplementedInterfaces) then
            begin
              ppufile.putlongint(ImplementedInterfaces.Count);
              for i:=0 to ImplementedInterfaces.Count-1 do
@@ -8082,7 +8082,7 @@ implementation
          writeentry(ppufile,ibobjectdef);
 
          if not(df_copied_def in defoptions) then
-           TObjectSymTable(symtable).ppuwrite(ppufile);
+           TObjectSymTable(SymTable).ppuwrite(ppufile);
 
          ppufile.do_indirect_crc:=old_do_indirect_crc;
       end;
@@ -8094,7 +8094,7 @@ implementation
         { there is no tsym associated yet with the def. It can occur  }
         { (tests/webtbf/tw4757.pas), so for now give a generic name    }
         { instead of the actual type name                             }
-        if not assigned(typesym) then
+        if not Assigned(typesym) then
           result:='<Currently Parsed Class>'
         else
           result:=typesymbolprettyname;
@@ -8103,7 +8103,7 @@ implementation
 
     procedure TObjectDef.buildderef;
       var
-         i : longint;
+         i : LongInt;
          vmtentry : PVMTEntry;
       begin
          inherited buildderef;
@@ -8111,9 +8111,9 @@ implementation
          childofderef.build(childof);
 
          if df_copied_def in defoptions then
-           cloneddefderef.build(symtable.defowner)
+           cloneddefderef.build(SymTable.defowner)
          else
-           TStoredSymTable(symtable).buildderef;
+           TStoredSymTable(SymTable).buildderef;
 
          if objecttype=odt_helper then
            extendeddefderef.build(extendeddef);
@@ -8124,7 +8124,7 @@ implementation
              vmtentry^.procdefderef.build(vmtentry^.procdef);
            end;
 
-         if assigned(ImplementedInterfaces) then
+         if Assigned(ImplementedInterfaces) then
            begin
              for i:=0 to ImplementedInterfaces.count-1 do
                TImplementedInterface(ImplementedInterfaces[i]).buildderef;
@@ -8134,7 +8134,7 @@ implementation
 
     procedure TObjectDef.deref;
       var
-         i : longint;
+         i : LongInt;
          vmtentry : PVMTEntry;
       begin
          inherited deref;
@@ -8143,10 +8143,10 @@ implementation
          if df_copied_def in defoptions then
            begin
              cloneddef:=TObjectDef(cloneddefderef.resolve);
-             symtable:=cloneddef.symtable.getcopy;
+             SymTable:=cloneddef.SymTable.getcopy;
            end
          else
-           TStoredSymTable(symtable).deref(false);
+           TStoredSymTable(SymTable).deref(false);
          if objecttype=odt_helper then
            extendeddef:=TDef(extendeddefderef.resolve);
          for i:=0 to vmtentries.count-1 do
@@ -8154,7 +8154,7 @@ implementation
              vmtentry:=PVMTEntry(vmtentries[i]);
              vmtentry^.procdef:=TProcDef(vmtentry^.procdefderef.resolve);
            end;
-         if assigned(ImplementedInterfaces) then
+         if Assigned(ImplementedInterfaces) then
            begin
              for i:=0 to ImplementedInterfaces.count-1 do
                TImplementedInterface(ImplementedInterfaces[i]).deref;
@@ -8178,9 +8178,9 @@ implementation
         nname:=class_helper_prefix+TProcSym(pd.procsym).name;
         { check for an existing procsym with our special name }
         psym:=TSym(st.find(nname));
-        if not assigned(psym) then
+        if not Assigned(psym) then
           begin
-            psym:=cprocsym.create(nname);
+            psym:=CProcSym.create(nname);
             { avoid warning about this symbol being unused }
             psym.IncRefCount;
             { don't check for duplicates:
@@ -8196,7 +8196,7 @@ implementation
             st.insertsym(psym,false);
           end
         else if (psym.typ<>procsym) then
-          internalerror(2009111501);
+          InternalError(2009111501);
         { add ourselves to this special procsym }
         TProcSym(psym).procdeflist.add(def);
       end;
@@ -8209,17 +8209,17 @@ implementation
            are not stored/restored either -> re-add them here }
          if (objecttype in [odt_objcclass,odt_objcprotocol]) or
             (oo_is_classhelper in objectoptions) then
-           symtable.DefList.ForEachCall(@create_class_helper_for_procdef,nil);
+           SymTable.DefList.ForEachCall(@create_class_helper_for_procdef,nil);
       end;
 
 
     procedure TObjectDef.copyvmtentries(objdef:TObjectDef);
       var
-        i : longint;
+        i : LongInt;
         vmtentry : PVMTEntry;
       begin
         if vmtentries.count<>0 then
-          internalerror(2019081401);
+          InternalError(2019081401);
         vmtentries.count:=objdef.vmtentries.count;
         for i:=0 to objdef.vmtentries.count-1 do
           begin
@@ -8246,23 +8246,23 @@ implementation
     procedure TObjectDef.prepareguid;
       begin
         { set up guid }
-        if not assigned(iidguid) then
+        if not Assigned(iidguid) then
          begin
             new(iidguid);
             fillchar(iidguid^,sizeof(iidguid^),0); { default null guid }
          end;
         { setup iidstring }
-        if not assigned(iidstr) then
-          iidstr:=stringdup(''); { default is empty string }
+        if not Assigned(iidstr) then
+          iidstr:=StringDup(''); { default is empty string }
       end;
 
 
     procedure TObjectDef.set_parent( c : TObjectDef);
       begin
-        if assigned(childof) then
+        if Assigned(childof) then
           exit;
         childof:=c;
-        if not assigned(c) then
+        if not Assigned(c) then
           exit;
         { inherit options and status }
         objectoptions:=objectoptions+(c.objectoptions*inherited_objectoptions);
@@ -8274,21 +8274,21 @@ implementation
         { add the data of the ancestor class/object }
         if (objecttype in [odt_class,odt_object,odt_objcclass,odt_javaclass]) then
           begin
-            TObjectSymTable(symtable).datasize:=TObjectSymTable(symtable).datasize+TObjectSymTable(c.symtable).datasize;
+            TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize+TObjectSymTable(c.SymTable).DataSize;
             { inherit recordalignment }
-            TObjectSymTable(symtable).recordalignment:=TObjectSymTable(c.symtable).recordalignment;
+            TObjectSymTable(SymTable).recordalignment:=TObjectSymTable(c.SymTable).recordalignment;
             { if both the parent and this record use C-alignment, also inherit
               the current field alignment }
-            if (TObjectSymTable(c.symtable).usefieldalignment=C_alignment) and
-               (TObjectSymTable(symtable).usefieldalignment=C_alignment) then
-              TObjectSymTable(symtable).fieldalignment:=TObjectSymTable(c.symtable).fieldalignment;
+            if (TObjectSymTable(c.SymTable).usefieldalignment=C_alignment) and
+               (TObjectSymTable(SymTable).usefieldalignment=C_alignment) then
+              TObjectSymTable(SymTable).fieldalignment:=TObjectSymTable(c.SymTable).fieldalignment;
             { the padding is not inherited for Objective-C classes (maybe not
               for cppclass either?) }
             if objecttype=odt_objcclass then
-              TObjectSymTable(symtable).datasize:=TObjectSymTable(symtable).datasize-TObjectSymTable(c.symtable).paddingsize;
+              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-TObjectSymTable(c.SymTable).paddingsize;
             if (oo_has_vmt in objectoptions) and
                (oo_has_vmt in c.objectoptions) then
-              TObjectSymTable(symtable).datasize:=TObjectSymTable(symtable).datasize-sizeof(pint);
+              TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize-sizeof(PInt);
             { if parent has a vmt field then the offset is the same for the child PM }
             if (oo_has_vmt in c.objectoptions) or is_class(self) then
               begin
@@ -8304,22 +8304,22 @@ implementation
         if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
           exit;
         if (oo_has_vmt in objectoptions) then
-          internalerror(2020100816)
+          InternalError(2020100816)
         else
           begin
-             TObjectSymTable(symtable).datasize:=align(TObjectSymTable(symtable).datasize,
-                 TObjectSymTable(symtable).fieldalignment);
+             TObjectSymTable(SymTable).DataSize:=align(TObjectSymTable(SymTable).DataSize,
+                 TObjectSymTable(SymTable).fieldalignment);
 
              if (tf_requires_proper_alignment in TargetInfo.flags) then
                begin
                  { Align VMT pointer and whole object instance if target CPU requires alignment. }
-                 TObjectSymTable(symtable).datasize:=align(TObjectSymTable(symtable).datasize,sizeof(pint));
-                 TObjectSymTable(symtable).alignrecord(TObjectSymTable(symtable).datasize,sizeof(pint));
+                 TObjectSymTable(SymTable).DataSize:=align(TObjectSymTable(SymTable).DataSize,sizeof(PInt));
+                 TObjectSymTable(SymTable).alignrecord(TObjectSymTable(SymTable).DataSize,sizeof(PInt));
                end;
-             vmt_field:=cfieldvarsym.create('_vptr$'+objname^,vs_value,voidpointertype,[]);
+             vmt_field:=CFieldVarSym.create('_vptr$'+objname^,vs_value,voidpointertype,[]);
              hidesym(vmt_field);
-             TObjectSymTable(symtable).insertsym(vmt_field);
-             TObjectSymTable(symtable).addfield(TFieldVarSym(vmt_field),vis_hidden);
+             TObjectSymTable(SymTable).insertsym(vmt_field);
+             TObjectSymTable(SymTable).addfield(TFieldVarSym(vmt_field),vis_hidden);
              include(objectoptions,oo_has_vmt);
           end;
      end;
@@ -8329,7 +8329,7 @@ implementation
      begin
         if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
           result:=0
-        else if (TObjectSymTable(symtable).usefieldalignment<>bit_alignment) then
+        else if (TObjectSymTable(SymTable).usefieldalignment<>bit_alignment) then
           result:=TFieldVarSym(vmt_field).fieldoffset
         else
           result:=TFieldVarSym(vmt_field).fieldoffset div 8;
@@ -8354,10 +8354,10 @@ implementation
        objdef: TObjectDef;
      begin
         objdef:=self;
-        while assigned(objdef) do
+        while Assigned(objdef) do
           begin
             result:=objdef.find_procdef_bytype(potype_destructor);
-            if assigned(result) then
+            if Assigned(result) then
               exit;
             objdef:=objdef.childof;
           end;
@@ -8367,16 +8367,16 @@ implementation
     function TObjectDef.implements_any_interfaces: boolean;
       begin
         result := (ImplementedInterfaces.Count > 0) or
-          (assigned(childof) and childof.implements_any_interfaces);
+          (Assigned(childof) and childof.implements_any_interfaces);
       end;
 
 
-    function TObjectDef.register_implemented_interface(intfdef:TObjectDef;useguid:boolean):timplementedinterface;
+    function TObjectDef.register_implemented_interface(intfdef:TObjectDef;useguid:boolean):TImplementedInterface;
       begin
         { allocate the GUID only if the class implements at least one interface }
         if useguid then
           prepareguid;
-        result:=timplementedinterface.create(intfdef);
+        result:=TImplementedInterface.create(intfdef);
         ImplementedInterfaces.Add(result);
       end;
 
@@ -8386,7 +8386,7 @@ implementation
         if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava] then
           result:=voidpointertype.size
         else
-          result:=TObjectSymTable(symtable).datasize;
+          result:=TObjectSymTable(SymTable).DataSize;
       end;
 
 
@@ -8395,17 +8395,17 @@ implementation
         if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava] then
           alignment:=voidpointertype.alignment
         else
-          alignment:=TObjectSymTable(symtable).recordalignment;
+          alignment:=TObjectSymTable(SymTable).recordalignment;
       end;
 
 
-    function TObjectDef.vmtmethodoffset(index:longint):longint;
+    function TObjectDef.vmtmethodoffset(index:LongInt):LongInt;
       begin
         { for offset of methods for classes, see rtl/inc/objpash.inc }
         case objecttype of
         odt_class:
           { the +2*sizeof(pint) is size and -size }
-          vmtmethodoffset:=index*voidcodepointertype.size+10*voidpointertype.size+2*sizeof(pint);
+          vmtmethodoffset:=index*voidcodepointertype.size+10*voidpointertype.size+2*sizeof(PInt);
         odt_helper,
         odt_objcclass,
         odt_objcprotocol:
@@ -8419,9 +8419,9 @@ implementation
         else
           { the +2*sizeof(pint) is size and -size }
 {$ifdef WITHDMT}
-          vmtmethodoffset:=index*voidcodepointertype.size+2*voidpointertype.size+2*sizeof(pint);
+          vmtmethodoffset:=index*voidcodepointertype.size+2*voidpointertype.size+2*sizeof(PInt);
 {$else WITHDMT}
-          vmtmethodoffset:=index*voidcodepointertype.size+1*voidpointertype.size+2*sizeof(pint);
+          vmtmethodoffset:=index*voidcodepointertype.size+1*voidpointertype.size+2*sizeof(PInt);
 {$endif WITHDMT}
         end;
       end;
@@ -8440,15 +8440,15 @@ implementation
 
     function TObjectDef.vmt_def: TRecordDef;
       var
-        vmttypesym: tsymentry;
+        vmttypesym: TSymEntry;
       begin
         if not is_unique_objpasdef then
           begin
-            vmttypesym:=symtable.Find('vmtdef');
-            if not assigned(vmttypesym) or
+            vmttypesym:=SymTable.Find('vmtdef');
+            if not Assigned(vmttypesym) or
                (vmttypesym.typ<>symconst.typesym) or
                (TTypeSym(vmttypesym).typedef.typ<>recorddef) then
-              internalerror(2015052501);
+              InternalError(2015052501);
             result:=TRecordDef(TTypeSym(vmttypesym).typedef);
           end
         else
@@ -8470,7 +8470,7 @@ implementation
             odt_interfacecorba:
               begin
                 hp:=childof;
-                while assigned(hp) do
+                while Assigned(hp) do
                   begin
                     if hp=interface_iunknown then
                       begin
@@ -8483,8 +8483,8 @@ implementation
               end;
             odt_object:
               NeedsInitTable:=
-                TObjectSymTable(symtable).needs_init_final or
-                (assigned(childof) and
+                TObjectSymTable(SymTable).needs_init_final or
+                (Assigned(childof) and
                  childof.NeedsInitTable);
             odt_cppclass,
             odt_objcclass,
@@ -8493,7 +8493,7 @@ implementation
             odt_interfacejava:
               NeedsInitTable:=false;
             else
-              internalerror(200108267);
+              InternalError(200108267);
          end;
       end;
 
@@ -8507,8 +8507,8 @@ implementation
       begin
         if objecttype in [odt_class,odt_object] then
           begin
-            result:=TObjectSymTable(symtable).has_non_trivial_init or
-                      (check_parent and assigned(childof) and childof.HasNonTrivialInitChild(true));
+            result:=TObjectSymTable(SymTable).has_non_trivial_init or
+                      (check_parent and Assigned(childof) and childof.HasNonTrivialInitChild(true));
           end
         else
           result:=false;
@@ -8551,7 +8551,7 @@ implementation
                           if not(oo_is_classhelper in objectoptions) then
                             result:=result+'_OBJC_METACLASS_'
                           else
-                            internalerror(2009111511);
+                            InternalError(2009111511);
                         objcprotocollist:
                           if not(oo_is_classhelper in objectoptions) then
                             result:=result+'_OBJC_CLASS_PROTOCOLS_'
@@ -8562,7 +8562,7 @@ implementation
                         objcclassmethods:
                           result:=result+'_OBJC_CLASS_METHODS_';
                         else
-                         internalerror(2009092302);
+                         InternalError(2009092302);
                       end;
                     end;
                   odt_objcprotocol:
@@ -8581,7 +8581,7 @@ implementation
                         objcprotclassmethodsopt:
                           result:=result+'_OBJC_PROTOCOL_CLASS_METHODS_OPT_';
                         else
-                         internalerror(2026062801);
+                         InternalError(2026062801);
                       end
                     end
                   else
@@ -8595,7 +8595,7 @@ implementation
                     begin
                       if (oo_is_classhelper in objectoptions) and
                          not(rt in [objcclassrtti,objcprotocollist]) then
-                        internalerror(2009111512);
+                        InternalError(2009111512);
                       case rt of
                         objcclassrtti:
                           if not(oo_is_classhelper in objectoptions) then
@@ -8618,7 +8618,7 @@ implementation
                         objcclassmethods:
                           result:='__OBJC_$_CLASS_METHODS_';
                         else
-                         internalerror(2009092303);
+                         InternalError(2009092303);
                       end;
                     end;
                   odt_objcprotocol:
@@ -8642,11 +8642,11 @@ implementation
                         objcprotclassmethodsopt:
                           result:='__OBJC_$_PROTOCOL_CLASS_METHODS_OPT_';
                         else
-                          internalerror(2009092501);
+                          InternalError(2009092501);
                       end;
                     end;
                   else
-                    internalerror(2013113005);
+                    InternalError(2013113005);
                 end;
               end;
             result:=result+objextname^;
@@ -8663,7 +8663,7 @@ implementation
 
     function TObjectDef.members_need_inittable : boolean;
       begin
-        members_need_inittable:=TObjectSymTable(symtable).needs_init_final or
+        members_need_inittable:=TObjectSymTable(SymTable).needs_init_final or
                                   HasNonTrivialInitChild(true);
       end;
 
@@ -8677,7 +8677,7 @@ implementation
       end;
 
 
-    function TObjectDef.get_next_dispid: longint;
+    function TObjectDef.get_next_dispid: LongInt;
       begin
         inc(fcurrent_dispid);
         result:=fcurrent_dispid;
@@ -8686,21 +8686,21 @@ implementation
     function TObjectDef.search_enumerator_get: TProcDef;
       begin
         result:=inherited;
-        if not assigned(result) and assigned(childof) then
+        if not Assigned(result) and Assigned(childof) then
           result:=childof.search_enumerator_get;
       end;
 
     function TObjectDef.search_enumerator_move: TProcDef;
       begin
         result:=inherited;
-        if not assigned(result) and assigned(childof) then
+        if not Assigned(result) and Assigned(childof) then
           result:=childof.search_enumerator_move;
       end;
 
     function TObjectDef.search_enumerator_current: TSym;
       begin
         result:=inherited;
-        if not assigned(result) and assigned(childof) then
+        if not Assigned(result) and Assigned(childof) then
           result:=childof.search_enumerator_current;
       end;
 
@@ -8741,7 +8741,7 @@ implementation
       end;
 
 
-    procedure TObjectDef.register_vmt_call(index: longint);
+    procedure TObjectDef.register_vmt_call(index: LongInt);
       begin
         if (is_object(self) or is_class(self)) then
           CurrentModule.wpoinfo.addcalledvmtentry(self,index);
@@ -8753,7 +8753,7 @@ implementation
         def: TDef absolute data;
         pd: TProcDef absolute data;
         i,
-        paracount: longint;
+        paracount: LongInt;
       begin
         if (def.typ=procdef) then
           begin
@@ -8771,7 +8771,7 @@ implementation
                 CGMessagePos(pd.fileinfo,parser_e_objc_requires_msgstr);
                 { recover to avoid internalerror later on }
                 include(pd.procoptions,po_msgstr);
-                pd.messageinf.str:=stringdup('MissingDeclaration');
+                pd.messageinf.str:=StringDup('MissingDeclaration');
               end;
             { Mangled name is already set in case this is a copy of
               another type.  }
@@ -8826,16 +8826,16 @@ implementation
 
     procedure TObjectDef.finish_objc_data;
       begin
-        self.symtable.DefList.foreachcall(@check_and_finish_msg,nil);
+        self.SymTable.DefList.foreachcall(@check_and_finish_msg,nil);
         if (oo_is_external in objectoptions) then
-          self.symtable.SymList.ForEachCall(@mark_private_fields_used,nil);
+          self.SymTable.SymList.ForEachCall(@mark_private_fields_used,nil);
       end;
 
 
     procedure verify_objc_vardef(data: tobject; arg: pointer);
       var
         sym: TAbstractVarSym absolute data;
-        res: pboolean absolute arg;
+        res: PBoolean absolute arg;
         founderrordef: TDef;
       begin
         if not(TSym(data).typ in [paravarsym,fieldvarsym]) then
@@ -8855,7 +8855,7 @@ implementation
     procedure verify_objc_procdef_paras(data: tobject; arg: pointer);
       var
         def: TDef absolute data;
-        res: pboolean absolute arg;
+        res: PBoolean absolute arg;
         founderrordef: TDef;
       begin
         if (def.typ<>procdef) then
@@ -8877,8 +8877,8 @@ implementation
           finish_objc_data is called, not all forwarddefs have been resolved
           yet and we need to know all types here }
         result:=true;
-        self.symtable.symlist.foreachcall(@verify_objc_vardef,@result);
-        self.symtable.deflist.foreachcall(@verify_objc_procdef_paras,@result);
+        self.SymTable.symlist.foreachcall(@verify_objc_vardef,@result);
+        self.SymTable.deflist.foreachcall(@verify_objc_procdef_paras,@result);
       end;
 
 
@@ -8893,7 +8893,7 @@ implementation
             if (oo_is_external in pd.struct.objectoptions) then
               begin
                 { copied from psub.read_proc }
-                if assigned(TObjectDef(pd.struct).import_lib) then
+                if Assigned(TObjectDef(pd.struct).import_lib) then
                    CurrentModule.AddExternalImport(TObjectDef(pd.struct).import_lib^,pd.mangledname,pd.mangledname,0,false,false)
                  else
                    begin
@@ -8909,7 +8909,7 @@ implementation
 
     procedure TObjectDef.finish_cpp_data;
       begin
-        self.symtable.DefList.ForEachCall(@do_cpp_import_info,nil);
+        self.SymTable.DefList.ForEachCall(@do_cpp_import_info,nil);
       end;
 
 
@@ -8917,7 +8917,7 @@ implementation
       begin
         rtti.clause:=dir.clause;
         rtti.options:=dir.options;
-        if (dir.clause=rtc_inherit) and assigned(childof) and (childof.rtti.clause<>rtc_none) then
+        if (dir.clause=rtc_inherit) and Assigned(childof) and (childof.rtti.clause<>rtc_none) then
           begin
             rtti.options[ro_methods]:=rtti.options[ro_methods]+childof.rtti.options[ro_methods];
             rtti.options[ro_fields]:=rtti.options[ro_fields]+childof.rtti.options[ro_fields];
@@ -8926,7 +8926,7 @@ implementation
       end;
 
 {$ifdef DEBUG_NODE_XML}
-    function TObjectDef.XMLPrintType: ansistring;
+    function TObjectDef.XMLPrintType: AnsiString;
       begin
         if (oo_is_forward in objectoptions) then
           Result := '&lt;class prototype&gt;'
@@ -8966,7 +8966,7 @@ implementation
         if not (oo_is_forward in objectoptions) then
           begin
             if Assigned(childof) then
-              WriteLn(T, printnodeindention, '<ancestor>', SanitiseXMLString(childof.typesym.RealName), '</ancestor>');
+              WriteLn(T, PrintNodeIndention, '<ancestor>', SanitiseXMLString(childof.typesym.RealName), '</ancestor>');
 
             inherited XMLPrintDefData(T, Sym);
           end;
@@ -8978,7 +8978,7 @@ implementation
                              TImplementedInterface
 ****************************************************************************}
 
-    function TImplementedInterface.GetIOffset: longint;
+    function TImplementedInterface.GetIOffset: LongInt;
       begin
         if (fIOffset=-1) and
            (IType in [etFieldValue,etFieldValueClass]) then
@@ -9013,27 +9013,27 @@ implementation
       end;
 
 
-    destructor  TImplementedInterface.destroy;
+    destructor  TImplementedInterface.Destroy;
       var
-        i : longint;
-        mappedname : pshortstring;
+        i : LongInt;
+        mappedname : PShortString;
       begin
-        if assigned(NameMappings) then
+        if Assigned(NameMappings) then
           begin
             for i:=0 to NameMappings.Count-1 do
               begin
-                mappedname:=pshortstring(NameMappings[i]);
-                stringdispose(mappedname);
+                mappedname:=PShortString(NameMappings[i]);
+                StringDispose(mappedname);
               end;
             NameMappings.free;
             NameMappings:=nil;
           end;
-        if assigned(procdefs) then
+        if Assigned(procdefs) then
           begin
             procdefs.free;
             procdefs:=nil;
           end;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -9053,28 +9053,28 @@ implementation
 
     procedure TImplementedInterface.AddMapping(const origname,newname: string);
       begin
-        if not assigned(NameMappings) then
+        if not Assigned(NameMappings) then
           NameMappings:=TFPHashList.Create;
-        NameMappings.Add(origname,stringdup(newname));
+        NameMappings.Add(origname,StringDup(newname));
       end;
 
 
     function TImplementedInterface.GetMapping(const origname: string):string;
       var
-        mappedname : pshortstring;
+        mappedname : PShortString;
       begin
         result:='';
-        if not assigned(NameMappings) then
+        if not Assigned(NameMappings) then
           exit;
-        mappedname:=PShortstring(NameMappings.Find(origname));
-        if assigned(mappedname) then
+        mappedname:=PShortString(NameMappings.Find(origname));
+        if Assigned(mappedname) then
           result:=mappedname^;
       end;
 
 
     procedure TImplementedInterface.AddImplProc(pd:TProcDef);
       begin
-        if not assigned(procdefs) then
+        if not Assigned(procdefs) then
           procdefs:=TFPObjectList.Create(false);
         { duplicate entries must be stored, because multiple }
         { interfaces can declare methods with the same name  }
@@ -9083,13 +9083,13 @@ implementation
       end;
 
 
-    function TImplementedInterface.IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: longint): boolean;
+    function TImplementedInterface.IsImplMergePossible(MergingIntf:TImplementedInterface;out weight: LongInt): boolean;
       var
-        i : longint;
+        i : LongInt;
       begin
         result:=false;
         { interfaces being implemented through delegation are not mergeable (FK) }
-        if (IType<>etStandard) or (MergingIntf.IType<>etStandard) or not(assigned(ProcDefs)) or not(assigned(MergingIntf.ProcDefs)) then
+        if (IType<>etStandard) or (MergingIntf.IType<>etStandard) or not(Assigned(ProcDefs)) or not(Assigned(MergingIntf.ProcDefs)) then
           exit;
         weight:=0;
         { empty interface is mergeable }
@@ -9114,7 +9114,7 @@ implementation
 
     function TImplementedInterface.getcopy:TImplementedInterface;
       var
-        i : longint;
+        i : LongInt;
       begin
         Result:=TImplementedInterface.Create(nil);
         { 1) the procdefs list will be freed once for each copy
@@ -9127,14 +9127,14 @@ implementation
         result.IntfDefDeref.reset;
         result.IType:=IType;
         result.VtblImplIntf:=VtblImplIntf;
-        if assigned(NameMappings) then
+        if Assigned(NameMappings) then
           begin
             result.NameMappings:=TFPHashList.create;
             for i:=0 to NameMappings.Count-1 do
               Result.NameMappings.Add(NameMappings.NameOfIndex(i),
-                                      stringdup(pshortstring(NameMappings.Items[i])^));
+                                      StringDup(PShortString(NameMappings.Items[i])^));
           end;
-        if assigned(ProcDefs) then
+        if Assigned(ProcDefs) then
           begin
             result.ProcDefs:=TFPObjectList.create(false);
             { Note: this is probably wrong, because those procdefs are owned by
@@ -9157,7 +9157,7 @@ implementation
    constructor TForwardDef.create(const s:string;const pos:TFilePosInfo);
      begin
         inherited create(forwarddef,true);
-        tosymname:=stringdup(s);
+        tosymname:=StringDup(s);
         forwardpos:=pos;
      end;
 
@@ -9168,15 +9168,15 @@ implementation
       end;
 
 
-    destructor TForwardDef.destroy;
+    destructor TForwardDef.Destroy;
       begin
-        stringdispose(tosymname);
-        inherited destroy;
+        StringDispose(tosymname);
+        inherited Destroy;
       end;
 
     function TForwardDef.getcopy:TStoredDef;
       begin
-        result:=cforwarddef.create(tosymname^, forwardpos);
+        result:=CForwardDef.create(tosymname^, forwardpos);
       end;
 
 {****************************************************************************
@@ -9223,7 +9223,7 @@ implementation
     procedure TErrorDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         { Can't write errordefs to ppu }
-        internalerror(200411063);
+        InternalError(200411063);
       end;
 
 
@@ -9246,7 +9246,7 @@ implementation
     function is_interfacecom(def: TDef): boolean;
       begin
         is_interfacecom:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_interfacecom);
       end;
@@ -9254,7 +9254,7 @@ implementation
     function is_interfacecom_or_dispinterface(def: TDef): boolean;
       begin
         is_interfacecom_or_dispinterface:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface]);
       end;
@@ -9262,7 +9262,7 @@ implementation
     function is_any_interface_kind(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           ((TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface,odt_interfacecorba,odt_interfacejava,odt_objcprotocol]) or
            is_objccategory(def));
@@ -9271,7 +9271,7 @@ implementation
     function is_interfacecorba(def: TDef): boolean;
       begin
         is_interfacecorba:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_interfacecorba);
       end;
@@ -9279,7 +9279,7 @@ implementation
     function is_interface(def: TDef): boolean;
       begin
         is_interface:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_interfacecom,odt_interfacecorba]);
       end;
@@ -9288,7 +9288,7 @@ implementation
     function is_dispinterface(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_dispinterface);
       end;
@@ -9297,7 +9297,7 @@ implementation
     function is_class(def: TDef): boolean;
       begin
         is_class:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_class);
       end;
@@ -9306,7 +9306,7 @@ implementation
     function is_object(def: TDef): boolean;
       begin
         is_object:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_object);
       end;
@@ -9315,7 +9315,7 @@ implementation
     function is_cppclass(def: TDef): boolean;
       begin
         is_cppclass:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_cppclass);
       end;
@@ -9324,7 +9324,7 @@ implementation
     function is_objcclass(def: TDef): boolean;
       begin
         is_objcclass:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_objcclass);
       end;
@@ -9333,7 +9333,7 @@ implementation
     function is_objectpascal_helper(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_helper);
       end;
@@ -9342,7 +9342,7 @@ implementation
     function is_objcclassref(def: TDef): boolean;
       begin
         is_objcclassref:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=classrefdef) and
           is_objcclass(TClassRefDef(def).pointeddef);
       end;
@@ -9351,7 +9351,7 @@ implementation
     function is_objcprotocol(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_objcprotocol);
       end;
@@ -9360,7 +9360,7 @@ implementation
     function is_objccategory(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           { if used as a forward type }
           ((TObjectDef(def).objecttype=odt_objccategory) or
@@ -9372,7 +9372,7 @@ implementation
     function is_objc_class_or_protocol(def: TDef): boolean;
       begin
          result:=
-           assigned(def) and
+           Assigned(def) and
            (def.typ=objectdef) and
            (TObjectDef(def).objecttype in [odt_objcclass,odt_objcprotocol]);
       end;
@@ -9381,7 +9381,7 @@ implementation
     function is_objc_protocol_or_category(def: TDef): boolean;
       begin
          result:=
-           assigned(def) and
+           Assigned(def) and
            (def.typ=objectdef) and
            ((TObjectDef(def).objecttype = odt_objcprotocol) or
             ((TObjectDef(def).objecttype = odt_objcclass) and
@@ -9398,7 +9398,7 @@ implementation
     function is_class_or_interface(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba]);
       end;
@@ -9407,7 +9407,7 @@ implementation
     function is_class_or_interface_or_objc(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_objcclass,odt_objcprotocol]);
       end;
@@ -9416,7 +9416,7 @@ implementation
     function is_class_or_interface_or_objc_or_java(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava]);
       end;
@@ -9425,7 +9425,7 @@ implementation
     function is_class_or_interface_or_dispinterface_or_objc_or_java(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava]);
       end;
@@ -9434,7 +9434,7 @@ implementation
     function is_class_or_interface_or_object(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_object]);
       end;
@@ -9443,7 +9443,7 @@ implementation
     function is_class_or_interface_or_dispinterface(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface]);
       end;
@@ -9452,7 +9452,7 @@ implementation
     function is_implicit_pointer_object_type(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava]);
       end;
@@ -9465,7 +9465,7 @@ implementation
     function is_class_or_object(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_class,odt_object]);
       end;
@@ -9473,14 +9473,14 @@ implementation
     function is_record(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=recorddef);
       end;
 
     function is_javaclass(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_javaclass);
       end;
@@ -9488,7 +9488,7 @@ implementation
     function is_javaclassref(def: TDef): boolean;
       begin
         is_javaclassref:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=classrefdef) and
           is_javaclass(TClassRefDef(def).pointeddef);
       end;
@@ -9496,7 +9496,7 @@ implementation
     function is_javainterface(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype=odt_interfacejava);
       end;
@@ -9504,7 +9504,7 @@ implementation
     function is_java_class_or_interface(def: TDef): boolean;
       begin
         result:=
-          assigned(def) and
+          Assigned(def) and
           (def.typ=objectdef) and
           (TObjectDef(def).objecttype in [odt_javaclass,odt_interfacejava]);
       end;
@@ -9524,19 +9524,19 @@ implementation
         TSym: TTypeSym;
         cocoaunit: string[15];
       begin
-        if assigned(objc_fastenumeration) then
+        if Assigned(objc_fastenumeration) then
           exit;
         if not(TargetInfo.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
           cocoaunit:='COCOAALL'
         else
           cocoaunit:='IPHONEALL';
         TSym:=search_named_unit_globaltype(cocoaunit,'NSFASTENUMERATIONPROTOCOL',false);
-        if assigned(TSym) then
+        if Assigned(TSym) then
           objc_fastenumeration:=TObjectDef(TSym.typedef)
         else
           objc_fastenumeration:=nil;
         TSym:=search_named_unit_globaltype(cocoaunit,'NSFASTENUMERATIONSTATE',false);
-        if assigned(TSym) then
+        if Assigned(TSym) then
           objc_fastenumerationstate:=TRecordDef(TSym.typedef)
         else
           objc_fastenumerationstate:=nil;
@@ -9547,8 +9547,8 @@ implementation
       begin
 {$ifdef x86}
 {$define use_vectorfpuimplemented}
-        use_vectorfpu:=(is_single(def) and (CurrentSettings.fputype in sse_singlescalar)) or
-          (is_double(def) and (CurrentSettings.fputype in sse_doublescalar)) or
+        use_vectorfpu:=(is_single(def) and (CurrentSettings.FPUType in sse_singlescalar)) or
+          (is_double(def) and (CurrentSettings.FPUType in sse_doublescalar)) or
           { Check vector types }
           (
             is_normal_array(def) and
@@ -9558,13 +9558,13 @@ implementation
                 is_single(TArrayDef(def).elementdef) and
                 (
                   { SSE or AVX XMM register }
-                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.fputype in sse_singlescalar)) or
+                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.FPUType in sse_singlescalar)) or
                   { AVX YMM register }
-                  ((TArrayDef(def).elecount = 8) and (CurrentSettings.fputype in fpu_avx_instructionsets))
+                  ((TArrayDef(def).elecount = 8) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
 
                   or
                   { AVX512 ZMM register }
-                  ((TArrayDef(def).elecount = 16) and (CurrentSettings.fputype in [fpu_avx512f]))
+                  ((TArrayDef(def).elecount = 16) and (CurrentSettings.FPUType in [fpu_avx512f]))
 
                 )
               ) or
@@ -9572,12 +9572,12 @@ implementation
                 is_double(TArrayDef(def).elementdef) and
                 (
                   { SSE or AVX XMM register }
-                  ((TArrayDef(def).elecount = 2) and (CurrentSettings.fputype in sse_doublescalar)) or
+                  ((TArrayDef(def).elecount = 2) and (CurrentSettings.FPUType in sse_doublescalar)) or
                   { AVX YMM register }
-                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.fputype in fpu_avx_instructionsets))
+                  ((TArrayDef(def).elecount = 4) and (CurrentSettings.FPUType in fpu_avx_instructionsets))
 
                   { AVX512 ZMM register }
-                  or ((TArrayDef(def).elecount = 8) and (CurrentSettings.fputype in [fpu_avx512f]))
+                  or ((TArrayDef(def).elecount = 8) and (CurrentSettings.FPUType in [fpu_avx512f]))
 
                 )
               )
@@ -9668,7 +9668,7 @@ implementation
        hresultdef:=nil;
        typekindtype:=nil;              { def of TTypeKind for correct handling of GetTypeKind parameters }
        { we use only one variant def for every variant class }
-       cvarianttype:=nil;
+       CVariantType:=nil;
        colevarianttype:=nil;
        { default integer type, normally s32inttype on 32 bit systems and s64bittype on 64 bit systems }
        sinttype:=nil;

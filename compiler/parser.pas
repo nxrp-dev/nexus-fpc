@@ -25,13 +25,13 @@ unit parser;
 
 interface
 
-uses fmodule;
+uses FModule;
 
 {$ifdef PREPROCWRITE}
-    procedure preprocess(const filename:string);
+    procedure preprocess(const FileName:string);
 {$endif PREPROCWRITE}
-    function compile_module(module : tmodule) : boolean;
-    procedure parsing_done(module : tmodule);
+    function compile_module(module : TModule) : boolean;
+    procedure parsing_done(module : TModule);
     procedure initparser;
     procedure doneparser;
 
@@ -39,47 +39,47 @@ implementation
 
     uses
 {$IFNDEF USE_FAKE_SYSUTILS}
-      sysutils,
+      SysUtils,
 {$ELSE}
-      fksysutl,
+      FKSysUtl,
 {$ENDIF}
-      cclasses,
-      globtype,tokens,systems,globals,verbose,globstat,
-      symbase,symtable,symdef,
-      finput,fppu,
-      aasmdata,
-      cscript,gendef,
-      comphook,
-      scanner,scandir,
+      CClasses,
+      GlobType,tokens,Systems,Globals,Verbose,GlobStat,
+      SymBase,SymTable,symdef,
+      FinPut,fppu,
+      AAsmData,
+      CScript,gendef,
+      CompHook,
+      Scanner,ScanDir,
       pbase,psystem,pmodules,psub,ncgrtti,
-      cpuinfo,procinfo,assemble;
+      CPUInfo,ProcInfo,assemble;
 
-    procedure parsing_done(module: tmodule);
+    procedure parsing_done(module: TModule);
 
     var
-       hp,hp2 :  tmodule;
+       hp,hp2 :  TModule;
 
     begin
-       if module.is_initial then
+       if module.IsInitial then
          DrainClangAssemblerQueue;
 
-       if (module.is_initial) and
-          (status.errorcount=0) then
+       if (module.IsInitial) and
+          (status.ErrorCount=0) then
          { Write Browser Collections }
-         do_extractsymbolinfo;
+         Do_ExtractSymbolInfo;
 
        module.end_of_parsing;
 
        { Restore all locally modified warning messages }
-       RestoreLocalVerbosity(CurrentSettings.pmessage);
-       current_exceptblock:=0;
-       exceptblockcounter:=0;
+       RestoreLocalVerbosity(CurrentSettings.PMessage);
+       Current_ExceptBlock:=0;
+       ExceptBlockCounter:=0;
 
        { Shut down things when the last file is compiled successful }
-       if (module.is_initial) and (module.state=ms_compiled) and
-           (status.errorcount=0) then
+       if (module.IsInitial) and (module.state=ms_compiled) and
+           (status.ErrorCount=0) then
          begin
-           parser_current_file:='';
+           Parser_Current_File:='';
            { Close script }
            if (not AsmRes.Empty) then
            begin
@@ -90,12 +90,12 @@ implementation
 
      { free now what we did not free earlier in
        proc_program PM }
-     if (module.is_initial) and (module.state=ms_compiled) and needsymbolinfo then
+     if (module.IsInitial) and (module.state=ms_compiled) and NeedSymbolInfo then
        begin
-         hp:=tmodule(loaded_units.first);
-         while assigned(hp) do
+         hp:=TModule(loaded_units.first);
+         while Assigned(hp) do
           begin
-            hp2:=tmodule(hp.next);
+            hp2:=TModule(hp.next);
             if (hp<>module) then
               begin
                 loaded_units.remove(hp);
@@ -117,7 +117,7 @@ implementation
 {           if olddata.old_current_module<>current_module then
         set_current_module(olddata.old_current_module);}
 
-      FreeLocalVerbosity(CurrentSettings.pmessage);
+      FreeLocalVerbosity(CurrentSettings.PMessage);
 
     end;
 
@@ -138,43 +138,43 @@ implementation
          unloaded_units:=TLinkedList.Create;
 
          { global switches }
-         CurrentSettings.globalswitches:=InitSettings.globalswitches;
+         CurrentSettings.GlobalSwitches:=InitSettings.GlobalSwitches;
 
-         CurrentSettings.sourcecodepage:=InitSettings.sourcecodepage;
+         CurrentSettings.SourceCodePage:=InitSettings.SourceCodePage;
 
          { initialize scanner }
          InitScanner;
          InitScannerDirectives;
 
          { scanner }
-         set_current_scanner(nil);
-         switchesstatestackpos:=0;
+         Set_Current_Scanner(nil);
+         SwitchesStateStackPos:=0;
 
          { register all nodes and tais }
          registernodes;
          registertais;
 
          { memory sizes }
-         if stacksize=0 then
-           stacksize:=TargetInfo.stacksize;
+         if StackSize=0 then
+           StackSize:=TargetInfo.StackSize;
 
          { RTTI writer }
          RTTIWriter:=TRTTIWriter.Create;
 
          { open assembler response }
-         if cs_link_on_target in CurrentSettings.globalswitches then
-           GenerateAsmRes(outputexedir+ChangeFileExt(inputfilename,'_ppas'))
+         if cs_link_on_target in CurrentSettings.GlobalSwitches then
+           GenerateAsmRes(OutputExeDir+ChangeFileExt(InputFileName,'_ppas'))
          else
-           GenerateAsmRes(outputexedir+'ppas');
+           GenerateAsmRes(OutputExeDir+'ppas');
 
          { open deffile }
-         DefFile:=TDefFile.Create(outputexedir+ChangeFileExt(inputfilename,TargetInfo.defext));
+         DefFile:=TDefFile.Create(OutputExeDir+ChangeFileExt(InputFileName,TargetInfo.defext));
 
          { list of generated .o files, so the linker can remove them }
          SmartLinkOFiles:=TCmdStrList.Create;
 
          { codegen }
-         if paraprintnodetree<>0 then
+         if ParaPrintNodeTree<>0 then
            printnode_reset;
 
       end;
@@ -192,17 +192,17 @@ implementation
          CurrentSpecializeDef:=nil;
 
          { unload units }
-         if assigned(loaded_units) then
+         if Assigned(loaded_units) then
            begin
              loaded_units.free;
              loaded_units:=nil;
            end;
-         if assigned(usedunits) then
+         if Assigned(usedunits) then
            begin
              usedunits.free;
              usedunits:=nil;
            end;
-         if assigned(unloaded_units) then
+         if Assigned(unloaded_units) then
            begin
              unloaded_units.free;
              unloaded_units:=nil;
@@ -212,10 +212,10 @@ implementation
 
          { if there was an error in the scanner, the scanner is
            still assigned }
-         if assigned(CurrentScanner) then
+         if Assigned(CurrentScanner) then
           begin
             CurrentScanner.free; // no nil needed
-            set_current_scanner(nil);
+            Set_Current_Scanner(nil);
           end;
 
          { close scanner }
@@ -239,24 +239,24 @@ implementation
 
 
 {$ifdef PREPROCWRITE}
-    procedure preprocess(const filename:string);
+    procedure preprocess(const FileName:string);
       var
-        i : longint;
+        i : LongInt;
       begin
-         preprocfile:=tpreprocfile.create('pre_'+filename);
+         preprocfile:=TPreProcFile.create('pre_'+FileName);
        { initialize a module }
-         SetCurrentModule(tppumodule.create(nil,'',filename,false));
-         macrosymtablestack:=TSymTableStack.create;
+         SetCurrentModule(TPPUModule.create(nil,'',FileName,false));
+         MacroSymTableStack:=TSymTableStack.create;
 
 
-         set_current_scanner(tscannerfile.Create(filename));
+         Set_Current_Scanner(TScannerFile.Create(FileName));
          CurrentScanner.firstfile;
-         CurrentModule.scanner:=CurrentScanner;
+         CurrentModule.Scanner:=CurrentScanner;
 
          { init macros before anything in the file is parsed.}
          CurrentModule.localmacrosymtable:= TMacroSymTable.create(false);
-         macrosymtablestack.push(initialmacrosymtable);
-         macrosymtablestack.push(CurrentModule.localmacrosymtable);
+         MacroSymTableStack.push(initialmacrosymtable);
+         MacroSymTableStack.push(CurrentModule.localmacrosymtable);
 
          { read the first token }
          // current_scanner.readtoken(false);
@@ -311,7 +311,7 @@ implementation
          until false;
        { free scanner }
          CurrentScanner.free;
-         set_current_scanner(nil);
+         Set_Current_Scanner(nil);
        { close }
          preprocfile.free;
          preprocfile := nil;
@@ -323,22 +323,22 @@ implementation
                              Compile a source file
 *****************************************************************************}
 
-    function compile_module(module : tmodule) : boolean;
+    function compile_module(module : TModule) : boolean;
 
       var
          finished : boolean;
-         sc : tscannerfile;
+         sc : TScannerFile;
 
        begin
          Result:=True;
 
          { parsing a procedure or declaration should be finished }
-         if assigned(CurrentProcInfo) then
-           internalerror(200811121);
-         if assigned(CurrentStructDef) then
-           internalerror(200811122);
+         if Assigned(CurrentProcInfo) then
+           InternalError(200811121);
+         if Assigned(CurrentStructDef) then
+           InternalError(200811122);
          inc(module.compilecount);
-         parser_current_file:=module.mainsource;
+         Parser_Current_File:=module.MainSource;
 
        { reset parser, a previous fatal error could have left these variables in an unreliable state, this is
          important for the IDE }
@@ -350,39 +350,39 @@ implementation
          getfuncrefdef:=nil;
 
        { show info }
-         Message1(parser_i_compiling,module.mainsource);
+         Message1(parser_i_compiling,module.MainSource);
 
        { reset symtable }
-         symtablestack:=TDefAwareSymTableStack.create;
-         macrosymtablestack:=TSymTableStack.create;
+         SymTableStack:=TDefAwareSymTableStack.create;
+         MacroSymTableStack:=TSymTableStack.create;
          systemunit:=nil;
-         CurrentSettings.defproccall:=InitSettings.defproccall;
-         current_exceptblock:=0;
-         exceptblockcounter:=0;
-         CurrentSettings.maxfpuregisters:=-1;
-         CurrentSettings.pmessage:=nil;
+         CurrentSettings.DefProcCall:=InitSettings.DefProcCall;
+         Current_ExceptBlock:=0;
+         ExceptBlockCounter:=0;
+         CurrentSettings.MaxFPURegisters:=-1;
+         CurrentSettings.PMessage:=nil;
 
          { Load current state from the init values }
          CurrentSettings:=InitSettings;
 
          SetCurrentModule(module);
          if not (module.state in [ms_compile]) then
-           internalerror(200212281);
+           InternalError(200212281);
 
          { load current asmdata from current_module }
          CurrentAsmData:=TAsmData(module.asmdata);
 
          { startup scanner and load the first file }
-         sc:=tscannerfile.Create(module.mainsource);
+         sc:=TScannerFile.Create(module.MainSource);
          sc.firstfile;
-         module.scanner:=sc;
+         module.Scanner:=sc;
          module.mainscanner:=sc;
-         set_current_scanner(sc);
+         Set_Current_Scanner(sc);
 
          { init macros before anything in the file is parsed.}
          module.localmacrosymtable:= TMacroSymTable.create(false);
-         macrosymtablestack.push(initialmacrosymtable);
-         macrosymtablestack.push(module.localmacrosymtable);
+         MacroSymTableStack.push(initialmacrosymtable);
+         MacroSymTableStack.push(module.localmacrosymtable);
 
          { read the first token }
          CurrentScanner.readtoken(false);
@@ -393,7 +393,7 @@ implementation
          { If the compile level > 1 we get a nice "unit expected" error
            message if we are trying to use a program as unit.}
          try
-           if (CurrentScanner.token=_UNIT) or (not module.is_initial) then
+           if (CurrentScanner.token=_UNIT) or (not module.IsInitial) then
              begin
                module.is_unit:=true;
                finished:=proc_unit(module);
@@ -413,9 +413,9 @@ implementation
                { Generate exception_raised message,
                  but avoid multiple messages by
                  guarding with exception_raised global variable }
-               if not exception_raised then
+               if not Exception_Raised then
                  begin
-                   exception_raised:=true;
+                   Exception_Raised:=true;
                    Message(general_e_exception_raised);
                  end;
                raise;

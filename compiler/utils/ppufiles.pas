@@ -32,10 +32,10 @@ const
   PPUExt = NexusUnitFileType;
 
 type
-  poutfile = ^toutfile;
-  toutfile = record
+  POutFile = ^TOutFile;
+  TOutFile = record
     name : string;
-    next : poutfile;
+    next : POutFile;
   end;
 
 var
@@ -44,7 +44,7 @@ var
   showshared,
   showobjects : boolean;
 
-  OutFiles    : poutfile;
+  OutFiles    : POutFile;
 
 
 {*****************************************************************************
@@ -56,7 +56,7 @@ Procedure Error(const s:string;stop:boolean);
   Write an error message to stderr
 }
 begin
-  writeln(stderr,s);
+  WriteLn(stderr,s);
   if stop then
    halt(1);
 end;
@@ -68,7 +68,7 @@ Function ChangeFileExt(Const HStr,ext:String):String;
   extension is found
 }
 var
-  j : longint;
+  j : LongInt;
 begin
   j:=length(Hstr);
   while (j>0) and (Hstr[j]<>'.') do
@@ -82,7 +82,7 @@ end;
 
 Function SplitPath(Const HStr:String):String;
 var
-  i : longint;
+  i : LongInt;
 begin
   i:=Length(Hstr);
   while (i>0) and not(Hstr[i] in ['\','/']) do
@@ -93,20 +93,20 @@ end;
 
 Procedure AddFile(const s:string);
 var
-  p : poutfile;
+  p : POutFile;
 begin
   p:=nil;
   if skipdup then
    begin
      p:=outfiles;
-     while assigned(p) do
+     while Assigned(p) do
       begin
         if s=p^.name then
          break;
         p:=p^.next;
       end;
    end;
-  if not assigned(p) then
+  if not Assigned(p) then
    begin
      new(p);
      p^.name:=s;
@@ -122,7 +122,7 @@ Function DoPPU(const PPUFn:String):Boolean;
   Return true if successful, false otherwise.
 }
 Var
-  inppu  : tppufile;
+  inppu  : TPPUFile;
   b      : byte;
   ppulongversion: cardinal;
 
@@ -137,7 +137,7 @@ Var
 
 begin
   DoPPU:=false;
-  inppu:=tppufile.create(PPUFn);
+  inppu:=TPPUFile.create(PPUFn);
   if not inppu.openfile then
    begin
      inppu.free;
@@ -192,10 +192,10 @@ end;
 
 
 var
-  i,parafile : longint;
+  i,parafile : LongInt;
   dir        : SearchRec;
   s,InFile   : String;
-  p          : poutfile;
+  p          : POutFile;
 begin
 { defaults }
   skipdup:=true;
@@ -203,7 +203,7 @@ begin
   i:=1;
   while (i<=paramcount) do
    begin
-     s:=paramstr(i);
+     s:=ParamStr(i);
      if s[1]<>'-' then
       break;
      case upcase(s[2]) of
@@ -213,13 +213,13 @@ begin
       'A' : skipdup:=false;
       '?','H' :
         begin
-          writeln('usage: ppufiles [options] <files>');
-          writeln('options:');
-          writeln('  -A  Show all files (don''t remove duplicates)');
-          writeln('  -L  Show only shared libraries');
-          writeln('  -S  Show only static libraries');
-          writeln('  -O  Show only object files');
-          writeln('  -H  This helpscreen');
+          WriteLn('usage: ppufiles [options] <files>');
+          WriteLn('options:');
+          WriteLn('  -A  Show all files (don''t remove duplicates)');
+          WriteLn('  -L  Show only shared libraries');
+          WriteLn('  -S  Show only static libraries');
+          WriteLn('  -O  Show only object files');
+          WriteLn('  -H  This helpscreen');
         end;
      end;
      inc(i);
@@ -246,13 +246,13 @@ begin
      FindClose(Dir);
    end;
 { Display the files }
-  while assigned(outfiles) do
+  while Assigned(outfiles) do
    begin
      p:=outfiles;
      write(outfiles^.name);
      outfiles:=outfiles^.next;
      dispose(p);
-     if assigned(outfiles) then
+     if Assigned(outfiles) then
       write(' ');
    end;
 end.

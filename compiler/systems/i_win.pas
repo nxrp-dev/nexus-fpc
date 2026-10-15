@@ -26,7 +26,7 @@ unit i_win;
   interface
 
     uses
-       systems,nxartifactid;
+       Systems,nxartifactid;
 
     const
 
@@ -44,7 +44,7 @@ unit i_win;
             cpu          : cpu_i386;
             unit_env     : 'WIN32UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
-            exeext       : '.exe';
+            ExeExt       : '.exe';
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
@@ -78,24 +78,24 @@ unit i_win;
             endian       : endian_little;
             alignment    :
               (
-                procalign       : 16;
-                loopalign       : 8;
-                jumpalign       : 16;
-                jumpalignskipmax    : 10;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 64;
-                varalignmin     : 0;
-                varalignmax     : 64;
-                localalignmin   : 4;
-                localalignmax   : 8;
-                recordalignmin  : 0;
-                recordalignmax  : 4;
-                maxCrecordalign : 16
+                ProcAlign       : 16;
+                LoopAlign       : 8;
+                JumpAlign       : 16;
+                JumpAlignSkipMax    : 10;
+                CoalesceAlign   : 0;
+                CoalesceAlignSkipMax: 0;
+                ConstAlignMin   : 0;
+                ConstAlignMax   : 64;
+                VarAlignMin     : 0;
+                VarAlignMax     : 64;
+                LocalAlignMin   : 4;
+                LocalAlignMax   : 8;
+                RecordAlignMin  : 0;
+                RecordAlignMax  : 4;
+                MaxCRecordAlign : 16
               );
             first_parm_offset : 8;
-            stacksize    : 16*1024*1024;
+            StackSize    : 16*1024*1024;
             stackalign   : 4;
             abi          : abi_default;
           );
@@ -115,7 +115,7 @@ unit i_win;
             cpu          : cpu_x86_64;
             unit_env     : 'WIN64UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
-            exeext       : '.exe';
+            ExeExt       : '.exe';
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
@@ -149,24 +149,24 @@ unit i_win;
             endian       : endian_little;
             alignment    :
               (
-                procalign       : 16;
-                loopalign       : 8;
-                jumpalign       : 16;
-                jumpalignskipmax    : 10;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 64;
-                varalignmin     : 0;
-                varalignmax     : 64;
-                localalignmin   : 4;
-                localalignmax   : 16;
-                recordalignmin  : 0;
-                recordalignmax  : 8;
-                maxCrecordalign : 16
+                ProcAlign       : 16;
+                LoopAlign       : 8;
+                JumpAlign       : 16;
+                JumpAlignSkipMax    : 10;
+                CoalesceAlign   : 0;
+                CoalesceAlignSkipMax: 0;
+                ConstAlignMin   : 0;
+                ConstAlignMax   : 64;
+                VarAlignMin     : 0;
+                VarAlignMax     : 64;
+                LocalAlignMin   : 4;
+                LocalAlignMax   : 16;
+                RecordAlignMin  : 0;
+                RecordAlignMax  : 8;
+                MaxCRecordAlign : 16
               );
             first_parm_offset : 16;
-            stacksize    : 16*1024*1024;
+            StackSize    : 16*1024*1024;
             stackalign   : 16;
             abi          : abi_default;
           );
@@ -186,7 +186,7 @@ unit i_win;
             cpu          : cpu_aarch64;
             unit_env     : 'WIN64UNITS';
             extradefines : 'MSWINDOWS;WINDOWS';
-            exeext       : '.exe';
+            ExeExt       : '.exe';
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
@@ -220,24 +220,24 @@ unit i_win;
             endian       : endian_little;
             alignment    :
               (
-                procalign       : 8;
-                loopalign       : 4;
-                jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 16;
-                varalignmin     : 0;
-                varalignmax     : 16;
-                localalignmin   : 4;
-                localalignmax   : 16;
-                recordalignmin  : 0;
-                recordalignmax  : 16;
-                maxCrecordalign : 16
+                ProcAlign       : 8;
+                LoopAlign       : 4;
+                JumpAlign       : 0;
+                JumpAlignSkipMax    : 0;
+                CoalesceAlign   : 0;
+                CoalesceAlignSkipMax: 0;
+                ConstAlignMin   : 0;
+                ConstAlignMax   : 16;
+                VarAlignMin     : 0;
+                VarAlignMax     : 16;
+                LocalAlignMin   : 4;
+                LocalAlignMax   : 16;
+                RecordAlignMin  : 0;
+                RecordAlignMax  : 16;
+                MaxCRecordAlign : 16
               );
             first_parm_offset : 16;
-            stacksize    : 16*1024*1024;
+            StackSize    : 16*1024*1024;
             stackalign   : 16;
             abi          : abi_default;
           );

@@ -39,7 +39,7 @@ uses
   BaseUnix,Unix,
  {$endif}
 {$endif}
-  verbose;
+  Verbose;
 
 {$ifdef has_signal}
 Var
@@ -50,13 +50,13 @@ Var
 Implementation
 
 uses
-  comphook;
+  CompHook;
 
 {$ifdef has_signal}
 {$ifdef unix}
-Procedure CatchSignal(Sig : Longint);cdecl;
+Procedure CatchSignal(Sig : LongInt);cdecl;
 {$else}
-Function CatchSignal(Sig : longint):longint; cdecl;
+Function CatchSignal(Sig : LongInt):LongInt; cdecl;
 {$endif}
 begin
   case Sig of

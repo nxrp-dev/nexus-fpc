@@ -28,7 +28,7 @@ interface
 
 type
   { Tag names and codes.   }
-  tdwarf_tag = (DW_TAG_padding := $00,DW_TAG_array_type := $01,
+  TDwarfTag = (DW_TAG_padding := $00,DW_TAG_array_type := $01,
     DW_TAG_class_type := $02,DW_TAG_entry_point := $03,
     DW_TAG_enumeration_type := $04,DW_TAG_formal_parameter := $05,
     DW_TAG_imported_declaration := $08,DW_TAG_label := $0a,
@@ -101,7 +101,7 @@ type
   );
 
   { Type encodings.   }
-  Tdwarf_type = (DW_ATE_void := $0,DW_ATE_address := $1,
+  TDwarfType = (DW_ATE_void := $0,DW_ATE_address := $1,
     DW_ATE_boolean := $2,DW_ATE_complex_float := $3,
     DW_ATE_float := $4,DW_ATE_signed := $5,
     DW_ATE_signed_char := $6,DW_ATE_unsigned := $7,
@@ -118,7 +118,7 @@ type
 {$push}
 {$notes off}
   { Attribute names and codes.   }
-  tdwarf_attribute = (DW_AT_sibling := $01,DW_AT_location := $02,
+  TDwarfAttribute = (DW_AT_sibling := $01,DW_AT_location := $02,
     DW_AT_name := $03,DW_AT_ordering := $09,
     DW_AT_subscr_data := $0a,DW_AT_byte_size := $0b,
     DW_AT_bit_offset := $0c,DW_AT_bit_size := $0d,
@@ -263,7 +263,7 @@ type
 {$pop}
 
   { Calling conventions }
-  Tdwarf_calling_convention = (
+  TDwarfCallingConvention = (
     DW_CC_normal  := $01,
     DW_CC_program := $02,
     DW_CC_nocall  := $03,
@@ -275,7 +275,7 @@ type
   );
 
   { Form names and codes.   }
-  Tdwarf_form = (DW_FORM_addr := $01,DW_FORM_block2 := $03,
+  TDwarfForm = (DW_FORM_addr := $01,DW_FORM_block2 := $03,
     DW_FORM_block4 := $04,DW_FORM_data2 := $05,
     DW_FORM_data4 := $06,DW_FORM_data8 := $07,
     DW_FORM_string := $08,DW_FORM_block := $09,
@@ -315,7 +315,7 @@ type
     );
 
   { values of DW_AT_address_class }
-  Tdwarf_addr = (
+  TDwarfAddr = (
     DW_ADDR_none := 0,
     DW_ADDR_near16 := 1,
     DW_ADDR_far16 := 2,
@@ -325,7 +325,7 @@ type
   );
 
   { values of DW_AT_WATCOM_memory_model }
-  Tdwarf_watcom_memory_model = (
+  TDwarfWatcomMemoryModel = (
     DW_WATCOM_MEMORY_MODEL_none := 0,
     DW_WATCOM_MEMORY_MODEL_flat := 1,
     DW_WATCOM_MEMORY_MODEL_small := 2,
@@ -337,7 +337,7 @@ type
 
   { DWARF 5 }
 
-  Tdwarf_unit_type_encoding = (
+  TDwarfUnitTypeEncoding = (
     DW_UT_invalid := 0,
     DW_UT_compile := 1,
     DW_UT_type := 2,
@@ -349,7 +349,7 @@ type
     DW_UT_hi_user := $ff
   );
 
-  Tdwarf_linenumber_content_type = (
+  TDwarfLineNumberContentType = (
     DW_LNCT_invalid := 0,
     DW_LNCT_path := 1,
     DW_LNCT_directory_index := 2,
@@ -360,7 +360,7 @@ type
     DW_LNCT_hi_user := $3fff
   );
 
-  Tdwarf_location_list_encoding = (
+  TDwarfLocationListEncoding = (
     DW_LLE_end_of_list := $00,
     DW_LLE_base_addressx := $01,
     DW_LLE_startx_endx := $02,
@@ -372,7 +372,7 @@ type
     DW_LLE_start_length := $08
   );
 
-  Tdwarf_name_index = (
+  TDwarfNameIndex = (
     DW_IDX_compile_unit := $01, { constant }
     DW_IDX_type_unit := $02,    { constant }
     DW_IDX_die_offset := $03,   { reference }
@@ -382,13 +382,13 @@ type
     DW_IDX_hi_user := $03ff
   );
 
-  Tdwarf_default_member_encoding = (
+  TDwarfDefaultMemberEncoding = (
     DW_DEFAULTED_no := $00,
     DW_DEFAULTED_in_class := $01,
     DW_DEFAULTED_out_of_class := $02
   );
 
-  Tdwarf_macro_information_entry_type = (
+  TDwarfMacroInformationEntryType = (
     DW_MACRO_define := $01,
     DW_MACRO_undef := $02,
     DW_MACRO_start_file := $03,
@@ -405,7 +405,7 @@ type
     DW_MACRO_hi_user := $ff
   );
 
-  Tdwarf_range_list_encoding = (
+  TDwarfRangeListEncoding = (
     DW_RLE_end_of_list := $00,
     DW_RLE_base_addressx := $01,
     DW_RLE_startx_endx := $02,
@@ -420,7 +420,7 @@ type
 
 type
   { Source language names and codes.   }
-  tdwarf_source_language = (DW_LANG_C89 := $0001,DW_LANG_C := $0002,DW_LANG_Ada83 := $0003,
+  TDwarfSourceLanguage = (DW_LANG_C89 := $0001,DW_LANG_C := $0002,DW_LANG_Ada83 := $0003,
     DW_LANG_C_plus_plus := $0004,DW_LANG_Cobol74 := $0005,
     DW_LANG_Cobol85 := $0006,DW_LANG_Fortran77 := $0007,
     DW_LANG_Fortran90 := $0008,DW_LANG_Pascal83 := $0009,
@@ -457,7 +457,7 @@ type
 {$push}
 {$notes off}
   { Location atom names and codes.   }
-  Tdwarf_location_atom = (DW_OP_addr := $03,DW_OP_deref := $06,DW_OP_const1u := $08,
+  TDwarfLocationAtom = (DW_OP_addr := $03,DW_OP_deref := $06,DW_OP_const1u := $08,
     DW_OP_const1s := $09,DW_OP_const2u := $0a,
     DW_OP_const2s := $0b,DW_OP_const4u := $0c,
     DW_OP_const4s := $0d,DW_OP_const8u := $0e,

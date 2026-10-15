@@ -14,77 +14,77 @@
 
 { Note: This program is not the old fpcres by Simon Kissel }
 
-program fpcres;
+program FPCRes;
 
 {$MODE OBJFPC} {$H+}
 
 uses
-  SysUtils, Classes, paramparser, target, msghandler, sourcehandler,
-  closablefilestream, resource,
+  SysUtils, Classes, ParamParser, Target, MsgHandler, SourceHandler,
+  ClosableFileStream, Resource,
 //readers
-  resreader, coffreader, winpeimagereader, elfreader, machoreader,
-  externalreader, dfmreader, tlbreader, rcreader,
+  ResReader, COFFReader, WinPEImageReader, ELFReader, MachOReader,
+  ExternalReader, DFMReader, TLBReader, RCReader,
 //writers
-  reswriter, coffwriter, xcoffwriter, elfwriter, machowriter,
-  externalwriter,
+  ResWriter, COFFWriter, XCOFFWriter, ELFWriter, MachOWriter,
+  ExternalWriter,
 //misc
-  elfconsts, cofftypes, machotypes, externaltypes;
+  ELFConsts, COFFTypes, MachOTypes, ExternalTypes;
 
 const
-  halt_no_err = 0;
-  halt_param_err = 1;
-  halt_read_err = 2;
-  halt_write_err = 3;
+  HaltNoErr = 0;
+  HaltParamErr = 1;
+  HaltReadErr = 2;
+  HaltWriteErr = 3;
 
-  progname = 'fpcres';
-  progversion = '2.0'; //to distinguish from the old fpcres
+  ProgName = 'fpcres';
+  ProgVersion = '2.0'; //to distinguish from the old fpcres
 
-  fpcversion = {$INCLUDE %FPCVERSION%};
-  host_arch = {$INCLUDE %FPCTARGETCPU%};
-  host_os = {$INCLUDE %FPCTARGETOS%};
-  build_date = {$INCLUDE %DATE%};
+  FPCVersion = {$INCLUDE %FPCVERSION%};
+  HostArch = {$INCLUDE %FPCTARGETCPU%};
+  HostOS = {$INCLUDE %FPCTARGETOS%};
+  BuildDate = {$INCLUDE %DATE%};
 
 var
-  params : TParameters = nil;
-  resources : TResources = nil;
-  sourcefiles : TSourceFiles = nil;
+  Params : TParameters = nil;
+  Resources : TResources = nil;
+  SourceFiles : TSourceFiles = nil;
 
 procedure ShowVersion;
 begin
-  writeln(progname+' - resource file converter, version '+progversion+' ['+build_date+'], FPC '+fpcversion);
-  writeln('Host platform: '+host_os+' - '+host_arch);
-  writeln('Copyright (c) 2008 by Giulio Bernardi.');
+  WriteLn(ProgName+' - resource file converter, version '+ProgVersion+' ['+BuildDate+'], FPC '+FPCVersion);
+  WriteLn('Host platform: '+HostOS+' - '+HostArch);
+  WriteLn('Copyright (c) 2008 by Giulio Bernardi.');
 end;
 
 procedure ShowHelp;
 begin
   ShowVersion;
-  writeln('Syntax: '+progname+' [options] <inputfile> [<inputfile>...] [-o <outputfile>]');
-  writeln;
-  writeln('Options:');
-  writeln('  --help, -h, -?       Show this screen.');
-  writeln('  --version, -V        Show program version.');
-  writeln('  --verbose, -v        Be verbose.');
-  writeln('  --input, -i <x>      Ignored for compatibility.');
-  writeln('  --include, -I <x>    RC files: add a path for include searches');
-  writeln('  --define, -D <sym>[=<val>]');
-  writeln('                       RC files: define a symbol (and value)');
-  writeln('  --undefine, -U <sym> RC files: undefine a symbol');
-  writeln('  --output, -o <x>     Set the output file name.');
-  writeln('  -of <format>         Set the output file format. Supported formats:');
-  writeln('                         res, elf, coff, mach-o, external');
-  writeln('  --arch, -a <name>    Set object file architecture. Supported architectures:');
-  writeln('                         i386, x86_64, arm (coff)');
-  writeln('                         i386, x86_64, powerpc, powerpc64, arm, armeb, m68k,');
-  writeln('                         riscv32, riscv64,');
-  writeln('                         sparc, sparc64, alpha, ia64, mips, mipsel (elf)');
-  writeln('                         i386, x86_64, powerpc, powerpc64, arm, aarch64 (mach-o)');
-  writeln('                         bigendian, littleendian (external)');
-  writeln('  --subarch, -s <name> Set object file sub-architecture. Supported values:');
-  writeln('                         arm: all, v4t, v6, v5tej, xscale, v7');
-  writeln('                         other architectures: all');
-  writeln('  @<file>              Read more options from file <file>');
-  writeln('Default output target: '+TargetToStr(currenttarget));
+  WriteLn('Syntax: '+ProgName+' [options] <inputfile> [<inputfile>...] [-o <outputfile>]');
+  WriteLn;
+  WriteLn('Options:');
+  WriteLn('  --help, -h, -?       Show this screen.');
+  WriteLn('  --version, -V        Show program version.');
+  WriteLn('  --verbose, -v        Be verbose.');
+  WriteLn('  --input, -i <x>      Ignored for compatibility.');
+  WriteLn('  --include, -I <x>    RC files: add a path for include searches');
+  WriteLn('  --define, -D <sym>[=<val>]');
+  WriteLn('                       RC files: define a symbol (and value)');
+  WriteLn('  --undefine, -U <sym> RC files: undefine a symbol');
+  WriteLn('  --output, -o <x>     Set the output file name.');
+  WriteLn('  -of <format>         Set the output file format. Supported formats:');
+  WriteLn('                         res, elf, coff, mach-o, external');
+  WriteLn('  --arch, -a <name>    Set object file architecture. Supported architectures:');
+  WriteLn('                         i386, x86_64, arm (coff)');
+  WriteLn('                         i386, x86_64, powerpc, powerpc64, arm, armeb, m68k,');
+  WriteLn('                         riscv32, riscv64,');
+  WriteLn('                         sparc, sparc64, alpha, ia64, mips, mipsel (elf)');
+  WriteLn('                         i386, x86_64, powerpc, powerpc64, arm, aarch64 (mach-o)');
+  WriteLn('                         bigendian, littleendian (external)');
+  WriteLn('  --subarch, -s <name> Set object file sub-architecture. Supported values:');
+  WriteLn('                         arm: all, v4t, v6, v5tej, xscale, v7');
+  WriteLn('                         other architectures: all');
+  WriteLn('  @<file>              Read more options from file <file>');
+  WriteLn('Default output target: '+TargetToStr(CurrentTarget));
 end;
 
 const
@@ -103,104 +103,104 @@ const
 
   SCantCreateFile = 'Can''t create file ''%s''';
 
-function GetCurrentTimeMsec : longint;
-var h,m,s,ms : word;
+function GetCurrentTimeMsec : LongInt;
+var H,M,S,MS : Word;
 begin
-  DecodeTime(Time,h,m,s,ms);
-  Result:=h*3600*1000 + m*60*1000 + s*1000 + ms;
+  DecodeTime(Time,H,M,S,MS);
+  Result:=H*3600*1000 + M*60*1000 + S*1000 + MS;
 end;
 
 procedure CheckTarget;
 begin
   //if user explicitly set a format, use it
-  if params.Target.objformat<>ofNone then
-    CurrentTarget.objformat:=params.Target.objformat;
+  if Params.Target.ObjFormat<>ofNone then
+    CurrentTarget.ObjFormat:=Params.Target.ObjFormat;
   //if no machine was specified, check if current is ok for this format,
   //otherwise pick the default one for that format
-  if params.Target.machine=mtNone then
+  if Params.Target.Machine=mtNone then
   begin
-    if not (CurrentTarget.machine in ObjFormats[CurrentTarget.objformat].machines) then
+    if not (CurrentTarget.Machine in ObjFormats[CurrentTarget.ObjFormat].Machines) then
       begin
-        CurrentTarget.machine:=GetDefaultMachineForFormat(CurrentTarget.objformat);
-        CurrentTarget.submachine:=GetDefaultSubMachineForMachine(currentTarget.machine);
+        CurrentTarget.Machine:=GetDefaultMachineForFormat(CurrentTarget.ObjFormat);
+        CurrentTarget.SubMachine:=GetDefaultSubMachineForMachine(CurrentTarget.Machine);
       end
   end
   else
     begin
-      CurrentTarget.machine:=params.Target.machine;
-      CurrentTarget.submachine:=params.Target.submachine;
+      CurrentTarget.Machine:=Params.Target.Machine;
+      CurrentTarget.SubMachine:=Params.Target.SubMachine;
     end;
 
-  if not (CurrentTarget.machine in ObjFormats[CurrentTarget.objformat].machines) then
+  if not (CurrentTarget.Machine in ObjFormats[CurrentTarget.ObjFormat].Machines) then
   begin
     Messages.DoError(Format(SFormatArchMismatch,[
-     MachineToStr(CurrentTarget.machine),ObjFormatToStr(CurrentTarget.objformat)]));
-    halt(halt_param_err);
+     MachineToStr(CurrentTarget.Machine),ObjFormatToStr(CurrentTarget.ObjFormat)]));
+    Halt(HaltParamErr);
   end;
   Messages.DoVerbose('target set to '+TargetToStr(CurrentTarget));
 end;
 
 procedure CheckInputFiles;
 begin
-  if params.InputFiles.Count=0 then
+  if Params.InputFiles.Count=0 then
   begin
     Messages.DoError(SNoInputFiles);
-    halt(halt_param_err);
+    Halt(HaltParamErr);
   end;
 end;
 
 procedure CheckOutputFile;
-var tmp : string;
+var Tmp : string;
 begin
-  if params.OutputFile<>'' then exit;
-  if params.InputFiles.Count>1 then
+  if Params.OutputFile<>'' then exit;
+  if Params.InputFiles.Count>1 then
   begin
     Messages.DoError(SNoOutputFile);
-    halt(halt_param_err);
+    Halt(HaltParamErr);
   end;
-  tmp:=ChangeFileExt(ExtractFileName(params.InputFiles[0]),
-    ObjFormats[CurrentTarget.objformat].ext);
-  if SameText(tmp,params.InputFiles[0]) then
-    tmp:=tmp+ObjFormats[CurrentTarget.objformat].ext;
-  params.OutputFile:=tmp;
+  Tmp:=ChangeFileExt(ExtractFileName(Params.InputFiles[0]),
+    ObjFormats[CurrentTarget.ObjFormat].Ext);
+  if SameText(Tmp,Params.InputFiles[0]) then
+    Tmp:=Tmp+ObjFormats[CurrentTarget.ObjFormat].Ext;
+  Params.OutputFile:=Tmp;
 end;
 
 procedure ParseParams;
-var msg : string;
+var Msg : string;
 begin
   Messages.DoVerbose('parsing command line parameters');
-  msg:='';
+  Msg:='';
   if ParamCount = 0 then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  params:=TParameters.Create;
+  Params:=TParameters.Create;
   try
-    params.Parse;
+    Params.Parse;
   except
-    on e : EOutputFileAlreadySetException do msg:=SOutputFileAlreadySet;
-    on e : EUnknownParameterException do msg:=Format(SUnknownParameter,[e.Message]);
-    on e : EArgumentMissingException do msg:=Format(SArgumentMissing,[e.Message]);
-    on e : EUnknownObjFormatException do msg:=Format(SUnknownObjFormat,[e.Message]);
-    on e : EUnknownMachineException do msg:=Format(SUnknownMachine,[e.Message]);
-    on e : ECannotReadConfFile do msg:=Format(SCannotReadConfFile,[e.Message]);
+    on E : EOutputFileAlreadySetException do Msg:=SOutputFileAlreadySet;
+    on E : EUnknownParameterException do Msg:=Format(SUnknownParameter,[E.Message]);
+    on E : EArgumentMissingException do Msg:=Format(SArgumentMissing,[E.Message]);
+    on E : EUnknownObjFormatException do Msg:=Format(SUnknownObjFormat,[E.Message]);
+    on E : EUnknownMachineException do Msg:=Format(SUnknownMachine,[E.Message]);
+    on E : ECannotReadConfFile do Msg:=Format(SCannotReadConfFile,[E.Message]);
   end;
-  Messages.Verbose:=params.Verbose;
-  if msg<>'' then
+  Messages.Verbose:=Params.Verbose;
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_param_err);
+    Messages.DoError(Msg);
+    Halt(HaltParamErr);
   end;
-  if params.Version then
+  if Params.Version then
   begin
     ShowVersion;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  if params.Help then
+  if Params.Help then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
 
   CheckTarget;
@@ -211,30 +211,30 @@ begin
 end;
 
 procedure LoadSourceFiles;
-var msg : string;
+var Msg : string;
 begin
-  msg:='';
-  resources:=TResources.Create;
-  sourcefiles:=TSourceFiles.Create;
-  sourcefiles.FileList.AddStrings(params.InputFiles);
-  sourcefiles.RCDefines.AddStrings(params.RCDefines);
-  sourcefiles.RCIncludeDirs.AddStrings(params.RCIncludeDirs);
-  sourcefiles.RCMode:=CurrentTarget.objformat=ofRes;
+  Msg:='';
+  Resources:=TResources.Create;
+  SourceFiles:=TSourceFiles.Create;
+  SourceFiles.FileList.AddStrings(Params.InputFiles);
+  SourceFiles.RCDefines.AddStrings(Params.RCDefines);
+  SourceFiles.RCIncludeDirs.AddStrings(Params.RCIncludeDirs);
+  SourceFiles.RCMode:=CurrentTarget.ObjFormat=ofRes;
   try
-    sourcefiles.Load(resources);
+    SourceFiles.Load(Resources);
   except
-    on e : ECantOpenFileException do msg:=Format(SCantOpenFile,[e.Message]);
-    on e : EUnknownInputFormatException do msg:=Format(SUnknownInputFormat,[e.Message]);
-    on e : Exception do
+    on E : ECantOpenFileException do Msg:=Format(SCantOpenFile,[E.Message]);
+    on E : EUnknownInputFormatException do Msg:=Format(SUnknownInputFormat,[E.Message]);
+    on E : Exception do
     begin
-      if e.Message='' then msg:=e.ClassName
-      else msg:=e.Message;
+      if E.Message='' then Msg:=E.ClassName
+      else Msg:=E.Message;
     end;
   end;
-  if msg<>'' then
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_read_err);
+    Messages.DoError(Msg);
+    Halt(HaltReadErr);
   end;
 end;
 
@@ -243,50 +243,50 @@ begin
   Result:=TResResourceWriter.Create;
 end;
 
-function SetUpElfWriter : TElfResourceWriter;
+function SetUpELFWriter : TElfResourceWriter;
 begin
   Result:=TElfResourceWriter.Create;
-  case CurrentTarget.machine of
+  case CurrentTarget.Machine of
 //    mtnone :
-    mti386 : Result.MachineType:=emti386;
-    mtx86_64 : Result.MachineType:=emtx86_64;
-    mtppc : Result.MachineType:=emtppc;
-    mtppc64 : Result.MachineType:=emtppc64;
-    mtarm : Result.MachineType:=emtarm;
-    mtarmeb : Result.MachineType:=emtarmeb;
-    mtm68k : Result.MachineType:=emtm68k;
-    mtsparc : Result.MachineType:=emtsparc;
-    mtsparc64 : Result.MachineType:=emtsparc64;
-    mtalpha : Result.MachineType:=emtalpha;
-    mtia64 : Result.MachineType:=emtia64;
-    mtmips : Result.MachineType:=emtmips;
-    mtmipsel : Result.MachineType:=emtmipsel;
-    mtppc64le : Result.MachineType:=emtppc64le;
-    mtaarch64 : Result.MachineType:=emtaarch64;
-    mtriscv32 : Result.MachineType:=emtriscv32;
-    mtriscv64 : Result.MachineType:=emtriscv64;
-    mtloongarch64 : Result.MachineType:=emtloongarch64;
+    mtI386 : Result.MachineType:=emti386;
+    mtX8664 : Result.MachineType:=emtx86_64;
+    mtPPC : Result.MachineType:=emtppc;
+    mtPPC64 : Result.MachineType:=emtppc64;
+    mtARM : Result.MachineType:=emtarm;
+    mtARMEB : Result.MachineType:=emtarmeb;
+    mtM68K : Result.MachineType:=emtm68k;
+    mtSPARC : Result.MachineType:=emtsparc;
+    mtSPARC64 : Result.MachineType:=emtsparc64;
+    mtAlpha : Result.MachineType:=emtalpha;
+    mtIA64 : Result.MachineType:=emtia64;
+    mtMIPS : Result.MachineType:=emtmips;
+    mtMIPSEL : Result.MachineType:=emtmipsel;
+    mtPPC64LE : Result.MachineType:=emtppc64le;
+    mtAArch64 : Result.MachineType:=emtaarch64;
+    mtRISCV32 : Result.MachineType:=emtriscv32;
+    mtRISCV64 : Result.MachineType:=emtriscv64;
+    mtLoongArch64 : Result.MachineType:=emtloongarch64;
   end;
 end;
 
-function SetUpCoffWriter : TCoffResourceWriter;
+function SetUpCOFFWriter : TCoffResourceWriter;
 begin
   Result:=TCoffResourceWriter.Create;
-  case CurrentTarget.machine of
+  case CurrentTarget.Machine of
 //    mtnone :
-    mti386 : Result.MachineType:=cmti386;
-    mtarm : Result.MachineType:=cmtarm;
-    mtx86_64 : Result.MachineType:=cmtx8664;
-    mtaarch64 : Result.MachineType:=cmtaarch64;
+    mtI386 : Result.MachineType:=cmti386;
+    mtARM : Result.MachineType:=cmtarm;
+    mtX8664 : Result.MachineType:=cmtx8664;
+    mtAArch64 : Result.MachineType:=cmtaarch64;
   end;
 end;
 
-function SetUpXCoffWriter : TCoffResourceWriter;
+function SetUpXCOFFWriter : TCoffResourceWriter;
 begin
   Result:=TXCoffResourceWriter.Create;
-  case CurrentTarget.machine of
+  case CurrentTarget.Machine of
 //    mtnone :
-    mtppc : Result.MachineType:=cmtppc32aix;
+    mtPPC : Result.MachineType:=cmtppc32aix;
 //    mtppc64 : Result.MachineType:=cmtppc64aix;
   end;
 end;
@@ -300,37 +300,37 @@ var
   MachOSubMachineType: TMachoSubMachineType;
 begin
   Result:=TMachOResourceWriter.Create;
-  case CurrentTarget.machine of
+  case CurrentTarget.Machine of
 //    mtnone :
-    mti386 :
+    mtI386 :
       begin
         Result.MachineType:=mmti386;
-        MachOSubMachineType.f386SubType:=msm386_all;
+        MachOSubMachineType.F386SubType:=msm386_all;
       end;
-    mtx86_64 :
+    mtX8664 :
       begin
         Result.MachineType:=mmtx86_64;
-        MachOSubMachineType.fX64SubType:=msmx64_all;
+        MachOSubMachineType.FX64SubType:=msmx64_all;
       end;
-    mtppc :
+    mtPPC :
       begin
         Result.MachineType:=mmtpowerpc;
-        MachOSubMachineType.fPpcSubType:=msmppc_all;
+        MachOSubMachineType.FPpcSubType:=msmppc_all;
       end;
-    mtppc64 :
+    mtPPC64 :
       begin
         Result.MachineType:=mmtpowerpc64;
-        MachOSubMachineType.fPpc64SubType:=msmppc64_all;
+        MachOSubMachineType.FPpc64SubType:=msmppc64_all;
       end;
-    mtarm :
+    mtARM :
       begin
         Result.MachineType:=mmtarm;
-        MachOSubMachineType.fArmSubType:=ArmSubMachine2MachOSubMachine[CurrentTarget.submachine.subarm];
+        MachOSubMachineType.FArmSubType:=ArmSubMachine2MachOSubMachine[CurrentTarget.SubMachine.SubArm];
       end;
-    mtaarch64 :
+    mtAArch64 :
       begin
         Result.MachineType:=mmtarm64;
-        MachOSubMachineType.fArm64SubType:=msmaarch64_all;
+        MachOSubMachineType.FArm64SubType:=msmaarch64_all;
       end;
   end;
   Result.SubMachineType:=MachOSubMachineType;
@@ -339,54 +339,54 @@ end;
 function SetUpExternalWriter : TExternalResourceWriter;
 begin
   Result:=TExternalResourceWriter.Create;
-  case CurrentTarget.machine of
+  case CurrentTarget.Machine of
 //    mtnone :
-    mtBigEndian : Result.Endianess:=EXT_ENDIAN_BIG;
-    mtLittleEndian : Result.Endianess:=EXT_ENDIAN_LITTLE;
+    mtBigEndian : Result.Endianess:=ExtEndianBig;
+    mtLittleEndian : Result.Endianess:=ExtEndianLittle;
   end;
 end;
 
 procedure WriteOutputFile;
-var aStream : TClosableFileStream;
-    aWriter : TAbstractResourceWriter;
-    msg : string;
+var AStream : TClosableFileStream;
+    AWriter : TAbstractResourceWriter;
+    Msg : string;
 begin
-  Messages.DoVerbose(Format('Trying to create output file %s...',[params.OutputFile]));
+  Messages.DoVerbose(Format('Trying to create output file %s...',[Params.OutputFile]));
   try
-    aStream:=TClosableFileStream.Create(params.OutputFile,fmCreate or fmShareDenyWrite);
+    AStream:=TClosableFileStream.Create(Params.OutputFile,fmCreate or fmShareDenyWrite);
   except
-    Messages.DoError(Format(SCantCreateFile,[params.OutputFile]));
-    halt(halt_write_err);
+    Messages.DoError(Format(SCantCreateFile,[Params.OutputFile]));
+    Halt(HaltWriteErr);
   end;
   try
     Messages.DoVerbose('Setting up resource writer...');
-    case CurrentTarget.objformat of
-      ofRes   : aWriter:=SetUpResWriter;
-      ofElf   : aWriter:=SetUpElfWriter;
-      ofCoff  : aWriter:=SetUpCoffWriter;
-      ofXCoff : aWriter:=SetUpXCoffWriter;
-      ofMachO : aWriter:=SetUpMachOWriter;
-      ofExt   : aWriter:=SetUpExternalWriter;
+    case CurrentTarget.ObjFormat of
+      ofRes   : AWriter:=SetUpResWriter;
+      ofElf   : AWriter:=SetUpELFWriter;
+      ofCoff  : AWriter:=SetUpCOFFWriter;
+      ofXCoff : AWriter:=SetUpXCOFFWriter;
+      ofMachO : AWriter:=SetUpMachOWriter;
+      ofExt   : AWriter:=SetUpExternalWriter;
     end;
     try
-      Messages.DoVerbose(Format('Writing output file %s...',[params.OutputFile]));
+      Messages.DoVerbose(Format('Writing output file %s...',[Params.OutputFile]));
       try
-        resources.WriteToStream(aStream,aWriter);
+        Resources.WriteToStream(AStream,AWriter);
       except
-        on e : Exception do
+        on E : Exception do
         begin
-          if e.Message='' then msg:=e.ClassName
-          else msg:=e.Message;
-          Messages.DoError(msg);
-          halt(halt_write_err);
+          if E.Message='' then Msg:=E.ClassName
+          else Msg:=E.Message;
+          Messages.DoError(Msg);
+          Halt(HaltWriteErr);
         end;
       end;
-      Messages.DoVerbose(Format('Output file %s written',[params.OutputFile]));
+      Messages.DoVerbose(Format('Output file %s written',[Params.OutputFile]));
     finally
-      aWriter.Free;
+      AWriter.Free;
     end;
   finally
-    aStream.Free;
+    AStream.Free;
   end;
 end;
 
@@ -398,17 +398,17 @@ begin
   if Params<>nil then Params.Free;
 end;
 
-var before, elapsed : longint;
+var Before, Elapsed : LongInt;
 
 begin
   try
-    before:=GetCurrentTimeMsec;
+    Before:=GetCurrentTimeMsec;
     ParseParams;
     LoadSourceFiles;
     WriteOutputFile;
-    elapsed:=GetCurrentTimeMsec-before;
-    if elapsed<0 then elapsed:=24*3600*1000 + elapsed;
-    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[elapsed div 1000,(elapsed mod 1000) div 10]));
+    Elapsed:=GetCurrentTimeMsec-Before;
+    if Elapsed<0 then Elapsed:=24*3600*1000 + Elapsed;
+    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[Elapsed div 1000,(Elapsed mod 1000) div 10]));
   finally
     Cleanup;
   end;

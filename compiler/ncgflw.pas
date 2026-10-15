@@ -29,79 +29,79 @@ unit ncgflw;
 interface
 
     uses
-      globtype,
+      GlobType,
       symtype,symdef,
-      aasmbase,aasmdata,
+      aasmbase,AAsmData,
       node,nflw,
       pass_2,cgbase,cgutils,ncgutil,cgexcept;
 
     type
-       tcgwhilerepeatnode = class(twhilerepeatnode)
-          usedregvars: tusedregvars;
+       TCGWhileRepeatNode = class(TWhileRepeatNode)
+          usedregvars: TUsedRegVars;
 
           procedure pass_generate_code;override;
           procedure sync_regvars(checkusedregvars: boolean);
        end;
 
-       tcgifnode = class(tifnode)
+       TCGIfNode = class(TIfNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgfornode = class(tfornode)
+       TCGForNode = class(TForNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgexitnode = class(texitnode)
+       TCGExitNode = class(TExitNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgbreaknode = class(tbreaknode)
+       TCGBreakNode = class(TBreakNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgcontinuenode = class(tcontinuenode)
+       TCGContinueNode = class(TContinueNode)
           procedure pass_generate_code;override;
        end;
 
-       tcggotonode = class(tgotonode)
+       TCGGotoNode = class(TGotoNode)
           procedure pass_generate_code;override;
        end;
 
-       tcglabelnode = class(tlabelnode)
+       TCGLabelNode = class(TLabelNode)
        protected
-          asmlabel : tasmlabel;
+          asmlabel : TAsmLabel;
        public
-          function getasmlabel : tasmlabel; virtual;
+          function getasmlabel : TAsmLabel; virtual;
           procedure pass_generate_code;override;
        end;
 
-       tcgraisenode = class(traisenode)
+       TCGRaiseNode = class(TRaiseNode)
          function pass_1: TNode;override;
 {$ifndef SkipABIEH}
          procedure pass_generate_code;override;
 {$endif SkipABIEH}
        end;
 
-       tcgtryexceptnode = class(ttryexceptnode)
+       TCGTryExceptNode = class(TTryExceptNode)
         protected
           type
-            tframetype = (ft_try,ft_except);
+            TFrameType = (ft_try,ft_except);
 
-          procedure emit_jump_out_of_try_except_frame(list: TasmList; frametype: tframetype; const exceptiontate: tcgexceptionstatehandler.texceptionstate; var excepttemps: tcgexceptionstatehandler.texceptiontemps; framelabel, outerlabel: tasmlabel); virtual;
+          procedure emit_jump_out_of_try_except_frame(list: TAsmList; frametype: TFrameType; const exceptiontate: TCGExceptionStateHandler.TExceptionState; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel, outerlabel: TAsmLabel); virtual;
         public
           procedure pass_generate_code;override;
        end;
 
-       tcgtryfinallynode = class(ttryfinallynode)
+       TCGTryFinallyNode = class(TTryFinallyNode)
         protected
-          procedure emit_jump_out_of_try_finally_frame(list: TasmList; const reason: byte; const finallycodelabel: tasmlabel; var excepttemps: tcgexceptionstatehandler.texceptiontemps; framelabel: tasmlabel);
-          function get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: tcgexceptionstatehandler.texceptionstate): tasmlabel;
+          procedure emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
+          function get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
         public
           procedure handle_safecall_exception;
           procedure pass_generate_code;override;
        end;
 
-       tcgonnode = class(tonnode)
+       TCGOnNode = class(TOnNode)
           procedure pass_generate_code;override;
        end;
 
@@ -109,11 +109,11 @@ interface
 implementation
 
     uses
-      cutils,
-      verbose,globals,systems,
-      symconst,symsym,symtable,aasmtai,aasmcpu,defutil,
-      procinfo,parabase,
-      fmodule,
+      CUtils,
+      Verbose,Globals,Systems,
+      symconst,SymSym,SymTable,aasmtai,aasmcpu,defutil,
+      ProcInfo,parabase,
+      FModule,
       cpubase,
       tgobj,paramgr,
       cgobj,hlcgobj,nutils
@@ -125,9 +125,9 @@ implementation
                          Second_While_RepeatN
 *****************************************************************************}
 
-    procedure tcgwhilerepeatnode.sync_regvars(checkusedregvars: boolean);
+    procedure TCGWhileRepeatNode.sync_regvars(checkusedregvars: boolean);
       begin
-         if (cs_opt_regvar in CurrentSettings.optimizerswitches) and
+         if (cs_opt_regvar in CurrentSettings.OptimizerSwitches) and
             not(pi_has_label in CurrentProcInfo.flags) then
            begin
              if checkusedregvars then
@@ -154,11 +154,11 @@ implementation
       end;
 
 
-    procedure tcgwhilerepeatnode.pass_generate_code;
+    procedure TCGWhileRepeatNode.pass_generate_code;
       var
          lcont,lbreak,lloop,
-         oldclabel,oldblabel : tasmlabel;
-         truelabel,falselabel : tasmlabel;
+         oldclabel,oldblabel : TAsmLabel;
+         truelabel,falselabel : TAsmLabel;
          oldflowcontrol : TFlowControl;
       begin
          location_reset(location,LOC_VOID,OS_NO);
@@ -179,17 +179,17 @@ implementation
          if lnf_testatbegin in loopflags then
            hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,lcont);
 
-         if not(cs_opt_size in CurrentSettings.optimizerswitches) then
+         if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
             { align loop target, as an unconditional jump is done before,
               use jump align which assume that the instructions inserted as alignment are never executed }
-            CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+            CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
 
          hlcg.a_label(CurrentAsmData.CurrAsmList,lloop);
 
          CurrentProcInfo.CurrContinueLabel:=lcont;
          CurrentProcInfo.CurrBreakLabel:=lbreak;
 
-         if assigned(right) then
+         if Assigned(right) then
            SecondPass(right);
 
          hlcg.a_label(CurrentAsmData.CurrAsmList,lcont);
@@ -221,10 +221,10 @@ implementation
                                tcgIFNODE
 *****************************************************************************}
 
-    procedure tcgifnode.pass_generate_code;
+    procedure TCGIfNode.pass_generate_code;
 
       var
-         hl : tasmlabel;
+         hl : TAsmLabel;
          oldflowcontrol: TFlowControl;
 (*
          org_regvar_loaded_other,
@@ -264,7 +264,7 @@ implementation
              org_regvar_loaded_other := rg.regvar_loaded_other;
            end;
 *)
-         if assigned(right) then
+         if Assigned(right) then
            begin
               hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.truelabel);
               SecondPass(right);
@@ -284,9 +284,9 @@ implementation
            end;
 }
 
-         if assigned(t1) then
+         if Assigned(t1) then
            begin
-              if assigned(right) then
+              if Assigned(right) then
                 begin
                    CurrentAsmData.getjumplabel(hl);
                    { do go back to if line !! }
@@ -300,8 +300,8 @@ implementation
 *)
                    ;
                    hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,hl);
-                   if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-                     CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+                   if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+                     CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
                 end;
               hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.falselabel);
               SecondPass(t1);
@@ -316,7 +316,7 @@ implementation
                   current_asmdata.CurrAsmList := TAsmList.create;
                 end;
 *)
-              if assigned(right) then
+              if Assigned(right) then
                 hlcg.a_label(CurrentAsmData.CurrAsmList,hl);
            end
          else
@@ -330,14 +330,14 @@ implementation
                   current_asmdata.CurrAsmList := TAsmList.create;
                 end;
 *)
-              if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-                CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.coalescealign,CurrentSettings.alignment.coalescealignskipmax));
+              if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+                CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.CoalesceAlign,CurrentSettings.alignment.CoalesceAlignSkipMax));
               hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.falselabel);
            end;
-         if not(assigned(right)) then
+         if not(Assigned(right)) then
            begin
-             if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-               CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.coalescealign,CurrentSettings.alignment.coalescealignskipmax));
+             if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.CoalesceAlign,CurrentSettings.alignment.CoalesceAlignSkipMax));
              hlcg.a_label(CurrentAsmData.CurrAsmList,left.location.truelabel);
            end;
 
@@ -386,10 +386,10 @@ implementation
                               SecondFor
 *****************************************************************************}
 
-    procedure tcgfornode.pass_generate_code;
+    procedure TCGForNode.pass_generate_code;
       begin
         { for nodes are converted in pass_1 in a while loop }
-        internalerror(2015082501);
+        InternalError(2015082501);
       end;
 
 
@@ -397,22 +397,22 @@ implementation
                               SecondExitN
 *****************************************************************************}
 
-    procedure tcgexitnode.pass_generate_code;
+    procedure TCGExitNode.pass_generate_code;
       begin
          location_reset(location,LOC_VOID,OS_NO);
 
          if fc_no_direct_exit in flowcontrol then
            include(flowcontrol,fc_gotolabel);
          include(flowcontrol,fc_exit);
-         if assigned(left) then
+         if Assigned(left) then
            SecondPass(left);
 
          if (fc_unwind_exit in flowcontrol) then
            hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel)
          else
            hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrExitLabel);
-         if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-           CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+         if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
        end;
 
 
@@ -420,7 +420,7 @@ implementation
                               SecondBreakN
 *****************************************************************************}
 
-    procedure tcgbreaknode.pass_generate_code;
+    procedure TCGBreakNode.pass_generate_code;
       begin
          location_reset(location,LOC_VOID,OS_NO);
 
@@ -431,8 +431,8 @@ implementation
                hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel)
              else
                hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrBreakLabel);
-             if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-               CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+             if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
            end
          else
            CGMessage(cg_e_break_not_allowed);
@@ -443,7 +443,7 @@ implementation
                               SecondContinueN
 *****************************************************************************}
 
-    procedure tcgcontinuenode.pass_generate_code;
+    procedure TCGContinueNode.pass_generate_code;
       begin
          location_reset(location,LOC_VOID,OS_NO);
 
@@ -454,8 +454,8 @@ implementation
                hlcg.g_local_unwind(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel)
              else
                hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,CurrentProcInfo.CurrContinueLabel);
-             if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-               CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+             if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+               CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
            end
          else
            CGMessage(cg_e_continue_not_allowed);
@@ -466,15 +466,15 @@ implementation
                              SecondGoto
 *****************************************************************************}
 
-    procedure tcggotonode.pass_generate_code;
+    procedure TCGGotoNode.pass_generate_code;
 
        begin
          location_reset(location,LOC_VOID,OS_NO);
 
          include(flowcontrol,fc_gotolabel);
-         hlcg.a_jmp_always_pascal_goto(CurrentAsmData.CurrAsmList,tcglabelnode(labelnode).getasmlabel);
-         if not(cs_opt_size in CurrentSettings.optimizerswitches) then
-           CurrentAsmData.CurrAsmList.concat(cai_align.create_max(CurrentSettings.alignment.jumpalign,CurrentSettings.alignment.jumpalignskipmax));
+         hlcg.a_jmp_always_pascal_goto(CurrentAsmData.CurrAsmList,TCGLabelNode(labelnode).getasmlabel);
+         if not(cs_opt_size in CurrentSettings.OptimizerSwitches) then
+           CurrentAsmData.CurrAsmList.concat(CAIAlign.create_max(CurrentSettings.alignment.JumpAlign,CurrentSettings.alignment.JumpAlignSkipMax));
        end;
 
 
@@ -482,12 +482,12 @@ implementation
                              SecondLabel
 *****************************************************************************}
 
-    function tcglabelnode.getasmlabel : tasmlabel;
+    function TCGLabelNode.getasmlabel : TAsmLabel;
       begin
-        if not(assigned(asmlabel)) then
+        if not(Assigned(asmlabel)) then
           { labsym is not set in inlined procedures, but since assembler }
           { routines can't be inlined, that shouldn't matter             }
-          if assigned(labsym) and
+          if Assigned(labsym) and
              labsym.nonlocal then
             CurrentAsmData.getglobaljumplabel(asmlabel)
           else
@@ -496,7 +496,7 @@ implementation
       end;
 
 
-    procedure tcglabelnode.pass_generate_code;
+    procedure TCGLabelNode.pass_generate_code;
       begin
          location_reset(location,LOC_VOID,OS_NO);
          if not (nf_internal in flags) then
@@ -505,8 +505,8 @@ implementation
 
          { Write also extra label if this label was referenced from
            assembler block }
-         if assigned(labsym) and
-            assigned(labsym.asmblocklabel) then
+         if Assigned(labsym) and
+            Assigned(labsym.asmblocklabel) then
            hlcg.a_label(CurrentAsmData.CurrAsmList,labsym.asmblocklabel);
       end;
 
@@ -516,10 +516,10 @@ implementation
 *****************************************************************************}
 
     var
-       endexceptlabel : tasmlabel;
+       endexceptlabel : TAsmLabel;
 
      { jump out of an try/except block }
-     procedure tcgtryexceptnode.emit_jump_out_of_try_except_frame(list: TasmList; frametype: tframetype; const exceptiontate: tcgexceptionstatehandler.texceptionstate; var excepttemps: tcgexceptionstatehandler.texceptiontemps; framelabel, outerlabel: tasmlabel);
+     procedure TCGTryExceptNode.emit_jump_out_of_try_except_frame(list: TAsmList; frametype: TFrameType; const exceptiontate: TCGExceptionStateHandler.TExceptionState; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel, outerlabel: TAsmLabel);
        begin
           hlcg.a_label(list,framelabel);
           { we must also destroy the address frame which guards
@@ -535,7 +535,7 @@ implementation
        end;
 
 
-    procedure tcgtryexceptnode.pass_generate_code;
+    procedure TCGTryExceptNode.pass_generate_code;
 
       var
          oldendexceptlabel,
@@ -548,10 +548,10 @@ implementation
          breaktrylabel,
          oldCurrExitLabel,
          oldContinueLabel,
-         oldBreakLabel : tasmlabel;
+         oldBreakLabel : TAsmLabel;
          destroytemps,
-         excepttemps : tcgexceptionstatehandler.texceptiontemps;
-         trystate,doobjectdestroyandreraisestate: tcgexceptionstatehandler.texceptionstate;
+         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
+         trystate,doobjectdestroyandreraisestate: TCGExceptionStateHandler.TExceptionState;
          afteronflowcontrol: TFlowControl;
       label
          errorexit;
@@ -561,7 +561,7 @@ implementation
          breaktrylabel:=nil;
          continueexceptlabel:=nil;
          breakexceptlabel:=nil;
-         doobjectdestroyandreraisestate:=Default(tcgexceptionstatehandler.texceptionstate);
+         doobjectdestroyandreraisestate:=Default(TCGExceptionStateHandler.TExceptionState);
 
          { this can be called recursively }
          oldBreakLabel:=nil;
@@ -570,7 +570,7 @@ implementation
 
          { save the old labels for control flow statements }
          oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
-         if assigned(CurrentProcInfo.CurrBreakLabel) then
+         if Assigned(CurrentProcInfo.CurrBreakLabel) then
            begin
               oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
               oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
@@ -579,7 +579,7 @@ implementation
          { get new labels for the control flow statements }
          CurrentAsmData.getjumplabel(exittrylabel);
          CurrentAsmData.getjumplabel(exitexceptlabel);
-         if assigned(CurrentProcInfo.CurrBreakLabel) then
+         if Assigned(CurrentProcInfo.CurrBreakLabel) then
            begin
               CurrentAsmData.getjumplabel(breaktrylabel);
               CurrentAsmData.getjumplabel(continuetrylabel);
@@ -596,7 +596,7 @@ implementation
          { try block }
          { set control flow labels for the try block }
          CurrentProcInfo.CurrExitLabel:=exittrylabel;
-         if assigned(oldBreakLabel) then
+         if Assigned(oldBreakLabel) then
           begin
             CurrentProcInfo.CurrContinueLabel:=continuetrylabel;
             CurrentProcInfo.CurrBreakLabel:=breaktrylabel;
@@ -607,7 +607,7 @@ implementation
            goto errorexit;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
          cexceptionstatehandler.end_try_block(CurrentAsmData.CurrAsmList,tek_except,excepttemps,trystate,endexceptlabel);
 
@@ -615,12 +615,12 @@ implementation
          cexceptionstatehandler.free_exception(CurrentAsmData.CurrAsmList, excepttemps, trystate, 0, endexceptlabel, false);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
          { set control flow labels for the except block }
          { and the on statements                        }
          CurrentProcInfo.CurrExitLabel:=exitexceptlabel;
-         if assigned(oldBreakLabel) then
+         if Assigned(oldBreakLabel) then
           begin
             CurrentProcInfo.CurrContinueLabel:=continueexceptlabel;
             CurrentProcInfo.CurrBreakLabel:=breakexceptlabel;
@@ -628,17 +628,17 @@ implementation
 
          flowcontrol:=[fc_inflowcontrol]+trystate.oldflowcontrol*[fc_catching_exceptions];
          { on statements }
-         if assigned(right) then
+         if Assigned(right) then
            SecondPass(right);
 
          afteronflowcontrol:=flowcontrol;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
          hlcg.a_label(CurrentAsmData.CurrAsmList,lastonlabel);
          { default handling except handling }
-         if assigned(t1) then
+         if Assigned(t1) then
            begin
               { FPC_CATCHES with 'default handler' flag (=-1) need no longer be called,
                 it doesn't change any state and its return value is ignored (Sergei)
@@ -666,7 +666,7 @@ implementation
                    afteronflowcontrol;
 
                  { except block needs line info }
-                 CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+                 CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
                  SecondPass(t1);
 
@@ -712,7 +712,7 @@ implementation
          hlcg.a_label(CurrentAsmData.CurrAsmList,endexceptlabel);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
        errorexit:
          { restore all saved labels }
@@ -720,7 +720,7 @@ implementation
 
          { restore the control flow labels }
          CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-         if assigned(oldBreakLabel) then
+         if Assigned(oldBreakLabel) then
           begin
             CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
             CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
@@ -732,7 +732,7 @@ implementation
       end;
 
 
-    procedure tcgonnode.pass_generate_code;
+    procedure TCGOnNode.pass_generate_code;
       var
          nextonlabel,
          exitonlabel,
@@ -740,12 +740,12 @@ implementation
          breakonlabel,
          oldCurrExitLabel,
          oldContinueLabel,
-         oldBreakLabel : tasmlabel;
-         doobjectdestroyandreraisestate: tcgexceptionstatehandler.texceptionstate;
-         excepttemps : tcgexceptionstatehandler.texceptiontemps;
+         oldBreakLabel : TAsmLabel;
+         doobjectdestroyandreraisestate: TCGExceptionStateHandler.TExceptionState;
+         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
          exceptvarsym : TLocalVarSym;
          exceptlocdef: TDef;
-         exceptlocreg: tregister;
+         exceptlocreg: TRegister;
       begin
          location_reset(location,LOC_VOID,OS_NO);
          oldCurrExitLabel:=nil;
@@ -758,12 +758,12 @@ implementation
          cexceptionstatehandler.begin_catch(CurrentAsmData.CurrAsmList,excepttype,nextonlabel,exceptlocdef,exceptlocreg);
 
          { Retrieve exception variable }
-         if assigned(excepTSymtable) then
+         if Assigned(excepTSymtable) then
            exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
          else
-           internalerror(2011020401);
+           InternalError(2011020401);
 
-         if assigned(exceptvarsym) then
+         if Assigned(exceptvarsym) then
            begin
              location_reset_ref(exceptvarsym.localloc, LOC_REFERENCE, def_cgsize(voidpointertype), voidpointertype.alignment, []);
              tg.GetLocal(CurrentAsmData.CurrAsmList, exceptvarsym.vardef.size, voidpointertype.alignment, 0, exceptvarsym.vardef, exceptvarsym, exceptvarsym.localloc.reference);
@@ -777,12 +777,12 @@ implementation
 
          oldBreakLabel:=nil;
          oldContinueLabel:=nil;
-         if assigned(right) then
+         if Assigned(right) then
            begin
               oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
               CurrentAsmData.getjumplabel(exitonlabel);
               CurrentProcInfo.CurrExitLabel:=exitonlabel;
-              if assigned(CurrentProcInfo.CurrBreakLabel) then
+              if Assigned(CurrentProcInfo.CurrBreakLabel) then
                begin
                  oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
                  oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
@@ -798,7 +798,7 @@ implementation
          cexceptionstatehandler.handle_nested_exception(CurrentAsmData.CurrAsmList,excepttemps,doobjectdestroyandreraisestate);
 
          { clear some stuff }
-         if assigned(exceptvarsym) then
+         if Assigned(exceptvarsym) then
            begin
              tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.localloc.reference);
              exceptvarsym.localloc.loc:=LOC_INVALID;
@@ -806,7 +806,7 @@ implementation
          cexceptionstatehandler.end_catch(CurrentAsmData.CurrAsmList);
          hlcg.a_jmp_always(CurrentAsmData.CurrAsmList,endexceptlabel);
 
-         if assigned(right) then
+         if Assigned(right) then
            begin
               { special handling for control flow instructions }
               if fc_exit in doobjectdestroyandreraisestate.newflowcontrol then
@@ -831,7 +831,7 @@ implementation
                 end;
 
               CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-              if assigned(oldBreakLabel) then
+              if Assigned(oldBreakLabel) then
                begin
                  CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
                  CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
@@ -840,13 +840,13 @@ implementation
 
          cexceptionstatehandler.unget_exception_temps(CurrentAsmData.CurrAsmList,excepttemps);
          hlcg.a_label(CurrentAsmData.CurrAsmList,nextonlabel);
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
          { propagate exit/break/continue }
          flowcontrol:=doobjectdestroyandreraisestate.oldflowcontrol+(doobjectdestroyandreraisestate.newflowcontrol-[fc_inflowcontrol,fc_catching_exceptions]);
 
          { next on node }
-         if assigned(left) then
+         if Assigned(left) then
            SecondPass(left);
       end;
 
@@ -855,7 +855,7 @@ implementation
 *****************************************************************************}
 
     { jump out of a finally block }
-    procedure tcgtryfinallynode.emit_jump_out_of_try_finally_frame(list: TasmList; const reason: byte; const finallycodelabel: tasmlabel; var excepttemps: tcgexceptionstatehandler.texceptiontemps; framelabel: tasmlabel);
+    procedure TCGTryFinallyNode.emit_jump_out_of_try_finally_frame(list: TAsmList; const reason: byte; const finallycodelabel: TAsmLabel; var excepttemps: TCGExceptionStateHandler.TExceptionTemps; framelabel: TAsmLabel);
       begin
          hlcg.a_label(list,framelabel);
          hlcg.g_exception_reason_discard(list,exceptionreasontype,excepttemps.reasonbuf);
@@ -864,15 +864,15 @@ implementation
       end;
 
 
-    function tcgtryfinallynode.get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: tcgexceptionstatehandler.texceptionstate): tasmlabel;
+    function TCGTryFinallyNode.get_jump_out_of_try_finally_frame_label(const finallyexceptionstate: TCGExceptionStateHandler.TExceptionState): TAsmLabel;
       begin
         CurrentAsmData.getjumplabel(result);
       end;
 
 
-    procedure tcgtryfinallynode.handle_safecall_exception;
+    procedure TCGTryFinallyNode.handle_safecall_exception;
       var
-        cgpara, resultpara: tcgpara;
+        cgpara, resultpara: TCGPara;
         selfsym: TParaVarSym;
         pd: TProcDef;
         safecallresult: TLocalVarSym;
@@ -900,7 +900,7 @@ implementation
       end;
 
 
-    procedure tcgtryfinallynode.pass_generate_code;
+    procedure TCGTryFinallyNode.pass_generate_code;
       var
          endfinallylabel,
          exitfinallylabel,
@@ -909,14 +909,14 @@ implementation
          oldCurrExitLabel,
          oldContinueLabel,
          oldBreakLabel,
-         finallyNoExceptionLabel: tasmlabel;
-         finallyexceptionstate: tcgexceptionstatehandler.texceptionstate;
-         excepttemps : tcgexceptionstatehandler.texceptiontemps;
-         reasonreg : tregister;
-         exceptframekind: tcgexceptionstatehandler.texceptframekind;
+         finallyNoExceptionLabel: TAsmLabel;
+         finallyexceptionstate: TCGExceptionStateHandler.TExceptionState;
+         excepttemps : TCGExceptionStateHandler.TExceptionTemps;
+         reasonreg : TRegister;
+         exceptframekind: TCGExceptionStateHandler.TExceptFrameKind;
          tmplist: TAsmList;
 
-        procedure handle_breakcontinueexit(const finallycode: tasmlabel; doreraise: boolean);
+        procedure handle_breakcontinueexit(const finallycode: TAsmLabel; doreraise: boolean);
           begin
             { no exception happened, but maybe break/continue/exit }
             hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,exceptionreasontype,OC_EQ,0,reasonreg,endfinallylabel);
@@ -962,7 +962,7 @@ implementation
          oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
          exitfinallylabel:=get_jump_out_of_try_finally_frame_label(finallyexceptionstate);
          CurrentProcInfo.CurrExitLabel:=exitfinallylabel;
-         if assigned(CurrentProcInfo.CurrBreakLabel) then
+         if Assigned(CurrentProcInfo.CurrBreakLabel) then
           begin
             oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
             oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
@@ -973,7 +973,7 @@ implementation
           end;
 
          { try code }
-         if assigned(left) then
+         if Assigned(left) then
            begin
               SecondPass(left);
               if CodeGenError then
@@ -981,10 +981,10 @@ implementation
            end;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
          cexceptionstatehandler.end_try_block(CurrentAsmData.CurrAsmList,exceptframekind,excepttemps,finallyexceptionstate,finallyexceptionstate.finallycodelabel);
-         if assigned(third) then
+         if Assigned(third) then
            begin
              tmplist:=TAsmList.create;
              { emit the except label already (to a temporary list) to ensure that any calls in the
@@ -996,17 +996,17 @@ implementation
              CurrentAsmData.getjumplabel(finallyNoExceptionLabel);
              hlcg.a_label(CurrentAsmData.CurrAsmList,finallyNoExceptionLabel);
              if not implicitframe then
-               CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+               CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
              SecondPass(third);
              if CodeGenError then
                exit;
              if not implicitframe then
-               CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+               CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
              reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,exceptionreasontype);
              hlcg.g_exception_reason_load(CurrentAsmData.CurrAsmList,exceptionreasontype,exceptionreasontype,excepttemps.reasonbuf,reasonreg);
              handle_breakcontinueexit(finallyNoExceptionLabel,false);
 
-             CurrentAsmData.CurrAsmList.concatList(tmplist);
+             CurrentAsmData.CurrAsmList.ConcatList(tmplist);
              tmplist.free;
              tmplist := nil;
            end
@@ -1017,7 +1017,7 @@ implementation
          cexceptionstatehandler.free_exception(CurrentAsmData.CurrAsmList,excepttemps,finallyexceptionstate,1,finallyexceptionstate.exceptionlabel,true);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
          { finally code (don't unconditionally set fc_inflowcontrol, since the
            finally code is unconditionally executed; we do have to filter out
@@ -1033,13 +1033,13 @@ implementation
            exit;
 
          { don't generate line info for internal cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
          { same level as before try, but this part is only executed if an exception occurred
            -> always fc_in_flowcontrol }
          flowcontrol:=finallyexceptionstate.oldflowcontrol*[fc_catching_exceptions];
          include(flowcontrol,fc_inflowcontrol);
-         if not assigned(third) then
+         if not Assigned(third) then
            begin
              { the value should now be in the exception handler }
              reasonreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,exceptionreasontype);
@@ -1084,10 +1084,10 @@ implementation
          hlcg.a_label(CurrentAsmData.CurrAsmList,endfinallylabel);
 
          { end cleanup }
-         CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+         CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
          CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-         if assigned(CurrentProcInfo.CurrBreakLabel) then
+         if Assigned(CurrentProcInfo.CurrBreakLabel) then
           begin
             CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
             CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
@@ -1096,9 +1096,9 @@ implementation
       end;
 
 
-    function tcgraisenode.pass_1: TNode;
+    function TCGRaiseNode.pass_1: TNode;
       begin
-        if not(tf_use_psabieh in TargetInfo.flags) or assigned(left) then
+        if not(tf_use_psabieh in TargetInfo.flags) or Assigned(left) then
           result:=inherited
         else
           begin
@@ -1109,19 +1109,19 @@ implementation
 
 {$ifndef SkipABIEH}
     { has to be factored out as well }
-    procedure tcgraisenode.pass_generate_code;
+    procedure TCGRaiseNode.pass_generate_code;
       var
         CurrentLandingPad, CurrentAction, ReRaiseLandingPad: TPSABIEHAction;
-        psabiehprocinfo: tpsabiehprocinfo;
+        psabiehprocinfo: TPSABIEHProcInfo;
       begin
         if not(tf_use_psabieh in TargetInfo.flags) then
-          Internalerror(2019021701);
+          InternalError(2019021701);
 
         location_reset(location,LOC_VOID,OS_NO);
         CurrentLandingPad:=nil;
         CurrentAction:=nil;
         ReRaiseLandingPad:=nil;
-        psabiehprocinfo:=CurrentProcInfo as tpsabiehprocinfo;
+        psabiehprocinfo:=CurrentProcInfo as TPSABIEHProcInfo;
         { a reraise must raise the exception to the parent exception frame }
         if fc_catching_exceptions in flowcontrol then
           begin
@@ -1140,7 +1140,7 @@ implementation
               end;
           end;
         hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_reraise',[],nil).resetiftemp;
-        if assigned(CurrentLandingPad) then
+        if Assigned(CurrentLandingPad) then
           begin
             psabiehprocinfo.CreateNewPSABIEHCallsite(CurrentAsmData.CurrAsmList);
             if not(fc_catching_exceptions in flowcontrol) then
@@ -1158,18 +1158,18 @@ implementation
 
 
 begin
-   cwhilerepeatnode:=tcgwhilerepeatnode;
-   cifnode:=tcgifnode;
-   cfornode:=tcgfornode;
-   cexitnode:=tcgexitnode;
-   cbreaknode:=tcgbreaknode;
-   ccontinuenode:=tcgcontinuenode;
-   cgotonode:=tcggotonode;
-   clabelnode:=tcglabelnode;
-   craisenode:=tcgraisenode;
-   ctryexceptnode:=tcgtryexceptnode;
-   ctryfinallynode:=tcgtryfinallynode;
-   connode:=tcgonnode;
-   cexceptionstatehandler:=tcgexceptionstatehandler;
+   CWhileRepeatNode:=TCGWhileRepeatNode;
+   CIfNode:=TCGIfNode;
+   CForNode:=TCGForNode;
+   CExitNode:=TCGExitNode;
+   CBreakNode:=TCGBreakNode;
+   CContinueNode:=TCGContinueNode;
+   CGotoNode:=TCGGotoNode;
+   CLabelNode:=TCGLabelNode;
+   CRaiseNode:=TCGRaiseNode;
+   CTryExceptNode:=TCGTryExceptNode;
+   CTryFinallyNode:=TCGTryFinallyNode;
+   COnNode:=TCGOnNode;
+   cexceptionstatehandler:=TCGExceptionStateHandler;
 end.
 

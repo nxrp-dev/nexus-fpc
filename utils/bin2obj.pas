@@ -1,4 +1,4 @@
-program bin2obj;
+program Bin2Obj;
 {
     This file is part of the Free Pascal run time library.
     Copyright (c) 1999-2000 by Michael Van Canneyt, member of the
@@ -17,7 +17,7 @@ program bin2obj;
 
 {$mode objfpc}
 
-uses classes,getopts, iostream,zstream,idea,sysutils,dos;
+uses Classes,GetOpts, IOStream,ZStream,IDEA,SysUtils,Dos;
 
 var
   ConstName,
@@ -25,10 +25,10 @@ var
   UnitName : String;
   WriteAsciiData,
   CompressData,
-  EnCodeData,
+  EncodeData,
   CompileUnit,
   WriteHex : Boolean;
-  Cryptkey : IDEAcryptKey;
+  CryptKey : IDEACryptKey;
   InStream,
   MemStream,
   CryptStream,
@@ -37,22 +37,22 @@ var
 Procedure Usage;
 
 begin
-  Writeln ('Usage: bin2obj [options] -c constname [infile] ');
-  Writeln ('Where options is a combination of : ');
-  Writeln ('   -a        write asciii data instead of bytes');
-  Writeln ('   -x        write numerical values as hexadecimal numbers');
-  Writeln ('   -z        compress data.');
-  Writeln ('   -e key    encrypt data with key (must have 8 characters)');
-  Writeln ('   -o        output filename');
-  Writeln ('   -u [name] make a unit instead of an include file (unit name is outfile)');
-  Writeln ('   -U [name] same as -u, and compile the unit. (requires outfile)');
+  WriteLn ('Usage: bin2obj [options] -c constname [infile] ');
+  WriteLn ('Where options is a combination of : ');
+  WriteLn ('   -a        write asciii data instead of bytes');
+  WriteLn ('   -x        write numerical values as hexadecimal numbers');
+  WriteLn ('   -z        compress data.');
+  WriteLn ('   -e key    encrypt data with key (must have 8 characters)');
+  WriteLn ('   -o        output filename');
+  WriteLn ('   -u [name] make a unit instead of an include file (unit name is outfile)');
+  WriteLn ('   -U [name] same as -u, and compile the unit. (requires outfile)');
   Halt(1);
 end;
 
 Procedure ProcessCommandLine;
 
 Var C : Char;
-    I : longint;
+    I : LongInt;
     NeedUnitName : Boolean;
 
 begin
@@ -66,11 +66,11 @@ begin
   WriteAsciiData:=False;
   WriteHex:=False;
   Repeat
-    c:=GetOpt('ac:e:o:zhu::U::x');
+    C:=GetOpt('ac:e:o:zhu::U::x');
     Case C of
       'a' : WriteAsciiData:=True;
       'c' : ConstName:=OptArg;
-      'h','?' : usage;
+      'h','?' : Usage;
       'z' : CompressData := True;
       'x' : WriteHex := True;
       'e' : begin
@@ -78,9 +78,9 @@ begin
             If Length(OptArg)<8 then
               Usage;
             For I:=0 to 7 do
-              CryptKey[i]:=Ord(OptArg[I+1]);
+              CryptKey[I]:=Ord(OptArg[I+1]);
             end;
-      'o' : OutFileName:=optArg;
+      'o' : OutFileName:=OptArg;
       'u','U':
             begin
             UnitName:=OptArg;
@@ -92,24 +92,24 @@ begin
     end;
   until C=EndOfOptions;
   if ConstName='' then
-    usage;
+    Usage;
   If NeedUnitName then
     If Length (OutFileName)=0 then
       begin
-      Writeln ('Error : cannot determine unitname from filename');
+      WriteLn ('Error : cannot determine unitname from filename');
       Usage;
       end
     else
       UnitName:=ExtractFileName(OutFileName);
   if CompileUnit and (Length(OutFileName)=0) then
-    usage;
+    Usage;
 end;
 
 Function SetupInput : TStream;
 
 begin
   if OptInd=ParamCount then
-    InStream:=TFileStream.Create(Paramstr(Optind),fmOpenRead)
+    InStream:=TFileStream.Create(ParamStr(OptInd),fmOpenRead)
   else
     InStream:=TIOStream(iosInput);
   Result:=InStream;
@@ -117,19 +117,19 @@ end;
 
 Function SetupOutput : TStream;
 
-Var Key : ideaKey;
+Var Key : IDEAKey;
 
 begin
   MemStream:=TMemoryStream.Create;
   Result:=MemStream;
-  If ComPressData then
+  If CompressData then
     begin
-    CompStream:=TCompressionStream.Create(cldefault,Result);
+    CompStream:=TCompressionStream.Create(clDefault,Result);
     Result:=CompStream;
     end;
   if EncodeData Then
     begin
-    EnKeyIdea(CryptKey,Key);
+    EnKeyIDEA(CryptKey,Key);
     CryptStream:=TIDEAEncryptStream.Create(Key,Result);
     Result:=CryptStream;
     end;
@@ -139,8 +139,8 @@ Procedure CopyStreams (Ins,Outs : TStream);
 
 Const BufSize = 1024;
 
-Var Buffer : Array[1..BufSize] of byte;
-    Count : longint;
+Var Buffer : Array[1..BufSize] of Byte;
+    Count : LongInt;
 
 begin
   repeat
@@ -184,8 +184,8 @@ Var OutStream : TStream;
 Const Prefix = '     ';
       MaxLineLength = 72;
 
-Var I,Count  : longint;
-    b    : byte;
+Var I,Count  : LongInt;
+    B    : Byte;
     Line,ToAdd : String;
 
 begin
@@ -204,7 +204,7 @@ begin
   WriteStrLn('Const');
   MemStream.Seek(0,soFromBeginning);
   Count:=MemStream.Size;
-  If WriteAsciidata then
+  If WriteAsciiData then
     WriteStrLn(Format('  %s : Array[0..%d] of char = (',[ConstName,Count-1]))
   else
     WriteStrLn(Format('  %s : Array[0..%d] of byte = (',[ConstName,Count-1]));
@@ -215,13 +215,13 @@ begin
     If Not WriteAsciiData then
        begin
          if WriteHex then
-           ToAdd:=Format('$%2.2x',[b])
+           ToAdd:=Format('$%2.2x',[B])
          else
-           ToAdd:=Format('%3d',[b]);
+           ToAdd:=Format('%3d',[B]);
        end
     else
       If (B in [32..127]) and not (B in [10,13,39]) then
-        ToAdd:=''''+Chr(b)+''''
+        ToAdd:=''''+Chr(B)+''''
       else
 //        ToAdd:=Format('''%s''',[Chr(b)]);
         begin
@@ -236,30 +236,30 @@ begin
     If Length(Line)>=MaxLineLength Then
       begin
       WriteStrLn(Line);
-      Line:=PreFix;
+      Line:=Prefix;
       end;
     end;
-  WriteStrln(Line+');');
+  WriteStrLn(Line+');');
   If Length(UnitName)<>0 then
     begin
     WriteStrLn('');
     WriteStrLn('Implementation');
-    WriteStrln('');
+    WriteStrLn('');
     WriteStrLn('end.')
     end;
   MemStream.Free;
 end;
 
-Procedure CompileTheUNit;
+Procedure CompileTheUnit;
 
 begin
   Exec('ppc386',' -Un '+UnitName);
 end;
 
 begin
-  ProcessCommandline;
-  CopyStreams(SetupInput,SetupOutPut);
+  ProcessCommandLine;
+  CopyStreams(SetupInput,SetupOutput);
   WriteMemStream;
-  If CompileUNit then
+  If CompileUnit then
     CompileTheUnit;
 end.

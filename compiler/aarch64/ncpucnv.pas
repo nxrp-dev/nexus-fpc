@@ -28,7 +28,7 @@ interface
       node,ncnv,ncgcnv;
 
     type
-      taarch64typeconvnode = class(TCgTypeConvNode)
+      TAArch64TypeConvNode = class(TCGTypeConvNode)
         protected
          function typecheck_int_to_real: TNode; override;
          function first_int_to_real: TNode; override;
@@ -57,10 +57,10 @@ interface
 implementation
 
   uses
-    verbose,globals,
-    symdef,aasmdata,aasmbase,
+    Verbose,Globals,
+    symdef,AAsmData,aasmbase,
     defutil,
-    cgbase,cgutils,procinfo,
+    cgbase,cgutils,ProcInfo,
     cpubase,aasmcpu,
     pass_2,cgobj,
     hlcgobj;
@@ -70,7 +70,7 @@ implementation
                              FirstTypeConv
 *****************************************************************************}
 
-  function taarch64typeconvnode.typecheck_int_to_real: TNode;
+  function TAArch64TypeConvNode.typecheck_int_to_real: TNode;
     begin
       { aarch64 supports converting everything to floating point, even fixed
         point! Unfortunately, it only supports fixed point with a power-of-2
@@ -83,10 +83,10 @@ implementation
         begin
           { convert the equivalent int64 value to double without conversion
             (internal typecast -> will set nf_is_currency flag) }
-          result:=ctypeconvnode.create_internal(left,s64floattype);
+          result:=CTypeConvNode.create_internal(left,s64floattype);
           { turn into currency with conversion, which will divide by 10000
             (regular typecast) }
-          result:=ctypeconvnode.create(result,s64currencytype);
+          result:=CTypeConvNode.create(result,s64currencytype);
           exit;
         end;
       { The only other thing we have to take care of: convert values < 32 bit
@@ -102,7 +102,7 @@ implementation
     end;
 
 
-  function taarch64typeconvnode.first_int_to_real: TNode;
+  function TAArch64TypeConvNode.first_int_to_real: TNode;
     begin
       result:=nil;
       expectloc:=LOC_MMREGISTER;
@@ -113,15 +113,15 @@ implementation
                              SecondTypeConv
 *****************************************************************************}
 
-  procedure taarch64typeconvnode.second_int_to_real;
+  procedure TAArch64TypeConvNode.second_int_to_real;
     var
-      op: tasmop;
+      op: TAsmOp;
     begin
       location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
       location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
       hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
       if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-        internalerror(2014120401);
+        InternalError(2014120401);
       case left.location.size of
         OS_32,
         OS_64:
@@ -132,16 +132,16 @@ implementation
         OS_F64:
           op:=A_SCVTF;
         else
-          internalerror(2014120402);
+          InternalError(2014120402);
       end;
-      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,location.register,left.location.register));
+      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,location.register,left.location.register));
       { no scaling for currency, that's handled in pass_typecheck }
     end;
 
 
-  procedure taarch64typeconvnode.second_int_to_bool;
+  procedure TAArch64TypeConvNode.second_int_to_bool;
     var
-      resflags: tresflags;
+      resflags: TResFlags;
     begin
       if (nf_explicit in flags) and
          not(left.expectloc in [LOC_FLAGS,LOC_JUMP]) then
@@ -169,20 +169,20 @@ implementation
         LOC_JUMP:
           begin
              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-             CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,left.location.register,0));
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,left.location.register,0));
              resflags:=F_NE;
           end;
         LOC_FLAGS :
           resflags:=left.location.resflags;
         else
-          internalerror(2014122902);
+          InternalError(2014122902);
       end;
       { load flags to register }
       location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
       location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
       if is_cbool(resultdef) then
         begin
-          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_cond(A_CSETM,location.register,flags_to_cond(resflags)));
+          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_cond(A_CSETM,location.register,flags_to_cond(resflags)));
             { truncate? (in case cbools are ever made unsigned) }
             if resultdef.size<4 then
               cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_32,location.size,location.register,location.register);
@@ -194,5 +194,5 @@ implementation
 
 
 begin
-   ctypeconvnode:=taarch64typeconvnode;
+   CTypeConvNode:=TAArch64TypeConvNode;
 end.

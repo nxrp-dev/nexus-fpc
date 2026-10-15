@@ -29,7 +29,7 @@ interface
        node,nadd,cpubase,nx86add;
 
     type
-       ti386addnode = class(tx86addnode)
+       TI386AddNode = class(TX86AddNode)
          function use_generic_mul32to64: boolean; override;
          function use_generic_mul64bit: boolean; override;
          procedure second_addordinal; override;
@@ -44,13 +44,13 @@ interface
   implementation
 
     uses
-      globtype,systems,
-      cutils,verbose,globals,
+      GlobType,Systems,
+      CUtils,Verbose,Globals,
       symconst,symdef,paramgr,defutil,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
-      cgbase,procinfo,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
+      cgbase,ProcInfo,
       ncon,nset,cgutils,tgobj,
-      cpuinfo,
+      CPUInfo,
       cga,ncgutil,cgobj,cg64f32,cgx86,
       hlcgobj;
 
@@ -58,20 +58,20 @@ interface
                                 use_generic_mul32to64
 *****************************************************************************}
 
-    function ti386addnode.use_generic_mul32to64: boolean;
+    function TI386AddNode.use_generic_mul32to64: boolean;
     begin
       result := False;
     end;
 
-    function ti386addnode.use_generic_mul64bit: boolean;
+    function TI386AddNode.use_generic_mul64bit: boolean;
     begin
       result:=needoverflowcheck or
-        (cs_opt_size in CurrentSettings.optimizerswitches);
+        (cs_opt_size in CurrentSettings.OptimizerSwitches);
     end;
 
     { handles all unsigned multiplications, and 32->64 bit signed ones.
       32bit-only signed mul is handled by generic codegen }
-    procedure ti386addnode.second_addordinal;
+    procedure TI386AddNode.second_addordinal;
     var
       unsigned: boolean;
     begin
@@ -92,17 +92,17 @@ interface
                                 Add64bit
 *****************************************************************************}
 
-    procedure ti386addnode.second_add64bit;
+    procedure TI386AddNode.second_add64bit;
       var
         op         : TOpCG;
         op1,op2    : TAsmOp;
         opsize     : TOpSize;
         hregister,
-        hregister2 : tregister;
-        hl4        : tasmlabel;
+        hregister2 : TRegister;
+        hl4        : TAsmLabel;
         mboverflow,
         unsigned:boolean;
-        r:Tregister;
+        r:TRegister;
       begin
         pass_left_right;
 
@@ -141,7 +141,7 @@ interface
           else
             begin
               { everything should be handled in pass_1 (JM) }
-              internalerror(2001090505);
+              InternalError(2001090505);
             end;
         end;
 
@@ -242,12 +242,12 @@ interface
       end;
 
 
-    procedure ti386addnode.second_cmp64bit;
+    procedure TI386AddNode.second_cmp64bit;
       var
         truelabel,
         falselabel,
-        hlab       : tasmlabel;
-        href       : treference;
+        hlab       : TAsmLabel;
+        href       : TReference;
         unsigned   : boolean;
 
       procedure firstjmp64bitcmp;
@@ -291,7 +291,7 @@ interface
               unequaln:
                 cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NE,location.truelabel);
               else
-                internalerror(2019050905);
+                InternalError(2019050905);
            end;
         end;
 
@@ -318,7 +318,7 @@ interface
                    cg.a_jmp_always(CurrentAsmData.CurrAsmList,location.falselabel);
                 end;
               else
-                internalerror(2019050904);
+                InternalError(2019050904);
            end;
         end;
 
@@ -354,14 +354,14 @@ interface
         if (right.location.loc=LOC_CONSTANT) and
            (left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
           begin
-            tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
+            TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
             href:=left.location.reference;
             inc(href.offset,4);
             cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             emit_const_ref(A_CMP,S_L,aint(hi(right.location.value64)),href);
             firstjmp64bitcmp;
             cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-            if assigned(hlab) then
+            if Assigned(hlab) then
               cg.a_jmp_always(CurrentAsmData.CurrAsmList,hlab)
             else
               begin
@@ -402,7 +402,7 @@ interface
           LOC_CREFERENCE,
           LOC_REFERENCE :
             begin
-              tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
               href:=right.location.reference;
               inc(href.offset,4);
               cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
@@ -416,21 +416,21 @@ interface
           LOC_CONSTANT :
             begin
               cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_CMP,S_L,aint(hi(right.location.value64)),left.location.register64.reghi));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(hi(right.location.value64)),left.location.register64.reghi));
               firstjmp64bitcmp;
               cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-              if assigned(hlab) then
+              if Assigned(hlab) then
                 cg.a_jmp_always(CurrentAsmData.CurrAsmList,hlab)
               else
                 begin
                   cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_CMP,S_L,aint(lo(right.location.value64)),left.location.register64.reglo));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,S_L,aint(lo(right.location.value64)),left.location.register64.reglo));
                   secondjmp64bitcmp;
                   cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                 end;
             end;
         else
-          internalerror(2002032803);
+          InternalError(2002032803);
         end;
 
       end;
@@ -440,7 +440,7 @@ interface
                                 x86 MUL
 *****************************************************************************}
 
-    procedure ti386addnode.set_mul_result_location;
+    procedure TI386AddNode.set_mul_result_location;
     begin
       location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
       {Free EAX,EDX}
@@ -466,20 +466,20 @@ interface
     end;
 
 
-    procedure ti386addnode.second_mul(unsigned: boolean);
+    procedure TI386AddNode.second_mul(unsigned: boolean);
 
-    var reg,reghi,reglo:Tregister;
-        ref:Treference;
+    var reg,reghi,reglo:TRegister;
+        ref:TReference;
         use_ref:boolean;
-        hl4 : tasmlabel;
+        hl4 : TAsmLabel;
 
     const
-      asmops: array[boolean] of tasmop = (A_IMUL, A_MUL);
+      asmops: array[boolean] of TAsmOp = (A_IMUL, A_MUL);
 
     begin
       pass_left_right;
       reg:=NR_NO;
-      reference_reset(ref,sizeof(pint),[]);
+      reference_reset(ref,sizeof(PInt),[]);
 
       { Mul supports registers and references, so if not register/reference,
         load the location into a register.
@@ -489,7 +489,7 @@ interface
         reg:=left.location.register
       else if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
         begin
-          tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
+          TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
           ref:=left.location.reference;
           use_ref:=true;
         end
@@ -500,7 +500,7 @@ interface
           hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,left.resultdef,osuinttype,left.location,reg);
         end;
 
-      if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and
+      if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
         (not(needoverflowcheck) or
         { 32->64 bit cannot overflow }
         is_64bit(resultdef)) then
@@ -510,7 +510,7 @@ interface
           reglo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
           reghi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
           if use_ref then
-            CurrentAsmData.CurrAsmList.concat(Taicpu.Op_ref_reg_reg(A_MULX,S_L,ref,reglo,reghi))
+            CurrentAsmData.CurrAsmList.concat(TAICPU.Op_ref_reg_reg(A_MULX,S_L,ref,reglo,reghi))
           else
             emit_reg_reg_reg(A_MULX,S_L,reg,reglo,reghi);
           cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EDX);
@@ -555,10 +555,10 @@ interface
     end;
 
 
-    procedure ti386addnode.second_mul64bit;
+    procedure TI386AddNode.second_mul64bit;
     var
       list: TAsmList;
-      hreg1,hreg2: tregister;
+      hreg1,hreg2: TRegister;
     begin
       { 64x64 multiplication yields 128-bit result, but we're only
         interested in its lower 64 bits. This lower part is independent
@@ -566,9 +566,9 @@ interface
       { pass_left_right already called from second_add64bit }
       list:=CurrentAsmData.CurrAsmList;
       if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-        tcgx86(cg).make_simple_ref(list,left.location.reference);
+        TCGX86(cg).make_simple_ref(list,left.location.reference);
       if right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-        tcgx86(cg).make_simple_ref(list,right.location.reference);
+        TCGX86(cg).make_simple_ref(list,right.location.reference);
 
       { calculate 32-bit terms lo(right)*hi(left) and hi(left)*lo(right) }
       if (right.location.loc=LOC_CONSTANT) then
@@ -598,17 +598,17 @@ interface
             LOC_REGISTER,LOC_CREGISTER:
               begin
                 if hreg1<>NR_NO then
-                  emit_const_reg_reg(A_IMUL,S_L,longint(lo(right.location.value64)),left.location.register64.reghi,hreg1);
+                  emit_const_reg_reg(A_IMUL,S_L,LongInt(lo(right.location.value64)),left.location.register64.reghi,hreg1);
                 if hreg2<>NR_NO then
-                  emit_const_reg_reg(A_IMUL,S_L,longint(hi(right.location.value64)),left.location.register64.reglo,hreg2);
+                  emit_const_reg_reg(A_IMUL,S_L,LongInt(hi(right.location.value64)),left.location.register64.reglo,hreg2);
               end;
             LOC_REFERENCE,LOC_CREFERENCE:
               begin
                 if hreg2<>NR_NO then
-                  list.concat(taicpu.op_const_ref_reg(A_IMUL,S_L,longint(hi(right.location.value64)),left.location.reference,hreg2));
+                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(hi(right.location.value64)),left.location.reference,hreg2));
                 inc(left.location.reference.offset,4);
                 if hreg1<>NR_NO then
-                  list.concat(taicpu.op_const_ref_reg(A_IMUL,S_L,longint(lo(right.location.value64)),left.location.reference,hreg1));
+                  list.concat(TAICPU.op_const_ref_reg(A_IMUL,S_L,LongInt(lo(right.location.value64)),left.location.reference,hreg1));
                 dec(left.location.reference.offset,4);
               end;
           else
@@ -668,5 +668,5 @@ interface
 
 
 begin
-   caddnode:=ti386addnode;
+   CAddNode:=TI386AddNode;
 end.

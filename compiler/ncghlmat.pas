@@ -31,7 +31,7 @@ uses
 
 type
 
-  tcghlnotnode = class(tcgnotnode)
+  TCGHLNotNode = class(TCGNotNode)
     function pass_1: TNode; override;
    protected
     procedure second_boolean; override;
@@ -40,25 +40,25 @@ type
 implementation
 
 uses
-  aasmbase,aasmdata,
+  aasmbase,AAsmData,
   defutil,
-  procinfo,
+  ProcInfo,
   cgbase,cgutils,pass_2,hlcgobj;
 
 {*****************************************************************************
                                tcghlnotnode
 *****************************************************************************}
 
-function tcghlnotnode.pass_1: TNode;
+function TCGHLNotNode.pass_1: TNode;
   begin
     result:=inherited;
-    if not assigned(result) and
+    if not Assigned(result) and
        is_boolean(resultdef) then
       expectloc:=LOC_JUMP;
   end;
 
 
-procedure tcghlnotnode.second_boolean;
+procedure TCGHLNotNode.second_boolean;
   begin
     SecondPass(left);
     hlcg.maketojumpbool(CurrentAsmData.CurrAsmList,left);

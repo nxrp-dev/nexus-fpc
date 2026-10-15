@@ -5,7 +5,7 @@ program tcpstr13;
 {$mode delphi}
 
 uses
-  unicodeducet, fpwidestring, cp866;
+  unicodeducet, fpwidestring, CP866;
 
 type
   ts866 = type ansistring(866);

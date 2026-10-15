@@ -33,10 +33,10 @@ unit cpubase;
   interface
 
     uses
-      tpcompilerreal,
-      cutils,cclasses,
-      globtype,globals,
-      cpuinfo,
+      TPCompilerReal,
+      CUtils,CClasses,
+      GlobType,Globals,
+      CPUInfo,
       aasmbase,
       cgbase
       ;
@@ -50,13 +50,13 @@ unit cpubase;
       TAsmOp= {$i a64op.inc}
 
       { This should define the array of instructions as string }
-      op2strtable=array[tasmop] of string[11];
+      TOp2StrTable=array[TAsmOp] of string[11];
 
     const
       { First value of opcode enumeration }
-      firstop = low(tasmop);
+      firstop = low(TAsmOp);
       { Last value of opcode enumeration  }
-      lastop  = high(tasmop);
+      lastop  = high(TAsmOp);
       { Last value of opcode for TCommonAsmOps set below  }
       LastCommonAsmOp = A_MOV;
 
@@ -71,7 +71,7 @@ unit cpubase;
 
     type
       { Number of registers used for indexing in tables }
-      tregisterindex=0..{$i ra64nor.inc}-1;
+      TRegisterIndex=0..{$i ra64nor.inc}-1;
 
     const
       { Available Superregisters }
@@ -116,15 +116,15 @@ unit cpubase;
       { TODO: Calculate bsstart}
       regnumber_count_bsstart = 512;
 
-      regnumber_table : array[tregisterindex] of tregister = (
+      regnumber_table : array[TRegisterIndex] of TRegister = (
         {$i ra64num.inc}
       );
 
-      regstabs_table : array[tregisterindex] of shortint = (
+      regstabs_table : array[TRegisterIndex] of shortint = (
         {$i ra64sta.inc}
       );
 
-      regdwarf_table : array[tregisterindex] of shortint = (
+      regdwarf_table : array[TRegisterIndex] of shortint = (
         {$i ra64dwa.inc}
       );
       { registers which may be destroyed by calls }
@@ -149,7 +149,7 @@ unit cpubase;
       TOpPostfixes = set of TOpPostfix;
 
     const
-      tcgsizep2size: array[tcgsize] of byte =
+      tcgsizep2size: array[TCgSize] of byte =
         {OS_NO }
         (0,
         {OS_8,OS_16,OS_32,OS_64,OS_128,OS_S8,OS_S16,OS_S32,OS_S64,OS_S128}
@@ -206,9 +206,9 @@ unit cpubase;
 *****************************************************************************}
 
     type
-      taddressmode = (AM_OFFSET,AM_PREINDEXED,AM_POSTINDEXED);
+      TAddressMode = (AM_OFFSET,AM_PREINDEXED,AM_POSTINDEXED);
 
-      tshiftmode = (SM_None,
+      TShiftMode = (SM_None,
                     { shifted register instructions. LSL can also be used for
                       the index register of certain loads/stores }
                     SM_LSL,SM_LSR,SM_ASR,SM_ROR,
@@ -220,12 +220,12 @@ unit cpubase;
                     }
                     SM_UXTB,SM_UXTH,SM_UXTW,SM_UXTX,SM_SXTB,SM_SXTH,SM_SXTW,SM_SXTX);
 
-      tupdatereg = (UR_None,UR_Update);
+      TUpdateReg = (UR_None,UR_Update);
 
-      pshifterop = ^tshifterop;
+      PShifterOp = ^TShifterOp;
 
-      tshifterop = record
-        shiftmode : tshiftmode;
+      TShifterOp = record
+        shiftmode : TShiftMode;
         shiftimm : byte;
       end;
 
@@ -250,7 +250,7 @@ unit cpubase;
 *****************************************************************************}
 
     type
-      topsize = (S_NO,
+      TOpSize = (S_NO,
         S_B,S_W,S_L,S_BW,S_BL,S_WL,
         S_IS,S_IL,S_IQ,
         S_FS,S_FL,S_FX,S_D,S_Q,S_FV,S_FXX
@@ -322,15 +322,15 @@ unit cpubase;
 *****************************************************************************}
 
     { Returns the tcgsize corresponding with the size of reg.}
-    function reg_cgsize(const reg: tregister) : tcgsize;
-    function cgsize2subreg(regtype: tregistertype; s:Tcgsize):Tsubregister;
-    function is_calljmp(o:tasmop):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
-    function is_calljmpmaybeuncondret(o:tasmop):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function reg_cgsize(const reg: TRegister) : TCgSize;
+    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function is_calljmp(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function is_calljmpmaybeuncondret(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
     procedure inverse_flags(var f: TResFlags);
     function flags_to_cond(const f: TResFlags) : TAsmCond;
-    function findreg_by_number(r:Tregister):tregisterindex;
-    function std_regnum_search(const s:string):Tregister;
-    function std_regname(r:Tregister):string;
+    function findreg_by_number(r:TRegister):TRegisterIndex;
+    function std_regnum_search(const s:string):TRegister;
+    function std_regname(r:TRegister):string;
 
     function inverse_cond(const c: TAsmCond): TAsmCond; {$ifdef USEINLINE}inline;{$endif USEINLINE}
     function conditions_equal(const c1, c2: TAsmCond): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
@@ -338,36 +338,36 @@ unit cpubase;
     { Checks if Subset is a subset of c (e.g. "less than" is a subset of "less than or equal" }
     function condition_in(const Subset, c: TAsmCond): Boolean;
 
-    procedure shifterop_reset(var so : tshifterop); {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    procedure shifterop_reset(var so : TShifterOp); {$ifdef USEINLINE}inline;{$endif USEINLINE}
 
-    function dwarf_reg(r:tregister):shortint;
-    function dwarf_reg_no_error(r:tregister):shortint;
-    function eh_return_data_regno(nr: longint): longint;
+    function dwarf_reg(r:TRegister):shortint;
+    function dwarf_reg_no_error(r:TRegister):shortint;
+    function eh_return_data_regno(nr: LongInt): LongInt;
 
-    function is_shifter_const(d: aint; size: tcgsize): boolean;
-    function IsFloatImmediate(ft : TFloatType;value : bestreal) : boolean;
+    function is_shifter_const(d: aint; size: TCgSize): boolean;
+    function IsFloatImmediate(ft : TFloatType;value : BestReal) : boolean;
 
 
   implementation
 
     uses
-      systems,rgBase,verbose;
+      Systems,rgBase,Verbose;
 
     const
       std_regname_table : TRegNameTable = (
         {$i ra64std.inc}
       );
 
-      regnumber_index : array[tregisterindex] of tregisterindex = (
+      regnumber_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i ra64rni.inc}
       );
 
-      std_regname_index : array[tregisterindex] of tregisterindex = (
+      std_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i ra64sri.inc}
       );
 
 
-    function cgsize2subreg(regtype: tregistertype; s:Tcgsize):Tsubregister;
+    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
       begin
         case regtype of
           R_INTREGISTER:
@@ -392,7 +392,7 @@ unit cpubase;
                 OS_F64:
                   cgsize2subreg:=R_SUBMMD;
                 else
-                  internalerror(2009112701);
+                  InternalError(2009112701);
               end;
             end;
           else
@@ -401,7 +401,7 @@ unit cpubase;
       end;
 
 
-    function reg_cgsize(const reg: tregister): tcgsize;
+    function reg_cgsize(const reg: TRegister): TCgSize;
       begin
         case getregtype(reg) of
           R_INTREGISTER:
@@ -438,22 +438,22 @@ unit cpubase;
                 R_SUBMMWHOLE:
                   result:=OS_M128;
                 else
-                  internalerror(2009112903);
+                  InternalError(2009112903);
               end;
             end;
           else
-            internalerror(200303181);
+            InternalError(200303181);
           end;
         end;
 
 
-    function is_calljmp(o:tasmop):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function is_calljmp(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         is_calljmp:=o in [A_B,A_BL,A_BLR,A_RET,A_CBNZ,A_CBZ,A_TBNZ,A_TBZ];
       end;
 
 
-    function is_calljmpmaybeuncondret(o:tasmop):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function is_calljmpmaybeuncondret(o:TAsmOp):boolean;{$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         { Note that the caller still has to check the instruction's condition }
         is_calljmpmaybeuncondret:=(o in [A_B,A_BL,A_BLR,A_RET]);
@@ -477,26 +477,26 @@ unit cpubase;
            C_GE,C_LT,C_GT,C_LE);
       begin
         if f>high(flag_2_cond) then
-          internalerror(200112301);
+          InternalError(200112301);
         result:=flag_2_cond[f];
       end;
 
 
-    function findreg_by_number(r:Tregister):tregisterindex;
+    function findreg_by_number(r:TRegister):TRegisterIndex;
       begin
         result:=rgBase.findreg_by_number_table(r,regnumber_index);
       end;
 
 
-    function std_regnum_search(const s:string):Tregister;
+    function std_regnum_search(const s:string):TRegister;
       begin
         result:=regnumber_table[findreg_by_name_table(s,std_regname_table,std_regname_index)];
       end;
 
 
-    function std_regname(r:Tregister):string;
+    function std_regname(r:TRegister):string;
       var
-        p : tregisterindex;
+        p : TRegisterIndex;
       begin
         p:=findreg_by_number_table(r,regnumber_index);
         if p<>0 then
@@ -506,7 +506,7 @@ unit cpubase;
       end;
 
 
-    procedure shifterop_reset(var so : tshifterop);{$ifdef USEINLINE}inline;{$endif USEINLINE}
+    procedure shifterop_reset(var so : TShifterOp);{$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         FillChar(so,sizeof(so),0);
       end;
@@ -549,23 +549,23 @@ unit cpubase;
       end;
 
 
-    function dwarf_reg(r:tregister):shortint;
+    function dwarf_reg(r:TRegister):shortint;
       begin
         result:=regdwarf_table[findreg_by_number(r)];
         if result=-1 then
-          internalerror(200603251);
+          InternalError(200603251);
       end;
 
-    function dwarf_reg_no_error(r:tregister):shortint;
+    function dwarf_reg_no_error(r:TRegister):shortint;
       begin
         result:=regdwarf_table[findreg_by_number(r)];
       end;
 
-    function is_shifter_const(d: aint; size: tcgsize): boolean;
+    function is_shifter_const(d: aint; size: TCgSize): boolean;
       var
          pattern, checkpattern: qword;
-         patternlen, maxbits, replicatedlen: longint;
-         rightmostone, rightmostzero, checkbit, secondrightmostbit: longint;
+         patternlen, maxbits, replicatedlen: LongInt;
+         rightmostone, rightmostzero, checkbit, secondrightmostbit: LongInt;
       begin
         result:=false;
         { patterns with all bits 0 or 1 cannot be represented this way }
@@ -581,7 +581,7 @@ unit cpubase;
             end
           else
             begin
-              if longint(d)=-1 then
+              if LongInt(d)=-1 then
                 exit;
               { we'll generate a 32 bit pattern -> ignore upper sign bits in
                 case of negative longint value }
@@ -670,7 +670,7 @@ unit cpubase;
       end;
 
 
-  function eh_return_data_regno(nr: longint): longint;
+  function eh_return_data_regno(nr: LongInt): LongInt;
     begin
       if (nr>=0) and (nr<2) then
         result:=nr
@@ -679,21 +679,21 @@ unit cpubase;
     end;
 
 
-  function IsFloatImmediate(ft : TFloatType;value : bestreal) : boolean;
+  function IsFloatImmediate(ft : TFloatType;value : BestReal) : boolean;
     var
       singlerec : TCompSingleRec;
       doublerec : TCompDoubleRec;
     begin
       Result:=false;
       case ft of
-        s32real:
+        S32Real:
           begin
             singlerec.value:=Single(value);
             singlerec:=TCompSingleRec(NtoLE(DWord(singlerec)));
             Result:=(singlerec.bytes[0]=0) and (singlerec.bytes[1]=0) and ((singlerec.bytes[2] and 7)=0)  and
               (((singlerec.bytes[3] and $7e)=$40) or ((singlerec.bytes[3] and $7e)=$3e));
           end;
-        s64real:
+        S64Real:
           begin
             doublerec.value:=Double(value);
             doublerec:=TCompDoubleRec(NtoLE(QWord(doublerec)));

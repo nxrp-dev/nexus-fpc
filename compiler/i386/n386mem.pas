@@ -26,29 +26,29 @@ unit n386mem;
 interface
 
     uses
-      globtype,
-      cgbase,cpuinfo,cpubase,
+      GlobType,
+      cgbase,CPUInfo,cpubase,
       node,nmem,ncgmem,nx86mem,ni86mem;
 
     type
-       ti386addrnode = class(ti86addrnode)
+       TI386AddrNode = class(TI86AddrNode)
          protected
           procedure set_absvarsym_resultdef; override;
          public
           procedure pass_generate_code;override;
        end;
 
-       ti386vecnode = class(tx86vecnode)
+       TI386VecNode = class(TX86VecNode)
           procedure pass_generate_code;override;
        end;
 
 implementation
 
     uses
-      systems,
-      cutils,verbose,
+      Systems,
+      CUtils,Verbose,
       symconst,symdef,symcpu,paramgr,
-      aasmtai,aasmdata,
+      aasmtai,AAsmData,
       nld,ncon,nadd,
       cgutils,cgobj;
 
@@ -56,16 +56,16 @@ implementation
                              TI386ADDRNODE
 *****************************************************************************}
 
-    procedure ti386addrnode.set_absvarsym_resultdef;
+    procedure TI386AddrNode.set_absvarsym_resultdef;
       begin
         if not(anf_typedaddr in addrnodeflags) then
           resultdef:=voidnearfspointertype
         else
-          resultdef:=tcpupointerdefclass(cpointerdef).createx86(left.resultdef,x86pt_near_fs);
+          resultdef:=TCPUPointerDefClass(CPointerDef).createx86(left.resultdef,x86pt_near_fs);
       end;
 
 
-    procedure ti386addrnode.pass_generate_code;
+    procedure TI386AddrNode.pass_generate_code;
       begin
         inherited pass_generate_code;
         { for use of other segments, not used }
@@ -78,7 +78,7 @@ implementation
                              TI386VECNODE
 *****************************************************************************}
 
-    procedure ti386vecnode.pass_generate_code;
+    procedure TI386VecNode.pass_generate_code;
       begin
         inherited pass_generate_code;
         if vnf_memseg in vecnodeflags then
@@ -87,6 +87,6 @@ implementation
 
 
 begin
-   caddrnode:=ti386addrnode;
-   cvecnode:=ti386vecnode;
+   CAddrNode:=TI386AddrNode;
+   CVecNode:=TI386VecNode;
 end.

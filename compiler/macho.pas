@@ -41,16 +41,16 @@ interface
 // currently used is i386
 
 type
-  integer_t = Integer;
-  uint8_t   = Byte;
+  TMachInteger = Integer;
+  TMachUInt8   = Byte;
 
-  int16_t   = SmallInt;
-  uint16_t  = Word;
+  TMachInt16   = SmallInt;
+  TMachUInt16  = Word;
 
-  uint32_t  = LongWord;
-  int32_t   = Integer;
+  TMachUInt32  = LongWord;
+  TMachInt32   = Integer;
 
-  uint64_t  = QWord;
+  TMachUInt64  = QWord;
 
 // mach/thread_status.h
 
@@ -61,9 +61,9 @@ type
 // mach/machine.h
 
 type
-  cpu_type_t       = integer_t;
-  cpu_subtype_t    = integer_t;
-  cpu_threadtype_t = integer_t;
+  TMachCPUType       = TMachInteger;
+  TMachCPUSubType    = TMachInteger;
+  TMachCPUThreadType = TMachInteger;
 
 const
   CPU_STATE_MAX		= 4;
@@ -303,7 +303,7 @@ const
 
 // mach/vm_prot.h
 type
-  vm_prot_t = Integer;
+  TMachVMProt = Integer;
 
 const
   VM_PROT_NONE	 = $00;
@@ -367,31 +367,31 @@ const
 
 type
   { * The 32-bit mach header appears at the very beginning of the object file for 32-bit architectures. }
-  mach_header = record
-    magic       : uint32_t;      { mach magic number identifier  }
-    cputype     : cpu_type_t;    { cpu specifier  }
-    cpusubtype  : cpu_subtype_t; { machine specifier  }
-    filetype    : uint32_t;      { type of file  }
-    ncmds       : uint32_t;      { number of load commands  }
-    sizeofcmds  : uint32_t;      { the size of all the load commands  }
-    flags       : uint32_t;      { flags  }
+  TMachRawHeader = record
+    magic       : TMachUInt32;      { mach magic number identifier  }
+    CPUType     : TMachCPUType;    { cpu specifier  }
+    cpusubtype  : TMachCPUSubType; { machine specifier  }
+    filetype    : TMachUInt32;      { type of file  }
+    ncmds       : TMachUInt32;      { number of load commands  }
+    sizeofcmds  : TMachUInt32;      { the size of all the load commands  }
+    flags       : TMachUInt32;      { flags  }
   end;
-  pmach_header = ^mach_header;
+  PMachRawHeader = ^TMachRawHeader;
 
 type
   {* The 64-bit mach header appears at the very beginning of object files for
    * 64-bit architectures. }
-  mach_header_64 = record
-    magic      : uint32_t;      { mach magic number identifier  }
-    cputype    : cpu_type_t;    { cpu specifier  }
-    cpusubtype : cpu_subtype_t; { machine specifier  }
-    filetype   : uint32_t;      { type of file  }
-    ncmds      : uint32_t;      { number of load commands  }
-    sizeofcmds : uint32_t;      { the size of all the load commands  }
-    flags      : uint32_t;      { flags  }
-    reserved   : uint32_t;      { reserved  }
+  TMachRawHeader64 = record
+    magic      : TMachUInt32;      { mach magic number identifier  }
+    CPUType    : TMachCPUType;    { cpu specifier  }
+    cpusubtype : TMachCPUSubType; { machine specifier  }
+    filetype   : TMachUInt32;      { type of file  }
+    ncmds      : TMachUInt32;      { number of load commands  }
+    sizeofcmds : TMachUInt32;      { the size of all the load commands  }
+    flags      : TMachUInt32;      { flags  }
+    reserved   : TMachUInt32;      { reserved  }
   end;
-  pmach_header_64 = ^mach_header_64;
+  PMachRawHeader64 = ^TMachRawHeader64;
 
   { Constant for the magic field of the mach_header_64 (64-bit architectures)  }
   { the 64-bit mach magic number  }
@@ -481,11 +481,11 @@ const
     }
 
 type
-  load_command = record
-    cmd     : uint32_t; { type of load command  }
-    cmdsize : uint32_t; { total size of command in bytes  }
+  TMachRawLoadCommand = record
+    cmd     : TMachUInt32; { type of load command  }
+    cmdsize : TMachUInt32; { total size of command in bytes  }
   end;
-  pload_command = ^load_command;
+  PMachRawLoadCommand = ^TMachRawLoadCommand;
 
   {
    * After MacOS X 10.1 when a new load command is added that is required to be
@@ -548,9 +548,9 @@ const
 {$endif}
 
 type
-  lc_str = record
-  case longint of
-    0 : ( offset : uint32_t );
+  TMachRawLCStr = record
+  case LongInt of
+    0 : ( offset : TMachUInt32 );
     1 : ( ptr : ^char );
   end;
 
@@ -569,20 +569,20 @@ type
 
   { for 32-bit architectures  }
 
-  segment_command = record
-    cmd      : uint32_t;             { LC_SEGMENT  }
-    cmdsize  : uint32_t;             { includes sizeof section structs  }
+  TMachRawSegmentCommand = record
+    cmd      : TMachUInt32;             { LC_SEGMENT  }
+    cmdsize  : TMachUInt32;             { includes sizeof section structs  }
     segname  : array[0..15] of char; { segment name  }
-    vmaddr   : uint32_t;             { memory address of this segment  }
-    vmsize   : uint32_t;             { memory size of this segment  }
-    fileoff  : uint32_t;             { file offset of this segment  }
-    filesize : uint32_t;             { amount to map from the file  }
-    maxprot  : vm_prot_t;            { maximum VM protection  }
-    initprot : vm_prot_t;            { initial VM protection  }
-    nsects   : uint32_t;             { number of sections in segment  }
-    flags    : uint32_t;             { flags  }
+    vmaddr   : TMachUInt32;             { memory address of this segment  }
+    vmsize   : TMachUInt32;             { memory size of this segment  }
+    fileoff  : TMachUInt32;             { file offset of this segment  }
+    filesize : TMachUInt32;             { amount to map from the file  }
+    maxprot  : TMachVMProt;            { maximum VM protection  }
+    initprot : TMachVMProt;            { initial VM protection  }
+    nsects   : TMachUInt32;             { number of sections in segment  }
+    flags    : TMachUInt32;             { flags  }
   end;
-  psegment_command = ^segment_command;
+  PMachRawSegmentCommand = ^TMachRawSegmentCommand;
 
   {
    * The 64-bit segment load command indicates that a part of this file is to be
@@ -592,20 +592,20 @@ type
     }
   { for 64-bit architectures  }
 
-  segment_command_64 = record
-    cmd      : uint32_t;              { LC_SEGMENT_64  }
-    cmdsize  : uint32_t;              { includes sizeof section_64 structs  }
+  TMachRawSegmentCommand64 = record
+    cmd      : TMachUInt32;              { LC_SEGMENT_64  }
+    cmdsize  : TMachUInt32;              { includes sizeof section_64 structs  }
     segname  : array[0..15] of char;  { segment name  }
-    vmaddr   : uint64_t;              { memory address of this segment  }
-    vmsize   : uint64_t;              { memory size of this segment  }
-    fileoff  : uint64_t;              { file offset of this segment  }
-    filesize : uint64_t;              { amount to map from the file  }
-    maxprot  : vm_prot_t;             { maximum VM protection  }
-    initprot : vm_prot_t;             { initial VM protection  }
-    nsects   : uint32_t;              { number of sections in segment  }
-    flags    : uint32_t;              { flags  }
+    vmaddr   : TMachUInt64;              { memory address of this segment  }
+    vmsize   : TMachUInt64;              { memory size of this segment  }
+    fileoff  : TMachUInt64;              { file offset of this segment  }
+    filesize : TMachUInt64;              { amount to map from the file  }
+    maxprot  : TMachVMProt;             { maximum VM protection  }
+    initprot : TMachVMProt;             { initial VM protection  }
+    nsects   : TMachUInt32;              { number of sections in segment  }
+    flags    : TMachUInt32;              { flags  }
   end;
-  psegment_command_64 = ^segment_command_64;
+  PMachRawSegmentCommand64 = ^TMachRawSegmentCommand64;
 
   { Constants for the flags field of the segment_command  }
 
@@ -656,38 +656,38 @@ const
 
 type
   { for 32-bit architectures  }
-  section = record
+  TMachRawSection = record
     sectname  : array[0..15] of char; { name of this section  }
     segname   : array[0..15] of char; { segment this section goes in  }
-    addr      : uint32_t;             { memory address of this section  }
-    size      : uint32_t;             { size in bytes of this section  }
-    offset    : uint32_t;             { file offset of this section  }
-    align     : uint32_t;             { section alignment (power of 2)  }
-    reloff    : uint32_t;             { file offset of relocation entries  }
-    nreloc    : uint32_t;             { number of relocation entries  }
-    flags     : uint32_t;             { flags (section type and attributes) }
-    reserved1 : uint32_t;             { reserved (for offset or index)  }
-    reserved2 : uint32_t;             { reserved (for count or sizeof)  }
+    addr      : TMachUInt32;             { memory address of this section  }
+    size      : TMachUInt32;             { size in bytes of this section  }
+    offset    : TMachUInt32;             { file offset of this section  }
+    align     : TMachUInt32;             { section alignment (power of 2)  }
+    reloff    : TMachUInt32;             { file offset of relocation entries  }
+    nreloc    : TMachUInt32;             { number of relocation entries  }
+    flags     : TMachUInt32;             { flags (section type and attributes) }
+    reserved1 : TMachUInt32;             { reserved (for offset or index)  }
+    reserved2 : TMachUInt32;             { reserved (for count or sizeof)  }
   end;
-  psection = ^section;
+  PMachRawSection = ^TMachRawSection;
 
 
   { for 64-bit architectures  }
-  section_64 = record
+  TMachRawSection64 = record
     sectname  : array[0..15] of char; { name of this section  }
     segname   : array[0..15] of char; { segment this section goes in  }
-    addr      : uint64_t;             { memory address of this section  }
-    size      : uint64_t;             { size in bytes of this section  }
-    offset    : uint32_t;             { file offset of this section  }
-    align     : uint32_t;             { section alignment (power of 2)  }
-    reloff    : uint32_t;             { file offset of relocation entries  }
-    nreloc    : uint32_t;             { number of relocation entries  }
-    flags     : uint32_t;             { flags (section type and attributes) }
-    reserved1 : uint32_t;             { reserved (for offset or index)  }
-    reserved2 : uint32_t;             { reserved (for count or sizeof)  }
-    reserved3 : uint32_t;             { reserved  }
+    addr      : TMachUInt64;             { memory address of this section  }
+    size      : TMachUInt64;             { size in bytes of this section  }
+    offset    : TMachUInt32;             { file offset of this section  }
+    align     : TMachUInt32;             { section alignment (power of 2)  }
+    reloff    : TMachUInt32;             { file offset of relocation entries  }
+    nreloc    : TMachUInt32;             { number of relocation entries  }
+    flags     : TMachUInt32;             { flags (section type and attributes) }
+    reserved1 : TMachUInt32;             { reserved (for offset or index)  }
+    reserved2 : TMachUInt32;             { reserved (for count or sizeof)  }
+    reserved3 : TMachUInt32;             { reserved  }
   end;
-  psection_64 = ^section_64;
+  PMachRawSection64 = ^TMachRawSection64;
 
   {* The flags field of a section structure is separated into two parts a section
    * type and section attributes.  The section types are mutually exclusive (it
@@ -817,10 +817,10 @@ const
    * header_addr. (THIS IS OBSOLETE and no longer supported). }
 
 type
-  fvmlib = record
-    name          : lc_str;   { library's target pathname  }
-    minor_version : uint32_t; { library's minor version number  }
-    header_addr   : uint32_t; { library's header address  }
+  TMachRawFVMLib = record
+    name          : TMachRawLCStr;   { library's target pathname  }
+    minor_version : TMachUInt32; { library's minor version number  }
+    header_addr   : TMachUInt32; { library's header address  }
   end;
 
   {* A fixed virtual shared library (filetype == MH_FVMLIB in the mach header)
@@ -829,12 +829,12 @@ type
    * fvmlib_command (cmd == LC_LOADFVMLIB) for each library it uses.
    * (THIS IS OBSOLETE and no longer supported). }
 
-  fvmlib_command = record
-    cmd     : uint32_t; { LC_IDFVMLIB or LC_LOADFVMLIB  }
-    cmdsize : uint32_t; { includes pathname string  }
-    fvmlib  : fvmlib;   { the library identification  }
+  TMachRawFVMLibCommand = record
+    cmd     : TMachUInt32; { LC_IDFVMLIB or LC_LOADFVMLIB  }
+    cmdsize : TMachUInt32; { includes pathname string  }
+    FVMLib  : TMachRawFVMLib;   { the library identification  }
   end;
-  pfvmlib_command = ^fvmlib_command;
+  PMachRawFVMLibCommand = ^TMachRawFVMLibCommand;
 
   {* Dynamically linked shared libraries are identified by two things.  The
    * pathname (the name of the library as found for execution), and the
@@ -844,11 +844,11 @@ type
    * built and copied into user so it can be use to determined if the library used
    * at runtime is exactly the same as used to built the program.  }
 
-  dylib = record
-    name                  : lc_str;   { library's path name  }
-    timestamp             : uint32_t; { library's build time stamp  }
-    current_version       : uint32_t; { library's current version number  }
-    compatibility_version : uint32_t; { library's compatibility vers number }
+  TMachRawDylib = record
+    name                  : TMachRawLCStr;   { library's path name  }
+    timestamp             : TMachUInt32; { library's build time stamp  }
+    current_version       : TMachUInt32; { library's current version number  }
+    compatibility_version : TMachUInt32; { library's compatibility vers number }
   end;
 
   {* A dynamically linked shared library (filetype == MH_DYLIB in the mach header)
@@ -857,12 +857,12 @@ type
    * dylib_command (cmd == LC_LOAD_DYLIB, LC_LOAD_WEAK_DYLIB, or
    * LC_REEXPORT_DYLIB) for each library it uses. }
 
-  dylib_command = record
-    cmd     : uint32_t; { LC_ID_DYLIB, LC_LOAD_DYLIB,WEAK_DYLIB, LC_REEXPORT_DYLIB  }
-    cmdsize : uint32_t; { includes pathname string  }
-    dylib   : dylib;    { the library identification  }
+  TMachRawDylibCommand = record
+    cmd     : TMachUInt32; { LC_ID_DYLIB, LC_LOAD_DYLIB,WEAK_DYLIB, LC_REEXPORT_DYLIB  }
+    cmdsize : TMachUInt32; { includes pathname string  }
+    Dylib   : TMachRawDylib;    { the library identification  }
   end;
-  pdylib_command = ^dylib_command;
+  PMachRawDylibCommand = ^TMachRawDylibCommand;
 
   {* A dynamically linked shared library may be a subframework of an umbrella
    * framework.  If so it will be linked with "-umbrella umbrella_name" where
@@ -873,12 +873,12 @@ type
    * The name of the umbrella framework for subframeworks is recorded in the
    * following structure. }
 
-  sub_framework_command = record
-    cmd       : uint32_t; { LC_SUB_FRAMEWORK  }
-    cmdsize   : uint32_t; { includes umbrella string  }
-    umbrella  : lc_str;   { the umbrella framework name  }
+  TMachRawSubFrameworkCommand = record
+    cmd       : TMachUInt32; { LC_SUB_FRAMEWORK  }
+    cmdsize   : TMachUInt32; { includes umbrella string  }
+    umbrella  : TMachRawLCStr;   { the umbrella framework name  }
   end;
-  psub_framework_command = ^sub_framework_command;
+  PMachRawSubFrameworkCommand = ^TMachRawSubFrameworkCommand;
 
 
   {* For dynamically linked shared libraries that are subframework of an umbrella
@@ -889,12 +889,12 @@ type
    * usually a framework name.  It can also be a name used for bundles clients
    * where the bundle is built with "-client_name client_name". }
 
-  sub_client_command = record
-    cmd     : uint32_t; { LC_SUB_CLIENT  }
-    cmdsize : uint32_t; { includes client string  }
-    client  : lc_str;   { the client name  }
+  TMachRawSubClientCommand = record
+    cmd     : TMachUInt32; { LC_SUB_CLIENT  }
+    cmdsize : TMachUInt32; { includes client string  }
+    client  : TMachRawLCStr;   { the client name  }
   end;
-  psub_client_command = ^sub_client_command;
+  PMachRawSubClientCommand = ^TMachRawSubClientCommand;
 
   {
    * A dynamically linked shared library may be a sub_umbrella of an umbrella
@@ -910,10 +910,10 @@ type
    * The name of a sub_umbrella framework is recorded in the following structure.
     }
 
-  sub_umbrella_command = record
-    cmd           : uint32_t; { LC_SUB_UMBRELLA  }
-    cmdsize       : uint32_t; { includes sub_umbrella string  }
-    sub_umbrella  : lc_str;   { the sub_umbrella framework name  }
+  TMachRawSubUmbrellaCommand = record
+    cmd           : TMachUInt32; { LC_SUB_UMBRELLA  }
+    cmdsize       : TMachUInt32; { includes sub_umbrella string  }
+    sub_umbrella  : TMachRawLCStr;   { the sub_umbrella framework name  }
   end;
 
   {* A dynamically linked shared library may be a sub_library of another shared
@@ -930,12 +930,12 @@ type
    * The name of a sub_library framework is recorded in the following structure.
    * For example /usr/lib/libobjc_profile.A.dylib would be recorded as "libobjc".}
 
-  sub_library_command = record
-    cmd         : uint32_t; { LC_SUB_LIBRARY  }
-    cmdsize     : uint32_t; { includes sub_library string  }
-    sub_library : lc_str;   { the sub_library name  }
+  TMachRawSubLibraryCommand = record
+    cmd         : TMachUInt32; { LC_SUB_LIBRARY  }
+    cmdsize     : TMachUInt32; { includes sub_library string  }
+    sub_library : TMachRawLCStr;   { the sub_library name  }
   end;
-  psub_library_command = ^sub_library_command;
+  PMachRawSubLibraryCommand = ^TMachRawSubLibraryCommand;
 
   {* A program (filetype == MH_EXECUTE) that is
    * prebound to its dynamic libraries has one of these for each library that
@@ -945,14 +945,14 @@ type
    * of the first byte.  So the bit for the Nth module is:
    * (linked_modules[N/8] >> N%8) & 1 }
 
-  prebound_dylib_command = record
-    cmd      : uint32_t;     { LC_PREBOUND_DYLIB  }
-    cmdsize  : uint32_t;     { includes strings  }
-    name     : lc_str;       { library's path name  }
-    nmodules : uint32_t;     { number of modules in library  }
-    linked_modules : lc_str; { bit vector of linked modules  }
+  TMachRawPreboundDylibCommand = record
+    cmd      : TMachUInt32;     { LC_PREBOUND_DYLIB  }
+    cmdsize  : TMachUInt32;     { includes strings  }
+    name     : TMachRawLCStr;       { library's path name  }
+    nmodules : TMachUInt32;     { number of modules in library  }
+    linked_modules : TMachRawLCStr; { bit vector of linked modules  }
   end;
-  pprebound_dylib_command = ^prebound_dylib_command;
+  PMachRawPreboundDylibCommand = ^TMachRawPreboundDylibCommand;
 
 
   {* A program that uses a dynamic linker contains a dylinker_command to identify
@@ -960,12 +960,12 @@ type
    * contains a dylinker_command to identify the dynamic linker (LC_ID_DYLINKER).
    * A file can have at most one of these.}
 
-  dylinker_command = record
-    cmd     : uint32_t; { LC_ID_DYLINKER or LC_LOAD_DYLINKER  }
-    cmdsize : uint32_t; { includes pathname string  }
-    name    : lc_str;   { dynamic linker's path name  }
+  TMachRawDylinkerCommand = record
+    cmd     : TMachUInt32; { LC_ID_DYLINKER or LC_LOAD_DYLINKER  }
+    cmdsize : TMachUInt32; { includes pathname string  }
+    name    : TMachRawLCStr;   { dynamic linker's path name  }
   end;
-  pdylinker_command = ^dylinker_command;
+  PMachRawDylinkerCommand = ^TMachRawDylinkerCommand;
 
   {
    * Thread commands contain machine-specific data structures suitable for
@@ -989,15 +989,15 @@ type
    * and environment variables are copied onto that stack.
     }
 
-  thread_command = record
-    cmd     : uint32_t; { LC_THREAD or  LC_UNIXTHREAD  }
-    cmdsize : uint32_t; { total size of this command  }
-    flavor  : uint32_t; { uint32_t flavor		   flavor of thread state  }
-    count   : uint32_t; { uint32_t count		   count of longs in thread state  }
+  TMachRawThreadCommand = record
+    cmd     : TMachUInt32; { LC_THREAD or  LC_UNIXTHREAD  }
+    cmdsize : TMachUInt32; { total size of this command  }
+    flavor  : TMachUInt32; { uint32_t flavor		   flavor of thread state  }
+    count   : TMachUInt32; { uint32_t count		   count of longs in thread state  }
                         { struct XXX_thread_state state   thread state for this flavor  }
                         { ...  }
   end;
-  pthread_command = ^thread_command;
+  PMachRawThreadCommand = ^TMachRawThreadCommand;
 
   {* The routines command contains the address of the dynamic shared library
    * initialization routine and an index into the module table for the module
@@ -1007,52 +1007,52 @@ type
    * routines (used for C++ static constructors) in the library.  }
   { for 32-bit architectures  }
 
-  routines_command = record
-    cmd     : uint32_t;       { LC_ROUTINES  }
-    cmdsize : uint32_t;       { total size of this command  }
-    init_address : uint32_t;  { address of initialization routine  }
-    init_module  : uint32_t;  { index into the module table that the init routine is defined in }
-    reserved1 : uint32_t;
-    reserved2 : uint32_t;
-    reserved3 : uint32_t;
-    reserved4 : uint32_t;
-    reserved5 : uint32_t;
-    reserved6 : uint32_t;
+  TMachRawRoutinesCommand = record
+    cmd     : TMachUInt32;       { LC_ROUTINES  }
+    cmdsize : TMachUInt32;       { total size of this command  }
+    init_address : TMachUInt32;  { address of initialization routine  }
+    init_module  : TMachUInt32;  { index into the module table that the init routine is defined in }
+    reserved1 : TMachUInt32;
+    reserved2 : TMachUInt32;
+    reserved3 : TMachUInt32;
+    reserved4 : TMachUInt32;
+    reserved5 : TMachUInt32;
+    reserved6 : TMachUInt32;
   end;
-  proutines_command = ^routines_command;
+  PMachRawRoutinesCommand = ^TMachRawRoutinesCommand;
 
   { * The 64-bit routines command.  Same use as above. }
   { for 64-bit architectures  }
 
-  routines_command_64 = record
-    cmd     : uint32_t;         { LC_ROUTINES_64  }
-    cmdsize : uint32_t;         { total size of this command  }
-    init_address : uint64_t;    { address of initialization routine  }
-    init_module  : uint64_t;    { index into the module table that  }
+  TMachRawRoutinesCommand64 = record
+    cmd     : TMachUInt32;         { LC_ROUTINES_64  }
+    cmdsize : TMachUInt32;         { total size of this command  }
+    init_address : TMachUInt64;    { address of initialization routine  }
+    init_module  : TMachUInt64;    { index into the module table that  }
                                 {  the init routine is defined in  }
-    reserved1 : uint64_t;
-    reserved2 : uint64_t;
-    reserved3 : uint64_t;
-    reserved4 : uint64_t;
-    reserved5 : uint64_t;
-    reserved6 : uint64_t;
+    reserved1 : TMachUInt64;
+    reserved2 : TMachUInt64;
+    reserved3 : TMachUInt64;
+    reserved4 : TMachUInt64;
+    reserved5 : TMachUInt64;
+    reserved6 : TMachUInt64;
   end;
-  proutines_command_64 = ^routines_command_64;
+  PMachRawRoutinesCommand64 = ^TMachRawRoutinesCommand64;
 
   {* The symtab_command contains the offsets and sizes of the link-edit 4.3BSD
    * "stab" style symbol table information as described in the header files
    * <nlist.h> and <stab.h>.
     }
 
-  symtab_command = record
-    cmd     : uint32_t;  { LC_SYMTAB  }
-    cmdsize : uint32_t;  { sizeof(struct symtab_command)  }
-    symoff  : uint32_t;  { symbol table offset  }
-    nsyms   : uint32_t;  { number of symbol table entries  }
-    stroff  : uint32_t;  { string table offset  }
-    strsize : uint32_t;  { string table size in bytes  }
+  TMachRawSymtabCommand = record
+    cmd     : TMachUInt32;  { LC_SYMTAB  }
+    cmdsize : TMachUInt32;  { sizeof(struct symtab_command)  }
+    symoff  : TMachUInt32;  { symbol table offset  }
+    nsyms   : TMachUInt32;  { number of symbol table entries  }
+    stroff  : TMachUInt32;  { string table offset  }
+    strsize : TMachUInt32;  { string table size in bytes  }
   end;
-  psymtab_command = ^symtab_command;
+  PMachRawSymtabCommand = ^TMachRawSymtabCommand;
 
   {
    * This is the second set of the symbolic information which is used to support
@@ -1095,9 +1095,9 @@ type
    * off the section structures.
     }
 
-  dysymtab_command = record
-    cmd             : uint32_t; { LC_DYSYMTAB  }
-    cmdsize         : uint32_t; { sizeof(struct dysymtab_command)  }
+  TMachRawDysymtabCommand = record
+    cmd             : TMachUInt32; { LC_DYSYMTAB  }
+    cmdsize         : TMachUInt32; { sizeof(struct dysymtab_command)  }
   {
        * The symbols indicated by symoff and nsyms of the LC_SYMTAB load command
        * are grouped into the following three groups:
@@ -1113,12 +1113,12 @@ type
        * binding (indirectly through the module table and the reference symbol
        * table when this is a dynamically linked shared library file).
         }
-    ilocalsym       : uint32_t; { index to local symbols  }
-    nlocalsym       : uint32_t; { number of local symbols  }
-    iextdefsym      : uint32_t; { index to externally defined symbols  }
-    nextdefsym      : uint32_t; { number of externally defined symbols  }
-    iundefsym       : uint32_t; { index to undefined symbols  }
-    nundefsym       : uint32_t; { number of undefined symbols  }
+    ilocalsym       : TMachUInt32; { index to local symbols  }
+    nlocalsym       : TMachUInt32; { number of local symbols  }
+    iextdefsym      : TMachUInt32; { index to externally defined symbols  }
+    nextdefsym      : TMachUInt32; { number of externally defined symbols  }
+    iundefsym       : TMachUInt32; { index to undefined symbols  }
+    nundefsym       : TMachUInt32; { number of undefined symbols  }
   {
        * For the for the dynamic binding process to find which module a symbol
        * is defined in the table of contents is used (analogous to the ranlib
@@ -1127,8 +1127,8 @@ type
        * library file.  For executable and object modules the defined external
        * symbols are sorted by name and is use as the table of contents.
         }
-    tocoff          : uint32_t; { file offset to table of contents  }
-    ntoc            : uint32_t; { number of entries in table of contents  }
+    tocoff          : TMachUInt32; { file offset to table of contents  }
+    ntoc            : TMachUInt32; { number of entries in table of contents  }
   {
        * To support dynamic binding of "modules" (whole object files) the symbol
        * table must reflect the modules that the file was created from.  This is
@@ -1138,8 +1138,8 @@ type
        * shared library file.  For executable and object modules the file only
        * contains one module so everything in the file belongs to the module.
         }
-    modtaboff       : uint32_t; { file offset to module table  }
-    nmodtab         : uint32_t; { number of module table entries  }
+    modtaboff       : TMachUInt32; { file offset to module table  }
+    nmodtab         : TMachUInt32; { number of module table entries  }
   {
        * To support dynamic module binding the module structure for each module
        * indicates the external references (defined and undefined) each module
@@ -1149,8 +1149,8 @@ type
        * executable and object modules the defined external symbols and the
        * undefined external symbols indicates the external references.
         }
-    extrefsymoff    : uint32_t; { offset to referenced symbol table  }
-    nextrefsyms     : uint32_t; { number of referenced symbol table entries  }
+    extrefsymoff    : TMachUInt32; { offset to referenced symbol table  }
+    nextrefsyms     : TMachUInt32; { number of referenced symbol table entries  }
   {
        * The sections that contain "symbol pointers" and "routine stubs" have
        * indexes and (implied counts based on the size of the section and fixed
@@ -1161,8 +1161,8 @@ type
        * the symbol table to the symbol that the pointer or stub is referring to.
        * The indirect symbol table is ordered to match the entries in the section.
         }
-    indirectsymoff  : uint32_t; { file offset to the indirect symbol table  }
-    nindirectsyms   : uint32_t; { number of indirect symbol table entries  }
+    indirectsymoff  : TMachUInt32; { file offset to the indirect symbol table  }
+    nindirectsyms   : TMachUInt32; { number of indirect symbol table entries  }
   {    * To support relocating an individual module in a library file quickly the
        * external relocation entries for each module in the library need to be
        * accessed efficiently.  Since the relocation entries can't be accessed
@@ -1189,13 +1189,13 @@ type
        * remaining external relocation entries for them (for merged sections
        * remaining relocation entries must be local).
         }
-    extreloff       : uint32_t; { offset to external relocation entries  }
-    nextrel         : uint32_t; { number of external relocation entries  }
+    extreloff       : TMachUInt32; { offset to external relocation entries  }
+    nextrel         : TMachUInt32; { number of external relocation entries  }
     {   * All the local relocation entries are grouped together (they are not
        * grouped by their module since they are only used if the object is moved
        * from it statically link edited address).      }
-    locreloff       : uint32_t; { offset to local relocation entries  }
-    nlocrel         : uint32_t; { number of local relocation entries  }
+    locreloff       : TMachUInt32; { offset to local relocation entries  }
+    nlocrel         : TMachUInt32; { number of local relocation entries  }
   end;
 
   {
@@ -1211,49 +1211,49 @@ const
   INDIRECT_SYMBOL_ABS = $40000000;
 
 type
-  dylib_table_of_contents = record { a table of contents entry  }
-    symbol_index : uint32_t; { the defined external symbol (index into the symbol table)  }
-    module_index : uint32_t; { index into the module table this symbol is defined in  }
+  TMachRawDylibTableOfContents = record { a table of contents entry  }
+    symbol_index : TMachUInt32; { the defined external symbol (index into the symbol table)  }
+    module_index : TMachUInt32; { index into the module table this symbol is defined in  }
   end;
 
-  dylib_module = record     { a module table entry  }
-    module_name : uint32_t; { the module name (index into string table)  }
-    iextdefsym  : uint32_t; { index into externally defined symbols  }
-    nextdefsym  : uint32_t; { number of externally defined symbols  }
-    irefsym     : uint32_t; { index into reference symbol table  }
-    nrefsym     : uint32_t; { number of reference symbol table entries  }
-    ilocalsym   : uint32_t; { index into symbols for local symbols  }
-    nlocalsym   : uint32_t; { number of local symbols  }
-    iextrel     : uint32_t; { index into external relocation entries  }
-    nextrel     : uint32_t; { number of external relocation entries  }
-    iinit_iterm : uint32_t; { low 16 bits are the index into the init
+  TMachRawDylibModule = record     { a module table entry  }
+    module_name : TMachUInt32; { the module name (index into string table)  }
+    iextdefsym  : TMachUInt32; { index into externally defined symbols  }
+    nextdefsym  : TMachUInt32; { number of externally defined symbols  }
+    irefsym     : TMachUInt32; { index into reference symbol table  }
+    nrefsym     : TMachUInt32; { number of reference symbol table entries  }
+    ilocalsym   : TMachUInt32; { index into symbols for local symbols  }
+    nlocalsym   : TMachUInt32; { number of local symbols  }
+    iextrel     : TMachUInt32; { index into external relocation entries  }
+    nextrel     : TMachUInt32; { number of external relocation entries  }
+    iinit_iterm : TMachUInt32; { low 16 bits are the index into the init
   				   section, high 16 bits are the index into
   			           the term section  }
-    ninit_nterm : uint32_t; { low 16 bits are the number of init section
+    ninit_nterm : TMachUInt32; { low 16 bits are the number of init section
   				   entries, high 16 bits are the number of
   				   term section entries  }
-    objc_module_info_addr : uint32_t;  { for this module address of the start of the (__OBJC,__module_info) section  }
-    objc_module_info_size : uint32_t;  { for this module size of  the (__OBJC,__module_info) section  }
+    objc_module_info_addr : TMachUInt32;  { for this module address of the start of the (__OBJC,__module_info) section  }
+    objc_module_info_size : TMachUInt32;  { for this module size of  the (__OBJC,__module_info) section  }
   end;
 
-  dylib_module_64 = record   { a 64-bit module table entry  }
-    module_name : uint32_t;  { the module name (index into string table)  }
-    iextdefsym  : uint32_t;  { index into externally defined symbols  }
-    nextdefsym  : uint32_t;  { number of externally defined symbols  }
-    irefsym     : uint32_t;  { index into reference symbol table  }
-    nrefsym     : uint32_t;  { number of reference symbol table entries  }
-    ilocalsym   : uint32_t;  { index into symbols for local symbols  }
-    nlocalsym   : uint32_t;  { number of local symbols  }
-    iextrel     : uint32_t;  { index into external relocation entries  }
-    nextrel     : uint32_t;  { number of external relocation entries  }
-    iinit_iterm : uint32_t;  { low 16 bits are the index into the init
+  TMachRawDylibModule64 = record   { a 64-bit module table entry  }
+    module_name : TMachUInt32;  { the module name (index into string table)  }
+    iextdefsym  : TMachUInt32;  { index into externally defined symbols  }
+    nextdefsym  : TMachUInt32;  { number of externally defined symbols  }
+    irefsym     : TMachUInt32;  { index into reference symbol table  }
+    nrefsym     : TMachUInt32;  { number of reference symbol table entries  }
+    ilocalsym   : TMachUInt32;  { index into symbols for local symbols  }
+    nlocalsym   : TMachUInt32;  { number of local symbols  }
+    iextrel     : TMachUInt32;  { index into external relocation entries  }
+    nextrel     : TMachUInt32;  { number of external relocation entries  }
+    iinit_iterm : TMachUInt32;  { low 16 bits are the index into the init
                     				   section, high 16 bits are the index into
                     				   the term section  }
-    ninit_nterm : uint32_t; { low 16 bits are the number of init section
+    ninit_nterm : TMachUInt32; { low 16 bits are the number of init section
                     				  entries, high 16 bits are the number of
                     				  term section entries  }
-    objc_module_info_size : uint32_t; { for this module size of the (__OBJC,__module_info) section  }
-    objc_module_info_addr : uint64_t; { for this module address of the start of the (__OBJC,__module_info) section  }
+    objc_module_info_size : TMachUInt32; { for this module size of the (__OBJC,__module_info) section  }
+    objc_module_info_addr : TMachUInt64; { for this module address of the start of the (__OBJC,__module_info) section  }
   end;
 
   {
@@ -1266,8 +1266,8 @@ type
     }
   { index into the symbol table  }
   { flags to indicate the type of reference  }
-  dylib_reference = record
-    flag0 : longint;
+  TMachRawDylibReference = record
+    flag0 : LongInt;
   end;
 
 
@@ -1286,11 +1286,11 @@ type
    * two-level namespace lookup hints table.}
 
 type
-  twolevel_hints_command = record
-    cmd     : uint32_t; { LC_TWOLEVEL_HINTS  }
-    cmdsize : uint32_t; { sizeof(struct twolevel_hints_command)  }
-    offset  : uint32_t; { offset to the hint table  }
-    nhints  : uint32_t; { number of hints in the hint table  }
+  TMachRawTwoLevelHintsCommand = record
+    cmd     : TMachUInt32; { LC_TWOLEVEL_HINTS  }
+    cmdsize : TMachUInt32; { sizeof(struct twolevel_hints_command)  }
+    offset  : TMachUInt32; { offset to the hint table  }
+    nhints  : TMachUInt32; { number of hints in the hint table  }
   end;
 
   {
@@ -1311,8 +1311,8 @@ type
     }
   { index into the sub images  }
   { index into the table of contents  }
-  twolevel_hint = record
-    flag0 : longint;
+  TMachRawTwoLevelHint = record
+    flag0 : LongInt;
   end;
 
 
@@ -1338,59 +1338,59 @@ type
    * is re-done and the cksum field is non-zero it is left unchanged from the
    * input file. }
 
-  prebind_cksum_command = record
-    cmd     : uint32_t; { LC_PREBIND_CKSUM  }
-    cmdsize : uint32_t; { sizeof(struct prebind_cksum_command)  }
-    cksum   : uint32_t; { the check sum or zero  }
+  TMachRawPrebindChecksumCommand = record
+    cmd     : TMachUInt32; { LC_PREBIND_CKSUM  }
+    cmdsize : TMachUInt32; { sizeof(struct prebind_cksum_command)  }
+    cksum   : TMachUInt32; { the check sum or zero  }
   end;
-  pprebind_cksum_command = ^prebind_cksum_command;
+  PMachRawPrebindChecksumCommand = ^TMachRawPrebindChecksumCommand;
 
 
   {* The uuid load command contains a single 128-bit unique random number that
    * identifies an object produced by the static link editor. }
 
-  uuid_command = record
-    cmd     : uint32_t;                { LC_UUID  }
-    cmdsize : uint32_t;                { sizeof(struct uuid_command)  }
-    uuid    : array[0..15] of uint8_t; { the 128-bit uuid  }
+  TMachRawUUIDCommand = record
+    cmd     : TMachUInt32;                { LC_UUID  }
+    cmdsize : TMachUInt32;                { sizeof(struct uuid_command)  }
+    uuid    : array[0..15] of TMachUInt8; { the 128-bit uuid  }
   end;
-  puuid_command = ^uuid_command;
+  PMachRawUUIDCommand = ^TMachRawUUIDCommand;
 
 
   {* The rpath_command contains a path which at runtime should be added to
    * the current run path used to find @rpath prefixed dylibs.}
 
-  rpath_command = record
-    cmd     : uint32_t; { LC_RPATH  }
-    cmdsize : uint32_t; { includes string  }
-    path    : lc_str;   { path to add to run path  }
+  TMachRawRPathCommand = record
+    cmd     : TMachUInt32; { LC_RPATH  }
+    cmdsize : TMachUInt32; { includes string  }
+    path    : TMachRawLCStr;   { path to add to run path  }
   end;
-  prpath_command = ^rpath_command;
+  PMachRawRPathCommand = ^TMachRawRPathCommand;
 
 
   {* The linkedit_data_command contains the offsets and sizes of a blob
    * of data in the __LINKEDIT segment.}
 
-  linkedit_data_command = record
-    cmd      : uint32_t; { LC_CODE_SIGNATURE or LC_SEGMENT_SPLIT_INFO  }
-    cmdsize  : uint32_t; { sizeof(struct linkedit_data_command)  }
-    dataoff  : uint32_t; { file offset of data in __LINKEDIT segment  }
-    datasize : uint32_t; { file size of data in __LINKEDIT segment   }
+  TMachRawLinkEditDataCommand = record
+    cmd      : TMachUInt32; { LC_CODE_SIGNATURE or LC_SEGMENT_SPLIT_INFO  }
+    cmdsize  : TMachUInt32; { sizeof(struct linkedit_data_command)  }
+    dataoff  : TMachUInt32; { file offset of data in __LINKEDIT segment  }
+    DataSize : TMachUInt32; { file size of data in __LINKEDIT segment   }
   end;
-  plinkedit_data_command = ^linkedit_data_command;
+  PMachRawLinkEditDataCommand = ^TMachRawLinkEditDataCommand;
 
 
   {* The encryption_info_command contains the file offset and size of an
    * of an encrypted segment.}
 
-  encryption_info_command = record
-    cmd       : uint32_t; { LC_ENCRYPTION_INFO  }
-    cmdsize   : uint32_t; { sizeof(struct encryption_info_command)  }
-    cryptoff  : uint32_t; { file offset of encrypted range  }
-    cryptsize : uint32_t; { file size of encrypted range  }
-    cryptid   : uint32_t; { which encryption system, 0 means not-encrypted yet  }
+  TMachRawEncryptionInfoCommand = record
+    cmd       : TMachUInt32; { LC_ENCRYPTION_INFO  }
+    cmdsize   : TMachUInt32; { sizeof(struct encryption_info_command)  }
+    cryptoff  : TMachUInt32; { file offset of encrypted range  }
+    cryptsize : TMachUInt32; { file size of encrypted range  }
+    cryptid   : TMachUInt32; { which encryption system, 0 means not-encrypted yet  }
   end;
-  pencryption_info_command = ^encryption_info_command;
+  PMachRawEncryptionInfoCommand = ^TMachRawEncryptionInfoCommand;
 
 
   {* The symseg_command contains the offset and size of the GNU style
@@ -1401,13 +1401,13 @@ type
    * roots also being a multiple of a long.  Also the padding must again be
    * zeroed. (THIS IS OBSOLETE and no longer supported). }
 
-  symseg_command = record
-    cmd     : uint32_t; { LC_SYMSEG  }
-    cmdsize : uint32_t; { sizeof(struct symseg_command)  }
-    offset  : uint32_t; { symbol segment offset  }
-    size    : uint32_t; { symbol segment size in bytes  }
+  TMachRawSymSegCommand = record
+    cmd     : TMachUInt32; { LC_SYMSEG  }
+    cmdsize : TMachUInt32; { sizeof(struct symseg_command)  }
+    offset  : TMachUInt32; { symbol segment offset  }
+    size    : TMachUInt32; { symbol segment size in bytes  }
   end;
-  psymseg_command = ^symseg_command;
+  PMachRawSymSegCommand = ^TMachRawSymSegCommand;
 
 
   {* The ident_command contains a free format string table following the
@@ -1415,11 +1415,11 @@ type
    * the command is padded out with zero bytes to a multiple of 4 bytes/
    * (THIS IS OBSOLETE and no longer supported).}
 
-  ident_command = record
-    cmd     : uint32_t; { LC_IDENT  }
-    cmdsize : uint32_t; { strings that follow this command  }
+  TMachRawIdentCommand = record
+    cmd     : TMachUInt32; { LC_IDENT  }
+    cmdsize : TMachUInt32; { strings that follow this command  }
   end;
-  pident_command = ^ident_command;
+  PMachRawIdentCommand = ^TMachRawIdentCommand;
 
 
   {* The fvmfile_command contains a reference to a file to be loaded at the
@@ -1427,13 +1427,13 @@ type
    * internal use.  The kernel ignores this command when loading a program into
    * memory).  }
 
-  fvmfile_command = record
-    cmd         : uint32_t;  { LC_FVMFILE  }
-    cmdsize     : uint32_t;  { includes pathname string  }
-    name        : lc_str;    { files pathname  }
-    header_addr : uint32_t;  { files virtual address  }
+  TMachRawFVMFileCommand = record
+    cmd         : TMachUInt32;  { LC_FVMFILE  }
+    cmdsize     : TMachUInt32;  { includes pathname string  }
+    name        : TMachRawLCStr;    { files pathname  }
+    header_addr : TMachUInt32;  { files virtual address  }
   end;
-  pfvmfile_command = ^fvmfile_command;
+  PMachRawFVMFileCommand = ^TMachRawFVMFileCommand;
 
 
   {* This header file describes the structures of the file format for "fat"
@@ -1456,17 +1456,17 @@ const
   FAT_CIGAM = $bebafeca;
 
 type
-  fat_header = record
-    magic       : uint32_t;      { FAT_MAGIC  }
-    nfat_arch   : uint32_t;      { number of structs that follow  }
+  TMachRawFatHeader = record
+    magic       : TMachUInt32;      { FAT_MAGIC  }
+    nfat_arch   : TMachUInt32;      { number of structs that follow  }
   end;
 
-  fat_arch = record
-    cputype     : cpu_type_t;    { cpu specifier (int)  }
-    cpusubtype  : cpu_subtype_t; { machine specifier (int)  }
-    offset      : uint32_t;      { file offset to this object file  }
-    size        : uint32_t;      { size of this object file  }
-    align       : uint32_t;      { alignment as a power of 2  }
+  TMachRawFatArch = record
+    CPUType     : TMachCPUType;    { cpu specifier (int)  }
+    cpusubtype  : TMachCPUSubType; { machine specifier (int)  }
+    offset      : TMachUInt32;      { file offset to this object file  }
+    size        : TMachUInt32;      { size of this object file  }
+    align       : TMachUInt32;      { alignment as a power of 2  }
   end;
 
 
@@ -1480,33 +1480,33 @@ type
     }
 
 type
-  nlist = record
+  TMachRawNList = record
     n_un : record
-    case longint of
+    case LongInt of
       {$ifndef __LP64__}
       0 : ( n_name : Pchar );   { for use when in-core }
       {$endif}
-      1 : ( n_strx : int32_t ); { index into the string table  }
+      1 : ( n_strx : TMachInt32 ); { index into the string table  }
     end;
-    n_type  : uint8_t;  { type flag, see below  }
-    n_sect  : uint8_t;  { section number or NO_SECT  }
-    n_desc  : int16_t;  { see <mach-o/stab.h>  }
-    n_value : uint32_t; { value of this symbol (or stab offset)  }
+    n_type  : TMachUInt8;  { type flag, see below  }
+    n_sect  : TMachUInt8;  { section number or NO_SECT  }
+    n_desc  : TMachInt16;  { see <mach-o/stab.h>  }
+    n_value : TMachUInt32; { value of this symbol (or stab offset)  }
   end;
-  pnlist = ^nlist;
+  PMachRawNList = ^TMachRawNList;
 
   {* This is the symbol table entry structure for 64-bit architectures.}
-  nlist_64 = record
+  TMachRawNList64 = record
     n_un : record
-    case longint of
-      0 : ( n_strx : uint32_t ); { index into the string table  }
+    case LongInt of
+      0 : ( n_strx : TMachUInt32 ); { index into the string table  }
     end;
-    n_type  : uint8_t;  { type flag, see below  }
-    n_sect  : uint8_t;  { section number or NO_SECT  }
-    n_desc  : uint16_t; { see <mach-o/stab.h>  }
-    n_value : uint64_t; { value of this symbol (or stab offset)  }
+    n_type  : TMachUInt8;  { type flag, see below  }
+    n_sect  : TMachUInt8;  { section number or NO_SECT  }
+    n_desc  : TMachUInt16; { see <mach-o/stab.h>  }
+    n_value : TMachUInt64; { value of this symbol (or stab offset)  }
   end;
-  pnlist_64 = ^nlist_64;
+  PMachRawNList64 = ^TMachRawNList64;
 
   {* Symbols with a index into the string table of zero (n_un.n_strx == 0) are
    * defined to have a null, "", name.  Therefore all string indexes to non null
@@ -1709,13 +1709,13 @@ const
     }
 
 type
-  ranlib = record
+  TMachRawRanLib = record
     ran_un : record
-      case longint of
-        0 : ( ran_strx : uint32_t );
+      case LongInt of
+        0 : ( ran_strx : TMachUInt32 );
         1 : ( ran_name : ^char );
       end;
-    ran_off : uint32_t;
+    ran_off : TMachUInt32;
   end;
 
 type
@@ -1726,9 +1726,9 @@ type
    * sections not just the three sections (text, data and bss) in a 4.3BSD file.
    * Also the last 4 bits have had the r_type tag added to them. }
 
-  relocation_info = record
-    r_address : int32_t;  { offset in the section to what is being relocated  }
-    r_info    : longint;
+  TMachRawRelocationInfo = record
+    r_address : TMachInt32;  { offset in the section to what is being relocated  }
+    r_info    : LongInt;
     // r_symbolnum:24,	{* symbol index if r_extern == 1 or section  ordinal if r_extern == 0 *}
 		// r_pcrel:1; 	    {* was relocated pc relative already *}
  		// r_length:2;	    {* 0=byte, 1=word, 2=long, 3=quad *}
@@ -1817,17 +1817,17 @@ const
 
 
 type
-  scattered_relocation_info = record
+  TMachRawScatteredRelocationInfo = record
     {$ifdef ENDIAN_BIG}
-    r_info  : longint;  { r_scattered:1,	/* 1=scattered, 0=non-scattered (see above) */
+    r_info  : LongInt;  { r_scattered:1,	/* 1=scattered, 0=non-scattered (see above) */
                           r_pcrel:1,   	/* was relocated pc relative already */
                   		    r_length:2, 	/* 0=byte, 1=word, 2=long, 3=quad */
                   		    r_type:4,   	/* if not 0, machine specific relocation type */
                           r_address:24;	/* offset in the section to what is being relocated */}
-    r_value : int32_t;  {* the value the item to be relocated is referring to (without any offset added) *}
+    r_value : TMachInt32;  {* the value the item to be relocated is referring to (without any offset added) *}
     {$else}
-    r_value : int32_t;
-    r_info  : longint; {*	r_address:24,	  /* offset in the section to what is being relocated */
+    r_value : TMachInt32;
+    r_info  : LongInt; {*	r_address:24,	  /* offset in the section to what is being relocated */
                       		r_type:4,	      /* if not 0, machine specific relocation type */
                       		r_length:2,	    /* 0=byte, 1=word, 2=long, 3=quad */
                       		r_pcrel:1, 	    /* was relocated pc relative already */

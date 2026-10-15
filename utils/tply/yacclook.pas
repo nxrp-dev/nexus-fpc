@@ -40,7 +40,7 @@ unit YaccLook;
 interface
 
 
-procedure lookaheads;
+procedure Lookaheads;
   (* computes the LALR lookahead sets and enters corresponding reductions
      into the redn table (sorted w.r.t. rule numbers) *)
 
@@ -159,246 +159,246 @@ uses YaccBase, YaccTabl;
 
 type
 
-SymSetArray = array [1..max_set_items] of IntSet;
-BoolArray   = array [1..max_set_items] of Boolean;
+TSymSetArray = array [1..MaxSetItems] of TIntSet;
+TBoolArray   = array [1..MaxSetItems] of Boolean;
 
 var
 
-item_set       : ItemSet;
-lookahead_set  : SymSetArray;
-n_kernel_items : Integer;
+ItemSet       : TItemSet;
+LookaheadSet  : TSymSetArray;
+NKernelItems : Integer;
 
-procedure spontaneous_lookaheads;
+procedure SpontaneousLookaheads;
 
   (* compute spontaneous lookaheads for item_set; negative symbols are
      used for endmarkers (-i denotes endmarker #i) *)
 
-  var count, last_count, i : Integer;
-      first_syms : SymSetArray;
-      nullable : BoolArray;
+  var Count, LastCount, I : Integer;
+      FirstSyms : TSymSetArray;
+      Nullable : TBoolArray;
 
-  function sym_count ( n : Integer ) : Integer;
+  function SymCount ( N : Integer ) : Integer;
     (* count lookahead symbols *)
-    var count, i : Integer;
+    var Count, I : Integer;
     begin
-      count := 0;
-      for i := 1 to n do
-        inc(count, size(lookahead_set[i]));
-      sym_count := count;
+      Count := 0;
+      for I := 1 to N do
+        Inc(Count, Size(LookaheadSet[I]));
+      SymCount := Count;
     end(*sym_count*);
 
-  procedure compute_first_syms ( i : Integer );
+  procedure ComputeFirstSyms ( I : Integer );
     (* compute first set and nullable flag for tail string of item
        number i *)
-    var j : Integer;
+    var J : Integer;
     begin
-      empty(first_syms[i]); nullable[i] := true;
-      with item_set, item[i], rule_table^[rule_no]^ do
-        if (pos_no<=rhs_len) and (rhs_sym[pos_no]<0) then
+      Empty(FirstSyms[I]); Nullable[I] := True;
+      with ItemSet, Item[I], RuleTable^[RuleNo]^ do
+        if (PosNo<=RHSLen) and (RHSSym[PosNo]<0) then
           begin
-            j := pos_no+1;
-            while (j<=rhs_len) and nullable[i] do
+            J := PosNo+1;
+            while (J<=RHSLen) and Nullable[I] do
               begin
-                if rhs_sym[j]<0 then
+                if RHSSym[J]<0 then
                   begin
-                    setunion(first_syms[i], first_set_table^[-rhs_sym[j]]^);
-                    nullable[i] := YaccTabl.nullable^[-rhs_sym[j]];
+                    SetUnion(FirstSyms[I], FirstSetTable^[-RHSSym[J]]^);
+                    Nullable[I] := YaccTabl.Nullable^[-RHSSym[J]];
                   end
                 else
                   begin
-                    include(first_syms[i], rhs_sym[j]);
-                    nullable[i] := false;
+                    Include(FirstSyms[I], RHSSym[J]);
+                    Nullable[I] := False;
                   end;
-                inc(j);
+                Inc(J);
               end;
           end;
     end(*compute_first_syms*);
 
-  procedure init_lookaheads ( i : Integer );
+  procedure InitLookaheads ( I : Integer );
     (* compute initial lookaheads induced by first sets of tail string
        of item i *)
-    var sym, j : Integer;
+    var Sym, J : Integer;
     begin
-      with item_set, item[i], rule_table^[rule_no]^ do
-        if (pos_no<=rhs_len) and (rhs_sym[pos_no]<0) then
+      with ItemSet, Item[I], RuleTable^[RuleNo]^ do
+        if (PosNo<=RHSLen) and (RHSSym[PosNo]<0) then
           begin
-            sym := rhs_sym[pos_no];
-            for j := n_kernel_items+1 to n_items do
-              with item[j], rule_table^[rule_no]^ do
-                if lhs_sym=sym then
-                  setunion(lookahead_set[j], first_syms[i]);
+            Sym := RHSSym[PosNo];
+            for J := NKernelItems+1 to NItems do
+              with Item[J], RuleTable^[RuleNo]^ do
+                if LHSSym=Sym then
+                  SetUnion(LookaheadSet[J], FirstSyms[I]);
           end
     end(*initial_lookaheads*);
 
-  procedure propagate ( i : Integer );
+  procedure Propagate ( I : Integer );
     (* propagate lookahead symbols of item i *)
-    var sym, j : Integer;
+    var Sym, J : Integer;
     begin
-      with item_set, item[i], rule_table^[rule_no]^ do
-        if (pos_no<=rhs_len) and (rhs_sym[pos_no]<0) and nullable[i] then
+      with ItemSet, Item[I], RuleTable^[RuleNo]^ do
+        if (PosNo<=RHSLen) and (RHSSym[PosNo]<0) and Nullable[I] then
           begin
-            sym := rhs_sym[pos_no];
-            for j := n_kernel_items+1 to n_items do
-              with item[j], rule_table^[rule_no]^ do
-                if lhs_sym=sym then
-                  setunion(lookahead_set[j], lookahead_set[i]);
+            Sym := RHSSym[PosNo];
+            for J := NKernelItems+1 to NItems do
+              with Item[J], RuleTable^[RuleNo]^ do
+                if LHSSym=Sym then
+                  SetUnion(LookaheadSet[J], LookaheadSet[I]);
           end
     end(*propagate*);
 
   begin(*spontaneous_lookaheads*)
-    with item_set do
+    with ItemSet do
       begin
         (* initialize kernel lookahead sets: *)
-        for i := 1 to n_kernel_items do singleton(lookahead_set[i], -i);
+        for I := 1 to NKernelItems do Singleton(LookaheadSet[I], -I);
         (* compute first sets and nullable flags: *)
-        for i := 1 to n_items do compute_first_syms(i);
+        for I := 1 to NItems do ComputeFirstSyms(I);
         (* initialize nonkernel lookahead sets: *)
-        for i := n_kernel_items+1 to n_items do empty(lookahead_set[i]);
-        for i := 1 to n_items do init_lookaheads(i);
+        for I := NKernelItems+1 to NItems do Empty(LookaheadSet[I]);
+        for I := 1 to NItems do InitLookaheads(I);
         (* repeated passes until no more lookaheads have been added
            during the previous pass: *)
-        count := sym_count(n_items);
+        Count := SymCount(NItems);
         repeat
-          last_count := count;
-          for i := 1 to n_items do
-            propagate(i);
-          count := sym_count(n_items);
-        until last_count=count;
+          LastCount := Count;
+          for I := 1 to NItems do
+            Propagate(I);
+          Count := SymCount(NItems);
+        until LastCount=Count;
       end;
   end(*spontaneous_lookaheads*);
 
-function redns_less ( i, j : Integer ) : Boolean;
+function RednsLess ( I, J : Integer ) : Boolean;
   begin
-    redns_less := redn_table^[i].rule_no<redn_table^[j].rule_no
+    RednsLess := RednTable^[I].RuleNo<RednTable^[J].RuleNo
   end(*redns_less*);
 
-procedure redns_swap ( i, j : Integer );
-  var x : RednRec;
+procedure RednsSwap ( I, J : Integer );
+  var X : TRednRec;
   begin
-    x := redn_table^[i];
-    redn_table^[i] := redn_table^[j];
-    redn_table^[j] := x;
+    X := RednTable^[I];
+    RednTable^[I] := RednTable^[J];
+    RednTable^[J] := X;
   end(*redns_swap*);
 
-procedure sort_redns;
+procedure SortRedns;
   (* sort reduction entries in act_state w.r.t. rule numbers *)
   begin
-    with state_table^[act_state] do
-      quicksort(redns_lo, redns_hi, {$ifdef fpc}@{$endif}redns_less,
-                {$ifdef fpc}@{$endif}redns_swap);
+    with StateTable^[ActState] do
+      QuickSort(RednsLo, RednsHi, {$ifdef fpc}@{$endif}RednsLess,
+                {$ifdef fpc}@{$endif}RednsSwap);
   end(*sort_redns*);
 
-procedure initialize;
+procedure Initialize;
 
   (* initialization phase of lookahead computation algorithm *)
 
-  procedure add_prop ( i : Integer; symset : IntSetPtr );
+  procedure AddProp ( I : Integer; SymSet : PIntSet );
     (* add a propagation link to kernel item i *)
-    var prop : PropList;
+    var Prop : PPropList;
     begin
-      new(prop);
-      prop^.symset := symset;
-      prop^.next := prop_table^[i];
-      prop_table^[i] := prop;
+      New(Prop);
+      Prop^.SymSet := SymSet;
+      Prop^.Next := PropTable^[I];
+      PropTable^[I] := Prop;
     end(*add_prop*);
 
-  var i, j, k : Integer;
-      lookaheads : IntSetPtr;
+  var I, J, K : Integer;
+      Lookaheads : PIntSet;
 
   begin
     (* initialize lookahead sets and propagation links: *)
-    for i := 1 to n_items do lookahead_table^[i] := newEmptyIntSet;
-    for i := 1 to n_items do prop_table^[i] := nil;
-    act_state := 0;
+    for I := 1 to NItems do LookaheadTable^[I] := NewEmptyIntSet;
+    for I := 1 to NItems do PropTable^[I] := nil;
+    ActState := 0;
     repeat
-      with state_table^[act_state], item_set do
+      with StateTable^[ActState], ItemSet do
         begin
-          start_redns;
-          get_item_set(act_state, item_set);
-          n_kernel_items := n_items;
+          StartRedns;
+          GetItemSet(ActState, ItemSet);
+          NKernelItems := NItems;
           (* compute LR(0) closure: *)
-          closure(item_set);
+          Closure(ItemSet);
           (* compute spontaneous lookaheads: *)
-          spontaneous_lookaheads;
+          SpontaneousLookaheads;
           (* process kernel items: *)
-          for i := 1 to n_kernel_items do with item[i] do
-            if next>0 then
+          for I := 1 to NKernelItems do with Item[I] do
+            if Next>0 then
               (* add propagation link: *)
-              add_prop(item_lo+i-1, lookahead_table^[next])
+              AddProp(ItemLo+I-1, LookaheadTable^[Next])
             else
               (* enter reduce action: *)
-              add_redn(lookahead_table^[item_lo+i-1], rule_no);
+              AddRedn(LookaheadTable^[ItemLo+I-1], RuleNo);
           (* process nonkernel items: *)
           (* find successor items: *)
-          for k := trans_lo to trans_hi do
-            with trans_table^[k] do
-              for i := n_kernel_items+1 to n_items do
-                with item[i], rule_table^[rule_no]^ do
-                  if pos_no>rhs_len then
-                    next := 0
-                  else if rhs_sym[pos_no]=sym then
-                    next := find_item(next_state, rule_no, pos_no+1);
+          for K := TransLo to TransHi do
+            with TransTable^[K] do
+              for I := NKernelItems+1 to NItems do
+                with Item[I], RuleTable^[RuleNo]^ do
+                  if PosNo>RHSLen then
+                    Next := 0
+                  else if RHSSym[PosNo]=Sym then
+                    Next := FindItem(NextState, RuleNo, PosNo+1);
           (* add spontaneous lookaheads and propagation links: *)
-          for i := n_kernel_items+1 to n_items do with item[i] do
-            if next>0 then
+          for I := NKernelItems+1 to NItems do with Item[I] do
+            if Next>0 then
               (* lookaheads are generated spontaneously for successor
                  item: *)
-              for j := 1 to size(lookahead_set[i]) do
-                if lookahead_set[i][j]>=0 then
-                  include(lookahead_table^[next]^, lookahead_set[i][j])
+              for J := 1 to Size(LookaheadSet[I]) do
+                if LookaheadSet[I][J]>=0 then
+                  Include(LookaheadTable^[Next]^, LookaheadSet[I][J])
                 else
-                  add_prop(item_lo+(-lookahead_set[i][j])-1,
-                           lookahead_table^[next])
+                  AddProp(ItemLo+(-LookaheadSet[I][J])-1,
+                           LookaheadTable^[Next])
             else
               (* nonkernel reduction item: *)
               begin
-                lookaheads := newEmptyIntSet;
-                for j := 1 to size(lookahead_set[i]) do
-                  if lookahead_set[i][j]>=0 then
-                    include(lookaheads^, lookahead_set[i][j])
+                Lookaheads := NewEmptyIntSet;
+                for J := 1 to Size(LookaheadSet[I]) do
+                  if LookaheadSet[I][J]>=0 then
+                    Include(Lookaheads^, LookaheadSet[I][J])
                   else
-                    add_prop(item_lo+(-lookahead_set[i][j])-1,
-                             lookaheads);
-                add_redn(lookaheads, rule_no);
+                    AddProp(ItemLo+(-LookaheadSet[I][J])-1,
+                             Lookaheads);
+                AddRedn(Lookaheads, RuleNo);
               end;
-          end_redns;
-          sort_redns;
+          EndRedns;
+          SortRedns;
         end;
-      inc(act_state);
-    until act_state=n_states;
+      Inc(ActState);
+    until ActState=NStates;
   end(*initialize*);
 
-procedure propagate;
+procedure Propagate;
 
   (* propagation phase of lookahead computation algorithm *)
 
-  var i, l : Integer;
-      done : Boolean;
-      prop : PropList;
+  var I, L : Integer;
+      Done : Boolean;
+      Prop : PPropList;
 
   begin
     (* repeated passes over the kernel items table until no more lookaheads
        could be added in the previous pass: *)
     repeat
-      done := true;
-      for i := 1 to n_items do
+      Done := True;
+      for I := 1 to NItems do
         begin
-          prop := prop_table^[i];
-          while prop<>nil do with prop^ do
+          Prop := PropTable^[I];
+          while Prop<>nil do with Prop^ do
             begin
-              l := size(symset^);
-              setunion(symset^, lookahead_table^[i]^);
-              if size(symset^)>l then done := false;
-              prop := next;
+              L := Size(SymSet^);
+              SetUnion(SymSet^, LookaheadTable^[I]^);
+              if Size(SymSet^)>L then Done := False;
+              Prop := Next;
             end;
         end;
-    until done;
+    until Done;
   end(*propagate*);
 
-procedure lookaheads;
+procedure Lookaheads;
   begin
-    initialize;
-    propagate;
+    Initialize;
+    Propagate;
   end(*lookaheads*);
 
 end(*YaccLookaheads*).

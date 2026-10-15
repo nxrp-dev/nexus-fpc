@@ -14,14 +14,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit paramparser;
+unit ParamParser;
 
 {$MODE OBJFPC} {$H+}
 
 interface
 
 uses
-  Classes, SysUtils, externaltypes;
+  Classes, SysUtils, ExternalTypes;
 
 type
   EParametersException = class(Exception);
@@ -36,97 +36,97 @@ type
 
   TParameters = class
   private
-    fHelp : boolean;
-    fVersion : boolean;
-    fVerbose : boolean;
-    fInputFiles : TStringList;
-    fOutputFile : string;
-    fEndianess : byte;
+    FHelp : Boolean;
+    FVersion : Boolean;
+    FVerbose : Boolean;
+    FInputFiles : TStringList;
+    FOutputFile : string;
+    FEndianess : Byte;
 
-    procedure ParseOutputFile(aList : TStringList; var index : integer; const parname : string);
-    procedure ParseEndianess(aList : TStringList; var index : integer; const parname : string);
-    function DoOptionalArgument(aList : TStringList; const i : integer) : string;
-    function DoMandatoryArgument(aList : TStringList; const i : integer) : string;
-    function IsParameter(const s : string) : boolean;
+    procedure ParseOutputFile(AList : TStringList; var Index : Integer; const ParName : string);
+    procedure ParseEndianess(AList : TStringList; var Index : Integer; const ParName : string);
+    function DoOptionalArgument(AList : TStringList; const I : Integer) : string;
+    function DoMandatoryArgument(AList : TStringList; const I : Integer) : string;
+    function IsParameter(const S : string) : Boolean;
     function ParamsToStrList : TStringList;
   protected
   public
     constructor Create;
     destructor Destroy; override;
     procedure Parse;
-    property Help : boolean read fHelp;
-    property Version : boolean read fVersion;
-    property Verbose : boolean read fVerbose;
-    property InputFiles : TStringList read fInputFiles;
-    property OutputFile : string read fOutputFile write fOutputFile;
-    property Endianess : byte read fEndianess write fEndianess;
+    property Help : Boolean Read FHelp;
+    property Version : Boolean Read FVersion;
+    property Verbose : Boolean Read FVerbose;
+    property InputFiles : TStringList Read FInputFiles;
+    property OutputFile : string Read FOutputFile Write FOutputFile;
+    property Endianess : Byte Read FEndianess Write FEndianess;
   end;
 
 implementation
 
 uses
-  msghandler;
+  MsgHandler;
 
 { TParameters }
 
-procedure TParameters.ParseOutputFile(aList: TStringList; var index: integer;
-  const parname : string);
+procedure TParameters.ParseOutputFile(AList: TStringList; var Index: Integer;
+  const ParName : string);
 begin
-  if fOutputFile<>'' then
+  if FOutputFile<>'' then
     raise EOutputFileAlreadySetException.Create('');
-  inc(index);
-  fOutputFile:=DoMandatoryArgument(aList,index);
-  if fOutputFile='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  FOutputFile:=DoMandatoryArgument(AList,Index);
+  if FOutputFile='' then
+    raise EArgumentMissingException.Create(ParName);
 end;
 
-procedure TParameters.ParseEndianess(aList: TStringList; var index: integer;
-  const parname: string);
-var tmp : string;
+procedure TParameters.ParseEndianess(AList: TStringList; var Index: Integer;
+  const ParName: string);
+var Tmp : string;
 begin
-  inc(index);
-  tmp:=LowerCase(DoMandatoryArgument(aList,index));
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  Tmp:=LowerCase(DoMandatoryArgument(AList,Index));
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
 
-  if tmp='big' then fEndianess:=EXT_ENDIAN_BIG
-  else if tmp='little' then fEndianess:=EXT_ENDIAN_LITTLE
-  else raise EUnknownEndianessException.Create(tmp);
+  if Tmp='big' then FEndianess:=ExtEndianBig
+  else if Tmp='little' then FEndianess:=ExtEndianLittle
+  else raise EUnknownEndianessException.Create(Tmp);
 end;
 
-function TParameters.DoOptionalArgument(aList: TStringList; const i: integer
+function TParameters.DoOptionalArgument(AList: TStringList; const I: Integer
   ): string;
 begin
   Result:='';
-  if aList.Count>i then
+  if AList.Count>I then
   begin
-    if not IsParameter(aList[i]) then
-      Result:=aList[i];
+    if not IsParameter(AList[I]) then
+      Result:=AList[I];
   end;
 end;
 
-function TParameters.DoMandatoryArgument(aList: TStringList; const i: integer
+function TParameters.DoMandatoryArgument(AList: TStringList; const I: Integer
   ): string;
 begin
   Result:='';
-  if aList.count>i then
-    Result:=aList[i];
+  if AList.Count>I then
+    Result:=AList[I];
 end;
 
-function TParameters.IsParameter(const s: string): boolean;
+function TParameters.IsParameter(const S: string): Boolean;
 begin
-  Result:=false;
-  if length(s)<=1 then exit;
-  if copy(s,1,1)='-' then Result:=true;
+  Result:=False;
+  if Length(S)<=1 then exit;
+  if Copy(S,1,1)='-' then Result:=True;
 end;
 
 function TParameters.ParamsToStrList: TStringList;
-var i : integer;
+var I : Integer;
 begin
   Result:=TStringList.Create;
   try
-    for i:=1 to ParamCount do
-      Result.Add(ParamStr(i));
+    for I:=1 to ParamCount do
+      Result.Add(ParamStr(I));
   except
     Result.Free;
     raise;
@@ -134,54 +134,54 @@ begin
 end;
 
 procedure TParameters.Parse;
-var fList : TStringList;
-    tmp : string;
-    i : integer;
+var FList : TStringList;
+    Tmp : string;
+    I : Integer;
 begin
-  fList:=ParamsToStrList;
+  FList:=ParamsToStrList;
   try
-    i:=0;
-    while i<fList.Count do
+    I:=0;
+    while I<FList.Count do
     begin
-      tmp:=fList[i];
-      Messages.DoVerbose(Format('parsing parameter ''%s''',[tmp]));
-      if IsParameter(tmp) then
+      Tmp:=FList[I];
+      Messages.DoVerbose(Format('parsing parameter ''%s''',[Tmp]));
+      if IsParameter(Tmp) then
       begin
-        if ((tmp='--help') or (tmp='-h') or (tmp='-?')) then
-          fHelp:=true
-        else if ((tmp='--version') or (tmp='-V')) then
-          fVersion:=true
-        else if ((tmp='--verbose') or (tmp='-v')) then
-          fVerbose:=true
-        else if ((tmp='-o') or (tmp='--output')) then
-          ParseOutputFile(fList,i,tmp)
-        else if ((tmp='-e') or (tmp='--endian')) then
-          ParseEndianess(fList,i,tmp)
+        if ((Tmp='--help') or (Tmp='-h') or (Tmp='-?')) then
+          FHelp:=True
+        else if ((Tmp='--version') or (Tmp='-V')) then
+          FVersion:=True
+        else if ((Tmp='--verbose') or (Tmp='-v')) then
+          FVerbose:=True
+        else if ((Tmp='-o') or (Tmp='--output')) then
+          ParseOutputFile(FList,I,Tmp)
+        else if ((Tmp='-e') or (Tmp='--endian')) then
+          ParseEndianess(FList,I,Tmp)
         else
-          raise EUnknownParameterException.Create(tmp);
+          raise EUnknownParameterException.Create(Tmp);
       end
       else
-        fInputFiles.Add(tmp); //assume it is an input file
-      inc(i);
+        FInputFiles.Add(Tmp); //assume it is an input file
+      Inc(I);
     end;
   finally
-    fList.Free;
+    FList.Free;
   end;
 end;
 
 constructor TParameters.Create;
 begin
-  fHelp:=false;
-  fVersion:=false;
-  fVerbose:=false;
-  fInputFiles:=TStringList.Create;
-  fOutputFile:='';
-  fEndianess:=EXT_ENDIAN_BIG;
+  FHelp:=False;
+  FVersion:=False;
+  FVerbose:=False;
+  FInputFiles:=TStringList.Create;
+  FOutputFile:='';
+  FEndianess:=ExtEndianBig;
 end;
 
 destructor TParameters.Destroy;
 begin
-  fInputFiles.Free;
+  FInputFiles.Free;
 end;
 
 end.

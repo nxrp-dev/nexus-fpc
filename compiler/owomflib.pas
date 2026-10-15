@@ -29,8 +29,8 @@ unit owomflib;
 interface
 
 uses
-  cclasses,
-  globtype,
+  CClasses,
+  GlobType,
   owbase;
 
 type
@@ -85,11 +85,11 @@ type
   public
     constructor createAr(const Aarfn:string);override;
     constructor createAr(const Aarfn:string;PageSize:Integer);
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  createfile(const fn:string):boolean;override;
     procedure closefile;override;
     procedure writesym(const sym:string);override;
-    procedure write(const b;len:longword);override;
+    procedure write(const b;len:LongWord);override;
   end;
 
   { TOmfLibObjectReader }
@@ -110,7 +110,7 @@ type
   strict private
     LibSymbols : TFPHashObjectList;
     islib: boolean;
-    CurrMemberPos : longint;
+    CurrMemberPos : LongInt;
     CurrMemberName : string;
     FPageSize: Integer;
     FIsCaseSensitive: Boolean;
@@ -118,14 +118,14 @@ type
     procedure ReadDictionary(DictionaryOffset: DWord; DictionarySizeInBlocks: Word);
   protected
     function getfilename:string;override;
-    function GetPos: longint;override;
+    function GetPos: LongInt;override;
     function GetIsArchive: boolean;override;
   public
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);override;
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  openfile(const fn:string):boolean;override;
     procedure closefile;override;
-    procedure seek(len:longint);override;
+    procedure seek(len:LongInt);override;
     property IsCaseSensitive: Boolean read FIsCaseSensitive;
   end;
 
@@ -133,8 +133,8 @@ implementation
 
     uses
       SysUtils,
-      cstreams,cutils,
-      globals,verbose,
+      CStreams,CUtils,
+      Globals,Verbose,
       omfbase;
 
     const
@@ -201,9 +201,9 @@ implementation
       end;
 
 
-    destructor TOmfLibObjectWriter.destroy;
+    destructor TOmfLibObjectWriter.Destroy;
       begin
-        if Errorcount=0 then
+        if ErrorCount=0 then
           WriteLib;
         FLibData.Free;
         FLibData := nil;
@@ -211,7 +211,7 @@ implementation
         FObjectModules := nil;
         FDictionary.Free;
         FDictionary := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -227,7 +227,7 @@ implementation
     procedure TOmfLibObjectWriter.closefile;
       var
         RawRec: TOmfRawRecord;
-        ObjHeader: TOmfRecord_THEADR;
+        ObjHeader: TOMFRecordTHEADR;
       begin
         FCurrentModule.ObjData.seek(0);
         RawRec:=TOmfRawRecord.Create;
@@ -238,7 +238,7 @@ implementation
             RawRec := nil;
             InternalError(2018060801);
           end;
-        ObjHeader:=TOmfRecord_THEADR.Create;
+        ObjHeader:=TOMFRecordTHEADR.Create;
         ObjHeader.DecodeFrom(RawRec);
         { create a dictionary entry with the module name }
         TOmfLibDictionaryEntry.Create(FDictionary,ModName2DictEntry(ObjHeader.ModuleName),FCurrentModuleIndex);
@@ -256,7 +256,7 @@ implementation
       end;
 
 
-    procedure TOmfLibObjectWriter.write(const b; len: longword);
+    procedure TOmfLibObjectWriter.write(const b; len: LongWord);
       begin
         inc(fobjsize,len);
         inc(fsize,len);
@@ -265,11 +265,11 @@ implementation
 
     procedure TOmfLibObjectWriter.WriteHeader(DictStart: DWord; DictBlocks: Word);
       var
-        Header: TOmfRecord_LIBHEAD;
+        Header: TOMFRecordLIBHEAD;
         RawRec: TOmfRawRecord;
       begin
         { set header properties }
-        Header:=TOmfRecord_LIBHEAD.Create;
+        Header:=TOMFRecordLIBHEAD.Create;
         Header.PageSize:=FPageSize;
         Header.DictionaryOffset:=DictStart;
         Header.DictionarySizeInBlocks:=DictBlocks;
@@ -288,11 +288,11 @@ implementation
 
     procedure TOmfLibObjectWriter.WriteFooter;
       var
-        Footer: TOmfRecord_LIBEND;
+        Footer: TOMFRecordLIBEND;
         RawRec: TOmfRawRecord;
       begin
         FLibData.seek(FFooterPos);
-        Footer:=TOmfRecord_LIBEND.Create;
+        Footer:=TOMFRecordLIBEND.Create;
         Footer.CalculatePaddingBytes(FLibData.Pos);
         RawRec:=TOmfRawRecord.Create;
         Footer.EncodeTo(RawRec);
@@ -308,12 +308,12 @@ implementation
         I: Integer;
         CurrentPage: Integer;
         CurrentPos: LongWord;
-        pow: longint;
+        pow: LongInt;
       begin
         if not IsPowerOf2(aPageSize,pow) then
-          internalerror(2018060701);
+          InternalError(2018060701);
         if (pow<4) or (pow>15) then
-          internalerror(2018060702);
+          InternalError(2018060702);
         FPageSize:=aPageSize;
         { header is at page 0, so first module starts at page 1 }
         CurrentPage:=1;
@@ -341,7 +341,7 @@ implementation
         for I:=4 to 15 do
           if TryPageSize(1 shl I) then
             exit;
-        internalerror(2018060703);
+        InternalError(2018060703);
       end;
 
     procedure TOmfLibObjectWriter.WriteLib;
@@ -387,7 +387,7 @@ implementation
           if TryWriteDictionaryWithSize(nb) then
             exit(nb);
         { could not write dictionary, even with the largest number of blocks }
-        internalerror(2015042202);
+        InternalError(2015042202);
       end;
 
         function TOmfLibObjectWriter.TryWriteDictionaryWithSize(nblocks: Word
@@ -486,11 +486,11 @@ implementation
   procedure TOmfLibObjectReader.ReadLibrary;
     var
       RawRecord: TOmfRawRecord;
-      Header: TOmfRecord_LIBHEAD;
+      Header: TOMFRecordLIBHEAD;
     begin
       RawRecord:=TOmfRawRecord.Create;
       RawRecord.ReadFrom(Self);
-      Header:=TOmfRecord_LIBHEAD.Create;
+      Header:=TOMFRecordLIBHEAD.Create;
       Header.DecodeFrom(RawRecord);
       FPageSize:=Header.PageSize;
       FIsCaseSensitive:=Header.CaseSensitive;
@@ -533,7 +533,7 @@ implementation
                 length_of_string:=block^[ofs];
                 if (ofs+1+length_of_string+1)>High(TBlock) then
                   begin
-                    Comment(V_Error,'OMF dictionary entry goes beyond end of block');
+                    Comment(VError,'OMF dictionary entry goes beyond end of block');
                     continue;
                   end;
                 SetLength(name,length_of_string);
@@ -551,7 +551,7 @@ implementation
         result:=result+'('+CurrMemberName+')';
     end;
 
-  function TOmfLibObjectReader.GetPos: longint;
+  function TOmfLibObjectReader.GetPos: LongInt;
     begin
       result:=inherited GetPos-CurrMemberPos;
     end;
@@ -577,11 +577,11 @@ implementation
           if islib then
             ReadLibrary
           else if (not allow_nonar) then
-            Comment(V_Error,'Not an OMF library file, illegal magic: '+filename);
+            Comment(VError,'Not an OMF library file, illegal magic: '+FileName);
         end;
     end;
 
-  destructor TOmfLibObjectReader.destroy;
+  destructor TOmfLibObjectReader.Destroy;
     begin
       inherited closefile;
       LibSymbols.Free;
@@ -593,11 +593,11 @@ implementation
     var
       libsym: TOmfLibDictionaryEntry;
       RawRec: TOmfRawRecord;
-      Header: TOmfRecord_THEADR;
+      Header: TOMFRecordTHEADR;
     begin
       result:=false;
       libsym:=TOmfLibDictionaryEntry(LibSymbols.Find(ModName2DictEntry(fn)));
-      if not assigned(libsym) then
+      if not Assigned(libsym) then
         exit;
       CurrMemberPos:=libsym.PageNum*FPageSize;
       inherited Seek(CurrMemberPos);
@@ -605,7 +605,7 @@ implementation
       { read the header, to obtain the module name }
       RawRec:=TOmfRawRecord.Create;
       RawRec.ReadFrom(self);
-      Header:=TOmfRecord_THEADR.Create;
+      Header:=TOMFRecordTHEADR.Create;
       Header.DecodeFrom(RawRec);
       CurrMemberName:=Header.ModuleName;
       Header.Free;
@@ -624,7 +624,7 @@ implementation
       CurrMemberName:='';
     end;
 
-  procedure TOmfLibObjectReader.seek(len: longint);
+  procedure TOmfLibObjectReader.seek(len: LongInt);
     begin
       inherited Seek(CurrMemberPos+len);
     end;

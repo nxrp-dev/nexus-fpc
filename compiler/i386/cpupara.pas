@@ -26,56 +26,56 @@ unit cpupara;
   interface
 
     uses
-       globtype,
-       aasmtai,aasmdata,cpubase,cgbase,cgutils,
-       symconst,symtype,symsym,symdef,
+       GlobType,
+       aasmtai,AAsmData,cpubase,cgbase,cgutils,
+       symconst,symtype,SymSym,symdef,
        parabase,paramgr;
 
     type
-       tcpuparamanager = class(tparamanager)
-          function param_use_paraloc(const cgpara:tcgpara):boolean;override;
+       TCPUParaManager = class(TParaManager)
+          function param_use_paraloc(const cgpara:TCGPara):boolean;override;
           function ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;override;
           function push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;override;
           function get_para_align(calloption : TProcCallOption):byte;override;
-          function get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;override;
-          function get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;override;
-          function get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;override;
-          function get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;override;
-          function create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):longint;override;
-          function create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:tvarargsparalist):longint;override;
+          function get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;override;
+          function get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;override;
+          function get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;override;
+          function get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;override;
+          function create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):LongInt;override;
+          function create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;override;
           procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);override;
           function get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;override;
        private
-          procedure create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:tparalist;var parasize:longint);
-          procedure create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:tparalist;var parareg,parasize:longint);
+          procedure create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parasize:LongInt);
+          procedure create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parareg,parasize:LongInt);
        end;
 
 
   implementation
 
     uses
-       cutils,sysutils,
-       systems,verbose,
-       symtable,
-       globals,defutil;
+       CUtils,SysUtils,
+       Systems,Verbose,
+       SymTable,
+       Globals,defutil;
 
       const
-        parasupregs : array[0..2] of tsuperregister = (RS_EAX,RS_EDX,RS_ECX);
+        parasupregs : array[0..2] of TSuperRegister = (RS_EAX,RS_EDX,RS_ECX);
 
 {****************************************************************************
                                 tcpuparamanager
 ****************************************************************************}
 
-    function tcpuparamanager.param_use_paraloc(const cgpara:tcgpara):boolean;
+    function TCPUParaManager.param_use_paraloc(const cgpara:TCGPara):boolean;
       var
-        paraloc : pcgparalocation;
+        paraloc : PCGParaLocation;
       begin
-        if not assigned(cgpara.location) then
-          internalerror(200410102);
+        if not Assigned(cgpara.location) then
+          InternalError(200410102);
         result:=true;
         { All locations are LOC_REFERENCE }
         paraloc:=cgpara.location;
-        while assigned(paraloc) do
+        while Assigned(paraloc) do
           begin
             if (paraloc^.loc<>LOC_REFERENCE) then
               begin
@@ -87,9 +87,9 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
+    function TCPUParaManager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
       var
-        size: longint;
+        size: LongInt;
       begin
         if handle_common_ret_in_param(def,pd,result) then
           exit;
@@ -152,7 +152,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
+    function TCPUParaManager.push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
       begin
         result:=false;
         { var,out,constref always require address }
@@ -227,7 +227,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_para_align(calloption : TProcCallOption):byte;
+    function TCPUParaManager.get_para_align(calloption : TProcCallOption):byte;
       begin
         if calloption=pocall_oldfpccall then
           result:=4
@@ -236,7 +236,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
+    function TCPUParaManager.get_volatile_registers_int(calloption : TProcCallOption):TCPURegisterSet;
       begin
         case calloption of
           pocall_internproc :
@@ -254,27 +254,27 @@ unit cpupara;
           pocall_oldfpccall :
             result:=[RS_EAX,RS_EDX,RS_ECX,RS_ESI,RS_EDI,RS_EBX];
           else
-            internalerror(200309071);
+            InternalError(200309071);
         end;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
+    function TCPUParaManager.get_volatile_registers_fpu(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[0..first_fpu_imreg-1];
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;
+    function TCPUParaManager.get_volatile_registers_mm(calloption : TProcCallOption):TCPURegisterSet;
       begin
         result:=[0..first_mm_imreg-1];
       end;
 
 
-    function tcpuparamanager.get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;
+    function TCPUParaManager.get_saved_registers_int(calloption : TProcCallOption):TCPURegisterArray;
       const
-        saveregs : tcpuregisterarray = (RS_EBX,RS_ESI,RS_EDI,RS_EBP);
-        saveregs_oldfpccall : tcpuregisterarray = (RS_EBP);
+        saveregs : TCPURegisterArray = (RS_EBX,RS_ESI,RS_EDI,RS_EBP);
+        saveregs_oldfpccall : TCPURegisterArray = (RS_EBP);
       begin
         case calloption of
           pocall_internproc,
@@ -291,20 +291,20 @@ unit cpupara;
           pocall_oldfpccall :
             result:=saveregs_oldfpccall;
           else
-            internalerror(2018050401);
+            InternalError(2018050401);
         end;
       end;
 
 
-    function  tcpuparamanager.get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;
+    function  TCPUParaManager.get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): TCGPara;
       var
-        retcgsize  : tcgsize;
-        paraloc : pcgparalocation;
+        retcgsize  : TCgSize;
+        paraloc : PCGParaLocation;
         fdef,
         usedef: TDef;
         handled: boolean;
       begin
-        if not assigned(forcetempdef) then
+        if not Assigned(forcetempdef) then
           usedef:=p.returndef
         else
           usedef:=forcetempdef;
@@ -313,9 +313,9 @@ unit cpupara;
         if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
            ((usedef.typ=recorddef) or
             is_object(usedef)) and
-           TAbstractRecordSymTable(TAbstractRecordDef(usedef).symtable).has_single_field(fdef) and
+           TAbstractRecordSymTable(TAbstractRecordDef(usedef).SymTable).has_single_field(fdef) and
            (fdef.typ=floatdef) and
-           (TFloatDef(fdef).floattype in [s32real,s64real]) then
+           (TFloatDef(fdef).floattype in [S32Real,S64Real]) then
           usedef:=fdef;
 
         handled:=set_common_funcretloc_info(p,usedef,retcgsize,result);
@@ -323,7 +323,7 @@ unit cpupara;
           set_common_funcretloc_info and that one will correctly determine whether
           the location is a temporary one, but that doesn't work here because we
           sometimes have to change the type }
-        result.temporary:=assigned(forcetempdef);
+        result.temporary:=Assigned(forcetempdef);
         if handled then
           exit;
 
@@ -387,17 +387,17 @@ unit cpupara;
       end;
 
 
-    procedure tcpuparamanager.create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:tparalist;var parasize:longint);
+    procedure TCPUParaManager.create_stdcall_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;var parasize:LongInt);
       var
         i  : integer;
         hp : TParaVarSym;
         paradef : TDef;
-        paraloc : pcgparalocation;
+        paraloc : PCGParaLocation;
         l,
         paralen,
-        varalign   : longint;
+        varalign   : LongInt;
         paraalign  : shortint;
-        paracgsize : tcgsize;
+        paracgsize : TCgSize;
         firstparaloc,
         pushaddr   : boolean;
       begin
@@ -431,7 +431,7 @@ unit cpupara;
               begin
                 { on AROS-i386, only the libbase can have explicit paraloc }
                 if not (vo_is_syscall_lib in hp.varoptions) then
-                  internalerror(2016090105);
+                  InternalError(2016090105);
                 if p.proccalloption in pushleftright_pocalls then
                   dec(i)
                 else
@@ -444,7 +444,7 @@ unit cpupara;
               begin
                 paralen:=sizeof(aint);
                 paracgsize:=OS_ADDR;
-                paradef:=cpointerdef.getreusable_no_free(paradef);
+                paradef:=CPointerDef.getreusable_no_free(paradef);
               end
             else
               begin
@@ -478,7 +478,7 @@ unit cpupara;
                   paraloc^.reference.index:=NR_STACK_POINTER_REG
                 else
                   paraloc^.reference.index:=NR_FRAME_POINTER_REG;
-                varalign:=used_align(size_2_align(paralen),paraalign,paraalign);
+                varalign:=Used_Align(Size_2_Align(paralen),paraalign,paraalign);
 
                 { don't let push_size return 16, because then we can    }
                 { read past the end of the heap since the value is only }
@@ -494,7 +494,7 @@ unit cpupara;
             else
               begin
                 if paralen=0 then
-                  internalerror(2005011606);
+                  InternalError(2005011606);
                 firstparaloc:=true;
                 while (paralen>0) do
                   begin
@@ -527,7 +527,7 @@ unit cpupara;
                       paraloc^.reference.index:=NR_STACK_POINTER_REG
                     else
                       paraloc^.reference.index:=NR_FRAME_POINTER_REG;
-                    varalign:=used_align(size_2_align(l),paraalign,paraalign);
+                    varalign:=Used_Align(Size_2_Align(l),paraalign,paraalign);
                     paraloc^.reference.offset:=parasize;
                     if side=calleeside then
                       if not(po_nostackframe in p.procoptions) then
@@ -548,17 +548,17 @@ unit cpupara;
       end;
 
 
-    procedure tcpuparamanager.create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:tparalist;
-                                                            var parareg,parasize:longint);
+    procedure TCPUParaManager.create_register_paraloc_info(p : TAbstractProcDef; side: TCallerCallee;paras:TParaList;
+                                                            var parareg,parasize:LongInt);
       var
         hp : TParaVarSym;
         paradef : TDef;
-        paraloc : pcgparalocation;
-        paracgsize : tcgsize;
+        paraloc : PCGParaLocation;
+        paracgsize : TCgSize;
         i : integer;
         l,
         paralen,
-        varalign : longint;
+        varalign : LongInt;
         paraalign : shortint;
         pass : byte;
         firstparaloc,
@@ -587,14 +587,14 @@ unit cpupara;
               begin
                 hp:=TParaVarSym(paras[i]);
                 paradef:=hp.vardef;
-                if not(assigned(hp.paraloc[side].location)) then
+                if not(Assigned(hp.paraloc[side].location)) then
                   begin
                     pushaddr:=push_addr_param(hp.varspez,hp.vardef,p.proccalloption);
                     if pushaddr then
                       begin
                         paralen:=sizeof(aint);
                         paracgsize:=OS_ADDR;
-                        paradef:=cpointerdef.getreusable_no_free(paradef);
+                        paradef:=CPointerDef.getreusable_no_free(paradef);
                       end
                     else
                       begin
@@ -651,7 +651,7 @@ unit cpupara;
                                 paraloc^.reference.index:=NR_STACK_POINTER_REG
                               else
                                 paraloc^.reference.index:=NR_FRAME_POINTER_REG;
-                              varalign:=used_align(size_2_align(paralen),paraalign,paraalign);
+                              varalign:=Used_Align(Size_2_Align(paralen),paraalign,paraalign);
                               paraloc^.reference.offset:=parasize;
                               if side=calleeside then
                                 inc(paraloc^.reference.offset,TargetInfo.first_parm_offset);
@@ -660,7 +660,7 @@ unit cpupara;
                           else
                             begin
                               if paralen=0 then
-                                internalerror(2005011607);
+                                InternalError(2005011607);
                               firstparaloc:=true;
                               while (paralen>0) do
                                 begin
@@ -692,7 +692,7 @@ unit cpupara;
                                     paraloc^.reference.index:=NR_STACK_POINTER_REG
                                   else
                                     paraloc^.reference.index:=NR_FRAME_POINTER_REG;
-                                  varalign:=used_align(size_2_align(l),paraalign,paraalign);
+                                  varalign:=Used_Align(Size_2_Align(l),paraalign,paraalign);
                                   paraloc^.reference.offset:=parasize;
                                   if side=calleeside then
                                     inc(paraloc^.reference.offset,TargetInfo.first_parm_offset);
@@ -722,10 +722,10 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):longint;
+    function TCPUParaManager.create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):LongInt;
       var
         parasize,
-        parareg : longint;
+        parareg : LongInt;
       begin
         parasize:=0;
         parareg:=0;
@@ -750,27 +750,27 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:tvarargsparalist):longint;
+    function TCPUParaManager.create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:TVarArgsParaList):LongInt;
       var
-        parasize : longint;
+        parasize : LongInt;
       begin
         parasize:=0;
         { calculate the registers for the normal parameters }
         create_stdcall_paraloc_info(p,side,p.paras,parasize);
         { append the varargs }
-        if assigned(varargspara) then
+        if Assigned(varargspara) then
           begin
             if side=callerside then
               create_stdcall_paraloc_info(p,side,varargspara,parasize)
             else
-              internalerror(2019021926);
+              InternalError(2019021926);
           end;
         create_funcretloc_info(p,side);
         result:=parasize;
       end;
 
 
-    procedure tcpuparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure TCPUParaManager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
       begin
         { Never a need for temps when value is pushed (calls inside parameters
           will simply allocate even more stack space for their parameters) }
@@ -781,5 +781,5 @@ unit cpupara;
 
 
 begin
-   paramanager:=tcpuparamanager.create;
+   paramanager:=TCPUParaManager.create;
 end.

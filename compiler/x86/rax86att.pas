@@ -33,8 +33,8 @@ Interface
 
     { tx86attreader }
 
-    tx86attreader = class(tattreader)
-      ActOpsize : topsize;
+    TX86ATTReader = class(TATTReader)
+      ActOpsize : TOpSize;
       function is_asmopcode(const s: string):boolean;override;
       procedure handleopcode;override;
       procedure BuildReference(oper : tx86operand);
@@ -56,17 +56,17 @@ Implementation
 
     uses
       { helpers }
-      cutils,
+      CUtils,
       { global }
-      globtype,verbose,
-      systems,
+      GlobType,Verbose,
+      Systems,
       { aasm }
-      aasmbase,aasmdata,aasmcpu,
+      aasmbase,AAsmData,aasmcpu,
       { symtable }
-      symconst,symsym,symdef,
+      symconst,SymSym,symdef,
       { parser }
-      scanner,
-      procinfo,
+      Scanner,
+      ProcInfo,
       itcpugas,
       paramgr,
       cgbase
@@ -124,9 +124,9 @@ Implementation
 
     { Tx86attReader }
 
-    procedure tx86attreader.handlepercent;
+    procedure TX86ATTReader.handlepercent;
       var
-        len : longint;
+        len : LongInt;
       begin
         len:=1;
         actasmpattern[len]:='%';
@@ -145,7 +145,7 @@ Implementation
               c:=CurrentScanner.asmgetchar;
             end;
            actasmpattern[0]:=chr(len);
-           uppervar(actasmpattern);
+           UpperVar(actasmpattern);
            if (actasmpattern = '%ST') and (c='(') then
             Begin
               actasmpattern:=actasmpattern+c;
@@ -171,7 +171,7 @@ Implementation
       end;
 
 
-    Procedure tx86attreader.BuildReference(oper : tx86operand);
+    Procedure TX86ATTReader.BuildReference(oper : tx86operand);
 
       procedure Consume_RParen;
         begin
@@ -462,12 +462,12 @@ Implementation
       end;
 
 
-    Procedure tx86attreader.MaybeGetPICModifier(var oper: tx86operand);
+    Procedure TX86ATTReader.MaybeGetPICModifier(var oper: tx86operand);
       var
         relsym: string;
-        asmsymtyp: tasmsymtype;
-        l: tcgint;
-        sym: tasmsymbol;
+        asmsymtyp: TAsmsymtype;
+        l: TCGInt;
+        sym: TAsmSymbol;
       begin
         case actasmtoken of
           AS_AT:
@@ -520,7 +520,7 @@ Implementation
               Consume(AS_MINUS);
               BuildConstSymbolExpression(true,true,false,l,relsym,asmsymtyp);
               if (relsym<>'') then
-                if not assigned(oper.opr.ref.relsymbol) then
+                if not Assigned(oper.opr.ref.relsymbol) then
                   oper.opr.ref.relsymbol:=CurrentAsmData.RefAsmSymbol(relsym,asmsymtyp)
                 else
                   Message(asmr_e_invalid_reference_syntax)
@@ -533,14 +533,14 @@ Implementation
       end;
 
 
-    Procedure tx86attreader.BuildOperand(oper : tx86operand);
+    Procedure TX86ATTReader.BuildOperand(oper : tx86operand);
       var
         tempstr,
         expr : string;
-        typesize,l,k : tcgint;
+        typesize,l,k : TCGInt;
 
 
-        procedure AddLabelOperand(hl:tasmlabel);
+        procedure AddLabelOperand(hl:TAsmLabel);
           begin
             if not(actasmtoken in [AS_PLUS,AS_MINUS,AS_LPAREN]) and
                is_calljmp(actopcode) then
@@ -562,7 +562,7 @@ Implementation
             hasdot  : boolean;
             l,
             toffset,
-            tsize   : tcgint;
+            tsize   : TCGInt;
           begin
             if not(actasmtoken in [AS_DOT,AS_PLUS,AS_MINUS]) then
              exit;
@@ -620,7 +620,7 @@ Implementation
               OPR_SYMBOL:
                 Message(asmr_e_invalid_symbol_ref);
               else
-                internalerror(200309221);
+                InternalError(200309221);
             end;
           end;
 
@@ -721,8 +721,8 @@ Implementation
           end;
 
       var
-        tempreg : tregister;
-        hl      : tasmlabel;
+        tempreg : TRegister;
+        hl      : TAsmLabel;
       Begin
         expr:='';
         case actasmtoken of
@@ -854,7 +854,7 @@ Implementation
                       if (actasmtoken=AS_PLUS) then
                         begin
                           l:=BuildConstExpression(true,false);
-                          if errorcount=0 then
+                          if ErrorCount=0 then
                             case oper.opr.typ of
                               OPR_CONSTANT :
                                 inc(oper.opr.val,l);
@@ -869,7 +869,7 @@ Implementation
                                   inc(oper.opr.constoffset, l);
                                 end;
                               else
-                                internalerror(2003092011);
+                                InternalError(2003092011);
                             end;
                         end;
                     end;
@@ -926,10 +926,10 @@ Implementation
       end;
 
 
-    procedure tx86attreader.BuildOpCode(instr : tx86instruction);
+    procedure TX86ATTReader.BuildOpCode(instr : tx86instruction);
       var
-        operandnum : longint;
-        PrefixOp,OverrideOp: tasmop;
+        operandnum : LongInt;
+        PrefixOp,OverrideOp: TAsmOp;
         di_param, si_param: ShortInt;
       Begin
         PrefixOp:=A_None;
@@ -1118,14 +1118,14 @@ Implementation
       end;
 
 
-    function tx86attreader.is_asmopcode(const s: string):boolean;
+    function TX86ATTReader.is_asmopcode(const s: string):boolean;
       var
         cond : string[4];
-        cnd  : tasmcond;
+        cnd  : TAsmCond;
         len,
         j,
         sufidx,
-        suflen : longint;
+        suflen : LongInt;
       Begin
         is_asmopcode:=FALSE;
 
@@ -1143,7 +1143,7 @@ Implementation
               { Search opcodes }
               if len>0 then
                 begin
-                  actopcode:=tasmop(PtrUInt(iasmops.Find(copy(s,1,len))));
+                  actopcode:=TAsmOp(PtrUInt(iasmops.Find(copy(s,1,len))));
 
                   { movsd needs special handling because it has two namings in at&t syntax (movsl for string handling and
                     movsd for the sse instruction) while only one in intel syntax (movsd, both string and sse)
@@ -1197,7 +1197,7 @@ Implementation
                     cond:=Copy(s,Length(CondAsmOpStr[j])+1,len-Length(CondAsmOpStr[j]));
                     if cond<>'' then
                      begin
-                       for cnd:=low(TasmCond) to high(TasmCond) do
+                       for cnd:=low(TAsmCond) to high(TAsmCond) do
                         if Cond=Upper(cond2str[cnd]) then
                          begin
                            actopcode:=CondASmOp[j];
@@ -1223,7 +1223,7 @@ Implementation
       end;
 
 
-    procedure tx86attreader.handleopcode;
+    procedure TX86ATTReader.handleopcode;
       var
         instr : Tx86Instruction;
       begin

@@ -34,15 +34,15 @@ interface
     const
       { include mnemonic strings }
 {$if defined(x86_64)}
-      gas_op2str:op2strtable={$i x8664att.inc}
-      gas_needsuffix:array[tasmop] of TAttSuffix={$i x8664ats.inc}
+      gas_op2str:TOp2StrTable={$i x8664att.inc}
+      gas_needsuffix:array[TAsmOp] of TAttSuffix={$i x8664ats.inc}
 {$elseif defined(i386)}
-      gas_op2str:op2strtable={$i i386att.inc}
-      gas_needsuffix:array[tasmop] of TAttSuffix={$i i386atts.inc}
+      gas_op2str:TOp2StrTable={$i i386att.inc}
+      gas_needsuffix:array[TAsmOp] of TAttSuffix={$i i386atts.inc}
 {$endif}
 
 {$ifdef x86_64}
-     gas_opsize2str : array[topsize] of string[2] = ('',
+     gas_opsize2str : array[TOpSize] of string[2] = ('',
        'b','w','l','q','bw','bl','wl','bq','wq','lq',
        's','l','q',
        's','l','t','v','x',
@@ -60,24 +60,24 @@ interface
      att_sizesuffixstr : array[0..14] of string[2] = (
        '','BW','BL','WL','BQ','WQ',{'LQ',}'B','W','L','S','Q','T','X','Y','Z'
      );
-     att_sizesuffix : array[0..14] of topsize = (
+     att_sizesuffix : array[0..14] of TOpSize = (
        S_NO,S_BW,S_BL,S_WL,S_BQ,S_WQ,{S_LQ,}S_B,S_W,S_L,S_NO,S_Q,S_NO,S_NO,S_NO,S_NO
      );
-     att_sizefpusuffix : array[0..14] of topsize = (
+     att_sizefpusuffix : array[0..14] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,{S_NO,}S_NO,S_NO,S_FL,S_FS,S_NO,S_FX,S_NO,S_NO,S_NO
      );
-     att_sizefpuintsuffix : array[0..14] of topsize = (
+     att_sizefpuintsuffix : array[0..14] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,{S_NO,}S_NO,S_NO,S_IL,S_IS,S_IQ,S_NO,S_NO,S_NO,S_NO
      );
-     att_sizemmsuffix : array[0..14] of topsize = (
+     att_sizemmsuffix : array[0..14] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO, S_NO,{S_NO,}S_NO,S_NO,S_IL,S_NO,S_IQ,S_NO,S_XMM,S_YMM,S_ZMM
      );
-     att_sizemmxsuffix : array[0..14] of topsize = (
+     att_sizemmxsuffix : array[0..14] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,{S_NO,}S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_XMM,S_NO,S_NO
      );
 
 {$else x86_64}
-     gas_opsize2str : array[topsize] of string[2] = ('',
+     gas_opsize2str : array[TOpSize] of string[2] = ('',
        'b','w','l','q','bw','bl','wl',
        's','l','q',
        's','l','t','v','',
@@ -92,19 +92,19 @@ interface
      att_sizesuffixstr : array[0..12] of string[2] = (
        '','BW','BL','WL','B','W','L','S','Q','T','X','Y','Z'
      );
-     att_sizesuffix : array[0..12] of topsize = (
+     att_sizesuffix : array[0..12] of TOpSize = (
        S_NO,S_BW,S_BL,S_WL,S_B,S_W,S_L,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO
      );
-     att_sizefpusuffix : array[0..12] of topsize = (
+     att_sizefpusuffix : array[0..12] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_FL,S_FS,S_NO,S_FX,S_NO,S_NO,S_NO
      );
-     att_sizefpuintsuffix : array[0..12] of topsize = (
+     att_sizefpuintsuffix : array[0..12] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_IL,S_IS,S_IQ,S_NO,S_NO,S_NO,S_NO
      );
-     att_sizemmsuffix : array[0..12] of topsize = (
+     att_sizemmsuffix : array[0..12] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_XMM,S_YMM,S_ZMM
      );
-     att_sizemmxsuffix : array[0..12] of topsize = (
+     att_sizemmxsuffix : array[0..12] of TOpSize = (
        S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_XMM,S_NO,S_NO
      );
 
@@ -112,14 +112,14 @@ interface
 {$endif x86_64}
 
 
-    function gas_regnum_search(const s:string):Tregister;
-    function gas_regname(r:Tregister):string;
+    function gas_regnum_search(const s:string):TRegister;
+    function gas_regname(r:TRegister):string;
 
 
 implementation
 
     uses
-      cutils,rgbase;
+      CUtils,rgbase;
 
     const
     {$if defined(x86_64)}
@@ -128,7 +128,7 @@ implementation
         {$i r8664att.inc}
       );
 
-      att_regname_index : array[tregisterindex] of tregisterindex = (
+      att_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {r8664ari.inc contains an index which sorts att_regname_table by
          ATT name.}
         {$i r8664ari.inc}
@@ -139,7 +139,7 @@ implementation
         {$i r386att.inc}
       );
 
-      att_regname_index : array[tregisterindex] of tregisterindex = (
+      att_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {r386ari.inc contains an index which sorts att_regname_table by
          ATT name.}
         {$i r386ari.inc}
@@ -148,15 +148,15 @@ implementation
 
 
 
-    function gas_regnum_search(const s:string):Tregister;
+    function gas_regnum_search(const s:string):TRegister;
       begin
         result:=regnumber_table[findreg_by_name_table(s,att_regname_table,att_regname_index)];
       end;
 
 
-    function gas_regname(r:Tregister):string;
+    function gas_regname(r:TRegister):string;
       var
-        p : tregisterindex;
+        p : TRegisterIndex;
       begin
         p:=findreg_by_number(r);
         if p<>0 then

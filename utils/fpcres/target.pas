@@ -14,31 +14,31 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit target;
+unit Target;
 
 {$MODE OBJFPC}
 
 interface
 
 type
-  TMachineType = (mtnone, mti386,mtx86_64,mtppc,mtppc64,mtarm,mtarmeb,mtm68k,
-                  mtsparc,mtalpha,mtia64,mtmips,mtmipsel,mtaarch64,mtppc64le,
-                  mtriscv32,mtriscv64,mtloongarch64,mtsparc64,
+  TMachineType = (mtNone, mtI386,mtX8664,mtPPC,mtPPC64,mtARM,mtARMEB,mtM68K,
+                  mtSPARC,mtAlpha,mtIA64,mtMIPS,mtMIPSEL,mtAArch64,mtPPC64LE,
+                  mtRISCV32,mtRISCV64,mtLoongArch64,mtSPARC64,
                   mtBigEndian,mtLittleEndian);
   TMachineTypes = set of TMachineType;
 
-  TSubMachineTypeArm = (smtarm_all,smtarm_v4t,smtarm_v6,smtarm_v5tej,smtarm_xscale,smtarm_v7);
-  TSubMachineTypeGeneric = (smtgen_all);
+  TSubMachineTypeArm = (smtARMAll,smtARMV4T,smtARMV6,smtARMV5TEJ,smtARMXScale,smtARMV7);
+  TSubMachineTypeGeneric = (smtGenAll);
 
   TSubMachineType = record
     case TMachineType of
-      mtarm,mtarmeb:
-        (subarm: TSubMachineTypeArm);
-      mtnone, mti386,mtx86_64,mtppc,mtppc64,mtm68k,
-      mtsparc,mtalpha,mtia64,mtmips,mtmipsel,mtaarch64,mtppc64le,
-      mtriscv32,mtriscv64,mtloongarch64,mtsparc64,
+      mtARM,mtARMEB:
+        (SubArm: TSubMachineTypeArm);
+      mtNone, mtI386,mtX8664,mtPPC,mtPPC64,mtM68K,
+      mtSPARC,mtAlpha,mtIA64,mtMIPS,mtMIPSEL,mtAArch64,mtPPC64LE,
+      mtRISCV32,mtRISCV64,mtLoongArch64,mtSPARC64,
       mtBigEndian,mtLittleEndian:
-        (subgen: TSubMachineTypeGeneric);
+        (SubGen: TSubMachineTypeGeneric);
   end;
 
   TObjFormat = (ofNone, ofRes, ofElf, ofCoff, ofXCoff, ofMachO, ofExt);
@@ -46,53 +46,53 @@ type
 
 
   TMachineInfo = record
-    name : string;
-    formats : TObjFormats;
-    alias : string;
+    Name : string;
+    Formats : TObjFormats;
+    Alias : string;
   end;
 
   TFormatInfo = record
-    name : string;
-    ext : string;
-    machines : TMachineTypes;
+    Name : string;
+    Ext : string;
+    Machines : TMachineTypes;
   end;
 
   TResTarget = record
-    machine : TMachineType;
-    submachine : TSubMachineType;
-    objformat : TObjFormat;
+    Machine : TMachineType;
+    SubMachine : TSubMachineType;
+    ObjFormat : TObjFormat;
   end;
 
-function GetDefaultMachineForFormat(aFormat : TObjFormat) : TMachineType;
-function GetDefaultSubMachineForMachine(aMachine: TMachineType) : TSubMachineType;
-function TargetToStr(const aTarget : TResTarget) : string;
-function MachineToStr(const aMachine : TMachineType) : string;
-function ObjFormatToStr(const aFormat : TObjFormat) : string;
+function GetDefaultMachineForFormat(AFormat : TObjFormat) : TMachineType;
+function GetDefaultSubMachineForMachine(AMachine: TMachineType) : TSubMachineType;
+function TargetToStr(const ATarget : TResTarget) : string;
+function MachineToStr(const AMachine : TMachineType) : string;
+function ObjFormatToStr(const AFormat : TObjFormat) : string;
 
 var
   Machines : array[TMachineType] of TMachineInfo =
   (
-    (name : '';             formats : [ofRes]),                   //mtnone
-    (name : 'i386';         formats : [ofElf, ofCoff, ofMachO]),  //mti386
-    (name : 'x86_64';       formats : [ofElf, ofCoff, ofMachO]),  //mtx86_64
-    (name : 'powerpc';      formats : [ofElf, ofXCoff, ofMachO]), //mtppc
-    (name : 'powerpc64';    formats : [ofElf, {ofXCoff,} ofMachO]), //mtppc64
-    (name : 'arm';          formats : [ofElf, ofCoff, ofMachO]),  //mtarm
-    (name : 'armeb';        formats : [ofElf]),                   //mtarmeb
-    (name : 'm68k';         formats : [ofElf]),                   //mtm68k
-    (name : 'sparc';        formats : [ofElf]),                   //mtsparc
-    (name : 'alpha';        formats : [ofElf]),                   //mtalpha
-    (name : 'ia64';         formats : [ofElf]),                   //mtia64
-    (name : 'mips';         formats : [ofElf]; alias : 'mipseb'), //mtmips
-    (name : 'mipsel';       formats : [ofElf]),                   //mtmipsel
-    (name : 'aarch64';      formats : [ofElf, ofCoff, ofMachO]),  //mtaarch64
-    (name : 'powerpc64le';  formats : [ofElf]),                   //mtppc64le
-    (name : 'riscv32';      formats : [ofElf]),                   //mtriscv32
-    (name : 'riscv64';      formats : [ofElf]),                   //mtriscv64
-    (name : 'loongarch64';  formats : [ofElf]),                   //mtloongarch64
-    (name : 'sparc64';      formats : [ofElf]),                   //mtsparc64
-    (name : 'bigendian';    formats : [ofExt]),                   //mtBigEndian
-    (name : 'littleendian'; formats : [ofExt])                    //mtLittleEndian
+    (Name : '';             Formats : [ofRes]),                   //mtnone
+    (Name : 'i386';         Formats : [ofElf, ofCoff, ofMachO]),  //mti386
+    (Name : 'x86_64';       Formats : [ofElf, ofCoff, ofMachO]),  //mtx86_64
+    (Name : 'powerpc';      Formats : [ofElf, ofXCoff, ofMachO]), //mtppc
+    (Name : 'powerpc64';    Formats : [ofElf, {ofXCoff,} ofMachO]), //mtppc64
+    (Name : 'arm';          Formats : [ofElf, ofCoff, ofMachO]),  //mtarm
+    (Name : 'armeb';        Formats : [ofElf]),                   //mtarmeb
+    (Name : 'm68k';         Formats : [ofElf]),                   //mtm68k
+    (Name : 'sparc';        Formats : [ofElf]),                   //mtsparc
+    (Name : 'alpha';        Formats : [ofElf]),                   //mtalpha
+    (Name : 'ia64';         Formats : [ofElf]),                   //mtia64
+    (Name : 'mips';         Formats : [ofElf]; Alias : 'mipseb'), //mtmips
+    (Name : 'mipsel';       Formats : [ofElf]),                   //mtmipsel
+    (Name : 'aarch64';      Formats : [ofElf, ofCoff, ofMachO]),  //mtaarch64
+    (Name : 'powerpc64le';  Formats : [ofElf]),                   //mtppc64le
+    (Name : 'riscv32';      Formats : [ofElf]),                   //mtriscv32
+    (Name : 'riscv64';      Formats : [ofElf]),                   //mtriscv64
+    (Name : 'loongarch64';  Formats : [ofElf]),                   //mtloongarch64
+    (Name : 'sparc64';      Formats : [ofElf]),                   //mtsparc64
+    (Name : 'bigendian';    Formats : [ofExt]),                   //mtBigEndian
+    (Name : 'littleendian'; Formats : [ofExt])                    //mtLittleEndian
   );
 
   SubMachinesArm: array[TSubMachineTypeArm] of string[8] =
@@ -102,56 +102,56 @@ var
 
   ObjFormats : array[TObjFormat] of TFormatInfo =
   (
-    (name : '';         ext : '';        machines : []),
-    (name : 'res';      ext : '.res';    machines : [mtnone]),
-    (name : 'elf';      ext : '.or';     machines : [mti386,mtx86_64,mtppc,
-                                                     mtppc64,mtarm,mtarmeb,
-                                                     mtm68k,mtsparc,mtalpha,
-                                                     mtia64,mtmips,mtmipsel,
-                                                     mtppc64le,mtaarch64,
-                                                     mtriscv32,mtriscv64,
-                                                     mtloongarch64,mtsparc64]),
-    (name : 'coff';     ext : '.o';      machines : [mti386,mtx86_64,mtarm,
-                                                     mtaarch64,mtppc,mtppc64]),
-    (name : 'xcoff';    ext : '.o';      machines : [mtppc{,mtppc64}]),
-    (name : 'mach-o';   ext : '.or';     machines : [mti386,mtx86_64,mtppc,
-                                                     mtppc64,mtarm,mtaarch64]),
-    (name : 'external'; ext : '.fpcres'; machines : [mtBigEndian,mtLittleEndian])
+    (Name : '';         Ext : '';        Machines : []),
+    (Name : 'res';      Ext : '.res';    Machines : [mtNone]),
+    (Name : 'elf';      Ext : '.or';     Machines : [mtI386,mtX8664,mtPPC,
+                                                     mtPPC64,mtARM,mtARMEB,
+                                                     mtM68K,mtSPARC,mtAlpha,
+                                                     mtIA64,mtMIPS,mtMIPSEL,
+                                                     mtPPC64LE,mtAArch64,
+                                                     mtRISCV32,mtRISCV64,
+                                                     mtLoongArch64,mtSPARC64]),
+    (Name : 'coff';     Ext : '.o';      Machines : [mtI386,mtX8664,mtARM,
+                                                     mtAArch64,mtPPC,mtPPC64]),
+    (Name : 'xcoff';    Ext : '.o';      Machines : [mtPPC{,mtppc64}]),
+    (Name : 'mach-o';   Ext : '.or';     Machines : [mtI386,mtX8664,mtPPC,
+                                                     mtPPC64,mtARM,mtAArch64]),
+    (Name : 'external'; Ext : '.fpcres'; Machines : [mtBigEndian,mtLittleEndian])
   );
 
 
   CurrentTarget : TResTarget =
   (
   {$if defined(CPUI386)}
-    machine : mti386;
-    submachine : (subgen: smtgen_all);
+    Machine : mtI386;
+    SubMachine : (SubGen: smtGenAll);
   {$elseif defined(CPUX86_64)}
-    machine : mtx86_64;
-    submachine : (subgen: smtgen_all);
+    Machine : mtX8664;
+    SubMachine : (SubGen: smtGenAll);
   {$elseif defined(CPUALPHA)}
-    machine : mtalpha;
-    submachine : (subgen: smtgen_all);
+    Machine : mtAlpha;
+    SubMachine : (SubGen: smtGenAll);
   {$elseif defined(CPUIA64)}
-    machine : mtia64;
-    submachine : (subgen: smtgen_all);
+    Machine : mtIA64;
+    SubMachine : (SubGen: smtGenAll);
   {$elseif defined(CPUAARCH64)}
-    machine : mtaarch64;
-    submachine : (subgen: smtgen_all);
+    Machine : mtAArch64;
+    SubMachine : (SubGen: smtGenAll);
   {$elseif defined(CPULOONGARCH64)}
-    machine : mtloongarch64;
-    submachine : (subgen: smtgen_all);
+    Machine : mtLoongArch64;
+    SubMachine : (SubGen: smtGenAll);
   {$else}
-    machine : mti386;  //default i386
-    submachine : (subgen: smtgen_all);
+    Machine : mtI386;  //default i386
+    SubMachine : (SubGen: smtGenAll);
   {$endif}
 
   {$IFDEF WINDOWS}
-    objformat : ofCoff;
+    ObjFormat : ofCoff;
   {$ELSE}
     {$IF defined(DARWIN)}
-      objformat : ofMachO;
+      ObjFormat : ofMachO;
     {$else}
-      objformat : ofElf;
+      ObjFormat : ofElf;
     {$ENDIF}
   {$ENDIF}
   );
@@ -159,15 +159,15 @@ var
 
 implementation
 
-function GetDefaultMachineForFormat(aFormat : TObjFormat) : TMachineType;
+function GetDefaultMachineForFormat(AFormat : TObjFormat) : TMachineType;
 begin
-  case aFormat of
-    ofNone : Result:=mtnone;
-    ofRes  : Result:=mtnone;
-    ofElf  : Result:=mti386;
-    ofCoff : Result:=mti386;
-    ofXCoff: Result:=mtppc;
-    ofMachO: Result:=mti386;
+  case AFormat of
+    ofNone : Result:=mtNone;
+    ofRes  : Result:=mtNone;
+    ofElf  : Result:=mtI386;
+    ofCoff : Result:=mtI386;
+    ofXCoff: Result:=mtPPC;
+    ofMachO: Result:=mtI386;
     {$IFDEF ENDIAN_BIG}
     ofExt  : Result:=mtBigEndian;
     {$ELSE}
@@ -176,48 +176,48 @@ begin
   end;
 end;
 
-function MachineToStr(const aMachine : TMachineType) : string;
+function MachineToStr(const AMachine : TMachineType) : string;
 begin
-  Result:=Machines[aMachine].name;
+  Result:=Machines[AMachine].Name;
 end;
 
-function SubMachineToStr(const aMachine : TMachineType; const aSubMachine : TSubMachineType) : string;
+function SubMachineToStr(const AMachine : TMachineType; const ASubMachine : TSubMachineType) : string;
 begin
-  case aMachine of
-    mtarm,mtarmeb:
-      result:=SubMachinesArm[aSubMachine.subarm];
+  case AMachine of
+    mtARM,mtARMEB:
+      Result:=SubMachinesArm[ASubMachine.SubArm];
     else
       // no need to confuse people with the "all" suffix, it doesn't do
       // anything anyway
-      result:='';
+      Result:='';
   end;
 end;
 
-function ObjFormatToStr(const aFormat : TObjFormat) : string;
+function ObjFormatToStr(const AFormat : TObjFormat) : string;
 begin
-  Result:=ObjFormats[aFormat].name;
+  Result:=ObjFormats[AFormat].Name;
 end;
 
-function GetDefaultSubMachineForMachine(aMachine: TMachineType): TSubMachineType;
+function GetDefaultSubMachineForMachine(AMachine: TMachineType): TSubMachineType;
 begin
-  case aMachine of
-    mtarm,mtarmeb:
-      result.subarm:=smtarm_all;
+  case AMachine of
+    mtARM,mtARMEB:
+      Result.SubArm:=smtARMAll;
     else
-      result.subgen:=smtgen_all;
+      Result.SubGen:=smtGenAll;
   end;
 end;
 
-function TargetToStr(const aTarget : TResTarget) : string;
-var s1, s2, s3 : string;
+function TargetToStr(const ATarget : TResTarget) : string;
+var S1, S2, S3 : string;
 begin
-  s1:=MachineToStr(aTarget.machine);
-  s2:=ObjFormatToStr(aTarget.objformat);
-  s3:=SubMachineToStr(aTarget.Machine,aTarget.submachine);
-  if (s1='') or (s2='') then Result:=s1+s2
-  else Result:=s1+' - '+s2;
-  if s3<>'' then
-    Result:=Result+'-'+s3;
+  S1:=MachineToStr(ATarget.Machine);
+  S2:=ObjFormatToStr(ATarget.ObjFormat);
+  S3:=SubMachineToStr(ATarget.Machine,ATarget.SubMachine);
+  if (S1='') or (S2='') then Result:=S1+S2
+  else Result:=S1+' - '+S2;
+  if S3<>'' then
+    Result:=Result+'-'+S3;
 end;
 
 end.

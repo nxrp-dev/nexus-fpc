@@ -25,21 +25,21 @@ Unit fpchash;
 
 Interface
 
-Function UpdateCrc32(InitCrc:cardinal;const InBuf;InLen:integer):cardinal;
+Function UpdateCRC32(InitCRC:Cardinal;const InBuf;InLen:Integer):Cardinal;
 { If needed trims the string to maxlen, adding at the end the CRC32 of discarded chars.
   The resulting string is guaranteed to be not longer than maxlen. }
-function TrimStrCRC32(const s: ansistring; maxlen: longint): ansistring;
+function TrimStrCRC32(const S: AnsiString; MaxLen: LongInt): AnsiString;
 
 { calculate string hash using FNV Hash:
   http://www.isthe.com/chongo/tech/comp/fnv/
 }
-function InitFnv64: uint64;
-function UpdateFnv64(const InitFnv: uint64; const InBuf; InLen: Integer): uint64;
+function InitFNV64: UInt64;
+function UpdateFNV64(const InitFNV: UInt64; const InBuf; InLen: Integer): UInt64;
 
 type
   Base64OfUint64String = string[11];
 
-function Base64Mangle(const x: uint64): Base64OfUint64String;
+function Base64Mangle(const X: UInt64): Base64OfUInt64String;
 
 Implementation
 
@@ -48,114 +48,114 @@ Implementation
 *****************************************************************************}
 
 var
-  Crc32Tbl : array[0..255] of cardinal;
+  CRC32Tbl : array[0..255] of Cardinal;
 
 procedure MakeCRC32Tbl;
 var
-  crc : cardinal;
-  i,n : integer;
+  CRC : Cardinal;
+  I,N : Integer;
 begin
-  for i:=0 to 255 do
+  for I:=0 to 255 do
    begin
-     crc:=i;
-     for n:=1 to 8 do
-      if (crc and 1)<>0 then
-       crc:=(crc shr 1) xor cardinal($edb88320)
+     CRC:=I;
+     for N:=1 to 8 do
+      if (CRC and 1)<>0 then
+       CRC:=(CRC shr 1) xor Cardinal($edb88320)
       else
-       crc:=crc shr 1;
-     Crc32Tbl[i]:=crc;
+       CRC:=CRC shr 1;
+     CRC32Tbl[I]:=CRC;
    end;
 end;
 
 
-Function UpdateCrc32(InitCrc:cardinal;const InBuf;InLen:Integer):cardinal;
+Function UpdateCRC32(InitCRC:Cardinal;const InBuf;InLen:Integer):Cardinal;
 var
-  i : integer;
-  p : pchar;
+  I : Integer;
+  P : PChar;
 begin
-  if Crc32Tbl[1]=0 then
-   MakeCrc32Tbl;
-  p:=@InBuf;
-  result:=not InitCrc;
-  for i:=1 to InLen do
+  if CRC32Tbl[1]=0 then
+   MakeCRC32Tbl;
+  P:=@InBuf;
+  Result:=not InitCRC;
+  for I:=1 to InLen do
    begin
-     result:=Crc32Tbl[byte(result) xor byte(p^)] xor (result shr 8);
-     inc(p);
+     Result:=CRC32Tbl[Byte(Result) xor Byte(P^)] xor (Result shr 8);
+     Inc(P);
    end;
-  result:=not result;
+  Result:=not Result;
 end;
 
 
-function TrimStrCRC32(const s: ansistring; maxlen: longint): ansistring;
+function TrimStrCRC32(const S: AnsiString; MaxLen: LongInt): AnsiString;
 var
-  crc: DWord;
-  len: longint;
+  CRC: DWord;
+  Len: LongInt;
 begin
-  len:=length(s);
-  if (len<=maxlen) or (len<12) then
-    result:=s
+  Len:=Length(S);
+  if (Len<=MaxLen) or (Len<12) then
+    Result:=S
   else
    begin
-     dec(maxlen,11);
-     crc:=0;
-     crc:=UpdateCrc32(crc,s[maxlen+1],len-maxlen);
-     result:=copy(s,1,maxlen)+'$CRC'+hexstr(crc,8);
+     Dec(MaxLen,11);
+     CRC:=0;
+     CRC:=UpdateCRC32(CRC,S[MaxLen+1],Len-MaxLen);
+     Result:=Copy(S,1,MaxLen)+'$CRC'+HexStr(CRC,8);
    end;
 end;
 
 
-function InitFnv64: uint64;
+function InitFNV64: UInt64;
   begin
-    result:=uint64(14695981039346656037);
+    Result:=UInt64(14695981039346656037);
   end;
 
 { calculate string hash using FNV Hash:
   http://www.isthe.com/chongo/tech/comp/fnv/
 }
 {$push} {$rangechecks off} {$overflowchecks off}
-function UpdateFnv64(const InitFnv: uint64; const InBuf; InLen: Integer): uint64;
+function UpdateFNV64(const InitFNV: UInt64; const InBuf; InLen: Integer): UInt64;
 const
-  M = uint64(1099511628211);
+  M = UInt64(1099511628211);
 var
-  pp: pByte;
+  PP: PByte;
 begin
-  result := InitFnv;
-  pp := @InBuf;
+  Result := InitFNV;
+  PP := @InBuf;
   while InLen >= 4 do
    begin
-     result := ((((result xor pp[0]) * M xor pp[1]) * M xor pp[2]) * M xor pp[3]) * M;
-     pp := pp + 4;
+     Result := ((((Result xor PP[0]) * M xor PP[1]) * M xor PP[2]) * M xor PP[3]) * M;
+     PP := PP + 4;
      InLen := InLen - 4;
    end;
   while InLen > 0 do
    begin
-     result := (result xor pp^) * M;
-     pp := pp + 1;
+     Result := (Result xor PP^) * M;
+     PP := PP + 1;
      InLen := InLen - 1;
    end;
 end;
 {$pop}
 
 const
-  Base64Chars: array[0 .. 63] of char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$';
+  Base64Chars: array[0 .. 63] of Char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_$';
 
-function Base64Mangle(const x: uint64): Base64OfUint64String;
+function Base64Mangle(const X: UInt64): Base64OfUInt64String;
 var
-  b64chars: pChar;
+  B64Chars: PChar;
 begin
-  b64chars := pChar(Base64Chars);
-  result[0] := #11;
-  result[1] := b64chars[x and $3f];
-  result[2] := b64chars[uint32(x) shr 6 and $3f];
-  result[3] := b64chars[uint32(x) shr 12 and $3f];
-  result[4] := b64chars[uint32(x) shr 18 and $3f];
-  result[5] := b64chars[uint32(x) shr 24 and $3f];
-  result[6] := b64chars[x shr 30 and $3f];
-  result[7] := b64chars[x shr 36 and $3f];
-  result[8] := b64chars[x shr 42 and $3f];
-  result[9] := b64chars[x shr 48 and $3f];
-  result[10] := b64chars[x shr 54 and $3f];
-  result[11] := b64chars[x shr 60];
+  B64Chars := PChar(Base64Chars);
+  Result[0] := #11;
+  Result[1] := B64Chars[X and $3f];
+  Result[2] := B64Chars[UInt32(X) shr 6 and $3f];
+  Result[3] := B64Chars[UInt32(X) shr 12 and $3f];
+  Result[4] := B64Chars[UInt32(X) shr 18 and $3f];
+  Result[5] := B64Chars[UInt32(X) shr 24 and $3f];
+  Result[6] := B64Chars[X shr 30 and $3f];
+  Result[7] := B64Chars[X shr 36 and $3f];
+  Result[8] := B64Chars[X shr 42 and $3f];
+  Result[9] := B64Chars[X shr 48 and $3f];
+  Result[10] := B64Chars[X shr 54 and $3f];
+  Result[11] := B64Chars[X shr 60];
 end;
 
 end.

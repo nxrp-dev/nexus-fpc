@@ -29,7 +29,7 @@ unit racpu;
     uses
       cgbase,
       cpubase,
-      aasmtai,aasmdata,
+      aasmtai,AAsmData,
       rautils;
 
     type
@@ -37,22 +37,22 @@ unit racpu;
       end;
 
       TAArch64Instruction=class(TInstruction)
-        oppostfix : toppostfix;
-        function ConcatInstruction(p:TAsmList) : tai;override;
+        oppostfix : TOpPostfix;
+        function ConcatInstruction(p:TAsmList) : TAI;override;
         function Is64bit: boolean;
-        function cgsize: tcgsize;
+        function cgsize: TCgSize;
       end;
 
   implementation
 
     uses
-      verbose,
+      Verbose,
       aasmcpu;
 
-    function TAArch64Instruction.ConcatInstruction(p:TAsmList) : tai;
+    function TAArch64Instruction.ConcatInstruction(p:TAsmList) : TAI;
       begin
         result:=inherited ConcatInstruction(p);
-        taicpu(result).oppostfix:=oppostfix;
+        TAICPU(result).oppostfix:=oppostfix;
       end;
 
 
@@ -63,10 +63,10 @@ unit racpu;
           (getsubreg(operands[1].opr.reg)=R_SUBQ);
       end;
 
-    function TAArch64Instruction.cgsize: tcgsize;
+    function TAArch64Instruction.cgsize: TCgSize;
       begin
         if ops<1 then
-          internalerror(2014122001);
+          InternalError(2014122001);
         if (ops=1) and (operands[1].opr.typ=OPR_REFERENCE) then
           exit(OS_NO);
         case operands[1].opr.typ of
@@ -77,7 +77,7 @@ unit racpu;
           OPR_REGSET:
             result:=OS_NO;
           else
-           internalerror(2014122002);
+           InternalError(2014122002);
         end;
         { a 32 bit integer register could actually be 16 or 8 bit }
         if result=OS_32 then

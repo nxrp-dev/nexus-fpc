@@ -29,7 +29,7 @@ unit nadd;
 interface
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
       node,symtype;
 
     type
@@ -41,7 +41,7 @@ interface
 
        TAddNodeFlags = set of TAddNodeFlag;
 
-       taddnode = class(TBinOpNode)
+       TAddNode = class(TBinOpNode)
        private
           resultrealdefderef: TDeref;
           function pass_typecheck_internal:TNode;
@@ -117,38 +117,38 @@ interface
           { tries to replace the current node by a fma node }
           function try_fma(ld,rd : TDef) : TNode;
        end;
-       taddnodeclass = class of taddnode;
+       TAddNodeClass = class of TAddNode;
 
     var
        { caddnode is used to create nodes of the add type }
        { the virtual constructor allows to assign         }
        { another class type to caddnode => processor      }
        { specific node types can be created               }
-       caddnode : taddnodeclass = taddnode;
+       CAddNode : TAddNodeClass = TAddNode;
 
 implementation
 
     uses
 {$IFNDEF USE_FAKE_SYSUTILS}
-      sysutils,
+      SysUtils,
 {$ELSE}
-      fksysutl,
+      FKSysUtl,
 {$ENDIF}
-      globtype,systems,constexp,compinnr,
-      cutils,verbose,globals,widestr,
+      GlobType,Systems,ConstExp,compinnr,
+      CUtils,Verbose,Globals,WideStr,
       tokens,
-      symconst,symdef,symsym,symcpu,symtable,defutil,defcmp,
+      symconst,symdef,SymSym,symcpu,SymTable,defutil,defcmp,
       cgbase,
       htypechk,pass_1,
       nld,nbas,nmat,ncnv,ncon,nset,nopt,ncal,ninl,nmem,nutils,
       {$ifdef state_tracking}
       nstate,
       {$endif}
-      cpuinfo,
+      CPUInfo,
       ppu;
 
 const
-    BestRealLayoutCheck = 1 div Ord(SizeOf(bestrealrec) = SizeOf(bestreal));
+    BestRealLayoutCheck = 1 div Ord(SizeOf(BestRealRec) = SizeOf(BestReal));
     swap_relation: array [ltn..unequaln] of TNodeType=(gtn, gten, ltn, lten, equaln, unequaln);
 
 {*****************************************************************************
@@ -171,7 +171,7 @@ const
                   best float type to calculate the result }
                 if (TFloatDef(t1).floattype in [s64comp,s64currency]) or
                   (TFloatDef(t2).floattype in [s64comp,s64currency]) or
-                  (cs_excessprecision in CurrentSettings.localswitches) then
+                  (cs_excessprecision in CurrentSettings.LocalSwitches) then
                   result:=pbestrealtype^
                 else
                   if floatweight[TFloatDef(t2).floattype]>floatweight[TFloatDef(t1).floattype] then
@@ -180,58 +180,58 @@ const
           end
         else if t2.typ=floatdef then
           result:=t2
-        else internalerror(200508061);
+        else InternalError(200508061);
       end;
 
 
-    constructor taddnode.create(tt : TNodeType;l,r : TNode);
+    constructor TAddNode.create(tt : TNodeType;l,r : TNode);
       begin
          inherited create(tt,l,r);
          addnodeflags:=[];
       end;
 
-    constructor taddnode.create_internal(tt:TNodeType;l,r:TNode);
+    constructor TAddNode.create_internal(tt:TNodeType;l,r:TNode);
       begin
         create(tt,l,r);
         include(flags,nf_internal);
       end;
 
 
-    constructor taddnode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
+    constructor TAddNode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(tppuset1(addnodeflags));
+        ppufile.getset(TPPUSet1(addnodeflags));
         ppufile.getderef(resultrealdefderef);
       end;
 
 
-    procedure taddnode.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TAddNode.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(tppuset1(addnodeflags));
+        ppufile.putset(TPPUSet1(addnodeflags));
         ppufile.putderef(resultrealdefderef);
       end;
 
 
-    procedure taddnode.buildderefimpl;
+    procedure TAddNode.buildderefimpl;
       begin
         inherited buildderefimpl;
         resultrealdefderef.build(resultrealdef);
       end;
 
 
-    procedure taddnode.derefimpl;
+    procedure TAddNode.derefimpl;
       begin
         inherited derefimpl;
         resultrealdef:=TDef(resultrealdefderef.resolve);
       end;
 
 
-    function taddnode.cmp_of_disjunct_ranges(var res : boolean) : boolean;
+    function TAddNode.cmp_of_disjunct_ranges(var res : boolean) : boolean;
       var
         hp          : TNode;
         realdef     : TDef;
-        v           : tconstexprint;
+        v           : TConstExprInt;
       begin
         result:=false;
         { check for comparison with known result because the ranges of the operands don't overlap }
@@ -245,12 +245,12 @@ const
              if is_constintnode(right) then
                begin
                  hp:=left;
-                 v:=Tordconstnode(right).value;
+                 v:=TOrdConstNode(right).value;
                end
              else
                begin
                  hp:=right;
-                 v:=Tordconstnode(left).value;
+                 v:=TOrdConstNode(left).value;
                end;
 
              realdef:=hp.resultdef;
@@ -263,7 +263,7 @@ const
              while (hp.nodetype=typeconvn) and
                    ([nf_internal,nf_explicit,nf_absolute] * hp.flags = []) do
                begin
-                 hp:=ttypeconvnode(hp).left;
+                 hp:=TTypeConvNode(hp).left;
                  realdef:=hp.resultdef;
                end;
              { could become an errordef in case of errors }
@@ -397,9 +397,9 @@ const
       end;
 
 
-    function taddnode.simplify(forinline : boolean) : TNode;
+    function TAddNode.simplify(forinline : boolean) : TNode;
 
-      function is_range_test(nodel, noder: taddnode; out value: TNode; var cl,cr: Tconstexprint): boolean;
+      function is_range_test(nodel, noder: TAddNode; out value: TNode; var cl,cr: TConstExprInt): boolean;
         const
           is_upper_test: array[ltn..gten] of boolean = (true,true,false,false);
           inclusive_adjust: array[boolean,boolean,ltn..gten] of integer = (((-1,0,1,0),
@@ -409,7 +409,7 @@ const
         var
           swapl, swapr, inverted_range: Boolean;
           valuer: TNode;
-          t: Tconstexprint;
+          t: TConstExprInt;
         begin
           result:=false;
           swapl:=false;
@@ -418,12 +418,12 @@ const
           if nodel.left.nodetype=ordconstn then
             begin
               swapl:=true;
-              cl:=tordconstnode(nodel.left).value;
+              cl:=TOrdConstNode(nodel.left).value;
               value:=nodel.right;
             end
           else if nodel.right.nodetype=ordconstn then
             begin
-              cl:=tordconstnode(nodel.right).value;
+              cl:=TOrdConstNode(nodel.right).value;
               value:=nodel.left;
             end
           else
@@ -432,12 +432,12 @@ const
           if noder.left.nodetype=ordconstn then
             begin
               swapl:=true;
-              cr:=tordconstnode(noder.left).value;
+              cr:=TOrdConstNode(noder.left).value;
               valuer:=noder.right;
             end
           else if noder.right.nodetype=ordconstn then
             begin
-              cr:=tordconstnode(noder.right).value;
+              cr:=TOrdConstNode(noder.right).value;
               valuer:=noder.left;
             end
           else
@@ -494,38 +494,38 @@ const
               end
             else
               exit;
-          if not is_constintvalue(R,0) or is_shortstring(tinlinenode(L).left.resultdef) then
+          if not is_constintvalue(R,0) or is_shortstring(TInlineNode(L).left.resultdef) then
             exit;
 
           { Length = 0, <> 0, > 0, <= 0 are reduced to Length = 0. }
           if op in [equaln,unequaln,gtn,lten] then
             begin
               { “pointer(L.left) = nil”. Steal L.left instead of getcopy, zero a bit later. }
-              resn:=caddnode.create_internal(equaln,ctypeconvnode.create_internal(tinlinenode(L).left,voidpointertype),
-                 cpointerconstnode.create(0,voidpointertype));
+              resn:=CAddNode.create_internal(equaln,CTypeConvNode.create_internal(TInlineNode(L).left,voidpointertype),
+                 CPointerConstNode.create(0,voidpointertype));
 
               { COM widestrings have 32-bit lengths, and can explicitly have 0 while being non-nil. }
-              if is_widestring(tinlinenode(L).left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
+              if is_widestring(TInlineNode(L).left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
                 begin
                   { Expand to “(pointer(L.left) = nil) or (PUint32(L.left)[-1] = 0)”. }
-                  resn:=caddnode.create_internal(orn,
+                  resn:=CAddNode.create_internal(orn,
                       resn,
-                      caddnode.create_internal(equaln,
-                        ctypeconvnode.create_internal(
-                          cderefnode.create(
-                            caddnode.create_internal(subn,ctypeconvnode.create_internal(tinlinenode(L).left.getcopy,voidpointertype),
-                              cordconstnode.create(sizeof(uint32),ptruinttype,false))
+                      CAddNode.create_internal(equaln,
+                        CTypeConvNode.create_internal(
+                          CDerefNode.create(
+                            CAddNode.create_internal(subn,CTypeConvNode.create_internal(TInlineNode(L).left.getcopy,voidpointertype),
+                              COrdConstNode.create(sizeof(uint32),ptruinttype,false))
                           ),u32inttype
                         ),
-                        cordconstnode.create(0,u32inttype,false))
+                        COrdConstNode.create(0,u32inttype,false))
                     );
-                  include(taddnode(resn).addnodeflags,anf_short_bool);
+                  include(TAddNode(resn).addnodeflags,anf_short_bool);
                 end;
-              tinlinenode(L).left:=nil; { Was stolen inside resn, and no longer of interest. }
+              TInlineNode(L).left:=nil; { Was stolen inside resn, and no longer of interest. }
 
               { resn now checks for Length = 0. For Length <> 0, invert. }
               if op in [unequaln,gtn] then
-                resn:=cnotnode.create(resn);
+                resn:=CNotNode.create(resn);
               exit(true);
             end;
 
@@ -537,9 +537,9 @@ const
               Message(type_w_comparison_always_false);
 
           { Length < 0 is always false, Length >= 0 is always true. }
-          if not might_have_sideeffects(tinlinenode(L).left) then { Could somehow remove the check but keep the F() even in Length(F()) >= 0... }
+          if not might_have_sideeffects(TInlineNode(L).left) then { Could somehow remove the check but keep the F() even in Length(F()) >= 0... }
             begin
-              resn:=cordconstnode.create(ord(op=gten),resultdef,true);
+              resn:=COrdConstNode.create(ord(op=gten),resultdef,true);
               exit(true);
             end;
         end;
@@ -549,7 +549,7 @@ const
         begin
           result:=getcopy;
           result.resultdef:=nil;
-          result:=ctypeconvnode.create_internal(result,resultdef);
+          result:=CTypeConvNode.create_internal(result,resultdef);
           DoTypeCheckPass(result);
         end;
 
@@ -557,14 +557,14 @@ const
       function IsAndOrAndNot(n1,n2,n3,n4 : TNode): Boolean;
         begin
           result:=(n4.nodetype=notn) and
-            tnotnode(n4).left.isequal(n2);
+            TNotNode(n4).left.isequal(n2);
         end;
 
 
       function TransformAndOrAndNot(n1,n2,n3,n4 : TNode): TNode;
         begin
-          result:=caddnode.create_internal(xorn,n3.getcopy,
-            caddnode.create_internal(andn,caddnode.create_internal(xorn,n3.getcopy,n1.getcopy),n2.getcopy));
+          result:=CAddNode.create_internal(xorn,n3.getcopy,
+            CAddNode.create_internal(andn,CAddNode.create_internal(xorn,n3.getcopy,n1.getcopy),n2.getcopy));
         end;
 
 
@@ -573,14 +573,14 @@ const
           hp : TNode;
         begin
           hp:=right;
-          right:=taddnode(left).right;
-          taddnode(left).right:=hp;
+          right:=TAddNode(left).right;
+          TAddNode(left).right:=hp;
           left:=left.simplify(forinline);
           if resultdef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              left:=ctypeconvnode.create_internal(left,resultdef);
+              left:=CTypeConvNode.create_internal(left,resultdef);
               DoTypeCheckPass(left);
             end;
           result:=GetCopyAndTypeCheck;
@@ -592,24 +592,24 @@ const
           hp,hp2 : TNode;
         begin
           { keep the order of val+const else pointer and string operations might cause an error }
-          hp:=taddnode(left).left;
-          taddnode(left).left:=taddnode(left).right;
-          taddnode(left).right:=right;
+          hp:=TAddNode(left).left;
+          TAddNode(left).left:=TAddNode(left).right;
+          TAddNode(left).right:=right;
           left.resultdef:=nil;
           DoTypeCheckPass(left);
           hp2:=left.simplify(forinline);
-          if assigned(hp2) then
+          if Assigned(hp2) then
             left:=hp2;
           if resultdef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              left:=ctypeconvnode.create_internal(left,resultdef);
+              left:=CTypeConvNode.create_internal(left,resultdef);
               DoTypeCheckPass(left);
             end
           else if TPointerDef(resultdef).pointeddef.size>1 then
           { the constants were already multiplied by the pointer element size }
-            left:=cmoddivnode.create(divn,left,cordconstnode.create(TPointerDef(resultdef).pointeddef.size,left.resultdef,false));
+            left:=CModDivNode.create(divn,left,COrdConstNode.create(TPointerDef(resultdef).pointeddef.size,left.resultdef,false));
           right:=left;
           left:=hp;
           result:=GetCopyAndTypeCheck;
@@ -621,21 +621,21 @@ const
           hp,hp2 : TNode;
         begin
           { keep the order of val+const else string operations might cause an error }
-          hp:=taddnode(right).right;
+          hp:=TAddNode(right).right;
 
-          taddnode(right).right:=taddnode(right).left;
-          taddnode(right).left:=left;
+          TAddNode(right).right:=TAddNode(right).left;
+          TAddNode(right).left:=left;
 
           right.resultdef:=nil;
           DoTypeCheckPass(right);
           hp2:=right.simplify(forinline);
-          if assigned(hp2) then
+          if Assigned(hp2) then
             right:=hp2;
           if resultdef.typ<>pointerdef then
             begin
               { ensure that the constant is not expanded to a larger type due to overflow,
                 but this is only useful if no pointer operation is done }
-              right:=ctypeconvnode.create_internal(right,resultdef);
+              right:=CTypeConvNode.create_internal(right,resultdef);
               DoTypeCheckPass(right);
             end;
           left:=right;
@@ -649,8 +649,8 @@ const
           hp: TNode;
         begin
           hp:=left;
-          left:=taddnode(right).left;
-          taddnode(right).left:=hp;
+          left:=TAddNode(right).left;
+          TAddNode(right).left:=hp;
           right:=right.simplify(false);
           result:=GetCopyAndTypeCheck;
         end;
@@ -659,10 +659,10 @@ const
       function TryVariableShiftPair(lin, rin: TNode; bitsize: asizeint): boolean;
         begin
           Result:=(rin.nodetype=subn) and
-            is_constintnode(taddnode(rin).left) and
-            (tordconstnode(taddnode(rin).left).value=bitsize) and
+            is_constintnode(TAddNode(rin).left) and
+            (TOrdConstNode(TAddNode(rin).left).value=bitsize) and
             not might_have_sideeffects(lin) and
-            taddnode(rin).right.isequal(lin);
+            TAddNode(rin).right.isequal(lin);
         end;
 
 
@@ -671,38 +671,38 @@ const
           bitsize: asizeint;
         begin
           Result:=nil;
-          if is_integer(tshlshrnode(left).left.resultdef) and
+          if is_integer(TShlShrNode(left).left.resultdef) and
             { Avoid using custom integers due to the risk of unusual sizes and
               undesired effects in, say, bitpacked records. [Kit] }
-            (TOrdDef(tshlshrnode(left).left.resultdef).ordtype<>customint) and
-            not might_have_sideeffects(tshlshrnode(left).left) and
-            tshlshrnode(left).left.isequal(tshlshrnode(right).left) then
+            (TOrdDef(TShlShrNode(left).left.resultdef).ordtype<>customint) and
+            not might_have_sideeffects(TShlShrNode(left).left) and
+            TShlShrNode(left).left.isequal(TShlShrNode(right).left) then
             begin
-              bitsize:=tshlshrnode(left).left.resultdef.size*8;
+              bitsize:=TShlShrNode(left).left.resultdef.size*8;
 
               { Check for constants first }
               if (
-                  is_constintnode(tshlshrnode(left).right) and
-                  (tordconstnode(tshlshrnode(left).right).value>0) and
-                  is_constintnode(tshlshrnode(right).right) and
-                  (tordconstnode(tshlshrnode(right).right).value>0) and
-                  (tordconstnode(tshlshrnode(right).right).value=bitsize-tordconstnode(tshlshrnode(left).right).value)
+                  is_constintnode(TShlShrNode(left).right) and
+                  (TOrdConstNode(TShlShrNode(left).right).value>0) and
+                  is_constintnode(TShlShrNode(right).right) and
+                  (TOrdConstNode(TShlShrNode(right).right).value>0) and
+                  (TOrdConstNode(TShlShrNode(right).right).value=bitsize-TOrdConstNode(TShlShrNode(left).right).value)
                 ) or
                   { Try (X op1 Y) or (X op2 (S-Y)) for variable rotation}
-                  TryVariableShiftPair(tshlshrnode(left).right, tshlshrnode(right).right, bitsize) then
+                  TryVariableShiftPair(TShlShrNode(left).right, TShlShrNode(right).right, bitsize) then
                 begin
-                  result:=cinlinenode.create(standard_op,false,
-                    ccallparanode.create(tshlshrnode(left).PruneKeepRight(),
-                    ccallparanode.create(tshlshrnode(left).PruneKeepLeft(),nil)));
+                  result:=CInlineNode.create(standard_op,false,
+                    CCallParaNode.create(TShlShrNode(left).PruneKeepRight(),
+                    CCallParaNode.create(TShlShrNode(left).PruneKeepLeft(),nil)));
                   Exit;
                 end;
 
               { Try (X op1 (S-Y)) or (X op2 Y) for variable rotation }
-              if TryVariableShiftPair(tshlshrnode(right).right, tshlshrnode(left).right, bitsize) then
+              if TryVariableShiftPair(TShlShrNode(right).right, TShlShrNode(left).right, bitsize) then
                 begin
-                  result:=cinlinenode.create(reverse_op,false,
-                    ccallparanode.create(tshlshrnode(right).PruneKeepRight(),
-                    ccallparanode.create(tshlshrnode(right).PruneKeepLeft(),nil)));
+                  result:=CInlineNode.create(reverse_op,false,
+                    CCallParaNode.create(TShlShrNode(right).PruneKeepRight(),
+                    CCallParaNode.create(TShlShrNode(right).PruneKeepLeft(),nil)));
                   Exit;
                 end;
             end;
@@ -710,22 +710,22 @@ const
 
 
       var
-        hp: taddnode;
+        hp: TAddNode;
         t,vl,lefttarget,righttarget,value1conv,value2conv: TNode;
         lt,rt,nt : TNodeType;
         hdef,
         rd,ld   , inttype: TDef;
-        rv,lv,v : tconstexprint;
-        rvd,lvd : bestreal;
-        ws1,ws2 : tcompilerwidestring;
+        rv,lv,v : TConstExprInt;
+        rvd,lvd : BestReal;
+        ws1,ws2 : TCompilerWideString;
         concatstrings : boolean;
         c1,c2   : array[0..1] of char;
         s1,s2,stmp   : pchar;
-        l1,l2   : longint;
+        l1,l2   : LongInt;
         resultset : TConstSet;
         res,
         b       : boolean;
-        cr, cl  : Tconstexprint;
+        cr, cl  : TConstExprInt;
         v2p, c2p, c1p, v1p: PNode;
         p1,p2: TConstPtrUInt;
       begin
@@ -746,13 +746,13 @@ const
 
         if (nodetype = slashn) and
            (((rt = ordconstn) and
-             (tordconstnode(right).value = 0)) or
+             (TOrdConstNode(right).value = 0)) or
             ((rt = realconstn) and
-             (trealconstnode(right).value_real = 0.0))) then
+             (TRealConstNode(right).value_real = 0.0))) then
           begin
-            if floating_point_range_check_error then
+            if Floating_Point_Range_Check_Error then
                begin
-                 result:=crealconstnode.create(1,pbestrealtype^);
+                 result:=CRealConstNode.create(1,pbestrealtype^);
                  Message(parser_e_division_by_zero);
                  exit;
                end;
@@ -821,13 +821,13 @@ const
                        t:=genintconstnode(0)
                      end
                    else if is_constpointernode(left) or is_constpointernode(right) then
-                     t:=cpointerconstnode.create(qword(v),resultdef)
+                     t:=CPointerConstNode.create(qword(v),resultdef)
                    else
                      begin
                        if is_integer(ld) then
-                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in localswitches)
+                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
                        else
-                         t:=cordconstnode.create(v,resultdef,(ld.typ<>enumdef));
+                         t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
                      end;
 
                    if is_currency(resultdef) then
@@ -846,20 +846,20 @@ const
                      { pointer-pointer results in an integer }
                      if (rt=pointerconstn) then
                        begin
-                         if (cs_typed_addresses in CurrentSettings.localswitches) and
+                         if (cs_typed_addresses in CurrentSettings.LocalSwitches) and
                             (TPointerDef(rd).pointeddef.size>1) and
                             not(anf_has_pointerdiv in addnodeflags) then
-                           internalerror(2008030101);
-                         t:=cpointerconstnode.create(qword(v),resultdef)
+                           InternalError(2008030101);
+                         t:=CPointerConstNode.create(qword(v),resultdef)
                        end
                      else
-                       t:=cpointerconstnode.create(qword(v),resultdef)
+                       t:=CPointerConstNode.create(qword(v),resultdef)
                    else
                      begin
                        if is_integer(ld) then
-                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in localswitches)
+                         t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches)
                        else
-                         t:=cordconstnode.create(v,resultdef,(ld.typ<>enumdef));
+                         t:=COrdConstNode.create(v,resultdef,(ld.typ<>enumdef));
                      end;
 
                    if is_currency(resultdef) then
@@ -887,7 +887,7 @@ const
                              v:=v div 10000;
                          end;
 
-                       t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in localswitches);
+                       t:=create_simplified_ord_const(v,resultdef,forinline,cs_check_overflow in LocalSwitches);
 
                        if is_currency(resultdef) then
                          Include(t.flags,nf_is_currency);
@@ -898,7 +898,7 @@ const
                    if is_integer(ld) then
                      t:=create_simplified_ord_const(lv xor rv,resultdef,forinline,false)
                    else
-                     t:=cordconstnode.create(lv xor rv,resultdef,true);
+                     t:=COrdConstNode.create(lv xor rv,resultdef,true);
 
                    if is_currency(resultdef) then
                      Include(t.flags,nf_is_currency);
@@ -908,7 +908,7 @@ const
                    if is_integer(ld) then
                      t:=create_simplified_ord_const(lv or rv,resultdef,forinline,false)
                    else
-                     t:=cordconstnode.create(lv or rv,resultdef,true);
+                     t:=COrdConstNode.create(lv or rv,resultdef,true);
 
                    if is_currency(resultdef) then
                      Include(t.flags,nf_is_currency);
@@ -918,23 +918,23 @@ const
                    if is_integer(ld) then
                      t:=create_simplified_ord_const(lv and rv,resultdef,forinline,false)
                    else
-                     t:=cordconstnode.create(lv and rv,resultdef,true);
+                     t:=COrdConstNode.create(lv and rv,resultdef,true);
 
                    if is_currency(resultdef) then
                      Include(t.flags,nf_is_currency);
                  end;
                ltn :
-                 t:=cordconstnode.create(ord(lv<rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv<rv),pasbool1type,true);
                lten :
-                 t:=cordconstnode.create(ord(lv<=rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv<=rv),pasbool1type,true);
                gtn :
-                 t:=cordconstnode.create(ord(lv>rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv>rv),pasbool1type,true);
                gten :
-                 t:=cordconstnode.create(ord(lv>=rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv>=rv),pasbool1type,true);
                equaln :
-                 t:=cordconstnode.create(ord(lv=rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv=rv),pasbool1type,true);
                unequaln :
-                 t:=cordconstnode.create(ord(lv<>rv),pasbool1type,true);
+                 t:=COrdConstNode.create(ord(lv<>rv),pasbool1type,true);
                slashn :
                  begin
                    { int/int becomes a real }
@@ -950,10 +950,10 @@ const
                      not (nf_is_currency in left.flags) then
                      rvd:=rvd/BestReal(10000.0);
 
-                   t:=crealconstnode.create(lvd/rvd,resultrealdef);
+                   t:=CRealConstNode.create(lvd/rvd,resultrealdef);
                  end;
                else
-                 internalerror(2008022101);
+                 InternalError(2008022101);
              end;
              result:=t;
              exit;
@@ -961,9 +961,9 @@ const
         else if cmp_of_disjunct_ranges(res) then
           begin
             if res then
-              t:=Cordconstnode.create(1,pasbool1type,true)
+              t:=COrdConstNode.create(1,pasbool1type,true)
             else
-              t:=Cordconstnode.create(0,pasbool1type,true);
+              t:=COrdConstNode.create(0,pasbool1type,true);
             { don't do this optimization, if the variable expression might
               have a side effect }
             if (is_constintnode(left) and might_have_sideeffects(right)) or
@@ -982,27 +982,27 @@ const
         { Add,Sub,Mul,Or,Xor,Andn with constant 0, 1 or -1?  }
         if is_constintnode(right) and (is_integer(ld) or is_pointer(ld)) then
           begin
-            if (tordconstnode(right).value = 0) and (nodetype in [addn,subn,orn,xorn,andn,muln]) then
+            if (TOrdConstNode(right).value = 0) and (nodetype in [addn,subn,orn,xorn,andn,muln]) then
               begin
                 case nodetype of
                   addn,subn,orn,xorn:
                     result := PruneKeepLeft();
                   andn,muln:
                     begin
-                      if (cs_opt_level4 in CurrentSettings.optimizerswitches) or
+                      if (cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
                          not might_have_sideeffects(left) then
-                        result:=cordconstnode.create(0,resultdef,true);
+                        result:=COrdConstNode.create(0,resultdef,true);
                     end
                   else
                     ;
                 end;
               end
 
-            else if (tordconstnode(right).value = 1) and (nodetype=muln) then
+            else if (TOrdConstNode(right).value = 1) and (nodetype=muln) then
               { insert type conversion in case it is a 32*32 to 64 bit multiplication optimization,
                 the type conversion does not hurt because it is normally removed later on
               }
-              result := ctypeconvnode.create_internal(PruneKeepLeft(),resultdef)
+              result := CTypeConvNode.create_internal(PruneKeepLeft(),resultdef)
 
             { try to fold
                           op                         op
@@ -1016,7 +1016,7 @@ const
                 we cannot do this optimization, see e.g. tests/tbs/tw36587.pas on arm }
               (compare_defs(resultdef,ld,nothingn)=te_exact) then
               begin
-                if is_constintnode(taddnode(left).left) then
+                if is_constintnode(TAddNode(left).left) then
                   begin
                     case left.nodetype of
                       xorn,
@@ -1029,7 +1029,7 @@ const
                         ;
                     end;
                   end
-                else if is_constintnode(taddnode(left).right) then
+                else if is_constintnode(TAddNode(left).right) then
                   begin
                     case left.nodetype of
                       xorn,
@@ -1044,15 +1044,15 @@ const
                   end
               end;
 
-            if assigned(result) then
+            if Assigned(result) then
               exit;
 
             { multiplication by -1? Convert it into an unary minus if the other conversions before failed, don't do
               it before the folding above, see #40448 }
-            if (tordconstnode(right).value = -1) and (nodetype=muln) then
-              result := ctypeconvnode.create_internal(cunaryminusnode.create(PruneKeepLeft()),ld);
+            if (TOrdConstNode(right).value = -1) and (nodetype=muln) then
+              result := CTypeConvNode.create_internal(CUnaryMinusNode.create(PruneKeepLeft()),ld);
 
-            if assigned(result) then
+            if Assigned(result) then
               exit;
           end;
 
@@ -1060,38 +1060,38 @@ const
         if (nodetype = subn) then
           begin
             { transform -1-x into not(x) }
-            if is_signed(rd) and is_constintnode(left) and (tordconstnode(left).value=-1)  then
+            if is_signed(rd) and is_constintnode(left) and (TOrdConstNode(left).value=-1)  then
               begin
-                result:=cnotnode.create(right.getcopy);
+                result:=CNotNode.create(right.getcopy);
                 exit;
               end
 
             { change "0 - val" to "-val" }
             else if is_constintnode(left) and (is_integer(right.resultdef) or is_pointer(right.resultdef)) then
               begin
-                if (tordconstnode(left).value = 0) then
-                  result := ctypeconvnode.create_internal(cunaryminusnode.create(right.getcopy),right.resultdef);
+                if (TOrdConstNode(left).value = 0) then
+                  result := CTypeConvNode.create_internal(CUnaryMinusNode.create(right.getcopy),right.resultdef);
               end
 
             { change "nil - val" to "-val" }
             else if (left.nodetype=niln) and is_pointer(right.resultdef) then
-              result := ctypeconvnode.create_internal(cunaryminusnode.create(ctypeconvnode.create_internal(right.getcopy,resultdef)),resultdef)
+              result := CTypeConvNode.create_internal(CUnaryMinusNode.create(CTypeConvNode.create_internal(right.getcopy,resultdef)),resultdef)
 
             { convert n - n mod const into n div const*const }
-            else if (right.nodetype=modn) and is_constintnode(tmoddivnode(right).right) and
-              (left.isequal(tmoddivnode(right).left)) and not(might_have_sideeffects(left)) { and
+            else if (right.nodetype=modn) and is_constintnode(TModDivNode(right).right) and
+              (left.isequal(TModDivNode(right).left)) and not(might_have_sideeffects(left)) { and
 	      not(cs_check_overflow in localswitches) } then
               begin
-                result:=caddnode.create(muln,cmoddivnode.create(divn,left,tmoddivnode(right).right.getcopy),tmoddivnode(right).right);
+                result:=CAddNode.create(muln,CModDivNode.create(divn,left,TModDivNode(right).right.getcopy),TModDivNode(right).right);
                 left:=nil;
-                tmoddivnode(right).right:=nil;
+                TModDivNode(right).right:=nil;
                 exit;
               end
 
             { transform -x-1 into not(x) }
-            else if is_signed(ld) and is_constintnode(right) and (tordconstnode(right).value=1) and (left.nodetype=unaryminusn) then
+            else if is_signed(ld) and is_constintnode(right) and (TOrdConstNode(right).value=1) and (left.nodetype=unaryminusn) then
               begin
-                result:=cnotnode.create(tunaryminusnode(left).left.getcopy);
+                result:=CNotNode.create(TUnaryMinusNode(left).left.getcopy);
                 exit;
               end;
           end;
@@ -1099,18 +1099,18 @@ const
       { both real constants ? }
         if (lt=realconstn) and (rt=realconstn) then
           begin
-             lvd:=trealconstnode(left).value_real;
-             rvd:=trealconstnode(right).value_real;
+             lvd:=TRealConstNode(left).value_real;
+             rvd:=TRealConstNode(right).value_real;
              case nodetype of
                 addn :
                   begin
-                    t:=crealconstnode.create(lvd+rvd,resultrealdef);
+                    t:=CRealConstNode.create(lvd+rvd,resultrealdef);
                     if nf_is_currency in flags then
                       include(t.flags,nf_is_currency);
                   end;
                 subn :
                   begin
-                    t:=crealconstnode.create(lvd-rvd,resultrealdef);
+                    t:=CRealConstNode.create(lvd-rvd,resultrealdef);
                     if nf_is_currency in flags then
                       include(t.flags,nf_is_currency);
                   end;
@@ -1147,7 +1147,7 @@ const
                           rvd:=rvd/BestReal(10000.0);
                       end;
 
-                    t:=crealconstnode.create(lvd*rvd,resultrealdef);
+                    t:=CRealConstNode.create(lvd*rvd,resultrealdef);
                     if nf_is_currency in flags then
                       include(t.flags,nf_is_currency);
                   end;
@@ -1156,12 +1156,12 @@ const
                     if lvd<0 then
                      begin
                        Message(parser_e_invalid_float_operation);
-                       t:=crealconstnode.create(0,resultrealdef);
+                       t:=CRealConstNode.create(0,resultrealdef);
                      end
                     else if lvd=0 then
-                      t:=crealconstnode.create(1.0,resultrealdef)
+                      t:=CRealConstNode.create(1.0,resultrealdef)
                     else
-                      t:=crealconstnode.create(Exp(Ln(lvd)*rvd),resultrealdef);
+                      t:=CRealConstNode.create(Exp(Ln(lvd)*rvd),resultrealdef);
                   end;
                 slashn :
                   begin
@@ -1170,12 +1170,12 @@ const
                       (nf_is_currency in right.flags) then
                       begin
                         { Need to put one of the scalars back }
-                        t:=crealconstnode.create((lvd/rvd)*BestReal(10000.0),resultrealdef);
+                        t:=CRealConstNode.create((lvd/rvd)*BestReal(10000.0),resultrealdef);
                         Include(t.flags,nf_is_currency);
                       end
                     else
                       begin
-                        t:=crealconstnode.create(lvd/rvd,resultrealdef);
+                        t:=CRealConstNode.create(lvd/rvd,resultrealdef);
 
                         if (nf_is_currency in left.flags) and
                           not (nf_is_currency in right.flags) then
@@ -1183,19 +1183,19 @@ const
                       end;
                   end;
                 ltn :
-                  t:=cordconstnode.create(ord(lvd<rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd<rvd),pasbool1type,true);
                 lten :
-                  t:=cordconstnode.create(ord(lvd<=rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd<=rvd),pasbool1type,true);
                 gtn :
-                  t:=cordconstnode.create(ord(lvd>rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd>rvd),pasbool1type,true);
                 gten :
-                  t:=cordconstnode.create(ord(lvd>=rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd>=rvd),pasbool1type,true);
                 equaln :
-                  t:=cordconstnode.create(ord(lvd=rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd=rvd),pasbool1type,true);
                 unequaln :
-                  t:=cordconstnode.create(ord(lvd<>rvd),pasbool1type,true);
+                  t:=COrdConstNode.create(ord(lvd<>rvd),pasbool1type,true);
                 else
-                  internalerror(2008022102);
+                  InternalError(2008022102);
              end;
              result:=t;
              exit;
@@ -1209,8 +1209,8 @@ const
                   this operation is always valid }
                 if (left.nodetype=unaryminusn) then
                   begin
-                    t := tunaryminusnode(left).PruneKeepLeft();
-                    result:=caddnode.create(subn,PruneKeepRight(),t);
+                    t := TUnaryMinusNode(left).PruneKeepLeft();
+                    result:=CAddNode.create(subn,PruneKeepRight(),t);
                     exit;
                   end;
 
@@ -1218,8 +1218,8 @@ const
                   this operation is always valid }
                 if (right.nodetype=unaryminusn) then
                   begin
-                    t := tunaryminusnode(right).PruneKeepLeft();
-                    result:=caddnode.create(subn,PruneKeepLeft(),t);
+                    t := TUnaryMinusNode(right).PruneKeepLeft();
+                    result:=CAddNode.create(subn,PruneKeepLeft(),t);
                     exit;
                   end;
               end;
@@ -1228,8 +1228,8 @@ const
               this operation is always valid }
             if (nodetype=subn) and (right.nodetype=unaryminusn) then
               begin
-                t := tunaryminusnode(right).PruneKeepLeft();
-                result:=caddnode.create(addn,PruneKeepLeft(),t);
+                t := TUnaryMinusNode(right).PruneKeepLeft();
+                result:=CAddNode.create(addn,PruneKeepLeft(),t);
                 exit;
               end;
 
@@ -1238,8 +1238,8 @@ const
               these operations are always valid }
             if (nodetype in [muln,slashn]) and (left.nodetype=unaryminusn) and (right.nodetype=unaryminusn) then
               begin
-                t := tunaryminusnode(right).PruneKeepLeft();
-                result:=caddnode.create(nodetype,tunaryminusnode(left).PruneKeepLeft(),t);
+                t := TUnaryMinusNode(right).PruneKeepLeft();
+                result:=CAddNode.create(nodetype,TUnaryMinusNode(left).PruneKeepLeft(),t);
                 exit;
               end;
 
@@ -1250,13 +1250,13 @@ const
               begin
                 if lt=realconstn then
                   begin
-                    if (trealconstnode(left).value_real=0) and (nodetype in [addn,muln,subn,slashn]) then
+                    if (TRealConstNode(left).value_real=0) and (nodetype in [addn,muln,subn,slashn]) then
                       begin
                         case nodetype of
                           addn:
                             begin
                               { -0.0+(+0.0)=+0.0 so we cannot carry out this optimization if no fastmath is passed }
-                              if not(cs_opt_fastmath in CurrentSettings.optimizerswitches) then
+                              if not(cs_opt_fastmath in CurrentSettings.OptimizerSwitches) then
                                 begin
                                   result:=PruneKeepRight();
                                   exit;
@@ -1272,28 +1272,28 @@ const
                           subn:
                             begin
                               t := PruneKeepRight();
-                              result:=ctypeconvnode.create_internal(cunaryminusnode.create(t),rd);
+                              result:=CTypeConvNode.create_internal(CUnaryMinusNode.create(t),rd);
                               exit;
                             end;
                           else
-                            Internalerror(2020060801);
+                            InternalError(2020060801);
                         end;
                       end
-                    else if (trealconstnode(left).value_real=1) and (nodetype=muln) then
+                    else if (TRealConstNode(left).value_real=1) and (nodetype=muln) then
                       begin
                         result:=right.getcopy;
                         exit;
                       end
-                    else if (trealconstnode(left).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(right,[mhs_exceptions])) and
+                    else if (TRealConstNode(left).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(right,[mhs_exceptions])) and
                       (node_complexity(right)<=1) then
                       begin
-                        result:=caddnode.create_internal(addn,right.getcopy,right.getcopy);
+                        result:=CAddNode.create_internal(addn,right.getcopy,right.getcopy);
                         exit;
                       end;
                   end
                 else if rt=realconstn then
                   begin
-                    if (trealconstnode(right).value_real=0) and (nodetype in [addn,muln,subn]) then
+                    if (TRealConstNode(right).value_real=0) and (nodetype in [addn,muln,subn]) then
                       begin
                         case nodetype of
                           subn,
@@ -1309,32 +1309,32 @@ const
                                 exit;
                               end;
                           else
-                            Internalerror(2020060802);
+                            InternalError(2020060802);
                         end;
                       end
-                    else if (trealconstnode(right).value_real=1) and (nodetype in [muln,slashn]) then
+                    else if (TRealConstNode(right).value_real=1) and (nodetype in [muln,slashn]) then
                       begin
                         result:=left.getcopy;
                         exit;
                       end
-                    else if (trealconstnode(right).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(left,[mhs_exceptions])) and
+                    else if (TRealConstNode(right).value_real=2) and (nodetype=muln) and not(might_have_sideeffects(left,[mhs_exceptions])) and
                       (node_complexity(left)<=1) then
                       begin
-                        result:=caddnode.create_internal(addn,left.getcopy,left.getcopy);
+                        result:=CAddNode.create_internal(addn,left.getcopy,left.getcopy);
                         exit;
                       end;
                   end
                 { optimize a/a and a-a }
-                else if ((nodetype in [subn,slashn]) and ([cs_opt_fastmath,cs_opt_level2]*CurrentSettings.optimizerswitches=[cs_opt_fastmath,cs_opt_level2])) and
+                else if ((nodetype in [subn,slashn]) and ([cs_opt_fastmath,cs_opt_level2]*CurrentSettings.OptimizerSwitches=[cs_opt_fastmath,cs_opt_level2])) and
                   left.isequal(right) and not(might_have_sideeffects(left,[mhs_exceptions])) then
                   begin
                     case nodetype of
                       subn:
-                        result:=crealconstnode.create(0,ld);
+                        result:=CRealConstNode.create(0,ld);
                       slashn:
-                        result:=crealconstnode.create(1,ld);
+                        result:=CRealConstNode.create(1,ld);
                       else
-                        Internalerror(2020060901);
+                        InternalError(2020060901);
                     end;
                   end;
               end;
@@ -1353,23 +1353,23 @@ const
                (TFloatDef(rd).floattype=s64comp)
               )
           ) and
-          (((cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=ordconstn)) or
-           ((cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=realconstn) and
-            (is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real<>0))
+          (((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=ordconstn)) or
+           ((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and
+            (Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real<>0))
            ) or
            ((rt=realconstn) and
-            (is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real<>0)) and
-            (bestrealrec(trealconstnode(right).value_real).Mantissa(True)=BestRealHiddenBit)
+            (Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real<>0)) and
+            (BestRealRec(TRealConstNode(right).value_real).Mantissa(True)=BestRealHiddenBit)
            )
           ) then
           case rt of
             ordconstn:
               begin
                 { the normal code handles div/0 }
-                if (tordconstnode(right).value<>0) then
+                if (TOrdConstNode(right).value<>0) then
                   begin
                     nodetype:=muln;
-                    t:=crealconstnode.create(1/tordconstnode(right).value,resultdef);
+                    t:=CRealConstNode.create(1/TOrdConstNode(right).value,resultdef);
                     right.free;
                     right:=t;
                     exit;
@@ -1378,7 +1378,7 @@ const
             realconstn:
               begin
                 nodetype:=muln;
-                trealconstnode(right).value_real:=1.0/trealconstnode(right).value_real;
+                TRealConstNode(right).value_real:=1.0/TRealConstNode(right).value_real;
                 exit;
               end;
             else
@@ -1391,36 +1391,36 @@ const
         { this isn't ver y efficient, but I don't think    }
         { that it does matter that much (FK)               }
         if (lt=stringconstn) and (rt=stringconstn) and
-          (tstringconstnode(left).cst_type in [cst_widestring,cst_unicodestring]) and
-          (tstringconstnode(right).cst_type in [cst_widestring,cst_unicodestring]) then
+          (TStringConstNode(left).cst_type in [cst_widestring,cst_unicodestring]) and
+          (TStringConstNode(right).cst_type in [cst_widestring,cst_unicodestring]) then
           begin
-             initwidestring(ws1);
-             initwidestring(ws2);
-             copywidestring(tstringconstnode(left).valuews,ws1);
-             copywidestring(tstringconstnode(right).valuews,ws2);
+             InitWideString(ws1);
+             InitWideString(ws2);
+             CopyWideString(TStringConstNode(left).valuews,ws1);
+             CopyWideString(TStringConstNode(right).valuews,ws2);
              case nodetype of
                 addn :
                   begin
-                     concatwidestrings(ws1,ws2);
-                     t:=cstringconstnode.createunistr(ws1);
+                     ConcatWideStrings(ws1,ws2);
+                     t:=CStringConstNode.createunistr(ws1);
                   end;
                 ltn :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)<0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<0),pasbool1type,true);
                 lten :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)<=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<=0),pasbool1type,true);
                 gtn :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)>0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>0),pasbool1type,true);
                 gten :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)>=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)>=0),pasbool1type,true);
                 equaln :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)=0),pasbool1type,true);
                 unequaln :
-                  t:=cordconstnode.create(byte(comparewidestrings(ws1,ws2)<>0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareWideStrings(ws1,ws2)<>0),pasbool1type,true);
                 else
-                  internalerror(2008022103);
+                  InternalError(2008022103);
              end;
-             donewidestring(ws1);
-             donewidestring(ws2);
+             DoneWideString(ws1);
+             DoneWideString(ws2);
              result:=t;
              exit;
           end;
@@ -1431,10 +1431,10 @@ const
         if (lt=ordconstn) and (rt=ordconstn) and
            is_char(ld) and is_char(rd) then
           begin
-             c1[0]:=char(int64(tordconstnode(left).value));
+             c1[0]:=char(int64(TOrdConstNode(left).value));
              c1[1]:=#0;
              l1:=1;
-             c2[0]:=char(int64(tordconstnode(right).value));
+             c2[0]:=char(int64(TOrdConstNode(right).value));
              c2[1]:=#0;
              l2:=1;
              s1:=@c1[0];
@@ -1443,9 +1443,9 @@ const
           end
         else if (lt=stringconstn) and (rt=ordconstn) and is_char(rd) then
           begin
-             l1:=tstringconstnode(left).len;
-             s1:=tstringconstnode(left).asconstpchar;
-             c2[0]:=char(int64(tordconstnode(right).value));
+             l1:=TStringConstNode(left).len;
+             s1:=TStringConstNode(left).asconstpchar;
+             c2[0]:=char(int64(TOrdConstNode(right).value));
              c2[1]:=#0;
              s2:=@c2[0];
              l2:=1;
@@ -1453,20 +1453,20 @@ const
           end
         else if (lt=ordconstn) and (rt=stringconstn) and is_char(ld) then
           begin
-             c1[0]:=char(int64(tordconstnode(left).value));
+             c1[0]:=char(int64(TOrdConstNode(left).value));
              c1[1]:=#0;
              l1:=1;
              s1:=@c1[0];
-             s2:=tstringconstnode(right).asconstpchar;
-             l2:=tstringconstnode(right).len;
+             s2:=TStringConstNode(right).asconstpchar;
+             l2:=TStringConstNode(right).len;
              concatstrings:=true;
           end
         else if (lt=stringconstn) and (rt=stringconstn) then
           begin
-             s1:=tstringconstnode(left).asconstpchar;
-             l1:=tstringconstnode(left).len;
-             s2:=tstringconstnode(right).asconstpchar;
-             l2:=tstringconstnode(right).len;
+             s1:=TStringConstNode(left).asconstpchar;
+             l1:=TStringConstNode(left).len;
+             s2:=TStringConstNode(right).asconstpchar;
+             l2:=TStringConstNode(right).len;
              concatstrings:=true;
           end;
         if concatstrings then
@@ -1474,30 +1474,30 @@ const
              case nodetype of
                 addn :
                   begin
-                    stmp:=concatansistrings(s1,s2,l1,l2);
-                    t:=cstringconstnode.createpchar(stmp,l1+l2,nil);
-                    Freemem(stmp);
+                    stmp:=ConcatAnsiStrings(s1,s2,l1,l2);
+                    t:=CStringConstNode.createpchar(stmp,l1+l2,nil);
+                    FreeMem(stmp);
                     TypeCheckPass(t);
                     if not is_ansistring(resultdef) or
-                       (TStringDef(resultdef).encoding<>globals.CP_NONE) then
-                      tstringconstnode(t).changestringtype(resultdef)
+                       (TStringDef(resultdef).encoding<>Globals.CP_NONE) then
+                      TStringConstNode(t).changestringtype(resultdef)
                     else
-                      tstringconstnode(t).changestringtype(getansistringdef)
+                      TStringConstNode(t).changestringtype(getansistringdef)
                   end;
                 ltn :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)<0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<0),pasbool1type,true);
                 lten :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)<=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<=0),pasbool1type,true);
                 gtn :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)>0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>0),pasbool1type,true);
                 gten :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)>=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)>=0),pasbool1type,true);
                 equaln :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)=0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)=0),pasbool1type,true);
                 unequaln :
-                  t:=cordconstnode.create(byte(compareansistrings(s1,s2,l1,l2)<>0),pasbool1type,true);
+                  t:=COrdConstNode.create(byte(CompareAnsiStrings(s1,s2,l1,l2)<>0),pasbool1type,true);
                 else
-                  internalerror(2008022104);
+                  InternalError(2008022104);
              end;
              result:=t;
              exit;
@@ -1505,53 +1505,53 @@ const
 
         { set constant evaluation }
         if (right.nodetype=setconstn) and
-           not assigned(tsetconstnode(right).left) and
+           not Assigned(TSetConstNode(right).left) and
            (left.nodetype=setconstn) and
-           not assigned(tsetconstnode(left).left) then
+           not Assigned(TSetConstNode(left).left) then
           begin
              case nodetype of
                addn :
                  begin
-                   resultset:=tsetconstnode(right).value_set^ + tsetconstnode(left).value_set^;
-                   t:=csetconstnode.create(@resultset,resultdef);
+                   resultset:=TSetConstNode(right).value_set^ + TSetConstNode(left).value_set^;
+                   t:=CSetConstNode.create(@resultset,resultdef);
                  end;
                 muln :
                   begin
-                    resultset:=tsetconstnode(right).value_set^ * tsetconstnode(left).value_set^;
-                    t:=csetconstnode.create(@resultset,resultdef);
+                    resultset:=TSetConstNode(right).value_set^ * TSetConstNode(left).value_set^;
+                    t:=CSetConstNode.create(@resultset,resultdef);
                   end;
                subn :
                   begin
-                    resultset:=tsetconstnode(left).value_set^ - tsetconstnode(right).value_set^;
-                            t:=csetconstnode.create(@resultset,resultdef);
+                    resultset:=TSetConstNode(left).value_set^ - TSetConstNode(right).value_set^;
+                            t:=CSetConstNode.create(@resultset,resultdef);
                   end;
                symdifn :
                   begin
-                    resultset:=tsetconstnode(right).value_set^ >< tsetconstnode(left).value_set^;
-                        t:=csetconstnode.create(@resultset,resultdef);
+                    resultset:=TSetConstNode(right).value_set^ >< TSetConstNode(left).value_set^;
+                        t:=CSetConstNode.create(@resultset,resultdef);
                   end;
                unequaln :
                   begin
-                    b:=tsetconstnode(right).value_set^ <> tsetconstnode(left).value_set^;
-                    t:=cordconstnode.create(byte(b),pasbool1type,true);
+                    b:=TSetConstNode(right).value_set^ <> TSetConstNode(left).value_set^;
+                    t:=COrdConstNode.create(byte(b),pasbool1type,true);
                   end;
                equaln :
                   begin
-                    b:=tsetconstnode(right).value_set^ = tsetconstnode(left).value_set^;
-                    t:=cordconstnode.create(byte(b),pasbool1type,true);
+                    b:=TSetConstNode(right).value_set^ = TSetConstNode(left).value_set^;
+                    t:=COrdConstNode.create(byte(b),pasbool1type,true);
                   end;
                lten :
                   begin
-                    b:=tsetconstnode(left).value_set^ <= tsetconstnode(right).value_set^;
-                    t:=cordconstnode.create(byte(b),pasbool1type,true);
+                    b:=TSetConstNode(left).value_set^ <= TSetConstNode(right).value_set^;
+                    t:=COrdConstNode.create(byte(b),pasbool1type,true);
                   end;
                gten :
                   begin
-                    b:=tsetconstnode(left).value_set^ >= tsetconstnode(right).value_set^;
-                    t:=cordconstnode.create(byte(b),pasbool1type,true);
+                    b:=TSetConstNode(left).value_set^ >= TSetConstNode(right).value_set^;
+                    t:=COrdConstNode.create(byte(b),pasbool1type,true);
                   end;
                 else
-                  internalerror(2008022105);
+                  InternalError(2008022105);
              end;
              result:=t;
              exit;
@@ -1563,45 +1563,45 @@ const
           begin
             if is_constboolnode(left) then
               begin
-                if ((nodetype=andn) and (tordconstnode(left).value<>0)) or
-                  ((nodetype=orn) and (tordconstnode(left).value=0)) or
-                  ((nodetype=xorn) and (tordconstnode(left).value=0)) then
+                if ((nodetype=andn) and (TOrdConstNode(left).value<>0)) or
+                  ((nodetype=orn) and (TOrdConstNode(left).value=0)) or
+                  ((nodetype=xorn) and (TOrdConstNode(left).value=0)) then
                   begin
                     Result := PruneKeepRight();
                     exit;
                   end
                 else if not(might_have_sideeffects(right)) and
-                  (((nodetype=orn) and (tordconstnode(left).value<>0)) or
-                  ((nodetype=andn) and (tordconstnode(left).value=0))) then
+                  (((nodetype=orn) and (TOrdConstNode(left).value<>0)) or
+                  ((nodetype=andn) and (TOrdConstNode(left).value=0))) then
                   begin
                     Result := PruneKeepLeft();
                     exit;
                   end
-                else if ((nodetype=xorn) and (tordconstnode(left).value<>0)) then
+                else if ((nodetype=xorn) and (TOrdConstNode(left).value<>0)) then
                   begin
-                    Result := cnotnode.create(PruneKeepRight());
+                    Result := CNotNode.create(PruneKeepRight());
                     exit;
                   end
               end
             else if is_constboolnode(right) then
               begin
-                if ((nodetype=andn) and (tordconstnode(right).value<>0)) or
-                  ((nodetype=orn) and (tordconstnode(right).value=0)) or
-                  ((nodetype=xorn) and (tordconstnode(right).value=0)) then
+                if ((nodetype=andn) and (TOrdConstNode(right).value<>0)) or
+                  ((nodetype=orn) and (TOrdConstNode(right).value=0)) or
+                  ((nodetype=xorn) and (TOrdConstNode(right).value=0)) then
                   begin
                     result := PruneKeepLeft();
                     exit;
                   end
                 else if not(might_have_sideeffects(left)) and
-                  (((nodetype=orn) and (tordconstnode(right).value<>0)) or
-                   ((nodetype=andn) and (tordconstnode(right).value=0))) then
+                  (((nodetype=orn) and (TOrdConstNode(right).value<>0)) or
+                   ((nodetype=andn) and (TOrdConstNode(right).value=0))) then
                   begin
                     result := PruneKeepRight();
                     exit;
                   end
-                else if ((nodetype=xorn) and (tordconstnode(right).value<>0)) then
+                else if ((nodetype=xorn) and (TOrdConstNode(right).value<>0)) then
                   begin
-                    result := cnotnode.create(PruneKeepLeft());
+                    result := CNotNode.create(PruneKeepLeft());
                     exit;
                   end
               end;
@@ -1610,13 +1610,13 @@ const
         { optimize @<proc>=/<>@<proc>,
           such code might appear in generic specializations }
         if (nodetype in [equaln,unequaln]) and
-          (left.nodetype=typeconvn) and (is_voidpointer(left.resultdef)) and (ttypeconvnode(left).left.nodetype=typeconvn) and
-          (ttypeconvnode(ttypeconvnode(left).left).convtype=tc_proc_2_procvar) and
-          (ttypeconvnode(ttypeconvnode(left).left).left.nodetype=loadn) and
-          (ttypeconvnode(ttypeconvnode(left).left).left.resultdef.typ=procdef) and
+          (left.nodetype=typeconvn) and (is_voidpointer(left.resultdef)) and (TTypeConvNode(left).left.nodetype=typeconvn) and
+          (TTypeConvNode(TTypeConvNode(left).left).convtype=tc_proc_2_procvar) and
+          (TTypeConvNode(TTypeConvNode(left).left).left.nodetype=loadn) and
+          (TTypeConvNode(TTypeConvNode(left).left).left.resultdef.typ=procdef) and
           left.isequal(right) then
           begin
-            result:=cordconstnode.create(ord(nodetype=equaln),resultdef,false);
+            result:=COrdConstNode.create(ord(nodetype=equaln),resultdef,false);
             exit;
           end;
 
@@ -1627,17 +1627,17 @@ const
         lefttarget:=actualtargetnode(@left)^;
         righttarget:=actualtargetnode(@right)^;
         if (nodetype in [equaln,unequaln]) and (lefttarget.nodetype=inlinen) and (righttarget.nodetype=inlinen) and
-          (tinlinenode(lefttarget).inlinenumber=in_typeinfo_x) and (tinlinenode(righttarget).inlinenumber=in_typeinfo_x) and
-          not (tinlinenode(lefttarget).left.resultdef.typ in [undefineddef,errordef]) and
-          not (tinlinenode(righttarget).left.resultdef.typ in [undefineddef,errordef]) then
+          (TInlineNode(lefttarget).inlinenumber=in_typeinfo_x) and (TInlineNode(righttarget).inlinenumber=in_typeinfo_x) and
+          not (TInlineNode(lefttarget).left.resultdef.typ in [undefineddef,errordef]) and
+          not (TInlineNode(righttarget).left.resultdef.typ in [undefineddef,errordef]) then
           begin
             case nodetype of
               equaln:
-                result:=cordconstnode.create(ord(tinlinenode(lefttarget).left.resultdef=tinlinenode(righttarget).left.resultdef),resultdef,false);
+                result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef=TInlineNode(righttarget).left.resultdef),resultdef,false);
               unequaln:
-                result:=cordconstnode.create(ord(tinlinenode(lefttarget).left.resultdef<>tinlinenode(righttarget).left.resultdef),resultdef,false);
+                result:=COrdConstNode.create(ord(TInlineNode(lefttarget).left.resultdef<>TInlineNode(righttarget).left.resultdef),resultdef,false);
               else
-                Internalerror(2020092901);
+                InternalError(2020092901);
             end;
             exit;
           end;
@@ -1647,54 +1647,54 @@ const
             p1:=0;
             p2:=0;
             if left.nodetype=pointerconstn then
-              p1:=tpointerconstnode(left).value;
+              p1:=TPointerConstNode(left).value;
             if right.nodetype=pointerconstn then
-              p2:=tpointerconstnode(right).value;
+              p2:=TPointerConstNode(right).value;
             case nodetype of
               equaln:
-                result:=cordconstnode.create(ord(p1=p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1=p2),bool8type,false);
               unequaln:
-                result:=cordconstnode.create(ord(p1<>p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1<>p2),bool8type,false);
               gtn:
-                result:=cordconstnode.create(ord(p1>p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1>p2),bool8type,false);
               ltn:
-                result:=cordconstnode.create(ord(p1<p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1<p2),bool8type,false);
               gten:
-                result:=cordconstnode.create(ord(p1>=p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1>=p2),bool8type,false);
               lten:
-                result:=cordconstnode.create(ord(p1<=p2),bool8type,false);
+                result:=COrdConstNode.create(ord(p1<=p2),bool8type,false);
               else
-                Internalerror(2020100101);
+                InternalError(2020100101);
             end;
             exit;
           end;
 
         { slow simplifications and/or more sophisticated transformations which might make debugging harder }
-        if cs_opt_level2 in CurrentSettings.optimizerswitches then
+        if cs_opt_level2 in CurrentSettings.OptimizerSwitches then
           begin
             if nodetype in [addn,muln,subn] then
               begin
                 { convert a+const1-const2 into a+const1+(-const2) so it is folded later on }
                 if (left.nodetype=addn) and
                   (nodetype=subn) and
-                  (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=realconstn) and (taddnode(left).right.nodetype=realconstn) and
+                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
                   (compare_defs(resultdef,ld,nothingn)=te_exact) then
                   begin
                     Result:=getcopy;
                     Result.nodetype:=addn;
-                    taddnode(result).right:=cunaryminusnode.create(taddnode(result).right);
+                    TAddNode(result).right:=CUnaryMinusNode.create(TAddNode(result).right);
                     exit;
                   end;
 
                 { convert a-const1+const2 into a+(-const1)+const2 so it is folded later on }
                 if (left.nodetype=subn) and
                   (nodetype=addn) and
-                  (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=realconstn) and (taddnode(left).right.nodetype=realconstn) and
+                  (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn) and
                   (compare_defs(resultdef,ld,nothingn)=te_exact) then
                   begin
                     Result:=getcopy;
-                    taddnode(Result).left.nodetype:=addn;
-                    taddnode(taddnode(Result).left).right:=cunaryminusnode.create(taddnode(taddnode(Result).left).right);
+                    TAddNode(Result).left.nodetype:=addn;
+                    TAddNode(TAddNode(Result).left).right:=CUnaryMinusNode.create(TAddNode(TAddNode(Result).left).right);
                     exit;
                   end;
 
@@ -1708,8 +1708,8 @@ const
                   while operating on strings or reals
                 }
                 if (left.nodetype=nodetype) and
-                  (((nodetype=addn) and ((rt=stringconstn) or is_constcharnode(right)) and ((taddnode(left).right.nodetype=stringconstn) or is_constcharnode(taddnode(left).right))) or
-                   ((nodetype in [addn,muln,subn]) and (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=realconstn) and (taddnode(left).right.nodetype=realconstn))
+                  (((nodetype=addn) and ((rt=stringconstn) or is_constcharnode(right)) and ((TAddNode(left).right.nodetype=stringconstn) or is_constcharnode(TAddNode(left).right))) or
+                   ((nodetype in [addn,muln,subn]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (rt=realconstn) and (TAddNode(left).right.nodetype=realconstn))
                   ) and
                   (compare_defs(resultdef,ld,nothingn)=te_exact) then
                   begin
@@ -1721,8 +1721,8 @@ const
                     }
                     if nodetype=subn then
                       begin
-                        taddnode(left).right:=cunaryminusnode.create(taddnode(left).right);
-                        DoTypeCheckPass(taddnode(left).right);
+                        TAddNode(left).right:=CUnaryMinusNode.create(TAddNode(left).right);
+                        DoTypeCheckPass(TAddNode(left).right);
                       end;
                     Result:=SwapRightWithLeftLeft;
                     if nodetype=subn then
@@ -1743,8 +1743,8 @@ const
                   while operating on strings or reals
                 }
                 if (right.nodetype=nodetype) and
-                  (((nodetype=addn) and ((lt=stringconstn) or is_constcharnode(left)) and ((taddnode(right).left.nodetype=stringconstn) or is_constcharnode(taddnode(right).left))) or
-                   ((nodetype in [addn,muln]) and (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (lt=realconstn) and (taddnode(right).left.nodetype=realconstn))
+                  (((nodetype=addn) and ((lt=stringconstn) or is_constcharnode(left)) and ((TAddNode(right).left.nodetype=stringconstn) or is_constcharnode(TAddNode(right).left))) or
+                   ((nodetype in [addn,muln]) and (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (lt=realconstn) and (TAddNode(right).left.nodetype=realconstn))
                   ) and
                   (compare_defs(resultdef,rd,nothingn)=te_exact) then
                   begin
@@ -1761,15 +1761,15 @@ const
                 while (hp.right.nodetype=hp.nodetype) and (hp.resultdef.typ=stringdef) and
                   (compare_defs(hp.resultdef,hp.right.resultdef,nothingn)=te_exact) and
                   (compare_defs(hp.resultdef,hp.left.resultdef,nothingn)=te_exact) and
-                  (compare_defs(hp.resultdef,taddnode(hp.right).left.resultdef,nothingn)=te_exact) and
-                  (compare_defs(hp.resultdef,taddnode(hp.right).right.resultdef,nothingn)=te_exact) do
+                  (compare_defs(hp.resultdef,TAddNode(hp.right).left.resultdef,nothingn)=te_exact) and
+                  (compare_defs(hp.resultdef,TAddNode(hp.right).right.resultdef,nothingn)=te_exact) do
                   begin
                     t:=hp.left;
                     hp.left:=hp.right;
-                    hp.right:=taddnode(hp.left).right;
-                    taddnode(hp.left).right:=taddnode(hp.left).left;
-                    taddnode(hp.left).left:=t;
-                    hp:=taddnode(hp.left);
+                    hp.right:=TAddNode(hp.left).right;
+                    TAddNode(hp.left).right:=TAddNode(hp.left).left;
+                    TAddNode(hp.left).left:=t;
+                    hp:=TAddNode(hp.left);
                   end;
               end;
 
@@ -1787,12 +1787,12 @@ const
                    (right.nodetype in [ltn,lten,gtn,gten]) and
                    (not might_have_sideeffects(left)) and
                    (not might_have_sideeffects(right)) and
-                   is_range_test(taddnode(left),taddnode(right),vl,cl,cr) and
+                   is_range_test(TAddNode(left),TAddNode(right),vl,cl,cr) and
                    { avoid optimization being applied to (<string. var > charconst1) and (<string. var < charconst2) }
                    (vl.resultdef.typ in [orddef,enumdef]) then
                   begin
                     hdef:=get_unsigned_inttype(vl.resultdef);
-                    vl:=ctypeconvnode.create_internal(vl.getcopy,hdef);
+                    vl:=CTypeConvNode.create_internal(vl.getcopy,hdef);
 
                     { If the condition is of the inverted form (v<x) or (v>y),
                       we have to invert the conditional result as well, since
@@ -1803,9 +1803,9 @@ const
                     else
                       nt:=lten;
 
-                    result:=caddnode.create_internal(nt,
-                              ctypeconvnode.create_internal(caddnode.create_internal(subn,vl,cordconstnode.create(cl,hdef,false)),hdef),
-                              cordconstnode.create(cr-cl,hdef,false));
+                    result:=CAddNode.create_internal(nt,
+                              CTypeConvNode.create_internal(CAddNode.create_internal(subn,vl,COrdConstNode.create(cl,hdef,false)),hdef),
+                              COrdConstNode.create(cr-cl,hdef,false));
 
                     exit;
                   end;
@@ -1820,32 +1820,32 @@ const
                    (right.nodetype=equaln) and
                    (not might_have_sideeffects(left)) and
                    (not might_have_sideeffects(right,[mhs_exceptions])) and
-                   (is_constintnode(taddnode(left).left) or is_constintnode(taddnode(left).right) or
-                    is_constpointernode(taddnode(left).left) or is_constpointernode(taddnode(left).right) or
-                    is_constcharnode(taddnode(left).left) or is_constcharnode(taddnode(left).right)) and
-                   (is_constintnode(taddnode(right).left) or is_constintnode(taddnode(right).right) or
-                    is_constpointernode(taddnode(right).left) or is_constpointernode(taddnode(right).right) or
-                    is_constcharnode(taddnode(right).left) or is_constcharnode(taddnode(right).right)) then
+                   (is_constintnode(TAddNode(left).left) or is_constintnode(TAddNode(left).right) or
+                    is_constpointernode(TAddNode(left).left) or is_constpointernode(TAddNode(left).right) or
+                    is_constcharnode(TAddNode(left).left) or is_constcharnode(TAddNode(left).right)) and
+                   (is_constintnode(TAddNode(right).left) or is_constintnode(TAddNode(right).right) or
+                    is_constpointernode(TAddNode(right).left) or is_constpointernode(TAddNode(right).right) or
+                    is_constcharnode(TAddNode(right).left) or is_constcharnode(TAddNode(right).right)) then
                    begin
-                     if is_constnode(taddnode(left).left) then
+                     if is_constnode(TAddNode(left).left) then
                        begin
-                         v1p:=@taddnode(left).right;
-                         c1p:=@taddnode(left).left;
+                         v1p:=@TAddNode(left).right;
+                         c1p:=@TAddNode(left).left;
                        end
                      else
                        begin
-                         v1p:=@taddnode(left).left;
-                         c1p:=@taddnode(left).right;
+                         v1p:=@TAddNode(left).left;
+                         c1p:=@TAddNode(left).right;
                        end;
-                     if is_constnode(taddnode(right).left) then
+                     if is_constnode(TAddNode(right).left) then
                        begin
-                         v2p:=@taddnode(right).right;
-                         c2p:=@taddnode(right).left;
+                         v2p:=@TAddNode(right).right;
+                         c2p:=@TAddNode(right).left;
                        end
                      else
                        begin
-                         v2p:=@taddnode(right).left;
-                         c2p:=@taddnode(right).right;
+                         v2p:=@TAddNode(right).left;
+                         c2p:=@TAddNode(right).right;
                        end;
                      if v1p^.resultdef.size=v2p^.resultdef.size then
                        begin
@@ -1859,23 +1859,23 @@ const
                            8:
                              inttype:=u64inttype;
                            else
-                             Internalerror(2020060101);
+                             InternalError(2020060101);
                          end;
 
                          { Assigned compares procvar values. Preserve that
                            meaning in the casts introduced by this rewrite. }
-                         value1conv:=ctypeconvnode.create_internal(v1p^.getcopy,inttype);
+                         value1conv:=CTypeConvNode.create_internal(v1p^.getcopy,inttype);
                          value1conv.flags:=value1conv.flags+(left.flags*[nf_load_procvar]);
-                         value2conv:=ctypeconvnode.create_internal(v2p^.getcopy,inttype);
+                         value2conv:=CTypeConvNode.create_internal(v2p^.getcopy,inttype);
                          value2conv.flags:=value2conv.flags+(right.flags*[nf_load_procvar]);
-                         result:=caddnode.create_internal(equaln,
-                           caddnode.create_internal(orn,
-                             caddnode.create_internal(xorn,value1conv,
-                               ctypeconvnode.create_internal(c1p^.getcopy,inttype)),
-                             caddnode.create_internal(xorn,value2conv,
-                               ctypeconvnode.create_internal(c2p^.getcopy,inttype))
+                         result:=CAddNode.create_internal(equaln,
+                           CAddNode.create_internal(orn,
+                             CAddNode.create_internal(xorn,value1conv,
+                               CTypeConvNode.create_internal(c1p^.getcopy,inttype)),
+                             CAddNode.create_internal(xorn,value2conv,
+                               CTypeConvNode.create_internal(c2p^.getcopy,inttype))
                            ),
-                           cordconstnode.create(0,inttype,false));
+                           COrdConstNode.create(0,inttype,false));
                        end;
                    end;
                 { even when short circuit boolean evaluation is active, this
@@ -1914,7 +1914,7 @@ const
                             not(left.expectloc in [LOC_JUMP,LOC_INVALID]) and not(right.expectloc in [LOC_JUMP,LOC_INVALID]) then
                             begin
                               { we need to copy the whole tree to force another pass_1 }
-                              include(localswitches,cs_full_boolean_eval);
+                              include(LocalSwitches,cs_full_boolean_eval);
                               exclude(addnodeflags,anf_short_bool);
                               result:=getcopy;
                               exit;
@@ -1928,7 +1928,7 @@ const
 
             if is_integer(ld) and is_integer(rd) then
               begin
-                if (cs_opt_level3 in CurrentSettings.optimizerswitches) and
+                if (cs_opt_level3 in CurrentSettings.OptimizerSwitches) and
                    left.isequal(right) and not might_have_sideeffects(left) then
                   begin
                     case nodetype of
@@ -1943,14 +1943,14 @@ const
                       ltn,
                       gtn:
                         begin
-                          result:=cordconstnode.create(0,resultdef,true);
+                          result:=COrdConstNode.create(0,resultdef,true);
                           exit;
                         end;
                       equaln,
                       lten,
                       gten:
                         begin
-                          result:=cordconstnode.create(1,resultdef,true);
+                          result:=COrdConstNode.create(1,resultdef,true);
                           exit;
                         end;
                       else
@@ -1969,21 +1969,21 @@ const
               tested by tests/tbs/tw40292.pas
             }
             if (nodetype in [ltn,gten]) and
-              (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_length_x) and
-              ((is_dynamic_array(tinlinenode(right).left.resultdef)) or
-               (is_open_array(tinlinenode(right).left.resultdef))
+              (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_length_x) and
+              ((is_dynamic_array(TInlineNode(right).left.resultdef)) or
+               (is_open_array(TInlineNode(right).left.resultdef))
               ) then
               begin
                 case nodetype of
                   ltn:
-                    result:=caddnode.create(lten,left,cinlinenode.create(in_high_x,false,tinlinenode(right).left));
+                    result:=CAddNode.create(lten,left,CInlineNode.create(in_high_x,false,TInlineNode(right).left));
                   gten:
-                    result:=caddnode.create(gtn,left,cinlinenode.create(in_high_x,false,tinlinenode(right).left));
+                    result:=CAddNode.create(gtn,left,CInlineNode.create(in_high_x,false,TInlineNode(right).left));
                   else
-                    Internalerror(2024041701);
+                    InternalError(2024041701);
                 end;
                 left:=nil;
-                tinlinenode(right).left:=nil;
+                TInlineNode(right).left:=nil;
                 exit;
               end;
 
@@ -1994,21 +1994,21 @@ const
               tested by tests/tbs/tw40292.pas
             }
             if (nodetype in [lten,gtn]) and
-              (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_length_x) and
-              ((is_dynamic_array(tinlinenode(left).left.resultdef)) or
-               (is_open_array(tinlinenode(left).left.resultdef))
+              (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_length_x) and
+              ((is_dynamic_array(TInlineNode(left).left.resultdef)) or
+               (is_open_array(TInlineNode(left).left.resultdef))
               ) then
               begin
                 case nodetype of
                   gtn:
-                    result:=caddnode.create(gten,cinlinenode.create(in_high_x,false,tinlinenode(left).left),right);
+                    result:=CAddNode.create(gten,CInlineNode.create(in_high_x,false,TInlineNode(left).left),right);
                   lten:
-                    result:=caddnode.create(ltn,cinlinenode.create(in_high_x,false,tinlinenode(left).left),right);
+                    result:=CAddNode.create(ltn,CInlineNode.create(in_high_x,false,TInlineNode(left).left),right);
                   else
-                    Internalerror(2024041701);
+                    InternalError(2024041701);
                 end;
                 right:=nil;
-                tinlinenode(left).left:=nil;
+                TInlineNode(left).left:=nil;
                 exit;
               end;
 
@@ -2020,7 +2020,7 @@ const
                left.isequal(right) and
                not(might_have_sideeffects(left)) then
               begin
-                result:=cinlinenode.create(in_sqr_real,false,PruneKeepLeft());
+                result:=CInlineNode.create(in_sqr_real,false,PruneKeepLeft());
                 inserttypeconv(result,resultdef);
                 exit;
               end;
@@ -2061,12 +2061,12 @@ const
              (right.nodetype=andn) and
              (not(is_boolean(resultdef)) or not(might_have_sideeffects(self,[mhs_exceptions])) or not(doshortbooleval(self))) and
              { this test is not needed but it speeds up the test and allows to bail out early }
-             ((taddnode(left).left.nodetype=notn) or (taddnode(left).right.nodetype=notn) or
-              (taddnode(right).left.nodetype=notn) or (taddnode(right).right.nodetype=notn)
+             ((TAddNode(left).left.nodetype=notn) or (TAddNode(left).right.nodetype=notn) or
+              (TAddNode(right).left.nodetype=notn) or (TAddNode(right).right.nodetype=notn)
              ) and
              not(might_have_sideeffects(self)) then
              begin
-               if MatchAndTransformNodesCommutative(taddnode(left).left,taddnode(left).right,taddnode(right).left,taddnode(right).right,
+               if MatchAndTransformNodesCommutative(TAddNode(left).left,TAddNode(left).right,TAddNode(right).left,TAddNode(right).right,
                  @IsAndOrAndNot,@TransformAndOrAndNot,Result) then
                  exit;
              end;
@@ -2082,13 +2082,13 @@ const
                 if (lt=andn) and (rt=ordconstn) then
                   begin
                     t:=left;
-                    cr:=tordconstnode(right).value;
+                    cr:=TOrdConstNode(right).value;
                   end
                 else
                   if (rt=andn) and (lt=ordconstn) then
                     begin
                       t:=right;
-                      cr:=tordconstnode(left).value;
+                      cr:=TOrdConstNode(left).value;
                     end
                   else
                     begin
@@ -2098,20 +2098,20 @@ const
                 { using cr.uvalue is fine as we are interested only in the bit pattern }
                 if (t<>nil) and (PopCnt(cr.uvalue) = 1) then
                   begin
-                    if is_constintnode(taddnode(t).left) then
-                      vl:=taddnode(t).left
+                    if is_constintnode(TAddNode(t).left) then
+                      vl:=TAddNode(t).left
                     else
-                      if is_constintnode(taddnode(t).right) then
-                        vl:=taddnode(t).right
+                      if is_constintnode(TAddNode(t).right) then
+                        vl:=TAddNode(t).right
                       else
                         vl:=nil;
-                    if (vl<>nil) and (tordconstnode(vl).value=cr) then
+                    if (vl<>nil) and (TOrdConstNode(vl).value=cr) then
                       begin
                         if nodetype=equaln then
                           nt:=unequaln
                         else
                           nt:=equaln;
-                        result:=caddnode.create(nt,t,cordconstnode.create(0,vl.resultdef,false));
+                        result:=CAddNode.create(nt,t,COrdConstNode.create(0,vl.resultdef,false));
                         Include(transientflags,tnf_do_not_execute);
                         if t=left then
                           left:=nil
@@ -2125,31 +2125,31 @@ const
       end;
 
 
-    function taddnode.dogetcopy: TNode;
+    function TAddNode.dogetcopy: TNode;
       var
-        n: taddnode;
+        n: TAddNode;
       begin
-        n:=taddnode(inherited dogetcopy);
+        n:=TAddNode(inherited dogetcopy);
         n.addnodeflags:=addnodeflags;
         n.resultrealdef:=resultrealdef;
         result:=n;
       end;
 
 
-    function taddnode.docompare(p: TNode): boolean;
+    function TAddNode.docompare(p: TNode): boolean;
       begin
         result:=
           inherited docompare(p) and
-          equal_defs(taddnode(p).resultrealdef,resultrealdef);
+          equal_defs(TAddNode(p).resultrealdef,resultrealdef);
       end;
 
 
-    procedure taddnode.printnodedata(var t: text);
+    procedure TAddNode.printnodedata(var t: text);
       var
         i: TAddNodeFlag;
         first: Boolean;
       begin
-        write(t,printnodeindention,'addnodeflags = [');
+        write(t,PrintNodeIndention,'addnodeflags = [');
         first:=true;
         for i:=low(TAddNodeFlag) to high(TAddNodeFlag) do
           if i in addnodeflags then
@@ -2160,12 +2160,12 @@ const
                 first:=false;
               write(t, i);
             end;
-        writeln(t,']');
+        WriteLn(t,']');
         inherited printnodedata(t);
       end;
 
 
-    function taddnode.pass_typecheck:TNode;
+    function TAddNode.pass_typecheck:TNode;
       begin
         { This function is small to keep the stack small for recursive of
           large + operations }
@@ -2175,13 +2175,13 @@ const
       end;
 
 
-    function taddnode.pass_typecheck_internal:TNode;
+    function TAddNode.pass_typecheck_internal:TNode;
       var
         hp          : TNode;
         rd,ld,nd    : TDef;
         hsym        : TFieldVarSym;
         llow,lhigh,
-        rlow,rhigh  : tconstexprint;
+        rlow,rhigh  : TConstExprInt;
         strtype     : TStringType;
         res,
         b           : boolean;
@@ -2194,29 +2194,29 @@ const
 
         function maybe_cast_ordconst(var n: TNode; adef: TDef): boolean;
           begin
-            result:=(tordconstnode(n).value>=TOrdDef(adef).low) and
-              (tordconstnode(n).value<=TOrdDef(adef).high);
+            result:=(TOrdConstNode(n).value>=TOrdDef(adef).low) and
+              (TOrdConstNode(n).value<=TOrdDef(adef).high);
             if result then
               inserttypeconv(n,adef);
           end;
 
         function maybe_convert_to_insert:TNode;
 
-          function element_count(arrconstr: tarrayconstructornode):asizeint;
+          function element_count(arrconstr: TArrayConstructorNode):asizeint;
             begin
               result:=0;
-              while assigned(arrconstr) do
+              while Assigned(arrconstr) do
                 begin
                   if arrconstr.nodetype=arrayconstructorrangen then
-                    internalerror(2018052501);
+                    InternalError(2018052501);
                   inc(result);
-                  arrconstr:=tarrayconstructornode(tarrayconstructornode(arrconstr).right);
+                  arrconstr:=TArrayConstructorNode(TArrayConstructorNode(arrconstr).right);
                 end;
             end;
 
           var
             elem : TNode;
-            para : tcallparanode;
+            para : TCallParaNode;
             isarrconstrl,
             isarrconstrr : boolean;
             index : asizeint;
@@ -2226,7 +2226,7 @@ const
             isarrconstrl:=left.nodetype=arrayconstructorn;
             isarrconstrr:=right.nodetype=arrayconstructorn;
 
-            if not assigned(aktassignmentnode) or
+            if not Assigned(aktassignmentnode) or
                 (aktassignmentnode.right<>self) or
                 not(
                   isarrconstrl or
@@ -2237,32 +2237,32 @@ const
                   right.isequal(aktassignmentnode.left)
                 ) or
                 not valid_for_var(aktassignmentnode.left,false) or
-                (isarrconstrl and (element_count(tarrayconstructornode(left))>1)) or
-                (isarrconstrr and (element_count(tarrayconstructornode(right))>1)) then
+                (isarrconstrl and (element_count(TArrayConstructorNode(left))>1)) or
+                (isarrconstrr and (element_count(TArrayConstructorNode(right))>1)) then
               exit;
 
             if isarrconstrl then
               begin
                 index:=0;
-                elem:=tarrayconstructornode(left).left;
-                tarrayconstructornode(left).left:=nil;
+                elem:=TArrayConstructorNode(left).left;
+                TArrayConstructorNode(left).left:=nil;
               end
             else
               begin
                 index:=high(asizeint);
-                elem:=tarrayconstructornode(right).left;
-                tarrayconstructornode(right).left:=nil;
+                elem:=TArrayConstructorNode(right).left;
+                TArrayConstructorNode(right).left:=nil;
               end;
 
             { we use the fact that insert() caps the index to avoid a copy }
-            para:=ccallparanode.create(
-                    cordconstnode.create(index,sizesinttype,false),
-                    ccallparanode.create(
+            para:=CCallParaNode.create(
+                    COrdConstNode.create(index,sizesinttype,false),
+                    CCallParaNode.create(
                       aktassignmentnode.left.getcopy,
-                      ccallparanode.create(
+                      CCallParaNode.create(
                         elem,nil)));
 
-            result:=cinlinenode.create(in_insert_x_y_z,false,para);
+            result:=CInlineNode.create(in_insert_x_y_z,false,para);
             include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
           end;
 
@@ -2305,7 +2305,7 @@ const
                (but only if the "+" array operator isn't used), if not fall back to sets }
              if (
                    (nodetype<>addn) or
-                   not (m_array_operators in CurrentSettings.modeswitches) or
+                   not (m_array_operators in CurrentSettings.ModeSwitches) or
                    (is_array_constructor(left.resultdef) and not is_dynamic_array(right.resultdef)) or
                    (not is_dynamic_array(left.resultdef) and is_array_constructor(right.resultdef))
                  ) and
@@ -2326,7 +2326,7 @@ const
 
          if is_dynamic_array(left.resultdef) and is_dynamic_array(right.resultdef) and
              (nodetype=addn) and
-             (m_array_operators in CurrentSettings.modeswitches) and
+             (m_array_operators in CurrentSettings.ModeSwitches) and
              isbinaryoverloaded(hp,[ocf_check_non_overloadable,ocf_check_only]) then
            message3(parser_w_operator_overloaded_hidden_3,left.resultdef.typename,arraytokeninfo[_PLUS].str,right.resultdef.typename);
 
@@ -2338,20 +2338,20 @@ const
          { Stop checking when an error was found in the operator checking }
          if CodeGenError then
            begin
-             result:=cerrornode.create;
+             result:=CErrorNode.create;
              exit;
            end;
 
          { Kylix allows enum+ordconstn in an enum type declaration, we need to do
            the conversion here before the constant folding }
-         if (m_delphi in CurrentSettings.modeswitches) and
+         if (m_delphi in CurrentSettings.ModeSwitches) and
             (blocktype in [bt_type,bt_const_type,bt_var_type]) then
           begin
             if (left.resultdef.typ=enumdef) and
                (right.resultdef.typ=orddef) then
              begin
                { insert explicit typecast to default signed int }
-               left:=ctypeconvnode.create_internal(left,sinttype);
+               left:=CTypeConvNode.create_internal(left,sinttype);
                TypeCheckPass(left);
              end
             else
@@ -2359,7 +2359,7 @@ const
                 (right.resultdef.typ=enumdef) then
               begin
                 { insert explicit typecast to default signed int }
-                right:=ctypeconvnode.create_internal(right,sinttype);
+                right:=CTypeConvNode.create_internal(right,sinttype);
                 TypeCheckPass(right);
               end;
           end;
@@ -2370,7 +2370,7 @@ const
 {$ifdef x86}
         { use extended as default real type only when the x87 fpu is used }
   {$if defined(i386)}
-        if not(CurrentSettings.fputype=fpu_x87) then
+        if not(CurrentSettings.FPUType=fpu_x87) then
           resultrealdef:=s64floattype
         else
           resultrealdef:=pbestrealtype^;
@@ -2392,7 +2392,7 @@ const
               (TFloatDef(left.resultdef).floattype=TFloatDef(right.resultdef).floattype) and
               not(TFloatDef(left.resultdef).floattype in [s64comp,s64currency]) then
              begin
-               if cs_excessprecision in CurrentSettings.localswitches then
+               if cs_excessprecision in CurrentSettings.LocalSwitches then
                  begin
                    resultrealdef:=pbestrealtype^;
                    inserttypeconv(right,resultrealdef);
@@ -2486,15 +2486,15 @@ const
 
          { 4 character constant strings are compatible with orddef }
          { in macpas mode (become cardinals)                       }
-         if (m_mac in CurrentSettings.modeswitches) and
+         if (m_mac in CurrentSettings.ModeSwitches) and
             { only allow for comparisons, additions etc are }
             { normally program errors                       }
             (nodetype in [ltn,lten,gtn,gten,unequaln,equaln]) and
             (((lt=stringconstn) and
-              (tstringconstnode(left).len=4) and
+              (TStringConstNode(left).len=4) and
               (rd.typ=orddef)) or
              ((rt=stringconstn) and
-              (tstringconstnode(right).len=4) and
+              (TStringConstNode(right).len=4) and
               (ld.typ=orddef))) then
            begin
              if (rt=stringconstn) then
@@ -2531,10 +2531,10 @@ const
                   left.resultdef := s64inttype;
                   right.resultdef := s64inttype;
                 end;
-            if CurrentSettings.fputype=fpu_none then
+            if CurrentSettings.FPUType=fpu_none then
               begin
                 Message(parser_e_unsupported_real);
-                result:=cerrornode.create;
+                result:=CErrorNode.create;
                 exit;
               end
             else
@@ -2580,8 +2580,8 @@ const
                           resultdef:=nil;
                           if is_cbool(ld) then
                             begin
-                              left:=ctypeconvnode.create(left,pasbool8type);
-                              ttypeconvnode(left).convtype:=tc_bool_2_bool;
+                              left:=CTypeConvNode.create(left,pasbool8type);
+                              TTypeConvNode(left).convtype:=tc_bool_2_bool;
                               FirstPass(left);
                               if not is_cbool(rd) or
                                  (ld.size>=rd.size) then
@@ -2589,14 +2589,14 @@ const
                             end;
                           if is_cbool(rd) then
                             begin
-                              right:=ctypeconvnode.Create(right,pasbool8type);
-                              ttypeconvnode(right).convtype:=tc_bool_2_bool;
+                              right:=CTypeConvNode.Create(right,pasbool8type);
+                              TTypeConvNode(right).convtype:=tc_bool_2_bool;
                               FirstPass(right);
-                              if not assigned(resultdef) then
+                              if not Assigned(resultdef) then
                                 resultdef:=rd;
                             end;
-                          result:=ctypeconvnode.create_explicit(caddnode.create(nodetype,left,right),resultdef);
-                          ttypeconvnode(result).convtype:=tc_bool_2_bool;
+                          result:=CTypeConvNode.create_explicit(CAddNode.create(nodetype,left,right),resultdef);
+                          TTypeConvNode(result).convtype:=tc_bool_2_bool;
                           left:=nil;
                           right:=nil;
                           exit;
@@ -2605,15 +2605,15 @@ const
                       if (TOrdDef(left.resultdef).size>TOrdDef(right.resultdef).size) or
                         (is_cbool(left.resultdef) and not is_cbool(right.resultdef)) then
                         begin
-                          right:=ctypeconvnode.create_internal(right,left.resultdef);
-                          ttypeconvnode(right).convtype:=tc_bool_2_bool;
+                          right:=CTypeConvNode.create_internal(right,left.resultdef);
+                          TTypeConvNode(right).convtype:=tc_bool_2_bool;
                           TypeCheckPass(right);
                         end
                       else if (TOrdDef(left.resultdef).size<TOrdDef(right.resultdef).size) or
                         (not is_cbool(left.resultdef) and is_cbool(right.resultdef)) then
                         begin
-                          left:=ctypeconvnode.create_internal(left,right.resultdef);
-                          ttypeconvnode(left).convtype:=tc_bool_2_bool;
+                          left:=CTypeConvNode.create_internal(left,right.resultdef);
+                          TTypeConvNode(left).convtype:=tc_bool_2_bool;
                           TypeCheckPass(left);
                         end;
                     end;
@@ -2635,13 +2635,13 @@ const
                       if (left.nodetype=ordconstn) then
                         begin
                           hp:=right;
-                          b:=(tordconstnode(left).value<>0);
+                          b:=(TOrdConstNode(left).value<>0);
                           ot:=nodetype;
                           right:=nil;
                           if (not(b) and (ot=equaln)) or
                              (b and (ot=unequaln)) then
                            begin
-                             hp:=cnotnode.create(hp);
+                             hp:=CNotNode.create(hp);
                            end;
                           result:=hp;
                           exit;
@@ -2649,13 +2649,13 @@ const
                       if (right.nodetype=ordconstn) then
                         begin
                           hp:=left;
-                          b:=(tordconstnode(right).value<>0);
+                          b:=(TOrdConstNode(right).value<>0);
                           ot:=nodetype;
                           left:=nil;
                           if (not(b) and (ot=equaln)) or
                              (b and (ot=unequaln)) then
                            begin
-                             hp:=cnotnode.create(hp);
+                             hp:=CNotNode.create(hp);
                            end;
                           result:=hp;
                           exit;
@@ -2668,7 +2668,7 @@ const
                   else
                     begin
                       CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
-                      result:=cnothingnode.create;
+                      result:=CNothingNode.create;
                       exit;
                     end;
                 end;
@@ -2692,7 +2692,7 @@ const
                 else if not(nodetype in [ltn,lten,gtn,gten,unequaln,equaln]) then
                   begin
                     CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
-                    result:=cnothingnode.create;
+                    result:=CNothingNode.create;
                     exit;
                   end;
                end
@@ -2728,12 +2728,12 @@ const
                        need scaling }
                      if (TOrdDef(ld).ordtype<>scurrency) then
                        begin
-                         left:=ctypeconvnode.create_internal(left,s64currencytype);
+                         left:=CTypeConvNode.create_internal(left,s64currencytype);
                          TypeCheckPass(left);
                        end
                      else
                        begin
-                         right:=ctypeconvnode.create_internal(right,s64currencytype);
+                         right:=CTypeConvNode.create_internal(right,s64currencytype);
                          TypeCheckPass(right);
                        end;
                    end
@@ -2830,11 +2830,11 @@ const
                  { convert positive constants to uinttype }
                  if (not is_nativeuint(ld)) and
                     is_constintnode(left) and
-                    (tordconstnode(left).value >= 0) then
+                    (TOrdConstNode(left).value >= 0) then
                    inserttypeconv(left,uinttype);
                  if (not is_nativeuint(rd)) and
                     is_constintnode(right) and
-                    (tordconstnode(right).value >= 0) then
+                    (TOrdConstNode(right).value >= 0) then
                    inserttypeconv(right,uinttype);
                  { when one of the operand is signed or the operation is subn then perform
                    the operation in a larger signed type, can't use rd/ld here because there
@@ -2881,7 +2881,7 @@ const
                    the result also unsigned. This is compatible with Delphi (PFV) }
                  if is_signed(ld) or
                     is_signed(rd) or
-                    (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) or
+                    (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) or
 
                     (nodetype=subn) then
                    begin
@@ -2927,8 +2927,8 @@ const
                 {    either an empty set without elementdef or a set whose }
                 {    elementdef fits in rd's elementdef -> convert to rd   }
                 if ((rd.typ=setdef) and
-                    assigned(TSetDef(rd).elementdef) and
-                    (not assigned(TSetDef(ld).elementdef) or
+                    Assigned(TSetDef(rd).elementdef) and
+                    (not Assigned(TSetDef(ld).elementdef) or
                      is_in_limit(ld,rd))) then
                   inserttypeconv(left,rd)
                 { 2: rd is either an empty set without elementdef or a set }
@@ -2937,7 +2937,7 @@ const
                 {    to ld. ld's elementdef can't be nil here, is caught   }
                 {    previous case and "note:" above                       }
                 else if ((rd.typ=setdef) and
-                         (not assigned(TSetDef(rd).elementdef) or
+                         (not Assigned(TSetDef(rd).elementdef) or
                           is_in_limit(rd,ld))) or
                         ((rd.typ<>setdef) and
                          is_in_limit(rd,TSetDef(ld).elementdef)) then
@@ -2949,13 +2949,13 @@ const
                 {    into account empty sets without elementdef             }
                 else
                   begin
-                    if assigned(TSetDef(ld).elementdef) then
+                    if Assigned(TSetDef(ld).elementdef) then
                       begin
                         llow:=TSetDef(ld).setlow;
                         lhigh:=TSetDef(ld).setmax;
                       end;
                     if (rd.typ=setdef) then
-                      if assigned(TSetDef(rd).elementdef) then
+                      if Assigned(TSetDef(rd).elementdef) then
                         begin
                           rlow:=TSetDef(rd).setlow;
                           rhigh:=TSetDef(rd).setmax;
@@ -2968,12 +2968,12 @@ const
                         end
                     else
                       getrange(rd,rlow,rhigh);
-                    if not assigned(TSetDef(ld).elementdef) then
+                    if not Assigned(TSetDef(ld).elementdef) then
                       begin
                         llow:=rlow;
                         lhigh:=rhigh;
                       end;
-                    nd:=csetdef.create(TSetDef(ld).elementdef,min(llow,rlow).svalue,max(lhigh,rhigh).svalue,true);
+                    nd:=CSetDef.create(TSetDef(ld).elementdef,min(llow,rlow).svalue,max(lhigh,rhigh).svalue,true);
                     inserttypeconv(left,nd);
                     if (rd.typ=setdef) then
                       inserttypeconv(right,nd)
@@ -3020,7 +3020,7 @@ const
                  end;
                ltn,lten,gtn,gten:
                  begin
-                    if (cs_extsyntax in CurrentSettings.moduleswitches) or
+                    if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
                        (nf_internal in flags) then
                      begin
                        if is_voidpointer(right.resultdef) then
@@ -3032,11 +3032,11 @@ const
                              if either $POINTERMATH is currently enabled or if
                              both pointer defs were declared with $POINTERMATH
                              enabled }
-                           (m_delphi in CurrentSettings.modeswitches) and
+                           (m_delphi in CurrentSettings.ModeSwitches) and
                            (ld.typ=pointerdef) and
                            (rd.typ=pointerdef) and
                            (
-                             (cs_pointermath in CurrentSettings.localswitches) or
+                             (cs_pointermath in CurrentSettings.LocalSwitches) or
                              (
                                TPointerDef(ld).has_pointer_math and
                                TPointerDef(rd).has_pointer_math
@@ -3050,7 +3050,7 @@ const
                  end;
                subn:
                  begin
-                    if (cs_extsyntax in CurrentSettings.moduleswitches) or
+                    if (cs_extsyntax in CurrentSettings.ModuleSwitches) or
                        (nf_internal in flags) then
                       begin
                         if is_voidpointer(right.resultdef) then
@@ -3071,9 +3071,9 @@ const
                       (TPointerDef(rd).pointeddef.size>1) then
                       begin
                         hp:=getcopy;
-                        include(taddnode(hp).addnodeflags, anf_has_pointerdiv);
-                        result:=cmoddivnode.create(divn,hp,
-                          cordconstnode.create(TPointerDef(rd).pointeddef.size,TPointerDef(rd).pointer_subtraction_result_type,false));
+                        include(TAddNode(hp).addnodeflags, anf_has_pointerdiv);
+                        result:=CModDivNode.create(divn,hp,
+                          COrdConstNode.create(TPointerDef(rd).pointeddef.size,TPointerDef(rd).pointer_subtraction_result_type,false));
                       end;
                     resultdef:=TPointerDef(rd).pointer_subtraction_result_type;
                     exit;
@@ -3102,8 +3102,8 @@ const
               begin
                 { Is there a unicodestring? }
                 if is_unicodestring(rd) or is_unicodestring(ld) or
-                   ((m_default_unicodestring in CurrentSettings.modeswitches) and
-                    (cs_refcountedstrings in CurrentSettings.localswitches) and
+                   ((m_default_unicodestring in CurrentSettings.ModeSwitches) and
+                    (cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                     (
                      is_pwidechar(rd) or is_widechararray(rd) or is_open_widechararray(rd) or (lt = stringconstn) or
                      is_pwidechar(ld) or is_widechararray(ld) or is_open_widechararray(ld) or (rt = stringconstn)
@@ -3118,7 +3118,7 @@ const
                     strtype:=st_widestring
                 else
                   if is_ansistring(rd) or is_ansistring(ld) or
-                     ((cs_refcountedstrings in CurrentSettings.localswitches) and
+                     ((cs_refcountedstrings in CurrentSettings.LocalSwitches) and
                      //todo: Move some of this to longstring's then they are implemented?
                       (
                        is_pchar(rd) or (is_chararray(rd) and (rd.size > 255)) or is_open_chararray(rd) or (lt = stringconstn) or
@@ -3164,17 +3164,17 @@ const
                         that can represent both encodings) }
                       if is_ansistring(ld) and
                          (TStringDef(ld).encoding<>0) and
-                         (TStringDef(ld).encoding<>globals.CP_NONE) and
+                         (TStringDef(ld).encoding<>Globals.CP_NONE) and
                          (not is_ansistring(rd) or
                           (TStringDef(rd).encoding=0) or
-                          (TStringDef(rd).encoding=globals.CP_NONE)) then
+                          (TStringDef(rd).encoding=Globals.CP_NONE)) then
                         inserttypeconv(right,ld)
                       else if is_ansistring(rd) and
                          (TStringDef(rd).encoding<>0) and
-                         (TStringDef(rd).encoding<>globals.CP_NONE) and
+                         (TStringDef(rd).encoding<>Globals.CP_NONE) and
                          (not is_ansistring(ld) or
                           (TStringDef(ld).encoding=0) or
-                          (TStringDef(ld).encoding=globals.CP_NONE)) then
+                          (TStringDef(ld).encoding=Globals.CP_NONE)) then
                         inserttypeconv(left,rd)
                       else
                         begin
@@ -3264,24 +3264,24 @@ const
             if not(nodetype in [equaln,unequaln]) then
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
             { find proc field in methodpointer record }
-            hsym:=TFieldVarSym(TRecordDef(methodpointertype).symtable.Find('proc'));
-            if not assigned(hsym) then
-              internalerror(200412043);
+            hsym:=TFieldVarSym(TRecordDef(methodpointertype).SymTable.Find('proc'));
+            if not Assigned(hsym) then
+              InternalError(200412043);
             { For methodpointers compare only tmethodpointer.proc }
             if (rd.typ=procvardef) and
                (not TProcVarDef(rd).is_addressonly) then
               begin
-                right:=csubscriptnode.create(
+                right:=CSubscriptNode.create(
                            hsym,
-                           ctypeconvnode.create_internal(right,methodpointertype));
+                           CTypeConvNode.create_internal(right,methodpointertype));
                 TypeCheckPass(right);
                end;
             if (ld.typ=procvardef) and
                (not TProcVarDef(ld).is_addressonly) then
               begin
-                left:=csubscriptnode.create(
+                left:=CSubscriptNode.create(
                           hsym,
-                          ctypeconvnode.create_internal(left,methodpointertype));
+                          CTypeConvNode.create_internal(left,methodpointertype));
                 TypeCheckPass(left);
               end;
             if lt=niln then
@@ -3294,13 +3294,13 @@ const
          else if (nodetype=addn) and (is_dynamic_array(ld) or is_dynamic_array(rd)) then
            begin
               { empty array to add? }
-              if (right.nodetype=arrayconstructorn) and (tarrayconstructornode(right).left=nil) then
+              if (right.nodetype=arrayconstructorn) and (TArrayConstructorNode(right).left=nil) then
                 begin
                   result:=left;
                   left:=nil;
                   exit;
                 end
-              else if (left.nodetype=arrayconstructorn) and (tarrayconstructornode(left).left=nil) then
+              else if (left.nodetype=arrayconstructorn) and (TArrayConstructorNode(left).left=nil) then
                 begin
                   result:=right;
                   right:=nil;
@@ -3309,7 +3309,7 @@ const
               else
                 begin
                   result:=maybe_convert_to_insert;
-                  if assigned(result) then
+                  if Assigned(result) then
                     exit;
                   if not(is_dynamic_array(ld)) then
                     inserttypeconv(left,rd);
@@ -3334,7 +3334,7 @@ const
 {$ifdef SUPPORT_MMX}
        { mmx support, this must be before the zero based array
          check }
-         else if (cs_mmx in CurrentSettings.localswitches) and
+         else if (cs_mmx in CurrentSettings.LocalSwitches) and
                  is_mmx_able_array(ld) and
                  is_mmx_able_array(rd) and
                  equal_defs(ld,rd) then
@@ -3353,7 +3353,7 @@ const
 {$endif SUPPORT_MMX}
          { vector support, this must be before the zero based array
            check }
-         else if (cs_support_vectors in CurrentSettings.globalswitches) and
+         else if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
                  fits_in_mm_register(ld) and
                  fits_in_mm_register(rd) and
                  equal_defs(ld,rd) then
@@ -3371,7 +3371,7 @@ const
           begin
             if is_zero_based_array(rd) then
               begin
-                resultdef:=cpointerdef.getreusable(TArrayDef(rd).elementdef);
+                resultdef:=CPointerDef.getreusable(TArrayDef(rd).elementdef);
                 inserttypeconv(right,resultdef);
               end
             else
@@ -3381,16 +3381,16 @@ const
               begin
                 if (rt=niln) then
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,'NIL');
-                if (not(cs_extsyntax in CurrentSettings.moduleswitches) and not(nf_internal in flags))  or
+                if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags))  or
                    (not (is_pchar(rd) or is_chararray(rd) or is_open_chararray(rd) or is_widechar(rd) or is_widechararray(rd) or is_open_widechararray(rd)) and
-                    not(cs_pointermath in CurrentSettings.localswitches) and
+                    not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((rd.typ=pointerdef) and TPointerDef(rd).has_pointer_math)) then
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
                 if (rd.typ=pointerdef) and
                    (TPointerDef(rd).pointeddef.size>1) then
                    begin
-                     left:=caddnode.create(muln,left,
-                       cordconstnode.create(TPointerDef(rd).pointeddef.size,TPointerDef(right.resultdef).pointer_arithmetic_int_type,true));
+                     left:=CAddNode.create(muln,left,
+                       COrdConstNode.create(TPointerDef(rd).pointeddef.size,TPointerDef(right.resultdef).pointer_arithmetic_int_type,true));
                      TypeCheckPass(left);
                    end;
               end
@@ -3403,7 +3403,7 @@ const
            begin
              if is_zero_based_array(ld) then
                begin
-                  resultdef:=cpointerdef.getreusable(TArrayDef(ld).elementdef);
+                  resultdef:=CPointerDef.getreusable(TArrayDef(ld).elementdef);
                   inserttypeconv(left,resultdef);
                end
              else
@@ -3414,9 +3414,9 @@ const
                begin
                  if (lt=niln) then
                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),'NIL',rd.typename);
-                 if (not(cs_extsyntax in CurrentSettings.moduleswitches) and not(nf_internal in flags)) or
+                 if (not(cs_extsyntax in CurrentSettings.ModuleSwitches) and not(nf_internal in flags)) or
                    (not (is_pchar(ld) or is_chararray(ld) or is_open_chararray(ld) or is_widechar(ld) or is_widechararray(ld) or is_open_widechararray(ld)) and
-                    not(cs_pointermath in CurrentSettings.localswitches) and
+                    not(cs_pointermath in CurrentSettings.LocalSwitches) and
                     not((ld.typ=pointerdef) and TPointerDef(ld).has_pointer_math)) then
                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
                  if (ld.typ=pointerdef) then
@@ -3425,16 +3425,16 @@ const
                      CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
                    if (TPointerDef(ld).pointeddef.size>1) then
                    begin
-                     right:=caddnode.create(muln,right,
-                       cordconstnode.create(TPointerDef(ld).pointeddef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
+                     right:=CAddNode.create(muln,right,
+                       COrdConstNode.create(TPointerDef(ld).pointeddef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
                      TypeCheckPass(right);
                    end
                  end else
                    if is_zero_based_array(ld) and
                       (TArrayDef(ld).elementdef.size>1) then
                      begin
-                       right:=caddnode.create(muln,right,
-                         cordconstnode.create(TArrayDef(ld).elementdef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
+                       right:=CAddNode.create(muln,right,
+                         COrdConstNode.create(TArrayDef(ld).elementdef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
                        TypeCheckPass(right);
                      end;
                end
@@ -3456,17 +3456,17 @@ const
                 else
                   begin
                     { find proc field in methodpointer record }
-                    hsym:=TFieldVarSym(TRecordDef(methodpointertype).symtable.Find('proc'));
-                    if not assigned(hsym) then
-                      internalerror(2004120405);
+                    hsym:=TFieldVarSym(TRecordDef(methodpointertype).SymTable.Find('proc'));
+                    if not Assigned(hsym) then
+                      InternalError(2004120405);
                     { Compare tmehodpointer(left).proc }
-                    right:=csubscriptnode.create(
+                    right:=CSubscriptNode.create(
                                  hsym,
-                                 ctypeconvnode.create_internal(right,methodpointertype));
+                                 CTypeConvNode.create_internal(right,methodpointertype));
                     TypeCheckPass(right);
-                    left:=csubscriptnode.create(
+                    left:=CSubscriptNode.create(
                                  hsym,
-                                 ctypeconvnode.create_internal(left,methodpointertype));
+                                 CTypeConvNode.create_internal(left,methodpointertype));
                      TypeCheckPass(left);
                   end;
               end
@@ -3499,7 +3499,7 @@ const
            end;
 
          { set resultdef if not already done }
-         if not assigned(resultdef) then
+         if not Assigned(resultdef) then
           begin
              case nodetype of
                 ltn,lten,gtn,gten,equaln,unequaln :
@@ -3515,7 +3515,7 @@ const
                     { for ansistrings set resultdef to assignment left node
                       if it is an assignment and left node expects ansistring }
                     if is_ansistring(left.resultdef) and
-                       assigned(aktassignmentnode) and
+                       Assigned(aktassignmentnode) and
                        (aktassignmentnode.right=self) and
                        is_ansistring(aktassignmentnode.left.resultdef) then
                       resultdef:=aktassignmentnode.left.resultdef
@@ -3530,7 +3530,7 @@ const
          result:=do_currency_corrections;
 
          if not(CodeGenError) and
-            not assigned(result) then
+            not Assigned(result) then
            begin
              if not (nf_internal in flags) and
                (nf_is_currency in left.flags) and
@@ -3543,7 +3543,7 @@ const
       end;
 
 
-    function taddnode.do_currency_corrections: TNode;
+    function TAddNode.do_currency_corrections: TNode;
       var
         hp: TNode;
         procname: string[31];
@@ -3571,7 +3571,7 @@ const
                     { slashn will only work with floats }
                     Exclude(flags,nf_is_currency);
                     Include(flags,nf_internal); { Prevent recursion }
-                    hp:=caddnode.create_internal(muln,getcopy,crealconstnode.create_currency_scalar(s64currencytype));
+                    hp:=CAddNode.create_internal(muln,getcopy,CRealConstNode.create_currency_scalar(s64currencytype));
                     include(hp.flags,nf_is_currency);
                     result:=hp;
                   end
@@ -3583,7 +3583,7 @@ const
                     ) then
                       begin
                         { Put a multiplier on the left side }
-                        left:=caddnode.create_internal(muln,left,crealconstnode.create_currency_scalar(s64currencytype));
+                        left:=CAddNode.create_internal(muln,left,CRealConstNode.create_currency_scalar(s64currencytype));
                         include(left.flags,nf_is_currency);
                         TypeCheckPass(left);
                       end
@@ -3605,12 +3605,12 @@ const
                             { Probably a Currency constant with a fractional component }
                             if (right.nodetype=realconstn) and (nf_internal in right.flags) then
                               begin
-                                left:=caddnode.create_internal(slashn,left,crealconstnode.create_currency_scalar(s64currencytype));
+                                left:=CAddNode.create_internal(slashn,left,CRealConstNode.create_currency_scalar(s64currencytype));
                                 DoTypeCheckPass(left);
                               end
                             else
                               begin
-                                right:=caddnode.create_internal(slashn,right,crealconstnode.create_currency_scalar(s64currencytype));
+                                right:=CAddNode.create_internal(slashn,right,CRealConstNode.create_currency_scalar(s64currencytype));
                                 DoTypeCheckPass(right);
                               end;
                           end
@@ -3619,13 +3619,13 @@ const
                             { Probably a Currency constant with a fractional component }
                             if (right.nodetype=realconstn) and (nf_internal in right.flags) then
                               begin
-                                left:=cmoddivnode.create(divn,left,cordconstnode.create_currency_scalar(s64currencytype));
+                                left:=CModDivNode.create(divn,left,COrdConstNode.create_currency_scalar(s64currencytype));
                                 Include(left.flags,nf_internal);
                                 DoTypeCheckPass(left);
                               end
                             else
                               begin
-                                right:=cmoddivnode.create(divn,right,cordconstnode.create_currency_scalar(s64currencytype));
+                                right:=CModDivNode.create(divn,right,COrdConstNode.create_currency_scalar(s64currencytype));
                                 Include(right.flags,nf_internal);
                                 DoTypeCheckPass(right);
                               end;
@@ -3641,9 +3641,9 @@ const
                         Include(result.flags,nf_internal);
 
                         if s64currencytype.typ=floatdef then
-                          hp:=caddnode.create_internal(muln,result,crealconstnode.create_currency_scalar(s64currencytype))
+                          hp:=CAddNode.create_internal(muln,result,CRealConstNode.create_currency_scalar(s64currencytype))
                         else
-                          hp:=caddnode.create_internal(muln,result,cordconstnode.create_currency_scalar(s64currencytype));
+                          hp:=CAddNode.create_internal(muln,result,COrdConstNode.create_currency_scalar(s64currencytype));
                         { Because the multiplication doubles up on the currency scalar, dividing
                           removes only one and hence the result is still scaled }
                         Include(hp.flags,nf_is_currency);
@@ -3656,11 +3656,11 @@ const
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
                         { int64(...) causes a cast on currency, so it is the currency value multiplied by 10000 }
-                        if (left.nodetype=realconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(trealconstnode(left).value_real) mod 10000)=0) then
+                        if (left.nodetype=realconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(TRealConstNode(left).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value_real and value_currency contain valid values }
-                            trealconstnode(left).value_real:=trealconstnode(left).value_real/BestReal(10000.0);
-                            trealconstnode(left).SetCurrencyValue(trealconstnode(left).value_real);
+                            TRealConstNode(left).value_real:=TRealConstNode(left).value_real/BestReal(10000.0);
+                            TRealConstNode(left).SetCurrencyValue(TRealConstNode(left).value_real);
                             Exclude(left.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3668,11 +3668,11 @@ const
                             hp:=getcopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=realconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(trealconstnode(right).value_real) mod 10000)=0) then
+                        else if (right.nodetype=realconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(TRealConstNode(right).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value and value_currency contain valid values }
-                            trealconstnode(right).value_real:=trealconstnode(right).value_real/BestReal(10000.0);
-                            trealconstnode(right).SetCurrencyValue(trealconstnode(right).value_real);
+                            TRealConstNode(right).value_real:=TRealConstNode(right).value_real/BestReal(10000.0);
+                            TRealConstNode(right).SetCurrencyValue(TRealConstNode(right).value_real);
                             Exclude(right.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3687,7 +3687,7 @@ const
                         else if (nf_is_currency in left.flags) and (nf_is_currency in right.flags) then
                           begin
                             Include(flags,nf_is_currency);
-                            right:=caddnode.create_internal(slashn,right,crealconstnode.create_currency_scalar(s64currencytype));
+                            right:=CAddNode.create_internal(slashn,right,CRealConstNode.create_currency_scalar(s64currencytype));
                             { Because the multiplication doubles up on the currency scalar, dividing
                               removes only one and hence the result is still scaled }
                             DoTypeCheckPass(right);
@@ -3699,9 +3699,9 @@ const
                     else
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
-                        if (left.nodetype=ordconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((tordconstnode(left).value mod 10000)=0) then
+                        if (left.nodetype=ordconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((TOrdConstNode(left).value mod 10000)=0) then
                           begin
-                            tordconstnode(left).value:=tordconstnode(left).value div 10000;
+                            TOrdConstNode(left).value:=TOrdConstNode(left).value div 10000;
                             Exclude(left.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3709,9 +3709,9 @@ const
                             hp:=getcopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=ordconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((tordconstnode(right).value mod 10000)=0) then
+                        else if (right.nodetype=ordconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((TOrdConstNode(right).value mod 10000)=0) then
                           begin
-                            tordconstnode(right).value:=tordconstnode(right).value div 10000;
+                            TOrdConstNode(right).value:=TOrdConstNode(right).value div 10000;
                             Exclude(right.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3721,10 +3721,10 @@ const
 
                         else if (right.nodetype=muln) and is_currency(right.resultdef) and (nf_is_currency in right.flags) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          is_currency(taddnode(right).right.resultdef) and (taddnode(right).right.nodetype=ordconstn) and (tordconstnode(taddnode(right).right).value=10000) and
-                          is_currency(taddnode(right).left.resultdef) and not (nf_is_currency in taddnode(right).left.flags) and (taddnode(right).left.nodetype=typeconvn) then
+                          is_currency(TAddNode(right).right.resultdef) and (TAddNode(right).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(right).right).value=10000) and
+                          is_currency(TAddNode(right).left.resultdef) and not (nf_is_currency in TAddNode(right).left.flags) and (TAddNode(right).left.nodetype=typeconvn) then
                           begin
-                            hp:=taddnode(right).left.getcopy;
+                            hp:=TAddNode(right).left.getcopy;
                             right.free;
                             right:=hp;
 
@@ -3733,10 +3733,10 @@ const
                           end
                         else if (left.nodetype=muln) and is_currency(left.resultdef) and
                           { do not test swapped here as the internal conversions are only create as "var."*"10000" }
-                          is_currency(taddnode(left).right.resultdef) and (taddnode(left).right.nodetype=ordconstn) and (tordconstnode(taddnode(left).right).value=10000) and
-                          is_currency(taddnode(left).left.resultdef) and not (nf_is_currency in taddnode(left).left.flags) and (taddnode(left).left.nodetype=typeconvn) then
+                          is_currency(TAddNode(left).right.resultdef) and (TAddNode(left).right.nodetype=ordconstn) and (TOrdConstNode(TAddNode(left).right).value=10000) and
+                          is_currency(TAddNode(left).left.resultdef) and not (nf_is_currency in TAddNode(left).left.flags) and (TAddNode(left).left.nodetype=typeconvn) then
                           begin
-                            hp:=taddnode(left).left.getcopy;
+                            hp:=TAddNode(left).left.getcopy;
                             left.free;
                             left:=hp;
 
@@ -3764,9 +3764,9 @@ const
                               in between.
                             }
                             procname := 'fpc_mul_currency';
-                            if cs_check_overflow in CurrentSettings.localswitches then
+                            if cs_check_overflow in CurrentSettings.LocalSwitches then
                               procname := procname + '_checkoverflow';
-                            hp:=ccallnode.createintern(procname,ccallparanode.create(right,ccallparanode.create(left,nil)));
+                            hp:=CCallNode.createintern(procname,CCallParaNode.create(right,CCallParaNode.create(left,nil)));
                             Include(hp.flags,nf_is_currency);
                             left:=nil;
                             right:=nil;
@@ -3794,9 +3794,9 @@ const
                     if not (nf_is_currency in right.flags) then
                       begin
                         if s64currencytype.typ = floatdef then
-                          right:=caddnode.create_internal(muln,right,crealconstnode.create_currency_scalar(s64currencytype))
+                          right:=CAddNode.create_internal(muln,right,CRealConstNode.create_currency_scalar(s64currencytype))
                         else
-                          right:=caddnode.create_internal(muln,right,cordconstnode.create_currency_scalar(s64currencytype));
+                          right:=CAddNode.create_internal(muln,right,COrdConstNode.create_currency_scalar(s64currencytype));
                         Include(right.flags,nf_is_currency);
                         TypeCheckPass(right);
                         FirstPass(right);
@@ -3805,9 +3805,9 @@ const
                     if not (nf_is_currency in left.flags) then
                       begin
                         if s64currencytype.typ = floatdef then
-                          left:=caddnode.create_internal(muln,left,crealconstnode.create_currency_scalar(s64currencytype))
+                          left:=CAddNode.create_internal(muln,left,CRealConstNode.create_currency_scalar(s64currencytype))
                         else
-                          left:=caddnode.create_internal(muln,left,cordconstnode.create_currency_scalar(s64currencytype));
+                          left:=CAddNode.create_internal(muln,left,COrdConstNode.create_currency_scalar(s64currencytype));
                         Include(left.flags,nf_is_currency);
                         TypeCheckPass(left);
                         FirstPass(left);
@@ -3821,13 +3821,13 @@ const
       end;
 
 
-    function taddnode.first_addstring: TNode;
+    function TAddNode.first_addstring: TNode;
       var
         p: TNode;
-        newstatement : tstatementnode;
-        tempnode : ttempcreatenode;
+        newstatement : TStatementNode;
+        tempnode : TTempCreateNode;
         cmpfuncname: string;
-        para: tcallparanode;
+        para: TCallParaNode;
       begin
         result:=nil;
         { when we get here, we are sure that both the left and the right }
@@ -3835,7 +3835,7 @@ const
         case nodetype of
           addn:
             begin
-              if (left.nodetype=stringconstn) and (tstringconstnode(left).len=0) then
+              if (left.nodetype=stringconstn) and (TStringConstNode(left).len=0) then
                 begin
                   result:=right;
                   left.free;
@@ -3843,7 +3843,7 @@ const
                   right:=nil;
                   exit;
                 end;
-              if (right.nodetype=stringconstn) and (tstringconstnode(right).len=0) then
+              if (right.nodetype=stringconstn) and (TStringConstNode(right).len=0) then
                 begin
                   result:=left;
                   left:=nil;
@@ -3852,7 +3852,7 @@ const
                   exit;
                 end;
               { create the call to the concat routine both strings as arguments }
-              if assigned(aktassignmentnode) and
+              if Assigned(aktassignmentnode) and
                   (aktassignmentnode.right=self) and
                   (
                     (aktassignmentnode.left.resultdef=resultdef) or
@@ -3863,16 +3863,16 @@ const
                   ) and
                   valid_for_var(aktassignmentnode.left,false) then
                 begin
-                  para:=ccallparanode.create(
+                  para:=CCallParaNode.create(
                           right,
-                          ccallparanode.create(
+                          CCallParaNode.create(
                             left,
-                            ccallparanode.create(aktassignmentnode.left.getcopy,nil)
+                            CCallParaNode.create(aktassignmentnode.left.getcopy,nil)
                           )
                         );
                   if is_ansistring(resultdef) then
-                    para:=ccallparanode.create(
-                            cordconstnode.create(
+                    para:=CCallParaNode.create(
+                            COrdConstNode.create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
                               TStringDef(resultdef).encoding,
@@ -3881,7 +3881,7 @@ const
                             ),
                             para
                           );
-                  result:=ccallnode.createintern(
+                  result:=CCallNode.createintern(
                             'fpc_'+TStringDef(resultdef).stringtypname+'_concat',
                             para
                           );
@@ -3891,18 +3891,18 @@ const
               else
                 begin
                   result:=internalstatements(newstatement);
-                  tempnode:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                  tempnode:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
-                  para:=ccallparanode.create(
+                  para:=CCallParaNode.create(
                           right,
-                          ccallparanode.create(
+                          CCallParaNode.create(
                             left,
-                            ccallparanode.create(ctemprefnode.create(tempnode),nil)
+                            CCallParaNode.create(CTempRefNode.create(tempnode),nil)
                           )
                         );
                   if is_ansistring(resultdef) then
-                    para:=ccallparanode.create(
-                            cordconstnode.create(
+                    para:=CCallParaNode.create(
+                            COrdConstNode.create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
                               TStringDef(resultdef).encoding,
@@ -3913,13 +3913,13 @@ const
                           );
                   addstatement(
                     newstatement,
-                    ccallnode.createintern(
+                    CCallNode.createintern(
                       'fpc_'+TStringDef(resultdef).stringtypname+'_concat',
                       para
                     )
                   );
-                  addstatement(newstatement,ctempdeletenode.create_normal_temp(tempnode));
-                  addstatement(newstatement,ctemprefnode.create(tempnode));
+                  addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
+                  addstatement(newstatement,CTempRefNode.create(tempnode));
                 end;
               { we reused the arguments }
               left := nil;
@@ -3930,8 +3930,8 @@ const
               { generate better code for comparison with empty string, we
                 only need to compare the length with 0 }
               if (nodetype in [equaln,unequaln,gtn,gten,ltn,lten]) and
-                 (((left.nodetype=stringconstn) and (tstringconstnode(left).len=0)) or
-                  ((right.nodetype=stringconstn) and (tstringconstnode(right).len=0))) then
+                 (((left.nodetype=stringconstn) and (TStringConstNode(left).len=0)) or
+                  ((right.nodetype=stringconstn) and (TStringConstNode(right).len=0))) then
                 begin
                   { switch so that the constant is always on the right }
                   if left.nodetype = stringconstn then
@@ -3944,27 +3944,27 @@ const
                   if is_shortstring(left.resultdef) or
                      (nodetype in [gtn,gten,ltn,lten]) then
                     { compare the length with 0 }
-                    result := caddnode.create(nodetype,
-                      cinlinenode.create(in_length_x,false,left),
-                      cordconstnode.create(0,s8inttype,false))
+                    result := CAddNode.create(nodetype,
+                      CInlineNode.create(in_length_x,false,left),
+                      COrdConstNode.create(0,s8inttype,false))
                   else { nodetype in [equaln,unequaln] }
                     begin
                       if is_widestring(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
                         begin
                           { windows like widestrings requires that we also check the length }
-                          result:=cinlinenode.create(in_length_x,false,left);
+                          result:=CInlineNode.create(in_length_x,false,left);
                           { and compare its result with 0 }
-                          result:=caddnode.create(equaln,result,cordconstnode.create(0,s8inttype,false));
+                          result:=CAddNode.create(equaln,result,COrdConstNode.create(0,s8inttype,false));
                           if nodetype=unequaln then
-                            result:=cnotnode.create(result);
+                            result:=CNotNode.create(result);
                         end
                       else
                         begin
                           { compare the pointer with nil (for ansistrings etc), }
                           { faster than getting the length (JM)                 }
-                          result:= caddnode.create(nodetype,
-                            ctypeconvnode.create_internal(left,voidpointertype),
-                            cpointerconstnode.create(0,voidpointertype));
+                          result:= CAddNode.create(nodetype,
+                            CTypeConvNode.create_internal(left,voidpointertype),
+                            CPointerConstNode.create(0,voidpointertype));
                         end;
                     end;
                   { left is reused }
@@ -3980,38 +3980,38 @@ const
               if nodetype in [equaln,unequaln] then
                 cmpfuncname := cmpfuncname + '_equal';
 
-              result := ccallnode.createintern(cmpfuncname,
-                ccallparanode.create(right,ccallparanode.create(left,nil)));
+              result := CCallNode.createintern(cmpfuncname,
+                CCallParaNode.create(right,CCallParaNode.create(left,nil)));
               { and compare its result with 0 according to the original operator }
-              result := caddnode.create(nodetype,result,
-                cordconstnode.create(0,s8inttype,false));
+              result := CAddNode.create(nodetype,result,
+                COrdConstNode.create(0,s8inttype,false));
               left := nil;
               right := nil;
             end;
           else
-            internalerror(2019050520);
+            InternalError(2019050520);
         end;
       end;
 
 
-    function taddnode.first_addset : TNode;
+    function TAddNode.first_addset : TNode;
 
       procedure call_varset_helper(const n : string);
         var
-          newstatement : tstatementnode;
-          temp    : ttempcreatenode;
+          newstatement : TStatementNode;
+          temp    : TTempCreateNode;
         begin
           { directly load the result set into the assignee if possible }
-          if assigned(aktassignmentnode) and
+          if Assigned(aktassignmentnode) and
               (aktassignmentnode.right=self) and
               (aktassignmentnode.left.resultdef=resultdef) and
               valid_for_var(aktassignmentnode.left,false) then
             begin
-              result:=ccallnode.createintern(n,
-                ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                ccallparanode.create(aktassignmentnode.left.getcopy,
-                ccallparanode.create(right,
-                ccallparanode.create(left,nil))))
+              result:=CCallNode.createintern(n,
+                CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                CCallParaNode.create(aktassignmentnode.left.getcopy,
+                CCallParaNode.create(right,
+                CCallParaNode.create(left,nil))))
               );
 
               { remove reused parts from original node }
@@ -4027,14 +4027,14 @@ const
               result:=internalstatements(newstatement);
 
               { create temp for result }
-              temp:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+              temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
               addstatement(newstatement,temp);
 
-              addstatement(newstatement,ccallnode.createintern(n,
-                ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                ccallparanode.create(ctemprefnode.create(temp),
-                ccallparanode.create(right,
-                ccallparanode.create(left,nil)))))
+              addstatement(newstatement,CCallNode.createintern(n,
+                CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                CCallParaNode.create(CTempRefNode.create(temp),
+                CCallParaNode.create(right,
+                CCallParaNode.create(left,nil)))))
               );
 
               { remove reused parts from original node }
@@ -4044,16 +4044,16 @@ const
                 location and type, this is done be referencing the
                 temp and converting it first from a persistent temp to
                 normal temp }
-              addstatement(newstatement,ctempdeletenode.create_normal_temp(temp));
-              addstatement(newstatement,ctemprefnode.create(temp));
+              addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
+              addstatement(newstatement,CTempRefNode.create(temp));
             end;
         end;
 
       var
         procname: string[31];
         tempn: TNode;
-        newstatement : tstatementnode;
-        temp    : ttempcreatenode;
+        newstatement : TStatementNode;
+        temp    : TTempCreateNode;
         no_temp: Boolean;
       begin
         result:=nil;
@@ -4076,43 +4076,43 @@ const
                       end;
                     end;
                   else
-                    internalerror(2013112911);
+                    InternalError(2013112911);
                 end;
-                result := ccallnode.createinternres(procname,
-                  ccallparanode.create(cordconstnode.create(left.resultdef.size,sinttype,false),
-                  ccallparanode.create(right,
-                  ccallparanode.create(left,nil))),resultdef);
+                result := CCallNode.createinternres(procname,
+                  CCallParaNode.create(COrdConstNode.create(left.resultdef.size,sinttype,false),
+                  CCallParaNode.create(right,
+                  CCallParaNode.create(left,nil))),resultdef);
                 { left and right are reused as parameters }
                 left := nil;
                 right := nil;
                 { for an unequaln, we have to negate the result of comp_sets }
                 if nodetype = unequaln then
-                  result := cnotnode.create(result);
+                  result := CNotNode.create(result);
             end;
           addn:
             begin
               { can we directly write into the result? }
-              no_temp:=assigned(aktassignmentnode) and
+              no_temp:=Assigned(aktassignmentnode) and
                 (aktassignmentnode.right=self) and
                 (aktassignmentnode.left.resultdef=self.resultdef) and
                 valid_for_var(aktassignmentnode.left,false);
 
               { optimize first loading of a set }
               if (right.nodetype=setelementn) and
-                  not(assigned(tsetelementnode(right).right)) and
+                  not(Assigned(TSetElementNode(right).right)) and
                   is_emptyset(left) then
                 begin
                   { adjust for set base }
-                  tsetelementnode(right).left:=caddnode.create(subn,
-                    ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                    cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
+                  TSetElementNode(right).left:=CAddNode.create(subn,
+                    CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                    COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                   if no_temp then
                     begin
-                      result:=ccallnode.createintern('fpc_varset_create_element',
-                        ccallparanode.create(aktassignmentnode.left.getcopy,
-                        ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                        ccallparanode.create(tsetelementnode(right).left,nil))));
+                      result:=CCallNode.createintern('fpc_varset_create_element',
+                        CCallParaNode.create(aktassignmentnode.left.getcopy,
+                        CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                        CCallParaNode.create(TSetElementNode(right).left,nil))));
                       include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
                     end
                   else
@@ -4120,23 +4120,23 @@ const
                       result:=internalstatements(newstatement);
 
                       { create temp for result }
-                      temp:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                      temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                       addstatement(newstatement,temp);
 
-                      addstatement(newstatement,ccallnode.createintern('fpc_varset_create_element',
-                        ccallparanode.create(ctemprefnode.create(temp),
-                        ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                        ccallparanode.create(tsetelementnode(right).left,nil))))
+                      addstatement(newstatement,CCallNode.createintern('fpc_varset_create_element',
+                        CCallParaNode.create(CTempRefNode.create(temp),
+                        CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                        CCallParaNode.create(TSetElementNode(right).left,nil))))
                       );
 
                       { the last statement should return the value as
                         location and type, this is done be referencing the
                         temp and converting it first from a persistent temp to
                         normal temp }
-                      addstatement(newstatement,ctempdeletenode.create_normal_temp(temp));
-                      addstatement(newstatement,ctemprefnode.create(temp));
+                      addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
+                      addstatement(newstatement,CTempRefNode.create(temp));
                     end;
-                  tsetelementnode(right).left:=nil;
+                  TSetElementNode(right).left:=nil;
                 end
               else
                 begin
@@ -4145,43 +4145,43 @@ const
                       if no_temp then
                         begin
                           { add a range or a single element? }
-                          if assigned(tsetelementnode(right).right) then
+                          if Assigned(TSetElementNode(right).right) then
                             begin
                               { adjust for set base }
-                              tsetelementnode(right).left:=caddnode.create(subn,
-                                ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
+                              TSetElementNode(right).left:=CAddNode.create(subn,
+                                CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                                COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                               { adjust for set base }
-                              tsetelementnode(right).right:=caddnode.create(subn,
-                                ctypeconvnode.create_internal(tsetelementnode(right).right,sinttype),
-                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
+                              TSetElementNode(right).right:=CAddNode.create(subn,
+                                CTypeConvNode.create_internal(TSetElementNode(right).right,sinttype),
+                                COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
 
-                              result:=ccallnode.createintern('fpc_varset_set_range',
-                                ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                                ccallparanode.create(tsetelementnode(right).right,
-                                ccallparanode.create(tsetelementnode(right).left,
-                                ccallparanode.create(aktassignmentnode.left.getcopy,
-                                ccallparanode.create(left,nil))))));
+                              result:=CCallNode.createintern('fpc_varset_set_range',
+                                CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                                CCallParaNode.create(TSetElementNode(right).right,
+                                CCallParaNode.create(TSetElementNode(right).left,
+                                CCallParaNode.create(aktassignmentnode.left.getcopy,
+                                CCallParaNode.create(left,nil))))));
                             end
                           else
                             begin
                               { s:=s+[element]; ? }
                               if left.isequal(aktassignmentnode.left) then
-                                result:=cinlinenode.createintern(in_include_x_y,false,ccallparanode.create(aktassignmentnode.left.getcopy,
-                                  ccallparanode.create(ctypeconvnode.create_internal(tsetelementnode(right).left,TSetDef(resultdef).elementdef),nil)))
+                                result:=CInlineNode.createintern(in_include_x_y,false,CCallParaNode.create(aktassignmentnode.left.getcopy,
+                                  CCallParaNode.create(CTypeConvNode.create_internal(TSetElementNode(right).left,TSetDef(resultdef).elementdef),nil)))
                               else
                                 begin
                                   { adjust for set base }
-                                  tsetelementnode(right).left:=caddnode.create(subn,
-                                    ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                                    cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
+                                  TSetElementNode(right).left:=CAddNode.create(subn,
+                                    CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                                    COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
 
-                                  result:=ccallnode.createintern('fpc_varset_set',
-                                    ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                                    ccallparanode.create(ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                                    ccallparanode.create(aktassignmentnode.left.getcopy,
-                                    ccallparanode.create(left,nil)))));
+                                  result:=CCallNode.createintern('fpc_varset_set',
+                                    CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                                    CCallParaNode.create(CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                                    CCallParaNode.create(aktassignmentnode.left.getcopy,
+                                    CCallParaNode.create(left,nil)))));
                                 end;
                             end;
 
@@ -4190,48 +4190,48 @@ const
                       else
                         begin
                           { adjust for set base }
-                          tsetelementnode(right).left:=caddnode.create(subn,
-                            ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                            cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
+                          TSetElementNode(right).left:=CAddNode.create(subn,
+                            CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                            COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                           result:=internalstatements(newstatement);
 
                           { create temp for result }
-                          temp:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                          temp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                           addstatement(newstatement,temp);
 
                           { add a range or a single element? }
-                          if assigned(tsetelementnode(right).right) then
+                          if Assigned(TSetElementNode(right).right) then
                             begin
                               { adjust for set base }
-                              tsetelementnode(right).right:=caddnode.create(subn,
-                                ctypeconvnode.create_internal(tsetelementnode(right).right,sinttype),
-                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
-                              addstatement(newstatement,ccallnode.createintern('fpc_varset_set_range',
-                                ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                                ccallparanode.create(tsetelementnode(right).right,
-                                ccallparanode.create(tsetelementnode(right).left,
-                                ccallparanode.create(ctemprefnode.create(temp),
-                                ccallparanode.create(left,nil))))))
+                              TSetElementNode(right).right:=CAddNode.create(subn,
+                                CTypeConvNode.create_internal(TSetElementNode(right).right,sinttype),
+                                COrdConstNode.create(TSetDef(resultdef).setbase,sinttype,false));
+                              addstatement(newstatement,CCallNode.createintern('fpc_varset_set_range',
+                                CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                                CCallParaNode.create(TSetElementNode(right).right,
+                                CCallParaNode.create(TSetElementNode(right).left,
+                                CCallParaNode.create(CTempRefNode.create(temp),
+                                CCallParaNode.create(left,nil))))))
                               );
                             end
                           else
-                            addstatement(newstatement,ccallnode.createintern('fpc_varset_set',
-                              ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
-                              ccallparanode.create(ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                              ccallparanode.create(ctemprefnode.create(temp),
-                              ccallparanode.create(left,nil)))))
+                            addstatement(newstatement,CCallNode.createintern('fpc_varset_set',
+                              CCallParaNode.create(COrdConstNode.create(resultdef.size,sinttype,false),
+                              CCallParaNode.create(CTypeConvNode.create_internal(TSetElementNode(right).left,sinttype),
+                              CCallParaNode.create(CTempRefNode.create(temp),
+                              CCallParaNode.create(left,nil)))))
                             );
                           { the last statement should return the value as
                             location and type, this is done be referencing the
                             temp and converting it first from a persistent temp to
                             normal temp }
-                          addstatement(newstatement,ctempdeletenode.create_normal_temp(temp));
-                          addstatement(newstatement,ctemprefnode.create(temp));
+                          addstatement(newstatement,CTempDeleteNode.create_normal_temp(temp));
+                          addstatement(newstatement,CTempRefNode.create(temp));
                         end;
                       { remove reused parts from original node }
-                      tsetelementnode(right).right:=nil;
-                      tsetelementnode(right).left:=nil;
+                      TSetElementNode(right).right:=nil;
+                      TSetElementNode(right).left:=nil;
                       left:=nil;
                     end
                   else
@@ -4245,16 +4245,16 @@ const
           muln:
             call_varset_helper('fpc_varset_mul_sets');
           else
-            internalerror(200609241);
+            InternalError(200609241);
         end;
       end;
 
 
-    function taddnode.first_adddynarray : TNode;
+    function TAddNode.first_adddynarray : TNode;
       var
-        newstatement : tstatementnode;
-        tempnode (*,tempnode2*) : ttempcreatenode;
-        para: tcallparanode;
+        newstatement : TStatementNode;
+        tempnode (*,tempnode2*) : TTempCreateNode;
+        para: TCallParaNode;
       begin
         result:=nil;
         { when we get here, we are sure that both the left and the right }
@@ -4262,7 +4262,7 @@ const
         case nodetype of
           addn:
             begin
-              if (left.nodetype=arrayconstructorn) and (tarrayconstructornode(left).isempty) then
+              if (left.nodetype=arrayconstructorn) and (TArrayConstructorNode(left).isempty) then
                 begin
                   result:=right;
                   left.free;
@@ -4270,7 +4270,7 @@ const
                   right:=nil;
                   exit;
                 end;
-              if (right.nodetype=arrayconstructorn) and (tarrayconstructornode(right).isempty) then
+              if (right.nodetype=arrayconstructorn) and (TArrayConstructorNode(right).isempty) then
                 begin
                   result:=left;
                   left:=nil;
@@ -4279,21 +4279,21 @@ const
                   exit;
                 end;
               { create the call to the concat routine both strings as arguments }
-              if assigned(aktassignmentnode) and
+              if Assigned(aktassignmentnode) and
                   (aktassignmentnode.right=self) and
                   (aktassignmentnode.left.resultdef=resultdef) and
                   valid_for_var(aktassignmentnode.left,false) then
                 begin
-                  para:=ccallparanode.create(
-                          ctypeconvnode.create_internal(right,voidcodepointertype),
-                        ccallparanode.create(
-                          ctypeconvnode.create_internal(left,voidcodepointertype),
-                        ccallparanode.create(
-                          caddrnode.create_internal(crttinode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
-                        ccallparanode.create(
-                          ctypeconvnode.create_internal(aktassignmentnode.left.getcopy,voidcodepointertype),nil)
+                  para:=CCallParaNode.create(
+                          CTypeConvNode.create_internal(right,voidcodepointertype),
+                        CCallParaNode.create(
+                          CTypeConvNode.create_internal(left,voidcodepointertype),
+                        CCallParaNode.create(
+                          CAddrNode.create_internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
+                        CCallParaNode.create(
+                          CTypeConvNode.create_internal(aktassignmentnode.left.getcopy,voidcodepointertype),nil)
                         )));
-                  result:=ccallnode.createintern(
+                  result:=CCallNode.createintern(
                             'fpc_dynarray_concat',
                             para
                           );
@@ -4303,26 +4303,26 @@ const
               else
                 begin
                   result:=internalstatements(newstatement);
-                  tempnode:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                  tempnode:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
-                  para:=ccallparanode.create(
-                          ctypeconvnode.create_internal(right,voidcodepointertype),
-                        ccallparanode.create(
-                          ctypeconvnode.create_internal(left,voidcodepointertype),
-                        ccallparanode.create(
-                          caddrnode.create_internal(crttinode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
-                        ccallparanode.create(
-                          ctypeconvnode.create_internal(ctemprefnode.create(tempnode),voidcodepointertype),nil)
+                  para:=CCallParaNode.create(
+                          CTypeConvNode.create_internal(right,voidcodepointertype),
+                        CCallParaNode.create(
+                          CTypeConvNode.create_internal(left,voidcodepointertype),
+                        CCallParaNode.create(
+                          CAddrNode.create_internal(CRTTINode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
+                        CCallParaNode.create(
+                          CTypeConvNode.create_internal(CTempRefNode.create(tempnode),voidcodepointertype),nil)
                         )));
                   addstatement(
                     newstatement,
-                    ccallnode.createintern(
+                    CCallNode.createintern(
                       'fpc_dynarray_concat',
                       para
                     )
                   );
-                  addstatement(newstatement,ctempdeletenode.create_normal_temp(tempnode));
-                  addstatement(newstatement,ctemprefnode.create(tempnode));
+                  addstatement(newstatement,CTempDeleteNode.create_normal_temp(tempnode));
+                  addstatement(newstatement,CTempRefNode.create(tempnode));
                 end;
               { we reused the arguments }
               left := nil;
@@ -4331,30 +4331,30 @@ const
           unequaln,equaln:
             expectloc:=LOC_FLAGS;
           else
-            Internalerror(2018030301);
+            InternalError(2018030301);
           end;
       end;
 
 
-    function taddnode.use_generic_mul32to64: boolean;
+    function TAddNode.use_generic_mul32to64: boolean;
       begin
         result := true;
       end;
 
 
-    function taddnode.use_generic_mul64bit: boolean;
+    function TAddNode.use_generic_mul64bit: boolean;
       begin
         result := true;
       end;
 
 
-    function taddnode.try_make_mul32to64: boolean;
+    function TAddNode.try_make_mul32to64: boolean;
 
-      function canbe32bitint(v: tconstexprint; out canbesignedconst, canbeunsignedconst: boolean): boolean;
+      function canbe32bitint(v: TConstExprInt; out canbesignedconst, canbeunsignedconst: boolean): boolean;
         begin
-          result := ((v >= int64(low(longint))) and (v <= int64(high(longint)))) or
+          result := ((v >= int64(low(LongInt))) and (v <= int64(high(LongInt)))) or
                     ((v >= qword(low(cardinal))) and (v <= qword(high(cardinal))));
-          canbesignedconst:=v<=int64(high(longint));
+          canbesignedconst:=v<=int64(high(LongInt));
           canbeunsignedconst:=v>=0;
         end;
 
@@ -4363,14 +4363,14 @@ const
           canbesignedconst:=false;
           canbeunsignedconst:=false;
           result := (n.nodetype = ordconstn) and
-                    canbe32bitint(tordconstnode(n).value, canbesignedconst, canbeunsignedconst);
+                    canbe32bitint(TOrdConstNode(n).value, canbesignedconst, canbeunsignedconst);
         end;
 
       function is_32to64typeconv(n: TNode): boolean;
         begin
           result := (n.nodetype = typeconvn) and
-                    is_integer(ttypeconvnode(n).left.resultdef) and
-                    not is_64bit(ttypeconvnode(n).left.resultdef);
+                    is_integer(TTypeConvNode(n).left.resultdef) and
+                    not is_64bit(TTypeConvNode(n).left.resultdef);
         end;
 
       var
@@ -4388,24 +4388,24 @@ const
           end;
         if is_32to64typeconv(left) then
           begin
-            leftoriginallysigned:=is_signed(ttypeconvnode(left).left.resultdef);
+            leftoriginallysigned:=is_signed(TTypeConvNode(left).left.resultdef);
             if ((is_32bitordconst(right,canbesignedconst, canbeunsignedconst) and
                  ((leftoriginallysigned and canbesignedconst) or
                   (not leftoriginallysigned and canbeunsignedconst))) or
                 (is_32to64typeconv(right) and
                   ((leftoriginallysigned =
-                    is_signed(ttypeconvnode(right).left.resultdef)) or
+                    is_signed(TTypeConvNode(right).left.resultdef)) or
                    (leftoriginallysigned and
-                    (TOrdDef(ttypeconvnode(right).left.resultdef).ordtype in [u8bit,u16bit]))))) then
+                    (TOrdDef(TTypeConvNode(right).left.resultdef).ordtype in [u8bit,u16bit]))))) then
               begin
-                temp := ttypeconvnode(left).left;
-                ttypeconvnode(left).left := nil;
+                temp := TTypeConvNode(left).left;
+                TTypeConvNode(left).left := nil;
                 left.free;
                 left := temp;
                 if (right.nodetype = typeconvn) then
                   begin
-                    temp := ttypeconvnode(right).left;
-                    ttypeconvnode(right).left := nil;
+                    temp := TTypeConvNode(right).left;
+                    TTypeConvNode(right).left := nil;
                     right.free;
                     right := temp;
                   end;
@@ -4431,18 +4431,18 @@ const
       end;
 
 
-    function taddnode.use_fma : boolean;
+    function TAddNode.use_fma : boolean;
       begin
         result:=false;
       end;
 
 
-    function taddnode.try_fma(ld,rd : TDef) : TNode;
+    function TAddNode.try_fma(ld,rd : TDef) : TNode;
       var
-        inlinennr : tinlinenumber;
+        inlinennr : TInlineNumber;
       begin
         result:=nil;
-        if (cs_opt_fastmath in CurrentSettings.optimizerswitches) and
+        if (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and
           use_fma and
           (nodetype in [addn,subn]) and
           (rd.typ=floatdef) and (ld.typ=floatdef) and
@@ -4468,86 +4468,86 @@ const
           (((left.nodetype=muln) and (node_complexity(right)<3)) or
            ((right.nodetype=muln) and (node_complexity(left)<3)) or
            ((left.nodetype=inlinen) and
-            (tinlinenode(left).inlinenumber=in_sqr_real) and
+            (TInlineNode(left).inlinenumber=in_sqr_real) and
              (node_complexity(right)<3)) or
            ((right.nodetype=inlinen) and
-            (tinlinenode(right).inlinenumber=in_sqr_real) and
+            (TInlineNode(right).inlinenumber=in_sqr_real) and
             (node_complexity(left)<3))
           ) then
           begin
             case TFloatDef(ld).floattype of
-              s32real:
+              S32Real:
                inlinennr:=in_fma_single;
-              s64real:
+              S64Real:
                inlinennr:=in_fma_double;
               s80real:
                inlinennr:=in_fma_extended;
               else
-                internalerror(2014042601);
+                InternalError(2014042601);
             end;
             if left.nodetype=muln then
               begin
                 if nodetype=subn then
-                  result:=cinlinenode.create(inlinennr,false,ccallparanode.create(cunaryminusnode.create(right),
-                    ccallparanode.create(taddnode(left).right,
-                    ccallparanode.create(taddnode(left).left,nil
+                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(CUnaryMinusNode.create(right),
+                    CCallParaNode.create(TAddNode(left).right,
+                    CCallParaNode.create(TAddNode(left).left,nil
                     ))))
                 else
-                  result:=cinlinenode.create(inlinennr,false,ccallparanode.create(right,
-                    ccallparanode.create(taddnode(left).right,
-                    ccallparanode.create(taddnode(left).left,nil
+                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(right,
+                    CCallParaNode.create(TAddNode(left).right,
+                    CCallParaNode.create(TAddNode(left).left,nil
                     ))));
                 right:=nil;
-                taddnode(left).right:=nil;
-                taddnode(left).left:=nil;
+                TAddNode(left).right:=nil;
+                TAddNode(left).left:=nil;
               end
             else if right.nodetype=muln then
               begin
                 if nodetype=subn then
-                  result:=cinlinenode.create(inlinennr,false,ccallparanode.create(left,
-                    ccallparanode.create(cunaryminusnode.create(taddnode(right).right),
-                    ccallparanode.create(taddnode(right).left,nil
+                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
+                    CCallParaNode.create(CUnaryMinusNode.create(TAddNode(right).right),
+                    CCallParaNode.create(TAddNode(right).left,nil
                     ))))
                 else
-                  result:=cinlinenode.create(inlinennr,false,ccallparanode.create(left,
-                    ccallparanode.create(taddnode(right).right,
-                    ccallparanode.create(taddnode(right).left,nil
+                  result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
+                    CCallParaNode.create(TAddNode(right).right,
+                    CCallParaNode.create(TAddNode(right).left,nil
                     ))));
                 left:=nil;
-                taddnode(right).right:=nil;
-                taddnode(right).left:=nil;
+                TAddNode(right).right:=nil;
+                TAddNode(right).left:=nil;
               end
-            else if (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_sqr_real) then
+            else if (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) then
               begin
-                if node_complexity(tinlinenode(left).left)=0 then
+                if node_complexity(TInlineNode(left).left)=0 then
                   begin
                     if nodetype=subn then
-                      result:=cinlinenode.create(inlinennr,false,ccallparanode.create(cunaryminusnode.create(right),
-                        ccallparanode.create(tinlinenode(left).left.getcopy,
-                        ccallparanode.create(tinlinenode(left).left.getcopy,nil
+                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(CUnaryMinusNode.create(right),
+                        CCallParaNode.create(TInlineNode(left).left.getcopy,
+                        CCallParaNode.create(TInlineNode(left).left.getcopy,nil
                         ))))
                     else
-                      result:=cinlinenode.create(inlinennr,false,ccallparanode.create(right,
-                        ccallparanode.create(tinlinenode(left).left.getcopy,
-                        ccallparanode.create(tinlinenode(left).left.getcopy,nil
+                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(right,
+                        CCallParaNode.create(TInlineNode(left).left.getcopy,
+                        CCallParaNode.create(TInlineNode(left).left.getcopy,nil
                         ))));
                     right:=nil;
                   end;
               end
             { we get here only if right is a sqr node }
-            else if (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_sqr_real) then
+            else if (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
               begin
-                if node_complexity(tinlinenode(right).left)=0 then
+                if node_complexity(TInlineNode(right).left)=0 then
                   begin
                     if nodetype=subn then
-                      result:=cinlinenode.create(inlinennr,false,ccallparanode.create(left,
-                        ccallparanode.create(cunaryminusnode.create(tinlinenode(right).left.getcopy),
-                        ccallparanode.create(tinlinenode(right).left.getcopy,nil
+                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
+                        CCallParaNode.create(CUnaryMinusNode.create(TInlineNode(right).left.getcopy),
+                        CCallParaNode.create(TInlineNode(right).left.getcopy,nil
                         ))))
                     else
-                      result:=cinlinenode.create(inlinennr,false,ccallparanode.create(left,
-                        ccallparanode.create(tinlinenode(right).left.getcopy,
-                        ccallparanode.create(tinlinenode(right).left.getcopy,nil
+                      result:=CInlineNode.create(inlinennr,false,CCallParaNode.create(left,
+                        CCallParaNode.create(TInlineNode(right).left.getcopy,
+                        CCallParaNode.create(TInlineNode(right).left.getcopy,nil
                         ))));
                     left:=nil;
                   end;
@@ -4556,10 +4556,10 @@ const
       end;
 
 
-    function taddnode.first_add64bitint: TNode;
+    function TAddNode.first_add64bitint: TNode;
       var
         procname: string[31];
-        power: longint;
+        power: LongInt;
       begin
         result := nil;
         { create helper calls mul }
@@ -4571,12 +4571,12 @@ const
           swapleftright;
 
         { can we use a shift instead of a mul? }
-        if not (cs_check_overflow in CurrentSettings.localswitches) and
+        if not (cs_check_overflow in CurrentSettings.LocalSwitches) and
            (right.nodetype = ordconstn) and
-           ispowerof2(tordconstnode(right).value,power) then
+           IsPowerOf2(TOrdConstNode(right).value,power) then
           begin
-            tordconstnode(right).value := power;
-            result := cshlshrnode.create(shln,left,right);
+            TOrdConstNode(right).value := power;
+            result := CShlShrNode.create(shln,left,right);
             { left and right are reused }
             left := nil;
             right := nil;
@@ -4593,8 +4593,8 @@ const
             else
               procname := 'fpc_mul_dword_to_qword';
 
-            right := ccallparanode.create(right,ccallparanode.create(left,nil));
-            result := ccallnode.createintern(procname,right);
+            right := CCallParaNode.create(right,CCallParaNode.create(left,nil));
+            result := CCallNode.createintern(procname,right);
             left := nil;
             right := nil;
           end
@@ -4619,7 +4619,7 @@ const
               end;
 
             { otherwise, create the parameters for the helper }
-            right :=   ccallparanode.create(right,ccallparanode.create(left,nil));
+            right :=   CCallParaNode.create(right,CCallParaNode.create(left,nil));
             left := nil;
             { only qword needs the unsigned code, the
               signed code is also used for currency }
@@ -4627,23 +4627,23 @@ const
               procname := 'fpc_mul_int64'
             else
               procname := 'fpc_mul_qword';
-            if cs_check_overflow in CurrentSettings.localswitches then
+            if cs_check_overflow in CurrentSettings.LocalSwitches then
               procname := procname + '_checkoverflow';
 
-            result := ccallnode.createintern(procname,right);
+            result := CCallNode.createintern(procname,right);
             right := nil;
           end;
       end;
 
 
-    function taddnode.first_addpointer: TNode;
+    function TAddNode.first_addpointer: TNode;
       begin
         result:=nil;
         expectloc:=LOC_REGISTER;
       end;
 
 
-    function taddnode.first_cmppointer: TNode;
+    function TAddNode.first_cmppointer: TNode;
       begin
         result:=nil;
         expectloc:=LOC_FLAGS;
@@ -4652,7 +4652,7 @@ const
 
 
 {$ifdef cpuneedsmulhelper}
-    function taddnode.use_mul_helper: boolean;
+    function TAddNode.use_mul_helper: boolean;
       begin
         result:=(nodetype=muln) and
                 not(TOrdDef(resultdef).ordtype in [u8bit,s8bit
@@ -4661,23 +4661,23 @@ const
 {$endif cpuneedsmulhelper}
 
 
-    function taddnode.pass_1 : TNode;
+    function TAddNode.pass_1 : TNode;
 
       function isconstsetfewelements(p : TNode) : boolean;
         begin
-          result:=(p.nodetype=setconstn) and (tsetconstnode(p).elements<=4);
+          result:=(p.nodetype=setconstn) and (TSetConstNode(p).elements<=4);
         end;
 
       var
          rd,ld   : TDef;
-         i,i2    : longint;
+         i,i2    : LongInt;
          lt,rt   : TNodeType;
 {$ifdef cpuneedsmulhelper}
          procname : string[32];
 {$endif cpuneedsmulhelper}
         tempn,varsetnode: TNode;
-        mulnode : taddnode;
-        constsetnode : tsetconstnode;
+        mulnode : TAddNode;
+        constsetnode : TSetConstNode;
         trycreateinnodes : Boolean;
       begin
          result:=nil;
@@ -4693,7 +4693,7 @@ const
          { Can we optimize multiple dyn. array additions into a single call?
            This need to be done on a complete tree to detect the multiple
            add nodes and is therefor done before the subtrees are processed }
-         if (m_array_operators in CurrentSettings.modeswitches) and canbemultidynarrayadd(self) then
+         if (m_array_operators in CurrentSettings.ModeSwitches) and canbemultidynarrayadd(self) then
            begin
              result:=genmultidynarrayadd(self);
              exit;
@@ -4701,21 +4701,21 @@ const
 
          { typical set tests like (s*[const. set])<>/=[] can be converted into an or'ed chain of in tests
            for var sets if const. set contains only a few elements }
-         if (cs_opt_level1 in CurrentSettings.optimizerswitches) and (nodetype in [unequaln,equaln]) and (left.resultdef.typ=setdef) and not(is_smallset(left.resultdef)) then
+         if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and (nodetype in [unequaln,equaln]) and (left.resultdef.typ=setdef) and not(is_smallset(left.resultdef)) then
            begin
              trycreateinnodes:=false;
              mulnode:=nil;
              if (is_emptyset(right) and (left.nodetype=muln) and
-                 (isconstsetfewelements(taddnode(left).right) or isconstsetfewelements(taddnode(left).left))) then
+                 (isconstsetfewelements(TAddNode(left).right) or isconstsetfewelements(TAddNode(left).left))) then
                begin
                  trycreateinnodes:=true;
-                 mulnode:=taddnode(left);
+                 mulnode:=TAddNode(left);
                end
              else if (is_emptyset(left) and (right.nodetype=muln) and
-               (isconstsetfewelements(taddnode(right).right) or isconstsetfewelements(taddnode(right).left))) then
+               (isconstsetfewelements(TAddNode(right).right) or isconstsetfewelements(TAddNode(right).left))) then
                begin
                  trycreateinnodes:=true;
-                 mulnode:=taddnode(right);
+                 mulnode:=TAddNode(right);
                end;
 
              if trycreateinnodes then
@@ -4724,12 +4724,12 @@ const
                  varsetnode:=nil;
                  if isconstsetfewelements(mulnode.right) then
                    begin
-                     constsetnode:=tsetconstnode(mulnode.right);
+                     constsetnode:=TSetConstNode(mulnode.right);
                      varsetnode:=mulnode.left;
                    end
                  else
                    begin
-                     constsetnode:=tsetconstnode(mulnode.left);
+                     constsetnode:=TSetConstNode(mulnode.left);
                      varsetnode:=mulnode.right;
                    end;
                  { the node is copied so it might have no side effects, if the complexity is too, cse should fix it, so
@@ -4740,14 +4740,14 @@ const
                      for i:=low(TConstSet) to high(TConstSet) do
                        if i in constsetnode.value_set^ then
                          begin
-                           tempn:=cinnode.create(cordconstnode.create(i,TSetDef(constsetnode.resultdef).elementdef,false),varsetnode.getcopy);
-                           if assigned(result) then
-                             result:=caddnode.create_internal(orn,result,tempn)
+                           tempn:=CInNode.create(COrdConstNode.create(i,TSetDef(constsetnode.resultdef).elementdef,false),varsetnode.getcopy);
+                           if Assigned(result) then
+                             result:=CAddNode.create_internal(orn,result,tempn)
                            else
                              result:=tempn;
                          end;
                      if nodetype=equaln then
-                       result:=cnotnode.create(result);
+                       result:=CNotNode.create(result);
                      exit;
                    end;
                end;
@@ -4756,11 +4756,11 @@ const
         { get rid of adding empty sets generated by set constructors (s+([]+[..]))
 
           this needs to be done before firstpass, else the set additions get already converted into calls }
-        if (resultdef.typ=setdef) and (nodetype=addn) and (right.nodetype=addn) and (is_emptyset(taddnode(right).left)) then
+        if (resultdef.typ=setdef) and (nodetype=addn) and (right.nodetype=addn) and (is_emptyset(TAddNode(right).left)) then
           begin
-            result:=caddnode.create(addn,left,taddnode(right).right);
+            result:=CAddNode.create(addn,left,TAddNode(right).right);
             left:=nil;
-            taddnode(right).right:=nil;
+            TAddNode(right).right:=nil;
             exit;
           end;
 
@@ -4787,28 +4787,28 @@ const
          else if (ld.typ=orddef) and (rd.typ=orddef) then
            begin
              { optimize multiplication by a power of 2 }
-             if not(cs_check_overflow in CurrentSettings.localswitches) and
+             if not(cs_check_overflow in CurrentSettings.LocalSwitches) and
                 (nodetype = muln) and
                 not is_currency(resultdef) and
                 (((left.nodetype = ordconstn) and
-                  ispowerof2(tordconstnode(left).value,i)) or
+                  IsPowerOf2(TOrdConstNode(left).value,i)) or
                  ((right.nodetype = ordconstn) and
-                  ispowerof2(tordconstnode(right).value,i2))) then
+                  IsPowerOf2(TOrdConstNode(right).value,i2))) then
                begin
                  { it could be that we are converting a 32x32 -> 64 multiplication:
                    in this case, we have to restore the type conversion }
                  inserttypeconv_internal(left,resultdef);
                  inserttypeconv_internal(right,resultdef);
                  if ((left.nodetype = ordconstn) and
-                     ispowerof2(tordconstnode(left).value,i)) then
+                     IsPowerOf2(TOrdConstNode(left).value,i)) then
                    begin
-                     tordconstnode(left).value := i;
-                     result := cshlshrnode.create(shln,right,left);
+                     TOrdConstNode(left).value := i;
+                     result := CShlShrNode.create(shln,right,left);
                    end
                  else
                    begin
-                     tordconstnode(right).value := i2;
-                     result := cshlshrnode.create(shln,left,right);
+                     TOrdConstNode(right).value := i2;
+                     result := CShlShrNode.create(shln,left,right);
                    end;
                  result.resultdef := resultdef;
                  left := nil;
@@ -4834,7 +4834,7 @@ const
               if is_char(ld) then
                begin
                  if nodetype=addn then
-                  internalerror(200103291);
+                  InternalError(200103291);
                  expectloc:=LOC_FLAGS;
                end
              else if (nodetype=muln) and
@@ -4851,7 +4851,7 @@ const
              else if (TOrdDef(ld).ordtype in [s64bit,u64bit,scurrency]) then
                begin
                  result := first_add64bitint;
-                 if assigned(result) then
+                 if Assigned(result) then
                    exit;
                   if nodetype in [addn,subn,muln,andn,orn,xorn] then
                     expectloc:=LOC_REGISTER
@@ -4881,13 +4881,13 @@ const
                        u32bit:
                          procname := 'fpc_mul_dword';
                        else
-                         internalerror(2011022301);
+                         InternalError(2011022301);
                      end;
-                     if cs_check_overflow in CurrentSettings.localswitches then
+                     if cs_check_overflow in CurrentSettings.LocalSwitches then
                        procname:=procname+'_checkoverflow';
-                     result := ccallnode.createintern(procname,
-                       ccallparanode.create(right,
-                       ccallparanode.create(left,nil)));
+                     result := CCallNode.createintern(procname,
+                       CCallParaNode.create(right,
+                       CCallParaNode.create(left,nil)));
                      left := nil;
                      right := nil;
                      FirstPass(result);
@@ -4914,7 +4914,7 @@ const
              if is_smallset(ld) and
                 not(
                     (right.nodetype=setelementn) and
-                    assigned(tsetelementnode(right).right)
+                    Assigned(TSetElementNode(right).right)
                    ) then
                begin
                  if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
@@ -4925,7 +4925,7 @@ const
              else
                begin
                  result := first_addset;
-                 if assigned(result) then
+                 if Assigned(result) then
                    exit;
                  expectloc:=LOC_CREFERENCE;
                end;
@@ -5007,7 +5007,7 @@ const
                 expectloc:=LOC_FLAGS;
 
               result:=try_fma(ld,rd);
-              if assigned(result) then
+              if Assigned(result) then
                 exit;
             end
 
@@ -5050,7 +5050,7 @@ const
 {$ifdef SUPPORT_MMX}
        { mmx support, this must be before the zero based array
          check }
-         else if (cs_mmx in CurrentSettings.localswitches) and is_mmx_able_array(ld) and
+         else if (cs_mmx in CurrentSettings.LocalSwitches) and is_mmx_able_array(ld) and
                  is_mmx_able_array(rd) then
             begin
               expectloc:=LOC_MMXREGISTER;
@@ -5081,7 +5081,7 @@ const
            end
 
 {$ifdef SUPPORT_MMX}
-         else if (cs_mmx in CurrentSettings.localswitches) and
+         else if (cs_mmx in CurrentSettings.LocalSwitches) and
                  is_mmx_able_array(ld) and
                  is_mmx_able_array(rd) then
             begin
@@ -5102,7 +5102,7 @@ const
       end;
 
 {$ifdef state_tracking}
-    function Taddnode.track_state_pass(exec_known:boolean):boolean;
+    function TAddNode.track_state_pass(exec_known:boolean):boolean;
 
     var factval:TNode;
 

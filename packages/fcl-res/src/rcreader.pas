@@ -56,10 +56,10 @@ implementation
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.Streamio, System.Resources.DataStream, System.Resources.Factory, Pascal.Lexlib, System.Resources.Rc.Parser;
+  System.Streamio, System.Resources.DataStream, System.Resources.Factory, Pascal.LexLib, System.Resources.Rc.Parser;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  StreamIO, resdatastream, resfactory, lexlib, rcparser;
+  StreamIO, resdatastream, resfactory, LexLib, rcparser;
 {$ENDIF FPC_DOTTEDUNITS}
 
 { TRCResourceReader }
@@ -100,12 +100,12 @@ procedure TRCResourceReader.ReadRCFile(aResources: TResources; aLocation: String
 var
   i: Integer;
 begin
-  AssignStream({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}Lexlib.yyinput, aStream);
-  Reset({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}Lexlib.yyinput);
+  AssignStream({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}LexLib.yyinput, aStream);
+  Reset({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}LexLib.yyinput);
   try
     {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}yyfilename:= '#MAIN.RC';
     {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}SetDefaults;
-    SetTextCodePage({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}Lexlib.yyinput, {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}opt_code_page);
+    SetTextCodePage({$IFDEF FPC_DOTTEDUNITS}Pascal.{$ENDIF}LexLib.yyinput, {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}opt_code_page);
     {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}yinclude:= tyinclude.Create;
     {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}yinclude.WorkDir:= aLocation;
     {$IFDEF FPC_DOTTEDUNITS}System.Resources.Rc.Parser.{$ELSE}rcparser.{$ENDIF}yinclude.SearchPaths.Assign(fRCIncludeDirs);

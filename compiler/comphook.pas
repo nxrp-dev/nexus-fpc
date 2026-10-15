@@ -27,70 +27,70 @@ interface
 
 uses
 {$IFNDEF USE_FAKE_SYSUTILS}
-  sysutils,
+  SysUtils,
 {$ELSE}
-  fksysutl,
+  FKSysUtl,
 {$ENDIF}
-  globtype,
-  finput;
+  GlobType,
+  FinPut;
 
 var
   { RHIDE expect gcc like error output }
-  fatalstr      : string[6] = 'Fatal:';
-  errorstr      : string[6] = 'Error:';
-  warningstr    : string[8] = 'Warning:';
-  notestr       : string[5] = 'Note:';
-  hintstr       : string[5] = 'Hint:';
+  FatalStr      : string[6] = 'Fatal:';
+  ErrorStr      : string[6] = 'Error:';
+  WarningStr    : string[8] = 'Warning:';
+  NoteStr       : string[5] = 'Note:';
+  HintStr       : string[5] = 'Hint:';
 const
-  warningerrorstr    : string[29] = 'Warning: (treated as error)';
-  noteerrorstr       : string[27] = 'Note: (treated as error)';
-  hinterrorstr       : string[27] = 'Hint: (treated as error)';
+  WarningErrorStr    : string[29] = 'Warning: (treated as error)';
+  NoteErrorStr       : string[27] = 'Note: (treated as error)';
+  HintErrorStr       : string[27] = 'Hint: (treated as error)';
 
 type
   PCompilerStatus = ^TCompilerStatus;
   TCompilerStatus = record
   { Current status }
-    currentmodule,
-    currentsourceppufilename, { the name of the ppu where the source file
+    CurrentModule,
+    CurrentSourcePPUFileName, { the name of the ppu where the source file
                                 comes from where the error location is given }
-    currentsourcepath,
-    currentsource : string;   { filename }
-    currentline,
-    currentcolumn : longint;  { current line and column }
-    currentmodulestate : string[32];
+    CurrentSourcePath,
+    CurrentSource : string;   { filename }
+    CurrentLine,
+    CurrentColumn : LongInt;  { current line and column }
+    CurrentModuleState : string[32];
   { Total Status }
-    compiledlines : longint;  { the number of lines which are compiled }
-    errorcount,               { this field should never be increased directly,
+    CompiledLines : LongInt;  { the number of lines which are compiled }
+    ErrorCount,               { this field should never be increased directly,
                                 use Verbose.GenerateError procedure to do this,
                                 this allows easier error catching using GDB by
                                 adding a single breakpoint at this procedure }
-    countWarnings,
-    countNotes,
-    countHints    : longint;  { number of found errors/warnings/notes/hints }
-    codesize,
-    datasize      : qword;
+    CountWarnings,
+    CountNotes,
+    CountHints    : LongInt;  { number of found errors/warnings/notes/hints }
+    CodeSize,
+    DataSize      : QWord;
   { program info }
-    isexe,
-    ispackage,
-    islibrary     : boolean;
+    IsExe,
+    IsPackage,
+    IsLibrary     : Boolean;
   { Settings for the output }
-    showmsgnrs    : boolean;
-    verbosity     : longint;
-    maxerrorcount : longint;
-    errorwarning,
-    errornote,
-    errorhint,
-    skip_error,
-    use_stderr,
-    use_redir,
-    use_bugreport,
-    use_gccoutput,
-    sources_avail,
-    print_source_path : boolean;
+    ShowMsgNrs    : Boolean;
+    Verbosity     : LongInt;
+    MaxErrorCount : LongInt;
+    ErrorWarning,
+    ErrorNote,
+    ErrorHint,
+    SkipError,
+    UseStdErr,
+    UseRedir,
+    UseBugReport,
+    UseGCCOutput,
+    SourcesAvail,
+    PrintSourcePath : Boolean;
   { Redirection support }
-    redirfile : text;
+    RedirFile : Text;
   { Special file for bug report }
-    reportbugfile : text;
+    ReportBugFile : Text;
   end;
 
 type
@@ -105,116 +105,116 @@ type
   end;
 
 var
-  status : tcompilerstatus;
+  Status : TCompilerStatus;
 
 { Default Functions }
-Function  def_status:boolean;
-Function  def_comment(Level:Longint;const s:ansistring):boolean;
-function  def_internalerror(i:longint):boolean;
-function  def_internalerrorEx(i:longint;const s:ansistring):boolean;
-function  def_CheckVerbosity(v:longint):boolean;
-procedure def_initsymbolinfo;
-procedure def_donesymbolinfo;
-procedure def_extractsymbolinfo;
-function  def_openinputfile(const filename: TPathStr): tinputfile;
-Function  def_getnamedfiletime(Const F : TPathStr) : Longint;
+Function  Def_Status:Boolean;
+Function  Def_Comment(Level:LongInt;const S:AnsiString):Boolean;
+function  Def_InternalError(I:LongInt):Boolean;
+function  Def_InternalErrorEx(I:LongInt;const S:AnsiString):Boolean;
+function  Def_CheckVerbosity(V:LongInt):Boolean;
+procedure Def_InitSymbolInfo;
+procedure Def_DoneSymbolInfo;
+procedure Def_ExtractSymbolInfo;
+function  Def_OpenInputFile(const FileName: TPathStr): TInputFile;
+Function  Def_GetNamedFileTime(Const F : TPathStr) : LongInt;
 { Function redirecting for IDE support }
 type
-  tstopprocedure         = procedure(err:longint);
-  tstatusfunction        = function:boolean;
-  tcommentfunction       = function(Level:Longint;const s:ansistring):boolean;
-  tinternalerrorfunction = function(i:longint):boolean;
-  tinternalerrorexfunction = function(i:longint; const s : ansistring):boolean;
-  tcheckverbosityfunction = function(i:longint):boolean;
+  TStopProcedure         = procedure(err:LongInt);
+  TStatusFunction        = function:Boolean;
+  TCommentFunction       = function(Level:LongInt;const s:AnsiString):Boolean;
+  TInternalErrorFunction = function(i:LongInt):Boolean;
+  TInternalErrorExFunction = function(i:LongInt; const s : AnsiString):Boolean;
+  TCheckVerbosityFunction = function(i:LongInt):Boolean;
 
-  tinitsymbolinfoproc = procedure;
-  tdonesymbolinfoproc = procedure;
-  textractsymbolinfoproc = procedure;
-  topeninputfilefunc = function(const filename: TPathStr): tinputfile;
-  tgetnamedfiletimefunc = function(const filename: TPathStr): longint;
+  TInitSymbolInfoProc = procedure;
+  TDoneSymbolInfoProc = procedure;
+  TExtractSymbolInfoProc = procedure;
+  TOpenInputFileFunc = function(const filename: TPathStr): TInputFile;
+  TGetNamedFileTimeFunc = function(const filename: TPathStr): LongInt;
 
 var
-  do_status        : tstatusfunction  = @def_status;
-  do_comment       : tcommentfunction = @def_comment;
-  do_internalerror : tinternalerrorfunction = @def_internalerror deprecated 'use do_internalerrorex';
-  do_internalerrorex : tinternalerrorexfunction = @def_internalerrorex;
-  do_checkverbosity : tcheckverbosityfunction = @def_checkverbosity;
+  Do_Status        : TStatusFunction  = @Def_Status;
+  Do_Comment       : TCommentFunction = @Def_Comment;
+  Do_InternalError : TInternalErrorFunction = @Def_InternalError deprecated 'use do_internalerrorex';
+  Do_InternalErrorEx : TInternalErrorExFunction = @Def_InternalErrorEx;
+  Do_CheckVerbosity : TCheckVerbosityFunction = @Def_CheckVerbosity;
 
-  do_initsymbolinfo : tinitsymbolinfoproc = @def_initsymbolinfo;
-  do_donesymbolinfo : tdonesymbolinfoproc = @def_donesymbolinfo;
-  do_extractsymbolinfo : textractsymbolinfoproc = @def_extractsymbolinfo;
-  needsymbolinfo : boolean =false;
+  Do_InitSymbolInfo : TInitSymbolInfoProc = @Def_InitSymbolInfo;
+  Do_DoneSymbolInfo : TDoneSymbolInfoProc = @Def_DoneSymbolInfo;
+  Do_ExtractSymbolInfo : TExtractSymbolInfoProc = @Def_ExtractSymbolInfo;
+  NeedSymbolInfo : Boolean =False;
 
-  do_openinputfile : topeninputfilefunc = @def_openinputfile;
-  do_getnamedfiletime : tgetnamedfiletimefunc = @def_getnamedfiletime;
+  Do_OpenInputFile : TOpenInputFileFunc = @Def_OpenInputFile;
+  Do_GetNamedFileTime : TGetNamedFileTimeFunc = @Def_GetNamedFileTime;
 
 implementation
 
   uses
-   cutils, systems, globals, comptty;
+   CUtils, Systems, Globals, CompTTY;
 
 {****************************************************************************
                           Helper Routines
 ****************************************************************************}
 
-function gccfilename(const s : ShortString) : ShortString;
+function GCCFileName(const S : ShortString) : ShortString;
 var
-  i : longint;
+  I : LongInt;
 begin
-  for i:=1to length(s) do
+  for I:=1to Length(S) do
    begin
-     case s[i] of
-      '\' : gccfilename[i]:='/';
- 'A'..'Z' : if not (tf_files_case_aware in SourceInfo.flags) and
-               not (tf_files_case_sensitive in SourceInfo.flags) then
-              gccfilename[i]:=chr(ord(s[i])+32)
+     case S[I] of
+      '\' : GCCFileName[I]:='/';
+ 'A'..'Z' : if not (tf_files_case_aware in SourceInfo.Flags) and
+               not (tf_files_case_sensitive in SourceInfo.Flags) then
+              GCCFileName[I]:=Chr(Ord(S[I])+32)
             else
-              gccfilename[i]:=s[i];
+              GCCFileName[I]:=S[I];
      else
-      gccfilename[i]:=s[i];
+      GCCFileName[I]:=S[I];
      end;
    end;
-  gccfilename[0]:=s[0];
+  GCCFileName[0]:=S[0];
 end;
 
 
-function tostr(i : longint) : string;
+function ToStr(I : LongInt) : string;
 var
-  hs : string;
+  HS : string;
 begin
-  str(i,hs);
-  tostr:=hs;
+  Str(I,HS);
+  ToStr:=HS;
 end;
 
 type
   TOutputColor = (oc_black,oc_red,oc_green,oc_orange,oc_blue,oc_magenta,oc_cyan,oc_lightgray);
 
-procedure WriteColoredOutput(var t: Text;color: TOutputColor;const s : AnsiString);
+procedure WriteColoredOutput(var T: Text;Color: TOutputColor;const S : AnsiString);
   begin
-     if TTYCheckSupported and IsATTY(t) then
+     if TTYCheckSupported and IsATTY(T) then
        begin
-         case color of
+         case Color of
            oc_black:
-             write(t,#27'[1m'#27'[30m');
+             Write(T,#27'[1m'#27'[30m');
            oc_red:
-             write(t,#27'[1m'#27'[31m');
+             Write(T,#27'[1m'#27'[31m');
            oc_green:
-             write(t,#27'[1m'#27'[32m');
+             Write(T,#27'[1m'#27'[32m');
            oc_orange:
-             write(t,#27'[1m'#27'[33m');
+             Write(T,#27'[1m'#27'[33m');
            oc_blue:
-             write(t,#27'[1m'#27'[34m');
+             Write(T,#27'[1m'#27'[34m');
            oc_magenta:
-             write(t,#27'[1m'#27'[35m');
+             Write(T,#27'[1m'#27'[35m');
            oc_cyan:
-             write(t,#27'[1m'#27'[36m');
+             Write(T,#27'[1m'#27'[36m');
            oc_lightgray:
-             write(t,#27'[1m'#27'[37m');
+             Write(T,#27'[1m'#27'[37m');
          end;
        end;
-    write(t,s);
-    if TTYCheckSupported and IsATTY(t) then
-      write(t,#27'[0m');
+    Write(T,S);
+    if TTYCheckSupported and IsATTY(T) then
+      Write(T,#27'[0m');
   end;
 {****************************************************************************
                           Stopping the compiler
@@ -242,223 +242,223 @@ constructor ECompilerAbortSilent.Create;
                          Predefined default Handlers
 ****************************************************************************}
 
-function def_status:boolean;
+function Def_Status:Boolean;
 var
-  hstatus : TFPCHeapStatus;
+  HStatus : TFPCHeapStatus;
 begin
-  def_status:=false; { never stop }
+  Def_Status:=False; { never stop }
 { Status info?, Called every line }
-  if ((status.verbosity and V_Status)<>0) then
+  if ((Status.Verbosity and VStatus)<>0) then
    begin
-     if (status.compiledlines=1) or
-        (status.currentline mod 100=0) then
+     if (Status.CompiledLines=1) or
+        (Status.CurrentLine mod 100=0) then
        begin
-         if status.currentline>0 then
-           Write(status.currentmodule,':',status.currentline,' ');
-         hstatus:=GetFPCHeapStatus;
-         WriteLn(DStr(hstatus.CurrHeapUsed shr 10),'/',DStr(hstatus.CurrHeapSize shr 10),' Kb Used');
-         flush(output);
+         if Status.CurrentLine>0 then
+           Write(Status.CurrentModule,':',Status.CurrentLine,' ');
+         HStatus:=GetFPCHeapStatus;
+         WriteLn(DStr(HStatus.CurrHeapUsed shr 10),'/',DStr(HStatus.CurrHeapSize shr 10),' Kb Used');
+         Flush(Output);
        end;
    end;
 end;
 
 
-Function def_comment(Level:Longint;const s:ansistring):boolean;
+Function Def_Comment(Level:LongInt;const S:AnsiString):Boolean;
 const
-  rh_errorstr   = 'error:';
-  rh_warningstr = 'warning:';
+  RHErrorStr   = 'error:';
+  RHWarningStr = 'warning:';
 
-  procedure WriteMsgTypeColored(var t : text;const s : AnsiString);
+  procedure WriteMsgTypeColored(var T : Text;const S : AnsiString);
     begin
-      case (status.verbosity and Level) of
-        V_Warning:
-          WriteColoredOutput(t,oc_magenta,s);
-        V_Error,
-        V_Fatal:
-          WriteColoredOutput(t,oc_red,s);
+      case (Status.Verbosity and Level) of
+        VWarning:
+          WriteColoredOutput(T,oc_magenta,S);
+        VError,
+        VFatal:
+          WriteColoredOutput(T,oc_red,S);
         else
-          write(t,s);
+          Write(T,S);
       end;
     end;
 
 var
-  hs2,
+  HS2,
   MsgTypeStr,
   MsgLocStr,
   MsgTimeStr: AnsiString;
 begin
-  def_comment:=false; { never stop }
+  Def_Comment:=False; { never stop }
   MsgTypeStr:='';
   MsgLocStr:='';
   MsgTimeStr:='';
-  if not(status.use_gccoutput) then
+  if not(Status.UseGCCOutput) then
     begin
-      if (status.verbosity and Level)=V_Hint then
-        if status.errorhint then
-          MsgTypeStr:=hinterrorstr
+      if (Status.Verbosity and Level)=VHint then
+        if Status.ErrorHint then
+          MsgTypeStr:=HintErrorStr
         else
-          MsgTypeStr:=hintstr;
-      if (status.verbosity and Level)=V_Note then
-        if status.errornote then
-          MsgTypeStr:=noteerrorstr
+          MsgTypeStr:=HintStr;
+      if (Status.Verbosity and Level)=VNote then
+        if Status.ErrorNote then
+          MsgTypeStr:=NoteErrorStr
         else
-          MsgTypeStr:=notestr;
-      if (status.verbosity and Level)=V_Warning then
-        if status.errorwarning then
-          MsgTypeStr:=warningerrorstr
+          MsgTypeStr:=NoteStr;
+      if (Status.Verbosity and Level)=VWarning then
+        if Status.ErrorWarning then
+          MsgTypeStr:=WarningErrorStr
         else
-          MsgTypeStr:=warningstr;
-      if (status.verbosity and Level)=V_Error then
-        MsgTypeStr:=errorstr;
-      if (status.verbosity and Level)=V_Fatal then
-        MsgTypeStr:=fatalstr;
-      if (status.verbosity and V_Parallel)=V_Parallel then
+          MsgTypeStr:=WarningStr;
+      if (Status.Verbosity and Level)=VError then
+        MsgTypeStr:=ErrorStr;
+      if (Status.Verbosity and Level)=VFatal then
+        MsgTypeStr:=FatalStr;
+      if (Status.Verbosity and VParallel)=VParallel then
         begin
-          if (inputfilename<>'') and (status.currentmodule<>'') then
-            MsgTypeStr:=MsgTypeStr+'('+inputfilename+'/'+status.currentmodule+')'
-          else if (status.currentmodule<>'') then
-            MsgTypeStr:=MsgTypeStr+'('+status.currentmodule+')'
-          else if (inputfilename<>'') then
-            MsgTypeStr:=MsgTypeStr+'('+inputfilename+')';
+          if (InputFileName<>'') and (Status.CurrentModule<>'') then
+            MsgTypeStr:=MsgTypeStr+'('+InputFileName+'/'+Status.CurrentModule+')'
+          else if (Status.CurrentModule<>'') then
+            MsgTypeStr:=MsgTypeStr+'('+Status.CurrentModule+')'
+          else if (InputFileName<>'') then
+            MsgTypeStr:=MsgTypeStr+'('+InputFileName+')';
         end
-      else if (status.verbosity and Level)=V_Used then
-        MsgTypeStr:=PadSpace('('+status.currentmodule+')',10);
+      else if (Status.Verbosity and Level)=VUsed then
+        MsgTypeStr:=PadSpace('('+Status.CurrentModule+')',10);
 
     end
   else
     begin
-      if (status.verbosity and Level)=V_Hint then
-        MsgTypeStr:=rh_warningstr;
-      if (status.verbosity and Level)=V_Note then
-        MsgTypeStr:=rh_warningstr;
-      if (status.verbosity and Level)=V_Warning then
-        MsgTypeStr:=rh_warningstr;
-      if (status.verbosity and Level)=V_Error then
-        MsgTypeStr:=rh_errorstr;
-      if (status.verbosity and Level)=V_Fatal then
-        MsgTypeStr:=rh_errorstr;
+      if (Status.Verbosity and Level)=VHint then
+        MsgTypeStr:=RHWarningStr;
+      if (Status.Verbosity and Level)=VNote then
+        MsgTypeStr:=RHWarningStr;
+      if (Status.Verbosity and Level)=VWarning then
+        MsgTypeStr:=RHWarningStr;
+      if (Status.Verbosity and Level)=VError then
+        MsgTypeStr:=RHErrorStr;
+      if (Status.Verbosity and Level)=VFatal then
+        MsgTypeStr:=RHErrorStr;
     end;
   { Generate line prefix }
-  if ((Level and V_LineInfo)=V_LineInfo) and
-     (status.currentsource<>'') and
-     (status.currentline>0) then
+  if ((Level and VLineInfo)=VLineInfo) and
+     (Status.CurrentSource<>'') and
+     (Status.CurrentLine>0) then
     begin
       { Adding the column should not confuse RHIDE,
       even if it does not yet use it PM
       but only if it is after error or warning !! PM }
-      if status.currentcolumn>0 then
+      if Status.CurrentColumn>0 then
         begin
-          if status.use_gccoutput then
-            MsgLocStr:=gccfilename(status.currentsource)+':'+tostr(status.currentline)+':'+tostr(status.currentcolumn)+':'
+          if Status.UseGCCOutput then
+            MsgLocStr:=GCCFileName(Status.CurrentSource)+':'+ToStr(Status.CurrentLine)+':'+ToStr(Status.CurrentColumn)+':'
           else
-            MsgLocStr:=status.currentsource+'('+tostr(status.currentline)+','+tostr(status.currentcolumn)+')';
+            MsgLocStr:=Status.CurrentSource+'('+ToStr(Status.CurrentLine)+','+ToStr(Status.CurrentColumn)+')';
         end
       else
         begin
-          if status.use_gccoutput then
-            MsgLocStr:=gccfilename(status.currentsource)+':'+tostr(status.currentline)+':'
+          if Status.UseGCCOutput then
+            MsgLocStr:=GCCFileName(Status.CurrentSource)+':'+ToStr(Status.CurrentLine)+':'
           else
-            MsgLocStr:=status.currentsource+'('+tostr(status.currentline)+')';
+            MsgLocStr:=Status.CurrentSource+'('+ToStr(Status.CurrentLine)+')';
         end;
-      if status.print_source_path then
-        if status.sources_avail then
-          MsgLocStr:=status.currentsourcepath+MsgLocStr
+      if Status.PrintSourcePath then
+        if Status.SourcesAvail then
+          MsgLocStr:=Status.CurrentSourcePath+MsgLocStr
         else
-          MsgLocStr:=status.currentsourceppufilename+':'+MsgLocStr;
+          MsgLocStr:=Status.CurrentSourcePPUFileName+':'+MsgLocStr;
     end;
   if MsgLocStr<>'' then
     MsgLocStr:=MsgLocStr+' ';
   if MsgTypeStr<>'' then
     MsgTypeStr:=MsgTypeStr+' ';
-  if (status.verbosity and V_TimeStamps)<>0 then
+  if (Status.Verbosity and VTimeStamps)<>0 then
     begin
-      system.str(getrealtime-starttime:0:3,hs2);
-      MsgTimeStr:='['+hs2+'] ';
+      System.Str(GetRealTime-StartTime:0:3,HS2);
+      MsgTimeStr:='['+HS2+'] ';
     end;
 
   { Display line }
-  if (Level<>V_None) and
-     ((status.verbosity and (Level and V_LevelMask))=(Level and V_LevelMask)) then
+  if (Level<>VNone) and
+     ((Status.Verbosity and (Level and VLevelMask))=(Level and VLevelMask)) then
    begin
-     if status.use_stderr then
+     if Status.UseStdErr then
        begin
-         write(StdErr,MsgTimeStr+MsgLocStr);
+         Write(StdErr,MsgTimeStr+MsgLocStr);
          WriteMsgTypeColored(StdErr,MsgTypeStr);
-         writeln(StdErr,s);
-         flush(StdErr);
+         WriteLn(StdErr,S);
+         Flush(StdErr);
        end
      else
        begin
-         if status.use_redir then
+         if Status.UseRedir then
            begin
-           writeln(status.redirfile,MsgTimeStr+MsgLocStr+MsgTypeStr+s);
-           flush(status.redirfile);
+           WriteLn(Status.RedirFile,MsgTimeStr+MsgLocStr+MsgTypeStr+S);
+           Flush(Status.RedirFile);
            end
          else
            begin
-             write(MsgTimeStr+MsgLocStr);
+             Write(MsgTimeStr+MsgLocStr);
              WriteMsgTypeColored(Output,MsgTypeStr);
-             writeln(s);
+             WriteLn(S);
            end;
        end;
    end;
   { include everything in the bugreport file }
-  if status.use_bugreport then
+  if Status.UseBugReport then
     begin
-      Write(status.reportbugfile,hexstr(level,8)+':');
-      Writeln(status.reportbugfile,MsgTimeStr+MsgLocStr+MsgTypeStr+s);
+      Write(Status.ReportBugFile,HexStr(Level,8)+':');
+      WriteLn(Status.ReportBugFile,MsgTimeStr+MsgLocStr+MsgTypeStr+S);
     end;
 end;
 
 
-function def_internalerror(i : longint) : boolean;
+function Def_InternalError(I : LongInt) : Boolean;
 begin
-  result:=def_internalerrorex(i,'');
+  Result:=Def_InternalErrorEx(I,'');
 end;
 
-function def_internalerrorex(i : longint; const s : ansistring) : boolean;
+function Def_InternalErrorEx(I : LongInt; const S : AnsiString) : Boolean;
 var
-  msg : ansistring;
+  Msg : AnsiString;
 begin
-  msg:=S;
-  if msg<>'' then
-    msg:=': '+msg;
-  msg:='Internal error '+tostr(i)+msg;
-  do_comment(V_Fatal+V_LineInfo,msg);
+  Msg:=S;
+  if Msg<>'' then
+    Msg:=': '+Msg;
+  Msg:='Internal error '+ToStr(I)+Msg;
+  Do_Comment(VFatal+VLineInfo,Msg);
 {$ifdef EXTDEBUG}
   { Internalerror() and def_internalerror() do not
     have a stackframe }
-  dump_stack(stdout,get_caller_frame(get_frame));
+  Dump_Stack(StdOut,Get_Caller_Frame(Get_Frame));
 {$endif EXTDEBUG}
-  def_internalerrorex:=true;
+  Def_InternalErrorEx:=True;
 end;
 
-function def_CheckVerbosity(v:longint):boolean;
+function Def_CheckVerbosity(V:LongInt):Boolean;
 begin
-  result:=status.use_bugreport or
-          ((v<>V_None) and
-           ((status.verbosity and (v and V_LevelMask))=(v and V_LevelMask)));
+  Result:=Status.UseBugReport or
+          ((V<>VNone) and
+           ((Status.Verbosity and (V and VLevelMask))=(V and VLevelMask)));
 end;
 
-procedure def_initsymbolinfo;
-begin
-end;
-
-procedure def_donesymbolinfo;
+procedure Def_InitSymbolInfo;
 begin
 end;
 
-procedure def_extractsymbolinfo;
+procedure Def_DoneSymbolInfo;
 begin
 end;
 
-function  def_openinputfile(const filename: TPathStr): tinputfile;
+procedure Def_ExtractSymbolInfo;
 begin
-  def_openinputfile:=tdosinputfile.create(filename);
+end;
+
+function  Def_OpenInputFile(const FileName: TPathStr): TInputFile;
+begin
+  Def_OpenInputFile:=TDOSInputFile.Create(FileName);
 end;
 
 
-Function def_GetNamedFileTime (Const F : TPathStr) : Longint;
+Function Def_GetNamedFileTime (Const F : TPathStr) : LongInt;
 begin
   Result:=FileAge(F);
 end;

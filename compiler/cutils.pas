@@ -30,23 +30,23 @@ unit cutils;
 interface
 
   uses
-    tpcompilerreal,constexp;
+    TPCompilerReal,ConstExp;
 
   type
-    Tcharset=set of char;
+    Tcharset=set of Char;
 
   var
-    internalerrorproc : procedure(i:longint);
+    InternalErrorProc : procedure(i:LongInt);
 
 
     {# Returns the minimal value between @var(a) and @var(b) }
-    function min(a,b : longint) : longint;{$ifdef USEINLINE}inline;{$endif}
-    function min(a,b : int64) : int64;{$ifdef USEINLINE}inline;{$endif}
-    function min(a,b : qword) : qword;{$ifdef USEINLINE}inline;{$endif}
+    function Min(A,B : LongInt) : LongInt;{$ifdef USEINLINE}inline;{$endif}
+    function Min(A,B : Int64) : Int64;{$ifdef USEINLINE}inline;{$endif}
+    function Min(A,B : QWord) : QWord;{$ifdef USEINLINE}inline;{$endif}
     {# Returns the maximum value between @var(a) and @var(b) }
-    function max(a,b : longint) : longint;{$ifdef USEINLINE}inline;{$endif}
-    function max(a,b : int64) : int64;{$ifdef USEINLINE}inline;{$endif}
-    function max(a,b : qword) : qword;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : LongInt) : LongInt;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : Int64) : Int64;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : QWord) : QWord;{$ifdef USEINLINE}inline;{$endif}
 
     { These functions are intentionally put here and not in the constexp unit.
       Since Tconstexprint may be automatically converted to int, which causes
@@ -55,119 +55,119 @@ interface
       potential bugs, caused by code unintentionally calling the int versions of
       min/max on Tconstexprint, because of only including cutils and forgetting
       the constexp unit in the uses clause. }
-    function min(const a,b : Tconstexprint) : Tconstexprint;{$ifdef USEINLINE}inline;{$endif}
-    function max(const a,b : Tconstexprint) : Tconstexprint;{$ifdef USEINLINE}inline;{$endif}
+    function Min(const A,B : TConstExprInt) : TConstExprInt;{$ifdef USEINLINE}inline;{$endif}
+    function Max(const A,B : TConstExprInt) : TConstExprInt;{$ifdef USEINLINE}inline;{$endif}
 
     {# Return value @var(i) aligned on @var(a) boundary }
-    function align(i,a:longint):longint;{$ifdef USEINLINE}inline;{$endif}
-    function align(i,a:int64):int64;{$ifdef USEINLINE}inline;{$endif}
-    function align(i,a:qword):qword;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:LongInt):LongInt;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:Int64):Int64;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:QWord):QWord;{$ifdef USEINLINE}inline;{$endif}
     { if you have an address aligned using "oldalignment" and add an
       offset of (a multiple of) offset to it, this function calculates
       the new minimally guaranteed alignment
     }
-    function newalignment(oldalignment: longint; offset: int64): longint;
+    function NewAlignment(OldAlignment: LongInt; Offset: Int64): LongInt;
     {# Return @var(b) with the bit order reversed }
-    function reverse_byte(b: byte): byte;
+    function Reverse_Byte(B: Byte): Byte;
     {# Return @var(w) with the bit order reversed }
-    function reverse_word(w: word): word;
+    function Reverse_Word(W: Word): Word;
     {# Return @var(l) with the bit order reversed }
-    function reverse_longword(l: longword): longword;
+    function Reverse_LongWord(L: LongWord): LongWord;
 
-    function next_prime(l: longint): longint;
+    function Next_Prime(L: LongInt): LongInt;
 
-    function used_align(varalign,minalign,maxalign:longint):longint;
-    function isbetteralignedthan(new, org, limit: cardinal): boolean;
-    function packedbitsloadsize(bitlen: int64) : int64;
-    procedure Replace(var s:ShortString;s1:ShortString;const s2:ShortString);
-    procedure Replace(var s:AnsiString;s1:ShortString;const s2:AnsiString);
-    procedure ReplaceCase(var s:ShortString;const s1,s2:ShortString);
-    procedure ReplaceCase(var s:ansistring;const s1,s2:ansistring);
-    Function MatchPattern(const pattern,what:string):boolean;
-    function upper(const c : char) : char;
-    function upper(const s : ShortString) : ShortString;
-    function upper(const s : ansistring) : ansistring;
-    function lower(const c : char) : char;
-    function lower(const s : ShortString) : ShortString;
-    function lower(const s : ansistring) : ansistring;
-    function rpos(const needle: char; const haystack: shortstring): longint; overload;
-    function rpos(const needle: shortstring; const haystack: shortstring): longint; overload;
-    function trimspace(const s:ShortString):ShortString;
-    function trimspace(const s:AnsiString):AnsiString;
-    function space (b : longint): ShortString;
+    function Used_Align(VarAlign,MinAlign,MaxAlign:LongInt):LongInt;
+    function IsBetterAlignedThan(New, Org, Limit: Cardinal): Boolean;
+    function PackedBitsLoadSize(BitLen: Int64) : Int64;
+    procedure Replace(var S:ShortString;S1:ShortString;const S2:ShortString);
+    procedure Replace(var S:AnsiString;S1:ShortString;const S2:AnsiString);
+    procedure ReplaceCase(var S:ShortString;const S1,S2:ShortString);
+    procedure ReplaceCase(var S:AnsiString;const S1,S2:AnsiString);
+    Function MatchPattern(const Pattern,What:string):Boolean;
+    function Upper(const C : Char) : Char;
+    function Upper(const S : ShortString) : ShortString;
+    function Upper(const S : AnsiString) : AnsiString;
+    function Lower(const C : Char) : Char;
+    function Lower(const S : ShortString) : ShortString;
+    function Lower(const S : AnsiString) : AnsiString;
+    function RPos(const Needle: Char; const Haystack: ShortString): LongInt; overload;
+    function RPos(const Needle: ShortString; const Haystack: ShortString): LongInt; overload;
+    function TrimSpace(const S:ShortString):ShortString;
+    function TrimSpace(const S:AnsiString):AnsiString;
+    function Space (B : LongInt): ShortString;
     { returns the position of the first char of the set cs in s, if there is none, then it returns 0 }
-    function PosCharset(const cs : TCharSet;const s : ansistring) : integer;
-    function PadSpace(const s:ShortString;len:longint):ShortString;
-    function PadSpace(const s:AnsiString;len:longint):AnsiString;
-    function GetToken(var s:ShortString;endchar:char):ShortString;
-    function GetToken(var s:ansistring;endchar:char):ansistring;
-    procedure uppervar(var s : ShortString);
-    function realtostr(e:bestreal):string;{$ifdef USEINLINE}inline;{$endif}
-    function tostr(i : qword) : string;{$ifdef USEINLINE}inline;{$endif}overload;
-    function tostr(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
-    function tostr(i : longint) : string;{$ifdef USEINLINE}inline;{$endif}overload;
-    function tostr_with_plus(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}
-    function DStr(l:longint):string;
+    function PosCharset(const CS : TCharSet;const S : AnsiString) : Integer;
+    function PadSpace(const S:ShortString;Len:LongInt):ShortString;
+    function PadSpace(const S:AnsiString;Len:LongInt):AnsiString;
+    function GetToken(var S:ShortString;EndChar:Char):ShortString;
+    function GetToken(var S:AnsiString;EndChar:Char):AnsiString;
+    procedure UpperVar(var S : ShortString);
+    function RealToStr(E:BestReal):string;{$ifdef USEINLINE}inline;{$endif}
+    function ToStr(I : QWord) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+    function ToStr(I : Int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+    function ToStr(I : LongInt) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+    function ToStr_With_Plus(I : Int64) : string;{$ifdef USEINLINE}inline;{$endif}
+    function DStr(L:LongInt):string;
     {# Returns true if the string s is a number }
-    function is_number(const s : string) : boolean;{$ifdef USEINLINE}inline;{$endif}
+    function Is_Number(const S : string) : Boolean;{$ifdef USEINLINE}inline;{$endif}
     {# Returns true if value is a power of 2, the actual
        exponent value is returned in power.
     }
-    function ispowerof2(value : int64;out power : longint) : boolean;
-    function ispowerof2(const value : Tconstexprint;out power : longint) : boolean;
+    function IsPowerOf2(Value : Int64;out Power : LongInt) : Boolean;
+    function IsPowerOf2(const Value : TConstExprInt;out Power : LongInt) : Boolean;
     {# Returns true if abs(value) is a power of 2, the actual
        exponent value is returned in power.
     }
-    function isabspowerof2(const value : Tconstexprint; out power : longint) : boolean;
+    function IsAbsPowerOf2(const Value : TConstExprInt; out Power : LongInt) : Boolean;
     { # Returns the power of 2 >= value }
-    function nextpowerof2(value : qword; out power: longint) : qword;
+    function NextPowerOf2(Value : QWord; out Power: LongInt) : QWord;
 
-    function backspace_quote(const s:string;const qchars:Tcharset):string;
-    function octal_quote(const s:string;const qchars:Tcharset):string;
+    function Backspace_Quote(const S:string;const QChars:TCharSet):string;
+    function Octal_Quote(const S:string;const QChars:TCharSet):string;
 
     {# If the string is quoted, in accordance with pascal, it is
        dequoted and returned in s, and the function returns true.
        If it is not quoted, or if the quoting is bad, s is not touched,
        and false is returned.
     }
-    function DePascalQuote(var s: ansistring): Boolean;
+    function DePascalQuote(var S: AnsiString): Boolean;
     function CompareStr(const S1, S2: ShortString): Integer;
-    function CompareText(S1, S2: ShortString): integer;
+    function CompareText(S1, S2: ShortString): Integer;
 
     { releases the string p and assigns nil to p  }
     { if p=nil then freemem isn't called          }
-    procedure stringdispose(var p : pshortstring);{$ifdef USEINLINE}inline;{$endif}
+    procedure StringDispose(var P : PShortString);{$ifdef USEINLINE}inline;{$endif}
 
 
     { allocates mem for a copy of s, copies s to this mem and returns }
     { a pointer to this mem                                           }
-    function stringdup(const s : shortstring) : pshortstring;{$ifdef USEINLINE}inline;{$endif}
-    function stringdup(const s : ansistring) : pshortstring;{$ifdef USEINLINE}inline;{$endif}
+    function StringDup(const S : ShortString) : PShortString;{$ifdef USEINLINE}inline;{$endif}
+    function StringDup(const S : AnsiString) : PShortString;{$ifdef USEINLINE}inline;{$endif}
 
     {# Allocates memory for the string @var(s) and copies s as zero
        terminated string to that allocated memory and returns a pointer
        to that mem
     }
-    function  strpnew(const s : ShortString) : pchar;
-    function  strpnew(const s : ansistring) : pchar;
+    function  StrPNew(const S : ShortString) : PChar;
+    function  StrPNew(const S : AnsiString) : PChar;
 
     {# makes the character @var(c) lowercase, with spanish, french and german
        character set
     }
-    function lowercase(c : char) : char;
+    function LowerCase(C : Char) : Char;
 
     { allocate a new pchar with the contents of a}
-    function ansistring2pchar(const a: ansistring) : pchar;
+    function AnsiString2PChar(const A: AnsiString) : PChar;
 
     { Ansistring (pchar+length) support }
-    procedure ansistringdispose(var p : pchar;length : longint);
-    function compareansistrings(p1,p2 : pchar;length1,length2 : longint) : longint;
-    function concatansistrings(p1,p2 : pchar;length1,length2 : longint) : pchar;
+    procedure AnsiStringDispose(var P : PChar;Length : LongInt);
+    function CompareAnsiStrings(P1,P2 : PChar;Length1,Length2 : LongInt) : LongInt;
+    function ConcatAnsiStrings(P1,P2 : PChar;Length1,Length2 : LongInt) : PChar;
 
-    function LengthUleb128(a: qword) : byte;
-    function LengthSleb128(a: int64) : byte;
-    function EncodeUleb128(a: qword;out buf;len: byte) : byte;
-    function EncodeSleb128(a: int64;out buf;len: byte) : byte;
+    function LengthULEB128(A: QWord) : Byte;
+    function LengthSLEB128(A: Int64) : Byte;
+    function EncodeULEB128(A: QWord;out Buf;Len: Byte) : Byte;
+    function EncodeSLEB128(A: Int64;out Buf;Len: Byte) : Byte;
 
   { hide Sysutils.ExecuteProcess in units using this one after SysUtils}
   const
@@ -179,107 +179,107 @@ implementation
       SysUtils;
 
     var
-      uppertbl,
-      lowertbl  : array[char] of char;
+      UpperTbl,
+      LowerTbl  : array[Char] of Char;
 
 
-    function min(a,b : longint) : longint;{$ifdef USEINLINE}inline;{$endif}
+    function Min(A,B : LongInt) : LongInt;{$ifdef USEINLINE}inline;{$endif}
     {
       return the minimal of a and b
     }
       begin
-         if a<=b then
-           min:=a
+         if A<=B then
+           Min:=A
          else
-           min:=b;
+           Min:=B;
       end;
 
 
-    function min(a,b : int64) : int64;{$ifdef USEINLINE}inline;{$endif}
+    function Min(A,B : Int64) : Int64;{$ifdef USEINLINE}inline;{$endif}
     {
       return the minimal of a and b
     }
       begin
-         if a<=b then
-           min:=a
+         if A<=B then
+           Min:=A
          else
-           min:=b;
+           Min:=B;
       end;
 
 
-    function min(const a,b : Tconstexprint) : Tconstexprint;{$ifdef USEINLINE}inline;{$endif}
+    function Min(const A,B : TConstExprInt) : TConstExprInt;{$ifdef USEINLINE}inline;{$endif}
     {
       return the minimal of a and b
     }
       begin
-         if a<=b then
-           min:=a
+         if A<=B then
+           Min:=A
          else
-           min:=b;
+           Min:=B;
       end;
 
 
-    function min(a,b : qword) : qword;
+    function Min(A,B : QWord) : QWord;
     {
       return the minimal of a and b
     }
       begin
-         if a<=b then
-           min:=a
+         if A<=B then
+           Min:=A
          else
-           min:=b;
+           Min:=B;
       end;
 
 
-    function max(a,b : longint) : longint;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : LongInt) : LongInt;{$ifdef USEINLINE}inline;{$endif}
     {
       return the maximum of a and b
     }
       begin
-         if a>=b then
-           max:=a
+         if A>=B then
+           Max:=A
          else
-           max:=b;
+           Max:=B;
       end;
 
 
-    function max(a,b : int64) : int64;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : Int64) : Int64;{$ifdef USEINLINE}inline;{$endif}
     {
       return the maximum of a and b
     }
       begin
-         if a>=b then
-           max:=a
+         if A>=B then
+           Max:=A
          else
-           max:=b;
+           Max:=B;
       end;
 
 
-    function max(a,b : qword) : qword;{$ifdef USEINLINE}inline;{$endif}
+    function Max(A,B : QWord) : QWord;{$ifdef USEINLINE}inline;{$endif}
     {
       return the maximum of a and b
     }
       begin
-         if a>=b then
-           max:=a
+         if A>=B then
+           Max:=A
          else
-           max:=b;
+           Max:=B;
       end;
 
 
-    function max(const a,b : Tconstexprint) : Tconstexprint;{$ifdef USEINLINE}inline;{$endif}
+    function Max(const A,B : TConstExprInt) : TConstExprInt;{$ifdef USEINLINE}inline;{$endif}
     {
       return the maximum of a and b
     }
       begin
-         if a>=b then
-           max:=a
+         if A>=B then
+           Max:=A
          else
-           max:=b;
+           Max:=B;
       end;
 
 
-    function newalignment(oldalignment: longint; offset: int64): longint;
+    function NewAlignment(OldAlignment: LongInt; Offset: Int64): LongInt;
       begin
         { oldalignment must be power of two.
 
@@ -287,47 +287,47 @@ implementation
           "x and -x" extracts this tail of 'x'.
           Said tail of "oldalignment or offset" is the desired answer. }
 
-        result:=oldalignment or longint(offset); { high part of offset won't matter as long as alignment is 32-bit }
-        result:=result and -result;
+        Result:=OldAlignment or LongInt(Offset); { high part of offset won't matter as long as alignment is 32-bit }
+        Result:=Result and -Result;
       end;
 
 
-    function reverse_byte(b: byte): byte;
+    function Reverse_Byte(B: Byte): Byte;
       const
-        reverse_nible:array[0..15] of 0..15 =
+        ReverseNibble:array[0..15] of 0..15 =
           (%0000,%1000,%0100,%1100,%0010,%1010,%0110,%1110,
            %0001,%1001,%0101,%1101,%0011,%1011,%0111,%1111);
       begin
-        reverse_byte:=(reverse_nible[b and $f] shl 4) or reverse_nible[b shr 4];
+        Reverse_Byte:=(ReverseNibble[B and $f] shl 4) or ReverseNibble[B shr 4];
       end;
 
-    function reverse_word(w: word): word;
+    function Reverse_Word(W: Word): Word;
       type
         TWordRec = packed record
-          hi, lo: Byte;
+          HI, LO: Byte;
         end;
 
       begin
-        TWordRec(reverse_word).hi := reverse_byte(TWordRec(w).lo);
-        TWordRec(reverse_word).lo := reverse_byte(TWordRec(w).hi);
+        TWordRec(Reverse_Word).HI := Reverse_Byte(TWordRec(W).LO);
+        TWordRec(Reverse_Word).LO := Reverse_Byte(TWordRec(W).HI);
       end;
 
 
-    function reverse_longword(l: longword): longword;
+    function Reverse_LongWord(L: LongWord): LongWord;
       type
         TLongWordRec = packed record
-          b: array[0..3] of Byte;
+          B: array[0..3] of Byte;
         end;
 
       begin
-        TLongWordRec(reverse_longword).b[0] := reverse_byte(TLongWordRec(l).b[3]);
-        TLongWordRec(reverse_longword).b[1] := reverse_byte(TLongWordRec(l).b[2]);
-        TLongWordRec(reverse_longword).b[2] := reverse_byte(TLongWordRec(l).b[1]);
-        TLongWordRec(reverse_longword).b[3] := reverse_byte(TLongWordRec(l).b[0]);
+        TLongWordRec(Reverse_LongWord).B[0] := Reverse_Byte(TLongWordRec(L).B[3]);
+        TLongWordRec(Reverse_LongWord).B[1] := Reverse_Byte(TLongWordRec(L).B[2]);
+        TLongWordRec(Reverse_LongWord).B[2] := Reverse_Byte(TLongWordRec(L).B[1]);
+        TLongWordRec(Reverse_LongWord).B[3] := Reverse_Byte(TLongWordRec(L).B[0]);
       end;
 
 
-    function align(i,a:longint):longint;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:LongInt):LongInt;{$ifdef USEINLINE}inline;{$endif}
     {
       return value <i> aligned <a> boundary. <a> must be power of two.
     }
@@ -337,49 +337,49 @@ implementation
           and for i < 0 is
           >>> i and not (a - 1). }
 
-        if a>0 then
-          a:=a-1; { 'a' is decremented beforehand, this also allows a=0 as a synonym for a=1. }
-        if i>=0 then
-          i:=i+a;
-        result:=i and not a;
+        if A>0 then
+          A:=A-1; { 'a' is decremented beforehand, this also allows a=0 as a synonym for a=1. }
+        if I>=0 then
+          I:=I+A;
+        Result:=I and not A;
       end;
 
 
-    function align(i,a:int64):int64;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:Int64):Int64;{$ifdef USEINLINE}inline;{$endif}
     {
       return value <i> aligned <a> boundary. <a> must be power of two.
     }
       begin
         { Copy of 'longint' version. }
-        if a>0 then
-          a:=a-1;
-        if i>=0 then
-          i:=i+a;
-        result:=i and not a;
+        if A>0 then
+          A:=A-1;
+        if I>=0 then
+          I:=I+A;
+        Result:=I and not A;
       end;
 
 
-    function align(i,a:qword):qword;{$ifdef USEINLINE}inline;{$endif}
+    function Align(I,A:QWord):QWord;{$ifdef USEINLINE}inline;{$endif}
     {
       return value <i> aligned <a> boundary. <a> must be power of two.
     }
       begin
         { No i < 0 case here. }
-        if a>0 then
-          a:=a-1;
-        result:=(i+a) and not a;
+        if A>0 then
+          A:=A-1;
+        Result:=(I+A) and not A;
       end;
 
 
-    function packedbitsloadsize(bitlen: int64) : int64;
+    function PackedBitsLoadSize(BitLen: Int64) : Int64;
       begin
-         case bitlen of
+         case BitLen of
            1,2,4,8:
-             result := 1;
+             Result := 1;
            { 10 bits can never be split over 3 bytes via 1-8-1, because it }
            { always starts at a multiple of 10 bits. Same for the others.  }
            3,5,6,7,9,10,12,16:
-             result := 2;
+             Result := 2;
   {$ifdef cpu64bitalu}
            { performance penalty for unaligned 8 byte access is much   }
            { higher than for unaligned 4 byte access, at least on ppc, }
@@ -387,856 +387,856 @@ implementation
            { always loaded using a single 8 byte load (e.g. in case of }
            { 28 bit values)                                            }
            11,13,14,15,17..32:
-             result := 4;
+             Result := 4;
            else
-             result := 8;
+             Result := 8;
   {$else cpu64bitalu}
            else
-             result := 4;
+             Result := 4;
   {$endif cpu64bitalu}
          end;
       end;
 
 
-    function isbetteralignedthan(new, org, limit: cardinal): boolean;
+    function IsBetterAlignedThan(New, Org, Limit: Cardinal): Boolean;
       var
-        cnt: cardinal;
+        Cnt: Cardinal;
       begin
-        cnt:=2;
-        while (cnt <= limit) do
+        Cnt:=2;
+        while (Cnt <= Limit) do
           begin
-            if (org and (cnt-1)) > (new and (cnt-1)) then
+            if (Org and (Cnt-1)) > (New and (Cnt-1)) then
               begin
-                result:=true;
-                exit;
+                Result:=True;
+                Exit;
               end
-            else if (org and (cnt-1)) < (new and (cnt-1)) then
+            else if (Org and (Cnt-1)) < (New and (Cnt-1)) then
               begin
-                result:=false;
-                exit;
+                Result:=False;
+                Exit;
               end;
-            cnt:=cnt*2;
+            Cnt:=Cnt*2;
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    function next_prime(l: longint): longint;
+    function Next_Prime(L: LongInt): LongInt;
       var
-        check, checkbound: longint;
-        ok: boolean;
+        Check, CheckBound: LongInt;
+        Ok: Boolean;
       begin
-        result:=l or 1;
-        while l<high(longint) do
+        Result:=L or 1;
+        while L<High(LongInt) do
           begin
-            ok:=true;
-            checkbound:=trunc(sqrt(l));
-            check:=3;
-            while check<checkbound do
+            Ok:=True;
+            CheckBound:=Trunc(Sqrt(L));
+            Check:=3;
+            while Check<CheckBound do
               begin
-                if (l mod check) = 0 then
+                if (L mod Check) = 0 then
                   begin
-                    ok:=false;
-                    break;
+                    Ok:=False;
+                    Break;
                   end;
-                inc(check,2);
+                Inc(Check,2);
               end;
-            if ok then
-              exit;
-            inc(l);
+            if Ok then
+              Exit;
+            Inc(L);
           end;
       end;
 
 
-    function used_align(varalign,minalign,maxalign:longint):longint;
+    function Used_Align(VarAlign,MinAlign,MaxAlign:LongInt):LongInt;
       begin
         { varalign  : minimum alignment required for the variable
           minalign  : Minimum alignment of this structure, 0 = undefined
           maxalign  : Maximum alignment of this structure, 0 = undefined }
-        if (minalign>0) and
-           (varalign<=minalign) then
-         used_align:=minalign
+        if (MinAlign>0) and
+           (VarAlign<=MinAlign) then
+         Used_Align:=MinAlign
         else
          begin
-           if (maxalign>0) and
-              (varalign>maxalign) then
-            used_align:=maxalign
+           if (MaxAlign>0) and
+              (VarAlign>MaxAlign) then
+            Used_Align:=MaxAlign
            else
-            used_align:=varalign;
+            Used_Align:=VarAlign;
          end;
       end;
 
 
-    procedure Replace(var s:ShortString;s1:ShortString;const s2:ShortString);
+    procedure Replace(var S:ShortString;S1:ShortString;const S2:ShortString);
       var
-         last,
-         i  : longint;
+         Last,
+         I  : LongInt;
       begin
-        s1:=upper(s1);
-        last:=0;
+        S1:=Upper(S1);
+        Last:=0;
         repeat
-          i:=pos(s1,upper(s));
-          if i=last then
-           i:=0;
-          if (i>0) then
+          I:=Pos(S1,Upper(S));
+          if I=Last then
+           I:=0;
+          if (I>0) then
            begin
-             Delete(s,i,length(s1));
-             Insert(s2,s,i);
-             last:=i;
+             Delete(S,I,Length(S1));
+             Insert(S2,S,I);
+             Last:=I;
            end;
-        until (i=0);
+        until (I=0);
       end;
 
 
-    procedure Replace(var s:AnsiString;s1:ShortString;const s2:AnsiString);
+    procedure Replace(var S:AnsiString;S1:ShortString;const S2:AnsiString);
       var
-         last,
-         i  : longint;
+         Last,
+         I  : LongInt;
       begin
-        s1:=upper(s1);
-        last:=0;
+        S1:=Upper(S1);
+        Last:=0;
         repeat
-          i:=pos(s1,upper(s));
-          if i=last then
-           i:=0;
-          if (i>0) then
+          I:=Pos(S1,Upper(S));
+          if I=Last then
+           I:=0;
+          if (I>0) then
            begin
-             Delete(s,i,length(s1));
-             Insert(s2,s,i);
-             last:=i;
+             Delete(S,I,Length(S1));
+             Insert(S2,S,I);
+             Last:=I;
            end;
-        until (i=0);
+        until (I=0);
       end;
 
 
-    procedure ReplaceCase(var s:ShortString;const s1,s2:ShortString);
+    procedure ReplaceCase(var S:ShortString;const S1,S2:ShortString);
       var
-         last,
-         i  : longint;
+         Last,
+         I  : LongInt;
       begin
-        last:=0;
+        Last:=0;
         repeat
-          i:=pos(s1,s);
-          if i=last then
-           i:=0;
-          if (i>0) then
+          I:=Pos(S1,S);
+          if I=Last then
+           I:=0;
+          if (I>0) then
            begin
-             Delete(s,i,length(s1));
-             Insert(s2,s,i);
-             last:=i;
+             Delete(S,I,Length(S1));
+             Insert(S2,S,I);
+             Last:=I;
            end;
-        until (i=0);
+        until (I=0);
       end;
 
 
-    procedure ReplaceCase(var s: ansistring; const s1, s2: ansistring);
+    procedure ReplaceCase(var S: AnsiString; const S1, S2: AnsiString);
       var
-         last,
-         i  : longint;
+         Last,
+         I  : LongInt;
       begin
-        last:=0;
+        Last:=0;
         repeat
-          i:=pos(s1,s);
-          if i=last then
-           i:=0;
-          if (i>0) then
+          I:=Pos(S1,S);
+          if I=Last then
+           I:=0;
+          if (I>0) then
            begin
-             Delete(s,i,length(s1));
-             Insert(s2,s,i);
-             last:=i;
+             Delete(S,I,Length(S1));
+             Insert(S2,S,I);
+             Last:=I;
            end;
-        until (i=0);
+        until (I=0);
       end;
 
 
-    Function MatchPattern(const pattern,what:string):boolean;
+    Function MatchPattern(const Pattern,What:string):Boolean;
       var
-        found : boolean;
-        i1,i2 : longint;
+        Found : Boolean;
+        I1,I2 : LongInt;
       begin
-        i1:=0;
-        i2:=0;
-        if pattern='' then
+        I1:=0;
+        I2:=0;
+        if Pattern='' then
           begin
-            result:=(what='');
-            exit;
+            Result:=(What='');
+            Exit;
           end;
-        found:=true;
+        Found:=True;
         repeat
-          inc(i1);
-          if (i1>length(pattern)) then
-            break;
-          inc(i2);
-          if (i2>length(what)) then
-            break;
-          case pattern[i1] of
+          Inc(I1);
+          if (I1>Length(Pattern)) then
+            Break;
+          Inc(I2);
+          if (I2>Length(What)) then
+            Break;
+          case Pattern[I1] of
             '?' :
-              found:=true;
+              Found:=True;
             '*' :
               begin
-                found:=true;
-                if (i1=length(pattern)) then
-                 i2:=length(what)
+                Found:=True;
+                if (I1=Length(Pattern)) then
+                 I2:=Length(What)
                 else
-                 if (i1<length(pattern)) and (pattern[i1+1]<>what[i2]) then
+                 if (I1<Length(Pattern)) and (Pattern[I1+1]<>What[I2]) then
                   begin
-                    if i2<length(what) then
-                     dec(i1)
+                    if I2<Length(What) then
+                     Dec(I1)
                   end
                 else
-                 if i2>1 then
-                  dec(i2);
+                 if I2>1 then
+                  Dec(I2);
               end;
             else
-              found:=(pattern[i1]=what[i2]) or (what[i2]='?');
+              Found:=(Pattern[I1]=What[I2]) or (What[I2]='?');
           end;
-        until not found;
-        if found then
+        until not Found;
+        if Found then
           begin
-            found:=(i2>=length(what)) and
+            Found:=(I2>=Length(What)) and
                    (
-                    (i1>length(pattern)) or
-                    ((i1=length(pattern)) and
-                     (pattern[i1]='*'))
+                    (I1>Length(Pattern)) or
+                    ((I1=Length(Pattern)) and
+                     (Pattern[I1]='*'))
                    );
           end;
-        result:=found;
+        Result:=Found;
       end;
 
 
-    function upper(const c : char) : char;
+    function Upper(const C : Char) : Char;
     {
       return uppercase of c
     }
       begin
-        upper:=uppertbl[c];
+        Upper:=UpperTbl[C];
       end;
 
 
-    function upper(const s : ShortString) : ShortString;
+    function Upper(const S : ShortString) : ShortString;
     {
       return uppercased string of s
     }
       var
-        i  : longint;
+        I  : LongInt;
       begin
-        for i:=1 to length(s) do
-          upper[i]:=uppertbl[s[i]];
-        upper[0]:=s[0];
+        for I:=1 to Length(S) do
+          Upper[I]:=UpperTbl[S[I]];
+        Upper[0]:=S[0];
       end;
 
 
-    function upper(const s : ansistring) : ansistring;
+    function Upper(const S : AnsiString) : AnsiString;
     {
       return uppercased string of s
     }
       var
-        i,n : sizeint;
+        I,N : SizeInt;
       begin
-        Result:=s;
-        n:=length(s);
-        i:=0;
-        while i<n do
-          if PChar(Pointer(s))[i] in ['a'..'z'] then
+        Result:=S;
+        N:=Length(S);
+        I:=0;
+        while I<N do
+          if PChar(Pointer(S))[I] in ['a'..'z'] then
             begin
               UniqueString(Result);
               repeat
-                PChar(Pointer(Result))[i]:=uppertbl[PChar(Pointer(s))[i]];
-                inc(i);
-              until i=n;
-              exit;
+                PChar(Pointer(Result))[I]:=UpperTbl[PChar(Pointer(S))[I]];
+                Inc(I);
+              until I=N;
+              Exit;
             end
           else
-            inc(i);
+            Inc(I);
       end;
 
 
-    function lower(const c : char) : char;
+    function Lower(const C : Char) : Char;
     {
       return lowercase of c
     }
       begin
-        lower:=lowertbl[c];
+        Lower:=LowerTbl[C];
       end;
 
 
-    function lower(const s : ShortString) : ShortString;
+    function Lower(const S : ShortString) : ShortString;
     {
       return lowercased string of s
     }
       var
-        i : longint;
+        I : LongInt;
       begin
-        for i:=1 to length(s) do
-          lower[i]:=lowertbl[s[i]];
-        lower[0]:=s[0];
+        for I:=1 to Length(S) do
+          Lower[I]:=LowerTbl[S[I]];
+        Lower[0]:=S[0];
       end;
 
 
-    function lower(const s : ansistring) : ansistring;
+    function Lower(const S : AnsiString) : AnsiString;
     {
       return lowercased string of s
     }
       var
-        i,n : sizeint;
+        I,N : SizeInt;
       begin
-        Result:=s;
-        n:=length(s);
-        i:=0;
-        while i<n do
-          if PChar(Pointer(s))[i] in ['A'..'Z'] then
+        Result:=S;
+        N:=Length(S);
+        I:=0;
+        while I<N do
+          if PChar(Pointer(S))[I] in ['A'..'Z'] then
             begin
               UniqueString(Result);
               repeat
-                PChar(Pointer(Result))[i]:=lowertbl[PChar(Pointer(s))[i]];
-                inc(i);
-              until i=n;
-              exit;
+                PChar(Pointer(Result))[I]:=LowerTbl[PChar(Pointer(S))[I]];
+                Inc(I);
+              until I=N;
+              Exit;
             end
           else
-            inc(i);
+            Inc(I);
       end;
 
 
-    procedure uppervar(var s : ShortString);
+    procedure UpperVar(var S : ShortString);
     {
       uppercase string s
     }
       var
-         i : longint;
+         I : LongInt;
       begin
-         for i:=1 to length(s) do
-          s[i]:=uppertbl[s[i]];
+         for I:=1 to Length(S) do
+          S[I]:=UpperTbl[S[I]];
       end;
 
 
-    procedure initupperlower;
+    procedure InitUpperLower;
       var
-        c : char;
+        C : Char;
       begin
-        for c:=#0 to #255 do
+        for C:=#0 to #255 do
          begin
-           lowertbl[c]:=c;
-           uppertbl[c]:=c;
-           case c of
+           LowerTbl[C]:=C;
+           UpperTbl[C]:=C;
+           case C of
              'A'..'Z' :
-               lowertbl[c]:=char(byte(c)+32);
+               LowerTbl[C]:=Char(Byte(C)+32);
              'a'..'z' :
-               uppertbl[c]:=char(byte(c)-32);
+               UpperTbl[C]:=Char(Byte(C)-32);
            end;
          end;
       end;
 
 
-    function DStr(l:longint):string;
+    function DStr(L:LongInt):string;
       var
         TmpStr : string[32];
-        i : longint;
+        I : LongInt;
       begin
-        Str(l,TmpStr);
-        i:=Length(TmpStr);
-        while (i>3) do
+        Str(L,TmpStr);
+        I:=Length(TmpStr);
+        while (I>3) do
          begin
-           dec(i,3);
-           if TmpStr[i]<>'-' then
-            insert('.',TmpStr,i+1);
+           Dec(I,3);
+           if TmpStr[I]<>'-' then
+            Insert('.',TmpStr,I+1);
          end;
         DStr:=TmpStr;
       end;
 
 
-    function rpos(const needle: char; const haystack: shortstring): longint;
+    function RPos(const Needle: Char; const Haystack: ShortString): LongInt;
       begin
-        result:=length(haystack);
-        while (result>0) do
+        Result:=Length(Haystack);
+        while (Result>0) do
           begin
-            if haystack[result]=needle then
-              exit;
-            dec(result);
+            if Haystack[Result]=Needle then
+              Exit;
+            Dec(Result);
           end;
       end;
 
 
-    function rpos(const needle: shortstring; const haystack: shortstring): longint;
+    function RPos(const Needle: ShortString; const Haystack: ShortString): LongInt;
       begin
-        result:=0;
-        if (length(needle)=0) or
-           (length(needle)>length(haystack)) then
-          exit;
-        result:=length(haystack)-length(needle)+1;
+        Result:=0;
+        if (Length(Needle)=0) or
+           (Length(Needle)>Length(Haystack)) then
+          Exit;
+        Result:=Length(Haystack)-Length(Needle)+1;
         repeat
-          if (haystack[result]=needle[1]) and
-             (CompareByte(haystack[result],needle[1],length(needle))=0) then
-            exit;
-          dec(result);
-        until result=0;
+          if (Haystack[Result]=Needle[1]) and
+             (CompareByte(Haystack[Result],Needle[1],Length(Needle))=0) then
+            Exit;
+          Dec(Result);
+        until Result=0;
       end;
 
 
-    function trimspace(const s:ShortString):ShortString;
+    function TrimSpace(const S:ShortString):ShortString;
     {
       return s with all leading and ending spaces and tabs removed
     }
       var
-        i,j : longint;
+        I,J : LongInt;
       begin
-        i:=length(s);
-        while (i>0) and (s[i] in [#9,' ']) do
-         dec(i);
-        j:=1;
-        while (j<i) and (s[j] in [#9,' ']) do
-         inc(j);
-        trimspace:=Copy(s,j,i-j+1);
+        I:=Length(S);
+        while (I>0) and (S[I] in [#9,' ']) do
+         Dec(I);
+        J:=1;
+        while (J<I) and (S[J] in [#9,' ']) do
+         Inc(J);
+        TrimSpace:=Copy(S,J,I-J+1);
       end;
 
 
-    function trimspace(const s:AnsiString):AnsiString;
+    function TrimSpace(const S:AnsiString):AnsiString;
     {
       return s with all leading and ending spaces and tabs removed
     }
       var
-        i,j : longint;
+        I,J : LongInt;
       begin
-        i:=length(s);
-        while (i>0) and (s[i] in [#9,' ']) do
-         dec(i);
-        j:=1;
-        while (j<i) and (s[j] in [#9,' ']) do
-         inc(j);
-        trimspace:=Copy(s,j,i-j+1);
+        I:=Length(S);
+        while (I>0) and (S[I] in [#9,' ']) do
+         Dec(I);
+        J:=1;
+        while (J<I) and (S[J] in [#9,' ']) do
+         Inc(J);
+        TrimSpace:=Copy(S,J,I-J+1);
       end;
 
 
-    function space (b : longint): ShortString;
+    function Space (B : LongInt): ShortString;
       var
-       s: ShortString;
+       S: ShortString;
       begin
-        space[0] := chr(b);
-        s[0] := chr(b);
-        FillChar (S[1],b,' ');
-        space:=s;
+        Space[0] := Chr(B);
+        S[0] := Chr(B);
+        FillChar (S[1],B,' ');
+        Space:=S;
       end;
 
 
-    function PadSpace(const s:ShortString;len:longint):ShortString;
+    function PadSpace(const S:ShortString;Len:LongInt):ShortString;
     {
       return s with spaces add to the end
     }
       begin
-         if length(s)<len then
-          PadSpace:=s+Space(len-length(s))
+         if Length(S)<Len then
+          PadSpace:=S+Space(Len-Length(S))
          else
-          PadSpace:=s;
+          PadSpace:=S;
       end;
 
 
-    function PadSpace(const s:AnsiString;len:longint):AnsiString;
+    function PadSpace(const S:AnsiString;Len:LongInt):AnsiString;
     {
       return s with spaces add to the end
     }
       begin
-         if length(s)<len then
-          PadSpace:=s+Space(len-length(s))
+         if Length(S)<Len then
+          PadSpace:=S+Space(Len-Length(S))
          else
-          PadSpace:=s;
+          PadSpace:=S;
       end;
 
 
-    function GetToken(var s:ShortString;endchar:char):ShortString;
+    function GetToken(var S:ShortString;EndChar:Char):ShortString;
       var
-        i : longint;
-        quote : char;
+        I : LongInt;
+        Quote : Char;
       begin
         GetToken:='';
-        s:=TrimSpace(s);
-        if (length(s)>0) and
-           (s[1] in ['''','"']) then
+        S:=TrimSpace(S);
+        if (Length(S)>0) and
+           (S[1] in ['''','"']) then
          begin
-           quote:=s[1];
-           i:=1;
-           while (i<length(s)) do
+           Quote:=S[1];
+           I:=1;
+           while (I<Length(S)) do
             begin
-              inc(i);
-              if s[i]=quote then
+              Inc(I);
+              if S[I]=Quote then
                begin
                  { Remove double quote }
-                 if (i<length(s)) and
-                    (s[i+1]=quote) then
+                 if (I<Length(S)) and
+                    (S[I+1]=Quote) then
                   begin
-                    Delete(s,i,1);
-                    inc(i);
+                    Delete(S,I,1);
+                    Inc(I);
                   end
                  else
                   begin
-                    GetToken:=Copy(s,2,i-2);
-                    Delete(s,1,i);
-                    exit;
+                    GetToken:=Copy(S,2,I-2);
+                    Delete(S,1,I);
+                    Exit;
                   end;
                end;
             end;
-           GetToken:=s;
-           s:='';
+           GetToken:=S;
+           S:='';
          end
         else
          begin
-           i:=pos(EndChar,s);
-           if i=0 then
+           I:=Pos(EndChar,S);
+           if I=0 then
             begin
-              GetToken:=s;
-              s:='';
-              exit;
+              GetToken:=S;
+              S:='';
+              Exit;
             end
            else
             begin
-              GetToken:=Copy(s,1,i-1);
-              Delete(s,1,i);
-              exit;
+              GetToken:=Copy(S,1,I-1);
+              Delete(S,1,I);
+              Exit;
             end;
          end;
       end;
 
 
-    function GetToken(var s:ansistring;endchar:char):ansistring;
+    function GetToken(var S:AnsiString;EndChar:Char):AnsiString;
       var
-        i : longint;
-        quote : char;
+        I : LongInt;
+        Quote : Char;
       begin
         GetToken:='';
-        s:=TrimSpace(s);
-        if (length(s)>0) and
-           (s[1] in ['''','"']) then
+        S:=TrimSpace(S);
+        if (Length(S)>0) and
+           (S[1] in ['''','"']) then
          begin
-           quote:=s[1];
-           i:=1;
-           while (i<length(s)) do
+           Quote:=S[1];
+           I:=1;
+           while (I<Length(S)) do
             begin
-              inc(i);
-              if s[i]=quote then
+              Inc(I);
+              if S[I]=Quote then
                begin
                  { Remove double quote }
-                 if (i<length(s)) and
-                    (s[i+1]=quote) then
+                 if (I<Length(S)) and
+                    (S[I+1]=Quote) then
                   begin
-                    Delete(s,i,1);
-                    inc(i);
+                    Delete(S,I,1);
+                    Inc(I);
                   end
                  else
                   begin
-                    GetToken:=Copy(s,2,i-2);
-                    Delete(s,1,i);
-                    exit;
+                    GetToken:=Copy(S,2,I-2);
+                    Delete(S,1,I);
+                    Exit;
                   end;
                end;
             end;
-           GetToken:=s;
-           s:='';
+           GetToken:=S;
+           S:='';
          end
         else
          begin
-           i:=pos(EndChar,s);
-           if i=0 then
+           I:=Pos(EndChar,S);
+           if I=0 then
             begin
-              GetToken:=s;
-              s:='';
-              exit;
+              GetToken:=S;
+              S:='';
+              Exit;
             end
            else
             begin
-              GetToken:=Copy(s,1,i-1);
-              Delete(s,1,i);
-              exit;
+              GetToken:=Copy(S,1,I-1);
+              Delete(S,1,I);
+              Exit;
             end;
          end;
       end;
 
 
-   function realtostr(e:bestreal):string;{$ifdef USEINLINE}inline;{$endif}
+   function RealToStr(E:BestReal):string;{$ifdef USEINLINE}inline;{$endif}
      begin
-        str(e,result);
+        Str(E,Result);
      end;
 
 
-   function tostr(i : qword) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+   function ToStr(I : QWord) : string;{$ifdef USEINLINE}inline;{$endif}overload;
    {
      return string of value i
    }
      begin
-        str(i,result);
+        Str(I,Result);
      end;
 
 
-   function tostr(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+   function ToStr(I : Int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
    {
      return string of value i
    }
      begin
-        str(i,result);
+        Str(I,Result);
      end;
 
 
-   function tostr(i : longint) : string;{$ifdef USEINLINE}inline;{$endif}overload;
+   function ToStr(I : LongInt) : string;{$ifdef USEINLINE}inline;{$endif}overload;
    {
      return string of value i
    }
      begin
-        str(i,result);
+        Str(I,Result);
      end;
 
 
-   function tostr_with_plus(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}
+   function ToStr_With_Plus(I : Int64) : string;{$ifdef USEINLINE}inline;{$endif}
    {
      return string of value i, but always include a + when i>=0
    }
      begin
-        str(i,result);
-        if i>=0 then
-          result:='+'+result;
+        Str(I,Result);
+        if I>=0 then
+          Result:='+'+Result;
      end;
 
 
-    function is_number(const s : string) : boolean;{$ifdef USEINLINE}inline;{$endif}
+    function Is_Number(const S : string) : Boolean;{$ifdef USEINLINE}inline;{$endif}
     {
       is string a correct number ?
     }
       var
-         w : integer;
-         l : longint;
+         W : Integer;
+         L : LongInt;
       begin
-         val(s,l,w);
+         Val(S,L,W);
          // remove warning
-         l:=l;
-         is_number:=(w=0);
+         L:=L;
+         Is_Number:=(W=0);
       end;
 
 
-    function ispowerof2(value : int64;out power : longint) : boolean;
+    function IsPowerOf2(Value : Int64;out Power : LongInt) : Boolean;
     {
       return if value is a power of 2. And if correct return the power
     }
       begin
-        if (value <= 0) or (value and (value - 1) <> 0) then
-          exit(false);
-        power:=BsfQWord(value);
-        result:=true;
+        if (Value <= 0) or (Value and (Value - 1) <> 0) then
+          Exit(False);
+        Power:=BsfQWord(Value);
+        Result:=True;
       end;
 
 
-    function ispowerof2(const value: Tconstexprint; out power: longint): boolean;
+    function IsPowerOf2(const Value: TConstExprInt; out Power: LongInt): Boolean;
       begin
-        if value.signed or
-           (value.uvalue<=high(int64)) then
-          result:=ispowerof2(value.svalue,power)
-        else if not value.signed and
-            (value.svalue=low(int64)) then
+        if Value.Signed or
+           (Value.UValue<=High(Int64)) then
+          Result:=IsPowerOf2(Value.SValue,Power)
+        else if not Value.Signed and
+            (Value.SValue=Low(Int64)) then
           begin
-            result:=true;
-            power:=63;
+            Result:=True;
+            Power:=63;
           end
         else
-          result:=false;
+          Result:=False;
       end;
 
 
-    function isabspowerof2(const value : Tconstexprint;out power : longint) : boolean;
+    function IsAbsPowerOf2(const Value : TConstExprInt;out Power : LongInt) : Boolean;
       begin
-        if ispowerof2(value,power) then
-          result:=true
-        else if value.signed and (value.svalue<0) and (value.svalue<>low(int64)) and ispowerof2(-value.svalue,power) then
-          result:=true
+        if IsPowerOf2(Value,Power) then
+          Result:=True
+        else if Value.Signed and (Value.SValue<0) and (Value.SValue<>Low(Int64)) and IsPowerOf2(-Value.SValue,Power) then
+          Result:=True
         else
-          result:=false;
+          Result:=False;
       end;
 
 
-    function nextpowerof2(value : qword; out power: longint) : qword;
+    function NextPowerOf2(Value : QWord; out Power: LongInt) : QWord;
       begin
-        power:=-1;
-        result:=0;
-        if (value=0) or (value>qword($8000000000000000)) then
-          exit;
+        Power:=-1;
+        Result:=0;
+        if (Value=0) or (Value>QWord($8000000000000000)) then
+          Exit;
 
-        power:=BsrQWord(value);
-        result:=qword(1) shl power;
-        if (value and (value-1))<>0 then
+        Power:=BsrQWord(Value);
+        Result:=QWord(1) shl Power;
+        if (Value and (Value-1))<>0 then
           begin
-            inc(power);
-            result:=result shl 1;
+            Inc(Power);
+            Result:=Result shl 1;
           end;
       end;
 
 
-    function backspace_quote(const s:string;const qchars:Tcharset):string;
+    function Backspace_Quote(const S:string;const QChars:TCharSet):string;
 
-    var i:byte;
+    var I:Byte;
 
     begin
-      backspace_quote:='';
-      for i:=1 to length(s) do
+      Backspace_Quote:='';
+      for I:=1 to Length(S) do
         begin
-          if (s[i]=#10) and (#10 in qchars) then
-            backspace_quote:=backspace_quote+'\n'
-          else if (s[i]=#13) and (#13 in qchars) then
-            backspace_quote:=backspace_quote+'\r'
+          if (S[I]=#10) and (#10 in QChars) then
+            Backspace_Quote:=Backspace_Quote+'\n'
+          else if (S[I]=#13) and (#13 in QChars) then
+            Backspace_Quote:=Backspace_Quote+'\r'
           else
             begin
-              if s[i] in qchars then
-                backspace_quote:=backspace_quote+'\';
-              backspace_quote:=backspace_quote+s[i];
+              if S[I] in QChars then
+                Backspace_Quote:=Backspace_Quote+'\';
+              Backspace_Quote:=Backspace_Quote+S[I];
             end;
         end;
     end;
 
 
-    function octal_quote(const s:string;const qchars:Tcharset):string;
+    function Octal_Quote(const S:string;const QChars:TCharSet):string;
 
-    var i:byte;
+    var I:Byte;
 
     begin
-      octal_quote:='';
-      for i:=1 to length(s) do
+      Octal_Quote:='';
+      for I:=1 to Length(S) do
         begin
-          if s[i] in qchars then
+          if S[I] in QChars then
             begin
-              if ord(s[i])<64 then
-                octal_quote:=octal_quote+'\'+octstr(ord(s[i]),3)
+              if Ord(S[I])<64 then
+                Octal_Quote:=Octal_Quote+'\'+OctStr(Ord(S[I]),3)
               else
-                octal_quote:=octal_quote+'\'+octstr(ord(s[i]),4);
+                Octal_Quote:=Octal_Quote+'\'+OctStr(Ord(S[I]),4);
             end
           else
-            octal_quote:=octal_quote+s[i];
+            Octal_Quote:=Octal_Quote+S[I];
         end;
     end;
 
 
-    function DePascalQuote(var s: ansistring): Boolean;
+    function DePascalQuote(var S: AnsiString): Boolean;
       var
-        destPos, sourcePos, len: Integer;
-        t: string;
-        ch: Char;
+        DestPos, SourcePos, Len: Integer;
+        T: string;
+        CH: Char;
     begin
-      t:='';
-      DePascalQuote:= false;
-      len:= length(s);
-      if (len >= 1) and (s[1] = '''') then
+      T:='';
+      DePascalQuote:= False;
+      Len:= Length(S);
+      if (Len >= 1) and (S[1] = '''') then
         begin
           {Remove quotes, exchange '' against ' }
-          destPos := 0;
-          sourcepos:=1;
-          while (sourcepos<len) do
+          DestPos := 0;
+          SourcePos:=1;
+          while (SourcePos<Len) do
             begin
-              inc(sourcePos);
-              ch := s[sourcePos];
-              if ch = '''' then
+              Inc(SourcePos);
+              CH := S[SourcePos];
+              if CH = '''' then
                 begin
-                  inc(sourcePos);
-                  if (sourcePos <= len) and (s[sourcePos] = '''') then
+                  Inc(SourcePos);
+                  if (SourcePos <= Len) and (S[SourcePos] = '''') then
                     {Add the quote as part of string}
                   else
                     begin
-                      SetLength(t, destPos);
-                      s:= t;
-                      Exit(true);
+                      SetLength(T, DestPos);
+                      S:= T;
+                      Exit(True);
                     end;
                 end;
-              inc(destPos);
-              t[destPos] := ch;
+              Inc(DestPos);
+              T[DestPos] := CH;
             end;
         end;
     end;
 
 
-    function ansistring2pchar(const a: ansistring) : pchar;
+    function AnsiString2PChar(const A: AnsiString) : PChar;
       var
-        len: ptrint;
+        Len: PtrInt;
       begin
-        len:=length(a);
-        getmem(result,len+1);
-        if (len<>0) then
-          move(a[1],result[0],len);
-        result[len]:=#0;
+        Len:=Length(A);
+        GetMem(Result,Len+1);
+        if (Len<>0) then
+          Move(A[1],Result[0],Len);
+        Result[Len]:=#0;
       end;
 
 
-    function lowercase(c : char) : char;
+    function LowerCase(C : Char) : Char;
        begin
-          case c of
-             #65..#90 : c := chr(ord (c) + 32);
-             #154 : c:=#129;  { german }
-             #142 : c:=#132;  { german }
-             #153 : c:=#148;  { german }
-             #144 : c:=#130;  { french }
-             #128 : c:=#135;  { french }
-             #143 : c:=#134;  { swedish/norge (?) }
-             #165 : c:=#164;  { spanish }
-             #228 : c:=#229;  { greek }
-             #226 : c:=#231;  { greek }
-             #232 : c:=#227;  { greek }
+          case C of
+             #65..#90 : C := Chr(Ord (C) + 32);
+             #154 : C:=#129;  { german }
+             #142 : C:=#132;  { german }
+             #153 : C:=#148;  { german }
+             #144 : C:=#130;  { french }
+             #128 : C:=#135;  { french }
+             #143 : C:=#134;  { swedish/norge (?) }
+             #165 : C:=#164;  { spanish }
+             #228 : C:=#229;  { greek }
+             #226 : C:=#231;  { greek }
+             #232 : C:=#227;  { greek }
           end;
-          lowercase := c;
+          LowerCase := C;
        end;
 
 
-    function strpnew(const s : ShortString) : pchar;
+    function StrPNew(const S : ShortString) : PChar;
       var
-         p : pchar;
+         P : PChar;
       begin
-         getmem(p,length(s)+1);
-         move(s[1],p^,length(s));
-         p[length(s)]:=#0;
-         result:=p;
+         GetMem(P,Length(S)+1);
+         Move(S[1],P^,Length(S));
+         P[Length(S)]:=#0;
+         Result:=P;
       end;
 
-    function strpnew(const s: ansistring): pchar;
+    function StrPNew(const S: AnsiString): PChar;
       var
-         p : pchar;
+         P : PChar;
       begin
-        getmem(p,length(s)+1);
-        move(s[1],p^,length(s)+1);
-        result:=p;
+        GetMem(P,Length(S)+1);
+        Move(S[1],P^,Length(S)+1);
+        Result:=P;
       end;
 
 
-    procedure stringdispose(var p : pshortstring);{$ifdef USEINLINE}inline;{$endif}
+    procedure StringDispose(var P : PShortString);{$ifdef USEINLINE}inline;{$endif}
       begin
-         if assigned(p) then
+         if Assigned(P) then
            begin
-             freemem(p);
-             p:=nil;
+             FreeMem(P);
+             P:=nil;
            end;
       end;
 
 
-    function stringdup(const s : shortstring) : pshortstring;{$ifdef USEINLINE}inline;{$endif}
+    function StringDup(const S : ShortString) : PShortString;{$ifdef USEINLINE}inline;{$endif}
       begin
-         getmem(result,length(s)+1);
-         result^:=s;
+         GetMem(Result,Length(S)+1);
+         Result^:=S;
       end;
 
 
-    function stringdup(const s : ansistring) : pshortstring;{$ifdef USEINLINE}inline;{$endif}
+    function StringDup(const S : AnsiString) : PShortString;{$ifdef USEINLINE}inline;{$endif}
       begin
-         getmem(result,length(s)+1);
-         result^:=s;
+         GetMem(Result,Length(S)+1);
+         Result^:=S;
       end;
 
 
-    function PosCharset(const cs : TCharSet;const s : ansistring) : integer;
+    function PosCharset(const CS : TCharSet;const S : AnsiString) : Integer;
       var
-        i : integer;
+        I : Integer;
       begin
-        result:=0;
-        for i:=1 to length(s) do
-          if s[i] in cs then
+        Result:=0;
+        for I:=1 to Length(S) do
+          if S[I] in CS then
             begin
-              result:=i;
-              exit;
+              Result:=I;
+              Exit;
             end;
       end;
 
 
     function CompareStr(const S1, S2: ShortString): Integer;
       var
-        count, count1, count2: integer;
+        Count, Count1, Count2: Integer;
       begin
         Count1 := Length(S1);
         Count2 := Length(S2);
@@ -1244,13 +1244,13 @@ implementation
           Count:=Count2
         else
           Count:=Count1;
-        result := CompareByte(S1[1],S2[1], Count);
-        if result=0 then
-          result:=Count1-Count2;
+        Result := CompareByte(S1[1],S2[1], Count);
+        if Result=0 then
+          Result:=Count1-Count2;
       end;
 
 
-    function CompareText(S1, S2: ShortString): integer;
+    function CompareText(S1, S2: ShortString): Integer;
       begin
         UpperVar(S1);
         UpperVar(S2);
@@ -1262,12 +1262,12 @@ implementation
                                Ansistring (PChar+Length)
 *****************************************************************************}
 
-    procedure ansistringdispose(var p : pchar;length : longint);
+    procedure AnsiStringDispose(var P : PChar;Length : LongInt);
       begin
-         if assigned(p) then
+         if Assigned(P) then
            begin
-             freemem(p);
-             p:=nil;
+             FreeMem(P);
+             P:=nil;
            end;
       end;
 
@@ -1276,92 +1276,92 @@ implementation
     { 0 means equal }
     { 1 means p1 > p2 }
     { -1 means p1 < p2 }
-    function compareansistrings(p1,p2 : pchar;length1,length2 :  longint) : longint;
+    function CompareAnsiStrings(P1,P2 : PChar;Length1,Length2 :  LongInt) : LongInt;
       var
-         cmp : SizeInt;
+         Cmp : SizeInt;
       begin
-         cmp:=CompareByte(p1^,p2^,min(length1,length2));
-         if cmp=0 then
-           cmp:=length1-length2;
-         result:=ord(cmp>0)-ord(cmp<0);
+         Cmp:=CompareByte(P1^,P2^,Min(Length1,Length2));
+         if Cmp=0 then
+           Cmp:=Length1-Length2;
+         Result:=Ord(Cmp>0)-Ord(Cmp<0);
       end;
 
 
-    function concatansistrings(p1,p2 : pchar;length1,length2 : longint) : pchar;
+    function ConcatAnsiStrings(P1,P2 : PChar;Length1,Length2 : LongInt) : PChar;
       var
-         p : pchar;
+         P : PChar;
       begin
-         getmem(p,length1+length2+1);
-         move(p1[0],p[0],length1);
-         move(p2[0],p[length1],length2+1);
-         concatansistrings:=p;
+         GetMem(P,Length1+Length2+1);
+         Move(P1[0],P[0],Length1);
+         Move(P2[0],P[Length1],Length2+1);
+         ConcatAnsiStrings:=P;
       end;
 
 
-    procedure defaulterror(i:longint);
+    procedure DefaultError(I:LongInt);
       begin
-        writeln('Internal error ',i);
-        runerror(255);
+        WriteLn('Internal error ',I);
+        RunError(255);
       end;
 
 
-    function LengthUleb128(a: qword) : byte;
+    function LengthULEB128(A: QWord) : Byte;
       begin
-        result:=0;
+        Result:=0;
         repeat
-          inc(result);
-          a := a shr 7;
-        until a=0;
+          Inc(Result);
+          A := A shr 7;
+        until A=0;
       end;
 
 
-    function LengthSleb128(a: int64) : byte;
+    function LengthSLEB128(A: Int64) : Byte;
       begin
         { 'a xor SarInt64(a,63)' has upper bits 0...01 where '0's symbolize sign bits of 'a' and 1 symbolizes its most significant non-sign bit.
           'shl 1' ensures storing the sign bit. }
-        result:=LengthUleb128(qword(a xor SarInt64(a,63)) shl 1);
+        Result:=LengthULEB128(QWord(A xor SarInt64(A,63)) shl 1);
       end;
 
 
-    function EncodeUleb128(a: qword;out buf;len : byte) : byte;
+    function EncodeULEB128(A: QWord;out Buf;Len : Byte) : Byte;
       var
-        b: byte;
-        pbuf : pbyte;
+        B: Byte;
+        PBuf : PByte;
       begin
-        result:=0;
-        pbuf:=@buf;
+        Result:=0;
+        PBuf:=@Buf;
         repeat
-          b := a and $7f;
-          a := a shr 7;
-          if a<>0 then
-            b := b or $80;
-          pbuf^:=b;
-          inc(pbuf);
-          inc(result);
-        until (a=0) and (result>=len);
+          B := A and $7f;
+          A := A shr 7;
+          if A<>0 then
+            B := B or $80;
+          PBuf^:=B;
+          Inc(PBuf);
+          Inc(Result);
+        until (A=0) and (Result>=Len);
       end;
 
 
-    function EncodeSleb128(a: int64;out buf;len : byte) : byte;
+    function EncodeSLEB128(A: Int64;out Buf;Len : Byte) : Byte;
       var
-        b: byte;
-        more: boolean;
-        pbuf : pbyte;
+        B: Byte;
+        More: Boolean;
+        PBuf : PByte;
       begin
-        result:=0;
-        pbuf:=@buf;
+        Result:=0;
+        PBuf:=@Buf;
         repeat
-          b := a and $7f;
-          a := SarInt64(a, 7);
-          inc(result);
-          more:=(result<len) or (a<>-(b shr 6));
-          pbuf^:=b or byte(more) shl 7;
-          inc(pbuf);
-        until not more;
+          B := A and $7f;
+          A := SarInt64(A, 7);
+          Inc(Result);
+          More:=(Result<Len) or (A<>-(B shr 6));
+          PBuf^:=B or Byte(More) shl 7;
+          Inc(PBuf);
+        until not More;
       end;
 
 
 initialization
-  internalerrorproc:=@defaulterror;
-  initupperlower;
+  InternalErrorProc:=@DefaultError;
+  InitUpperLower;
 end.

@@ -14,14 +14,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit paramparser;
+unit ParamParser;
 
 {$MODE OBJFPC} {$H+}
 
 interface
 
 uses
-  Classes, SysUtils, target;
+  Classes, SysUtils, Target;
 
 type
   EParametersException = class(Exception);
@@ -39,46 +39,46 @@ type
 
   TParameters = class
   private
-    fHelp : boolean;
-    fVersion : boolean;
-    fVerbose : boolean;
-    fInputFiles : TStringList;
-    fOutputFile : string;
-    fTarget : TResTarget;
-    fRCIncludeDirs: TStringList;
-    fRCDefines: TStringList;
+    FHelp : Boolean;
+    FVersion : Boolean;
+    FVerbose : Boolean;
+    FInputFiles : TStringList;
+    FOutputFile : string;
+    FTarget : TResTarget;
+    FRCIncludeDirs: TStringList;
+    FRCDefines: TStringList;
 
-    procedure ParseInputFiles(aList : TStringList; var index : integer; const parname : string);
-    procedure ParseRCInclude(aList: TStringList; var index: integer; const parname: string);
-    procedure ParseRCUnDefine(aList: TStringList; var index: integer; const parname: string);
-    procedure ParseOutputFile(aList : TStringList; var index : integer; const parname : string);
-    procedure ParseOutputFormat(aList : TStringList; var index : integer; const parname : string);virtual;
-    procedure ParseArchitecture(aList : TStringList; var index : integer; const parname : string);virtual;
-    procedure ParseSubArchitecture(aList : TStringList; var index : integer; const parname : string);virtual;
-    procedure ParseConfigFile(aList : TStringList; var index : integer; const parname : string);
-    function DoOptionalArgument(aList : TStringList; const i : integer) : string;
-    function DoMandatoryArgument(aList : TStringList; const i : integer) : string;
-    function IsParameter(const s : string) : boolean;
+    procedure ParseInputFiles(AList : TStringList; var Index : Integer; const ParName : string);
+    procedure ParseRCInclude(AList: TStringList; var Index: Integer; const ParName: string);
+    procedure ParseRCUndefine(AList: TStringList; var Index: Integer; const ParName: string);
+    procedure ParseOutputFile(AList : TStringList; var Index : Integer; const ParName : string);
+    procedure ParseOutputFormat(AList : TStringList; var Index : Integer; const ParName : string);virtual;
+    procedure ParseArchitecture(AList : TStringList; var Index : Integer; const ParName : string);virtual;
+    procedure ParseSubArchitecture(AList : TStringList; var Index : Integer; const ParName : string);virtual;
+    procedure ParseConfigFile(AList : TStringList; var Index : Integer; const ParName : string);
+    function DoOptionalArgument(AList : TStringList; const I : Integer) : string;
+    function DoMandatoryArgument(AList : TStringList; const I : Integer) : string;
+    function IsParameter(const S : string) : Boolean;
     function ParamsToStrList : TStringList;
   protected
   public
     constructor Create;
     destructor Destroy; override;
     procedure Parse;
-    property Help : boolean read fHelp;
-    property Version : boolean read fVersion;
-    property Verbose : boolean read fVerbose;
-    property InputFiles : TStringList read fInputFiles;
-    property RCIncludeDirs: TStringList read fRCIncludeDirs;
-    property RCDefines: TStringList read fRCDefines;
-    property OutputFile : string read fOutputFile write fOutputFile;
-    property Target : TResTarget read fTarget;
+    property Help : Boolean Read FHelp;
+    property Version : Boolean Read FVersion;
+    property Verbose : Boolean Read FVerbose;
+    property InputFiles : TStringList Read FInputFiles;
+    property RCIncludeDirs: TStringList Read FRCIncludeDirs;
+    property RCDefines: TStringList Read FRCDefines;
+    property OutputFile : string Read FOutputFile Write FOutputFile;
+    property Target : TResTarget Read FTarget;
   end;
 
 implementation
 
 uses
-  msghandler;
+  MsgHandler;
 
 type
 
@@ -86,295 +86,295 @@ type
 
   TConfFileParser = class
   private
-    fConfFile : TStringList;
-    fParList : TStringList;
-    fInsPos : integer;
+    FConfFile : TStringList;
+    FParList : TStringList;
+    FInsPos : Integer;
 
-    procedure ParseLine(idx : integer);
-    function GetParameter(pc : pchar; var i : integer) : string;
-    function GetString(pc : pchar; var i : integer) : string;
+    procedure ParseLine(Idx : Integer);
+    function GetParameter(PC : PChar; var I : Integer) : string;
+    function GetString(PC : PChar; var I : Integer) : string;
   protected
   public
-    constructor Create(aFileName : string; aParList : TStringList; aInsPos : integer);
+    constructor Create(AFileName : string; AParList : TStringList; AInsPos : Integer);
     procedure Parse;
     destructor Destroy; override;
   end;
 
 { TConfFileParser }
 
-procedure TConfFileParser.ParseLine(idx: integer);
-var pc : pchar;
-    tmp : string;
-    i : integer;
+procedure TConfFileParser.ParseLine(Idx: Integer);
+var PC : PChar;
+    Tmp : string;
+    I : Integer;
 begin
-  pc:=pchar(fConfFile[idx]);
-  i:=0;
-  while pc[i]<>#0 do
+  PC:=PChar(FConfFile[Idx]);
+  I:=0;
+  while PC[I]<>#0 do
   begin
-    case pc[i] of
-      ' ',#9,#13,#10 : inc(i);
+    case PC[I] of
+      ' ',#9,#13,#10 : Inc(I);
       '#' : break
     else
       begin
-        tmp:=GetParameter(pc,i);
-        if tmp<>'' then
+        Tmp:=GetParameter(PC,I);
+        if Tmp<>'' then
         begin
-          fParList.Insert(fInsPos,tmp);
-          inc(fInsPos);
+          FParList.Insert(FInsPos,Tmp);
+          Inc(FInsPos);
         end;
       end;
     end;
   end;
 end;
 
-function TConfFileParser.GetParameter(pc : pchar; var i : integer): string;
+function TConfFileParser.GetParameter(PC : PChar; var I : Integer): string;
 begin
   Result:='';
-  while pc[i]<>#0 do
+  while PC[I]<>#0 do
   begin
-    case pc[i] of
+    case PC[I] of
       ' ',#9,#13,#10 : exit;
       '#' : exit;
-      '"' : Result:=Result+GetString(pc,i);
+      '"' : Result:=Result+GetString(PC,I);
       else
-        Result:=Result+pc[i];
+        Result:=Result+PC[I];
     end;
-    inc(i);
+    Inc(I);
   end;
 end;
 
-function TConfFileParser.GetString(pc: pchar; var i: integer): string;
+function TConfFileParser.GetString(PC: PChar; var I: Integer): string;
 begin
   Result:='';
-  inc(i);
-  while pc[i]<>#0 do
+  Inc(I);
+  while PC[I]<>#0 do
   begin
-    if pc[i] = '"' then
+    if PC[I] = '"' then
       exit
     else
-      Result:=Result+pc[i];
-    inc(i);
+      Result:=Result+PC[I];
+    Inc(I);
   end;
-  dec(i);
+  Dec(I);
 end;
 
-constructor TConfFileParser.Create(aFileName: string; aParList: TStringList; aInsPos : integer);
+constructor TConfFileParser.Create(AFileName: string; AParList: TStringList; AInsPos : Integer);
 begin
-  fInsPos:=aInsPos+1;
-  fConfFile:=TStringList.Create;
-  fParList:=aParList;
+  FInsPos:=AInsPos+1;
+  FConfFile:=TStringList.Create;
+  FParList:=AParList;
   try
-    fConfFile.LoadFromFile(aFileName);
+    FConfFile.LoadFromFile(AFileName);
   except
-    raise ECannotReadConfFile.Create(aFileName);
+    raise ECannotReadConfFile.Create(AFileName);
   end;
 end;
 
 procedure TConfFileParser.Parse;
-var i : integer;
+var I : Integer;
 begin
-  for i:=0 to fConfFile.Count-1 do
-    ParseLine(i);
+  for I:=0 to FConfFile.Count-1 do
+    ParseLine(I);
 end;
 
 destructor TConfFileParser.Destroy;
 begin
-  fConfFile.Free;
+  FConfFile.Free;
 end;
 
 { TParameters }
 
 //for compatibility allow -i <inputfiles>
-procedure TParameters.ParseInputFiles(aList: TStringList; var index: integer;
-  const parname : string);
-var tmp : string;
+procedure TParameters.ParseInputFiles(AList: TStringList; var Index: Integer;
+  const ParName : string);
+var Tmp : string;
 begin
-  tmp:=DoMandatoryArgument(aList,index+1);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
+  Tmp:=DoMandatoryArgument(AList,Index+1);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
 
-  while tmp<>'' do
+  while Tmp<>'' do
   begin
-    inc(index);
-    fInputFiles.Add(tmp);
-    tmp:=DoOptionalArgument(aList,index+1);
+    Inc(Index);
+    FInputFiles.Add(Tmp);
+    Tmp:=DoOptionalArgument(AList,Index+1);
   end;
 end;
 
-procedure TParameters.ParseRCInclude(aList: TStringList; var index: integer;
-  const parname : string);
+procedure TParameters.ParseRCInclude(AList: TStringList; var Index: Integer;
+  const ParName : string);
 var
-  tmp: String;
+  Tmp: String;
 begin
-  inc(index);
-  tmp:=DoMandatoryArgument(aList,index);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
-  fRCIncludeDirs.Add(tmp);
+  Inc(Index);
+  Tmp:=DoMandatoryArgument(AList,Index);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
+  FRCIncludeDirs.Add(Tmp);
 end;
 
-procedure TParameters.ParseRCUnDefine(aList: TStringList; var index: integer;
-  const parname : string);
+procedure TParameters.ParseRCUndefine(AList: TStringList; var Index: Integer;
+  const ParName : string);
 var
-  tmp: String;
-  i: integer;
+  Tmp: String;
+  I: Integer;
 begin
-  inc(index);
-  tmp:=DoMandatoryArgument(aList,index);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
-  if (parname='-D') or (parname='--define') then begin
-    i:= pos('=', tmp);
-    if i<1 then
-      fRCDefines.Values[tmp]:= ''
+  Inc(Index);
+  Tmp:=DoMandatoryArgument(AList,Index);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
+  if (ParName='-D') or (ParName='--define') then begin
+    I:= Pos('=', Tmp);
+    if I<1 then
+      FRCDefines.Values[Tmp]:= ''
     else
-      fRCDefines.Values[Copy(tmp, 1, i-1)]:= Copy(tmp, i+1);
+      FRCDefines.Values[Copy(Tmp, 1, I-1)]:= Copy(Tmp, I+1);
   end else begin
-    i:= fRCDefines.IndexOfName(tmp);
-    if i >= 0 then
-      fRCDefines.Delete(i);
+    I:= FRCDefines.IndexOfName(Tmp);
+    if I >= 0 then
+      FRCDefines.Delete(I);
   end;
-  fRCIncludeDirs.Add(tmp);
+  FRCIncludeDirs.Add(Tmp);
 end;
 
-procedure TParameters.ParseOutputFile(aList: TStringList; var index: integer;
-  const parname : string);
+procedure TParameters.ParseOutputFile(AList: TStringList; var Index: Integer;
+  const ParName : string);
 begin
-  if fOutputFile<>'' then
+  if FOutputFile<>'' then
     raise EOutputFileAlreadySetException.Create('');
-  inc(index);
-  fOutputFile:=DoMandatoryArgument(aList,index);
-  if fOutputFile='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  FOutputFile:=DoMandatoryArgument(AList,Index);
+  if FOutputFile='' then
+    raise EArgumentMissingException.Create(ParName);
 end;
 
-procedure TParameters.ParseOutputFormat(aList: TStringList; var index: integer;
-  const parname: string);
-var tmp : string;
-    aFormat : TObjFormat;
+procedure TParameters.ParseOutputFormat(AList: TStringList; var Index: Integer;
+  const ParName: string);
+var Tmp : string;
+    AFormat : TObjFormat;
 begin
-  inc(index);
-  tmp:=DoMandatoryArgument(aList,index);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  Tmp:=DoMandatoryArgument(AList,Index);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
 
-  for aFormat:=low(TObjFormat) to high(TObjFormat) do
+  for AFormat:=Low(TObjFormat) to High(TObjFormat) do
   begin
-    if ObjFormats[aFormat].name=tmp then
+    if ObjFormats[AFormat].Name=Tmp then
     begin
-      fTarget.objformat:=aFormat;
+      FTarget.ObjFormat:=AFormat;
       exit;
     end;
   end;
 
-  raise EUnknownObjFormatException.Create(tmp);
+  raise EUnknownObjFormatException.Create(Tmp);
 
 end;
 
-procedure TParameters.ParseArchitecture(aList: TStringList; var index: integer;
-  const parname: string);
-var tmp : string;
-    aMachine : TMachineType;
+procedure TParameters.ParseArchitecture(AList: TStringList; var Index: Integer;
+  const ParName: string);
+var Tmp : string;
+    AMachine : TMachineType;
 begin
-  inc(index);
-  tmp:=DoMandatoryArgument(aList,index);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  Tmp:=DoMandatoryArgument(AList,Index);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
 
-  for aMachine:=low(TMachineType) to high(TMachineType) do
+  for AMachine:=Low(TMachineType) to High(TMachineType) do
   begin
-    if (Machines[aMachine].name=tmp) or (Machines[aMachine].alias = tmp) then
+    if (Machines[AMachine].Name=Tmp) or (Machines[AMachine].Alias = Tmp) then
     begin
-      fTarget.machine:=aMachine;
-      fTarget.submachine:=GetDefaultSubMachineForMachine(fTarget.machine);
+      FTarget.Machine:=AMachine;
+      FTarget.SubMachine:=GetDefaultSubMachineForMachine(FTarget.Machine);
       exit;
     end;
   end;
 
-  raise EUnknownMachineException.Create(tmp);
+  raise EUnknownMachineException.Create(Tmp);
 
 end;
 
-procedure TParameters.ParseSubArchitecture(aList: TStringList; var index: integer; const parname: string);
-var tmp : string;
-    aSubMachineArm : TSubMachineTypeArm;
-    aSubMachineGeneric : TSubMachineTypeGeneric;
+procedure TParameters.ParseSubArchitecture(AList: TStringList; var Index: Integer; const ParName: string);
+var Tmp : string;
+    ASubMachineArm : TSubMachineTypeArm;
+    ASubMachineGeneric : TSubMachineTypeGeneric;
 begin
-  inc(index);
-  tmp:=DoMandatoryArgument(aList,index);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
+  Inc(Index);
+  Tmp:=DoMandatoryArgument(AList,Index);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
 
-  case fTarget.machine of
-    mtarm,mtarmeb:
-      for aSubMachineArm:=low(TSubMachineTypeArm) to high(TSubMachineTypeArm) do
-        if SubMachinesArm[aSubMachineArm]=tmp then
+  case FTarget.Machine of
+    mtARM,mtARMEB:
+      for ASubMachineArm:=Low(TSubMachineTypeArm) to High(TSubMachineTypeArm) do
+        if SubMachinesArm[ASubMachineArm]=Tmp then
           begin
-            ftarget.submachine.subarm:=aSubMachineArm;
+            FTarget.SubMachine.SubArm:=ASubMachineArm;
             exit;
           end;
     else
-      for aSubMachineGeneric:=low(TSubMachineTypeGeneric) to high(TSubMachineTypeGeneric) do
-        if SubMachinesGen[aSubMachineGeneric]=tmp then
+      for ASubMachineGeneric:=Low(TSubMachineTypeGeneric) to High(TSubMachineTypeGeneric) do
+        if SubMachinesGen[ASubMachineGeneric]=Tmp then
           begin
-            ftarget.submachine.subgen:=aSubMachineGeneric;
+            FTarget.SubMachine.SubGen:=ASubMachineGeneric;
             exit;
           end;
   end;
 
-  raise EUnknownSubMachineException.Create(tmp);
+  raise EUnknownSubMachineException.Create(Tmp);
 
 end;
 
-procedure TParameters.ParseConfigFile(aList: TStringList; var index: integer;
-  const parname : string);
-var tmp : string;
-    cp : TConfFileParser;
+procedure TParameters.ParseConfigFile(AList: TStringList; var Index: Integer;
+  const ParName : string);
+var Tmp : string;
+    CP : TConfFileParser;
 begin
-  tmp:=copy(parname,2,length(parname)-1);
-  if tmp='' then
-    raise EArgumentMissingException.Create(parname);
-  cp:=TConfFileParser.Create(tmp,aList,index);
+  Tmp:=Copy(ParName,2,Length(ParName)-1);
+  if Tmp='' then
+    raise EArgumentMissingException.Create(ParName);
+  CP:=TConfFileParser.Create(Tmp,AList,Index);
   try
-    cp.Parse;
+    CP.Parse;
   finally
-    cp.Free;
+    CP.Free;
   end;
 end;
 
-function TParameters.DoOptionalArgument(aList: TStringList; const i: integer
+function TParameters.DoOptionalArgument(AList: TStringList; const I: Integer
   ): string;
 begin
   Result:='';
-  if aList.Count>i then
+  if AList.Count>I then
   begin
-    if not IsParameter(aList[i]) then
-      Result:=aList[i];
+    if not IsParameter(AList[I]) then
+      Result:=AList[I];
   end;
 end;
 
-function TParameters.DoMandatoryArgument(aList: TStringList; const i: integer
+function TParameters.DoMandatoryArgument(AList: TStringList; const I: Integer
   ): string;
 begin
   Result:='';
-  if aList.count>i then
-    Result:=aList[i];
+  if AList.Count>I then
+    Result:=AList[I];
 end;
 
-function TParameters.IsParameter(const s: string): boolean;
+function TParameters.IsParameter(const S: string): Boolean;
 begin
-  Result:=false;
-  if length(s)<=1 then exit;
-  if copy(s,1,1)='-' then Result:=true;
+  Result:=False;
+  if Length(S)<=1 then exit;
+  if Copy(S,1,1)='-' then Result:=True;
 end;
 
 function TParameters.ParamsToStrList: TStringList;
-var i : integer;
+var I : Integer;
 begin
   Result:=TStringList.Create;
   try
-    for i:=1 to ParamCount do
-      Result.Add(ParamStr(i));
+    for I:=1 to ParamCount do
+      Result.Add(ParamStr(I));
   except
     Result.Free;
     raise;
@@ -382,76 +382,76 @@ begin
 end;
 
 procedure TParameters.Parse;
-var fList : TStringList;
-    tmp : string;
-    i : integer;
+var FList : TStringList;
+    Tmp : string;
+    I : Integer;
 begin
-  fList:=ParamsToStrList;
+  FList:=ParamsToStrList;
   try
-    i:=0;
-    while i<fList.Count do
+    I:=0;
+    while I<FList.Count do
     begin
-      tmp:=fList[i];
-      Messages.DoVerbose(Format('parsing parameter ''%s''',[tmp]));
-      if IsParameter(tmp) then
+      Tmp:=FList[I];
+      Messages.DoVerbose(Format('parsing parameter ''%s''',[Tmp]));
+      if IsParameter(Tmp) then
       begin
-        if ((tmp='--help') or (tmp='-h') or (tmp='-?')) then
-          fHelp:=true
-        else if ((tmp='--version') or (tmp='-V')) then
-          fVersion:=true
-        else if ((tmp='--verbose') or (tmp='-v')) then
-          fVerbose:=true
-        else if ((tmp='-i') or (tmp='--input')) then
-          ParseInputFiles(fList,i,tmp)
-        else if ((tmp='-I') or (tmp='--include')) then
-          ParseRCInclude(fList,i,tmp)
-        else if ((tmp='-D') or (tmp='--define'))
-             or ((tmp='-U') or (tmp='--undefine')) then
-          ParseRCUnDefine(fList,i,tmp)
-        else if ((tmp='-o') or (tmp='--output')) then
-          ParseOutputFile(fList,i,tmp)
-        else if (tmp='-of') then
-          ParseOutputFormat(fList,i,tmp)
-        else if ((tmp='-a') or (tmp='--arch')) then
-          ParseArchitecture(fList,i,tmp)
-        else if ((tmp='-s') or (tmp='--subarch')) then
-          ParseSubArchitecture(fList,i,tmp)
+        if ((Tmp='--help') or (Tmp='-h') or (Tmp='-?')) then
+          FHelp:=True
+        else if ((Tmp='--version') or (Tmp='-V')) then
+          FVersion:=True
+        else if ((Tmp='--verbose') or (Tmp='-v')) then
+          FVerbose:=True
+        else if ((Tmp='-i') or (Tmp='--input')) then
+          ParseInputFiles(FList,I,Tmp)
+        else if ((Tmp='-I') or (Tmp='--include')) then
+          ParseRCInclude(FList,I,Tmp)
+        else if ((Tmp='-D') or (Tmp='--define'))
+             or ((Tmp='-U') or (Tmp='--undefine')) then
+          ParseRCUndefine(FList,I,Tmp)
+        else if ((Tmp='-o') or (Tmp='--output')) then
+          ParseOutputFile(FList,I,Tmp)
+        else if (Tmp='-of') then
+          ParseOutputFormat(FList,I,Tmp)
+        else if ((Tmp='-a') or (Tmp='--arch')) then
+          ParseArchitecture(FList,I,Tmp)
+        else if ((Tmp='-s') or (Tmp='--subarch')) then
+          ParseSubArchitecture(FList,I,Tmp)
         else
-          raise EUnknownParameterException.Create(tmp);
+          raise EUnknownParameterException.Create(Tmp);
       end
       else
-        if copy(tmp,1,1)='@' then
-          ParseConfigFile(fList,i,tmp)
+        if Copy(Tmp,1,1)='@' then
+          ParseConfigFile(FList,I,Tmp)
       else
-        fInputFiles.Add(tmp); //assume it is an input file
-      inc(i);
+        FInputFiles.Add(Tmp); //assume it is an input file
+      Inc(I);
     end;
   finally
-    fList.Free;
+    FList.Free;
   end;
 end;
 
 constructor TParameters.Create;
 begin
   inherited Create;
-  fHelp:=false;
-  fVersion:=false;
-  fVerbose:=false;
-  fInputFiles:=TStringList.Create;
-  fRCIncludeDirs:= TStringList.Create;
-  fRCIncludeDirs.Duplicates:= dupIgnore;
-  fRCDefines:= TStringList.Create;
-  fOutputFile:='';
-  fTarget.machine:=mtnone;
-  GetDefaultSubMachineForMachine(fTarget.machine);
-  fTarget.objformat:=ofnone;
+  FHelp:=False;
+  FVersion:=False;
+  FVerbose:=False;
+  FInputFiles:=TStringList.Create;
+  FRCIncludeDirs:= TStringList.Create;
+  FRCIncludeDirs.Duplicates:= dupIgnore;
+  FRCDefines:= TStringList.Create;
+  FOutputFile:='';
+  FTarget.Machine:=mtNone;
+  GetDefaultSubMachineForMachine(FTarget.Machine);
+  FTarget.ObjFormat:=ofNone;
 end;
 
 destructor TParameters.Destroy;
 begin
-  fRCDefines.Free;
-  fRCIncludeDirs.Free;
-  fInputFiles.Free;
+  FRCDefines.Free;
+  FRCIncludeDirs.Free;
+  FInputFiles.Free;
   inherited;
 end;
 

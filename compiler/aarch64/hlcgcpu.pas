@@ -30,35 +30,35 @@ interface
 
   uses
     symtype,
-    aasmdata,
+    AAsmData,
     symdef,
     cgbase,cgutils,
     hlcgobj, hlcg2ll;
 
   type
-    thlcgaarch64 = class(thlcg2ll)
-      procedure a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: tsubsetregister; destreg: tregister); override;
-      procedure a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: tsubsetregister); override;
+    THLCGAArch64 = class(THLCG2LL)
+      procedure a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister); override;
+      procedure a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister); override;
 
-      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);override;
+      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
      protected
-      procedure a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt); override;
+      procedure a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt); override;
     end;
 
 implementation
 
   uses
-    verbose,globtype,fmodule,
+    Verbose,GlobType,FModule,
     aasmbase,aasmtai,
-    symconst,symsym,defutil,
+    symconst,SymSym,defutil,
     cpubase,aasmcpu,parabase,
     cgobj,cgcpu;
 
-  procedure thlcgaarch64.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: tsubsetregister; destreg: tregister);
+  procedure THLCGAArch64.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: TSubsetRegister; destreg: TRegister);
     var
-      op: tasmop;
-      tocgsize: tcgsize;
-      tmpdestreg: tregister;
+      op: TAsmOp;
+      tocgsize: TCgSize;
+      tmpdestreg: TRegister;
     begin
       tocgsize:=def_cgsize(tosize);
       if (sreg.startbit<>0) or
@@ -80,7 +80,7 @@ implementation
             tmpdestreg:=cg.getintregister(list,OS_32)
           else
             tmpdestreg:=destreg;
-          list.concat(taicpu.op_reg_reg_const_const(op,tmpdestreg,sreg.subsetreg,sreg.startbit,sreg.bitlen));
+          list.concat(TAICPU.op_reg_reg_const_const(op,tmpdestreg,sreg.subsetreg,sreg.startbit,sreg.bitlen));
           { need to sign extend further or truncate? }
           if (sreg.subsetregsize=OS_S64) and
              not(tocgsize in [OS_64,OS_S64]) then
@@ -96,7 +96,7 @@ implementation
     end;
 
 
-  procedure makeregssamesize(list: tasmlist; fromsize, tosize: tcgsize; orgfromreg, orgtoreg: tregister; out newfromreg, newtoreg: tregister);
+  procedure makeregssamesize(list: TAsmList; fromsize, tosize: TCgSize; orgfromreg, orgtoreg: TRegister; out newfromreg, newtoreg: TRegister);
     begin
       if (fromsize in [OS_S64,OS_64])<>
          (tosize in [OS_S64,OS_64]) then
@@ -112,9 +112,9 @@ implementation
     end;
 
 
-  procedure thlcgaarch64.a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: tsubsetregister);
+  procedure THLCGAArch64.a_load_subsetreg_subsetreg(list: TAsmList; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: TSubsetRegister);
     var
-      fromreg, toreg: tregister;
+      fromreg, toreg: TRegister;
 
     begin
       { BFM can only insert a bitfield that starts at position 0 in the source
@@ -123,89 +123,89 @@ implementation
          (fromsreg.bitlen>=tosreg.bitlen) then
         begin
           makeregssamesize(list,fromsreg.subsetregsize,tosreg.subsetregsize,fromsreg.subsetreg,tosreg.subsetreg,fromreg,toreg);
-          list.concat(taicpu.op_reg_reg_const_const(A_BFXIL,toreg,fromreg,fromsreg.startbit,tosreg.bitlen))
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFXIL,toreg,fromreg,fromsreg.startbit,tosreg.bitlen))
         end
       else if (fromsreg.startbit=0) and
          (fromsreg.bitlen>=tosreg.bitlen) then
         begin
           makeregssamesize(list,fromsreg.subsetregsize,tosreg.subsetregsize,fromsreg.subsetreg,tosreg.subsetreg,fromreg,toreg);
-          list.concat(taicpu.op_reg_reg_const_const(A_BFI,toreg,fromreg,tosreg.startbit,tosreg.bitlen))
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,tosreg.startbit,tosreg.bitlen))
         end
       else
         inherited;
     end;
 
 
-  procedure thlcgaarch64.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);
+  procedure THLCGAArch64.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
     var
       make_global: boolean;
-      href: treference;
+      href: TReference;
       hsym: TSym;
-      paraloc: pcgparalocation;
-      op: tasmop;
+      paraloc: PCGParaLocation;
+      op: TAsmOp;
     begin
       if not(procdef.proctypeoption in [potype_function,potype_procedure]) then
-        Internalerror(200006137);
-      if not assigned(procdef.struct) or
+        InternalError(200006137);
+      if not Assigned(procdef.struct) or
          (procdef.procoptions*[po_classmethod, po_staticmethod,
            po_methodpointer, po_interrupt, po_iocheck]<>[]) then
-        Internalerror(200006138);
+        InternalError(200006138);
       if procdef.owner.symtabletype<>ObjectSymtable then
-        Internalerror(200109191);
+        InternalError(200109191);
 
       make_global:=false;
       if (not CurrentModule.is_unit) or create_smartlink_library or
-         (procdef.owner.defowner.owner.symtabletype=globalsymtable) then
+         (procdef.owner.defowner.owner.symtabletype=GlobalSymTable) then
         make_global:=true;
 
       if make_global then
-        list.concat(Tai_symbol.Createname_global(labelname,AT_FUNCTION,0,procdef))
+        list.concat(TAISymbol.Createname_global(labelname,AT_FUNCTION,0,procdef))
       else
-        list.concat(Tai_symbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
+        list.concat(TAISymbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
 
       { set param1 interface to self  }
       procdef.init_paraloc_info(callerside);
       hsym:=TSym(procdef.parast.Find('self'));
-      if not(assigned(hsym) and
+      if not(Assigned(hsym) and
         (hsym.typ=paravarsym)) then
-        internalerror(2010103101);
+        InternalError(2010103101);
       paraloc:=TParaVarSym(hsym).paraloc[callerside].location;
-      if assigned(paraloc^.next) then
+      if Assigned(paraloc^.next) then
         InternalError(2013020101);
 
       case paraloc^.loc of
         LOC_REGISTER:
-          tcgaarch64(cg).handle_reg_imm12_reg(list,A_SUB,paraloc^.size,paraloc^.register,ioffset,paraloc^.register,NR_IP0,false,true);
+          TCGAArch64(cg).handle_reg_imm12_reg(list,A_SUB,paraloc^.size,paraloc^.register,ioffset,paraloc^.register,NR_IP0,false,true);
         else
-          internalerror(2010103102);
+          InternalError(2010103102);
       end;
 
       if (po_virtualmethod in procdef.procoptions) and
           not is_objectpascal_helper(procdef.struct) then
         begin
           if (procdef.extnumber=$ffff) then
-            Internalerror(2000061302);
+            InternalError(2000061302);
           { mov  0(%rdi),%rax ; load vmt}
-          reference_reset_base(href,voidpointertype,paraloc^.register,0,ctempposinvalid,sizeof(pint),[]);
+          reference_reset_base(href,voidpointertype,paraloc^.register,0,ctempposinvalid,sizeof(PInt),[]);
           getcpuregister(list,NR_IP0);
           a_load_ref_reg(list,voidpointertype,voidpointertype,href,NR_IP0);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_IP0,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
+          reference_reset_base(href,voidpointertype,NR_IP0,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(PInt),[]);
           op:=A_LDR;
-          tcgaarch64(cg).make_simple_ref(list,op,OS_ADDR,PF_None,href,NR_IP0);
-          list.concat(taicpu.op_reg_ref(op,NR_IP0,href));
+          TCGAArch64(cg).make_simple_ref(list,op,OS_ADDR,PF_None,href,NR_IP0);
+          list.concat(TAICPU.op_reg_ref(op,NR_IP0,href));
           ungetcpuregister(list,NR_IP0);
-          list.concat(taicpu.op_reg(A_BR,NR_IP0));
+          list.concat(TAICPU.op_reg(A_BR,NR_IP0));
         end
       else
         cg.a_jmp_name(list,procdef.mangledname);
-      list.concat(Tai_symbol_end.Createname(labelname));
+      list.concat(TAISymbolEnd.Createname(labelname));
     end;
 
 
-  procedure thlcgaarch64.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt);
+  procedure THLCGAArch64.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: TRegister; const sreg: TSubsetRegister; slopt: TSubsetLoadOpt);
     var
-      toreg: tregister;
+      toreg: TRegister;
     begin
       if slopt in [SL_SETZERO,SL_SETMAX] then
         inherited
@@ -214,21 +214,21 @@ implementation
               (getsubreg(fromreg)<getsubreg(sreg.subsetreg)) then
         begin
           makeregssamesize(list,def_cgsize(fromsize),sreg.subsetregsize,fromreg,sreg.subsetreg,fromreg,toreg);
-          list.concat(taicpu.op_reg_reg_const_const(A_BFI,toreg,fromreg,sreg.startbit,sreg.bitlen))
+          list.concat(TAICPU.op_reg_reg_const_const(A_BFI,toreg,fromreg,sreg.startbit,sreg.bitlen))
         end
       else
         a_load_reg_reg(list,fromsize,subsetsize,fromreg,sreg.subsetreg);
     end;
 
 
-  procedure create_hlcodegen_cpu(hlcgobjhelpers: thlcgobjhelpersclass);
+  procedure create_hlcodegen_cpu(hlcgobjhelpers: THLCGObjHelpersClass);
     begin
-      hlcg:=thlcgaarch64.create(hlcgobjhelpers);
+      hlcg:=THLCGAArch64.create(hlcgobjhelpers);
       create_codegen;
     end;
 
 
 begin
-  chlcgobj:=thlcgaarch64;
+  CHLCGObj:=THLCGAArch64;
   create_hlcodegen:=@create_hlcodegen_cpu;
 end.

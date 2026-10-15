@@ -20,360 +20,360 @@
 
  ****************************************************************************
 }
-program postw32;
+program PostW32;
 uses
 {$ifdef fpc}
-  strings
+  Strings
 {$else}
-  sysutils
+  SysUtils
 {$endif}
   ;
 
 const
-  execinfo_f_cant_open_executable='Cannot open file ';
-  execinfo_x_codesize='Code size: ';
-  execinfo_x_initdatasize='Size of Initialized Data: ';
-  execinfo_x_uninitdatasize='Size of Uninitialized Data: ';
-  execinfo_f_cant_process_executable='Cannot process file ';
-  execinfo_x_stackreserve='Size of Stack Reserve: ';
-  execinfo_x_stackcommit='Size of Stack Commit: ';
+  ExecInfoFCantOpenExecutable='Cannot open file ';
+  ExecInfoXCodeSize='Code size: ';
+  ExecInfoXInitDataSize='Size of Initialized Data: ';
+  ExecInfoXUninitDataSize='Size of Uninitialized Data: ';
+  ExecInfoFCantProcessExecutable='Cannot process file ';
+  ExecInfoXStackReserve='Size of Stack Reserve: ';
+  ExecInfoXStackCommit='Size of Stack Commit: ';
 
 type
-  tapptype = (at_none,
-    at_gui,at_cui
+  TAppType = (atNone,
+    atGUI,atCUI
   );
 
 var
-  verbose:longbool;
-  stacksize,
-  ii,jj:longint;
-  code:integer;
-  DllVersion : sTring;
-  Dllmajor,Dllminor : word;
-  apptype : tapptype;
+  Verbose:LongBool;
+  StackSize,
+  II,JJ:LongInt;
+  Code:Integer;
+  DLLVersion : sTring;
+  DLLMajor,DLLMinor : Word;
+  AppType : TAppType;
 
-function tostr(i : longint) : string;
+function ToStr(I : LongInt) : string;
 {
 return string of value i
 }
 var
-  hs : string;
+  HS : string;
 begin
-  str(i,hs);
-  tostr:=hs;
+  Str(I,HS);
+  ToStr:=HS;
 end;
 
-procedure Message1(const info,fn:string);
+procedure Message1(const Info,Fn:string);
 var
-  e:longbool;
+  E:LongBool;
 begin
-  e:=pos('Cannot',info)=1;
-  if verbose or e then
-   writeln(info,fn);
-  if e then
-   halt(1);
+  E:=Pos('Cannot',Info)=1;
+  if Verbose or E then
+   WriteLn(Info,Fn);
+  if E then
+   Halt(1);
 end;
 
 
-function postprocessexecutable(const fn : string;isdll:boolean):boolean;
+function PostProcessExecutable(const Fn : string;IsDLL:Boolean):Boolean;
 type
-  tdosheader = packed record
-     e_magic : word;
-     e_cblp : word;
-     e_cp : word;
-     e_crlc : word;
-     e_cparhdr : word;
-     e_minalloc : word;
-     e_maxalloc : word;
-     e_ss : word;
-     e_sp : word;
-     e_csum : word;
-     e_ip : word;
-     e_cs : word;
-     e_lfarlc : word;
-     e_ovno : word;
-     e_res : array[0..3] of word;
-     e_oemid : word;
-     e_oeminfo : word;
-     e_res2 : array[0..9] of word;
-     e_lfanew : longint;
+  TDOSHeader = packed record
+     EMagic : Word;
+     ECblp : Word;
+     ECp : Word;
+     ECrlc : Word;
+     ECparhdr : Word;
+     EMinalloc : Word;
+     EMaxalloc : Word;
+     ESs : Word;
+     ESp : Word;
+     ECsum : Word;
+     EIp : Word;
+     ECs : Word;
+     ELfarlc : Word;
+     EOvno : Word;
+     ERes : array[0..3] of Word;
+     EOEMID : Word;
+     EOEMInfo : Word;
+     ERes2 : array[0..9] of Word;
+     ELFANew : LongInt;
   end;
-  tpeheader = packed record
-     PEMagic : array[0..3] of char;
-     Machine : word;
-     NumberOfSections : word;
-     TimeDateStamp : longint;
-     PointerToSymbolTable : longint;
-     NumberOfSymbols : longint;
-     SizeOfOptionalHeader : word;
-     Characteristics : word;
-     Magic : word;
-     MajorLinkerVersion : byte;
-     MinorLinkerVersion : byte;
-     SizeOfCode : longint;
-     SizeOfInitializedData : longint;
-     SizeOfUninitializedData : longint;
-     AddressOfEntryPoint : longint;
-     BaseOfCode : longint;
-     BaseOfData : longint;
-     ImageBase : longint;
-     SectionAlignment : longint;
-     FileAlignment : longint;
-     MajorOperatingSystemVersion : word;
-     MinorOperatingSystemVersion : word;
-     MajorImageVersion : word;
-     MinorImageVersion : word;
-     MajorSubsystemVersion : word;
-     MinorSubsystemVersion : word;
-     Reserved1 : longint;
-     SizeOfImage : longint;
-     SizeOfHeaders : longint;
-     CheckSum : longint;
-     Subsystem : word;
-     DllCharacteristics : word;
-     SizeOfStackReserve : longint;
-     SizeOfStackCommit : longint;
-     SizeOfHeapReserve : longint;
-     SizeOfHeapCommit : longint;
-     LoaderFlags : longint;
-     NumberOfRvaAndSizes : longint;
-     DataDirectory : array[1..$80] of byte;
+  TPEHeader = packed record
+     PEMagic : array[0..3] of Char;
+     Machine : Word;
+     NumberOfSections : Word;
+     TimeDateStamp : LongInt;
+     PointerToSymbolTable : LongInt;
+     NumberOfSymbols : LongInt;
+     SizeOfOptionalHeader : Word;
+     Characteristics : Word;
+     Magic : Word;
+     MajorLinkerVersion : Byte;
+     MinorLinkerVersion : Byte;
+     SizeOfCode : LongInt;
+     SizeOfInitializedData : LongInt;
+     SizeOfUninitializedData : LongInt;
+     AddressOfEntryPoint : LongInt;
+     BaseOfCode : LongInt;
+     BaseOfData : LongInt;
+     ImageBase : LongInt;
+     SectionAlignment : LongInt;
+     FileAlignment : LongInt;
+     MajorOperatingSystemVersion : Word;
+     MinorOperatingSystemVersion : Word;
+     MajorImageVersion : Word;
+     MinorImageVersion : Word;
+     MajorSubsystemVersion : Word;
+     MinorSubsystemVersion : Word;
+     Reserved1 : LongInt;
+     SizeOfImage : LongInt;
+     SizeOfHeaders : LongInt;
+     CheckSum : LongInt;
+     Subsystem : Word;
+     DllCharacteristics : Word;
+     SizeOfStackReserve : LongInt;
+     SizeOfStackCommit : LongInt;
+     SizeOfHeapReserve : LongInt;
+     SizeOfHeapCommit : LongInt;
+     LoaderFlags : LongInt;
+     NumberOfRvaAndSizes : LongInt;
+     DataDirectory : array[1..$80] of Byte;
   end;
-  tcoffsechdr=packed record
-    name     : array[0..7] of char;
-    vsize    : longint;
-    rvaofs   : longint;
-    datalen  : longint;
-    datapos  : longint;
-    relocpos : longint;
-    lineno1  : longint;
-    nrelocs  : word;
-    lineno2  : word;
-    flags    : longint;
+  TCOFFSecHdr=packed record
+    Name     : array[0..7] of Char;
+    VSize    : LongInt;
+    RVAOfs   : LongInt;
+    DataLen  : LongInt;
+    DataPos  : LongInt;
+    RelocPos : LongInt;
+    LineNo1  : LongInt;
+    NRelocs  : Word;
+    LineNo2  : Word;
+    Flags    : LongInt;
   end;
-  psecfill=^tsecfill;
-  tsecfill=record
-    fillpos,
-    fillsize : longint;
-    next : psecfill;
+  PSecFill=^TSecFill;
+  TSecFill=record
+    FillPos,
+    FillSize : LongInt;
+    Next : PSecFill;
   end;
 var
-  f : file;
-  dosheader : tdosheader;
-  peheader : tpeheader;
-  firstsecpos,
-  maxfillsize,
-  l,peheaderpos : longint;
-  coffsec : tcoffsechdr;
-  secroot,hsecroot : psecfill;
-  zerobuf : pointer;
+  F : file;
+  DOSHeader : TDOSHeader;
+  PEHeader : TPEHeader;
+  FirstSecPos,
+  MaxFillSize,
+  L,PEHeaderPos : LongInt;
+  COFFSec : TCOFFSecHdr;
+  SecRoot,HSecRoot : PSecFill;
+  ZeroBuf : Pointer;
 begin
-  postprocessexecutable:=false;
+  PostProcessExecutable:=False;
   { open file }
-  assign(f,fn);
+  Assign(F,Fn);
   {$I-}
-   reset(f,1);
-  if ioresult<>0 then
-    Message1(execinfo_f_cant_open_executable,fn);
+   Reset(F,1);
+  if IOResult<>0 then
+    Message1(ExecInfoFCantOpenExecutable,Fn);
   { read headers }
-  blockread(f,dosheader,sizeof(tdosheader));
-  peheaderpos:=dosheader.e_lfanew;
-  seek(f,peheaderpos);
-  blockread(f,peheader,sizeof(tpeheader));
+  BlockRead(F,DOSHeader,SizeOf(TDOSHeader));
+  PEHeaderPos:=DOSHeader.ELFANew;
+  Seek(F,PEHeaderPos);
+  BlockRead(F,PEHeader,SizeOf(TPEHeader));
   { write info }
-  Message1(execinfo_x_codesize,tostr(peheader.SizeOfCode));
-  Message1(execinfo_x_initdatasize,tostr(peheader.SizeOfInitializedData));
-  Message1(execinfo_x_uninitdatasize,tostr(peheader.SizeOfUninitializedData));
+  Message1(ExecInfoXCodeSize,ToStr(PEHeader.SizeOfCode));
+  Message1(ExecInfoXInitDataSize,ToStr(PEHeader.SizeOfInitializedData));
+  Message1(ExecInfoXUninitDataSize,ToStr(PEHeader.SizeOfUninitializedData));
   { change stack size (PM) }
   { I am not sure that the default value is adequate !! }
-  peheader.SizeOfStackReserve:=stacksize;
+  PEHeader.SizeOfStackReserve:=StackSize;
   { change the header }
   { sub system }
   { gui=2 }
   { cui=3 }
-  if apptype=at_gui then
-    peheader.Subsystem:=2
-  else if apptype=at_cui then
-    peheader.Subsystem:=3;
-  if dllversion<>'' then
+  if AppType=atGUI then
+    PEHeader.Subsystem:=2
+  else if AppType=atCUI then
+    PEHeader.Subsystem:=3;
+  if DLLVersion<>'' then
     begin
-     peheader.MajorImageVersion:=dllmajor;
-     peheader.MinorImageVersion:=dllminor;
+     PEHeader.MajorImageVersion:=DLLMajor;
+     PEHeader.MinorImageVersion:=DLLMinor;
     end;
   { reset timestamp }
-  peheader.TimeDateStamp:=0;
+  PEHeader.TimeDateStamp:=0;
   { write header back }
-  seek(f,peheaderpos);
-  blockwrite(f,peheader,sizeof(tpeheader));
-  if ioresult<>0 then
-    Message1(execinfo_f_cant_process_executable,fn);
-  seek(f,peheaderpos);
-  blockread(f,peheader,sizeof(tpeheader));
+  Seek(F,PEHeaderPos);
+  BlockWrite(F,PEHeader,SizeOf(TPEHeader));
+  if IOResult<>0 then
+    Message1(ExecInfoFCantProcessExecutable,Fn);
+  Seek(F,PEHeaderPos);
+  BlockRead(F,PEHeader,SizeOf(TPEHeader));
   { write the value after the change }
-  Message1(execinfo_x_stackreserve,tostr(peheader.SizeOfStackReserve));
-  Message1(execinfo_x_stackcommit,tostr(peheader.SizeOfStackCommit));
+  Message1(ExecInfoXStackReserve,ToStr(PEHeader.SizeOfStackReserve));
+  Message1(ExecInfoXStackCommit,ToStr(PEHeader.SizeOfStackCommit));
   { read section info }
-  maxfillsize:=0;
-  firstsecpos:=0;
-  secroot:=nil;
-  for l:=1to peheader.NumberOfSections do
+  MaxFillSize:=0;
+  FirstSecPos:=0;
+  SecRoot:=nil;
+  for L:=1to PEHeader.NumberOfSections do
    begin
-     blockread(f,coffsec,sizeof(tcoffsechdr));
-     if coffsec.datapos>0 then
+     BlockRead(F,COFFSec,SizeOf(TCOFFSecHdr));
+     if COFFSec.DataPos>0 then
       begin
-        if secroot=nil then
-         firstsecpos:=coffsec.datapos;
-        new(hsecroot);
-        hsecroot^.fillpos:=coffsec.datapos+coffsec.vsize;
-        hsecroot^.fillsize:=coffsec.datalen-coffsec.vsize;
-        hsecroot^.next:=secroot;
-        secroot:=hsecroot;
-        if secroot^.fillsize>maxfillsize then
-         maxfillsize:=secroot^.fillsize;
+        if SecRoot=nil then
+         FirstSecPos:=COFFSec.DataPos;
+        New(HSecRoot);
+        HSecRoot^.FillPos:=COFFSec.DataPos+COFFSec.VSize;
+        HSecRoot^.FillSize:=COFFSec.DataLen-COFFSec.VSize;
+        HSecRoot^.Next:=SecRoot;
+        SecRoot:=HSecRoot;
+        if SecRoot^.FillSize>MaxFillSize then
+         MaxFillSize:=SecRoot^.FillSize;
       end;
    end;
-  if firstsecpos>0 then
+  if FirstSecPos>0 then
    begin
-     l:=firstsecpos-filepos(f);
-     if l>maxfillsize then
-      maxfillsize:=l;
+     L:=FirstSecPos-FilePos(F);
+     if L>MaxFillSize then
+      MaxFillSize:=L;
    end
   else
-   l:=0;
+   L:=0;
   { get zero buffer }
-  getmem(zerobuf,maxfillsize);
-  fillchar(zerobuf^,maxfillsize,0);
+  GetMem(ZeroBuf,MaxFillSize);
+  FillChar(ZeroBuf^,MaxFillSize,0);
   { zero from sectioninfo until first section }
-  blockwrite(f,zerobuf^,l);
+  BlockWrite(F,ZeroBuf^,L);
   { zero section alignments }
-  while assigned(secroot) do
+  while Assigned(SecRoot) do
    begin
-     seek(f,secroot^.fillpos);
-     blockwrite(f,zerobuf^,secroot^.fillsize);
-     hsecroot:=secroot;
-     secroot:=secroot^.next;
-     dispose(hsecroot);
+     Seek(F,SecRoot^.FillPos);
+     BlockWrite(F,ZeroBuf^,SecRoot^.FillSize);
+     HSecRoot:=SecRoot;
+     SecRoot:=SecRoot^.Next;
+     Dispose(HSecRoot);
    end;
-  freemem(zerobuf,maxfillsize);
-  close(f);
+  FreeMem(ZeroBuf,MaxFillSize);
+  Close(F);
   {$I+}
-  if ioresult<>0 then;
-  postprocessexecutable:=true;
+  if IOResult<>0 then;
+  PostProcessExecutable:=True;
 end;
 
 
 var
-  fn,s:string;
-function GetSwitchValue(const key,shortkey,default:string;const PossibleValues:array of pansichar):ansistring;
+  Fn,S:string;
+function GetSwitchValue(const Key,ShortKey,Default:string;const PossibleValues:array of PAnsiChar):AnsiString;
 var
-  i,j,k:longint;
-  x:double;
-  s1,s2:ansistring;
-  code:integer;
+  I,J,K:LongInt;
+  X:Double;
+  S1,S2:AnsiString;
+  Code:Integer;
 
   procedure Error;
   begin
-   writeln('Error: unrecognized option ',paramstr(i),' ',s1);
-   halt(1);
+   WriteLn('Error: unrecognized option ',ParamStr(I),' ',S1);
+   Halt(1);
   end;
 
 begin
-  for i:=1 to paramcount do
-   if(paramstr(i)=key)or(paramstr(i)=shortkey)then
+  for I:=1 to ParamCount do
+   if(ParamStr(I)=Key)or(ParamStr(I)=ShortKey)then
     begin
-     s1:=paramstr(succ(i));
-     for j:=0 to high(PossibleValues)do
+     S1:=ParamStr(Succ(I));
+     for J:=0 to High(PossibleValues)do
       begin
-       s2:=strpas(PossibleValues[j]);
-       if(length(s2)>1)and(s2[1]='*')then
-        case s2[2]of
+       S2:=StrPas(PossibleValues[J]);
+       if(Length(S2)>1)and(S2[1]='*')then
+        case S2[2]of
          'i':
           begin
-           val(s1,k,code);
-           if code<>0 then
-            error;
-           GetSwitchValue:=s1;
+           Val(S1,K,Code);
+           if Code<>0 then
+            Error;
+           GetSwitchValue:=S1;
            exit;
           end;
          'r':
           begin
-           val(s1,x,code);
-           if code<>0 then
-            error;
-           GetSwitchValue:=s1;
+           Val(S1,X,Code);
+           if Code<>0 then
+            Error;
+           GetSwitchValue:=S1;
            exit;
           end;
          's':
           begin
-           GetSwitchValue:=s1;
+           GetSwitchValue:=S1;
            exit;
           end;
         end
-       else if s1=s2 then
+       else if S1=S2 then
         begin
-         GetSwitchValue:=s1;
+         GetSwitchValue:=S1;
          exit;
         end;
       end;
-     error;
+     Error;
     end;
-  GetSwitchValue:=default;
+  GetSwitchValue:=Default;
 end;
 
-procedure help_info;
+procedure HelpInfo;
 begin
-  fn:=paramstr(0);
-  for jj:=length(fn)downto 1 do
-   if fn[jj] in [':','\','/']then
+  Fn:=ParamStr(0);
+  for JJ:=Length(Fn)downto 1 do
+   if Fn[JJ] in [':','\','/']then
     begin
-     fn:=copy(fn,succ(jj),255);
+     Fn:=Copy(Fn,Succ(JJ),255);
      break;
     end;
-  writeln('Usage: ',fn,' [options]');
-  writeln('Options:');
-  writeln('-i | --input <file>              - set input file;');
-  writeln('-m | --subsystem <console | gui> - set Win32 subsystem;');
-  writeln('-s | --stack <size>              - set stack size;');
-  writeln('-V | --version <n.n>             - set image version;');
-  writeln('-v | --verbose                   - show info while processing;');
-  writeln('-h | --help | -?                 - show this screen');
-  halt;
+  WriteLn('Usage: ',Fn,' [options]');
+  WriteLn('Options:');
+  WriteLn('-i | --input <file>              - set input file;');
+  WriteLn('-m | --subsystem <console | gui> - set Win32 subsystem;');
+  WriteLn('-s | --stack <size>              - set stack size;');
+  WriteLn('-V | --version <n.n>             - set image version;');
+  WriteLn('-v | --verbose                   - show info while processing;');
+  WriteLn('-h | --help | -?                 - show this screen');
+  Halt;
 end;
 
 begin
-  verbose:=false;
-  if paramcount=0 then
-    help_info;
-  for ii:=1 to paramcount do
-    if(paramstr(ii)='-h')or(paramstr(ii)='--help')or(paramstr(ii)='-?')then
-     help_info
-    else if(paramstr(ii)='-v')or(paramstr(ii)='--verbose')then
+  Verbose:=False;
+  if ParamCount=0 then
+    HelpInfo;
+  for II:=1 to ParamCount do
+    if(ParamStr(II)='-h')or(ParamStr(II)='--help')or(ParamStr(II)='-?')then
+     HelpInfo
+    else if(ParamStr(II)='-v')or(ParamStr(II)='--verbose')then
      begin
-      verbose:=true;
+      Verbose:=True;
       break;
      end;
-  fn:=GetSwitchValue('--input','-i','',['*s']);
-  val(GetSwitchValue('--stack','-s','33554432',['*i']),stacksize,code);
-  s:=GetSwitchValue('--subsystem','-m','console',['gui','console']);
-  if s='gui' then
-    apptype:=at_GUI
+  Fn:=GetSwitchValue('--input','-i','',['*s']);
+  Val(GetSwitchValue('--stack','-s','33554432',['*i']),StackSize,Code);
+  S:=GetSwitchValue('--subsystem','-m','console',['gui','console']);
+  if S='gui' then
+    AppType:=atGUI
   else
-    apptype:=at_cui;
-  dllversion:=GetSwitchValue('--version','-V','1.0',['*r']);
-  ii:=pos('.',dllversion);
-  if ii=0 then
+    AppType:=atCUI;
+  DLLVersion:=GetSwitchValue('--version','-V','1.0',['*r']);
+  II:=Pos('.',DLLVersion);
+  if II=0 then
     begin
-     ii:=succ(length(dllversion));
-     dllversion:=dllversion+'.0';
+     II:=Succ(Length(DLLVersion));
+     DLLVersion:=DLLVersion+'.0';
     end
-  else if ii=1 then
+  else if II=1 then
     begin
-     ii:=2;
-     dllversion:='0.'+dllversion;
+     II:=2;
+     DLLVersion:='0.'+DLLVersion;
     end;
-  val(copy(dllversion,1,pred(ii)),dllmajor,code);
-  val(copy(dllversion,succ(ii),length(dllversion)),dllminor,code);
-  if verbose then
-    writeln('Image Version: ',dllmajor,'.',dllminor);
-  PostProcessExecutable(fn,false);
+  Val(Copy(DLLVersion,1,Pred(II)),DLLMajor,Code);
+  Val(Copy(DLLVersion,Succ(II),Length(DLLVersion)),DLLMinor,Code);
+  if Verbose then
+    WriteLn('Image Version: ',DLLMajor,'.',DLLMinor);
+  PostProcessExecutable(Fn,False);
 end.

@@ -25,13 +25,13 @@ unit gendef;
 
 interface
 uses
-  globtype,cclasses;
+  GlobType,CClasses;
 
 type
-  tdeffile=class
+  TDefFile=class
     fname : string;
     constructor create(const fn:string);
-    destructor  destroy;override;
+    destructor  Destroy;override;
     procedure addexport(const s:TSymStr);
     procedure addimport(const s:TSymStr);
     procedure writefile;
@@ -44,20 +44,20 @@ type
   end;
 
 var
-  deffile : tdeffile;
+  deffile : TDefFile;
 
 
 implementation
 
 uses
   SysUtils,
-  systems,cutils,globals;
+  Systems,CUtils,Globals;
 
 {******************************************************************************
                                TDefFile
 ******************************************************************************}
 
-constructor tdeffile.create(const fn:string);
+constructor TDefFile.create(const fn:string);
 begin
   fname:=fn;
   WrittenOnDisk:=false;
@@ -67,10 +67,10 @@ begin
 end;
 
 
-destructor tdeffile.destroy;
+destructor TDefFile.Destroy;
 begin
   if WrittenOnDisk and
-     ([cs_link_nolink,cs_link_deffile]*CurrentSettings.globalswitches=[]) then
+     ([cs_link_nolink,cs_link_deffile]*CurrentSettings.GlobalSwitches=[]) then
     DeleteFile(FName);
   importlist.Free;
   importlist := nil;
@@ -80,27 +80,27 @@ end;
 
 
 
-procedure tdeffile.addexport(const s:TSymStr);
+procedure TDefFile.addexport(const s:TSymStr);
 begin
   exportlist.insert(s);
   is_empty:=false;
 end;
 
 
-procedure tdeffile.addimport(const s:TSymStr);
+procedure TDefFile.addimport(const s:TSymStr);
 begin
   importlist.insert(s);
   is_empty:=false;
 end;
 
 
-function tdeffile.empty : boolean;
+function TDefFile.empty : boolean;
 begin
   empty:=is_empty or DescriptionSetExplicity;
 end;
 
 
-procedure tdeffile.writefile;
+procedure TDefFile.writefile;
 var
   t : text;
 begin
@@ -111,17 +111,17 @@ begin
   {$push}{$I-}
    rewrite(t);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    exit;
   case TargetInfo.system of
     system_i386_win32,
     system_x86_64_win64,
     system_aarch64_win64 :
       begin
-        if description<>'' then
-          writeln(t,'DESCRIPTION '+''''+description+'''');
-        if dllversion<>'' then
-          writeln(t,'VERSION '+dllversion);
+        if Description<>'' then
+          WriteLn(t,'DESCRIPTION '+''''+Description+'''');
+        if DLLVersion<>'' then
+          WriteLn(t,'VERSION '+DLLVersion);
       end;
     else
       ;
@@ -130,19 +130,19 @@ begin
 {write imports}
   if not importlist.empty then
    begin
-     writeln(t,'');
-     writeln(t,'IMPORTS');
+     WriteLn(t,'');
+     WriteLn(t,'IMPORTS');
      while not importlist.empty do
-      writeln(t,#9+importlist.getfirst);
+      WriteLn(t,#9+importlist.GetFirst);
    end;
 
 {write exports}
   if not exportlist.empty then
    begin
-     writeln(t,'');
-     writeln(t,'EXPORTS');
+     WriteLn(t,'');
+     WriteLn(t,'EXPORTS');
      while not exportlist.empty do
-      writeln(t,#9+exportlist.getfirst);
+      WriteLn(t,#9+exportlist.GetFirst);
    end;
 
   close(t);

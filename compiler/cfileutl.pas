@@ -29,7 +29,7 @@ interface
 
     uses
 {$ifdef hasunix}
-      Baseunix,unix,
+      BaseUnix,Unix,
 {$endif hasunix}
 {$ifdef win32}
       Windows,
@@ -37,7 +37,7 @@ interface
 {$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
 {$ELSE}
-      fksysutl,
+      FKSysUtl,
 {$ENDIF}
       GlobType,
       CUtils,CClasses,
@@ -49,31 +49,31 @@ interface
         FDirectoryEntries : TFPHashList;
         FCached : Boolean;
         procedure FreeDirectoryEntries;
-        function GetItemAttr(const AName: TCmdStr): longint;
-        function TryUseCache: boolean;
+        function GetItemAttr(const AName: TCmdStr): LongInt;
+        function TryUseCache: Boolean;
         procedure ForceUseCache;
         procedure Reload;
       public
         constructor Create(AList:TFPHashObjectList;const AName:TCmdStr);
-        destructor  destroy;override;
-        function FileExists(const AName:TCmdStr):boolean;
-        function FileExistsCaseAware(const path, fn: TCmdStr; out FoundName: TCmdStr):boolean;
-        function DirectoryExists(const AName:TCmdStr):boolean;
+        destructor  Destroy;override;
+        function FileExists(const AName:TCmdStr):Boolean;
+        function FileExistsCaseAware(const Path, FN: TCmdStr; out FoundName: TCmdStr):Boolean;
+        function DirectoryExists(const AName:TCmdStr):Boolean;
         property DirectoryEntries:TFPHashList read FDirectoryEntries;
       end;
 
       TCachedSearchRec = record
         Name       : TCmdStr;
-        Attr       : longint;
+        Attr       : LongInt;
         Pattern    : TCmdStr;
         CachedDir  : TCachedDirectory;
-        EntryIndex : longint;
+        EntryIndex : LongInt;
       end;
 
       PCachedDirectoryEntry =  ^TCachedDirectoryEntry;
       TCachedDirectoryEntry = record
         RealName: TCmdStr;
-        Attr    : longint;
+        Attr    : LongInt;
       end;
 
       TDirectoryCache = class
@@ -82,74 +82,74 @@ interface
         function GetDirectory(const ADir:TCmdStr):TCachedDirectory;
       public
         constructor Create;
-        destructor  destroy;override;
-        function FileExists(const AName:TCmdStr):boolean;
-        function FileExistsCaseAware(const path, fn: TCmdStr; out FoundName: TCmdStr):boolean;
-        function DirectoryExists(const AName:TCmdStr):boolean;
-        function FindFirst(const APattern:TCmdStr;var Res:TCachedSearchRec):boolean;
-        function FindNext(var Res:TCachedSearchRec):boolean;
-        function FindClose(var Res:TCachedSearchRec):boolean;
+        destructor  Destroy;override;
+        function FileExists(const AName:TCmdStr):Boolean;
+        function FileExistsCaseAware(const Path, FN: TCmdStr; out FoundName: TCmdStr):Boolean;
+        function DirectoryExists(const AName:TCmdStr):Boolean;
+        function FindFirst(const APattern:TCmdStr;var Res:TCachedSearchRec):Boolean;
+        function FindNext(var Res:TCachedSearchRec):Boolean;
+        function FindClose(var Res:TCachedSearchRec):Boolean;
       end;
 
       TSearchPathList = class(TCmdStrList)
-        procedure AddPath(s:TCmdStr;addfirst:boolean);overload;
-        procedure AddLibraryPath(const sysroot: TCmdStr; s:TCmdStr;addfirst:boolean);overload;
-        procedure AddList(list:TSearchPathList;addfirst:boolean);
-        function  FindFile(const f : TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+        procedure AddPath(S:TCmdStr;AddFirst:Boolean);overload;
+        procedure AddLibraryPath(const SysRoot: TCmdStr; S:TCmdStr;AddFirst:Boolean);overload;
+        procedure AddList(List:TSearchPathList;AddFirst:Boolean);
+        function  FindFile(const F : TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
       end;
 
-    function  bstoslash(const s : TCmdStr) : TCmdStr;
+    function  BSToSlash(const S : TCmdStr) : TCmdStr;
     {Gives the absolute path to the current directory}
     function  GetCurrentDir:TCmdStr;
     {Gives the relative path to the current directory,
      with a trailing dir separator. E. g. on unix ./ }
-    function CurDirRelPath(systeminfo: TSystemInfo): TCmdStr;
-    function  path_absolute(const s : TCmdStr) : boolean;
-    Function  PathExists (const F : TCmdStr;allowcache:boolean) : Boolean;
-    Function  FileExists (const F : TCmdStr;allowcache:boolean) : Boolean;
-    function  FileExistsNonCase(const path,fn:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
-    Function  RemoveDir(d:TCmdStr):boolean;
-    Function  FixPath(const s:TCmdStr;allowdot:boolean):TCmdStr;
-    function  FixFileName(const s:TCmdStr):TCmdStr;
-    function  TargetFixPath(s:TCmdStr;allowdot:boolean):TCmdStr;
-    function  TargetFixFileName(const s:TCmdStr):TCmdStr;
-    procedure SplitBinCmd(const s:TCmdStr;var bstr: TCmdStr;var cstr:TCmdStr);
-    function  FindFile(const f : TCmdStr; const path : TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+    function CurDirRelPath(SystemInfo: TSystemInfo): TCmdStr;
+    function  Path_Absolute(const S : TCmdStr) : Boolean;
+    Function  PathExists (const F : TCmdStr;AllowCache:Boolean) : Boolean;
+    Function  FileExists (const F : TCmdStr;AllowCache:Boolean) : Boolean;
+    function  FileExistsNonCase(const Path,FN:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
+    Function  RemoveDir(D:TCmdStr):Boolean;
+    Function  FixPath(const S:TCmdStr;AllowDot:Boolean):TCmdStr;
+    function  FixFileName(const S:TCmdStr):TCmdStr;
+    function  TargetFixPath(S:TCmdStr;AllowDot:Boolean):TCmdStr;
+    function  TargetFixFileName(const S:TCmdStr):TCmdStr;
+    procedure SplitBinCmd(const S:TCmdStr;var BStr: TCmdStr;var CStr:TCmdStr);
+    function  FindFile(const F : TCmdStr; const Path : TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
 {    function  FindFilePchar(const f : TCmdStr;path : pchar;allowcache:boolean;var foundfile:TCmdStr):boolean;}
-    function  FindFileInExeLocations(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
-    function  FindExe(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
-    function  GetShortName(const n:TCmdStr):TCmdStr;
-    function maybequoted(const s:ShortString):ShortString;
-    function maybequoted(const s:ansistring):ansistring;
-    function maybequoted_for_script(const s:ansistring; quote_script: tscripttype):ansistring;
+    function  FindFileInExeLocations(const Bin:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
+    function  FindExe(const Bin:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
+    function  GetShortName(const N:TCmdStr):TCmdStr;
+    function MaybeQuoted(const S:ShortString):ShortString;
+    function MaybeQuoted(const S:AnsiString):AnsiString;
+    function MaybeQuoted_For_Script(const S:AnsiString; QuoteScript: TScriptType):AnsiString;
 
     procedure InitFileUtils;
     procedure DoneFileUtils;
 
     function UnixRequoteWithDoubleQuotes(const QuotedStr: TCmdStr): TCmdStr;
-    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: AnsiString; Flags: TExecuteFlags = []): Longint;
-    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: array of AnsiString; Flags: TExecuteFlags = []): Longint;
-    function Shell(const command:ansistring): longint;
+    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: AnsiString; Flags: TExecuteFlags = []): LongInt;
+    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: array of AnsiString; Flags: TExecuteFlags = []): LongInt;
+    function Shell(const Command:AnsiString): LongInt;
 
   { hide Sysutils.ExecuteProcess in units using this one after SysUtils}
   const
     ExecuteProcess = 'Do not use' deprecated 'Use cfileutil.RequotedExecuteProcess instead, ExecuteProcess cannot deal with single quotes as used by Unix command lines';
 
-function Unix2AmigaPath(path: String): String;
+function Unix2AmigaPath(Path: String): String;
 
 implementation
 
     uses
-      Comphook,
+      CompHook,
       Globals;
 
     var
       DirCache : TDirectoryCache;
 
 
-function Unix2AmigaPath(path: String): String;
+function Unix2AmigaPath(Path: String): String;
 begin
-  Unix2AmigaPath:=path;
+  Unix2AmigaPath:=Path;
 end;
 
 
@@ -158,29 +158,29 @@ end;
                            TCachedDirectory
 ****************************************************************************}
 
-    constructor TCachedDirectory.create(AList:TFPHashObjectList;const AName:TCmdStr);
+    constructor TCachedDirectory.Create(AList:TFPHashObjectList;const AName:TCmdStr);
       begin
-        inherited create(AList,AName);
+        inherited Create(AList,AName);
         FDirectoryEntries:=TFPHashList.Create;
         FCached:=False;
       end;
 
 
-    destructor TCachedDirectory.destroy;
+    destructor TCachedDirectory.Destroy;
       begin
         FreeDirectoryEntries;
         FDirectoryEntries.Free;
         FDirectoryEntries := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    function TCachedDirectory.TryUseCache:boolean;
+    function TCachedDirectory.TryUseCache:Boolean;
       begin
         Result:=True;
         if FCached then
-          exit;
-        if not CurrentSettings.disabledircache then
+          Exit;
+        if not CurrentSettings.DisableDirCache then
           ForceUseCache
         else
           Result:=False;
@@ -199,25 +199,25 @@ end;
 
     procedure TCachedDirectory.FreeDirectoryEntries;
       var
-        i: Integer;
+        I: Integer;
       begin
-        if not(tf_files_case_aware in SourceInfo.flags) then
-          exit;
-        for i := 0 to DirectoryEntries.Count-1 do
-          dispose(PCachedDirectoryEntry(DirectoryEntries[i]));
+        if not(tf_files_case_aware in SourceInfo.Flags) then
+          Exit;
+        for I := 0 to DirectoryEntries.Count-1 do
+          Dispose(PCachedDirectoryEntry(DirectoryEntries[I]));
       end;
 
 
-    function TCachedDirectory.GetItemAttr(const AName: TCmdStr): longint;
+    function TCachedDirectory.GetItemAttr(const AName: TCmdStr): LongInt;
       var
-        entry: PCachedDirectoryEntry;
+        Entry: PCachedDirectoryEntry;
       begin
-        if not(tf_files_case_sensitive in SourceInfo.flags) then
-          if (tf_files_case_aware in SourceInfo.flags) then
+        if not(tf_files_case_sensitive in SourceInfo.Flags) then
+          if (tf_files_case_aware in SourceInfo.Flags) then
             begin
-              entry:=PCachedDirectoryEntry(DirectoryEntries.Find(Lower(AName)));
-              if assigned(entry) then
-                Result:=entry^.Attr
+              Entry:=PCachedDirectoryEntry(DirectoryEntries.Find(Lower(AName)));
+              if Assigned(Entry) then
+                Result:=Entry^.Attr
               else
                 Result:=0;
             end
@@ -230,80 +230,80 @@ end;
 
     procedure TCachedDirectory.Reload;
       var
-        dir   : TRawByteSearchRec;
-        entry : PCachedDirectoryEntry;
+        Dir   : TRawByteSearchRec;
+        Entry : PCachedDirectoryEntry;
       begin
         FreeDirectoryEntries;
         DirectoryEntries.Clear;
-        if findfirst(IncludeTrailingPathDelimiter(Name)+AllFilesMask,faAnyFile or faDirectory,dir) = 0 then
+        if FindFirst(IncludeTrailingPathDelimiter(Name)+AllFilesMask,faAnyFile or faDirectory,Dir) = 0 then
           begin
             repeat
-              if ((dir.attr and faDirectory)<>faDirectory) or
-                 ((dir.Name<>'.') and
-                  (dir.Name<>'..')) then
+              if ((Dir.Attr and faDirectory)<>faDirectory) or
+                 ((Dir.Name<>'.') and
+                  (Dir.Name<>'..')) then
                 begin
                   { Force Archive bit so the attribute always has a value. This is needed
                     to be able to see the difference in the directoryentries lookup if a file
                     exists or not }
                   Dir.Attr:=Dir.Attr or faArchive;
-                  if not(tf_files_case_sensitive in SourceInfo.flags) then
-                    if (tf_files_case_aware in SourceInfo.flags) then
+                  if not(tf_files_case_sensitive in SourceInfo.Flags) then
+                    if (tf_files_case_aware in SourceInfo.Flags) then
                       begin
-                        new(entry);
-                        entry^.RealName:=Dir.Name;
-                        entry^.Attr:=Dir.Attr;
-                        DirectoryEntries.Add(Lower(Dir.Name),entry)
+                        New(Entry);
+                        Entry^.RealName:=Dir.Name;
+                        Entry^.Attr:=Dir.Attr;
+                        DirectoryEntries.Add(Lower(Dir.Name),Entry)
                       end
                     else
-                      DirectoryEntries.Add(Lower(Dir.Name),Pointer(Ptrint(Dir.Attr)))
+                      DirectoryEntries.Add(Lower(Dir.Name),Pointer(PtrInt(Dir.Attr)))
                   else
-                    DirectoryEntries.Add(Dir.Name,Pointer(Ptrint(Dir.Attr)));
+                    DirectoryEntries.Add(Dir.Name,Pointer(PtrInt(Dir.Attr)));
                 end;
-            until findnext(dir) <> 0;
-            findclose(dir);
+            until FindNext(Dir) <> 0;
+            FindClose(Dir);
           end;
       end;
 
 
-    function TCachedDirectory.FileExists(const AName:TCmdStr):boolean;
+    function TCachedDirectory.FileExists(const AName:TCmdStr):Boolean;
       var
-        Attr : Longint;
+        Attr : LongInt;
       begin
         if not TryUseCache then
           begin
             { prepend directory name again }
-            result:=cfileutl.FileExists(Name+AName,false);
-            exit;
+            Result:=CFileUtl.FileExists(Name+AName,False);
+            Exit;
           end;
         Attr:=GetItemAttr(AName);
         if Attr<>0 then
           Result:=((Attr and faDirectory)=0)
         else
-          Result:=false;
+          Result:=False;
       end;
 
 
-    function TCachedDirectory.FileExistsCaseAware(const path, fn: TCmdStr; out FoundName: TCmdStr):boolean;
+    function TCachedDirectory.FileExistsCaseAware(const Path, FN: TCmdStr; out FoundName: TCmdStr):Boolean;
       var
-        entry : PCachedDirectoryEntry;
+        Entry : PCachedDirectoryEntry;
       begin
-        if (tf_files_case_aware in SourceInfo.flags) then
+        if (tf_files_case_aware in SourceInfo.Flags) then
           begin
             if not TryUseCache then
               begin
-                Result:=FileExistsNonCase(path,fn,false,FoundName);
-                exit;
+                Result:=FileExistsNonCase(Path,FN,False,FoundName);
+                Exit;
               end;
-            entry:=PCachedDirectoryEntry(DirectoryEntries.Find(Lower(ExtractFileName(fn))));
-            if assigned(entry) and
-               (entry^.Attr<>0) and
-               ((entry^.Attr and faDirectory) = 0) then
+            Entry:=PCachedDirectoryEntry(DirectoryEntries.Find(Lower(ExtractFileName(FN))));
+            if Assigned(Entry) and
+               (Entry^.Attr<>0) and
+               ((Entry^.Attr and faDirectory) = 0) then
               begin
-                 FoundName:=ExtractFilePath(path+fn)+entry^.RealName;
-                 Result:=true
+                 FoundName:=ExtractFilePath(Path+FN)+Entry^.RealName;
+                 Result:=True
               end
             else
-              Result:=false;
+              Result:=False;
           end
         else
           { should not be called in this case, use plain FileExists }
@@ -311,20 +311,20 @@ end;
       end;
 
 
-    function TCachedDirectory.DirectoryExists(const AName:TCmdStr):boolean;
+    function TCachedDirectory.DirectoryExists(const AName:TCmdStr):Boolean;
       var
-        Attr : Longint;
+        Attr : LongInt;
       begin
         if not TryUseCache then
           begin
-            Result:=PathExists(Name+AName,false);
-            exit;
+            Result:=PathExists(Name+AName,False);
+            Exit;
           end;
         Attr:=GetItemAttr(AName);
         if Attr<>0 then
           Result:=((Attr and faDirectory)=faDirectory)
         else
-          Result:=false;
+          Result:=False;
       end;
 
 
@@ -332,18 +332,18 @@ end;
                            TDirectoryCache
 ****************************************************************************}
 
-    constructor TDirectoryCache.create;
+    constructor TDirectoryCache.Create;
       begin
-        inherited create;
-        FDirectories:=TFPHashObjectList.Create(true);
+        inherited Create;
+        FDirectories:=TFPHashObjectList.Create(True);
       end;
 
 
-    destructor TDirectoryCache.destroy;
+    destructor TDirectoryCache.Destroy;
       begin
         FDirectories.Free;
         FDirectories := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -357,87 +357,87 @@ end;
         else
           DirName:=ADir;
         CachedDir:=TCachedDirectory(FDirectories.Find(DirName));
-        if not assigned(CachedDir) then
+        if not Assigned(CachedDir) then
           CachedDir:=TCachedDirectory.Create(FDirectories,DirName);
         Result:=CachedDir;
       end;
 
 
-    function TDirectoryCache.FileExists(const AName:TCmdStr):boolean;
+    function TDirectoryCache.FileExists(const AName:TCmdStr):Boolean;
       var
         CachedDir : TCachedDirectory;
       begin
-        Result:=false;
+        Result:=False;
         CachedDir:=GetDirectory(ExtractFilePath(AName));
-        if assigned(CachedDir) then
+        if Assigned(CachedDir) then
           Result:=CachedDir.FileExists(ExtractFileName(AName));
       end;
 
 
-    function TDirectoryCache.FileExistsCaseAware(const path, fn: TCmdStr; out FoundName: TCmdStr):boolean;
+    function TDirectoryCache.FileExistsCaseAware(const Path, FN: TCmdStr; out FoundName: TCmdStr):Boolean;
       var
         CachedDir : TCachedDirectory;
       begin
-        Result:=false;
-        CachedDir:=GetDirectory(ExtractFilePath(path+fn));
-        if assigned(CachedDir) then
-          Result:=CachedDir.FileExistsCaseAware(path,fn,FoundName);
+        Result:=False;
+        CachedDir:=GetDirectory(ExtractFilePath(Path+FN));
+        if Assigned(CachedDir) then
+          Result:=CachedDir.FileExistsCaseAware(Path,FN,FoundName);
       end;
 
 
-    function TDirectoryCache.DirectoryExists(const AName:TCmdStr):boolean;
+    function TDirectoryCache.DirectoryExists(const AName:TCmdStr):Boolean;
       var
         CachedDir : TCachedDirectory;
       begin
-        Result:=false;
+        Result:=False;
         CachedDir:=GetDirectory(ExtractFilePath(AName));
-        if assigned(CachedDir) then
+        if Assigned(CachedDir) then
           Result:=CachedDir.DirectoryExists(ExtractFileName(AName));
       end;
 
 
-    function TDirectoryCache.FindFirst(const APattern:TCmdStr;var Res:TCachedSearchRec):boolean;
+    function TDirectoryCache.FindFirst(const APattern:TCmdStr;var Res:TCachedSearchRec):Boolean;
       begin
         Res.Pattern:=ExtractFileName(APattern);
         Res.CachedDir:=GetDirectory(ExtractFilePath(APattern));
         Res.CachedDir.ForceUseCache;
         Res.EntryIndex:=0;
-        if assigned(Res.CachedDir) then
+        if Assigned(Res.CachedDir) then
           Result:=FindNext(Res)
         else
-          Result:=false;
+          Result:=False;
       end;
 
 
-    function TDirectoryCache.FindNext(var Res:TCachedSearchRec):boolean;
+    function TDirectoryCache.FindNext(var Res:TCachedSearchRec):Boolean;
       var
-        entry: PCachedDirectoryEntry;
+        Entry: PCachedDirectoryEntry;
       begin
         if Res.EntryIndex<Res.CachedDir.DirectoryEntries.Count then
           begin
-            if (tf_files_case_aware in SourceInfo.flags) then
+            if (tf_files_case_aware in SourceInfo.Flags) then
               begin
-                entry:=Res.CachedDir.DirectoryEntries[Res.EntryIndex];
-                Res.Name:=entry^.RealName;
-                Res.Attr:=entry^.Attr;
+                Entry:=Res.CachedDir.DirectoryEntries[Res.EntryIndex];
+                Res.Name:=Entry^.RealName;
+                Res.Attr:=Entry^.Attr;
               end
             else
               begin
                 Res.Name:=Res.CachedDir.DirectoryEntries.NameOfIndex(Res.EntryIndex);
                 Res.Attr:=PtrUInt(Res.CachedDir.DirectoryEntries[Res.EntryIndex]);
               end;
-            inc(Res.EntryIndex);
-            Result:=true;
+            Inc(Res.EntryIndex);
+            Result:=True;
           end
         else
-          Result:=false;
+          Result:=False;
       end;
 
 
-    function TDirectoryCache.FindClose(var Res:TCachedSearchRec):boolean;
+    function TDirectoryCache.FindClose(var Res:TCachedSearchRec):Boolean;
       begin
         { nothing todo }
-        result:=true;
+        Result:=True;
       end;
 
 
@@ -445,17 +445,17 @@ end;
                                    Utils
 ****************************************************************************}
 
-    function bstoslash(const s : TCmdStr) : TCmdStr;
+    function BSToSlash(const S : TCmdStr) : TCmdStr;
     {
       return TCmdStr s with all \ changed into /
     }
       var
-         i : sizeint;
+         I : SizeInt;
       begin
-        bstoslash:=s;
-        for i:=1 to length(s) do
-         if s[i]='\' then
-          bstoslash[i]:='/';
+        BSToSlash:=S;
+        for I:=1 to Length(S) do
+         if S[I]='\' then
+          BSToSlash[I]:='/';
       end;
 
 
@@ -467,72 +467,72 @@ end;
        if CachedCurrentDir='' then
          begin
            GetDir(0,CachedCurrentDir);
-           CachedCurrentDir:=FixPath(CachedCurrentDir,false);
+           CachedCurrentDir:=FixPath(CachedCurrentDir,False);
          end;
-       result:=CachedCurrentDir;
+       Result:=CachedCurrentDir;
      end;
 
    {Gives the relative path to the current directory,
     with a trailing dir separator. E. g. on unix ./ }
-   function CurDirRelPath(systeminfo: TSystemInfo): TCmdStr;
+   function CurDirRelPath(SystemInfo: TSystemInfo): TCmdStr;
 
    begin
-     CurDirRelPath:= '.'+systeminfo.DirSep
+     CurDirRelPath:= '.'+SystemInfo.DirSep
    end;
 
 
-   function path_absolute(const s : TCmdStr) : boolean;
+   function Path_Absolute(const S : TCmdStr) : Boolean;
    {
      is path s an absolute path?
    }
      begin
-        result:=false;
+        Result:=False;
 {$if defined(unix)}
-        if (length(s)>0) and (s[1] in AllowDirectorySeparators) then
-          result:=true;
+        if (Length(S)>0) and (S[1] in AllowDirectorySeparators) then
+          Result:=True;
 {$elseif defined(win32) or defined(win64)}
-        if ((length(s)>0) and (s[1] in AllowDirectorySeparators)) or
+        if ((Length(S)>0) and (S[1] in AllowDirectorySeparators)) or
 (* The following check for non-empty AllowDriveSeparators assumes that all
    other platforms supporting drives and not handled as exceptions above
    should work with DOS-like paths, i.e. use absolute paths with one letter
    for drive followed by path separator *)
-           ((length(s)>2) and (s[2] in AllowDriveSeparators) and (s[3] in AllowDirectorySeparators)) then
-          result:=true;
+           ((Length(S)>2) and (S[2] in AllowDriveSeparators) and (S[3] in AllowDirectorySeparators)) then
+          Result:=True;
 {$else}
-        if ((length(s)>0) and (s[1] in AllowDirectorySeparators)) or
+        if ((Length(S)>0) and (S[1] in AllowDirectorySeparators)) or
 (* The following check for non-empty AllowDriveSeparators assumes that all
    other platforms supporting drives and not handled as exceptions above
    should work with DOS-like paths, i.e. use absolute paths with one letter
    for drive followed by path separator *)
-           ((AllowDriveSeparators <> []) and (length(s)>2) and (s[2] in AllowDriveSeparators) and (s[3] in AllowDirectorySeparators)) then
-          result:=true;
+           ((AllowDriveSeparators <> []) and (Length(S)>2) and (S[2] in AllowDriveSeparators) and (S[3] in AllowDirectorySeparators)) then
+          Result:=True;
 {$endif unix}
      end;
 
-    Function FileExists ( Const F : TCmdStr;allowcache:boolean) : Boolean;
+    Function FileExists ( Const F : TCmdStr;AllowCache:Boolean) : Boolean;
       begin
 {$ifdef usedircache}
-        if allowcache then
+        if AllowCache then
           Result:=DirCache.FileExists(F)
         else
 {$endif usedircache}
           Result:=SysUtils.FileExists(F);
-        if do_checkverbosity(V_Tried) then
+        if Do_CheckVerbosity(VTried) then
          begin
            if Result then
-             do_comment(V_Tried,'Searching file '+F+'... found')
+             Do_Comment(VTried,'Searching file '+F+'... found')
            else
-             do_comment(V_Tried,'Searching file '+F+'... not found');
+             Do_Comment(VTried,'Searching file '+F+'... not found');
          end;
       end;
 
 
-    function FileExistsNonCase(const path,fn:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+    function FileExistsNonCase(const Path,FN:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
       var
-        fn2 : TCmdStr;
+        FN2 : TCmdStr;
       begin
-        result:=false;
-        if tf_files_case_sensitive in SourceInfo.flags then
+        Result:=False;
+        if tf_files_case_sensitive in SourceInfo.Flags then
           begin
             {
               Search order for case sensitive systems:
@@ -540,427 +540,427 @@ end;
                2. lowercase
                3. UPPERCASE
             }
-            FoundFile:=path+fn;
-            If (ftNone in AllowedFilenameTransFormations) and FileExists(FoundFile,allowcache) then
+            FoundFile:=Path+FN;
+            If (ftNone in AllowedFilenameTransFormations) and FileExists(FoundFile,AllowCache) then
              begin
-               result:=true;
-               exit;
+               Result:=True;
+               Exit;
              end;
             if (ftLowerCase in AllowedFilenameTransFormations) then
               begin
-                fn2:=Lower(fn);
-                if (fn2<>fn) then
+                FN2:=Lower(FN);
+                if (FN2<>FN) then
                   begin
-                    FoundFile:=path+fn2;
-                    If FileExists(FoundFile,allowcache) then
+                    FoundFile:=Path+FN2;
+                    If FileExists(FoundFile,AllowCache) then
                      begin
-                       result:=true;
-                       exit;
+                       Result:=True;
+                       Exit;
                      end;
                   end;
               end;
             if (ftUpperCase in AllowedFilenameTransFormations)  then
               begin
-                fn2:=Upper(fn);
-                if (fn2<>fn) then
+                FN2:=Upper(FN);
+                if (FN2<>FN) then
                   begin
-                  FoundFile:=path+fn2;
-                  If FileExists(FoundFile,allowcache) then
+                  FoundFile:=Path+FN2;
+                  If FileExists(FoundFile,AllowCache) then
                     begin
-                      result:=true;
-                      exit;
+                      Result:=True;
+                      Exit;
                     end;
                   end;
               end;
           end
         else
-          if tf_files_case_aware in SourceInfo.flags then
+          if tf_files_case_aware in SourceInfo.Flags then
             begin
               {
                 Search order for case aware systems:
                  1. NormalCase
               }
 {$ifdef usedircache}
-              if allowcache then
+              if AllowCache then
                 begin
-                  result:=DirCache.FileExistsCaseAware(path,fn,fn2);
-                  if result then
+                  Result:=DirCache.FileExistsCaseAware(Path,FN,FN2);
+                  if Result then
                     begin
-                      FoundFile:=fn2;
-                      exit;
+                      FoundFile:=FN2;
+                      Exit;
                     end;
                 end
               else
 {$endif usedircache}
                 begin
-                  FoundFile:=path+fn;
-                  If FileExists(FoundFile,allowcache) then
+                  FoundFile:=Path+FN;
+                  If FileExists(FoundFile,AllowCache) then
                     begin
                       { don't know the real name in this case }
-                      result:=true;
-                      exit;
+                      Result:=True;
+                      Exit;
                    end;
                 end;
            end
         else
           begin
             { None case sensitive only lowercase }
-            FoundFile:=path+Lower(fn);
-            If FileExists(FoundFile,allowcache) then
+            FoundFile:=Path+Lower(FN);
+            If FileExists(FoundFile,AllowCache) then
              begin
-               result:=true;
-               exit;
+               Result:=True;
+               Exit;
              end;
           end;
         { Set foundfile to something useful }
-        FoundFile:=fn;
+        FoundFile:=FN;
       end;
 
 
-    Function PathExists (const F : TCmdStr;allowcache:boolean) : Boolean;
+    Function PathExists (const F : TCmdStr;AllowCache:Boolean) : Boolean;
       Var
-        i: longint;
-        hs : TCmdStr;
+        I: LongInt;
+        HS : TCmdStr;
       begin
         if F = '' then
           begin
-            result := true;
-            exit;
+            Result := True;
+            Exit;
           end;
-        hs := ExpandFileName(F);
-        I := Pos (DriveSeparator, hs);
-        if (hs [Length (hs)] = DirectorySeparator) and
-           (((I = 0) and (Length (hs) > 1)) or (I <> Length (hs) - 1)) then
-          Delete (hs, Length (hs), 1);
+        HS := ExpandFileName(F);
+        I := Pos (DriveSeparator, HS);
+        if (HS [Length (HS)] = DirectorySeparator) and
+           (((I = 0) and (Length (HS) > 1)) or (I <> Length (HS) - 1)) then
+          Delete (HS, Length (HS), 1);
 {$ifdef usedircache}
-        if allowcache then
-          Result:=DirCache.DirectoryExists(hs)
+        if AllowCache then
+          Result:=DirCache.DirectoryExists(HS)
         else
 {$endif usedircache}
-          Result:=SysUtils.DirectoryExists(hs);
+          Result:=SysUtils.DirectoryExists(HS);
       end;
 
 
-    Function RemoveDir(d:TCmdStr):boolean;
+    Function RemoveDir(D:TCmdStr):Boolean;
       begin
-        if d[length(d)]=SourceInfo.DirSep then
-         Delete(d,length(d),1);
+        if D[Length(D)]=SourceInfo.DirSep then
+         Delete(D,Length(D),1);
         {$push}{$I-}
-         rmdir(d);
+         RmDir(D);
         {$pop}
-        RemoveDir:=(ioresult=0);
+        RemoveDir:=(IOResult=0);
       end;
 
 
-    Function _FixPath(const s:TCmdStr;allowdot:boolean;const info:TSystemInfo;const drivesep:string):TCmdStr;
+    Function InternalFixPath(const S:TCmdStr;AllowDot:Boolean;const Info:TSystemInfo;const DriveSep:string):TCmdStr;
       var
-        i, L : sizeint;
+        I, L : SizeInt;
       begin
-        Result := s;
+        Result := S;
         L := Length(Result);
         if L=0 then
-          exit;
+          Exit;
         { Fix separator }
-        for i:=1 to L do
-          if (Result[i] in ['/','\']) and (Result[i]<>info.DirSep) then
-            Result[i]:=info.DirSep;
+        for I:=1 to L do
+          if (Result[I] in ['/','\']) and (Result[I]<>Info.DirSep) then
+            Result[I]:=Info.DirSep;
         { Remove . or ./ }
-        if (not allowdot) and (Result[1]='.') and ((L=1) or (L=2) and (Result[2]=info.DirSep)) then
-          exit('');
+        if (not AllowDot) and (Result[1]='.') and ((L=1) or (L=2) and (Result[2]=Info.DirSep)) then
+          Exit('');
         { Fix ending / }
-        if (Result[L]<>info.DirSep) and (Result[L]<>drivesep) then
-          Result:=Result+info.DirSep;
+        if (Result[L]<>Info.DirSep) and (Result[L]<>DriveSep) then
+          Result:=Result+Info.DirSep;
         { return }
-        if not ((tf_files_case_aware in info.flags) or
-           (tf_files_case_sensitive in info.flags)) then
-          Result := lower(Result);
+        if not ((tf_files_case_aware in Info.Flags) or
+           (tf_files_case_sensitive in Info.Flags)) then
+          Result := Lower(Result);
       end;
 
 
-    Function FixPath(const s:TCmdStr;allowdot:boolean):TCmdStr;
+    Function FixPath(const S:TCmdStr;AllowDot:Boolean):TCmdStr;
       begin
-        Result:=_FixPath(s,allowdot,SourceInfo,DriveSeparator);
+        Result:=InternalFixPath(S,AllowDot,SourceInfo,DriveSeparator);
       end;
 
 
-   function _FixFileName(const s:TCmdStr; const info:TSystemInfo):TCmdStr;
+   function InternalFixFileName(const S:TCmdStr; const Info:TSystemInfo):TCmdStr;
      var
-       i      : sizeint;
+       I      : SizeInt;
      begin
-       if (tf_files_case_aware in info.flags) or
-          (tf_files_case_sensitive in info.flags) then
-         Result:=s
+       if (tf_files_case_aware in Info.Flags) or
+          (tf_files_case_sensitive in Info.Flags) then
+         Result:=S
        else
-         Result:=Lower(s);
-       for i:=1 to length(s) do
-        case s[i] of
+         Result:=Lower(S);
+       for I:=1 to Length(S) do
+        case S[I] of
           '/','\' :
-            if s[i]<>info.dirsep then
-              Result[i]:=info.dirsep;
+            if S[I]<>Info.DirSep then
+              Result[I]:=Info.DirSep;
         end;
      end;
 
 
-   function FixFileName(const s:TCmdStr):TCmdStr;
+   function FixFileName(const S:TCmdStr):TCmdStr;
      begin
-       result:=_FixFileName(s,SourceInfo);
+       Result:=InternalFixFileName(S,SourceInfo);
      end;
 
 
-   Function TargetFixPath(s:TCmdStr;allowdot:boolean):TCmdStr;
+   Function TargetFixPath(S:TCmdStr;AllowDot:Boolean):TCmdStr;
      begin
-       result:=_FixPath(s,allowdot,TargetInfo,':');
+       Result:=InternalFixPath(S,AllowDot,TargetInfo,':');
      end;
 
 
-   function TargetFixFileName(const s:TCmdStr):TCmdStr;
+   function TargetFixFileName(const S:TCmdStr):TCmdStr;
      begin
-       result:=_FixFileName(s,TargetInfo);
+       Result:=InternalFixFileName(S,TargetInfo);
      end;
 
 
-   procedure SplitBinCmd(const s:TCmdStr;var bstr:TCmdStr;var cstr:TCmdStr);
+   procedure SplitBinCmd(const S:TCmdStr;var BStr:TCmdStr;var CStr:TCmdStr);
      var
-       i : longint;
+       I : LongInt;
      begin
-       i:=pos(' ',s);
-       if i>0 then
+       I:=Pos(' ',S);
+       if I>0 then
         begin
-          bstr:=Copy(s,1,i-1);
-          cstr:=Copy(s,i+1,length(s)-i);
+          BStr:=Copy(S,1,I-1);
+          CStr:=Copy(S,I+1,Length(S)-I);
         end
        else
         begin
-          bstr:=s;
-          cstr:='';
+          BStr:=S;
+          CStr:='';
         end;
      end;
 
 
-    procedure TSearchPathList.AddPath(s:TCmdStr;addfirst:boolean);
+    procedure TSearchPathList.AddPath(S:TCmdStr;AddFirst:Boolean);
       begin
-        AddLibraryPath('',s,AddFirst);
+        AddLibraryPath('',S,AddFirst);
       end;
 
 
-   procedure TSearchPathList.AddLibraryPath(const sysroot: TCmdStr; s:TCmdStr;addfirst:boolean);
+   procedure TSearchPathList.AddLibraryPath(const SysRoot: TCmdStr; S:TCmdStr;AddFirst:Boolean);
      var
-       staridx,
-       i,j      : longint;
-       prefix,
-       suffix,
+       StarIdx,
+       I,J      : LongInt;
+       Prefix,
+       Suffix,
        CurrentDir,
-       currPath : TCmdStr;
-       subdirfound : boolean;
+       CurrPath : TCmdStr;
+       SubDirFound : Boolean;
 {$ifdef usedircache}
-       dir      : TCachedSearchRec;
+       Dir      : TCachedSearchRec;
 {$else usedircache}
-       dir      : TSearchRec;
+       Dir      : TSearchRec;
 {$endif usedircache}
-       hp       : TCmdStrListItem;
+       HP       : TCmdStrListItem;
 
-       procedure WarnNonExistingPath(const path : TCmdStr);
+       procedure WarnNonExistingPath(const Path : TCmdStr);
        begin
-         if do_checkverbosity(V_Tried) then
-           do_comment(V_Tried,'Path "'+path+'" not found');
+         if Do_CheckVerbosity(VTried) then
+           Do_Comment(VTried,'Path "'+Path+'" not found');
        end;
 
        procedure AddCurrPath;
        begin
-         if addfirst then
+         if AddFirst then
           begin
-            Remove(currPath);
-            Insert(currPath);
+            Remove(CurrPath);
+            Insert(CurrPath);
           end
          else
           begin
             { Check if already in path, then we don't add it }
-            hp:=Find(currPath);
-            if not assigned(hp) then
-             Concat(currPath);
+            HP:=Find(CurrPath);
+            if not Assigned(HP) then
+             Concat(CurrPath);
           end;
        end;
 
      begin
-       if s='' then
-        exit;
+       if S='' then
+        Exit;
      { Support default macro's }
-       DefaultReplacements(s);
+       DefaultReplacements(S);
 {$warnings off}
        if PathSeparator <> ';' then
-        for i:=1 to length(s) do
-         if s[i]=PathSeparator then
-          s[i]:=';';
+        for I:=1 to Length(S) do
+         if S[I]=PathSeparator then
+          S[I]:=';';
 {$warnings on}
      { get current dir }
        CurrentDir:=GetCurrentDir;
        repeat
          { get currpath }
-         if addfirst then
+         if AddFirst then
           begin
-            j:=length(s);
-            while (j>0) and (s[j]<>';') do
-             dec(j);
-            currPath:= TrimSpace(Copy(s,j+1,length(s)-j));
-            if j=0 then
-             s:=''
+            J:=Length(S);
+            while (J>0) and (S[J]<>';') do
+             Dec(J);
+            CurrPath:= TrimSpace(Copy(S,J+1,Length(S)-J));
+            if J=0 then
+             S:=''
             else
-             System.Delete(s,j,length(s)-j+1);
+             System.Delete(S,J,Length(S)-J+1);
           end
          else
           begin
-            j:=Pos(';',s);
-            if j=0 then
-             j:=length(s)+1;
-            currPath:= TrimSpace(Copy(s,1,j-1));
-            System.Delete(s,1,j);
+            J:=Pos(';',S);
+            if J=0 then
+             J:=Length(S)+1;
+            CurrPath:= TrimSpace(Copy(S,1,J-1));
+            System.Delete(S,1,J);
           end;
 
          { fix pathname }
-         DePascalQuote(currPath);
+         DePascalQuote(CurrPath);
          { GNU LD convention: if library search path starts with '=', it's relative to the
            sysroot; otherwise, interpret it as a regular path }
-         if (length(currPath) >0) and (currPath[1]='=') then
-           currPath:=sysroot+FixPath(copy(currPath,2,length(currPath)-1),false);
-         if currPath='' then
-           currPath:= CurDirRelPath(SourceInfo)
+         if (Length(CurrPath) >0) and (CurrPath[1]='=') then
+           CurrPath:=SysRoot+FixPath(Copy(CurrPath,2,Length(CurrPath)-1),False);
+         if CurrPath='' then
+           CurrPath:= CurDirRelPath(SourceInfo)
          else
           begin
-            currPath:=FixPath(ExpandFileName(currpath),false);
-            if (CurrentDir<>'') and (Copy(currPath,1,length(CurrentDir))=CurrentDir) then
+            CurrPath:=FixPath(ExpandFileName(CurrPath),False);
+            if (CurrentDir<>'') and (Copy(CurrPath,1,Length(CurrentDir))=CurrentDir) then
              begin
-               currPath:= CurDirRelPath(SourceInfo)+Copy(currPath,length(CurrentDir)+1,length(currPath));
+               CurrPath:= CurDirRelPath(SourceInfo)+Copy(CurrPath,Length(CurrentDir)+1,Length(CurrPath));
              end;
           end;
          { wildcard adding ? }
-         staridx:=pos('*',currpath);
-         if staridx>0 then
+         StarIdx:=Pos('*',CurrPath);
+         if StarIdx>0 then
           begin
-            prefix:=ExtractFilePath(Copy(currpath,1,staridx));
-            suffix:=Copy(currpath,staridx+1,length(currpath));
-            subdirfound:=false;
+            Prefix:=ExtractFilePath(Copy(CurrPath,1,StarIdx));
+            Suffix:=Copy(CurrPath,StarIdx+1,Length(CurrPath));
+            SubDirFound:=False;
 {$ifdef usedircache}
-            if DirCache.FindFirst(Prefix+AllFilesMask,dir) then
+            if DirCache.FindFirst(Prefix+AllFilesMask,Dir) then
               begin
                 repeat
-                  if (dir.attr and faDirectory)<>0 then
+                  if (Dir.Attr and faDirectory)<>0 then
                     begin
-                      subdirfound:=true;
-                      currpath:=prefix+dir.name+suffix;
-                      if (suffix='') or PathExists(currpath,true) then
+                      SubDirFound:=True;
+                      CurrPath:=Prefix+Dir.Name+Suffix;
+                      if (Suffix='') or PathExists(CurrPath,True) then
                         begin
-                          hp:=Find(currPath);
-                          if not assigned(hp) then
+                          HP:=Find(CurrPath);
+                          if not Assigned(HP) then
                             AddCurrPath;
                         end;
                     end;
-                until not DirCache.FindNext(dir);
+                until not DirCache.FindNext(Dir);
               end;
-            DirCache.FindClose(dir);
+            DirCache.FindClose(Dir);
 {$else usedircache}
-            if findfirst(prefix+AllFilesMask,faDirectory,dir) = 0 then
+            if FindFirst(Prefix+AllFilesMask,faDirectory,Dir) = 0 then
               begin
                 repeat
-                  if (dir.name<>'.') and
-                      (dir.name<>'..') and
-                      ((dir.attr and faDirectory)<>0) then
+                  if (Dir.Name<>'.') and
+                      (Dir.Name<>'..') and
+                      ((Dir.Attr and faDirectory)<>0) then
                     begin
-                      subdirfound:=true;
-                      currpath:=prefix+dir.name+suffix;
-                      if (suffix='') or PathExists(currpath,false) then
+                      SubDirFound:=True;
+                      CurrPath:=Prefix+Dir.Name+Suffix;
+                      if (Suffix='') or PathExists(CurrPath,False) then
                         begin
-                          hp:=Find(currPath);
-                          if not assigned(hp) then
+                          HP:=Find(CurrPath);
+                          if not Assigned(HP) then
                             AddCurrPath;
                         end;
                     end;
-                until findnext(dir) <> 0;
-                FindClose(dir);
+                until FindNext(Dir) <> 0;
+                FindClose(Dir);
               end;
 {$endif usedircache}
-            if not subdirfound then
-              WarnNonExistingPath(currpath);
+            if not SubDirFound then
+              WarnNonExistingPath(CurrPath);
           end
          else
           begin
-            if PathExists(currpath,true) then
+            if PathExists(CurrPath,True) then
              AddCurrPath
             else
-             WarnNonExistingPath(currpath);
+             WarnNonExistingPath(CurrPath);
           end;
-       until (s='');
+       until (S='');
      end;
 
 
-   procedure TSearchPathList.AddList(list:TSearchPathList;addfirst:boolean);
+   procedure TSearchPathList.AddList(List:TSearchPathList;AddFirst:Boolean);
      var
-       s : TCmdStr;
-       hl : TSearchPathList;
-       hp,hp2 : TCmdStrListItem;
+       S : TCmdStr;
+       HL : TSearchPathList;
+       HP,HP2 : TCmdStrListItem;
      begin
-       if list.empty then
-        exit;
+       if List.Empty then
+        Exit;
        { create temp and reverse the list }
-       if addfirst then
+       if AddFirst then
         begin
-          hl:=TSearchPathList.Create;
-          hp:=TCmdStrListItem(list.first);
-          while assigned(hp) do
+          HL:=TSearchPathList.Create;
+          HP:=TCmdStrListItem(List.First);
+          while Assigned(HP) do
            begin
-             hl.insert(hp.Str);
-             hp:=TCmdStrListItem(hp.next);
+             HL.Insert(HP.Str);
+             HP:=TCmdStrListItem(HP.Next);
            end;
-          while not hl.empty do
+          while not HL.Empty do
            begin
-             s:=hl.GetFirst;
-             Remove(s);
-             Insert(s);
+             S:=HL.GetFirst;
+             Remove(S);
+             Insert(S);
            end;
-          hl.Free;
-          hl := nil;
+          HL.Free;
+          HL := nil;
         end
        else
         begin
-          hp:=TCmdStrListItem(list.first);
-          while assigned(hp) do
+          HP:=TCmdStrListItem(List.First);
+          while Assigned(HP) do
            begin
-             hp2:=Find(hp.Str);
+             HP2:=Find(HP.Str);
              { Check if already in path, then we don't add it }
-             if not assigned(hp2) then
-              Concat(hp.Str);
-             hp:=TCmdStrListItem(hp.next);
+             if not Assigned(HP2) then
+              Concat(HP.Str);
+             HP:=TCmdStrListItem(HP.Next);
            end;
         end;
      end;
 
 
-   function TSearchPathList.FindFile(const f :TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+   function TSearchPathList.FindFile(const F :TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
      Var
-       p : TCmdStrListItem;
+       P : TCmdStrListItem;
      begin
-       FindFile:=false;
-       p:=TCmdStrListItem(first);
-       while assigned(p) do
+       FindFile:=False;
+       P:=TCmdStrListItem(First);
+       while Assigned(P) do
         begin
-          result:=FileExistsNonCase(p.Str,f,allowcache,FoundFile);
-          if result then
-            exit;
-          p:=TCmdStrListItem(p.next);
+          Result:=FileExistsNonCase(P.Str,F,AllowCache,FoundFile);
+          if Result then
+            Exit;
+          P:=TCmdStrListItem(P.Next);
         end;
        { Return original filename if not found }
-       FoundFile:=f;
+       FoundFile:=F;
      end;
 
 
-   function FindFile(const f : TCmdStr; const path : TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+   function FindFile(const F : TCmdStr; const Path : TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
      Var
        StartPos, EndPos, L: LongInt;
      begin
        Result:=False;
 
-       if (path_absolute(f)) then
+       if (Path_Absolute(F)) then
          begin
-           Result:=FileExistsNonCase('',f, allowcache, foundfile);
+           Result:=FileExistsNonCase('',F, AllowCache, FoundFile);
            if Result then
              Exit;
          end;
@@ -971,12 +971,12 @@ end;
          EndPos := StartPos;
          while (EndPos <= L) and ((Path[EndPos] <> PathSeparator) and (Path[EndPos] <> ';')) do
            Inc(EndPos);
-         Result := FileExistsNonCase(FixPath(Copy(Path, StartPos, EndPos-StartPos), False), f, allowcache, FoundFile);
+         Result := FileExistsNonCase(FixPath(Copy(Path, StartPos, EndPos-StartPos), False), F, AllowCache, FoundFile);
          if Result then
            Exit;
          StartPos := EndPos + 1;
        until StartPos > L;
-       FoundFile:=f;
+       FoundFile:=F;
      end;
 
 {
@@ -1008,202 +1008,202 @@ end;
      end;
 }
 
-  function  FindFileInExeLocations(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+  function  FindFileInExeLocations(const Bin:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
     var
       Path : TCmdStr;
-      found : boolean;
+      Found : Boolean;
     begin
-       found:=FindFile(FixFileName(bin),exepath,allowcache,foundfile);
-      if not found then
+       Found:=FindFile(FixFileName(Bin),ExePath,AllowCache,FoundFile);
+      if not Found then
        begin
          Path:=GetEnvironmentVariable('PATH');
-         found:=FindFile(FixFileName(bin),Path,allowcache,foundfile);
+         Found:=FindFile(FixFileName(Bin),Path,AllowCache,FoundFile);
        end;
-      FindFileInExeLocations:=found;
+      FindFileInExeLocations:=Found;
     end;
 
 
-   function  FindExe(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
+   function  FindExe(const Bin:TCmdStr;AllowCache:Boolean;var FoundFile:TCmdStr):Boolean;
      var
-       b : TCmdStr;
+       B : TCmdStr;
      begin
        { change extension only on platforms that use an exe extension, otherwise on OpenBSD
          'ld.bfd' gets converted to 'ld' }
-       if SourceInfo.exeext<>'' then
-         b:=ChangeFileExt(bin,SourceInfo.exeext)
+       if SourceInfo.ExeExt<>'' then
+         B:=ChangeFileExt(Bin,SourceInfo.ExeExt)
        else
-         b:=bin;
-       FindExe:=FindFileInExeLocations(b,allowcache,foundfile);
+         B:=Bin;
+       FindExe:=FindFileInExeLocations(B,AllowCache,FoundFile);
      end;
 
 
-    function GetShortName(const n:TCmdStr):TCmdStr;
+    function GetShortName(const N:TCmdStr):TCmdStr;
 {$ifdef win32}
       var
-        hs,hs2 : TCmdStr;
-        i : longint;
+        HS,HS2 : TCmdStr;
+        I : LongInt;
 {$endif}
       begin
-        GetShortName:=n;
+        GetShortName:=N;
 {$ifdef win32}
-        hs:=n+#0;
-        hs2:='';
+        HS:=N+#0;
+        HS2:='';
         { may become longer in case of e.g. ".a" -> "a~1" or so }
-        setlength(hs2,length(hs)*2);
-        i:=Windows.GetShortPathName(@hs[1],@hs2[1],length(hs)*2);
-        if (i>0) and (i<=length(hs)*2) then
+        SetLength(HS2,Length(HS)*2);
+        I:=Windows.GetShortPathName(@HS[1],@HS2[1],Length(HS)*2);
+        if (I>0) and (I<=Length(HS)*2) then
           begin
-            setlength(hs2,strlen(@hs2[1]));
-            GetShortName:=hs2;
+            SetLength(HS2,StrLen(@HS2[1]));
+            GetShortName:=HS2;
           end;
 {$endif}
       end;
 
 
-    function maybequoted(const s:ShortString):ShortString;
+    function MaybeQuoted(const S:ShortString):ShortString;
     const
-      FORBIDDEN_CHARS_DOS = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
+      ForbiddenCharsDOS = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
                          '{', '}', '''', '`', '~'];
-      FORBIDDEN_CHARS_OTHER = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
+      ForbiddenCharsOther = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
                          '{', '}', '''', ':', '\', '`', '~'];
     var
-      forbidden_chars: set of char;
-      i  : integer;
-      quote_script: tscripttype;
-      quote_char: ansichar;
-      quoted : boolean;
+      ForbiddenChars: set of Char;
+      I  : Integer;
+      QuoteScript: TScriptType;
+      QuoteChar: AnsiChar;
+      Quoted : Boolean;
     begin
-      if not(cs_link_on_target in CurrentSettings.globalswitches) then
-        quote_script:=SourceInfo.script
+      if not(cs_link_on_target in CurrentSettings.GlobalSwitches) then
+        QuoteScript:=SourceInfo.Script
       else
-        quote_script:=TargetInfo.script;
-      if quote_script=script_dos then
-        forbidden_chars:=FORBIDDEN_CHARS_DOS
+        QuoteScript:=TargetInfo.Script;
+      if QuoteScript=script_dos then
+        ForbiddenChars:=ForbiddenCharsDOS
       else
         begin
-          forbidden_chars:=FORBIDDEN_CHARS_OTHER;
-          if quote_script=script_unix then
-            include(forbidden_chars,'"');
+          ForbiddenChars:=ForbiddenCharsOther;
+          if QuoteScript=script_unix then
+            Include(ForbiddenChars,'"');
         end;
-      if quote_script=script_unix then
-        quote_char:=''''
+      if QuoteScript=script_unix then
+        QuoteChar:=''''
       else
-        quote_char:='"';
+        QuoteChar:='"';
 
-      quoted:=false;
-      result:=quote_char;
-      for i:=1 to length(s) do
+      Quoted:=False;
+      Result:=QuoteChar;
+      for I:=1 to Length(S) do
        begin
-         if s[i]=quote_char then
+         if S[I]=QuoteChar then
            begin
-             quoted:=true;
-             result:=result+'\'+quote_char;
+             Quoted:=True;
+             Result:=Result+'\'+QuoteChar;
            end
-         else case s[i] of
+         else case S[I] of
            '\':
              begin
-               if quote_script=script_unix then
+               if QuoteScript=script_unix then
                  begin
-                   result:=result+'\\';
-                   quoted:=true
+                   Result:=Result+'\\';
+                   Quoted:=True
                  end
                else
-                 result:=result+'\';
+                 Result:=Result+'\';
              end;
            ' ',
            #128..#255 :
              begin
-               quoted:=true;
-               result:=result+s[i];
+               Quoted:=True;
+               Result:=Result+S[I];
              end;
            else begin
-             if s[i] in forbidden_chars then
-               quoted:=True;
-             result:=result+s[i];
+             if S[I] in ForbiddenChars then
+               Quoted:=True;
+             Result:=Result+S[I];
            end;
          end;
        end;
-      if quoted then
-        result:=result+quote_char
+      if Quoted then
+        Result:=Result+QuoteChar
       else
-        result:=s;
+        Result:=S;
     end;
 
 
-    function maybequoted_for_script(const s:ansistring; quote_script: tscripttype):ansistring;
+    function MaybeQuoted_For_Script(const S:AnsiString; QuoteScript: TScriptType):AnsiString;
       const
-        FORBIDDEN_CHARS_DOS = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
+        ForbiddenCharsDOS = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
                            '{', '}', '''', '`', '~'];
-        FORBIDDEN_CHARS_OTHER = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
+        ForbiddenCharsOther = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
                            '{', '}', '''', ':', '\', '`', '~'];
       var
-        forbidden_chars: set of char;
-        i  : integer;
-        quote_char: ansichar;
-        quoted : boolean;
+        ForbiddenChars: set of Char;
+        I  : Integer;
+        QuoteChar: AnsiChar;
+        Quoted : Boolean;
       begin
-        if quote_script=script_dos then
-          forbidden_chars:=FORBIDDEN_CHARS_DOS
+        if QuoteScript=script_dos then
+          ForbiddenChars:=ForbiddenCharsDOS
         else
           begin
-            forbidden_chars:=FORBIDDEN_CHARS_OTHER;
-            if quote_script=script_unix then
-              include(forbidden_chars,'"');
+            ForbiddenChars:=ForbiddenCharsOther;
+            if QuoteScript=script_unix then
+              Include(ForbiddenChars,'"');
           end;
-        if quote_script=script_unix then
-          quote_char:=''''
+        if QuoteScript=script_unix then
+          QuoteChar:=''''
         else
-          quote_char:='"';
+          QuoteChar:='"';
 
-        quoted:=false;
-        result:=quote_char;
-        for i:=1 to length(s) do
+        Quoted:=False;
+        Result:=QuoteChar;
+        for I:=1 to Length(S) do
          begin
-           if s[i]=quote_char then
+           if S[I]=QuoteChar then
              begin
-               quoted:=true;
-               result:=result+'\'+quote_char;
+               Quoted:=True;
+               Result:=Result+'\'+QuoteChar;
              end
-           else case s[i] of
+           else case S[I] of
              '\':
                begin
-                 if quote_script=script_unix then
+                 if QuoteScript=script_unix then
                    begin
-                     result:=result+'\\';
-                     quoted:=true
+                     Result:=Result+'\\';
+                     Quoted:=True
                    end
                  else
-                   result:=result+'\';
+                   Result:=Result+'\';
                end;
              ' ',
              #128..#255 :
                begin
-                 quoted:=true;
-                 result:=result+s[i];
+                 Quoted:=True;
+                 Result:=Result+S[I];
                end;
              else begin
-               if s[i] in forbidden_chars then
-                 quoted:=True;
-               result:=result+s[i];
+               if S[I] in ForbiddenChars then
+                 Quoted:=True;
+               Result:=Result+S[I];
              end;
            end;
          end;
-        if quoted then
-          result:=result+quote_char
+        if Quoted then
+          Result:=Result+QuoteChar
         else
-          result:=s;
+          Result:=S;
       end;
 
 
-    function maybequoted(const s:ansistring):ansistring;
+    function MaybeQuoted(const S:AnsiString):AnsiString;
       var
-        quote_script: tscripttype;
+        QuoteScript: TScriptType;
       begin
-        if not(cs_link_on_target in CurrentSettings.globalswitches) then
-          quote_script:=SourceInfo.script
+        if not(cs_link_on_target in CurrentSettings.GlobalSwitches) then
+          QuoteScript:=SourceInfo.Script
         else
-          quote_script:=TargetInfo.script;
-        result:=maybequoted_for_script(s,quote_script);
+          QuoteScript:=TargetInfo.Script;
+        Result:=MaybeQuoted_For_Script(S,QuoteScript);
       end;
 
 
@@ -1213,112 +1213,112 @@ end;
       differently for Unix) -- which is the case }
     function UnixRequoteWithDoubleQuotes(const QuotedStr: TCmdStr): TCmdStr;
       var
-        i: longint;
-        temp: TCmdStr;
-        inquotes: boolean;
+        I: LongInt;
+        Temp: TCmdStr;
+        InQuotes: Boolean;
       begin
         if QuotedStr='' then
           begin
-            result:='';
-            exit;
+            Result:='';
+            Exit;
           end;
-        inquotes:=false;
-        result:='';
-        i:=1;
-        temp:='';
-        while i<=length(QuotedStr) do
+        InQuotes:=False;
+        Result:='';
+        I:=1;
+        Temp:='';
+        while I<=Length(QuotedStr) do
           begin
-            case QuotedStr[i] of
+            case QuotedStr[I] of
               '''':
                 begin
-                  if not(inquotes) then
+                  if not(InQuotes) then
                     begin
-                      inquotes:=true;
-                      temp:=''
+                      InQuotes:=True;
+                      Temp:=''
                     end
                   else
                     begin
                       { requote for Windows }
-                      result:=result+maybequoted_for_script(temp,script_dos);
-                      inquotes:=false;
+                      Result:=Result+MaybeQuoted_For_Script(Temp,script_dos);
+                      InQuotes:=False;
                     end;
                 end;
               '\':
                 begin
-                  if inquotes then
-                    temp:=temp+QuotedStr[i+1]
+                  if InQuotes then
+                    Temp:=Temp+QuotedStr[I+1]
                   else
-                    result:=result+QuotedStr[i+1];
-                  inc(i);
+                    Result:=Result+QuotedStr[I+1];
+                  Inc(I);
                 end;
               else
                 begin
-                  if inquotes then
-                    temp:=temp+QuotedStr[i]
+                  if InQuotes then
+                    Temp:=Temp+QuotedStr[I]
                   else
-                    result:=result+QuotedStr[i];
+                    Result:=Result+QuotedStr[I];
                 end;
             end;
-            inc(i);
+            Inc(I);
           end;
       end;
 
 
-    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: AnsiString; Flags: TExecuteFlags): Longint;
+    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: AnsiString; Flags: TExecuteFlags): LongInt;
       var
-        quote_script: tscripttype;
+        QuoteScript: TScriptType;
       begin
 
-        if do_checkverbosity(V_Executable) then
-          do_comment(V_Executable,'Executing "'+Path+'" with command line "'+
+        if Do_CheckVerbosity(VExecutable) then
+          Do_Comment(VExecutable,'Executing "'+Path+'" with command line "'+
             ComLine+'"');
-        if (cs_link_on_target in CurrentSettings.globalswitches) then
-          quote_script:=TargetInfo.script
+        if (cs_link_on_target in CurrentSettings.GlobalSwitches) then
+          QuoteScript:=TargetInfo.Script
         else
-          quote_script:=SourceInfo.script;
-        if quote_script=script_unix then
-          result:=sysutils.ExecuteProcess(Path,UnixRequoteWithDoubleQuotes(ComLine),Flags)
+          QuoteScript:=SourceInfo.Script;
+        if QuoteScript=script_unix then
+          Result:=SysUtils.ExecuteProcess(Path,UnixRequoteWithDoubleQuotes(ComLine),Flags)
         else
-          result:=sysutils.ExecuteProcess(Path,ComLine,Flags)
+          Result:=SysUtils.ExecuteProcess(Path,ComLine,Flags)
       end;
 
 
-    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: array of AnsiString; Flags: TExecuteFlags): Longint;
+    function RequotedExecuteProcess(const Path: AnsiString; const ComLine: array of AnsiString; Flags: TExecuteFlags): LongInt;
       var
-        i : longint;
-        st : string;
+        I : LongInt;
+        ST : string;
       begin
-        if do_checkverbosity(V_Executable) then
+        if Do_CheckVerbosity(VExecutable) then
           begin
-            if high(ComLine)=0 then
-              st:=''
+            if High(ComLine)=0 then
+              ST:=''
             else
-              st:=ComLine[1];
-            for i:=2 to high(ComLine) do
-              st:=st+' '+ComLine[i];
-            do_comment(V_Executable,'Executing "'+Path+'" with command line "'+
-              st+'"');
+              ST:=ComLine[1];
+            for I:=2 to High(ComLine) do
+              ST:=ST+' '+ComLine[I];
+            Do_Comment(VExecutable,'Executing "'+Path+'" with command line "'+
+              ST+'"');
           end;
-        result:=sysutils.ExecuteProcess(Path,ComLine,Flags);
+        Result:=SysUtils.ExecuteProcess(Path,ComLine,Flags);
       end;
 
 
-    function Shell(const command:ansistring): longint;
+    function Shell(const Command:AnsiString): LongInt;
       { This is already defined in the linux.nxu for linux, need for the *
         expansion under linux }
 {$ifdef hasunix}
       begin
-        do_comment(V_Executable,'Executing "'+Command+'" with fpSystem call');
-        result := Unix.fpsystem(command);
+        Do_Comment(VExecutable,'Executing "'+Command+'" with fpSystem call');
+        Result := Unix.FpSystem(Command);
       end;
 {$else hasunix}
       var
-        comspec : string;
+        ComSpec : string;
       begin
-        comspec:=GetEnvironmentVariable('COMSPEC');
-        do_comment(V_Executable,'Executing "'+Command+'" using comspec "'
+        ComSpec:=GetEnvironmentVariable('COMSPEC');
+        Do_Comment(VExecutable,'Executing "'+Command+'" using comspec "'
             +ComSpec+'"');
-        result := RequotedExecuteProcess(comspec,' /C '+command);
+        Result := RequotedExecuteProcess(ComSpec,' /C '+Command);
       end;
 {$endif hasunix}
 

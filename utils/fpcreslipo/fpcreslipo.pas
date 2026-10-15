@@ -12,58 +12,58 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-program fpcreslipo;
+program FPCResLipo;
 
 {$MODE OBJFPC} {$H+}
 
 uses
-  SysUtils, Classes, paramparser, msghandler, sourcehandler,
-  resource, externalreader, externalwriter;
+  SysUtils, Classes, ParamParser, MsgHandler, SourceHandler,
+  Resource, ExternalReader, ExternalWriter;
 
 const
-  halt_no_err = 0;
-  halt_param_err = 1;
-  halt_read_err = 2;
-  halt_write_err = 3;
+  HaltNoErr = 0;
+  HaltParamErr = 1;
+  HaltReadErr = 2;
+  HaltWriteErr = 3;
 
-  progname = 'fpcreslipo';
-  progversion = '1.0';
+  ProgName = 'fpcreslipo';
+  ProgVersion = '1.0';
 
-  fpcversion = {$INCLUDE %FPCVERSION%};
-  host_arch = {$INCLUDE %FPCTARGETCPU%};
-  host_os = {$INCLUDE %FPCTARGETOS%};
-  build_date = {$INCLUDE %DATE%};
+  FPCVersion = {$INCLUDE %FPCVERSION%};
+  HostArch = {$INCLUDE %FPCTARGETCPU%};
+  HostOS = {$INCLUDE %FPCTARGETOS%};
+  BuildDate = {$INCLUDE %DATE%};
 
 var
-  params : TParameters = nil;
-  sourcefiles : TSourceFiles = nil;
-  outResources : TResources = nil;
+  Params : TParameters = nil;
+  SourceFiles : TSourceFiles = nil;
+  OutResources : TResources = nil;
 
 procedure ShowVersion;
 begin
-  writeln(progname+' - external resource file thinner, version '+progversion+' ['+build_date+'], FPC '+fpcversion);
-  writeln('Host platform: '+host_os+' - '+host_arch);
-  writeln('Copyright (c) 2008 by Giulio Bernardi.');
+  WriteLn(ProgName+' - external resource file thinner, version '+ProgVersion+' ['+BuildDate+'], FPC '+FPCVersion);
+  WriteLn('Host platform: '+HostOS+' - '+HostArch);
+  WriteLn('Copyright (c) 2008 by Giulio Bernardi.');
 end;
 
 procedure ShowHelp;
 begin
   ShowVersion;
-  writeln('Syntax: '+progname+' [options] <inputfile> [<inputfile>...] -o <outputfile>');
-  writeln;
-  writeln('Options:');
-  writeln('  --help, -h, -?     Show this screen.');
-  writeln('  --version, -V      Show program version.');
-  writeln('  --verbose, -v      Be verbose.');
-  writeln('  --output, -o <x>   Set the output file name.');
-  writeln('  --endian, -e <x>   Set shared file endianess (big, little)');
-  writeln('                       default is big');
-  writeln;
-  writeln('Example:');
-  writeln('  '+progname+' myprog.i386.fpcres myprog.powerpc.fpcres -o myprog.fpcres');
-  writeln;
-  writeln('  strips common resources from the two input files and puts them in the');
-  writeln('  output file');
+  WriteLn('Syntax: '+ProgName+' [options] <inputfile> [<inputfile>...] -o <outputfile>');
+  WriteLn;
+  WriteLn('Options:');
+  WriteLn('  --help, -h, -?     Show this screen.');
+  WriteLn('  --version, -V      Show program version.');
+  WriteLn('  --verbose, -v      Be verbose.');
+  WriteLn('  --output, -o <x>   Set the output file name.');
+  WriteLn('  --endian, -e <x>   Set shared file endianess (big, little)');
+  WriteLn('                       default is big');
+  WriteLn;
+  WriteLn('Example:');
+  WriteLn('  '+ProgName+' myprog.i386.fpcres myprog.powerpc.fpcres -o myprog.fpcres');
+  WriteLn;
+  WriteLn('  strips common resources from the two input files and puts them in the');
+  WriteLn('  output file');
 end;
 
 const
@@ -78,66 +78,66 @@ const
   SUnknownInputFormat = 'No known file format detected for file ''%s''';
   SCantCreateFile = 'Can''t create file ''%s''';
 
-function GetCurrentTimeMsec : longint;
-var h,m,s,ms : word;
+function GetCurrentTimeMsec : LongInt;
+var H,M,S,MS : Word;
 begin
-  DecodeTime(Time,h,m,s,ms);
-  Result:=h*3600*1000 + m*60*1000 + s*1000 + ms;
+  DecodeTime(Time,H,M,S,MS);
+  Result:=H*3600*1000 + M*60*1000 + S*1000 + MS;
 end;
 
 procedure CheckInputFiles;
 begin
-  if params.InputFiles.Count<2 then
+  if Params.InputFiles.Count<2 then
   begin
-    case params.InputFiles.Count of
+    case Params.InputFiles.Count of
       0 : Messages.DoError(SNoInputFiles);
       1 : Messages.DoError(STooFewInputFiles);
     end;
-    halt(halt_param_err);
+    Halt(HaltParamErr);
   end;
 end;
 
 procedure CheckOutputFile;
 begin
-  if params.OutputFile<>'' then exit;
+  if Params.OutputFile<>'' then exit;
   Messages.DoError(SNoOutputFile);
-  halt(halt_param_err);
+  Halt(HaltParamErr);
 end;
 
 procedure ParseParams;
-var msg : string;
+var Msg : string;
 begin
   Messages.DoVerbose('parsing command line parameters');
-  msg:='';
+  Msg:='';
   if ParamCount = 0 then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  params:=TParameters.Create;
+  Params:=TParameters.Create;
   try
-    params.Parse;
+    Params.Parse;
   except
-    on e : EOutputFileAlreadySetException do msg:=SOutputFileAlreadySet;
-    on e : EUnknownParameterException do msg:=Format(SUnknownParameter,[e.Message]);
-    on e : EArgumentMissingException do msg:=Format(SArgumentMissing,[e.Message]);
-    on e : EUnknownEndianessException do msg:=Format(SUnknownEndianess,[e.Message]);
+    on E : EOutputFileAlreadySetException do Msg:=SOutputFileAlreadySet;
+    on E : EUnknownParameterException do Msg:=Format(SUnknownParameter,[E.Message]);
+    on E : EArgumentMissingException do Msg:=Format(SArgumentMissing,[E.Message]);
+    on E : EUnknownEndianessException do Msg:=Format(SUnknownEndianess,[E.Message]);
   end;
-  Messages.Verbose:=params.Verbose;
-  if msg<>'' then
+  Messages.Verbose:=Params.Verbose;
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_param_err);
+    Messages.DoError(Msg);
+    Halt(HaltParamErr);
   end;
-  if params.Version then
+  if Params.Version then
   begin
     ShowVersion;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  if params.Help then
+  if Params.Help then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
 
   CheckInputFiles;
@@ -147,100 +147,100 @@ begin
 end;
 
 procedure LoadSourceFiles;
-var msg : string;
-    i : integer;
+var Msg : string;
+    I : Integer;
 begin
-  msg:='';
-  sourcefiles:=TSourceFiles.Create;
+  Msg:='';
+  SourceFiles:=TSourceFiles.Create;
   try
-    for i:=0 to params.InputFiles.Count-1 do
-      sourcefiles.NewSourceFile(params.InputFiles[i]);
+    for I:=0 to Params.InputFiles.Count-1 do
+      SourceFiles.NewSourceFile(Params.InputFiles[I]);
   except
-    on e : ECantOpenFileException do msg:=Format(SCantOpenFile,[e.Message]);
-    on e : EUnknownInputFormatException do msg:=Format(SUnknownInputFormat,[e.Message]);
-    on e : Exception do
+    on E : ECantOpenFileException do Msg:=Format(SCantOpenFile,[E.Message]);
+    on E : EUnknownInputFormatException do Msg:=Format(SUnknownInputFormat,[E.Message]);
+    on E : Exception do
     begin
-      if e.Message='' then msg:=e.ClassName
-      else msg:=e.Message;
+      if E.Message='' then Msg:=E.ClassName
+      else Msg:=E.Message;
     end;
   end;
-  if msg<>'' then
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_read_err);
+    Messages.DoError(Msg);
+    Halt(HaltReadErr);
   end;
 end;
 
 procedure ProcessFiles;
 begin
   Messages.DoVerbose('processing input files...');
-  outResources:=TResources.Create;
-  sourcefiles.Process(outResources);
+  OutResources:=TResources.Create;
+  SourceFiles.Process(OutResources);
   Messages.DoVerbose('input files processed.');
 end;
 
-function WriteOutputFile : boolean;
-var aStream : TFileStream;
-    aWriter : TExternalResourceWriter;
-    msg : string;
+function WriteOutputFile : Boolean;
+var AStream : TFileStream;
+    AWriter : TExternalResourceWriter;
+    Msg : string;
 begin
-  if outResources.Count=0 then
+  if OutResources.Count=0 then
   begin
-    Result:=false;
+    Result:=False;
     Messages.DoVerbose('Nothing to do');
     exit;
   end;
-  Result:=true;
-  Messages.DoVerbose(Format('Trying to create file %s...',[params.OutputFile]));
+  Result:=True;
+  Messages.DoVerbose(Format('Trying to create file %s...',[Params.OutputFile]));
   try
-    aStream:=TFileStream.Create(params.OutputFile,fmCreate or fmShareDenyWrite);
+    AStream:=TFileStream.Create(Params.OutputFile,fmCreate or fmShareDenyWrite);
   except
-    Messages.DoError(Format(SCantCreateFile,[params.OutputFile]));
-    halt(halt_write_err);
+    Messages.DoError(Format(SCantCreateFile,[Params.OutputFile]));
+    Halt(HaltWriteErr);
   end;
   try
-    aWriter:=TExternalResourceWriter.Create;
-    aWriter.Endianess:=params.Endianess;
+    AWriter:=TExternalResourceWriter.Create;
+    AWriter.Endianess:=Params.Endianess;
     try
       try
-        outResources.WriteToStream(aStream,aWriter);
+        OutResources.WriteToStream(AStream,AWriter);
       except
-        on e : Exception do
+        on E : Exception do
         begin
-          if e.Message='' then msg:=e.ClassName
-          else msg:=e.Message;
-          Messages.DoError(msg);
-          halt(halt_write_err);
+          if E.Message='' then Msg:=E.ClassName
+          else Msg:=E.Message;
+          Messages.DoError(Msg);
+          Halt(HaltWriteErr);
         end;
       end;
-      Messages.DoVerbose(Format('%d resources written.',[outResources.Count]));
-      Messages.DoVerbose(Format('File %s written',[params.OutputFile]));
+      Messages.DoVerbose(Format('%d resources written.',[OutResources.Count]));
+      Messages.DoVerbose(Format('File %s written',[Params.OutputFile]));
     finally
-      aWriter.Free;
+      AWriter.Free;
     end;
   finally
-    aStream.Free;
+    AStream.Free;
   end;
-  FreeAndNil(outResources);
+  FreeAndNil(OutResources);
 end;
 
 procedure UpdateFiles;
-var msg : string;
+var Msg : string;
 begin
   try
-    sourcefiles.Update;
+    SourceFiles.Update;
   except
-    on e : ECantCreateFileException do msg:=Format(SCantCreateFile,[e.Message]);
-    on e : Exception do
+    on E : ECantCreateFileException do Msg:=Format(SCantCreateFile,[E.Message]);
+    on E : Exception do
     begin
-      if e.Message='' then msg:=e.ClassName
-      else msg:=e.Message;
+      if E.Message='' then Msg:=E.ClassName
+      else Msg:=E.Message;
     end;
   end;
-  if msg<>'' then
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_write_err);
+    Messages.DoError(Msg);
+    Halt(HaltWriteErr);
   end;
 end;
 
@@ -252,19 +252,19 @@ begin
   if Params<>nil then Params.Free;
 end;
 
-var before, elapsed : longint;
+var Before, Elapsed : LongInt;
 
 begin
   try
-    before:=GetCurrentTimeMsec;
+    Before:=GetCurrentTimeMsec;
     ParseParams;
     LoadSourceFiles;
     ProcessFiles;
     if WriteOutputFile then
       UpdateFiles;
-    elapsed:=GetCurrentTimeMsec-before;
-    if elapsed<0 then elapsed:=24*3600*1000 + elapsed;
-    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[elapsed div 1000,(elapsed mod 1000) div 10]));
+    Elapsed:=GetCurrentTimeMsec-Before;
+    if Elapsed<0 then Elapsed:=24*3600*1000 + Elapsed;
+    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[Elapsed div 1000,(Elapsed mod 1000) div 10]));
   finally
     Cleanup;
   end;

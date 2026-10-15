@@ -26,17 +26,17 @@ unit triplet;
 interface
 
 uses
-  globtype;
+  GlobType;
 
-function targettriplet(tripletstyle: TTripletStyle): ansistring;
+function targettriplet(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
-  globals,systems,
-  cpuinfo,tripletcpu;
+  Globals,Systems,
+  CPUInfo,tripletcpu;
 
-  function targettriplet(tripletstyle: TTripletStyle): ansistring;
+  function targettriplet(tripletstyle: TTripletStyle): AnsiString;
     begin
       { architecture }
       result:=tripletcpustr(tripletstyle);
@@ -47,9 +47,9 @@ uses
           if TargetInfo.system in systems_macosx then
             result:=result+'-macosx'+MacOSXVersionMin.str
           else if TargetInfo.system = system_aarch64_iphonesim then
-            result:=result+'-ios-simulator'+iPhoneOSVersionMin.str
+            result:=result+'-ios-simulator'+IPhoneOSVersionMin.str
           else
-            result:=result+'-ios'+iPhoneOSVersionMin.str;
+            result:=result+'-ios'+IPhoneOSVersionMin.str;
         end
       else if TargetInfo.system in (systems_linux+systems_android) then
         result:=result+'-unknown-linux'

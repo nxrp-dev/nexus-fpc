@@ -29,22 +29,22 @@ unit agcpugas;
   interface
 
     uses
-       globtype,systems,
-       aasmtai,aasmdata,aasmbase,
+       GlobType,Systems,
+       aasmtai,AAsmData,aasmbase,
        assemble,aggas,
-       cpubase,cpuinfo;
+       cpubase,CPUInfo;
 
     type
       TAArch64InstrWriter=class(TCPUInstrWriter)
-        procedure WriteInstruction(hp : tai);override;
+        procedure WriteInstruction(hp : TAI);override;
       end;
 
-      TAArch64Assembler=class(TGNUassembler)
+      TAArch64Assembler=class(TGNUAssembler)
         constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
 
-      TAArch64AppleAssembler=class(TAppleGNUassembler)
+      TAArch64AppleAssembler=class(TAppleGNUAssembler)
         constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
@@ -60,13 +60,13 @@ unit agcpugas;
       end;
 
     const
-      gas_shiftmode2str : array[tshiftmode] of string[4] = (
+      gas_shiftmode2str : array[TShiftMode] of string[4] = (
         '','lsl','lsr','asr','ror',
         'uxtb','uxth','uxtw','uxtx',
         'sxtb','sxth','sxtw','sxtx');
 
     const
-      cputype_to_gas_march : array[tcputype] of string = (
+      cputype_to_gas_march : array[TCPUType] of string = (
         '', // cpu_none
         'armv8-a', // armv8 is not accepted by GNU assembler
         'armv8-a',
@@ -81,7 +81,7 @@ unit agcpugas;
         'armv8.9-a'
       );
 
-      cputype_to_clang_march : array[tcputype] of string = (
+      cputype_to_clang_march : array[TCPUType] of string = (
         '', // cpu_none
         'armv8',
         'armv8-a',
@@ -99,7 +99,7 @@ unit agcpugas;
   implementation
 
     uses
-       cutils,cclasses,globals,verbose,
+       CUtils,CClasses,Globals,Verbose,
        aasmcpu,
        itcpugas,
        cgbase,cgutils;
@@ -107,10 +107,10 @@ unit agcpugas;
 
     function GetmarchStr : String;
       var
-        cf: tcpuflags;
+        cf: TCPUFlags;
       begin
-        Result:='-march='+cputype_to_gas_march[CurrentSettings.cputype];
-        for cf in cpu_capabilities[CurrentSettings.cputype] do
+        Result:='-march='+cputype_to_gas_march[CurrentSettings.CPUType];
+        for cf in cpu_capabilities[CurrentSettings.CPUType] do
           begin
             case cf of
               CPUAARCH64_HAS_DOTPROD:
@@ -131,7 +131,7 @@ unit agcpugas;
                 { currently, clang on aarch64-darwin does not support pauth and as
                   it is actually part of -march==armv8.4-a (and higher) we actually don't need it,
                   so ignore it at this point }
-                if not(CurrentSettings.cputype>=cpu_armv84a) then
+                if not(CurrentSettings.CPUType>=cpu_armv84a) then
                   Result:=Result+'+pauth';
               CPUAARCH64_HAS_TME:
                 Result:=Result+'+tme';
@@ -158,7 +158,7 @@ unit agcpugas;
     function TAArch64Assembler.MakeCmdLine: TCmdStr;
       begin
         result:=inherited MakeCmdLine;
-        if cputype_to_gas_march[CurrentSettings.cputype] <> '' then
+        if cputype_to_gas_march[CurrentSettings.CPUType] <> '' then
           Replace(result,'$MARCHOPT',GetmarchStr)
         else
           Replace(result,'$MARCHOPT','');
@@ -178,7 +178,7 @@ unit agcpugas;
     function TAArch64AppleAssembler.MakeCmdLine: TCmdStr;
       begin
         result:=inherited MakeCmdLine;
-        if cputype_to_gas_march[CurrentSettings.cputype] <> '' then
+        if cputype_to_gas_march[CurrentSettings.CPUType] <> '' then
           Replace(result,'$MARCHOPT',GetmarchStr)
         else
           Replace(result,'$MARCHOPT','');
@@ -195,18 +195,18 @@ unit agcpugas;
 
     procedure TAArch64ClangGASAssembler.TransformSEHDirectives(list:TAsmList);
 
-      function convert_unwinddata(list:tasmlist):tdynamicarray;
+      function convert_unwinddata(list:TAsmList):TDynamicArray;
 
         procedure check_offset(ofs,max:dword);
           begin
             if ((ofs and $7)<>0) or (ofs>max) then
-              internalerror(2020041210);
+              InternalError(2020041210);
           end;
 
-        procedure check_reg(reg:tregister;rt:TRegisterType;min:TSuperRegister);
+        procedure check_reg(reg:TRegister;rt:TRegisterType;min:TSuperRegister);
           begin
             if (getregtype(reg)<>rt) or (getsupreg(reg)<min) then
-              internalerror(2020041211);
+              InternalError(2020041211);
           end;
 
         procedure writebyte(b:byte); inline;
@@ -230,20 +230,20 @@ unit agcpugas;
           min_int_reg = 19;
           min_mm_reg = 8;
         var
-          hp : tai;
-          seh : tai_seh_directive absolute hp;
+          hp : TAI;
+          seh : TAISEHDirective absolute hp;
         begin
-          result:=tdynamicarray.create(0);
-          hp:=tai(list.last);
-          while assigned(hp) do
+          result:=TDynamicArray.create(0);
+          hp:=TAI(list.last);
+          while Assigned(hp) do
             begin
               if hp.typ<>ait_seh_directive then
-                internalerror(2020041502);
+                InternalError(2020041502);
               case seh.kind of
                 ash_stackalloc:
                   begin
                     if (seh.data.offset and $f)<>0 then
-                      internalerror(2020041207);
+                      InternalError(2020041207);
                     if seh.data.offset<((1 shl 5)*16) then
                       writebyte(byte(seh.data.offset shr 4))
                     else if seh.data.offset<((1 shl 11)*16) then
@@ -251,8 +251,8 @@ unit agcpugas;
                     else if seh.data.offset<((1 shl 24)*16) then
                       writedword($E0000000 or (seh.data.offset shr 4))
                     else begin
-                      writeln(hexstr(seh.data.offset,8));
-                      internalerror(2020041209);
+                      WriteLn(HexStr(seh.data.offset,8));
+                      InternalError(2020041209);
                     end;
                   end;
                 ash_addfp:
@@ -323,14 +323,14 @@ unit agcpugas;
                     writeword($DA00 or ((getsupreg(seh.data.reg)-min_mm_reg) shl 6) or ((seh.data.offset shr 3)-1));
                   end;
                 else
-                  internalerror(2020041503);
+                  InternalError(2020041503);
               end;
-              hp:=tai(hp.previous);
+              hp:=TAI(hp.previous);
             end;
         end;
 
       var
-        unwinddata : tdynamicarray;
+        unwinddata : TDynamicArray;
 
       procedure writebyte(b:byte);
         begin
@@ -338,30 +338,30 @@ unit agcpugas;
         end;
 
       var
-        hp,hpnext,hpdata : tai;
-        seh : tai_seh_directive absolute hp;
-        lastsym : tai_symbol;
-        lastsec : tai_section;
+        hp,hpnext,hpdata : TAI;
+        seh : TAISEHDirective absolute hp;
+        lastsym : TAISymbol;
+        lastsec : TAISection;
         inprologue,
         smartunwind,
         deleteai : boolean;
         totalcount,
         instrcount,
         datacount : sizeint;
-        handlername : tsymstr;
+        handlername : TSymStr;
         handlerflags : byte;
-        handlerdata : array of tai;
+        handlerdata : array of TAI;
         handlerdataidx : sizeint;
-        handlerdatacount : tai;
+        handlerdatacount : TAI;
         sehlist,
         tmplist : TAsmList;
         pdatasection,
-        xdatasection : tai_section;
-        xdatasym : tasmsymbol;
+        xdatasection : TAISection;
+        xdatasym : TAsmSymbol;
         leaderinfo : TGNUWin64ComdatInfo;
-        unwindrec : longword;
+        unwindrec : LongWord;
       begin
-        if not assigned(list) then
+        if not Assigned(list) then
           exit;
 
         lastsym:=nil;
@@ -378,34 +378,34 @@ unit agcpugas;
         handlerflags:=0;
         handlername:='';
 
-        hp:=tai(list.first);
-        while assigned(hp) do
+        hp:=TAI(list.first);
+        while Assigned(hp) do
           begin
             deleteai:=false;
             case hp.typ of
               ait_section:
                 begin
-                  if assigned(sehlist) then
+                  if Assigned(sehlist) then
                     begin
-                      if assigned(lastsec) and (tai_section(hp).name^=lastsec.name^) then
+                      if Assigned(lastsec) and (TAISection(hp).name^=lastsec.name^) then
                         begin
                           { this section was only added due to the now removed SEH data }
                           deleteai:=true;
                           dec(list.section_count);
                         end
                       else
-                        internalerror(2020041214);
+                        InternalError(2020041214);
                     end
                   else
                     begin
-                      lastsec:=tai_section(hp);
+                      lastsec:=TAISection(hp);
                       { also reset the last encountered symbol }
                       lastsym:=nil;
                     end;
 
-                  if assigned(tmplist) then
+                  if Assigned(tmplist) then
                     begin
-                      list.insertListBefore(hp,tmplist);
+                      list.InsertListBefore(hp,tmplist);
                       tmplist.free;
                       tmplist:=nil;
                     end;
@@ -413,43 +413,43 @@ unit agcpugas;
                 end;
               ait_symbol:
                 begin
-                  if tai_symbol(hp).sym.typ=AT_FUNCTION then
-                    lastsym:=tai_symbol(hp);
+                  if TAISymbol(hp).sym.typ=AT_FUNCTION then
+                    lastsym:=TAISymbol(hp);
                 end;
               ait_instruction:
-                if assigned(sehlist) then
+                if Assigned(sehlist) then
                   inc(instrcount);
               ait_const:
-                if assigned(sehlist) then
-                  inc(datacount,tai_const(hp).size);
+                if Assigned(sehlist) then
+                  inc(datacount,TAIConst(hp).size);
               ait_seh_directive:
                 begin
-                  if not assigned(sehlist) and (seh.kind<>ash_proc) then
-                    internalerror(2020041208);
+                  if not Assigned(sehlist) and (seh.kind<>ash_proc) then
+                    InternalError(2020041208);
                   { most seh directives are removed }
                   deleteai:=true;
                   case seh.kind of
                     ash_proc:
                       begin
-                        if not assigned(lastsec) then
-                          internalerror(2020041203);
+                        if not Assigned(lastsec) then
+                          InternalError(2020041203);
                         datacount:=0;
                         instrcount:=0;
                         handlerflags:=0;
                         handlername:='';
-                        sehlist:=tasmlist.create;
+                        sehlist:=TAsmList.create;
                         inprologue:=true;
                       end;
                     ash_endproc:
                       begin
-                        if not assigned(sehlist) then
-                          internalerror(2020041501);
-                        if assigned(tmplist) then
-                          internalerror(2020041302);
-                        if not assigned(lastsym) then
-                          internalerror(2020041303);
+                        if not Assigned(sehlist) then
+                          InternalError(2020041501);
+                        if Assigned(tmplist) then
+                          InternalError(2020041302);
+                        if not Assigned(lastsym) then
+                          InternalError(2020041303);
                         if inprologue then
-                          cgmessage(asmw_e_missing_endprologue);
+                          CGMessage(asmw_e_missing_endprologue);
 
                         { only generate xdata and pdata if we have any
                           prologue or a handler is set }
@@ -471,10 +471,10 @@ unit agcpugas;
                                     anyway }
                             xdatasym:=CurrentAsmData.DefineAsmSymbol('xdata_'+lastsym.sym.name,AB_LOCAL,AT_DATA,nil);
 
-                            tmplist:=tasmlist.create;
+                            tmplist:=TAsmList.create;
                             pdatasection:=new_section(tmplist,sec_pdata,lastsec.name^,0);
-                            tmplist.concat(tai_const.Create_rva_sym(lastsym.sym));
-                            tmplist.concat(tai_const.Create_rva_sym(xdatasym));
+                            tmplist.concat(TAIConst.Create_rva_sym(lastsym.sym));
+                            tmplist.concat(TAIConst.Create_rva_sym(xdatasym));
 
                             smartunwind:=IsWin64SmartSection(lastsec.sectype,lastsec.name^);
                             if create_smartlink_sections then
@@ -483,7 +483,7 @@ unit agcpugas;
                               xdatasection:=new_section(tmplist,sec_user,'.xdata',sizeof(int32));
                             xdatasection.secflags:=[SF_A];
                             xdatasection.secprogbits:=SPB_None;
-                            tmplist.concat(tai_symbol.Create(xdatasym,0));
+                            tmplist.concat(TAISymbol.Create(xdatasym,0));
 
                             if smartunwind then
                               begin
@@ -492,24 +492,24 @@ unit agcpugas;
                                 RegisterWin64AssociativeComdat(sectionname(xdatasection.sectype,xdatasection.name^,xdatasection.secorder),leaderinfo.Key);
                               end;
 
-                            tmplist.concat(tai_comment.Create(strpnew('instr: '+tostr(instrcount)+', data: '+tostr(datacount)+', unwind: '+tostr(unwinddata.size))));
+                            tmplist.concat(TAIComment.Create(StrPNew('instr: '+ToStr(instrcount)+', data: '+ToStr(datacount)+', unwind: '+ToStr(unwinddata.size))));
 
                             {$ifdef EXTDEBUG}
-                            comment(V_Debug,'got section: '+lastsec.name^);
-                            comment(V_Debug,'got instructions: '+tostr(instrcount));
-                            comment(V_Debug,'got data: '+tostr(datacount));
-                            comment(V_Debug,'got unwinddata: '+tostr(unwinddata.size));
+                            comment(VDebug,'got section: '+lastsec.name^);
+                            comment(VDebug,'got instructions: '+ToStr(instrcount));
+                            comment(VDebug,'got data: '+ToStr(datacount));
+                            comment(VDebug,'got unwinddata: '+ToStr(unwinddata.size));
                             {$endif EXTDEBUG}
 
                             if datacount mod 4<>0 then
-                              cgmessage(asmw_e_seh_invalid_data_size);
+                              CGMessage(asmw_e_seh_invalid_data_size);
 
                             totalcount:=datacount div 4+instrcount;
 
                             { splitting to multiple pdata/xdata sections is not yet
                               supported, so 1 MB is our limit for now }
                             if totalcount>(1 shl 18) then
-                              comment(V_Error,'Function is larger than 1 MB which is not supported for SEH currently');
+                              comment(VError,'Function is larger than 1 MB which is not supported for SEH currently');
 
                             unwindrec:=min(totalcount,(1 shl 18)-1);
                             { ARM64 xdata header format:
@@ -533,35 +533,35 @@ unit agcpugas;
                               unwindrec:=unwindrec or ((unwinddata.size div 4) shl 27);  { code_words in bits 27-31 }
 
                             { exception record headers }
-                            tmplist.concat(tai_const.Create_32bit(longint(unwindrec)));
-                            if cs_asm_source in InitSettings.globalswitches then
-                              tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
+                            tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
+                            if cs_asm_source in InitSettings.GlobalSwitches then
+                              tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
 
                             if unwinddata.size div 4>31 then
                               begin
                                 { once we're able to split a .pdata entry this can be
                                   removed as well }
                                 if unwinddata.size div 4>255 then
-                                  comment(V_Error,'Too many unwind codes for SEH');
+                                  comment(VError,'Too many unwind codes for SEH');
                                 unwindrec:=(unwinddata.size div 4) shl 16;
-                                tmplist.concat(tai_const.create_32bit(longint(unwindrec)));
-                                if cs_asm_source in InitSettings.globalswitches then
-                                  tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
+                                tmplist.concat(TAIConst.create_32bit(LongInt(unwindrec)));
+                                if cs_asm_source in InitSettings.GlobalSwitches then
+                                  tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
                               end;
 
                             { unwind codes }
                             unwinddata.seek(0);
                             while unwinddata.pos<unwinddata.size do
                               begin
-                                unwinddata.read(unwindrec,sizeof(longword));
-                                tmplist.concat(tai_const.Create_32bit(longint(unwindrec)));
-                                if cs_asm_source in InitSettings.globalswitches then
-                                  tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
+                                unwinddata.read(unwindrec,sizeof(LongWord));
+                                tmplist.concat(TAIConst.Create_32bit(LongInt(unwindrec)));
+                                if cs_asm_source in InitSettings.GlobalSwitches then
+                                  tmplist.concat(TAIComment.create(StrPNew(HexStr(unwindrec,8))));
                               end;
 
                             if handlerflags<>0 then
                               begin
-                                tmplist.concat(tai_const.Create_rva_sym(CurrentAsmData.RefAsmSymbol(handlername,AT_FUNCTION,false)));
+                                tmplist.concat(TAIConst.Create_rva_sym(CurrentAsmData.RefAsmSymbol(handlername,AT_FUNCTION,false)));
                                 if length(handlerdata)>0 then
                                   begin
                                     tmplist.concat(handlerdatacount);
@@ -588,28 +588,28 @@ unit agcpugas;
                     ash_handlerdata:
                       begin
                         if handlername='' then
-                          cgmessage(asmw_e_handlerdata_no_handler);
-                        hpdata:=tai(hp.next);
-                        if not assigned(hpdata) or (hpdata.typ<>ait_const) or (tai_const(hpdata).consttype<>aitconst_32bit) then
-                          internalerror(2020041215);
+                          CGMessage(asmw_e_handlerdata_no_handler);
+                        hpdata:=TAI(hp.next);
+                        if not Assigned(hpdata) or (hpdata.typ<>ait_const) or (TAIConst(hpdata).consttype<>aitconst_32bit) then
+                          InternalError(2020041215);
                         handlerdatacount:=hpdata;
-                        setlength(handlerdata,tai_const(hpdata).value*4);
+                        SetLength(handlerdata,TAIConst(hpdata).value*4);
                         handlerdataidx:=0;
-                        hpnext:=tai(hpdata.next);
+                        hpnext:=TAI(hpdata.next);
                         list.remove(hpdata);
                         hpdata:=hpnext;
-                        while (handlerdataidx<length(handlerdata)) and assigned(hpdata) do
+                        while (handlerdataidx<length(handlerdata)) and Assigned(hpdata) do
                           begin
-                            if (hpdata.typ<>ait_const) or not (tai_const(hpdata).consttype in [aitconst_32bit,aitconst_rva_symbol]) then
-                              internalerror(2020041212);
+                            if (hpdata.typ<>ait_const) or not (TAIConst(hpdata).consttype in [aitconst_32bit,aitconst_rva_symbol]) then
+                              InternalError(2020041212);
                             handlerdata[handlerdataidx]:=hpdata;
                             inc(handlerdataidx);
-                            hpnext:=tai(hpdata.next);
+                            hpnext:=TAI(hpdata.next);
                             list.remove(hpdata);
                             hpdata:=hpnext;
                           end;
                         if handlerdataidx<length(handlerdata) then
-                          internalerror(2020041213);
+                          InternalError(2020041213);
                       end;
                     ash_stackalloc,
                     ash_addfp,
@@ -626,19 +626,19 @@ unit agcpugas;
                     ash_savefregp,
                     ash_savefregp_x:
                       begin
-                        if not assigned(sehlist) then
-                          internalerror(2020041504);
+                        if not Assigned(sehlist) then
+                          InternalError(2020041504);
                         if not inprologue then
-                          internalerror(2020041505);
+                          InternalError(2020041505);
                         hpdata:=hp;
-                        hp:=tai(hp.previous);
+                        hp:=TAI(hp.previous);
                         list.Remove(hpdata);
                         sehlist.concat(hpdata);
                         { don't delete this }
                         deleteai:=false;
                       end;
                     else
-                      internalerror(2020041206);
+                      InternalError(2020041206);
                   end;
                 end;
               else
@@ -648,21 +648,21 @@ unit agcpugas;
 
             if deleteai then
               begin
-                hpnext:=tai(hp.next);
+                hpnext:=TAI(hp.next);
                 list.remove(hp);
                 hp.free;
                 hp:=hpnext;
               end
             else
-              hp:=tai(hp.next);
+              hp:=TAI(hp.next);
           end;
 
-        if assigned(sehlist) then
-          internalerror(2020041205);
+        if Assigned(sehlist) then
+          InternalError(2020041205);
 
-        if assigned(tmplist) then
+        if Assigned(tmplist) then
           begin
-            list.concatlist(tmplist);
+            list.ConcatList(tmplist);
             tmplist.free;
           end;
       end;
@@ -697,7 +697,7 @@ unit agcpugas;
 {                  Helper routines for Instruction Writer                    }
 {****************************************************************************}
 
-    function getreferencestring(asminfo: PAsmInfo; var ref : treference) : string;
+    function getreferencestring(asminfo: PAsmInfo; var ref : TReference) : string;
       const
         darwin_addrpage2str: array[addr_page..addr_gotpageoffset] of string[11] =
            ('@PAGE','@PAGEOFF','@GOTPAGE','@GOTPAGEOFF');
@@ -712,12 +712,12 @@ unit agcpugas;
               addr_gotpageoffset,
               addr_pageoffset:
                 begin
-                  if not assigned(ref.symbol) or
+                  if not Assigned(ref.symbol) or
                      (ref.base<>NR_NO) or
                      (ref.index<>NR_NO) or
                      (ref.shiftmode<>SM_None) or
                      (ref.offset<>0) then
-                    internalerror(2014121501);
+                    InternalError(2014121501);
                   if TargetInfo.system in systems_darwin then
                     result:=ref.symbol.name+darwin_addrpage2str[ref.refaddr]
                   else
@@ -728,7 +728,7 @@ unit agcpugas;
               addr_no:
                 result:=ref.symbol.name;
               else
-                internalerror(2015022302);
+                InternalError(2015022302);
             end
           end
         else
@@ -739,8 +739,8 @@ unit agcpugas;
             if ref.index<>NR_NO then
               begin
                 if (ref.offset<>0) or
-                   assigned(ref.symbol) then
-                  internalerror(2014121504);
+                   Assigned(ref.symbol) then
+                  InternalError(2014121504);
                 result:=result+', '+gas_regname(ref.index);
                 case ref.shiftmode of
                   SM_None: ;
@@ -750,15 +750,15 @@ unit agcpugas;
                       result:=result+', '+gas_shiftmode2str[ref.shiftmode];
                       if (ref.shiftmode=SM_LSL) or
                          (ref.shiftimm<>0) then
-                        result:=result+' #'+tostr(ref.shiftimm);
+                        result:=result+' #'+ToStr(ref.shiftimm);
                     end
                   else
-                    internalerror(2014121505);
+                    InternalError(2014121505);
                 end;
               end
             else
               begin
-                if assigned(ref.symbol) then
+                if Assigned(ref.symbol) then
                   begin
                     case ref.refaddr of
                       addr_gotpageoffset,
@@ -771,15 +771,15 @@ unit agcpugas;
                         end
                       else
                         { todo: not yet generated/don't know syntax }
-                        internalerror(2014121506);
+                        InternalError(2014121506);
                     end;
                   end
                 else
                   begin
                     if ref.refaddr<>addr_no then
-                      internalerror(2014121502);
+                      InternalError(2014121502);
                     if (ref.offset<>0) then
-                      result:=result+', #'+tostr(ref.offset);
+                      result:=result+', #'+ToStr(ref.offset);
                   end;
               end;
             case ref.addressmode of
@@ -794,10 +794,10 @@ unit agcpugas;
       end;
 
 
-    function getopstr(asminfo: PAsmInfo; hp: taicpu; opnr: longint; const o: toper): string;
+    function getopstr(asminfo: PAsmInfo; hp: TAICPU; opnr: LongInt; const o: TOper): string;
       var
-        i: longint;
-        reg: tregister;
+        i: LongInt;
+        reg: TRegister;
       begin
         case o.typ of
           top_reg:
@@ -806,33 +806,33 @@ unit agcpugas;
             begin
               getopstr:=gas_shiftmode2str[o.shifterop^.shiftmode];
               if o.shifterop^.shiftimm<>0 then
-                getopstr:=getopstr+' #'+tostr(o.shifterop^.shiftimm)
+                getopstr:=getopstr+' #'+ToStr(o.shifterop^.shiftimm)
             end;
           top_const:
             if o.val>=0 then
-              getopstr:='#'+tostr(o.val)
+              getopstr:='#'+ToStr(o.val)
             else
-              getopstr:='#0x'+hexStr(o.val,16);
+              getopstr:='#0x'+HexStr(o.val,16);
           top_conditioncode:
             getopstr:=cond2str[o.cc];
           top_ref:
             if is_calljmp(hp.opcode) then
               begin
                 if o.ref^.refaddr<>addr_full then
-                  internalerror(2014122220);
-                if not assigned(o.ref^.symbol) or
-                   assigned(o.ref^.relsymbol) or
+                  InternalError(2014122220);
+                if not Assigned(o.ref^.symbol) or
+                   Assigned(o.ref^.relsymbol) or
                    (o.ref^.base<>NR_NO) or
                    (o.ref^.index<>NR_NO) or
                    (o.ref^.offset<>0) then
-                  internalerror(2014122221);
+                  InternalError(2014122221);
                 getopstr:=o.ref^.symbol.name;
               end
             else
               getopstr:=getreferencestring(asminfo,o.ref^);
           top_realconst:
             begin
-              Result:=realtostr(o.val_real);
+              Result:=RealToStr(o.val_real);
               Result:='#'+Result;
             end;
           top_regset:
@@ -846,38 +846,38 @@ unit agcpugas;
                 end;
               result:=result+'}';
               if o.regsetindex<>255 then
-                result:=result+'['+tostr(o.regsetindex)+']'
+                result:=result+'['+ToStr(o.regsetindex)+']'
             end;
           top_indexedreg:
             begin
-              result:=gas_regname(o.indexedreg)+'['+tostr(o.regindex)+']';
+              result:=gas_regname(o.indexedreg)+'['+ToStr(o.regindex)+']';
             end;
           else
-            internalerror(2014121507);
+            InternalError(2014121507);
         end;
       end;
 
 
-    procedure TAArch64InstrWriter.WriteInstruction(hp : tai);
+    procedure TAArch64InstrWriter.WriteInstruction(hp : TAI);
       var
         op: TAsmOp;
         s: string;
         i: byte;
         sep: string[3];
       begin
-        op:=taicpu(hp).opcode;
-        s:=#9+gas_op2str[op]+oppostfix2str[taicpu(hp).oppostfix];
-        if taicpu(hp).condition<>C_NONE then
-          s:=s+'.'+cond2str[taicpu(hp).condition];
-        if taicpu(hp).ops<>0 then
+        op:=TAICPU(hp).opcode;
+        s:=#9+gas_op2str[op]+oppostfix2str[TAICPU(hp).oppostfix];
+        if TAICPU(hp).condition<>C_NONE then
+          s:=s+'.'+cond2str[TAICPU(hp).condition];
+        if TAICPU(hp).ops<>0 then
           begin
             sep:=#9;
-            for i:=0 to taicpu(hp).ops-1 do
+            for i:=0 to TAICPU(hp).ops-1 do
               begin
                  // debug code
                  // writeln(s);
                  // writeln(taicpu(hp).fileinfo.line);
-                 s:=s+sep+getopstr(owner.asminfo,taicpu(hp),i,taicpu(hp).oper[i]^);
+                 s:=s+sep+getopstr(owner.asminfo,TAICPU(hp),i,TAICPU(hp).oper[i]^);
                  sep:=',';
               end;
           end;

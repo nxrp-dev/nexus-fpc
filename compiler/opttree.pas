@@ -44,22 +44,22 @@ unit opttree;
   implementation
 
     uses
-      verbose,
-      globtype,
+      Verbose,
+      GlobType,
       cgbase,
       defutil,
       nbas,nld,ncal,
       nutils,
       pass_1;
 
-    function searchstatements(var n : TNode;arg : pointer) : foreachnoderesult;forward;
+    function searchstatements(var n : TNode;arg : pointer) : TForEachNodeResult;forward;
 
     { success pointer shared across recursive searchstatements calls so nested
       blockns can be processed with the proper arg (their own statement chain) }
     var
-      normalize_success : pboolean;
+      normalize_success : PBoolean;
 
-    function hasblock(var n : TNode;arg : pointer) : foreachnoderesult;
+    function hasblock(var n : TNode;arg : pointer) : TForEachNodeResult;
       begin
         result:=fen_false;
         if n.nodetype=blockn then
@@ -71,33 +71,33 @@ unit opttree;
       nothingnode) and return it; nil if not found. Matches the flat
       tempcreate/.../tempdelete pattern emitted around internalstatements
       blocks (nested deletes not expected) }
-    function block_extract_tempdelete(block : tblocknode; ti : ptempinfo) : ttempdeletenode;
+    function block_extract_tempdelete(block : TBlockNode; ti : PTempInfo) : TTempDeleteNode;
       var
-        s : tstatementnode;
+        s : TStatementNode;
       begin
         result:=nil;
-        s:=tstatementnode(block.left);
-        while assigned(s) do
+        s:=TStatementNode(block.left);
+        while Assigned(s) do
           begin
-            if assigned(s.left) and
+            if Assigned(s.left) and
                (s.left.nodetype=tempdeleten) and
-               (ttempdeletenode(s.left).tempinfo=ti) then
+               (TTempDeleteNode(s.left).tempinfo=ti) then
               begin
-                result:=ttempdeletenode(s.left);
-                s.left:=cnothingnode.create;
+                result:=TTempDeleteNode(s.left);
+                s.left:=CNothingNode.create;
                 exit;
               end;
-            s:=tstatementnode(s.right);
+            s:=TStatementNode(s.right);
           end;
       end;
 
-    function searchblock(var n : TNode;arg : pointer) : foreachnoderesult;
+    function searchblock(var n : TNode;arg : pointer) : TForEachNodeResult;
       var
         hp,
-        stmnt : tstatementnode;
+        stmnt : TStatementNode;
         res : PNode;
-        tempcreatenode : ttempcreatenode;
-        tempdelnode : ttempdeletenode;
+        tempcreatenode : TTempCreateNode;
+        tempdelnode : TTempDeleteNode;
         movedblock : TNode;
       begin
         result:=fen_true;
@@ -113,31 +113,31 @@ unit opttree;
         case n.nodetype of
           calln:
             begin
-              if assigned(tcallnode(n).callinitblock) then
+              if Assigned(TCallNode(n).callinitblock) then
                 begin
                   { create a new statement node and insert it }
-                  hp:=cstatementnode.create(tcallnode(n).callinitblock,PNode(arg)^);
+                  hp:=CStatementNode.create(TCallNode(n).callinitblock,PNode(arg)^);
                   PNode(arg)^:=hp;
                   { tree moved }
-                  tcallnode(n).callinitblock:=nil;
+                  TCallNode(n).callinitblock:=nil;
                   { process the newly generated block }
                   foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                 end;
-              if assigned(tcallnode(n).callcleanupblock) then
+              if Assigned(TCallNode(n).callcleanupblock) then
                 begin
                   { create a new statement node and append it }
-                  hp:=cstatementnode.create(tcallnode(n).callcleanupblock,tstatementnode(PNode(arg)^).right);
-                  tstatementnode(PNode(arg)^).right:=hp;
+                  hp:=CStatementNode.create(TCallNode(n).callcleanupblock,TStatementNode(PNode(arg)^).right);
+                  TStatementNode(PNode(arg)^).right:=hp;
                   { tree moved }
-                  tcallnode(n).callcleanupblock:=nil;
+                  TCallNode(n).callcleanupblock:=nil;
                   { process the newly generated block }
-                  foreachnodestatic(tstatementnode(PNode(arg)^).right,@searchstatements,nil);
+                  foreachnodestatic(TStatementNode(PNode(arg)^).right,@searchstatements,nil);
                 end;
             end;
           blockn:
             begin
-              if assigned(tblocknode(n).left) and (tblocknode(n).left.nodetype<>statementn) then
-                internalerror(2013120502);
+              if Assigned(TBlockNode(n).left) and (TBlockNode(n).left.nodetype<>statementn) then
+                InternalError(2013120502);
 
               { blocks used as statements (void result) cannot be extracted -
                 replacing the statement slot with a value would produce a
@@ -145,31 +145,31 @@ unit opttree;
                 with references to this block's own temps; recurse through the
                 statement chain so those inner blockns get normalized at the
                 scope where their external temp refs are still valid. }
-              if not assigned(tblocknode(n).resultdef) or
-                 is_void(tblocknode(n).resultdef) then
+              if not Assigned(TBlockNode(n).resultdef) or
+                 is_void(TBlockNode(n).resultdef) then
                 begin
-                  if assigned(tblocknode(n).left) then
-                    foreachnodestatic(tblocknode(n).left,@searchstatements,normalize_success);
+                  if Assigned(TBlockNode(n).left) then
+                    foreachnodestatic(TBlockNode(n).left,@searchstatements,normalize_success);
                   { tell the outer foreachnodestatic not to descend again -
                     we've already walked the body with searchstatements }
                   result:=fen_norecurse_true;
                   exit;
                 end;
 
-              stmnt:=tstatementnode(tblocknode(n).left);
+              stmnt:=TStatementNode(TBlockNode(n).left);
               { search for the result of the block node }
-              if assigned(stmnt) then
+              if Assigned(stmnt) then
                 begin
                   res:=nil;
-                  hp:=tstatementnode(stmnt);
-                  while assigned(hp) do
+                  hp:=TStatementNode(stmnt);
+                  while Assigned(hp) do
                     begin
-                      if assigned(hp.left) then
+                      if Assigned(hp.left) then
                         res:=@hp.left;
-                      hp:=tstatementnode(hp.right);
+                      hp:=TStatementNode(hp.right);
                     end;
                   { did we find a last node? }
-                  if assigned(res^) then
+                  if Assigned(res^) then
                     begin
                       case res^.nodetype of
                         ordconstn,
@@ -185,55 +185,55 @@ unit opttree;
                               temp (otherwise the delete would run before the
                               use and trip IE 200108231); nil for other cases }
                             if res^.nodetype=temprefn then
-                              tempdelnode:=block_extract_tempdelete(tblocknode(n),ttemprefnode(res^).tempinfo)
+                              tempdelnode:=block_extract_tempdelete(TBlockNode(n),TTempRefNode(res^).tempinfo)
                             else
                               tempdelnode:=nil;
                             { create a new statement node and insert it }
-                            hp:=cstatementnode.create(n,PNode(arg)^);
+                            hp:=CStatementNode.create(n,PNode(arg)^);
                             PNode(arg)^:=hp;
                             { use the result node instead of the block node }
                             n:=res^;
                             { the old statement is not used anymore }
-                            res^:=cnothingnode.create;
+                            res^:=CNothingNode.create;
                             { splice the lifted tempdelete after the original
                               statement so the temp outlives the extracted tempref }
-                            if assigned(tempdelnode) then
-                              tstatementnode(hp.right).right:=
-                                cstatementnode.create(tempdelnode,tstatementnode(hp.right).right);
+                            if Assigned(tempdelnode) then
+                              TStatementNode(hp.right).right:=
+                                CStatementNode.create(tempdelnode,TStatementNode(hp.right).right);
                             { process the newly generated statement }
                             foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                           end
-                        else if assigned(res^.resultdef) and not(is_void(res^.resultdef)) then
+                        else if Assigned(res^.resultdef) and not(is_void(res^.resultdef)) then
                           begin
                             { Splice into the parent chain:
                                 tempcreate -> block (now assigns to temp) -> origstmt -> tempdelete
                               The blockn's slot in the source expression is
                               replaced by a temprefn for the new temp; the
                               statement slot at pnode(arg)^ stays a statementn. }
-                            tempcreatenode:=ctempcreatenode.create(res^.resultdef,res^.resultdef.size,tt_persistent,true);
+                            tempcreatenode:=CTempCreateNode.create(res^.resultdef,res^.resultdef.size,tt_persistent,true);
                             { pass_1 on tempcreate sets pi_needs_implicit_finally
                               for managed typedefs; must fire before
                               add_entry_exit_code reads that flag }
                             DoFirstPass(TNode(tempcreatenode));
 
                             { rewrite block's last expression: "temp := <expr>" }
-                            res^:=cassignmentnode.create_internal(ctemprefnode.create(tempcreatenode),res^);
+                            res^:=CAssignmentNode.create_internal(CTempRefNode.create(tempcreatenode),res^);
                             DoFirstPass(res^);
                             { replace blockn in source expression with a temprefn }
                             movedblock:=n;
-                            n:=ctemprefnode.create(tempcreatenode);
+                            n:=CTempRefNode.create(tempcreatenode);
                             DoFirstPass(n);
 
                             { tempdelete after origstmt }
-                            hp:=cstatementnode.create(
-                                  ctempdeletenode.create_normal_temp(tempcreatenode),
-                                  tstatementnode(PNode(arg)^).right);
-                            tstatementnode(PNode(arg)^).right:=hp;
+                            hp:=CStatementNode.create(
+                                  CTempDeleteNode.create_normal_temp(tempcreatenode),
+                                  TStatementNode(PNode(arg)^).right);
+                            TStatementNode(PNode(arg)^).right:=hp;
                             { movedblock before origstmt }
-                            hp:=cstatementnode.create(movedblock,PNode(arg)^);
+                            hp:=CStatementNode.create(movedblock,PNode(arg)^);
                             PNode(arg)^:=hp;
                             { tempcreate before movedblock }
-                            hp:=cstatementnode.create(tempcreatenode,PNode(arg)^);
+                            hp:=CStatementNode.create(tempcreatenode,PNode(arg)^);
                             PNode(arg)^:=hp;
 
                             foreachnodestatic(PNode(arg)^,@searchstatements,nil);
@@ -248,21 +248,21 @@ unit opttree;
       end;
 
     var
-      searchstatementsproc : staticforeachnodefunction;
+      searchstatementsproc : TStaticForEachNodeFunction;
 
-    function searchstatements(var n : TNode;arg : pointer) : foreachnoderesult;
+    function searchstatements(var n : TNode;arg : pointer) : TForEachNodeResult;
       begin
         if n.nodetype=statementn then
           begin
-            if not(foreachnodestatic(tstatementnode(n).left,@searchblock,@n)) then
+            if not(foreachnodestatic(TStatementNode(n).left,@searchblock,@n)) then
               begin
-                pboolean(arg)^:=false;
+                PBoolean(arg)^:=false;
                 result:=fen_norecurse_false;
                 exit;
               end;
             { do not recurse automatically, but continue with the next statement }
             result:=fen_norecurse_false;
-            foreachnodestatic(tstatementnode(n).right,searchstatementsproc,arg);
+            foreachnodestatic(TStatementNode(n).right,searchstatementsproc,arg);
           end
         else
           result:=fen_false;

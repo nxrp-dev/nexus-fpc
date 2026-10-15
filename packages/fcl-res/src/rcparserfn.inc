@@ -21,13 +21,13 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  System.SysUtils, System.Classes, System.StrUtils, System.FGL, Pascal.Lexlib, Pascal.Yacclib, System.Resources.Resource,
+  System.SysUtils, System.Classes, System.StrUtils, System.FGL, Pascal.LexLib, Pascal.YaccLib, System.Resources.Resource,
   System.Resources.Accelerator, System.Resources.GroupIcon, System.Resources.StringTable,
   System.Resources.Bitmap, System.Resources.Version, System.Resources.VersionTypes, System.Resources.GroupCursor,
   System.Resources.DialogResource;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  SysUtils, Classes, StrUtils, fgl, lexlib, yacclib, resource,
+  SysUtils, Classes, StrUtils, fgl, LexLib, YaccLib, resource,
   acceleratorsresource, groupiconresource, stringtableresource,
   bitmapresource, versionresource, versiontypes, groupcursorresource,
   dialogresource;

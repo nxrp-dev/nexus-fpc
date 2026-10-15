@@ -26,13 +26,13 @@ unit scanner;
 interface
 
     uses
-       tpcompilerreal,
-       cclasses,
-       globtype,globals,constexp,version,tokens,
-       symtype,symdef,symsym,
-       verbose,comphook,
-       finput,
-       widestr;
+       TPCompilerReal,
+       CClasses,
+       GlobType,Globals,ConstExp,version,tokens,
+       symtype,symdef,SymSym,
+       Verbose,CompHook,
+       FinPut,
+       WideStr;
 
     const
        max_include_nesting=32;
@@ -50,60 +50,60 @@ interface
 
 
     type
-       tcommentstyle = (comment_none,comment_tp,comment_oldtp,comment_delphi,comment_c);
+       TCommentStyle = (comment_none,comment_tp,comment_oldtp,comment_delphi,comment_c);
 
-       tscannerfile = class;
+       TScannerFile = class;
 
-       preproctyp = (pp_ifdef,pp_ifndef,pp_if,pp_ifopt,pp_else,pp_elseif);
+       TPreProcType = (pp_ifdef,pp_ifndef,pp_if,pp_ifopt,pp_else,pp_elseif);
 
-       tpreprocstack = class
+       TPreProcStack = class
           typ,
           { stores the preproctyp of the last (else)if(ndef) directive
             so we can check properly for ifend when legacyifend is on }
-          iftyp   : preproctyp;
+          iftyp   : TPreProcType;
           accept  : boolean;
-          next    : tpreprocstack;
+          next    : TPreProcStack;
           name    : TIDString;
-          line_nb : longint;
-          fileindex : longint;
-          constructor Create(atyp:preproctyp;a:boolean;n:tpreprocstack);
+          line_nb : LongInt;
+          fileindex : LongInt;
+          constructor Create(atyp:TPreProcType;a:boolean;n:TPreProcStack);
        end;
 
-       tdirectiveproc=procedure;
+       TDirectiveProc=procedure;
 
-       tdirectiveitem = class(TFPHashObject)
+       TDirectiveItem = class(TFPHashObject)
        public
           is_conditional : boolean;
-          proc : tdirectiveproc;
-          constructor Create(AList:TFPHashObjectList;const n:string;p:tdirectiveproc);
-          constructor CreateCond(AList:TFPHashObjectList;const n:string;p:tdirectiveproc);
+          proc : TDirectiveProc;
+          constructor Create(AList:TFPHashObjectList;const n:string;p:TDirectiveProc);
+          constructor CreateCond(AList:TFPHashObjectList;const n:string;p:TDirectiveProc);
        end;
 
        // stack for replay buffers
-       treplaystack = class
-         token    : ttoken;
-         idtoken  : ttoken;
+       TReplayStack = class
+         token    : TToken;
+         idtoken  : TToken;
          orgpattern,
          pattern  : ShortString;
-         cstringpattern: ansistring;
-         patternw : tcompilerwidestring;
+         cstringpattern: AnsiString;
+         patternw : TCompilerWideString;
          settings : TSettings;
-         tokenbuf : tdynamicarray;
+         tokenbuf : TDynamicArray;
          tokenbuf_needs_swapping : boolean;
-         next     : treplaystack;
+         next     : TReplayStack;
          pending  : TPendingState;
-         verbosity : longint;
-         constructor Create(atoken: ttoken;aidtoken:ttoken;
-           const aorgpattern,apattern:ShortString;const acstringpattern:ansistring;
-           apatternw:tcompilerwidestring;asettings:TSettings;
-           atokenbuf:tdynamicarray;change_endian:boolean;const apending:TPendingState;
-           averbosity:longint;anext:treplaystack);
-         destructor destroy;override;
+         verbosity : LongInt;
+         constructor Create(atoken: TToken;aidtoken:TToken;
+           const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
+           apatternw:TCompilerWideString;asettings:TSettings;
+           atokenbuf:TDynamicArray;change_endian:boolean;const apending:TPendingState;
+           averbosity:LongInt;anext:TReplayStack);
+         destructor Destroy;override;
        end;
 
-       tcompile_time_predicate = function(var valuedescr: String) : Boolean;
+       TCompileTimePredicate = function(var valuedescr: String) : Boolean;
 
-       tspecialgenerictoken =
+       TSpecialGenericToken =
          (ST_LOADSETTINGS,
           ST_LINE,
           ST_COLUMN,
@@ -111,62 +111,62 @@ interface
           ST_LOADMESSAGES);
 
        { tscannerfile }
-       tscannerfile = class
+       TScannerFile = class
        private
-         procedure do_gettokenpos(out tokenpos: longint; out filepos: TFilePosInfo);
+         procedure do_gettokenpos(out tokenpos: LongInt; out filepos: TFilePosInfo);
          procedure cachenexttokenpos;
          procedure postprocessmultiline(len, quote_pos, quote_count: integer);
          procedure postprocessutf8multiline(len, quote_pos, quote_count: integer);
          procedure setnexttoken;
          procedure savetokenpos;
          procedure restoretokenpos;
-         procedure writetoken(t: ttoken);
-         function readtoken : ttoken;
+         procedure writetoken(t: TToken);
+         function readtoken : TToken;
        public
-          inputfile    : tinputfile;  { current inputfile list }
-          inputfilecount : longint;
+          inputfile    : TInputFile;  { current inputfile list }
+          inputfilecount : LongInt;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
        private
           hidden_inputbuffer,                { input buffer }
           hidden_inputpointer : pchar;
           { Gets char at inputpointer with offset,
             after checking that it doesn't overflow inputfile.bufsize }
-          function get_inputpointer_char(offset : longint = 0) : char;
-          procedure inc_inputpointer(amount : longint = 1);
+          function get_inputpointer_char(offset : LongInt = 0) : char;
+          procedure inc_inputpointer(amount : LongInt = 1);
           procedure dec_inputpointer;
        public
 {$else not CHECK_INPUTPOINTER_LIMITS}
           inputbuffer,                { input buffer }
           inputpointer : pchar;
 {$endif}
-          inputstart   : longint;
+          inputstart   : LongInt;
 
           line_no,                    { line }
-          lastlinepos  : longint;
+          lastlinepos  : LongInt;
 
           lasttokenpos,
-          nexttokenpos : longint;     { token }
+          nexttokenpos : LongInt;     { token }
           lasttoken,
-          nexttoken    : ttoken;
+          nexttoken    : TToken;
 
           { read strings }
           c              : char;
 
           orgpattern,
           pattern        : ShortString;
-          cstringpattern : ansistring;
-          patternw       : tcompilerwidestring;
+          cstringpattern : AnsiString;
+          patternw       : TCompilerWideString;
 
           { token }
           token,                        { current token being parsed }
-          idtoken    : ttoken;          { holds the token if the pattern is a known word }
+          idtoken    : TToken;          { holds the token if the pattern is a known word }
 
-          oldlasttokenpos     : longint; { temporary saving/restoring tokenpos }
+          oldlasttokenpos     : LongInt; { temporary saving/restoring tokenpos }
           oldcurrent_filepos,
           oldcurrent_tokenpos : TFilePosInfo;
 
           replaytokenbuf,
-          recordtokenbuf : tdynamicarray;
+          recordtokenbuf : TDynamicArray;
 
           { last settings we stored }
           last_settings : TSettings;
@@ -179,13 +179,13 @@ interface
           { current macro nesting depth }
           macro_nesting_depth,
           comment_level,
-          yylexcount     : longint;
+          yylexcount     : LongInt;
           ignoredirectives : TFPHashList; { ignore directives, used to give warnings only once }
-          preprocstack   : tpreprocstack;
-          replaystack    : treplaystack;
+          preprocstack   : TPreProcStack;
+          replaystack    : TReplayStack;
 
           preproc_pattern : string;
-          preproc_token   : ttoken;
+          preproc_token   : TToken;
 
           { true, if we are parsing preprocessor expressions }
           in_preproc_comp_expr : boolean;
@@ -197,12 +197,12 @@ interface
           { Having these tracked in the scanner class itself versus local variables allows for
             informative error handling that would be impossible otherwise }
           in_multiline_string, had_multiline_string : boolean;
-          multiline_start_line : longint;
+          multiline_start_line : LongInt;
           multiline_start_column : word;
 
-          current_commentstyle : tcommentstyle; { needed to use read_comment from directives }
+          current_commentstyle : TCommentStyle; { needed to use read_comment from directives }
 
-          constructor Create(const fn:string; is_macro: boolean = false);
+          constructor Create(const fn:string; IsMacro: boolean = false);
           destructor Destroy;override;
         { File buffer things }
           function  openinputfile:boolean;
@@ -213,10 +213,10 @@ interface
           procedure restoreinputfile;
           procedure firstfile;
           procedure nextfile;
-          procedure addfile(hp:tinputfile);
+          procedure addfile(hp:TInputFile);
           procedure reload;
           { replaces current token with the text in p }
-          procedure substitutemacro(const macname:string;p:pchar;len,line,fileindex:longint;internally_generated: boolean);
+          procedure substitutemacro(const macname:string;p:pchar;len,line,fileindex:LongInt;internally_generated: boolean);
         { Scanner things }
           procedure gettokenpos;
           procedure inc_comment_level;
@@ -225,50 +225,50 @@ interface
           procedure end_of_file;
           procedure checkpreprocstack;
           procedure poppreprocstack;
-          procedure ifpreprocstack(atyp:preproctyp;compile_time_predicate:tcompile_time_predicate;messid:longint);
-          procedure elseifpreprocstack(compile_time_predicate:tcompile_time_predicate);
+          procedure ifpreprocstack(atyp:TPreProcType;compile_time_predicate:TCompileTimePredicate;messid:LongInt);
+          procedure elseifpreprocstack(compile_time_predicate:TCompileTimePredicate);
           procedure elsepreprocstack;
           procedure popreplaystack;
-          function replay_stack_depth:longint;
-          procedure handleconditional(p:tdirectiveitem);
+          function replay_stack_depth:LongInt;
+          procedure handleconditional(p:TDirectiveItem);
           procedure handledirectives;
           procedure linebreak;
           procedure recordtoken;
-          procedure startrecordtokens(buf:tdynamicarray);
+          procedure startrecordtokens(buf:TDynamicArray);
           procedure stoprecordtokens;
           function is_recording_tokens:boolean;
           procedure replaytoken;
-          procedure startreplaytokens(buf:tdynamicarray; change_endian:boolean);
+          procedure startreplaytokens(buf:TDynamicArray; change_endian:boolean);
           { bit length asizeint is target depend }
           procedure tokenwritesizeint(val : asizeint);
-          procedure tokenwritelongint(val : longint);
-          procedure tokenwritelongword(val : longword);
+          procedure tokenwritelongint(val : LongInt);
+          procedure tokenwritelongword(val : LongWord);
           procedure tokenwritebyte(val : byte);
           procedure tokenwriteword(val : word);
           procedure tokenwriteshortint(val : shortint);
-          procedure tokenwriteset(var b;size : longint);
-          procedure tokenwriteenum(var b;size : longint);
+          procedure tokenwriteset(var b;size : LongInt);
+          procedure tokenwriteenum(var b;size : LongInt);
           function  tokenreadsizeint : asizeint;
           procedure tokenwritesettings(var asettings : TSettings; var size : asizeint);
           { longword/longint are 32 bits on all targets }
           { word/smallint are 16-bits on all targets }
-          function  tokenreadlongword : longword;
+          function  tokenreadlongword : LongWord;
           function  tokenreadword : word;
-          function  tokenreadlongint : longint;
+          function  tokenreadlongint : LongInt;
           function  tokenreadsmallint : smallint;
           { short int is one a signed byte }
           function  tokenreadshortint : shortint;
           function  tokenreadbyte : byte;
           { This one takes the set size as an parameter }
-          procedure tokenreadset(var b;size : longint);
-          function  tokenreadenum(size : longint) : longword;
+          procedure tokenreadset(var b;size : LongInt);
+          function  tokenreadenum(size : LongInt) : LongWord;
 
           procedure tokenreadsettings(var asettings : TSettings; expected_size : asizeint);
           procedure readchar;
           procedure readstring;
           procedure readnumber;
           function  readid:string;
-          function  readval:longint;
+          function  readval:LongInt;
           function  readval64:int64;
           function  readcomment(include_special_char: boolean = false):ShortString;
           function  readquotedstring:ShortString;
@@ -284,7 +284,7 @@ interface
           procedure skipdelphicomment;
           procedure skipoldtpcomment(read_first_char:boolean);
           procedure readtoken(allowrecordtoken:boolean);
-          function  readpreproc:ttoken;
+          function  readpreproc:TToken;
           function  readpreprocint(var value:int64;const place:string):boolean;
           function  readpreprocset(conform_to:TSetDef;var value:TNormalSet;const place:string):boolean;
           function  asmgetchar:char;
@@ -294,13 +294,13 @@ interface
        end;
 
 {$ifdef PREPROCWRITE}
-       tpreprocfile=class
+       TPreProcFile=class
          f   : text;
          buf : TByteDynArray;
          spacefound,
          eolfound : boolean;
          constructor create(const fn:string);
-         destructor  destroy; override;
+         destructor  Destroy; override;
          procedure Add(const s:string);
          procedure AddSpace;
        end;
@@ -308,20 +308,20 @@ interface
 
 {$ifdef PREPROCWRITE}
     var
-        preprocfile     : tpreprocfile;  { used with only preprocessing }
+        preprocfile     : TPreProcFile;  { used with only preprocessing }
 {$endif PREPROCWRITE}
 
     type
-        tdirectivemode = (directive_all, directive_turbo, directive_mac);
+        TDirectiveMode = (directive_all, directive_turbo, directive_mac);
 
-    procedure AddDirective(const s:string; dm: tdirectivemode; p:tdirectiveproc);
-    procedure AddConditional(const s:string; dm: tdirectivemode; p:tdirectiveproc);
+    procedure AddDirective(const s:string; dm: TDirectiveMode; p:TDirectiveProc);
+    procedure AddConditional(const s:string; dm: TDirectiveMode; p:TDirectiveProc);
 
     procedure InitScanner;
     procedure DoneScanner;
 
-    function CurrentScanner : tscannerfile;  { current scanner in use }
-    procedure set_current_scanner(avalue : tscannerfile);  { current scanner in use }
+    function CurrentScanner : TScannerFile;  { current scanner in use }
+    procedure Set_Current_Scanner(avalue : TScannerFile);  { current scanner in use }
 
     { To be called when the language mode is finally determined }
     Function SetCompileMode(const s:string; changeInit: boolean):boolean;
@@ -329,21 +329,21 @@ interface
     procedure SetAppType(NewAppType:TAppType);
 
     var
-      onfreescanner : procedure(s : tscannerfile) = nil;
+      OnFreeScanner : procedure(s : TScannerFile) = nil;
 
 implementation
 
     uses
       SysUtils,
-      cutils,cfileutl,
-      systems,
-      switches,
-      symbase,symtable,symconst,defutil,defcmp,node,
+      CUtils,CFileUtl,
+      Systems,
+      Switches,
+      SymBase,SymTable,symconst,defutil,defcmp,node,
       { This is needed for tcputype }
-      cpuinfo,
-      fmodule,fppu,
+      CPUInfo,
+      FModule,fppu,
       { this is needed for $I %CURRENTROUTINE%}
-      procinfo;
+      ProcInfo;
 
     var
       { dictionaries with the supported directives }
@@ -354,16 +354,16 @@ implementation
         set_current_scanner sets the _temp_scanner variable.
         If _temp_scanner is set, it is returned as the current scanner
       }
-      _temp_scanner : tscannerfile;
+      _temp_scanner : TScannerFile;
 
-      function CurrentScanner : tscannerfile;  { current scanner in use }
+      function CurrentScanner : TScannerFile;  { current scanner in use }
 
       begin
         Result:=_temp_scanner;
         if result<>nil then
           exit;
-        if assigned(CurrentModule) then
-          Result:=Tscannerfile(CurrentModule.scanner)
+        if Assigned(CurrentModule) then
+          Result:=TScannerFile(CurrentModule.Scanner)
         else
           Result:=Nil;
       end;
@@ -375,12 +375,12 @@ implementation
     const
       DirectiveIgnored=pointer(1);
       { use any special name that is an invalid file name to avoid problems }
-      preprocstring : array [preproctyp] of string[7]
+      preprocstring : array [TPreProcType] of string[7]
         = ('$IFDEF','$IFNDEF','$IF','$IFOPT','$ELSE','$ELSEIF');
 
     function is_keyword(const s:string):boolean;
       var
-        low,high,mid : longint;
+        low,high,mid : LongInt;
       begin
         if not (length(s) in [tokenlenmin..tokenlenmax]) or
            not (s[1] in ['a'..'z','A'..'Z']) then
@@ -393,13 +393,13 @@ implementation
         while low<high do
          begin
            mid:=(high+low+1) shr 1;
-           if CurrentScanner.pattern<tokeninfo^[ttoken(mid)].str then
+           if CurrentScanner.pattern<tokeninfo^[TToken(mid)].str then
             high:=mid-1
            else
             low:=mid;
          end;
-        is_keyword:=(CurrentScanner.pattern=tokeninfo^[ttoken(high)].str) and
-                    ((tokeninfo^[ttoken(high)].keyword*CurrentSettings.modeswitches)<>[]);
+        is_keyword:=(CurrentScanner.pattern=tokeninfo^[TToken(high)].str) and
+                    ((tokeninfo^[TToken(high)].keyword*CurrentSettings.ModeSwitches)<>[]);
       end;
 
 
@@ -409,40 +409,40 @@ implementation
           A source language mode may change grammar but cannot change it. }
         if switch in [m_none,m_default_ansistring,m_default_unicodestring] then
           begin
-            if compilerwide_unicode_strings then
+            if CompilerWide_Unicode_Strings then
               begin
-                exclude(CurrentSettings.modeswitches,m_default_ansistring);
-                include(CurrentSettings.modeswitches,m_default_unicodestring);
+                exclude(CurrentSettings.ModeSwitches,m_default_ansistring);
+                include(CurrentSettings.ModeSwitches,m_default_unicodestring);
                 def_system_macro('FPC_UNICODESTRINGS');
               end
             else
               begin
-                exclude(CurrentSettings.modeswitches,m_default_unicodestring);
-                include(CurrentSettings.modeswitches,m_default_ansistring);
+                exclude(CurrentSettings.ModeSwitches,m_default_unicodestring);
+                include(CurrentSettings.ModeSwitches,m_default_ansistring);
                 undef_system_macro('FPC_UNICODESTRINGS');
               end;
-            include(CurrentSettings.localswitches,cs_refcountedstrings);
+            include(CurrentSettings.LocalSwitches,cs_refcountedstrings);
             if changeinit then
               begin
-                InitSettings.modeswitches:=CurrentSettings.modeswitches;
-                include(InitSettings.localswitches,cs_refcountedstrings);
+                InitSettings.ModeSwitches:=CurrentSettings.ModeSwitches;
+                include(InitSettings.LocalSwitches,cs_refcountedstrings);
               end;
           end;
 
         { turn inline on by default ? }
         if switch in [m_none,m_default_inline] then
           begin
-            if (m_default_inline in CurrentSettings.modeswitches) then
+            if (m_default_inline in CurrentSettings.ModeSwitches) then
              begin
-               include(CurrentSettings.localswitches,cs_do_inline);
+               include(CurrentSettings.LocalSwitches,cs_do_inline);
                if changeinit then
-                 include(InitSettings.localswitches,cs_do_inline);
+                 include(InitSettings.LocalSwitches,cs_do_inline);
              end
             else
              begin
-               exclude(CurrentSettings.localswitches,cs_do_inline);
+               exclude(CurrentSettings.LocalSwitches,cs_do_inline);
                if changeinit then
-                 exclude(InitSettings.localswitches,cs_do_inline);
+                 exclude(InitSettings.LocalSwitches,cs_do_inline);
              end;
           end;
 
@@ -462,24 +462,24 @@ implementation
               (cs_explicit_codepage and cs_system_codepage) for the same setting
               (current_settings.sourcecodepage)
             }
-            if m_systemcodepage in CurrentSettings.modeswitches then
+            if m_systemcodepage in CurrentSettings.ModeSwitches then
               begin
                 { m_systemcodepage gets enabled -> disable any -FcXXX and
                   "codepage XXX" settings (exclude cs_explicit_codepage), and
                   overwrite the source codepage }
-                CurrentSettings.sourcecodepage:=DefaultSystemCodePage;
-                if (CurrentSettings.sourcecodepage<>CP_UTF8) and not cpavailable(CurrentSettings.sourcecodepage) then
+                CurrentSettings.SourceCodePage:=DefaultSystemCodePage;
+                if (CurrentSettings.SourceCodePage<>CP_UTF8) and not CPAvailable(CurrentSettings.SourceCodePage) then
                   begin
-                    Message2(scan_w_unavailable_system_codepage,IntToStr(CurrentSettings.sourcecodepage),IntToStr(default_settings.sourcecodepage));
-                    CurrentSettings.sourcecodepage:=default_settings.sourcecodepage;
+                    Message2(scan_w_unavailable_system_codepage,IntToStr(CurrentSettings.SourceCodePage),IntToStr(Default_Settings.SourceCodePage));
+                    CurrentSettings.SourceCodePage:=Default_Settings.SourceCodePage;
                   end;
-                exclude(CurrentSettings.moduleswitches,cs_explicit_codepage);
-                include(CurrentSettings.moduleswitches,cs_system_codepage);
+                exclude(CurrentSettings.ModuleSwitches,cs_explicit_codepage);
+                include(CurrentSettings.ModuleSwitches,cs_system_codepage);
                 if changeinit then
                   begin
-                    InitSettings.sourcecodepage:=CurrentSettings.sourcecodepage;
-                    exclude(InitSettings.moduleswitches,cs_explicit_codepage);
-                    include(InitSettings.moduleswitches,cs_system_codepage);
+                    InitSettings.SourceCodePage:=CurrentSettings.SourceCodePage;
+                    exclude(InitSettings.ModuleSwitches,cs_explicit_codepage);
+                    include(InitSettings.ModuleSwitches,cs_system_codepage);
                   end;
               end
             else
@@ -501,14 +501,14 @@ implementation
                   settings, by design. The only thing we have to ensure is that
                   disabling m_systemcodepage if it wasn't on in the first place
                   doesn't overwrite the sourcecodepage }
-                exclude(CurrentSettings.moduleswitches,cs_system_codepage);
-                if not(cs_explicit_codepage in CurrentSettings.moduleswitches) then
-                  CurrentSettings.sourcecodepage:=default_settings.sourcecodepage;
+                exclude(CurrentSettings.ModuleSwitches,cs_system_codepage);
+                if not(cs_explicit_codepage in CurrentSettings.ModuleSwitches) then
+                  CurrentSettings.SourceCodePage:=Default_Settings.SourceCodePage;
                 if changeinit then
                   begin
-                    exclude(InitSettings.moduleswitches,cs_system_codepage);
-                    if not(cs_explicit_codepage in InitSettings.moduleswitches) then
-                      InitSettings.sourcecodepage:=default_settings.sourcecodepage;
+                    exclude(InitSettings.ModuleSwitches,cs_system_codepage);
+                    if not(cs_explicit_codepage in InitSettings.ModuleSwitches) then
+                      InitSettings.SourceCodePage:=Default_Settings.SourceCodePage;
                   end;
               end;
           end;
@@ -516,7 +516,7 @@ implementation
 
       end;
 
-    procedure set_current_scanner(avalue: tscannerfile);
+    procedure Set_Current_Scanner(avalue: TScannerFile);
     begin
       _temp_scanner:=avalue;
     end;
@@ -530,162 +530,162 @@ implementation
           begin
             if changeInit then
               begin
-                if compilerwide_string_mode_explicit and
-                   not compilerwide_unicode_strings then
+                if CompilerWide_String_Mode_Explicit and
+                   not CompilerWide_Unicode_Strings then
                   begin
                     Message1(option_illegal_para,'-MDELPHIUNICODE conflicts with -MANSISTRINGS');
                     exit(true);
                   end;
-                compilerwide_unicode_strings:=true;
-                compilerwide_string_mode_explicit:=true;
+                CompilerWide_Unicode_Strings:=true;
+                CompilerWide_String_Mode_Explicit:=true;
               end
-            else if not compilerwide_unicode_strings then
+            else if not CompilerWide_Unicode_Strings then
               begin
                 Message1(scan_e_illegal_directive,'MODE DELPHIUNICODE requires -MUNICODESTRINGS');
                 exit(true);
               end;
           end;
-        oldmodeswitches:=CurrentSettings.modeswitches;
+        oldmodeswitches:=CurrentSettings.ModeSwitches;
 
         b:=true;
         if s='DEFAULT' then
-          CurrentSettings.modeswitches:=fpcmodeswitches
+          CurrentSettings.ModeSwitches:=FPCModeSwitches
         else
          if s='DELPHI' then
-          CurrentSettings.modeswitches:=delphimodeswitches
+          CurrentSettings.ModeSwitches:=DelphiModeSwitches
         else
          if s='DELPHIUNICODE' then
-          CurrentSettings.modeswitches:=delphiunicodemodeswitches
+          CurrentSettings.ModeSwitches:=DelphiUnicodeModeSwitches
         else
          if s='FPC' then begin
-          CurrentSettings.modeswitches:=fpcmodeswitches;
+          CurrentSettings.ModeSwitches:=FPCModeSwitches;
           { TODO: enable this for 2.3/2.9 }
           //  include(current_settings.localswitches, cs_typed_addresses);
         end else
          if s='OBJFPC' then begin
-          CurrentSettings.modeswitches:=objfpcmodeswitches;
+          CurrentSettings.ModeSwitches:=ObjFPCModeSwitches;
           { TODO: enable this for 2.3/2.9 }
           //  include(current_settings.localswitches, cs_typed_addresses);
         end
 {$ifdef gpc_mode}
         else if s='GPC' then
-          CurrentSettings.modeswitches:=gpcmodeswitches
+          CurrentSettings.ModeSwitches:=GPCModeSwitches
 {$endif}
         else
          if s='MACPAS' then
-          CurrentSettings.modeswitches:=macmodeswitches
+          CurrentSettings.ModeSwitches:=MacModeSwitches
         else
          if s='ISO' then
-          CurrentSettings.modeswitches:=isomodeswitches
+          CurrentSettings.ModeSwitches:=ISOModeSwitches
         else
          if s='EXTENDEDPASCAL' then
-          CurrentSettings.modeswitches:=extpasmodeswitches
+          CurrentSettings.ModeSwitches:=ExtPasModeSwitches
         else
          b:=false;
 
 
         if b and changeInit then
-          InitSettings.modeswitches := CurrentSettings.modeswitches;
+          InitSettings.ModeSwitches := CurrentSettings.ModeSwitches;
 
         if b then
          begin
            { resolve all postponed switch changes }
-           flushpendingswitchesstate;
+           FlushPendingSwitchesState;
 
            HandleModeSwitches(m_none,changeinit);
 
            { turn on bitpacking and case checking for mode macpas and iso pascal,
              as well as extended pascal }
-           if ([m_mac,m_iso,m_extpas] * CurrentSettings.modeswitches <> []) then
+           if ([m_mac,m_iso,m_extpas] * CurrentSettings.ModeSwitches <> []) then
              begin
-               include(CurrentSettings.localswitches,cs_bitpacking);
-               include(CurrentSettings.localswitches,cs_check_all_case_coverage);
+               include(CurrentSettings.LocalSwitches,cs_bitpacking);
+               include(CurrentSettings.LocalSwitches,cs_check_all_case_coverage);
                if changeinit then
                  begin
-                   include(InitSettings.localswitches,cs_bitpacking);
-                   include(InitSettings.localswitches,cs_check_all_case_coverage);
+                   include(InitSettings.LocalSwitches,cs_bitpacking);
+                   include(InitSettings.LocalSwitches,cs_check_all_case_coverage);
                  end;
              end;
 
             { support goto/label by default in delphi/mac/iso/extpas modes }
-            if ([m_delphi,m_mac,m_iso,m_extpas] * CurrentSettings.modeswitches <> []) then
+            if ([m_delphi,m_mac,m_iso,m_extpas] * CurrentSettings.ModeSwitches <> []) then
              begin
-               include(CurrentSettings.moduleswitches,cs_support_goto);
+               include(CurrentSettings.ModuleSwitches,cs_support_goto);
                if changeinit then
-                 include(InitSettings.moduleswitches,cs_support_goto);
+                 include(InitSettings.ModuleSwitches,cs_support_goto);
              end;
 
            { support pointer math by default in fpc/objfpc modes }
-           if ([m_fpc,m_objfpc] * CurrentSettings.modeswitches <> []) then
+           if ([m_fpc,m_objfpc] * CurrentSettings.ModeSwitches <> []) then
              begin
-               include(CurrentSettings.localswitches,cs_pointermath);
+               include(CurrentSettings.LocalSwitches,cs_pointermath);
                if changeinit then
-                 include(InitSettings.localswitches,cs_pointermath);
+                 include(InitSettings.LocalSwitches,cs_pointermath);
              end
            else
              begin
-               exclude(CurrentSettings.localswitches,cs_pointermath);
+               exclude(CurrentSettings.LocalSwitches,cs_pointermath);
                if changeinit then
-                 exclude(InitSettings.localswitches,cs_pointermath);
+                 exclude(InitSettings.LocalSwitches,cs_pointermath);
              end;
 
             { Default enum and set packing for Delphi }
-            if m_delphi in CurrentSettings.modeswitches then
+            if m_delphi in CurrentSettings.ModeSwitches then
              begin
-               CurrentSettings.packenum:=1;
-               CurrentSettings.setalloc:=1;
+               CurrentSettings.PackEnum:=1;
+               CurrentSettings.SetAlloc:=1;
              end
-           else if (m_mac in CurrentSettings.modeswitches) then
+           else if (m_mac in CurrentSettings.ModeSwitches) then
              begin
                { compatible with Metrowerks Pascal }
-               CurrentSettings.packenum:=2;
-               CurrentSettings.setalloc:=default_settings.setalloc;
+               CurrentSettings.PackEnum:=2;
+               CurrentSettings.SetAlloc:=Default_Settings.SetAlloc;
              end
            else
              begin
-               CurrentSettings.packenum:=default_settings.packenum;
-               CurrentSettings.setalloc:=default_settings.setalloc;
+               CurrentSettings.PackEnum:=Default_Settings.PackEnum;
+               CurrentSettings.SetAlloc:=Default_Settings.SetAlloc;
              end;
 
            if changeinit then
              begin
-               InitSettings.packenum:=CurrentSettings.packenum;
-               InitSettings.setalloc:=CurrentSettings.setalloc;
+               InitSettings.PackEnum:=CurrentSettings.PackEnum;
+               InitSettings.SetAlloc:=CurrentSettings.SetAlloc;
              end;
 {$if defined(i386)}
             { Default to Intel assembler for Delphi on i386 }
-            if m_delphi in CurrentSettings.modeswitches then
+            if m_delphi in CurrentSettings.ModeSwitches then
              begin
 
-               CurrentSettings.asmmode:=asmmode_i386_intel;
+               CurrentSettings.AsmMode:=asmmode_i386_intel;
 
                if changeinit then
-                 InitSettings.asmmode:=CurrentSettings.asmmode;
+                 InitSettings.AsmMode:=CurrentSettings.AsmMode;
              end;
 {$endif i386}
 
            { Exception support explicitly turned on (mainly for macpas, to }
            { compensate for lack of interprocedural goto support)          }
-           if (cs_support_exceptions in CurrentSettings.globalswitches) then
-             include(CurrentSettings.modeswitches,m_except);
+           if (cs_support_exceptions in CurrentSettings.GlobalSwitches) then
+             include(CurrentSettings.ModeSwitches,m_except);
 
             { Default strict string var checking in Delphi mode }
-            if m_delphi in CurrentSettings.modeswitches then
+            if m_delphi in CurrentSettings.ModeSwitches then
              begin
-               include(CurrentSettings.localswitches,cs_strict_var_strings);
+               include(CurrentSettings.LocalSwitches,cs_strict_var_strings);
                if changeinit then
-                 include(InitSettings.localswitches,cs_strict_var_strings);
+                 include(InitSettings.LocalSwitches,cs_strict_var_strings);
              end;
 
            { in delphi mode, excess precision and open strings are by default on }
-           if ([m_delphi] * CurrentSettings.modeswitches <> []) then
+           if ([m_delphi] * CurrentSettings.ModeSwitches <> []) then
              begin
-               include(CurrentSettings.localswitches,cs_excessprecision);
-               include(CurrentSettings.localswitches,cs_openstring);
+               include(CurrentSettings.LocalSwitches,cs_excessprecision);
+               include(CurrentSettings.LocalSwitches,cs_openstring);
                if changeinit then
                  begin
-                   include(InitSettings.localswitches,cs_excessprecision);
-                   include(InitSettings.localswitches,cs_openstring);
+                   include(InitSettings.LocalSwitches,cs_excessprecision);
+                   include(InitSettings.LocalSwitches,cs_openstring);
                  end;
              end;
 
@@ -708,19 +708,19 @@ implementation
               undef_system_macro('FPC_EXTENDEDPASCAL');
 
             { define new symbol in Delphi, ObjFPC, GPC, or MacPas mode }
-            if (m_delphi in CurrentSettings.modeswitches) then
+            if (m_delphi in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_DELPHI')
-            else if (m_objfpc in CurrentSettings.modeswitches) then
+            else if (m_objfpc in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_OBJFPC')
 {$ifdef gpc_mode}
-            else if (m_gpc in CurrentSettings.modeswitches) then
+            else if (m_gpc in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_GPC')
 {$endif}
-            else if (m_mac in CurrentSettings.modeswitches) then
+            else if (m_mac in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_MACPAS')
-            else if (m_iso in CurrentSettings.modeswitches) then
+            else if (m_iso in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_ISO')
-            else if (m_extpas in CurrentSettings.modeswitches) then
+            else if (m_extpas in CurrentSettings.ModeSwitches) then
               def_system_macro('FPC_EXTENDEDPASCAL');
          end;
 
@@ -739,10 +739,10 @@ implementation
         doinclude:=true;
         case s[length(s)] of
           '+':
-            setlength(s,length(s)-1);
+            SetLength(s,length(s)-1);
           '-':
             begin
-              setlength(s,length(s)-1);
+              SetLength(s,length(s)-1);
               doinclude:=false;
             end;
         end;
@@ -758,15 +758,15 @@ implementation
                     Message1(scan_e_illegal_directive,'MODESWITCH '+s)
                   else if not doinclude then
                     Message1(option_illegal_para,'-M'+s+'-')
-                  else if compilerwide_string_mode_explicit and
-                          (compilerwide_unicode_strings<>(i=m_default_unicodestring)) then
+                  else if CompilerWide_String_Mode_Explicit and
+                          (CompilerWide_Unicode_Strings<>(i=m_default_unicodestring)) then
                     Message1(option_illegal_para,'-M'+s+' conflicts with the selected string mode')
                   else
                     begin
-                      compilerwide_unicode_strings:=i=m_default_unicodestring;
-                      compilerwide_string_mode_explicit:=true;
+                      CompilerWide_Unicode_Strings:=i=m_default_unicodestring;
+                      CompilerWide_String_Mode_Explicit:=true;
                       if changeInit then
-                        CurrentSettings.modeswitches:=InitSettings.modeswitches;
+                        CurrentSettings.ModeSwitches:=InitSettings.ModeSwitches;
                       HandleModeSwitches(i,changeInit);
                     end;
                   break;
@@ -790,33 +790,33 @@ implementation
                 end;
 
               if changeInit then
-                CurrentSettings.modeswitches:=InitSettings.modeswitches;
+                CurrentSettings.ModeSwitches:=InitSettings.ModeSwitches;
               Result:=true;
               if doinclude then
                 begin
-                  include(CurrentSettings.modeswitches,i);
+                  include(CurrentSettings.ModeSwitches,i);
                   { Objective-C 2.0 support implies 1.0 support }
                   if (i=m_objectivec2) then
-                    include(CurrentSettings.modeswitches,m_objectivec1);
+                    include(CurrentSettings.ModeSwitches,m_objectivec1);
                   if (i in [m_objectivec1,m_objectivec2]) then
-                    include(CurrentSettings.modeswitches,m_class);
+                    include(CurrentSettings.ModeSwitches,m_class);
                 end
               else
                 begin
-                  exclude(CurrentSettings.modeswitches,i);
+                  exclude(CurrentSettings.ModeSwitches,i);
                   { Objective-C 2.0 support implies 1.0 support }
                   if (i=m_objectivec2) then
-                    exclude(CurrentSettings.modeswitches,m_objectivec1);
+                    exclude(CurrentSettings.ModeSwitches,m_objectivec1);
                   if (i in [m_objectivec1,m_objectivec2]) and
-                     ([m_delphi,m_objfpc]*CurrentSettings.modeswitches=[]) then
-                    exclude(CurrentSettings.modeswitches,m_class);
+                     ([m_delphi,m_objfpc]*CurrentSettings.ModeSwitches=[]) then
+                    exclude(CurrentSettings.ModeSwitches,m_class);
                 end;
 
               { set other switches depending on changed mode switch }
               HandleModeSwitches(i,changeinit);
 
               if changeInit then
-                InitSettings.modeswitches:=CurrentSettings.modeswitches;
+                InitSettings.ModeSwitches:=CurrentSettings.ModeSwitches;
 
               break;
             end;
@@ -825,10 +825,10 @@ implementation
     procedure SetAppType(NewAppType:TAppType);
       begin
 
-        if apptype in [app_cui,app_com] then
+        if AppType in [app_cui,app_com] then
           undef_system_macro('CONSOLE');
-        apptype:=NewAppType;
-        if apptype in [app_cui,app_com] then
+        AppType:=NewAppType;
+        if AppType in [app_cui,app_com] then
           def_system_macro('CONSOLE');
       end;
 {*****************************************************************************
@@ -842,7 +842,7 @@ implementation
 
     procedure dir_endif;
       begin
-        if (cs_legacyifend in CurrentSettings.localswitches) and
+        if (cs_legacyifend in CurrentSettings.LocalSwitches) and
           (CurrentScanner.preprocstack.typ<>pp_ifdef) and (CurrentScanner.preprocstack.typ<>pp_ifndef) and
             not((CurrentScanner.preprocstack.typ=pp_else) and (CurrentScanner.preprocstack.iftyp in [pp_ifdef,pp_ifndef])) then
           Message(scan_e_unexpected_endif);
@@ -851,7 +851,7 @@ implementation
 
     procedure dir_ifend;
       begin
-        if (cs_legacyifend in CurrentSettings.localswitches) and
+        if (cs_legacyifend in CurrentSettings.LocalSwitches) and
           (CurrentScanner.preprocstack.typ<>pp_elseif) and (CurrentScanner.preprocstack.typ<>pp_if) and
             not((CurrentScanner.preprocstack.typ=pp_else) and (CurrentScanner.preprocstack.iftyp in [pp_if,pp_elseif])) then
           Message(scan_e_unexpected_ifend);
@@ -915,7 +915,7 @@ implementation
 
     procedure dir_ifopt;
       begin
-        flushpendingswitchesstate;
+        FlushPendingSwitchesState;
         CurrentScanner.ifpreprocstack(pp_ifopt,@opt_check,scan_c_ifopt_found);
       end;
 
@@ -927,10 +927,10 @@ implementation
         if CurrentScanner.c <> '''' then
           Message2(scan_f_syn_expected, '''', CurrentScanner.c);
         s := CurrentScanner.readquotedstring;
-        stringdispose(outputprefix);
-        outputprefix := stringdup(s);
+        StringDispose(OutputPrefix);
+        OutputPrefix := StringDup(s);
         with CurrentModule do
-         setfilename(paramfn, paramallowoutput);
+         setfilename(ParamFN, ParamAllowOutput);
       end;
 
     procedure dir_libsuffix;
@@ -941,10 +941,10 @@ implementation
         if CurrentScanner.c <> '''' then
           Message2(scan_f_syn_expected, '''', CurrentScanner.c);
         s := CurrentScanner.readquotedstring;
-        stringdispose(outputsuffix);
-        outputsuffix := stringdup(s);
+        StringDispose(OutputSuffix);
+        OutputSuffix := StringDup(s);
         with CurrentModule do
-          setfilename(paramfn, paramallowoutput);
+          setfilename(ParamFN, ParamAllowOutput);
       end;
 
     procedure dir_extension;
@@ -959,7 +959,7 @@ implementation
           OutputFileName:=InputFileName;
         OutputFileName:=ChangeFileExt(OutputFileName,'.'+s);
         with CurrentModule do
-          setfilename(paramfn, paramallowoutput);
+          setfilename(ParamFN, ParamAllowOutput);
       end;
 
 {
@@ -1004,7 +1004,7 @@ type
 
   { texprvalue }
 
-  texprvalue = class
+  TExprValue = class
   private
     { we can't use built-in defs since they
       may be not created at the moment }
@@ -1018,16 +1018,16 @@ type
     def: TDef;
     constructor create_const(c:TConstSym);
     constructor create_error;
-    constructor create_ord(v: Tconstexprint);
+    constructor create_ord(v: TConstExprInt);
     constructor create_int(v: int64);
     constructor create_uint(v: qword);
     constructor create_bool(b: boolean);
     constructor create_str(const s: string);
     constructor create_set(ns: TNormalSet);
-    constructor create_real(r: bestreal);
-    class function try_parse_number(const s:string):texprvalue; static;
-    class function try_parse_real(const s:string):texprvalue; static;
-    function evaluate(v:texprvalue;op:ttoken):texprvalue;
+    constructor create_real(r: BestReal);
+    class function try_parse_number(const s:string):TExprValue; static;
+    class function try_parse_real(const s:string):TExprValue; static;
+    function evaluate(v:TExprValue;op:TToken):TExprValue;
     procedure error(expecteddef, place: string);
     function isBoolean: Boolean;
     function isInt: Boolean;
@@ -1036,10 +1036,10 @@ type
     function asInt64: Int64;
     function asStr: String;
     function asSet: TNormalSet;
-    destructor destroy; override;
+    destructor Destroy; override;
   end;
 
-  class constructor texprvalue.createdefs;
+  class constructor TExprValue.createdefs;
     begin
       { do not use corddef etc here: this code is executed before those
         variables are initialised. Since these types are only used for
@@ -1053,7 +1053,7 @@ type
       realdef:=TFloatDef.create(s80real,false);
     end;
 
-  class destructor texprvalue.destroydefs;
+  class destructor TExprValue.destroydefs;
     begin
       setdef.free;
       setdef := nil;
@@ -1069,7 +1069,7 @@ type
       realdef := nil;
     end;
 
-  constructor texprvalue.create_const(c: TConstSym);
+  constructor TExprValue.create_const(c: TConstSym);
     begin
       consttyp:=c.consttyp;
       def:=c.constdef;
@@ -1078,19 +1078,19 @@ type
         constresourcestring:
           begin
             value.len:=c.value.len;
-            getmem(value.valueptr,value.len+1);
+            GetMem(value.valueptr,value.len+1);
             move(c.value.valueptr^,value.valueptr^,value.len+1);
           end;
         constwstring,
         constwresourcestring:
           begin
-            initwidestring(value.valuews);
-            copywidestring(c.value.valuews,value.valuews);
+            InitWideString(value.valuews);
+            CopyWideString(c.value.valuews,value.valuews);
           end;
         constreal:
           begin
-            new(pbestreal(value.valueptr));
-            pbestreal(value.valueptr)^:=pbestreal(c.value.valueptr)^;
+            new(PBestReal(value.valueptr));
+            PBestReal(value.valueptr)^:=PBestReal(c.value.valueptr)^;
           end;
         constset:
           begin
@@ -1099,22 +1099,22 @@ type
           end;
         constguid:
           begin
-            new(pguid(value.valueptr));
-            pguid(value.valueptr)^:=pguid(c.value.valueptr)^;
+            new(PGUID(value.valueptr));
+            PGUID(value.valueptr)^:=PGUID(c.value.valueptr)^;
           end;
         else
           value:=c.value;
       end;
     end;
 
-  constructor texprvalue.create_error;
+  constructor TExprValue.create_error;
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constnone;
       def:=generrordef;
     end;
 
-  constructor texprvalue.create_ord(v: Tconstexprint);
+  constructor TExprValue.create_ord(v: TConstExprInt);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constord;
@@ -1125,7 +1125,7 @@ type
         def:=uintdef;
     end;
 
-  constructor texprvalue.create_int(v: int64);
+  constructor TExprValue.create_int(v: int64);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constord;
@@ -1133,7 +1133,7 @@ type
       def:=sintdef;
     end;
 
-  constructor texprvalue.create_uint(v: qword);
+  constructor TExprValue.create_uint(v: qword);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constord;
@@ -1141,7 +1141,7 @@ type
       def:=uintdef;
     end;
 
-  constructor texprvalue.create_bool(b: boolean);
+  constructor TExprValue.create_bool(b: boolean);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constord;
@@ -1149,22 +1149,22 @@ type
       def:=booldef;
     end;
 
-  constructor texprvalue.create_str(const s: string);
+  constructor TExprValue.create_str(const s: string);
     var
-      sp: pansichar;
+      sp: PAnsiChar;
       len: integer;
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=conststring;
       len:=length(s);
-      getmem(sp,len+1);
+      GetMem(sp,len+1);
       move(s[1],sp^,len+1);
       value.valueptr:=sp;
       value.len:=len;
       def:=strdef;
     end;
 
-  constructor texprvalue.create_set(ns: TNormalSet);
+  constructor TExprValue.create_set(ns: TNormalSet);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constset;
@@ -1173,16 +1173,16 @@ type
       def:=setdef;
     end;
 
-  constructor texprvalue.create_real(r: bestreal);
+  constructor TExprValue.create_real(r: BestReal);
     begin
       fillchar(value,sizeof(value),#0);
       consttyp:=constreal;
-      new(pbestreal(value.valueptr));
-      pbestreal(value.valueptr)^:=r;
+      new(PBestReal(value.valueptr));
+      PBestReal(value.valueptr)^:=r;
       def:=realdef;
     end;
 
-  class function texprvalue.try_parse_number(const s:string):texprvalue;
+  class function TExprValue.try_parse_number(const s:string):TExprValue;
     var
       ic: int64;
       qc: qword;
@@ -1191,31 +1191,31 @@ type
       { try int64 }
       val(s,ic,code);
       if code=0 then
-        result:=texprvalue.create_int(ic)
+        result:=TExprValue.create_int(ic)
       else
         begin
           { try qword }
           val(s,qc,code);
           if code=0 then
-            result:=texprvalue.create_uint(qc)
+            result:=TExprValue.create_uint(qc)
           else
             result:=try_parse_real(s);
         end;
     end;
 
-  class function texprvalue.try_parse_real(const s:string):texprvalue;
+  class function TExprValue.try_parse_real(const s:string):TExprValue;
     var
-      d: bestreal;
+      d: BestReal;
       code: integer;
     begin
       Val(s,d,code);
       if code=0 then
-        result:=texprvalue.create_real(d)
+        result:=TExprValue.create_real(d)
       else
         result:=nil;
     end;
 
-  function texprvalue.evaluate(v:texprvalue;op:ttoken):texprvalue;
+  function TExprValue.evaluate(v:TExprValue;op:TToken):TExprValue;
 
     function check_compatible: boolean;
       begin
@@ -1228,8 +1228,8 @@ type
           Message2(type_e_incompatible_types,def.typename,v.def.typename);
       end;
     var
-      lv,rv: tconstexprint;
-      lvd,rvd: bestreal;
+      lv,rv: TConstExprInt;
+      lvd,rvd: BestReal;
       lvs,rvs: string;
     begin
       case op of
@@ -1238,115 +1238,115 @@ type
           if not is_set(v.def) then
             begin
               v.error('Set', 'IN');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end
           else
           if not is_ordinal(def) then
             begin
               error('Ordinal', 'IN');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end
           else
           if value.valueord.signed then
-            result:=texprvalue.create_bool(value.valueord.svalue in PNormalSet(v.value.valueptr)^)
+            result:=TExprValue.create_bool(value.valueord.svalue in PNormalSet(v.value.valueptr)^)
           else
-            result:=texprvalue.create_bool(value.valueord.uvalue in PNormalSet(v.value.valueptr)^);
+            result:=TExprValue.create_bool(value.valueord.uvalue in PNormalSet(v.value.valueptr)^);
         end;
         _OP_NOT:
         begin
           if isBoolean then
-            result:=texprvalue.create_bool(not asBool)
+            result:=TExprValue.create_bool(not asBool)
           else if is_ordinal(def) then
             begin
-              result:=texprvalue.create_ord(value.valueord);
+              result:=TExprValue.create_ord(value.valueord);
               result.def:=def;
               calc_not_ordvalue(result.value.valueord,result.def);
             end
           else
             begin
               error('Boolean', 'NOT');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end;
         end;
         _OP_OR:
         begin
           if isBoolean then
             if v.isBoolean then
-              result:=texprvalue.create_bool(asBool or v.asBool)
+              result:=TExprValue.create_bool(asBool or v.asBool)
             else
               begin
                 v.error('Boolean','OR');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=texprvalue.create_ord(value.valueord or v.value.valueord)
+              result:=TExprValue.create_ord(value.valueord or v.value.valueord)
             else
               begin
                 v.error('Ordinal','OR');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else
             begin
               error('Boolean','OR');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end;
         end;
         _OP_XOR:
         begin
           if isBoolean then
             if v.isBoolean then
-              result:=texprvalue.create_bool(asBool xor v.asBool)
+              result:=TExprValue.create_bool(asBool xor v.asBool)
             else
               begin
                 v.error('Boolean','XOR');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=texprvalue.create_ord(value.valueord xor v.value.valueord)
+              result:=TExprValue.create_ord(value.valueord xor v.value.valueord)
             else
               begin
                 v.error('Ordinal','XOR');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else
             begin
               error('Boolean','XOR');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end;
         end;
         _OP_AND:
         begin
           if isBoolean then
             if v.isBoolean then
-              result:=texprvalue.create_bool(asBool and v.asBool)
+              result:=TExprValue.create_bool(asBool and v.asBool)
             else
               begin
                 v.error('Boolean','AND');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else if is_ordinal(def) then
             if is_ordinal(v.def) then
-              result:=texprvalue.create_ord(value.valueord and v.value.valueord)
+              result:=TExprValue.create_ord(value.valueord and v.value.valueord)
             else
               begin
                 v.error('Ordinal','AND');
-                result:=texprvalue.create_error;
+                result:=TExprValue.create_error;
               end
           else
             begin
               error('Boolean','AND');
-              result:=texprvalue.create_error;
+              result:=TExprValue.create_error;
             end;
         end;
         _EQ,_NE,_LT,_GT,_GTE,_LTE,_PLUS,_MINUS,_STAR,_SLASH,_OP_DIV,_OP_MOD,_OP_SHL,_OP_SHR:
-        if (op=_MINUS) and not(assigned(v)) then
+        if (op=_MINUS) and not(Assigned(v)) then
           begin
             if is_ordinal(def) then
-              result:=texprvalue.create_ord(-value.valueord)
+              result:=TExprValue.create_ord(-value.valueord)
             else if is_fpu(def) then
-              result:=texprvalue.create_real(-pbestreal(value.valueptr)^)
+              result:=TExprValue.create_real(-PBestReal(value.valueptr)^)
             else
               InternalError(2025050610);
           end
@@ -1358,33 +1358,33 @@ type
                 rv:=v.value.valueord;
                 case op of
                   _EQ:
-                    result:=texprvalue.create_bool(lv=rv);
+                    result:=TExprValue.create_bool(lv=rv);
                   _NE:
-                    result:=texprvalue.create_bool(lv<>rv);
+                    result:=TExprValue.create_bool(lv<>rv);
                   _LT:
-                    result:=texprvalue.create_bool(lv<rv);
+                    result:=TExprValue.create_bool(lv<rv);
                   _GT:
-                    result:=texprvalue.create_bool(lv>rv);
+                    result:=TExprValue.create_bool(lv>rv);
                   _GTE:
-                    result:=texprvalue.create_bool(lv>=rv);
+                    result:=TExprValue.create_bool(lv>=rv);
                   _LTE:
-                    result:=texprvalue.create_bool(lv<=rv);
+                    result:=TExprValue.create_bool(lv<=rv);
                   _PLUS:
-                    result:=texprvalue.create_ord(lv+rv);
+                    result:=TExprValue.create_ord(lv+rv);
                   _MINUS:
-                    result:=texprvalue.create_ord(lv-rv);
+                    result:=TExprValue.create_ord(lv-rv);
                   _STAR:
-                    result:=texprvalue.create_ord(lv*rv);
+                    result:=TExprValue.create_ord(lv*rv);
                   _SLASH:
-                    result:=texprvalue.create_real(lv/rv);
+                    result:=TExprValue.create_real(lv/rv);
                   _OP_DIV:
-                    result:=texprvalue.create_ord(lv div rv);
+                    result:=TExprValue.create_ord(lv div rv);
                   _OP_MOD:
-                    result:=texprvalue.create_ord(lv mod rv);
+                    result:=TExprValue.create_ord(lv mod rv);
                   _OP_SHL:
-                    result:=texprvalue.create_ord(lv shl rv);
+                    result:=TExprValue.create_ord(lv shl rv);
                   _OP_SHR:
-                    result:=texprvalue.create_ord(lv shr rv);
+                    result:=TExprValue.create_ord(lv shr rv);
                   else
                     InternalError(2025050611);
                 end;
@@ -1394,38 +1394,38 @@ type
                (is_fpu(v.def) or is_ordinal(v.def)) then
               begin
                 if is_fpu(def) then
-                  lvd:=pbestreal(value.valueptr)^
+                  lvd:=PBestReal(value.valueptr)^
                 else
                   lvd:=value.valueord;
                 if is_fpu(v.def) then
-                  rvd:=pbestreal(v.value.valueptr)^
+                  rvd:=PBestReal(v.value.valueptr)^
                 else
                   rvd:=v.value.valueord;
                 case op of
                   _EQ:
-                    result:=texprvalue.create_bool(lvd=rvd);
+                    result:=TExprValue.create_bool(lvd=rvd);
                   _NE:
-                    result:=texprvalue.create_bool(lvd<>rvd);
+                    result:=TExprValue.create_bool(lvd<>rvd);
                   _LT:
-                    result:=texprvalue.create_bool(lvd<rvd);
+                    result:=TExprValue.create_bool(lvd<rvd);
                   _GT:
-                    result:=texprvalue.create_bool(lvd>rvd);
+                    result:=TExprValue.create_bool(lvd>rvd);
                   _GTE:
-                    result:=texprvalue.create_bool(lvd>=rvd);
+                    result:=TExprValue.create_bool(lvd>=rvd);
                   _LTE:
-                    result:=texprvalue.create_bool(lvd<=rvd);
+                    result:=TExprValue.create_bool(lvd<=rvd);
                   _PLUS:
-                    result:=texprvalue.create_real(lvd+rvd);
+                    result:=TExprValue.create_real(lvd+rvd);
                   _MINUS:
-                    result:=texprvalue.create_real(lvd-rvd);
+                    result:=TExprValue.create_real(lvd-rvd);
                   _STAR:
-                    result:=texprvalue.create_real(lvd*rvd);
+                    result:=TExprValue.create_real(lvd*rvd);
                   _SLASH:
-                    result:=texprvalue.create_real(lvd/rvd);
+                    result:=TExprValue.create_real(lvd/rvd);
                   else
                     begin
                       Message(parser_e_illegal_expression);
-                      result:=texprvalue.create_error;
+                      result:=TExprValue.create_error;
                     end;
                 end;
               end
@@ -1435,35 +1435,35 @@ type
               rvs:=v.asStr;
               case op of
                 _EQ:
-                  result:=texprvalue.create_bool(lvs=rvs);
+                  result:=TExprValue.create_bool(lvs=rvs);
                 _NE:
-                  result:=texprvalue.create_bool(lvs<>rvs);
+                  result:=TExprValue.create_bool(lvs<>rvs);
                 _LT:
-                  result:=texprvalue.create_bool(lvs<rvs);
+                  result:=TExprValue.create_bool(lvs<rvs);
                 _GT:
-                  result:=texprvalue.create_bool(lvs>rvs);
+                  result:=TExprValue.create_bool(lvs>rvs);
                 _GTE:
-                  result:=texprvalue.create_bool(lvs>=rvs);
+                  result:=TExprValue.create_bool(lvs>=rvs);
                 _LTE:
-                  result:=texprvalue.create_bool(lvs<=rvs);
+                  result:=TExprValue.create_bool(lvs<=rvs);
                 _PLUS:
-                  result:=texprvalue.create_str(lvs+rvs);
+                  result:=TExprValue.create_str(lvs+rvs);
                 else
                   begin
                     Message(parser_e_illegal_expression);
-                    result:=texprvalue.create_error;
+                    result:=TExprValue.create_error;
                   end;
               end;
             end;
           end
         else
-          result:=texprvalue.create_error;
+          result:=TExprValue.create_error;
         else
-          result:=texprvalue.create_error;
+          result:=TExprValue.create_error;
       end;
     end;
 
-  procedure texprvalue.error(expecteddef, place: string);
+  procedure TExprValue.error(expecteddef, place: string);
     begin
       Message3(scan_e_compile_time_typeerror,
                expecteddef,
@@ -1472,7 +1472,7 @@ type
               );
     end;
 
-  function texprvalue.isBoolean: Boolean;
+  function TExprValue.isBoolean: Boolean;
     var
       i: int64;
     begin
@@ -1484,73 +1484,73 @@ type
         end;
     end;
 
-  function texprvalue.isInt: Boolean;
+  function TExprValue.isInt: Boolean;
     begin
       result:=is_integer(def);
     end;
 
-  function texprvalue.asBool: Boolean;
+  function TExprValue.asBool: Boolean;
     begin
       result:=value.valueord<>0;
     end;
 
-  function texprvalue.asInt: Integer;
+  function TExprValue.asInt: Integer;
     begin
       result:=value.valueord.svalue;
     end;
 
-  function texprvalue.asInt64: Int64;
+  function TExprValue.asInt64: Int64;
     begin
       result:=value.valueord.svalue;
     end;
 
-  function texprvalue.asSet: TNormalSet;
+  function TExprValue.asSet: TNormalSet;
     begin
       result:=PNormalSet(value.valueptr)^;
     end;
 
-  function texprvalue.asStr: String;
+  function TExprValue.asStr: String;
     var
       b:byte;
     begin
       case consttyp of
         constord:
-          result:=tostr(value.valueord);
+          result:=ToStr(value.valueord);
         conststring,
         constresourcestring:
           SetString(result,pchar(value.valueptr),value.len);
         constreal:
-          result:=realtostr(pbestreal(value.valueptr)^);
+          result:=RealToStr(PBestReal(value.valueptr)^);
         constset:
           begin
             result:=',';
             for b:=0 to 255 do
               if b in PConstSet(value.valueptr)^ then
-                result:=result+tostr(b)+',';
+                result:=result+ToStr(b)+',';
           end;
         { error values }
         constnone:
           result:='';
         else
-          internalerror(2013112801);
+          InternalError(2013112801);
       end;
     end;
 
-  destructor texprvalue.destroy;
+  destructor TExprValue.Destroy;
     begin
       case consttyp of
         conststring,
         constresourcestring :
-          freemem(value.valueptr,value.len+1);
+          FreeMem(value.valueptr,value.len+1);
         constwstring,
         constwresourcestring:
-          donewidestring(value.valuews);
+          DoneWideString(value.valuews);
         constreal :
-          dispose(pbestreal(value.valueptr));
+          dispose(PBestReal(value.valueptr));
         constset :
           dispose(PNormalSet(value.valueptr));
         constguid :
-          dispose(pguid(value.valueptr));
+          dispose(PGUID(value.valueptr));
         constnil,
         constpointer,
         constord,
@@ -1558,7 +1558,7 @@ type
         constnone:
           ;
       end;
-      inherited destroy;
+      inherited Destroy;
     end;
 
   const
@@ -1581,7 +1581,7 @@ type
          found:=false;
          foundfile:='';
          hpath:='';
-         if path_absolute(path) then
+         if Path_Absolute(path) then
            begin
              found:=FindFile(name,path,true,foundfile);
            end
@@ -1592,44 +1592,44 @@ type
              if not found then
                found:=CurrentModule.localincludesearchpath.FindFile(path+name,true,foundfile);
              if not found  then
-               found:=includesearchpath.FindFile(path+name,true,foundfile);
+               found:=IncludeSearchPath.FindFile(path+name,true,foundfile);
            end;
          result:=found;
       end;
 
 
-    function preproc_comp_expr(conform_to:TDef):texprvalue;
+    function preproc_comp_expr(conform_to:TDef):TExprValue;
 
-        function preproc_sub_expr(pred_level:Toperator_precedence;eval:Boolean):texprvalue; forward;
+        function preproc_sub_expr(pred_level:TOperatorPrecedence;eval:Boolean):TExprValue; forward;
 
-        procedure preproc_consume(t:ttoken);
+        procedure preproc_consume(t:TToken);
         begin
           if t<>CurrentScanner.preproc_token then
             Message(scan_e_preproc_syntax_error);
           CurrentScanner.preproc_token:=CurrentScanner.readpreproc;
         end;
 
-        function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;out tokentoconsume:ttoken):boolean;
+        function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;out tokentoconsume:TToken):boolean;
           var
-            hmodule: tmodule;
-            ns:ansistring;
+            hmodule: TModule;
+            ns:AnsiString;
             nssym:TSym;
           begin
             result:=false;
             tokentoconsume:=_ID;
 
-            if assigned(srsym) and (srsym.typ in [unitsym,namespacesym]) then
+            if Assigned(srsym) and (srsym.typ in [unitsym,namespacesym]) then
               begin
-                if not(srsym.owner.symtabletype in [staticsymtable,globalsymtable]) then
-                  internalerror(200501154);
+                if not(srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) then
+                  InternalError(200501154);
                 { only allow unit.symbol access if the name was
                   found in the current module
                   we can use iscurrentunit because generic specializations does not
                   change current_unit variable }
                 hmodule:=find_module_from_symtable(srsym.Owner);
                 if not Assigned(hmodule) then
-                  internalerror(201001120);
-                if hmodule.moduleid=CurrentFilePos.moduleindex then
+                  InternalError(201001120);
+                if hmodule.ModuleID=CurrentFilePos.moduleindex then
                   begin
                     preproc_consume(_POINT);
                     CurrentScanner.skipspace;
@@ -1637,11 +1637,11 @@ type
                       begin
                         ns:=srsym.name;
                         nssym:=srsym;
-                        while assigned(srsym) and (srsym.typ=namespacesym) do
+                        while Assigned(srsym) and (srsym.typ=namespacesym) do
                           begin
                             { we have a namespace. the next identifier should be either a namespace or a unit }
                             searchsym_in_module(hmodule,ns+'.'+CurrentScanner.preproc_pattern,srsym,srsymtable);
-                            if assigned(srsym) and (srsym.typ in [namespacesym,unitsym]) then
+                            if Assigned(srsym) and (srsym.typ in [namespacesym,unitsym]) then
                               begin
                                 ns:=ns+'.'+CurrentScanner.preproc_pattern;
                                 nssym:=srsym;
@@ -1652,12 +1652,12 @@ type
                               end;
                           end;
                         { check if there is a hidden unit with this pattern in the namespace }
-                        if not assigned(srsym) and
-                           assigned(nssym) and (nssym.typ=namespacesym) and assigned(TNamespaceSym(nssym).unitsym) then
+                        if not Assigned(srsym) and
+                           Assigned(nssym) and (nssym.typ=namespacesym) and Assigned(TNamespaceSym(nssym).unitsym) then
                           srsym:=TNamespaceSym(nssym).unitsym;
-                        if assigned(srsym) and (srsym.typ<>unitsym) then
-                          internalerror(201108260);
-                        if not assigned(srsym) then
+                        if Assigned(srsym) and (srsym.typ<>unitsym) then
+                          InternalError(201108260);
+                        if not Assigned(srsym) then
                           begin
                             result:=true;
                             srsymtable:=nil;
@@ -1670,14 +1670,14 @@ type
                           text model, regardless of the System alias. }
                         if ((CurrentScanner.preproc_pattern='CHAR') or
                             (CurrentScanner.preproc_pattern='PCHAR')) and
-                           (tmodule(TUnitSym(srsym).module).globalsymtable=systemunit) then
+                           (TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit) then
                           begin
                             if CurrentScanner.preproc_pattern='PCHAR' then
-                              if m_default_unicodestring in CurrentSettings.modeswitches then
+                              if m_default_unicodestring in CurrentSettings.ModeSwitches then
                                 searchsym_in_module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                               else
                                 searchsym_in_module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
-                            else if m_default_unicodestring in CurrentSettings.modeswitches then
+                            else if m_default_unicodestring in CurrentSettings.ModeSwitches then
                               searchsym_in_module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
                             else
                               searchsym_in_module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
@@ -1687,11 +1687,11 @@ type
                       _STRING:
                         begin
                           { system.string? }
-                          if tmodule(TUnitSym(srsym).module).globalsymtable=systemunit then
+                          if TModule(TUnitSym(srsym).module).GlobalSymTable=systemunit then
                             begin
-                              if cs_refcountedstrings in CurrentSettings.localswitches then
+                              if cs_refcountedstrings in CurrentSettings.LocalSwitches then
                                 begin
-                                  if m_default_unicodestring in CurrentSettings.modeswitches then
+                                  if m_default_unicodestring in CurrentSettings.ModeSwitches then
                                     searchsym_in_module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                                   else
                                     searchsym_in_module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
@@ -1717,7 +1717,7 @@ type
         procedure try_consume_nestedsym(var srsym:TSym;var srsymtable:TSymTable);
           var
             def:TDef;
-            tokentoconsume:ttoken;
+            tokentoconsume:TToken;
             found:boolean;
           begin
             found:=try_consume_unitsym(srsym,srsymtable,tokentoconsume);
@@ -1728,7 +1728,7 @@ type
               end;
              while (CurrentScanner.preproc_token=_POINT) do
                begin
-                 if assigned(srsym)and(srsym.typ=typesym) then
+                 if Assigned(srsym)and(srsym.typ=typesym) then
                    begin
                      def:=TTypeSym(srsym).typedef;
                      if is_class_or_object(def) or is_record(def) or is_java_class_or_interface(def) then
@@ -1761,7 +1761,7 @@ type
                end;
           end;
 
-        function preproc_substitutedtoken(const basesearchstr:ShortString;eval:Boolean):texprvalue;
+        function preproc_substitutedtoken(const basesearchstr:ShortString;eval:Boolean):TExprValue;
         { Currently this parses identifiers as well as numbers.
           The result from this procedure can either be that the token
           itself is a value, or that it is a compile time variable/macro,
@@ -1774,12 +1774,12 @@ type
           macrocount,
           len: integer;
           foundmacro: boolean;
-          searchstr: pshortstring;
+          searchstr: PShortString;
           searchstr2store: ShortString;
         begin
           if not eval then
             begin
-              result:=texprvalue.create_str(basesearchstr);
+              result:=TExprValue.create_str(basesearchstr);
               exit;
             end;
 
@@ -1799,8 +1799,8 @@ type
                 break;
               end;
 
-            if assigned(mac) and mac.defined then
-              if assigned(mac.buftext) then
+            if Assigned(mac) and mac.defined then
+              if Assigned(mac.buftext) then
                 begin
                   if mac.buflen>255 then
                     begin
@@ -1831,24 +1831,24 @@ type
 
           { At this point, result do contain the value. Do some decoding and
             determine the type.}
-          result:=texprvalue.try_parse_number(searchstr^);
-          if not assigned(result) then
+          result:=TExprValue.try_parse_number(searchstr^);
+          if not Assigned(result) then
             begin
               if foundmacro and (searchstr^='FALSE') then
-                result:=texprvalue.create_bool(false)
+                result:=TExprValue.create_bool(false)
               else if foundmacro and (searchstr^='TRUE') then
-                result:=texprvalue.create_bool(true)
-              else if (m_mac in CurrentSettings.modeswitches) and
-                      (not assigned(mac) or not mac.defined) and
+                result:=TExprValue.create_bool(true)
+              else if (m_mac in CurrentSettings.ModeSwitches) and
+                      (not Assigned(mac) or not mac.defined) and
                       (macrocount = 1) then
                 begin
                   {Errors in mode mac is issued here. For non macpas modes there is
                    more liberty, but the error will eventually be caught at a later stage.}
                   Message1(scan_e_error_macro_undefined,searchstr^);
-                  result:=texprvalue.create_str(searchstr^); { just to have something }
+                  result:=TExprValue.create_str(searchstr^); { just to have something }
                 end
               else
-                result:=texprvalue.create_str(searchstr^);
+                result:=TExprValue.create_str(searchstr^);
             end;
         end;
 
@@ -1857,22 +1857,22 @@ type
            sym.IncRefCount;
            { do we know an owner? }
            if Assigned(CurrentModule) and Assigned(CurrentModule.unitmap) and Assigned(sym.owner) then
-             inc(CurrentModule.unitmap[sym.owner.moduleid].refs);
+             inc(CurrentModule.unitmap[sym.owner.ModuleID].refs);
           end;
 
-        function preproc_factor(eval: Boolean):texprvalue;
+        function preproc_factor(eval: Boolean):TExprValue;
         var
            hs,countstr,storedpattern,fileext: string;
            mac: TMacro;
            srsym : TSym;
            srsymtable : TSymTable;
            hdef : TDef;
-           l : longint;
+           l : LongInt;
            hasKlammer,
            read_next: Boolean;
-           exprvalue:texprvalue;
+           exprvalue:TExprValue;
            ns:TNormalSet;
-           fs,path,name: tpathstr;
+           fs,path,name: TPathStr;
            foundfile: TCmdStr;
            found: boolean;
         begin
@@ -1894,23 +1894,23 @@ type
                     { this like 'include' }
                     if (length(name)>=1) and
                        (name[1]='*') then
-                      name:=ChangeFileExt(CurrentModule.sourcefiles.get_file_name(CurrentFilePos.fileindex),'')+ExtractFileExt(name);
+                      name:=ChangeFileExt(CurrentModule.SourceFiles.Get_File_Name(CurrentFilePos.fileindex),'')+ExtractFileExt(name);
 
                     { try to find the file, this like 'include' }
                     found:=findincludefile(path,name,foundfile);
                     fileext:=lower(ExtractFileExt(name));
-                    if (not found) and ((fileext<>'.inc') and (fileext<>sourceext)) then
+                    if (not found) and ((fileext<>'.inc') and (fileext<>SourceExt)) then
                      begin
                        { try default extensions .inc and .pas }
                        if (not found) then
                         found:=findincludefile(path,name+'.inc',foundfile);
                        if (not found) then
-                        found:=findincludefile(path,name+sourceext,foundfile);
+                        found:=findincludefile(path,name+SourceExt,foundfile);
                      end;
                     if (not found) and (ExtractFileExt(name)=ExtensionSeparator) and (Length(name)>=2) then
                       found:=findincludefile(path,Copy(name,1,Length(name)-1),foundfile);
 
-                    result:=texprvalue.create_bool(found);
+                    result:=TExprValue.create_bool(found);
                     CurrentScanner.skipspace;
                     preproc_consume(_RKLAMMER);
                   end
@@ -1925,7 +1925,7 @@ type
                         CurrentScanner.skipspace;
                         hasKlammer:= true;
                       end
-                    else if (m_mac in CurrentSettings.modeswitches) then
+                    else if (m_mac in CurrentSettings.ModeSwitches) then
                       hasKlammer:= false
                     else
                       Message(scan_e_error_in_preproc_expr);
@@ -1934,13 +1934,13 @@ type
                       begin
                         hs := CurrentScanner.preproc_pattern;
                         mac := TMacro(search_macro(hs));
-                        if assigned(mac) and mac.defined then
+                        if Assigned(mac) and mac.defined then
                           begin
-                            result:=texprvalue.create_bool(true);
+                            result:=TExprValue.create_bool(true);
                             mac.is_used:=true;
                           end
                         else
-                          result:=texprvalue.create_bool(false);
+                          result:=TExprValue.create_bool(false);
                         preproc_consume(_ID);
                         CurrentScanner.skipspace;
                       end
@@ -1954,7 +1954,7 @@ type
                         Message(scan_e_error_in_preproc_expr);
                   end
                 else
-                if (m_mac in CurrentSettings.modeswitches) and (CurrentScanner.preproc_pattern='UNDEFINED') then
+                if (m_mac in CurrentSettings.ModeSwitches) and (CurrentScanner.preproc_pattern='UNDEFINED') then
                   begin
                     preproc_consume(_ID);
                     CurrentScanner.skipspace;
@@ -1964,14 +1964,14 @@ type
                         mac := TMacro(search_macro(hs));
                         { FPC_UNICODESTRINGS is always present in the initial
                           macro table, but is undefined in ANSI mode. }
-                        if assigned(mac) and
+                        if Assigned(mac) and
                            ((upper(hs)<>'FPC_UNICODESTRINGS') or mac.defined) then
                           begin
-                            result:=texprvalue.create_bool(false);
+                            result:=TExprValue.create_bool(false);
                             mac.is_used:=true;
                           end
                         else
-                          result:=texprvalue.create_bool(true);
+                          result:=TExprValue.create_bool(true);
                         preproc_consume(_ID);
                         CurrentScanner.skipspace;
                       end
@@ -1979,7 +1979,7 @@ type
                       Message(scan_e_error_in_preproc_expr);
                   end
                 else
-                if (m_mac in CurrentSettings.modeswitches) and (CurrentScanner.preproc_pattern='OPTION') then
+                if (m_mac in CurrentSettings.ModeSwitches) and (CurrentScanner.preproc_pattern='OPTION') then
                   begin
                     preproc_consume(_ID);
                     CurrentScanner.skipspace;
@@ -2001,9 +2001,9 @@ type
                     else
                       begin
                         if CheckSwitch(hs[1],'+') then
-                          result:=texprvalue.create_bool(true)
+                          result:=TExprValue.create_bool(true)
                         else
-                          result:=texprvalue.create_bool(false);
+                          result:=TExprValue.create_bool(false);
                       end;
 
                     preproc_consume(_ID);
@@ -2035,7 +2035,7 @@ type
                         begin
                           try_consume_nestedsym(srsym,srsymtable);
                           l:=0;
-                          if assigned(srsym) then
+                          if Assigned(srsym) then
                             case srsym.typ of
                               staticvarsym,
                               localvarsym,
@@ -2054,7 +2054,7 @@ type
                               else
                                 Message(scan_e_error_in_preproc_expr);
                             end;
-                          result:=texprvalue.create_int(l);
+                          result:=TExprValue.create_int(l);
                         end
                       else
                         Message1(sym_e_id_not_found,storedpattern);
@@ -2088,7 +2088,7 @@ type
                           hdef:=nil;
                           hs:='';
                           l:=0;
-                          if assigned(srsym) then
+                          if Assigned(srsym) then
                             case srsym.typ of
                               staticvarsym,
                               localvarsym,
@@ -2105,7 +2105,7 @@ type
                               else
                                 Message(scan_e_error_in_preproc_expr);
                             end;
-                          if assigned(hdef) then
+                          if Assigned(hdef) then
                             begin
                               if hdef.typ=setdef then
                                 hdef:=TSetDef(hdef).elementdef;
@@ -2113,21 +2113,21 @@ type
                                 orddef:
                                   with TOrdDef(hdef).high do
                                     if signed then
-                                      result:=texprvalue.create_int(svalue)
+                                      result:=TExprValue.create_int(svalue)
                                     else
-                                      result:=texprvalue.create_uint(uvalue);
+                                      result:=TExprValue.create_uint(uvalue);
                                 enumdef:
-                                  result:=texprvalue.create_int(TEnumDef(hdef).maxval);
+                                  result:=TExprValue.create_int(TEnumDef(hdef).maxval);
                                 arraydef:
                                   if is_open_array(hdef) or is_array_of_const(hdef) or is_dynamic_array(hdef) then
                                     Message(type_e_mismatch)
                                   else
-                                    result:=texprvalue.create_int(TArrayDef(hdef).highrange);
+                                    result:=TExprValue.create_int(TArrayDef(hdef).highrange);
                                 stringdef:
                                   if is_open_string(hdef) or is_ansistring(hdef) or is_wide_or_unicode_string(hdef) then
                                     Message(type_e_mismatch)
                                   else
-                                    result:=texprvalue.create_int(TStringDef(hdef).len);
+                                    result:=TExprValue.create_int(TStringDef(hdef).len);
                                 else
                                   Message(type_e_mismatch);
                               end;
@@ -2195,13 +2195,13 @@ type
                                   { non-delphi modes }
                                   (df_generic in TTypeSym(srsym).typedef.defoptions)
                                 ) then
-                              result:=texprvalue.create_bool(false)
+                              result:=TExprValue.create_bool(false)
                             else
-                              result:=texprvalue.create_bool(true);
+                              result:=TExprValue.create_bool(true);
                             MarkSymbolAsUsed(srsym);
                           end
                         else
-                          result:=texprvalue.create_bool(false);
+                          result:=TExprValue.create_bool(false);
                       end
                     else
                       Message(scan_e_error_in_preproc_expr);
@@ -2227,15 +2227,15 @@ type
                     if eval then
                       begin
                         if is_ordinal(exprvalue.def) then
-                          result:=texprvalue.create_int(exprvalue.asInt)
+                          result:=TExprValue.create_int(exprvalue.asInt)
                         else
                           begin
                             exprvalue.error('Ordinal','ORD');
-                            result:=texprvalue.create_int(0);
+                            result:=TExprValue.create_int(0);
                           end;
                       end
                     else
-                      result:=texprvalue.create_int(0);
+                      result:=TExprValue.create_int(0);
                     exprvalue.free;
                     exprvalue := nil;
                     if CurrentScanner.preproc_token =_RKLAMMER then
@@ -2251,20 +2251,20 @@ type
                     if eval then
                       result:=exprvalue.evaluate(nil,_OP_NOT)
                     else
-                      result:=texprvalue.create_bool(false); {Just to have something}
+                      result:=TExprValue.create_bool(false); {Just to have something}
                     exprvalue.free;
                     exprvalue := nil;
                   end
                 else
                 if (CurrentScanner.preproc_pattern='TRUE') then
                   begin
-                    result:=texprvalue.create_bool(true);
+                    result:=TExprValue.create_bool(true);
                     preproc_consume(_ID);
                   end
                 else
                 if (CurrentScanner.preproc_pattern='FALSE') then
                   begin
-                    result:=texprvalue.create_bool(false);
+                    result:=TExprValue.create_bool(false);
                     preproc_consume(_ID);
                   end
                 else
@@ -2279,7 +2279,7 @@ type
                         if searchsym(storedpattern,srsym,srsymtable) then
                           begin
                             try_consume_nestedsym(srsym,srsymtable);
-                            if assigned(srsym) then
+                            if Assigned(srsym) then
                               begin
                                 MarkSymbolAsUsed(srsym);
                                 case srsym.typ of
@@ -2299,7 +2299,7 @@ type
                                       if result<>nil then
                                         begin
                                           result.free;
-                                          result:=texprvalue.create_const(TConstSym(srsym));
+                                          result:=TExprValue.create_const(TConstSym(srsym));
                                         end;
                                     end;
                                   enumsym:
@@ -2317,7 +2317,7 @@ type
                                       if result<>nil then
                                         begin
                                           result.free;
-                                          result:=texprvalue.create_int(TEnumSym(srsym).value);
+                                          result:=TExprValue.create_int(TEnumSym(srsym).value);
                                         end;
                                     end;
                                   else
@@ -2371,14 +2371,14 @@ type
                    (conform_to.typ=setdef) and
                    (exprvalue.consttyp=constnone) then
                    begin
-                     result:=texprvalue.create_error;
+                     result:=TExprValue.create_error;
                      break;
                    end;
                  { reject duplicate enums in the set }
                  if exprvalue.asInt in ns then
                    begin
                      Message1(sym_e_duplicate_id,CurrentScanner.preproc_pattern);
-                     result:=texprvalue.create_error;
+                     result:=TExprValue.create_error;
                      break;
                    end;
                  include(ns,exprvalue.asInt);
@@ -2390,30 +2390,30 @@ type
                end;
                preproc_consume(_RECKKLAMMER);
                if result=nil then
-                 result:=texprvalue.create_set(ns);
+                 result:=TExprValue.create_set(ns);
              end
            else if CurrentScanner.preproc_token = _INTCONST then
              begin
-               result:=texprvalue.try_parse_number(CurrentScanner.preproc_pattern);
-               if not assigned(result) then
+               result:=TExprValue.try_parse_number(CurrentScanner.preproc_pattern);
+               if not Assigned(result) then
                  begin
                    Message(parser_e_invalid_integer);
-                   result:=texprvalue.create_int(1);
+                   result:=TExprValue.create_int(1);
                  end;
                preproc_consume(_INTCONST);
              end
            else if CurrentScanner.preproc_token = _CSTRING then
              begin
-               result:=texprvalue.create_str(CurrentScanner.preproc_pattern);
+               result:=TExprValue.create_str(CurrentScanner.preproc_pattern);
                preproc_consume(_CSTRING);
              end
            else if CurrentScanner.preproc_token = _REALNUMBER then
              begin
-               result:=texprvalue.try_parse_real(CurrentScanner.preproc_pattern);
-               if not assigned(result) then
+               result:=TExprValue.try_parse_real(CurrentScanner.preproc_pattern);
+               if not Assigned(result) then
                  begin
                    Message(parser_e_error_in_real);
-                   result:=texprvalue.create_real(1.0);
+                   result:=TExprValue.create_real(1.0);
                  end;
                preproc_consume(_REALNUMBER);
              end
@@ -2424,9 +2424,9 @@ type
                if eval then
                  result:=exprvalue.evaluate(nil,_MINUS)
                else if exprvalue.isInt then
-                 result:=texprvalue.create_int(-exprvalue.asInt)
+                 result:=TExprValue.create_int(-exprvalue.asInt)
                else if is_fpu(exprvalue.def) then
-                 result:=texprvalue.create_real(-pbestreal(exprvalue.value.valueptr)^)
+                 result:=TExprValue.create_real(-PBestReal(exprvalue.value.valueptr)^)
                else
                  Message(scan_e_error_in_preproc_expr);
                exprvalue.free;
@@ -2434,14 +2434,14 @@ type
              end
            else
              Message(scan_e_error_in_preproc_expr);
-           if not assigned(result) then
-             result:=texprvalue.create_error;
+           if not Assigned(result) then
+             result:=TExprValue.create_error;
         end;
 
-        function preproc_sub_expr(pred_level:Toperator_precedence;eval:Boolean): texprvalue;
+        function preproc_sub_expr(pred_level:TOperatorPrecedence;eval:Boolean): TExprValue;
         var
-          hs1,hs2: texprvalue;
-          op: ttoken;
+          hs1,hs2: TExprValue;
+          op: TToken;
         begin
            if pred_level=highest_precedence then
              result:=preproc_factor(eval)
@@ -2457,7 +2457,7 @@ type
                if (op=_OP_OR) and hs1.isBoolean and hs1.asBool then
                  begin
                    { stop evaluation the rest of expression }
-                   result:=texprvalue.create_bool(true);
+                   result:=TExprValue.create_bool(true);
                    if pred_level=highest_precedence then
                      hs2:=preproc_factor(false)
                    else
@@ -2466,7 +2466,7 @@ type
                else if (op=_OP_AND) and hs1.isBoolean and not hs1.asBool then
                  begin
                    { stop evaluation the rest of expression }
-                   result:=texprvalue.create_bool(false);
+                   result:=TExprValue.create_bool(false);
                    if pred_level=highest_precedence then
                      hs2:=preproc_factor(false)
                    else
@@ -2481,7 +2481,7 @@ type
                    if eval then
                      result:=hs1.evaluate(hs2,op)
                    else
-                     result:=texprvalue.create_bool(false); {Just to have something}
+                     result:=TExprValue.create_bool(false); {Just to have something}
                  end;
                hs1.free;
                hs1 := nil;
@@ -2504,7 +2504,7 @@ type
 
     function boolean_compile_time_expr(var valuedescr: string): Boolean;
       var
-        hs: texprvalue;
+        hs: TExprValue;
       begin
         hs:=preproc_comp_expr(nil);
         if hs.isBoolean then
@@ -2532,7 +2532,7 @@ type
     procedure dir_define_impl(macstyle: boolean);
       var
         hs  : string;
-        bracketcount : longint;
+        bracketcount : LongInt;
         mac : TMacro;
         macropos : SizeInt;
         macrobuffer : array[0..maxmacrolen-1] of char;
@@ -2550,7 +2550,7 @@ type
             exit;
           end;
         mac:=TMacro(search_macro(hs));
-        if not assigned(mac) or (mac.owner <> CurrentModule.localmacrosymtable) then
+        if not Assigned(mac) or (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
             mac:=TMacro.create(hs);
             mac.defined:=true;
@@ -2565,7 +2565,7 @@ type
           end;
         Message1(parser_c_macro_defined,mac.name);
         mac.is_used:=true;
-        if (cs_support_macro in CurrentSettings.moduleswitches) then
+        if (cs_support_macro in CurrentSettings.ModuleSwitches) then
           begin
              CurrentScanner.skipspace;
 
@@ -2649,7 +2649,7 @@ type
       var
         hs  : string;
         mac : TMacro;
-        exprvalue: texprvalue;
+        exprvalue: TExprValue;
       begin
         CurrentScanner.skipspace;
         hs:=CurrentScanner.readid;
@@ -2659,7 +2659,7 @@ type
             exit;
           end;
         mac:=TMacro(search_macro(hs));
-        if not assigned(mac) or
+        if not Assigned(mac) or
            (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
             mac:=TMacro.create(hs);
@@ -2732,7 +2732,7 @@ type
             exit;
           end;
         mac:=TMacro(search_macro(hs));
-        if not assigned(mac) or
+        if not Assigned(mac) or
            (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
              mac:=TMacro.create(hs);
@@ -2757,9 +2757,9 @@ type
         foundfile : TCmdStr;
         path,
         name,
-        hs    : tpathstr;
+        hs    : TPathStr;
         args  : string;
-        hp    : tinputfile;
+        hp    : TInputFile;
         found : boolean;
         macroIsString : boolean;
         fileext: string;
@@ -2783,58 +2783,58 @@ type
            macroIsString:=true;
            case hs of
              'TIME':
-               if timestr<>'' then
-                 hs:=timestr
+               if TimeStr<>'' then
+                 hs:=TimeStr
                else
-                 hs:=gettimestr;
+                 hs:=GetTimeStr;
              'DATE':
-               if datestr<>'' then
-                 hs:=datestr
+               if DateStr<>'' then
+                 hs:=DateStr
                else
-                 hs:=getdatestr;
+                 hs:=GetDateStr;
              'DATEYEAR':
                begin
-                 hs:=tostr(startsystime.Year);
+                 hs:=ToStr(StartSysTime.Year);
                  macroIsString:=false;
                end;
              'DATEMONTH':
                begin
-                 hs:=tostr(startsystime.Month);
+                 hs:=ToStr(StartSysTime.Month);
                  macroIsString:=false;
                end;
              'DATEDAY':
                begin
-                 hs:=tostr(startsystime.Day);
+                 hs:=ToStr(StartSysTime.Day);
                  macroIsString:=false;
                end;
              'TIMEHOUR':
                begin
-                 hs:=tostr(startsystime.Hour);
+                 hs:=ToStr(StartSysTime.Hour);
                  macroIsString:=false;
                end;
              'TIMEMINUTE':
                begin
-                 hs:=tostr(startsystime.Minute);
+                 hs:=ToStr(StartSysTime.Minute);
                  macroIsString:=false;
                end;
              'TIMESECOND':
                begin
-                 hs:=tostr(startsystime.Second);
+                 hs:=ToStr(StartSysTime.Second);
                  macroIsString:=false;
                end;
              'FILE':
-               hs:=CurrentModule.sourcefiles.get_file_name(CurrentFilePos.fileindex);
+               hs:=CurrentModule.SourceFiles.Get_File_Name(CurrentFilePos.fileindex);
              'LINE':
-               hs:=tostr(CurrentFilePos.line);
+               hs:=ToStr(CurrentFilePos.line);
              'LINENUM':
                begin
-                 hs:=tostr(CurrentFilePos.line);
+                 hs:=ToStr(CurrentFilePos.line);
                  macroIsString:=false;
                end;
              'FPCVERSION':
-               hs:=version_string;
+               hs:=Version_String;
              'FPCDATE':
-               hs:=date_string;
+               hs:=DateString;
              'FPCTARGET':
                hs:=TargetCPUString;
              'FPCTARGETCPU':
@@ -2852,7 +2852,7 @@ type
            if macroIsString then
              hs:=''''+hs+'''';
            CurrentScanner.substitutemacro(path,@hs[1],length(hs),
-             CurrentScanner.line_no,CurrentScanner.inputfile.ref_index,false);
+             CurrentScanner.line_no,CurrentScanner.inputfile.RefIndex,false);
          end
         else
          begin
@@ -2863,18 +2863,18 @@ type
              by the file name of the current source file.  }
            if (length(name)>=1) and
               (name[1]='*') then
-             name:=ChangeFileExt(CurrentModule.sourcefiles.get_file_name(CurrentFilePos.fileindex),'')+ExtractFileExt(name);
+             name:=ChangeFileExt(CurrentModule.SourceFiles.Get_File_Name(CurrentFilePos.fileindex),'')+ExtractFileExt(name);
 
            { try to find the file }
            found:=findincludefile(path,name,foundfile);
            fileext:=lower(ExtractFileExt(name));
-           if (not found) and ((fileext<>'.inc') and (fileext<>sourceext)) then
+           if (not found) and ((fileext<>'.inc') and (fileext<>SourceExt)) then
             begin
               { try default extensions .inc and .pas }
               if (not found) then
                found:=findincludefile(path,name+'.inc',foundfile);
               if (not found) then
-               found:=findincludefile(path,name+sourceext,foundfile);
+               found:=findincludefile(path,name+SourceExt,foundfile);
             end;
            { if the name ends in dot, try without the dot }
            if (not found) and (ExtractFileExt(name)=ExtensionSeparator) and (Length(name)>=2) then
@@ -2893,10 +2893,10 @@ type
                { shutdown current file }
                CurrentScanner.tempcloseinputfile;
                { load new file }
-               hp:=do_openinputfile(foundfile);
-               hp.inc_path:=path;
+               hp:=Do_OpenInputFile(foundfile);
+               hp.IncPath:=path;
                CurrentScanner.addfile(hp);
-               CurrentModule.sourcefiles.register_file(hp);
+               CurrentModule.SourceFiles.Register_File(hp);
                if (not found) then
                 Message1(scan_f_cannot_open_includefile,hs);
               if (not CurrentScanner.openinputfile) then
@@ -2914,7 +2914,7 @@ type
 *****************************************************************************}
 
 {$ifdef PREPROCWRITE}
-    constructor tpreprocfile.create(const fn:string);
+    constructor TPreProcFile.create(const fn:string);
       begin
         inherited create;
       { open outputfile }
@@ -2922,9 +2922,9 @@ type
         {$push}{$I-}
          rewrite(f);
         {$pop}
-        if ioresult<>0 then
-         Comment(V_Fatal,'can''t create file '+fn);
-        setlength(buf,preprocbufsize);
+        if IOResult<>0 then
+         Comment(VFatal,'can''t create file '+fn);
+        SetLength(buf,preprocbufsize);
         settextbuf(f,buf[0],preprocbufsize);
       { reset }
         eolfound:=false;
@@ -2932,23 +2932,23 @@ type
       end;
 
 
-    destructor tpreprocfile.destroy;
+    destructor TPreProcFile.Destroy;
       begin
         close(f);
         buf:=nil;
       end;
 
 
-    procedure tpreprocfile.add(const s:string);
+    procedure TPreProcFile.add(const s:string);
       begin
         write(f,s);
       end;
 
-    procedure tpreprocfile.addspace;
+    procedure TPreProcFile.addspace;
       begin
         if eolfound then
          begin
-           writeln(f,'');
+           WriteLn(f,'');
            eolfound:=false;
            spacefound:=false;
          end
@@ -2966,7 +2966,7 @@ type
                               TPreProcStack
 *****************************************************************************}
 
-    constructor tpreprocstack.create(atyp : preproctyp;a:boolean;n:tpreprocstack);
+    constructor TPreProcStack.create(atyp : TPreProcType;a:boolean;n:TPreProcStack);
       begin
         accept:=a;
         typ:=atyp;
@@ -2976,21 +2976,21 @@ type
 {*****************************************************************************
                               TReplayStack
 *****************************************************************************}
-    constructor treplaystack.Create(atoken:ttoken;aidtoken:ttoken;
-      const aorgpattern,apattern:ShortString;const acstringpattern:ansistring;
-      apatternw:tcompilerwidestring;asettings:TSettings;
-      atokenbuf:tdynamicarray;change_endian:boolean;const apending:TPendingState;
-      averbosity:longint;anext:treplaystack);
+    constructor TReplayStack.Create(atoken:TToken;aidtoken:TToken;
+      const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
+      apatternw:TCompilerWideString;asettings:TSettings;
+      atokenbuf:TDynamicArray;change_endian:boolean;const apending:TPendingState;
+      averbosity:LongInt;anext:TReplayStack);
       begin
         token:=atoken;
         idtoken:=aidtoken;
         orgpattern:=aorgpattern;
         pattern:=apattern;
         cstringpattern:=acstringpattern;
-        initwidestring(patternw);
-        if assigned(apatternw) then
+        InitWideString(patternw);
+        if Assigned(apatternw) then
           begin
-            copywidestring(patternw,apatternw);
+            CopyWideString(patternw,apatternw);
           end;
         settings:=asettings;
         pending:=apending;
@@ -3001,16 +3001,16 @@ type
       end;
 
 
-    destructor treplaystack.destroy;
+    destructor TReplayStack.Destroy;
       begin
-        donewidestring(patternw);
+        DoneWideString(patternw);
       end;
 
 {*****************************************************************************
                               TDirectiveItem
 *****************************************************************************}
 
-    constructor TDirectiveItem.Create(AList:TFPHashObjectList;const n:string;p:tdirectiveproc);
+    constructor TDirectiveItem.Create(AList:TFPHashObjectList;const n:string;p:TDirectiveProc);
       begin
         inherited Create(AList,n);
         is_conditional:=false;
@@ -3018,7 +3018,7 @@ type
       end;
 
 
-    constructor TDirectiveItem.CreateCond(AList:TFPHashObjectList;const n:string;p:tdirectiveproc);
+    constructor TDirectiveItem.CreateCond(AList:TFPHashObjectList;const n:string;p:TDirectiveProc);
       begin
         inherited Create(AList,n);
         is_conditional:=true;
@@ -3029,13 +3029,13 @@ type
                                 TSCANNERFILE
  ****************************************************************************}
 
-    constructor tscannerfile.Create(const fn: string; is_macro: boolean);
+    constructor TScannerFile.Create(const fn: string; IsMacro: boolean);
       begin
-        inputfile:=do_openinputfile(fn);
-        if is_macro then
-          inputfile.is_macro:=true;
-        if assigned(CurrentModule) then
-          CurrentModule.sourcefiles.register_file(inputfile);
+        inputfile:=Do_OpenInputFile(fn);
+        if IsMacro then
+          inputfile.IsMacro:=true;
+        if Assigned(CurrentModule) then
+          CurrentModule.SourceFiles.Register_File(inputfile);
       { reset localinput }
         c:=#0;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
@@ -3051,7 +3051,7 @@ type
         replaystack:=nil;
         comment_level:=0;
         yylexcount:=0;
-        block_type:=bt_general;
+        Block_Type:=bt_general;
         line_no:=0;
         lastlinepos:=0;
         lasttokenpos:=0;
@@ -3060,11 +3060,11 @@ type
         nexttoken:=NOTOKEN;
         ignoredirectives:=TFPHashList.Create;
         change_endian_for_replay:=false;
-        initwidestring(patternw);
+        InitWideString(patternw);
       end;
 
 
-    procedure tscannerfile.firstfile;
+    procedure TScannerFile.firstfile;
       begin
       { load block }
         if not openinputfile then
@@ -3073,35 +3073,35 @@ type
       end;
 
 
-    destructor tscannerfile.Destroy;
+    destructor TScannerFile.Destroy;
       begin
-        if assigned(onfreescanner) then
-          onfreescanner(self);
-        if assigned(CurrentModule) and
+        if Assigned(OnFreeScanner) then
+          OnFreeScanner(self);
+        if Assigned(CurrentModule) and
            (CurrentModule.state in [ms_processed,ms_compiled]) and
-           (status.errorcount=0) then
+           (status.ErrorCount=0) then
           checkpreprocstack
         else
           begin
-            while assigned(preprocstack) do
+            while Assigned(preprocstack) do
              poppreprocstack;
           end;
-        while assigned(replaystack) do
+        while Assigned(replaystack) do
           popreplaystack;
         if not inputfile.closed then
           closeinputfile;
-        if inputfile.is_macro then
+        if inputfile.IsMacro then
           begin
             inputfile.free;
             inputfile := nil;
           end;
         ignoredirectives.free;
         ignoredirectives := nil;
-        donewidestring(patternw);
+        DoneWideString(patternw);
       end;
 
 
-    function tscannerfile.openinputfile:boolean;
+    function TScannerFile.openinputfile:boolean;
       begin
         openinputfile:=inputfile.open;
       { load buffer }
@@ -3112,7 +3112,7 @@ type
         inputbuffer:=PAnsiChar(inputfile.buf);
         inputpointer:=PAnsiChar(inputfile.buf);
 {$endif CHECK_INPUTPOINTER_LIMITS}
-        inputstart:=inputfile.bufstart;
+        inputstart:=inputfile.BufStart;
       { line }
         line_no:=0;
         lastlinepos:=0;
@@ -3121,7 +3121,7 @@ type
       end;
 
 
-    procedure tscannerfile.closeinputfile;
+    procedure TScannerFile.closeinputfile;
       begin
         inputfile.close;
       { reset buffer }
@@ -3141,12 +3141,12 @@ type
       end;
 
 
-    function tscannerfile.tempopeninputfile:boolean;
+    function TScannerFile.tempopeninputfile:boolean;
       begin
         tempopeninputfile:=false;
-        if inputfile.is_macro then
+        if inputfile.IsMacro then
           exit;
-        tempopeninputfile:=inputfile.tempopen;
+        tempopeninputfile:=inputfile.TempOpen;
       { reload buffer }
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         hidden_inputbuffer:=PAnsiChar(inputfile.buf);
@@ -3155,20 +3155,20 @@ type
         inputbuffer:=PAnsiChar(inputfile.buf);
         inputpointer:=PAnsiChar(inputfile.buf);
 {$endif CHECK_INPUTPOINTER_LIMITS}
-        inputstart:=inputfile.bufstart;
+        inputstart:=inputfile.BufStart;
       end;
 
 
-    procedure tscannerfile.tempcloseinputfile;
+    procedure TScannerFile.tempcloseinputfile;
       begin
-        if inputfile.closed or inputfile.is_macro then
+        if inputfile.closed or inputfile.IsMacro then
          exit;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         inputfile.setpos(inputstart+(hidden_inputpointer-hidden_inputbuffer));
 {$else not CHECK_INPUTPOINTER_LIMITS}
         inputfile.setpos(inputstart+(inputpointer-inputbuffer));
 {$endif CHECK_INPUTPOINTER_LIMITS}
-        inputfile.tempclose;
+        inputfile.TempClose;
       { reset buffer }
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         hidden_inputbuffer:=nil;
@@ -3181,41 +3181,41 @@ type
       end;
 
 
-    procedure tscannerfile.saveinputfile;
+    procedure TScannerFile.saveinputfile;
       begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-        inputfile.saveinputpointer:=hidden_inputpointer;
+        inputfile.SaveInputPointer:=hidden_inputpointer;
 {$else not CHECK_INPUTPOINTER_LIMITS}
-        inputfile.saveinputpointer:=inputpointer;
+        inputfile.SaveInputPointer:=inputpointer;
 {$endif CHECK_INPUTPOINTER_LIMITS}
-        inputfile.savelastlinepos:=lastlinepos;
-        inputfile.saveline_no:=line_no;
+        inputfile.SaveLastLinePos:=lastlinepos;
+        inputfile.SaveLineNo:=line_no;
       end;
 
 
-    procedure tscannerfile.restoreinputfile;
+    procedure TScannerFile.restoreinputfile;
       begin
 {$ifdef check_inputpointer_limits}
         hidden_inputbuffer:=PAnsiChar(inputfile.buf);
-        hidden_inputpointer:=inputfile.saveinputpointer;
+        hidden_inputpointer:=inputfile.SaveInputPointer;
 {$else not check_inputpointer_limits}
         inputbuffer:=PAnsiChar(inputfile.buf);
-        inputpointer:=inputfile.saveinputpointer;
+        inputpointer:=inputfile.SaveInputPointer;
 {$endif check_inputpointer_limits}
-        lastlinepos:=inputfile.savelastlinepos;
-        line_no:=inputfile.saveline_no;
-        if not inputfile.is_macro then
-          parser_current_file:=inputfile.name;
+        lastlinepos:=inputfile.SaveLastLinePos;
+        line_no:=inputfile.SaveLineNo;
+        if not inputfile.IsMacro then
+          Parser_Current_File:=inputfile.name;
       end;
 
 
-    procedure tscannerfile.nextfile;
+    procedure TScannerFile.nextfile;
       var
-        to_dispose : tinputfile;
+        to_dispose : TInputFile;
       begin
-        if assigned(inputfile.next) then
+        if Assigned(inputfile.next) then
          begin
-           if inputfile.is_macro then
+           if inputfile.IsMacro then
              begin
                to_dispose:=inputfile;
                dec(macro_nesting_depth);
@@ -3228,7 +3228,7 @@ type
            { we can always close the file, no ? }
            inputfile.close;
            inputfile:=inputfile.next;
-           if assigned(to_dispose) then
+           if Assigned(to_dispose) then
              to_dispose.free; // no nil needed
            restoreinputfile;
          end;
@@ -3236,31 +3236,31 @@ type
 
 
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-    function tscannerfile.get_inputpointer_char(offset : longint = 0) : char;
+    function TScannerFile.get_inputpointer_char(offset : LongInt = 0) : char;
       begin
-	assert(hidden_inputpointer-hidden_inputbuffer+offset<=inputfile.bufsize);
+	assert(hidden_inputpointer-hidden_inputbuffer+offset<=inputfile.BufSize);
 	get_inputpointer_char:=(hidden_inputpointer+offset)^;
       end;
 
-    procedure tscannerfile.inc_inputpointer(amount : longint = 1);
+    procedure TScannerFile.inc_inputpointer(amount : LongInt = 1);
       begin
-        assert(hidden_inputpointer-hidden_inputbuffer+amount<=inputfile.bufsize);
+        assert(hidden_inputpointer-hidden_inputbuffer+amount<=inputfile.BufSize);
         inc(hidden_inputpointer,amount);
       end;
 
-    procedure tscannerfile.dec_inputpointer;
+    procedure TScannerFile.dec_inputpointer;
       begin
         assert(hidden_inputpointer>hidden_inputbuffer);
         dec(hidden_inputpointer);
       end;
 {$endif}
 
-    procedure tscannerfile.startrecordtokens(buf:tdynamicarray);
+    procedure TScannerFile.startrecordtokens(buf:TDynamicArray);
       begin
-        if not assigned(buf) then
-          internalerror(200511172);
-        if assigned(recordtokenbuf) then
-          internalerror(200511173);
+        if not Assigned(buf) then
+          InternalError(200511172);
+        if Assigned(recordtokenbuf) then
+          InternalError(200511173);
         recordtokenbuf:=buf;
         fillchar(last_settings,sizeof(last_settings),0);
         last_message:=nil;
@@ -3268,20 +3268,20 @@ type
       end;
 
 
-    procedure tscannerfile.stoprecordtokens;
+    procedure TScannerFile.stoprecordtokens;
       begin
-        if not assigned(recordtokenbuf) then
-          internalerror(200511174);
+        if not Assigned(recordtokenbuf) then
+          InternalError(200511174);
         recordtokenbuf:=nil;
       end;
 
-    function tscannerfile.is_recording_tokens: boolean;
+    function TScannerFile.is_recording_tokens: boolean;
       begin
-        result:=assigned(recordtokenbuf);
+        result:=Assigned(recordtokenbuf);
       end;
 
 
-    procedure tscannerfile.writetoken(t : ttoken);
+    procedure TScannerFile.writetoken(t : TToken);
       var
         b : byte;
       begin
@@ -3294,37 +3294,37 @@ type
         recordtokenbuf.write(b,1);
       end;
 
-    procedure tscannerfile.tokenwritesizeint(val : asizeint);
+    procedure TScannerFile.tokenwritesizeint(val : asizeint);
       begin
         recordtokenbuf.write(val,sizeof(asizeint));
       end;
 
-    procedure tscannerfile.tokenwritelongint(val : longint);
+    procedure TScannerFile.tokenwritelongint(val : LongInt);
       begin
-        recordtokenbuf.write(val,sizeof(longint));
+        recordtokenbuf.write(val,sizeof(LongInt));
       end;
 
-    procedure tscannerfile.tokenwriteshortint(val : shortint);
+    procedure TScannerFile.tokenwriteshortint(val : shortint);
       begin
         recordtokenbuf.write(val,sizeof(shortint));
       end;
 
-    procedure tscannerfile.tokenwritebyte(val : byte);
+    procedure TScannerFile.tokenwritebyte(val : byte);
       begin
         recordtokenbuf.write(val,sizeof(byte));
       end;
 
-    procedure tscannerfile.tokenwriteword(val : word);
+    procedure TScannerFile.tokenwriteword(val : word);
       begin
         recordtokenbuf.write(val,sizeof(word));
       end;
 
-    procedure tscannerfile.tokenwritelongword(val : longword);
+    procedure TScannerFile.tokenwritelongword(val : LongWord);
       begin
-        recordtokenbuf.write(val,sizeof(longword));
+        recordtokenbuf.write(val,sizeof(LongWord));
       end;
 
-    function tscannerfile.tokenreadsizeint : asizeint;
+    function TScannerFile.tokenreadsizeint : asizeint;
       var
         val : asizeint;
       begin
@@ -3334,27 +3334,27 @@ type
         result:=val;
       end;
 
-    function tscannerfile.tokenreadlongword : longword;
+    function TScannerFile.tokenreadlongword : LongWord;
       var
-        val : longword;
+        val : LongWord;
       begin
-        replaytokenbuf.read(val,sizeof(longword));
+        replaytokenbuf.read(val,sizeof(LongWord));
         if change_endian_for_replay then
           val:=swapendian(val);
         result:=val;
       end;
 
-    function tscannerfile.tokenreadlongint : longint;
+    function TScannerFile.tokenreadlongint : LongInt;
       var
-        val : longint;
+        val : LongInt;
       begin
-        replaytokenbuf.read(val,sizeof(longint));
+        replaytokenbuf.read(val,sizeof(LongInt));
         if change_endian_for_replay then
           val:=swapendian(val);
         result:=val;
       end;
 
-    function tscannerfile.tokenreadshortint : shortint;
+    function TScannerFile.tokenreadshortint : shortint;
       var
         val : shortint;
       begin
@@ -3362,7 +3362,7 @@ type
         result:=val;
       end;
 
-    function tscannerfile.tokenreadbyte : byte;
+    function TScannerFile.tokenreadbyte : byte;
       var
         val : byte;
       begin
@@ -3370,7 +3370,7 @@ type
         result:=val;
       end;
 
-    function tscannerfile.tokenreadsmallint : smallint;
+    function TScannerFile.tokenreadsmallint : smallint;
       var
         val : smallint;
       begin
@@ -3380,7 +3380,7 @@ type
         result:=val;
       end;
 
-    function tscannerfile.tokenreadword : word;
+    function TScannerFile.tokenreadword : word;
       var
         val : word;
       begin
@@ -3390,7 +3390,7 @@ type
         result:=val;
       end;
 
-   function tscannerfile.tokenreadenum(size : longint) : longword;
+   function TScannerFile.tokenreadenum(size : LongInt) : LongWord;
    begin
      if size=1 then
        result:=tokenreadbyte
@@ -3399,31 +3399,31 @@ type
      else if size=4 then
        result:=tokenreadlongword
      else
-       internalerror(2013112901);
+       InternalError(2013112901);
    end;
 
-   procedure tscannerfile.tokenreadset(var b;size : longint);
+   procedure TScannerFile.tokenreadset(var b;size : LongInt);
    var
-     i : longint;
+     i : LongInt;
    begin
      replaytokenbuf.read(b,size);
      if change_endian_for_replay then
        for i:=0 to size-1 do
-         Pbyte(@b)[i]:=reverse_byte(Pbyte(@b)[i]);
+         PByte(@b)[i]:=Reverse_Byte(PByte(@b)[i]);
    end;
 
-   procedure tscannerfile.tokenwriteenum(var b;size : longint);
+   procedure TScannerFile.tokenwriteenum(var b;size : LongInt);
    begin
      recordtokenbuf.write(b,size);
    end;
 
-   procedure tscannerfile.tokenwriteset(var b;size : longint);
+   procedure TScannerFile.tokenwriteset(var b;size : LongInt);
    begin
      recordtokenbuf.write(b,size);
    end;
 
 
-    procedure tscannerfile.tokenreadsettings(var asettings : TSettings; expected_size : asizeint);
+    procedure TScannerFile.tokenreadsettings(var asettings : TSettings; expected_size : asizeint);
 
     {    This procedure
        needs to be changed whenever
@@ -3432,62 +3432,62 @@ type
        before tests with generics are tested. PM }
 
        var
-         startpos, endpos : longword;
+         startpos, endpos : LongWord;
       begin
         { WARNING all those fields need to be in the correct
         order otherwise cross_endian PPU reading will fail }
         startpos:=replaytokenbuf.pos;
         with asettings do
           begin
-            alignment.procalign:=tokenreadlongint;
-            alignment.loopalign:=tokenreadlongint;
-            alignment.jumpalign:=tokenreadlongint;
-            alignment.jumpalignskipmax:=tokenreadlongint;
-            alignment.coalescealign:=tokenreadlongint;
-            alignment.coalescealignskipmax:=tokenreadlongint;
-            alignment.constalignmin:=tokenreadlongint;
-            alignment.constalignmax:=tokenreadlongint;
-            alignment.varalignmin:=tokenreadlongint;
-            alignment.varalignmax:=tokenreadlongint;
-            alignment.localalignmin:=tokenreadlongint;
-            alignment.localalignmax:=tokenreadlongint;
-            alignment.recordalignmin:=tokenreadlongint;
-            alignment.recordalignmax:=tokenreadlongint;
-            alignment.maxCrecordalign:=tokenreadlongint;
-            tokenreadset(globalswitches,sizeof(globalswitches));
-            tokenreadset(targetswitches,sizeof(targetswitches));
-            tokenreadset(moduleswitches,sizeof(moduleswitches));
-            tokenreadset(localswitches,sizeof(localswitches));
-            tokenreadset(modeswitches,sizeof(modeswitches));
-            tokenreadset(optimizerswitches,sizeof(optimizerswitches));
-            tokenreadset(genwpoptimizerswitches,sizeof(genwpoptimizerswitches));
-            tokenreadset(dowpoptimizerswitches,sizeof(dowpoptimizerswitches));
-            tokenreadset(debugswitches,sizeof(debugswitches));
+            alignment.ProcAlign:=tokenreadlongint;
+            alignment.LoopAlign:=tokenreadlongint;
+            alignment.JumpAlign:=tokenreadlongint;
+            alignment.JumpAlignSkipMax:=tokenreadlongint;
+            alignment.CoalesceAlign:=tokenreadlongint;
+            alignment.CoalesceAlignSkipMax:=tokenreadlongint;
+            alignment.ConstAlignMin:=tokenreadlongint;
+            alignment.ConstAlignMax:=tokenreadlongint;
+            alignment.VarAlignMin:=tokenreadlongint;
+            alignment.VarAlignMax:=tokenreadlongint;
+            alignment.LocalAlignMin:=tokenreadlongint;
+            alignment.LocalAlignMax:=tokenreadlongint;
+            alignment.RecordAlignMin:=tokenreadlongint;
+            alignment.RecordAlignMax:=tokenreadlongint;
+            alignment.MaxCRecordAlign:=tokenreadlongint;
+            tokenreadset(GlobalSwitches,sizeof(GlobalSwitches));
+            tokenreadset(TargetSwitches,sizeof(TargetSwitches));
+            tokenreadset(ModuleSwitches,sizeof(ModuleSwitches));
+            tokenreadset(LocalSwitches,sizeof(LocalSwitches));
+            tokenreadset(ModeSwitches,sizeof(ModeSwitches));
+            tokenreadset(OptimizerSwitches,sizeof(OptimizerSwitches));
+            tokenreadset(GenWPOptimizerSwitches,sizeof(GenWPOptimizerSwitches));
+            tokenreadset(DoWPOptimizerSwitches,sizeof(DoWPOptimizerSwitches));
+            tokenreadset(DebugSwitches,sizeof(DebugSwitches));
             { 0: old behaviour for sets <=256 elements
               >0: round to this size }
-            setalloc:=tokenreadshortint;
-            packenum:=tokenreadshortint;
-            packrecords:=tokenreadshortint;
-            maxfpuregisters:=tokenreadshortint;
+            SetAlloc:=tokenreadshortint;
+            PackEnum:=tokenreadshortint;
+            PackRecords:=tokenreadshortint;
+            MaxFPURegisters:=tokenreadshortint;
 
             verbosity:=tokenreadlongint;
 
-            cputype:=tcputype(tokenreadenum(sizeof(tcputype)));
-            optimizecputype:=tcputype(tokenreadenum(sizeof(tcputype)));
-            asmcputype:=tcputype(tokenreadenum(sizeof(tcputype)));
-            fputype:=tfputype(tokenreadenum(sizeof(tfputype)));
-            asmmode:=tasmmode(tokenreadenum(sizeof(tasmmode)));
-            interfacetype:=TInterfaceTypes(tokenreadenum(sizeof(TInterfaceTypes)));
-            defproccall:=TProcCallOption(tokenreadenum(sizeof(TProcCallOption)));
+            CPUType:=TCPUType(tokenreadenum(sizeof(TCPUType)));
+            OptimizeCPUType:=TCPUType(tokenreadenum(sizeof(TCPUType)));
+            AsmCPUType:=TCPUType(tokenreadenum(sizeof(TCPUType)));
+            FPUType:=TFPUType(tokenreadenum(sizeof(TFPUType)));
+            AsmMode:=TAsmMode(tokenreadenum(sizeof(TAsmMode)));
+            InterfaceType:=TInterfaceTypes(tokenreadenum(sizeof(TInterfaceTypes)));
+            DefProcCall:=TProcCallOption(tokenreadenum(sizeof(TProcCallOption)));
             { tstringencoding is word type,
               thus this should be OK here }
-            sourcecodepage:=TStringEncoding(tokenreadword);
+            SourceCodePage:=TStringEncoding(tokenreadword);
 
-            minfpconstprec:=TFloatType(tokenreadenum(sizeof(TFloatType)));
+            MinFPConstPrec:=TFloatType(tokenreadenum(sizeof(TFloatType)));
 
-            disabledircache:=boolean(tokenreadbyte);
+            DisableDirCache:=boolean(tokenreadbyte);
 
-            tlsmodel:=TTLSModel(tokenreadenum(sizeof(TTLSModel)));
+            TLSModel:=TTLSModel(tokenreadenum(sizeof(TTLSModel)));
 { TH: Since the field was conditional originally, it was not stored in PPUs.  }
 { While adding ControllerSupport constant, I decided not to store ct_none     }
 { on targets not supporting controllers, but this might be changed here and   }
@@ -3496,20 +3496,20 @@ type
 {$PUSH}
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
             if ControllerSupport then
-             controllertype:=tcontrollertype(tokenreadenum(sizeof(tcontrollertype)))
+             ControllerType:=TControllerType(tokenreadenum(sizeof(TControllerType)))
             else
              ControllerType:=ct_none;
 {$POP}
-            lineendingtype:=TLineEndingType(tokenreadenum(sizeof(TLineEndingType)));
-            whitespacetrimcount:=tokenreadword;
-            whitespacetrimauto:=boolean(tokenreadbyte);
+            LineEndingType:=TLineEndingType(tokenreadenum(sizeof(TLineEndingType)));
+            WhitespaceTrimCount:=tokenreadword;
+            WhitespaceTrimAuto:=boolean(tokenreadbyte);
            endpos:=replaytokenbuf.pos;
            if endpos-startpos<>expected_size then
-             Comment(V_Error,'Wrong size of Settings read-in');
+             Comment(VError,'Wrong size of Settings read-in');
          end;
      end;
 
-    procedure tscannerfile.tokenwritesettings(var asettings : TSettings; var size : asizeint);
+    procedure TScannerFile.tokenwritesettings(var asettings : TSettings; var size : asizeint);
 
     {    This procedure
        needs to be changed whenever
@@ -3518,7 +3518,7 @@ type
        before tests with generics are tested. PM }
 
        var
-         sizepos, startpos, endpos : longword;
+         sizepos, startpos, endpos : LongWord;
       begin
         { WARNING all those fields need to be in the correct
         order otherwise cross_endian PPU reading will fail }
@@ -3528,64 +3528,64 @@ type
         startpos:=recordtokenbuf.pos;
         with asettings do
           begin
-            tokenwritelongint(alignment.procalign);
-            tokenwritelongint(alignment.loopalign);
-            tokenwritelongint(alignment.jumpalign);
-            tokenwritelongint(alignment.jumpalignskipmax);
-            tokenwritelongint(alignment.coalescealign);
-            tokenwritelongint(alignment.coalescealignskipmax);
-            tokenwritelongint(alignment.constalignmin);
-            tokenwritelongint(alignment.constalignmax);
-            tokenwritelongint(alignment.varalignmin);
-            tokenwritelongint(alignment.varalignmax);
-            tokenwritelongint(alignment.localalignmin);
-            tokenwritelongint(alignment.localalignmax);
-            tokenwritelongint(alignment.recordalignmin);
-            tokenwritelongint(alignment.recordalignmax);
-            tokenwritelongint(alignment.maxCrecordalign);
-            tokenwriteset(globalswitches,sizeof(globalswitches));
-            tokenwriteset(targetswitches,sizeof(targetswitches));
-            tokenwriteset(moduleswitches,sizeof(moduleswitches));
-            tokenwriteset(localswitches,sizeof(localswitches));
-            tokenwriteset(modeswitches,sizeof(modeswitches));
-            tokenwriteset(optimizerswitches,sizeof(optimizerswitches));
-            tokenwriteset(genwpoptimizerswitches,sizeof(genwpoptimizerswitches));
-            tokenwriteset(dowpoptimizerswitches,sizeof(dowpoptimizerswitches));
-            tokenwriteset(debugswitches,sizeof(debugswitches));
+            tokenwritelongint(alignment.ProcAlign);
+            tokenwritelongint(alignment.LoopAlign);
+            tokenwritelongint(alignment.JumpAlign);
+            tokenwritelongint(alignment.JumpAlignSkipMax);
+            tokenwritelongint(alignment.CoalesceAlign);
+            tokenwritelongint(alignment.CoalesceAlignSkipMax);
+            tokenwritelongint(alignment.ConstAlignMin);
+            tokenwritelongint(alignment.ConstAlignMax);
+            tokenwritelongint(alignment.VarAlignMin);
+            tokenwritelongint(alignment.VarAlignMax);
+            tokenwritelongint(alignment.LocalAlignMin);
+            tokenwritelongint(alignment.LocalAlignMax);
+            tokenwritelongint(alignment.RecordAlignMin);
+            tokenwritelongint(alignment.RecordAlignMax);
+            tokenwritelongint(alignment.MaxCRecordAlign);
+            tokenwriteset(GlobalSwitches,sizeof(GlobalSwitches));
+            tokenwriteset(TargetSwitches,sizeof(TargetSwitches));
+            tokenwriteset(ModuleSwitches,sizeof(ModuleSwitches));
+            tokenwriteset(LocalSwitches,sizeof(LocalSwitches));
+            tokenwriteset(ModeSwitches,sizeof(ModeSwitches));
+            tokenwriteset(OptimizerSwitches,sizeof(OptimizerSwitches));
+            tokenwriteset(GenWPOptimizerSwitches,sizeof(GenWPOptimizerSwitches));
+            tokenwriteset(DoWPOptimizerSwitches,sizeof(DoWPOptimizerSwitches));
+            tokenwriteset(DebugSwitches,sizeof(DebugSwitches));
             { 0: old behaviour for sets <=256 elements
               >0: round to this size }
-            tokenwriteshortint(setalloc);
-            tokenwriteshortint(packenum);
-            tokenwriteshortint(packrecords);
-            tokenwriteshortint(maxfpuregisters);
+            tokenwriteshortint(SetAlloc);
+            tokenwriteshortint(PackEnum);
+            tokenwriteshortint(PackRecords);
+            tokenwriteshortint(MaxFPURegisters);
             tokenwritelongint(verbosity);
 
-            tokenwriteenum(cputype,sizeof(tcputype));
-            tokenwriteenum(optimizecputype,sizeof(tcputype));
-            tokenwriteenum(asmcputype,sizeof(tcputype));
-            tokenwriteenum(fputype,sizeof(tfputype));
-            tokenwriteenum(asmmode,sizeof(tasmmode));
-            tokenwriteenum(interfacetype,sizeof(TInterfaceTypes));
-            tokenwriteenum(defproccall,sizeof(TProcCallOption));
+            tokenwriteenum(CPUType,sizeof(TCPUType));
+            tokenwriteenum(OptimizeCPUType,sizeof(TCPUType));
+            tokenwriteenum(AsmCPUType,sizeof(TCPUType));
+            tokenwriteenum(FPUType,sizeof(TFPUType));
+            tokenwriteenum(AsmMode,sizeof(TAsmMode));
+            tokenwriteenum(InterfaceType,sizeof(TInterfaceTypes));
+            tokenwriteenum(DefProcCall,sizeof(TProcCallOption));
             { tstringencoding is word type,
               thus this should be OK here }
-            tokenwriteword(sourcecodepage);
+            tokenwriteword(SourceCodePage);
 
-            tokenwriteenum(minfpconstprec,sizeof(TFloatType));
+            tokenwriteenum(MinFPConstPrec,sizeof(TFloatType));
 
-            recordtokenbuf.write(byte(disabledircache),1);
+            recordtokenbuf.write(byte(DisableDirCache),1);
 
-            tokenwriteenum(tlsmodel,sizeof(tlsmodel));
+            tokenwriteenum(TLSModel,sizeof(TLSModel));
 
 { TH: See note about controllertype field in tokenreadsettings. }
 {$PUSH}
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
             if ControllerSupport then
-              tokenwriteenum(controllertype,sizeof(tcontrollertype));
+              tokenwriteenum(ControllerType,sizeof(TControllerType));
 {$POP}
-            tokenwriteenum(lineendingtype,sizeof(TLineEndingType));
-            tokenwriteword(whitespacetrimcount);
-            tokenwritebyte(byte(whitespacetrimauto));
+            tokenwriteenum(LineEndingType,sizeof(TLineEndingType));
+            tokenwriteword(WhitespaceTrimCount);
+            tokenwritebyte(byte(WhitespaceTrimAuto));
            endpos:=recordtokenbuf.pos;
            size:=endpos-startpos;
            recordtokenbuf.seek(sizepos);
@@ -3595,17 +3595,17 @@ type
      end;
 
 
-    procedure tscannerfile.recordtoken;
+    procedure TScannerFile.recordtoken;
       var
-        t : ttoken;
-        s : tspecialgenerictoken;
+        t : TToken;
+        s : TSpecialGenericToken;
         len,msgnb,copy_size : asizeint;
-        val : longint;
+        val : LongInt;
         b : byte;
-        pmsg : PMessageStateRecord;
+        PMsg : PMessageStateRecord;
       begin
-        if not assigned(recordtokenbuf) then
-          internalerror(200511176);
+        if not Assigned(recordtokenbuf) then
+          InternalError(200511176);
         t:=_GENERICSPECIALTOKEN;
         { ensure that all fields of settings are up to date }
         CurrentSettings.verbosity:=status.verbosity;
@@ -3624,35 +3624,35 @@ type
             last_settings:=CurrentSettings;
           end;
 
-        if CurrentSettings.pmessage<>last_message then
+        if CurrentSettings.PMessage<>last_message then
           begin
             { use a special token to record it }
             s:=ST_LOADMESSAGES;
             writetoken(t);
             recordtokenbuf.write(s,1);
             msgnb:=0;
-            pmsg:=CurrentSettings.pmessage;
-            while assigned(pmsg) do
+            PMsg:=CurrentSettings.PMessage;
+            while Assigned(PMsg) do
               begin
                 if msgnb=high(asizeint) then
                   { Too many messages }
-                  internalerror(2011090401);
+                  InternalError(2011090401);
                 inc(msgnb);
-                pmsg:=pmsg^.next;
+                PMsg:=PMsg^.next;
               end;
             tokenwritesizeint(msgnb);
-            pmsg:=CurrentSettings.pmessage;
-            while assigned(pmsg) do
+            PMsg:=CurrentSettings.PMessage;
+            while Assigned(PMsg) do
               begin
                 { What about endianess here?}
                 { SB: this is handled by tokenreadlongint }
-                val:=pmsg^.value;
+                val:=PMsg^.value;
                 tokenwritelongint(val);
-                val:=ord(pmsg^.state);
+                val:=ord(PMsg^.state);
                 tokenwritelongint(val);
-                pmsg:=pmsg^.next;
+                PMsg:=PMsg^.next;
               end;
-            last_message:=CurrentSettings.pmessage;
+            last_message:=CurrentSettings.PMessage;
           end;
 
         { file pos changes? }
@@ -3701,7 +3701,7 @@ type
             begin
               tokenwritesizeint(patternw.len);
               if patternw.len>0 then
-                recordtokenbuf.write(patternw.data[0],patternw.len*sizeof(tcompilerwidechar));
+                recordtokenbuf.write(patternw.data[0],patternw.len*sizeof(TCompilerWideChar));
             end;
           _CSTRING:
             begin
@@ -3734,28 +3734,28 @@ type
       end;
 
 
-    procedure tscannerfile.startreplaytokens(buf:tdynamicarray; change_endian:boolean);
+    procedure TScannerFile.startreplaytokens(buf:TDynamicArray; change_endian:boolean);
       begin
-        if not assigned(buf) then
-          internalerror(200511175);
+        if not Assigned(buf) then
+          InternalError(200511175);
 
         { save current scanner state }
-        replaystack:=treplaystack.create(token,idtoken,orgpattern,pattern,
+        replaystack:=TReplayStack.create(token,idtoken,orgpattern,pattern,
           cstringpattern,patternw,CurrentSettings,replaytokenbuf,change_endian_for_replay,
-          pendingstate,status.verbosity,replaystack);
+          PendingState,status.verbosity,replaystack);
 {$ifdef check_inputpointer_limits}
-        if assigned(hidden_inputpointer) then
+        if Assigned(hidden_inputpointer) then
           dec_inputpointer;
 {$else not check_inputpointer_limits}
-        if assigned(inputpointer) then
+        if Assigned(inputpointer) then
           dec(inputpointer);
 {$endif check_inputpointer_limits}
         { install buffer }
         replaytokenbuf:=buf;
 
         { ensure that existing message state records won't be freed }
-        CurrentSettings.pmessage:=nil;
-        pendingstate:=default(TPendingState);
+        CurrentSettings.PMessage:=nil;
+        PendingState:=default(TPendingState);
 
         { Initialize value of change_endian_for_replay variable }
         change_endian_for_replay:=change_endian;
@@ -3766,7 +3766,7 @@ type
       end;
 
 
-    function tscannerfile.readtoken: ttoken;
+    function TScannerFile.readtoken: TToken;
       var
         b,b2 : byte;
       begin
@@ -3774,24 +3774,24 @@ type
         if (b and $80)<>0 then
           begin
             replaytokenbuf.read(b2,1);
-            result:=ttoken(((b and $7f) shl 8) or b2);
+            result:=TToken(((b and $7f) shl 8) or b2);
           end
         else
-          result:=ttoken(b);
+          result:=TToken(b);
       end;
 
 
-    procedure tscannerfile.replaytoken;
+    procedure TScannerFile.replaytoken;
       var
         wlen,mesgnb,copy_size : asizeint;
-        specialtoken : tspecialgenerictoken;
+        specialtoken : TSpecialGenericToken;
         i : byte;
-        pmsg,prevmsg : PMessageStateRecord;
-        msgset : thashset;
+        PMsg,prevmsg : PMessageStateRecord;
+        msgset : THashSet;
         msgfound : boolean;
       begin
-        if not assigned(replaytokenbuf) then
-          internalerror(200511177);
+        if not Assigned(replaytokenbuf) then
+          InternalError(200511177);
         { End of replay buffer? Then load the next char from the file again }
         if replaytokenbuf.pos>=replaytokenbuf.size then
           begin
@@ -3799,27 +3799,27 @@ type
             idtoken:=replaystack.idtoken;
             pattern:=replaystack.pattern;
             orgpattern:=replaystack.orgpattern;
-            copywidestring(replaystack.patternw,patternw);
+            CopyWideString(replaystack.patternw,patternw);
             cstringpattern:=replaystack.cstringpattern;
             replaytokenbuf:=replaystack.tokenbuf;
             change_endian_for_replay:=replaystack.tokenbuf_needs_swapping;
             { restore compiler settings }
             CurrentSettings:=replaystack.settings;
-            pendingstate:=replaystack.pending;
-            if assigned(pendingstate.nextmessagerecord) then
-              FreeLocalVerbosity(pendingstate.nextmessagerecord);
-            recordpendingverbosityfullswitch(replaystack.verbosity);
-            pendingstate.nextmessagerecord:=CurrentSettings.pmessage;
-            CurrentSettings.pmessage:=nil;
+            PendingState:=replaystack.pending;
+            if Assigned(PendingState.NextMessageRecord) then
+              FreeLocalVerbosity(PendingState.NextMessageRecord);
+            RecordPendingVerbosityFullSwitch(replaystack.verbosity);
+            PendingState.NextMessageRecord:=CurrentSettings.PMessage;
+            CurrentSettings.PMessage:=nil;
             popreplaystack;
 {$ifdef check_inputpointer_limits}
-            if assigned(hidden_inputpointer) then
+            if Assigned(hidden_inputpointer) then
               begin
                 c:=get_inputpointer_char;
                 inc_inputpointer;
               end;
 {$else not check_inputpointer_limits}
-            if assigned(inputpointer) then
+            if Assigned(inputpointer) then
               begin
                 c:=inputpointer^;
                 inc(inputpointer);
@@ -3839,9 +3839,9 @@ type
             _CWSTRING :
               begin
                 wlen:=tokenreadsizeint;
-                setlengthwidestring(patternw,wlen);
+                SetLengthWideString(patternw,wlen);
                 if wlen>0 then
-                  replaytokenbuf.read(patternw.data[0],patternw.len*sizeof(tcompilerwidechar));
+                  replaytokenbuf.read(patternw.data[0],patternw.len*sizeof(TCompilerWideChar));
                 orgpattern:='';
                 pattern:='';
                 cstringpattern:='';
@@ -3851,7 +3851,7 @@ type
                 wlen:=tokenreadsizeint;
                 if wlen>0 then
                   begin
-                    setlength(cstringpattern,wlen);
+                    SetLength(cstringpattern,wlen);
                     replaytokenbuf.read(cstringpattern[1],wlen);
                   end
                 else
@@ -3897,46 +3897,46 @@ type
                           settings. Their saved text defaults cannot override
                           the compiler invocation's String/Char/PChar model. }
                         HandleModeSwitches(m_default_ansistring,false);
-                        recordpendingverbosityfullswitch(CurrentSettings.verbosity);
+                        RecordPendingVerbosityFullSwitch(CurrentSettings.verbosity);
                       end;
                     ST_LOADMESSAGES:
                       begin
                         { free current and pending messages }
-                        FreeLocalVerbosity(CurrentSettings.pmessage);
-                        FreeLocalVerbosity(pendingstate.nextmessagerecord);
+                        FreeLocalVerbosity(CurrentSettings.PMessage);
+                        FreeLocalVerbosity(PendingState.NextMessageRecord);
                         { the message settings are stored from newest to oldest
                           change for the whole stack, so we only want to apply
                           the newest changes for each message type }
                         mesgnb:=tokenreadsizeint;
-                        msgset:=thashset.create(min(mesgnb,10),false,false);
+                        msgset:=THashSet.create(min(mesgnb,10),false,false);
                         prevmsg:=nil;
-                        pmsg:=nil;
+                        PMsg:=nil;
                         for i:=1 to mesgnb do
                           begin
-                            if not assigned(pmsg) then
+                            if not Assigned(PMsg) then
                               begin
-                                new(pmsg);
+                                new(PMsg);
                                 {$IFDEF DEBUG_MESSAGESTATE}
                                 if CurrentModule=nil then
-                                  Internalerror(2026030704);
-                                pmsg^.owner:=CurrentModule;
+                                  InternalError(2026030704);
+                                PMsg^.owner:=CurrentModule;
                                 {$ENDIF}
                               end;
-                            pmsg^.value:=tokenreadlongint;
-                            pmsg^.state:=TMsgState(tokenreadlongint);
-                            pmsg^.next:=nil;
+                            PMsg^.value:=tokenreadlongint;
+                            PMsg^.state:=TMsgState(tokenreadlongint);
+                            PMsg^.next:=nil;
                             msgfound:=false;
-                            if assigned(msgset.findoradd(@pmsg^.value,sizeof(pmsg^.value),msgfound)) and msgfound then
+                            if Assigned(msgset.findoradd(@PMsg^.value,sizeof(PMsg^.value),msgfound)) and msgfound then
                               continue;
                             if i=1 then
-                              pendingstate.nextmessagerecord:=pmsg
+                              PendingState.NextMessageRecord:=PMsg
                             else
-                              prevmsg^.next:=pmsg;
-                            prevmsg:=pmsg;
-                            pmsg:=nil;
+                              prevmsg^.next:=PMsg;
+                            prevmsg:=PMsg;
+                            PMsg:=nil;
                           end;
-                        if assigned(pmsg) then
-                          dispose(pmsg);
+                        if Assigned(PMsg) then
+                          dispose(PMsg);
                         msgset.free;
                         msgset := nil;
                       end;
@@ -3966,7 +3966,7 @@ type
       end;
 
 
-    procedure tscannerfile.addfile(hp:tinputfile);
+    procedure TScannerFile.addfile(hp:TInputFile);
       begin
         saveinputfile;
         { add to list }
@@ -3977,7 +3977,7 @@ type
       end;
 
 
-    procedure tscannerfile.reload;
+    procedure TScannerFile.reload;
       var
         wasmacro: Boolean;
       begin
@@ -3986,18 +3986,18 @@ type
            { when nothing more to read then leave immediately, so we
              don't change the current_filepos and leave it point to the last
              char }
-           if (c=#26) and (not assigned(next)) then
+           if (c=#26) and (not Assigned(next)) then
             exit;
            repeat
            { still more to read?, then change the #0 to a space so its seen
              as a separator, this can't be used for macro's which can change
              the place of the #0 in the buffer with tempopen }
-             if (c=#0) and (bufsize>0) and
-                not(inputfile.is_macro) and
+             if (c=#0) and (BufSize>0) and
+                not(inputfile.IsMacro) and
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-                (hidden_inputpointer-hidden_inputbuffer<bufsize) then
+                (hidden_inputpointer-hidden_inputbuffer<BufSize) then
 {$else not CHECK_INPUTPOINTER_LIMITS}
-                (inputpointer-inputbuffer<bufsize) then
+                (inputpointer-inputbuffer<BufSize) then
 {$endif CHECK_INPUTPOINTER_LIMITS}
               begin
                 c:=' ';
@@ -4009,9 +4009,9 @@ type
                 exit;
               end;
            { can we read more from this file ? }
-             if (c<>#26) and (not endoffile) then
+             if (c<>#26) and (not EndOfFile) then
               begin
-                readbuf;
+                ReadBuf;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
                 hidden_inputpointer:=PAnsiChar(buf);
                 hidden_inputbuffer:=PAnsiChar(buf);
@@ -4019,14 +4019,14 @@ type
                 inputpointer:=PAnsiChar(buf);
                 inputbuffer:=PAnsiChar(buf);
 {$endif CHECK_INPUTPOINTER_LIMITS}
-                inputstart:=bufstart;
+                inputstart:=BufStart;
               { first line? }
                 if line_no=0 then
                  begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
                    c:=get_inputpointer_char;
                    { eat utf-8 signature? }
-                   if (bufsize>2) and
+                   if (BufSize>2) and
                      (ord(get_inputpointer_char)=$ef) and
                      (ord(get_inputpointer_char(1))=$bb) and
                      (ord(get_inputpointer_char(2))=$bf) then
@@ -4034,7 +4034,7 @@ type
 {$else not CHECK_INPUTPOINTER_LIMITS}
                    c:=inputpointer^;
                    { eat utf-8 signature? }
-                   if (bufsize>2) and
+                   if (BufSize>2) and
                      (ord(inputpointer^)=$ef) and
                      (ord((inputpointer+1)^)=$bb) and
                      (ord((inputpointer+2)^)=$bf) then
@@ -4044,7 +4044,7 @@ type
                           inside another file that wasn't encoded as UTF-8
                           already (we don't support {$codepage xxx} switches in
                           the middle of a file either) *)
-                       if (CurrentSettings.sourcecodepage<>CP_UTF8) and
+                       if (CurrentSettings.SourceCodePage<>CP_UTF8) and
                           not CurrentModule.in_global then
                          Message(scanner_f_illegal_utf8_bom);
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
@@ -4053,13 +4053,13 @@ type
                        inc(inputpointer,3);
 {$endif CHECK_INPUTPOINTER_LIMITS}
                        message(scan_c_switching_to_utf8);
-                       CurrentSettings.sourcecodepage:=CP_UTF8;
-                       exclude(CurrentSettings.moduleswitches,cs_system_codepage);
-                       include(CurrentSettings.moduleswitches,cs_explicit_codepage);
+                       CurrentSettings.SourceCodePage:=CP_UTF8;
+                       exclude(CurrentSettings.ModuleSwitches,cs_system_codepage);
+                       include(CurrentSettings.ModuleSwitches,cs_explicit_codepage);
                      end;
 
                    line_no:=1;
-                   if cs_asm_source in CurrentSettings.globalswitches then
+                   if cs_asm_source in CurrentSettings.GlobalSwitches then
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
                      inputfile.setline(line_no,inputstart+hidden_inputpointer-hidden_inputbuffer);
 {$else not CHECK_INPUTPOINTER_LIMITS}
@@ -4069,13 +4069,13 @@ type
               end
              else
               begin
-                wasmacro:=inputfile.is_macro;
+                wasmacro:=inputfile.IsMacro;
               { load eof position in tokenpos/current_filepos }
                 gettokenpos;
               { close file }
                 closeinputfile;
               { no next module, than EOF }
-                if not assigned(inputfile.next) then
+                if not Assigned(inputfile.next) then
                  begin
                    c:=#26;
                    exit;
@@ -4108,9 +4108,9 @@ type
       end;
 
 
-    procedure tscannerfile.substitutemacro(const macname:string;p:pchar;len,line,fileindex:longint;internally_generated: boolean);
+    procedure TScannerFile.substitutemacro(const macname:string;p:pchar;len,line,fileindex:LongInt;internally_generated: boolean);
       var
-        hp : tinputfile;
+        hp : TInputFile;
       begin
         { save old position }
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
@@ -4121,12 +4121,12 @@ type
         tempcloseinputfile;
       { create macro 'file' }
         { use special name to dispose after !! }
-        hp:=do_openinputfile('_Macro_.'+macname);
+        hp:=Do_OpenInputFile('_Macro_.'+macname);
         addfile(hp);
         with inputfile do
          begin
            inc(macro_nesting_depth);
-           setmacro(p,len);
+           SetMacro(p,len);
          { local buffer }
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
            hidden_inputbuffer:=PAnsiChar(buf);
@@ -4135,9 +4135,9 @@ type
            inputbuffer:=PAnsiChar(buf);
            inputpointer:=PAnsiChar(buf);
 {$endif CHECK_INPUTPOINTER_LIMITS}
-           inputstart:=bufstart;
-           ref_index:=fileindex;
-           internally_generated_macro:=internally_generated;
+           inputstart:=BufStart;
+           RefIndex:=fileindex;
+           InternallyGeneratedMacro:=internally_generated;
          end;
       { reset line }
         line_no:=line;
@@ -4155,7 +4155,7 @@ type
       end;
 
 
-    procedure tscannerfile.do_gettokenpos(out tokenpos: longint; out filepos: TFilePosInfo);
+    procedure TScannerFile.do_gettokenpos(out tokenpos: LongInt; out filepos: TFilePosInfo);
       begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         tokenpos:=inputstart+(hidden_inputpointer-hidden_inputbuffer);
@@ -4164,12 +4164,12 @@ type
 {$endif CHECK_INPUTPOINTER_LIMITS}
         filepos.line:=line_no;
         filepos.column:=tokenpos-lastlinepos;
-        filepos.fileindex:=inputfile.ref_index;
-        filepos.moduleindex:=CurrentModule.moduleid;
+        filepos.fileindex:=inputfile.RefIndex;
+        filepos.moduleindex:=CurrentModule.ModuleID;
       end;
 
 
-    procedure tscannerfile.gettokenpos;
+    procedure TScannerFile.gettokenpos;
     { load the values of tokenpos and lasttokenpos }
       begin
         do_gettokenpos(lasttokenpos,CurrentTokenPos);
@@ -4177,13 +4177,13 @@ type
       end;
 
 
-    procedure tscannerfile.cachenexttokenpos;
+    procedure TScannerFile.cachenexttokenpos;
       begin
         do_gettokenpos(nexttokenpos,next_filepos);
       end;
 
 
-    procedure tscannerfile.setnexttoken;
+    procedure TScannerFile.setnexttoken;
       begin
         token:=nexttoken;
         nexttoken:=NOTOKEN;
@@ -4194,7 +4194,7 @@ type
       end;
 
 
-    procedure tscannerfile.savetokenpos;
+    procedure TScannerFile.savetokenpos;
       begin
         oldlasttokenpos:=lasttokenpos;
         oldcurrent_filepos:=CurrentFilePos;
@@ -4202,7 +4202,7 @@ type
       end;
 
 
-    procedure tscannerfile.restoretokenpos;
+    procedure TScannerFile.restoretokenpos;
       begin
         lasttokenpos:=oldlasttokenpos;
         CurrentFilePos:=oldcurrent_filepos;
@@ -4210,9 +4210,9 @@ type
       end;
 
 
-    procedure tscannerfile.inc_comment_level;
+    procedure TScannerFile.inc_comment_level;
       begin
-         if (m_nested_comment in CurrentSettings.modeswitches) then
+         if (m_nested_comment in CurrentSettings.ModeSwitches) then
            inc(comment_level)
          else
            comment_level:=1;
@@ -4220,31 +4220,31 @@ type
           begin
              savetokenpos;
              gettokenpos; { update for warning }
-             Message1(scan_w_comment_level,tostr(comment_level));
+             Message1(scan_w_comment_level,ToStr(comment_level));
              restoretokenpos;
           end;
       end;
 
 
-    procedure tscannerfile.dec_comment_level;
+    procedure TScannerFile.dec_comment_level;
       begin
-         if (m_nested_comment in CurrentSettings.modeswitches) then
+         if (m_nested_comment in CurrentSettings.ModeSwitches) then
            dec(comment_level)
          else
            comment_level:=0;
       end;
 
 
-    procedure tscannerfile.linebreak;
+    procedure TScannerFile.linebreak;
       var
          cur : char;
       begin
         with inputfile do
          begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-           if (byte(get_inputpointer_char)=0) and not(endoffile) then
+           if (byte(get_inputpointer_char)=0) and not(EndOfFile) then
 {$else not CHECK_INPUTPOINTER_LIMITS}
-           if (byte(inputpointer^)=0) and not(endoffile) then
+           if (byte(inputpointer^)=0) and not(EndOfFile) then
 {$endif CHECK_INPUTPOINTER_LIMITS}
              begin
                cur:=c;
@@ -4277,36 +4277,36 @@ type
 {$endif CHECK_INPUTPOINTER_LIMITS}
            inc(line_no);
            { update linebuffer }
-           if cs_asm_source in CurrentSettings.globalswitches then
+           if cs_asm_source in CurrentSettings.GlobalSwitches then
              inputfile.setline(line_no,lastlinepos);
            { update for status and call the show status routine,
              but don't touch current_filepos ! }
            savetokenpos;
            gettokenpos; { update for v_status }
-           inc(status.compiledlines);
+           inc(status.CompiledLines);
            ShowStatus;
            restoretokenpos;
          end;
       end;
 
 
-    procedure tscannerfile.illegal_char(ch:char);
+    procedure TScannerFile.illegal_char(ch:char);
       var
         s : string;
       begin
         if ch in [#32..#255] then
           s:=''''+ch+''''
         else
-          s:='#'+tostr(ord(ch));
-        Message2(scan_f_illegal_char,s,'$'+hexstr(ord(ch),2));
+          s:='#'+ToStr(ord(ch));
+        Message2(scan_f_illegal_char,s,'$'+HexStr(ord(ch),2));
       end;
 
 
-    procedure tscannerfile.end_of_file;
+    procedure TScannerFile.end_of_file;
       begin
         checkpreprocstack;
         if in_multiline_string then
-          Message2(scan_f_unterminated_multiline_string, tostr(multiline_start_line), tostr(multiline_start_column))
+          Message2(scan_f_unterminated_multiline_string, ToStr(multiline_start_line), ToStr(multiline_start_column))
         else
           Message(scan_f_end_of_file);
       end;
@@ -4315,24 +4315,24 @@ type
            IF Conditional Handling
   -------------------------------------------}
 
-    procedure tscannerfile.checkpreprocstack;
+    procedure TScannerFile.checkpreprocstack;
       begin
       { check for missing ifdefs }
-        while assigned(preprocstack) do
+        while Assigned(preprocstack) do
          begin
            Message4(scan_e_endif_expected,preprocstring[preprocstack.typ],preprocstack.name,
-             CurrentModule.sourcefiles.get_file_name(preprocstack.fileindex),
-             tostr(preprocstack.line_nb));
+             CurrentModule.SourceFiles.Get_File_Name(preprocstack.fileindex),
+             ToStr(preprocstack.line_nb));
            poppreprocstack;
          end;
       end;
 
 
-    procedure tscannerfile.poppreprocstack;
+    procedure TScannerFile.poppreprocstack;
       var
-        hp : tpreprocstack;
+        hp : TPreProcStack;
       begin
-        if assigned(preprocstack) then
+        if Assigned(preprocstack) then
          begin
            Message1(scan_c_endif_found,preprocstack.name);
            hp:=preprocstack.next;
@@ -4344,7 +4344,7 @@ type
       end;
 
 
-    procedure tscannerfile.ifpreprocstack(atyp:preproctyp;compile_time_predicate:tcompile_time_predicate;messid:longint);
+    procedure TScannerFile.ifpreprocstack(atyp:TPreProcType;compile_time_predicate:TCompileTimePredicate;messid:LongInt);
       var
         condition: Boolean;
         valuedescr: String;
@@ -4356,7 +4356,7 @@ type
             condition:= false;
             valuedescr:= '';
           end;
-        preprocstack:=tpreprocstack.create(atyp, condition, preprocstack);
+        preprocstack:=TPreProcStack.create(atyp, condition, preprocstack);
         preprocstack.name:=valuedescr;
         preprocstack.line_nb:=line_no;
         preprocstack.fileindex:=CurrentFilePos.fileindex;
@@ -4366,15 +4366,15 @@ type
           Message2(messid,preprocstack.name,'rejected');
       end;
 
-    procedure tscannerfile.elsepreprocstack;
+    procedure TScannerFile.elsepreprocstack;
       begin
-        if assigned(preprocstack) and
+        if Assigned(preprocstack) and
            (preprocstack.typ<>pp_else) then
          begin
            if (preprocstack.typ=pp_elseif) then
              preprocstack.accept:=false
            else
-             if (not(assigned(preprocstack.next)) or (preprocstack.next.accept)) then
+             if (not(Assigned(preprocstack.next)) or (preprocstack.next.accept)) then
                preprocstack.accept:=not preprocstack.accept;
            preprocstack.iftyp:=preprocstack.typ;
            preprocstack.typ:=pp_else;
@@ -4389,11 +4389,11 @@ type
          Message(scan_e_endif_without_if);
       end;
 
-    procedure tscannerfile.elseifpreprocstack(compile_time_predicate:tcompile_time_predicate);
+    procedure TScannerFile.elseifpreprocstack(compile_time_predicate:TCompileTimePredicate);
       var
         valuedescr: String;
       begin
-        if assigned(preprocstack) and
+        if Assigned(preprocstack) and
            (preprocstack.typ in [pp_if,pp_ifdef,pp_ifndef,pp_elseif]) then
          begin
            { when the branch is accepted we use pp_elseif so we know that
@@ -4406,7 +4406,7 @@ type
                  preprocstack.accept:=false;
                  preprocstack.typ:=pp_elseif;
                end
-           else if (not(assigned(preprocstack.next)) or (preprocstack.next.accept))
+           else if (not(Assigned(preprocstack.next)) or (preprocstack.next.accept))
                    and compile_time_predicate(valuedescr) then
                begin
                  preprocstack.name:=valuedescr;
@@ -4426,11 +4426,11 @@ type
       end;
 
 
-    procedure tscannerfile.popreplaystack;
+    procedure TScannerFile.popreplaystack;
       var
-        hp : treplaystack;
+        hp : TReplayStack;
       begin
-        if assigned(replaystack) then
+        if Assigned(replaystack) then
          begin
            hp:=replaystack.next;
            replaystack.free;
@@ -4439,20 +4439,20 @@ type
       end;
 
 
-    function tscannerfile.replay_stack_depth:longint;
+    function TScannerFile.replay_stack_depth:LongInt;
       var
-        tmp: treplaystack;
+        tmp: TReplayStack;
       begin
         result:=0;
         tmp:=replaystack;
-        while assigned(tmp) do
+        while Assigned(tmp) do
           begin
             inc(result);
             tmp:=tmp.next;
           end;
       end;
 
-    procedure tscannerfile.handleconditional(p:tdirectiveitem);
+    procedure TScannerFile.handleconditional(p:TDirectiveItem);
       begin
         savetokenpos;
         repeat
@@ -4468,11 +4468,11 @@ type
              Message(scan_c_skipping_until);
              repeat
                CurrentScanner.skipuntildirective;
-               if not (m_mac in CurrentSettings.modeswitches) then
-                 p:=tdirectiveitem(turbo_scannerdirectives.Find(CurrentScanner.readid))
+               if not (m_mac in CurrentSettings.ModeSwitches) then
+                 p:=TDirectiveItem(turbo_scannerdirectives.Find(CurrentScanner.readid))
                else
-                 p:=tdirectiveitem(mac_scannerdirectives.Find(CurrentScanner.readid));
-             until assigned(p) and (p.is_conditional);
+                 p:=TDirectiveItem(mac_scannerdirectives.Find(CurrentScanner.readid));
+             until Assigned(p) and (p.is_conditional);
              CurrentScanner.gettokenpos;
            end;
         until false;
@@ -4480,9 +4480,9 @@ type
       end;
 
 
-    procedure tscannerfile.handledirectives;
+    procedure TScannerFile.handledirectives;
       var
-         t  : tdirectiveitem;
+         t  : TDirectiveItem;
          hs : string;
       begin
          gettokenpos;
@@ -4495,13 +4495,13 @@ type
              exit;
            end;
 {$ifdef PREPROCWRITE}
-         if parapreprocess then
+         if ParaPreprocess then
           begin
-            if not (m_mac in CurrentSettings.modeswitches) then
-              t:=tdirectiveitem(turbo_scannerdirectives.Find(hs))
+            if not (m_mac in CurrentSettings.ModeSwitches) then
+              t:=TDirectiveItem(turbo_scannerdirectives.Find(hs))
             else
-              t:=tdirectiveitem(mac_scannerdirectives.Find(hs));
-            if assigned(t) and not(t.is_conditional) then
+              t:=TDirectiveItem(mac_scannerdirectives.Find(hs));
+            if Assigned(t) and not(t.is_conditional) then
              begin
                preprocfile.AddSpace;
                preprocfile.Add('{$'+hs+CurrentScanner.readcomment+'}');
@@ -4532,7 +4532,7 @@ type
                hs:=CurrentScanner.readid;
                if (hs='') then
                 begin
-                  if (c='$') and (m_fpc in CurrentSettings.modeswitches) then
+                  if (c='$') and (m_fpc in CurrentSettings.ModeSwitches) then
                    begin
                      CurrentScanner.readchar;  { skip $ }
                      hs:=CurrentScanner.readid;
@@ -4547,12 +4547,12 @@ type
          { directives may follow switches after a , }
          if hs<>'' then
           begin
-            if not (m_mac in CurrentSettings.modeswitches) then
-              t:=tdirectiveitem(turbo_scannerdirectives.Find(hs))
+            if not (m_mac in CurrentSettings.ModeSwitches) then
+              t:=TDirectiveItem(turbo_scannerdirectives.Find(hs))
             else
-              t:=tdirectiveitem(mac_scannerdirectives.Find(hs));
+              t:=TDirectiveItem(mac_scannerdirectives.Find(hs));
 
-            if assigned(t) then
+            if Assigned(t) then
              begin
                if t.is_conditional then
                 handleconditional(t)
@@ -4576,7 +4576,7 @@ type
       end;
 
 
-    procedure tscannerfile.readchar;
+    procedure TScannerFile.readchar;
       begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         c:=get_inputpointer_char;
@@ -4594,9 +4594,9 @@ type
       end;
 
 
-    procedure tscannerfile.readstring;
+    procedure TScannerFile.readstring;
       var
-        i : longint;
+        i : LongInt;
         err : boolean;
       begin
         err:=false;
@@ -4637,7 +4637,7 @@ type
               end;
             #0 :
               reload;
-            else if inputfile.internally_generated_macro and
+            else if inputfile.InternallyGeneratedMacro and
                     (c in [internal_macro_escape_begin..internal_macro_escape_end]) then
               begin
                 if i<255 then
@@ -4671,10 +4671,10 @@ type
       end;
 
 
-    procedure tscannerfile.readnumber;
+    procedure TScannerFile.readnumber;
       var
         base,
-        i  : longint;
+        i  : LongInt;
         firstdigitread: Boolean;
       begin
         case c of
@@ -4710,7 +4710,7 @@ type
               ((base=16) and (c in ['A'..'F','a'..'f'])) or
               ((base=8) and (c in ['0'..'7'])) or
               ((base=2) and (c in ['0'..'1'])) or
-              ((m_underscoreisseparator in CurrentSettings.modeswitches) and firstdigitread and (c='_')) do
+              ((m_underscoreisseparator in CurrentSettings.ModeSwitches) and firstdigitread and (c='_')) do
          begin
            if (i<255) and (c<>'_') then
             begin
@@ -4724,16 +4724,16 @@ type
       end;
 
 
-    function tscannerfile.readid:string;
+    function TScannerFile.readid:string;
       begin
         readstring;
         readid:=pattern;
       end;
 
 
-    function tscannerfile.readval:longint;
+    function TScannerFile.readval:LongInt;
       var
-        l : longint;
+        l : LongInt;
         w : integer;
       begin
         readnumber;
@@ -4742,7 +4742,7 @@ type
       end;
 
 
-    function tscannerfile.readval64:int64;
+    function TScannerFile.readval64:int64;
       var
         l : int64;
         w : integer;
@@ -4753,9 +4753,9 @@ type
       end;
 
 
-    function tscannerfile.readcomment(include_special_char: boolean):ShortString;
+    function TScannerFile.readcomment(include_special_char: boolean):ShortString;
       var
-        i : longint;
+        i : LongInt;
       begin
         i:=0;
         repeat
@@ -4844,9 +4844,9 @@ type
       end;
 
 
-    function tscannerfile.readquotedstring:ShortString;
+    function TScannerFile.readquotedstring:ShortString;
       var
-        i : longint;
+        i : LongInt;
         msgwritten : boolean;
       begin
         i:=0;
@@ -4855,7 +4855,7 @@ type
           begin
             had_multiline_string:=in_multiline_string;
             in_multiline_string:=(c='`');
-            if in_multiline_string and (not (m_multiline_strings in CurrentSettings.modeswitches)) then
+            if in_multiline_string and (not (m_multiline_strings in CurrentSettings.ModeSwitches)) then
               begin
                 result[0]:=chr(0);
                 Illegal_Char(c);
@@ -4870,8 +4870,8 @@ type
                     begin
                       if had_multiline_string then
                         Message2(scan_f_unterminated_multiline_string,
-                                 tostr(multiline_start_line),
-                                 tostr(multiline_start_column))
+                                 ToStr(multiline_start_line),
+                                 ToStr(multiline_start_column))
                       else
                         Message(scan_f_string_exceeds_line);
                     end;
@@ -4909,9 +4909,9 @@ type
       end;
 
 
-    function tscannerfile.readlongcomment(include_special_char: boolean):RawByteString;
+    function TScannerFile.readlongcomment(include_special_char: boolean):RawByteString;
       var
-        i : longint;
+        i : LongInt;
 
         procedure addchar(char: AnsiChar = #0);
         begin
@@ -4985,13 +4985,13 @@ type
           readchar;
         until false;
         SetLength(readlongcomment, i);
-        SetCodePage(readlongcomment, CurrentSettings.sourcecodepage, False);
+        SetCodePage(readlongcomment, CurrentSettings.SourceCodePage, False);
       end;
 
 
-    function tscannerfile.readlongquotedstring:RawByteString;
+    function TScannerFile.readlongquotedstring:RawByteString;
       var
-        i : longint;
+        i : LongInt;
         msgwritten : boolean;
 
         procedure addchar;
@@ -5003,7 +5003,7 @@ type
         end;
       begin
         i:=0;
-        Setlength(readlongquotedstring, 256);
+        SetLength(readlongquotedstring, 256);
         msgwritten:=false;
         if (c='''') then
           begin
@@ -5025,11 +5025,11 @@ type
             until false;
           end;
         SetLength(readlongquotedstring, i);
-        SetCodePage(readlongquotedstring, CurrentSettings.sourcecodepage, False);
+        SetCodePage(readlongquotedstring, CurrentSettings.SourceCodePage, False);
       end;
 
 
-    function tscannerfile.readstate:char;
+    function TScannerFile.readstate:char;
       var
         state : char;
       begin
@@ -5052,7 +5052,7 @@ type
       end;
 
 
-    function tscannerfile.readoptionalstate(fallback:char):char;
+    function TScannerFile.readoptionalstate(fallback:char):char;
       var
         state : char;
       begin
@@ -5083,7 +5083,7 @@ type
       end;
 
 
-    function tscannerfile.readstatedefault:char;
+    function TScannerFile.readstatedefault:char;
       var
         state : char;
       begin
@@ -5109,14 +5109,14 @@ type
       end;
 
 
-    procedure tscannerfile.skipspace;
+    procedure TScannerFile.skipspace;
       begin
         repeat
           case c of
             #26 :
               begin
                 reload;
-                if (c=#26) and not assigned(inputfile.next) then
+                if (c=#26) and not Assigned(inputfile.next) then
                   break;
                 continue;
               end;
@@ -5133,9 +5133,9 @@ type
       end;
 
 
-    procedure tscannerfile.skipuntildirective;
+    procedure TScannerFile.skipuntildirective;
       var
-        found : longint;
+        found : LongInt;
         next_char_loaded : boolean;
       begin
          found:=0;
@@ -5148,7 +5148,7 @@ type
              #26 :
                begin
                  reload;
-                 if (c=#26) and not assigned(inputfile.next) then
+                 if (c=#26) and not Assigned(inputfile.next) then
                    end_of_file;
                  continue;
                end;
@@ -5199,7 +5199,7 @@ type
                  begin
                    had_multiline_string:=in_multiline_string;
                    in_multiline_string:=(c='`');
-                   if in_multiline_string and (not (m_multiline_strings in CurrentSettings.modeswitches)) then
+                   if in_multiline_string and (not (m_multiline_strings in CurrentSettings.ModeSwitches)) then
                      Illegal_Char(c);
                    repeat
                      readchar;
@@ -5285,7 +5285,7 @@ type
                              Comment Handling
 ****************************************************************************}
 
-    procedure tscannerfile.skipcomment(read_first_char:boolean);
+    procedure TScannerFile.skipcomment(read_first_char:boolean);
       begin
         current_commentstyle:=comment_tp;
         if read_first_char then
@@ -5304,7 +5304,7 @@ type
               dec_comment_level;
             '*' :
               { in iso mode, comments opened by a curly bracket can be closed by asterisk, round bracket }
-              if m_iso in CurrentSettings.modeswitches then
+              if m_iso in CurrentSettings.ModeSwitches then
                 begin
                   readchar;
                   if c=')' then
@@ -5317,7 +5317,7 @@ type
             #26 :
               begin
                 reload;
-                if (c=#26) and not assigned(inputfile.next) then
+                if (c=#26) and not Assigned(inputfile.next) then
                   end_of_file;
                 continue;
               end;
@@ -5328,7 +5328,7 @@ type
       end;
 
 
-    procedure tscannerfile.skipdelphicomment;
+    procedure TScannerFile.skipdelphicomment;
       begin
         current_commentstyle:=comment_delphi;
         inc_comment_level;
@@ -5344,9 +5344,9 @@ type
       end;
 
 
-    procedure tscannerfile.skipoldtpcomment(read_first_char:boolean);
+    procedure TScannerFile.skipoldtpcomment(read_first_char:boolean);
       var
-        found : longint;
+        found : LongInt;
       begin
         current_commentstyle:=comment_oldtp;
         inc_comment_level;
@@ -5366,7 +5366,7 @@ type
                #26 :
                  begin
                    reload;
-                   if (c=#26) and not assigned(inputfile.next) then
+                   if (c=#26) and not Assigned(inputfile.next) then
                      end_of_file;
                    continue;
                  end;
@@ -5403,7 +5403,7 @@ type
                  end;
               '}' :
                 { in iso mode, comments opened by asterisk, round bracket can be closed by a curly bracket }
-                if m_iso in CurrentSettings.modeswitches then
+                if m_iso in CurrentSettings.ModeSwitches then
                   begin
                     dec_comment_level;
                     if comment_level=0 then
@@ -5430,28 +5430,28 @@ type
         current_commentstyle:=comment_none;
       end;
 
-    procedure tscannerfile.postprocessutf8multiline(len,quote_pos,quote_count : integer);
+    procedure TScannerFile.postprocessutf8multiline(len,quote_pos,quote_count : integer);
     var
       malformed : boolean;
       start, i,stripcol,col,newlen : integer;
       crlf : boolean;
-      tmp : tcompilerwidestring;
-      ch : tcompilerwidechar;
+      tmp : TCompilerWideString;
+      ch : TCompilerWideChar;
     begin
       stripcol:=quote_pos;
       malformed:=false;
       newlen:=0;
       col:=0;
       start:=1;
-      initwidestring(tmp);
+      InitWideString(tmp);
       { Strip initial cr/lf }
-      Case CurrentSettings.lineendingtype of
+      Case CurrentSettings.LineEndingType of
         le_cr,le_lf : inc(start);
         le_crlf : inc(start,2);
         le_source :
           begin
           inc(start);
-          if (getcharwidestring(patternw,1)=13) and (getcharwidestring(patternw,start)=10) then
+          if (GetCharWideString(patternw,1)=13) and (GetCharWideString(patternw,start)=10) then
             inc(start);
           end;
         le_platform : inc(start,length(TargetInfo.newline));
@@ -5460,12 +5460,12 @@ type
       dec(len,quote_count-1);
       for I:=Start to len do
         begin
-        ch:=getcharwidestring(patternw,i);
+        ch:=GetCharWideString(patternw,i);
         inc(col);
         if (col>stripcol) or (ch=10) or (ch=13) then
           begin
           inc(newlen);
-          concatwidestringchar(patternw,ch);
+          ConcatWideStringChar(patternw,ch);
           end
         else
           begin
@@ -5476,9 +5476,9 @@ type
               begin
               malformed:=true;
               message3(scan_e_improperly_indented_multiline_string,
-                      tostr(stripcol),
-                      tostr(multiline_start_line),
-                      tostr(multiline_start_column));
+                      ToStr(stripcol),
+                      ToStr(multiline_start_line),
+                      ToStr(multiline_start_column));
               end;
             end;
           end;
@@ -5486,44 +5486,44 @@ type
           col:=0;
         end;
       // remove last CR/LF
-      ch:=getcharwidestring(tmp,newlen);
+      ch:=GetCharWideString(tmp,newlen);
       if (ch=10) or (ch=13) then
         begin
-        Case CurrentSettings.lineendingtype of
+        Case CurrentSettings.LineEndingType of
           le_cr,le_lf : dec(newlen);
           le_crlf : dec(newlen,2);
           le_platform : dec(newlen,length(TargetInfo.newline));
           le_source :
             begin
-            crlf:=getcharwidestring(tmp,newlen)=10;
+            crlf:=GetCharWideString(tmp,newlen)=10;
             dec(newlen);
-            if crlf and (newLen>0) and (getcharwidestring(tmp,newlen)=13) then
+            if crlf and (newLen>0) and (GetCharWideString(tmp,newlen)=13) then
               dec(newlen);
             end;
         end;
         end;
       tmp.len:=newLen;
-      donewidestring(patternw);
+      DoneWideString(patternw);
       patternw:=tmp;
     end;
 
-    procedure tscannerfile.postprocessmultiline(len,quote_pos,quote_count : integer);
+    procedure TScannerFile.postprocessmultiline(len,quote_pos,quote_count : integer);
 
     var
       malformed : boolean;
       start, i,stripcol,col,newlen : integer;
       crlf : boolean;
-      tmp : ansistring;
+      tmp : AnsiString;
       ch : ansichar;
     begin
       stripcol:=quote_pos;
       malformed:=false;
       newlen:=0;
-      setlength(tmp,len-quote_count+1);
+      SetLength(tmp,len-quote_count+1);
       col:=0;
       start:=1;
       { Strip initial cr/lf }
-      Case CurrentSettings.lineendingtype of
+      Case CurrentSettings.LineEndingType of
         le_cr,le_lf : inc(start);
         le_crlf : inc(start,2);
         le_platform : inc(start,length(TargetInfo.newline));
@@ -5554,9 +5554,9 @@ type
               begin
               malformed:=true;
               message3(scan_e_improperly_indented_multiline_string,
-                      tostr(stripcol),
-                      tostr(multiline_start_line),
-                      tostr(multiline_start_column));
+                      ToStr(stripcol),
+                      ToStr(multiline_start_line),
+                      ToStr(multiline_start_column));
               end;
             end;
           end;
@@ -5566,7 +5566,7 @@ type
       // remove last CR/LF
       if tmp[newlen] in [#10,#13] then
         begin
-        Case CurrentSettings.lineendingtype of
+        Case CurrentSettings.LineEndingType of
           le_cr,le_lf : dec(newlen);
           le_crlf : dec(newlen,2);
           le_platform : dec(newlen,length(TargetInfo.newline));
@@ -5585,14 +5585,14 @@ type
     end;
 
 
-    function tscannerfile.readstringconstant : boolean;
+    function TScannerFile.readstringconstant : boolean;
 
     type
-       tQuoteStyle = (qsNone,qsBacktick,qsMultiQuote);
+       TQuoteStyle = (qsNone,qsBacktick,qsMultiQuote);
 
     var
       trimcount,m,code,len,quote_count,init_quote_count,whitespace_count,quote_col : integer;
-      style : tQuoteStyle;
+      style : TQuoteStyle;
       iswidestring : boolean;
       asciinr : string[33];
       last_c : char;
@@ -5622,7 +5622,7 @@ type
       whitespace_only:=true;
       if in_multiline_string then
         begin
-          if not (m_multiline_strings in CurrentSettings.modeswitches) then
+          if not (m_multiline_strings in CurrentSettings.ModeSwitches) then
             Illegal_Char(c)
           else
             begin
@@ -5637,7 +5637,7 @@ type
        begin
          readchar;
          c:=upcase(c);
-         if (block_type in [bt_type,bt_const_type,bt_var_type]) or
+         if (Block_Type in [bt_type,bt_const_type,bt_var_type]) or
             (lasttoken=_ID) or (lasttoken=_NIL) or (lasttoken=_OPERATOR) or
             (lasttoken=_RKLAMMER) or (lasttoken=_RECKKLAMMER) or (lasttoken=_CARET) then
           begin
@@ -5647,7 +5647,7 @@ type
          else
           begin
             inc(len);
-            setlength(cstringpattern,256);
+            SetLength(cstringpattern,256);
             if c<#64 then
               cstringpattern[len]:=chr(ord(c)+64)
             else
@@ -5711,31 +5711,31 @@ type
                        if not iswidestring then
                         begin
                           if len>0 then
-                            ascii2unicode(@cstringpattern[1],len,CurrentSettings.sourcecodepage,patternw)
+                            ASCII2Unicode(@cstringpattern[1],len,CurrentSettings.SourceCodePage,patternw)
                           else
-                            ascii2unicode(nil,len,CurrentSettings.sourcecodepage,patternw);
+                            ASCII2Unicode(nil,len,CurrentSettings.SourceCodePage,patternw);
                           iswidestring:=true;
                           len:=0;
                         end;
                        if m<=$FFFF then
-                         concatwidestringchar(patternw,tcompilerwidechar(m))
+                         ConcatWideStringChar(patternw,TCompilerWideChar(m))
                        else
                          begin
                            { split into surrogate pair }
                            dec(m,$10000);
-                           concatwidestringchar(patternw,tcompilerwidechar((m shr 10) + $D800));
-                           concatwidestringchar(patternw,tcompilerwidechar((m and $3FF) + $DC00));
+                           ConcatWideStringChar(patternw,TCompilerWideChar((m shr 10) + $D800));
+                           ConcatWideStringChar(patternw,TCompilerWideChar((m and $3FF) + $DC00));
                          end;
                      end
                    else
                      Message(scan_e_illegal_char_const)
                 end
               else if iswidestring then
-                concatwidestringchar(patternw,asciichar2unicode(char(m)))
+                ConcatWideStringChar(patternw,ASCIIChar2Unicode(char(m)))
               else
                 begin
                   if len>=length(cstringpattern) then
-                    setlength(cstringpattern,length(cstringpattern)+256);
+                    SetLength(cstringpattern,length(cstringpattern)+256);
                   inc(len);
                   cstringpattern[len]:=chr(m);
                 end;
@@ -5769,13 +5769,13 @@ type
                       begin
                       inc(whitespace_count);
                       if (had_newline or first_multiline) and backtick and
-                         (CurrentSettings.whitespacetrimauto or
-                         (CurrentSettings.whitespacetrimcount>0)) then
+                         (CurrentSettings.WhitespaceTrimAuto or
+                         (CurrentSettings.WhitespaceTrimCount>0)) then
                         begin
-                          if CurrentSettings.whitespacetrimauto then
+                          if CurrentSettings.WhitespaceTrimAuto then
                             trimcount:=multiline_start_column
                           else
-                            trimcount:=CurrentSettings.whitespacetrimcount;
+                            trimcount:=CurrentSettings.WhitespaceTrimCount;
                           while (c in [#32,#9,#11]) and (trimcount>0) do
                             begin
                               readchar;
@@ -5794,11 +5794,11 @@ type
                         begin
                           if had_multiline_string then
                             Message2(scan_f_unterminated_multiline_string,
-                                     tostr(multiline_start_line),
-                                     tostr(multiline_start_column))
+                                     ToStr(multiline_start_line),
+                                     ToStr(multiline_start_column))
                           else if (not backtick)
                                    and ((quote_count>2) and ((quote_count mod 2)=1))
-                                   and (m_multiline_strings in CurrentSettings.modeswitches) then
+                                   and (m_multiline_strings in CurrentSettings.ModeSwitches) then
                             begin
                             style:=qsMultiQuote;
                             init_quote_count:=quote_count;
@@ -5854,15 +5854,15 @@ type
                     end;
                 first_multiline:=false;
                 { interpret as utf-8 string? }
-                if (ord(c)>=$80) and (CurrentSettings.sourcecodepage=CP_UTF8) then
+                if (ord(c)>=$80) and (CurrentSettings.SourceCodePage=CP_UTF8) then
                   begin
                     { convert existing string to an utf-8 string }
                     if not iswidestring then
                       begin
                         if len>0 then
-                          ascii2unicode(@cstringpattern[1],len,CurrentSettings.sourcecodepage,patternw)
+                          ASCII2Unicode(@cstringpattern[1],len,CurrentSettings.SourceCodePage,patternw)
                         else
-                          ascii2unicode(nil,len,CurrentSettings.sourcecodepage,patternw);
+                          ASCII2Unicode(nil,len,CurrentSettings.SourceCodePage,patternw);
                         iswidestring:=true;
                         len:=0;
                       end;
@@ -5890,10 +5890,10 @@ type
                         d:=d-$10000;
                         { high surrogate }
                         w:=$d800+(d shr 10);
-                        concatwidestringchar(patternw,w);
+                        ConcatWideStringChar(patternw,w);
                         { low surrogate }
                         w:=$dc00+(d and $3ff);
-                        concatwidestringchar(patternw,w);
+                        ConcatWideStringChar(patternw,w);
                       end
                     { three chars }
                     else if (ord(c) and $e0)=$e0 then
@@ -5907,7 +5907,7 @@ type
                         if (ord(c) and $c0)<>$80 then
                           message(scan_e_utf8_malformed);
                         w:=(w shl 6) or (ord(c) and $3f);
-                        concatwidestringchar(patternw,w);
+                        ConcatWideStringChar(patternw,w);
                       end
                     { two chars }
                     else if (ord(c) and $c0)<>0 then
@@ -5917,81 +5917,81 @@ type
                         if (ord(c) and $c0)<>$80 then
                           message(scan_e_utf8_malformed);
                         w:=(w shl 6) or (ord(c) and $3f);
-                        concatwidestringchar(patternw,w);
+                        ConcatWideStringChar(patternw,w);
                       end
                     { illegal }
                     else if (ord(c) and $80)<>0 then
                       message(scan_e_utf8_malformed)
                     else
-                      concatwidestringchar(patternw,tcompilerwidechar(c))
+                      ConcatWideStringChar(patternw,TCompilerWideChar(c))
                   end
                 else if iswidestring then
                   begin
                     if in_multiline_string and (c in [#10,#13]) and (not ((c=#10) and (last_c=#13))) then
                       begin
-                        if CurrentSettings.sourcecodepage=CP_UTF8 then
+                        if CurrentSettings.SourceCodePage=CP_UTF8 then
                           begin
-                            case CurrentSettings.lineendingtype of
+                            case CurrentSettings.LineEndingType of
                               le_cr :
-                                concatwidestringchar(patternw,ord(#13));
+                                ConcatWideStringChar(patternw,ord(#13));
                               le_crlf :
                                 begin
-                                  concatwidestringchar(patternw,ord(#13));
-                                  concatwidestringchar(patternw,ord(#10));
+                                  ConcatWideStringChar(patternw,ord(#13));
+                                  ConcatWideStringChar(patternw,ord(#10));
                                 end;
                               le_lf :
-                                concatwidestringchar(patternw,ord(#10));
+                                ConcatWideStringChar(patternw,ord(#10));
                               le_platform :
                                 begin
                                   if TargetInfo.newline=#13 then
-                                    concatwidestringchar(patternw,ord(#13))
+                                    ConcatWideStringChar(patternw,ord(#13))
                                   else if TargetInfo.newline=#13#10 then
                                     begin
-                                      concatwidestringchar(patternw,ord(#13));
-                                      concatwidestringchar(patternw,ord(#10));
+                                      ConcatWideStringChar(patternw,ord(#13));
+                                      ConcatWideStringChar(patternw,ord(#10));
                                     end
                                   else if TargetInfo.newline=#10 then
-                                    concatwidestringchar(patternw,ord(#10));
+                                    ConcatWideStringChar(patternw,ord(#10));
                                 end;
                               le_source :
-                                concatwidestringchar(patternw,ord(c));
+                                ConcatWideStringChar(patternw,ord(c));
                             end;
                           end
                         else
-                          case CurrentSettings.lineendingtype of
+                          case CurrentSettings.LineEndingType of
                             le_cr :
-                              concatwidestringchar(patternw,asciichar2unicode(#13));
+                              ConcatWideStringChar(patternw,ASCIIChar2Unicode(#13));
                             le_crlf :
                               begin
-                                concatwidestringchar(patternw,asciichar2unicode(#13));
-                                concatwidestringchar(patternw,asciichar2unicode(#10));
+                                ConcatWideStringChar(patternw,ASCIIChar2Unicode(#13));
+                                ConcatWideStringChar(patternw,ASCIIChar2Unicode(#10));
                               end;
                             le_lf :
-                              concatwidestringchar(patternw,asciichar2unicode(#10));
+                              ConcatWideStringChar(patternw,ASCIIChar2Unicode(#10));
                             le_platform :
                               begin
                                 if TargetInfo.newline=#13 then
-                                  concatwidestringchar(patternw,asciichar2unicode(#13))
+                                  ConcatWideStringChar(patternw,ASCIIChar2Unicode(#13))
                                 else if TargetInfo.newline=#13#10 then
                                   begin
-                                    concatwidestringchar(patternw,asciichar2unicode(#13));
-                                    concatwidestringchar(patternw,asciichar2unicode(#10));
+                                    ConcatWideStringChar(patternw,ASCIIChar2Unicode(#13));
+                                    ConcatWideStringChar(patternw,ASCIIChar2Unicode(#10));
                                   end
                                 else if TargetInfo.newline=#10 then
-                                  concatwidestringchar(patternw,asciichar2unicode(#10));
+                                  ConcatWideStringChar(patternw,ASCIIChar2Unicode(#10));
                               end;
                             le_source :
-                              concatwidestringchar(patternw,asciichar2unicode(c));
+                              ConcatWideStringChar(patternw,ASCIIChar2Unicode(c));
                           end;
                         had_newline:=true;
                         inc(line_no);
                       end
                     else if not (in_multiline_string and (c in [#10,#13])) then
                       begin
-                        if CurrentSettings.sourcecodepage=CP_UTF8 then
-                          concatwidestringchar(patternw,ord(c))
+                        if CurrentSettings.SourceCodePage=CP_UTF8 then
+                          ConcatWideStringChar(patternw,ord(c))
                         else
-                          concatwidestringchar(patternw,asciichar2unicode(c));
+                          ConcatWideStringChar(patternw,ASCIIChar2Unicode(c));
                       end;
                   end
                 else
@@ -5999,9 +5999,9 @@ type
                      if in_multiline_string and (c in [#10,#13]) and (not ((c=#10) and (last_c=#13))) then
                        begin
                          if len>=length(cstringpattern) then
-                           setlength(cstringpattern,length(cstringpattern)+256);
+                           SetLength(cstringpattern,length(cstringpattern)+256);
                          inc(len);
-                         case CurrentSettings.lineendingtype of
+                         case CurrentSettings.LineEndingType of
                            le_cr :
                              cstringpattern[len]:=#13;
                            le_crlf :
@@ -6034,7 +6034,7 @@ type
                      else if not (in_multiline_string and (c in [#10,#13])) then
                        begin
                          if len>=length(cstringpattern) then
-                           setlength(cstringpattern,length(cstringpattern)+256);
+                           SetLength(cstringpattern,length(cstringpattern)+256);
                          inc(len);
                          cstringpattern[len]:=c;
                        end;
@@ -6052,11 +6052,11 @@ type
                c:=chr(ord(c)-64);
 
               if iswidestring then
-                concatwidestringchar(patternw,asciichar2unicode(c))
+                ConcatWideStringChar(patternw,ASCIIChar2Unicode(c))
               else
                 begin
                   if len>=length(cstringpattern) then
-                    setlength(cstringpattern,length(cstringpattern)+256);
+                    SetLength(cstringpattern,length(cstringpattern)+256);
                    inc(len);
                    cstringpattern[len]:=c;
                 end;
@@ -6088,7 +6088,7 @@ type
             postprocessmultiline(len,quote_col,init_quote_count);
             end
           else
-            setlength(cstringpattern,len);
+            SetLength(cstringpattern,len);
           if length(cstringpattern)=1 then
             begin
               token:=_CCHAR;
@@ -6105,9 +6105,9 @@ type
                                Token Scanner
 ****************************************************************************}
 
-    procedure tscannerfile.readtoken(allowrecordtoken:boolean);
+    procedure TScannerFile.readtoken(allowrecordtoken:boolean);
       var
-        low,high,mid : longint;
+        low,high,mid : LongInt;
         mac     : TMacro;
         firstdigitread: boolean;
         had_newline,first_multiline : boolean;
@@ -6117,15 +6117,15 @@ type
       begin
         had_newline:=false;
         first_multiline:=false;
-        flushpendingswitchesstate;
+        FlushPendingSwitchesState;
 
         { record tokens? }
         if allowrecordtoken and
-           assigned(recordtokenbuf) then
+           Assigned(recordtokenbuf) then
           recordtoken;
 
         { replay tokens? }
-        if assigned(replaytokenbuf) then
+        if Assigned(replaytokenbuf) then
           begin
             replaytoken;
             goto exit_label;
@@ -6146,13 +6146,13 @@ type
             #26 :
               begin
                 reload;
-                if (c=#26) and not assigned(inputfile.next) then
+                if (c=#26) and not Assigned(inputfile.next) then
                   break;
               end;
             ' ',#9..#13 :
               begin
 {$ifdef PREPROCWRITE}
-                if parapreprocess then
+                if ParaPreprocess then
                  begin
                    if c=#10 then
                     preprocfile.eolfound:=true
@@ -6186,30 +6186,30 @@ type
               while low<high do
                begin
                  mid:=(high+low+1) shr 1;
-                 if pattern<tokeninfo^[ttoken(mid)].str then
+                 if pattern<tokeninfo^[TToken(mid)].str then
                   high:=mid-1
                  else
                   low:=mid;
                end;
-              with tokeninfo^[ttoken(high)] do
+              with tokeninfo^[TToken(high)] do
                 if pattern=str then
                   begin
-                    if (keyword*CurrentSettings.modeswitches)<>[] then
+                    if (keyword*CurrentSettings.ModeSwitches)<>[] then
                       if op=NOTOKEN then
-                        token:=ttoken(high)
+                        token:=TToken(high)
                       else
                         token:=op;
-                    idtoken:=ttoken(high);
+                    idtoken:=TToken(high);
                   end;
             end;
          { Only process identifiers and not keywords }
            if token=_ID then
             begin
             { this takes some time ... }
-              if (cs_support_macro in CurrentSettings.moduleswitches) then
+              if (cs_support_macro in CurrentSettings.ModuleSwitches) then
                begin
                  mac:=TMacro(search_macro(pattern));
-                 if assigned(mac) and (not mac.is_compiler_var) and mac.is_c_macro then
+                 if Assigned(mac) and (not mac.is_compiler_var) and mac.is_c_macro then
                   begin
                     if (yylexcount<max_macro_nesting) and (macro_nesting_depth<max_macro_nesting) then
                      begin
@@ -6256,7 +6256,7 @@ type
 
              '%' :
                begin
-                 if [m_fpc,m_delphi] * CurrentSettings.modeswitches = [] then
+                 if [m_fpc,m_delphi] * CurrentSettings.ModeSwitches = [] then
                   Illegal_Char(c)
                  else
                   begin
@@ -6268,7 +6268,7 @@ type
 
              '&' :
                begin
-                 if [m_fpc,m_delphi] * CurrentSettings.modeswitches <> [] then
+                 if [m_fpc,m_delphi] * CurrentSettings.ModeSwitches <> [] then
                   begin
                     readnumber;
                     if length(pattern)=1 then
@@ -6284,7 +6284,7 @@ type
                       token:=_INTCONST;
                     goto exit_label;
                   end
-                 else if m_mac in CurrentSettings.modeswitches then
+                 else if m_mac in CurrentSettings.ModeSwitches then
                   begin
                     readchar;
                     token:=_AMPERSAND;
@@ -6326,7 +6326,7 @@ type
                              pattern:=pattern+'.';
                              firstdigitread:=false;
                              while (c in ['0'..'9']) or
-                              ((m_underscoreisseparator in CurrentSettings.modeswitches) and firstdigitread and (c='_')) do
+                              ((m_underscoreisseparator in CurrentSettings.ModeSwitches) and firstdigitread and (c='_')) do
                               begin
                                 if c<>'_' then
                                   pattern:=pattern+c;
@@ -6356,7 +6356,7 @@ type
                          Illegal_Char(c);
                        firstdigitread:=false;
                        while (c in ['0'..'9']) or
-                        ((m_underscoreisseparator in CurrentSettings.modeswitches) and firstdigitread and (c='_')) do
+                        ((m_underscoreisseparator in CurrentSettings.ModeSwitches) and firstdigitread and (c='_')) do
                         begin
                           if c<>'_' then
                           pattern:=pattern+c;
@@ -6500,7 +6500,7 @@ type
                end;
 
              '|' :
-               if m_mac in CurrentSettings.modeswitches then
+               if m_mac in CurrentSettings.ModeSwitches then
                 begin
                   readchar;
                   token:=_PIPE;
@@ -6570,7 +6570,7 @@ type
              '>' :
                begin
                  readchar;
-                 if (block_type in [bt_type,bt_var_type,bt_const_type]) then
+                 if (Block_Type in [bt_type,bt_var_type,bt_const_type]) then
                    token:=_RSHARPBRACKET
                  else
                    begin
@@ -6602,7 +6602,7 @@ type
              '<' :
                begin
                  readchar;
-                 if (block_type in [bt_type,bt_var_type,bt_const_type]) then
+                 if (Block_Type in [bt_type,bt_var_type,bt_const_type]) then
                    token:=_LSHARPBRACKET
                  else
                    begin
@@ -6637,7 +6637,7 @@ type
                  checkpreprocstack;
                  goto exit_label;
                end;
-             else if inputfile.internally_generated_macro and
+             else if inputfile.InternallyGeneratedMacro and
                      (c in [internal_macro_escape_begin..internal_macro_escape_end]) then
                begin
                  token:=_ID;
@@ -6652,10 +6652,10 @@ exit_label:
       end;
 
 
-    function tscannerfile.readpreproc:ttoken;
+    function TScannerFile.readpreproc:TToken;
       var
-        low,high,mid: longint;
-        optoken: ttoken;
+        low,high,mid: LongInt;
+        optoken: TToken;
       begin
          { Added the assignment to NOTOKEN below because I got a DFA uninitialized result
            warning when building the compiler with -O3, which broke compilation with -Sew.
@@ -6676,17 +6676,17 @@ exit_label:
                   while low<high do
                    begin
                      mid:=(high+low+1) shr 1;
-                     if pattern<tokeninfo^[ttoken(mid)].str then
+                     if pattern<tokeninfo^[TToken(mid)].str then
                       high:=mid-1
                      else
                       low:=mid;
                    end;
-                  with tokeninfo^[ttoken(high)] do
+                  with tokeninfo^[TToken(high)] do
                     if pattern=str then
                       begin
-                        if (keyword*CurrentSettings.modeswitches)<>[] then
+                        if (keyword*CurrentSettings.ModeSwitches)<>[] then
                           if op=NOTOKEN then
-                            optoken:=ttoken(high)
+                            optoken:=TToken(high)
                           else
                             optoken:=op;
                       end;
@@ -6697,7 +6697,7 @@ exit_label:
                readpreproc:=optoken;
              end;
            '''','`' :
-             if not ((c='`') and (not (m_multiline_strings in CurrentSettings.modeswitches))) then
+             if not ((c='`') and (not (m_multiline_strings in CurrentSettings.ModeSwitches))) then
                begin
                  cstringpattern:=readquotedstring;
                  CurrentScanner.preproc_pattern:=cstringpattern;
@@ -6869,9 +6869,9 @@ exit_label:
       end;
 
 
-    function tscannerfile.readpreprocint(var value:int64;const place:string):boolean;
+    function TScannerFile.readpreprocint(var value:int64;const place:string):boolean;
       var
-        hs : texprvalue;
+        hs : TExprValue;
       begin
         hs:=preproc_comp_expr(nil);
         if hs.isInt then
@@ -6889,9 +6889,9 @@ exit_label:
       end;
 
 
-    function tscannerfile.readpreprocset(conform_to:TSetDef;var value:TNormalSet;const place:string):boolean;
+    function TScannerFile.readpreprocset(conform_to:TSetDef;var value:TNormalSet;const place:string):boolean;
       var
-        hs : texprvalue;
+        hs : TExprValue;
       begin
         hs:=preproc_comp_expr(conform_to);
         if hs.def.typ=setdef then
@@ -6909,7 +6909,7 @@ exit_label:
       end;
 
 
-    function tscannerfile.asmgetchar : char;
+    function TScannerFile.asmgetchar : char;
       begin
          readchar;
          repeat
@@ -6917,7 +6917,7 @@ exit_label:
              #26 :
                begin
                  reload;
-                 if (c=#26) and not assigned(inputfile.next) then
+                 if (c=#26) and not Assigned(inputfile.next) then
                    end_of_file;
                  continue;
                end;
@@ -6931,7 +6931,7 @@ exit_label:
       end;
 
 {$ifdef EXTDEBUG}
-    function tscannerfile.DumpPointer: string;
+    function TScannerFile.DumpPointer: string;
       var
         i: Integer;
 
@@ -6941,9 +6941,9 @@ exit_label:
         i:=0;
         While (inputpointer[I]<>#0) and (i<200) do
           inc(i);
-        Setlength(result,I);
+        SetLength(result,I);
         move(inputpointer^,Result[1],I);
-        result:='<'+inttostr(inputstart)+'>'+result;
+        result:='<'+IntToStr(inputstart)+'>'+result;
       end;
 {$endif EXTDEBUG}
 
@@ -6951,20 +6951,20 @@ exit_label:
                                    Helpers
 *****************************************************************************}
 
-    procedure AddDirective(const s:string; dm: tdirectivemode; p:tdirectiveproc);
+    procedure AddDirective(const s:string; dm: TDirectiveMode; p:TDirectiveProc);
       begin
         if dm in [directive_all, directive_turbo] then
-          tdirectiveitem.create(turbo_scannerdirectives,s,p);
+          TDirectiveItem.create(turbo_scannerdirectives,s,p);
         if dm in [directive_all, directive_mac] then
-          tdirectiveitem.create(mac_scannerdirectives,s,p);
+          TDirectiveItem.create(mac_scannerdirectives,s,p);
       end;
 
-    procedure AddConditional(const s:string; dm: tdirectivemode; p:tdirectiveproc);
+    procedure AddConditional(const s:string; dm: TDirectiveMode; p:TDirectiveProc);
       begin
         if dm in [directive_all, directive_turbo] then
-          tdirectiveitem.createcond(turbo_scannerdirectives,s,p);
+          TDirectiveItem.createcond(turbo_scannerdirectives,s,p);
         if dm in [directive_all, directive_mac] then
-          tdirectiveitem.createcond(mac_scannerdirectives,s,p);
+          TDirectiveItem.createcond(mac_scannerdirectives,s,p);
       end;
 
 {*****************************************************************************

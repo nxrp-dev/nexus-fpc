@@ -36,7 +36,7 @@ interface
     returns a node representing the converted code to implement this
     conversion (this node is valid both for typed constant declarations and
     in function bodies). The node is not reused }
-  function generate_block_for_procaddr(procloadnode: tloadnode): TNode;
+  function generate_block_for_procaddr(procloadnode: TLoadNode): TNode;
 
   { for a procdef, return a recorddef representing a block literal for this
     procdef
@@ -48,11 +48,11 @@ interface
 implementation
 
   uses
-    verbose,globtype,cutils,constexp,
-    pass_1,pparautl,fmodule,
-    aasmdata,
+    Verbose,GlobType,CUtils,ConstExp,
+    pass_1,pparautl,FModule,
+    AAsmData,
     nbas,ncon,nmem,nutils,
-    symbase,symconst,symtable,symsym,symcreat,objcutil,defutil,
+    SymBase,symconst,SymTable,SymSym,symcreat,objcutil,defutil,
     paramgr;
 
 
@@ -67,7 +67,7 @@ implementation
               not is_objcclass(TDef(pd.owner.defowner)) then
         result:=TRecordDef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).typedef)
       else
-        internalerror(2014071304);
+        InternalError(2014071304);
     end;
 
 
@@ -75,7 +75,7 @@ implementation
     var
       srsym: TSym;
       srsymtable: TSymTable;
-      name: tidstring;
+      name: TIDString;
     begin
       if orgpd.is_addressonly then
         name:='_NSCONCRETEGLOBALBLOCK'
@@ -83,12 +83,12 @@ implementation
         name:='_NSCONCRETESTACKBLOCK';
       if not searchsym_in_named_module('BLOCKRTL',name,srsym,srsymtable) or
          (srsym.typ<>staticvarsym) then
-        internalerror(2014071501);
+        InternalError(2014071501);
       result:=TStaticVarSym(srsym);
     end;
 
 
-  function get_block_literal_flags(orgpd, invokepd: TProcDef): longint;
+  function get_block_literal_flags(orgpd, invokepd: TProcDef): LongInt;
     { BlockLiteralFlags }
     const
       BLOCK_HAS_COPY_DISPOSE    = 1 shl 25;
@@ -138,11 +138,11 @@ implementation
     end;
 
 
-  function get_block_literal_descriptor(invokepd: TProcDef; block_literal_size: tcgint): TStaticVarSym;
+  function get_block_literal_descriptor(invokepd: TProcDef; block_literal_size: TCGInt): TStaticVarSym;
     var
       descriptordef: TDef;
       descriptor: TStaticVarSym;
-      name: tsymstr;
+      name: TSymStr;
       srsym: TSym;
       srsymtable: TSymTable;
     begin
@@ -167,19 +167,19 @@ implementation
       if searchsym(name,srsym,srsymtable) then
         begin
           if srsym.typ<>staticvarsym then
-            internalerror(2014071402);
+            InternalError(2014071402);
           result:=TStaticVarSym(srsym);
           exit;
         end;
       { find the type of the descriptor structure }
       descriptordef:=search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_DESCRIPTOR_SIMPLE',true).typedef;
       { create new static variable }
-      descriptor:=cstaticvarsym.create(name,vs_value,descriptordef,[]);
-      symtablestack.top.insertsym(descriptor);
+      descriptor:=CStaticVarSym.create(name,vs_value,descriptordef,[]);
+      SymTableStack.top.insertsym(descriptor);
       include(descriptor.symoptions,sp_internal);
       { create typed constant for the descriptor }
       str_parse_typedconst(CurrentAsmData.AsmLists[al_const],
-        '(reserved: 0; Block_size: '+tostr(block_literal_size)+
+        '(reserved: 0; Block_size: '+ToStr(block_literal_size)+
         '; signature: '''+objcencodemethod(invokepd)+''');',descriptor);
       result:=descriptor;
     end;
@@ -196,13 +196,13 @@ implementation
     begin
       { the copy() is to ensure we don't overflow the maximum identifier length;
         the combination of owner.moduleid and defid will make the name unique }
-      wrappername:='__FPC_BLOCK_INVOKE_'+upper(copy(orgpd.procsym.realname,1,60))+'_'+tostr(orgpd.owner.moduleid)+'_'+orgpd.UniqueIDStr;
+      wrappername:='__FPC_BLOCK_INVOKE_'+upper(copy(orgpd.procsym.realname,1,60))+'_'+ToStr(orgpd.owner.ModuleID)+'_'+orgpd.UniqueIDStr;
       { already an invoke wrapper for this procsym -> reuse }
       if searchsym(wrappername,srsym,srsymtable) then
         begin
           if (srsym.typ<>procsym) or
              (TProcSym(srsym).procdeflist.count<>1) then
-            internalerror(2014071503);
+            InternalError(2014071503);
           result:=TProcDef(TProcSym(srsym).procdeflist[0]);
           exit;
         end;
@@ -227,14 +227,14 @@ implementation
         begin
           { alias for the type to invoke the procvar, used in the symcreat
             handling of tsk_block_invoke_procvar }
-          result.localst.insertsym(ctypesym.create('__FPC_BLOCK_INVOKE_PV_TYPE',orgpv));
+          result.localst.insertsym(CTypeSym.create('__FPC_BLOCK_INVOKE_PV_TYPE',orgpv));
           result.synthetickind:=tsk_block_invoke_procvar;
         end;
     end;
 
 
   { compose a block literal for a static block (one without context) }
-  function get_global_proc_literal_sym(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: longint; invokepd: TProcDef; descriptor: TStaticVarSym): TStaticVarSym;
+  function get_global_proc_literal_sym(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: LongInt; invokepd: TProcDef; descriptor: TStaticVarSym): TStaticVarSym;
     var
       literalname: TIDString;
       srsym: TSym;
@@ -245,21 +245,21 @@ implementation
       if searchsym(literalname,srsym,srsymtable) then
         begin
           if srsym.typ<>staticvarsym then
-            internalerror(2014071506);
+            InternalError(2014071506);
           result:=TStaticVarSym(srsym);
           exit;
         end;
       { create new block literal symbol }
-      result:=cstaticvarsym.create(
+      result:=CStaticVarSym.create(
         '$'+literalname,
         vs_value,
         blockliteraldef,[]);
       include(result.symoptions,sp_internal);
-      symtablestack.top.insertsym(result);
+      SymTableStack.top.insertsym(result);
       { initialise it }
       str_parse_typedconst(CurrentAsmData.AsmLists[al_const],
         '(base: (isa        : @'+blockisasym.realname+
-              '; flags     : '+tostr(blockflags)+
+              '; flags     : '+ToStr(blockflags)+
               '; reserved  : 0'+
               '; invoke    : @'+invokepd.procsym.realname+
               '; descriptor: @'+descriptor.realname+
@@ -269,42 +269,42 @@ implementation
 
 
   { compose an on-stack block literal for a "procedure of object" }
-  function get_pascal_method_literal(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: longint; procvarnode: TNode; invokepd: TProcDef; orgpv: TProcVarDef; descriptor: TStaticVarSym): TNode;
+  function get_pascal_method_literal(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: LongInt; procvarnode: TNode; invokepd: TProcDef; orgpv: TProcVarDef; descriptor: TStaticVarSym): TNode;
     var
-      statement: tstatementnode;
-      literaltemp: ttempcreatenode;
+      statement: TStatementNode;
+      literaltemp: TTempCreateNode;
     begin
       result:=internalstatements(statement);
       { create new block literal structure }
-      literaltemp:=ctempcreatenode.create(blockliteraldef,blockliteraldef.size,tt_persistent,false);
+      literaltemp:=CTempCreateNode.create(blockliteraldef,blockliteraldef.size,tt_persistent,false);
       addstatement(statement,literaltemp);
       { temp.base.isa:=@blockisasym }
-      addstatement(statement,cassignmentnode.create(
-        genloadfield(genloadfield(ctemprefnode.create(literaltemp),'BASE'),'ISA'),
-        caddrnode.create(cloadnode.create(blockisasym,blockisasym.owner))));
+      addstatement(statement,CAssignmentNode.create(
+        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'ISA'),
+        CAddrNode.create(CLoadNode.create(blockisasym,blockisasym.owner))));
       { temp.base.flags:=blockflags }
-      addstatement(statement,cassignmentnode.create(
-        genloadfield(genloadfield(ctemprefnode.create(literaltemp),'BASE'),'FLAGS'),
+      addstatement(statement,CAssignmentNode.create(
+        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'FLAGS'),
         genintconstnode(blockflags)));
       { temp.base.reserved:=0 }
-      addstatement(statement,cassignmentnode.create(
-        genloadfield(genloadfield(ctemprefnode.create(literaltemp),'BASE'),'RESERVED'),
+      addstatement(statement,CAssignmentNode.create(
+        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'RESERVED'),
         genintconstnode(0)));
       { temp.base.invoke:=tmethod(@invokepd) }
-      addstatement(statement,cassignmentnode.create(
-        genloadfield(genloadfield(ctemprefnode.create(literaltemp),'BASE'),'INVOKE'),
-        ctypeconvnode.create_proc_to_procvar(
-          cloadnode.create_procvar(invokepd.procsym,invokepd,invokepd.owner))));
+      addstatement(statement,CAssignmentNode.create(
+        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'INVOKE'),
+        CTypeConvNode.create_proc_to_procvar(
+          CLoadNode.create_procvar(invokepd.procsym,invokepd,invokepd.owner))));
       { temp.base.descriptor:=@descriptor }
-      addstatement(statement,cassignmentnode.create(
-        genloadfield(genloadfield(ctemprefnode.create(literaltemp),'BASE'),'DESCRIPTOR'),
-        caddrnode.create(cloadnode.create(descriptor,descriptor.owner))));
+      addstatement(statement,CAssignmentNode.create(
+        genloadfield(genloadfield(CTempRefNode.create(literaltemp),'BASE'),'DESCRIPTOR'),
+        CAddrNode.create(CLoadNode.create(descriptor,descriptor.owner))));
       { temp.pv:=tmethod(@orgpd) }
-      addstatement(statement,cassignmentnode.create(
-        ctypeconvnode.create_explicit(genloadfield(ctemprefnode.create(literaltemp),'PV'),orgpv),
+      addstatement(statement,CAssignmentNode.create(
+        CTypeConvNode.create_explicit(genloadfield(CTempRefNode.create(literaltemp),'PV'),orgpv),
           procvarnode.getcopy));
       { and return the address of the temp }
-      addstatement(statement,caddrnode.create(ctemprefnode.create(literaltemp)));
+      addstatement(statement,CAddrNode.create(CTempRefNode.create(literaltemp)));
       { typecheck this now, because the current source may be written in TP/
         Delphi/MacPas mode and the above node tree has been constructed for
         ObjFPC mode, which has been set by replace_scanner (in Delphi, the
@@ -313,7 +313,7 @@ implementation
     end;
 
 
-  function generate_block_for_procaddr(procloadnode: tloadnode): TNode;
+  function generate_block_for_procaddr(procloadnode: TLoadNode): TNode;
     var
       procvarnode: TNode;
       { procvardef representing the original function we want to invoke }
@@ -327,27 +327,27 @@ implementation
       descriptor,
       blockisasym,
       blockliteralsym: TStaticVarSym;
-      blockflags: longint;
+      blockflags: LongInt;
       old_symtablestack: TSymTableStack;
-      sstate: tscannerstate;
+      sstate: TScannerState;
     begin
       result:=nil;
       { supported? (should be caught earlier) }
       if (procloadnode.resultdef.typ<>procdef) or
          is_nested_pd(TProcDef(procloadnode.resultdef)) or
          is_objcclass(TDef(procloadnode.resultdef.owner.defowner)) then
-        internalerror(2014071401);
+        InternalError(2014071401);
 
       { add every symbol that we create here to the unit-level symbol table }
-      old_symtablestack:=symtablestack;
-      symtablestack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
+      old_symtablestack:=SymTableStack;
+      SymTableStack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
       { save scanner state }
       replace_scanner('block literal creation',sstate);
 
       { def representing the original function }
       orgpd:=TProcDef(procloadnode.resultdef);
       { def representing the corresponding procvar type }
-      procvarnode:=ctypeconvnode.create_proc_to_procvar(procloadnode.getcopy);
+      procvarnode:=CTypeConvNode.create_proc_to_procvar(procloadnode.getcopy);
       TypeCheckPass(procvarnode);
       orgpv:=TProcVarDef(procvarnode.resultdef);
       { get blockdef for this kind of procdef }
@@ -365,7 +365,7 @@ implementation
         begin
           blockliteralsym:=get_global_proc_literal_sym(blockliteraldef,blockisasym,blockflags,invokepd,descriptor);
           { result: address of the block literal }
-          result:=caddrnode.create(cloadnode.create(blockliteralsym,blockliteralsym.owner));
+          result:=CAddrNode.create(CLoadNode.create(blockliteralsym,blockliteralsym.owner));
         end
       else
         begin
@@ -378,8 +378,8 @@ implementation
       { restore scanner }
       restore_scanner(sstate);
       { restore symtable stack }
-      symtablestack.free;
-      symtablestack:=old_symtablestack;
+      SymTableStack.free;
+      SymTableStack:=old_symtablestack;
     end;
 
 end.

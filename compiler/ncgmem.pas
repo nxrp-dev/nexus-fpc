@@ -27,35 +27,35 @@ unit ncgmem;
 interface
 
     uses
-      globtype,cgbase,cgutils,cpubase,
+      GlobType,cgbase,cgutils,cpubase,
       symtype,
       node,nmem;
 
     type
-       tcgloadvmtaddrnode = class(tloadvmtaddrnode)
+       TCGLoadVMTAddrNode = class(TLoadVMTAddrNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgloadparentfpnode = class(tloadparentfpnode)
+       TCGLoadParentFPNode = class(TLoadParentFPNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgaddrnode = class(taddrnode)
+       TCGAddrNode = class(TAddrNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgderefnode = class(tderefnode)
+       TCGDerefNode = class(TDerefNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgsubscriptnode = class(tsubscriptnode)
+       TCGSubscriptNode = class(TSubscriptNode)
          protected
           function handle_platform_subscript: boolean; virtual;
          public
           procedure pass_generate_code;override;
        end;
 
-       tcgvecnode = class(tvecnode)
+       TCGVecNode = class(TVecNode)
          function get_mul_size : asizeint;
        private
          procedure rangecheck_array;
@@ -68,12 +68,12 @@ interface
            This routine should update location.reference correctly,
            so it points to the correct address.
          }
-         procedure update_reference_reg_mul(maybe_const_reg: tregister;regsize: TDef; l: aint);virtual;
-         procedure update_reference_reg_packed(maybe_const_reg: tregister; regsize: TDef; l: aint);virtual;
-         procedure update_reference_offset(var ref: treference; index, mulsize: ASizeInt); virtual;
+         procedure update_reference_reg_mul(maybe_const_reg: TRegister;regsize: TDef; l: aint);virtual;
+         procedure update_reference_reg_packed(maybe_const_reg: TRegister; regsize: TDef; l: aint);virtual;
+         procedure update_reference_offset(var ref: TReference; index, mulsize: ASizeInt); virtual;
          procedure second_wideansistring;virtual;
          procedure second_dynamicarray;virtual;
-         function valid_index_size(size: tcgsize): boolean;virtual;
+         function valid_index_size(size: TCgSize): boolean;virtual;
        public
          procedure pass_generate_code;override;
        end;
@@ -82,11 +82,11 @@ interface
 implementation
 
     uses
-      systems,
-      cutils,cclasses,verbose,globals,constexp,fmodule,
-      symconst,symbase,symdef,symsym,symtable,defutil,paramgr,
-      aasmbase,aasmdata,
-      procinfo,pass_2,parabase,
+      Systems,
+      CUtils,CClasses,Verbose,Globals,ConstExp,FModule,
+      symconst,SymBase,symdef,SymSym,SymTable,defutil,paramgr,
+      aasmbase,AAsmData,
+      ProcInfo,pass_2,parabase,
       ncon,nadd,nutils,
       cgobj,hlcgobj,
       objcgutl;
@@ -96,12 +96,12 @@ implementation
                               TCGLOADVMTADDRNODE
 *****************************************************************************}
 
-    procedure tcgloadvmtaddrnode.pass_generate_code;
+    procedure TCGLoadVMTAddrNode.pass_generate_code;
       var
-        href    : treference;
+        href    : TReference;
         pool    : THashSet;
         entry   : PHashSetItem;
-        vmtname : tsymstr;
+        vmtname : TSymStr;
         otherunit,
         indirect : boolean;
       begin
@@ -115,7 +115,7 @@ implementation
                    - the target does not support packages
                    - the target does not use indirect references
                    - the class is located inside the same unit }
-                 otherunit:=findunitsymtable(left.resultdef.owner).moduleid<>CurrentModule.moduleid;
+                 otherunit:=findunitsymtable(left.resultdef.owner).ModuleID<>CurrentModule.ModuleID;
                  indirect:=(tf_supports_packages in TargetInfo.flags) and
                            (TargetInfo.system in systems_indirect_var_imports) and
                            otherunit;
@@ -141,13 +141,13 @@ implementation
                      { find/add necessary classref/classname pool entries }
                      objcfinishstringrefpoolentry(entry,sp_objcclassnames,sec_objc_cls_refs,sec_objc_class_names);
                    end;
-                 reference_reset_symbol(href,tasmlabel(entry^.Data),0,objc_idtype.alignment,[]);
+                 reference_reset_symbol(href,TAsmLabel(entry^.Data),0,objc_idtype.alignment,[]);
                  hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,objc_idtype,objc_idtype,href,location.register);
                end;
            end
          else
            { should be handled in pass 1 }
-           internalerror(2015052801);
+           InternalError(2015052801);
       end;
 
 
@@ -155,11 +155,11 @@ implementation
                         TCGLOADPARENTFPNODE
 *****************************************************************************}
 
-    procedure tcgloadparentfpnode.pass_generate_code;
+    procedure TCGLoadParentFPNode.pass_generate_code;
       var
-        currpi : tprocinfo;
+        currpi : TProcInfo;
         hsym   : TParaVarSym;
-        href   : treference;
+        href   : TReference;
       begin
         if (CurrentProcInfo.procdef.parast.symtablelevel=parentpd.parast.symtablelevel) then
           begin
@@ -182,11 +182,11 @@ implementation
                 while (currpi.procdef.owner.symtablelevel>parentpd.parast.symtablelevel) do
                   begin
                     currpi:=currpi.parent;
-                    if not assigned(currpi) then
-                      internalerror(200311201);
+                    if not Assigned(currpi) then
+                      InternalError(200311201);
                     hsym:=TParaVarSym(currpi.procdef.parentfpsym);
                     if hsym.localloc.loc<>LOC_REFERENCE then
-                      internalerror(200309283);
+                      InternalError(200309283);
 
                     hlcg.reference_reset_base(href,parentfpvoidpointertype,location.register,hsym.localloc.reference.offset,ctempposinvalid,parentfpvoidpointertype.alignment,[]);
                     hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,parentfpvoidpointertype,parentfpvoidpointertype,href,location.register);
@@ -200,7 +200,7 @@ implementation
                              TCGADDRNODE
 *****************************************************************************}
 
-    procedure tcgaddrnode.pass_generate_code;
+    procedure TCGAddrNode.pass_generate_code;
       begin
          SecondPass(left);
 
@@ -215,7 +215,7 @@ implementation
            if nf_internal in flags then
              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef)
            else
-             internalerror(2006111510);
+             InternalError(2006111510);
          hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.reference,location.register);
       end;
 
@@ -224,19 +224,19 @@ implementation
                            TCGDEREFNODE
 *****************************************************************************}
 
-    procedure tcgderefnode.pass_generate_code;
+    procedure TCGDerefNode.pass_generate_code;
       var
-        paraloc1 : tcgpara;
+        paraloc1 : TCGPara;
         pd : TProcDef;
         sym : TSym;
         st : TSymTable;
         hp : PNode;
-        newoffset : tcgint;
+        newoffset : TCGInt;
       begin
          sym:=nil;
          { assume natural alignment, except for packed records }
          if not(resultdef.typ in [recorddef,objectdef]) or
-            (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).symtable).usefieldalignment<>1) then
+            (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).usefieldalignment<>1) then
            location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),resultdef.alignment,[])
          else
            location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),1,[]);
@@ -244,20 +244,20 @@ implementation
          { can we fold an add/sub node into the offset of the deref node? }
          newoffset:=0;
          hp:=actualtargetnode(@left);
-         if (hp^.nodetype=subn) and is_constintnode(taddnode(hp^).right) then
+         if (hp^.nodetype=subn) and is_constintnode(TAddNode(hp^).right) then
            begin
-             newoffset:=-tcgint(tordconstnode(taddnode(hp^).right).value);
-             replacenode(hp^,taddnode(hp^).left);
+             newoffset:=-TCGInt(TOrdConstNode(TAddNode(hp^).right).value);
+             replacenode(hp^,TAddNode(hp^).left);
            end
-         else if (hp^.nodetype=addn) and is_constintnode(taddnode(hp^).right) then
+         else if (hp^.nodetype=addn) and is_constintnode(TAddNode(hp^).right) then
            begin
-             newoffset:=tcgint(tordconstnode(taddnode(hp^).right).value);
-             replacenode(hp^,taddnode(hp^).left);
+             newoffset:=TCGInt(TOrdConstNode(TAddNode(hp^).right).value);
+             replacenode(hp^,TAddNode(hp^).left);
            end
-         else if (hp^.nodetype=addn) and is_constintnode(taddnode(hp^).left) then
+         else if (hp^.nodetype=addn) and is_constintnode(TAddNode(hp^).left) then
            begin
-             newoffset:=tcgint(tordconstnode(taddnode(hp^).left).value);
-             replacenode(hp^,taddnode(hp^).right);
+             newoffset:=TCGInt(TOrdConstNode(TAddNode(hp^).left).value);
+             replacenode(hp^,TAddNode(hp^).right);
            end;
 
          SecondPass(left);
@@ -291,19 +291,19 @@ implementation
                 inc(newoffset,left.location.value);
               end;
             else
-              internalerror(200507031);
+              InternalError(200507031);
          end;
 {$ifopt R+}
 {$ifdef cpu32bitaddr}
-         if (newoffset>high(asizeuint)) or (newoffset<low(asizeint)) then
+         if (newoffset>high(ASizeUInt)) or (newoffset<low(asizeint)) then
            message(parser_e_range_check_error)
          else
 {$endif}
 {$endif}
            location.reference.offset:=asizeint(newoffset);
-         if (cs_use_heaptrc in CurrentSettings.globalswitches) and
-            (cs_checkpointer in CurrentSettings.localswitches) and
-            not(cs_compilesystem in CurrentSettings.moduleswitches) and
+         if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) and
+            (cs_checkpointer in CurrentSettings.LocalSwitches) and
+            not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
             TPointerDef(left.resultdef).compatible_with_pointerdef_size(TPointerDef(voidpointertype)) and
             not(drnf_no_checkpointer in derefnodeflags) and
             { can be NR_NO in case of LOC_CONSTANT }
@@ -311,7 +311,7 @@ implementation
           begin
             if not searchsym_in_named_module('HEAPTRC','CHECKPOINTER',sym,st) or
                (sym.typ<>procsym) then
-              internalerror(2012010601);
+              InternalError(2012010601);
             pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
             paraloc1.init;
             paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
@@ -321,7 +321,7 @@ implementation
             hlcg.allocallcpuregisters(CurrentAsmData.CurrAsmList);
             hlcg.a_call_name(CurrentAsmData.CurrAsmList,pd,'FPC_CHECKPOINTER',[@paraloc1],nil,false);
             hlcg.deallocallcpuregisters(CurrentAsmData.CurrAsmList);
-            include(CurrentSettings.moduleswitches,cs_checkpointer_called);
+            include(CurrentSettings.ModuleSwitches,cs_checkpointer_called);
           end;
       end;
 
@@ -330,17 +330,17 @@ implementation
                           TCGSUBSCRIPTNODE
 *****************************************************************************}
 
-    function tcgsubscriptnode.handle_platform_subscript: boolean;
+    function TCGSubscriptNode.handle_platform_subscript: boolean;
       begin
         result:=false;
       end;
 
-    procedure tcgsubscriptnode.pass_generate_code;
+    procedure TCGSubscriptNode.pass_generate_code;
       var
-        asmsym: tasmsymbol;
-        paraloc1 : tcgpara;
-        tmpref: treference;
-        sref: tsubsetreference;
+        asmsym: TAsmSymbol;
+        paraloc1 : TCGPara;
+        tmpref: TReference;
+        sref: TSubsetReference;
         awordoffset,
         offsetcorrection : aint;
         pd : TProcDef;
@@ -360,8 +360,8 @@ implementation
                begin
                  { take care of the alignment of the fields }
                  if not(left.resultdef is TAbstractRecordDef) then
-                   Internalerror(2018021601);
-                 location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),newalignment(TAbstractRecordSymTable(TAbstractRecordDef(left.resultdef).symtable).recordalignment,vs.fieldoffset),[]);
+                   InternalError(2018021601);
+                 location_reset_ref(location,LOC_REFERENCE,def_cgsize(resultdef),NewAlignment(TAbstractRecordSymTable(TAbstractRecordDef(left.resultdef).SymTable).recordalignment,vs.fieldoffset),[]);
                  case left.location.loc of
                     LOC_CREGISTER,
                     LOC_REGISTER:
@@ -395,16 +395,16 @@ implementation
                         location.reference.offset:=left.location.value;
                       end;
                     else
-                      internalerror(2009092401);
+                      InternalError(2009092401);
                  end;
                  { implicit deferencing }
-                 if (cs_use_heaptrc in CurrentSettings.globalswitches) and
-                    (cs_checkpointer in CurrentSettings.localswitches) and
-                    not(cs_compilesystem in CurrentSettings.moduleswitches) then
+                 if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) and
+                    (cs_checkpointer in CurrentSettings.LocalSwitches) and
+                    not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
                   begin
                     if not searchsym_in_named_module('HEAPTRC','CHECKPOINTER',sym,st) or
                        (sym.typ<>procsym) then
-                      internalerror(2012010602);
+                      InternalError(2012010602);
                     pd:=TProcDef(TProcSym(sym).ProcdefList[0]);
                     paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                     hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,left.resultdef,location.reference,paraloc1);
@@ -412,14 +412,14 @@ implementation
                     hlcg.allocallcpuregisters(CurrentAsmData.CurrAsmList);
                     hlcg.a_call_name(CurrentAsmData.CurrAsmList,pd,'FPC_CHECKPOINTER',[@paraloc1],nil,false);
                     hlcg.deallocallcpuregisters(CurrentAsmData.CurrAsmList);
-                    system.include(CurrentSettings.moduleswitches,cs_checkpointer_called);
+                    system.include(CurrentSettings.ModuleSwitches,cs_checkpointer_called);
                   end;
                end
              else
                { reference-counted implicit pointer object types don't have
                  fields -> cannot be subscripted (calls are handled via call
                  nodes) }
-               internalerror(2011011901);
+               InternalError(2011011901);
            end
          else
            begin
@@ -546,7 +546,7 @@ implementation
                      end;
                  end;
                else
-                 internalerror(2006031901);
+                 InternalError(2006031901);
              end;
            end;
 
@@ -555,7 +555,7 @@ implementation
            begin
              if (location.loc<>LOC_REFERENCE) or
                 (location.reference.index<>NR_NO) then
-               internalerror(2009092402);
+               InternalError(2009092402);
              { the actual field offset is stored in memory (to solve the
                "fragile base class" problem: this way the layout of base
                classes can be changed without breaking programs compiled against
@@ -563,7 +563,7 @@ implementation
              }
              asmsym:=CurrentAsmData.RefAsmSymbol(vs.mangledname,AT_DATA);
              reference_reset_symbol(tmpref,asmsym,0,voidpointertype.alignment,[]);
-             hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,left.resultdef,cpointerdef.getreusable(resultdef),location.reference);
+             hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,left.resultdef,CPointerDef.getreusable(resultdef),location.reference);
              location.reference.index:=hlcg.getintregister(CurrentAsmData.CurrAsmList,ptruinttype);
              hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,ptruinttype,ptruinttype,tmpref,location.reference.index);
              { always packrecords C -> natural alignment }
@@ -578,7 +578,7 @@ implementation
              if not is_packed_record_or_object(left.resultdef) then
                begin
                  inc(location.reference.offset,vs.fieldoffset);
-                 location.reference.alignment:=newalignment(location.reference.alignment,vs.fieldoffset);
+                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.fieldoffset);
                end
              else if (vs.fieldoffset mod 8 = 0) and
                      (resultdef.packedbitsize mod 8 = 0) and
@@ -587,7 +587,7 @@ implementation
                      (resultdef.size*8 = resultdef.packedbitsize) then
                begin
                  inc(location.reference.offset,vs.fieldoffset div 8);
-                 location.reference.alignment:=newalignment(location.reference.alignment,vs.fieldoffset div 8);
+                 location.reference.alignment:=NewAlignment(location.reference.alignment,vs.fieldoffset div 8);
                end
              else
                begin
@@ -614,7 +614,7 @@ implementation
                             TCGVECNODE
 *****************************************************************************}
 
-     function tcgvecnode.get_mul_size : asizeint;
+     function TCGVecNode.get_mul_size : asizeint;
        begin
          if vnf_memindex in vecnodeflags then
           get_mul_size:=1
@@ -631,9 +631,9 @@ implementation
        end;
 
 
-     function tcgvecnode.get_address_type: TDef;
+     function TCGVecNode.get_address_type: TDef;
        begin
-         result:=cpointerdef.getreusable(resultdef);
+         result:=CPointerDef.getreusable(resultdef);
        end;
 
 
@@ -645,9 +645,9 @@ implementation
      { the live range of the LOC_CREGISTER will most likely overlap the   }
      { the live range of the target LOC_(C)REGISTER)                      }
      { The passed register may be a LOC_CREGISTER as well.                }
-     procedure tcgvecnode.update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint);
+     procedure TCGVecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
        var
-         hreg: tregister;
+         hreg: TRegister;
        begin
          hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,regsize,get_address_type,maybe_const_reg);
          if l<>1 then
@@ -670,24 +670,24 @@ implementation
           end;
           { update alignment }
           if (location.reference.alignment=0) then
-            internalerror(2009020704);
-          location.reference.alignment:=newalignment(location.reference.alignment,l);
+            InternalError(2009020704);
+          location.reference.alignment:=NewAlignment(location.reference.alignment,l);
        end;
 
 
      { see remarks for tcgvecnode.update_reference_reg_mul above }
-     procedure tcgvecnode.update_reference_reg_packed(maybe_const_reg: tregister; regsize: TDef; l:aint);
+     procedure TCGVecNode.update_reference_reg_packed(maybe_const_reg: TRegister; regsize: TDef; l:aint);
        var
-         sref: tsubsetreference;
-         offsetreg, hreg: tregister;
+         sref: TSubsetReference;
+         offsetreg, hreg: TRegister;
          alignpower: aint;
-         temp : longint;
+         temp : LongInt;
        begin
          { only orddefs are bitpacked. Even then we only need special code in }
          { case the bitpacked *byte size* is not a power of two, otherwise    }
          { everything can be handled using the the regular array code.        }
          if ((l mod 8) = 0) and
-            (ispowerof2(l div 8,temp) or
+            (IsPowerOf2(l div 8,temp) or
              not is_ordinal(resultdef)
 {$ifndef cpu64bitalu}
              or is_64bitint(resultdef)
@@ -698,7 +698,7 @@ implementation
              exit;
            end;
          if (l > 8*sizeof(aint)) then
-           internalerror(200608051);
+           InternalError(200608051);
          hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,regsize,get_address_type,maybe_const_reg);
          sref.ref := location.reference;
          hreg := hlcg.getaddressregister(CurrentAsmData.CurrAsmList,get_address_type);
@@ -706,8 +706,8 @@ implementation
          hlcg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_IMUL,get_address_type,l,hreg);
          { keep alignment for index }
          sref.ref.alignment := left.resultdef.alignment;
-         if not ispowerof2(packedbitsloadsize(l),temp) then
-           internalerror(2006081201);
+         if not IsPowerOf2(PackedBitsLoadSize(l),temp) then
+           InternalError(2006081201);
          alignpower:=temp;
          offsetreg := hlcg.getaddressregister(CurrentAsmData.CurrAsmList,get_address_type);
          hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHR,get_address_type,3+alignpower,hreg,offsetreg);
@@ -747,14 +747,14 @@ implementation
        end;
 
 
-     procedure tcgvecnode.update_reference_offset(var ref: treference; index, mulsize: ASizeInt);
+     procedure TCGVecNode.update_reference_offset(var ref: TReference; index, mulsize: ASizeInt);
        var
-         newoffset : tcgint;
+         newoffset : TCGInt;
        begin
          newoffset:=ref.offset+index*mulsize;
 {$ifopt R+}
 {$ifdef cpu32bitaddr}
-         if (newoffset>high(asizeuint)) or (newoffset<low(asizeint)) then
+         if (newoffset>high(ASizeUInt)) or (newoffset<low(asizeint)) then
            message(parser_e_range_check_error)
 	 else
 {$endif}
@@ -762,25 +762,25 @@ implementation
           ref.offset:=asizeint(newoffset);
        end;
 
-     procedure tcgvecnode.second_wideansistring;
+     procedure TCGVecNode.second_wideansistring;
        begin
        end;
 
-     procedure tcgvecnode.second_dynamicarray;
+     procedure TCGVecNode.second_dynamicarray;
        begin
        end;
 
 
-     function tcgvecnode.valid_index_size(size: tcgsize): boolean;
+     function TCGVecNode.valid_index_size(size: TCgSize): boolean;
        begin
          result:=
            tcgsize2signed[size]=tcgsize2signed[OS_ADDR];
        end;
 
 
-     procedure tcgvecnode.rangecheck_array;
+     procedure TCGVecNode.rangecheck_array;
        var
-         paraloc1,paraloc2 : tcgpara;
+         paraloc1,paraloc2 : TCGPara;
          pd : TProcDef;
        begin
          { omit range checking when this is an array access to a pointer which has been
@@ -815,10 +815,10 @@ implementation
          paraloc2.done;
        end;
 
-    procedure tcgvecnode.rangecheck_string;
+    procedure TCGVecNode.rangecheck_string;
       var
         paraloc1,
-        paraloc2: tcgpara;
+        paraloc2: TCGPara;
         helpername: TIDString;
         pd: TProcDef;
       begin
@@ -830,7 +830,7 @@ implementation
           st_widestring,
           st_ansistring:
             begin
-              if cs_zerobasedstrings in CurrentSettings.localswitches then
+              if cs_zerobasedstrings in CurrentSettings.LocalSwitches then
                 helpername:='fpc_'+TStringDef(left.resultdef).stringtypname+'_zerobased_rangecheck'
               else
                 helpername:='fpc_'+TStringDef(left.resultdef).stringtypname+'_rangecheck';
@@ -868,21 +868,21 @@ implementation
         paraloc2.done;
       end;
 
-    procedure tcgvecnode.pass_generate_code;
+    procedure TCGVecNode.pass_generate_code;
 
       var
          offsetdec,
          extraoffset : ASizeInt;
          rightp      : PNode;
-         newsize  : tcgsize;
+         newsize  : TCgSize;
          mulsize,
          bytemulsize : ASizeInt;
          alignpow : aint;
          paraloc1,
-         paraloc2 : tcgpara;
-         subsetref : tsubsetreference;
-         temp : longint;
-         hreg : tregister;
+         paraloc2 : TCGPara;
+         subsetref : TSubsetReference;
+         temp : LongInt;
+         hreg : TRegister;
          indexdef : TDef;
 
       begin
@@ -906,7 +906,7 @@ implementation
             is_wide_or_unicode_string(left.resultdef) then
            begin
               if vnf_callunique in vecnodeflags then
-                internalerror(200304236);
+                InternalError(200304236);
 
               {DM!!!!!}
               case left.location.loc of
@@ -926,7 +926,7 @@ implementation
                     hlcg.reference_reset_base(location.reference,left.resultdef,NR_NO,left.location.value,ctempposinvalid,location.reference.alignment,[]);
                   end;
                 else
-                  internalerror(2002032218);
+                  InternalError(2002032218);
               end;
 
               if is_ansistring(left.resultdef) then
@@ -937,7 +937,7 @@ implementation
               location.reference.volatility:=[];
 
               { in ansistrings/widestrings S[1] is p<w>char(S)[0] }
-              if not(cs_zerobasedstrings in CurrentSettings.localswitches) then
+              if not(cs_zerobasedstrings in CurrentSettings.LocalSwitches) then
                 update_reference_offset(location.reference,-1,offsetdec);
            end
          else if is_dynamic_array(left.resultdef) then
@@ -954,7 +954,7 @@ implementation
                       left.location.reference,location.reference.base);
                   end;
                 else
-                  internalerror(2002032219);
+                  InternalError(2002032219);
               end;
               { a dynarray points to the start of a memory block, which
                 we assume to be always aligned to a multiple of the
@@ -992,7 +992,7 @@ implementation
                    hlcg.reference_reset_base(location.reference,left.resultdef,NR_NO,left.location.value,ctempposinvalid,location.reference.alignment,[]);
                  end;
                LOC_INVALID:
-                 Internalerror(2019061101);
+                 InternalError(2019061101);
                else
                  location_copy(location,left.location);
              end;
@@ -1000,14 +1000,14 @@ implementation
 
          { location must be memory }
          if not(location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-           internalerror(200411013);
+           InternalError(200411013);
 
          { offset can only differ from 0 if arraydef }
          if (left.resultdef.typ=arraydef) and
             not(is_dynamic_array(left.resultdef)) and
             (not(is_packed_array(left.resultdef)) or
              ((mulsize mod 8 = 0) and
-              ispowerof2(mulsize div 8,temp)) or
+              IsPowerOf2(mulsize div 8,temp)) or
               { only orddefs are bitpacked }
               not is_ordinal(resultdef)
 {$ifndef cpu64bitalu}
@@ -1019,7 +1019,7 @@ implementation
          if right.nodetype=ordconstn then
            begin
               { offset can only differ from 0 if arraydef }
-              if cs_check_range in CurrentSettings.localswitches then
+              if cs_check_range in CurrentSettings.LocalSwitches then
                 begin
                   SecondPass(right);
                   case left.resultdef.typ of
@@ -1033,14 +1033,14 @@ implementation
                 end;
               if not(is_packed_array(left.resultdef)) or
                  ((mulsize mod 8 = 0) and
-                  (ispowerof2(mulsize div 8,temp) or
+                  (IsPowerOf2(mulsize div 8,temp) or
                    { only orddefs are bitpacked }
                    not is_ordinal(resultdef))) then
                 begin
-                  extraoffset:=tordconstnode(right).value.svalue;
+                  extraoffset:=TOrdConstNode(right).value.svalue;
                   update_reference_offset(location.reference,extraoffset,bytemulsize);
                   { adjust alignment after this change }
-                  location.reference.alignment:=newalignment(location.reference.alignment,extraoffset*bytemulsize);
+                  location.reference.alignment:=NewAlignment(location.reference.alignment,extraoffset*bytemulsize);
 
                   { actually an array in a register? }
                   if (left.location.loc in [LOC_CREGISTER,LOC_REGISTER]) and
@@ -1073,12 +1073,12 @@ implementation
                 begin
                   subsetref.ref := location.reference;
                   subsetref.ref.alignment := left.resultdef.alignment;
-                  if not ispowerof2(packedbitsloadsize(resultdef.packedbitsize),temp) then
-                    internalerror(2006081212);
+                  if not IsPowerOf2(PackedBitsLoadSize(resultdef.packedbitsize),temp) then
+                    InternalError(2006081212);
                   alignpow:=temp;
-                  update_reference_offset(subsetref.ref,(mulsize * (tordconstnode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) shr (3+alignpow),1 shl alignpow);
+                  update_reference_offset(subsetref.ref,(mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) shr (3+alignpow),1 shl alignpow);
                   subsetref.bitindexreg := NR_NO;
-                  subsetref.startbit := (mulsize * (tordconstnode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) and ((1 shl (3+alignpow))-1);
+                  subsetref.startbit := (mulsize * (TOrdConstNode(right).value.svalue-TArrayDef(left.resultdef).lowrange)) and ((1 shl (3+alignpow))-1);
                   subsetref.bitlen := resultdef.packedbitsize;
                   if (left.location.loc = LOC_REFERENCE) then
                     location.loc := LOC_SUBSETREF
@@ -1090,11 +1090,11 @@ implementation
          else
          { not nodetype=ordconstn }
            begin
-              if (cs_opt_level1 in CurrentSettings.optimizerswitches) and
+              if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and
                  { if we do range checking, we don't }
                  { need that fancy code (it would be }
                  { buggy)                            }
-                 not(cs_check_range in CurrentSettings.localswitches) and
+                 not(cs_check_range in CurrentSettings.LocalSwitches) and
                  (left.resultdef.typ=arraydef) and
                  not is_packed_array(left.resultdef) then
                 begin
@@ -1102,34 +1102,34 @@ implementation
                    rightp:=actualtargetnode(@right);
                    if rightp^.nodetype=addn then
                      begin
-                        if taddnode(rightp^).right.nodetype=ordconstn then
+                        if TAddNode(rightp^).right.nodetype=ordconstn then
                           begin
-                            extraoffset:=tordconstnode(taddnode(rightp^).right).value.svalue;
-                            replacenode(rightp^,taddnode(rightp^).left);
+                            extraoffset:=TOrdConstNode(TAddNode(rightp^).right).value.svalue;
+                            replacenode(rightp^,TAddNode(rightp^).left);
                           end
-                        else if taddnode(rightp^).left.nodetype=ordconstn then
+                        else if TAddNode(rightp^).left.nodetype=ordconstn then
                           begin
-                            extraoffset:=tordconstnode(taddnode(rightp^).left).value.svalue;
-                            replacenode(rightp^,taddnode(rightp^).right);
+                            extraoffset:=TOrdConstNode(TAddNode(rightp^).left).value.svalue;
+                            replacenode(rightp^,TAddNode(rightp^).right);
                           end;
                      end
                    else if rightp^.nodetype=subn then
                      begin
-                        if taddnode(rightp^).right.nodetype=ordconstn then
+                        if TAddNode(rightp^).right.nodetype=ordconstn then
                           begin
-                            extraoffset:=-tordconstnode(taddnode(rightp^).right).value.svalue;
-                            replacenode(rightp^,taddnode(rightp^).left);
+                            extraoffset:=-TOrdConstNode(TAddNode(rightp^).right).value.svalue;
+                            replacenode(rightp^,TAddNode(rightp^).left);
                           end;
                      end;
                    update_reference_offset(location.reference,extraoffset,mulsize);
                 end;
               { calculate from left to right }
               if not(location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
-                internalerror(200304237);
+                InternalError(200304237);
               SecondPass(right);
               if (right.expectloc=LOC_JUMP)<>
                  (right.location.loc=LOC_JUMP) then
-                internalerror(2006010801);
+                InternalError(2006010801);
 
               { if mulsize = 1, we won't have to modify the index }
               if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
@@ -1142,7 +1142,7 @@ implementation
                 indexdef:=right.resultdef;
 
             { produce possible range check code: }
-              if cs_check_range in CurrentSettings.localswitches then
+              if cs_check_range in CurrentSettings.LocalSwitches then
                begin
                  if left.resultdef.typ=arraydef then
                    rangecheck_array
@@ -1165,10 +1165,10 @@ implementation
 
 
 begin
-   cloadvmtaddrnode:=tcgloadvmtaddrnode;
-   cloadparentfpnode:=tcgloadparentfpnode;
-   caddrnode:=tcgaddrnode;
-   cderefnode:=tcgderefnode;
-   csubscriptnode:=tcgsubscriptnode;
-   cvecnode:=tcgvecnode;
+   CLoadVMTAddrNode:=TCGLoadVMTAddrNode;
+   CLoadParentFPNode:=TCGLoadParentFPNode;
+   CAddrNode:=TCGAddrNode;
+   CDerefNode:=TCGDerefNode;
+   CSubscriptNode:=TCGSubscriptNode;
+   CVecNode:=TCGVecNode;
 end.

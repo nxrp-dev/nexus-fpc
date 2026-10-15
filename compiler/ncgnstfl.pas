@@ -30,31 +30,31 @@ interface
       nflw, ncgflw;
 
     type
-      tcgnestgotonode = class(tcggotonode)
+      TCGNestGotoNode = class(TCGGotoNode)
         function pass_typecheck: TNode; override;
       end;
 
 implementation
 
     uses
-      globtype,globals,
+      GlobType,Globals,
       nld,
-      symdef,symsym,symcreat;
+      symdef,SymSym,symcreat;
 
 
-    function tcgnestgotonode.pass_typecheck: TNode;
+    function TCGNestGotoNode.pass_typecheck: TNode;
       begin
         result:=inherited;
-        if (m_non_local_goto in CurrentSettings.modeswitches) and
-           assigned(labelsym) and
-           assigned(labelsym.jumpbuf) then
+        if (m_non_local_goto in CurrentSettings.ModeSwitches) and
+           Assigned(labelsym) and
+           Assigned(labelsym.jumpbuf) then
           begin
             { we will access this jumpbuf local variable from a nested context,
               but the loadnode to do so only gets created in pass_1. This is too
               late for us to detect that it should have been added to the
               parentfpstruct, so temporarily create and typecheckpass a load
               node for the jumpbuf here (so that it can be added now) }
-            with cloadnode.create(labelsym.jumpbuf,labelsym.jumpbuf.Owner) do
+            with CLoadNode.create(labelsym.jumpbuf,labelsym.jumpbuf.Owner) do
               begin
                 pass_typecheck;
                 free
@@ -64,6 +64,6 @@ implementation
 
 
 begin
-  cgotonode:=tcgnestgotonode;
+  CGotoNode:=TCGNestGotoNode;
 end.
 

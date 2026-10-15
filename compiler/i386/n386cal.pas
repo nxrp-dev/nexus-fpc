@@ -31,10 +31,10 @@ interface
       nx86cal,ncal;
 
     type
-       ti386callnode = class(tx86callnode)
+       TI386CallNode = class(TX86CallNode)
        protected
-          procedure gen_syscall_para(para: tcallparanode); override;
-          procedure pop_parasize(pop_size:longint);override;
+          procedure gen_syscall_para(para: TCallParaNode); override;
+          procedure pop_parasize(pop_size:LongInt);override;
           procedure extra_interrupt_code;override;
        public
          procedure do_syscall;override;
@@ -44,16 +44,16 @@ interface
 implementation
 
     uses
-      globtype,systems,
-      cutils,verbose,globals,
+      GlobType,Systems,
+      CUtils,Verbose,Globals,
       cgbase,cgutils,
       cpubase,paramgr,
-      aasmtai,aasmdata,aasmcpu,
+      aasmtai,AAsmData,aasmcpu,
       nbas,nmem,nld,ncnv,
       parabase,
-      symdef,symsym,symcpu,symconst,
+      symdef,SymSym,symcpu,symconst,
       cga,cgobj,cgx86,
-      cpuinfo;
+      CPUInfo;
 
 
 {*****************************************************************************
@@ -61,30 +61,30 @@ implementation
 *****************************************************************************}
 
 
-    procedure ti386callnode.do_syscall;
+    procedure TI386CallNode.do_syscall;
       begin
-        internalerror(2014081801);
+        InternalError(2014081801);
       end;
 
 
-    procedure ti386callnode.gen_syscall_para(para: tcallparanode);
+    procedure TI386CallNode.gen_syscall_para(para: TCallParaNode);
       begin
         { lib parameter has no special type but proccalloptions must be a syscall }
-        para.left:=cloadnode.create(tcpuprocdef(procdefinition).libsym,tcpuprocdef(procdefinition).libsym.owner);
+        para.left:=CLoadNode.create(TCPUProcDef(procdefinition).libsym,TCPUProcDef(procdefinition).libsym.owner);
       end;
 
 
-    procedure ti386callnode.extra_interrupt_code;
+    procedure TI386CallNode.extra_interrupt_code;
       begin
         emit_none(A_PUSHF,S_L);
         emit_reg(A_PUSH,S_L,NR_CS);
       end;
 
 
-    procedure ti386callnode.pop_parasize(pop_size:longint);
+    procedure TI386CallNode.pop_parasize(pop_size:LongInt);
       var
-        hreg : tregister;
-        href : treference;
+        hreg : TRegister;
+        href : TReference;
       begin
         if paramanager.use_fixed_stack then
           begin
@@ -97,7 +97,7 @@ implementation
               begin
                 reference_reset_base(href,NR_STACK_POINTER_REG,pop_size,ctempposinvalid,0,[]);
                 { it is better to use lea here }
-                CurrentAsmData.CurrAsmList.concat(Taicpu.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
               end;
             exit;
           end;
@@ -126,26 +126,26 @@ implementation
         if pop_size=4 then
           begin
             hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
           end
         { the pentium has two pipes and pop reg is pairable }
         { but the registers must be different!        }
         else
           if (pop_size=8) and
-             not(cs_opt_size in CurrentSettings.optimizerswitches) and
-             (CurrentSettings.optimizecputype=cpu_Pentium) then
+             not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
+             (CurrentSettings.OptimizeCPUType=cpu_Pentium) then
             begin
                hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
                hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_POP,S_L,hreg));
             end
         else
           if pop_size<>0 then
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_ADD,S_L,pop_size,NR_ESP));
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_ADD,S_L,pop_size,NR_ESP));
       end;
 
 
 begin
-  ccallnode:=ti386callnode;
+  CCallNode:=TI386CallNode;
 end.

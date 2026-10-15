@@ -26,11 +26,11 @@ unit pdecobj;
 interface
 
     uses
-      cclasses,
-      globtype,symconst,symtype,symdef;
+      CClasses,
+      GlobType,symconst,symtype,symdef;
 
     { parses a object declaration }
-    function object_dec(objecttype:TObjectTyp;const n:tidstring;objsym:TSym;genericdef:TStoredDef;genericlist:tfphashobjectlist;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
+    function object_dec(objecttype:TObjectTyp;const n:TIDString;objsym:TSym;genericdef:TStoredDef;genericlist:TFPHashObjectList;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
 
     { parses a (class) method declaration }
     function method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
@@ -44,11 +44,11 @@ interface
 implementation
 
     uses
-      sysutils,cutils,
-      globals,verbose,systems,tokens,
-      symbase,symsym,symtable,symcreat,defcmp,
+      SysUtils,CUtils,
+      Globals,Verbose,Systems,tokens,
+      SymBase,SymSym,SymTable,symcreat,defcmp,
       node,ncon,
-      fmodule,scanner,
+      FModule,Scanner,
       pbase,pexpr,pdecsub,pdecvar,ptype,pdecl,pgenutil,pparautl,ppu
       ;
 
@@ -74,7 +74,7 @@ implementation
               parse_object_proc_directives(pd);
             end
           else
-            internalerror(2011040502);
+            InternalError(2011040502);
         end;
         // We can't add hidden params here because record is not yet defined
         // and therefore record size which has influence on parameter passing rules may change too
@@ -102,7 +102,7 @@ implementation
         consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
         parse_proc_head(CurrentStructDef,potype_class_constructor,[],nil,nil,pd);
-        if not assigned(pd) then
+        if not Assigned(pd) then
           begin
             consume(_SEMICOLON);
             exit;
@@ -127,7 +127,7 @@ implementation
         consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
         parse_proc_head(CurrentStructDef,potype_constructor,[],nil,nil,pd);
-        if not assigned(pd) then
+        if not Assigned(pd) then
           begin
             consume(_SEMICOLON);
             exit;
@@ -158,7 +158,7 @@ implementation
     procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: TRTTIAttributeList);
       var
         p : TPropertySym;
-        _deprecatedmsg: pshortstring;
+        _deprecatedmsg: PShortString;
         _symoptions: TSymOptions;
       begin
         { check for a class, record or helper }
@@ -210,7 +210,7 @@ implementation
             consume(_SEMICOLON);
           end;
         { in case of a previous error, p might not be assigned }
-        if assigned(p) then
+        if Assigned(p) then
           begin
             TRTTIAttributeList.bind(rtti_attrs_def,p.RTTIAttributeList);
 
@@ -238,7 +238,7 @@ implementation
         result:=nil;
         consume(_DESTRUCTOR);
         parse_proc_head(CurrentStructDef,potype_class_destructor,[],nil,nil,pd);
-        if not assigned(pd) then
+        if not Assigned(pd) then
           begin
             consume(_SEMICOLON);
             exit;
@@ -262,14 +262,14 @@ implementation
         result:=nil;
         consume(_DESTRUCTOR);
         parse_proc_head(CurrentStructDef,potype_destructor,[],nil,nil,pd);
-        if not assigned(pd) then
+        if not Assigned(pd) then
           begin
             consume(_SEMICOLON);
             exit;
           end;
         pd.calcparas;
         if not(pd.maxparacount=0) and
-           (m_fpc in CurrentSettings.modeswitches) then
+           (m_fpc in CurrentSettings.ModeSwitches) then
           Message(parser_e_no_paras_for_destructor);
         consume(_SEMICOLON);
         include(CurrentStructDef.objectoptions,oo_has_destructor);
@@ -283,14 +283,14 @@ implementation
 
     procedure setinterfacemethodoptions;
       var
-        i   : longint;
+        i   : LongInt;
         def : TDef;
       begin
         include(CurrentStructDef.objectoptions,oo_has_virtual);
-        for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
+        for i:=0 to CurrentStructDef.SymTable.DefList.count-1 do
           begin
-            def:=TDef(CurrentStructDef.symtable.DefList[i]);
-            if assigned(def) and
+            def:=TDef(CurrentStructDef.SymTable.DefList[i]);
+            if Assigned(def) and
                (def.typ=procdef) then
               begin
                 include(TProcDef(def).procoptions,po_virtualmethod);
@@ -302,13 +302,13 @@ implementation
 
     procedure setobjcclassmethodoptions;
       var
-        i   : longint;
+        i   : LongInt;
         def : TDef;
       begin
-        for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
+        for i:=0 to CurrentStructDef.SymTable.DefList.count-1 do
           begin
-            def:=TDef(CurrentStructDef.symtable.DefList[i]);
-            if assigned(def) and
+            def:=TDef(CurrentStructDef.SymTable.DefList[i]);
+            if Assigned(def) and
                (def.typ=procdef) then
               begin
                 include(TProcDef(def).procoptions,po_virtualmethod);
@@ -356,7 +356,7 @@ implementation
                 exit
               end;
           else
-            internalerror(2011010807);
+            InternalError(2011010807);
         end;
         if ([oo_is_forward,oo_is_formal] * intfdef.objectoptions <> []) then
           begin
@@ -402,9 +402,9 @@ implementation
         p:=comp_expr([ef_accept_equal]);
         if p.nodetype=stringconstn then
           begin
-            stringdispose(current_objectdef.iidstr);
-            current_objectdef.iidstr:=stringdup(tstringconstnode(p).asrawbytestring);
-            valid:=string2guid(current_objectdef.iidstr^,current_objectdef.iidguid^);
+            StringDispose(current_objectdef.iidstr);
+            current_objectdef.iidstr:=StringDup(TStringConstNode(p).asrawbytestring);
+            valid:=String2GUID(current_objectdef.iidstr^,current_objectdef.iidguid^);
             if (current_objectdef.objecttype in [odt_interfacecom,odt_dispinterface]) and
                not valid then
               Message(parser_e_improper_guid_syntax);
@@ -438,19 +438,19 @@ implementation
               end;
             if hs<>'' then
               begin
-                stringdispose(od.import_lib);
-                od.import_lib:=stringdup(hs);
+                StringDispose(od.import_lib);
+                od.import_lib:=StringDup(hs);
               end;
             { check if we shall use another name for the class }
             if try_to_consume(_NAME) then
-              od.objextname:=stringdup(get_stringconst)
+              od.objextname:=StringDup(get_stringconst)
             else
-              od.objextname:=stringdup(od.objrealname^);
+              od.objextname:=StringDup(od.objrealname^);
             include(od.objectoptions,oo_is_external);
           end
         else
           begin
-            od.objextname:=stringdup(od.objrealname^);
+            od.objextname:=StringDup(od.objrealname^);
           end;
       end;
 
@@ -464,17 +464,17 @@ implementation
         if try_to_consume(_EXTERNAL) then
           begin
             if try_to_consume(_NAME) then
-              od.objextname:=stringdup(get_stringconst)
+              od.objextname:=StringDup(get_stringconst)
             else
               { the external name doesn't matter for formally declared
                 classes, and allowing to specify one would mean that we would
                 have to check it for consistency with the actual definition
                 later on }
-              od.objextname:=stringdup(od.objrealname^);
+              od.objextname:=StringDup(od.objrealname^);
             include(od.objectoptions,oo_is_external);
           end
         else
-          od.objextname:=stringdup(od.objrealname^);
+          od.objextname:=StringDup(od.objrealname^);
       end;
 
 
@@ -542,10 +542,10 @@ implementation
             consume(_LKLAMMER);
             { use single_type instead of id_type for specialize support }
             single_type(hdef,[stoAllowSpecialization, stoParseClassParent]);
-            if (not assigned(hdef)) or
+            if (not Assigned(hdef)) or
                (hdef.typ<>objectdef) then
               begin
-                if assigned(hdef) then
+                if Assigned(hdef) then
                   Message1(type_e_class_type_expected,hdef.typename)
                 else if is_objccategory(CurrentStructDef) then
                   { a category must specify the class to extend }
@@ -647,7 +647,7 @@ implementation
           end;
 
         { if no parent class, then a class get tobject as parent }
-        if not assigned(childof) then
+        if not Assigned(childof) then
           begin
             case current_objectdef.objecttype of
               odt_class:
@@ -669,7 +669,7 @@ implementation
             end;
           end;
 
-        if assigned(childof) then
+        if Assigned(childof) then
           begin
             { Forbid not completly defined objects to be used as parents. This will
               also prevent circular loops of classes, because we set the forward flag
@@ -687,7 +687,7 @@ implementation
           begin
             if current_objectdef.objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
               begin
-                if assigned(intfchildof) then
+                if Assigned(intfchildof) then
                   if current_objectdef.objecttype=odt_class then
                     handleImplementedInterface(intfchildof)
                   else
@@ -718,14 +718,14 @@ implementation
         var
           tmp : TStoredDef;
         begin
-          if (def.typ<>errordef) and assigned(current_objectdef.childof) then
+          if (def.typ<>errordef) and Assigned(current_objectdef.childof) then
             begin
               if def<>current_objectdef.childof.extendeddef then
                 begin
                   { a type helper may extend a type alias of the type its
                     parent type helper extends }
                   tmp:=TStoredDef(def);
-                  while (df_unique in tmp.defoptions) and assigned(TStoredDef(tmp).orgdef) do
+                  while (df_unique in tmp.defoptions) and Assigned(TStoredDef(tmp).orgdef) do
                     begin
                       if tmp.orgdef=current_objectdef.childof.extendeddef then
                         exit;
@@ -739,11 +739,11 @@ implementation
 
       procedure check_inheritance_class_helper(var def:TDef);
         begin
-          if (def.typ<>errordef) and assigned(current_objectdef.childof) then
+          if (def.typ<>errordef) and Assigned(current_objectdef.childof) then
             begin
               if (current_objectdef.childof.extendeddef.typ<>objectdef) or
                  not (TObjectDef(current_objectdef.childof.extendeddef).objecttype in objecttypes_with_helpers) then
-                Internalerror(2011021101);
+                InternalError(2011021101);
               if not def_is_related(def,current_objectdef.childof.extendeddef) then
                 begin
                   Message1(type_e_class_helper_must_extend_subclass,current_objectdef.childof.extendeddef.typename);
@@ -756,14 +756,14 @@ implementation
         hdef: TDef;
       begin
         if not is_objectpascal_helper(CurrentStructDef) then
-          Internalerror(2011021103);
+          InternalError(2011021103);
 
         consume(_FOR);
         { set extendeddef to non-Nil so that potential checks for it won't trigger
           access violations }
         current_objectdef.extendeddef:=generrordef;
         single_type(hdef,[stoParseClassParent]);
-        if not assigned(hdef) or (hdef.typ=errordef) then
+        if not Assigned(hdef) or (hdef.typ=errordef) then
           begin
             case helpertype of
               ht_class:
@@ -773,7 +773,7 @@ implementation
               ht_type:
                 Message1(type_e_type_id_expected,hdef.typename);
               else
-                internalerror(2019050532);
+                InternalError(2019050532);
             end;
           end
         else
@@ -795,7 +795,7 @@ implementation
                       { primitive types are allowed for record helpers in mode
                         delphi }
                       (hdef.typ<>recorddef) and
-                      not (m_delphi in CurrentSettings.modeswitches)
+                      not (m_delphi in CurrentSettings.ModeSwitches)
                     ) then
                   Message1(type_e_record_type_expected,hdef.typename)
                 else
@@ -820,11 +820,11 @@ implementation
                     check_inheritance_record_type_helper(hdef);
                 end;
               else
-                internalerror(2019050531);
+                InternalError(2019050531);
             end;
           end;
 
-        if assigned(hdef) then
+        if Assigned(hdef) then
           current_objectdef.extendeddef:=hdef;
       end;
 
@@ -865,13 +865,13 @@ implementation
 
       var
         oldparse_only: boolean;
-        flags : tparse_proc_flags;
+        flags : TParseProcFlags;
       begin
         case CurrentScanner.token of
           _PROCEDURE,
           _FUNCTION:
             begin
-              if (astruct.symtable.currentvisibility=vis_published) and
+              if (astruct.SymTable.currentvisibility=vis_published) and
                  not(oo_can_have_published in astruct.objectoptions) then
                 Message(parser_e_cant_have_published);
 
@@ -887,7 +887,7 @@ implementation
               { this is for error recovery as well as forward }
               { interface mappings, i.e. mapping to a method  }
               { which isn't declared yet                      }
-              if assigned(result) then
+              if Assigned(result) then
                 begin
                   parse_object_proc_directives(result);
 
@@ -901,7 +901,7 @@ implementation
                   { all Macintosh Object Pascal methods are virtual.  }
                   { this can't be a class method, because macpas mode }
                   { has no m_class                                    }
-                  if (m_mac in CurrentSettings.modeswitches) then
+                  if (m_mac in CurrentSettings.ModeSwitches) then
                     include(result.procoptions,po_virtualmethod);
 
                   { for record and type helpers only static class methods are
@@ -928,7 +928,7 @@ implementation
                     include(astruct.objectoptions,oo_has_virtual);
 
                   if result.is_generic then
-                    astruct.symtable.includeoption(sto_has_generic);
+                    astruct.SymTable.includeoption(sto_has_generic);
 
                   chkcpp(result);
                   chkobjc(result);
@@ -941,11 +941,11 @@ implementation
             end;
           _CONSTRUCTOR :
             begin
-              if (astruct.symtable.currentvisibility=vis_published) and
+              if (astruct.SymTable.currentvisibility=vis_published) and
                 not(oo_can_have_published in astruct.objectoptions) then
                 Message(parser_e_cant_have_published);
 
-              if not is_classdef and not(astruct.symtable.currentvisibility in [vis_public,vis_published]) then
+              if not is_classdef and not(astruct.SymTable.currentvisibility in [vis_public,vis_published]) then
                 Message(parser_w_constructor_should_be_public);
 
               if is_interface(astruct) then
@@ -985,7 +985,7 @@ implementation
             end;
           _DESTRUCTOR :
             begin
-              if (astruct.symtable.currentvisibility=vis_published) and
+              if (astruct.SymTable.currentvisibility=vis_published) and
                  not(oo_can_have_published in astruct.objectoptions) then
                 Message(parser_e_cant_have_published);
 
@@ -1000,7 +1000,7 @@ implementation
               if is_objectpascal_helper(astruct) then
                 Message(parser_e_no_destructor_in_records);
 
-              if not is_classdef and (astruct.symtable.currentvisibility<>vis_public) then
+              if not is_classdef and (astruct.SymTable.currentvisibility<>vis_public) then
                 Message(parser_w_destructor_should_be_public);
 
               { Objective-C does not know the concept of a destructor }
@@ -1023,7 +1023,7 @@ implementation
               parse_only:=oldparse_only;
             end;
           else
-            internalerror(2011032102);
+            InternalError(2011032102);
         end;
       end;
 
@@ -1036,15 +1036,15 @@ implementation
         hadgeneric,
         fields_allowed, is_classdef, class_fields, is_final, final_fields,
         threadvar_fields : boolean;
-        vdoptions: tvar_dec_options;
-        fieldlist: tfpobjectlist;
+        vdoptions: TVarDecOptions;
+        fieldlist: TFPObjectList;
         rtti_attrs_def: TRTTIAttributeList;
         attr_element_count,fldCount : Integer;
         method_def : TProcDef;
 
       procedure check_unbound_attributes;
         begin
-          if assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
+          if Assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
             Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).typesym.prettyname);
           rtti_attrs_def.free;
           rtti_attrs_def:=nil;
@@ -1121,7 +1121,7 @@ implementation
              is_objc_protocol_or_category(CurrentStructDef) or
              is_javainterface(CurrentStructDef) then
             Message(parser_e_no_access_specifier_in_interfaces);
-          CurrentStructDef.symtable.currentvisibility:=vis;
+          CurrentStructDef.SymTable.currentvisibility:=vis;
           consume(CurrentScanner.token);
           if (oo<>oo_none) then
             include(CurrentStructDef.objectoptions,oo);
@@ -1142,9 +1142,9 @@ implementation
 
         { in "publishable" classes the default access type is published }
         if (oo_can_have_published in CurrentStructDef.objectoptions) then
-          CurrentStructDef.symtable.currentvisibility:=vis_published
+          CurrentStructDef.SymTable.currentvisibility:=vis_published
         else
-          CurrentStructDef.symtable.currentvisibility:=vis_public;
+          CurrentStructDef.SymTable.currentvisibility:=vis_public;
         fields_allowed:=true;
         is_classdef:=false;
         class_fields:=false;
@@ -1154,7 +1154,7 @@ implementation
         hadgeneric:=false;
         threadvar_fields:=false;
         object_member_blocktype:=bt_general;
-        fieldlist:=tfpobjectlist.create(false);
+        fieldlist:=TFPObjectList.create(false);
         repeat
           case CurrentScanner.token of
             _TYPE :
@@ -1165,7 +1165,7 @@ implementation
                 consume(_TYPE);
                 object_member_blocktype:=bt_type;
 
-                if (CurrentScanner.token=_LECKKLAMMER) and (m_prefixed_attributes in CurrentSettings.modeswitches) then
+                if (CurrentScanner.token=_LECKKLAMMER) and (m_prefixed_attributes in CurrentSettings.ModeSwitches) then
                   begin
                     check_unbound_attributes;
                     types_dec(true,hadgeneric, rtti_attrs_def);
@@ -1213,7 +1213,7 @@ implementation
                    ((CurrentScanner.idtoken=_REQUIRED) or
                     (CurrentScanner.idtoken=_OPTIONAL)) then
                   begin
-                    CurrentStructDef.symtable.currentlyoptional:=(CurrentScanner.idtoken=_OPTIONAL);
+                    CurrentStructDef.SymTable.currentlyoptional:=(CurrentScanner.idtoken=_OPTIONAL);
                     consume(CurrentScanner.idtoken)
                   end
                 else case CurrentScanner.idtoken of
@@ -1246,13 +1246,13 @@ implementation
                               _PRIVATE:
                                 begin
                                   consume(_PRIVATE);
-                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprivate;
+                                  CurrentStructDef.SymTable.currentvisibility:=vis_strictprivate;
                                   include(CurrentStructDef.objectoptions,oo_has_strictprivate);
                                 end;
                               _PROTECTED:
                                 begin
                                   consume(_PROTECTED);
-                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprotected;
+                                  CurrentStructDef.SymTable.currentvisibility:=vis_strictprotected;
                                   include(CurrentStructDef.objectoptions,oo_has_strictprotected);
                                 end;
                               else
@@ -1269,7 +1269,7 @@ implementation
                         final_fields:=false;
                         object_member_blocktype:=bt_general;
                      end
-                    else if (m_final_fields in CurrentSettings.modeswitches) and
+                    else if (m_final_fields in CurrentSettings.ModeSwitches) and
                             (CurrentScanner.token=_ID) and
                             (CurrentScanner.idtoken=_FINAL) then
                       begin
@@ -1290,7 +1290,7 @@ implementation
                         if object_member_blocktype=bt_general then
                           begin
                             if (CurrentScanner.idtoken=_GENERIC) and
-                                not (m_delphi in CurrentSettings.modeswitches) and
+                                not (m_delphi in CurrentSettings.ModeSwitches) and
                                 (
                                   not fields_allowed or
                                   is_objectpascal_helper(CurrentStructDef)
@@ -1315,14 +1315,14 @@ implementation
                                     not(class_fields and final_fields)) then
                                   Message(parser_e_no_vars_in_interfaces);
 
-                                if (CurrentStructDef.symtable.currentvisibility=vis_published) and
+                                if (CurrentStructDef.SymTable.currentvisibility=vis_published) and
                                    not(oo_can_have_published in CurrentStructDef.objectoptions) then
                                   Message(parser_e_cant_have_published);
                                 if (not fields_allowed) then
                                   Message(parser_e_field_not_allowed_here);
 
                                 vdoptions:=[vd_object];
-                                if not (m_delphi in CurrentSettings.modeswitches) then
+                                if not (m_delphi in CurrentSettings.ModeSwitches) then
                                   include(vdoptions,vd_check_generic);
                                 if class_fields then
                                   include(vdoptions,vd_class);
@@ -1347,7 +1347,7 @@ implementation
                                   it returns 2.
                                   Basically the number of variables before the first colon.
                                 }
-                                if assigned(rtti_attrs_def) then
+                                if Assigned(rtti_attrs_def) then
                                   begin
                                   { read_record_fields can read a list of fields with the same type.
                                     for the first fields, we simply copy. for the last one we bind.}
@@ -1379,16 +1379,16 @@ implementation
                               begin
                                 { the value of final fields cannot be changed
                                   once they've been assigned a value }
-                                typedconstswritable:=cs_typed_const_writable in CurrentSettings.localswitches;
-                                exclude(CurrentSettings.localswitches,cs_typed_const_writable);
+                                typedconstswritable:=cs_typed_const_writable in CurrentSettings.LocalSwitches;
+                                exclude(CurrentSettings.LocalSwitches,cs_typed_const_writable);
                               end;
                             consts_dec(true,not is_javainterface(CurrentStructDef),hadgeneric);
                             if final_fields and
                                typedconstswritable then
-                              include(CurrentSettings.localswitches,cs_typed_const_writable);
+                              include(CurrentSettings.LocalSwitches,cs_typed_const_writable);
                           end
                         else
-                          internalerror(2010011103);
+                          InternalError(2010011103);
                       end;
                 end;
               end;
@@ -1406,7 +1406,7 @@ implementation
             _DESTRUCTOR :
               begin
                 method_def:=method_dec(CurrentStructDef,is_classdef,hadgeneric);
-                if assigned(rtti_attrs_def) then
+                if Assigned(rtti_attrs_def) then
                   begin
                   TRTTIAttributeList.bind(rtti_attrs_def,method_def.RTTIAttributeList);
                   rtti_attrs_def:=nil;
@@ -1417,7 +1417,7 @@ implementation
               end;
             _LECKKLAMMER:
               begin
-                if m_prefixed_attributes in CurrentSettings.modeswitches then
+                if m_prefixed_attributes in CurrentSettings.ModeSwitches then
                   parse_rttiattributes(rtti_attrs_def)
                 else
                   consume(_ID);
@@ -1434,13 +1434,13 @@ implementation
         until false;
 
         if is_class(CurrentStructDef) then
-          TAbstractRecordSymTable(CurrentStructDef.symtable).addfieldlist(fieldlist,true);
+          TAbstractRecordSymTable(CurrentStructDef.SymTable).addfieldlist(fieldlist,true);
         fieldlist.free;
         fieldlist := nil;
       end;
 
 
-    function object_dec(objecttype:TObjectTyp;const n:tidstring;objsym:TSym;genericdef:TStoredDef;genericlist:tfphashobjectlist;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
+    function object_dec(objecttype:TObjectTyp;const n:TIDString;objsym:TSym;genericdef:TStoredDef;genericlist:TFPHashObjectList;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
       var
         old_current_structdef: TAbstractRecordDef;
         old_current_genericdef,
@@ -1461,18 +1461,18 @@ implementation
         CurrentSpecializeDef:=nil;
 
         { objects and class types can't be declared local }
-        if not(symtablestack.top.symtabletype in [globalsymtable,staticsymtable,objectsymtable,recordsymtable]) and
-           not assigned(genericlist) then
+        if not(SymTableStack.top.symtabletype in [GlobalSymTable,staticsymtable,objectsymtable,recordsymtable]) and
+           not Assigned(genericlist) then
           Message(parser_e_no_local_objects);
 
         { reuse forward objectdef? }
-        if assigned(fd) then
+        if Assigned(fd) then
           begin
-            if (fd.objecttype<>objecttype) or ((fd.is_generic or fd.is_specialization) xor assigned(genericlist)) then
+            if (fd.objecttype<>objecttype) or ((fd.is_generic or fd.is_specialization) xor Assigned(genericlist)) then
               begin
                 Message(parser_e_forward_mismatch);
                 { recover }
-                CurrentStructDef:=cobjectdef.create(objecttype,n,nil,true);
+                CurrentStructDef:=CObjectDef.create(objecttype,n,nil,true);
                 include(CurrentStructDef.objectoptions,oo_is_forward);
               end
             else
@@ -1485,7 +1485,7 @@ implementation
               Message(parser_f_no_anonym_objects);
 
             { create new class }
-            CurrentStructDef:=cobjectdef.create(objecttype,n,nil,true);
+            CurrentStructDef:=CObjectDef.create(objecttype,n,nil,true);
             TObjectDef(CurrentStructDef).helpertype:=helpertype;
 
             { include always the forward flag, it'll be removed once the whole
@@ -1495,7 +1495,7 @@ implementation
               parent classes have been parsed }
             include(CurrentStructDef.objectoptions,oo_is_forward);
 
-            if (cs_compilesystem in CurrentSettings.moduleswitches) then
+            if (cs_compilesystem in CurrentSettings.ModuleSwitches) then
               begin
                 case current_objectdef.objecttype of
                   odt_interfacecom :
@@ -1536,7 +1536,7 @@ implementation
                     ;
                 end;
               end;
-            if (CurrentModule.modulename^='OBJCBASE') then
+            if (CurrentModule.ModuleName^='OBJCBASE') then
               begin
                 case current_objectdef.objecttype of
                   odt_objcclass:
@@ -1549,17 +1549,17 @@ implementation
           end;
 
         { usage of specialized type inside its generic template }
-        if assigned(genericdef) then
+        if Assigned(genericdef) then
           CurrentSpecializeDef:=CurrentStructDef;
         { reject declaration of generic class inside generic class }
-        if assigned(genericlist) then
+        if Assigned(genericlist) then
           CurrentGenericDef:=CurrentStructDef;
 
         { nested types of specializations are specializations as well }
-        if assigned(old_current_structdef) and
+        if Assigned(old_current_structdef) and
             (df_specialization in old_current_structdef.defoptions) then
           include(CurrentStructDef.defoptions,df_specialization);
-        if assigned(old_current_structdef) and
+        if Assigned(old_current_structdef) and
             (df_generic in old_current_structdef.defoptions) then
           begin
             include(CurrentStructDef.defoptions,df_generic);
@@ -1568,7 +1568,7 @@ implementation
 
         { set published flag in $M+ mode, it can also be inherited and will
           be added when the parent class set with tobjectdef.set_parent (PFV) }
-        if (cs_generate_rtti in CurrentSettings.localswitches) and
+        if (cs_generate_rtti in CurrentSettings.LocalSwitches) and
            (current_objectdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_class,odt_helper]) then
           include(CurrentStructDef.objectoptions,oo_can_have_published);
 
@@ -1582,7 +1582,7 @@ implementation
         { forward def? }
         if CurrentScanner.token=_SEMICOLON then
           begin
-            if assigned(fd) then
+            if Assigned(fd) then
               Message1(parser_e_type_alread_forward,n)
             else
               begin
@@ -1592,7 +1592,7 @@ implementation
                   is resolved. this is required for delphi mode }
                 CurrentModule.checkforwarddefs.add(CurrentStructDef);
 
-                symtablestack.push(CurrentStructDef.symtable);
+                SymTableStack.push(CurrentStructDef.SymTable);
                 insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,false);
                 { when we are parsing a generic already then this is a generic as
                   well }
@@ -1603,7 +1603,7 @@ implementation
                 { *don't* add the strict private symbol for non-Delphi modes for
                   forward defs }
 
-                symtablestack.pop(CurrentStructDef.symtable);
+                SymTableStack.pop(CurrentStructDef.SymTable);
               end;
           end
         else
@@ -1623,8 +1623,8 @@ implementation
             if not(objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava]) then
               parse_object_options;
 
-            symtablestack.push(CurrentStructDef.symtable);
-            insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,assigned(fd));
+            SymTableStack.push(CurrentStructDef.SymTable);
+            insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,Assigned(fd));
             { when we are parsing a generic already then this is a generic as
               well }
             if old_parse_generic then
@@ -1638,7 +1638,7 @@ implementation
             { parse list of parent classes }
             { for record helpers in mode Delphi this is not allowed }
             if not (is_objectpascal_helper(current_objectdef) and
-                (m_delphi in CurrentSettings.modeswitches) and
+                (m_delphi in CurrentSettings.ModeSwitches) and
                 (helpertype=ht_record)) then
               parse_parent_classes;
 
@@ -1664,7 +1664,7 @@ implementation
               ObjC classes. To make this possible we need to set their symbols to real defs instead
               of errordef }
 
-            if assigned(objsym) and not (objecttype in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
+            if Assigned(objsym) and not (objecttype in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
               begin
                 olddef:=TTypeSym(objsym).typedef;
                 TTypeSym(objsym).typedef:=CurrentStructDef;
@@ -1678,7 +1678,7 @@ implementation
               CurrentStructDef.apply_rtti_directive(CurrentModule.rtti_directive)
             else
               { if not set, and class has a parent, take parent object settings }
-              if (objectType = odt_class) and assigned(current_objectdef.childof) then
+              if (objectType = odt_class) and Assigned(current_objectdef.childof) then
                 CurrentStructDef.apply_rtti_directive(current_objectdef.childof.rtti);
 
             { generate TObject VMT space }
@@ -1686,13 +1686,13 @@ implementation
               The cs_compilesystem is superfluous, but we add it for safety.
 
             }
-            if (current_objectdef=class_tobject) and (cs_compilesystem in CurrentSettings.moduleswitches) then
+            if (current_objectdef=class_tobject) and (cs_compilesystem in CurrentSettings.ModuleSwitches) then
               current_objectdef.insertvmt;
 
             { parse and insert object members }
             parse_object_members;
 
-            if assigned(olddef) then
+            if Assigned(olddef) then
               begin
                 TTypeSym(objsym).typedef:=olddef;
                 CurrentStructDef.typesym:=nil;
@@ -1710,7 +1710,7 @@ implementation
                 end;
             end;
 
-            symtablestack.pop(CurrentStructDef.symtable);
+            SymTableStack.pop(CurrentStructDef.SymTable);
 
             exclude(CurrentStructDef.objectoptions,oo_is_forward);
           end;
@@ -1755,15 +1755,15 @@ implementation
             st:=CurrentStructDef.owner;
             while st.symtabletype in [objectsymtable,recordsymtable] do
               st:=st.defowner.owner;
-            if st.symtabletype in [staticsymtable,globalsymtable] then
+            if st.symtabletype in [staticsymtable,GlobalSymTable] then
               begin
                 if current_objectdef.extendeddef.typ in [recorddef,objectdef] then
-                  s:=make_mangledname('',TAbstractRecordDef(current_objectdef.extendeddef).symtable,'')
+                  s:=make_mangledname('',TAbstractRecordDef(current_objectdef.extendeddef).SymTable,'')
                 else
                   s:=make_mangledname('',current_objectdef.extendeddef.owner,current_objectdef.extendeddef.typesym.name);
                 Message1(sym_d_adding_helper_for,s);
                 list:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
-                if not assigned(list) then
+                if not Assigned(list) then
                   begin
                     list:=TFPObjectList.Create(false);
                     CurrentModule.extendeddefs.Add(s, list);
@@ -1771,7 +1771,7 @@ implementation
                 list.add(CurrentStructDef);
               end;
           end;
-        TAbstractRecordSymTable(current_objectdef.symtable).addalignmentpadding;
+        TAbstractRecordSymTable(current_objectdef.SymTable).addalignmentpadding;
 
         { return defined objectdef }
         result:=current_objectdef;

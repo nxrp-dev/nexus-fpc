@@ -31,8 +31,8 @@ unit rgcpu;
        cgbase,rgx86;
 
      type
-       trgcpu = class(trgx86)
-         procedure add_constraints(reg:Tregister); override;
+       TRGCPU = class(TRGX86)
+         procedure add_constraints(reg:TRegister); override;
        end;
 
   implementation
@@ -40,9 +40,9 @@ unit rgcpu;
     uses
       cpubase;
 
-    procedure trgcpu.add_constraints(reg:Tregister);
+    procedure TRGCPU.add_constraints(reg:TRegister);
       var
-        supreg : tsuperregister;
+        supreg : TSuperRegister;
       begin
         if (getregtype(reg)=R_INTREGISTER) then
           begin

@@ -20,7 +20,7 @@ const
   max_operands = 4;
 var
    s : ShortString;
-   i : longint;
+   i : LongInt;
    i8086  : boolean;
    x86_64 : boolean;
 
@@ -29,7 +29,7 @@ var
       return lowercased string of s
     }
       var
-         i : longint;
+         i : LongInt;
       begin
          for i:=1 to length(s) do
           if s[i] in ['A'..'Z'] then
@@ -41,7 +41,7 @@ var
 
       function Replace(var s:ShortString;const s1,s2:ShortString):boolean;
       var
-        i  : longint;
+        i  : LongInt;
       begin
         i:=pos(s1,s);
         if i>0 then
@@ -90,7 +90,7 @@ function formatop(s:ShortString;allowsizeonly:boolean):ShortString;
        ('80','bits80')
      );
   var
-    i : longint;
+    i : LongInt;
   begin
     for i:=1to replaces do
       begin
@@ -104,10 +104,10 @@ function formatop(s:ShortString;allowsizeonly:boolean):ShortString;
   end;
 
 
-function readnumber : longint;
+function readnumber : LongInt;
 
   var
-     base : longint;
+     base : LongInt;
   begin
      result:=0;
      if s[i]='\' then
@@ -136,14 +136,14 @@ function readnumber : longint;
        end;
   end;
 
-function tostr(l : longint) : ShortString;
+function ToStr(l : LongInt) : ShortString;
 
   var
      hs : ShortString;
 
   begin
      str(l,hs);
-     tostr:=hs;
+     ToStr:=hs;
   end;
 
 function readstr : ShortString;
@@ -166,18 +166,18 @@ procedure skipspace;
 
 procedure openinc(out f:text;const fn:ShortString);
 begin
-  writeln('creating ',fn);
+  WriteLn('creating ',fn);
   assign(f,fn);
   rewrite(f);
-  writeln(f,'{ don''t edit, this file is generated from x86ins.dat }');
-  writeln(f,'(');
+  WriteLn(f,'{ don''t edit, this file is generated from x86ins.dat }');
+  WriteLn(f,'(');
 end;
 
 
 procedure closeinc(var f:text);
 begin
-  writeln(f);
-  writeln(f,');');
+  WriteLn(f);
+  WriteLn(f,');');
   close(f);
 end;
 
@@ -185,19 +185,19 @@ end;
 var
    attsuffix,
    hs : ShortString;
-   j : longint;
+   j : LongInt;
    firstopcode,
    first : boolean;
    maxinfolen,
    code : byte;
-   insns : longint;
+   insns : LongInt;
    attsuffile,propfile,opfile,
    nopfile,attfile,intfile,
    infile,insfile : text;
    { instruction fields }
    skip : boolean;
    literalcount,
-   ops    : longint;
+   ops    : LongInt;
    intopcode,
    attopcode,
    opcode,
@@ -219,11 +219,11 @@ begin
     firstopcode:=false
   else
     begin
-      writeln(opfile,',');
-      writeln(attfile,',');
-      writeln(attsuffile,',');
-      writeln(intfile,',');
-      writeln(propfile,',');
+      WriteLn(opfile,',');
+      WriteLn(attfile,',');
+      WriteLn(attsuffile,',');
+      WriteLn(intfile,',');
+      WriteLn(propfile,',');
     end;
   write(opfile,opcode);
   write(intfile,'''',intopcode,'''');
@@ -233,9 +233,9 @@ begin
 end;
 
 begin
-   writeln('Nasm Instruction Table Converter Version ',Version);
-   i8086:=paramstr(1)='i8086';
-   x86_64:=paramstr(1)='x86_64';
+   WriteLn('Nasm Instruction Table Converter Version ',Version);
+   i8086:=ParamStr(1)='i8086';
+   x86_64:=ParamStr(1)='x86_64';
    insns:=0;
    maxinfolen:=0;
    { open dat file }
@@ -274,7 +274,7 @@ begin
        openinc(propfile,'i386prop.inc');
      end;
    rewrite(nopfile);
-   writeln(nopfile,'{ don''t edit, this file is generated from x86ins.dat }');
+   WriteLn(nopfile,'{ don''t edit, this file is generated from x86ins.dat }');
    reset(infile);
    first:=true;
    opcode:='';
@@ -432,7 +432,7 @@ begin
                          end;
                        end;
                    end;
-                 codes:=codes+'#'+tostr(code);
+                 codes:=codes+'#'+ToStr(code);
                  inc(j);
                end;
           end
@@ -495,15 +495,15 @@ begin
               DoWriteInstr;
             instrwritten:=true;
             if not(first) then
-              writeln(insfile,',')
+              WriteLn(insfile,',')
             else
               first:=false;
-            writeln(insfile,'  (');
-            writeln(insfile,'    opcode  : ',opcode,';');
-            writeln(insfile,'    ops     : ',ops,';');
-            writeln(insfile,'    optypes : (',optypes[1],',',optypes[2],',',optypes[3],',',optypes[4],');');
-            writeln(insfile,'    code    : ',codes,';');
-            writeln(insfile,'    flags   : [',flags,']');
+            WriteLn(insfile,'  (');
+            WriteLn(insfile,'    opcode  : ',opcode,';');
+            WriteLn(insfile,'    ops     : ',ops,';');
+            WriteLn(insfile,'    optypes : (',optypes[1],',',optypes[2],',',optypes[3],',',optypes[4],');');
+            WriteLn(insfile,'    code    : ',codes,';');
+            WriteLn(insfile,'    flags   : [',flags,']');
             write(insfile,'  )');
             inc(insns);
           end;
@@ -514,8 +514,8 @@ begin
    closeinc(attfile);
    closeinc(attsuffile);
    closeinc(opfile);
-   writeln(nopfile,insns,';');
+   WriteLn(nopfile,insns,';');
    close(nopfile);
    closeinc(propfile);
-   writeln(insns,' nodes processed (maxinfolen=',maxinfolen,')');
+   WriteLn(insns,' nodes processed (maxinfolen=',maxinfolen,')');
 end.

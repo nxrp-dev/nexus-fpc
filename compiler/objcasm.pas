@@ -37,8 +37,8 @@ unit objcasm;
 implementation
 
   uses
-    verbose,
-    systems;
+    Verbose,
+    Systems;
 
   function objc_section_name(sec: TObjCAsmSectionType): string;
     begin
@@ -50,7 +50,7 @@ implementation
               if not(TargetInfo.system in systems_objc_nfabi) then
                 result:='__OBJC, __protocol, regular, no_dead_strip'
               else
-                internalerror(2015010605);
+                InternalError(2015010605);
             end;
           sec_objc_protocol_ext:
             begin
@@ -61,7 +61,7 @@ implementation
               if not(TargetInfo.system in systems_objc_nfabi) then
                 result:='__OBJC, __category, regular, no_dead_strip'
               else
-                internalerror(2015010606);
+                InternalError(2015010606);
             end;
           sec_objc_class_ext:
             begin
@@ -99,7 +99,7 @@ implementation
               if not(TargetInfo.system in systems_objc_nfabi) then
                 result:='__OBJC, __symbols, regular, no_dead_strip'
               else
-                internalerror(2016010603);
+                InternalError(2016010603);
             end;
           sec_objc_instance_vars:
             begin
@@ -207,7 +207,7 @@ implementation
               if not(TargetInfo.system in systems_objc_nfabi) then
                 result:=' __OBJC, __module_info, regular, no_dead_strip'
               else
-                internalerror(2016010601);
+                InternalError(2016010601);
             end;
           sec_objc_data:
             begin
@@ -222,10 +222,10 @@ implementation
               result:='__DATA, __datacoal_nt, coalesced';
             end;
           else
-            internalerror(2016010101);
+            InternalError(2016010101);
           end
       else
-        internalerror(2016010102);
+        InternalError(2016010102);
     end;
 
 end.

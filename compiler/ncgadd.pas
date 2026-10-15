@@ -29,7 +29,7 @@ interface
        node,nadd,cpubase,cgbase;
 
     type
-       tcgaddnode = class(taddnode)
+       TCGAddNode = class(TAddNode)
 {          function pass_1: tnode; override;}
           procedure pass_generate_code;override;
          protected
@@ -73,10 +73,10 @@ interface
   implementation
 
     uses
-      globtype,systems,
-      verbose,globals,
+      GlobType,Systems,
+      Verbose,Globals,
       symconst,symdef,
-      aasmbase,aasmdata,defutil,
+      aasmbase,AAsmData,defutil,
       pass_2,tgobj,
       nutils,nset,ncgutil,cgobj,cgutils,
       hlcgobj
@@ -87,10 +87,10 @@ interface
                                   Helpers
 *****************************************************************************}
 
-    procedure tcgaddnode.pass_left_right;
+    procedure TCGAddNode.pass_left_right;
 {$ifdef x86}
       var
-        tmpreg     : tregister;
+        tmpreg     : TRegister;
         pushedfpu  : boolean;
 {$endif x86}
       begin
@@ -145,7 +145,7 @@ interface
       end;
 
 
-    procedure tcgaddnode.set_result_location_reg;
+    procedure TCGAddNode.set_result_location_reg;
       begin
         location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
@@ -160,7 +160,7 @@ interface
       end;
 
 
-    procedure tcgaddnode.force_reg_left_right(allow_swap,allow_constant:boolean);
+    procedure TCGAddNode.force_reg_left_right(allow_swap,allow_constant:boolean);
       begin
         if (left.location.loc<>LOC_REGISTER) and
            not(
@@ -189,7 +189,7 @@ interface
       end;
 
 
-    function tcgaddnode.cmpnode2topcmp(unsigned: boolean): TOpCmp;
+    function TCGAddNode.cmpnode2topcmp(unsigned: boolean): TOpCmp;
       begin
         if unsigned then
           case nodetype of
@@ -200,7 +200,7 @@ interface
             equaln:   result:=OC_EQ;
             unequaln: result:=OC_NE;
           else
-            internalerror(2011010412);
+            InternalError(2011010412);
           end
         else
           case nodetype of
@@ -211,7 +211,7 @@ interface
             equaln:   result:=OC_EQ;
             unequaln: result:=OC_NE;
           else
-            internalerror(2011010403);
+            InternalError(2011010403);
           end
       end;
 
@@ -219,14 +219,14 @@ interface
                                 Smallsets
 *****************************************************************************}
 
-    procedure tcgaddnode.second_opsmallset;
+    procedure TCGAddNode.second_opsmallset;
       begin
         { when a setdef is passed, it has to be a smallset }
         if not(
                ((left.nodetype=setelementn) or is_smallset(left.resultdef)) and
                ((right.nodetype=setelementn) or is_smallset(right.resultdef))
               ) then
-          internalerror(200203302);
+          InternalError(200203302);
         if (left.nodetype=setelementn) or (right.nodetype=setelementn) then
           second_addsmallsetelement
         else if nodetype in [equaln,unequaln,gtn,gten,lten,ltn] then
@@ -236,9 +236,9 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_addsmallset;
+    procedure TCGAddNode.second_addsmallset;
       var
-        cgop    : TOpCg;
+        cgop    : TOpCG;
         opdone  : boolean;
       begin
         opdone := false;
@@ -271,7 +271,7 @@ interface
                 begin
                   if (right.location.size<>left.location.size) or
                      (location.size<>left.location.size) then
-                    internalerror(2010123001);
+                    InternalError(2010123001);
                   { make sure that location.register is different from
                     left.location.register, since right will overwrite it
                     and we'll use left afterwards }
@@ -289,7 +289,7 @@ interface
                 end;
             end;
           else
-            internalerror(2002072701);
+            InternalError(2002072701);
         end;
 
         if not opdone then
@@ -309,18 +309,18 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_addsmallsetelement;
+    procedure TCGAddNode.second_addsmallsetelement;
       var
-        tmpreg : tregister;
+        tmpreg : TRegister;
         mask,
         setbase : aint;
-        cgop    : TOpCg;
+        cgop    : TOpCG;
       begin
         if nodetype<>addn then
-          internalerror(20080302);
+          InternalError(20080302);
         { no range support for smallsets }
-        if assigned(tsetelementnode(right).right) then
-          internalerror(20080303);
+        if Assigned(TSetElementNode(right).right) then
+          InternalError(20080303);
         pass_left_right;
         { setelementn is a special case, it must be on right }
         if (nf_swapped in flags) and
@@ -370,7 +370,7 @@ interface
                                 Boolean
 *****************************************************************************}
 
-    procedure tcgaddnode.second_opboolean;
+    procedure TCGAddNode.second_opboolean;
       begin
         if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
           second_cmpboolean
@@ -379,16 +379,16 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_addboolean;
+    procedure TCGAddNode.second_addboolean;
       var
-        cgop    : TOpCg;
-        truelabel, falselabel : tasmlabel;
+        cgop    : TOpCG;
+        truelabel, falselabel : TAsmLabel;
         oldflowcontrol : TFlowControl;
       begin
         { And,Or will only evaluate from left to right only the
           needed nodes unless full boolean evaluation is enabled }
         if (nodetype in [orn,andn]) and
-           (not(cs_full_boolean_eval in CurrentSettings.localswitches) or
+           (not(cs_full_boolean_eval in CurrentSettings.LocalSwitches) or
             (anf_short_bool in addnodeflags)) then
           begin
             case nodetype of
@@ -409,7 +409,7 @@ interface
                    location_reset_jump(location,left.location.truelabel,falselabel);
                 end;
               else
-                internalerror(200307044);
+                InternalError(200307044);
             end;
             { these jumps mean we're now in a flow control construct }
             oldflowcontrol:=flowcontrol;
@@ -436,7 +436,7 @@ interface
               andn :
                 cgop:=OP_AND;
               else
-                 internalerror(200203247);
+                 InternalError(200203247);
             end;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
             if right.location.size in [OS_64,OS_S64] then
@@ -470,7 +470,7 @@ interface
                                 64-bit
 *****************************************************************************}
 
-    procedure tcgaddnode.second_op64bit;
+    procedure TCGAddNode.second_op64bit;
       begin
         if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
           second_cmp64bit
@@ -479,11 +479,11 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_add64bit;
+    procedure TCGAddNode.second_add64bit;
       var
         op         : TOpCG;
         checkoverflow : boolean;
-        ovloc : tlocation;
+        ovloc : TLocation;
       begin
         ovloc.loc:=LOC_VOID;
 
@@ -513,10 +513,10 @@ interface
           muln:
             begin
               { should be handled in pass_1 (JM) }
-              internalerror(200109051);
+              InternalError(200109051);
             end;
           else
-            internalerror(2002072705);
+            InternalError(2002072705);
         end;
 
         checkoverflow:=
@@ -562,7 +562,7 @@ interface
                 end;
             end;
           else
-            internalerror(2002072803);
+            InternalError(2002072803);
         end;
 {$else cpu64bitalu or cpuhighleveltarget}
         case nodetype of
@@ -608,7 +608,7 @@ interface
                 end;
             end;
           else
-            internalerror(2002072804);
+            InternalError(2002072804);
         end;
 {$endif cpu64bitalu or cpuhighleveltarget}
 
@@ -622,10 +622,10 @@ interface
                                 Strings
 *****************************************************************************}
 
-    procedure tcgaddnode.second_addstring;
+    procedure TCGAddNode.second_addstring;
       begin
         { this should already be handled in pass1 }
-        internalerror(2002072402);
+        InternalError(2002072402);
       end;
 
 
@@ -633,7 +633,7 @@ interface
                                 Floats
 *****************************************************************************}
 
-    procedure tcgaddnode.second_opfloat;
+    procedure TCGAddNode.second_opfloat;
       begin
         if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
           second_cmpfloat
@@ -646,7 +646,7 @@ interface
                                 Ordinals
 *****************************************************************************}
 
-    procedure tcgaddnode.second_opordinal;
+    procedure TCGAddNode.second_opordinal;
       begin
          if (nodetype in [ltn,lten,gtn,gten,equaln,unequaln]) then
            second_cmpordinal
@@ -655,13 +655,13 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_addordinal;
+    procedure TCGAddNode.second_addordinal;
       var
         unsigned,
         checkoverflow : boolean;
-        cgop   : topcg;
-        tmpreg : tregister;
-        ovloc : tlocation;
+        cgop   : TOpCG;
+        tmpreg : TRegister;
+        ovloc : TLocation;
       begin
         ovloc.loc:=LOC_VOID;
 
@@ -708,14 +708,14 @@ interface
               cgop:=OP_SUB;
             end;
           else
-            internalerror(2013120104);
+            InternalError(2013120104);
         end;
 
        checkoverflow:=
          checkoverflow and
           (left.resultdef.typ<>pointerdef) and
           (right.resultdef.typ<>pointerdef) and
-          (cs_check_overflow in CurrentSettings.localswitches) and not(nf_internal in flags);
+          (cs_check_overflow in CurrentSettings.LocalSwitches) and not(nf_internal in flags);
 
        if nodetype<>subn then
         begin
@@ -759,15 +759,15 @@ interface
       end;
 
 
-    procedure tcgaddnode.second_cmpboolean;
+    procedure TCGAddNode.second_cmpboolean;
       begin
         second_cmpordinal;
       end;
 
-    function tcgaddnode.needoverflowcheck: boolean;
+    function TCGAddNode.needoverflowcheck: boolean;
       begin
         result:=
-          (cs_check_overflow in CurrentSettings.localswitches) and
+          (cs_check_overflow in CurrentSettings.LocalSwitches) and
           (left.resultdef.typ<>pointerdef) and
           (right.resultdef.typ<>pointerdef) and
           not(nf_internal in flags);
@@ -778,7 +778,7 @@ interface
                                 pass_generate_code;
 *****************************************************************************}
 
-    procedure tcgaddnode.pass_generate_code;
+    procedure TCGAddNode.pass_generate_code;
       begin
         case left.resultdef.typ of
           orddef :
@@ -804,7 +804,7 @@ interface
               if is_smallset(TSetDef(left.resultdef)) then
                 second_opsmallset
               else
-                internalerror(200109041);
+                InternalError(200109041);
             end;
           arraydef :
             begin
@@ -812,7 +812,7 @@ interface
               if is_dynamic_array(left.resultdef) then
                 second_opordinal
               else
-                if (cs_support_vectors in CurrentSettings.globalswitches) and
+                if (cs_support_vectors in CurrentSettings.GlobalSwitches) and
                    is_vector(left.resultdef) then
                   second_opvector
 {$ifdef SUPPORT_MMX}
@@ -821,7 +821,7 @@ interface
                   second_opmmx
 {$endif SUPPORT_MMX}
               else
-                internalerror(200306016);
+                InternalError(200306016);
             end;
           floatdef :
             second_opfloat;
@@ -831,5 +831,5 @@ interface
       end;
 
 begin
-   caddnode:=tcgaddnode;
+   CAddNode:=TCGAddNode;
 end.

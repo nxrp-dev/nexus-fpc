@@ -26,23 +26,23 @@ unit naarch64util;
 interface
 
 uses
-    cclasses, ngenutil, fmodule;
+    CClasses, ngenutil, FModule;
 
 type
     TAArch64NodeUtils = class(TNodeUtils)
         class procedure InsertObjectInfo; override;
-        class procedure Insert_Init_Final_Table(main: tmodule; Entries: TFPList); override;
+        class procedure Insert_Init_Final_Table(main: TModule; Entries: TFPList); override;
     end;
 
 implementation
 
 uses
-    verbose,
-    systems,
-    globals,
-    cpuinfo,cpubase,
+    Verbose,
+    Systems,
+    Globals,
+    CPUInfo,cpubase,
     cgbase,cgutils,
-    aasmbase,aasmdata,aasmtai,aasmcpu,
+    aasmbase,AAsmData,aasmtai,aasmcpu,
     symdef;
 
 class procedure TAArch64NodeUtils.InsertObjectInfo;
@@ -54,7 +54,7 @@ end;
     TODO: This is a simple skeleton, not nearly as complex as the
     ARM (32-bit) version in compiler/arm/narmutil.pas
 }
-class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: tmodule; Entries: TFPList);
+class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: TModule; Entries: TFPList);
 
     procedure GenEntry(List: TAsmList);
     var
@@ -75,7 +75,7 @@ class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: tmodule; Entries
         pairreg := newreg(rt, sr, sub);
 
         sr := RS_X30;
-        List.Concat(taicpu.op_reg_reg_ref(A_STP, pairreg, newreg(rt, sr, sub), ref));
+        List.Concat(TAICPU.op_reg_reg_ref(A_STP, pairreg, newreg(rt, sr, sub), ref));
 
         { TODO: generate `mov x29, sp` maybe? }
     end;
@@ -100,16 +100,16 @@ class procedure TAArch64NodeUtils.Insert_Init_Final_Table(main: tmodule; Entries
         pairreg := newreg(rt, sr, sub);
 
         sr := RS_X29;
-        List.Concat(taicpu.op_reg_reg_ref(A_LDP, newreg(rt, sr, sub), pairreg, ref));
+        List.Concat(TAICPU.op_reg_reg_ref(A_LDP, newreg(rt, sr, sub), pairreg, ref));
 
         { generate `ret` }
-        List.Concat(taicpu.op_none(A_RET));
+        List.Concat(TAICPU.op_none(A_RET));
     end;
 
 var
     InitList, FinalList, Header: TAsmList;
     Entry : PInitFinalEntry;
-    i : longint;
+    i : LongInt;
 begin
     if not(tf_init_final_units_by_calls in TargetInfo.flags) then
     begin
@@ -127,9 +127,9 @@ begin
     begin
         Entry := PInitFinalEntry(Entries[i]);
         if Entry^.finifunc <> '' then
-            finalList.Concat(taicpu.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.finifunc, AT_FUNCTION)));
+            finalList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.finifunc, AT_FUNCTION)));
         if Entry^.initfunc <> '' then
-            initList.Concat(taicpu.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.initfunc, AT_FUNCTION)));
+            initList.Concat(TAICPU.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.initfunc, AT_FUNCTION)));
     end;
 
     GenExit(finalList);
@@ -137,21 +137,21 @@ begin
 
     Header := TAsmList.Create;
     New_Section(Header, Sec_Code, 'FPC_INIT_FUNC_TABLE', 1);
-    Header.Concat(TAI_Symbol.CreateName_Global('FPC_INIT_FUNC_TABLE', AT_FUNCTION, 0, VoidCodePointerType));
+    Header.Concat(TAISymbol.CreateName_Global('FPC_INIT_FUNC_TABLE', AT_FUNCTION, 0, VoidCodePointerType));
 
     InitList.InsertList(Header);
     Header.Free;
 
-    CurrentAsmData.AsmLists[al_procedures].concatList(initList);
+    CurrentAsmData.AsmLists[al_procedures].ConcatList(initList);
 
     Header := TAsmList.Create;
     New_Section(Header, Sec_Code, 'FPC_FINALIZE_FUNC_TABLE', 1);
-    Header.Concat(TAI_Symbol.CreateName_Global('FPC_FINALIZE_FUNC_TABLE', AT_FUNCTION, 0, VoidCodePointerType));
+    Header.Concat(TAISymbol.CreateName_Global('FPC_FINALIZE_FUNC_TABLE', AT_FUNCTION, 0, VoidCodePointerType));
 
     FinalList.InsertList(Header);
     Header.Free;
 
-    CurrentAsmData.AsmLists[al_procedures].concatList(finalList);
+    CurrentAsmData.AsmLists[al_procedures].ConcatList(finalList);
 
     InitList.Free;
     FinalList.Free;
@@ -160,5 +160,5 @@ begin
 end;
 
 begin
-    cnodeutils := TAArch64NodeUtils;
+    CNodeUtils := TAArch64NodeUtils;
 end.

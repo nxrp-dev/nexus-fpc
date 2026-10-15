@@ -26,26 +26,26 @@ unit globals;
 interface
 
     uses
-tpcompilerreal,
+TPCompilerReal,
     {$ifdef windows}
-      windows,
+      Windows,
 {$endif}
 {$ifdef hasunix}
-      Baseunix,unix,
+      BaseUnix,Unix,
 {$endif}
 
 {$IFNDEF USE_FAKE_SYSUTILS}
-      sysutils,
+      SysUtils,
 {$ELSE}
-      fksysutl,
+      FKSysUtl,
 {$ENDIF}
       { comphook pulls in sysutils anyways }
-      cutils,cclasses,cfileutl,
-      cpuinfo,
-      globtype,version,versioncmp,systems;
+      CUtils,CClasses,CFileUtl,
+      CPUInfo,
+      GlobType,Version,VersionCmp,Systems;
 
     const
-       delphimodeswitches =
+       DelphiModeSwitches =
          [m_delphi,m_class,m_objpas,m_result,m_string_pchar,
           m_pointer_2_procedure,m_autoderef,m_tp_procvar,m_initfinal,m_default_ansistring,
           m_out,m_default_para,m_duplicate_names,m_hintdirective,
@@ -53,55 +53,55 @@ tpcompilerreal,
           m_array_operators,m_prefixed_attributes,m_underscoreisseparator,
           m_function_references,m_anonymous_functions,m_multiline_strings,
           m_statement_expressions];
-       delphiunicodemodeswitches = delphimodeswitches + [m_systemcodepage,m_default_unicodestring];
-       fpcmodeswitches =
+       DelphiUnicodeModeSwitches = DelphiModeSwitches + [m_systemcodepage,m_default_unicodestring];
+       FPCModeSwitches =
          [m_fpc,m_string_pchar,m_nested_comment,m_repeat_forward,
           m_cvar_support,m_initfinal,m_hintdirective,
           m_property,m_default_inline];
-       objfpcmodeswitches =
+       ObjFPCModeSwitches =
          [m_objfpc,m_fpc,m_class,m_objpas,m_result,m_string_pchar,m_nested_comment,
           m_repeat_forward,m_cvar_support,m_initfinal,m_out,m_default_para,m_hintdirective,
           m_property,m_default_inline,m_except,m_multiline_strings];
 {$ifdef gpc_mode}
-       gpcmodeswitches =
+       GPCModeSwitches =
          [m_gpc,m_tp_procvar];
 {$endif}
-       macmodeswitches =
+       MacModeSwitches =
          [m_mac,m_cvar_support,m_mac_procvar,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_default_inline];
-       isomodeswitches =
+       ISOModeSwitches =
          [m_iso,m_tp_procvar,m_duplicate_names,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_isolike_io,
           m_isolike_program_para,
           m_isolike_mod];
-       extpasmodeswitches =
+       ExtPasModeSwitches =
          [m_extpas,m_tp_procvar,m_duplicate_names,m_nested_procvars,m_non_local_goto,m_isolike_unary_minus,m_isolike_io,
           m_isolike_program_para,
           m_isolike_mod];
 
        { maximum nesting of routines }
-       maxnesting = 32;
+       MaxNesting = 32;
 
        { Filenames and extensions }
-       sourceext  = '.pas';
-       pext       = '.p';
+       SourceExt  = '.pas';
+       PExt       = '.p';
 
-       treelogfilename = 'tree.log';
+       TreeLogFileName = 'tree.log';
 
 {$ifdef FPC_LITTLE_ENDIAN}
-       MathQNaN : TCompDoubleRec = (bytes : (0,0,0,0,0,0,252,255));
-       MathInf : TCompDoubleRec = (bytes : (0,0,0,0,0,0,240,127));
-       MathNegInf : TCompDoubleRec = (bytes : (0,0,0,0,0,0,240,255));
-       MathPosZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,128));
-       MathPi : TCompDoubleRec = (bytes : (24,45,68,84,251,33,9,64));
-       MathPiExtended : TCompExtendedRec = (bytes : (53,194,104,33,162,218,15,201,0,64));
+       MathQNaN : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,252,255));
+       MathInf : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,240,127));
+       MathNegInf : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,240,255));
+       MathPosZero : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,0,0));
+       MathNegZero : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,0,128));
+       MathPi : TCompDoubleRec = (Bytes : (24,45,68,84,251,33,9,64));
+       MathPiExtended : TCompExtendedRec = (Bytes : (53,194,104,33,162,218,15,201,0,64));
 {$else FPC_LITTLE_ENDIAN}
-       MathQNaN : TCompDoubleRec = (bytes : (255,252,0,0,0,0,0,0));
-       MathInf : TCompDoubleRec = (bytes : (127,240,0,0,0,0,0,0));
-       MathNegInf : TCompDoubleRec = (bytes : (255,240,0,0,0,0,0,0));
-       MathPosZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : TCompDoubleRec = (bytes : (128,0,0,0,0,0,0,0));
-       MathPi : TCompDoubleRec =  (bytes : (64,9,33,251,84,68,45,24));
-       MathPiExtended : TCompExtendedRec = (bytes : (64,0,201,15,218,162,33,104,194,53));
+       MathQNaN : TCompDoubleRec = (Bytes : (255,252,0,0,0,0,0,0));
+       MathInf : TCompDoubleRec = (Bytes : (127,240,0,0,0,0,0,0));
+       MathNegInf : TCompDoubleRec = (Bytes : (255,240,0,0,0,0,0,0));
+       MathPosZero : TCompDoubleRec = (Bytes : (0,0,0,0,0,0,0,0));
+       MathNegZero : TCompDoubleRec = (Bytes : (128,0,0,0,0,0,0,0));
+       MathPi : TCompDoubleRec =  (Bytes : (64,9,33,251,84,68,45,24));
+       MathPiExtended : TCompExtendedRec = (Bytes : (64,0,201,15,218,162,33,104,194,53));
 {$endif FPC_LITTLE_ENDIAN}
 
        CP_UTF8 = 65001;
@@ -111,38 +111,38 @@ tpcompilerreal,
 
     var
        { by default no local variable trashing }
-       localvartrashing: longint = -1;
+       LocalVarTrashing: LongInt = -1;
 
     const
-       nroftrashvalues = 4;
-       trashintvalues: array[0..nroftrashvalues-1] of int64 = ($5555555555555555,$AAAAAAAAAAAAAAAA,$EFEFEFEFEFEFEFEF,0);
+       NrOfTrashValues = 4;
+       TrashIntValues: array[0..NrOfTrashValues-1] of Int64 = ($5555555555555555,$AAAAAAAAAAAAAAAA,$EFEFEFEFEFEFEFEF,0);
 
 { Verbosity constants }
 Const
   { Levels }
-  V_None         = $0;
-  V_Fatal        = $1;
-  V_Error        = $2;
-  V_Normal       = $4; { doesn't show a text like Error: }
-  V_Warning      = $8;
-  V_Note         = $10;
-  V_Hint         = $20;
-  V_LineInfoMask = $fff;
+  VNone         = $0;
+  VFatal        = $1;
+  VError        = $2;
+  VNormal       = $4; { doesn't show a text like Error: }
+  VWarning      = $8;
+  VNote         = $10;
+  VHint         = $20;
+  VLineInfoMask = $fff;
   { From here by default no line info }
-  V_Info         = $1000;
-  V_Status       = $2000;
-  V_Used         = $4000;
-  V_Tried        = $8000;
-  V_Conditional  = $10000;
-  V_Debug        = $20000;
-  V_Executable   = $40000;
-  V_TimeStamps   = $80000;
-  V_LevelMask    = $ffffff;
-  V_All          = V_LevelMask;
-  V_Default      = V_Fatal + V_Error + V_Normal;
+  VInfo         = $1000;
+  VStatus       = $2000;
+  VUsed         = $4000;
+  VTried        = $8000;
+  VConditional  = $10000;
+  VDebug        = $20000;
+  VExecutable   = $40000;
+  VTimeStamps   = $80000;
+  VLevelMask    = $ffffff;
+  VAll          = VLevelMask;
+  VDefault      = VFatal + VError + VNormal;
   { Flags }
-  V_LineInfo     = $10000000;
-  V_Parallel     = $20000000;
+  VLineInfo     = $10000000;
+  VParallel     = $20000000;
 
 
     type
@@ -151,69 +151,69 @@ Const
          but this requirement is now obsolete,
          as the fields are written one by one. PM 2012-06-13 }
        TSettings = record
-         alignment       : TAlignmentInfo;
-         globalswitches  : TGlobalSwitches;
-         targetswitches  : TTargetSwitches;
-         moduleswitches  : TModuleSwitches;
-         localswitches   : TLocalSwitches;
-         modeswitches    : TModeSwitches;
-         optimizerswitches : TOptimizerSwitches;
+         Alignment       : TAlignmentInfo;
+         GlobalSwitches  : TGlobalSwitches;
+         TargetSwitches  : TTargetSwitches;
+         ModuleSwitches  : TModuleSwitches;
+         LocalSwitches   : TLocalSwitches;
+         ModeSwitches    : TModeSwitches;
+         OptimizerSwitches : TOptimizerSwitches;
          { generate information necessary to perform these wpo's during a subsequent compilation }
-         genwpoptimizerswitches: TWPOptimizerSwitches;
+         GenWPOptimizerSwitches: TWPOptimizerSwitches;
          { perform these wpo's using information generated during a previous compilation }
-         dowpoptimizerswitches: TWPOptimizerSwitches;
-         debugswitches   : TDebugSwitches;
+         DoWPOptimizerSwitches: TWPOptimizerSwitches;
+         DebugSwitches   : TDebugSwitches;
          { 0: old behaviour for sets <=256 elements
            >0: round to this size }
-         setalloc,
-         packenum        : shortint;
+         SetAlloc,
+         PackEnum        : ShortInt;
 
-         packrecords     : shortint;
-         maxfpuregisters : shortint;
+         PackRecords     : ShortInt;
+         MaxFPURegisters : ShortInt;
 
-         verbosity       : longint;
+         Verbosity       : LongInt;
 
-         cputype,
-         optimizecputype,
-         asmcputype      : tcputype;
-         fputype         : tfputype;
-         asmmode         : tasmmode;
-         interfacetype   : TInterfaceTypes;
-         defproccall     : TProcCallOption;
-         sourcecodepage  : TStringEncoding;
+         CPUType,
+         OptimizeCPUType,
+         AsmCPUType      : TCPUType;
+         FPUType         : TFPUType;
+         AsmMode         : TAsmMode;
+         InterfaceType   : TInterfaceTypes;
+         DefProcCall     : TProcCallOption;
+         SourceCodePage  : TStringEncoding;
 
-         minfpconstprec  : TFloatType;
+         MinFPConstPrec  : TFloatType;
 
-         disabledircache : boolean;
+         DisableDirCache : Boolean;
 
-         tlsmodel : TTLSModel;
+         TLSModel : TTLSModel;
 
         { CPU targets with microcontroller support can add a controller specific unit }
-         controllertype   : tcontrollertype;
+         ControllerType   : TControllerType;
 
          { WARNING: pmessage cannot be written as such in record token
               pmessage is the top of a stack of message/verbosity changes
               RestoreLocalVerbosity applies the current stack. }
-         pmessage : PMessageStateRecord;
+         PMessage : PMessageStateRecord;
 
-         lineendingtype : TLineEndingType;
+         LineEndingType : TLineEndingType;
 
-         whitespacetrimcount : word;
+         WhitespaceTrimCount : Word;
 
-         whitespacetrimauto : boolean;
+         WhitespaceTrimAuto : Boolean;
 
 {$if defined(generic_cpu)}
-         case byte of
+         case Byte of
 {$endif}
 {$if defined(generic_cpu)}
    {$ifdef generic_cpu} 1:({$endif}
-           x86memorymodel  : TX86MemoryModel;
+           X86MemoryModel  : TX86MemoryModel;
    {$ifdef generic_cpu}   );{$endif}
 {$endif defined(generic_cpu)}
 
 {$if defined(generic_cpu)}
    {$ifdef generic_cpu} 2:({$endif}
-         instructionset : tinstructionset;
+         InstructionSet : TInstructionSet;
    {$ifdef generic_cpu}   );{$endif}
 {$endif}
 
@@ -228,28 +228,28 @@ Const
       TLinkRec = record
         Key   : AnsiString;
         Value : AnsiString; // key expands to valuelist "value"
-        Weight: longint;
+        Weight: LongInt;
       end;
 
       TLinkStrMap  = class
       private
-        itemcnt : longint;
-        fmap : Array Of TLinkRec;
-        function  Lookup(const key:Ansistring):longint;
-        function getlinkrec(i:longint):TLinkRec;
+        ItemCnt : LongInt;
+        FMap : Array Of TLinkRec;
+        function  Lookup(const Key:AnsiString):LongInt;
+        function GetLinkRec(I:LongInt):TLinkRec;
       public
-        procedure Add(const key:ansistring;const value:AnsiString='';weight:longint=LinkMapWeightDefault);
-        procedure addseries(const keys:AnsiString;weight:longint=LinkMapWeightDefault);
-        function  AddDep(const keyvalue:String):boolean;
-        function  AddWeight(const keyvalue:String):boolean;
-        procedure SetValue(const key:AnsiString;Weight:Integer);
-        procedure SortonWeight;
-        function Find(const key:AnsiString):AnsiString;
-        procedure Expand(src:TCmdStrList;dest: TLinkStrMap);
-        procedure UpdateWeights(Weightmap:TLinkStrMap);
+        procedure Add(const Key:AnsiString;const Value:AnsiString='';Weight:LongInt=LinkMapWeightDefault);
+        procedure AddSeries(const Keys:AnsiString;Weight:LongInt=LinkMapWeightDefault);
+        function  AddDep(const KeyValue:String):Boolean;
+        function  AddWeight(const KeyValue:String):Boolean;
+        procedure SetValue(const Key:AnsiString;Weight:Integer);
+        procedure SortOnWeight;
+        function Find(const Key:AnsiString):AnsiString;
+        procedure Expand(Src:TCmdStrList;Dest: TLinkStrMap);
+        procedure UpdateWeights(WeightMap:TLinkStrMap);
         constructor Create;
-        property count : longint read itemcnt;
-        property items[I:longint]:TLinkRec read getlinkrec; default;
+        property Count : LongInt read ItemCnt;
+        property Items[I:LongInt]:TLinkRec read GetLinkRec; default;
       end;
 
       TPendingStateFlag = (
@@ -265,99 +265,99 @@ Const
       TPendingStateFlags = set of TPendingStateFlag;
 
       TPendingState = record
-        nextverbositystr : shortstring;
-        nextlocalswitches : TLocalSwitches;
-        nextverbosityfullswitch: longint;
-        nextcallingstr : shortstring;
-        nextmessagerecord : PMessageStateRecord;
-        nextalignment : TAlignmentInfo;
-        nextpackenum : shortint;
-        nextpackrecords : shortint;
-        nextsetalloc : shortint;
-        nextasmmode : tasmmode;
-        nextoptimizerswitches : TOptimizerSwitches;
-        flags : TPendingStateFlags;
+        NextVerbosityStr : ShortString;
+        NextLocalSwitches : TLocalSwitches;
+        NextVerbosityFullSwitch: LongInt;
+        NextCallingStr : ShortString;
+        NextMessageRecord : PMessageStateRecord;
+        NextAlignment : TAlignmentInfo;
+        NextPackEnum : ShortInt;
+        NextPackRecords : ShortInt;
+        NextSetAlloc : ShortInt;
+        NextAsmMode : TAsmMode;
+        NextOptimizerSwitches : TOptimizerSwitches;
+        Flags : TPendingStateFlags;
       end;
 
 
     var
        { specified inputfile }
-       inputfilepath     : string;
-       inputfilename     : string;
+       InputFilePath     : string;
+       InputFileName     : string;
        { specified outputfile with -o parameter }
-       outputfilename    : string;
-       outputprefix      : pshortstring;
-       outputsuffix      : pshortstring;
+       OutputFileName    : string;
+       OutputPrefix      : PShortString;
+       OutputSuffix      : PShortString;
        { selected subtarget }
-       subtarget         : string;
+       SubTarget         : string;
 
        { specified with -FE or -FU }
-       outputexedir      : TPathStr;
-       outputunitdir     : TPathStr;
+       OutputExeDir      : TPathStr;
+       OutputUnitDir     : TPathStr;
        { specified with -FW and -Fw }
-       wpofeedbackinput,
-       wpofeedbackoutput : TPathStr;
+       WPOFeedbackInput,
+       WPOFeedbackOutput : TPathStr;
        { external assembler extra option }
-       asmextraopt       : string;
+       AsmExtraOpt       : string;
 
        { things specified with parameters }
-       paralinkoptions   : TCmdStr;
-       paradynamiclinker : string;
-       paraprintnodetree : byte;
+       ParaLinkOptions   : TCmdStr;
+       ParaDynamicLinker : string;
+       ParaPrintNodeTree : Byte;
 {$ifdef PREPROCWRITE}
-       parapreprocess    : boolean;
+       ParaPreprocess    : Boolean;
 {$endif PREPROCWRITE}
-       printnodefile     : text;
+       PrintNodeFile     : Text;
 
        {  typical cross compiling params}
 
        { directory where the utils can be found (options -FD) }
-       utilsdirectory : TPathStr;
+       UtilsDirectory : TPathStr;
        { targetname specific prefix used by these utils (options -XP<path>) }
-       utilsprefix    : TCmdStr;
+       UtilsPrefix    : TCmdStr;
 
        { Suffix for LLVM utilities, e.g. '-7' for clang-7 }
-       llvmutilssuffix     : TCmdStr;
+       LLVMUtilsSuffix     : TCmdStr;
 
-       cshared        : boolean;        { pass --shared to ld to link C libs shared}
-       Dontlinkstdlibpath: Boolean;     { Don't add std paths to linkpath}
-       rlinkpath      : TCmdStr;        { rpath-link linkdir override}
-       sysrootpath    : TCmdStr;        { target system root to search dyn linker }
+       CShared        : Boolean;        { pass --shared to ld to link C libs shared}
+       DontLinkStdlibPath: Boolean;     { Don't add std paths to linkpath}
+       RLinkPath      : TCmdStr;        { rpath-link linkdir override}
+       SysRootPath    : TCmdStr;        { target system root to search dyn linker }
 
        { some flags for global compiler switches }
-       do_build,
-       do_release,
-       do_make       : boolean;
+       Do_Build,
+       Do_Release,
+       Do_Make       : Boolean;
 
-       timestr,
-       datestr : string;
+       TimeStr,
+       DateStr : string;
        { Path to ppc }
-       exepath       : TPathStr;
+       ExePath       : TPathStr;
        { Path to unicode charmap/collation binaries }
-       unicodepath   : TPathStr;
+       UnicodePath   : TPathStr;
        { path for searching units, different paths can be separated by ; }
-       librarysearchpath,
-       unitsearchpath,
-       objectsearchpath,
-       includesearchpath,
-       frameworksearchpath  : TSearchPathList;
-       packagesearchpath     : TSearchPathList;
+       LibrarySearchPath,
+       UnitSearchPath,
+       ObjectSearchPath,
+       IncludeSearchPath,
+       FrameworkSearchPath  : TSearchPathList;
+       PackageSearchPath     : TSearchPathList;
 
        { list of default namespaces }
-       namespacelist : TCmdStrList;
+       NamespaceList : TCmdStrList;
        // During scanning/parsing, a module may not yet be available.
        // Scanner checks first current_namespacelist, then local_namespacelist
-       premodule_namespacelist,                    // always set: used as long as current_namespacelist is not correctly set.
+       PreModule_NamespaceList,                    // always set: used as long as current_namespacelist is not correctly set.
        CurrentNamespaceList : TCmdStrList;        // Set when parsing module to the current module's namespace.
        { contains tpackageentry entries }
-       packagelist : TFPHashList;
-       package_sdk_identity, package_build_identity: shortstring;
-       embed_package_metadata: boolean;
-       autoloadunits      : string;
+       PackageList : TFPHashList;
+       Package_SDK_Identity, Package_Build_Identity: ShortString;
+       Embed_Package_Metadata: Boolean;
+       AutoloadUnits      : string;
 
        { linking }
-       usewindowapi  : boolean;
-       description   : string;
+       UseWindowAPI  : Boolean;
+       Description   : string;
        SetPEFlagsSetExplicity,
        SetPEOptFlagsSetExplicity,
        SetPEOSVersionSetExplicitely,
@@ -366,42 +366,42 @@ Const
        ImageBaseSetExplicity,
        MinStackSizeSetExplicity,
        MaxStackSizeSetExplicity,
-       DescriptionSetExplicity : boolean;
-       dllversion    : string;
-       dllmajor,
-       dllminor,
+       DescriptionSetExplicity : Boolean;
+       DLLVersion    : string;
+       DLLMajor,
+       DLLMinor,
        { win pe  }
-       peosversionminor,
-       peosversionmajor,
-       pesubsysversionminor,
-       pesubsysversionmajor,
-       peuserversionminor,
-       peuserversionmajor : word;
-       peoptflags,
-       peflags : longint;
-       minstacksize,
-       maxstacksize,
-       imagebase     : puint;
-       UseDeffileForExports    : boolean;
-       UseDeffileForExportsSetExplicitly : boolean;
+       PEOSVersionMinor,
+       PEOSVersionMajor,
+       PESubSysVersionMinor,
+       PESubSysVersionMajor,
+       PEUserVersionMinor,
+       PEUserVersionMajor : Word;
+       PEOptFlags,
+       PEFlags : LongInt;
+       MinStackSize,
+       MaxStackSize,
+       ImageBase     : PUint;
+       UseDefFileForExports    : Boolean;
+       UseDefFileForExportsSetExplicitly : Boolean;
        GenerateImportSection,
        GenerateImportSectionSetExplicitly,
-       RelocSection : boolean;
+       RelocSection : Boolean;
 
        MacOSXVersionMin,
-       iPhoneOSVersionMin: tversion;
-       RelocSectionSetExplicitly : boolean;
+       IPhoneOSVersionMin: TVersion;
+       RelocSectionSetExplicitly : Boolean;
 
        CurrentTokenPos,                  { position of the last token }
        CurrentFilePos : TFilePosInfo;    { current position }
 
-       CodeGenError : boolean;           { true if there is an error reported }
-       exception_raised : boolean;           { true if there is an exception reported }
+       CodeGenError : Boolean;           { true if there is an error reported }
+       Exception_Raised : Boolean;           { true if there is an exception reported }
 
-       block_type : TBlockType;         { type of currently parsed block }
+       Block_Type : TBlockType;         { type of currently parsed block }
 
-       exceptblockcounter    : integer;  { each except block gets a unique number check gotos      }
-       current_exceptblock        : integer;  { the exceptblock number of the current block (0 if none) }
+       ExceptBlockCounter    : Integer;  { each except block gets a unique number check gotos      }
+       Current_ExceptBlock        : Integer;  { the exceptblock number of the current block (0 if none) }
        LinkLibraryAliases : TLinkStrMap;
        LinkLibraryOrder   : TLinkStrMap;
 
@@ -411,192 +411,192 @@ Const
 
        { The default text type belongs to the compiler invocation, not to
          an individual module or its language mode. }
-       compilerwide_unicode_strings : boolean;
-       compilerwide_string_mode_explicit : boolean;
+       CompilerWide_Unicode_Strings : Boolean;
+       CompilerWide_String_Mode_Explicit : Boolean;
 
-       pendingstate       : TPendingState;
+       PendingState       : TPendingState;
      { Memory sizes }
-       heapsize,
-       maxheapsize : int64;
-       stacksize   : longint;
+       HeapSize,
+       MaxHeapSize : Int64;
+       StackSize   : LongInt;
 
 {$Ifdef EXTDEBUG}
      { parameter switches }
-       debugstop : boolean;
+       DebugStop : Boolean;
 {$EndIf EXTDEBUG}
        { Application type (platform specific)
          see globtype.pas for description }
-       apptype : TAppType;
+       AppType : TAppType;
 
-       features : TFeatures;
+       Features : TFeatures;
 
        { prefix added to automatically generated setters/getters. If empty,
          no getters/setters will be automatically generated except if required
          for visibility reasons (but in that case the names will be mangled so
          they are unique) }
-       prop_auto_getter_prefix,
-       prop_auto_setter_prefix : string;
+       Prop_Auto_Getter_Prefix,
+       Prop_Auto_Setter_Prefix : string;
 
-       cgbackend: tcgbackend;
+       CGBackend: TCGBackend;
 
-       Inside_asm_statement : boolean = false;
+       Inside_Asm_Statement : Boolean = False;
 
-       global_unit_count : word = 0;
+       Global_Unit_Count : Word = 0;
 
        { for error info in pp.pas }
-       parser_current_file : string = '';
+       Parser_Current_File : string = '';
 
 
     const
        { default name of the C-style "main" procedure of the library/program }
        { (this will be prefixed with the target_info.cprefix)                }
-       defaultmainaliasname = 'main';
+       DefaultMainAliasName = 'main';
 
     var
-       mainaliasname : string = defaultmainaliasname;
+       MainAliasName : string = DefaultMainAliasName;
 
     const
-       custom_attribute_suffix = 'ATTRIBUTE';
+       CustomAttributeSuffix = 'ATTRIBUTE';
 
     var
       LTOExt: TCmdStr = '';
 
-      default_settings : TSettings = (
-        alignment : (
-          procalign : 0;
-          loopalign : 0;
-          jumpalign : 0;
-          jumpalignskipmax    : 0;
-          coalescealign   : 0;
-          coalescealignskipmax: 0;
-          constalignmin : 0;
-          constalignmax : 0;
-          varalignmin : 0;
-          varalignmax : 0;
-          localalignmin : 0;
-          localalignmax : 0;
-          recordalignmin : 0;
-          recordalignmax : 0;
-          maxCrecordalign : 0;
+      Default_Settings : TSettings = (
+        Alignment : (
+          ProcAlign : 0;
+          LoopAlign : 0;
+          JumpAlign : 0;
+          JumpAlignSkipMax    : 0;
+          CoalesceAlign   : 0;
+          CoalesceAlignSkipMax: 0;
+          ConstAlignMin : 0;
+          ConstAlignMax : 0;
+          VarAlignMin : 0;
+          VarAlignMax : 0;
+          LocalAlignMin : 0;
+          LocalAlignMax : 0;
+          RecordAlignMin : 0;
+          RecordAlignMax : 0;
+          MaxCRecordAlign : 0;
         );
-        globalswitches : [cs_check_unit_name,cs_link_static];
-        targetswitches : [];
-        moduleswitches : [cs_extsyntax,cs_implicit_exceptions];
-        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_refcountedstrings];
-        modeswitches : fpcmodeswitches + [m_default_ansistring];
-        optimizerswitches : [];
-        genwpoptimizerswitches : [];
-        dowpoptimizerswitches : [];
+        GlobalSwitches : [cs_check_unit_name,cs_link_static];
+        TargetSwitches : [];
+        ModuleSwitches : [cs_extsyntax,cs_implicit_exceptions];
+        LocalSwitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_refcountedstrings];
+        ModeSwitches : FPCModeSwitches + [m_default_ansistring];
+        OptimizerSwitches : [];
+        GenWPOptimizerSwitches : [];
+        DoWPOptimizerSwitches : [];
 
-        debugswitches : [ds_dwarf_sets];
-
-
-        setalloc : 0;
-        packenum : 4;
+        DebugSwitches : [ds_dwarf_sets];
 
 
-        packrecords     : 0;
+        SetAlloc : 0;
+        PackEnum : 4;
 
-        maxfpuregisters : 0;
 
-        verbosity : V_Default;
+        PackRecords     : 0;
+
+        MaxFPURegisters : 0;
+
+        Verbosity : VDefault;
 
 { Note: GENERIC_CPU is used together with generic subdirectory to
   be able to compile some of the units without any real CPU.
   This is used to generate a CPU independant PPUDUMP utility. PM }
 {$ifdef GENERIC_CPU}
-        cputype : cpu_none;
-        optimizecputype : cpu_none;
-        asmcputype : cpu_none;
-        fputype : fpu_none;
+        CPUType : cpu_none;
+        OptimizeCPUType : cpu_none;
+        AsmCPUType : cpu_none;
+        FPUType : fpu_none;
 {$else not GENERIC_CPU}
   {$ifdef i386}
-        cputype : cpu_Pentium2;
-        optimizecputype : cpu_Pentium3;
-        asmcputype : cpu_none;
-        fputype : fpu_x87;
+        CPUType : cpu_Pentium2;
+        OptimizeCPUType : cpu_Pentium3;
+        AsmCPUType : cpu_none;
+        FPUType : fpu_x87;
   {$endif i386}
   {$ifdef x86_64}
-        cputype : cpu_athlon64;
-        optimizecputype : cpu_athlon64;
-        asmcputype : cpu_none;
-        fputype : fpu_sse64;
+        CPUType : cpu_athlon64;
+        OptimizeCPUType : cpu_athlon64;
+        AsmCPUType : cpu_none;
+        FPUType : fpu_sse64;
   {$endif x86_64}
   {$ifdef aarch64}
-        cputype : cpu_armv8;
-        optimizecputype : cpu_armv8;
-        asmcputype : cpu_none;
-        fputype : fpu_vfp;
+        CPUType : cpu_armv8;
+        OptimizeCPUType : cpu_armv8;
+        AsmCPUType : cpu_none;
+        FPUType : fpu_vfp;
   {$endif aarch64}
 
 
 {$endif not GENERIC_CPU}
-        asmmode : asmmode_standard;
-        interfacetype : it_interfacecom;
-        defproccall : pocall_default;
-        sourcecodepage : 28591;
-        minfpconstprec : s32real;
+        AsmMode : asmmode_standard;
+        InterfaceType : it_interfacecom;
+        DefProcCall : pocall_default;
+        SourceCodePage : 28591;
+        MinFPConstPrec : S32Real;
 
-        disabledircache : false;
+        DisableDirCache : False;
 
-        tlsmodel : tlsm_none;
-        controllertype : ct_none;
-        pmessage : nil;
-        lineendingtype : le_platform;
-        whitespacetrimcount : 0;
-        whitespacetrimauto : false;
+        TLSModel : tlsm_none;
+        ControllerType : ct_none;
+        PMessage : nil;
+        LineEndingType : le_platform;
+        WhitespaceTrimCount : 0;
+        WhitespaceTrimAuto : False;
 {$if defined(GENERIC_CPU)}
-        x86memorymodel : mm_small;
+        X86MemoryModel : mm_small;
 {$endif defined(GENERIC_CPU)}
       );
 
-      starttime  : real;
-      startsystime : TSystemTime;
+      StartTime  : Real;
+      StartSysTime : TSystemTime;
 
-    function getdatestr:string;
-    function gettimestr:string;
-    function filetimestring( t : longint) : string;
-    function getrealtime(const st: TSystemTime) : real;
-    function getrealtime : real;
+    function GetDateStr:string;
+    function GetTimeStr:string;
+    function FileTimeString( T : LongInt) : string;
+    function GetRealTime(const ST: TSystemTime) : Real;
+    function GetRealTime : Real;
 
-    procedure DefaultReplacements(var s:ansistring; substitute_env_variables:boolean=true);
+    procedure DefaultReplacements(var S:AnsiString; SubstituteEnvVariables:Boolean=True);
 
-    function  GetEnvPChar(const envname:ansistring):pchar;
-    procedure FreeEnvPChar(p:pchar);
+    function  GetEnvPChar(const EnvName:AnsiString):PChar;
+    procedure FreeEnvPChar(P:PChar);
 
-    function is_number_float(d : bestreal) : boolean;
+    function Is_Number_Float(D : BestReal) : Boolean;
     { discern +0.0 and -0.0 }
-    function get_real_sign(r: bestreal): longint;
+    function Get_Real_Sign(R: BestReal): LongInt;
 
-    function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
-    function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function IsPosZero(Value: BestReal): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function IsNegZero(Value: BestReal): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
 
     procedure InitGlobals;
     procedure DoneGlobals;
-    procedure register_initdone_proc(init,done:tprocedure);
+    procedure Register_InitDone_Proc(Init,Done:TProcedure);
 
-    function  string2guid(const s: string; var GUID: TGUID): boolean;
-    function  guid2string(const GUID: TGUID): string;
+    function  String2GUID(const S: string; var GUID: TGUID): Boolean;
+    function  GUID2String(const GUID: TGUID): string;
 
-    function SetAktProcCall(const s:string; var a:TProcCallOption):boolean;
-    function Setabitype(const s:string;var a:tabi):boolean;
-    function Setoptimizecputype(const s:string;var a:tcputype):boolean;
-    function Setcputype(const s:string;var a:TSettings):boolean;
-    function SetFpuType(const s:string;var a:tfputype):boolean;
-    function SetControllerType(const s:string;var a:tcontrollertype):boolean;
-    function HandleFeature(const s : string) : boolean;
-    function SetMinFPConstPrec(const s: string; var a: TFloatType) : boolean;
+    function SetAktProcCall(const S:string; var A:TProcCallOption):Boolean;
+    function SetABIType(const S:string;var A:TABI):Boolean;
+    function SetOptimizeCPUType(const S:string;var A:TCPUType):Boolean;
+    function SetCPUType(const S:string;var A:TSettings):Boolean;
+    function SetFPUType(const S:string;var A:TFPUType):Boolean;
+    function SetControllerType(const S:string;var A:TControllerType):Boolean;
+    function HandleFeature(const S : string) : Boolean;
+    function SetMinFPConstPrec(const S: string; var A: TFloatType) : Boolean;
 
     {# Routine to get the required alignment for size of data, which will
        be placed in bss segment, according to the current alignment requirements }
-    function size_2_align(len : asizeuint) : longint;
-    function var_align(want_align: longint): shortint;
-    function var_align_size(siz: asizeuint): shortint;
+    function Size_2_Align(Len : ASizeUInt) : LongInt;
+    function Var_Align(WantAlign: LongInt): ShortInt;
+    function Var_Align_Size(Siz: ASizeUInt): ShortInt;
     {# Routine to get the required alignment for size of data, which will
        be placed in data/const segment, according to the current alignment requirements }
-    function const_align(want_align: longint): shortint;
-    function const_align_size(siz: asizeuint): shortint;
-    function floating_point_range_check_error : boolean;
+    function Const_Align(WantAlign: LongInt): ShortInt;
+    function Const_Align_Size(Siz: ASizeUInt): ShortInt;
+    function Floating_Point_Range_Check_Error : Boolean;
 
   { hide Sysutils.ExecuteProcess in units using this one after SysUtils}
   const
@@ -610,167 +610,167 @@ implementation
 
 {$if defined(mswindows)}
     uses
-      windirs;
+      WinDirs;
 {$endif}
 
 {****************************************************************************
                                  TLinkStrMap
 ****************************************************************************}
 
-    Constructor TLinkStrMap.create;
+    Constructor TLinkStrMap.Create;
       begin
         inherited;
-        itemcnt:=0;
+        ItemCnt:=0;
       end;
 
 
-    procedure TLinkStrMap.Add(const key:ansistring;const value:AnsiString='';weight:longint=LinkMapWeightDefault);
+    procedure TLinkStrMap.Add(const Key:AnsiString;const Value:AnsiString='';Weight:LongInt=LinkMapWeightDefault);
       begin
-        if lookup(key)<>-1 Then
-          exit;
-        if itemcnt<=length(fmap) Then
-          setlength(fmap,itemcnt+10);
-        fmap[itemcnt].key:=key;
-        fmap[itemcnt].value:=value;
-        fmap[itemcnt].weight:=weight;
-        inc(itemcnt);
+        if Lookup(Key)<>-1 Then
+          Exit;
+        if ItemCnt<=Length(FMap) Then
+          SetLength(FMap,ItemCnt+10);
+        FMap[ItemCnt].Key:=Key;
+        FMap[ItemCnt].Value:=Value;
+        FMap[ItemCnt].Weight:=Weight;
+        Inc(ItemCnt);
       end;
 
 
-    function  TLinkStrMap.AddDep(const keyvalue:String):boolean;
+    function  TLinkStrMap.AddDep(const KeyValue:String):Boolean;
       var
-        i : Longint;
+        I : LongInt;
       begin
-        AddDep:=false;
-        i:=pos('=',keyvalue);
-        if i=0 then
-          exit;
-        Add(Copy(KeyValue,1,i-1),Copy(KeyValue,i+1,length(KeyValue)-i));
+        AddDep:=False;
+        I:=Pos('=',KeyValue);
+        if I=0 then
+          Exit;
+        Add(Copy(KeyValue,1,I-1),Copy(KeyValue,I+1,Length(KeyValue)-I));
         AddDep:=True;
       end;
 
 
-    function  TLinkStrMap.AddWeight(const keyvalue:String):boolean;
+    function  TLinkStrMap.AddWeight(const KeyValue:String):Boolean;
       var
-        i,j    : Longint;
+        I,J    : LongInt;
         Code : Word;
-        s    : AnsiString;
+        S    : AnsiString;
       begin
-        AddWeight:=false;
-        i:=pos('=',keyvalue);
-        if i=0 then
-          exit;
-        s:=Copy(KeyValue,i+1,length(KeyValue)-i);
-        val(s,j,code);
-        if code=0 Then
+        AddWeight:=False;
+        I:=Pos('=',KeyValue);
+        if I=0 then
+          Exit;
+        S:=Copy(KeyValue,I+1,Length(KeyValue)-I);
+        Val(S,J,Code);
+        if Code=0 Then
           begin
-            Add(Copy(KeyValue,1,i-1),'',j);
+            Add(Copy(KeyValue,1,I-1),'',J);
             AddWeight:=True;
           end;
       end;
 
 
-    procedure TLinkStrMap.addseries(const keys:AnsiString;weight:longint);
+    procedure TLinkStrMap.AddSeries(const Keys:AnsiString;Weight:LongInt);
       var
-        i,j,k : longint;
+        I,J,K : LongInt;
       begin
-       k:=length(keys);
-       i:=1;
-       while i<=k do
+       K:=Length(Keys);
+       I:=1;
+       while I<=K do
          begin
-           j:=i;
-           while (i<=k) and (keys[i]<>',') do
-             inc(i);
-           add(copy(keys,j,i-j),'',weight);
-           inc(i);
+           J:=I;
+           while (I<=K) and (Keys[I]<>',') do
+             Inc(I);
+           Add(Copy(Keys,J,I-J),'',Weight);
+           Inc(I);
          end;
       end;
 
-    procedure TLinkStrMap.SetValue(const Key:Ansistring;weight:Integer);
+    procedure TLinkStrMap.SetValue(const Key:AnsiString;Weight:Integer);
       var
-        j : longint;
+        J : LongInt;
       begin
-         j:=lookup(key);
-         if j<>-1 then
-          fmap[j].weight:=weight;
+         J:=Lookup(Key);
+         if J<>-1 then
+          FMap[J].Weight:=Weight;
       end;
 
 
-    function TLinkStrMap.find(const key:Ansistring):Ansistring;
+    function TLinkStrMap.Find(const Key:AnsiString):AnsiString;
       var
-        j : longint;
+        J : LongInt;
       begin
-         find:='';
-         j:=lookup(key);
-         if j<>-1 then
-          find:=fmap[j].value;
+         Find:='';
+         J:=Lookup(Key);
+         if J<>-1 then
+          Find:=FMap[J].Value;
       end;
 
 
-    function TLinkStrMap.lookup(const key:Ansistring):longint;
+    function TLinkStrMap.Lookup(const Key:AnsiString):LongInt;
       var
-        i : longint;
+        I : LongInt;
       begin
-         lookup:=-1;
-         i:=0;
-         while (i<itemcnt) and (fmap[i].key<>key) do
-           inc(i);
-         if i<>itemcnt then
-            lookup:=i;
+         Lookup:=-1;
+         I:=0;
+         while (I<ItemCnt) and (FMap[I].Key<>Key) do
+           Inc(I);
+         if I<>ItemCnt then
+            Lookup:=I;
       end;
 
 
     procedure TLinkStrMap.SortOnWeight;
       var
-        i, j : longint;
-        m    : TLinkRec;
+        I, J : LongInt;
+        M    : TLinkRec;
       begin
-        if itemcnt <2 then exit;
-        for i:=0 to itemcnt-1 do
-          for j:=i+1 to itemcnt-1 do
+        if ItemCnt <2 then Exit;
+        for I:=0 to ItemCnt-1 do
+          for J:=I+1 to ItemCnt-1 do
             begin
-            if fmap[i].weight>fmap[j].weight Then
+            if FMap[I].Weight>FMap[J].Weight Then
               begin
-                m:=fmap[i];
-                fmap[i]:=fmap[j];
-                fmap[j]:=m;
+                M:=FMap[I];
+                FMap[I]:=FMap[J];
+                FMap[J]:=M;
               end;
            end;
       end;
 
 
-    function TLinkStrMap.getlinkrec(i:longint):TLinkRec;
+    function TLinkStrMap.GetLinkRec(I:LongInt):TLinkRec;
       begin
-        result:=fmap[i];
+        Result:=FMap[I];
       end;
 
 
     procedure TLinkStrMap.Expand(Src:TCmdStrList;Dest:TLinkStrMap);
       // expands every thing in Src to Dest for linkorder purposes.
       var
-        r  : longint;
+        R  : LongInt;
         LibN    : TCmdStr;
       begin
-        while not src.empty do
+        while not Src.Empty do
           begin
-            LibN:=src.getfirst;
-            r:=lookup (LibN);
-            if r=-1 then
-              dest.add(LibN)
+            LibN:=Src.GetFirst;
+            R:=Lookup (LibN);
+            if R=-1 then
+              Dest.Add(LibN)
             else
-              dest.addseries(fmap[r].value);
+              Dest.AddSeries(FMap[R].Value);
           end;
       end;
 
-    procedure TLinkStrMap.UpdateWeights(Weightmap:TLinkStrMap);
+    procedure TLinkStrMap.UpdateWeights(WeightMap:TLinkStrMap);
       var
-        l,r : longint;
+        L,R : LongInt;
       begin
-        for l := 0 to itemcnt-1 do
+        for L := 0 to ItemCnt-1 do
           begin
-            r:=weightmap.lookup (fmap[l].key);
-            if r<>-1 then
-              fmap[l].weight:=weightmap[r].weight;
+            R:=WeightMap.Lookup (FMap[L].Key);
+            if R<>-1 then
+              FMap[L].Weight:=WeightMap[R].Weight;
           end;
       end;
 
@@ -779,92 +779,92 @@ implementation
                                Time Handling
 ****************************************************************************}
 
-    Function L0(l:longint):string;
+    Function L0(L:LongInt):string;
     {
       return the string of value l, if l<10 then insert a zero, so
       the string is always at least 2 chars '01','02',etc
     }
       var
-        s : string;
+        S : string;
       begin
-        Str(l,s);
-        if l<10 then
-         s:='0'+s;
-        L0:=s;
+        Str(L,S);
+        if L<10 then
+         S:='0'+S;
+        L0:=S;
       end;
 
 
-   function gettimestr:string;
+   function GetTimeStr:string;
    {
      get the current time in a string HH:MM:SS
    }
       var
-        st: TSystemTime;
+        ST: TSystemTime;
       begin
-        GetLocalTime(st);
-        gettimestr:=L0(st.Hour)+':'+L0(st.Minute)+':'+L0(st.Second);
+        GetLocalTime(ST);
+        GetTimeStr:=L0(ST.Hour)+':'+L0(ST.Minute)+':'+L0(ST.Second);
       end;
 
 
-   function getdatestr:string;
+   function GetDateStr:string;
    {
      get the current date in a string YY/MM/DD
    }
       var
-        st: TSystemTime;
+        ST: TSystemTime;
       begin
-        GetLocalTime(st);
-        getdatestr:=L0(st.Year)+'/'+L0(st.Month)+'/'+L0(st.Day);
+        GetLocalTime(ST);
+        GetDateStr:=L0(ST.Year)+'/'+L0(ST.Month)+'/'+L0(ST.Day);
       end;
 
 
-   function  filetimestring( t : longint) : string;
+   function  FileTimeString( T : LongInt) : string;
    {
      convert dos datetime t to a string YY/MM/DD HH:MM:SS
    }
      var
        DT : TDateTime;
-       hsec : word;
+       HSec : Word;
        Year,Month,Day: Word;
-       hour,min,sec : word;
+       Hour,Min,Sec : Word;
      begin
-       if t=-1 then
+       if T=-1 then
         begin
           Result := 'Not Found';
-          exit;
+          Exit;
         end;
-       DT := FileDateToDateTime(t);
-       DecodeTime(DT,hour,min,sec,hsec);
-       DecodeDate(DT,year,month,day);
-       Result := L0(Year)+'/'+L0(Month)+'/'+L0(Day)+' '+L0(Hour)+':'+L0(min)+':'+L0(sec);
+       DT := FileDateToDateTime(T);
+       DecodeTime(DT,Hour,Min,Sec,HSec);
+       DecodeDate(DT,Year,Month,Day);
+       Result := L0(Year)+'/'+L0(Month)+'/'+L0(Day)+' '+L0(Hour)+':'+L0(Min)+':'+L0(Sec);
      end;
 
-   function getrealtime(const st: TSystemTime) : real;
+   function GetRealTime(const ST: TSystemTime) : Real;
      begin
-       result := st.Hour*3600.0 + st.Minute*60.0 + st.Second + st.MilliSecond/1000.0;
+       Result := ST.Hour*3600.0 + ST.Minute*60.0 + ST.Second + ST.MilliSecond/1000.0;
      end;
 
-   function getrealtime : real;
+   function GetRealTime : Real;
      var
-       st:TSystemTime;
+       ST:TSystemTime;
      begin
-       GetLocalTime(st);
-       result:=getrealtime(st);
+       GetLocalTime(ST);
+       Result:=GetRealTime(ST);
      end;
 
-   function idfversionstring(version : longint):string;
+   function IDFVersionString(Version : LongInt):string;
    {
      Convert back the numerical idf_version for esp32 to string
    }
      begin
-       result := '';
-       if version > 0 then
+       Result := '';
+       if Version > 0 then
          begin
-           result := inttostr(version div 10000)+'.';
-           version := version - (version div 10000)*10000;
-           result := result + inttostr(version div 100)+'.';
-           version := version - (version div 100)*100;
-           result := result + inttostr(version);
+           Result := IntToStr(Version div 10000)+'.';
+           Version := Version - (Version div 10000)*10000;
+           Result := Result + IntToStr(Version div 100)+'.';
+           Version := Version - (Version div 100)*100;
+           Result := Result + IntToStr(Version);
          end;
      end;
 
@@ -873,40 +873,40 @@ implementation
 ****************************************************************************}
 
 
-     procedure DefaultReplacements(var s:ansistring; substitute_env_variables:boolean=true);
+     procedure DefaultReplacements(var S:AnsiString; SubstituteEnvVariables:Boolean=True);
 {$ifdef mswindows}
-       procedure ReplaceSpecialFolder(const MacroName: string; const ID: integer);
+       procedure ReplaceSpecialFolder(const MacroName: string; const Id: Integer);
          begin
            // Only try to receive the special folders (and thus dynamically
            // load shfolder.dll) when that's needed.
-           if pos(MacroName,s)>0 then
-             Replace(s,MacroName,GetWindowsSpecialDir(ID));
+           if Pos(MacroName,S)>0 then
+             Replace(S,MacroName,GetWindowsSpecialDir(Id));
          end;
 
 {$endif mswindows}
        var
-         envstr: string;
-         envvalue: pchar;
-         i: integer;
+         EnvStr: string;
+         EnvValue: PChar;
+         I: Integer;
        begin
          { Replace some macros }
-         Replace(s,'$FPCVERSION',version_string);
-         Replace(s,'$FPCFULLVERSION',full_version_string);
-         Replace(s,'$FPCDATE',date_string);
-         Replace(s,'$FPCCPU',TargetCPUString);
-         Replace(s,'$FPCOS',TargetOSString);
-         Replace(s,'$FPCBINDIR',exepath);
+         Replace(S,'$FPCVERSION',Version_String);
+         Replace(S,'$FPCFULLVERSION',Full_Version_String);
+         Replace(S,'$FPCDATE',DateString);
+         Replace(S,'$FPCCPU',TargetCPUString);
+         Replace(S,'$FPCOS',TargetOSString);
+         Replace(S,'$FPCBINDIR',ExePath);
          if (tf_use_8_3 in SourceInfo.Flags) or
             (tf_use_8_3 in TargetInfo.Flags) then
-           Replace(s,'$FPCTARGET',TargetOSString)
-         else if subtarget<>'' then
-           Replace(s,'$FPCTARGET',TargetFullString+'-'+lower(subtarget))
+           Replace(S,'$FPCTARGET',TargetOSString)
+         else if SubTarget<>'' then
+           Replace(S,'$FPCTARGET',TargetFullString+'-'+Lower(SubTarget))
          else
-           Replace(s,'$FPCTARGET',TargetFullString);
-         Replace(s,'$FPCSUBARCH',lower(cputypestr[InitSettings.cputype]));
-         Replace(s,'$FPCABI',lower(abiinfo[TargetInfo.abi].name));
+           Replace(S,'$FPCTARGET',TargetFullString);
+         Replace(S,'$FPCSUBARCH',Lower(CPUTypeStr[InitSettings.CPUType]));
+         Replace(S,'$FPCABI',Lower(ABIInfo[TargetInfo.ABI].Name));
 
-         Replace(s,'$FPCMEMORYMODEL','flat');
+         Replace(S,'$FPCMEMORYMODEL','flat');
 
 {$ifdef mswindows}
          ReplaceSpecialFolder('$LOCAL_APPDATA',CSIDL_LOCAL_APPDATA);
@@ -918,29 +918,29 @@ implementation
          ReplaceSpecialFolder('$PROFILE',CSIDL_PROFILE);
 {$endif mswindows}
 
-         if not substitute_env_variables then
-           exit;
+         if not SubstituteEnvVariables then
+           Exit;
          { Replace environment variables between dollar signs }
-         i := pos('$',s);
-         while i>0 do
+         I := Pos('$',S);
+         while I>0 do
           begin
-            envstr:=copy(s,i+1,length(s)-i);
-            i:=pos('$',envstr);
-            if i>0 then
+            EnvStr:=Copy(S,I+1,Length(S)-I);
+            I:=Pos('$',EnvStr);
+            if I>0 then
              begin
-               envstr := copy(envstr,1,i-1);
-               envvalue := GetEnvPChar(envstr);
-               if assigned(envvalue) then
+               EnvStr := Copy(EnvStr,1,I-1);
+               EnvValue := GetEnvPChar(EnvStr);
+               if Assigned(EnvValue) then
                  begin
-                 Replace(s,'$'+envstr+'$',envvalue);
+                 Replace(S,'$'+EnvStr+'$',EnvValue);
                  // Look if there is another env.var in the string
-                 i:=pos('$',s);
+                 I:=Pos('$',S);
                  end
                else
                  // if the env.var is not set, do not replace the env.variable
                  // and stop looking for more env.var within the string
-                 i := 0;
-              FreeEnvPChar(envvalue);
+                 I := 0;
+              FreeEnvPChar(EnvValue);
              end;
           end;
        end;
@@ -950,45 +950,45 @@ implementation
                                OS Dependent things
  ****************************************************************************}
 
-    function GetEnvPChar(const envname:ansistring):pchar;
+    function GetEnvPChar(const EnvName:AnsiString):PChar;
       {$ifdef mswindows}
       var
-        s     : string;
-        i,len : longint;
-        hp,p,p2 : pchar;
+        S     : string;
+        I,Len : LongInt;
+        HP,P,P2 : PChar;
       {$endif}
       begin
       {$ifdef hasunix}
-        GetEnvPchar:=BaseUnix.fpGetEnv(pansichar(envname));
+        GetEnvPChar:=BaseUnix.FpGetEnv(PAnsiChar(EnvName));
         {$define GETENVOK}
       {$endif}
       {$ifdef mswindows}
-        GetEnvPchar:=nil;
-        p:=GetEnvironmentStringsA;
-        hp:=p;
-        while hp^<>#0 do
+        GetEnvPChar:=nil;
+        P:=GetEnvironmentStringsA;
+        HP:=P;
+        while HP^<>#0 do
          begin
-           s:=strpas(hp);
-           i:=pos('=',s);
-           len:=strlen(hp);
-           if upper(copy(s,1,i-1))=upper(envname) then
+           S:=StrPas(HP);
+           I:=Pos('=',S);
+           Len:=StrLen(HP);
+           if Upper(Copy(S,1,I-1))=Upper(EnvName) then
             begin
-              GetMem(p2,len-length(envname));
-              Move(hp[i],p2^,len-length(envname));
-              GetEnvPchar:=p2;
-              break;
+              GetMem(P2,Len-Length(EnvName));
+              Move(HP[I],P2^,Len-Length(EnvName));
+              GetEnvPChar:=P2;
+              Break;
             end;
            { next string entry}
-           hp:=hp+len+1;
+           HP:=HP+Len+1;
          end;
-        FreeEnvironmentStrings(p);
+        FreeEnvironmentStrings(P);
         {$define GETENVOK}
       {$endif}
       {$ifdef GETENVOK}
         {$undef GETENVOK}
       {$else}
-        GetEnvPchar:=StrPNew(GetEnvironmentVariable(envname));
-        if (length(GetEnvPChar)=0) then
+        GetEnvPChar:=StrPNew(GetEnvironmentVariable(EnvName));
+        if (Length(GetEnvPChar)=0) then
           begin
             FreeEnvPChar(GetEnvPChar);
             GetEnvPChar:=nil;
@@ -997,112 +997,112 @@ implementation
       end;
 
 
-    procedure FreeEnvPChar(p:pchar);
+    procedure FreeEnvPChar(P:PChar);
       begin
       {$ifndef hasunix}
-        freemem(p);
+        FreeMem(P);
       {$endif}
       end;
 
-      function is_number_float(d : bestreal) : boolean;
+      function Is_Number_Float(D : BestReal) : Boolean;
       begin
-        Result:=bestrealrec(d).SpecialType in
+        Result:=BestRealRec(D).SpecialType in
           [fsZero,fsNZero,fsDenormal,fsNDenormal,fsPositive,fsNegative];
       end;
 
-    function get_real_sign(r: bestreal): longint;
+    function Get_Real_Sign(R: BestReal): LongInt;
       begin
-        if bestrealrec(r).Sign then Result:=-1 else Result:=1;
+        if BestRealRec(R).Sign then Result:=-1 else Result:=1;
       end;
 
-    function convertdoublerec(d : TCompDoubleRec) : TCompDoubleRec;{$ifdef USEINLINE}inline;{$endif}
+    function ConvertDoubleRec(D : TCompDoubleRec) : TCompDoubleRec;{$ifdef USEINLINE}inline;{$endif}
       begin
-        result:=d;
+        Result:=D;
       end;
 
-    function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function IsPosZero(Value: BestReal): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result:=bestrealrec(value).SpecialType=fsZero;
+        Result:=BestRealRec(Value).SpecialType=fsZero;
       end;
 
-    function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function IsNegZero(Value: BestReal): Boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result:=bestrealrec(value).SpecialType=fsNZero;
+        Result:=BestRealRec(Value).SpecialType=fsNZero;
       end;
 
     { '('D1:'00000000-'D2:'0000-'D3:'0000-'D4:'0000-000000000000)' }
-    function string2guid(const s: string; var GUID: TGUID): boolean;
-        function ishexstr(const hs: string): boolean;
+    function String2GUID(const S: string; var GUID: TGUID): Boolean;
+        function IsHexStr(const HS: string): Boolean;
           var
-            i: integer;
+            I: Integer;
           begin
-            ishexstr:=false;
-            for i:=1 to Length(hs) do begin
-              if not (hs[i] in ['0'..'9','A'..'F','a'..'f']) then
-                exit;
+            IsHexStr:=False;
+            for I:=1 to Length(HS) do begin
+              if not (HS[I] in ['0'..'9','A'..'F','a'..'f']) then
+                Exit;
             end;
-            ishexstr:=true;
+            IsHexStr:=True;
           end;
-        function hexstr2longint(const hexs: string): longint;
+        function HexStr2LongInt(const HexS: string): LongInt;
           var
-            i: integer;
-            rl: longint;
+            I: Integer;
+            RL: LongInt;
           begin
-            rl:=0;
-            for i:=1 to length(hexs) do begin
-              rl:=rl shl 4;
-              case hexs[i] of
-                '0'..'9' : inc(rl,ord(hexs[i])-ord('0'));
-                'A'..'F' : inc(rl,ord(hexs[i])-ord('A')+10);
-                'a'..'f' : inc(rl,ord(hexs[i])-ord('a')+10);
+            RL:=0;
+            for I:=1 to Length(HexS) do begin
+              RL:=RL shl 4;
+              case HexS[I] of
+                '0'..'9' : Inc(RL,Ord(HexS[I])-Ord('0'));
+                'A'..'F' : Inc(RL,Ord(HexS[I])-Ord('A')+10);
+                'a'..'f' : Inc(RL,Ord(HexS[I])-Ord('a')+10);
               end
             end;
-            hexstr2longint:=rl;
+            HexStr2LongInt:=RL;
           end;
       var
-        i: integer;
+        I: Integer;
       begin
-        if (Length(s)=38) and (s[1]='{') and (s[38]='}') and
-           (s[10]='-') and (s[15]='-') and (s[20]='-') and (s[25]='-') and
-           ishexstr(copy(s,2,8)) and ishexstr(copy(s,11,4)) and
-           ishexstr(copy(s,16,4)) and ishexstr(copy(s,21,4)) and
-           ishexstr(copy(s,26,12)) then begin
-          GUID.D1:=dword(hexstr2longint(copy(s,2,8)));
+        if (Length(S)=38) and (S[1]='{') and (S[38]='}') and
+           (S[10]='-') and (S[15]='-') and (S[20]='-') and (S[25]='-') and
+           IsHexStr(Copy(S,2,8)) and IsHexStr(Copy(S,11,4)) and
+           IsHexStr(Copy(S,16,4)) and IsHexStr(Copy(S,21,4)) and
+           IsHexStr(Copy(S,26,12)) then begin
+          GUID.D1:=DWord(HexStr2LongInt(Copy(S,2,8)));
           { these values are already in the correct range (4 chars = word) }
-          GUID.D2:=word(hexstr2longint(copy(s,11,4)));
-          GUID.D3:=word(hexstr2longint(copy(s,16,4)));
-          for i:=0 to 1 do
-            GUID.D4[i]:=byte(hexstr2longint(copy(s,21+i*2,2)));
-          for i:=2 to 7 do
-            GUID.D4[i]:=byte(hexstr2longint(copy(s,22+i*2,2)));
-          string2guid:=true;
+          GUID.D2:=Word(HexStr2LongInt(Copy(S,11,4)));
+          GUID.D3:=Word(HexStr2LongInt(Copy(S,16,4)));
+          for I:=0 to 1 do
+            GUID.D4[I]:=Byte(HexStr2LongInt(Copy(S,21+I*2,2)));
+          for I:=2 to 7 do
+            GUID.D4[I]:=Byte(HexStr2LongInt(Copy(S,22+I*2,2)));
+          String2GUID:=True;
         end
-        else if (length(s)=0) then
+        else if (Length(S)=0) then
           begin
           FillChar(GUID,SizeOf(GUID),0);
-          string2guid:=true;
+          String2GUID:=True;
           end
         else
-          string2guid:=false;
+          String2GUID:=False;
       end;
 
 
-    function guid2string(const GUID: TGUID): string;
+    function GUID2String(const GUID: TGUID): string;
 
       begin
-        guid2string:=
-          '{'+hexstr(GUID.D1,8)+
-          '-'+hexstr(GUID.D2,4)+
-          '-'+hexstr(GUID.D3,4)+
-          '-'+hexstr(GUID.D4[0],2)+hexstr(GUID.D4[1],2)+
-          '-'+hexstr(GUID.D4[2],2)+hexstr(GUID.D4[3],2)+
-              hexstr(GUID.D4[4],2)+hexstr(GUID.D4[5],2)+
-              hexstr(GUID.D4[6],2)+hexstr(GUID.D4[7],2)+
+        GUID2String:=
+          '{'+HexStr(GUID.D1,8)+
+          '-'+HexStr(GUID.D2,4)+
+          '-'+HexStr(GUID.D3,4)+
+          '-'+HexStr(GUID.D4[0],2)+HexStr(GUID.D4[1],2)+
+          '-'+HexStr(GUID.D4[2],2)+HexStr(GUID.D4[3],2)+
+              HexStr(GUID.D4[4],2)+HexStr(GUID.D4[5],2)+
+              HexStr(GUID.D4[6],2)+HexStr(GUID.D4[7],2)+
           '}';
       end;
 
 
-    function SetAktProcCall(const s:string; var a:TProcCallOption):boolean;
+    function SetAktProcCall(const S:string; var A:TProcCallOption):Boolean;
       const
         DefProcCallName : array[TProcCallOption] of string[16] = ('',
          'CDECL',
@@ -1126,102 +1126,102 @@ implementation
          'VECTORCALL'
         );
       var
-        t  : TProcCallOption;
-        hs : string;
+        T  : TProcCallOption;
+        HS : string;
       begin
-        result:=false;
-        if (s = '') then
-          exit;
-        hs:=upper(s);
-        if (hs = 'DEFAULT') then
+        Result:=False;
+        if (S = '') then
+          Exit;
+        HS:=Upper(S);
+        if (HS = 'DEFAULT') then
           begin
-            a := pocall_default;
-            result := true;
-            exit;
+            A := pocall_default;
+            Result := True;
+            Exit;
           end;
-        for t:=low(TProcCallOption) to high(TProcCallOption) do
-         if DefProcCallName[t]=hs then
+        for T:=Low(TProcCallOption) to High(TProcCallOption) do
+         if DefProcCallName[T]=HS then
           begin
-            a:=t;
-            result:=true;
-            break;
+            A:=T;
+            Result:=True;
+            Break;
           end;
       end;
 
 
-    function Setabitype(const s:string;var a:tabi):boolean;
+    function SetABIType(const S:string;var A:TABI):Boolean;
       var
-        t  : tabi;
-        hs : string;
+        T  : TABI;
+        HS : string;
       begin
-        result:=false;
-        hs:=Upper(s);
-        for t:=low(t) to high(t) do
-          if abiinfo[t].supported and
-             (abiinfo[t].name=hs) then
+        Result:=False;
+        HS:=Upper(S);
+        for T:=Low(T) to High(T) do
+          if ABIInfo[T].Supported and
+             (ABIInfo[T].Name=HS) then
             begin
-              a:=t;
+              A:=T;
               { abi_old_win32_gnu is a win32 i386 specific "feature" }
-              if (t<>abi_old_win32_gnu) or (TargetInfo.system=system_i386_win32) then
-                result:=true;
-              break;
+              if (T<>abi_old_win32_gnu) or (TargetInfo.System=system_i386_win32) then
+                Result:=True;
+              Break;
             end;
       end;
 
 
-    function Setoptimizecputype(const s:string;var a:tcputype):boolean;
+    function SetOptimizeCPUType(const S:string;var A:TCPUType):Boolean;
       var
-        t  : tcputype;
-        hs : string;
+        T  : TCPUType;
+        HS : string;
       begin
-        result:=false;
-        hs:=Upper(s);
-        for t:=low(tcputype) to high(tcputype) do
-          if cputypestr[t]=hs then
+        Result:=False;
+        HS:=Upper(S);
+        for T:=Low(TCPUType) to High(TCPUType) do
+          if CPUTypeStr[T]=HS then
             begin
-              a:=t;
-              result:=true;
-              break;
+              A:=T;
+              Result:=True;
+              Break;
             end;
       end;
 
 
-    function Setcputype(const s:string;var a:TSettings):boolean;
+    function SetCPUType(const S:string;var A:TSettings):Boolean;
       var
-        t  : tcputype;
-        hs : string;
+        T  : TCPUType;
+        HS : string;
       begin
-        result:=false;
-        hs:=Upper(s);
-        for t:=low(tcputype) to high(tcputype) do
-          if cputypestr[t]=hs then
+        Result:=False;
+        HS:=Upper(S);
+        for T:=Low(TCPUType) to High(TCPUType) do
+          if CPUTypeStr[T]=HS then
             begin
-              a.cputype:=t;
-              result:=true;
-              break;
+              A.CPUType:=T;
+              Result:=True;
+              Break;
             end;
       end;
 
 
-    function SetFpuType(const s:string;var a:tfputype):boolean;
+    function SetFPUType(const S:string;var A:TFPUType):Boolean;
       var
-        t : tfputype;
+        T : TFPUType;
       begin
-        result:=false;
-        for t:=low(tfputype) to high(tfputype) do
-          if fputypestr[t]=s then
+        Result:=False;
+        for T:=Low(TFPUType) to High(TFPUType) do
+          if FPUTypeStr[T]=S then
             begin
-              a:=t;
-              result:=true;
-              break;
+              A:=T;
+              Result:=True;
+              Break;
             end;
       end;
 
 
-    function SetControllerType(const s:string;var a:tcontrollertype):boolean;
+    function SetControllerType(const S:string;var A:TControllerType):Boolean;
       var
-        t  : tcontrollertype;
-        hs : string;
+        T  : TControllerType;
+        HS : string;
       begin
 { The following check allows to reduce amount of code for platforms  }
 { not supporting microcontrollers due to evaluation at compile time. }
@@ -1229,122 +1229,122 @@ implementation
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
         if ControllerSupport then
          begin
-          result:=false;
-          hs:=Upper(s);
-          for t:=low(tcontrollertype) to high(tcontrollertype) do
-            if embedded_controllers[t].controllertypestr=hs then
+          Result:=False;
+          HS:=Upper(S);
+          for T:=Low(TControllerType) to High(TControllerType) do
+            if embedded_controllers[T].ControllerTypeStr=HS then
               begin
-                a:=t;
-                result:=true;
-                break;
+                A:=T;
+                Result:=True;
+                Break;
               end;
          end
         else
          begin
-          a := ct_none;
-          Result := true;
+          A := ct_none;
+          Result := True;
          end;
 {$POP}
       end;
 
 
-    function HandleFeature(const s : string) : boolean;
+    function HandleFeature(const S : string) : Boolean;
       var
-        i : TFeature;
+        I : TFeature;
       begin
-        result:=true;
-        for i:=low(TFeature) to high(TFeature) do
-          if s=featurestr[i] then
+        Result:=True;
+        for I:=Low(TFeature) to High(TFeature) do
+          if S=FeatureStr[I] then
             begin
-              include(features,i);
-              exit;
+              Include(Features,I);
+              Exit;
             end;
         { Also support -Sfnoheap to exclude heap }
         if Copy(S,1,2)='NO' then
-          for i:=low(TFeature) to high(TFeature) do
-            if s='NO'+featurestr[i] then
+          for I:=Low(TFeature) to High(TFeature) do
+            if S='NO'+FeatureStr[I] then
               begin
-                exclude(features,i);
-                exit;
+                Exclude(Features,I);
+                Exit;
               end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    function SetMinFPConstPrec(const s: string; var a: TFloatType) : boolean;
+    function SetMinFPConstPrec(const S: string; var A: TFloatType) : Boolean;
       var
-        value, error: longint;
+        Value, Error: LongInt;
       begin
-        if (upper(s)='DEFAULT') then
+        if (Upper(S)='DEFAULT') then
           begin
-            a:=s32real;
-            result:=true;
-            exit;
+            A:=S32Real;
+            Result:=True;
+            Exit;
           end;
-        result:=false;
-        val(s,value,error);
-        if (error<>0) then
-          exit;
-        case value of
-          32: a:=s32real;
-          64: a:=s64real;
+        Result:=False;
+        Val(S,Value,Error);
+        if (Error<>0) then
+          Exit;
+        case Value of
+          32: A:=S32Real;
+          64: A:=S64Real;
           { adding support for 80 bit here is tricky, since we can't really }
           { check whether the target cpu+OS actually supports it            }
           else
-            exit;
+            Exit;
         end;
-        result:=true;
+        Result:=True;
       end;
 
 
-    function size_2_align(len : asizeuint) : longint;
+    function Size_2_Align(Len : ASizeUInt) : LongInt;
       begin
-         if len>16 then
-           size_2_align:=32
-         else if len>8 then
-           size_2_align:=16
-         else if len>4 then
-           size_2_align:=8
-         else if len>2 then
-           size_2_align:=4
-         else if len>1 then
-           size_2_align:=2
+         if Len>16 then
+           Size_2_Align:=32
+         else if Len>8 then
+           Size_2_Align:=16
+         else if Len>4 then
+           Size_2_Align:=8
+         else if Len>2 then
+           Size_2_Align:=4
+         else if Len>1 then
+           Size_2_Align:=2
          else
-           size_2_align:=1;
+           Size_2_Align:=1;
       end;
 
 
-    function var_align(want_align: longint): shortint;
+    function Var_Align(WantAlign: LongInt): ShortInt;
       begin
-        var_align := used_align(want_align,CurrentSettings.alignment.varalignmin,CurrentSettings.alignment.varalignmax);
+        Var_Align := Used_Align(WantAlign,CurrentSettings.Alignment.VarAlignMin,CurrentSettings.Alignment.VarAlignMax);
       end;
 
 
-    function var_align_size(siz: asizeuint): shortint;
+    function Var_Align_Size(Siz: ASizeUInt): ShortInt;
       begin
-        siz := size_2_align(siz);
-        var_align_size := var_align(siz);
+        Siz := Size_2_Align(Siz);
+        Var_Align_Size := Var_Align(Siz);
       end;
 
 
-    function const_align(want_align: longint): shortint;
+    function Const_Align(WantAlign: LongInt): ShortInt;
       begin
-        const_align := used_align(want_align,CurrentSettings.alignment.constalignmin,CurrentSettings.alignment.constalignmax);
+        Const_Align := Used_Align(WantAlign,CurrentSettings.Alignment.ConstAlignMin,CurrentSettings.Alignment.ConstAlignMax);
       end;
 
 
-    function const_align_size(siz: asizeuint): shortint;
+    function Const_Align_Size(Siz: ASizeUInt): ShortInt;
       begin
-        siz := size_2_align(siz);
-        const_align_size := const_align(siz);
+        Siz := Size_2_Align(Siz);
+        Const_Align_Size := Const_Align(Siz);
       end;
 
 
 
 
-    function floating_point_range_check_error : boolean;
+    function Floating_Point_Range_Check_Error : Boolean;
       begin
-        result:=cs_ieee_errors in CurrentSettings.localswitches;
+        Result:=cs_ieee_errors in CurrentSettings.LocalSwitches;
       end;
 
 
@@ -1356,120 +1356,120 @@ implementation
   {$define need_path_search}
 {$endif unix}
 
-   procedure get_exepath;
+   procedure GetExePath;
      var
-       localExepath : TCmdStr;
-       exeName:TCmdStr;
+       LocalExePath : TCmdStr;
+       ExeName:TCmdStr;
 {$ifdef need_path_search}
-       hs1 : TPathStr;
+       HS1 : TPathStr;
 {$endif need_path_search}
      begin
-       localexepath:=GetEnvironmentVariable('PPC_EXEC_PATH');
-       exeName := '';
-       if localexepath='' then
+       LocalExePath:=GetEnvironmentVariable('PPC_EXEC_PATH');
+       ExeName := '';
+       if LocalExePath='' then
          begin
-           exeName := FixFileName(system.paramstr(0));
-           localexepath := ExtractFilePath(exeName);
+           ExeName := FixFileName(System.ParamStr(0));
+           LocalExePath := ExtractFilePath(ExeName);
          end;
 {$ifdef need_path_search}
-       if localexepath='' then
+       if LocalExePath='' then
         begin
-          hs1 := ExtractFileName(exeName);
-          hs1 := ChangeFileExt(hs1,SourceInfo.exeext);
-          FindFile(hs1,GetEnvironmentVariable('PATH'),false,localExepath);
-          localExepath:=ExtractFilePath(localExepath);
+          HS1 := ExtractFileName(ExeName);
+          HS1 := ChangeFileExt(HS1,SourceInfo.ExeExt);
+          FindFile(HS1,GetEnvironmentVariable('PATH'),False,LocalExePath);
+          LocalExePath:=ExtractFilePath(LocalExePath);
         end;
 {$endif need_path_search}
-       exepath:=FixPath(localExepath,false);
+       ExePath:=FixPath(LocalExePath,False);
      end;
 
 
 
    type
-     tinitdoneentry=record
-       init:tprocedure;
-       done:tprocedure;
+     TInitDoneEntry=record
+       Init:TProcedure;
+       Done:TProcedure;
      end;
-     pinitdoneentry=^tinitdoneentry;
+     PInitDoneEntry=^TInitDoneEntry;
 
 
    var
-     initdoneprocs : TFPList = nil;
+     InitDoneProcs : TFPList = nil;
 
 
-   procedure register_initdone_proc(init,done:tprocedure);
+   procedure Register_InitDone_Proc(Init,Done:TProcedure);
      var
-       entry : pinitdoneentry;
+       Entry : PInitDoneEntry;
      begin
-       new(entry);
-       entry^.init:=init;
-       entry^.done:=done;
-       TFPList.AddOnDemand(initdoneprocs,entry);
+       New(Entry);
+       Entry^.Init:=Init;
+       Entry^.Done:=Done;
+       TFPList.AddOnDemand(InitDoneProcs,Entry);
      end;
 
 
-   procedure callinitprocs;
+   procedure CallInitProcs;
      var
-       i : longint;
+       I : LongInt;
      begin
-       if not assigned(initdoneprocs) then
-         exit;
-       for i:=0 to initdoneprocs.count-1 do
-         with pinitdoneentry(initdoneprocs[i])^ do
-           if assigned(init) then
-             init();
+       if not Assigned(InitDoneProcs) then
+         Exit;
+       for I:=0 to InitDoneProcs.Count-1 do
+         with PInitDoneEntry(InitDoneProcs[I])^ do
+           if Assigned(Init) then
+             Init();
      end;
 
 
-   procedure calldoneprocs;
+   procedure CallDoneProcs;
      var
-       i : longint;
+       I : LongInt;
      begin
-       if not assigned(initdoneprocs) then
-         exit;
-       for i:=0 to initdoneprocs.count-1 do
-         with pinitdoneentry(initdoneprocs[i])^ do
-           if assigned(done) then
-             done();
+       if not Assigned(InitDoneProcs) then
+         Exit;
+       for I:=0 to InitDoneProcs.Count-1 do
+         with PInitDoneEntry(InitDoneProcs[I])^ do
+           if Assigned(Done) then
+             Done();
      end;
 
 
    procedure DoneGlobals;
      begin
-       calldoneprocs;
-       librarysearchpath.Free;
-       librarysearchpath := nil;
-       unitsearchpath.Free;
-       unitsearchpath := nil;
-       objectsearchpath.Free;
-       objectsearchpath := nil;
-       includesearchpath.Free;
-       includesearchpath := nil;
-       frameworksearchpath.Free;
-       frameworksearchpath := nil;
+       CallDoneProcs;
+       LibrarySearchPath.Free;
+       LibrarySearchPath := nil;
+       UnitSearchPath.Free;
+       UnitSearchPath := nil;
+       ObjectSearchPath.Free;
+       ObjectSearchPath := nil;
+       IncludeSearchPath.Free;
+       IncludeSearchPath := nil;
+       FrameworkSearchPath.Free;
+       FrameworkSearchPath := nil;
        LinkLibraryAliases.Free;
        LinkLibraryAliases := nil;
        LinkLibraryOrder.Free;
        LinkLibraryOrder := nil;
-       packagesearchpath.Free;
-       packagesearchpath := nil;
-       namespacelist.Free;
-       namespacelist := nil;
-       premodule_namespacelist.Free;
-       premodule_namespacelist := nil;
+       PackageSearchPath.Free;
+       PackageSearchPath := nil;
+       NamespaceList.Free;
+       NamespaceList := nil;
+       PreModule_NamespaceList.Free;
+       PreModule_NamespaceList := nil;
        CurrentNamespaceList:=Nil;
      end;
 
    procedure InitGlobals;
      begin
-        get_exepath;
+        GetExePath;
 
         { reset globals }
-        do_build:=false;
-        do_release:=false;
-        do_make:=true;
-        CodeGenError:=false;
-        global_unit_count:=0;
+        Do_Build:=False;
+        Do_Release:=False;
+        Do_Make:=True;
+        CodeGenError:=False;
+        Global_Unit_Count:=0;
 
         { Output }
         OutputFileName:='';
@@ -1480,76 +1480,76 @@ implementation
         OutputUnitDir:='';
 
         { Utils directory }
-        utilsdirectory:='';
-        utilsprefix:='';
-        llvmutilssuffix:='';
-        cshared:=false;
-        rlinkpath:='';
-        sysrootpath:='';
+        UtilsDirectory:='';
+        UtilsPrefix:='';
+        LLVMUtilsSuffix:='';
+        CShared:=False;
+        RLinkPath:='';
+        SysRootPath:='';
 
         { Search Paths }
-        unicodepath:='';
-        librarysearchpath:=TSearchPathList.Create;
-        unitsearchpath:=TSearchPathList.Create;
-        includesearchpath:=TSearchPathList.Create;
-        objectsearchpath:=TSearchPathList.Create;
-        frameworksearchpath:=TSearchPathList.Create;
-        packagesearchpath:=TSearchPathList.Create;
-        package_sdk_identity:='';
-        package_build_identity:='';
-        embed_package_metadata:=true;
-        namespacelist:=TCmdStrList.Create;
-        premodule_namespacelist:=TCmdStrList.Create;
+        UnicodePath:='';
+        LibrarySearchPath:=TSearchPathList.Create;
+        UnitSearchPath:=TSearchPathList.Create;
+        IncludeSearchPath:=TSearchPathList.Create;
+        ObjectSearchPath:=TSearchPathList.Create;
+        FrameworkSearchPath:=TSearchPathList.Create;
+        PackageSearchPath:=TSearchPathList.Create;
+        Package_SDK_Identity:='';
+        Package_Build_Identity:='';
+        Embed_Package_Metadata:=True;
+        NamespaceList:=TCmdStrList.Create;
+        PreModule_NamespaceList:=TCmdStrList.Create;
         CurrentNamespaceList:=Nil;
         { Def file }
-        usewindowapi:=false;
-        description:='Compiled by FPC '+version_string+' - '+TargetCPUString;
-        DescriptionSetExplicity:=false;
-        SetPEFlagsSetExplicity:=false;
-        SetPEOptFlagsSetExplicity:=false;
-        SetPEOSVersionSetExplicitely:=false;
-        SetPESubSysVersionSetExplicitely:=false;
-        SetPEUserVersionSetExplicitely:=false;
-        ImageBaseSetExplicity:=false;
-        MinStackSizeSetExplicity:=false;
-        MaxStackSizeSetExplicity:=false;
+        UseWindowAPI:=False;
+        Description:='Compiled by FPC '+Version_String+' - '+TargetCPUString;
+        DescriptionSetExplicity:=False;
+        SetPEFlagsSetExplicity:=False;
+        SetPEOptFlagsSetExplicity:=False;
+        SetPEOSVersionSetExplicitely:=False;
+        SetPESubSysVersionSetExplicitely:=False;
+        SetPEUserVersionSetExplicitely:=False;
+        ImageBaseSetExplicity:=False;
+        MinStackSizeSetExplicity:=False;
+        MaxStackSizeSetExplicity:=False;
 
-        dllversion:='';
-        dllmajor:=1;
-        dllminor:=0;
-        UseDeffileForExports:=false;
-        UseDeffileForExportsSetExplicitly:=false;
-        GenerateImportSection:=false;
-        RelocSection:=false;
-        RelocSectionSetExplicitly:=false;
-        MacOSXVersionMin.invalidate;
-        iPhoneOSVersionMin.invalidate;
+        DLLVersion:='';
+        DLLMajor:=1;
+        DLLMinor:=0;
+        UseDefFileForExports:=False;
+        UseDefFileForExportsSetExplicitly:=False;
+        GenerateImportSection:=False;
+        RelocSection:=False;
+        RelocSectionSetExplicitly:=False;
+        MacOSXVersionMin.Invalidate;
+        IPhoneOSVersionMin.Invalidate;
         { memory sizes, will be overridden by parameter or default for target
           in options or init_parser }
-        stacksize:=0;
+        StackSize:=0;
         { not initialized yet }
-        apptype:=app_cui;
+        AppType:=app_cui;
 
         { Init values }
-        compilerwide_unicode_strings:=false;
-        compilerwide_string_mode_explicit:=false;
-        InitSettings:=default_settings;
-        if InitSettings.optimizecputype=cpu_none then
-          InitSettings.optimizecputype:=InitSettings.cputype;
+        CompilerWide_Unicode_Strings:=False;
+        CompilerWide_String_Mode_Explicit:=False;
+        InitSettings:=Default_Settings;
+        if InitSettings.OptimizeCPUType=cpu_none then
+          InitSettings.OptimizeCPUType:=InitSettings.CPUType;
 
         LinkLibraryAliases :=TLinkStrMap.Create;
         LinkLibraryOrder   :=TLinkStrMap.Create;
 
         { enable all features by default }
-        features:=[low(TFeature)..high(TFeature)];
+        Features:=[Low(TFeature)..High(TFeature)];
 
-        callinitprocs;
+        CallInitProcs;
      end;
 
 initialization
 
-  cgbackend:=cg_fpc;
+  CGBackend:=cg_fpc;
 
 finalization
-  tfplist.FreeAndNilDisposing(initdoneprocs,TypeInfo(tinitdoneentry));
+  TFPList.FreeAndNilDisposing(InitDoneProcs,TypeInfo(TInitDoneEntry));
 end.

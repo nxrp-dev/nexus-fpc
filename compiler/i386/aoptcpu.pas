@@ -33,14 +33,14 @@ unit aoptcpu;
     uses
       cgbase,
       cpubase, aopt, aoptx86,
-      Aasmbase,aasmtai,aasmdata;
+      Aasmbase,aasmtai,AAsmData;
 
     Type
       TCpuAsmOptimizer = class(TX86AsmOptimizer)
-        function PrePeepHoleOptsCpu(var p: tai): boolean; override;
-        function PeepHoleOptPass1Cpu(var p: tai): boolean; override;
-        function PeepHoleOptPass2Cpu(var p: tai): boolean; override;
-        function PostPeepHoleOptsCpu(var p : tai) : boolean; override;
+        function PrePeepHoleOptsCpu(var p: TAI): boolean; override;
+        function PeepHoleOptPass1Cpu(var p: TAI): boolean; override;
+        function PeepHoleOptPass2Cpu(var p: TAI): boolean; override;
+        function PostPeepHoleOptsCpu(var p : TAI) : boolean; override;
       end;
 
     Var
@@ -49,15 +49,15 @@ unit aoptcpu;
   Implementation
 
     uses
-      verbose,globtype,globals,
-      cpuinfo,
+      Verbose,GlobType,Globals,
+      CPUInfo,
       aasmcpu,
       aoptutils,
       aasmcfi,
-      procinfo,
+      ProcInfo,
       cgutils,
       { units we should get rid off: }
-      symsym,symconst;
+      SymSym,symconst;
 
 
     { Checks if the register is a 32 bit general purpose register }
@@ -70,9 +70,9 @@ unit aoptcpu;
 
 
     { returns true if p contains a memory operand with a segment set }
-    function InsContainsSegRef(p: taicpu): boolean;
+    function InsContainsSegRef(p: TAICPU): boolean;
       var
-        i: longint;
+        i: LongInt;
       begin
         result:=true;
         for i:=0 to p.opercnt-1 do
@@ -83,21 +83,21 @@ unit aoptcpu;
       end;
 
 
-    function TCPUAsmOPtimizer.PrePeepHoleOptsCpu(var p: tai): boolean;
+    function TCpuAsmOptimizer.PrePeepHoleOptsCpu(var p: TAI): boolean;
       begin
         repeat
           Result:=False;
           case p.typ of
             ait_instruction:
               begin
-                if InsContainsSegRef(taicpu(p)) then
+                if InsContainsSegRef(TAICPU(p)) then
                   begin
-                    p := tai(p.next);
+                    p := TAI(p.next);
                     { Nothing's actually changed, so no need to set Result to True,
                       but try again to see if an instruction immediately follows }
                     Continue;
                   end;
-                case taicpu(p).opcode Of
+                case TAICPU(p).opcode Of
                   A_IMUL:
                     Result:=PrePeepholeOptIMUL(p);
                   A_SAR,A_SHR:
@@ -106,14 +106,14 @@ unit aoptcpu;
                     Result:=PrePeepholeOptAND(p);
                   A_XOR:
                     begin
-                      if (taicpu(p).oper[0]^.typ = top_reg) and
-                         (taicpu(p).oper[1]^.typ = top_reg) and
-                         (taicpu(p).oper[0]^.reg = taicpu(p).oper[1]^.reg) then
+                      if (TAICPU(p).oper[0]^.typ = top_reg) and
+                         (TAICPU(p).oper[1]^.typ = top_reg) and
+                         (TAICPU(p).oper[0]^.reg = TAICPU(p).oper[1]^.reg) then
                        { temporarily change this to 'mov reg,0' to make it easier }
                        { for the CSE. Will be changed back in pass 2              }
                         begin
-                          taicpu(p).opcode := A_MOV;
-                          taicpu(p).loadConst(0,0);
+                          TAICPU(p).opcode := A_MOV;
+                          TAICPU(p).loadConst(0,0);
                           Result:=true;
                         end;
                     end;
@@ -138,25 +138,25 @@ unit aoptcpu;
                 if (p.typ in SkipInstr) then
                   UpdateUsedRegs(p);
 
-                p := tai(p.Next);
+                p := TAI(p.Next);
                 Result := True;
               end;
           end;
       end;
 
 
-    function TCPUAsmOPtimizer.PeepHoleOptPass1Cpu(var p: tai): boolean;
+    function TCpuAsmOptimizer.PeepHoleOptPass1Cpu(var p: TAI): boolean;
       var
-        hp1 : tai;
+        hp1 : TAI;
       begin
         result:=False;
         case p.Typ Of
           ait_instruction:
             begin
-              CurrentFilePos:=taicpu(p).fileinfo;
-              if InsContainsSegRef(taicpu(p)) then
+              CurrentFilePos:=TAICPU(p).fileinfo;
+              if InsContainsSegRef(TAICPU(p)) then
                 exit;
-              case taicpu(p).opcode Of
+              case TAICPU(p).opcode Of
                 A_ADD:
                   Result:=OptPass1ADD(p);
                 A_AND:
@@ -195,16 +195,16 @@ unit aoptcpu;
                   Result:=OptPass1Test(p);
                 A_PUSH:
                   begin
-                    if (taicpu(p).opsize = S_W) and
-                       (taicpu(p).oper[0]^.typ = Top_Const) and
+                    if (TAICPU(p).opsize = S_W) and
+                       (TAICPU(p).oper[0]^.typ = Top_Const) and
                        GetNextInstruction(p, hp1) and
-                       (tai(hp1).typ = ait_instruction) and
-                       (taicpu(hp1).opcode = A_PUSH) and
-                       (taicpu(hp1).oper[0]^.typ = Top_Const) and
-                       (taicpu(hp1).opsize = S_W) then
+                       (TAI(hp1).typ = ait_instruction) and
+                       (TAICPU(hp1).opcode = A_PUSH) and
+                       (TAICPU(hp1).oper[0]^.typ = Top_Const) and
+                       (TAICPU(hp1).opsize = S_W) then
                       begin
-                        taicpu(p).changeopsize(S_L);
-                        taicpu(p).loadConst(0,taicpu(p).oper[0]^.val shl 16 + word(taicpu(hp1).oper[0]^.val));
+                        TAICPU(p).changeopsize(S_L);
+                        TAICPU(p).loadConst(0,TAICPU(p).oper[0]^.val shl 16 + word(TAICPU(hp1).oper[0]^.val));
                         asml.remove(hp1);
                         hp1.free;
                         Result:=true;
@@ -283,11 +283,11 @@ unit aoptcpu;
                 if (p.typ in SkipInstr) then
                   begin
                     UpdateUsedRegs(p);
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                   end
                 else
                   begin
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                     UpdateUsedRegs(p);
                   end;
                 Result := True;
@@ -296,15 +296,15 @@ unit aoptcpu;
       end;
 
 
-    function TCPUAsmOptimizer.PeepHoleOptPass2Cpu(var p: tai): boolean;
+    function TCpuAsmOptimizer.PeepHoleOptPass2Cpu(var p: TAI): boolean;
       begin
         Result:=false;
         case p.Typ Of
           Ait_Instruction:
             begin
-              if InsContainsSegRef(taicpu(p)) then
+              if InsContainsSegRef(TAICPU(p)) then
                 exit;
-              case taicpu(p).opcode Of
+              case TAICPU(p).opcode Of
                 A_ADD:
                   Result:=OptPass2ADD(p);
                 A_CMOVcc:
@@ -353,11 +353,11 @@ unit aoptcpu;
                 if (p.typ in SkipInstr) then
                   begin
                     UpdateUsedRegs(p);
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                   end
                 else
                   begin
-                    p := tai(p.Next);
+                    p := TAI(p.Next);
                     UpdateUsedRegs(p);
                   end;
                 Result := True;
@@ -366,17 +366,17 @@ unit aoptcpu;
       end;
 
 
-    function TCPUAsmOptimizer.PostPeepHoleOptsCpu(var p : tai) : boolean;
+    function TCpuAsmOptimizer.PostPeepHoleOptsCpu(var p : TAI) : boolean;
       var
-        hp1: tai;
+        hp1: TAI;
       begin
         Result:=false;
         case p.Typ Of
           Ait_Instruction:
             begin
-              if InsContainsSegRef(taicpu(p)) then
+              if InsContainsSegRef(TAICPU(p)) then
                 Exit;
-              case taicpu(p).opcode Of
+              case TAICPU(p).opcode Of
                 A_CALL:
                   Result:=PostPeepHoleOptCall(p);
                 A_LEA:
@@ -392,48 +392,48 @@ unit aoptcpu;
                   { since that would change the flags (JM)                    }
                   if PostPeepholeOptMovzx(p) then
                     Result := True
-                  else if not(cs_opt_regvar in CurrentSettings.optimizerswitches) then
+                  else if not(cs_opt_regvar in CurrentSettings.OptimizerSwitches) then
                     begin
-                      if (taicpu(p).oper[1]^.typ = top_reg) then
-                        if (taicpu(p).oper[0]^.typ = top_reg)
+                      if (TAICPU(p).oper[1]^.typ = top_reg) then
+                        if (TAICPU(p).oper[0]^.typ = top_reg)
                           then
-                            case taicpu(p).opsize of
+                            case TAICPU(p).opsize of
                               S_BL:
                                 begin
-                                  if IsGP32Reg(taicpu(p).oper[1]^.reg) and
-                                     not(cs_opt_size in CurrentSettings.optimizerswitches) and
-                                     (CurrentSettings.optimizecputype = cpu_Pentium) then
+                                  if IsGP32Reg(TAICPU(p).oper[1]^.reg) and
+                                     not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
+                                     (CurrentSettings.OptimizeCPUType = cpu_Pentium) then
                                       {Change "movzbl %reg1, %reg2" to
                                        "xorl %reg2, %reg2; movb %reg1, %reg2" for Pentium and
                                        PentiumMMX}
                                     begin
-                                      hp1 := taicpu.op_reg_reg(A_XOR, S_L,
-                                                  taicpu(p).oper[1]^.reg, taicpu(p).oper[1]^.reg);
+                                      hp1 := TAICPU.op_reg_reg(A_XOR, S_L,
+                                                  TAICPU(p).oper[1]^.reg, TAICPU(p).oper[1]^.reg);
                                       InsertLLItem(p.previous, p, hp1);
-                                      taicpu(p).opcode := A_MOV;
-                                      taicpu(p).changeopsize(S_B);
-                                      setsubreg(taicpu(p).oper[1]^.reg,R_SUBL);
+                                      TAICPU(p).opcode := A_MOV;
+                                      TAICPU(p).changeopsize(S_B);
+                                      setsubreg(TAICPU(p).oper[1]^.reg,R_SUBL);
                                       Result := True;
                                     end;
                                 end;
                               else
                                 ;
                             end
-                          else if (taicpu(p).oper[0]^.typ = top_ref) and
-                              (taicpu(p).oper[0]^.ref^.base <> taicpu(p).oper[1]^.reg) and
-                              (taicpu(p).oper[0]^.ref^.index <> taicpu(p).oper[1]^.reg) and
-                              not(cs_opt_size in CurrentSettings.optimizerswitches) and
-                              IsGP32Reg(taicpu(p).oper[1]^.reg) and
-                              (CurrentSettings.optimizecputype = cpu_Pentium) and
-                              (taicpu(p).opsize = S_BL) then
+                          else if (TAICPU(p).oper[0]^.typ = top_ref) and
+                              (TAICPU(p).oper[0]^.ref^.base <> TAICPU(p).oper[1]^.reg) and
+                              (TAICPU(p).oper[0]^.ref^.index <> TAICPU(p).oper[1]^.reg) and
+                              not(cs_opt_size in CurrentSettings.OptimizerSwitches) and
+                              IsGP32Reg(TAICPU(p).oper[1]^.reg) and
+                              (CurrentSettings.OptimizeCPUType = cpu_Pentium) and
+                              (TAICPU(p).opsize = S_BL) then
                             {changes "movzbl mem, %reg" to "xorl %reg, %reg; movb mem, %reg8" for
                               Pentium and PentiumMMX}
                             begin
-                              hp1 := taicpu.Op_reg_reg(A_XOR, S_L, taicpu(p).oper[1]^.reg,
-                                          taicpu(p).oper[1]^.reg);
-                              taicpu(p).opcode := A_MOV;
-                              taicpu(p).changeopsize(S_B);
-                              setsubreg(taicpu(p).oper[1]^.reg,R_SUBL);
+                              hp1 := TAICPU.Op_reg_reg(A_XOR, S_L, TAICPU(p).oper[1]^.reg,
+                                          TAICPU(p).oper[1]^.reg);
+                              TAICPU(p).opcode := A_MOV;
+                              TAICPU(p).changeopsize(S_B);
+                              setsubreg(TAICPU(p).oper[1]^.reg,R_SUBL);
                               InsertLLItem(p.previous, p, hp1);
                               Result := True;
                             end;
@@ -468,7 +468,7 @@ unit aoptcpu;
               { Optimise any reference-type operands (if Result is True, the
                 instruction will be checked on the next iteration) }
               if not Result then
-                OptimizeRefs(taicpu(p));
+                OptimizeRefs(TAICPU(p));
             end;
           else
             ;
@@ -484,7 +484,7 @@ unit aoptcpu;
                 if (p.typ in SkipInstr) then
                   UpdateUsedRegs(p);
 
-                p := tai(p.Next);
+                p := TAI(p.Next);
                 Result := True;
               end;
           end;

@@ -26,25 +26,25 @@ unit symi86;
 interface
 
 uses
-  symtype,symdef,symsym,symx86;
+  symtype,symdef,SymSym,symx86;
 
 type
 
   { ti86procvardef }
 
-  ti86procvardef = class(tx86procvardef)
+  TI86ProcVarDef = class(TX86ProcVarDef)
     function is_pushleftright: boolean; override;
   end;
 
   { ti86procdef }
 
-  ti86procdef = class(tx86procdef)
+  TI86ProcDef = class(TX86ProcDef)
     function is_pushleftright: boolean; override;
   end;
 
   { ti86absolutevarsym }
 
-  ti86absolutevarsym = class(TAbsoluteVarSym)
+  TI86AbsoluteVarSym = class(TAbsoluteVarSym)
    protected
     procedure PPULoadPlatform(ppufile: TCompilerPPUFile); override;
     procedure PPUWritePlatform(ppufile: TCompilerPPUFile); override;
@@ -59,21 +59,21 @@ uses
 
 { ti86procvardef }
 
-function ti86procvardef.is_pushleftright: boolean;
+function TI86ProcVarDef.is_pushleftright: boolean;
   begin
     result:=proccalloption in pushleftright_pocalls;
   end;
 
 { ti86procdef }
 
-function ti86procdef.is_pushleftright: boolean;
+function TI86ProcDef.is_pushleftright: boolean;
   begin
     result:=proccalloption in pushleftright_pocalls;
   end;
 
 { ti86absolutevarsym }
 
-procedure ti86absolutevarsym.PPULoadPlatform(ppufile: TCompilerPPUFile);
+procedure TI86AbsoluteVarSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then
@@ -83,7 +83,7 @@ procedure ti86absolutevarsym.PPULoadPlatform(ppufile: TCompilerPPUFile);
   end;
 
 
-procedure ti86absolutevarsym.PPUWritePlatform(ppufile: TCompilerPPUFile);
+procedure TI86AbsoluteVarSym.PPUWritePlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then

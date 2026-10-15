@@ -30,58 +30,58 @@ uses
   nobjc;
 
 type
-  tcgobjcselectornode = class(tobjcselectornode)
+  TCGObjCSelectorNode = class(TObjCSelectorNode)
     procedure pass_generate_code; override;
   end;
 
-  tcgobjcprotocolnode = class(tobjcprotocolnode)
+  TCGObjCProtocolNode = class(TObjCProtocolNode)
     procedure pass_generate_code; override;
   end;
 
 implementation
 
 uses
-    globtype,cclasses,
-    aasmbase,aasmdata,
+    GlobType,CClasses,
+    aasmbase,AAsmData,
     cgbase,cgutils,defutil,objcgutl,
-    symconst,symsym,symdef,
+    symconst,SymSym,symdef,
     node,nld,ncon,
-    verbose;
+    Verbose;
 
 {*****************************************************************************
                            TCGOBJCSELECTORNODE
 *****************************************************************************}
 
-procedure tcgobjcselectornode.pass_generate_code;
+procedure TCGObjCSelectorNode.pass_generate_code;
   var
     pool   : THashSet;
     entry  : PHashSetItem;
-    name   : pshortstring;
+    name   : PShortString;
   begin
     pool:=CurrentAsmData.ConstPools[sp_varnamerefs];
 
     case left.nodetype of
       loadn:
         begin
-          if (tloadnode(left).symtableentry.typ<>procsym) then
-            internalerror(2009051602);
-          if (TProcSym(tloadnode(left).symtableentry).procdeflist.count<>1) then
-            internalerror(2009051701);
-          name:=TProcDef(TProcSym(tloadnode(left).symtableentry).procdeflist[0]).messageinf.str;
+          if (TLoadNode(left).symtableentry.typ<>procsym) then
+            InternalError(2009051602);
+          if (TProcSym(TLoadNode(left).symtableentry).procdeflist.count<>1) then
+            InternalError(2009051701);
+          name:=TProcDef(TProcSym(TLoadNode(left).symtableentry).procdeflist[0]).messageinf.str;
           entry:=pool.FindOrAdd(@name^[1],length(name^))
         end;
       stringconstn:
         begin
-          entry:=pool.FindOrAdd(pointer(tstringconstnode(left).valueas),tstringconstnode(left).len);
+          entry:=pool.FindOrAdd(pointer(TStringConstNode(left).valueas),TStringConstNode(left).len);
         end;
       else
-        internalerror(2009030701);
+        InternalError(2009030701);
     end;
 
     objcfinishstringrefpoolentry(entry,sp_objcvarnames,sec_objc_message_refs,sec_objc_meth_var_names);
 
-    location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),sizeof(pint),[]);
-    location.reference.symbol:=tasmlabel(entry^.Data);
+    location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),sizeof(PInt),[]);
+    location.reference.symbol:=TAsmLabel(entry^.Data);
   end;
 
 
@@ -89,14 +89,14 @@ procedure tcgobjcselectornode.pass_generate_code;
                            TCGOBJCPROTOCOLNODE
 *****************************************************************************}
 
-procedure tcgobjcprotocolnode.pass_generate_code;
+procedure TCGObjCProtocolNode.pass_generate_code;
   begin
     { first needs support for writing class definitions }
-    internalerror(2009072601);
+    InternalError(2009072601);
   end;
 
 
 begin
-  cobjcselectornode:=tcgobjcselectornode;
-  cobjcprotocolnode:=tcgobjcprotocolnode;
+  CObjCSelectorNode:=TCGObjCSelectorNode;
+  CObjCProtocolNode:=TCGObjCProtocolNode;
 end.

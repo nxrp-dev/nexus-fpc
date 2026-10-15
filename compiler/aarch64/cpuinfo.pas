@@ -19,14 +19,14 @@ Unit CPUInfo;
 Interface
 
   uses
-    globtype;
+    GlobType;
 
 Type
 
 
 
    { possible supported processors for this target }
-   tcputype =
+   TCPUType =
       (cpu_none,
        cpu_armv8,
        cpu_armv8a,
@@ -42,12 +42,12 @@ Type
       );
 
 Type
-   tfputype =
+   TFPUType =
      (fpu_none,
       fpu_vfp
      );
 
-   tcontrollertype =
+   TControllerType =
      (ct_none,
 
       { Raspberry Pi 3/4 }
@@ -55,9 +55,9 @@ Type
       ct_raspi4
      );
 
-   tcontrollerdatatype = record
-      controllertypestr, controllerunitstr: string[20];
-      cputype: tcputype; fputype: tfputype;
+   TControllerDataType = record
+      ControllerTypeStr, controllerunitstr: string[20];
+      CPUType: TCPUType; FPUType: TFPUType;
       flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
    end;
 
@@ -75,13 +75,13 @@ Const
      but we don't care about this warning }
    {$PUSH}
     {$WARN 3177 OFF}
-   embedded_controllers : array [tcontrollertype] of tcontrollerdatatype =
+   embedded_controllers : array [TControllerType] of TControllerDataType =
    (
-      (controllertypestr:''; controllerunitstr:''; cputype:cpu_none; fputype:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0),
+      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0),
 
       { Raspberry Pi 3/4 }
-      (controllertypestr:'RASPI3'; controllerunitstr:'RASPI3'; cputype:cpu_armv8a; fputype:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000),
-      (controllertypestr:'RASPI4'; controllerunitstr:'RASPI4'; cputype:cpu_armv8a; fputype:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000)
+      (ControllerTypeStr:'RASPI3'; controllerunitstr:'RASPI3'; CPUType:cpu_armv8a; FPUType:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000),
+      (ControllerTypeStr:'RASPI4'; controllerunitstr:'RASPI4'; CPUType:cpu_armv8a; FPUType:fpu_vfp; flashbase:$00000000; flashsize:$00000000; srambase:$00080000; sramsize:$10000000)
 
       );
    {$POP}
@@ -106,7 +106,7 @@ var
    ];
 
 const
-   cputypestr : array[tcputype] of string[9] = ('',
+   CPUTypeStr : array[TCPUType] of string[9] = ('',
      'ARMV8',
      'ARMV8-A',
      'ARMV8.1-A',
@@ -120,7 +120,7 @@ const
      'ARMV8.9-A'
    );
 
-   fputypestr : array[tfputype] of string[9] = ('',
+   FPUTypeStr : array[TFPUType] of string[9] = ('',
      'VFP'
    );
 
@@ -141,7 +141,7 @@ const
    level4optimizerswitches = genericlevel4optimizerswitches + level3optimizerswitches + [];
 
 type
-   tcpuflags =
+   TCPUFlags =
      (CPUAARCH64_HAS_LSE,     { CPU supports Large System Extensions }
       CPUAARCH64_HAS_DOTPROD, { CPU supports dotprod extension }
       CPUAARCH64_HAS_CRYPTO,  { CPU supports the crypto extension }
@@ -156,12 +156,12 @@ type
       CPUAARCH64_HAS_CSSC     { CPU supports the Common Short Sequence Compression (CSSC) extension }
      );
 
-   tfpuflags =
+   TFPUFlags =
      (CPUAARCH64_HAS_VFP       { CPU supports VFP }
      );
 
 var
-   cpu_capabilities : array[tcputype] of set of tcpuflags =
+   cpu_capabilities : array[TCPUType] of set of TCPUFlags =
      ( { cpu_none      } [],
        { cpu_armv8     } [],
        { cpu_armv8a    } [],
@@ -177,7 +177,7 @@ var
      );
 
 const
-   fpu_capabilities : array[tfputype] of set of tfpuflags =
+   fpu_capabilities : array[TFPUType] of set of TFPUFlags =
      ( { fpu_none         } [],
        { fpu_vfp          } [CPUAARCH64_HAS_VFP]
      );

@@ -32,13 +32,13 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
-program data2inc;
-uses strings;
+program Data2Inc;
+uses Strings;
 
 CONST
-  version='1.00';
+  Version='1.00';
 
-  maxbufsize = 1024*1024;  { 1 mb buffer }
+  MaxBufSize = 1024*1024;  { 1 mb buffer }
 
 type
   TOutputMode=(OutByte,OutChar,OutString);
@@ -48,11 +48,11 @@ type
             Simple service routines. These are copied from EPasStr.
 *****************************************************************************}
 
-TYPE CHARSET=SET OF ANSICHAR;
+TYPE TCharSet=SET OF AnsiChar;
 
-FUNCTION NextCharPos(CONST S : AnsiString;C:AnsiCHAR;Count:LONGINT):LONGINT;
+FUNCTION NextCharPos(CONST S : AnsiString;C:AnsiChar;Count:LongInt):LongInt;
 
-VAR I,J:LONGINT;
+VAR I,J:LongInt;
 
 BEGIN
  I:=Length(S);
@@ -66,16 +66,16 @@ BEGIN
     NextCharPos:=0;
     EXIT
    END;
-  WHILE (S[J]<>C) AND (J<=I) DO INC(J);
+  WHILE (S[J]<>C) AND (J<=I) DO Inc(J);
    IF (J>I) THEN
     J:=0;
   END;
  NextCharPos:=J;
 END;
 
-FUNCTION NextCharPosSet(CONST S : AnsiString;CONST C:CHARSET;Count:LONGINT):LONGINT;
+FUNCTION NextCharPosSet(CONST S : AnsiString;CONST C:TCharSet;Count:LongInt):LongInt;
 
-VAR I,J:LONGINT;
+VAR I,J:LongInt;
 
 BEGIN
    I:=Length(S);
@@ -89,7 +89,7 @@ BEGIN
      NextCharPosSet:=0;
      EXIT;
     END;
-   WHILE (j<=i) AND (NOT (S[J] IN C)) DO INC(J);
+   WHILE (J<=I) AND (NOT (S[J] IN C)) DO Inc(J);
    IF (J>I) THEN
     J:=0;                                        // NOT found.
    END;
@@ -99,14 +99,14 @@ END;
 
 PROCEDURE RTrim(VAR P : AnsiString;Ch:AnsiChar);
 
-VAR I,J : LONGINT;
+VAR I,J : LongInt;
 
 BEGIN
  I:=Length(P);      { Keeping length in local data eases optimizations}
  IF (I>0) THEN
   BEGIN
    J:=I;
-   WHILE (P[J]=Ch) AND (J>0) DO DEC(J);
+   WHILE (P[J]=Ch) AND (J>0) DO Dec(J);
    IF J<>I THEN
     Delete(P,J+1,I-J+1);
    END;
@@ -114,26 +114,26 @@ END;
 
 PROCEDURE UpperCase(VAR S : AnsiString);
 
-VAR L,I : LONGINT;
+VAR L,I : LongInt;
 
 BEGIN
  L:=Length(S);
  IF L>0 THEN
   FOR I:=1 TO L DO
-   IF (S[I]>CHR(96)) AND (S[I]<CHR(123)) THEN
-    S[I]:=CHR(ORD(S[I])-32);
+   IF (S[I]>Chr(96)) AND (S[I]<Chr(123)) THEN
+    S[I]:=Chr(Ord(S[I])-32);
 END;
 
-PROCEDURE LTrim(VAR P : AnsiString;Ch:ansiChar);
+PROCEDURE LTrim(VAR P : AnsiString;Ch:AnsiChar);
 
-VAR I,J : LONGINT;
+VAR I,J : LongInt;
 
 BEGIN
  I:=Length(P);      { Keeping length in local data eases optimizations}
  IF (I>0) THEN
   BEGIN
    J:=1;
-   WHILE (P[J]=Ch) AND (J<=I) DO INC(J);
+   WHILE (P[J]=Ch) AND (J<=I) DO Inc(J);
    IF J>1 THEN
     Delete(P,1,J-1);
    END;
@@ -144,24 +144,24 @@ END;
                               Parsing helpers
 *****************************************************************************}
 
-FUNCTION XlatString(Var S : AnsiString):BOOLEAN;
+FUNCTION XlatString(Var S : AnsiString):Boolean;
 {replaces \xxx in string S with #x, and \\ with \ (escaped)
  which can reduce size of string.
 
 Returns false when an error in the line exists}
 
 
-Function GetNumber(Position:LONGINT):LONGINT;
+Function GetNumber(Position:LongInt):LongInt;
 
 VAR C,
     Value,
-    I : LONGINT;
+    I : LongInt;
 
 BEGIN
  I:=0; Value:=0;
  WHILE I<3 DO
   BEGIN
-   C:=ORD(S[Position+I]);
+   C:=Ord(S[Position+I]);
    IF (C>47) AND (C<56) THEN
     C:=C-48
    ELSE
@@ -174,14 +174,14 @@ BEGIN
    IF I=1 THEN
     C:=C SHL 3;
    Value:=Value + C;
-   INC(I);
+   Inc(I);
    END;
  GetNumber:=Value;
 END;
 
 VAR S2:AnsiString;
-    A,B : LONGINT;
-    Value : LONGINT;
+    A,B : LongInt;
+    Value : LongInt;
 
 BEGIN
  A:=1; B:=1;
@@ -191,42 +191,42 @@ BEGIN
     IF S[A+1]='\' THEN
      BEGIN
       S2[B]:='\';
-      INC (A,2); INC(B);
+      Inc (A,2); Inc(B);
      END
     ELSE
      BEGIN
       Value:=GetNumber(A+1);
       IF Value=-1 THEN
        BEGIN
-        XlatString:=FALSE;
+        XlatString:=False;
         EXIT;
        END;
-      S2[B]:=CHR(Value);
-      INC(B); INC(A,4);
+      S2[B]:=Chr(Value);
+      Inc(B); Inc(A,4);
      END
    ELSE
     BEGIN
      S2[B]:=S[A];
-     INC (A);
-     INC (B);
+     Inc (A);
+     Inc (B);
     END;
   END;
  SetLength(S2,B-1);
  S:=S2;
- XlatString:=TRUE;
+ XlatString:=True;
 END;
 
 {Global equates}
 
 VAR
-  Inname,                     { Name of input file }
+  InName,                     { Name of input file }
   OutName,                    { Name of output (.inc) file }
-  BinConstName : Ansistring;  { (-b only) commandline name of constant }
+  BinConstName : AnsiString;  { (-b only) commandline name of constant }
   OutputMode   : TOutputMode; { Output mode (char,byte,string) }
-  I_Binary     : BOOLEAN;     { TRUE is binary input, FALSE textual }
-  MsgTxt       : pAnsichar;   { Temporary storage of data }
-  msgsize      : longint;     { Bytes used in MsgTxt }
-  C            : AnsiCHAR;
+  IBinary     : Boolean;     { TRUE is binary input, FALSE textual }
+  MsgTxt       : PAnsiChar;   { Temporary storage of data }
+  MsgSize      : LongInt;     { Bytes used in MsgTxt }
+  C            : AnsiChar;
 
 
 {*****************************************************************************
@@ -235,48 +235,48 @@ VAR
 
 {Dump the contents of MsgTxt (msgsize bytes) to file T (which has been opened),
 using CONSTNAME as the name of the ARRAY OF CHAR constant}
-procedure WriteCharFile(var t:text;constname:ansistring);
+procedure WriteCharFile(var T:Text;ConstName:AnsiString);
 
-  function createconst(b:byte):string;
+  function CreateConst(B:Byte):string;
   {decides whether to use the #xxx code or 'c' style for each char}
   begin
-    if (b in [32..127]) and (b<>39) then
-     createconst:=''''+chr(b)+''''
+    if (B in [32..127]) and (B<>39) then
+     CreateConst:=''''+Chr(B)+''''
     else
-     createconst:='#'+chr(b div 100+48)+chr((b mod 100) div 10+48)+chr(b mod 10+48)
+     CreateConst:='#'+Chr(B div 100+48)+Chr((B mod 100) div 10+48)+Chr(B mod 10+48)
   end;
 
 var
-  cidx,i  : longint;
-  p       : PAnsiCHAR;
+  CIdx,I  : LongInt;
+  P       : PAnsiChar;
 begin
-  Writeln('Writing constant: ',constname,' to file '#39,outname,#39);
+  WriteLn('Writing constant: ',ConstName,' to file '#39,OutName,#39);
 {Open textfile}
-  write(t,'const ',constname,' : array[0..'); Writeln(t,msgsize-1,'] of char=(');
-  p:=msgtxt;
-  cidx:=0;
-  for i:=0 to msgsize-1 do
+  Write(T,'const ',ConstName,' : array[0..'); WriteLn(T,MsgSize-1,'] of char=(');
+  P:=MsgTxt;
+  CIdx:=0;
+  for I:=0 to MsgSize-1 do
    begin
-     if cidx=15 then
+     if CIdx=15 then
       begin
-        if cidx>0 then
-         writeln(t,',')
+        if CIdx>0 then
+         WriteLn(T,',')
         else
-         writeln(t,'');
-        write(t,'  ');
-        cidx:=0;
+         WriteLn(T,'');
+        Write(T,'  ');
+        CIdx:=0;
       end
      else
-       IF cidx>0 THEN
-        write(t,',')
+       IF CIdx>0 THEN
+        Write(T,',')
        ELSE
         Write(T,'  ');
-     write(t,createconst(ord(p^)));
-     inc(cidx);
-     inc(p);
+     Write(T,CreateConst(Ord(P^)));
+     Inc(CIdx);
+     Inc(P);
    end;
-  writeln(t,');');
-  Writeln(T);
+  WriteLn(T,');');
+  WriteLn(T);
 end;
 
 
@@ -286,54 +286,54 @@ end;
 
 {Dump the contents of MsgTxt (msgsize bytes) to file T (which has been opened),
 using CONSTNAME as the name of the ARRAY OF BYTE constant}
-procedure WriteByteFile(var t:text;constname:ansistring);
+procedure WriteByteFile(var T:Text;ConstName:AnsiString);
 
-  function createconst(b:byte):ansistring;
+  function CreateConst(B:Byte):AnsiString;
   {Translates byte B to a $xx hex constant}
-  VAR l : Byte;
+  VAR L : Byte;
   begin
-   createconst[1]:='$'; SetLength(createconst,3);
-   l:=ORD(B SHR 4) +48;
-   IF l>57 THEN
-    l:=L+7;
-   createconst[2]:=CHR(l);
-   l:=ORD(B and 15) +48;
-   IF l>57 THEN
-    INC(L,7);
-   createconst[3]:=CHR(l);
+   CreateConst[1]:='$'; SetLength(CreateConst,3);
+   L:=Ord(B SHR 4) +48;
+   IF L>57 THEN
+    L:=L+7;
+   CreateConst[2]:=Chr(L);
+   L:=Ord(B and 15) +48;
+   IF L>57 THEN
+    Inc(L,7);
+   CreateConst[3]:=Chr(L);
   end;
 
 var
-  cidx,i  : longint;
-  p       : pansichar;
+  CIdx,I  : LongInt;
+  P       : PAnsiChar;
 begin
-  Writeln('Writing constant: ',constname,' to file '#39,outname,#39);
+  WriteLn('Writing constant: ',ConstName,' to file '#39,OutName,#39);
 {Open textfile}
-  write(t,'const ',constname,' : array[0..'); Writeln(t,msgsize-1,'] of byte=(');
-  p:=msgtxt;
-  cidx:=0;
-  for i:=0 to msgsize-1 do
+  Write(T,'const ',ConstName,' : array[0..'); WriteLn(T,MsgSize-1,'] of byte=(');
+  P:=MsgTxt;
+  CIdx:=0;
+  for I:=0 to MsgSize-1 do
    begin
-     if cidx=15 then
+     if CIdx=15 then
       begin
-        if cidx>0 then
-         writeln(t,',')
+        if CIdx>0 then
+         WriteLn(T,',')
         else
-         writeln(t,'');
-        write(t,'  ');
-        cidx:=0;
+         WriteLn(T,'');
+        Write(T,'  ');
+        CIdx:=0;
       end
      else
-       IF cidx>0 THEN
-        write(t,',')
+       IF CIdx>0 THEN
+        Write(T,',')
        ELSE
         Write(T,'  ');
-     write(t,createconst(ord(p^)));
-     inc(cidx);
-     inc(p);
+     Write(T,CreateConst(Ord(P^)));
+     Inc(CIdx);
+     Inc(P);
    end;
-  writeln(t,');');
-  Writeln(T);
+  WriteLn(T,');');
+  WriteLn(T);
 end;
 
 
@@ -341,101 +341,101 @@ end;
                                WriteStringFile
 *****************************************************************************}
 
-procedure WriteStringFile(var t:text;constname:ansistring);
+procedure WriteStringFile(var T:Text;ConstName:AnsiString);
 const
-  maxslen=240; { to overcome aligning problems }
+  MaxSLen=240; { to overcome aligning problems }
 
-  function l0(l:longint):ansistring;
+  function L0(L:LongInt):AnsiString;
   var
-    s : string[16];
+    S : string[16];
   begin
-    str(l,s);
-    while (length(s)<5) do
-     s:='0'+s;
-    l0:=s;
+    Str(L,S);
+    while (Length(S)<5) do
+     S:='0'+S;
+    L0:=S;
   end;
 
 var
-  slen,
-  len,i  : longint;
-  p      : pansichar;
-  start,
-  quote  : boolean;
+  SLen,
+  Len,I  : LongInt;
+  P      : PAnsiChar;
+  Start,
+  Quote  : Boolean;
 begin
-  Writeln('Writing constant: ',constname,' to file '#39,outname,#39);
+  WriteLn('Writing constant: ',ConstName,' to file '#39,OutName,#39);
 {Open textfile}
-  writeln(t,'{$ifdef Delphi}');
-  writeln(t,'const '+constname+' : array[0..',(msgsize-1) div maxslen,'] of string[',maxslen,']=(');
-  writeln(t,'{$else Delphi}');
-  writeln(t,'const '+constname+' : array[0..',(msgsize-1) div maxslen,',1..',maxslen,'] of char=(');
-  write(t,'{$endif Delphi}');
+  WriteLn(T,'{$ifdef Delphi}');
+  WriteLn(T,'const '+ConstName+' : array[0..',(MsgSize-1) div MaxSLen,'] of string[',MaxSLen,']=(');
+  WriteLn(T,'{$else Delphi}');
+  WriteLn(T,'const '+ConstName+' : array[0..',(MsgSize-1) div MaxSLen,',1..',MaxSLen,'] of char=(');
+  Write(T,'{$endif Delphi}');
 {Parse buffer in msgbuf and create indexs}
-  p:=msgtxt;
-  slen:=0;
-  len:=0;
-  quote:=false;
-  start:=true;
-  for i:=1 to msgsize do
+  P:=MsgTxt;
+  SLen:=0;
+  Len:=0;
+  Quote:=False;
+  Start:=True;
+  for I:=1 to MsgSize do
    begin
-     if slen>=maxslen then
+     if SLen>=MaxSLen then
       begin
-        if quote then
+        if Quote then
          begin
-           write(t,'''');
-           quote:=false;
+           Write(T,'''');
+           Quote:=False;
          end;
-        write(t,',');
-        slen:=0;
-        inc(len);
+        Write(T,',');
+        SLen:=0;
+        Inc(Len);
       end;
-     if (len>70) or (start) then
+     if (Len>70) or (Start) then
       begin
-        if quote then
+        if Quote then
          begin
-           write(t,'''');
-           quote:=false;
+           Write(T,'''');
+           Quote:=False;
          end;
-        if slen>0 then
-          writeln(t,'+')
+        if SLen>0 then
+          WriteLn(T,'+')
         else
-          writeln(t);
-        len:=0;
-        start:=false;
+          WriteLn(T);
+        Len:=0;
+        Start:=False;
       end;
-     if (len=0) then
-      write(t,'  ');
-     if (ord(p^)>=32) and (p^<>#39) then
+     if (Len=0) then
+      Write(T,'  ');
+     if (Ord(P^)>=32) and (P^<>#39) then
       begin
-        if not quote then
+        if not Quote then
          begin
-           write(t,'''');
-           quote:=true;
-           inc(len);
+           Write(T,'''');
+           Quote:=True;
+           Inc(Len);
          end;
-        write(t,p^);
-        inc(len);
+        Write(T,P^);
+        Inc(Len);
       end
      else
       begin
-        if quote then
+        if Quote then
          begin
-           write(t,'''');
-           inc(len);
-           quote:=false;
+           Write(T,'''');
+           Inc(Len);
+           Quote:=False;
          end;
-        write(t,'#'+chr(ord(p^) div 100+48)+chr((ord(p^) mod 100) div 10+48)+chr(ord(p^) mod 10+48));
-        inc(len,3);
+        Write(T,'#'+Chr(Ord(P^) div 100+48)+Chr((Ord(P^) mod 100) div 10+48)+Chr(Ord(P^) mod 10+48));
+        Inc(Len,3);
       end;
      { start a new line when a #0 or #10 is found }
-     if p^ in [#0,#10] then
-      start:=true;
-     inc(slen);
-     inc(p);
+     if P^ in [#0,#10] then
+      Start:=True;
+     Inc(SLen);
+     Inc(P);
    end;
-  if quote then
-   write(t,'''');
-  writeln(t,'');
-  writeln(t,');');
+  if Quote then
+   Write(T,'''');
+  WriteLn(T,'');
+  WriteLn(T,');');
 end;
 
 
@@ -443,20 +443,20 @@ end;
                                    Parser
 *****************************************************************************}
 
-FUNCTION SpecialItem(S : AnsiString):LONGINT;
+FUNCTION SpecialItem(S : AnsiString):LongInt;
 { This procedure finds the next comma, (or the end of the string)
     but comma's within single or double quotes should be ignored.
     Single quotes within double quotes and vice versa are also ignored.}
 
-VAR DataItem : LONGINT;
+VAR DataItem : LongInt;
 
-CONST xFcl : CHARSET = [',',#39,'"'];
+CONST XFcl : TCharSet = [',',#39,'"'];
 
 BEGIN
 
     DataItem:=0;
     REPEAT
-     DataItem:=NextCharPosSet(S,xFcl,DataItem+1);   {Find first " ' or ,}
+     DataItem:=NextCharPosSet(S,XFcl,DataItem+1);   {Find first " ' or ,}
       IF (DataItem<>0) AND ((S[DataItem]='"') OR (S[DataItem]=#39)) THEN { (double)Quote found?}
        DataItem:=NextCharPos(S,S[DataItem],DataItem+1);  { then find other one}
      UNTIL (DataItem=0) OR (S[DataItem]=',');
@@ -469,38 +469,38 @@ END;
 { Handles reading and processing of a textual file}
 procedure DoFile;
 var
-  Infile,
-  Outfile : text;       {in and output textfiles}
-  line, DataItem,       {line number, position in DATA line}
+  InFile,
+  OutFile : Text;       {in and output textfiles}
+  Line, DataItem,       {line number, position in DATA line}
   I1,I2,                {4 temporary counters}
-  I3,I4  : longint;
-  s,S1    : Ansistring;     {S is string after reading, S1 is temporary string or
+  I3,I4  : LongInt;
+  S,S1    : AnsiString;     {S is string after reading, S1 is temporary string or
                           current DATA-item being processed }
   VarName : AnsiString;     { Variable name of constant to be written}
 
   PROCEDURE ParseError;
   {Extremely simple errorhandler}
   BEGIN
-   Writeln('Error in line : ',Line, ' Somewhere near :',#39,S1,#39);
-   Close(InfIle); Close(Outfile);
-   HALT;
+   WriteLn('Error in line : ',Line, ' Somewhere near :',#39,S1,#39);
+   Close(InFile); Close(OutFile);
+   Halt;
   END;
 
   PROCEDURE FixDec;
   { Reads decimal value starting at S1[1].
        Value in I3, number of digits found in I1}
-       var I1,I2,i3 : longint;
+       var I1,I2,I3 : LongInt;
 
   BEGIN
    I1:=1;
    WHILE ((S1[I1]>#47) AND (S1[I1]<#58)) AND (I1<=Length(S1)) DO
-    INC(I1);
-   DEC(I1);
+    Inc(I1);
+   Dec(I1);
    IF I1=0 THEN
     ParseError;
    I3:=0;
    FOR I2:=1 TO I1 DO
-    I3:=(I3*10)+ ORD(S1[I2])-48;
+    I3:=(I3*10)+ Ord(S1[I2])-48;
   {Calc no of bytes(1,2 or 4) required from no of digits found}
    IF (I1<3) THEN
     I2:=1
@@ -512,7 +512,7 @@ var
       IF I1<5 THEN
        I2:=2
        ELSE
-        IF (I1=5) AND (i3<65536) THEN
+        IF (I1=5) AND (I3<65536) THEN
          I2:=2
         ELSE
          I2:=4;
@@ -525,8 +525,8 @@ var
   BEGIN
    Delete(S1,1,1);
    FixDec;
-   msgtxt[Msgsize]:=CHR(I3);
-   inc(msgsize);
+   MsgTxt[MsgSize]:=Chr(I3);
+   Inc(MsgSize);
    Delete(S1,1,I1);
   END;
 
@@ -546,14 +546,14 @@ var
     Dec(I1);
     IF I1<>0 THEN
      BEGIN
-      Move(S1[1],Msgtxt[Msgsize],I1);
-      INC(msgsize,I1);
+      Move(S1[1],MsgTxt[MsgSize],I1);
+      Inc(MsgSize,I1);
      END;
     Delete(S1,1,I1+1);
     LTrim(S1,' ');
   END;
 
-  PROCEDURE FixHex(base2:LONGINT);
+  PROCEDURE FixHex(Base2:LongInt);
   { Reads a base 2,8 or 16 constant from S1.
     Parameter = 2Log of base (1,3 or 4 corresponding to base 2,8 and 16)
     Constant is processed, the number of digits estimated (1,2 or 4 bytes) and
@@ -564,23 +564,23 @@ var
     WHILE (S1[I2] IN ['0'..'9','A'..'F','a'..'f']) AND (I2<=Length(S1)) DO
      BEGIN
       IF (S1[I2]>#47) AND (S1[I2]<#58) THEN
-       I3:=(I3 SHL base2)+ ORD(S1[I2])-48
+       I3:=(I3 SHL Base2)+ Ord(S1[I2])-48
       ELSE
        IF (S1[I2]>#64) AND (S1[I2]<#71) THEN
-        I3:=(I3 SHL base2)+ ORD(S1[I2])-55
+        I3:=(I3 SHL Base2)+ Ord(S1[I2])-55
        ELSE
         IF (S1[I2]>#96) AND (S1[I2]<#103) THEN
-         I3:=(I3 SHL base2)+ ORD(S1[I2])-87
+         I3:=(I3 SHL Base2)+ Ord(S1[I2])-87
        ELSE
         ParseError;
-       INC(I2);
+       Inc(I2);
      END;
-    DEC(I2);
+    Dec(I2);
     CASE Base2 OF
      4 :   BEGIN
            I4:=(I2 SHR 1);
-           IF ODD(I2) THEN
-            INC(I4);
+           IF Odd(I2) THEN
+            Inc(I4);
            IF I4=3 THEN I4:=4
           END;
      3 :   I4:=(I2*3 DIV 8)+1;
@@ -595,12 +595,12 @@ var
            END;
       ELSE
        BEGIN
-        Writeln(' severe internal error ');
+        WriteLn(' severe internal error ');
         ParseError;
        END; {else}
     END; {Case}
-    move(I3,msgtxt[Msgsize],i4);
-    inc(msgsize,i4);
+    Move(I3,MsgTxt[MsgSize],I4);
+    Inc(MsgSize,I4);
   END;
 
   PROCEDURE DoTextual;
@@ -623,45 +623,45 @@ var
 
   PROCEDURE FlushMsgTxt;            {Flush MsgTxt array}
   BEGIN
-   IF msgsize>0 THEN          {In memory? Then flush}
+   IF MsgSize>0 THEN          {In memory? Then flush}
     BEGIN
-      case outputmode of
+      case OutputMode of
         OutByte :
-          WriteByteFile(outfile,Varname);
+          WriteByteFile(OutFile,VarName);
         OutChar :
-          WriteCharFile(outfile,varname);
+          WriteCharFile(OutFile,VarName);
         OutString :
-          WriteStringFile(outfile,varname);
+          WriteStringFile(OutFile,VarName);
       end;
-     msgsize:=0;
+     MsgSize:=0;
     END;
   END;
 
 {Actual DoFile}
 begin
-  Getmem(msgtxt,maxbufsize);
-  Writeln('processing file : ',inname);
+  GetMem(MsgTxt,MaxBufSize);
+  WriteLn('processing file : ',InName);
 {Read the message file}
-  assign(infile,inname);
+  Assign(InFile,InName);
   {$I-}
-   reset(infile);
+   Reset(InFile);
   {$I+}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
-     WriteLn('file '+inname+' not found');
+     WriteLn('file '+InName+' not found');
      exit;
    end;
 {Create output file}
-  assign (outfile,outname);
-  rewrite(outfile);
-  msgsize:=0;
+  Assign (OutFile,OutName);
+  Rewrite(OutFile);
+  MsgSize:=0;
   Line:=0;
-  while not eof(infile) do
+  while not EOF(InFile) do
    begin
-    readln(infile,s);      {Read a line}
-    INC(Line);
+    ReadLn(InFile,S);      {Read a line}
+    Inc(Line);
     S1:=Copy(S,1,5);
-    Uppercase(S1);
+    UpperCase(S1);
     IF S1='DATA ' THEN   {DATA keyword?}
      BEGIN
       Delete(S,1,5);
@@ -671,7 +671,7 @@ begin
         BEGIN
          I1:=DataItem;
          IF DataItem=Length(S) THEN
-          INC(i1);        {DataItem fix for last field}
+          Inc(I1);        {DataItem fix for last field}
          S1:=Copy(S,1,I1-1);    { copy field to S1}
          Delete(S,1,I1);        {Delete field from S}
          LTrim(S1,' ');
@@ -707,8 +707,8 @@ begin
                '0'..'9','d','D' : BEGIN      {decimal versions}
                                    FixDec;   {Fixdec is safe for trailing chars}
                                    {I1 =no of digits, I3=value, I2= no bytes needed}
-                                   move(I3,msgtxt[Msgsize],i2);
-                                   inc(msgsize,i2)
+                                   Move(I3,MsgTxt[MsgSize],I2);
+                                   Inc(MsgSize,I2)
                                   END
                              ELSE
                               ParseError; {otherwise wrong suffix}
@@ -734,7 +734,7 @@ begin
          C:=S[1];
          IF NOT XlatString(S) THEN  {Expand \xxx octal constants}
           BEGIN
-           Writeln('Some error with a \xxx constant or a stale (unescaped) backslash');
+           WriteLn('Some error with a \xxx constant or a stale (unescaped) backslash');
            ParseError;
           END;
          IF C='!' THEN         { New variable}
@@ -744,7 +744,7 @@ begin
            OutputMode:=OutChar;
            IF S[2]='$' THEN      {Flag for ARRAY OF BYTE?}
             BEGIN
-             INC(I1);
+             Inc(I1);
              OutputMode:=OutByte;
             END;
            Delete(S,1,I1);
@@ -752,16 +752,16 @@ begin
           END
          ELSE
           BEGIN {Normal line}
-           i1:=Length(S);
-           move(s[1],msgtxt[Msgsize],i1);
-           inc(msgsize,i1);
+           I1:=Length(S);
+           Move(S[1],MsgTxt[MsgSize],I1);
+           Inc(MsgSize,I1);
           END;
       END;
     END;
    end;
-  close(infile);
+  Close(InFile);
   FlushMsgTxt;                    {Flush variable if msgtxt is occupied}
-  Close(Outfile);
+  Close(OutFile);
 end;
 
 
@@ -771,43 +771,43 @@ end;
 
 procedure DoBinary;
 var
-  Infile  : File;
-  Outfile : text;
-  i       : longint;
+  InFile  : File;
+  OutFile : Text;
+  I       : LongInt;
 begin
-  Writeln('processing file : ',inname);
+  WriteLn('processing file : ',InName);
 { Read the file }
-  assign(infile,inname);
+  Assign(InFile,InName);
   {$I-}
-   reset(infile,1);
+   Reset(InFile,1);
   {$I+}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
-     WriteLn('file '+inname+' not found');
+     WriteLn('file '+InName+' not found');
      exit;
    end;
 { First parse the file and count bytes needed }
-  msgsize:=FileSize(InFile);
-  Getmem(msgtxt,msgsize);
-  BlockRead(InFile,msgTxt[0],msgsize,i);
-  close(infile);
-  IF I<>msgsize THEN
+  MsgSize:=FileSize(InFile);
+  GetMem(MsgTxt,MsgSize);
+  BlockRead(InFile,MsgTxt[0],MsgSize,I);
+  Close(InFile);
+  IF I<>MsgSize THEN
    BEGIN
-     Writeln('Error while reading file',inName);
-     HALT(1);
+     WriteLn('Error while reading file',InName);
+     Halt(1);
    END;
 { Output }
-  assign (outfile,outname);
-  rewrite(outfile);
-  case outputmode of
+  Assign (OutFile,OutName);
+  Rewrite(OutFile);
+  case OutputMode of
     OutByte :
-      WriteByteFile(outfile,BinconstName);
+      WriteByteFile(OutFile,BinConstName);
     OutChar :
-      WriteCharFile(outfile,BinconstName);
+      WriteCharFile(OutFile,BinConstName);
     OutString :
-      WriteStringFile(outfile,BinconstName);
+      WriteStringFile(OutFile,BinConstName);
   end;
-  Close(Outfile);
+  Close(OutFile);
 end;
 
 
@@ -815,57 +815,57 @@ end;
                                 Main Program
 *****************************************************************************}
 
-procedure getpara;
+procedure GetPara;
 var
-  ch      : char;
-  para    : string;
-  files,i : word;
+  Ch      : Char;
+  Para    : string;
+  Files,I : Word;
 
-  procedure helpscreen;
+  procedure HelpScreen;
   begin
-    writeln('usage : data2inc [Options] <msgfile> [incfile] [constname]');
-    Writeln('  The constname parameter is only valid in combination');
-    writeln('  with -b, otherwise the constname must be specified in the inputfile');
-    Writeln;
-    writeln('<Options> can be :');
-    writeln('              -B     File to read is binary.');
-    writeln('              -A     array of byte output (default is array of char)');
-    writeln('              -S     array of string output');
-    writeln('              -V     Show version');
-    writeln('        -? or -H     This HelpScreen');
-    writeln;
-    Writeln(' See data2inc.exm for a demonstration source');
-    halt(1);
+    WriteLn('usage : data2inc [Options] <msgfile> [incfile] [constname]');
+    WriteLn('  The constname parameter is only valid in combination');
+    WriteLn('  with -b, otherwise the constname must be specified in the inputfile');
+    WriteLn;
+    WriteLn('<Options> can be :');
+    WriteLn('              -B     File to read is binary.');
+    WriteLn('              -A     array of byte output (default is array of char)');
+    WriteLn('              -S     array of string output');
+    WriteLn('              -V     Show version');
+    WriteLn('        -? or -H     This HelpScreen');
+    WriteLn;
+    WriteLn(' See data2inc.exm for a demonstration source');
+    Halt(1);
   end;
 
 
 begin
-  I_binary:=FALSE;
+  IBinary:=False;
   OutputMode:=OutChar;
-  FIles:=0;
-  for i:=1to paramcount do
+  Files:=0;
+  for I:=1to ParamCount do
    begin
-     para:=paramstr(i);
-     if (para[1]='-') then
+     Para:=ParamStr(I);
+     if (Para[1]='-') then
       begin
-        ch:=upcase(para[2]);
-        delete(para,1,2);
-        case ch of
-         'B' : I_Binary:=TRUE;
+        Ch:=UpCase(Para[2]);
+        Delete(Para,1,2);
+        case Ch of
+         'B' : IBinary:=True;
          'A' : OutputMode:=OutByte;
          'S' : OutputMode:=OutString;
          'V' : begin
-                 Writeln('Data2Inc ',version,' (C) 1999 Peter Vreman and Marco van de Voort');
-                 Writeln;
+                 WriteLn('Data2Inc ',Version,' (C) 1999 Peter Vreman and Marco van de Voort');
+                 WriteLn;
                  Halt;
                end;
-     '?','H' : Helpscreen;
+     '?','H' : HelpScreen;
 
         end;
      end
     else
      begin
-       inc(Files);
+       Inc(Files);
        if Files>3 then
         HelpScreen;
        case Files of
@@ -875,7 +875,7 @@ begin
        end;
      end;
     END;
-   if (FIles<3) AND I_Binary then
+   if (Files<3) AND IBinary then
      HelpScreen;
    IF Files<2 THEN
     HelpScreen;
@@ -883,7 +883,7 @@ end;
 
 begin
   GetPara;
-  IF I_Binary THEN
+  IF IBinary THEN
    DoBinary
   ELSE
    DoFile;

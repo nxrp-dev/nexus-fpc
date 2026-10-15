@@ -26,61 +26,61 @@ unit rabase;
   interface
 
     uses
-      cclasses,
-      systems;
+      CClasses,
+      Systems;
 
     type
-       tbaseasmreader = class
+       TBaseAsmReader = class
          constructor create;virtual;
          { the real return type is TAsmList, but this would introduce too much unit circles }
-         function Assemble: tlinkedlist;virtual;abstract;
+         function Assemble: TLinkedList;virtual;abstract;
        end;
-       tcbaseasmreader = class of tbaseasmreader;
+       TBaseAsmReaderClass = class of TBaseAsmReader;
 
-       pasmmodeinfo = ^tasmmodeinfo;
-       tasmmodeinfo = record
-          id    : tasmmode;
+       PAsmModeInfo = ^TAsmModeInfo;
+       TAsmModeInfo = record
+          id    : TAsmMode;
           idtxt : string[12];
-          casmreader : tcbaseasmreader;
+          CAsmReader : TBaseAsmReaderClass;
        end;
 
     var
-      asmmodeinfos  : array[tasmmode] of pasmmodeinfo;
+      asmmodeinfos  : array[TAsmMode] of PAsmModeInfo;
 
-    function SetAsmReadMode(const s:string;var t:tasmmode):boolean;
-    procedure RegisterAsmMode(const r:tasmmodeinfo);
+    function SetAsmReadMode(const s:string;var t:TAsmMode):boolean;
+    procedure RegisterAsmMode(const r:TAsmModeInfo);
 
   implementation
 
     uses
-      cutils;
+      CUtils;
 
 
-    procedure RegisterAsmmode(const r:tasmmodeinfo);
+    procedure RegisterAsmmode(const r:TAsmModeInfo);
       var
-        t : tasmmode;
+        t : TAsmMode;
       begin
         t:=r.id;
-        if assigned(asmmodeinfos[t]) then
-          writeln('Warning: Asmmode is already registered!')
+        if Assigned(asmmodeinfos[t]) then
+          WriteLn('Warning: Asmmode is already registered!')
         else
           new(asmmodeinfos[t]);
         asmmodeinfos[t]^:=r;
       end;
 
 
-    function SetAsmReadMode(const s:string;var t:tasmmode):boolean;
+    function SetAsmReadMode(const s:string;var t:TAsmMode):boolean;
       var
         hs : string;
-        ht : tasmmode;
+        ht : TAsmMode;
       begin
         result:=false;
         hs:=upper(s);
         { Support Default as an alias for Standard }
         if hs='DEFAULT' then
           hs:='STANDARD';
-        for ht:=low(tasmmode) to high(tasmmode) do
-         if assigned(asmmodeinfos[ht]) and
+        for ht:=low(TAsmMode) to high(TAsmMode) do
+         if Assigned(asmmodeinfos[ht]) and
             (asmmodeinfos[ht]^.idtxt=hs) then
           begin
             t:=asmmodeinfos[ht]^.id;
@@ -89,19 +89,19 @@ unit rabase;
       end;
 
 
-    constructor tbaseasmreader.create;
+    constructor TBaseAsmReader.create;
       begin
         inherited create;
       end;
 
 var
-  asmmode : tasmmode;
+  AsmMode : TAsmMode;
 
 finalization
-  for asmmode:=low(tasmmode) to high(tasmmode) do
-   if assigned(asmmodeinfos[asmmode]) then
+  for AsmMode:=low(TAsmMode) to high(TAsmMode) do
+   if Assigned(asmmodeinfos[AsmMode]) then
     begin
-      dispose(asmmodeinfos[asmmode]);
-      asmmodeinfos[asmmode]:=nil;
+      dispose(asmmodeinfos[AsmMode]);
+      asmmodeinfos[AsmMode]:=nil;
     end;
 end.

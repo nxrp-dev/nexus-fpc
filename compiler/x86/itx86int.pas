@@ -28,31 +28,31 @@ interface
     uses
       cgbase;
 
-    function masm_regnum_search(const s:string):Tregister;
-    function masm_regname(r:Tregister):string;
+    function masm_regnum_search(const s:string):TRegister;
+    function masm_regname(r:TRegister):string;
 
 
 implementation
 
     uses
-      cutils,verbose,
+      CUtils,Verbose,
       cpubase;
 
     const
     {$if defined(x86_64)}
-      int_regname_table : array[tregisterindex] of string[13] = (
+      int_regname_table : array[TRegisterIndex] of string[13] = (
         {$i r8664int.inc}
       );
 
-      int_regname_index : array[tregisterindex] of tregisterindex = (
+      int_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r8664iri.inc}
       );
     {$elseif defined(i386)}
-      int_regname_table : array[tregisterindex] of string[13] = (
+      int_regname_table : array[TRegisterIndex] of string[13] = (
         {$i r386int.inc}
       );
 
-      int_regname_index : array[tregisterindex] of tregisterindex = (
+      int_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r386iri.inc}
       );
     {$endif}
@@ -64,7 +64,7 @@ implementation
       begin
         {Binary search.}
         l := 0;
-        r := high(tregisterindex) + 1;
+        r := high(TRegisterIndex) + 1;
         while l < r do
           begin
             m := (l + r) div 2;
@@ -72,22 +72,22 @@ implementation
             else r := m;
           end;
 
-        if (r<=high(tregisterindex)) and (int_regname_table[int_regname_index[r]]=s) then
+        if (r<=high(TRegisterIndex)) and (int_regname_table[int_regname_index[r]]=s) then
           findreg_by_intname:=int_regname_index[r]
         else
           findreg_by_intname:=0;
       end;
 
 
-    function masm_regnum_search(const s:string):Tregister;
+    function masm_regnum_search(const s:string):TRegister;
       begin
         result:=regnumber_table[findreg_by_intname(s)];
       end;
 
 
-    function masm_regname(r:Tregister):string;
+    function masm_regname(r:TRegister):string;
       var
-        p : tregisterindex;
+        p : TRegisterIndex;
       begin
         p:=findreg_by_number(r);
         if p<>0 then

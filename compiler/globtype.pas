@@ -46,7 +46,7 @@ interface
        TBooleanDynArray = array of boolean;
        TWordDynArray = array of word;
 
-       Int32 = Longint;
+       Int32 = LongInt;
 
        { Integer type corresponding to pointer size }
 {$ifdef cpu64bitaddr}
@@ -55,7 +55,7 @@ interface
 {$endif cpu64bitaddr}
 {$ifdef cpu32bitaddr}
        PUint = cardinal;
-       PInt = longint;
+       PInt = LongInt;
 {$endif cpu32bitaddr}
 
 
@@ -68,8 +68,8 @@ interface
        AIntBits = 64;
 {$endif cpu64bitalu}
 {$ifdef cpu32bitalu}
-       AWord = longword;
-       AInt = longint;
+       AWord = LongWord;
+       AInt = LongInt;
 
      Const
        AIntBits = 32;
@@ -80,7 +80,7 @@ interface
      { Maximum possible size of locals space (stack frame) }
      Const
 
-       MaxLocalsSize = High(longint) - 15;
+       MaxLocalsSize = High(LongInt) - 15;
 
 
      Type
@@ -90,7 +90,7 @@ interface
        { target cpu specific type used to store data sizes }
 
        ASizeInt = PInt;
-       ASizeUInt = PUInt;
+       ASizeUInt = PUint;
 
 
        { type used for handling constants etc. in the code generator }
@@ -411,7 +411,7 @@ interface
        }
        WPOptimizationsNeedingAllUnitInfo = [cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts];
 
-       featurestr : array[TFeature] of string[14] = (
+       FeatureStr : array[TFeature] of string[14] = (
          'HEAP','INITFINAL','RTTI','CLASSES','EXCEPTIONS','EXITCODE',
          'ANSISTRINGS','WIDESTRINGS','TEXTIO','CONSOLEIO','FILEIO',
          'RANDOM','VARIANTS','OBJECTS','DYNARRAYS','THREADING','COMMANDARGS',
@@ -787,14 +787,14 @@ interface
       TNormalSet = set of byte; { 256 elements set }
       PNormalSet = ^TNormalSet;
 
-      pboolean   = ^boolean;
-      pdouble    = ^double;
-      pbyte      = ^byte;
-      pword      = ^word;
-      plongint   = ^longint;
-      plongintarray = plongint;
+      PBoolean   = ^boolean;
+      PDouble    = ^double;
+      PByte      = ^byte;
+      PWord      = ^word;
+      PLongInt   = ^LongInt;
+      PLongIntArray = PLongInt;
 
-      TFilePosLine = longint;
+      TFilePosLine = LongInt;
       TFilePosColumn = word;
       TFilePosFileIndex = word;
       TFilePosModuleIndex = word;
@@ -809,8 +809,8 @@ interface
 
   {$ifndef xFPC}
     type
-      pguid = ^tguid;
-      tguid = packed record
+      PGUID = ^TGUID;
+      TGUID = packed record
         D1: LongWord;
         D2: Word;
         D3: Word;
@@ -857,7 +857,7 @@ interface
         owner: TObject; { tmodule }
         {$ENDIF}
         next : PMessageStateRecord;
-        value : longint;
+        value : LongInt;
         state : TMsgState;
       end;
 

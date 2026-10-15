@@ -105,18 +105,18 @@ begin
     on e : EReadError do exit;
   end;
 
-  if hdr.magic<>EXTERNAL_RESMAGIC then exit;
-  if hdr.version<>EXT_CURRENT_VERSION then exit;
-  if hdr.endianess<>fNativeEndianess then
+  if hdr.Magic<>External_ResMagic then exit;
+  if hdr.Version<>ExtCurrentVersion then exit;
+  if hdr.Endianess<>fNativeEndianess then
   begin
-    fEndianess:=hdr.endianess;
+    fEndianess:=hdr.Endianess;
     fOppositeEndianess:=true;
   end;
   if fOppositeEndianess then
   begin
-    hdr.count:=SwapEndian(hdr.count);
-    hdr.nodesize:=SwapEndian(hdr.nodesize);
-    hdr.hdrsize:=SwapEndian(hdr.hdrsize);
+    hdr.Count:=SwapEndian(hdr.Count);
+    hdr.NodeSize:=SwapEndian(hdr.NodeSize);
+    hdr.HdrSize:=SwapEndian(hdr.HdrSize);
   end;
   fFileHeader:=hdr;
   Result:=true;
@@ -142,31 +142,31 @@ begin
   oldpos:=aStream.Position;
   if fOppositeEndianess then
   begin
-    infonode.nameid:=SwapEndian(infonode.nameid);
-    infonode.ncount:=SwapEndian(infonode.ncount);
-    infonode.idcountsize:=SwapEndian(infonode.idcountsize);
-    infonode.subptr:=SwapEndian(infonode.subptr);
+    infonode.NameID:=SwapEndian(infonode.NameID);
+    infonode.NCount:=SwapEndian(infonode.NCount);
+    infonode.IDCountSize:=SwapEndian(infonode.IDCountSize);
+    infonode.SubPtr:=SwapEndian(infonode.SubPtr);
   end;
   if aParent=nil then aNode:=fRoot
   else
   begin
     desc:=TResourceDesc.Create;
     try
-      if named then desc.Name:=ReadString(aStream,infonode.nameid)
-      else desc.ID:=infonode.nameid;
+      if named then desc.Name:=ReadString(aStream,infonode.NameID)
+      else desc.ID:=infonode.NameID;
       aNode:=aParent.CreateSubNode(desc);
     finally
       desc.Free;
     end;
   end;
-  aStream.Position:=infonode.subptr;
+  aStream.Position:=infonode.SubPtr;
   if aNode.IsLeaf then
-    ReadResData(aStream,aNode,aResources,infonode.idcountsize)
+    ReadResData(aStream,aNode,aResources,infonode.IDCountSize)
   else
   begin
-    for i:=1 to infonode.ncount do
+    for i:=1 to infonode.NCount do
       ReadNode(aStream,aNode,aResources,true);
-    for i:=1 to infonode.idcountsize do
+    for i:=1 to infonode.IDCountSize do
       ReadNode(aStream,aNode,aResources,false);
   end;
   aStream.Position:=oldpos;
@@ -204,7 +204,7 @@ begin
   if not ReadFileHeader(aStream) then
     raise EResourceReaderWrongFormatException.Create('');
   try
-    if fFileHeader.count=0 then exit; //no resources in this file.
+    if fFileHeader.Count=0 then exit; //no resources in this file.
     ReadResourceTree(aStream,aResources);
   except
     on e : EReadError do
@@ -222,9 +222,9 @@ begin
   fExtensions:='.fpcres .frs';
   fDescription:='External file resource reader';
   {$IFDEF ENDIAN_BIG}
-  fNativeEndianess:=EXT_ENDIAN_BIG;
+  fNativeEndianess:=ExtEndianBig;
   {$ELSE}
-  fNativeEndianess:=EXT_ENDIAN_LITTLE;
+  fNativeEndianess:=ExtEndianLittle;
   {$ENDIF}
   fEndianess:=fNativeEndianess;
   fOppositeEndianess:=false;

@@ -1,4 +1,4 @@
-program late_gui;
+program LateGUI;
 {$mode objfpc}{$H+}
 uses LateHost;
-begin RunLateDemo(false); end.
+begin RunLateDemo(False); end.

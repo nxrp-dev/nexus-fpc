@@ -26,13 +26,13 @@ unit raatt;
   interface
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
       { common }
-      cutils,cclasses,
+      CUtils,CClasses,
       { global }
-      globtype,
+      GlobType,
       { aasm }
-      cpubase,cpuinfo,aasmbase,aasmtai,aasmdata,aasmcpu,
+      cpubase,CPUInfo,aasmbase,aasmtai,AAsmData,aasmcpu,
       { assembler reader }
       rabase,
       rasm,
@@ -43,7 +43,7 @@ unit raatt;
       cgbase;
 
     type
-      tasmtoken = (
+      TAsmToken = (
         AS_NONE,AS_LABEL,AS_LLABEL,AS_STRING,AS_INTNUM,
         AS_REALNUM,AS_COMMA,AS_LPAREN,
         AS_RPAREN,AS_COLON,AS_DOT,AS_PLUS,AS_MINUS,AS_STAR,
@@ -63,7 +63,7 @@ unit raatt;
         AS_TARGET_DIRECTIVE
         );
 
-        tasmkeyword = string[10];
+        TAsmKeyword = string[10];
 
     const
       { These tokens should be modified accordingly to the modifications }
@@ -71,7 +71,7 @@ unit raatt;
       firstdirective = AS_DB;
       lastdirective  = AS_END;
 
-      token2str : array[tasmtoken] of tasmkeyword=(
+      token2str : array[TAsmToken] of TAsmKeyword=(
         '','Label','LLabel','string','integer',
         'float',',','(',
         ')',':','.','+','-','*',
@@ -87,19 +87,19 @@ unit raatt;
         'directive');
 
     type
-       tattreader = class(tasmreader)
-         actasmtoken    : tasmtoken;
-         prevasmtoken   : tasmtoken;
+       TATTReader = class(TAsmReader)
+         actasmtoken    : TAsmToken;
+         prevasmtoken   : TAsmToken;
          procedure SetupTables;
          procedure BuildConstant(constsize: byte);
-         procedure BuildConstantOperand(oper : toperand);
+         procedure BuildConstantOperand(oper : TOperand);
          procedure BuildRealConstant(typ : TFloatType);
          procedure BuildStringConstant(asciiz: boolean);
          procedure BuildRva;
-         procedure BuildRecordOffsetSize(const expr: string;var offset:tcgint;var size:tcgint; var mangledname: string; needvmtofs: boolean);
-         procedure BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:tcgint;var asmsym:string;var asmsymtyp:TAsmsymtype);
-         function BuildConstExpression(allowref,betweenbracket:boolean): tcgint;
-         function Assemble: tlinkedlist;override;
+         procedure BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var mangledname: string; needvmtofs: boolean);
+         procedure BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
+         function BuildConstExpression(allowref,betweenbracket:boolean): TCGInt;
+         function Assemble: TLinkedList;override;
          procedure handleopcode;virtual;abstract;
          function is_asmopcode(const s: string) : boolean;virtual;abstract;
          Function is_asmdirective(const s: string):boolean;
@@ -107,7 +107,7 @@ unit raatt;
          function is_locallabel(const s: string):boolean;
          function is_targetdirective(const s: string): boolean;virtual;
          procedure GetToken;
-         function consume(t : tasmtoken):boolean;
+         function consume(t : TAsmToken):boolean;
          procedure RecoverConsume(allowcomma:boolean);
          procedure handlepercent;virtual;
          procedure handledollar;virtual;
@@ -119,21 +119,21 @@ unit raatt;
 
     uses
       { globals }
-      verbose,systems,
+      Verbose,Systems,
       { input }
-      scanner, pbase,
+      Scanner, pbase,
       { symtable }
-      symbase,symtype,symsym,symdef,symtable,
+      SymBase,symtype,SymSym,symdef,SymTable,
 {$ifdef x86}
       rax86,
 {$endif x86}
       itcpugas,
-      procinfo;
+      ProcInfo;
 
 
-    procedure tattreader.SetupTables;
+    procedure TATTReader.SetupTables;
       var
-        i : tasmop;
+        i : TAsmOp;
       Begin
         iasmops:=TFPHashList.create;
         for i:=firstop to lastop do
@@ -141,9 +141,9 @@ unit raatt;
       end;
 
 
-    function tattreader.is_asmdirective(const s: string):boolean;
+    function TATTReader.is_asmdirective(const s: string):boolean;
       var
-        i : tasmtoken;
+        i : TAsmToken;
         hs : string;
       Begin
         { GNU as is also not casesensitive with this }
@@ -159,7 +159,7 @@ unit raatt;
       end;
 
 
-    function tattreader.is_register(const s:string):boolean;
+    function TATTReader.is_register(const s:string):boolean;
       begin
         is_register:=false;
         actasmregister:=gas_regnum_search(lower(s));
@@ -171,36 +171,36 @@ unit raatt;
       end;
 
 
-    function tattreader.is_locallabel(const s: string):boolean;
+    function TATTReader.is_locallabel(const s: string):boolean;
       begin
         is_locallabel:=(length(s)>=2) and (s[1]='.') and (s[2]='L');
       end;
 
 
-    procedure tattreader.handledollar;
+    procedure TATTReader.handledollar;
       begin
         c:=CurrentScanner.asmgetchar;
         actasmtoken:=AS_DOLLAR;
       end;
 
-    procedure tattreader.handlepercent;
+    procedure TATTReader.handlepercent;
       begin
         c:=CurrentScanner.asmgetchar;
         actasmtoken:=AS_MOD;
       end;
 
-    function tattreader.is_targetdirective(const s: string): boolean;
+    function TATTReader.is_targetdirective(const s: string): boolean;
       begin
         result:=false;
       end;
 
-    procedure tattreader.handletargetdirective;
+    procedure TATTReader.handletargetdirective;
       begin
       end;
 
-    procedure tattreader.GetToken;
+    procedure TATTReader.GetToken;
       var
-        len : longint;
+        len : LongInt;
         srsym : TSym;
         srsymtable : TSymTable;
       begin
@@ -290,7 +290,7 @@ unit raatt;
            { Opcode ? }
            If is_asmopcode(upper(actasmpattern)) then
             Begin
-              uppervar(actasmpattern);
+              UpperVar(actasmpattern);
               exit;
             end;
            { End of assemblerblock ? }
@@ -347,14 +347,14 @@ unit raatt;
                     c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern[0]:=chr(len);
-                 uppervar(actasmpattern);
+                 UpperVar(actasmpattern);
 {$ifdef x86}
                  { only x86 architectures have instruction prefixes }
 
                  { Opcode, can only be when the previous was a prefix }
                  If is_prefix(actopcode) and is_asmopcode(actasmpattern) then
                   Begin
-                    uppervar(actasmpattern);
+                    UpperVar(actasmpattern);
                     exit;
                   end;
 {$endif x86}
@@ -389,9 +389,9 @@ unit raatt;
                  if (c='.') then
                   begin
                     searchsym(actasmpattern,srsym,srsymtable);
-                    if assigned(srsym) and
+                    if Assigned(srsym) and
                        (srsym.typ=unitsym) and
-                       (srsym.owner.symtabletype in [staticsymtable,globalsymtable]) and
+                       (srsym.owner.symtabletype in [staticsymtable,GlobalSymTable]) and
                        srsym.owner.iscurrentunit then
                      begin
                        actasmpattern:=actasmpattern+c;
@@ -420,7 +420,7 @@ unit raatt;
                     c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern[0]:=chr(len);
-                 actasmpattern:=tostr(ParseVal(actasmpattern,10));
+                 actasmpattern:=ToStr(ParseVal(actasmpattern,10));
                  actasmtoken:=AS_INTNUM;
                  exit;
                end;
@@ -437,7 +437,7 @@ unit raatt;
                           actasmpattern:=actasmpattern + c;
                           c:=CurrentScanner.asmgetchar;
                         end;
-                       actasmpattern:=tostr(ParseVal(actasmpattern,2));
+                       actasmpattern:=ToStr(ParseVal(actasmpattern,2));
                        actasmtoken:=AS_INTNUM;
                        exit;
                      end;
@@ -498,7 +498,7 @@ unit raatt;
                           actasmpattern:=actasmpattern + c;
                           c:=CurrentScanner.asmgetchar;
                         end;
-                       actasmpattern:=tostr(ParseVal(actasmpattern,16));
+                       actasmpattern:=ToStr(ParseVal(actasmpattern,16));
                        actasmtoken:=AS_INTNUM;
                        exit;
                      end;
@@ -510,13 +510,13 @@ unit raatt;
                           actasmpattern:=actasmpattern + c;
                           c:=CurrentScanner.asmgetchar;
                         end;
-                       actasmpattern:=tostr(ParseVal(actasmpattern,8));
+                       actasmpattern:=ToStr(ParseVal(actasmpattern,8));
                        actasmtoken:=AS_INTNUM;
                        exit;
                      end;
                    else { octal number zero value...}
                      Begin
-                       actasmpattern:=tostr(ParseVal(actasmpattern,8));
+                       actasmpattern:=ToStr(ParseVal(actasmpattern,8));
                        actasmtoken:=AS_INTNUM;
                        exit;
                      end;
@@ -790,7 +790,7 @@ unit raatt;
       end;
 
 
-    function tattreader.consume(t : tasmtoken):boolean;
+    function TATTReader.consume(t : TAsmToken):boolean;
       begin
         Consume:=true;
         if t<>actasmtoken then
@@ -804,7 +804,7 @@ unit raatt;
       end;
 
 
-    procedure tattreader.RecoverConsume(allowcomma:boolean);
+    procedure TATTReader.RecoverConsume(allowcomma:boolean);
       begin
         While not (actasmtoken in [AS_SEPARATOR,AS_END]) do
          begin
@@ -815,12 +815,12 @@ unit raatt;
       end;
 
 
-    Procedure tattreader.BuildConstant(constsize: byte);
+    Procedure TATTReader.BuildConstant(constsize: byte);
       var
-       asmsymtyp : TAsmSymType;
+       asmsymtyp : TAsmsymtype;
        asmsym,
        expr: string;
-       value : tcgint;
+       value : TCGInt;
       Begin
         Repeat
           Case actasmtoken of
@@ -852,7 +852,7 @@ unit raatt;
                 BuildConstSymbolExpression(false,false,false,value,asmsym,asmsymtyp);
                 if asmsym<>'' then
                  begin
-                   if constsize<>sizeof(pint) then
+                   if constsize<>sizeof(PInt) then
                     Message(asmr_w_32bit_const_for_address);
                    ConcatConstSymbol(curlist,asmsym,'',asmsymtyp,value,constsize,true)
                  end
@@ -874,10 +874,10 @@ unit raatt;
       end;
 
 
-    Procedure tattreader.BuildRealConstant(typ : TFloatType);
+    Procedure TATTReader.BuildRealConstant(typ : TFloatType);
       var
         expr : string;
-        r : bestreal;
+        r : BestReal;
         code : integer;
         negativ : boolean;
         errorflag: boolean;
@@ -949,7 +949,7 @@ unit raatt;
       end;
 
 
-    Procedure tattreader.BuildStringConstant(asciiz: boolean);
+    Procedure TATTReader.BuildStringConstant(asciiz: boolean);
       var
         expr: string;
         errorflag : boolean;
@@ -986,9 +986,9 @@ unit raatt;
       end;
 
 
-   Function tattreader.Assemble: tlinkedlist;
+   Function TATTReader.Assemble: TLinkedList;
      Var
-       hl         : tasmlabel;
+       hl         : TAsmLabel;
        commname,
        symname,
        symval     ,sectionname: string;
@@ -996,9 +996,9 @@ unit raatt;
        l1,
        l3,
        l4,
-       symofs     : tcgint;
+       symofs     : TCGInt;
        symtyp     : TAsmsymtype;
-       section    : tai_section;
+       section    : TAISection;
        secflags   : TSectionFlags;
        secprogbits : TSectionProgbits;
        i: Integer;
@@ -1108,13 +1108,13 @@ unit raatt;
            AS_SINGLE:
              Begin
                Consume(AS_SINGLE);
-               BuildRealConstant(s32real);
+               BuildRealConstant(S32Real);
              end;
 
            AS_DOUBLE:
              Begin
                Consume(AS_DOUBLE);
-               BuildRealConstant(s64real);
+               BuildRealConstant(S64Real);
              end;
 
            AS_EXTENDED:
@@ -1162,7 +1162,7 @@ unit raatt;
                Consume(AS_P2ALIGN);
                l1:=BuildConstExpression(false,false);
                if (l1>=0) and (l1<=16) then
-                 l1:=tcgint(1) shl l1
+                 l1:=TCGInt(1) shl l1
                else
                  l1:=1;
                if actasmtoken=AS_COMMA then
@@ -1179,7 +1179,7 @@ unit raatt;
                            l4:=BuildConstExpression(false,false);
                            if (l4<0) or (l4>l1) then
                              Message(asmr_e_invalid_constant_expression);
-                           curlist.concat(Tai_align.create_op_max(l1,l3,l4));
+                           curlist.concat(TAIAlign.create_op_max(l1,l3,l4));
                          end
                      end
                    else if actasmtoken=AS_COMMA then
@@ -1188,7 +1188,7 @@ unit raatt;
                        l4:=BuildConstExpression(false,false);
                        if (l4<0) or (l4>l1) then
                          Message(asmr_e_invalid_constant_expression);
-                       curlist.concat(Tai_align.create_max(l1,l4));
+                       curlist.concat(TAIAlign.create_max(l1,l4));
                      end
                  end
                else
@@ -1217,7 +1217,7 @@ unit raatt;
                Consume(AS_ID);
                Consume(AS_COMMA);
                symofs:=BuildConstExpression(false,false);
-               curList.concat(Tai_datablock.Create(commname,symofs,carraydef.getreusable(u8inttype,symofs),AT_DATA));
+               curList.concat(TAIDataBlock.Create(commname,symofs,CArrayDef.getreusable(u8inttype,symofs),AT_DATA));
                if actasmtoken<>AS_SEPARATOR then
                 Consume(AS_SEPARATOR);
              end;
@@ -1229,7 +1229,7 @@ unit raatt;
                Consume(AS_ID);
                Consume(AS_COMMA);
                symofs:=BuildConstExpression(false,false);
-               curList.concat(Tai_datablock.Create_global(commname,symofs,carraydef.getreusable(u8inttype,symofs),AT_DATA));
+               curList.concat(TAIDataBlock.Create_global(commname,symofs,CArrayDef.getreusable(u8inttype,symofs),AT_DATA));
                if actasmtoken<>AS_SEPARATOR then
                 Consume(AS_SEPARATOR);
              end;
@@ -1261,7 +1261,7 @@ unit raatt;
                Consume(AS_COMMA);
                BuildConstSymbolExpression(true,false,false, symofs,symval,symtyp);
 
-               curList.concat(tai_symbolpair.create(spk_set,symname,symval));
+               curList.concat(TAISymbolPair.create(spk_set,symname,symval));
              end;
 
            AS_WEAK:
@@ -1272,7 +1272,7 @@ unit raatt;
                  depending on whether it's external or net, generate
                  asd_weak_reference or asd_weak_definition -- this is different
                  on some targets) }
-               curList.concat(tai_directive.create(asd_weak_definition,symname));
+               curList.concat(TAIDirective.create(asd_weak_definition,symname));
              end;
 
            AS_SECTION:
@@ -1369,7 +1369,7 @@ unit raatt;
                                Parsing Helpers
 *****************************************************************************}
 
-    Procedure tattreader.BuildRecordOffsetSize(const expr: string;var offset:tcgint;var size:tcgint; var mangledname: string; needvmtofs: boolean);
+    Procedure TATTReader.BuildRecordOffsetSize(const expr: string;var offset:TCGInt;var size:TCGInt; var mangledname: string; needvmtofs: boolean);
       { Description: This routine builds up a record offset after a AS_DOT }
       { token is encountered.                                              }
       { On entry actasmtoken should be equal to AS_DOT                     }
@@ -1402,17 +1402,17 @@ unit raatt;
       end;
 
 
-    procedure tattreader.BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:tcgint;var asmsym:string;var asmsymtyp:TAsmsymtype);
+    procedure TATTReader.BuildConstSymbolExpression(allowref,betweenbracket,needofs:boolean;var value:TCGInt;var asmsym:string;var asmsymtyp:TAsmsymtype);
       var
-        hssymtyp : TAsmSymType;
+        hssymtyp : TAsmsymtype;
         hs,tempstr,expr,mangledname : string;
-        parenlevel : longint;
-        l,k : tcgint;
+        parenlevel : LongInt;
+        l,k : TCGInt;
         errorflag : boolean;
-        prevtok : tasmtoken;
+        prevtok : TAsmToken;
         sym : TSym;
         srsymtable : TSymTable;
-        hl  : tasmlabel;
+        hl  : TAsmLabel;
       Begin
         asmsym:='';
         asmsymtyp:=AT_DATA;
@@ -1564,7 +1564,7 @@ unit raatt;
                    else
                     begin
                       searchsym(tempstr,sym,srsymtable);
-                      if assigned(sym) then
+                      if Assigned(sym) then
                        begin
                          case sym.typ of
                            staticvarsym,
@@ -1629,7 +1629,7 @@ unit raatt;
                    else
                     begin
                       searchsym(tempstr,sym,srsymtable);
-                      if assigned(sym) then
+                      if Assigned(sym) then
                        begin
                          case sym.typ of
                            staticvarsym :
@@ -1734,11 +1734,11 @@ unit raatt;
       end;
 
 
-    function tattreader.BuildConstExpression(allowref,betweenbracket:boolean): tcgint;
+    function TATTReader.BuildConstExpression(allowref,betweenbracket:boolean): TCGInt;
       var
-        l : tcgint;
+        l : TCGInt;
         hs : string;
-        hssymtyp : TAsmSymType;
+        hssymtyp : TAsmsymtype;
       begin
         BuildConstSymbolExpression(allowref,betweenbracket,false,l,hs,hssymtyp);
         if hs<>'' then
@@ -1747,11 +1747,11 @@ unit raatt;
       end;
 
 
-    Procedure tattreader.BuildConstantOperand(oper : toperand);
+    Procedure TATTReader.BuildConstantOperand(oper : TOperand);
       var
-        l : tcgint;
+        l : TCGInt;
         tempstr : string;
-        tempsymtyp : TAsmSymType;
+        tempsymtyp : TAsmsymtype;
       begin
         BuildConstSymbolExpression(false,false,true,l,tempstr,tempsymtyp);
         if tempstr<>'' then
@@ -1770,12 +1770,12 @@ unit raatt;
          end;
       end;
 
-    procedure tattreader.BuildRva;
+    procedure TATTReader.BuildRva;
       var
-       asmsymtyp : TAsmSymType;
+       asmsymtyp : TAsmsymtype;
        asmsym: string;
-       value : tcgint;
-       ai:tai_const;
+       value : TCGInt;
+       ai:TAIConst;
       begin
         repeat
           case actasmtoken of
@@ -1788,7 +1788,7 @@ unit raatt;
                 BuildConstSymbolExpression(false,false,false,value,asmsym,asmsymtyp);
                 if asmsym<>'' then
                  begin
-                   ai:=tai_const.create_type_sym(aitconst_rva_symbol,CurrentAsmData.RefAsmSymbol(asmsym,asmsymtyp));
+                   ai:=TAIConst.create_type_sym(aitconst_rva_symbol,CurrentAsmData.RefAsmSymbol(asmsym,asmsymtyp));
                    ai.value:=value;
                    curlist.concat(ai);
                  end

@@ -26,14 +26,14 @@ Unit cpuinfo;
 Interface
 
   uses
-    globtype;
+    GlobType;
 
 Type
 
 
 
    { possible supported processors for this target }
-   tcputype =
+   TCPUType =
       (cpu_none,
        cpu_386,
        cpu_486,
@@ -60,7 +60,7 @@ Type
        cpu_zen5
       );
 
-   tfputype =
+   TFPUType =
      (fpu_none,
 //      fpu_soft,
       fpu_x87,
@@ -76,13 +76,13 @@ Type
       fpu_avx512f
      );
 
-   tcontrollertype =
+   TControllerType =
      (ct_none
      );
 
-   tcontrollerdatatype = record
-      controllertypestr, controllerunitstr: string[20];
-      cputype: tcputype; fputype: tfputype;
+   TControllerDataType = record
+      ControllerTypeStr, controllerunitstr: string[20];
+      CPUType: TCPUType; FPUType: TFPUType;
       flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
    end;
 
@@ -96,9 +96,9 @@ Const
      but we don't care about this warning }
    {$PUSH}
     {$WARN 3177 OFF}
-   embedded_controllers : array [tcontrollertype] of tcontrollerdatatype =
+   embedded_controllers : array [TControllerType] of TControllerDataType =
    (
-      (controllertypestr:''; controllerunitstr:''; cputype:cpu_none; fputype:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
+      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
    {$POP}
 
 var
@@ -117,7 +117,7 @@ var
    ];
 
 const
-   cputypestr : array[tcputype] of string[16] = ('',
+   CPUTypeStr : array[TCPUType] of string[16] = ('',
      '80386',
      '80486',
      'PENTIUM',
@@ -143,7 +143,7 @@ const
      'ZEN5'
    );
 
-   fputypestr : array[tfputype] of string[7] = (
+   FPUTypeStr : array[TFPUType] of string[7] = (
      'NONE',
 //     'SOFT',
      'X87',
@@ -182,7 +182,7 @@ const
    level4optimizerswitches = genericlevel4optimizerswitches + level3optimizerswitches + [cs_useebp];
 
 type
-   tcpuflags =
+   TCPUFlags =
       (CPUX86_HAS_BTX,          { Bit-test instructions (BT, BTC, BTR and BTS) are available }
        CPUX86_HAS_CMOV,         { CMOVcc instructions are available }
        CPUX86_HAS_SSEUNIT,      { SSE instructions are available }
@@ -201,7 +201,7 @@ type
        CPUX86_HAS_OSXSAVE       { XGETBV is available }
       );
 
-   tfpuflags =
+   TFPUFlags =
       (FPUX86_HAS_AVXUNIT,
        FPUX86_HAS_FMA,
        FPUX86_HAS_FMA4,
@@ -231,7 +231,7 @@ type
       );
 
  var
-   cpu_capabilities : array[tcputype] of set of tcpuflags = (
+   cpu_capabilities : array[TCPUType] of set of TCPUFlags = (
      { cpu_none      } [],
      { cpu_386       } [CPUX86_HAS_BTX],
      { cpu_486       } [CPUX86_HAS_BSWAP,CPUX86_HAS_BTX],
@@ -259,7 +259,7 @@ type
    );
 
  const
-   fpu_capabilities : array[tfputype] of set of tfpuflags = (
+   fpu_capabilities : array[TFPUType] of set of TFPUFlags = (
      { fpu_none      } [],
      { fpu_x87       } [],
      { fpu_sse       } [],

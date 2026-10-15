@@ -26,83 +26,83 @@ unit fpkg;
 interface
 
   uses
-    sysutils,
-    cclasses,
-    globtype,
-    finput;
+    SysUtils,
+    CClasses,
+    GlobType,
+    FinPut;
 
   type
-    tcontainedunit=record
-      module:tmodulebase;
-      ppufile:tpathstr;
-      offset:longint;
-      size:longint;
+    TContainedUnit=record
+      module:TModuleBase;
+      ppufile:TPathStr;
+      offset:LongInt;
+      size:LongInt;
     end;
-    pcontainedunit=^tcontainedunit;
+    PContainedUnit=^TContainedUnit;
 
-    tpackage=class
+    TPackage=class
     public
       realpackagename,
-      packagename : pshortstring;
+      packagename : PShortString;
       containedmodules : TFPHashList;
       requiredpackages : TFPHashObjectList;
       requiredidentities : TFPHashList;
       sdkidentity, buildidentity: shortstring;
       pcpfilename,
       ppafilename,
-      pplfilename : tpathstr;
+      pplfilename : TPathStr;
       constructor create(const pn:string);
-      destructor destroy;override;
+      destructor Destroy;override;
     end;
 
-    tpackageentry=record
-      package : tpackage;
+    TPackageEntry=record
+      package : TPackage;
       realpkgname : string;
-      usedunits : longint;
+      usedunits : LongInt;
       direct : boolean;
     end;
-    ppackageentry=^tpackageentry;
+    PPackageEntry=^TPackageEntry;
 
   function current_package_build_identity: shortstring;
 
 implementation
 
   uses
-    cutils,globals;
+    CUtils,Globals;
 
   { tpackage }
 
   function current_package_build_identity: shortstring;
-    var g: System.TGuid;
+    var g: System.TGUID;
     begin
-      if package_build_identity='' then
+      if Package_Build_Identity='' then
         begin
           if CreateGUID(g)<>0 then
             raise Exception.Create('Cannot create package build identity');
-          package_build_identity:=StringReplace(StringReplace(
+          Package_Build_Identity:=StringReplace(StringReplace(
             Copy(GUIDToString(g),2,36),'-','',[rfReplaceAll]),'}','',[]);
         end;
-      result:=package_build_identity;
+      result:=Package_Build_Identity;
     end;
 
-  constructor tpackage.create(const pn: string);
+  constructor TPackage.create(const pn: string);
     begin
-      realpackagename:=stringdup(pn);
-      packagename:=stringdup(upper(pn));
+      realpackagename:=StringDup(pn);
+      packagename:=StringDup(upper(pn));
       containedmodules:=TFPHashList.Create;
       requiredpackages:=TFPHashObjectList.Create(false);
       requiredidentities:=TFPHashList.Create;
     end;
 
-  destructor tpackage.destroy;
+  destructor TPackage.Destroy;
     var
-      p : pcontainedunit;
-      i : longint;
+      p : PContainedUnit;
+      i : LongInt;
     begin
-      if assigned(containedmodules) then
+      if Assigned(containedmodules) then
         for i:=0 to containedmodules.count-1 do
           begin
-            p:=pcontainedunit(containedmodules[i]);
+            p:=PContainedUnit(containedmodules[i]);
             dispose(p);
           end;
       containedmodules.free;
@@ -110,38 +110,38 @@ implementation
       requiredpackages.free;
       requiredpackages := nil;
       for i:=0 to requiredidentities.Count-1 do
-        freemem(requiredidentities[i]);
+        FreeMem(requiredidentities[i]);
       requiredidentities.Free;
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
     procedure packageinit;
       begin
-        packagelist:=TFPHashList.Create;
+        PackageList:=TFPHashList.Create;
       end;
 
 
     procedure packagedone;
       var
-        i : longint;
-        pkgentry : ppackageentry;
+        i : LongInt;
+        pkgentry : PPackageEntry;
       begin
-        if assigned(packagelist) then
+        if Assigned(PackageList) then
           begin
-            for i:=0 to packagelist.count-1 do
+            for i:=0 to PackageList.count-1 do
               begin
-                pkgentry:=ppackageentry(packagelist[i]);
+                pkgentry:=PPackageEntry(PackageList[i]);
                 FreeAndNil(pkgentry^.package);
                 dispose(pkgentry);
               end;
           end;
-        packagelist.Free;
-        packagelist:=nil;
+        PackageList.Free;
+        PackageList:=nil;
       end;
 
 
 initialization
-  register_initdone_proc(@packageinit,@packagedone);
+  Register_InitDone_Proc(@packageinit,@packagedone);
 end.
 

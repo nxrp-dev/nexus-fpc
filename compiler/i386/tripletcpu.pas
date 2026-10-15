@@ -26,16 +26,16 @@ unit tripletcpu;
 interface
 
 uses
-  globtype;
+  GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
-  globals, systems, cpuinfo;
+  Globals, Systems, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
   begin
     if tripletstyle in [triplet_llvm,triplet_llvmrt] then
       begin
@@ -45,7 +45,7 @@ function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
           result:='i386'
       end
     else if (TargetInfo.system in systems_darwin) or
-       (CurrentSettings.cputype<cpu_Pentium2) then
+       (CurrentSettings.CPUType<cpu_Pentium2) then
       result:='i386'
     else
       result:='i686'

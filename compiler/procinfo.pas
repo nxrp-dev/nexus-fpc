@@ -27,15 +27,15 @@ unit procinfo;
 
     uses
       { common }
-      cclasses,
+      CClasses,
       { global }
-      globtype,
+      GlobType,
       { symtable }
-      symconst,symtype,symdef,symsym,
+      symconst,symtype,symdef,SymSym,
       node,
       { aasm }
       cpubase,cgbase,cgutils,
-      aasmbase,aasmtai,aasmdata;
+      aasmbase,aasmtai,AAsmData;
 
     const
       inherited_inlining_flags : TProcInfoFlags =
@@ -46,25 +46,25 @@ unit procinfo;
 
 
     type
-       tsavedlabels = array[Boolean] of TAsmLabel;
+       TSavedLabels = array[Boolean] of TAsmLabel;
 
        { This object gives information on the current routine being
          compiled.
        }
-       tprocinfo = class(tlinkedlistitem)
+       TProcInfo = class(TLinkedListItem)
        private
           { list to store the procinfo's of the nested procedures }
-          nestedprocs : tlinkedlist;
+          nestedprocs : TLinkedList;
           { required alignment for this stackframe }
-          fstackalignment : longint;
+          fstackalignment : LongInt;
        public
           { pointer to parent in nested procedures }
-          parent : tprocinfo;
+          parent : TProcInfo;
           { the definition of the routine itself }
           procdef : TProcDef;
           { nested implicit finalization procedure, used for platform-specific
             exception handling }
-          finalize_procinfo : tprocinfo;
+          finalize_procinfo : TProcInfo;
           { file location of begin of procedure }
           entrypos  : TFilePosInfo;
           { file location of end of procedure }
@@ -75,10 +75,10 @@ unit procinfo;
           exitswitches  : TLocalSwitches;
 
           { Size of the parameters on the stack }
-          para_stack_size : pint;
+          para_stack_size : PInt;
 
           { Offset of temp after para/local are allocated }
-          tempstart : longint;
+          tempstart : LongInt;
 
           { some collected informations about the procedure
             see pi_xxxx constants above
@@ -86,32 +86,32 @@ unit procinfo;
           flags : TProcInfoFlags;
 
           { register used as frame pointer }
-          framepointer : tregister;
+          framepointer : TRegister;
 
           { register containing currently the got }
-          got : tregister;
-          CurrGOTLabel : tasmlabel;
+          got : TRegister;
+          CurrGOTLabel : TAsmLabel;
 
           { register containing the tlsoffset }
-          tlsoffset : tregister;
+          tlsoffset : TRegister;
           { reference label for tls addresses }
-          tlslabel : tasmlabel;
+          tlslabel : TAsmLabel;
 
           { Holds the reference used to store all saved registers. }
-          save_regs_ref : treference;
+          save_regs_ref : TReference;
 
           { Last assembler instruction of procedure prologue }
-          endprologue_ai : tlinkedlistitem;
+          endprologue_ai : TLinkedListItem;
 
           { Amount of stack adjustment after all alignments }
-          final_localsize : longint;
+          final_localsize : LongInt;
 
           { Labels for TRUE/FALSE condition, BREAK and CONTINUE }
           CurrBreakLabel,
-          CurrContinueLabel : tasmlabel;
+          CurrContinueLabel : TAsmLabel;
 
           { label to leave the sub routine }
-          CurrExitLabel : tasmlabel;
+          CurrExitLabel : TAsmLabel;
 
           { label for nested exits }
           nestedexitlabel : TLabelSym;
@@ -128,14 +128,14 @@ unit procinfo;
             when the generated procedure lists are committed. }
           nexus_profile_descsym : TAsmSymbol;
           nexus_profile_endlabel : TAsmLabel;
-          nexus_profile_section : tai_section;
+          nexus_profile_section : TAISection;
 
           { max. of space need for parameters }
           maxpushedparasize : SizeInt;
 
           { some architectures need to know a stack size before the first compilation pass
             estimatedtempsize contains an estimated value how big temps will get }
-          estimatedtempsize : longint;
+          estimatedtempsize : LongInt;
 
           { is this a constructor that calls another constructor on itself
             (either inherited, or another constructor of the same class)?
@@ -148,20 +148,20 @@ unit procinfo;
 
           { local symbols and defs referenced by global functions; these need
             to be exported in case the function gets inlined }
-          localrefsyms : tfpobjectlist;
-          localrefdefs : tfpobjectlist;
+          localrefsyms : TFPObjectList;
+          localrefdefs : TFPObjectList;
 
           { Registers saved by the current procedure - useful for peephole optimizers }
           saved_regs_int,
           saved_regs_address,
           saved_regs_mm: TCPURegisterSet;
 
-          constructor create(aparent:tprocinfo);virtual;
-          destructor destroy;override;
+          constructor create(aparent:TProcInfo);virtual;
+          destructor Destroy;override;
 
-          procedure allocate_push_parasize(size:longint);
+          procedure allocate_push_parasize(size:LongInt);
 
-          function calc_stackframe_size:longint;virtual;abstract;
+          function calc_stackframe_size:LongInt;virtual;abstract;
 
           { Set the address of the first temp, can be used to allocate
             space for pushing parameters }
@@ -182,11 +182,11 @@ unit procinfo;
           { Destroy the entire procinfo tree, starting from the outermost parent }
           procedure destroy_tree;
 
-          function get_first_nestedproc: tprocinfo;
+          function get_first_nestedproc: TProcInfo;
           function has_nestedprocs: boolean;
-          function get_normal_proc: tprocinfo;
-          procedure addnestedproc(child: tprocinfo);
-          function find_nestedproc_by_pd(pd:TProcDef):tprocinfo;
+          function get_normal_proc: TProcInfo;
+          procedure addnestedproc(child: TProcInfo);
+          function find_nestedproc_by_pd(pd:TProcDef):TProcInfo;
 
           procedure add_local_ref_sym(sym:TSym);
           procedure export_local_ref_syms;
@@ -195,16 +195,16 @@ unit procinfo;
 
           procedure add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
 
-          function create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): tprocinfo;
+          function create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): TProcInfo;
 
           { Add to parent's list of nested procedures even if parent is a 'main' procedure }
           procedure force_nested;
 
           { Get the required alignment for the current stack frame }
-          property stackalignment: longint read fstackalignment;
+          property stackalignment: LongInt read fstackalignment;
           { Update the required alignment for the current stack frame based
             on the current value and the new required alignment }
-          procedure updatestackalignment(alignment: longint);
+          procedure updatestackalignment(alignment: LongInt);
           { Specific actions after the code has been generated }
           procedure postprocess_code; virtual;
 
@@ -222,31 +222,31 @@ unit procinfo;
             procedures until parent_level }
           procedure set_needs_parentfp(parent_level: byte);
        end;
-       tcprocinfo = class of tprocinfo;
+       TProcInfoClass = class of TProcInfo;
 
     var
-       cprocinfo : tcprocinfo;
+       CProcInfo : TProcInfoClass;
        { information about the current sub routine being parsed (@var(pprocinfo))}
-       CurrentProcInfo : tprocinfo;
+       CurrentProcInfo : TProcInfo;
 
-    function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
+    function nexus_profile_proc_eligible(pi: TProcInfo): boolean;
 
 implementation
 
     uses
-      globals,cutils,systems,verbose,fmodule,
+      Globals,CUtils,Systems,Verbose,FModule,
       procdefutil;
 
-    function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
+    function nexus_profile_proc_eligible(pi: TProcInfo): boolean;
       begin
-        result:=assigned(pi) and assigned(pi.procdef) and
+        result:=Assigned(pi) and Assigned(pi.procdef) and
           (TargetInfo.system=system_x86_64_win64) and
-          (cs_nexus_profile in CurrentSettings.moduleswitches) and
-          assigned(CurrentModule) and
-          assigned(main_module) and
-          not main_module.islibrary and
-          (CurrentModule.modulename^<>'NXPROFILE') and
-          (CurrentModule.modulename^<>'NXPROFILERRUNTIME') and
+          (cs_nexus_profile in CurrentSettings.ModuleSwitches) and
+          Assigned(CurrentModule) and
+          Assigned(main_module) and
+          not main_module.IsLibrary and
+          (CurrentModule.ModuleName^<>'NXPROFILE') and
+          (CurrentModule.ModuleName^<>'NXPROFILERRUNTIME') and
           not(po_assembler in pi.procdef.procoptions) and
           not(po_nostackframe in pi.procdef.procoptions) and
           not(po_interrupt in pi.procdef.procoptions) and
@@ -257,7 +257,7 @@ implementation
                                  TProcInfo
 ****************************************************************************}
 
-    constructor tprocinfo.create(aparent:tprocinfo);
+    constructor TProcInfo.create(aparent:TProcInfo);
       begin
         parent:=aparent;
         procdef:=nil;
@@ -283,13 +283,13 @@ implementation
           parent.addnestedproc(Self);
       end;
 
-    procedure tprocinfo.force_nested;
+    procedure TProcInfo.force_nested;
       begin
         if Assigned(parent) and (parent.procdef.parast.symtablelevel<normal_function_level) then
           parent.addnestedproc(Self);
       end;
 
-    destructor tprocinfo.destroy;
+    destructor TProcInfo.Destroy;
       begin
          nestedprocs.free;
          nestedprocs := nil;
@@ -303,9 +303,9 @@ implementation
          localrefdefs := nil;
       end;
 
-    procedure tprocinfo.destroy_tree;
+    procedure TProcInfo.destroy_tree;
       var
-        hp: tprocinfo;
+        hp: TProcInfo;
       begin
         hp:=Self;
         while Assigned(hp.parent) do
@@ -314,99 +314,99 @@ implementation
         hp := nil;
       end;
 
-    procedure tprocinfo.addnestedproc(child: tprocinfo);
+    procedure TProcInfo.addnestedproc(child: TProcInfo);
       begin
         if nestedprocs=nil then
           nestedprocs:=TLinkedList.Create;
         nestedprocs.insert(child);
       end;
 
-    function tprocinfo.find_nestedproc_by_pd(pd:TProcDef):tprocinfo;
+    function TProcInfo.find_nestedproc_by_pd(pd:TProcDef):TProcInfo;
       var
-        pi : tprocinfo;
+        pi : TProcInfo;
       begin
-        if not assigned(nestedprocs) then
+        if not Assigned(nestedprocs) then
           exit(nil);
-        pi:=tprocinfo(nestedprocs.first);
-        while assigned(pi) do
+        pi:=TProcInfo(nestedprocs.first);
+        while Assigned(pi) do
           begin
             if pi.procdef=pd then
               exit(pi);
-            pi:=tprocinfo(pi.next);
+            pi:=TProcInfo(pi.next);
           end;
         result:=nil;
       end;
 
-    procedure tprocinfo.updatestackalignment(alignment: longint);
+    procedure TProcInfo.updatestackalignment(alignment: LongInt);
       begin
         fstackalignment:=max(fstackalignment,alignment);
       end;
 
-    function tprocinfo.get_first_nestedproc: tprocinfo;
+    function TProcInfo.get_first_nestedproc: TProcInfo;
       begin
-        if assigned(nestedprocs) then
-          result:=tprocinfo(nestedprocs.first)
+        if Assigned(nestedprocs) then
+          result:=TProcInfo(nestedprocs.first)
         else
           result:=nil;
       end;
 
-    function tprocinfo.has_nestedprocs: boolean;
+    function TProcInfo.has_nestedprocs: boolean;
       begin
-        result:=assigned(nestedprocs) and (nestedprocs.count>0);
+        result:=Assigned(nestedprocs) and (nestedprocs.count>0);
       end;
 
-    function tprocinfo.get_normal_proc: tprocinfo;
+    function TProcInfo.get_normal_proc: TProcInfo;
       begin
         result:=self;
-        while assigned(result.parent) and (result.procdef.parast.symtablelevel>normal_function_level) do
+        while Assigned(result.parent) and (result.procdef.parast.symtablelevel>normal_function_level) do
           result:=result.parent;
       end;
 
-    procedure tprocinfo.add_local_ref_sym(sym:TSym);
+    procedure TProcInfo.add_local_ref_sym(sym:TSym);
       begin
-        if not assigned(localrefsyms) then
-          localrefsyms:=tfpobjectlist.create(false);
+        if not Assigned(localrefsyms) then
+          localrefsyms:=TFPObjectList.create(false);
         if localrefsyms.indexof(sym)<0 then
           localrefsyms.add(sym);
       end;
 
-    procedure tprocinfo.export_local_ref_syms;
+    procedure TProcInfo.export_local_ref_syms;
       var
-        i : longint;
+        i : LongInt;
         sym : TSym;
       begin
-        if not assigned(localrefsyms) then
+        if not Assigned(localrefsyms) then
           exit;
         for i:=0 to localrefsyms.count-1 do
           begin
             sym:=TSym(localrefsyms[i]);
             if sym.typ<>staticvarsym then
-              internalerror(2019110901);
+              InternalError(2019110901);
             include(TStaticVarSym(sym).varoptions,vo_has_global_ref);
           end;
       end;
 
-    procedure tprocinfo.add_local_ref_def(def:TDef);
+    procedure TProcInfo.add_local_ref_def(def:TDef);
       begin
-        if not assigned(localrefdefs) then
-          localrefdefs:=tfpobjectlist.create(false);
+        if not Assigned(localrefdefs) then
+          localrefdefs:=TFPObjectList.create(false);
         if localrefdefs.indexof(def)<0 then
           localrefdefs.add(def);
       end;
 
-    procedure tprocinfo.export_local_ref_defs;
+    procedure TProcInfo.export_local_ref_defs;
       var
-        i : longint;
+        i : LongInt;
         def : TDef;
         lAlias: TCmdStrListItem;
       begin
-        if not assigned(localrefdefs) then
+        if not Assigned(localrefdefs) then
           exit;
         for i:=0 to localrefdefs.count-1 do
           begin
             def:=TDef(localrefdefs[i]);
             if def.typ<>symconst.procdef then
-              internalerror(2019111801);
+              InternalError(2019111801);
             include(TProcDef(def).defoptions,df_has_global_ref);
             { An inline body retains the referenced definition even when its
               implementation-only procsym is not loaded from a cached unit.
@@ -417,7 +417,7 @@ implementation
               begin
                 CurrentModule.add_public_asmsym(TProcDef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
                 lAlias:=TCmdStrListItem(TProcDef(def).aliasnames.first);
-                while assigned(lAlias) do
+                while Assigned(lAlias) do
                   begin
                     CurrentModule.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
                     lAlias:=TCmdStrListItem(lAlias.next);
@@ -426,33 +426,33 @@ implementation
           end;
       end;
 
-    procedure tprocinfo.add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
+    procedure TProcInfo.add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
       begin
         procdef.add_captured_sym(sym,def,fileinfo);
       end;
 
-    function tprocinfo.create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): tprocinfo;
+    function TProcInfo.create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): TProcInfo;
       begin
-        result:=cprocinfo.create(self);
+        result:=CProcInfo.create(self);
         result.force_nested;
         result.procdef:=create_outline_procdef(basesymname,astruct,potype,resultdef);
         result.entrypos:=entrynodeinfo.fileinfo;
-        result.entryswitches:=entrynodeinfo.localswitches;
+        result.entryswitches:=entrynodeinfo.LocalSwitches;
         result.exitpos:=CurrentFilePos; // filepos of last node?
-        result.exitswitches:=CurrentSettings.localswitches; // localswitches of last node?
+        result.exitswitches:=CurrentSettings.LocalSwitches; // localswitches of last node?
       end;
 
-    procedure tprocinfo.allocate_push_parasize(size:longint);
+    procedure TProcInfo.allocate_push_parasize(size:LongInt);
       begin
         if size>maxpushedparasize then
           maxpushedparasize:=size;
       end;
 
-    procedure tprocinfo.set_first_temp_offset;
+    procedure TProcInfo.set_first_temp_offset;
       begin
       end;
 
-    procedure tprocinfo.generate_parameter_info;
+    procedure TProcInfo.generate_parameter_info;
       begin
         { generate callee paraloc register info, it initialises the size that
           is allocated on the stack }
@@ -460,66 +460,66 @@ implementation
         para_stack_size:=procdef.calleeargareasize;
       end;
 
-    procedure tprocinfo.allocate_got_register(list: TAsmList);
+    procedure TProcInfo.allocate_got_register(list: TAsmList);
       begin
         { most os/cpu combo's don't use this yet, so not yet abstract }
       end;
 
-    procedure tprocinfo.allocate_tls_register(list : TAsmList);
+    procedure TProcInfo.allocate_tls_register(list : TAsmList);
       begin
       end;
 
 
-    procedure tprocinfo.init_framepointer;
+    procedure TProcInfo.init_framepointer;
       begin
         { most targets use a constant, but some have a typed constant that must
           be initialized }
       end;
 
 
-    procedure tprocinfo.postprocess_code;
+    procedure TProcInfo.postprocess_code;
       begin
         { no action by default }
       end;
 
 
-    procedure tprocinfo.set_eh_info;
+    procedure TProcInfo.set_eh_info;
       begin
         { default code is in tcgprocinfo }
       end;
 
 
-    procedure tprocinfo.setup_eh;
+    procedure TProcInfo.setup_eh;
       begin
         { no action by default }
       end;
 
 
-    procedure tprocinfo.finish_eh;
+    procedure TProcInfo.finish_eh;
       begin
         { no action by default }
       end;
 
 
-    procedure tprocinfo.start_eh(list: TAsmList);
+    procedure TProcInfo.start_eh(list: TAsmList);
       begin
         { no action by default }
       end;
 
 
-    procedure tprocinfo.end_eh(list: TAsmList);
+    procedure TProcInfo.end_eh(list: TAsmList);
       begin
         { no action by default }
       end;
 
 
-    procedure tprocinfo.set_needs_parentfp(parent_level: byte);
+    procedure TProcInfo.set_needs_parentfp(parent_level: byte);
       var
-        pi : tprocinfo;
+        pi : TProcInfo;
         p : TParaVarSym;
       begin
         if procdef.parast.symtablelevel<=normal_function_level then
-          Internalerror(2020050302);
+          InternalError(2020050302);
         if procdef.parast.symtablelevel<=parent_level then
           exit;
         if parent_level<normal_function_level then

@@ -29,7 +29,7 @@ interface
        node,nx86inl;
 
     type
-       ti386inlinenode = class(tx86inlinenode)
+       TI386InlineNode = class(TX86InlineNode)
        public
          function first_sar: TNode; override;
          procedure second_rox_sar; override;
@@ -38,21 +38,21 @@ interface
 implementation
 
   uses
-    globtype,globals,compinnr,
+    GlobType,Globals,compinnr,
     defutil,
-    aasmbase,aasmdata,
+    aasmbase,AAsmData,
     cgbase,pass_2,
-    cpuinfo,cpubase,
+    CPUInfo,cpubase,
     cga,cgutils,cgx86,cgobj,hlcgobj,
     ninl,ncon,ncal;
 
 
-  function ti386inlinenode.first_sar: TNode;
+  function TI386InlineNode.first_sar: TNode;
     begin
       if is_64bitint(resultdef) and (
         (inlinenumber=in_sar_x) or (
           (inlinenumber=in_sar_x_y) and
-          (tcallparanode(left).left.nodetype=ordconstn)
+          (TCallParaNode(left).left.nodetype=ordconstn)
       )) then
         begin
           result:=nil;
@@ -63,25 +63,25 @@ implementation
     end;
 
 
-  procedure ti386inlinenode.second_rox_sar;
+  procedure TI386InlineNode.second_rox_sar;
     var
       op1: TNode;
-      hreg64hi,hreg64lo: tregister;
+      hreg64hi,hreg64lo: TRegister;
       v: aint;
     begin
       if is_64bitint(resultdef) and (
         (inlinenumber=in_sar_x) or (
           (inlinenumber=in_sar_x_y) and
-          (tcallparanode(left).left.nodetype=ordconstn)
+          (TCallParaNode(left).left.nodetype=ordconstn)
       )) then
         begin
           { x sar constant }
           if (left.nodetype=callparan) and
-             assigned(tcallparanode(left).right) then
+             Assigned(TCallParaNode(left).right) then
             begin
-              op1:=tcallparanode(tcallparanode(left).right).left;
-              SecondPass(tcallparanode(left).left);
-              v:=Tordconstnode(tcallparanode(left).left).value.svalue and 63;
+              op1:=TCallParaNode(TCallParaNode(left).right).left;
+              SecondPass(TCallParaNode(left).left);
+              v:=TOrdConstNode(TCallParaNode(left).left).value.svalue and 63;
             end
           else
             begin
@@ -121,5 +121,5 @@ implementation
     end;
 
 begin
-   cinlinenode:=ti386inlinenode;
+   CInlineNode:=TI386InlineNode;
 end.

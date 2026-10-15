@@ -4,7 +4,7 @@ program mkx86inl;
 {$H+}
 
 uses
-  sysutils, classes;
+  SysUtils, classes;
 
 type
   TOperDirection = (operIn, operVar, operOut);
@@ -52,7 +52,7 @@ function Copy2SymbDel(var S: string; Symb: Char): string;
   end;
 
 
-function PosSetEx(const c: TSysCharSet; const s: ansistring; count: Integer): SizeInt;
+function PosSetEx(const c: TSysCharSet; const s: AnsiString; count: Integer): SizeInt;
   var
     i,j:SizeInt;
   begin
@@ -74,14 +74,14 @@ function PosSetEx(const c: TSysCharSet; const s: ansistring; count: Integer): Si
    result:=j;
   end;
 
-function PosSet(const c: TSysCharSet; const s: ansistring): SizeInt;
+function PosSet(const c: TSysCharSet; const s: AnsiString): SizeInt;
   begin
     result:=possetex(c,s,1);
   end;
 
 procedure RemoveTrailingChars(VAR S: AnsiString; const CSet: TSysCharset);
   var
-    I,J: LONGINT;
+    I,J: LongInt;
 
   Begin
    I:=Length(S);
@@ -112,8 +112,8 @@ function GetPascalType(const ATyp: string): string;
       'rs8':   exit('shortint');
       'r16':   exit('word');
       'rs16':  exit('smallint');
-      'r32':   exit('longword');
-      'rs32':  exit('longint');
+      'r32':   exit('LongWord');
+      'rs32':  exit('LongInt');
       'r64':   exit('qword');
       'rs64':  exit('int64');
       'reg':   exit('NativeUInt');
@@ -123,7 +123,7 @@ function GetPascalType(const ATyp: string): string;
       'mm':    exit('__m64');
       'implicit_xmm0',
       'xmm':   exit('__m128');
-      'i32':   exit('longint');
+      'i32':   exit('LongInt');
 
       'edi_ptr':   exit('pointer');
 
@@ -201,7 +201,7 @@ function GetOper(const ATyp: string): string;
     end;
   end;
 
-function GetOperand(const ATyp: string; AIndex: longint): string;
+function GetOperand(const ATyp: string; AIndex: LongInt): string;
   begin
     case ATyp of
       'r8':    exit(format(',paraarray[%d].location.register', [AIndex]));
@@ -263,7 +263,7 @@ function GetOperandLoc(const ATyp: string): string;
     end;
   end;
 
-function GetLocStatement(AIndex: longint; const ATyp: string; AConst: boolean): string;
+function GetLocStatement(AIndex: LongInt; const ATyp: string; AConst: boolean): string;
   begin
     result:='';
     case ATyp of
@@ -300,7 +300,7 @@ function GetLocStatement(AIndex: longint; const ATyp: string; AConst: boolean): 
     end;
   end;
 
-function GetDeallocStatement(AIndex: longint; const ATyp: string): string;
+function GetDeallocStatement(AIndex: LongInt; const ATyp: string): string;
   begin
     result:='';
     case ATyp of
@@ -384,7 +384,7 @@ function GetLocAllocation(const ATyp: string): string;
       'sreg': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);');
       'f32':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
       'f64':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
-      'mm':   exit('location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);');
+      'mm':   exit('location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);');
       'xmm':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
     end;
   end;
@@ -410,15 +410,15 @@ procedure ParseList(const APrefix, AFilename: string);
     params, operline: String;
 
     opers: array[0..7] of TOperand;
-    opercnt: longint;
+    opercnt: LongInt;
 
     hasOutput: boolean;
     outputType: string;
     cnt,
-    i, intrnum: longint;
+    i, intrnum: LongInt;
     tmp, condition, target: String;
 
-  function ParseOperands(AIndex: longint = -1): string;
+  function ParseOperands(AIndex: LongInt = -1): string;
     var
       idx: LongInt;
       pt: Integer;
@@ -477,16 +477,16 @@ procedure ParseList(const APrefix, AFilename: string);
 
   function GetOperLine: string;
     var
-      i: longint;
+      i: LongInt;
     begin
       result:='';
       for i := 0 to opercnt-1 do
         result:=result+DirLUT[opers[i].direction]+opers[i].name+':'+opers[i].typ+';';
     end;
 
-  function GetParams: longint;
+  function GetParams: LongInt;
     var
-      i: longint;
+      i: LongInt;
     begin
       result:=0;
       for i := 0 to opercnt-1 do
@@ -494,9 +494,9 @@ procedure ParseList(const APrefix, AFilename: string);
           inc(result);
     end;
 
-  function FindOperIdx(const AOper: string): longint;
+  function FindOperIdx(const AOper: string): LongInt;
     var
-      i,cnt: longint;
+      i,cnt: LongInt;
     begin
       cnt:=0;
       result:=0;
@@ -594,7 +594,7 @@ procedure ParseList(const APrefix, AFilename: string);
             ftypechk.Add('in_'+APrefix+'_'+instrPart+postfix+_alias);
             ftypechk.Add(': //'+operline);
             ftypechk.Add('  begin');
-            ftypechk.Add('    CheckParameters('+inttostr(GetParams())+');');
+            ftypechk.Add('    CheckParameters('+IntToStr(GetParams())+');');
             if hasOutput then
               ftypechk.Add('    resultdef:='+GetTypeDef(outputType)+';')
             else
@@ -646,15 +646,15 @@ procedure ParseList(const APrefix, AFilename: string);
             fsecond.Add('    case inlinenumber of');
             fsecond.Add('      in_'+APrefix+'_'+instrPart+postfix+_alias+': begin op:=A_'+instrPart+'; end;');
             fsecond.Add('      else');
-            fsecond.Add('        Internalerror(2020010201);');
+            fsecond.Add('        InternalError(2020010201);');
             fsecond.Add('    end;');
             fsecond.Add('');
 
             i:=GetParams;
-            fsecond.Add('    GetParameters('+inttostr(i)+');');
+            fsecond.Add('    GetParameters('+IntToStr(i)+');');
             fsecond.Add('');
 
-            fsecond.Add('    for i := 1 to '+inttostr(i)+' do SecondPass(paraarray[i]);');
+            fsecond.Add('    for i := 1 to '+IntToStr(i)+' do SecondPass(paraarray[i]);');
             fsecond.Add('');
 
             // Force inputs
@@ -693,7 +693,7 @@ procedure ParseList(const APrefix, AFilename: string);
                     end;
                   operVar:
                     begin
-                      fsecond.Add('    location:=paraarray['+inttostr(cnt+1)+'].location;');
+                      fsecond.Add('    location:=paraarray['+IntToStr(cnt+1)+'].location;');
                       inc(cnt);
                     end;
                   operIn:
@@ -701,7 +701,7 @@ procedure ParseList(const APrefix, AFilename: string);
                 end;
               end;
 
-            operline:='taicpu.op';
+            operline:='TAICPU.op';
             //for i := 0 to opercnt-1 do
             for i := opercnt-1 downto 0 do
               begin
@@ -715,8 +715,8 @@ procedure ParseList(const APrefix, AFilename: string);
                 end;
               end;
 
-            if operline='taicpu.op' then
-              operline:='taicpu.op_none(op,S_NO'
+            if operline='TAICPU.op' then
+              operline:='TAICPU.op_none(op,S_NO'
             else
               operline:=operline+'(op,S_NO';
 
@@ -754,12 +754,12 @@ procedure ParseList(const APrefix, AFilename: string);
           end;
 
         // Write innr
-        writeln(fcinnr, '  in_', APrefix,'_',instrPart,postfix+_alias,' = in_',APrefix,'_mm_first+',intrnum,',');
-        writeln(fcpumminnr, '  fpc_in_', APrefix,'_',instrPart,postfix+_alias,' = fpc_in_',APrefix,'_mm_first+',intrnum,';');
+        WriteLn(fcinnr, '  in_', APrefix,'_',instrPart,postfix+_alias,' = in_',APrefix,'_mm_first+',intrnum,',');
+        WriteLn(fcpumminnr, '  fpc_in_', APrefix,'_',instrPart,postfix+_alias,' = fpc_in_',APrefix,'_mm_first+',intrnum,';');
 
         // Write function
         if target<>'' then
-          writeln(fprocs, '{$ifdef ',target,'}');
+          WriteLn(fprocs, '{$ifdef ',target,'}');
 
         if hasOutput then write(fprocs,'function ') else write(fprocs,'procedure ');
         write(fprocs,APrefix,'_',instrPart,postfix,'(');
@@ -788,17 +788,17 @@ procedure ParseList(const APrefix, AFilename: string);
         write(fprocs,')');
 
         if hasOutput then write(fprocs,': ',GetPascalType(outputType));
-        writeln(fprocs,'; [INTERNPROC: fpc_in_',APrefix,'_',instrPart,postfix+_alias,'];');
+        WriteLn(fprocs,'; [INTERNPROC: fpc_in_',APrefix,'_',instrPart,postfix+_alias,'];');
 
         if target<>'' then
-          writeln(fprocs, '{$endif}');
+          WriteLn(fprocs, '{$endif}');
 
         // Str now contains conditionals
 
         inc(intrnum);
       end;
 
-    writeln(fcinnr, '  in_', APrefix,'mm_last = in_',APrefix,'_mm_first+',intrnum-1);
+    WriteLn(fcinnr, '  in_', APrefix,'mm_last = in_',APrefix,'_mm_first+',intrnum-1);
 
     ftypechk.SaveToFile(APrefix+'mmtype.inc');
     ffirst.SaveToFile(APrefix+'mmfirst.inc');

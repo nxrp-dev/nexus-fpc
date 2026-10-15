@@ -34,7 +34,7 @@ interface
 
      type
        TAbstractResourceFile = class
-         constructor create(const fn : ansistring);virtual;abstract;
+         constructor create(const fn : AnsiString);virtual;abstract;
        end;
        TAbstractResourceFileClass = class of TAbstractResourceFile;
 
@@ -42,29 +42,29 @@ interface
        PAlignmentInfo = ^TAlignmentInfo;
        { this is written to ppus during token recording for generics so it must be packed }
        TAlignmentInfo = packed record
-         procalign,
-         loopalign,
+         ProcAlign,
+         LoopAlign,
          { alignment for labels after unconditional jumps, this must be a power of two }
-         jumpalign,
+         JumpAlign,
          { max. alignment for labels after unconditional jumps:
            the compiler tries to align jumpalign, however, to do so it inserts at maximum jumpalignskipmax bytes or uses
            the next smaller power of two of jumpalign }
-         jumpalignskipmax,
+         JumpAlignSkipMax,
          { alignment for labels where two flows of the program flow coalesce, this must be a power of two }
-         coalescealign,
+         CoalesceAlign,
          { max. alignment for labels where two flows of the program flow coalesce
            the compiler tries to align to coalescealign, however, to do so it inserts at maximum coalescealignskipmax bytes or uses
            the next smaller power of two of coalescealign }
-         coalescealignskipmax,
-         constalignmin,
-         constalignmax,
-         varalignmin,
-         varalignmax,
-         localalignmin,
-         localalignmax,
-         recordalignmin,
-         recordalignmax,
-         maxCrecordalign : longint;
+         CoalesceAlignSkipMax,
+         ConstAlignMin,
+         ConstAlignMax,
+         VarAlignMin,
+         VarAlignMax,
+         LocalAlignMin,
+         LocalAlignMax,
+         RecordAlignMin,
+         RecordAlignMax,
+         MaxCRecordAlign : LongInt;
        end;
 
        TAsmFlags = (af_none
@@ -83,7 +83,7 @@ interface
 
        PAsmInfo = ^TAsmInfo;
        TAsmInfo = record
-          id          : tasm;
+          id          : TAsm;
           idtxt       : string[17];
           asmbin      : string[16];
           asmcmd      : string[154];
@@ -99,7 +99,7 @@ interface
 
        PArInfo = ^TArInfo;
        TArInfo = record
-          id          : tar;
+          id          : TAr;
           addfilecmd  : string[10];
           arfirstcmd  : string[60];
           arcmd       : string[60];
@@ -108,7 +108,7 @@ interface
 
        PResInfo = ^TResInfo;
        TResInfo = record
-          id      : tres;
+          id      : TRes;
           { Compiler for resource (.rc or .res) to obj }
           resbin  : string[10];
           rescmd  : string[50];
@@ -117,12 +117,12 @@ interface
           rcbin   : string[10];
           rccmd   : string[50];
           resourcefileclass : TAbstractResourceFileClass;
-          resflags : set of tresinfoflags;
+          resflags : set of TResInfoFlags;
        end;
 
        PDbgInfo = ^TDbgInfo;
        TDbgInfo = record
-          id      : tdbg;
+          id      : TDbg;
           idtxt   : string[12];
        end;
 
@@ -191,7 +191,7 @@ interface
           cpu          : TSystemCPU;
           unit_env     : string[16];
           extradefines : string[40];
-          exeext,
+          ExeExt,
           defext,
           scriptext,
           smartext,
@@ -214,15 +214,15 @@ interface
           Cprefix      : string[2];
           newline      : string[2];
           dirsep       : char;
-          assem        : tasm;
-          assemextern  : tasm; { external assembler, used by -a and -s }
-          link         : tlink;
-          linkextern   : tlink;  { external linker, used by -s }
-          ar           : tar;
-          res          : tres;
-          dbg          : tdbg;
-          script       : tscripttype;
-          endian       : tendian;
+          assem        : TAsm;
+          assemextern  : TAsm; { external assembler, used by -a and -s }
+          link         : TLink;
+          linkextern   : TLink;  { external linker, used by -s }
+          ar           : TAr;
+          res          : TRes;
+          dbg          : TDbg;
+          script       : TScriptType;
+          endian       : TEndian;
           alignment    : TAlignmentInfo;
           {
             Offset from the argument pointer register to the first
@@ -230,11 +230,11 @@ interface
             the data type of the function.
             (see also FIRST_PARM_OFFSET in GCC source)
           }
-          first_parm_offset : longint;
-          stacksize    : longint;
+          first_parm_offset : LongInt;
+          StackSize    : LongInt;
           { stack alignment }
           stackalign   : byte;
-          abi          : tabi;
+          abi          : TABI;
        end;
 
     TABIInfo = record
@@ -332,7 +332,7 @@ interface
              'aarch64', 'wasm32', 'sparc64', 'riscv32', 'riscv64', 'xtensa',
              'obsolete-z80', 'mips64', 'mips64el', 'loongarch64');
 
-       abiinfo : array[tabi] of TABIInfo = (
+       ABIInfo : array[TABI] of TABIInfo = (
          (name: 'DEFAULT'; supported: true),
          (name: 'SYSV'   ; supported:false),
          (name: 'AIX'    ; supported:false),
@@ -366,7 +366,7 @@ interface
          (name: 'LP32D'; supported:false)
        );
 
-       cgbackend2str: array[tcgbackend] of ansistring = (
+       cgbackend2str: array[TCGBackend] of AnsiString = (
          'FPC'
        );
 
@@ -392,10 +392,10 @@ interface
 
     var
        targetinfos   : array[0..MaxStoredSystemId] of PSystemInfo;
-       arinfos       : array[tar] of PArInfo;
-       resinfos      : array[tres] of PResInfo;
-       asminfos      : array[tasm] of PAsmInfo;
-       dbginfos      : array[tdbg] of PDbgInfo;
+       arinfos       : array[TAr] of PArInfo;
+       resinfos      : array[TRes] of PResInfo;
+       asminfos      : array[TAsm] of PAsmInfo;
+       dbginfos      : array[TDbg] of PDbgInfo;
 
        SourceInfo : TSystemInfo;
        TargetCPU  : TSystemCPU;
@@ -409,14 +409,14 @@ interface
        TargetFullString : string[28];
 
     function SetTarget(t:TSystem):boolean;
-    function SetTargetAsm(t:tasm):boolean;
-    function SetTargetAr(t:tar):boolean;
-    function SetTargetRes(t:tres):boolean;
-    function SetTargetDbg(t:tdbg):boolean;
+    function SetTargetAsm(t:TAsm):boolean;
+    function SetTargetAr(t:TAr):boolean;
+    function SetTargetRes(t:TRes):boolean;
+    function SetTargetDbg(t:TDbg):boolean;
 
     function FindSystemByString(const s : string) : TSystem;
-    function FindAsmByString(const s : string) : tasm;
-    function FindDbgByString(const s : string) : tdbg;
+    function FindAsmByString(const s : string) : TAsm;
+    function FindDbgByString(const s : string) : TDbg;
 
     procedure SetSourceInfo(const ti : TSystemInfo);
 
@@ -431,7 +431,7 @@ interface
 implementation
 
     uses
-      cutils;
+      CUtils;
 
 
 {****************************************************************************
@@ -441,7 +441,7 @@ implementation
 function SetTarget(t:TSystem):boolean;
 begin
   SetTarget:=false;
-  if assigned(targetinfos[Ord(t)]) then
+  if Assigned(targetinfos[Ord(t)]) then
    begin
      TargetInfo:=targetinfos[Ord(t)]^;
      SetTargetAsm(TargetInfo.assem);
@@ -458,10 +458,10 @@ begin
 end;
 
 
-function SetTargetAsm(t:tasm):boolean;
+function SetTargetAsm(t:TAsm):boolean;
 begin
   SetTargetAsm:=false;
-  if assigned(asminfos[t]) and
+  if Assigned(asminfos[t]) and
     ((TargetInfo.system in asminfos[t]^.supported_targets) or
      (system_any in asminfos[t]^.supported_targets)) then
    begin
@@ -472,10 +472,10 @@ begin
 end;
 
 
-function SetTargetAr(t:tar):boolean;
+function SetTargetAr(t:TAr):boolean;
 begin
   result:=false;
-  if assigned(arinfos[t]) then
+  if Assigned(arinfos[t]) then
    begin
      TargetAr:=arinfos[t]^;
      result:=true;
@@ -484,10 +484,10 @@ begin
 end;
 
 
-function SetTargetRes(t:tres):boolean;
+function SetTargetRes(t:TRes):boolean;
 begin
   result:=false;
-  if assigned(resinfos[t]) then
+  if Assigned(resinfos[t]) then
    begin
      TargetRes:=resinfos[t]^;
      result:=true;
@@ -498,11 +498,11 @@ begin
 end;
 
 
-function SetTargetDbg(t:tdbg):boolean;
+function SetTargetDbg(t:TDbg):boolean;
 begin
   result:=false;
 { no debugging support for llvm yet }
-  if assigned(dbginfos[t]) then
+  if Assigned(dbginfos[t]) then
    begin
      TargetDbg:=dbginfos[t]^;
      result:=true;
@@ -519,7 +519,7 @@ begin
   result:=system_none;
   hs:=upper(s);
   for t:=low(TSystem) to high(TSystem) do
-   if assigned(targetinfos[Ord(t)]) and
+   if Assigned(targetinfos[Ord(t)]) and
       (upper(targetinfos[Ord(t)]^.shortname)=hs) then
     begin
       result:=t;
@@ -528,15 +528,15 @@ begin
 end;
 
 
-function FindAsmByString(const s : string) : tasm;
+function FindAsmByString(const s : string) : TAsm;
 var
   hs : string;
-  t  : tasm;
+  t  : TAsm;
 begin
   result:=as_none;
   hs:=upper(s);
-  for t:=low(tasm) to high(tasm) do
-   if assigned(asminfos[t]) and
+  for t:=low(TAsm) to high(TAsm) do
+   if Assigned(asminfos[t]) and
       (asminfos[t]^.idtxt=hs) then
     begin
       result:=t;
@@ -545,15 +545,15 @@ begin
 end;
 
 
-function FindDbgByString(const s : string) : tdbg;
+function FindDbgByString(const s : string) : TDbg;
 var
   hs : string;
-  t  : tdbg;
+  t  : TDbg;
 begin
   result:=dbg_none;
   hs:=upper(s);
-  for t:=low(tdbg) to high(tdbg) do
-   if assigned(dbginfos[t]) and
+  for t:=low(TDbg) to high(TDbg) do
+   if Assigned(dbginfos[t]) and
       (dbginfos[t]^.idtxt=hs) then
     begin
       result:=t;
@@ -567,52 +567,52 @@ begin
   result:=true;
   with d do
    begin
-     if (s.procalign in [1,2,4,8,16,32,64,128]) or (s.procalign=256) then
-       procalign:=s.procalign
-     else if s.procalign<>0 then
+     if (s.ProcAlign in [1,2,4,8,16,32,64,128]) or (s.ProcAlign=256) then
+       ProcAlign:=s.ProcAlign
+     else if s.ProcAlign<>0 then
        result:=false;
-     if (s.loopalign in [1,2,4,8,16,32,64,128]) or (s.loopalign=256) then
-       loopalign:=s.loopalign
-     else if s.loopalign<>0 then
+     if (s.LoopAlign in [1,2,4,8,16,32,64,128]) or (s.LoopAlign=256) then
+       LoopAlign:=s.LoopAlign
+     else if s.LoopAlign<>0 then
        result:=false;
-     if (s.jumpalign in [1,2,4,8,16,32,64,128]) or (s.jumpalign=256) then
-       jumpalign:=s.jumpalign
-     else if s.jumpalign<>0 then
+     if (s.JumpAlign in [1,2,4,8,16,32,64,128]) or (s.JumpAlign=256) then
+       JumpAlign:=s.JumpAlign
+     else if s.JumpAlign<>0 then
        result:=false;
-     if (s.coalescealign in [1,2,4,8,16,32,64,128]) or (s.coalescealign=256) then
-       coalescealign:=s.coalescealign
-     else if s.coalescealign<>0 then
+     if (s.CoalesceAlign in [1,2,4,8,16,32,64,128]) or (s.CoalesceAlign=256) then
+       CoalesceAlign:=s.CoalesceAlign
+     else if s.CoalesceAlign<>0 then
        result:=false;
-     if s.jumpalignskipmax>0 then
-       jumpalignskipmax:=s.jumpalignskipmax;
-     if s.coalescealign>0 then
-       coalescealignskipmax:=s.coalescealignskipmax;
+     if s.JumpAlignSkipMax>0 then
+       JumpAlignSkipMax:=s.JumpAlignSkipMax;
+     if s.CoalesceAlign>0 then
+       CoalesceAlignSkipMax:=s.CoalesceAlignSkipMax;
      { general update rules:
        minimum: if higher then update
        maximum: if lower then update or if undefined then update }
-     if s.constalignmin>constalignmin then
-      constalignmin:=s.constalignmin;
-     if (constalignmax=0) or
-        ((s.constalignmax>0) and (s.constalignmax<constalignmax)) then
-      constalignmax:=s.constalignmax;
-     if s.varalignmin>varalignmin then
-      varalignmin:=s.varalignmin;
-     if (varalignmax=0) or
-        ((s.varalignmax>0) and (s.varalignmax<varalignmax)) then
-      varalignmax:=s.varalignmax;
-     if s.localalignmin>localalignmin then
-      localalignmin:=s.localalignmin;
-     if (localalignmax=0) or
-        ((s.localalignmax>0) and (s.localalignmax<localalignmax)) then
-      localalignmax:=s.localalignmax;
-     if s.recordalignmin>recordalignmin then
-      recordalignmin:=s.recordalignmin;
-     if (recordalignmax=0) or
-        ((s.recordalignmax>0) and (s.recordalignmax<recordalignmax)) then
-      recordalignmax:=s.recordalignmax;
-     if (maxCrecordalign=0) or
-        ((s.maxCrecordalign>0) and (s.maxCrecordalign<maxCrecordalign)) then
-      maxCrecordalign:=s.maxCrecordalign;
+     if s.ConstAlignMin>ConstAlignMin then
+      ConstAlignMin:=s.ConstAlignMin;
+     if (ConstAlignMax=0) or
+        ((s.ConstAlignMax>0) and (s.ConstAlignMax<ConstAlignMax)) then
+      ConstAlignMax:=s.ConstAlignMax;
+     if s.VarAlignMin>VarAlignMin then
+      VarAlignMin:=s.VarAlignMin;
+     if (VarAlignMax=0) or
+        ((s.VarAlignMax>0) and (s.VarAlignMax<VarAlignMax)) then
+      VarAlignMax:=s.VarAlignMax;
+     if s.LocalAlignMin>LocalAlignMin then
+      LocalAlignMin:=s.LocalAlignMin;
+     if (LocalAlignMax=0) or
+        ((s.LocalAlignMax>0) and (s.LocalAlignMax<LocalAlignMax)) then
+      LocalAlignMax:=s.LocalAlignMax;
+     if s.RecordAlignMin>RecordAlignMin then
+      RecordAlignMin:=s.RecordAlignMin;
+     if (RecordAlignMax=0) or
+        ((s.RecordAlignMax>0) and (s.RecordAlignMax<RecordAlignMax)) then
+      RecordAlignMax:=s.RecordAlignMax;
+     if (MaxCRecordAlign=0) or
+        ((s.MaxCRecordAlign>0) and (s.MaxCRecordAlign<MaxCRecordAlign)) then
+      MaxCRecordAlign:=s.MaxCRecordAlign;
    end;
 end;
 
@@ -626,8 +626,8 @@ var
   t : TSystem;
 begin
   t:=r.system;
-  if assigned(targetinfos[Ord(t)]) then
-   writeln('Warning: Target is already registered!')
+  if Assigned(targetinfos[Ord(t)]) then
+   WriteLn('Warning: Target is already registered!')
   else
    new(targetinfos[Ord(t)]);
   targetinfos[Ord(t)]^:=r;
@@ -636,10 +636,10 @@ end;
 
 procedure RegisterRes(const r:TResInfo; rcf : TAbstractResourceFileClass);
 var
-  t : tres;
+  t : TRes;
 begin
   t:=r.id;
-  if not assigned(resinfos[t]) then
+  if not Assigned(resinfos[t]) then
     new(resinfos[t]);
   resinfos[t]^:=r;
   resinfos[t]^.resourcefileclass:=rcf;
@@ -648,11 +648,11 @@ end;
 
 procedure RegisterAr(const r:TArInfo);
 var
-  t : tar;
+  t : TAr;
 begin
   t:=r.id;
-  if assigned(arinfos[t]) then
-    writeln('Warning: ar is already registered!')
+  if Assigned(arinfos[t]) then
+    WriteLn('Warning: ar is already registered!')
   else
     new(arinfos[t]);
   arinfos[t]^:=r;
@@ -662,40 +662,40 @@ end;
 
 procedure DeregisterInfos;
 var
-  assem   : tasm;
+  assem   : TAsm;
   target  : TSystem;
-  ar      : tar;
-  res     : tres;
-  dbg     : tdbg;
+  ar      : TAr;
+  res     : TRes;
+  dbg     : TDbg;
 begin
   for target:=low(TSystem) to high(TSystem) do
-   if assigned(targetinfos[Ord(target)]) then
+   if Assigned(targetinfos[Ord(target)]) then
     begin
-      freemem(targetinfos[Ord(target)],sizeof(TSystemInfo));
+      FreeMem(targetinfos[Ord(target)],sizeof(TSystemInfo));
       targetinfos[Ord(target)]:=nil;
     end;
-  for assem:=low(tasm) to high(tasm) do
-   if assigned(asminfos[assem]) then
+  for assem:=low(TAsm) to high(TAsm) do
+   if Assigned(asminfos[assem]) then
     begin
-      freemem(asminfos[assem],sizeof(TAsmInfo));
+      FreeMem(asminfos[assem],sizeof(TAsmInfo));
       asminfos[assem]:=nil;
     end;
-  for ar:=low(tar) to high(tar) do
-   if assigned(arinfos[ar]) then
+  for ar:=low(TAr) to high(TAr) do
+   if Assigned(arinfos[ar]) then
     begin
-      freemem(arinfos[ar],sizeof(TArInfo));
+      FreeMem(arinfos[ar],sizeof(TArInfo));
       arinfos[ar]:=nil;
     end;
-  for res:=low(tres) to high(tres) do
-   if assigned(resinfos[res]) then
+  for res:=low(TRes) to high(TRes) do
+   if Assigned(resinfos[res]) then
     begin
-      freemem(resinfos[res],sizeof(TResInfo));
+      FreeMem(resinfos[res],sizeof(TResInfo));
       resinfos[res]:=nil;
     end;
-  for dbg:=low(tdbg) to high(tdbg) do
-   if assigned(dbginfos[dbg]) then
+  for dbg:=low(TDbg) to high(TDbg) do
+   if Assigned(dbginfos[dbg]) then
     begin
-      freemem(dbginfos[dbg],sizeof(TDbgInfo));
+      FreeMem(dbginfos[dbg],sizeof(TDbgInfo));
       dbginfos[dbg]:=nil;
     end;
 end;
@@ -717,7 +717,7 @@ procedure SetSourceInfo(const ti : TSystemInfo);
 begin
 { can't use message() here (PFV) }
   if SourceInfo.name<>'' then
-    Writeln('Warning: Source OS Redefined!');
+    WriteLn('Warning: Source OS Redefined!');
   SourceInfo:=ti;
 end;
 

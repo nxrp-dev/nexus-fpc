@@ -32,20 +32,20 @@ unit aasmtai;
 interface
 
     uses
-       tpcompilerreal,
-       cutils,cclasses,
-       globtype,systems,
-       cpuinfo,cpubase,
+       TPCompilerReal,
+       CUtils,CClasses,
+       GlobType,Systems,
+       CPUInfo,cpubase,
 
        cgbase,cgutils,
        symtype,
-       aasmbase,aasmdata,ogbase
+       aasmbase,AAsmData,ogbase
        ;
 
     type
        { keep the number of elements in this enumeration less or equal than 32 as long
          as FPC knows only 4 byte and 32 byte sets (FK) }
-       taitype = (
+       TAIType = (
           ait_none,
           ait_align,
           ait_section,
@@ -82,9 +82,9 @@ interface
           ait_attribute
           );
 
-        taitypes = set of taitype;
+        TAITypes = set of TAIType;
 
-        taiconst_type = (
+        TAIConstType = (
           aitconst_128bit,
           aitconst_64bit,
           aitconst_32bit,
@@ -147,7 +147,7 @@ interface
           aitconst_tlsdesc
         );
 
-        tairealconsttype = (
+        TAIRealConstType = (
           aitrealconst_s32bit,
           aitrealconst_s64bit,
           aitrealconst_s80bit,
@@ -173,7 +173,7 @@ interface
        aitconst_aint = aitconst_32bit;
 {$endif}
 
-       taitypestr : array[taitype] of string[24] = (
+       taitypestr : array[TAIType] of string[24] = (
           '<none>',
           'align',
           'section',
@@ -206,7 +206,7 @@ interface
 
     type
       { Types of operand }
-      toptype=(top_none,top_reg,top_ref,top_const,top_bool,top_local
+      TOpType=(top_none,top_reg,top_ref,top_const,top_bool,top_local
 {$if defined(aarch64)}
        ,top_regset
        ,top_conditioncode
@@ -220,21 +220,21 @@ interface
        );
 
       { kinds of operations that an instruction can perform on an operand }
-      topertype = (operand_read,operand_write,operand_readwrite);
+      TOperType = (operand_read,operand_write,operand_readwrite);
 
-      tlocaloper = record
+      TLocalOper = record
         localsym : pointer;
         localsymderef : TDeref;
-        localsymofs : longint;
+        localsymofs : LongInt;
 {$ifdef x86}
         localsegment,
 {$endif x86}
-        localindexreg : tregister;
+        localindexreg : TRegister;
         localscale : byte;
         localgetoffset,
         localforceref : boolean
       end;
-      plocaloper = ^tlocaloper;
+      PLocalOper = ^TLocalOper;
 
     const
       { ait_* types which don't result in executable code or which don't influence
@@ -329,7 +329,7 @@ interface
 
 
     const
-      regallocstr : array[tregalloctype] of string[10]=('allocated','released','sync','resized','used');
+      regallocstr : array[TRegAllocType] of string[10]=('allocated','released','sync','resized','used');
       tempallocstr : array[boolean] of string[10]=('released','allocated');
       stabtypestr : array[TStabType] of string[8]=(
         'stabs','stabn','stabd',
@@ -374,175 +374,175 @@ interface
       );
 
     type
-        tai = class;
+        TAI = class;
 
         { please keep the size of this record <=12 bytes and keep it properly aligned }
-        toper = record
-          ot : longint;
+        TOper = record
+          ot : LongInt;
         {$ifdef x86}
           vopext: smallint;
         {$ENDIF}
-          case typ : toptype of
+          case typ : TOpType of
             top_none   : ();
-            top_reg    : (reg:tregister);
-            top_ref    : (ref:preference);
-            top_const  : (val:tcgint);
+            top_reg    : (reg:TRegister);
+            top_ref    : (ref:PReference);
+            top_const  : (val:TCGInt);
             top_bool   : (b:boolean);
             { local varsym that will be inserted in pass_generate_code }
-            top_local  : (localoper:plocaloper);
+            top_local  : (localoper:PLocalOper);
         {$if defined(aarch64)}
-            top_shifterop : (shifterop : pshifterop);
+            top_shifterop : (shifterop : PShifterOp);
             top_conditioncode : (cc : TAsmCond);
-            top_realconst : (val_real:bestreal);
+            top_realconst : (val_real:BestReal);
         {$endif}
         {$ifdef aarch64}
-            top_regset : (basereg: tregister; nregs, regsetindex: byte);
-            top_indexedreg : (indexedreg: tregister; regindex: byte);
+            top_regset : (basereg: TRegister; nregs, regsetindex: byte);
+            top_indexedreg : (indexedreg: TRegister; regindex: byte);
         {$endif}
 
         end;
-        poper=^toper;
+        POper=^TOper;
 
        { abstract assembler item }
-       tai = class(TLinkedListItem)
+       TAI = class(TLinkedListItem)
 {$ifndef NOOPT}
           { pointer to record with optimizer info about this tai object }
           optinfo  : pointer;
 {$endif NOOPT}
-          typ      : taitype;
+          typ      : TAIType;
           constructor Create;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);virtual;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);virtual;
           procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
           procedure buildderefimpl;virtual;
           procedure derefimpl;virtual;
        end;
 
        { abstract assembler item with line information }
-       tailineinfo = class(tai)
+       TAILineInfo = class(TAI)
         fileinfo : TFilePosInfo;
         constructor Create;
-        constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+        constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
-       tai_simple = class(tai)
-         constructor create(_typ : taitype);
+       TAISimple = class(TAI)
+         constructor create(_typ : TAIType);
        end;
 
-       taiclass = class of tai;
+       TAIClass = class of TAI;
 
-       taiclassarray = array[taitype] of taiclass;
+       TAIClassArray = array[TAIType] of TAIClass;
 
        { Generates an assembler string }
 
        { tai_string }
 
-       tai_string = class(tailineinfo)
+       TAIString = class(TAILineInfo)
           str : TAnsiCharDynArray;
           constructor Create(const _str : ShortString);
-          constructor Create(const _str : ansistring);
+          constructor Create(const _str : AnsiString);
           { data: not guaranteed to #0-terminated
             length: length of the data without #0 terminator (unless the #0
               terminator itself must be included)
             add0: add a terminating zero as part of the data after data  }
-          constructor Create_Data(data : pchar;length : longint; add0: boolean);
+          constructor Create_Data(data : pchar;length : LongInt; add0: boolean);
           destructor Destroy;override;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function getcopy:tlinkedlistitem;override;
+          function getcopy:TLinkedListItem;override;
           function len : integer; inline;
        end;
 
        { Generates a common label }
-       tai_symbol = class(tai)
-          sym       : tasmsymbol;
-          value     : puint;
-          size      : longint;
+       TAISymbol = class(TAI)
+          sym       : TAsmSymbol;
+          value     : PUint;
+          size      : LongInt;
           is_global,
           has_value : boolean;
-          constructor Create(_sym:tasmsymbol;siz:longint);
-          constructor Create_Global(_sym:tasmsymbol;siz:longint);
-          constructor Create_Weak(_sym:tasmsymbol;siz:longint);
-          constructor Createname(const _name : string;_symtyp:Tasmsymtype;siz:longint;def:TDef);
-          constructor Createname_global(const _name : string;_symtyp:Tasmsymtype;siz:longint;def:TDef);
-          constructor Createname_hidden(const _name : string;_symtyp:Tasmsymtype;siz:longint;def:TDef);
-          constructor Createname_global_value(const _name : string;_symtyp:Tasmsymtype;siz:longint;val:ptruint;def:TDef);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor Create(_sym:TAsmSymbol;siz:LongInt);
+          constructor Create_Global(_sym:TAsmSymbol;siz:LongInt);
+          constructor Create_Weak(_sym:TAsmSymbol;siz:LongInt);
+          constructor Createname(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;def:TDef);
+          constructor Createname_global(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;def:TDef);
+          constructor Createname_hidden(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;def:TDef);
+          constructor Createname_global_value(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;val:ptruint;def:TDef);
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
        end;
 
-       tai_symbol_end = class(tailineinfo)
-          sym : tasmsymbol;
-          constructor Create(_sym:tasmsymbol);
+       TAISymbolEnd = class(TAILineInfo)
+          sym : TAsmSymbol;
+          constructor Create(_sym:TAsmSymbol);
           constructor Createname(const _name : string);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
        end;
 
-       tai_directive = class(tailineinfo)
-          name : ansistring;
+       TAIDirective = class(TAILineInfo)
+          name : AnsiString;
           directive : TAsmDirective;
-          constructor Create(_directive:TAsmDirective;const _name:ansistring);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor Create(_directive:TAsmDirective;const _name:AnsiString);
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
        { Generates an assembler label }
-       tai_label = class(tai)
-          labsym    : tasmlabel;
-          constructor Create(_labsym : tasmlabel);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+       TAILabel = class(TAI)
+          labsym    : TAsmLabel;
+          constructor Create(_labsym : TAsmLabel);
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
        end;
 
        { Generates an assembler comment }
-       tai_comment = class(tai)
+       TAIComment = class(TAI)
           str : pchar;
           constructor Create(_str : pchar);
           destructor Destroy; override;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-          function getcopy:tlinkedlistitem;override;
+          function getcopy:TLinkedListItem;override;
        end;
 
        { Generates a section / segment directive }
-       tai_section = class(tai)
+       TAISection = class(TAI)
           sectype  : TAsmSectiontype;
-          secorder : TasmSectionorder;
-          secalign : longint;
-          name     : pshortstring;
+          secorder : TAsmSectionOrder;
+          secalign : LongInt;
+          name     : PShortString;
           { used in binary writer }
           sec      : TObjSection;
           { transient association used by external object writers }
-          AssociativeSection : tai_section;
+          AssociativeSection : TAISection;
           { used only by ELF so far }
           secflags : TSectionFlags;
           secprogbits : TSectionProgbits;
           destructor Destroy;override;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
 {$push}{$warnings off}
          private
           { this constructor is made private on purpose }
           { because sections should be created via new_section() }
-          constructor Create(Asectype:TAsmSectiontype;const Aname:string;Aalign:longint;Asecorder:TasmSectionorder=secorder_default);
-          constructor Create_proc(Asectype:TAsmSectiontype;const Aname:string;Aalign:longint;Asecorder:TasmSectionorder=secorder_default);
+          constructor Create(Asectype:TAsmSectiontype;const Aname:string;Aalign:LongInt;Asecorder:TAsmSectionOrder=secorder_default);
+          constructor Create_proc(Asectype:TAsmSectiontype;const Aname:string;Aalign:LongInt;Asecorder:TAsmSectionOrder=secorder_default);
 {$pop}
        end;
 
 
        { Generates an uninitialized data block }
-       tai_datablock = class(tailineinfo)
+       TAIDataBlock = class(TAILineInfo)
           is_global : boolean;
-          sym       : tasmsymbol;
+          sym       : TAsmSymbol;
           size      : asizeint;
-          constructor Create(const _name: string; _size: asizeint; def: TDef; _typ: Tasmsymtype);
-          constructor Create_hidden(const _name: string; _size: asizeint; def: TDef; _typ: Tasmsymtype);
-          constructor Create_global(const _name: string; _size: asizeint; def: TDef; _typ: Tasmsymtype);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor Create(const _name: string; _size: asizeint; def: TDef; _typ: TAsmsymtype);
+          constructor Create_hidden(const _name: string; _size: asizeint; def: TDef; _typ: TAsmsymtype);
+          constructor Create_global(const _name: string; _size: asizeint; def: TDef; _typ: TAsmsymtype);
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
        end;
@@ -552,26 +552,26 @@ interface
 
        { tai_const }
 
-       tai_const = class(tai)
+       TAIConst = class(TAI)
           sym,
-          endsym  : tasmsymbol;
+          endsym  : TAsmSymbol;
           { if symbols and offset are provided the symofs is used,
             the value is calculated during assembling }
           symofs,
           value   : int64;
-          consttype : taiconst_type;
+          consttype : TAIConstType;
           { sleb128 and uleb128 values have a varying length, by calling FixSize their size can be fixed
             to avoid that other offsets need to be changed. The value to write is stored in fixed_size }
           fixed_size : byte;
           { we use for the 128bit int64/qword for now because I can't imagine a
             case where we need 128 bit now (FK) }
-          constructor Create(_typ:taiconst_type;_value : int64);
+          constructor Create(_typ:TAIConstType;_value : int64);
           constructor Create_128bit(_value : int64);
           constructor Create_64bit(_value : int64);
-          constructor Create_32bit(_value : longint);
+          constructor Create_32bit(_value : LongInt);
           constructor Create_16bit(_value : word);
           constructor Create_64bit_unaligned(_value : int64);
-          constructor Create_32bit_unaligned(_value : longint);
+          constructor Create_32bit_unaligned(_value : LongInt);
           constructor Create_16bit_unaligned(_value : word);
           constructor Create_8bit(_value : byte);
           constructor Create_char(size: integer; _value: dword);
@@ -580,20 +580,20 @@ interface
           constructor Create_aint(_value : aint);
           constructor Create_sizeint(_value : asizeint);
           constructor Create_sizeint_unaligned(_value : asizeint);
-          constructor Create_sym(_sym:tasmsymbol);
+          constructor Create_sym(_sym:TAsmSymbol);
 
-          constructor Create_type_sym(_typ:taiconst_type;_sym:tasmsymbol);
-          constructor Create_sym_offset(_sym:tasmsymbol;ofs:asizeint);
-          constructor Create_type_sym_offset(_typ:taiconst_type;_sym:tasmsymbol;ofs:asizeint);
-          constructor Create_rel_sym(_typ:taiconst_type;_sym,_endsym:tasmsymbol);
-          constructor Create_rel_sym_offset(_typ : taiconst_type; _sym,_endsym : tasmsymbol; _ofs : int64);
-          constructor Create_rva_sym(_sym:tasmsymbol);
+          constructor Create_type_sym(_typ:TAIConstType;_sym:TAsmSymbol);
+          constructor Create_sym_offset(_sym:TAsmSymbol;ofs:asizeint);
+          constructor Create_type_sym_offset(_typ:TAIConstType;_sym:TAsmSymbol;ofs:asizeint);
+          constructor Create_rel_sym(_typ:TAIConstType;_sym,_endsym:TAsmSymbol);
+          constructor Create_rel_sym_offset(_typ : TAIConstType; _sym,_endsym : TAsmSymbol; _ofs : int64);
+          constructor Create_rva_sym(_sym:TAsmSymbol);
           constructor Createname(const name:string;ofs:asizeint);
           constructor Createname_rel(const name, endname: string);
-          constructor Createname(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-          constructor Create_type_name(_typ:taiconst_type;const name:string;ofs:asizeint);
-          constructor Create_type_name(_typ:taiconst_type;const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-          constructor Create_type_name(_typ:taiconst_type;const name:string;symclass: TAsmSymbolClass;_symtyp:Tasmsymtype;ofs:asizeint);
+          constructor Createname(const name:string;_symtyp:TAsmsymtype;ofs:asizeint);
+          constructor Create_type_name(_typ:TAIConstType;const name:string;ofs:asizeint);
+          constructor Create_type_name(_typ:TAIConstType;const name:string;_symtyp:TAsmsymtype;ofs:asizeint);
+          constructor Create_type_name(_typ:TAIConstType;const name:string;symclass: TAsmSymbolClass;_symtyp:TAsmsymtype;ofs:asizeint);
           constructor Create_nil_codeptr;
           constructor Create_nil_codeptr_unaligned;
           constructor Create_nil_dataptr;
@@ -603,122 +603,122 @@ interface
           constructor Create_int_dataptr(_value: int64);
           constructor Create_int_dataptr_unaligned(_value: int64);
 
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure derefimpl;override;
-          function getcopy:tlinkedlistitem;override;
-          function size:longint;
+          function getcopy:TLinkedListItem;override;
+          function size:LongInt;
           { sleb128 and uleb128 values have a varying length, by calling FixSize their size can be fixed
             to avoid that other offsets need to be changed. The value to write is stored in fixed_size }
           Procedure FixSize;
        end;
 
        { floating point const }
-       tformatoptions = (fo_none,fo_hiloswapped);
-       tai_realconst = class(tai)
-          realtyp: tairealconsttype;
+       TFormatOptions = (fo_none,fo_hiloswapped);
+       TAIRealConst = class(TAI)
+          realtyp: TAIRealConstType;
           savesize: byte;
           value: record
-            case tairealconsttype of
+            case TAIRealConstType of
               aitrealconst_s32bit: (s32val: Single);
               aitrealconst_s64bit: (s64val: Double);
-              aitrealconst_s80bit: (s80val: bestreal);
+              aitrealconst_s80bit: (s80val: BestReal);
               aitrealconst_s64comp: (s64compval: Int64);
           end;
           constructor create_s32real(val: Single);
           constructor create_s64real(val: Double);
-          constructor create_s80real(val: bestreal; _savesize: byte);
+          constructor create_s80real(val: BestReal; _savesize: byte);
           constructor create_s64compreal(val: Int64);
-          constructor ppuload(t: taitype;ppufile: TCompilerPPUFile); override;
+          constructor ppuload(t: TAIType;ppufile: TCompilerPPUFile); override;
           procedure ppuwrite(ppufile: TCompilerPPUFile); override;
-          function getcopy:tlinkedlistitem;override;
-          function datasize: word;
+          function getcopy:TLinkedListItem;override;
+          function DataSize: word;
        end;
 
        { tai_stab }
 
-       tai_stab = class(tai)
+       TAIStab = class(TAI)
           str : pchar;
           stabtype : TStabType;
           constructor Create(_stabtype:TStabType;_str : pchar);
           constructor Create_str(_stabtype:TStabType;const s:string);
-          constructor create_ansistr(_stabtype: TStabType; const s: ansistring);
+          constructor create_ansistr(_stabtype: TStabType; const s: AnsiString);
           destructor Destroy;override;
        end;
 
-       tai_force_line = class(tailineinfo)
+       TAIForceLine = class(TAILineInfo)
           constructor Create;
        end;
 
-       tai_function_name = class(tai)
-          funcname : pshortstring;
+       TAIFunctionName = class(TAI)
+          funcname : PShortString;
           constructor create(const s:string);
-          destructor destroy;override;
+          destructor Destroy;override;
        end;
 
        { Insert a cut to split assembler into several smaller files }
-       tai_cutobject = class(tai)
-          place : tcutplace;
+       TAICutObject = class(TAI)
+          place : TCutPlace;
           constructor Create;
           constructor Create_begin;
           constructor Create_end;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
        { Insert a marker for assembler and inline blocks }
-       tai_marker = class(tai)
+       TAIMarker = class(TAI)
           Kind: TAsmMarker;
           Constructor Create(_Kind: TAsmMarker);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
-       tai_tempalloc = class(tai)
+       TAITempAlloc = class(TAI)
           allocation : boolean;
 {$ifdef EXTDEBUG}
-          problem : pshortstring;
+          problem : PShortString;
 {$endif EXTDEBUG}
           temppos,
-          tempsize   : longint;
-          constructor alloc(pos,size:longint);
-          constructor dealloc(pos,size:longint);
+          tempsize   : LongInt;
+          constructor alloc(pos,size:LongInt);
+          constructor dealloc(pos,size:LongInt);
 {$ifdef EXTDEBUG}
-          constructor allocinfo(pos,size:longint;const st:string);
+          constructor allocinfo(pos,size:LongInt;const st:string);
 {$endif EXTDEBUG}
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
-          destructor destroy;override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
+          destructor Destroy;override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
-       tai_regalloc = class(tai)
-          reg     : tregister;
+       TAIRegAlloc = class(TAI)
+          reg     : TRegister;
           ratype  : TRegAllocType;
           { tells BuildLabelTableAndFixRegAlloc that the deallocation should be kept }
           keep    : boolean;
           { reg(de)alloc belongs to this instruction, this
             is only used for automatic inserted (de)alloc for
             imaginary register and required for spilling code }
-          instr   : tai;
-          constructor alloc(r : tregister;ainstr:tai);
-          constructor dealloc(r : tregister;ainstr:tai);
-          constructor sync(r : tregister);
-          constructor resize(r : tregister);
-          constructor markused(r : tregister);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          instr   : TAI;
+          constructor alloc(r : TRegister;ainstr:TAI);
+          constructor dealloc(r : TRegister;ainstr:TAI);
+          constructor sync(r : TRegister);
+          constructor resize(r : TRegister);
+          constructor markused(r : TRegister);
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
        end;
 
-       tadd_reg_instruction_proc=procedure(instr:Tai;r:tregister) of object;
+       TAddRegInstructionProc=procedure(instr:TAI;r:TRegister) of object;
 
         { Class template for assembler instructions
         }
-        tai_cpu_abstract = class(tailineinfo)
+        TAICPUAbstract = class(TAILineInfo)
         protected
-           procedure ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);virtual;
-           procedure ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);virtual;
-           procedure ppubuildderefimploper(var o:toper);virtual;abstract;
-           procedure ppuderefoper(var o:toper);virtual;abstract;
+           procedure ppuloadoper(ppufile:TCompilerPPUFile;var o:TOper);virtual;
+           procedure ppuwriteoper(ppufile:TCompilerPPUFile;const o:TOper);virtual;
+           procedure ppubuildderefimploper(var o:TOper);virtual;abstract;
+           procedure ppuderefoper(var o:TOper);virtual;abstract;
         public
            { Condition flags for instruction }
            condition : TAsmCond;
@@ -727,49 +727,49 @@ interface
            { Number of allocate oper structures }
            opercnt   : byte;
            { Operands of instruction }
-           oper      : array[0..max_operands-1] of poper;
+           oper      : array[0..max_operands-1] of POper;
            { Actual opcode of instruction }
-           opcode    : tasmop;
+           opcode    : TAsmOp;
 {$ifdef x86}
-           segprefix : tregister;
+           segprefix : TRegister;
 {$endif x86}
            { true if instruction is a jmp }
            is_jmp    : boolean; { is this instruction a jump? (needed for optimizer) }
-           Constructor Create(op : tasmop);virtual;
+           Constructor Create(op : TAsmOp);virtual;
            Destructor Destroy;override;
            function getcopy:TLinkedListItem;override;
-           constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
            procedure buildderefimpl;override;
            procedure derefimpl;override;
            procedure SetCondition(const c:TAsmCond);
-           procedure allocate_oper(opers:longint);
-           procedure loadconst(opidx:longint;l:tcgint);
-           procedure loadsymbol(opidx:longint;s:tasmsymbol;sofs:longint);
-           procedure loadlocal(opidx:longint;s:pointer;sofs:longint;indexreg:tregister;scale:byte;getoffset,forceref:boolean);
-           procedure loadref(opidx:longint;const r:treference);
-           procedure loadreg(opidx:longint;r:tregister);
-           procedure loadoper(opidx:longint;o:toper); virtual;
-           procedure clearop(opidx:longint); virtual;
-           procedure freeop(opidx:longint);
+           procedure allocate_oper(opers:LongInt);
+           procedure loadconst(opidx:LongInt;l:TCGInt);
+           procedure loadsymbol(opidx:LongInt;s:TAsmSymbol;sofs:LongInt);
+           procedure loadlocal(opidx:LongInt;s:pointer;sofs:LongInt;indexreg:TRegister;scale:byte;getoffset,forceref:boolean);
+           procedure loadref(opidx:LongInt;const r:TReference);
+           procedure loadreg(opidx:LongInt;r:TRegister);
+           procedure loadoper(opidx:LongInt;o:TOper); virtual;
+           procedure clearop(opidx:LongInt); virtual;
+           procedure freeop(opidx:LongInt);
            { register allocator }
-           function is_same_reg_move(regtype: Tregistertype):boolean;virtual;
-           function spilling_get_operation_type(opnr: longint): topertype;virtual;
-           function spilling_get_operation_type_ref(opnr: longint; reg: tregister): topertype;virtual;
+           function is_same_reg_move(regtype: TRegisterType):boolean;virtual;
+           function spilling_get_operation_type(opnr: LongInt): TOperType;virtual;
+           function spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;virtual;
 
-           function  Pass1(objdata:TObjData):longint;virtual;
+           function  Pass1(objdata:TObjData):LongInt;virtual;
            procedure Pass2(objdata:TObjData);virtual;
 
            procedure resetpass1; virtual;
            procedure resetpass2; virtual;
         end;
-        tai_cpu_class = class of tai_cpu_abstract;
+        TAICPUClass = class of TAICPUAbstract;
 
         { Buffer type used for alignment }
-        tfillbuffer = array[0..63] of char;
+        TFillBuffer = array[0..63] of char;
 
         { alignment for operator }
-        tai_align_abstract = class(tai)
+        TAIAlignAbstract = class(TAI)
            aligntype : byte;   { 1 = no align, 2 = word align, 4 = dword align }
            maxbytes  : byte;   { if needed bytes would be larger than maxbyes, alignment is ignored }
            fillsize  : byte;   { real size to fill }
@@ -780,22 +780,22 @@ interface
            constructor create_max(b: byte; max: byte);virtual;
            constructor create_op_max(b: byte; _op: byte; max: byte);virtual;
            constructor Create_zeros(b:byte);
-           constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
-           function calculatefillbuf(var buf : tfillbuffer;executable : boolean):pchar;virtual;
+           function calculatefillbuf(var buf : TFillBuffer;executable : boolean):pchar;virtual;
         end;
-        tai_align_class = class of tai_align_abstract;
+        TAIAlignClass = class of TAIAlignAbstract;
 
-        tai_varloc = class(tai)
+        TAIVarLoc = class(TAI)
            newlocation,
-           newlocationhi : tregister;
+           newlocationhi : TRegister;
            varsym : TSym;
-           constructor create(sym : TSym;loc : tregister);
-           constructor create64(sym : TSym;loc,lochi : tregister);
+           constructor create(sym : TSym;loc : TRegister);
+           constructor create64(sym : TSym;loc,lochi : TRegister);
 {$ifdef cpu64bitalu}
-           constructor create128(sym : TSym;loc,lochi : tregister);
+           constructor create128(sym : TSym;loc,lochi : TRegister);
 {$endif cpu64bitalu}
-           constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+           constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
            procedure ppuwrite(ppufile:TCompilerPPUFile);override;
            procedure buildderefimpl;override;
            procedure derefimpl;override;
@@ -806,11 +806,11 @@ interface
         TSehDirectiveData=record
         case typ: TSehDirectiveDatatype of
           sd_none: ();
-          sd_string: (name:pshortstring;flags:byte);
+          sd_string: (name:PShortString;flags:byte);
           sd_reg,sd_offset,sd_regoffset: (reg:TRegister;offset:dword);
         end;
 
-        tai_seh_directive = class(tai)
+        TAISEHDirective = class(TAI)
           kind: TAsmSehDirective;
           data: TSehDirectiveData;
           constructor create(_kind:TAsmSehDirective);
@@ -818,55 +818,55 @@ interface
           constructor create_reg(_kind:TAsmSehDirective;r:TRegister);
           constructor create_offset(_kind:TAsmSehDirective;ofs:dword);
           constructor create_reg_offset(_kind:TAsmSehDirective;r:TRegister;ofs:dword);
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
-          destructor destroy;override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
+          destructor Destroy;override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure generate_code(objdata:TObjData);virtual;
           property datatype: TSehDirectiveDatatype read data.typ;
         end;
-        tai_seh_directive_class=class of tai_seh_directive;
+        TAISEHDirectiveClass=class of TAISEHDirective;
 
 
-        tai_symbolpair = class(tai)
+        TAISymbolPair = class(TAI)
           kind: TSymbolPairKind;
           sym,
-          value: pshortstring;
+          value: PShortString;
           constructor create(akind: TSymbolPairKind; const asym, avalue: string);
-          destructor destroy;override;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          destructor Destroy;override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
         end;
 
-        teattrtyp = (eattrtype_none,eattrtype_dword,eattrtype_ntbs);
-        tai_attribute = class(tai)
-          eattr_typ : teattrtyp;
+        TEAttrTyp = (eattrtype_none,eattrtype_dword,eattrtype_ntbs);
+        TAIAttribute = class(TAI)
+          eattr_typ : TEAttrTyp;
           tag,value : dword;
           valuestr : pstring;
-          constructor create(atyp: taitype; atag,avalue : dword);
-          constructor create(atyp: taitype; atag : dword;const avalue : string);
-          destructor destroy;override;
-          constructor ppuload(t:taitype;ppufile:TCompilerPPUFile);override;
+          constructor create(atyp: TAIType; atag,avalue : dword);
+          constructor create(atyp: TAIType; atag : dword;const avalue : string);
+          destructor Destroy;override;
+          constructor ppuload(t:TAIType;ppufile:TCompilerPPUFile);override;
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;
         end;
 
     var
       { array with all class types for tais }
-      aiclass : taiclassarray;
+      aiclass : TAIClassArray;
 
       { target specific tais, possibly overwritten in target specific aasmcpu }
-      cai_align : tai_align_class = tai_align_abstract;
-      cai_cpu   : tai_cpu_class = tai_cpu_abstract;
-      cai_seh_directive: tai_seh_directive_class = tai_seh_directive;
+      CAIAlign : TAIAlignClass = TAIAlignAbstract;
+      cai_cpu   : TAICPUClass = TAICPUAbstract;
+      CAISEHDirective: TAISEHDirectiveClass = TAISEHDirective;
 
       { hook to notify uses of registers }
-      add_reg_instruction_hook : tadd_reg_instruction_proc;
+      add_reg_instruction_hook : TAddRegInstructionProc;
 
     procedure maybe_new_object_file(list:TAsmList);
-    function new_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TasmSectionorder=secorder_default) : tai_section;
-    function new_proc_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TasmSectionorder=secorder_default) : tai_section;
+    function new_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TAsmSectionOrder=secorder_default) : TAISection;
+    function new_proc_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TAsmSectionOrder=secorder_default) : TAISection;
 
-    function ppuloadai(ppufile:TCompilerPPUFile):tai;
-    procedure ppuwriteai(ppufile:TCompilerPPUFile;n:tai);
+    function ppuloadai(ppufile:TCompilerPPUFile):TAI;
+    procedure ppuwriteai(ppufile:TCompilerPPUFile;n:TAI);
 
 
 implementation
@@ -876,8 +876,8 @@ implementation
       aasmcpu,
 {$endif x86}
       SysUtils,
-      verbose,
-      globals,
+      Verbose,
+      Globals,
       ppu;
 
     const
@@ -890,46 +890,46 @@ implementation
     procedure maybe_new_object_file(list:TAsmList);
       begin
         if create_smartlink_library then
-          list.concat(tai_cutobject.create);
+          list.concat(TAICutObject.create);
       end;
 
 
-    function new_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TasmSectionorder=secorder_default) : tai_section;
+    function new_section(list:TAsmList;Asectype:TAsmSectiontype;const Aname:string;Aalign:byte;Asecorder:TAsmSectionOrder=secorder_default) : TAISection;
       begin
-        Result:=tai_section.create(Asectype,Aname,Aalign,Asecorder);
+        Result:=TAISection.create(Asectype,Aname,Aalign,Asecorder);
         list.concat(Result);
         inc(list.section_count);
-        list.concat(cai_align.create(Aalign));
+        list.concat(CAIAlign.create(Aalign));
       end;
 
 
     function new_proc_section(list:TAsmList;Asectype:TAsmSectiontype;
-      const Aname:string;Aalign:byte;Asecorder:TasmSectionorder):tai_section;
+      const Aname:string;Aalign:byte;Asecorder:TAsmSectionOrder):TAISection;
       begin
-        Result:=tai_section.Create_proc(Asectype,Aname,Aalign,Asecorder);
+        Result:=TAISection.Create_proc(Asectype,Aname,Aalign,Asecorder);
         list.concat(Result);
         inc(list.section_count);
-        list.concat(cai_align.create(Aalign));
+        list.concat(CAIAlign.create(Aalign));
       end;
 
 
-    function ppuloadai(ppufile:TCompilerPPUFile):tai;
+    function ppuloadai(ppufile:TCompilerPPUFile):TAI;
       var
         b : byte;
-        t : taitype;
+        t : TAIType;
       begin
         { marker }
         b:=ppufile.getbyte;
         if b<>pputaimarker then
-          internalerror(200208181);
+          InternalError(200208181);
         { load nodetype }
-        t:=taitype(ppufile.getbyte);
+        t:=TAIType(ppufile.getbyte);
         if t<>ait_none then
          begin
-           if t>high(taitype) then
-             internalerror(200208182);
-           if not assigned(aiclass[t]) then
-             internalerror(200208183);
+           if t>high(TAIType) then
+             InternalError(200208182);
+           if not Assigned(aiclass[t]) then
+             InternalError(200208183);
            {writeln('taiload: ',taitypestr[t]);}
            { generate tai of the correct class }
            ppuloadai:=aiclass[t].ppuload(t,ppufile);
@@ -939,11 +939,11 @@ implementation
       end;
 
 
-    procedure ppuwriteai(ppufile:TCompilerPPUFile;n:tai);
+    procedure ppuwriteai(ppufile:TCompilerPPUFile;n:TAI);
       begin
         { marker, read by ppuloadnode }
         ppufile.putbyte(pputaimarker);
-        if assigned(n) then
+        if Assigned(n) then
          begin
            { type, read by ppuloadnode }
            ppufile.putbyte(byte(n.typ));
@@ -955,23 +955,23 @@ implementation
       end;
 
 
-    constructor tai_symbolpair.create(akind: TSymbolPairKind; const asym, avalue: string);
+    constructor TAISymbolPair.create(akind: TSymbolPairKind; const asym, avalue: string);
       begin
         inherited create;
         kind:=akind;
         typ:=ait_symbolpair;
-        sym:=stringdup(asym);
-        value:=stringdup(avalue);
+        sym:=StringDup(asym);
+        value:=StringDup(avalue);
       end;
 
-    destructor tai_symbolpair.destroy;
+    destructor TAISymbolPair.Destroy;
       begin
-        stringdispose(sym);
-        stringdispose(value);
-        inherited destroy;
+        StringDispose(sym);
+        StringDispose(value);
+        inherited Destroy;
       end;
 
-    constructor tai_symbolpair.ppuload(t: taitype; ppufile: TCompilerPPUFile);
+    constructor TAISymbolPair.ppuload(t: TAIType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         kind:=TSymbolPairKind(ppufile.getbyte);
@@ -979,7 +979,7 @@ implementation
         value:=ppufile.getpshortstring;
       end;
 
-    procedure tai_symbolpair.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TAISymbolPair.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(kind));
@@ -988,7 +988,7 @@ implementation
       end;
 
 
-    constructor tai_varloc.create(sym: TSym; loc: tregister);
+    constructor TAIVarLoc.create(sym: TSym; loc: TRegister);
       begin
         inherited Create;
         typ:=ait_varloc;
@@ -998,7 +998,7 @@ implementation
       end;
 
 
-    constructor tai_varloc.create64(sym: TSym; loc, lochi: tregister);
+    constructor TAIVarLoc.create64(sym: TSym; loc, lochi: TRegister);
       begin
         inherited Create;
         typ:=ait_varloc;
@@ -1009,7 +1009,7 @@ implementation
 
 
 {$ifdef cpu64bitalu}
-    constructor tai_varloc.create128(sym: TSym; loc, lochi: tregister);
+    constructor TAIVarLoc.create128(sym: TSym; loc, lochi: TRegister);
       begin
         inherited Create;
         typ:=ait_varloc;
@@ -1020,25 +1020,25 @@ implementation
 {$endif cpu64bitalu}
 
 
-    constructor tai_varloc.ppuload(t: taitype; ppufile: TCompilerPPUFile);
+    constructor TAIVarLoc.ppuload(t: TAIType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
       end;
 
 
-    procedure tai_varloc.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TAIVarLoc.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
       end;
 
 
-    procedure tai_varloc.buildderefimpl;
+    procedure TAIVarLoc.buildderefimpl;
       begin
         inherited buildderefimpl;
       end;
 
 
-    procedure tai_varloc.derefimpl;
+    procedure TAIVarLoc.derefimpl;
       begin
         inherited derefimpl;
       end;
@@ -1048,7 +1048,7 @@ implementation
                              TAI
  ****************************************************************************}
 
-    constructor tai.Create;
+    constructor TAI.Create;
       begin
 {$ifndef NOOPT}
         optinfo:=nil;
@@ -1056,7 +1056,7 @@ implementation
       end;
 
 
-    constructor tai.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAI.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         typ:=t;
 {$ifndef NOOPT}
@@ -1065,17 +1065,17 @@ implementation
       end;
 
 
-    procedure tai.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAI.ppuwrite(ppufile:TCompilerPPUFile);
       begin
       end;
 
 
-    procedure tai.buildderefimpl;
+    procedure TAI.buildderefimpl;
       begin
       end;
 
 
-    procedure tai.derefimpl;
+    procedure TAI.derefimpl;
       begin
       end;
 
@@ -1084,21 +1084,21 @@ implementation
                               TAILINEINFO
  ****************************************************************************}
 
-    constructor tailineinfo.create;
+    constructor TAILineInfo.create;
      begin
        inherited create;
        fileinfo:=CurrentFilePos;
      end;
 
 
-    constructor tailineinfo.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAILineInfo.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getposinfo(fileinfo);
       end;
 
 
-    procedure tailineinfo.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAILineInfo.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putposinfo(fileinfo);
@@ -1109,7 +1109,7 @@ implementation
                               TAI_SIMPLE
  ****************************************************************************}
 
-    constructor tai_simple.create(_typ : taitype);
+    constructor TAISimple.create(_typ : TAIType);
       begin
         inherited create;
         typ:=_typ;
@@ -1120,7 +1120,7 @@ implementation
                              TAI_SECTION
  ****************************************************************************}
 
-    constructor tai_section.Create(Asectype:TAsmSectiontype;const Aname:string;Aalign:longint;Asecorder:TasmSectionorder=secorder_default);
+    constructor TAISection.Create(Asectype:TAsmSectiontype;const Aname:string;Aalign:LongInt;Asecorder:TAsmSectionOrder=secorder_default);
       begin
         inherited Create;
         typ:=ait_section;
@@ -1128,7 +1128,7 @@ implementation
         secalign:=Aalign;
         secorder:=Asecorder;
         TObjData.sectiontype2progbitsandflags(sectype,secprogbits,secflags);
-        name:=stringdup(Aname);
+        name:=StringDup(Aname);
         sec:=nil;
         AssociativeSection:=nil;
         // .noinit section should be marked with the nobits flag
@@ -1136,8 +1136,8 @@ implementation
           secprogbits:=SPB_NOBITS;
       end;
 
-    constructor tai_section.Create_proc(Asectype:TAsmSectiontype;
-      const Aname:string;Aalign:longint;Asecorder:TasmSectionorder);
+    constructor TAISection.Create_proc(Asectype:TAsmSectiontype;
+      const Aname:string;Aalign:LongInt;Asecorder:TAsmSectionOrder);
       begin
         Create(Asectype,Aname,Aalign,Asecorder);
         secprogbits:=SPB_PROGBITS;
@@ -1146,32 +1146,32 @@ implementation
       end;
 
 
-    constructor tai_section.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAISection.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         sectype:=TAsmSectiontype(ppufile.getbyte);
         secalign:=ppufile.getlongint;
         name:=ppufile.getpshortstring;
-        ppufile.getset(tppuset1(secflags));
+        ppufile.getset(TPPUSet1(secflags));
         secprogbits:=TSectionProgbits(ppufile.getbyte);
         sec:=nil;
         AssociativeSection:=nil;
       end;
 
 
-    destructor tai_section.Destroy;
+    destructor TAISection.Destroy;
       begin
-        stringdispose(name);
+        StringDispose(name);
       end;
 
 
-    procedure tai_section.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAISection.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(sectype));
         ppufile.putlongint(secalign);
         ppufile.putstring(name^);
-        ppufile.putset(tppuset1(secflags));
+        ppufile.putset(TPPUSet1(secflags));
         ppufile.putbyte(byte(secprogbits));
       end;
 
@@ -1180,7 +1180,7 @@ implementation
                              TAI_DATABLOCK
  ****************************************************************************}
 
-    constructor tai_datablock.Create(const _name : string;_size : asizeint; def: TDef; _typ:Tasmsymtype);
+    constructor TAIDataBlock.Create(const _name : string;_size : asizeint; def: TDef; _typ:TAsmsymtype);
 
       begin
          inherited Create;
@@ -1193,7 +1193,7 @@ implementation
          is_global:=false;
       end;
 
-    constructor tai_datablock.Create_hidden(const _name: string; _size: asizeint; def: TDef; _typ:Tasmsymtype);
+    constructor TAIDataBlock.Create_hidden(const _name: string; _size: asizeint; def: TDef; _typ:TAsmsymtype);
       begin
         if tf_supports_hidden_symbols in TargetInfo.flags then
           begin
@@ -1211,7 +1211,7 @@ implementation
       end;
 
 
-    constructor tai_datablock.Create_global(const _name : string;_size : asizeint; def: TDef; _typ:Tasmsymtype);
+    constructor TAIDataBlock.Create_global(const _name : string;_size : asizeint; def: TDef; _typ:TAsmsymtype);
       begin
          inherited Create;
          typ:=ait_datablock;
@@ -1224,7 +1224,7 @@ implementation
       end;
 
 
-    constructor tai_datablock.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIDataBlock.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited Create;
         sym:=ppufile.getasmsymbol;
@@ -1233,7 +1233,7 @@ implementation
       end;
 
 
-    procedure tai_datablock.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIDataBlock.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(sym);
@@ -1242,7 +1242,7 @@ implementation
       end;
 
 
-    procedure tai_datablock.derefimpl;
+    procedure TAIDataBlock.derefimpl;
       begin
       end;
 
@@ -1251,7 +1251,7 @@ implementation
                                TAI_SYMBOL
  ****************************************************************************}
 
-    constructor tai_symbol.Create(_sym:tasmsymbol;siz:longint);
+    constructor TAISymbol.Create(_sym:TAsmSymbol;siz:LongInt);
       begin
          inherited Create;
          typ:=ait_symbol;
@@ -1260,13 +1260,13 @@ implementation
          { don't redefine global/external symbols as local, as code to access
            such symbols is different on some platforms }
          if not(sym.bind in [AB_NONE,AB_LOCAL]) then
-           internalerror(2013081601);
+           InternalError(2013081601);
          sym.bind:=AB_LOCAL;
          is_global:=false;
       end;
 
 
-    constructor tai_symbol.Create_global(_sym:tasmsymbol;siz:longint);
+    constructor TAISymbol.Create_global(_sym:TAsmSymbol;siz:LongInt);
       begin
          inherited Create;
          typ:=ait_symbol;
@@ -1279,20 +1279,20 @@ implementation
       end;
 
 
-    constructor tai_symbol.Create_Weak(_sym:tasmsymbol;siz:longint);
+    constructor TAISymbol.Create_Weak(_sym:TAsmSymbol;siz:LongInt);
       begin
         inherited Create;
         typ:=ait_symbol;
         sym:=_sym;
         size:=siz;
         if not(sym.bind in [AB_NONE,AB_WEAK_EXTERNAL]) then
-          internalerror(2021092801);
+          InternalError(2021092801);
         sym.bind:=AB_WEAK;
         is_global:=false;
       end;
 
 
-    constructor tai_symbol.Createname(const _name : string;_symtyp:Tasmsymtype;siz:longint;def:TDef);
+    constructor TAISymbol.Createname(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;def:TDef);
       begin
          inherited Create;
          typ:=ait_symbol;
@@ -1302,7 +1302,7 @@ implementation
       end;
 
 
-    constructor tai_symbol.Createname_global(const _name : string;_symtyp:Tasmsymtype;siz:longint;def:TDef);
+    constructor TAISymbol.Createname_global(const _name : string;_symtyp:TAsmsymtype;siz:LongInt;def:TDef);
       begin
          inherited Create;
          typ:=ait_symbol;
@@ -1311,7 +1311,7 @@ implementation
          is_global:=true;
       end;
 
-    constructor tai_symbol.Createname_hidden(const _name: string; _symtyp: Tasmsymtype; siz: longint; def: TDef);
+    constructor TAISymbol.Createname_hidden(const _name: string; _symtyp: TAsmsymtype; siz: LongInt; def: TDef);
       begin
         if tf_supports_hidden_symbols in TargetInfo.flags then
           begin
@@ -1326,7 +1326,7 @@ implementation
       end;
 
 
-    constructor tai_symbol.createname_global_value(const _name: string;_symtyp: tasmsymtype; siz: longint; val: ptruint;def:TDef);
+    constructor TAISymbol.createname_global_value(const _name: string;_symtyp: TAsmsymtype; siz: LongInt; val: ptruint;def:TDef);
       begin
         Createname_global(_name,_symtyp,siz,def);
         value:=val;
@@ -1334,7 +1334,7 @@ implementation
       end;
 
 
-    constructor tai_symbol.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAISymbol.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         sym:=ppufile.getasmsymbol;
@@ -1343,7 +1343,7 @@ implementation
       end;
 
 
-    procedure tai_symbol.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAISymbol.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(sym);
@@ -1352,7 +1352,7 @@ implementation
       end;
 
 
-    procedure tai_symbol.derefimpl;
+    procedure TAISymbol.derefimpl;
       begin
       end;
 
@@ -1361,7 +1361,7 @@ implementation
                                TAI_SYMBOL_END
  ****************************************************************************}
 
-    constructor tai_symbol_end.Create(_sym:tasmsymbol);
+    constructor TAISymbolEnd.Create(_sym:TAsmSymbol);
       begin
          inherited Create;
          typ:=ait_symbol_end;
@@ -1369,31 +1369,31 @@ implementation
       end;
 
 
-    constructor tai_symbol_end.Createname(const _name : string);
+    constructor TAISymbolEnd.Createname(const _name : string);
       begin
          inherited Create;
          typ:=ait_symbol_end;
          sym:=CurrentAsmData.GetAsmSymbol(_name);
-         if not assigned(sym) then
-           internalerror(2013080301);
+         if not Assigned(sym) then
+           InternalError(2013080301);
       end;
 
 
-    constructor tai_symbol_end.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAISymbolEnd.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         sym:=ppufile.getasmsymbol;
       end;
 
 
-    procedure tai_symbol_end.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAISymbolEnd.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(sym);
       end;
 
 
-    procedure tai_symbol_end.derefimpl;
+    procedure TAISymbolEnd.derefimpl;
       begin
       end;
 
@@ -1402,7 +1402,7 @@ implementation
                                TAI_SYMBOL_END
  ****************************************************************************}
 
-    constructor tai_directive.Create(_directive:TAsmDirective;const _name:ansistring);
+    constructor TAIDirective.Create(_directive:TAsmDirective;const _name:AnsiString);
       begin
          inherited Create;
          typ:=ait_directive;
@@ -1411,7 +1411,7 @@ implementation
       end;
 
 
-    constructor tai_directive.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIDirective.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         name:=ppufile.getansistring;
@@ -1419,7 +1419,7 @@ implementation
       end;
 
 
-    procedure tai_directive.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIDirective.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putansistring(name);
@@ -1431,7 +1431,7 @@ implementation
                                TAI_CONST
  ****************************************************************************}
 
-    constructor tai_const.Create(_typ:taiconst_type;_value : int64);
+    constructor TAIConst.Create(_typ:TAIConstType;_value : int64);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1442,7 +1442,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_128bit(_value : int64);
+    constructor TAIConst.Create_128bit(_value : int64);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1453,7 +1453,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_64bit(_value : int64);
+    constructor TAIConst.Create_64bit(_value : int64);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1464,7 +1464,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_32bit(_value : longint);
+    constructor TAIConst.Create_32bit(_value : LongInt);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1475,7 +1475,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_16bit(_value : word);
+    constructor TAIConst.Create_16bit(_value : word);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1485,7 +1485,7 @@ implementation
          endsym:=nil;
       end;
 
-    constructor tai_const.Create_64bit_unaligned(_value : int64);
+    constructor TAIConst.Create_64bit_unaligned(_value : int64);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1496,7 +1496,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_32bit_unaligned(_value : longint);
+    constructor TAIConst.Create_32bit_unaligned(_value : LongInt);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1507,7 +1507,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_16bit_unaligned(_value : word);
+    constructor TAIConst.Create_16bit_unaligned(_value : word);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1518,7 +1518,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_8bit(_value : byte);
+    constructor TAIConst.Create_8bit(_value : byte);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1529,7 +1529,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_char(size: integer; _value: dword);
+    constructor TAIConst.Create_char(size: integer; _value: dword);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1550,7 +1550,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_sleb128bit(_value : int64);
+    constructor TAIConst.Create_sleb128bit(_value : int64);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1561,7 +1561,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_uleb128bit(_value : qword);
+    constructor TAIConst.Create_uleb128bit(_value : qword);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1572,7 +1572,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_aint(_value : aint);
+    constructor TAIConst.Create_aint(_value : aint);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1583,7 +1583,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_sizeint(_value : asizeint);
+    constructor TAIConst.Create_sizeint(_value : asizeint);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1594,7 +1594,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_sizeint_unaligned(_value : asizeint);
+    constructor TAIConst.Create_sizeint_unaligned(_value : asizeint);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1605,7 +1605,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_type_sym(_typ:taiconst_type;_sym:tasmsymbol);
+    constructor TAIConst.Create_type_sym(_typ:TAIConstType;_sym:TAsmSymbol);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1614,12 +1614,12 @@ implementation
          endsym:=nil;
          value:=0;
          { update sym info }
-         if assigned(sym) then
+         if Assigned(sym) then
            sym.increfs;
       end;
 
 
-    constructor tai_const.Create_sym(_sym:tasmsymbol);
+    constructor TAIConst.Create_sym(_sym:TAsmSymbol);
       begin
          self.create_sym_offset(_sym,0);
       end;
@@ -1628,7 +1628,7 @@ implementation
 
 
 
-    constructor tai_const.Create_sym_offset(_sym:tasmsymbol;ofs:asizeint);
+    constructor TAIConst.Create_sym_offset(_sym:TAsmSymbol;ofs:asizeint);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1643,12 +1643,12 @@ implementation
          symofs:=ofs;
          value:=ofs;
          { update sym info }
-         if assigned(sym) then
+         if Assigned(sym) then
            sym.increfs;
       end;
 
 
-    constructor tai_const.Create_type_sym_offset(_typ : taiconst_type;_sym : tasmsymbol; ofs : asizeint);
+    constructor TAIConst.Create_type_sym_offset(_typ : TAIConstType;_sym : TAsmSymbol; ofs : asizeint);
       begin
          inherited Create;
          typ:=ait_const;
@@ -1661,12 +1661,12 @@ implementation
          symofs:=ofs;
          value:=ofs;
          { update sym info }
-         if assigned(sym) then
+         if Assigned(sym) then
            sym.increfs;
       end;
 
 
-    constructor tai_const.Create_rel_sym(_typ:taiconst_type;_sym,_endsym:tasmsymbol);
+    constructor TAIConst.Create_rel_sym(_typ:TAIConstType;_sym,_endsym:TAsmSymbol);
       begin
          self.create_sym_offset(_sym,0);
          consttype:=_typ;
@@ -1675,7 +1675,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_rel_sym_offset(_typ: taiconst_type; _sym, _endsym: tasmsymbol; _ofs: int64);
+    constructor TAIConst.Create_rel_sym_offset(_typ: TAIConstType; _sym, _endsym: TAsmSymbol; _ofs: int64);
        begin
          self.create_sym_offset(_sym,_ofs);
          consttype:=_typ;
@@ -1684,77 +1684,77 @@ implementation
        end;
 
 
-    constructor tai_const.Create_rva_sym(_sym:tasmsymbol);
+    constructor TAIConst.Create_rva_sym(_sym:TAsmSymbol);
       begin
          self.create_sym_offset(_sym,0);
          consttype:=aitconst_rva_symbol;
       end;
 
 
-    constructor tai_const.Createname(const name:string;ofs:asizeint);
+    constructor TAIConst.Createname(const name:string;ofs:asizeint);
       begin
          self.Createname(name,AT_NONE,ofs);
       end;
 
 
-    constructor tai_const.Createname(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
+    constructor TAIConst.Createname(const name:string;_symtyp:TAsmsymtype;ofs:asizeint);
       begin
          self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,_symtyp),ofs);
       end;
 
 
-    constructor tai_const.Createname_rel(const name,endname:string);
+    constructor TAIConst.Createname_rel(const name,endname:string);
       begin
          self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,AT_NONE),0);
          endsym:=CurrentAsmData.RefAsmSymbol(endname,AT_NONE)
       end;
 
 
-    constructor tai_const.Create_type_name(_typ:taiconst_type;const name:string;ofs:asizeint);
+    constructor TAIConst.Create_type_name(_typ:TAIConstType;const name:string;ofs:asizeint);
       begin
          self.Create_type_name(_typ,name,AT_NONE,ofs);
       end;
 
 
-    constructor tai_const.Create_type_name(_typ:taiconst_type;const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
+    constructor TAIConst.Create_type_name(_typ:TAIConstType;const name:string;_symtyp:TAsmsymtype;ofs:asizeint);
       begin
          self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,_symtyp),ofs);
          consttype:=_typ;
       end;
 
 
-    constructor tai_const.Create_type_name(_typ:taiconst_type;const name:string;symclass: TAsmSymbolClass;_symtyp:Tasmsymtype;ofs:asizeint);
+    constructor TAIConst.Create_type_name(_typ:TAIConstType;const name:string;symclass: TAsmSymbolClass;_symtyp:TAsmsymtype;ofs:asizeint);
       begin
         self.create_sym_offset(CurrentAsmData.RefAsmSymbolByClass(symclass,name,_symtyp),ofs);
         consttype:=_typ;
       end;
 
 
-    constructor tai_const.Create_nil_codeptr;
+    constructor TAIConst.Create_nil_codeptr;
       begin
         self.Create_int_codeptr(0);
       end;
 
 
-    constructor tai_const.Create_nil_codeptr_unaligned;
+    constructor TAIConst.Create_nil_codeptr_unaligned;
       begin
         self.Create_int_codeptr_unaligned(0);
       end;
 
 
-    constructor tai_const.Create_nil_dataptr;
+    constructor TAIConst.Create_nil_dataptr;
       begin
         self.Create_int_dataptr(0);
       end;
 
 
-    constructor tai_const.Create_nil_dataptr_unaligned;
+    constructor TAIConst.Create_nil_dataptr_unaligned;
       begin
         self.Create_int_dataptr_unaligned(0);
       end;
 
 
-    constructor tai_const.Create_int_codeptr(_value: int64);
+    constructor TAIConst.Create_int_codeptr(_value: int64);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1767,7 +1767,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_int_codeptr_unaligned(_value: int64);
+    constructor TAIConst.Create_int_codeptr_unaligned(_value: int64);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1780,7 +1780,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_int_dataptr(_value: int64);
+    constructor TAIConst.Create_int_dataptr(_value: int64);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1793,7 +1793,7 @@ implementation
       end;
 
 
-    constructor tai_const.Create_int_dataptr_unaligned(_value: int64);
+    constructor TAIConst.Create_int_dataptr_unaligned(_value: int64);
       begin
         inherited Create;
         typ:=ait_const;
@@ -1810,17 +1810,17 @@ implementation
 
 
 
-    constructor tai_const.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIConst.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        consttype:=taiconst_type(ppufile.getbyte);
+        consttype:=TAIConstType(ppufile.getbyte);
         sym:=ppufile.getasmsymbol;
         endsym:=ppufile.getasmsymbol;
         value:=ppufile.getint64;
       end;
 
 
-    procedure tai_const.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIConst.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(consttype));
@@ -1830,23 +1830,23 @@ implementation
       end;
 
 
-    procedure tai_const.derefimpl;
+    procedure TAIConst.derefimpl;
       begin
       end;
 
 
-    function tai_const.getcopy:tlinkedlistitem;
+    function TAIConst.getcopy:TLinkedListItem;
       begin
         getcopy:=inherited getcopy;
         { we need to increase the reference number }
-        if assigned(sym) then
+        if Assigned(sym) then
           sym.increfs;
-        if assigned(endsym) then
+        if Assigned(endsym) then
           endsym.increfs;
       end;
 
 
-    function tai_const.size:longint;
+    function TAIConst.size:LongInt;
       begin
         case consttype of
           aitconst_8bit :
@@ -1862,9 +1862,9 @@ implementation
           aitconst_secrel32_symbol,
           aitconst_rva_symbol :
             if TargetInfo.system in systems_peoptplus then
-              result:=sizeof(longint)
+              result:=sizeof(LongInt)
             else
-              result:=sizeof(pint);
+              result:=sizeof(PInt);
           aitconst_uleb128bit :
             begin
               if fixed_size>0 then
@@ -1876,7 +1876,7 @@ implementation
                 end
               else
                 { worst case }
-                result:=sizeof(pint)+2;
+                result:=sizeof(PInt)+2;
             end;
           aitconst_sleb128bit :
             begin
@@ -1889,7 +1889,7 @@ implementation
                 end
               else
                 { worst case }
-                result:=sizeof(pint)+2;
+                result:=sizeof(PInt)+2;
             end;
           aitconst_half16bit,
           aitconst_gs:
@@ -1901,7 +1901,7 @@ implementation
           aitconst_seg:
             result:=2;
           aitconst_got:
-            result:=sizeof(pint);
+            result:=sizeof(PInt);
           aitconst_gotoff_symbol:
             result:=4;
           aitconst_gottpoff:
@@ -1915,20 +1915,20 @@ implementation
           aitconst_dtpoff:
             result:=4;
           else
-            internalerror(200603253);
+            InternalError(200603253);
         end;
       end;
 
 
-    procedure tai_const.FixSize;
+    procedure TAIConst.FixSize;
       begin
         case consttype of
           aitconst_uleb128bit:
-            fixed_size:=LengthUleb128(qword(value));
+            fixed_size:=LengthULEB128(qword(value));
           aitconst_sleb128bit:
-            fixed_size:=LengthSleb128(value);
+            fixed_size:=LengthSLEB128(value);
           else
-            Internalerror(2019030301);
+            InternalError(2019030301);
         end;
       end;
 
@@ -1937,7 +1937,7 @@ implementation
                                TAI_realconst
  ****************************************************************************}
 
-    constructor tai_realconst.create_s32real(val: Single);
+    constructor TAIRealConst.create_s32real(val: Single);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1947,7 +1947,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s64real(val: Double);
+    constructor TAIRealConst.create_s64real(val: Double);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1957,7 +1957,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s80real(val: bestreal; _savesize: byte);
+    constructor TAIRealConst.create_s80real(val: BestReal; _savesize: byte);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1967,7 +1967,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s64compreal(val: Int64);
+    constructor TAIRealConst.create_s64compreal(val: Int64);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1977,10 +1977,10 @@ implementation
       end;
 
 
-        constructor tai_realconst.ppuload(t: taitype; ppufile: TCompilerPPUFile);
+        constructor TAIRealConst.ppuload(t: TAIType; ppufile: TCompilerPPUFile);
       begin
         inherited;
-        realtyp:=tairealconsttype(ppufile.getbyte);
+        realtyp:=TAIRealConstType(ppufile.getbyte);
         case realtyp of
           aitrealconst_s32bit:
             value.s32val:=Single(ppufile.getreal);
@@ -1994,7 +1994,7 @@ implementation
       end;
 
 
-    procedure tai_realconst.ppuwrite(ppufile: TCompilerPPUFile);
+    procedure TAIRealConst.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(realtyp));
@@ -2013,16 +2013,16 @@ implementation
       end;
 
 
-    function tai_realconst.getcopy: tlinkedlistitem;
+    function TAIRealConst.getcopy: TLinkedListItem;
       begin
         result:=inherited getcopy;
-        tai_realconst(result).value:=value;
-        tai_realconst(result).realtyp:=realtyp;
-        tai_realconst(result).savesize:=savesize;
+        TAIRealConst(result).value:=value;
+        TAIRealConst(result).realtyp:=realtyp;
+        TAIRealConst(result).savesize:=savesize;
       end;
 
 
-    function tai_realconst.datasize: word;
+    function TAIRealConst.DataSize: word;
       begin
         result:=0;
         case realtyp of
@@ -2041,37 +2041,37 @@ implementation
                                TAI_STRING
  ****************************************************************************}
 
-     constructor tai_string.Create(const _str : ShortString);
+     constructor TAIString.Create(const _str : ShortString);
        var
          lNewLen : Integer;
        begin
           inherited Create;
           typ:=ait_string;
           lNewLen:=length(_str);
-          setlength(str,lNewLen);
+          SetLength(str,lNewLen);
           if lNewLen>0 then
             move(_str[1],str[0],lNewLen);
        end;
 
 
-     constructor tai_string.Create(const _str: ansistring);
+     constructor TAIString.Create(const _str: AnsiString);
        var
          lNewLen : Integer;
        begin
          inherited Create;
          typ:=ait_string;
          lNewLen:=length(_str);
-         setlength(str,lNewlen);
+         SetLength(str,lNewlen);
          if lNewLen>0 then
            move(_str[1],str[0],lNewLen);
        end;
 
 
-    constructor tai_string.Create_Data(data : pchar;length : longint; add0: boolean);
+    constructor TAIString.Create_Data(data : pchar;length : LongInt; add0: boolean);
        begin
           inherited Create;
           typ:=ait_string;
-          setlength(str,length+ord(add0));
+          SetLength(str,length+ord(add0));
           if length>0 then
             move(data^,str[0],length);
           if add0 then
@@ -2079,24 +2079,24 @@ implementation
        end;
 
 
-        destructor tai_string.Destroy;
+        destructor TAIString.Destroy;
       begin
          inherited Destroy;
       end;
 
 
-    constructor tai_string.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIString.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       var
         lNewLen : integer;
       begin
         inherited ppuload(t,ppufile);
         lNewLen:=ppufile.getlongint;
-        setlength(str,lNewLen);
+        SetLength(str,lNewLen);
         ppufile.getdata(str[0],lnewlen);
       end;
 
 
-    procedure tai_string.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIString.ppuwrite(ppufile:TCompilerPPUFile);
       var
         lWriteLen : integer;
       begin
@@ -2107,19 +2107,19 @@ implementation
       end;
 
 
-    function tai_string.getcopy : tlinkedlistitem;
+    function TAIString.getcopy : TLinkedListItem;
       var
-        p : tlinkedlistitem;
+        p : TLinkedListItem;
         lWriteLen : integer;
       begin
         p:=inherited getcopy;
         lWriteLen:=length(str);
-        setlength(tai_string(p).str,lWriteLen);
-        move(str[0],tai_string(p).str[0],lWriteLen);
+        SetLength(TAIString(p).str,lWriteLen);
+        move(str[0],TAIString(p).str[0],lWriteLen);
         getcopy:=p;
       end;
 
-    function tai_string.len: integer;
+    function TAIString.len: integer;
     begin
       Result:=Length(str);
     end;
@@ -2129,7 +2129,7 @@ implementation
                                TAI_LABEL
  ****************************************************************************}
 
-    constructor tai_label.Create(_labsym : tasmlabel);
+    constructor TAILabel.Create(_labsym : TAsmLabel);
       begin
         inherited Create;
         typ:=ait_label;
@@ -2138,15 +2138,15 @@ implementation
       end;
 
 
-    constructor tai_label.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAILabel.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        labsym:=tasmlabel(ppufile.getasmsymbol);
+        labsym:=TAsmLabel(ppufile.getasmsymbol);
         ppufile.getbyte; { was is_global flag, now unused }
       end;
 
 
-    procedure tai_label.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAILabel.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(labsym);
@@ -2154,7 +2154,7 @@ implementation
       end;
 
 
-    procedure tai_label.derefimpl;
+    procedure TAILabel.derefimpl;
       begin
         labsym.is_set:=true;
       end;
@@ -2163,7 +2163,7 @@ implementation
           tai_comment  comment to be inserted in the assembler file
  ****************************************************************************}
 
-     constructor tai_comment.Create(_str : pchar);
+     constructor TAIComment.Create(_str : pchar);
 
        begin
           inherited Create;
@@ -2171,43 +2171,43 @@ implementation
           str:=_str;
        end;
 
-    destructor tai_comment.destroy;
+    destructor TAIComment.Destroy;
 
       begin
-         freemem(str);
+         FreeMem(str);
          inherited Destroy;
       end;
 
-    constructor tai_comment.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIComment.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       var
-        len : longint;
+        len : LongInt;
       begin
         inherited ppuload(t,ppufile);
         len:=ppufile.getlongint;
-        getmem(str,len+1);
+        GetMem(str,len+1);
         ppufile.getdata(str^,len);
         str[len]:=#0;
       end;
 
 
-    procedure tai_comment.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIComment.ppuwrite(ppufile:TCompilerPPUFile);
       var
-        len : longint;
+        len : LongInt;
       begin
         inherited ppuwrite(ppufile);
-        len:=strlen(str);
+        len:=StrLen(str);
         ppufile.putlongint(len);
         ppufile.putdata(str^,len);
       end;
 
 
-    function tai_comment.getcopy : tlinkedlistitem;
+    function TAIComment.getcopy : TLinkedListItem;
       var
-        p : tlinkedlistitem;
+        p : TLinkedListItem;
       begin
         p:=inherited getcopy;
-        getmem(tai_comment(p).str,strlen(str)+1);
-        move(str^,tai_comment(p).str^,strlen(str)+1);
+        GetMem(TAIComment(p).str,StrLen(str)+1);
+        move(str^,TAIComment(p).str^,StrLen(str)+1);
         getcopy:=p;
       end;
 
@@ -2216,7 +2216,7 @@ implementation
                               TAI_STABS
  ****************************************************************************}
 
-    constructor tai_stab.create(_stabtype:TStabType;_str : pchar);
+    constructor TAIStab.create(_stabtype:TStabType;_str : pchar);
       begin
          inherited create;
          typ:=ait_stab;
@@ -2224,27 +2224,27 @@ implementation
          stabtype:=_stabtype;
       end;
 
-    constructor tai_stab.create_str(_stabtype:TStabType;const s:string);
+    constructor TAIStab.create_str(_stabtype:TStabType;const s:string);
       begin
-         self.create(_stabtype,strpnew(s));
+         self.create(_stabtype,StrPNew(s));
       end;
 
-    constructor tai_stab.create_ansistr(_stabtype:TStabType;const s:ansistring);
+    constructor TAIStab.create_ansistr(_stabtype:TStabType;const s:AnsiString);
       begin
          inherited create;
          typ:=ait_stab;
          stabtype:=_stabtype;
-         getmem(str,length(s)+1);
+         GetMem(str,length(s)+1);
          if length(s)>0 then
            move(s[1],str^,length(s)+1)
          else
            str^:=#0;
       end;
 
-    destructor tai_stab.destroy;
+    destructor TAIStab.Destroy;
       begin
-         freemem(str);
-         inherited destroy;
+         FreeMem(str);
+         inherited Destroy;
       end;
 
 
@@ -2252,7 +2252,7 @@ implementation
                             TAI_FORCE_LINE
  ****************************************************************************}
 
-    constructor tai_force_line.create;
+    constructor TAIForceLine.create;
       begin
          inherited create;
          typ:=ait_force_line;
@@ -2263,17 +2263,17 @@ implementation
                               TAI_FUNCTION_NAME
  ****************************************************************************}
 
-    constructor tai_function_name.create(const s:string);
+    constructor TAIFunctionName.create(const s:string);
       begin
          inherited create;
          typ:=ait_function_name;
-         funcname:=stringdup(s);
+         funcname:=StringDup(s);
       end;
 
-    destructor tai_function_name.destroy;
+    destructor TAIFunctionName.Destroy;
       begin
-         stringdispose(funcname);
-         inherited destroy;
+         StringDispose(funcname);
+         inherited Destroy;
       end;
 
 
@@ -2281,7 +2281,7 @@ implementation
                               TAI_CUTOBJECT
  ****************************************************************************}
 
-     constructor tai_cutobject.Create;
+     constructor TAICutObject.Create;
        begin
           inherited Create;
           typ:=ait_cutobject;
@@ -2289,7 +2289,7 @@ implementation
        end;
 
 
-     constructor tai_cutobject.Create_begin;
+     constructor TAICutObject.Create_begin;
        begin
           inherited Create;
           typ:=ait_cutobject;
@@ -2297,7 +2297,7 @@ implementation
        end;
 
 
-     constructor tai_cutobject.Create_end;
+     constructor TAICutObject.Create_end;
        begin
           inherited Create;
           typ:=ait_cutobject;
@@ -2305,14 +2305,14 @@ implementation
        end;
 
 
-    constructor tai_cutobject.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAICutObject.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         place:=TCutPlace(ppufile.getbyte);
       end;
 
 
-    procedure tai_cutobject.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAICutObject.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(place));
@@ -2323,7 +2323,7 @@ implementation
                              Tai_Marker
  ****************************************************************************}
 
-    constructor Tai_Marker.Create(_Kind: TAsmMarker);
+    constructor TAIMarker.Create(_Kind: TAsmMarker);
       begin
         Inherited Create;
         typ := ait_marker;
@@ -2331,14 +2331,14 @@ implementation
       end;
 
 
-    constructor Tai_Marker.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIMarker.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         kind:=TAsmMarker(ppufile.getbyte);
       end;
 
 
-    procedure Tai_Marker.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIMarker.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(kind));
@@ -2349,7 +2349,7 @@ implementation
                                 tai_tempalloc
 *****************************************************************************}
 
-    constructor tai_tempalloc.alloc(pos,size:longint);
+    constructor TAITempAlloc.alloc(pos,size:LongInt);
       begin
         inherited Create;
         typ:=ait_tempalloc;
@@ -2362,16 +2362,16 @@ implementation
       end;
 
 
-    destructor tai_tempalloc.destroy;
+    destructor TAITempAlloc.Destroy;
       begin
 {$ifdef EXTDEBUG}
-        stringdispose(problem);
+        StringDispose(problem);
 {$endif EXTDEBUG}
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    constructor tai_tempalloc.dealloc(pos,size:longint);
+    constructor TAITempAlloc.dealloc(pos,size:LongInt);
       begin
         inherited Create;
         typ:=ait_tempalloc;
@@ -2385,19 +2385,19 @@ implementation
 
 
 {$ifdef EXTDEBUG}
-    constructor tai_tempalloc.allocinfo(pos,size:longint;const st:string);
+    constructor TAITempAlloc.allocinfo(pos,size:LongInt;const st:string);
       begin
         inherited Create;
         typ:=ait_tempalloc;
         allocation:=false;
         temppos:=pos;
         tempsize:=size;
-        problem:=stringdup(st);
+        problem:=StringDup(st);
       end;
 {$endif EXTDEBUG}
 
 
-    constructor tai_tempalloc.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAITempAlloc.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         temppos:=ppufile.getlongint;
@@ -2409,7 +2409,7 @@ implementation
       end;
 
 
-    procedure tai_tempalloc.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAITempAlloc.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putlongint(temppos);
@@ -2422,35 +2422,35 @@ implementation
                                  tai_regalloc
 *****************************************************************************}
 
-    constructor tai_regalloc.alloc(r : tregister;ainstr:tai);
+    constructor TAIRegAlloc.alloc(r : TRegister;ainstr:TAI);
       begin
         inherited create;
         typ:=ait_regalloc;
         ratype:=ra_alloc;
         reg:=r;
         { ainstr must be an instruction }
-        if assigned(ainstr) and
+        if Assigned(ainstr) and
            (ainstr.typ<>ait_instruction) then
-          internalerror(200411011);
+          InternalError(200411011);
         instr:=ainstr;
       end;
 
 
-    constructor tai_regalloc.dealloc(r : tregister;ainstr:tai);
+    constructor TAIRegAlloc.dealloc(r : TRegister;ainstr:TAI);
       begin
         inherited create;
         typ:=ait_regalloc;
         ratype:=ra_dealloc;
         reg:=r;
         { ainstr must be an instruction }
-        if assigned(ainstr) and
+        if Assigned(ainstr) and
            (ainstr.typ<>ait_instruction) then
-          internalerror(200411012);
+          InternalError(200411012);
         instr:=ainstr;
       end;
 
 
-    constructor tai_regalloc.sync(r : tregister);
+    constructor TAIRegAlloc.sync(r : TRegister);
       begin
         inherited create;
         typ:=ait_regalloc;
@@ -2459,7 +2459,7 @@ implementation
       end;
 
 
-    constructor tai_regalloc.resize(r : tregister);
+    constructor TAIRegAlloc.resize(r : TRegister);
       begin
         inherited create;
         typ:=ait_regalloc;
@@ -2468,7 +2468,7 @@ implementation
       end;
 
 
-    constructor tai_regalloc.markused(r : tregister);
+    constructor TAIRegAlloc.markused(r : TRegister);
       begin
         inherited create;
         typ:=ait_regalloc;
@@ -2477,19 +2477,19 @@ implementation
       end;
 
 
-    constructor tai_regalloc.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIRegAlloc.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getdata(reg,sizeof(Tregister));
-        ratype:=tregalloctype(ppufile.getbyte);
+        ppufile.getdata(reg,sizeof(TRegister));
+        ratype:=TRegAllocType(ppufile.getbyte);
         keep:=ppufile.getboolean;
       end;
 
 
-    procedure tai_regalloc.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIRegAlloc.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putdata(reg,sizeof(Tregister));
+        ppufile.putdata(reg,sizeof(TRegister));
         ppufile.putbyte(byte(ratype));
         ppufile.putboolean(keep);
       end;
@@ -2499,7 +2499,7 @@ implementation
                                TaiInstruction
 *****************************************************************************}
 
-    constructor tai_cpu_abstract.Create(op : tasmop);
+    constructor TAICPUAbstract.Create(op : TAsmOp);
 
       begin
          inherited create;
@@ -2510,13 +2510,13 @@ implementation
       end;
 
 
-    destructor tai_cpu_abstract.Destroy;
+    destructor TAICPUAbstract.Destroy;
       var
         i : integer;
       begin
         for i:=0 to opercnt-1 do
           freeop(i);
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -2524,18 +2524,18 @@ implementation
     Loading of operands.
   ---------------------------------------------------------------------}
 
-    procedure tai_cpu_abstract.allocate_oper(opers:longint);
+    procedure TAICPUAbstract.allocate_oper(opers:LongInt);
       begin
         while (opers>opercnt) do
           begin
             new(oper[opercnt]);
-            fillchar(oper[opercnt]^,sizeof(toper),0);
+            fillchar(oper[opercnt]^,sizeof(TOper),0);
             inc(opercnt);
           end;
       end;
 
 
-    procedure tai_cpu_abstract.loadconst(opidx:longint;l:tcgint);
+    procedure TAICPUAbstract.loadconst(opidx:LongInt;l:TCGInt);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -2548,9 +2548,9 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.loadsymbol(opidx:longint;s:tasmsymbol;sofs:longint);
+    procedure TAICPUAbstract.loadsymbol(opidx:LongInt;s:TAsmSymbol;sofs:LongInt);
       var
-        r : treference;
+        r : TReference;
       begin
         reference_reset_symbol(r,s,sofs,1,[]);
         r.refaddr:=addr_full;
@@ -2558,10 +2558,10 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.loadlocal(opidx:longint;s:pointer;sofs:longint;indexreg:tregister;scale:byte;getoffset,forceref:boolean);
+    procedure TAICPUAbstract.loadlocal(opidx:LongInt;s:pointer;sofs:LongInt;indexreg:TRegister;scale:byte;getoffset,forceref:boolean);
       begin
-        if not assigned(s) then
-         internalerror(200204251);
+        if not Assigned(s) then
+         InternalError(200204251);
         allocate_oper(opidx+1);
         with oper[opidx]^ do
          begin
@@ -2587,7 +2587,7 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.loadref(opidx:longint;const r:treference);
+    procedure TAICPUAbstract.loadref(opidx:LongInt;const r:TReference);
 {$ifdef x86}
       var
         si_param: ShortInt;
@@ -2609,7 +2609,7 @@ implementation
             if is_x86_parameterized_string_op(opcode) then
               begin
                 si_param:=get_x86_string_op_si_param(opcode);
-                if (si_param<>-1) and (taicpu(self).OperandOrder=op_att) then
+                if (si_param<>-1) and (TAICPU(self).OperandOrder=op_att) then
                   si_param:=x86_parameterized_string_op_param_count(opcode)-si_param-1;
                 if (si_param=opidx) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
                   segprefix:=ref^.segment;
@@ -2620,32 +2620,32 @@ implementation
               segprefix:=ref^.segment;
 {$endif}
 
-            if (cs_create_pic in CurrentSettings.moduleswitches) and
-              assigned(r.symbol) and
-              not assigned(r.relsymbol) and
+            if (cs_create_pic in CurrentSettings.ModuleSwitches) and
+              Assigned(r.symbol) and
+              not Assigned(r.relsymbol) and
               (r.refaddr=addr_no)
 {$ifdef aarch64}
               and not(r.refaddr in [addr_full,addr_gotpageoffset,addr_gotpage])
 {$endif aarch64}
               then
-              internalerror(200502052);
+              InternalError(200502052);
 
             typ:=top_ref;
-            if assigned(add_reg_instruction_hook) then
+            if Assigned(add_reg_instruction_hook) then
               begin
                 add_reg_instruction_hook(self,ref^.base);
                 add_reg_instruction_hook(self,ref^.index);
               end;
             { mark symbol as used }
-            if assigned(ref^.symbol) then
+            if Assigned(ref^.symbol) then
               ref^.symbol.increfs;
-            if assigned(ref^.relsymbol) then
+            if Assigned(ref^.relsymbol) then
               ref^.relsymbol.increfs;
           end;
       end;
 
 
-    procedure tai_cpu_abstract.loadreg(opidx:longint;r:tregister);
+    procedure TAICPUAbstract.loadreg(opidx:LongInt;r:TRegister);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -2655,12 +2655,12 @@ implementation
            reg:=r;
            typ:=top_reg;
          end;
-        if assigned(add_reg_instruction_hook) then
+        if Assigned(add_reg_instruction_hook) then
           add_reg_instruction_hook(self,r);
       end;
 
 
-    procedure tai_cpu_abstract.loadoper(opidx:longint;o:toper);
+    procedure TAICPUAbstract.loadoper(opidx:LongInt;o:TOper);
 {$ifdef x86}
       var
         si_param: ShortInt;
@@ -2675,7 +2675,7 @@ implementation
             case typ of
               top_reg:
                 begin
-                  if assigned(add_reg_instruction_hook) then
+                  if Assigned(add_reg_instruction_hook) then
                     add_reg_instruction_hook(self,reg);
                 end;
               top_ref:
@@ -2688,7 +2688,7 @@ implementation
                   if is_x86_parameterized_string_op(opcode) then
                     begin
                       si_param:=get_x86_string_op_si_param(opcode);
-                      if (si_param<>-1) and (taicpu(self).OperandOrder=op_att) then
+                      if (si_param<>-1) and (TAICPU(self).OperandOrder=op_att) then
                         si_param:=x86_parameterized_string_op_param_count(opcode)-si_param-1;
                       if (si_param=opidx) and (ref^.segment<>NR_NO) and (ref^.segment<>NR_DS) then
                         segprefix:=ref^.segment;
@@ -2698,7 +2698,7 @@ implementation
                   else if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
                     segprefix:=ref^.segment;
 {$endif x86}
-                  if assigned(add_reg_instruction_hook) then
+                  if Assigned(add_reg_instruction_hook) then
                     begin
                       add_reg_instruction_hook(self,ref^.base);
                       add_reg_instruction_hook(self,ref^.index);
@@ -2710,7 +2710,7 @@ implementation
           end;
       end;
 
-    procedure tai_cpu_abstract.clearop(opidx:longint);
+    procedure TAICPUAbstract.clearop(opidx:LongInt);
       begin
         with oper[opidx]^ do
           begin
@@ -2727,7 +2727,7 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.freeop(opidx:longint);
+    procedure TAICPUAbstract.freeop(opidx:LongInt);
       begin
         clearop(opidx);
         dispose(oper[opidx]);
@@ -2738,18 +2738,18 @@ implementation
     Miscellaneous methods.
   ---------------------------------------------------------------------}
 
-    procedure tai_cpu_abstract.SetCondition(const c:TAsmCond);
+    procedure TAICPUAbstract.SetCondition(const c:TAsmCond);
       begin
          condition:=c;
       end;
 
 
-    Function tai_cpu_abstract.getcopy:TLinkedListItem;
+    Function TAICPUAbstract.getcopy:TLinkedListItem;
       var
-        i : longint;
-        p : tai_cpu_abstract;
+        i : LongInt;
+        p : TAICPUAbstract;
       begin
-        p:=tai_cpu_abstract(inherited getcopy);
+        p:=TAICPUAbstract(inherited getcopy);
         { make a copy of the references }
         p.opercnt:=0;
         p.allocate_oper(ops);
@@ -2779,66 +2779,66 @@ implementation
       end;
 
 
-    function tai_cpu_abstract.is_same_reg_move(regtype: Tregistertype):boolean;
+    function TAICPUAbstract.is_same_reg_move(regtype: TRegisterType):boolean;
       begin
         { When the generic RA is used this needs to be overridden, we don't use
           virtual;abstract; to prevent a lot of warnings of unimplemented abstract methods
           when tai_cpu is created (PFV) }
-        internalerror(2004040901);
+        InternalError(2004040901);
         result:=false;
       end;
 
 
-    function tai_cpu_abstract.spilling_get_operation_type(opnr: longint): topertype;
+    function TAICPUAbstract.spilling_get_operation_type(opnr: LongInt): TOperType;
       begin
-        internalerror(2004040902);
+        InternalError(2004040902);
         result:=operand_readwrite;
       end;
 
 
-    function tai_cpu_abstract.spilling_get_operation_type_ref(opnr: longint; reg: tregister): topertype;
+    function TAICPUAbstract.spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;
       begin
         result := operand_read;
       end;
 
 
-    constructor tai_cpu_abstract.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAICPUAbstract.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       var
         i : integer;
       begin
         inherited ppuload(t,ppufile);
         { hopefully, we don't get problems with big/little endian here when cross compiling :/ }
-        ppufile.getdata(condition,sizeof(tasmcond));
+        ppufile.getdata(condition,sizeof(TAsmCond));
         ops := ppufile.getbyte;
         allocate_oper(ops);
         for i:=0 to ops-1 do
           ppuloadoper(ppufile,oper[i]^);
-        opcode:=tasmop(ppufile.getword);
+        opcode:=TAsmOp(ppufile.getword);
 {$ifdef x86}
-        ppufile.getdata(segprefix,sizeof(Tregister));
+        ppufile.getdata(segprefix,sizeof(TRegister));
 {$endif x86}
         is_jmp:=ppufile.getboolean;
       end;
 
 
-    procedure tai_cpu_abstract.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAICPUAbstract.ppuwrite(ppufile:TCompilerPPUFile);
       var
         i : integer;
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putdata(condition,sizeof(tasmcond));
+        ppufile.putdata(condition,sizeof(TAsmCond));
         ppufile.putbyte(ops);
         for i:=0 to ops-1 do
           ppuwriteoper(ppufile,oper[i]^);
         ppufile.putword(word(opcode));
 {$ifdef x86}
-        ppufile.putdata(segprefix,sizeof(Tregister));
+        ppufile.putdata(segprefix,sizeof(TRegister));
 {$endif x86}
         ppufile.putboolean(is_jmp);
       end;
 
 
-    procedure tai_cpu_abstract.buildderefimpl;
+    procedure TAICPUAbstract.buildderefimpl;
       var
         i : integer;
       begin
@@ -2847,7 +2847,7 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.derefimpl;
+    procedure TAICPUAbstract.derefimpl;
       var
         i : integer;
       begin
@@ -2856,42 +2856,42 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract.resetpass1;
+    procedure TAICPUAbstract.resetpass1;
       begin
       end;
 
 
-    procedure tai_cpu_abstract.resetpass2;
+    procedure TAICPUAbstract.resetpass2;
       begin
       end;
 
 
-   function tai_cpu_abstract.Pass1(objdata:TObjData):longint;
+   function TAICPUAbstract.Pass1(objdata:TObjData):LongInt;
       begin
         result:=0;
       end;
 
 
-    procedure tai_cpu_abstract.Pass2(objdata:TObjData);
+    procedure TAICPUAbstract.Pass2(objdata:TObjData);
       begin
       end;
 
 
-    procedure tai_cpu_abstract.ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);
+    procedure TAICPUAbstract.ppuloadoper(ppufile:TCompilerPPUFile;var o:TOper);
       begin
-        o.typ:=toptype(ppufile.getbyte);
+        o.typ:=TOpType(ppufile.getbyte);
         o.ot:=ppufile.getlongint;
         case o.typ of
           top_reg :
-            ppufile.getdata(o.reg,sizeof(Tregister));
+            ppufile.getdata(o.reg,sizeof(TRegister));
           top_ref :
             begin
               new(o.ref);
 {$ifdef x86}
-              ppufile.getdata(o.ref^.segment,sizeof(Tregister));
+              ppufile.getdata(o.ref^.segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.getdata(o.ref^.base,sizeof(Tregister));
-              ppufile.getdata(o.ref^.index,sizeof(Tregister));
+              ppufile.getdata(o.ref^.base,sizeof(TRegister));
+              ppufile.getdata(o.ref^.index,sizeof(TRegister));
               ppufile.getdata(o.ref^.refaddr,sizeof(o.ref^.refaddr));
               o.ref^.scalefactor:=ppufile.getbyte;
               o.ref^.offset:=ppufile.getaint;
@@ -2908,33 +2908,33 @@ implementation
                   ppufile.getderef(localsymderef);
                   localsymofs:=ppufile.getaint;
 {$ifdef x86}
-                  localsegment:=tregister(ppufile.getlongint);
+                  localsegment:=TRegister(ppufile.getlongint);
 {$endif x86}
-                  localindexreg:=tregister(ppufile.getlongint);
+                  localindexreg:=TRegister(ppufile.getlongint);
                   localscale:=ppufile.getbyte;
                   localgetoffset:=(ppufile.getbyte<>0);
                 end;
             end;
           else
-            internalerror(2007010210);
+            InternalError(2007010210);
         end;
       end;
 
 
-    procedure tai_cpu_abstract.ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);
+    procedure TAICPUAbstract.ppuwriteoper(ppufile:TCompilerPPUFile;const o:TOper);
       begin
         ppufile.putbyte(byte(o.typ));
         ppufile.putlongint(o.ot);
         case o.typ of
           top_reg :
-            ppufile.putdata(o.reg,sizeof(Tregister));
+            ppufile.putdata(o.reg,sizeof(TRegister));
           top_ref :
             begin
 {$ifdef x86}
-              ppufile.putdata(o.ref^.segment,sizeof(Tregister));
+              ppufile.putdata(o.ref^.segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.putdata(o.ref^.base,sizeof(Tregister));
-              ppufile.putdata(o.ref^.index,sizeof(Tregister));
+              ppufile.putdata(o.ref^.base,sizeof(TRegister));
+              ppufile.putdata(o.ref^.index,sizeof(TRegister));
               ppufile.putdata(o.ref^.refaddr,sizeof(o.ref^.refaddr));
               ppufile.putbyte(o.ref^.scalefactor);
               ppufile.putaint(o.ref^.offset);
@@ -2950,15 +2950,15 @@ implementation
                   ppufile.putderef(localsymderef);
                   ppufile.putaint(localsymofs);
 {$ifdef x86}
-                  ppufile.putlongint(longint(localsegment));
+                  ppufile.putlongint(LongInt(localsegment));
 {$endif x86}
-                  ppufile.putlongint(longint(localindexreg));
+                  ppufile.putlongint(LongInt(localindexreg));
                   ppufile.putbyte(localscale);
                   ppufile.putbyte(byte(localgetoffset));
                 end;
             end;
           else
-            internalerror(2007010211);
+            InternalError(2007010211);
         end;
       end;
 
@@ -2966,13 +2966,13 @@ implementation
                               tai_align_abstract
  ****************************************************************************}
 
-     constructor tai_align_abstract.Create(b: byte);
+     constructor TAIAlignAbstract.Create(b: byte);
        begin
           inherited Create;
           typ:=ait_align;
 {$ifdef EXTDEBUG}
-          if upper(classname)='TAI_ALIGN_ABSTRACT' then
-            internalerror(200709191);
+          if upper(classname)='TAIALIGNABSTRACT' then
+            InternalError(200709191);
 {$endif EXTDEBUG}
           if b in [1,2,4,8,16,32,64] then
             aligntype := b
@@ -2985,7 +2985,7 @@ implementation
        end;
 
 
-     constructor tai_align_abstract.Create_op(b: byte; _op: byte);
+     constructor TAIAlignAbstract.Create_op(b: byte; _op: byte);
        begin
           inherited Create;
           typ:=ait_align;
@@ -3000,7 +3000,7 @@ implementation
        end;
 
 
-     constructor tai_align_abstract.create_max(b : byte; max : byte);
+     constructor TAIAlignAbstract.create_max(b : byte; max : byte);
        begin
           inherited Create;
           typ:=ait_align;
@@ -3015,7 +3015,7 @@ implementation
        end;
 
 
-     constructor tai_align_abstract.create_op_max(b: byte; _op: byte; max: byte);
+     constructor TAIAlignAbstract.create_op_max(b: byte; _op: byte; max: byte);
        begin
           inherited Create;
           typ:=ait_align;
@@ -3030,7 +3030,7 @@ implementation
        end;
 
 
-     constructor tai_align_abstract.Create_zeros(b: byte);
+     constructor TAIAlignAbstract.Create_zeros(b: byte);
        begin
           inherited Create;
           typ:=ait_align;
@@ -3045,16 +3045,16 @@ implementation
        end;
 
 
-     function tai_align_abstract.calculatefillbuf(var buf : tfillbuffer;executable : boolean):pchar;
+     function TAIAlignAbstract.calculatefillbuf(var buf : TFillBuffer;executable : boolean):pchar;
        begin
          if fillsize>sizeof(buf) then
-           internalerror(200404293);
+           InternalError(200404293);
          fillchar(buf,high(buf),fillop);
          calculatefillbuf:=pchar(@buf);
        end;
 
 
-    constructor tai_align_abstract.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIAlignAbstract.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         aligntype:=ppufile.getbyte;
@@ -3065,7 +3065,7 @@ implementation
       end;
 
 
-    procedure tai_align_abstract.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIAlignAbstract.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(aligntype);
@@ -3109,7 +3109,7 @@ implementation
         sd_none        { savenv }
       );
 
-    constructor tai_seh_directive.create(_kind:TAsmSehDirective);
+    constructor TAISEHDirective.create(_kind:TAsmSehDirective);
       begin
         inherited Create;
         typ:=ait_seh_directive;
@@ -3117,25 +3117,25 @@ implementation
         data.typ:=datatypemap[_kind];
       end;
 
-    constructor tai_seh_directive.create_name(_kind:TAsmSehDirective;const _name:string);
+    constructor TAISEHDirective.create_name(_kind:TAsmSehDirective;const _name:string);
       begin
         create(_kind);
-        data.name:=stringdup(_name);
+        data.name:=StringDup(_name);
       end;
 
-    constructor tai_seh_directive.create_reg(_kind:TAsmSehDirective;r:TRegister);
+    constructor TAISEHDirective.create_reg(_kind:TAsmSehDirective;r:TRegister);
       begin
         create(_kind);
         data.reg:=r;
       end;
 
-    constructor tai_seh_directive.create_offset(_kind:TAsmSehDirective;ofs:dword);
+    constructor TAISEHDirective.create_offset(_kind:TAsmSehDirective;ofs:dword);
       begin
         create(_kind);
         data.offset:=ofs;
       end;
 
-    constructor tai_seh_directive.create_reg_offset(_kind:TAsmSehDirective;
+    constructor TAISEHDirective.create_reg_offset(_kind:TAsmSehDirective;
       r:TRegister;ofs:dword);
       begin
         create(_kind);
@@ -3143,7 +3143,7 @@ implementation
         data.reg:=r;
       end;
 
-    constructor tai_seh_directive.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAISEHDirective.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         kind:=TAsmSehDirective(ppufile.getbyte);
@@ -3164,14 +3164,14 @@ implementation
         end;
       end;
 
-    destructor tai_seh_directive.destroy;
+    destructor TAISEHDirective.Destroy;
       begin
         if data.typ=sd_string then
-          stringdispose(data.name);
-        inherited destroy;
+          StringDispose(data.name);
+        inherited Destroy;
       end;
 
-    procedure tai_seh_directive.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAISEHDirective.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(ord(kind));
@@ -3191,7 +3191,7 @@ implementation
         end;
       end;
 
-    procedure tai_seh_directive.generate_code(objdata:TObjData);
+    procedure TAISEHDirective.generate_code(objdata:TObjData);
       begin
       end;
 
@@ -3200,7 +3200,7 @@ implementation
                               tai_attribute
  ****************************************************************************}
 
-    constructor tai_attribute.create(atyp : taitype; atag,avalue : dword);
+    constructor TAIAttribute.create(atyp : TAIType; atag,avalue : dword);
       begin
         inherited Create;
         typ:=atyp;
@@ -3210,7 +3210,7 @@ implementation
       end;
 
 
-    constructor tai_attribute.create(atyp : taitype; atag: dword; const avalue: string);
+    constructor TAIAttribute.create(atyp : TAIType; atag: dword; const avalue: string);
       begin
         inherited Create;
         typ:=atyp;
@@ -3220,18 +3220,18 @@ implementation
       end;
 
 
-    destructor tai_attribute.destroy;
+    destructor TAIAttribute.Destroy;
       begin
         Inherited Destroy;
       end;
 
 
-    constructor tai_attribute.ppuload(t:taitype;ppufile:TCompilerPPUFile);
+    constructor TAIAttribute.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
       end;
 
 
-    procedure tai_attribute.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TAIAttribute.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putdword(tag);
@@ -3243,7 +3243,7 @@ implementation
 begin
 {$push}{$warnings off}
   { taitype should fit into a 4 byte set for speed reasons }
-  if ord(high(taitype))>31 then
-    internalerror(201108181);
+  if ord(high(TAIType))>31 then
+    InternalError(201108181);
 {$pop}
 end.

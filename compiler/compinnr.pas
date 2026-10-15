@@ -26,7 +26,7 @@ const
   in_x86_mm_first    = 11000;
 
 type
-   tinlinenumber=(
+   TInlineNumber=(
      in_none              = -1,
 { Internal functions }
      in_lo_word           = 1,

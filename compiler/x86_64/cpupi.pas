@@ -28,25 +28,25 @@ unit cpupi;
 interface
 
     uses
-       globtype,
+       GlobType,
        psub,
-       procinfo,psabiehpi,
-       aasmbase,aasmdata;
+       ProcInfo,psabiehpi,
+       aasmbase,AAsmData;
 
     type
-       tcpuprocinfo = class(tpsabiehprocinfo)
+       TCPUProcInfo = class(TPSABIEHProcInfo)
        private
          scopes: TAsmList;
-         scopecount: longint;
+         scopecount: LongInt;
          unwindflags: byte;
        public
          procedure set_first_temp_offset;override;
          procedure generate_parameter_info;override;
-         function calc_stackframe_size:longint;override;
+         function calc_stackframe_size:LongInt;override;
          procedure add_finally_scope(startlabel,endlabel,handler:TAsmSymbol;implicit:Boolean);
          procedure add_except_scope(trylabel,exceptlabel,endlabel,filter:TAsmSymbol);
          procedure dump_scopes(list:TAsmList);
-         destructor destroy;override;
+         destructor Destroy;override;
        end;
 
     function x86_64_use_ms_abi(proccall: TProcCallOption): boolean;
@@ -54,21 +54,21 @@ interface
 implementation
 
     uses
-      systems,
-      globals,
-      cutils,
+      Systems,
+      Globals,
+      CUtils,
       symconst,
-      symtable,
+      SymTable,
       aasmtai,
       tgobj,
-      fmodule;
+      FModule;
 
     const
       SCOPE_FINALLY=0;
       SCOPE_CATCHALL=1;
       SCOPE_IMPLICIT=2;
 
-    procedure tcpuprocinfo.set_first_temp_offset;
+    procedure TCPUProcInfo.set_first_temp_offset;
       begin
         if TargetInfo.system=system_x86_64_win64 then
           begin
@@ -92,7 +92,7 @@ implementation
       end;
 
 
-    procedure tcpuprocinfo.generate_parameter_info;
+    procedure TCPUProcInfo.generate_parameter_info;
       begin
         inherited generate_parameter_info;
         if TargetInfo.system=system_x86_64_win64 then
@@ -100,9 +100,9 @@ implementation
       end;
 
 
-    function tcpuprocinfo.calc_stackframe_size:longint;
+    function TCPUProcInfo.calc_stackframe_size:LongInt;
       begin
-        maxpushedparasize:=align(maxpushedparasize,max(CurrentSettings.alignment.localalignmin,16));
+        maxpushedparasize:=align(maxpushedparasize,max(CurrentSettings.alignment.LocalAlignMin,16));
         { Note 1: when tg.direction>0, tg.lasttemp is already offset by maxpushedparasize
                   (because tg.setfirsttemp also sets lasttemp)
           Note 2: Align to 8 bytes here. The final 16-byte alignment is handled in
@@ -114,7 +114,7 @@ implementation
           result:=Align(tg.direction*tg.lasttemp+maxpushedparasize,8);
       end;
 
-    procedure tcpuprocinfo.add_finally_scope(startlabel,endlabel,handler:TAsmSymbol;implicit:Boolean);
+    procedure TCPUProcInfo.add_finally_scope(startlabel,endlabel,handler:TAsmSymbol;implicit:Boolean);
       begin
         unwindflags:=unwindflags or 2;
         if implicit then  { also needs catch functionality }
@@ -124,15 +124,15 @@ implementation
           scopes:=TAsmList.Create;
 
         if implicit then
-          scopes.concat(tai_const.create_32bit(SCOPE_IMPLICIT))
+          scopes.concat(TAIConst.create_32bit(SCOPE_IMPLICIT))
         else
-          scopes.concat(tai_const.create_32bit(SCOPE_FINALLY));
-        scopes.concat(tai_const.create_rva_sym(startlabel));
-        scopes.concat(tai_const.create_rva_sym(endlabel));
-        scopes.concat(tai_const.create_rva_sym(handler));
+          scopes.concat(TAIConst.create_32bit(SCOPE_FINALLY));
+        scopes.concat(TAIConst.create_rva_sym(startlabel));
+        scopes.concat(TAIConst.create_rva_sym(endlabel));
+        scopes.concat(TAIConst.create_rva_sym(handler));
       end;
 
-    procedure tcpuprocinfo.add_except_scope(trylabel,exceptlabel,endlabel,filter:TAsmSymbol);
+    procedure TCPUProcInfo.add_except_scope(trylabel,exceptlabel,endlabel,filter:TAsmSymbol);
       begin
         unwindflags:=unwindflags or 3;
         inc(scopecount);
@@ -140,17 +140,17 @@ implementation
           scopes:=TAsmList.Create;
 
         if Assigned(filter) then
-          scopes.concat(tai_const.create_rva_sym(filter))
+          scopes.concat(TAIConst.create_rva_sym(filter))
         else
-          scopes.concat(tai_const.create_32bit(SCOPE_CATCHALL));
-        scopes.concat(tai_const.create_rva_sym(trylabel));
-        scopes.concat(tai_const.create_rva_sym(exceptlabel));
-        scopes.concat(tai_const.create_rva_sym(endlabel));
+          scopes.concat(TAIConst.create_32bit(SCOPE_CATCHALL));
+        scopes.concat(TAIConst.create_rva_sym(trylabel));
+        scopes.concat(TAIConst.create_rva_sym(exceptlabel));
+        scopes.concat(TAIConst.create_rva_sym(endlabel));
       end;
 
-    procedure tcpuprocinfo.dump_scopes(list: TAsmList);
+    procedure TCPUProcInfo.dump_scopes(list: TAsmList);
       var
-        hdir: tai_seh_directive;
+        hdir: TAISEHDirective;
         profiled: boolean;
       begin
         profiled:=nexus_profile_proc_eligible(self);
@@ -158,31 +158,31 @@ implementation
           exit;
         if profiled then
           begin
-            hdir:=cai_seh_directive.create_name(ash_handler,'__NXP_specific_handler');
+            hdir:=CAISEHDirective.create_name(ash_handler,'__NXP_specific_handler');
             CurrentModule.add_extern_asmsym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
             CurrentModule.add_extern_asmsym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags or 2;
           end
         else
           begin
-            hdir:=cai_seh_directive.create_name(ash_handler,'__FPC_specific_handler');
+            hdir:=CAISEHDirective.create_name(ash_handler,'__FPC_specific_handler');
             if not systemunit.iscurrentunit then
               CurrentModule.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags;
           end;
         list.concat(hdir);
-        list.concat(cai_seh_directive.create(ash_handlerdata));
+        list.concat(CAISEHDirective.create(ash_handlerdata));
         inc(list.section_count);
-        list.concat(tai_const.create_32bit(scopecount));
-        if assigned(scopes) then
-          list.concatlist(scopes);
+        list.concat(TAIConst.create_32bit(scopecount));
+        if Assigned(scopes) then
+          list.ConcatList(scopes);
         if profiled then
           begin
             { Versioned trailer following the untouched FPC scope table. }
-            list.concat(tai_const.create_32bit($4850584E)); { NXPH }
-            list.concat(tai_const.create_32bit(1));
-            list.concat(tai_const.create_sym(nexus_profile_descsym));
-            list.concat(tai_const.create_sym(
+            list.concat(TAIConst.create_32bit($4850584E)); { NXPH }
+            list.concat(TAIConst.create_32bit(1));
+            list.concat(TAIConst.create_sym(nexus_profile_descsym));
+            list.concat(TAIConst.create_sym(
               CurrentAsmData.RefAsmSymbol('nxp_unwind',AT_FUNCTION)));
           end;
         { return to text, required for GAS compatibility }
@@ -190,10 +190,10 @@ implementation
         new_section(list,sec_code,lower(procdef.mangledname),0);
       end;
 
-    destructor tcpuprocinfo.destroy;
+    destructor TCPUProcInfo.Destroy;
       begin
         scopes.free;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -207,5 +207,5 @@ implementation
 
 
 begin
-   cprocinfo:=tcpuprocinfo;
+   CProcInfo:=TCPUProcInfo;
 end.

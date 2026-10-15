@@ -38,12 +38,12 @@ interface
 
     type
       // flags of the *handle_calling_convention routines
-      thccflag=(
+      THCCFlag=(
         hcc_declaration,          // declaration (as opposed to definition, i.e. interface rather than implementation)
         hcc_check,                // perform checks and output errors if found
         hcc_insert_hidden_paras   // insert hidden parameters
       );
-      thccflags=set of thccflag;
+      THCCFlags=set of THCCFlag;
 
     const
       hcc_default_actions_intf=[hcc_declaration,hcc_check,hcc_insert_hidden_paras];
@@ -53,7 +53,7 @@ interface
       PD_VIRTUAL_MUTEXCLPO = [po_interrupt,po_exports,po_overridingmethod,po_inline,po_staticmethod];
 
     { may take procdef, procvardef or defs for which is_funcref is true }
-    procedure handle_calling_convention(pd_or_invkdef:TDef;flags:thccflags);
+    procedure handle_calling_convention(pd_or_invkdef:TDef;flags:THCCFlags);
     function proc_add_definition(var currpd:TProcDef):boolean;
 
     { create "parent frame pointer" record skeleton for procdef, in which local
@@ -64,9 +64,9 @@ interface
 implementation
 
     uses
-      globals,globtype,cclasses,cutils,verbose,systems,fmodule,
+      Globals,GlobType,CClasses,CUtils,Verbose,Systems,FModule,
       tokens,
-      symbase,symsym,symtable,symutil,defutil,defcmp,blockutl,
+      SymBase,SymSym,SymTable,symutil,defutil,defcmp,blockutl,
       node,nbas,
       aasmbase,
       paramgr;
@@ -87,7 +87,7 @@ implementation
              done earlier }
            not ((pd.typ=procdef) and TProcDef(pd).was_anonymous) and
            paramanager.ret_in_param(pd.returndef,pd) and
-           not assigned(pd.parast.find(name_result)) then
+           not Assigned(pd.parast.find(name_result)) then
          begin
            storepos:=CurrentTokenPos;
            if pd.typ=procdef then
@@ -113,7 +113,7 @@ implementation
            else
              paranr:=paranr_result;
            { Generate result variable accessing function result }
-           vs:=cparavarsym.create('$'+name_result,paranr,vs_var,pd.returndef,[vo_is_funcret,vo_is_hidden_para]);
+           vs:=CParaVarSym.create('$'+name_result,paranr,vs_var,pd.returndef,[vo_is_funcret,vo_is_hidden_para]);
            pd.parast.insertsym(vs);
            { Store this symbol as funcretsym for procedures }
            if pd.typ=procdef then
@@ -130,10 +130,10 @@ implementation
       var
         storepos : TFilePosInfo;
         vs       : TParaVarSym;
-        paranr   : longint;
+        paranr   : LongInt;
       begin
         if (pd.parast.symtablelevel>normal_function_level) and
-           not assigned(pd.parast.find(name_parentfp)) then
+           not Assigned(pd.parast.find(name_parentfp)) then
           begin
             storepos:=CurrentTokenPos;
             if pd.typ=procdef then
@@ -142,7 +142,7 @@ implementation
             { if no support for nested procvars is activated, use the old
               calling convention to pass the parent frame pointer for backwards
               compatibility }
-            if not(m_nested_procvars in CurrentSettings.modeswitches) then
+            if not(m_nested_procvars in CurrentSettings.ModeSwitches) then
               paranr:=paranr_parentfp
             { nested procvars require Delphi-style parentfp passing, see
               po_delphi_nested_cc declaration for more info }
@@ -156,7 +156,7 @@ implementation
               must be accessible from nested routines }
 
               begin
-                vs:=cparavarsym.create('$'+name_parentfp,paranr,vs_value
+                vs:=CParaVarSym.create('$'+name_parentfp,paranr,vs_value
                       ,parentfpvoidpointertype,[vo_is_parentfp,vo_is_hidden_para]);
               end
 
@@ -187,16 +187,16 @@ implementation
            is_objc_class_or_protocol(TProcDef(pd).struct) and
            (pd.parast.symtablelevel=normal_function_level) then
           begin
-            if not assigned(pd.parast.find(name_cmd)) or
-                not assigned(pd.parast.find(name_self)) then
+            if not Assigned(pd.parast.find(name_cmd)) or
+                not Assigned(pd.parast.find(name_self)) then
               begin
                 { insert Objective-C self and selector parameters }
-                vs:=cparavarsym.create('$'+name_cmd,paranr_objc_cmd,vs_value,objc_seltype,[vo_is_msgsel,vo_is_hidden_para]);
+                vs:=CParaVarSym.create('$'+name_cmd,paranr_objc_cmd,vs_value,objc_seltype,[vo_is_msgsel,vo_is_hidden_para]);
                 pd.parast.insertsym(vs);
                 { make accessible to code }
                 sl:=TPropAccessList.create;
                 sl.addsym(sl_load,vs);
-                aliasvs:=cabsolutevarsym.create_ref('_CMD',objc_seltype,sl);
+                aliasvs:=CAbsoluteVarSym.create_ref('_CMD',objc_seltype,sl);
                 include(aliasvs.varoptions,vo_is_msgsel);
                 TLocalSymTable(TProcDef(pd).localst).insertsym(aliasvs);
 
@@ -206,17 +206,17 @@ implementation
                 else
                   hdef:=TProcDef(pd).struct;
 
-                vs:=cparavarsym.create('$'+name_self,paranr_objc_self,vs_value,hdef,[vo_is_self,vo_is_hidden_para]);
+                vs:=CParaVarSym.create('$'+name_self,paranr_objc_self,vs_value,hdef,[vo_is_self,vo_is_hidden_para]);
                 pd.parast.insertsym(vs);
               end;
           end
         else if (pd.typ=procvardef) and
            pd.is_methodpointer then
           begin
-            if not assigned(pd.parast.find(name_self)) then
+            if not Assigned(pd.parast.find(name_self)) then
               begin
                 { Generate self variable }
-                vs:=cparavarsym.create('$'+name_self,paranr_self,vs_value,voidpointertype,[vo_is_self,vo_is_hidden_para]);
+                vs:=CParaVarSym.create('$'+name_self,paranr_self,vs_value,voidpointertype,[vo_is_self,vo_is_hidden_para]);
                 pd.parast.insertsym(vs);
               end;
           end
@@ -225,15 +225,15 @@ implementation
           block wrappers }
         else if (po_is_block in pd.procoptions) then
           begin
-            if not assigned(pd.parast.find('$'+name_block_literal)) then
+            if not Assigned(pd.parast.find('$'+name_block_literal)) then
               begin
                 { generate the first hidden parameter, which is a so-called "block
                   literal" describing the block and containing its invocation
                   procedure  }
-                hdef:=cpointerdef.getreusable(get_block_literal_type_for_proc(pd));
+                hdef:=CPointerDef.getreusable(get_block_literal_type_for_proc(pd));
                 { mark as vo_is_parentfp so that proc2procvar comparisons will
                   succeed when assigning arbitrary routines to the block }
-                vs:=cparavarsym.create('$'+name_block_literal,paranr_blockselfpara,vs_value,
+                vs:=CParaVarSym.create('$'+name_block_literal,paranr_blockselfpara,vs_value,
                   hdef,[vo_is_hidden_para,vo_is_parentfp]
                 );
                 pd.parast.insertsym(vs);
@@ -242,7 +242,7 @@ implementation
                     { make accessible to code }
                     sl:=TPropAccessList.create;
                     sl.addsym(sl_load,vs);
-                    aliasvs:=cabsolutevarsym.create_ref('FPC_BLOCK_SELF',hdef,sl);
+                    aliasvs:=CAbsoluteVarSym.create_ref('FPC_BLOCK_SELF',hdef,sl);
                     include(aliasvs.varoptions,vo_is_parentfp);
                     TLocalSymTable(TProcDef(pd).localst).insertsym(aliasvs);
                   end;
@@ -251,7 +251,7 @@ implementation
         else
           begin
              if (pd.typ=procdef) and
-                assigned(TProcDef(pd).struct) and
+                Assigned(TProcDef(pd).struct) and
                 (
                   (pd.parast.symtablelevel=normal_function_level) or
                   ([po_anonymous,po_methodpointer]<=pd.procoptions)
@@ -274,9 +274,9 @@ implementation
                          is_objectpascal_helper(TProcDef(pd).struct) and
                          (TObjectDef(TProcDef(pd).struct).extendeddef.typ<>objectdef)
                        )) and
-                   not assigned(pd.parast.find(name_vmt)) then
+                   not Assigned(pd.parast.find(name_vmt)) then
                  begin
-                   vs:=cparavarsym.create('$'+name_vmt,paranr_vmt,vs_value,cclassrefdef.create(TProcDef(pd).struct),[vo_is_vmt,vo_is_hidden_para]);
+                   vs:=CParaVarSym.create('$'+name_vmt,paranr_vmt,vs_value,CClassRefDef.create(TProcDef(pd).struct),[vo_is_vmt,vo_is_hidden_para]);
                    pd.parast.insertsym(vs);
                  end;
 
@@ -294,7 +294,7 @@ implementation
                 vsp:=vs_value;
                 if (po_staticmethod in pd.procoptions) or
                    (po_classmethod in pd.procoptions) then
-                  hdef:=cclassrefdef.create(selfdef)
+                  hdef:=CClassRefDef.create(selfdef)
                 else
                   begin
                     if is_object(selfdef) or (selfdef.typ<>objectdef) then
@@ -302,9 +302,9 @@ implementation
                     hdef:=selfdef;
                   end;
                 vs:=TParaVarSym(pd.parast.find(name_self));
-                if not assigned(vs) or (vs.typ<>paravarsym) or (vs.vardef<>hdef) then
+                if not Assigned(vs) or (vs.typ<>paravarsym) or (vs.vardef<>hdef) then
                   begin
-                    vs:=cparavarsym.create('$'+name_self,paranr_self,vsp,hdef,[vo_is_self,vo_is_hidden_para]);
+                    vs:=CParaVarSym.create('$'+name_self,paranr_self,vsp,hdef,[vo_is_self,vo_is_hidden_para]);
                     pd.parast.insertsym(vs);
                   end;
 
@@ -338,7 +338,7 @@ implementation
            if (df_generic in pd.defoptions) or
                not paramanager.ret_in_param(pd.returndef,pd) then
             begin
-              vs:=clocalvarsym.create('$result',vs_value,pd.returndef,[vo_is_funcret]);
+              vs:=CLocalVarSym.create('$result',vs_value,pd.returndef,[vo_is_funcret]);
               pd.localst.insertsym(vs,false);
               pd.funcretsym:=vs;
             end;
@@ -351,9 +351,9 @@ implementation
            if (
                  (pd.proctypeoption<>potype_operator) and
                  not (po_anonymous in pd.procoptions)
-               ) or assigned(pd.resultname) then
+               ) or Assigned(pd.resultname) then
              begin
-               if assigned(pd.resultname) then
+               if Assigned(pd.resultname) then
                  hs:=pd.resultname^
                else
                  hs:=pd.procsym.name;
@@ -361,17 +361,17 @@ implementation
                  hs:='$_result';
                sl:=TPropAccessList.create;
                sl.addsym(sl_load,pd.funcretsym);
-               aliasvs:=cabsolutevarsym.create_ref(hs,pd.returndef,sl);
+               aliasvs:=CAbsoluteVarSym.create_ref(hs,pd.returndef,sl);
                include(aliasvs.varoptions,vo_is_funcret);
                TLocalSymTable(pd.localst).insertsym(aliasvs);
              end;
 
            { insert result also if support is on }
-           if (m_result in CurrentSettings.modeswitches) then
+           if (m_result in CurrentSettings.ModeSwitches) then
             begin
               sl:=TPropAccessList.create;
               sl.addsym(sl_load,pd.funcretsym);
-              aliasvs:=cabsolutevarsym.create_ref('RESULT',pd.returndef,sl);
+              aliasvs:=CAbsoluteVarSym.create_ref('RESULT',pd.returndef,sl);
               include(aliasvs.varoptions,vo_is_funcret);
               include(aliasvs.varoptions,vo_is_result);
               TLocalSymTable(pd.localst).insertsym(aliasvs);
@@ -383,7 +383,7 @@ implementation
           begin
             { vo_is_funcret is necessary so the local only gets freed after we loaded its
               value into the return register }
-            vs:=clocalvarsym.create('$safecallresult',vs_value,search_system_type('HRESULT').typedef,[vo_is_funcret]);
+            vs:=CLocalVarSym.create('$safecallresult',vs_value,search_system_type('HRESULT').typedef,[vo_is_funcret]);
             { do not put this variable in a register. The register which will be bound
               to this symbol will not be allocated automatically. Which means it will
               be re-used which breaks the code. Besides this it is questionable if it is
@@ -405,7 +405,7 @@ implementation
         name_high = 'high';
         name_typinfo = 'typinfo';
       var
-        n   : tsymstr;
+        n   : TSymStr;
         hvs : TParaVarSym;
         pd  : TAbstractProcDef absolute arg;
       begin
@@ -437,10 +437,10 @@ implementation
            if paramanager.push_high_param(varspez,vardef,pd.proccalloption) then
              begin
                n:=name_high+name;
-               if not assigned(owner.find(n)) then
+               if not Assigned(owner.find(n)) then
                  begin
 
-                     hvs:=cparavarsym.create('$'+n,paranr+1,vs_const,sizesinttype,[vo_is_high_para,vo_is_hidden_para]);
+                     hvs:=CParaVarSym.create('$'+n,paranr+1,vs_const,sizesinttype,[vo_is_high_para,vo_is_hidden_para]);
                    hvs.symoptions:=[];
                    owner.insertsym(hvs);
                    { don't place to register if it will be accessed from implicit finally block }
@@ -470,9 +470,9 @@ implementation
               if (vardef.typ=formaldef) and (TFormalDef(vardef).typed) then
                 begin
                   n:=name_typinfo+name;
-                  if not assigned(owner.find(n)) then
+                  if not Assigned(owner.find(n)) then
                     begin
-                      hvs:=cparavarsym.create('$'+n,paranr+1,vs_const,voidpointertype,
+                      hvs:=CParaVarSym.create('$'+n,paranr+1,vs_const,voidpointertype,
                                               [vo_is_typinfo_para,vo_is_hidden_para]);
                       owner.insertsym(hvs);
                     end;
@@ -485,7 +485,7 @@ implementation
     procedure check_c_para(pd:TAbstractProcDef);
       var
         i,
-        lastparaidx : longint;
+        lastparaidx : LongInt;
         sym : TSym;
       begin
         lastparaidx:=pd.parast.SymList.Count-1;
@@ -512,7 +512,7 @@ implementation
     procedure insert_struct_hidden_paras(astruct: TAbstractRecordDef);
       var
         pd: TDef;
-        i: longint;
+        i: LongInt;
         oldpos: TFilePosInfo;
       begin
         // handle calling conventions of record methods
@@ -520,9 +520,9 @@ implementation
         { don't keep track of procdefs in a separate list, because the
           compiler may add additional procdefs (e.g. property wrappers for
           the jvm backend) }
-        for i := 0 to astruct.symtable.deflist.count - 1 do
+        for i := 0 to astruct.SymTable.deflist.count - 1 do
           begin
-            pd:=TDef(astruct.symtable.deflist[i]);
+            pd:=TDef(astruct.SymTable.deflist[i]);
             if pd.typ<>procdef then
               continue;
             CurrentFilePos:=TProcDef(pd).fileinfo;
@@ -545,7 +545,7 @@ implementation
       end;
 
 
-    procedure handle_calling_convention(pd_or_invkdef:TDef;flags:thccflags);
+    procedure handle_calling_convention(pd_or_invkdef:TDef;flags:THCCFlags);
       var
         pd : TAbstractProcDef;
       begin
@@ -554,7 +554,7 @@ implementation
         else if pd_or_invkdef.typ in [procdef,procvardef] then
           pd:=TAbstractProcDef(pd_or_invkdef)
         else
-          internalerror(2022012502);
+          InternalError(2022012502);
         if hcc_check in flags then
           begin
             { set the default calling convention if none provided }
@@ -564,18 +564,18 @@ implementation
               begin
                 { none of the explicit calling conventions should be allowed }
                 if (po_hascallingconvention in pd.procoptions) then
-                  internalerror(2009032501);
+                  InternalError(2009032501);
                 if is_cppclass(TProcDef(pd).struct) then
                   pd.proccalloption:=pocall_cppdecl
                 else
                   pd.proccalloption:=pocall_cdecl;
               end
             else if not(po_hascallingconvention in pd.procoptions) then
-              pd.proccalloption:=CurrentSettings.defproccall
+              pd.proccalloption:=CurrentSettings.DefProcCall
             else
               begin
                 if pd.proccalloption=pocall_none then
-                  internalerror(200309081);
+                  InternalError(200309081);
               end;
 
             { handle proccall specific settings }
@@ -599,11 +599,11 @@ implementation
 
             { Inlining is enabled and supported? }
             if (po_inline in pd.procoptions) and
-               not(cs_do_inline in CurrentSettings.localswitches) then
+               not(cs_do_inline in CurrentSettings.LocalSwitches) then
               begin
                 { Give an error if inline is not supported by the compiler mode,
                   otherwise only give a hint that this procedure will not be inlined }
-                if not(m_default_inline in CurrentSettings.modeswitches) then
+                if not(m_default_inline in CurrentSettings.ModeSwitches) then
                   Message(parser_e_proc_inline_not_supported)
                 else
                   Message(parser_h_inlining_disabled);
@@ -646,7 +646,7 @@ implementation
               we add them, as users of this information would not process these extra
               parameters in that case }
             if pd.has_paraloc_info<>callnoside then
-              internalerror(2019031610);
+              InternalError(2019031610);
 
             { insert hidden high parameters }
             pd.parast.SymList.ForEachCall(@insert_hidden_para,pd);
@@ -677,7 +677,7 @@ implementation
 
       function check_generic_parameters(fwpd,currpd:TProcDef):boolean;
         var
-          i : longint;
+          i : LongInt;
           fwsym,
           currsym : TSym;
           currtype : TTypeSym absolute currsym;
@@ -685,7 +685,7 @@ implementation
         begin
           result:=true;
           if fwpd.genericparas.count<>currpd.genericparas.count then
-            internalerror(2018090101);
+            InternalError(2018090101);
           for i:=0 to fwpd.genericparas.count-1 do
             begin
               fwsym:=TSym(fwpd.genericparas[i]);
@@ -696,7 +696,7 @@ implementation
                   messagepos1(fwsym.fileinfo,sym_e_generic_type_param_decl,fwsym.realname);
                   result:=false;
                 end;
-              if (fwpd.interfacedef or assigned(fwpd.struct)) and
+              if (fwpd.interfacedef or Assigned(fwpd.struct)) and
                  (
                    ((currsym.typ=typesym) and (df_genconstraint in currtype.typedef.defoptions)) or
                    (currsym.typ=constsym)
@@ -709,7 +709,7 @@ implementation
                   messagepos(fileinfo,parser_e_generic_constraints_not_allowed_here);
                   result:=false;
                 end;
-              if not fwpd.interfacedef and not assigned(fwpd.struct) and
+              if not fwpd.interfacedef and not Assigned(fwpd.struct) and
                  (fwsym.typ=constsym) then
                 begin
                   { without modeswitch RepeatForward we need to check here
@@ -726,11 +726,11 @@ implementation
 
       function equal_generic_procdefs(fwpd,currpd:TProcDef;out sameparas,sameret:boolean):boolean;
         var
-          i : longint;
+          i : LongInt;
           fwsym,
           currsym : TSym;
           currtype : TTypeSym absolute currsym;
-          convdummy: tconverttype;
+          convdummy: TConvertType;
           pddummy: TProcDef;
         begin
           result:=false;
@@ -817,9 +817,9 @@ implementation
         fwparacnt,
         curridx,
         fwidx,
-        i       : longint;
+        i       : LongInt;
         po_comp : TProcOptions;
-        paracompopt: tcompare_paras_options;
+        paracompopt: TCompareParasOptions;
         sameparasfound,
         gensameparas,
         gensameret,
@@ -827,12 +827,12 @@ implementation
         sameret,
         forwardfound : boolean;
         symentry: TSymEntry;
-        item : tlinkedlistitem;
+        item : TLinkedListItem;
       begin
         forwardfound:=false;
 
-        if assigned(currpd.struct) and
-           (currpd.struct.symtable.moduleid<>CurrentModule.moduleid) and
+        if Assigned(currpd.struct) and
+           (currpd.struct.SymTable.ModuleID<>CurrentModule.ModuleID) and
            not (df_specialization in currpd.defoptions) then
           begin
             result:=false;
@@ -868,7 +868,7 @@ implementation
              But for an overload declared function this is not allowed }
            if { check if empty implementation arguments match is allowed }
               (
-               not(m_repeat_forward in CurrentSettings.modeswitches) and
+               not(m_repeat_forward in CurrentSettings.ModeSwitches) and
                not(currpd.forwarddef) and
                is_bareprocdef(currpd) and
                not(po_overload in fwpd.procoptions)
@@ -897,7 +897,7 @@ implementation
                  begin
                    forwardfound:=true;
 
-                   if not(m_repeat_forward in CurrentSettings.modeswitches) and
+                   if not(m_repeat_forward in CurrentSettings.ModeSwitches) and
                       (fwpd.proccalloption<>currpd.proccalloption) then
                      paracompopt:=[cpo_ignorehidden,cpo_comparedefaultvalue,cpo_openequalisexact,cpo_ignoreuniv]
                    else
@@ -910,7 +910,7 @@ implementation
                         convention in the interface or implementation if
                         there was no convention specified in the other
                         part }
-                      if (m_delphi in CurrentSettings.modeswitches) then
+                      if (m_delphi in CurrentSettings.ModeSwitches) then
                         begin
                           if not(po_hascallingconvention in currpd.procoptions) then
                             currpd.proccalloption:=fwpd.proccalloption
@@ -958,7 +958,7 @@ implementation
                      if the implementation has default parameters, the interface
                      also has them and that if they both have them, that they
                      have the same value }
-                   if ((m_repeat_forward in CurrentSettings.modeswitches) or
+                   if ((m_repeat_forward in CurrentSettings.ModeSwitches) or
                        not is_bareprocdef(currpd)) and
                        (
                          (
@@ -1000,7 +1000,7 @@ implementation
 
                    { Check procedure options, Delphi requires that class is
                      repeated in the implementation for class methods }
-                   if (m_fpc in CurrentSettings.modeswitches) then
+                   if (m_fpc in CurrentSettings.ModeSwitches) then
                      po_comp:=[po_classmethod,po_varargs,po_methodpointer,po_interrupt]
                    else
                      po_comp:=[po_classmethod,po_methodpointer];
@@ -1036,7 +1036,7 @@ implementation
                          MessagePos2(currpd.fileinfo,parser_e_proc_dir_conflict,tokeninfo^[_VIRTUAL].str,get_first_proc_str(po_comp));
                      end;
                     { Check parameters }
-                   if (m_repeat_forward in CurrentSettings.modeswitches) or
+                   if (m_repeat_forward in CurrentSettings.ModeSwitches) or
                       (currpd.minparacount>0) then
                     begin
                       { If mangled names are equal then they have the same amount of arguments }
@@ -1090,33 +1090,33 @@ implementation
                    fwpd.procoptions:=fwpd.procoptions+currpd.procoptions;
 
                    { marked as local but exported from unit? }
-                   if (po_kylixlocal in fwpd.procoptions) and (fwpd.owner.symtabletype=globalsymtable) then
+                   if (po_kylixlocal in fwpd.procoptions) and (fwpd.owner.symtabletype=GlobalSymTable) then
                      MessagePos(fwpd.fileinfo,type_e_cant_export_local);
 
                    if fwpd.extnumber=$ffff then
                      fwpd.extnumber:=currpd.extnumber;
                    while not currpd.aliasnames.empty do
-                     fwpd.aliasnames.insert(currpd.aliasnames.getfirst);
+                     fwpd.aliasnames.insert(currpd.aliasnames.GetFirst);
                    { update fileinfo so position references the implementation,
                      also update funcretsym if it is already generated }
                    fwpd.fileinfo:=currpd.fileinfo;
-                   if assigned(fwpd.funcretsym) then
+                   if Assigned(fwpd.funcretsym) then
                      fwpd.funcretsym.fileinfo:=currpd.fileinfo;
-                   if assigned(currpd.deprecatedmsg) then
+                   if Assigned(currpd.deprecatedmsg) then
                      begin
-                       stringdispose(fwpd.deprecatedmsg);
-                       fwpd.deprecatedmsg:=stringdup(currpd.deprecatedmsg^);
+                       StringDispose(fwpd.deprecatedmsg);
+                       fwpd.deprecatedmsg:=StringDup(currpd.deprecatedmsg^);
                      end;
                    { import names }
-                   if assigned(currpd.import_dll) then
+                   if Assigned(currpd.import_dll) then
                      begin
-                       stringdispose(fwpd.import_dll);
-                       fwpd.import_dll:=stringdup(currpd.import_dll^);
+                       StringDispose(fwpd.import_dll);
+                       fwpd.import_dll:=StringDup(currpd.import_dll^);
                      end;
-                   if assigned(currpd.import_name) then
+                   if Assigned(currpd.import_name) then
                      begin
-                       stringdispose(fwpd.import_name);
-                       fwpd.import_name:=stringdup(currpd.import_name^);
+                       StringDispose(fwpd.import_name);
+                       fwpd.import_name:=StringDup(currpd.import_name^);
                      end;
                    fwpd.import_nr:=currpd.import_nr;
                    { for compilerproc defines we need to rename and update the
@@ -1131,7 +1131,7 @@ implementation
                    if po_public in fwpd.procoptions then
                      begin
                        item:=fwpd.aliasnames.first;
-                       while assigned(item) do
+                       while Assigned(item) do
                          begin
                            CurrentModule.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
                            item:=item.next;
@@ -1161,7 +1161,7 @@ implementation
              end;
 
            { check for allowing overload directive }
-           if not(m_fpc in CurrentSettings.modeswitches) then
+           if not(m_fpc in CurrentSettings.ModeSwitches) then
             begin
               { overload directive turns on overloading }
               if ((po_overload in currpd.procoptions) or
@@ -1170,7 +1170,7 @@ implementation
                  { check if all procs have overloading, but not if the proc is a method or
                    already declared forward, then the check is already done }
                  if not(fwpd.hasforward or
-                        assigned(currpd.struct) or
+                        Assigned(currpd.struct) or
                         (currpd.forwarddef<>fwpd.forwarddef) or
                         ((po_overload in currpd.procoptions) and
                          (po_overload in fwpd.procoptions))) then
@@ -1205,7 +1205,7 @@ implementation
               { allow overloads with different result types for external java
                 classes as Java supports covariant return types when implementing
                 interfaces and e.g. AbstractStringBuilder uses that }
-              not assigned(currpd.struct) or
+              not Assigned(currpd.struct) or
               not is_java_class_or_interface(currpd.struct) or
               not (oo_is_external in TObjectDef(currpd.struct).objectoptions)
             ) then
@@ -1226,7 +1226,7 @@ implementation
             if not currpd.forwarddef and (po_public in currpd.procoptions) then
               begin
                 item:=currpd.aliasnames.first;
-                while assigned(item) do
+                while Assigned(item) do
                   begin
                     CurrentModule.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
                     item:=item.next;
@@ -1250,29 +1250,29 @@ implementation
           because they may be for a parent procdef (changeowner does remove a def
           from the symtable in which it was originally created, so that by itself
           is not enough) }
-        old_symtablestack:=symtablestack;
-        symtablestack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
+        old_symtablestack:=SymTableStack;
+        SymTableStack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
         { create struct to hold local variables and parameters that are
           accessed from within nested routines (start with extra dollar to prevent
           the JVM from thinking this is a nested class in the unit) }
-        nestedvarsst:=TRecordSymTable.create('$'+CurrentModule.realmodulename^+'$$_fpc_nestedvars$'+pd.UniqueIDStr,
-          CurrentSettings.alignment.localalignmax,CurrentSettings.alignment.localalignmin);
-        nestedvarsdef:=crecorddef.create(nestedvarsst.name^,nestedvarsst);
-        symtablestack.free;
-        symtablestack:=old_symtablestack.getcopyuntil(pd.localst);
-        pnestedvarsdef:=cpointerdef.getreusable(nestedvarsdef);
+        nestedvarsst:=TRecordSymTable.create('$'+CurrentModule.RealModuleName^+'$$_fpc_nestedvars$'+pd.UniqueIDStr,
+          CurrentSettings.alignment.LocalAlignMax,CurrentSettings.alignment.LocalAlignMin);
+        nestedvarsdef:=CRecordDef.create(nestedvarsst.name^,nestedvarsst);
+        SymTableStack.free;
+        SymTableStack:=old_symtablestack.getcopyuntil(pd.localst);
+        pnestedvarsdef:=CPointerDef.getreusable(nestedvarsdef);
         if not(po_assembler in pd.procoptions) then
           begin
-            nestedvars:=clocalvarsym.create('$nestedvars',vs_var,nestedvarsdef,[]);
+            nestedvars:=CLocalVarSym.create('$nestedvars',vs_var,nestedvarsdef,[]);
             include(nestedvars.symoptions,sp_internal);
             pd.localst.insertsym(nestedvars);
             pd.parentfpstruct:=nestedvars;
-            pd.parentfpinitblock:=cblocknode.create(nil);
+            pd.parentfpinitblock:=CBlockNode.create(nil);
           end;
-        symtablestack.free;
+        SymTableStack.free;
         pd.parentfpstructptrtype:=pnestedvarsdef;
 
-        symtablestack:=old_symtablestack;
+        SymTableStack:=old_symtablestack;
       end;
 
 end.

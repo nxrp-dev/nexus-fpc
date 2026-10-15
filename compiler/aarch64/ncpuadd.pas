@@ -29,7 +29,7 @@ interface
        node,ncgadd,cpubase;
 
     type
-       taarch64addnode = class(tcgaddnode)
+       TAArch64AddNode = class(TCGAddNode)
        private
           function  GetResFlags(unsigned:Boolean):TResFlags;
           function  GetFPUResFlags:TResFlags;
@@ -53,11 +53,11 @@ interface
   implementation
 
     uses
-      systems,symconst,symtype,symdef,
-      globals,globtype,
-      cutils,verbose,
-      paramgr,procinfo,
-      aasmtai,aasmdata,aasmcpu,defutil,
+      Systems,symconst,symtype,symdef,
+      Globals,GlobType,
+      CUtils,Verbose,
+      paramgr,ProcInfo,
+      aasmtai,AAsmData,aasmcpu,defutil,
       cgbase,cgcpu,cgutils,
       cpupara,
       ncon,nset,nadd,nmat,
@@ -67,13 +67,13 @@ interface
                                taarch64addnode
 *****************************************************************************}
 
-    function taarch64addnode.use_fma : boolean;
+    function TAArch64AddNode.use_fma : boolean;
       begin
         Result:=true;
       end;
 
 
-    function taarch64addnode.GetResFlags(unsigned:Boolean):TResFlags;
+    function TAArch64AddNode.GetResFlags(unsigned:Boolean):TResFlags;
       begin
         case NodeType of
           equaln:
@@ -94,7 +94,7 @@ interface
                     gten:
                       GetResFlags:=F_LE;
                     else
-                      internalerror(2014082010);
+                      InternalError(2014082010);
                   end
                 else
                   case NodeType of
@@ -107,7 +107,7 @@ interface
                     gten:
                       GetResFlags:=F_GE;
                     else
-                      internalerror(2014082011);
+                      InternalError(2014082011);
                   end;
               end
             else
@@ -123,7 +123,7 @@ interface
                     gten:
                       GetResFlags:=F_LS;
                     else
-                      internalerror(2014082012);
+                      InternalError(2014082012);
                   end
                 else
                   case NodeType of
@@ -136,14 +136,14 @@ interface
                     gten:
                       GetResFlags:=F_HS;
                     else
-                      internalerror(2014082013);
+                      InternalError(2014082013);
                   end;
               end;
         end;
       end;
 
 
-    function taarch64addnode.GetFPUResFlags:TResFlags;
+    function TAArch64AddNode.GetFPUResFlags:TResFlags;
       begin
         case NodeType of
           equaln:
@@ -163,7 +163,7 @@ interface
                   gten:
                     result:=F_LS;
                   else
-                    internalerror(2014082014);
+                    InternalError(2014082014);
                 end
               else
                 case NodeType of
@@ -176,14 +176,14 @@ interface
                   gten:
                     result:=F_GE;
                   else
-                    internalerror(2014082015);
+                    InternalError(2014082015);
                 end;
             end;
         end;
       end;
 
 
-    procedure taarch64addnode.second_addfloat;
+    procedure TAArch64AddNode.second_addfloat;
       var
         op : TAsmOp;
       begin
@@ -217,16 +217,16 @@ interface
               op:=A_FDIV;
             end;
           else
-            internalerror(200306014);
+            InternalError(200306014);
         end;
 
-        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(op,
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(op,
            location.register,left.location.register,right.location.register));
         cg.maybe_check_for_fpu_exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure taarch64addnode.second_cmpfloat;
+    procedure TAArch64AddNode.second_cmpfloat;
       begin
         pass_left_right;
         if nf_swapped in flags then
@@ -241,13 +241,13 @@ interface
         location.resflags:=getfpuresflags;
 
         { signalling compare so we can get exceptions }
-        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_FCMPE,
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCMPE,
              left.location.register,right.location.register));
         cg.maybe_check_for_fpu_exception(CurrentAsmData.CurrAsmList);
       end;
 
 
-    procedure taarch64addnode.second_cmpboolean;
+    procedure TAArch64AddNode.second_cmpboolean;
       begin
         pass_left_right;
         force_reg_left_right(true,true);
@@ -255,25 +255,25 @@ interface
         if right.location.loc=LOC_CONSTANT then
           begin
             if right.location.value>=0 then
-              Tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMP,left.location.size,left.location.register,right.location.value,NR_XZR,NR_NO,false,false)
+              TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMP,left.location.size,left.location.register,right.location.value,NR_XZR,NR_NO,false,false)
             else
               { avoid overflow if value=low(int64) }
 {$push}{$r-}{$q-}
-              Tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMN,left.location.size,left.location.register,-right.location.value,NR_XZR,NR_NO,false,false)
+              TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMN,left.location.size,left.location.register,-right.location.value,NR_XZR,NR_NO,false,false)
 {$pop}
           end
         else
-          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,left.location.register,right.location.register));
+          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,left.location.register,right.location.register));
 
         location_reset(location,LOC_FLAGS,OS_NO);
         location.resflags:=getresflags(true);
       end;
 
 
-    procedure taarch64addnode.second_cmpsmallset;
+    procedure TAArch64AddNode.second_cmpsmallset;
       var
-        tmpreg : tregister;
-        op: tasmop;
+        tmpreg : TRegister;
+        op: TAsmOp;
       begin
         pass_left_right;
 
@@ -286,7 +286,7 @@ interface
             { when doing a cmp/cmn on 32 bit, we care whether the *lower 32 bit*
               is a positive/negative value -> sign extend }
             if not(right.location.size in [OS_64,OS_S64]) then
-              right.location.value:=longint(right.location.value);
+              right.location.value:=LongInt(right.location.value);
             if right.location.value>=0 then
               op:=A_CMP
             else
@@ -301,9 +301,9 @@ interface
           unequaln:
             begin
               if right.location.loc=LOC_CONSTANT then
-                tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),left.location.register,abs(right.location.value),NR_XZR,NR_NO,false,false)
+                TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),left.location.register,abs(right.location.value),NR_XZR,NR_NO,false,false)
               else
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,left.location.register,right.location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,left.location.register,right.location.register));
               location.resflags:=getresflags(true);
             end;
           lten,
@@ -321,22 +321,22 @@ interface
               if right.location.loc=LOC_CONSTANT then
                 begin
                   hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_AND,resultdef,right.location.value,left.location.register,tmpreg);
-                  tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),tmpreg,abs(right.location.value),NR_XZR,NR_NO,false,false)
+                  TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,op,def_cgsize(resultdef),tmpreg,abs(right.location.value),NR_XZR,NR_NO,false,false)
                 end
               else
                 begin
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_AND,tmpreg,left.location.register,right.location.register));
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,tmpreg,right.location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_AND,tmpreg,left.location.register,right.location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,tmpreg,right.location.register));
                 end;
               location.resflags:=F_EQ;
             end;
           else
-            internalerror(2012042701);
+            InternalError(2012042701);
         end;
       end;
 
 
-    function taarch64addnode.try_second_bit_test: Boolean;
+    function TAArch64AddNode.try_second_bit_test: Boolean;
 
       function try_arrangement(compvaln: TOrdConstNode; andn: TAddNode): Boolean;
         var
@@ -367,7 +367,7 @@ interface
               (nodetype in [gtn,lten]) and
               (
                 ((inputn.location.size=OS_S64) and (andconstn.value.svalue=$8000000000000000)) or
-                (not (inputn.location.size in [OS_64,OS_S64,OS_32]) and (longword(andconstn.value.uvalue)=$80000000))
+                (not (inputn.location.size in [OS_64,OS_S64,OS_32]) and (LongWord(andconstn.value.uvalue)=$80000000))
               )
             )
             then
@@ -385,12 +385,12 @@ interface
             begin
               SecondPass(andconstn);
               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,andconstn.location,andconstn.resultdef,andconstn.resultdef,false);
-              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_TST,inputn.location.register,andconstn.location.register));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_TST,inputn.location.register,andconstn.location.register));
             end
           else
             begin
               Include(andconstn.transientflags,tnf_do_not_execute);
-              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_TST,inputn.location.register,andconstn.value.svalue));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_TST,inputn.location.register,andconstn.value.svalue));
             end;
 
           location_reset(location,LOC_FLAGS,OS_NO);
@@ -414,7 +414,7 @@ interface
       end;
 
 
-    procedure taarch64addnode.second_cmpordinal;
+    procedure TAArch64AddNode.second_cmpordinal;
       var
         unsigned : boolean;
       begin
@@ -430,21 +430,21 @@ interface
         if right.location.loc = LOC_CONSTANT then
           begin
             if right.location.value>=0 then
-              Tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMP,left.location.size,left.location.register,right.location.value,NR_XZR,NR_NO,false,false)
+              TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMP,left.location.size,left.location.register,right.location.value,NR_XZR,NR_NO,false,false)
             else
 {$push}{$r-}{$q-}
-              Tcgaarch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMN,left.location.size,left.location.register,-right.location.value,NR_XZR,NR_NO,false,false)
+              TCGAArch64(cg).handle_reg_imm12_reg(CurrentAsmData.CurrAsmList,A_CMN,left.location.size,left.location.register,-right.location.value,NR_XZR,NR_NO,false,false)
 {$pop}
           end
         else
-          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,left.location.register,right.location.register));
+          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,left.location.register,right.location.register));
 
         location_reset(location,LOC_FLAGS,OS_NO);
         location.resflags:=getresflags(unsigned);
       end;
 
 
-    procedure taarch64addnode.second_addordinal;
+    procedure TAArch64AddNode.second_addordinal;
       const
         multops: array[boolean] of TAsmOp = (A_SMULL,A_UMULL);
       var
@@ -467,21 +467,21 @@ interface
               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,right.resultdef,true);
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
             location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,def_cgsize(resultdef));
-            CurrentAsmData.CurrAsmList.Concat(taicpu.op_reg_reg_reg(multops[unsigned],location.register,left.location.register,right.location.register));
+            CurrentAsmData.CurrAsmList.Concat(TAICPU.op_reg_reg_reg(multops[unsigned],location.register,left.location.register,right.location.register));
             Exit;
           end
-        else if (cs_opt_level2 in CurrentSettings.optimizerswitches) then
+        else if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) then
           begin
             { Can we turn "x and (not y)" into an ANDN instruction instead? }
             if (nodetype in [andn, orn, xorn]) and
               (
                 (
                   (left.nodetype = notn) and
-                  (tnotnode(left).left.location.loc <> LOC_CONSTANT)
+                  (TNotNode(left).left.location.loc <> LOC_CONSTANT)
                 ) or
                 (
                   (right.nodetype = notn) and
-                  (tnotnode(right).left.location.loc <> LOC_CONSTANT)
+                  (TNotNode(right).left.location.loc <> LOC_CONSTANT)
                 )
               ) then
               begin
@@ -489,7 +489,7 @@ interface
                   since we're dealing with ordinals, there won't be any Boolean
                   shortcutting, so we can safely swap the parameters }
 
-                if (left.nodetype = notn) and (tnotnode(left).left.location.loc <> LOC_CONSTANT) then
+                if (left.nodetype = notn) and (TNotNode(left).left.location.loc <> LOC_CONSTANT) then
                   { If the left node is "not" but is inverting a constant, then
                     the right node must also be a "not", but with a non-constant
                     input }
@@ -499,15 +499,15 @@ interface
 
                 { Skip the not node completely }
                 Include(right.transientflags, tnf_do_not_execute);
-                SecondPass(tnotnode(right).left);
+                SecondPass(TNotNode(right).left);
 
                 { allocate registers }
-                if not (tnotnode(right).left.location.loc in [LOC_REGISTER, LOC_CREGISTER]) then
+                if not (TNotNode(right).left.location.loc in [LOC_REGISTER, LOC_CREGISTER]) then
                   hlcg.location_force_reg(
                     CurrentAsmData.CurrAsmList,
-                    tnotnode(right).left.location,
-                    tnotnode(right).left.resultdef,
-                    tnotnode(right).left.resultdef,
+                    TNotNode(right).left.location,
+                    TNotNode(right).left.resultdef,
+                    TNotNode(right).left.resultdef,
                     // tnotnode(right).resultdef, { In case the "not" node does some implicit typecasting }
                     false
                   );
@@ -534,7 +534,7 @@ interface
                     InternalError(2022102130);
                 end;
 
-                CurrentAsmData.CurrAsmList.Concat(taicpu.op_reg_reg_reg(logical_not_op,location.register,left.location.register,tnotnode(right).left.location.register));
+                CurrentAsmData.CurrAsmList.Concat(TAICPU.op_reg_reg_reg(logical_not_op,location.register,left.location.register,TNotNode(right).left.location.register));
 
                 { We have to make sure trailing bits are cut off for unsigned
                   extensions since it will be full of 1s, so do this by
@@ -552,24 +552,24 @@ interface
       end;
 
 
-    procedure taarch64addnode.second_add64bit;
+    procedure TAArch64AddNode.second_add64bit;
       begin
         second_addordinal;
       end;
 
 
-    procedure taarch64addnode.second_cmp64bit;
+    procedure TAArch64AddNode.second_cmp64bit;
       begin
         second_cmpordinal;
       end;
 
 
-    function taarch64addnode.use_generic_mul32to64: boolean;
+    function TAArch64AddNode.use_generic_mul32to64: boolean;
       begin
         result:=false;
       end;
 
-    function taarch64addnode.pass_1: TNode;
+    function TAArch64AddNode.pass_1: TNode;
       begin
         Result:=inherited pass_1;
         { if the result is not nil, a new node has been generated and the current node will be discarded }
@@ -583,5 +583,5 @@ interface
 
 
 begin
-  caddnode:=taarch64addnode;
+  CAddNode:=TAArch64AddNode;
 end.

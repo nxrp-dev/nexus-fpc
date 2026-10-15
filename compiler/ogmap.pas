@@ -27,13 +27,13 @@ interface
 
     uses
        { common }
-       globtype,
+       GlobType,
        { object writer }
        ogbase
        ;
 
     type
-       texemap = class
+       TExeMap = class
        private
          t : text;
          FImageBase : qword;
@@ -46,19 +46,19 @@ interface
          procedure AddCommonSymbolsHeader;
          procedure AddCommonSymbol(p:TObjSymbol);
          procedure AddMemoryMapHeader(abase:qword);
-         procedure AddMemoryMapExeSection(p:texesection);
+         procedure AddMemoryMapExeSection(p:TExeSection);
          procedure AddMemoryMapObjectSection(p:TObjSection);
          procedure AddMemoryMapSymbol(p:TObjSymbol);
        end;
 
     var
-      exemap : texemap;
+      exemap : TExeMap;
 
 
 implementation
 
     uses
-      cutils,cfileutl;
+      CUtils,CFileUtl;
 
     const
       HexTbl : array[0..15] of char='0123456789abcdef';
@@ -66,7 +66,7 @@ implementation
     function sizestr(v:qword):string;
       var
         tmp:array [0..19] of char;
-        i:longint;
+        i:LongInt;
       begin
         if v=0 then
           result:='0x0'
@@ -85,7 +85,7 @@ implementation
           end;
       end;
 
-    function PadSpaceLeft(const s:string;len:longint):string;
+    function PadSpaceLeft(const s:string;len:LongInt):string;
       begin
         if length(s)<len then
           result:=Space(len-length(s))+s
@@ -120,7 +120,7 @@ implementation
 
      procedure TExeMap.Add(const s:string);
        begin
-         writeln(t,s);
+         WriteLn(t,s);
        end;
 
 
@@ -147,7 +147,7 @@ implementation
          s:=p.name;
          if length(s)>20 then
           begin
-            writeln(t,p.name);
+            WriteLn(t,p.name);
             s:='';
           end;
          Add(PadSpace(s,20)+PadSpace(sizestr(p.size),16)+p.objdata.name);
@@ -160,7 +160,7 @@ implementation
        begin
          FImageBase:=abase;
          if FImageBase<>0 then
-           imagebasestr:=' (ImageBase=0x'+HexStr(FImageBase,sizeof(pint)*2)+')'
+           imagebasestr:=' (ImageBase=0x'+HexStr(FImageBase,sizeof(PInt)*2)+')'
          else
            imagebasestr:='';
          AddHeader('Memory map'+imagebasestr);
@@ -168,7 +168,7 @@ implementation
        end;
 
 
-     procedure TExeMap.AddMemoryMapExeSection(p:texesection);
+     procedure TExeMap.AddMemoryMapExeSection(p:TExeSection);
        begin
          { .text           0x000018a8     0xd958 }
          Add(PadSpace(p.name,15)+PadSpace(' '+p.MemPosStr(Fimagebase),12)+

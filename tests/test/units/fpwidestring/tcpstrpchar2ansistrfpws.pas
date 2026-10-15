@@ -1,5 +1,5 @@
 uses
-  unicodeducet, fpwidestring, cp1252, cp866,
+  unicodeducet, fpwidestring, CP1252, CP866,
   sysutils;
 
 type

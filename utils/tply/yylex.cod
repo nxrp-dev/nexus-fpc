@@ -6,12 +6,12 @@
 
 function yylex : Integer;
 
-procedure yyaction ( yyruleno : Integer );
+procedure YYAction ( YYRuleNo : Integer );
   (* local definitions: *)
 %%
 begin
   (* actions: *)
-  case yyruleno of
+  case YYRuleNo of
 %%
   end;
 end(*yyaction*);
@@ -19,62 +19,62 @@ end(*yyaction*);
 (* DFA table: *)
 %%
 
-var yyn : Integer;
+var YYN : Integer;
 
-label start, scan, action;
+label Start, Scan, Action;
 
 begin
 
-start:
+Start:
 
   (* initialize: *)
 
-  yynew;
+  YYNew;
 
-scan:
+Scan:
 
   (* mark positions and matches: *)
 
-  for yyn := yykl[yystate] to     yykh[yystate] do yymark(yyk[yyn]);
-  for yyn := yymh[yystate] downto yyml[yystate] do yymatch(yym[yyn]);
+  for YYN := YYKL[YYState] to     YYKH[YYState] do YYMark(YYK[YYN]);
+  for YYN := YYMH[YYState] downto YYML[YYState] do YYMatch(YYM[YYN]);
 
-  if yytl[yystate]>yyth[yystate] then goto action; (* dead state *)
+  if YYTL[YYState]>YYTH[YYState] then goto Action; (* dead state *)
 
   (* get next character: *)
 
-  yyscan;
+  YYScan;
 
   (* determine action: *)
 
-  yyn := yytl[yystate];
-  while (yyn<=yyth[yystate]) and not (yyactchar in yyt[yyn].cc) do inc(yyn);
-  if yyn>yyth[yystate] then goto action;
+  YYN := YYTL[YYState];
+  while (YYN<=YYTH[YYState]) and not (YYActChar in YYT[YYN].CC) do Inc(YYN);
+  if YYN>YYTH[YYState] then goto Action;
     (* no transition on yyactchar in this state *)
 
   (* switch to new state: *)
 
-  yystate := yyt[yyn].s;
+  YYState := YYT[YYN].S;
 
-  goto scan;
+  goto Scan;
 
-action:
+Action:
 
   (* execute action: *)
 
-  if yyfind(yyrule) then
+  if YYFind(YYRule) then
     begin
-      yyaction(yyrule);
-      if yyreject then goto action;
+      YYAction(YYRule);
+      if YYReject then goto Action;
     end
-  else if not yydefault and yywrap() then
+  else if not YYDefault and YYWrap() then
     begin
-      yyclear;
-      return(0);
+      YYClear;
+      Return(0);
     end;
 
-  if not yydone then goto start;
+  if not YYDone then goto Start;
 
-  yylex := yyretval;
+  yylex := YYRetVal;
 
 end(*yylex*);
 

@@ -24,7 +24,7 @@ var
 
 function RemoveSuffix(const st : string) : string;
 var
-  i,last : longint;
+  i,last : LongInt;
 begin
   last:=length(st);
   for i:=length(st) downto 1 do
@@ -39,7 +39,7 @@ begin
 end;
 
 var
-  i,j : longint;
+  i,j : LongInt;
   param : string;
   skipnext : boolean;
 begin
@@ -47,7 +47,7 @@ begin
   skipnext:=false;
   for i:=1 to ParamCount do
     begin
-      param:=Paramstr(i);
+      param:=ParamStr(i);
       if skipnext or (length(Param)=0) then
         begin
           skipnext:=false;
@@ -99,14 +99,14 @@ begin
             assembler_name:=ParamStr(i)
           else
             begin
-              Writeln(stderr,'two non option param found!');
-              Writeln(stderr,'first non option param =',assembler_name);
-              Writeln(stderr,'second non option param =',Param);
-              Writeln(stderr,'Don''t know how to handle this!');
+              WriteLn(stderr,'two non option param found!');
+              WriteLn(stderr,'first non option param =',assembler_name);
+              WriteLn(stderr,'second non option param =',Param);
+              WriteLn(stderr,'Don''t know how to handle this!');
               write(stderr,'full command-line was:');
               for j:=1 to ParamCount do
-                Write(' ',paramstr(j));
-              Writeln;
+                Write(' ',ParamStr(j));
+              WriteLn;
               halt(1);
             end;
         end;
@@ -114,7 +114,7 @@ begin
 
   if assembler_name='' then
     begin
-      Writeln(stderr,'Dummyas, no source file specified');
+      WriteLn(stderr,'Dummyas, no source file specified');
       halt(1);
     end;
   Assign(ofile,assembler_name);
@@ -122,7 +122,7 @@ begin
   Reset(ofile);
   if IOResult<>0 then
     begin
-      Writeln(stderr,'Dummyas, source file not found ',assembler_name);
+      WriteLn(stderr,'Dummyas, source file not found ',assembler_name);
       halt(1);
     end;
   Close(ofile);
@@ -132,15 +132,15 @@ begin
   Rewrite(ofile);
   if IOResult<>0 then
     begin
-      Writeln(stderr,'Dummyas, object file not writable ',object_name);
+      WriteLn(stderr,'Dummyas, object file not writable ',object_name);
       halt(1);
     end;
-  Writeln(ofile,'Dummy as called');
+  WriteLn(ofile,'Dummy as called');
   for i:=0 to Paramcount do
     Write(ofile,ParamStr(i),' ');
-  Writeln(ofile);
-  Writeln(ofile,'assembler file=',assembler_name);
-  Writeln(ofile,'object file=',object_name);
+  WriteLn(ofile);
+  WriteLn(ofile,'assembler file=',assembler_name);
+  WriteLn(ofile,'object file=',object_name);
   Close(ofile);
 {$pop}
 end.

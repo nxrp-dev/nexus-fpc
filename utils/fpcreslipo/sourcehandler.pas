@@ -14,14 +14,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit sourcehandler;
+unit SourceHandler;
 
 {$MODE OBJFPC} {$H+}
 
 interface
 
 uses
-  Classes, SysUtils, resource, externalreader, externalwriter;
+  Classes, SysUtils, Resource, ExternalReader, ExternalWriter;
 
 type
   ESourceFilesException = class(Exception);
@@ -35,306 +35,306 @@ type
 
   TSourceFile = class
   private
-    fFname : string;
-    fStream : TStream;
-    fResources : TResources;
-    fProcessed : TResources;
-    fEndianess : byte;
-    fModified : boolean;
-    function Delete : boolean;
+    FFileName : string;
+    FStream : TStream;
+    FResources : TResources;
+    FProcessed : TResources;
+    FEndianess : Byte;
+    FModified : Boolean;
+    function Delete : Boolean;
   protected
   public
-    constructor Create(aFileName : string);
+    constructor Create(AFileName : string);
     destructor Destroy; override;
     procedure Update;
-    property FileName : string read fFname;
-    property Resources : TResources read fResources;
-    property Processed : TResources read fProcessed;
-    property Endianess : byte read fEndianess;
-    property Modified : boolean read fModified write fModified;
+    property FileName : string Read FFileName;
+    property Resources : TResources Read FResources;
+    property Processed : TResources Read FProcessed;
+    property Endianess : Byte Read FEndianess;
+    property Modified : Boolean Read FModified Write FModified;
   end;
 
   { TSourceFiles }
 
   TSourceFiles = class
   private
-    similarities, simcount : array of integer;
-    fList : TFPList;
-    function GetItem(index : integer) : TSourceFile;
-    function GetCount : integer;
+    Similarities, SimCount : array of Integer;
+    FList : TFPList;
+    function GetItem(Index : Integer) : TSourceFile;
+    function GetCount : Integer;
     procedure ResetSimArrays;
-    function GetMostCommon : integer;
-    procedure CheckSimilarities(idx : integer; aType,aName : TResourceDesc; aLangID : TLangID);
-    procedure ExtractCommon(idx : integer; outRes : TResources; aType,aName : TResourceDesc; aLangID : TLangID);
+    function GetMostCommon : Integer;
+    procedure CheckSimilarities(Idx : Integer; AType,AName : TResourceDesc; ALangID : TLangID);
+    procedure ExtractCommon(Idx : Integer; OutRes : TResources; AType,AName : TResourceDesc; ALangID : TLangID);
   protected
   public
     constructor Create;
     destructor Destroy; override;
-    procedure NewSourceFile(aFileName : string);
-    procedure Process(outRes : TResources);
+    procedure NewSourceFile(AFileName : string);
+    procedure Process(OutRes : TResources);
     procedure Update;
-    property Items[index : integer] : TSourceFile read GetItem;
-    property Count : integer read GetCount;
+    property Items[Index : Integer] : TSourceFile Read GetItem;
+    property Count : Integer Read GetCount;
   end;
 
 implementation
 
-uses msghandler;
+uses MsgHandler;
 
 { TSourceFile }
 
-function TSourceFile.Delete : boolean;
+function TSourceFile.Delete : Boolean;
 begin
-  FreeAndNil(fResources);
-  FreeAndNil(fStream);
-  Result:=DeleteFile(fFname);
+  FreeAndNil(FResources);
+  FreeAndNil(FStream);
+  Result:=DeleteFile(FFileName);
   if not Result then
-    Messages.DoError(Format('Can''t delete file %s.',[fFname]))
+    Messages.DoError(Format('Can''t delete file %s.',[FFileName]))
 end;
 
-constructor TSourceFile.Create(aFileName: string);
-var aReader : TExternalResourceReader;
+constructor TSourceFile.Create(AFileName: string);
+var AReader : TExternalResourceReader;
 begin
-  fModified:=false;
-  fFName:=aFileName;
-  Messages.DoVerbose(Format('Trying to open file %s...',[fFName]));
+  FModified:=False;
+  FFileName:=AFileName;
+  Messages.DoVerbose(Format('Trying to open file %s...',[FFileName]));
   try
-    fStream:=TFileStream.Create(fFName,fmOpenRead or fmShareDenyWrite);
+    FStream:=TFileStream.Create(FFileName,fmOpenRead or fmShareDenyWrite);
   except
-    raise ECantOpenFileException.Create(fFName);
+    raise ECantOpenFileException.Create(FFileName);
   end;
-  aReader:=TExternalResourceReader.Create;
-  fResources:=TResources.Create;
+  AReader:=TExternalResourceReader.Create;
+  FResources:=TResources.Create;
   try
     try
       try
         Messages.DoVerbose('Reading resource information...');
-        fResources.LoadFromStream(fStream,aReader);
-        Messages.DoVerbose(Format('%d resources read.',[fResources.Count]));
-        fEndianess:=aReader.Endianess;
+        FResources.LoadFromStream(FStream,AReader);
+        Messages.DoVerbose(Format('%d resources read.',[FResources.Count]));
+        FEndianess:=AReader.Endianess;
       except
-        on e : EResourceReaderWrongFormatException do
-          raise EUnknownInputFormatException.Create(fFname);
+        on E : EResourceReaderWrongFormatException do
+          raise EUnknownInputFormatException.Create(FFileName);
       end;
     except
-      FreeAndNil(fResources);
-      FreeAndNil(fStream);
+      FreeAndNil(FResources);
+      FreeAndNil(FStream);
     end;
   finally
-    aReader.Free;
+    AReader.Free;
   end;
-  fProcessed:=TResources.Create;
+  FProcessed:=TResources.Create;
 end;
 
 destructor TSourceFile.Destroy;
 begin
-  if fResources<>nil then fResources.Free;
-  if fProcessed<>nil then fProcessed.Free;
-  if fStream<>nil then fStream.Free;
+  if FResources<>nil then FResources.Free;
+  if FProcessed<>nil then FProcessed.Free;
+  if FStream<>nil then FStream.Free;
 end;
 
 procedure TSourceFile.Update;
-var tmp : string;
-    aWriter : TExternalResourceWriter;
-    aStream : TFileStream;
+var Tmp : string;
+    AWriter : TExternalResourceWriter;
+    AStream : TFileStream;
 begin
-  if not fModified then
+  if not FModified then
   begin
-    Messages.DoVerbose(Format('File %s is unchanged.',[fFname]));
+    Messages.DoVerbose(Format('File %s is unchanged.',[FFileName]));
     exit;
   end;
   if Resources.Count=0 then
   begin
     if Delete then
-      Messages.DoVerbose(Format('No more resources in file %s, deleted',[fFname]));
+      Messages.DoVerbose(Format('No more resources in file %s, deleted',[FFileName]));
     exit;
   end;
 
-  tmp:=ExtractFileDir(fFname);
-  if tmp='' then tmp:='.';
-  tmp:=GetTempFileName(tmp,'tmp');
+  Tmp:=ExtractFileDir(FFileName);
+  if Tmp='' then Tmp:='.';
+  Tmp:=GetTempFileName(Tmp,'tmp');
 
-  Messages.DoVerbose(Format('Updating file %s...',[fFname]));
+  Messages.DoVerbose(Format('Updating file %s...',[FFileName]));
   try
-    aStream:=TFileStream.Create(tmp,fmCreate or fmShareDenyWrite);
+    AStream:=TFileStream.Create(Tmp,fmCreate or fmShareDenyWrite);
   except
-    raise ECantCreateFileException.Create(tmp);
+    raise ECantCreateFileException.Create(Tmp);
   end;
   try
-    aWriter:=TExternalResourceWriter.Create;
-    aWriter.Endianess:=Endianess;
+    AWriter:=TExternalResourceWriter.Create;
+    AWriter.Endianess:=Endianess;
     try
-      Resources.WriteToStream(aStream,aWriter);
+      Resources.WriteToStream(AStream,AWriter);
       Messages.DoVerbose(Format('%d resources written.',[Resources.Count]));
     finally
-      aWriter.Free;
+      AWriter.Free;
     end;
   finally
-    aStream.Free;
+    AStream.Free;
   end;
 
   if not Delete then exit;
-  if not RenameFile(tmp,fFname) then
-    Messages.DoError(Format('Can''t rename file %s to %s.',[tmp,fFname]))
+  if not RenameFile(Tmp,FFileName) then
+    Messages.DoError(Format('Can''t rename file %s to %s.',[Tmp,FFileName]))
   else
-    Messages.DoVerbose(Format('File %s updated',[fFname]));
+    Messages.DoVerbose(Format('File %s updated',[FFileName]));
 end;
 
 { TSourceFiles }
 
-function TSourceFiles.GetItem(index : integer) : TSourceFile;
+function TSourceFiles.GetItem(Index : Integer) : TSourceFile;
 begin
-  Result:=TSourceFile(fList[index]);
+  Result:=TSourceFile(FList[Index]);
 end;
 
-function TSourceFiles.GetCount: integer;
+function TSourceFiles.GetCount: Integer;
 begin
-  Result:=fList.Count;
+  Result:=FList.Count;
 end;
 
 procedure TSourceFiles.ResetSimArrays;
-var i : integer;
+var I : Integer;
 begin
-  for i:=0 to Count-1 do
+  for I:=0 to Count-1 do
   begin
-    similarities[i]:=i;
-    simcount[i]:=1;
+    Similarities[I]:=I;
+    SimCount[I]:=1;
   end;
 end;
 
-function TSourceFiles.GetMostCommon: integer;
-var i : integer;
-    max, maxidx : integer;
+function TSourceFiles.GetMostCommon: Integer;
+var I : Integer;
+    Max, MaxIdx : Integer;
 begin
-  max:=0;
-  maxidx:=0;
-  for i:=0 to Count-1 do
-    if simcount[i]>max then
+  Max:=0;
+  MaxIdx:=0;
+  for I:=0 to Count-1 do
+    if SimCount[I]>Max then
     begin
-      max:=simcount[i];
-      maxidx:=i;
+      Max:=SimCount[I];
+      MaxIdx:=I;
     end;
-  Result:=maxidx;
+  Result:=MaxIdx;
 end;
 
-procedure TSourceFiles.CheckSimilarities(idx: integer; aType,
-  aName: TResourceDesc; aLangID: TLangID);
-var i,j : integer;
-    res1, res2 : TAbstractResource;
+procedure TSourceFiles.CheckSimilarities(Idx: Integer; AType,
+  AName: TResourceDesc; ALangID: TLangID);
+var I,J : Integer;
+    Res1, Res2 : TAbstractResource;
 begin
-  for i:=idx to Count-1 do
+  for I:=Idx to Count-1 do
   begin
-    if similarities[i]<>i then continue;
+    if Similarities[I]<>I then continue;
     try
-      res1:=Items[i].Resources.Find(aType,aName,aLangID);
+      Res1:=Items[I].Resources.Find(AType,AName,ALangID);
     except
-      on e : EResourceNotFoundException do continue;
+      on E : EResourceNotFoundException do continue;
     end;
-    for j:=idx+1 to Count-1 do
+    for J:=Idx+1 to Count-1 do
     begin
       try
-        res2:=Items[j].Resources.Find(aType,aName,aLangID);
+        Res2:=Items[J].Resources.Find(AType,AName,ALangID);
       except
-        on e : EResourceNotFoundException do continue;
+        on E : EResourceNotFoundException do continue;
       end;
-      if res1.CompareContents(res2) then
+      if Res1.CompareContents(Res2) then
       begin
-        dec(simcount[similarities[j]]);
-        inc(simcount[similarities[i]]);
-        similarities[j]:=similarities[i];
+        Dec(SimCount[Similarities[J]]);
+        Inc(SimCount[Similarities[I]]);
+        Similarities[J]:=Similarities[I];
       end;
     end;
   end;
 end;
 
-procedure TSourceFiles.ExtractCommon(idx: integer; outRes: TResources; aType,
-  aName: TResourceDesc; aLangID: TLangID);
-var maxidx,i : integer;
-    res : TAbstractResource;
+procedure TSourceFiles.ExtractCommon(Idx: Integer; OutRes: TResources; AType,
+  AName: TResourceDesc; ALangID: TLangID);
+var MaxIdx,I : Integer;
+    Res : TAbstractResource;
 begin
-  maxidx:=GetMostCommon;
-  if simcount[maxidx]<=1 then
+  MaxIdx:=GetMostCommon;
+  if SimCount[MaxIdx]<=1 then
   begin
-    for i:=idx to Count-1 do
+    for I:=Idx to Count-1 do
     begin
       try
-        res:=Items[i].Resources.Remove(aType,aName,aLangID);
+        Res:=Items[I].Resources.Remove(AType,AName,ALangID);
       except
-        on e : EResourceNotFoundException do continue;
+        on E : EResourceNotFoundException do continue;
       end;
-      Items[i].Processed.Add(res);
+      Items[I].Processed.Add(Res);
     end;
     exit;
   end;
 
-  res:=Items[maxidx].Resources.Remove(aType,aName,aLangID);
-  Items[maxidx].Modified:=true;
-  outRes.Add(res);
-  for i:=idx to Count-1 do
+  Res:=Items[MaxIdx].Resources.Remove(AType,AName,ALangID);
+  Items[MaxIdx].Modified:=True;
+  OutRes.Add(Res);
+  for I:=Idx to Count-1 do
   begin
-    if i=maxidx then continue;
+    if I=MaxIdx then continue;
     try
-      res:=Items[i].Resources.Remove(aType,aName,aLangID);
+      Res:=Items[I].Resources.Remove(AType,AName,ALangID);
     except
-      on e : EResourceNotFoundException do continue;
+      on E : EResourceNotFoundException do continue;
     end;
-    if similarities[i]=similarities[maxidx] then
+    if Similarities[I]=Similarities[MaxIdx] then
     begin
-      res.Free;
-      Items[i].Modified:=true;
+      Res.Free;
+      Items[I].Modified:=True;
     end
     else
-      Items[i].Processed.Add(res);
+      Items[I].Processed.Add(Res);
   end;
 end;
 
 constructor TSourceFiles.Create;
 begin
-  fList:=TFPList.Create;
+  FList:=TFPList.Create;
 end;
 
 destructor TSourceFiles.Destroy;
-var i : integer;
+var I : Integer;
 begin
-  for i:=0 to fList.Count-1 do
-    TSourceFile(fList[i]).Free;
-  fList.Free;
+  for I:=0 to FList.Count-1 do
+    TSourceFile(FList[I]).Free;
+  FList.Free;
 end;
 
-procedure TSourceFiles.NewSourceFile(aFileName : string);
-var aFile : TSourceFile;
+procedure TSourceFiles.NewSourceFile(AFileName : string);
+var AFile : TSourceFile;
 begin
-  aFile:=TSourceFile.Create(aFileName);
-  fList.Add(aFile);
+  AFile:=TSourceFile.Create(AFileName);
+  FList.Add(AFile);
 end;
 
-procedure TSourceFiles.Process(outRes: TResources);
-var i : integer;
-    res : TAbstractResource;
+procedure TSourceFiles.Process(OutRes: TResources);
+var I : Integer;
+    Res : TAbstractResource;
 begin
-  setlength(similarities,Count);
-  setlength(simcount,Count);
-  for i:=0 to Count-1 do
+  SetLength(Similarities,Count);
+  SetLength(SimCount,Count);
+  for I:=0 to Count-1 do
   begin
-    while Items[i].Resources.Count>0 do
+    while Items[I].Resources.Count>0 do
     begin
       ResetSimArrays;
-      res:=Items[i].Resources[Items[i].Resources.Count-1];
-      if res.Owner<>nil then
-        res:=res.Owner;
+      Res:=Items[I].Resources[Items[I].Resources.Count-1];
+      if Res.Owner<>nil then
+        Res:=Res.Owner;
 
-      CheckSimilarities(i,res._Type,res.Name,res.LangID);
-      ExtractCommon(i,outRes,res._Type,res.Name,res.LangID);
+      CheckSimilarities(I,Res._Type,Res.Name,Res.LangID);
+      ExtractCommon(I,OutRes,Res._Type,Res.Name,Res.LangID);
     end;
-    Items[i].Resources.MoveFrom(Items[i].Processed);
+    Items[I].Resources.MoveFrom(Items[I].Processed);
   end;
 end;
 
 procedure TSourceFiles.Update;
-var i : integer;
+var I : Integer;
 begin
-  for i:=0 to Count-1 do
-    Items[i].Update;
+  for I:=0 to Count-1 do
+    Items[I].Update;
 end;
 
 end.

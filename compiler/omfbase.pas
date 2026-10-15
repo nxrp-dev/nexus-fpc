@@ -27,8 +27,8 @@ unit omfbase;
 interface
 {$H+}
   uses
-    sysutils,
-    cclasses,
+    SysUtils,
+    CClasses,
     aasmbase,
     owbase;
 
@@ -301,7 +301,7 @@ interface
 
     { TOmfRecord_THEADR }
 
-    TOmfRecord_THEADR = class(TOmfParsedRecord)
+    TOMFRecordTHEADR = class(TOmfParsedRecord)
     private
       FModuleName: string;
     public
@@ -313,7 +313,7 @@ interface
 
     { TOmfRecord_COMENT }
 
-    TOmfRecord_COMENT = class(TOmfParsedRecord)
+    TOMFRecordCOMENT = class(TOmfParsedRecord)
     private
       FCommentType: Byte;
       FCommentClass: Byte;
@@ -335,15 +335,15 @@ interface
 
     { TOmfRecord_COMENT_Subtype }
 
-    TOmfRecord_COMENT_Subtype = class
+    TOMFRecordCOMENTSubtype = class
     public
-      procedure DecodeFrom(ComentRecord: TOmfRecord_COMENT);virtual;abstract;
-      procedure EncodeTo(ComentRecord: TOmfRecord_COMENT);virtual;abstract;
+      procedure DecodeFrom(ComentRecord: TOMFRecordCOMENT);virtual;abstract;
+      procedure EncodeTo(ComentRecord: TOMFRecordCOMENT);virtual;abstract;
     end;
 
     { TOmfRecord_COMENT_IMPDEF }
 
-    TOmfRecord_COMENT_IMPDEF = class(TOmfRecord_COMENT_Subtype)
+    TOMFRecordCOMENTIMPDEF = class(TOMFRecordCOMENTSubtype)
     private
       FImportByOrdinal: Boolean;
       FInternalName: string;
@@ -351,8 +351,8 @@ interface
       FOrdinal: Word;
       FName: string;
     public
-      procedure DecodeFrom(ComentRecord: TOmfRecord_COMENT);override;
-      procedure EncodeTo(ComentRecord: TOmfRecord_COMENT);override;
+      procedure DecodeFrom(ComentRecord: TOMFRecordCOMENT);override;
+      procedure EncodeTo(ComentRecord: TOMFRecordCOMENT);override;
 
       property ImportByOrdinal: Boolean read FImportByOrdinal write FImportByOrdinal;
       property InternalName: string read FInternalName write FInternalName;
@@ -363,7 +363,7 @@ interface
 
     { TOmfRecord_COMENT_EXPDEF }
 
-    TOmfRecord_COMENT_EXPDEF = class(TOmfRecord_COMENT_Subtype)
+    TOMFRecordCOMENTEXPDEF = class(TOMFRecordCOMENTSubtype)
     private
       FExportByOrdinal: Boolean;
       FResidentName: Boolean;
@@ -373,8 +373,8 @@ interface
       FInternalName: string;
       FExportOrdinal: Word;
     public
-      procedure DecodeFrom(ComentRecord: TOmfRecord_COMENT);override;
-      procedure EncodeTo(ComentRecord: TOmfRecord_COMENT);override;
+      procedure DecodeFrom(ComentRecord: TOMFRecordCOMENT);override;
+      procedure EncodeTo(ComentRecord: TOMFRecordCOMENT);override;
 
       property ExportByOrdinal: Boolean read FExportByOrdinal write FExportByOrdinal;
       property ResidentName: Boolean read FResidentName write FResidentName;
@@ -387,7 +387,7 @@ interface
 
     { TOmfRecord_LNAMES }
 
-    TOmfRecord_LNAMES = class(TOmfParsedRecord)
+    TOMFRecordLNAMES = class(TOmfParsedRecord)
     private
       FNames: TOmfOrderedNameCollection;
       FNextIndex: Integer;
@@ -403,7 +403,7 @@ interface
 
     { TOmfRecord_SEGDEF }
 
-    TOmfRecord_SEGDEF = class(TOmfParsedRecord)
+    TOMFRecordSEGDEF = class(TOmfParsedRecord)
     private
       FAlignment: TOmfSegmentAlignment;
       FCombination: TOmfSegmentCombination;
@@ -437,7 +437,7 @@ interface
 
     { TOmfRecord_GRPDEF }
 
-    TOmfRecord_GRPDEF = class(TOmfParsedRecord)
+    TOMFRecordGRPDEF = class(TOmfParsedRecord)
     private
       FGroupNameIndex: Integer;
       FSegmentList: TSegmentList;
@@ -468,7 +468,7 @@ interface
 
     { TOmfRecord_PUBDEF }
 
-    TOmfRecord_PUBDEF = class(TOmfParsedRecord)
+    TOMFRecordPUBDEF = class(TOmfParsedRecord)
     private
       FIs32Bit: Boolean;
       FIsLocal: Boolean;
@@ -507,7 +507,7 @@ interface
 
     { TOmfRecord_EXTDEF }
 
-    TOmfRecord_EXTDEF = class(TOmfParsedRecord)
+    TOMFRecordEXTDEF = class(TOmfParsedRecord)
     private
       FExternalNames: TFPHashObjectList;
       FNextIndex: Integer;
@@ -521,7 +521,7 @@ interface
 
     { TOmfRecord_MODEND }
 
-    TOmfRecord_MODEND = class(TOmfParsedRecord)
+    TOMFRecordMODEND = class(TOmfParsedRecord)
     private
       FIs32Bit: Boolean;
       FIsMainModule: Boolean;
@@ -561,7 +561,7 @@ interface
 
     { TOmfRecord_LINNUM }
 
-    TOmfRecord_LINNUM = class(TOmfParsedRecord)
+    TOMFRecordLINNUM = class(TOmfParsedRecord)
     private
       FIs32Bit: Boolean;
       FBaseGroup: Integer;
@@ -584,7 +584,7 @@ interface
 
     { TOmfSubRecord_LINNUM_MsLink_Entry }
 
-    TOmfSubRecord_LINNUM_MsLink_Entry = class
+    TOMFSubRecordLINNUMMsLinkEntry = class
     private
       FLineNumber: TOmfSubRecord_LINNUM_MsLink_LineNumber;
       FOffset: DWord;
@@ -596,33 +596,33 @@ interface
 
     { TOmfSubRecord_LINNUM_MsLink_LineNumberList }
 
-    TOmfSubRecord_LINNUM_MsLink_LineNumberList = class
+    TOMFSubRecordLINNUMMsLinkLineNumberList = class
     private
       FLineNumbers: TFPObjectList;
       function GetCount: Integer;
-      function GetItem(Index: Integer): TOmfSubRecord_LINNUM_MsLink_Entry;
+      function GetItem(Index: Integer): TOMFSubRecordLINNUMMsLinkEntry;
       procedure SetCount(AValue: Integer);
-      procedure SetItem(Index: Integer; AValue: TOmfSubRecord_LINNUM_MsLink_Entry);
+      procedure SetItem(Index: Integer; AValue: TOMFSubRecordLINNUMMsLinkEntry);
     public
       constructor Create;
       destructor Destroy;override;
 
       procedure Clear;
-      function Add(AObject: TOmfSubRecord_LINNUM_MsLink_Entry): Integer;
+      function Add(AObject: TOMFSubRecordLINNUMMsLinkEntry): Integer;
       property Count: Integer read GetCount write SetCount;
-      property Items[Index: Integer]: TOmfSubRecord_LINNUM_MsLink_Entry read GetItem write SetItem; default;
+      property Items[Index: Integer]: TOMFSubRecordLINNUMMsLinkEntry read GetItem write SetItem; default;
     end;
 
     { TOmfRecord_LINNUM_MsLink }
 
-    TOmfRecord_LINNUM_MsLink = class(TOmfRecord_LINNUM)
+    TOMFRecordLINNUMMsLink = class(TOMFRecordLINNUM)
     private
-      FLineNumberList: TOmfSubRecord_LINNUM_MsLink_LineNumberList;
+      FLineNumberList: TOMFSubRecordLINNUMMsLinkLineNumberList;
     protected
       procedure DebugFormatSpecific_DecodeFrom(RawRecord:TOmfRawRecord;NextOfs:Integer);override;
       procedure DebugFormatSpecific_EncodeTo(RawRecord:TOmfRawRecord;var NextOfs:Integer);override;
     public
-      property LineNumberList: TOmfSubRecord_LINNUM_MsLink_LineNumberList read FLineNumberList write FLineNumberList;
+      property LineNumberList: TOMFSubRecordLINNUMMsLinkLineNumberList read FLineNumberList write FLineNumberList;
     end;
 
     { TOmfThread }
@@ -673,7 +673,7 @@ interface
 
     { TOmfSubRecord_THREAD }
 
-    TOmfSubRecord_THREAD = class
+    TOMFSubRecordTHREAD = class
     private
       FThreadNumber: TOmfFixupThread;
       FThreadType: TOmfThreadType;
@@ -695,7 +695,7 @@ interface
 
     { TOmfSubRecord_FIXUP }
 
-    TOmfSubRecord_FIXUP = class
+    TOMFSubRecordFIXUP = class
     private
       FIs32Bit: Boolean;
       FMode: TOmfFixupMode;
@@ -742,7 +742,7 @@ interface
 
     { TOmfRecord_LIBHEAD }
 
-    TOmfRecord_LIBHEAD = class(TOmfParsedRecord)
+    TOMFRecordLIBHEAD = class(TOmfParsedRecord)
     private
       FPageSize: Integer;
       FDictionaryOffset: DWord;
@@ -765,7 +765,7 @@ interface
 
     { TOmfRecord_LIBEND }
 
-    TOmfRecord_LIBEND = class(TOmfParsedRecord)
+    TOMFRecordLIBEND = class(TOmfParsedRecord)
     private
       FPaddingBytes: Word;
     public
@@ -1321,7 +1321,7 @@ interface
 
   { OMF segment class names for the object sections, produced by the FPC code generator }
   function omf_segclass(atype:TAsmSectiontype):string;
-  function omf_sectiontype2align(atype:TAsmSectiontype):longint;
+  function omf_sectiontype2align(atype:TAsmSectiontype):LongInt;
   { returns whether the specified section type belongs to the group DGROUP in
     the current memory model. DGROUP is the segment group pointed by DS }
   function section_belongs_to_dgroup(atype:TAsmSectiontype): Boolean;
@@ -1330,10 +1330,10 @@ interface
 implementation
 
   uses
-    cutils,globtype,globals,
-    cpuinfo,
-    verbose,
-    fmodule;
+    CUtils,GlobType,Globals,
+    CPUInfo,
+    Verbose,
+    FModule;
 
   { TOmfOrderedNameCollection }
 
@@ -1407,7 +1407,7 @@ implementation
       len:=RawData[Offset];
       Result:=Offset+len+1;
       if result>RecordLength then
-        internalerror(2015033103);
+        InternalError(2015033103);
       SetLength(s, len);
       UniqueString(s);
       if len>0 then
@@ -1416,14 +1416,14 @@ implementation
 
   function TOmfRawRecord.WriteStringAt(Offset: Integer; s: string): Integer;
     var
-      len : longint;
+      len : LongInt;
     begin
       len:=Length(s);
       if len>255 then
-        internalerror(2015033101);
+        InternalError(2015033101);
       result:=Offset+len+1;
       if result>High(RawData) then
-        internalerror(2015033102);
+        InternalError(2015033102);
       RawData[Offset]:=len;
       if len>0 then
         Move(s[1], RawData[Offset+1], len);
@@ -1433,32 +1433,32 @@ implementation
     begin
       Result:=Offset+1;
       if result>RecordLength then
-        internalerror(2015033108);
+        InternalError(2015033108);
       IndexedRef:=RawData[Offset];
       if IndexedRef<=$7f then
         exit;
       Result:=Offset+2;
       if result>RecordLength then
-        internalerror(2015033109);
+        InternalError(2015033109);
       IndexedRef:=((IndexedRef and $7f) shl 8)+RawData[Offset+1];
     end;
 
   function TOmfRawRecord.WriteIndexedRef(Offset: Integer; IndexedRef: Integer): Integer;
     begin
       if (IndexedRef<0) or (IndexedRef>$7FFF) then
-        internalerror(2015040303);
+        InternalError(2015040303);
       if IndexedRef<=$7f then
         begin
           Result:=Offset+1;
           if Result>High(RawData) then
-            internalerror(2015033106);
+            InternalError(2015033106);
           RawData[Offset]:=IndexedRef;
         end
       else
         begin
           Result:=Offset+2;
           if Result>High(RawData) then
-            internalerror(2015033107);
+            InternalError(2015033107);
           RawData[Offset]:=$80+(IndexedRef shr 8);
           RawData[Offset+1]:=Byte(IndexedRef);
         end;
@@ -1528,14 +1528,14 @@ implementation
 
   { TOmfRecord_THEADR }
 
-  procedure TOmfRecord_THEADR.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordTHEADR.DecodeFrom(RawRecord: TOmfRawRecord);
     begin
       if RawRecord.RecordType<>RT_THEADR then
-        internalerror(2015040301);
+        InternalError(2015040301);
       RawRecord.ReadStringAt(0,FModuleName);
     end;
 
-  procedure TOmfRecord_THEADR.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordTHEADR.EncodeTo(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
     begin
@@ -1547,17 +1547,17 @@ implementation
 
   { TOmfRecord_COMENT }
 
-  function TOmfRecord_COMENT.GetNoList: Boolean;
+  function TOMFRecordCOMENT.GetNoList: Boolean;
     begin
       Result:=(CommentType and $40)<>0;
     end;
 
-  function TOmfRecord_COMENT.GetNoPurge: Boolean;
+  function TOMFRecordCOMENT.GetNoPurge: Boolean;
     begin
       Result:=(CommentType and $80)<>0;
     end;
 
-  procedure TOmfRecord_COMENT.SetNoList(AValue: Boolean);
+  procedure TOMFRecordCOMENT.SetNoList(AValue: Boolean);
     begin
       if AValue then
         CommentType:=CommentType or $40
@@ -1565,7 +1565,7 @@ implementation
         CommentType:=CommentType and $BF;
     end;
 
-  procedure TOmfRecord_COMENT.SetNoPurge(AValue: Boolean);
+  procedure TOMFRecordCOMENT.SetNoPurge(AValue: Boolean);
     begin
       if AValue then
         CommentType:=CommentType or $80
@@ -1573,12 +1573,12 @@ implementation
         CommentType:=CommentType and $7F;
     end;
 
-  procedure TOmfRecord_COMENT.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordCOMENT.DecodeFrom(RawRecord: TOmfRawRecord);
     begin
       if RawRecord.RecordType<>RT_COMENT then
-        internalerror(2015040304);
+        InternalError(2015040304);
       if RawRecord.RecordLength<3 then
-        internalerror(2015033104);
+        InternalError(2015033104);
       CommentType:=RawRecord.RawData[0];
       CommentClass:=RawRecord.RawData[1];
       SetLength(FCommentString,RawRecord.RecordLength-3);
@@ -1586,14 +1586,14 @@ implementation
       Move(RawRecord.RawData[2],FCommentString[1],Length(FCommentString));
     end;
 
-  procedure TOmfRecord_COMENT.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordCOMENT.EncodeTo(RawRecord: TOmfRawRecord);
     var
-      len : longint;
+      len : LongInt;
     begin
       RawRecord.RecordType:=RT_COMENT;
       len:=Length(FCommentString);
       if (len+3)>High(RawRecord.RawData) then
-        internalerror(2015033105);
+        InternalError(2015033105);
       RawRecord.RecordLength:=len+3;
       RawRecord.RawData[0]:=CommentType;
       RawRecord.RawData[1]:=CommentClass;
@@ -1604,23 +1604,23 @@ implementation
 
   { TOmfRecord_COMENT_IMPDEF }
 
-  procedure TOmfRecord_COMENT_IMPDEF.DecodeFrom(ComentRecord: TOmfRecord_COMENT);
+  procedure TOMFRecordCOMENTIMPDEF.DecodeFrom(ComentRecord: TOMFRecordCOMENT);
     var
       InternalNameLen, ModuleNameLenIdx, ModuleNameLen, NameLenIdx,
         NameLen, OrdinalIdx: Integer;
     begin
       if ComentRecord.CommentClass<>CC_OmfExtension then
-        internalerror(2019061621);
+        InternalError(2019061621);
       if Length(ComentRecord.CommentString)<5 then
-        internalerror(2019061622);
+        InternalError(2019061622);
       if ComentRecord.CommentString[1]<>Chr(CC_OmfExtension_IMPDEF) then
-        internalerror(2019061623);
+        InternalError(2019061623);
       ImportByOrdinal:=Ord(ComentRecord.CommentString[2])<>0;
       InternalNameLen:=Ord(ComentRecord.CommentString[3]);
       InternalName:=Copy(ComentRecord.CommentString,4,InternalNameLen);
       ModuleNameLenIdx:=4+InternalNameLen;
       if ModuleNameLenIdx>Length(ComentRecord.CommentString) then
-        internalerror(2019061624);
+        InternalError(2019061624);
       ModuleNameLen:=Ord(ComentRecord.CommentString[ModuleNameLenIdx]);
       ModuleName:=Copy(ComentRecord.CommentString,ModuleNameLenIdx+1,ModuleNameLen);
       if ImportByOrdinal then
@@ -1628,7 +1628,7 @@ implementation
           Name:='';
           OrdinalIdx:=ModuleNameLenIdx+1+ModuleNameLen;
           if (OrdinalIdx+1)>Length(ComentRecord.CommentString) then
-            internalerror(2019061625);
+            InternalError(2019061625);
           Ordinal:=LEtoN(unaligned(PUint16(@ComentRecord.CommentString[OrdinalIdx{..OrdinalIdx+1}])^));
         end
       else
@@ -1636,17 +1636,17 @@ implementation
           Ordinal:=0;
           NameLenIdx:=ModuleNameLenIdx+1+ModuleNameLen;
           if NameLenIdx>Length(ComentRecord.CommentString) then
-            internalerror(2019061626);
+            InternalError(2019061626);
           NameLen:=Ord(ComentRecord.CommentString[NameLenIdx]);
           if (NameLenIdx+NameLen)>Length(ComentRecord.CommentString) then
-            internalerror(2019061627);
+            InternalError(2019061627);
           Name:=Copy(ComentRecord.CommentString,NameLenIdx+1,NameLen);
           if Name='' then
             Name:=InternalName;
         end;
     end;
 
-  procedure TOmfRecord_COMENT_IMPDEF.EncodeTo(ComentRecord: TOmfRecord_COMENT);
+  procedure TOMFRecordCOMENTIMPDEF.EncodeTo(ComentRecord: TOMFRecordCOMENT);
     begin
       ComentRecord.CommentClass:=CC_OmfExtension;
       if ImportByOrdinal then
@@ -1667,18 +1667,18 @@ implementation
 
   { TOmfRecord_COMENT_EXPDEF }
 
-  procedure TOmfRecord_COMENT_EXPDEF.DecodeFrom(ComentRecord: TOmfRecord_COMENT);
+  procedure TOMFRecordCOMENTEXPDEF.DecodeFrom(ComentRecord: TOMFRecordCOMENT);
     var
       expflag: Byte;
       ExportedNameLen, InternalNameLenIdx, InternalNameLen,
         ExportOrdinalIdx: Integer;
     begin
       if ComentRecord.CommentClass<>CC_OmfExtension then
-        internalerror(2019061601);
+        InternalError(2019061601);
       if Length(ComentRecord.CommentString)<4 then
-        internalerror(2019061602);
+        InternalError(2019061602);
       if ComentRecord.CommentString[1]<>Chr(CC_OmfExtension_EXPDEF) then
-        internalerror(2019061603);
+        InternalError(2019061603);
       expflag:=Ord(ComentRecord.CommentString[2]);
       ExportByOrdinal:=(expflag and $80)<>0;
       ResidentName:=(expflag and $40)<>0;
@@ -1688,16 +1688,16 @@ implementation
       ExportedName:=Copy(ComentRecord.CommentString,4,ExportedNameLen);
       InternalNameLenIdx:=4+ExportedNameLen;
       if InternalNameLenIdx>Length(ComentRecord.CommentString) then
-        internalerror(2019061604);
+        InternalError(2019061604);
       InternalNameLen:=Ord(ComentRecord.CommentString[InternalNameLenIdx]);
       if (InternalNameLenIdx+InternalNameLen)>Length(ComentRecord.CommentString) then
-        internalerror(2019061605);
+        InternalError(2019061605);
       InternalName:=Copy(ComentRecord.CommentString,InternalNameLenIdx+1,InternalNameLen);
       if ExportByOrdinal then
         begin
           ExportOrdinalIdx:=InternalNameLenIdx+1+InternalNameLen;
           if (ExportOrdinalIdx+1)>Length(ComentRecord.CommentString) then
-            internalerror(2019061606);
+            InternalError(2019061606);
           ExportOrdinal:=LEtoN(unaligned(PUint16(@ComentRecord.CommentString[ExportOrdinalIdx{..ExportOrdinalIdx+1}])^));
         end
       else
@@ -1706,14 +1706,14 @@ implementation
         InternalName:=ExportedName;
     end;
 
-  procedure TOmfRecord_COMENT_EXPDEF.EncodeTo(ComentRecord: TOmfRecord_COMENT);
+  procedure TOMFRecordCOMENTEXPDEF.EncodeTo(ComentRecord: TOMFRecordCOMENT);
     var
       expflag: Byte;
     begin
       ComentRecord.CommentClass:=CC_OmfExtension;
 
       if (ParmCount<0) or (ParmCount>31) then
-        internalerror(2019061504);
+        InternalError(2019061504);
       expflag:=ParmCount;
       if ExportByOrdinal then
         expflag:=expflag or $80;
@@ -1744,18 +1744,18 @@ implementation
 
   { TOmfRecord_LNAMES }
 
-  constructor TOmfRecord_LNAMES.Create;
+  constructor TOMFRecordLNAMES.Create;
     begin
       FNextIndex:=1;
     end;
 
-  procedure TOmfRecord_LNAMES.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLNAMES.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
       Name: string;
     begin
       if RawRecord.RecordType<>RT_LNAMES then
-        internalerror(2015040308);
+        InternalError(2015040308);
       NextOfs:=0;
       while NextOfs<(RawRecord.RecordLength-1) do
         begin
@@ -1764,7 +1764,7 @@ implementation
         end;
     end;
 
-  procedure TOmfRecord_LNAMES.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLNAMES.EncodeTo(RawRecord: TOmfRawRecord);
     const
       RecordLengthLimit = 1024;
     var
@@ -1793,7 +1793,7 @@ implementation
 
   { TOmfRecord_SEGDEF }
 
-  procedure TOmfRecord_SEGDEF.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordSEGDEF.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       B: Byte;
       Big: Boolean;
@@ -1801,14 +1801,14 @@ implementation
       MinLen: Integer;
     begin
       if not (RawRecord.RecordType in [RT_SEGDEF,RT_SEGDEF32]) then
-        internalerror(2015040309);
+        InternalError(2015040309);
       Is32Bit:=RawRecord.RecordType=RT_SEGDEF32;
 
       MinLen:=7; { b(1)+seglength(2..4)+segnameindex(1..2)+classnameindex(1..2)+overlaynameindex(1..2)+checksum }
       if Is32Bit then
         inc(MinLen,2);
       if RawRecord.RecordLength<MinLen then
-        internalerror(2015040305);
+        InternalError(2015040305);
       B:=RawRecord.RawData[0];
       Alignment:=TOmfSegmentAlignment(B shr 5);
       Combination:=TOmfSegmentCombination((B shr 2) and 7);
@@ -1819,7 +1819,7 @@ implementation
         begin
           inc(MinLen,3);
           if RawRecord.RecordLength<MinLen then
-            internalerror(2015040317);
+            InternalError(2015040317);
           FrameNumber:=LEtoN(unaligned(PUint16(@RawRecord.RawData[1{..2}])^));
           Offset:=RawRecord.RawData[3];
           NextOfs:=4;
@@ -1836,7 +1836,7 @@ implementation
             if SegmentLength=0 then
               SegmentLength:=4294967296
             else
-              internalerror(2015040306);
+              InternalError(2015040306);
           Inc(NextOfs,4);
         end
       else
@@ -1846,7 +1846,7 @@ implementation
             if SegmentLength=0 then
               SegmentLength:=65536
             else
-              internalerror(2015040323);
+              InternalError(2015040323);
           Inc(NextOfs,2);
         end;
       NextOfs:=RawRecord.ReadIndexedRef(NextOfs,FSegmentNameIndex);
@@ -1854,7 +1854,7 @@ implementation
       NextOfs:=RawRecord.ReadIndexedRef(NextOfs,FOverlayNameIndex);
     end;
 
-  procedure TOmfRecord_SEGDEF.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordSEGDEF.EncodeTo(RawRecord: TOmfRawRecord);
     var
       Big: Boolean;
       NextOfs: Integer;
@@ -1864,14 +1864,14 @@ implementation
         begin
           RawRecord.RecordType:=RT_SEGDEF32;
           if SegmentLength>4294967296 then
-            internalerror(2015040307);
+            InternalError(2015040307);
           Big:=SegmentLength=4294967296;
         end
       else
         begin
           RawRecord.RecordType:=RT_SEGDEF;
           if SegmentLength>65536 then
-            internalerror(2015040302);
+            InternalError(2015040302);
           Big:=SegmentLength=65536;
         end;
       RawRecord.RawData[0]:=(Ord(Alignment) shl 5) or (Ord(Combination) shl 2) or (Ord(Big) shl 1) or Ord(Use);
@@ -1899,7 +1899,7 @@ implementation
       RawRecord.CalculateChecksumByte;
     end;
 
-  procedure TOmfRecord_SEGDEF.MaybeGo32;
+  procedure TOMFRecordSEGDEF.MaybeGo32;
     begin
       if SegmentLength>65536 then
         Is32Bit:=true;
@@ -1907,26 +1907,26 @@ implementation
 
   { TOmfRecord_GRPDEF }
 
-  procedure TOmfRecord_GRPDEF.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordGRPDEF.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
       Segment: Integer;
     begin
       if RawRecord.RecordType<>RT_GRPDEF then
-        internalerror(2015040310);
+        InternalError(2015040310);
       NextOfs:=RawRecord.ReadIndexedRef(0,FGroupNameIndex);
       SetLength(FSegmentList,0);
       while NextOfs<RawRecord.RecordLength-1 do
         begin
           if RawRecord.RawData[NextOfs]<>$ff then
-            internalerror(2015040901);
+            InternalError(2015040901);
           NextOfs:=RawRecord.ReadIndexedRef(NextOfs+1,Segment);
           SetLength(FSegmentList,Length(FSegmentList)+1);
           FSegmentList[High(FSegmentList)]:=Segment;
         end;
     end;
 
-  procedure TOmfRecord_GRPDEF.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordGRPDEF.EncodeTo(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
       Segment: Integer;
@@ -1936,7 +1936,7 @@ implementation
       for Segment in SegmentList do
         begin
           if NextOfs>High(RawRecord.RawData) then
-            internalerror(2015040401);
+            InternalError(2015040401);
           RawRecord.RawData[NextOfs]:=$ff;
           NextOfs:=RawRecord.WriteIndexedRef(NextOfs+1,Segment);
         end;
@@ -1944,7 +1944,7 @@ implementation
       RawRecord.CalculateChecksumByte;
     end;
 
-  procedure TOmfRecord_GRPDEF.AddSegmentIndex(segidx: Integer);
+  procedure TOMFRecordGRPDEF.AddSegmentIndex(segidx: Integer);
     begin
       SetLength(FSegmentList,Length(FSegmentList)+1);
       FSegmentList[High(FSegmentList)]:=segidx;
@@ -1963,7 +1963,7 @@ implementation
 
   { TOmfRecord_PUBDEF }
 
-  procedure TOmfRecord_PUBDEF.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordPUBDEF.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
       Name: string;
@@ -1972,7 +1972,7 @@ implementation
       PubName: TOmfPublicNameElement;
     begin
       if not (RawRecord.RecordType in [RT_PUBDEF,RT_PUBDEF32,RT_LPUBDEF,RT_LPUBDEF32]) then
-        internalerror(2015040311);
+        InternalError(2015040311);
       Is32Bit:=RawRecord.RecordType in [RT_PUBDEF32,RT_LPUBDEF32];
       IsLocal:=RawRecord.RecordType in [RT_LPUBDEF,RT_LPUBDEF32];
 
@@ -1981,7 +1981,7 @@ implementation
       if BaseSegmentIndex=0 then
         begin
           if (NextOfs+1)>=RawRecord.RecordLength then
-            internalerror(2015041401);
+            InternalError(2015041401);
           BaseFrame:=LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^));
           Inc(NextOfs,2);
         end
@@ -1994,14 +1994,14 @@ implementation
           if Is32Bit then
             begin
               if (NextOfs+3)>=RawRecord.RecordLength then
-                internalerror(2015041405);
+                InternalError(2015041405);
               PublicOffset:=LEtoN(unaligned(PUint32(@RawRecord.RawData[NextOfs{..NextOfs+3}])^));
               Inc(NextOfs,4);
             end
           else
             begin
               if (NextOfs+1)>=RawRecord.RecordLength then
-                internalerror(2015041407);
+                InternalError(2015041407);
               PublicOffset:=LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^));
               Inc(NextOfs,2);
             end;
@@ -2013,7 +2013,7 @@ implementation
         end;
     end;
 
-  procedure TOmfRecord_PUBDEF.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordPUBDEF.EncodeTo(RawRecord: TOmfRawRecord);
     const
       RecordLengthLimit = 1024;
     var
@@ -2021,7 +2021,7 @@ implementation
       PubName: TOmfPublicNameElement;
     begin
       if NextIndex>=PublicNames.Count then
-        internalerror(2018061101);
+        InternalError(2018061101);
       MaybeGo32;
       IsLocal:=TOmfPublicNameElement(PublicNames[NextIndex]).IsLocal;
       if IsLocal then
@@ -2066,7 +2066,7 @@ implementation
           else
             begin
               if PubName.PublicOffset>$ffff then
-                internalerror(2015041403);
+                InternalError(2015041403);
               unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^):=NtoLE(uint16(PubName.PublicOffset));
               Inc(NextOfs,2);
             end;
@@ -2079,7 +2079,7 @@ implementation
       NextIndex:=LastIncludedIndex+1;
     end;
 
-  procedure TOmfRecord_PUBDEF.MaybeGo32;
+  procedure TOMFRecordPUBDEF.MaybeGo32;
     var
       I: Integer;
       PubName: TOmfPublicNameElement;
@@ -2106,7 +2106,7 @@ implementation
 
   { TOmfRecord_EXTDEF }
 
-  procedure TOmfRecord_EXTDEF.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordEXTDEF.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
       Name: string;
@@ -2114,7 +2114,7 @@ implementation
       ExtName: TOmfExternalNameElement;
     begin
       if RawRecord.RecordType<>RT_EXTDEF then
-        internalerror(2015040312);
+        InternalError(2015040312);
       NextOfs:=0;
       while NextOfs<(RawRecord.RecordLength-1) do
         begin
@@ -2125,7 +2125,7 @@ implementation
         end;
     end;
 
-  procedure TOmfRecord_EXTDEF.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordEXTDEF.EncodeTo(RawRecord: TOmfRawRecord);
     const
       RecordLengthLimit = 1024;
     var
@@ -2159,25 +2159,25 @@ implementation
 
   { TOmfRecord_MODEND }
 
-  procedure TOmfRecord_MODEND.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordMODEND.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       ModTyp: Byte;
       NextOfs: Integer;
       EndData: Byte;
     begin
       if not (RawRecord.RecordType in [RT_MODEND,RT_MODEND32]) then
-        internalerror(2015040313);
+        InternalError(2015040313);
       Is32Bit:=RawRecord.RecordType=RT_MODEND32;
 
       if RawRecord.RecordLength<2 then
-        internalerror(2015040318);
+        InternalError(2015040318);
       ModTyp:=RawRecord.RawData[0];
       IsMainModule:=(ModTyp and $80)<>0;
       HasStartAddress:=(ModTyp and $40)<>0;
       SegmentBit:=(ModTyp and $20)<>0;
       LogicalStartAddress:=(ModTyp and $01)<>0;
       if (ModTyp and $1E)<>0 then
-        internalerror(2015041404);
+        InternalError(2015041404);
       NextOfs:=1;
 
       { clear all the start address properties first }
@@ -2194,17 +2194,17 @@ implementation
           if LogicalStartAddress then
             begin
               if NextOfs>=RawRecord.RecordLength then
-                internalerror(2015040319);
+                InternalError(2015040319);
               EndData:=RawRecord.RawData[NextOfs];
               Inc(NextOfs);
               { frame and target method determined by thread is not allowed in MODEND records }
               if (EndData and $88)<>0 then
-                internalerror(2015041406);
+                InternalError(2015041406);
               FrameMethod:=TOmfFixupFrameMethod((EndData shr 4) and 7);
               TargetMethod:=TOmfFixupTargetMethod(EndData and 7);
               { frame method ffmLocation is not allowed in an MODEND record }
               if FrameMethod=ffmLocation then
-                internalerror(2015041402);
+                InternalError(2015041402);
               { read Frame Datum? }
               if FrameMethod in [ffmSegmentIndex,ffmGroupIndex,ffmExternalIndex,ffmFrameNumber] then
                 NextOfs:=RawRecord.ReadIndexedRef(NextOfs,FFrameDatum);
@@ -2216,14 +2216,14 @@ implementation
                   if Is32Bit then
                     begin
                       if (NextOfs+3)>=RawRecord.RecordLength then
-                        internalerror(2015040504);
+                        InternalError(2015040504);
                       TargetDisplacement := LEtoN(unaligned(PUint32(@RawRecord.RawData[NextOfs{..NextOfs+3}])^));
                       Inc(NextOfs,4);
                     end
                   else
                     begin
                       if (NextOfs+1)>=RawRecord.RecordLength then
-                        internalerror(2015040508);
+                        InternalError(2015040508);
                       TargetDisplacement := LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^));
                       Inc(NextOfs,2);
                     end;
@@ -2233,20 +2233,20 @@ implementation
             begin
               { physical start address }
               if (NextOfs+1)>=RawRecord.RecordLength then
-                internalerror(2015040320);
+                InternalError(2015040320);
               PhysFrameNumber:=LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^));
               Inc(NextOfs,2);
               if Is32Bit then
                 begin
                   if (NextOfs+3)>=RawRecord.RecordLength then
-                    internalerror(2015040321);
+                    InternalError(2015040321);
                   PhysOffset:=LEtoN(unaligned(PUint32(@RawRecord.RawData[NextOfs{..NextOfs+3}])^));
                   Inc(NextOfs,4);
                 end
               else
                 begin
                   if (NextOfs+1)>=RawRecord.RecordLength then
-                    internalerror(2015040322);
+                    InternalError(2015040322);
                   PhysOffset:=LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^));
                   Inc(NextOfs,2);
                 end;
@@ -2254,7 +2254,7 @@ implementation
         end;
     end;
 
-  procedure TOmfRecord_MODEND.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordMODEND.EncodeTo(RawRecord: TOmfRawRecord);
     var
       ModTyp: Byte;
       NextOfs: Integer;
@@ -2273,7 +2273,7 @@ implementation
             begin
               { frame method ffmLocation is not allowed in an MODEND record }
               if FrameMethod=ffmLocation then
-                internalerror(2015041411);
+                InternalError(2015041411);
               EndData:=(Ord(FrameMethod) shl 4)+Ord(TargetMethod);
               RawRecord.RawData[NextOfs]:=EndData;
               Inc(NextOfs);
@@ -2293,7 +2293,7 @@ implementation
                   else
                     begin
                       if TargetDisplacement>$ffff then
-                        internalerror(2015040502);
+                        InternalError(2015040502);
                       unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^):=NtoLE(uint16(TargetDisplacement));
                       Inc(NextOfs,2);
                     end;
@@ -2312,7 +2312,7 @@ implementation
               else
                 begin
                   if PhysOffset>$ffff then
-                    internalerror(2015040506);
+                    InternalError(2015040506);
                   unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^):=NtoLE(uint16(PhysOffset));
                   Inc(NextOfs,2);
                 end;
@@ -2324,12 +2324,12 @@ implementation
 
   { TOmfRecord_LINNUM }
 
-  procedure TOmfRecord_LINNUM.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLINNUM.DecodeFrom(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
     begin
       if not (RawRecord.RecordType in [RT_LINNUM,RT_LINNUM32]) then
-        internalerror(2018050801);
+        InternalError(2018050801);
       Is32Bit:=RawRecord.RecordType=RT_LINNUM32;
 
       NextOfs:=RawRecord.ReadIndexedRef(0,FBaseGroup);
@@ -2338,7 +2338,7 @@ implementation
       DebugFormatSpecific_DecodeFrom(RawRecord,NextOfs);
     end;
 
-  procedure TOmfRecord_LINNUM.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLINNUM.EncodeTo(RawRecord: TOmfRawRecord);
     var
       NextOfs: Integer;
     begin
@@ -2358,7 +2358,7 @@ implementation
 
   { TOmfSubRecord_LINNUM_MsLink_Entry }
 
-  constructor TOmfSubRecord_LINNUM_MsLink_Entry.Create(ALineNumber: TOmfSubRecord_LINNUM_MsLink_LineNumber; AOffset: DWord);
+  constructor TOMFSubRecordLINNUMMsLinkEntry.Create(ALineNumber: TOmfSubRecord_LINNUM_MsLink_LineNumber; AOffset: DWord);
     begin
       LineNumber:=ALineNumber;
       Offset:=AOffset;
@@ -2366,55 +2366,55 @@ implementation
 
   { TOmfSubRecord_LINNUM_MsLink_LineNumberList }
 
-  function TOmfSubRecord_LINNUM_MsLink_LineNumberList.GetCount: Integer;
+  function TOMFSubRecordLINNUMMsLinkLineNumberList.GetCount: Integer;
     begin
       result:=FLineNumbers.Count;
     end;
 
-  function TOmfSubRecord_LINNUM_MsLink_LineNumberList.GetItem(Index: Integer
-    ): TOmfSubRecord_LINNUM_MsLink_Entry;
+  function TOMFSubRecordLINNUMMsLinkLineNumberList.GetItem(Index: Integer
+    ): TOMFSubRecordLINNUMMsLinkEntry;
     begin
-      result:=TOmfSubRecord_LINNUM_MsLink_Entry(FLineNumbers[Index]);
+      result:=TOMFSubRecordLINNUMMsLinkEntry(FLineNumbers[Index]);
     end;
 
-  procedure TOmfSubRecord_LINNUM_MsLink_LineNumberList.SetCount(AValue: Integer
+  procedure TOMFSubRecordLINNUMMsLinkLineNumberList.SetCount(AValue: Integer
     );
     begin
       FLineNumbers.Count:=AValue;
     end;
 
-  procedure TOmfSubRecord_LINNUM_MsLink_LineNumberList.SetItem(Index: Integer;
-    AValue: TOmfSubRecord_LINNUM_MsLink_Entry);
+  procedure TOMFSubRecordLINNUMMsLinkLineNumberList.SetItem(Index: Integer;
+    AValue: TOMFSubRecordLINNUMMsLinkEntry);
     begin
       FLineNumbers[Index]:=AValue;
     end;
 
-  constructor TOmfSubRecord_LINNUM_MsLink_LineNumberList.Create;
+  constructor TOMFSubRecordLINNUMMsLinkLineNumberList.Create;
     begin
       FLineNumbers:=TFPObjectList.Create(true);
     end;
 
-  destructor TOmfSubRecord_LINNUM_MsLink_LineNumberList.Destroy;
+  destructor TOMFSubRecordLINNUMMsLinkLineNumberList.Destroy;
     begin
       FLineNumbers.Free;
       FLineNumbers := nil;
       inherited Destroy;
     end;
 
-  procedure TOmfSubRecord_LINNUM_MsLink_LineNumberList.Clear;
+  procedure TOMFSubRecordLINNUMMsLinkLineNumberList.Clear;
     begin
       FLineNumbers.Clear;
     end;
 
-  function TOmfSubRecord_LINNUM_MsLink_LineNumberList.Add(
-    AObject: TOmfSubRecord_LINNUM_MsLink_Entry): Integer;
+  function TOMFSubRecordLINNUMMsLinkLineNumberList.Add(
+    AObject: TOMFSubRecordLINNUMMsLinkEntry): Integer;
     begin
       Result:=FLineNumbers.Add(AObject);
     end;
 
   { TOmfRecord_LINNUM_MsLink }
 
-  procedure TOmfRecord_LINNUM_MsLink.DebugFormatSpecific_DecodeFrom(
+  procedure TOMFRecordLINNUMMsLink.DebugFormatSpecific_DecodeFrom(
     RawRecord: TOmfRawRecord; NextOfs: Integer);
     var
       RecordSize: Integer;
@@ -2432,12 +2432,12 @@ implementation
             Offset:=LEtoN(unaligned(PUint32(@RawRecord.RawData[NextOfs+2{..NextOfs+5}])^))
           else
             Offset:=LEtoN(unaligned(PUint16(@RawRecord.RawData[NextOfs+2{..NextOfs+3}])^));
-          LineNumberList.Add(TOmfSubRecord_LINNUM_MsLink_Entry.Create(LineNumber,Offset));
+          LineNumberList.Add(TOMFSubRecordLINNUMMsLinkEntry.Create(LineNumber,Offset));
           Inc(NextOfs,RecordSize);
         end;
     end;
 
-  procedure TOmfRecord_LINNUM_MsLink.DebugFormatSpecific_EncodeTo(
+  procedure TOMFRecordLINNUMMsLink.DebugFormatSpecific_EncodeTo(
     RawRecord: TOmfRawRecord; var NextOfs: Integer);
     const
       RecordLengthLimit = 1024;
@@ -2470,7 +2470,7 @@ implementation
             else
               begin
                 if Offset>High(Word) then
-                  internalerror(2018050901);
+                  InternalError(2018050901);
                 unaligned(PUint16(@RawRecord.RawData[NextOfs{..NextOfs+1}])^):=NtoLE(uint16(Offset));
                 Inc(NextOfs,2);
               end;
@@ -2525,16 +2525,16 @@ implementation
 
   { TOmfSubRecord_THREAD }
 
-  function TOmfSubRecord_THREAD.ReadAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
+  function TOMFSubRecordTHREAD.ReadAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
     var
       B, Method: Byte;
     begin
       if Offset>=RawRecord.RecordLength then
-        internalerror(2018052901);
+        InternalError(2018052901);
       B:=RawRecord.RawData[Offset];
       Inc(Offset);
       if (B and $A0)<>0 then
-        internalerror(2018052902);
+        InternalError(2018052902);
       ThreadNumber:=TOmfFixupThread(B and 3);
       Method:=(B shr 2) and 7;
       if (B and $40)<>0 then
@@ -2546,7 +2546,7 @@ implementation
         begin
           ThreadType:=ttTarget;
           if Method>3 then
-            internalerror(2018052903);
+            InternalError(2018052903);
           TargetMethod:=TOmfFixupTargetMethod(Method);
         end;
       if Method<=3 then
@@ -2556,7 +2556,7 @@ implementation
       Result:=Offset;
     end;
 
-  function TOmfSubRecord_THREAD.WriteAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
+  function TOMFSubRecordTHREAD.WriteAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
     var
       B, Method: Byte;
     begin
@@ -2570,7 +2570,7 @@ implementation
           B:=0;
           Method:=Byte(TargetMethod) and 7;
           if Method>3 then
-            internalerror(2018052904);
+            InternalError(2018052904);
         end;
       Inc(B,Byte(ThreadNumber) and 3);
       Inc(B,Method shl 2);
@@ -2581,7 +2581,7 @@ implementation
       Result:=Offset;
     end;
 
-  procedure TOmfSubRecord_THREAD.ApplyTo(AThreads: TOmfThreads);
+  procedure TOMFSubRecordTHREAD.ApplyTo(AThreads: TOmfThreads);
     begin
       case ThreadType of
         ttFrame:
@@ -2601,12 +2601,12 @@ implementation
 
   { TOmfSubRecord_FIXUP }
 
-  function TOmfSubRecord_FIXUP.GetDataRecordOffset: Integer;
+  function TOMFSubRecordFIXUP.GetDataRecordOffset: Integer;
     begin
       Result:=FLocationOffset-FDataRecordStartOffset;
     end;
 
-  function TOmfSubRecord_FIXUP.GetLocationSize: Integer;
+  function TOMFSubRecordFIXUP.GetLocationSize: Integer;
     const
       OmfLocationType2Size: array [TOmfFixupLocationType] of Integer=
         (1,  // fltLoByte
@@ -2629,24 +2629,24 @@ implementation
       Result:=OmfLocationType2Size[LocationType];
     end;
 
-  procedure TOmfSubRecord_FIXUP.SetDataRecordOffset(AValue: Integer);
+  procedure TOMFSubRecordFIXUP.SetDataRecordOffset(AValue: Integer);
     begin
       FLocationOffset:=AValue+FDataRecordStartOffset;
     end;
 
-  function TOmfSubRecord_FIXUP.ReadAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
+  function TOMFSubRecordFIXUP.ReadAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
     var
       Locat: Word;
       FixData: Byte;
     begin
       if (Offset+2)>=RawRecord.RecordLength then
-        internalerror(2015040509);
+        InternalError(2015040509);
       { unlike other fields in the OMF format, this one is big endian }
       Locat:=BEtoN(unaligned(PUint16(@RawRecord.RawData[Offset{..Offset+1}])^));
       FixData:=RawRecord.RawData[Offset+2];
       Inc(Offset,3);
       if (Locat and $8000)=0 then
-        internalerror(2015040503);
+        InternalError(2015040503);
       DataRecordOffset:=Locat and $3FF;
       LocationType:=TOmfFixupLocationType((Locat shr 10) and 15);
       Mode:=TOmfFixupMode((Locat shr 14) and 1);
@@ -2680,14 +2680,14 @@ implementation
           if Is32Bit then
             begin
               if (Offset+3)>=RawRecord.RecordLength then
-                internalerror(2015040510);
+                InternalError(2015040510);
               TargetDisplacement := LEtoN(unaligned(PUint32(@RawRecord.RawData[Offset{..Offset+3}])^));
               Inc(Offset,4);
             end
           else
             begin
               if (Offset+1)>=RawRecord.RecordLength then
-                internalerror(2015040511);
+                InternalError(2015040511);
               TargetDisplacement := LEtoN(unaligned(PUint16(@RawRecord.RawData[Offset{..Offset+1}])^));
               Inc(Offset,2);
             end;
@@ -2695,13 +2695,13 @@ implementation
       Result:=Offset;
     end;
 
-  function TOmfSubRecord_FIXUP.WriteAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
+  function TOMFSubRecordFIXUP.WriteAt(RawRecord: TOmfRawRecord; Offset: Integer): Integer;
     var
       Locat: Word;
       FixData: Byte;
     begin
       if (DataRecordOffset<0) or (DataRecordOffset>1023) then
-        internalerror(2015040505);
+        InternalError(2015040505);
       Locat:=$8000+(Ord(Mode) shl 14)+(Ord(LocationType) shl 10)+DataRecordOffset;
       { unlike other fields in the OMF format, this one is big endian }
       unaligned(PUint16(@RawRecord.RawData[Offset{..Offset+1}])^):=NtoBE(uint16(Locat));
@@ -2735,7 +2735,7 @@ implementation
           else
             begin
               if TargetDisplacement>$ffff then
-                internalerror(2015040507);
+                InternalError(2015040507);
               unaligned(PUint16(@RawRecord.RawData[Offset{..Offset+1}])^):=NtoLE(uint16(TargetDisplacement));
               Inc(Offset,2);
             end;
@@ -2743,12 +2743,12 @@ implementation
       Result:=Offset;
     end;
 
-  procedure TOmfSubRecord_FIXUP.ResolveByThread(AThreads: TOmfThreads);
+  procedure TOMFSubRecordFIXUP.ResolveByThread(AThreads: TOmfThreads);
     begin
       if TargetDeterminedByThread then
         begin
           if not AThreads.TargetThread[TargetThread].Initialized then
-            internalerror(2018053002);
+            InternalError(2018053002);
           TargetDatum:=AThreads.TargetThread[TargetThread].Datum;
           TargetMethod:=AThreads.TargetThread[TargetThread].TargetMethod;
           if not TargetThreadDisplacementPresent then
@@ -2759,7 +2759,7 @@ implementation
       if FrameDeterminedByThread then
         begin
           if not AThreads.FrameThread[FrameThread].Initialized then
-            internalerror(2018053003);
+            InternalError(2018053003);
           FrameDatum:=AThreads.FrameThread[FrameThread].Datum;
           FrameMethod:=AThreads.FrameThread[FrameThread].FrameMethod;
           FrameDeterminedByThread:=False;
@@ -2768,29 +2768,29 @@ implementation
 
   { TOmfRecord_LIBHEAD }
 
-  constructor TOmfRecord_LIBHEAD.Create;
+  constructor TOMFRecordLIBHEAD.Create;
     begin
       PageSize:=512;
       DictionarySizeInBlocks:=2;
       CaseSensitive:=true;
     end;
 
-  procedure TOmfRecord_LIBHEAD.SetPageSize(AValue: Integer);
+  procedure TOMFRecordLIBHEAD.SetPageSize(AValue: Integer);
     var
-      p: longint;
+      p: LongInt;
     begin
       { valid library page sizes are powers of two, between 2**4 and 2**15 }
-      if not ispowerof2(AValue,p) then
-        internalerror(2015041802);
+      if not IsPowerOf2(AValue,p) then
+        InternalError(2015041802);
       if (p<4) or (p>15) then
-        internalerror(2015041803);
+        InternalError(2015041803);
       FPageSize:=AValue;
     end;
 
-  procedure TOmfRecord_LIBHEAD.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLIBHEAD.DecodeFrom(RawRecord: TOmfRawRecord);
     begin
       if RawRecord.RecordType<>RT_LIBHEAD then
-        internalerror(2015040314);
+        InternalError(2015040314);
       { this will also range check PageSize and will ensure that RecordLength>=13 }
       PageSize:=RawRecord.RecordLength+3;
       DictionaryOffset:=LEtoN(unaligned(PUint32(@RawRecord.RawData[0{..3}])^));
@@ -2798,7 +2798,7 @@ implementation
       Flags:=RawRecord.RawData[6];
     end;
 
-  procedure TOmfRecord_LIBHEAD.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLIBHEAD.EncodeTo(RawRecord: TOmfRawRecord);
     begin
       { make sure the LIBHEAD record is padded with zeros at the end }
       FillChar(RawRecord.RawData,SizeOf(RawRecord.RawData),0);
@@ -2811,26 +2811,26 @@ implementation
         RawRecord.CalculateChecksumByte }
     end;
 
-  function TOmfRecord_LIBHEAD.IsCaseSensitive: Boolean;
+  function TOMFRecordLIBHEAD.IsCaseSensitive: Boolean;
     begin
       Result:=(FFlags and 1)<>0;
     end;
 
-  procedure TOmfRecord_LIBHEAD.SetCaseSensitive(AValue: Boolean);
+  procedure TOMFRecordLIBHEAD.SetCaseSensitive(AValue: Boolean);
     begin
       FFlags:=(FFlags and $FE) or Ord(AValue);
     end;
 
   { TOmfRecord_LIBEND }
 
-  procedure TOmfRecord_LIBEND.DecodeFrom(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLIBEND.DecodeFrom(RawRecord: TOmfRawRecord);
     begin
       if RawRecord.RecordType<>RT_LIBEND then
-        internalerror(2015040315);
+        InternalError(2015040315);
       FPaddingBytes:=RawRecord.RecordLength;
     end;
 
-  procedure TOmfRecord_LIBEND.EncodeTo(RawRecord: TOmfRawRecord);
+  procedure TOMFRecordLIBEND.EncodeTo(RawRecord: TOmfRawRecord);
     begin
       { make sure the LIBEND record is padded with zeros at the end }
       FillChar(RawRecord.RawData,SizeOf(RawRecord.RawData),0);
@@ -2840,7 +2840,7 @@ implementation
         RawRecord.CalculateChecksumByte }
     end;
 
-  procedure TOmfRecord_LIBEND.CalculatePaddingBytes(RecordStartOffset: DWord);
+  procedure TOMFRecordLIBEND.CalculatePaddingBytes(RecordStartOffset: DWord);
     var
       DictionaryStartOffset: Integer;
     begin
@@ -2865,7 +2865,7 @@ implementation
     begin
       len:=Length(name);
       if len=0 then
-        internalerror(2015041801);
+        InternalError(2015041801);
       pbidx:=1;
       peidx:=len+1;
       { left to right scan }
@@ -2977,7 +2977,7 @@ implementation
 
     end;
 
-  function omf_sectiontype2align(atype: TAsmSectiontype): longint;
+  function omf_sectiontype2align(atype: TAsmSectiontype): LongInt;
     begin
       case atype of
         sec_stabstr:

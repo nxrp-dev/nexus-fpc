@@ -26,107 +26,107 @@ unit owbase;
 interface
 
 uses
-  globtype,
-  cstreams,
-  cclasses;
+  GlobType,
+  CStreams,
+  CClasses;
 
 type
-  tobjectwriter=class
+  TObjectWriter=class
   private
     f      : TCCustomFileStream;
     opened : boolean;
     buf    : TAnsiCharDynArray;
-    bufidx : longword;
+    bufidx : LongWord;
     procedure writebuf;
   protected
     fsize,
-    fobjsize  : longword;
+    fobjsize  : LongWord;
   public
     constructor create;
     constructor createAr(const Aarfn:string);virtual;
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  createfile(const fn:string):boolean;virtual;
     procedure closefile;virtual;
     procedure writesym(const sym:string);virtual;
-    procedure write(const b;len:longword);virtual;
-    procedure WriteZeros(l:longword);
+    procedure write(const b;len:LongWord);virtual;
+    procedure WriteZeros(l:LongWord);
     procedure writearray(a:TDynamicArray);
-    property Size:longword read FSize;
-    property ObjSize:longword read FObjSize;
+    property Size:LongWord read FSize;
+    property ObjSize:LongWord read FObjSize;
   end;
 
-  tobjectwriterclass = class of tobjectwriter;
+  TObjectWriterClass = class of TObjectWriter;
 
   { tobjectreader }
 
-  tobjectreader=class
+  TObjectReader=class
   private
     f      : TCCustomFileStream;
     opened : boolean;
     buf    : TAnsiCharDynArray;
     ffilename : string;
     bufidx,
-    bufmax : longint;
-    function readbuf:boolean;
+    bufmax : LongInt;
+    function ReadBuf:boolean;
   protected
     function getfilename : string;virtual;
-    function GetSize: longint;virtual;
-    function GetPos: longint;virtual;
+    function GetSize: LongInt;virtual;
+    function GetPos: LongInt;virtual;
     function GetIsArchive: boolean;virtual;
   public
     constructor create;
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);virtual;
-    destructor  destroy;override;
+    destructor  Destroy;override;
     function  openfile(const fn:string):boolean;virtual;
     procedure closefile;virtual;
-    procedure seek(len:longint);virtual;
-    function  read(out b;len:longint):boolean;virtual;
-    function  readarray(a:TDynamicArray;len:longint):boolean;
-    property filename : string read getfilename;
-    property size:longint read GetSize;
-    property Pos:longint read GetPos;
+    procedure seek(len:LongInt);virtual;
+    function  read(out b;len:LongInt):boolean;virtual;
+    function  readarray(a:TDynamicArray;len:LongInt):boolean;
+    property FileName : string read getfilename;
+    property size:LongInt read GetSize;
+    property Pos:LongInt read GetPos;
     property IsArchive: boolean read GetIsArchive;
   end;
 
-  tobjectreaderclass = class of tobjectreader;
+  TObjectReaderClass = class of TObjectReader;
 
 implementation
 
 uses
    SysUtils,
-   verbose, globals;
+   Verbose, Globals;
 
 const
-  bufsize = 32768;
+  BufSize = 32768;
 
 
 {****************************************************************************
                               TObjectWriter
 ****************************************************************************}
 
-constructor tobjectwriter.create;
+constructor TObjectWriter.create;
 begin
-  setlength(buf,bufsize);
+  SetLength(buf,BufSize);
   bufidx:=0;
   opened:=false;
   fsize:=0;
 end;
 
 
-destructor tobjectwriter.destroy;
+destructor TObjectWriter.Destroy;
 begin
   if opened then
    closefile;
   buf:=nil;
 end;
 
-constructor tobjectwriter.createAr(const Aarfn:string);
+constructor TObjectWriter.createAr(const Aarfn:string);
 begin
   InternalError(2015041901);
 end;
 
 
-function tobjectwriter.createfile(const fn:string):boolean;
+function TObjectWriter.createfile(const fn:string):boolean;
 begin
   createfile:=false;
   f:=CFileStreamClass.Create(fn,fmCreate);
@@ -143,13 +143,13 @@ begin
 end;
 
 
-procedure tobjectwriter.closefile;
+procedure TObjectWriter.closefile;
 var
   fn : string;
 begin
   if bufidx>0 then
    writebuf;
-  fn:=f.filename;
+  fn:=f.FileName;
   f.free;
   f := nil;
 { Remove if size is 0 }
@@ -161,23 +161,23 @@ begin
 end;
 
 
-procedure tobjectwriter.writebuf;
+procedure TObjectWriter.writebuf;
 begin
   f.write(buf[0],bufidx);
   bufidx:=0;
 end;
 
 
-procedure tobjectwriter.writesym(const sym:string);
+procedure TObjectWriter.writesym(const sym:string);
 begin
 end;
 
 
-procedure tobjectwriter.write(const b;len:longword);
+procedure TObjectWriter.write(const b;len:LongWord);
 var
   p   : pchar;
   bufleft,
-  idx : longword;
+  idx : LongWord;
 begin
   inc(fsize,len);
   inc(fobjsize,len);
@@ -185,7 +185,7 @@ begin
   idx:=0;
   while len>0 do
    begin
-     bufleft:=bufsize-bufidx;
+     bufleft:=BufSize-bufidx;
      if bufleft=0 then
        Writebuf;
      if len>bufleft then
@@ -206,7 +206,7 @@ begin
 end;
 
 
-procedure tobjectwriter.WriteZeros(l:longword);
+procedure TObjectWriter.WriteZeros(l:LongWord);
 var
   empty : array[0..1023] of byte;
 begin
@@ -229,12 +229,12 @@ begin
 end;
 
 
-procedure tobjectwriter.writearray(a:TDynamicArray);
+procedure TObjectWriter.writearray(a:TDynamicArray);
 var
-  hp : pdynamicblock;
+  hp : PDynamicBlock;
 begin
   hp:=a.firstblock;
-  while assigned(hp) do
+  while Assigned(hp) do
     begin
       write(hp^.data,hp^.used);
       hp:=hp^.next;
@@ -246,7 +246,7 @@ end;
                               TObjectReader
 ****************************************************************************}
 
-constructor tobjectreader.create;
+constructor TObjectReader.create;
 begin
   buf:=nil;
   bufidx:=0;
@@ -256,31 +256,31 @@ begin
 end;
 
 
-destructor tobjectreader.destroy;
+destructor TObjectReader.Destroy;
 begin
   if opened then
     closefile;
 end;
 
 
-constructor tobjectreader.createAr(const Aarfn:string;allow_nonar:boolean=false);
+constructor TObjectReader.createAr(const Aarfn:string;allow_nonar:boolean=false);
 begin
   InternalError(2015081401);
 end;
 
 
-function tobjectreader.openfile(const fn:string):boolean;
+function TObjectReader.openfile(const fn:string):boolean;
 begin
   openfile:=false;
   f:=CFileStreamClass.Create(fn,fmOpenRead);
   if CStreamError<>0 then
     begin
-       Comment(V_Error,'Can''t open object file: '+fn);
+       Comment(VError,'Can''t open object file: '+fn);
        exit;
     end;
   ffilename:=fn;
   bufmax:=f.Size;
-  setlength(buf,bufmax);
+  SetLength(buf,bufmax);
   f.read(buf[0],bufmax);
   f.free;
   f := nil;
@@ -290,7 +290,7 @@ begin
 end;
 
 
-procedure tobjectreader.closefile;
+procedure TObjectReader.closefile;
 begin
   opened:=false;
   bufidx:=0;
@@ -299,19 +299,19 @@ begin
 end;
 
 
-function tobjectreader.readbuf:boolean;
+function TObjectReader.ReadBuf:boolean;
 begin
   result:=bufidx<bufmax;
 end;
 
 
-procedure tobjectreader.seek(len:longint);
+procedure TObjectReader.seek(len:LongInt);
 begin
   bufidx:=len;
 end;
 
 
-function tobjectreader.read(out b;len:longint):boolean;
+function TObjectReader.read(out b;len:LongInt):boolean;
 begin
   result:=true;
   if bufidx+len>bufmax then
@@ -324,7 +324,7 @@ begin
 end;
 
 
-function tobjectreader.readarray(a:TDynamicArray;len:longint):boolean;
+function TObjectReader.readarray(a:TDynamicArray;len:LongInt):boolean;
 begin
   result:=true;
   if bufidx+len>bufmax then
@@ -336,23 +336,23 @@ begin
   inc(bufidx,len);
 end;
 
-function tobjectreader.getfilename : string;
+function TObjectReader.getfilename : string;
   begin
     result:=ffilename;
   end;
 
-function tobjectreader.GetSize: longint;
+function TObjectReader.GetSize: LongInt;
   begin
     result:=bufmax;
   end;
 
-function tobjectreader.GetPos: longint;
+function TObjectReader.GetPos: LongInt;
   begin
     Result:=bufidx;
   end;
 
 
-function tobjectreader.GetIsArchive: boolean;
+function TObjectReader.GetIsArchive: boolean;
   begin
     Result:=false;
   end;

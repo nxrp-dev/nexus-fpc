@@ -20,8 +20,8 @@ const Version = '1.00';
       max_regcount = 1000;
 
 var s : string;
-    i : longint;
-    line : longint;
+    i : LongInt;
+    line : LongInt;
     regcount:word;
     regcount_bsstart:word;
     names,
@@ -34,10 +34,10 @@ var s : string;
     regnumber_index,
     std_regname_index : array[0..max_regcount-1] of word;
 
-function tostr(l : longint) : string;
+function ToStr(l : LongInt) : string;
 
 begin
-  str(l,tostr);
+  str(l,ToStr);
 end;
 
 function readstr : string;
@@ -56,8 +56,8 @@ procedure readcomma;
   begin
      if s[i]<>',' then
        begin
-         writeln('Missing "," at line ',line);
-         writeln('Line: "',s,'"');
+         WriteLn('Missing "," at line ',line);
+         WriteLn('Line: "',s,'"');
          halt(1);
        end;
      inc(i);
@@ -73,16 +73,16 @@ procedure skipspace;
 
 procedure openinc(out f:text;const fn:string);
 begin
-  writeln('creating ',fn);
+  WriteLn('creating ',fn);
   assign(f,fn);
   rewrite(f);
-  writeln(f,'{ don''t edit, this file is generated from a64reg.dat }');
+  WriteLn(f,'{ don''t edit, this file is generated from a64reg.dat }');
 end;
 
 
 procedure closeinc(var f:text);
 begin
-  writeln(f);
+  WriteLn(f);
   close(f);
 end;
 
@@ -184,21 +184,21 @@ begin
         { Create register number }
         if supregs[regcount][1]<>'$' then
           begin
-            writeln('Missing $ before number, at line ',line);
-            writeln('Line: "',s,'"');
+            WriteLn('Missing $ before number, at line ',line);
+            WriteLn('Line: "',s,'"');
             halt(1);
           end;
         numbers[regcount]:=regtypes[regcount]+copy(subtypes[regcount],2,255)+'00'+copy(supregs[regcount],2,255);
         if i<length(s) then
           begin
-            writeln('Extra chars at end of line, at line ',line);
-            writeln('Line: "',s,'"');
+            WriteLn('Extra chars at end of line, at line ',line);
+            WriteLn('Line: "',s,'"');
             halt(1);
           end;
         inc(regcount);
         if regcount>max_regcount then
           begin
-            writeln('Error: Too much registers, please increase maxregcount in source');
+            WriteLn('Error: Too much registers, please increase maxregcount in source');
             halt(2);
           end;
      end;
@@ -229,18 +229,18 @@ begin
     begin
       if not first then
         begin
-          writeln(numfile,',');
-          writeln(stdfile,',');
-          writeln(stabfile,',');
-          writeln(dwarffile,',');
-          writeln(rnifile,',');
-          writeln(srifile,',');
+          WriteLn(numfile,',');
+          WriteLn(stdfile,',');
+          WriteLn(stabfile,',');
+          WriteLn(dwarffile,',');
+          WriteLn(rnifile,',');
+          WriteLn(srifile,',');
         end
       else
         first:=false;
-      writeln(supfile,'RS_',names[i],' = ',supregs[i],';');
-      writeln(confile,'NR_'+names[i],' = ','tregister(',numbers[i],')',';');
-      write(numfile,'tregister(',numbers[i],')');
+      WriteLn(supfile,'RS_',names[i],' = ',supregs[i],';');
+      WriteLn(confile,'NR_'+names[i],' = ','TRegister(',numbers[i],')',';');
+      write(numfile,'TRegister(',numbers[i],')');
       write(stdfile,'''',stdnames[i],'''');
       write(stabfile,stabs[i]);
       write(dwarffile,dwarf[i]);
@@ -257,13 +257,13 @@ begin
   closeinc(norfile);
   closeinc(rnifile);
   closeinc(srifile);
-  writeln('Done!');
-  writeln(regcount,' registers processed');
+  WriteLn('Done!');
+  WriteLn(regcount,' registers processed');
 end;
 
 
 begin
-   writeln('Register Table Converter Version ',Version);
+   WriteLn('Register Table Converter Version ',Version);
    line:=0;
    regcount:=0;
    read_spreg_file;

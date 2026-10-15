@@ -26,26 +26,26 @@ unit wpoinfo;
 interface
 
 uses
-  globtype,cclasses,
+  GlobType,CClasses,
   symtype,
   wpobase;
 
 type
-  tderefarray = array of TDeref;
+  TDerefArray = array of TDeref;
 
-  tunitwpoinfo = class(tunitwpoinfobase)
+  TUnitWPOInfo = class(TUnitWPOInfoBase)
    { devirtualisation information -- begin }
    private
-    fcreatedobjtypesderefs: tderefarray;
-    fcreatedclassrefobjtypesderefs: tderefarray;
-    fmaybecreatedbyclassrefdeftypesderefs: tderefarray;
-    fcalledvmtentriestemplist: tfpobjectlist;
+    fcreatedobjtypesderefs: TDerefArray;
+    fcreatedclassrefobjtypesderefs: TDerefArray;
+    fmaybecreatedbyclassrefdeftypesderefs: TDerefArray;
+    fcalledvmtentriestemplist: TFPObjectList;
    { devirtualisation information -- end }
 
     procedure clearderefinfo;
    public
 
-    destructor destroy; override;
+    destructor Destroy; override;
 
     procedure ppuwrite(ppufile:TCompilerPPUFile);
     constructor ppuload(ppufile:TCompilerPPUFile);
@@ -59,7 +59,7 @@ type
 
   { twpoinfomanager }
 
-  twpoinfomanager = class(twpoinfomanagerbase)
+  TWPOInfoManager = class(TWPOInfoManagerBase)
     function can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean; override;
     function optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean; override;
     function symbol_live(const name: shortstring): boolean; override;
@@ -69,12 +69,12 @@ type
 implementation
 
   uses
-    globals,
+    Globals,
     symdef,
-    verbose,
+    Verbose,
     entfile;
 
-  procedure tunitwpoinfo.clearderefinfo;
+  procedure TUnitWPOInfo.clearderefinfo;
     begin
       fcreatedobjtypesderefs:=nil;
       fcreatedclassrefobjtypesderefs:=nil;
@@ -84,16 +84,16 @@ implementation
       fcalledvmtentriestemplist:=nil;
     end;
 
-  destructor tunitwpoinfo.destroy;
+  destructor TUnitWPOInfo.Destroy;
     begin
       clearderefinfo;
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
-  procedure tunitwpoinfo.ppuwrite(ppufile:TCompilerPPUFile);
+  procedure TUnitWPOInfo.ppuwrite(ppufile:TCompilerPPUFile);
     var
-      i: longint;
+      i: LongInt;
     begin
       { write the number of instantiated object types in this module,
         followed by the derefs of those types
@@ -110,7 +110,7 @@ implementation
 
       ppufile.putlongint(fcalledvmtentriestemplist.count);
       for i:=0 to fcalledvmtentriestemplist.count-1 do
-        tcalledvmtentries(fcalledvmtentriestemplist[i]).ppuwrite(ppufile);
+        TCalledVMTEntries(fcalledvmtentriestemplist[i]).ppuwrite(ppufile);
 
       ppufile.writeentry(ibcreatedobjtypes);
 
@@ -120,9 +120,9 @@ implementation
     end;
 
 
-  constructor tunitwpoinfo.ppuload(ppufile:TCompilerPPUFile);
+  constructor TUnitWPOInfo.ppuload(ppufile:TCompilerPPUFile);
     var
-      i, len: longint;
+      i, len: LongInt;
     begin
       { load start of definition section, which holds the amount of defs }
       if ppufile.readentry<>ibcreatedobjtypes then
@@ -131,66 +131,66 @@ implementation
       { don't load the wpo info from the units if we are not generating
         a wpo feedback file (that would just take time and memory)
       }
-      if (InitSettings.genwpoptimizerswitches=[]) then
+      if (InitSettings.GenWPOptimizerSwitches=[]) then
         ppufile.skipdata(ppufile.entrysize)
       else
         begin
           len:=ppufile.getlongint;
-          fcreatedobjtypes:=tfpobjectlist.create(false);
+          fcreatedobjtypes:=TFPObjectList.create(false);
           fcreatedobjtypes.count:=len;
-          setlength(fcreatedobjtypesderefs,len);
+          SetLength(fcreatedobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fcreatedobjtypesderefs[i]);
 
           len:=ppufile.getlongint;
-          fcreatedclassrefobjtypes:=tfpobjectlist.create(false);
+          fcreatedclassrefobjtypes:=TFPObjectList.create(false);
           fcreatedclassrefobjtypes.count:=len;
-          setlength(fcreatedclassrefobjtypesderefs,len);
+          SetLength(fcreatedclassrefobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fcreatedclassrefobjtypesderefs[i]);
 
           len:=ppufile.getlongint;
-          fmaybecreatedbyclassrefdeftypes:=tfpobjectlist.create(false);
+          fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
           fmaybecreatedbyclassrefdeftypes.count:=len;
-          setlength(fmaybecreatedbyclassrefdeftypesderefs,len);
+          SetLength(fmaybecreatedbyclassrefdeftypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
           len:=ppufile.getlongint;
-          fcalledvmtentriestemplist:=tfpobjectlist.create(false);
+          fcalledvmtentriestemplist:=TFPObjectList.create(false);
           fcalledvmtentriestemplist.count:=len;
-          fcalledvmtentries:=tfphashlist.create;
+          fcalledvmtentries:=TFPHashList.create;
           for i:=0 to len-1 do
-            fcalledvmtentriestemplist[i]:=tcalledvmtentries.ppuload(ppufile);
+            fcalledvmtentriestemplist[i]:=TCalledVMTEntries.ppuload(ppufile);
         end;
     end;
 
 
-  procedure tunitwpoinfo.buildderef;
+  procedure TUnitWPOInfo.buildderef;
     var
-      i: longint;
+      i: LongInt;
     begin
       { ppuload may have already been called before -> deref info structures
         may already have been allocated }
       clearderefinfo;
 
-      setlength(fcreatedobjtypesderefs,fcreatedobjtypes.count);
+      SetLength(fcreatedobjtypesderefs,fcreatedobjtypes.count);
       for i:=0 to fcreatedobjtypes.count-1 do
         fcreatedobjtypesderefs[i].build(fcreatedobjtypes[i]);
 
-      setlength(fcreatedclassrefobjtypesderefs,fcreatedclassrefobjtypes.count);
+      SetLength(fcreatedclassrefobjtypesderefs,fcreatedclassrefobjtypes.count);
       for i:=0 to fcreatedclassrefobjtypes.count-1 do
         fcreatedclassrefobjtypesderefs[i].build(fcreatedclassrefobjtypes[i]);
 
-      setlength(fmaybecreatedbyclassrefdeftypesderefs,fmaybecreatedbyclassrefdeftypes.count);
+      SetLength(fmaybecreatedbyclassrefdeftypesderefs,fmaybecreatedbyclassrefdeftypes.count);
       for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
         fmaybecreatedbyclassrefdeftypesderefs[i].build(fmaybecreatedbyclassrefdeftypes[i]);
 
-      fcalledvmtentriestemplist:=tfpobjectlist.create(false);
+      fcalledvmtentriestemplist:=TFPObjectList.create(false);
       fcalledvmtentriestemplist.count:=fcalledvmtentries.count;
       for i:=0 to fcalledvmtentries.count-1 do
         begin
-          tcalledvmtentries(fcalledvmtentries[i]).buildderef;
+          TCalledVMTEntries(fcalledvmtentries[i]).buildderef;
           { necessary in case we have unit1 loads unit2, unit2 is recompiled,
             then unit1 derefs unit2 -> in this case we have buildderef for unit2
             -> ppuwrite for unit2 -> deref for unit2 (without a load) -> ensure
@@ -201,24 +201,24 @@ implementation
     end;
 
 
-  procedure tunitwpoinfo.buildderefimpl;
+  procedure TUnitWPOInfo.buildderefimpl;
     var
-      i: longint;
+      i: LongInt;
     begin
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         begin
-          tcalledvmtentries(fcalledvmtentriestemplist[i]).buildderefimpl;
+          TCalledVMTEntries(fcalledvmtentriestemplist[i]).buildderefimpl;
         end;
     end;
 
 
-  procedure tunitwpoinfo.deref;
+  procedure TUnitWPOInfo.deref;
     var
-      i: longint;
+      i: LongInt;
 
     begin
-      if (InitSettings.genwpoptimizerswitches=[]) or
-         not assigned(fcalledvmtentriestemplist) then
+      if (InitSettings.GenWPOptimizerSwitches=[]) or
+         not Assigned(fcalledvmtentriestemplist) then
         exit;
 
       { don't free deref arrays immediately after use, as the types may need
@@ -241,7 +241,7 @@ implementation
       { now resolve all items in the list and add them to the hash table }
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         begin
-          with tcalledvmtentries(fcalledvmtentriestemplist[i]) do
+          with TCalledVMTEntries(fcalledvmtentriestemplist[i]) do
             begin
               deref;
               fcalledvmtentries.add(TObjectDef(objdef).vmt_mangledname,
@@ -251,17 +251,17 @@ implementation
     end;
 
 
-  procedure tunitwpoinfo.derefimpl;
+  procedure TUnitWPOInfo.derefimpl;
     var
-      i: longint;
+      i: LongInt;
     begin
-      if (InitSettings.genwpoptimizerswitches=[]) or
-         not assigned(fcalledvmtentriestemplist) then
+      if (InitSettings.GenWPOptimizerSwitches=[]) or
+         not Assigned(fcalledvmtentriestemplist) then
         exit;
 
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         begin
-          tcalledvmtentries(fcalledvmtentriestemplist[i]).derefimpl;
+          TCalledVMTEntries(fcalledvmtentriestemplist[i]).derefimpl;
         end;
     end;
 
@@ -270,42 +270,42 @@ implementation
 
   { devirtualisation }
 
-  function twpoinfomanager.can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean;
+  function TWPOInfoManager.can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean;
     begin
-      if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
-         not(cs_wpo_devirtualize_calls in CurrentSettings.dowpoptimizerswitches) then
+      if not Assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
+         not(cs_wpo_devirtualize_calls in CurrentSettings.DoWPOptimizerSwitches) then
         begin
           result:=false;
           exit;
         end;
-      result:=twpodevirtualisationhandler(wpoinfouse[wpo_devirtualization_context_insensitive]).staticnameforcallingvirtualmethod(objdef,procdef,name);
+      result:=TWPODevirtualisationHandler(wpoinfouse[wpo_devirtualization_context_insensitive]).staticnameforcallingvirtualmethod(objdef,procdef,name);
     end;
 
 
-  function twpoinfomanager.optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean;
+  function TWPOInfoManager.optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean;
     begin
-      if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
-         not(cs_wpo_optimize_vmts in CurrentSettings.dowpoptimizerswitches) then
+      if not Assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
+         not(cs_wpo_optimize_vmts in CurrentSettings.DoWPOptimizerSwitches) then
         begin
           result:=false;
           exit;
         end;
-      result:=twpodevirtualisationhandler(wpoinfouse[wpo_devirtualization_context_insensitive]).staticnameforvmtentry(objdef,procdef,name);
+      result:=TWPODevirtualisationHandler(wpoinfouse[wpo_devirtualization_context_insensitive]).staticnameforvmtentry(objdef,procdef,name);
     end;
 
 
   { symbol liveness }
 
-  function twpoinfomanager.symbol_live(const name: shortstring): boolean;
+  function TWPOInfoManager.symbol_live(const name: shortstring): boolean;
     begin
-      if not assigned(wpoinfouse[wpo_live_symbol_information]) or
-         not(cs_wpo_symbol_liveness in CurrentSettings.dowpoptimizerswitches) then
+      if not Assigned(wpoinfouse[wpo_live_symbol_information]) or
+         not(cs_wpo_symbol_liveness in CurrentSettings.DoWPOptimizerSwitches) then
         begin
           { if we don't know, say that the symbol is live }
           result:=true;
           exit;
         end;
-      result:=twpodeadcodehandler(wpoinfouse[wpo_live_symbol_information]).symbolinfinalbinary(name);
+      result:=TWPODeadCodeHandler(wpoinfouse[wpo_live_symbol_information]).symbolinfinalbinary(name);
     end;
 
 

@@ -385,6 +385,6 @@ raw_item
 {$I rclex.inc}
 begin
   bufptr:= 0;
-  lexlib.get_char:= @rc_get_char;
-  lexlib.unget_char:= @rc_unget_char;
+  LexLib.get_char:= @rc_get_char;
+  LexLib.unget_char:= @rc_unget_char;
 end.

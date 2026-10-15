@@ -27,7 +27,7 @@ unit cgbase;
 interface
 
     uses
-      globtype,
+      GlobType,
       symconst;
 
     type
@@ -63,7 +63,7 @@ interface
        TCGNonRefLoc=low(TCGLoc)..pred(LOC_CREFERENCE);
        TCGRefLoc=LOC_CREFERENCE..LOC_REFERENCE;
 
-       trefaddr = (
+       TRefAddr = (
          addr_no,
          addr_full,
          addr_pic,
@@ -89,7 +89,7 @@ interface
 
        {# Generic opcodes, which must be supported by all processors
        }
-       topcg =
+       TOpCG =
        (
           OP_NONE,
           OP_MOVE,      { replaced operation with direct load }
@@ -128,8 +128,8 @@ interface
         );
 
        { indirect symbol flags }
-       tindsymflag = (is_data,is_weak);
-       tindsymflags = set of tindsymflag;
+       TIndSymFlag = (is_data,is_weak);
+       TIndSymFlags = set of TIndSymFlag;
 
        { OS_NO is also used memory references with large data that can
          not be loaded in a register directly }
@@ -233,41 +233,41 @@ interface
         with TSuperRegister to avoid mixing them
       }
       TRegister = (
-        TRegisterLowEnum := Low(longint),
-        TRegisterHighEnum := High(longint)
+        TRegisterLowEnum := Low(LongInt),
+        TRegisterHighEnum := High(LongInt)
       );
       TRegisterRec=packed record
 {$ifdef FPC_BIG_ENDIAN}
-         regtype : Tregistertype;
-         subreg  : Tsubregister;
-         supreg  : Tsuperregister;
+         regtype : TRegisterType;
+         subreg  : TSubRegister;
+         supreg  : TSuperRegister;
 {$else FPC_BIG_ENDIAN}
-         supreg  : Tsuperregister;
-         subreg  : Tsubregister;
-         regtype : Tregistertype;
+         supreg  : TSuperRegister;
+         subreg  : TSubRegister;
+         regtype : TRegisterType;
 {$endif FPC_BIG_ENDIAN}
       end;
 
       { A type to store register locations for 64 Bit values. }
 {$ifdef cpu64bitalu}
-      tregister64 = tregister;
-      tregister128 = record
-         reglo,reghi : tregister;
+      TRegister64 = TRegister;
+      TRegister128 = record
+         reglo,reghi : TRegister;
       end;
 {$else cpu64bitalu}
-      tregister64 = record
-         reglo,reghi : tregister;
+      TRegister64 = record
+         reglo,reghi : TRegister;
       end;
 {$endif cpu64bitalu}
 
       { Set type definition for registers }
-      tsuperregisterset = array[byte] of set of byte;
+      TSuperRegisterSet = array[byte] of set of byte;
 
-      pmmshuffle = ^tmmshuffle;
+      PMMShuffle = ^TMMShuffle;
 
       { this record describes shuffle operations for mm operations; if a pointer a shuffle record
         passed to an mm operation is nil, it means that the whole location is moved }
-      tmmshuffle = record
+      TMMShuffle = record
         { describes how many shuffles are actually described, if len=0 then
           moving the scalar with index 0 to the scalar with index 0 is meant,
           if len=-1, then a variable/unknown length is assumed }
@@ -277,7 +277,7 @@ interface
         shuffles : array[1..1] of word;
       end;
 
-      Tsuperregisterarray=array of Tsuperregister;
+      Tsuperregisterarray=array of TSuperRegister;
 
       Tsuperregisterworklist=object
         buflength,
@@ -288,25 +288,25 @@ interface
         constructor copyfrom(const x:Tsuperregisterworklist);
         destructor  done;
         procedure clear;
-        procedure add(s:tsuperregister);
-        function addnodup(s:tsuperregister): boolean;
+        procedure add(s:TSuperRegister);
+        function addnodup(s:TSuperRegister): boolean;
         { returns the last element and removes it from the list }
-        function get:tsuperregister;
-        function readidx(i:word):tsuperregister;
+        function get:TSuperRegister;
+        function readidx(i:word):TSuperRegister;
         procedure deleteidx(i:word);
-        function delete(s:tsuperregister):boolean;
+        function delete(s:TSuperRegister):boolean;
       end;
-      psuperregisterworklist=^tsuperregisterworklist;
+      PSuperRegisterWorkList=^tsuperregisterworklist;
 
     const
        { alias for easier understanding }
        R_SSEREGISTER = R_MMREGISTER;
 
        { Invalid register number }
-       RS_INVALID    = high(tsuperregister);
-       NR_INVALID    = tregister($ffffffff);
+       RS_INVALID    = high(TSuperRegister);
+       NR_INVALID    = TRegister($ffffffff);
 
-       tcgsize2size : Array[tcgsize] of integer =
+       tcgsize2size : Array[TCgSize] of integer =
         (0,
          { integer values }
          1,  2,  4,  8, 16,
@@ -316,10 +316,10 @@ interface
          { multimedia values }
          1,  2,  4,  8, 16, 32, 64);
 
-       tfloat2tcgsize: array[TFloatType] of tcgsize =
+       tfloat2tcgsize: array[TFloatType] of TCgSize =
          (OS_F32,OS_F64,OS_F80,OS_F80,OS_C64,OS_C64);
 
-       tvarregable2tcgloc : array[TVarRegable] of tcgloc = (LOC_VOID,
+       tvarregable2tcgloc : array[TVarRegable] of TCGLoc = (LOC_VOID,
           LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER,LOC_CREGISTER);
 
 {$if defined(cpu64bitalu)}
@@ -336,7 +336,7 @@ interface
 
        { Table to convert tcgsize variables to the corresponding
          unsigned types }
-       tcgsize2unsigned : array[tcgsize] of tcgsize = (OS_NO,
+       tcgsize2unsigned : array[TCgSize] of TCgSize = (OS_NO,
          OS_8,    OS_16,   OS_32,   OS_64,   OS_128,
          OS_8,    OS_16,   OS_32,   OS_64,   OS_128,
 
@@ -344,7 +344,7 @@ interface
          OS_M8,   OS_M16,  OS_M32,  OS_M64,  OS_M128, OS_M256, OS_M512);
 
 
-       tcgsize2signed : array[tcgsize] of tcgsize = (OS_NO,
+       tcgsize2signed : array[TCgSize] of TCgSize = (OS_NO,
          OS_S8,   OS_S16,  OS_S32,  OS_S64,  OS_S128,
          OS_S8,   OS_S16,  OS_S32,  OS_S64,  OS_S128,
 
@@ -381,60 +381,60 @@ interface
        mms_4,
        mms_8,
        mms_16,
-       mms_32 : pmmshuffle;
+       mms_32 : PMMShuffle;
 
-    procedure supregset_reset(out regs:tsuperregisterset;setall:boolean;
-                              maxreg:Tsuperregister);{$ifdef USEINLINE}inline;{$endif}
-    procedure supregset_include(var regs:tsuperregisterset;s:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
-    procedure supregset_exclude(var regs:tsuperregisterset;s:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
-    function supregset_in(const regs:tsuperregisterset;s:tsuperregister):boolean;{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_reset(out regs:TSuperRegisterSet;setall:boolean;
+                              maxreg:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_include(var regs:TSuperRegisterSet;s:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_exclude(var regs:TSuperRegisterSet;s:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
+    function supregset_in(const regs:TSuperRegisterSet;s:TSuperRegister):boolean;{$ifdef USEINLINE}inline;{$endif}
 
-    function newreg(rt:tregistertype;sr:tsuperregister;sb:tsubregister):tregister;{$ifdef USEINLINE}inline;{$endif}
-    function getsubreg(r:tregister):tsubregister;{$ifdef USEINLINE}inline;{$endif}
-    function getsupreg(r:tregister):tsuperregister;{$ifdef USEINLINE}inline;{$endif}
-    function getregtype(r:tregister):tregistertype;{$ifdef USEINLINE}inline;{$endif}
-    procedure setsubreg(var r:tregister;sr:tsubregister);{$ifdef USEINLINE}inline;{$endif}
-    procedure setsupreg(var r:tregister;sr:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
-    function generic_regname(r:tregister):string;
+    function newreg(rt:TRegisterType;sr:TSuperRegister;sb:TSubRegister):TRegister;{$ifdef USEINLINE}inline;{$endif}
+    function getsubreg(r:TRegister):TSubRegister;{$ifdef USEINLINE}inline;{$endif}
+    function getsupreg(r:TRegister):TSuperRegister;{$ifdef USEINLINE}inline;{$endif}
+    function getregtype(r:TRegister):TRegisterType;{$ifdef USEINLINE}inline;{$endif}
+    procedure setsubreg(var r:TRegister;sr:TSubRegister);{$ifdef USEINLINE}inline;{$endif}
+    procedure setsupreg(var r:TRegister;sr:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
+    function generic_regname(r:TRegister):string;
 
     {# From a constant numeric value, return the abstract code generator
        size.
     }
-    function int_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
-    function int_float_cgsize(const a: tcgint): tcgsize;
-    function float_array_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
-    function double_array_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
+    function int_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
+    function int_float_cgsize(const a: TCGInt): TCgSize;
+    function float_array_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
+    function double_array_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
 
-    function tcgsize2str(cgsize: tcgsize):string;
-    function topcg2str(opcg: topcg):string;
-    function topcmp2str(opcmp: topcmp):string;
+    function tcgsize2str(cgsize: TCgSize):string;
+    function topcg2str(opcg: TOpCG):string;
+    function topcmp2str(opcmp: TOpCmp):string;
 
     { return the inverse condition of opcmp }
-    function inverse_opcmp(opcmp: topcmp): topcmp;{$ifdef USEINLINE}inline;{$endif}
+    function inverse_opcmp(opcmp: TOpCmp): TOpCmp;{$ifdef USEINLINE}inline;{$endif}
 
     { return the opcmp needed when swapping the operands }
-    function swap_opcmp(opcmp: topcmp): topcmp;{$ifdef USEINLINE}inline;{$endif}
+    function swap_opcmp(opcmp: TOpCmp): TOpCmp;{$ifdef USEINLINE}inline;{$endif}
 
     { return whether op is commutative }
-    function commutativeop(op: topcg): boolean;{$ifdef USEINLINE}inline;{$endif}
+    function commutativeop(op: TOpCG): boolean;{$ifdef USEINLINE}inline;{$endif}
 
     { returns true, if shuffle describes a real shuffle operation and not only a move }
-    function realshuffle(shuffle : pmmshuffle) : boolean;
+    function realshuffle(shuffle : PMMShuffle) : boolean;
 
     { returns true, if the shuffle describes only a move of the scalar at index 0 }
-    function shufflescalar(shuffle : pmmshuffle) : boolean;
+    function shufflescalar(shuffle : PMMShuffle) : boolean;
 
     { removes shuffling from shuffle, this means that the destination index of each shuffle is copied to
       the source }
-    procedure removeshuffles(var shuffle : tmmshuffle);
+    procedure removeshuffles(var shuffle : TMMShuffle);
 
-    function is_float_cgsize(size: tcgsize): boolean;{$ifdef USEINLINE}inline;{$endif}
+    function is_float_cgsize(size: TCgSize): boolean;{$ifdef USEINLINE}inline;{$endif}
 
 implementation
 
     uses
-      verbose,
-      cutils;
+      Verbose,
+      CUtils;
 
 {******************************************************************************
                              tsuperregisterworklist
@@ -458,8 +458,8 @@ implementation
       length:=x.length;
       if x.buf<>nil then
         begin
-          setlength(buf,buflength);
-          move(x.buf[0],buf[0],length*sizeof(Tsuperregister));
+          SetLength(buf,buflength);
+          move(x.buf[0],buf[0],length*sizeof(TSuperRegister));
         end;
     end;
 
@@ -470,7 +470,7 @@ implementation
     end;
 
 
-    procedure tsuperregisterworklist.add(s:tsuperregister);
+    procedure tsuperregisterworklist.add(s:TSuperRegister);
 
     begin
       inc(length);
@@ -481,13 +481,13 @@ implementation
           buflengthinc:=buflengthinc*2;
           if buflengthinc>256 then
              buflengthinc:=256;
-          setlength(buf,buflength);
+          SetLength(buf,buflength);
         end;
       buf[length-1]:=s;
     end;
 
 
-    function tsuperregisterworklist.addnodup(s:tsuperregister): boolean;
+    function tsuperregisterworklist.addnodup(s:TSuperRegister): boolean;
 
     begin
       addnodup := false;
@@ -510,34 +510,34 @@ implementation
 
     begin
       if i>=length then
-        internalerror(200310144);
+        InternalError(200310144);
       buf[i]:=buf[length-1];
       dec(length);
     end;
 
 
-    function tsuperregisterworklist.readidx(i:word):tsuperregister;
+    function tsuperregisterworklist.readidx(i:word):TSuperRegister;
       begin
         if (i >= length) then
-          internalerror(2005010601);
+          InternalError(2005010601);
         result := buf[i];
       end;
 
 
-    function tsuperregisterworklist.get:tsuperregister;
+    function tsuperregisterworklist.get:TSuperRegister;
 
     begin
       if length=0 then
-        internalerror(200310142);
+        InternalError(200310142);
       dec(length);
       get:=buf[length];
     end;
 
 
-    function tsuperregisterworklist.delete(s:tsuperregister):boolean;
+    function tsuperregisterworklist.delete(s:TSuperRegister):boolean;
 
     var
-      i:longint;
+      i:LongInt;
 
     begin
       delete:=false;
@@ -553,71 +553,71 @@ implementation
     end;
 
 
-    procedure supregset_reset(out regs:tsuperregisterset;setall:boolean;
-                              maxreg:Tsuperregister);{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_reset(out regs:TSuperRegisterSet;setall:boolean;
+                              maxreg:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
 
     begin
       fillchar(regs,(maxreg+7) shr 3,-byte(setall));
     end;
 
 
-    procedure supregset_include(var regs:tsuperregisterset;s:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_include(var regs:TSuperRegisterSet;s:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
       begin
         include(regs[s shr 8],(s and $ff));
       end;
 
 
-    procedure supregset_exclude(var regs:tsuperregisterset;s:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
+    procedure supregset_exclude(var regs:TSuperRegisterSet;s:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
       begin
         exclude(regs[s shr 8],(s and $ff));
       end;
 
 
-    function supregset_in(const regs:tsuperregisterset;s:tsuperregister):boolean;{$ifdef USEINLINE}inline;{$endif}
+    function supregset_in(const regs:TSuperRegisterSet;s:TSuperRegister):boolean;{$ifdef USEINLINE}inline;{$endif}
       begin
         result:=(s and $ff) in regs[s shr 8];
       end;
 
 
-    function newreg(rt:tregistertype;sr:tsuperregister;sb:tsubregister):tregister;{$ifdef USEINLINE}inline;{$endif}
+    function newreg(rt:TRegisterType;sr:TSuperRegister;sb:TSubRegister):TRegister;{$ifdef USEINLINE}inline;{$endif}
       begin
-        tregisterrec(result).regtype:=rt;
-        tregisterrec(result).supreg:=sr;
-        tregisterrec(result).subreg:=sb;
+        TRegisterRec(result).regtype:=rt;
+        TRegisterRec(result).supreg:=sr;
+        TRegisterRec(result).subreg:=sb;
       end;
 
 
-    function getsubreg(r:tregister):tsubregister;{$ifdef USEINLINE}inline;{$endif}
+    function getsubreg(r:TRegister):TSubRegister;{$ifdef USEINLINE}inline;{$endif}
       begin
-        result:=tregisterrec(r).subreg;
+        result:=TRegisterRec(r).subreg;
       end;
 
 
-    function getsupreg(r:tregister):tsuperregister;{$ifdef USEINLINE}inline;{$endif}
+    function getsupreg(r:TRegister):TSuperRegister;{$ifdef USEINLINE}inline;{$endif}
       begin
-        result:=tregisterrec(r).supreg;
+        result:=TRegisterRec(r).supreg;
       end;
 
 
-    function getregtype(r:tregister):tregistertype;{$ifdef USEINLINE}inline;{$endif}
+    function getregtype(r:TRegister):TRegisterType;{$ifdef USEINLINE}inline;{$endif}
       begin
-        result:=tregisterrec(r).regtype;
+        result:=TRegisterRec(r).regtype;
       end;
 
 
-    procedure setsubreg(var r:tregister;sr:tsubregister);{$ifdef USEINLINE}inline;{$endif}
+    procedure setsubreg(var r:TRegister;sr:TSubRegister);{$ifdef USEINLINE}inline;{$endif}
       begin
-        tregisterrec(r).subreg:=sr;
+        TRegisterRec(r).subreg:=sr;
       end;
 
 
-    procedure setsupreg(var r:tregister;sr:tsuperregister);{$ifdef USEINLINE}inline;{$endif}
+    procedure setsupreg(var r:TRegister;sr:TSuperRegister);{$ifdef USEINLINE}inline;{$endif}
       begin
-        tregisterrec(r).supreg:=sr;
+        TRegisterRec(r).supreg:=sr;
       end;
 
 
-    function generic_regname(r:tregister):string;
+    function generic_regname(r:TRegister):string;
       var
         nr : string[12];
       begin
@@ -695,14 +695,14 @@ implementation
             result:=result+'md1';
 {$endif}
           else
-            internalerror(200308252);
+            InternalError(200308252);
         end;
       end;
 
 
-    function int_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
+    function int_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
       const
-        size2cgsize : array[0..8] of tcgsize = (
+        size2cgsize : array[0..8] of TCgSize = (
           OS_NO,OS_8,OS_16,OS_NO,OS_32,OS_NO,OS_NO,OS_NO,OS_64
         );
       begin
@@ -718,7 +718,7 @@ implementation
       end;
 
 
-    function int_float_cgsize(const a: tcgint): tcgsize;
+    function int_float_cgsize(const a: TCGInt): TCgSize;
       begin
         case a of
           4 :
@@ -730,12 +730,12 @@ implementation
           16 :
             result:=OS_F128;
           else
-            internalerror(200603211);
+            InternalError(200603211);
         end;
       end;
 
 
-    function float_array_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
+    function float_array_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
       begin
         case a of
           4:
@@ -751,7 +751,7 @@ implementation
         end;
       end;
 
-    function double_array_cgsize(const a: tcgint): tcgsize;{$ifdef USEINLINE}inline;{$endif}
+    function double_array_cgsize(const a: TCGInt): TCgSize;{$ifdef USEINLINE}inline;{$endif}
       begin
         case a of
           8:
@@ -768,25 +768,25 @@ implementation
       end;
 
 
-    function tcgsize2str(cgsize: tcgsize):string;
+    function tcgsize2str(cgsize: TCgSize):string;
       begin
         Str(cgsize, Result);
       end;
 
 
-    function topcg2str(opcg: topcg):string;
+    function topcg2str(opcg: TOpCG):string;
       begin
         Str(opcg, Result);
       end;
 
 
-    function topcmp2str(opcmp: topcmp):string;
+    function topcmp2str(opcmp: TOpCmp):string;
       begin
         Str(opcmp, Result);
       end;
 
 
-    function inverse_opcmp(opcmp: topcmp): topcmp;{$ifdef USEINLINE}inline;{$endif}
+    function inverse_opcmp(opcmp: TOpCmp): TOpCmp;{$ifdef USEINLINE}inline;{$endif}
       const
         list: array[TOpCmp] of TOpCmp =
           (OC_NONE,OC_NE,OC_LTE,OC_GTE,OC_LT,OC_GT,OC_EQ,OC_A,OC_AE,
@@ -796,7 +796,7 @@ implementation
       end;
 
 
-    function swap_opcmp(opcmp: topcmp): topcmp;{$ifdef USEINLINE}inline;{$endif}
+    function swap_opcmp(opcmp: TOpCmp): TOpCmp;{$ifdef USEINLINE}inline;{$endif}
       const
         list: array[TOpCmp] of TOpCmp =
           (OC_NONE,OC_EQ,OC_LT,OC_GT,OC_LTE,OC_GTE,OC_NE,OC_AE,OC_A,
@@ -806,9 +806,9 @@ implementation
       end;
 
 
-    function commutativeop(op: topcg): boolean;{$ifdef USEINLINE}inline;{$endif}
+    function commutativeop(op: TOpCG): boolean;{$ifdef USEINLINE}inline;{$endif}
       const
-        list: array[topcg] of boolean =
+        list: array[TOpCG] of boolean =
           (true,false,true,true,false,false,true,true,false,false,
            true,false,false,false,false,true,false,false);
       begin
@@ -816,9 +816,9 @@ implementation
       end;
 
 
-    function realshuffle(shuffle : pmmshuffle) : boolean;
+    function realshuffle(shuffle : PMMShuffle) : boolean;
       var
-        i : longint;
+        i : LongInt;
       begin
         realshuffle:=true;
         if (shuffle=nil) or (shuffle^.len<1) then
@@ -835,15 +835,15 @@ implementation
       end;
 
 
-    function shufflescalar(shuffle : pmmshuffle) : boolean;
+    function shufflescalar(shuffle : PMMShuffle) : boolean;
       begin
         result:=shuffle^.len=0;
       end;
 
 
-    procedure removeshuffles(var shuffle : tmmshuffle);
+    procedure removeshuffles(var shuffle : TMMShuffle);
       var
-        i : longint;
+        i : LongInt;
       begin
         if shuffle.len=0 then
           exit;
@@ -852,17 +852,17 @@ implementation
       end;
 
 
-    function is_float_cgsize(size: tcgsize): boolean;{$ifdef USEINLINE}inline;{$endif}
+    function is_float_cgsize(size: TCgSize): boolean;{$ifdef USEINLINE}inline;{$endif}
       begin
         result:=size in [OS_F32..OS_F128];
       end;
 
 
-   procedure Initmms(var p : pmmshuffle;len : ShortInt);
+   procedure Initmms(var p : PMMShuffle;len : ShortInt);
      var
        i : Integer;
      begin
-       Getmem(p,sizeof(tmmshuffle)+(max(len,0)-1)*2);
+       GetMem(p,sizeof(TMMShuffle)+(max(len,0)-1)*2);
        p^.len:=len;
        for i:=1 to len do
 {$push}
@@ -880,12 +880,12 @@ initialization
   Initmms(mms_16,16);
   Initmms(mms_32,32);
 finalization
-  Freemem(mms_movescalar);
-  Freemem(mms_variable);
-  Freemem(mms_2);
-  Freemem(mms_4);
-  Freemem(mms_8);
-  Freemem(mms_16);
-  Freemem(mms_32);
+  FreeMem(mms_movescalar);
+  FreeMem(mms_variable);
+  FreeMem(mms_2);
+  FreeMem(mms_4);
+  FreeMem(mms_8);
+  FreeMem(mms_16);
+  FreeMem(mms_32);
 end.
 

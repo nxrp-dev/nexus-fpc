@@ -29,28 +29,28 @@ Unit ra386att;
       rax86att;
 
     type
-      ti386attreader = class(tx86attreader)
+      TI386ATTReader = class(TX86ATTReader)
       end;
 
 
   implementation
 
     uses
-      rabase,systems;
+      rabase,Systems;
 
 const
-  asmmode_i386_att_info : tasmmodeinfo =
+  asmmode_i386_att_info : TAsmModeInfo =
           (
             id    : asmmode_i386_att;
             idtxt : 'ATT';
-            casmreader : ti386attreader;
+            CAsmReader : TI386ATTReader;
           );
 
-  asmmode_i386_standard_info : tasmmodeinfo =
+  asmmode_i386_standard_info : TAsmModeInfo =
           (
             id    : asmmode_standard;
             idtxt : 'STANDARD';
-            casmreader : ti386attreader;
+            CAsmReader : TI386ATTReader;
           );
 
 initialization

@@ -40,7 +40,7 @@ Uses
 Type
 
 { type of a normal instruction }
-  TInstr = Taicpu;
+  TInstr = TAICPU;
   PInstr = ^TInstr;
 
 { ************************************************************************* }

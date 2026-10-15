@@ -29,7 +29,7 @@ interface
        node,nadd,cpubase,nx86add;
 
     type
-       tx8664addnode = class(tx86addnode)
+       TX8664AddNode = class(TX86AddNode)
          function use_generic_mul64bit: boolean; override;
          procedure second_addordinal; override;
          procedure second_mul;
@@ -38,13 +38,13 @@ interface
   implementation
 
     uses
-      globtype,globals,verbose,
-      aasmbase,aasmdata,
+      GlobType,Globals,Verbose,
+      aasmbase,AAsmData,
       defutil,
       cgbase,cgutils,cga,cgobj,hlcgobj,cgx86,
       tgobj;
 
-    function tx8664addnode.use_generic_mul64bit: boolean;
+    function TX8664AddNode.use_generic_mul64bit: boolean;
     begin
       result:=false;
     end;
@@ -53,7 +53,7 @@ interface
                                 Addordinal
 *****************************************************************************}
 
-    procedure tx8664addnode.second_addordinal;
+    procedure TX8664AddNode.second_addordinal;
     begin
       { filter unsigned MUL opcode, which requires special handling.
         Note that when overflow checking is off, we can use IMUL instead. }
@@ -73,14 +73,14 @@ interface
                                 MUL
 *****************************************************************************}
 
-    procedure tx8664addnode.second_mul;
+    procedure TX8664AddNode.second_mul;
       var
-        reg,rega,regd:Tregister;
-        ref:Treference;
+        reg,rega,regd:TRegister;
+        ref:TReference;
         use_ref:boolean;
-        hl4 : tasmlabel;
+        hl4 : TAsmLabel;
         cgsize:TCgSize;
-        opsize:topsize;
+        opsize:TOpSize;
       begin
         reference_reset(ref,0,[]);
         reg:=NR_NO;
@@ -99,7 +99,7 @@ interface
               regd:=NR_EDX;
             end;
           else
-            internalerror(2013102703);
+            InternalError(2013102703);
         end;
 
         pass_left_right;
@@ -156,5 +156,5 @@ interface
 
 
 begin
-   caddnode:=tx8664addnode;
+   CAddNode:=TX8664AddNode;
 end.

@@ -26,14 +26,14 @@ unit export;
 interface
 
 uses
-  cutils,cclasses,
-  systems,
-  symtype,symdef,symsym,
-  aasmdata;
+  CUtils,CClasses,
+  Systems,
+  symtype,symdef,SymSym,
+  AAsmData;
 
 type
    { export options }
-   texportoption=(eo_none,
+   TExportOption=(eo_none,
      eo_resident,
      eo_index,
      eo_name,
@@ -41,21 +41,21 @@ type
      eo_promising_first,
      eo_promising_last
    );
-   texportoptions=set of texportoption;
+   TExportOptions=set of TExportOption;
 
-   texported_item = class(TLinkedListItem)
+   TExportedItem = class(TLinkedListItem)
       sym : TSym;
-      index : longint;
-      name : pshortstring;
+      index : LongInt;
+      name : PShortString;
       { Stable assembler name for exports that outlive the unit's symbols. }
       internalname : string;
-      options : texportoptions;
+      options : TExportOptions;
       is_var : boolean;
       constructor create;
-      destructor destroy;override;
+      destructor Destroy;override;
    end;
 
-   texportlib=class
+   TExportLib=class
    private
       notsupmsg : boolean;
       fignoreduplicates : boolean;
@@ -68,8 +68,8 @@ type
       constructor Create;virtual;
       destructor Destroy;override;
       procedure preparelib(const s : string);virtual;
-      procedure exportprocedure(hp : texported_item);virtual;
-      procedure exportvar(hp : texported_item);virtual;
+      procedure exportprocedure(hp : TExportedItem);virtual;
+      procedure exportvar(hp : TExportedItem);virtual;
       procedure generatelib;virtual;
       procedure setinitname(list: TAsmList; const s: string); virtual;
       procedure setfininame(list: TAsmList; const s: string); virtual;
@@ -82,14 +82,14 @@ type
    TExportLibClass=class of TExportLib;
 
 
-  procedure exportprocsym(sym: TSym; const s : string; index: longint; options: texportoptions);
-  procedure exportvarsym(sym: TSym; const s : string; index: longint; options: texportoptions);
+  procedure exportprocsym(sym: TSym; const s : string; index: LongInt; options: TExportOptions);
+  procedure exportvarsym(sym: TSym; const s : string; index: LongInt; options: TExportOptions);
   { to export symbols not directly related to a tsym (e.g., the Objective-C
     rtti) }
-  procedure exportname(const s : string; options: texportoptions);
+  procedure exportname(const s : string; options: TExportOptions);
 
-  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: texportoptions);
-  procedure exportallprocsymnames(ps: TProcSym; options: texportoptions);
+  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: TExportOptions);
+  procedure exportallprocsymnames(ps: TProcSym; options: TExportOptions);
 
 
 var
@@ -103,18 +103,18 @@ procedure DoneExport;
 implementation
 
 uses
-  verbose,globals;
+  Verbose,Globals;
 
 {****************************************************************************
                            TExported_procedure
 ****************************************************************************}
 
-procedure exportprocsym(sym: TSym; const s : string; index: longint; options: texportoptions);
+procedure exportprocsym(sym: TSym; const s : string; index: LongInt; options: TExportOptions);
   var
-    hp : texported_item;
+    hp : TExportedItem;
   begin
-    hp:=texported_item.create;
-    hp.name:=stringdup(s);
+    hp:=TExportedItem.create;
+    hp.name:=StringDup(s);
     hp.sym:=sym;
     hp.options:=options+[eo_name];
     hp.index:=index;
@@ -122,12 +122,12 @@ procedure exportprocsym(sym: TSym; const s : string; index: longint; options: te
   end;
 
 
-procedure exportvarsym(sym: TSym; const s : string; index: longint; options: texportoptions);
+procedure exportvarsym(sym: TSym; const s : string; index: LongInt; options: TExportOptions);
   var
-    hp : texported_item;
+    hp : TExportedItem;
   begin
-    hp:=texported_item.create;
-    hp.name:=stringdup(s);
+    hp:=TExportedItem.create;
+    hp.name:=StringDup(s);
     hp.sym:=sym;
     hp.is_var:=true;
     hp.options:=options+[eo_name];
@@ -136,20 +136,20 @@ procedure exportvarsym(sym: TSym; const s : string; index: longint; options: tex
   end;
 
 
-procedure exportname(const s : string; options: texportoptions);
+procedure exportname(const s : string; options: TExportOptions);
   begin
     exportvarsym(nil,s,0,options);
   end;
 
 
-  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: texportoptions);
+  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: TExportOptions);
     var
       item: TCmdStrListItem;
     begin
       exportprocsym(sym,pd.mangledname,0,options);
       { walk through all aliases }
       item:=TCmdStrListItem(pd.aliasnames.first);
-      while assigned(item) do
+      while Assigned(item) do
         begin
           { avoid duplicate entries, sometimes aliasnames contains the mangledname }
           if item.str<>pd.mangledname then
@@ -159,9 +159,9 @@ procedure exportname(const s : string; options: texportoptions);
     end;
 
 
-  procedure exportallprocsymnames(ps: TProcSym; options: texportoptions);
+  procedure exportallprocsymnames(ps: TProcSym; options: TExportOptions);
     var
-      i: longint;
+      i: LongInt;
     begin
       for i:= 0 to ps.ProcdefList.Count-1 do
         exportallprocdefnames(ps,TProcDef(ps.ProcdefList[i]),options);
@@ -172,7 +172,7 @@ procedure exportname(const s : string; options: texportoptions);
                            TExported_procedure
 ****************************************************************************}
 
-constructor texported_item.Create;
+constructor TExportedItem.Create;
 begin
   inherited Create;
   sym:=nil;
@@ -184,10 +184,10 @@ begin
 end;
 
 
-destructor texported_item.destroy;
+destructor TExportedItem.Destroy;
 begin
-  stringdispose(name);
-  inherited destroy;
+  StringDispose(name);
+  inherited Destroy;
 end;
 
 
@@ -195,19 +195,19 @@ end;
                               TExportLib
 ****************************************************************************}
 
-constructor texportlib.Create;
+constructor TExportLib.Create;
 begin
   notsupmsg:=false;
   fignoreduplicates:=false;
 end;
 
 
-destructor texportlib.Destroy;
+destructor TExportLib.Destroy;
 begin
 end;
 
 
-procedure texportlib.NotSupported;
+procedure TExportLib.NotSupported;
 begin
   { show the message only once }
   if not notsupmsg then
@@ -218,7 +218,7 @@ begin
 end;
 
 
-procedure texportlib.duplicatesymbol(const s: string);
+procedure TExportLib.duplicatesymbol(const s: string);
 begin
   { only generate an error if the caller is not aware that it could generate
     duplicates (e.g. exporting from a package) }
@@ -227,37 +227,37 @@ begin
 end;
 
 
-procedure texportlib.preparelib(const s:string);
+procedure TExportLib.preparelib(const s:string);
 begin
   NotSupported;
 end;
 
 
-procedure texportlib.exportprocedure(hp : texported_item);
+procedure TExportLib.exportprocedure(hp : TExportedItem);
 begin
   NotSupported;
 end;
 
 
-procedure texportlib.exportvar(hp : texported_item);
+procedure TExportLib.exportvar(hp : TExportedItem);
 begin
   NotSupported;
 end;
 
 
-procedure texportlib.generatelib;
+procedure TExportLib.generatelib;
 begin
   NotSupported;
 end;
 
 
-procedure texportlib.setinitname(list: TAsmList; const s: string);
+procedure TExportLib.setinitname(list: TAsmList; const s: string);
 begin
   finitname:=s;
 end;
 
 
-procedure texportlib.setfininame(list: TAsmList; const s: string);
+procedure TExportLib.setfininame(list: TAsmList; const s: string);
 begin
   ffininame:=s;
 end;
@@ -274,7 +274,7 @@ end;
 
 procedure InitExport;
 begin
-  if assigned(CExportLib[Ord(TargetInfo.system)]) then
+  if Assigned(CExportLib[Ord(TargetInfo.system)]) then
    exportlib:=CExportLib[Ord(TargetInfo.system)].Create
   else
    exportlib:=TExportLib.Create;
@@ -283,7 +283,7 @@ end;
 
 procedure DoneExport;
 begin
-  if assigned(Exportlib) then
+  if Assigned(Exportlib) then
     Exportlib.free;
     Exportlib := nil;
 end;

@@ -34,7 +34,7 @@ unit cpubase;
 interface
 
 uses
-  globals,
+  Globals,
   cgbase
   ;
 
@@ -51,17 +51,17 @@ uses
 {$endif}
 
       { This should define the array of instructions as string }
-        op2strtable=array[tasmop] of string[17];
+        TOp2StrTable=array[TAsmOp] of string[17];
 
 
-      ImmInt = Longint;
+      ImmInt = LongInt;
 
 
     const
       { First value of opcode enumeration }
-      firstop = low(tasmop);
+      firstop = low(TAsmOp);
       { Last value of opcode enumeration  }
-      lastop  = high(tasmop);
+      lastop  = high(TAsmOp);
 
 {*****************************************************************************
                                   Registers
@@ -190,13 +190,13 @@ uses
     type
       { Number of registers used for indexing in tables }
 {$if defined(x86_64)}
-      tregisterindex=0..{$i r8664nor.inc}-1;
+      TRegisterIndex=0..{$i r8664nor.inc}-1;
 {$elseif defined(i386)}
-      tregisterindex=0..{$i r386nor.inc}-1;
+      TRegisterIndex=0..{$i r386nor.inc}-1;
 {$endif}
 
     const
-      regnumber_table : array[tregisterindex] of tregister = (
+      regnumber_table : array[TRegisterIndex] of TRegister = (
 {$if defined(x86_64)}
         {$i r8664num.inc}
 {$elseif defined(i386)}
@@ -204,7 +204,7 @@ uses
 {$endif}
       );
 
-      regstabs_table : array[tregisterindex] of shortint = (
+      regstabs_table : array[TRegisterIndex] of shortint = (
 {$if defined(x86_64)}
         {$i r8664stab.inc}
 {$elseif defined(i386)}
@@ -212,7 +212,7 @@ uses
 {$endif}
       );
 
-      regdwarf_table : array[tregisterindex] of shortint = (
+      regdwarf_table : array[TRegisterIndex] of shortint = (
 {$if defined(x86_64)}
         {$i r8664dwrf.inc}
 {$elseif defined(i386)}
@@ -284,7 +284,7 @@ uses
 
 const
 {$ifdef x86_64}
-  topsize2memsize: array[topsize] of integer =
+  topsize2memsize: array[TOpSize] of integer =
     (0, 8,16,32,64,8,8,16,8,16,32,
      16,32,64,
      16,32,64,0,0,
@@ -296,7 +296,7 @@ const
      512
     );
 {$else}
-topsize2memsize: array[topsize] of integer =
+topsize2memsize: array[TOpSize] of integer =
   (0, 8,16,32,64,8,8,16,
    16,32,64,
    16,32,64,0,0,
@@ -313,21 +313,21 @@ topsize2memsize: array[topsize] of integer =
                                   Helpers
 *****************************************************************************}
 
-    function cgsize2subreg(regtype: tregistertype; s:Tcgsize):Tsubregister;
-    function reg2opsize(r:Tregister):topsize;
-    function subreg2opsize(sr : tsubregister):topsize;
-    function reg_cgsize(const reg: tregister): tcgsize;
-    function is_calljmp(o:tasmop):boolean;
-    function is_calljmpuncondret(o:tasmop):boolean;
+    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
+    function reg2opsize(r:TRegister):TOpSize;
+    function subreg2opsize(sr : TSubRegister):TOpSize;
+    function reg_cgsize(const reg: TRegister): TCgSize;
+    function is_calljmp(o:TAsmOp):boolean;
+    function is_calljmpuncondret(o:TAsmOp):boolean;
     procedure inverse_flags(var f: TResFlags);
     function flags_to_cond(const f: TResFlags) : TAsmCond;
-    function is_segment_reg(r:tregister):boolean;
-    function findreg_by_number(r:Tregister):tregisterindex;
-    function std_regnum_search(const s:string):Tregister;
-    function std_regname(r:Tregister):string;
-    function dwarf_reg(r:tregister):shortint;
-    function dwarf_reg_no_error(r:tregister):shortint;
-    function eh_return_data_regno(nr: longint): longint;
+    function is_segment_reg(r:TRegister):boolean;
+    function findreg_by_number(r:TRegister):TRegisterIndex;
+    function std_regnum_search(const s:string):TRegister;
+    function std_regname(r:TRegister):string;
+    function dwarf_reg(r:TRegister):shortint;
+    function dwarf_reg_no_error(r:TRegister):shortint;
+    function eh_return_data_regno(nr: LongInt): LongInt;
 
     function inverse_cond(const c: TAsmCond): TAsmCond; {$ifdef USEINLINE}inline;{$endif USEINLINE}
     function conditions_equal(const c1, c2: TAsmCond): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
@@ -336,7 +336,7 @@ topsize2memsize: array[topsize] of integer =
     function condition_in(const Subset, c: TAsmCond): Boolean;
 
     { checks whether two segment registers are normally equal in the current memory model }
-    function segment_regs_equal(r1,r2:tregister):boolean;
+    function segment_regs_equal(r1,r2:TRegister):boolean;
 
     { checks whether the specified op is an x86 string instruction (e.g. cmpsb, movsd, scasw, etc.) }
     function is_x86_string_op(op: TAsmOp): boolean;
@@ -364,9 +364,9 @@ topsize2memsize: array[topsize] of integer =
 implementation
 
     uses
-      globtype,
-      rgbase,verbose,
-      cpuinfo;
+      GlobType,
+      rgbase,Verbose,
+      CPUInfo;
 
     const
     {$if defined(x86_64)}
@@ -374,10 +374,10 @@ implementation
         {$i r8664std.inc}
       );
 
-      regnumber_index : array[tregisterindex] of tregisterindex = (
+      regnumber_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r8664rni.inc}
       );
-      std_regname_index : array[tregisterindex] of tregisterindex = (
+      std_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r8664sri.inc}
       );
     {$elseif defined(i386)}
@@ -385,11 +385,11 @@ implementation
         {$i r386std.inc}
       );
 
-      regnumber_index : array[tregisterindex] of tregisterindex = (
+      regnumber_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r386rni.inc}
       );
 
-      std_regname_index : array[tregisterindex] of tregisterindex = (
+      std_regname_index : array[TRegisterIndex] of TRegisterIndex = (
         {$i r386sri.inc}
       );
     {$endif}
@@ -399,7 +399,7 @@ implementation
                                   Helpers
 *****************************************************************************}
 
-    function cgsize2subreg(regtype: tregistertype; s:Tcgsize):Tsubregister;
+    function cgsize2subreg(regtype: TRegisterType; s:TCgSize):TSubRegister;
       begin
         case s of
           OS_8,OS_S8:
@@ -423,10 +423,10 @@ implementation
                   OS_F64:
                     cgsize2subreg:=R_SUBMMD;
                   else
-                    internalerror(2009071901);
+                    InternalError(2009071901);
                 end;
               else
-                internalerror(2009071902);
+                InternalError(2009071902);
             end;
           OS_M128:
             cgsize2subreg:=R_SUBMMX;
@@ -441,13 +441,13 @@ implementation
               an internal error }
             cgsize2subreg:=R_SUBNONE;
           else
-            internalerror(200301231);
+            InternalError(200301231);
         end;
       end;
 
 
-    function reg_cgsize(const reg: tregister): tcgsize;
-      const subreg2cgsize:array[Tsubregister] of Tcgsize =
+    function reg_cgsize(const reg: TRegister): TCgSize;
+      const subreg2cgsize:array[TSubRegister] of TCgSize =
             (OS_NO,OS_8,OS_8,OS_16,OS_32,OS_64,OS_NO,OS_NO,OS_NO,OS_F32,OS_F64,OS_NO,OS_M128,OS_M256,OS_M512,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO,OS_NO);
       begin
         case getregtype(reg) of
@@ -473,24 +473,24 @@ implementation
           R_ADDRESSREGISTER:
             case reg of
               NR_K0..NR_K7: reg_cgsize:=OS_NO;
-              else internalerror(2003031801);
+              else InternalError(2003031801);
             end;
           else
-            internalerror(2003031802);
+            InternalError(2003031802);
           end;
         end;
 
 
-    function subreg2opsize(sr : tsubregister):topsize;
+    function subreg2opsize(sr : TSubRegister):TOpSize;
       const
-        _subreg2opsize : array[tsubregister] of topsize =
+        _subreg2opsize : array[TSubRegister] of TOpSize =
           (S_NO,S_B,S_B,S_W,S_L,S_Q,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO,S_NO);
       begin
         result:=_subreg2opsize[sr];
       end;
 
 
-    function reg2opsize(r:Tregister):topsize;
+    function reg2opsize(r:TRegister):TOpSize;
       begin
         reg2opsize:=S_L;
         case getregtype(r) of
@@ -512,12 +512,12 @@ implementation
               end;
             end;
           else
-            internalerror(200303181);
+            InternalError(200303181);
         end;
       end;
 
 
-    function is_calljmp(o:tasmop):boolean;
+    function is_calljmp(o:TAsmOp):boolean;
       begin
         case o of
           A_CALL,
@@ -544,7 +544,7 @@ implementation
       end;
 
 
-    function is_calljmpuncondret(o:tasmop):boolean;
+    function is_calljmpuncondret(o:TAsmOp):boolean;
       begin
         case o of
           A_CALL,
@@ -583,7 +583,7 @@ implementation
       end;
 
 
-    function is_segment_reg(r:tregister):boolean;
+    function is_segment_reg(r:TRegister):boolean;
       begin
         case r of
           NR_CS,NR_DS,NR_ES,
@@ -595,9 +595,9 @@ implementation
       end;
 
 
-    function findreg_by_number(r:Tregister):tregisterindex;
+    function findreg_by_number(r:TRegister):TRegisterIndex;
       var
-        hr : tregister;
+        hr : TRegister;
       begin
         { for the name the sub reg doesn't matter }
         hr:=r;
@@ -619,15 +619,15 @@ implementation
       end;
 
 
-    function std_regnum_search(const s:string):Tregister;
+    function std_regnum_search(const s:string):TRegister;
       begin
         result:=regnumber_table[findreg_by_name_table(s,std_regname_table,std_regname_index)];
       end;
 
 
-    function std_regname(r:Tregister):string;
+    function std_regname(r:TRegister):string;
       var
-        p : tregisterindex;
+        p : TRegisterIndex;
       begin
         if (getregtype(r)=R_MMXREGISTER) or
           ((getregtype(r)=R_MMREGISTER) and not(getsubreg(r) in [R_SUBMMX,R_SUBMMY])) then
@@ -700,20 +700,20 @@ implementation
           end;
       end;
 
-    function dwarf_reg(r:tregister):shortint;
+    function dwarf_reg(r:TRegister):shortint;
       begin
         result:=regdwarf_table[findreg_by_number(r)];
         if result=-1 then
-          internalerror(200603251);
+          InternalError(200603251);
       end;
 
-    function dwarf_reg_no_error(r:tregister):shortint;
+    function dwarf_reg_no_error(r:TRegister):shortint;
       begin
         result:=regdwarf_table[findreg_by_number(r)];
       end;
 
 
-    function eh_return_data_regno(nr: longint): longint;
+    function eh_return_data_regno(nr: LongInt): LongInt;
       begin
          case nr of
            0: result:=0;
@@ -728,10 +728,10 @@ implementation
       end;
 
 
-    function segment_regs_equal(r1, r2: tregister): boolean;
+    function segment_regs_equal(r1, r2: TRegister): boolean;
       begin
         if not is_segment_reg(r1) or not is_segment_reg(r2) then
-          internalerror(2013062301);
+          InternalError(2013062301);
         { every segment register is equal to itself }
         if r1=r2 then
           exit(true);
@@ -814,7 +814,7 @@ implementation
           A_SCAS,A_LODS,A_STOS:
             result:=1;
           else
-            internalerror(2017101203);
+            InternalError(2017101203);
         end;
       end;
 
@@ -837,7 +837,7 @@ implementation
           A_OUTSB,A_OUTSW,A_OUTSD:
             result:=A_OUTS;
           else
-            internalerror(2017101201);
+            InternalError(2017101201);
         end;
       end;
 
@@ -856,7 +856,7 @@ implementation
             result:=S_Q;
 {$endif x86_64}
           else
-            internalerror(2017101202);
+            InternalError(2017101202);
         end;
       end;
 
@@ -871,7 +871,7 @@ implementation
           A_SCAS,A_STOS,A_INS:
             result:=-1;
           else
-            internalerror(2017101102);
+            InternalError(2017101102);
         end;
       end;
 
@@ -886,7 +886,7 @@ implementation
           A_LODS,A_OUTS:
             result:=-1;
           else
-            internalerror(2017101204);
+            InternalError(2017101204);
         end;
       end;
 
@@ -896,13 +896,13 @@ implementation
 
   function UseAVX: boolean;
     begin
-      Result:=(FPUX86_HAS_AVXUNIT in fpu_capabilities[CurrentSettings.fputype]);
+      Result:=(FPUX86_HAS_AVXUNIT in fpu_capabilities[CurrentSettings.FPUType]);
     end;
 
 
   function UseAVX512: boolean;
     begin
-      Result:=UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]);
+      Result:=UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]);
     end;
 
 

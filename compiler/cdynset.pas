@@ -27,182 +27,182 @@ unit cdynset;
 
 
     type
-      TDynSet = array of byte;
+      TDynSet = array of Byte;
       PDynSet = ^TDynSet;
 
     { add e to s }
-    procedure DynSetInclude(var s : TDynSet;e : integer);
+    procedure DynSetInclude(var S : TDynSet;E : Integer);
 
     { add s to d }
-    procedure DynSetIncludeSet(var d : TDynSet;const s : TDynSet);
+    procedure DynSetIncludeSet(var D : TDynSet;const S : TDynSet);
 
     { remove s to d }
-    procedure DynSetExcludeSet(var d : TDynSet;const s : TDynSet);
+    procedure DynSetExcludeSet(var D : TDynSet;const S : TDynSet);
 
     { remove e from s }
-    procedure DynSetExclude(var s : TDynSet;e : integer);
+    procedure DynSetExclude(var S : TDynSet;E : Integer);
 
     { test if s contains e }
-    function DynSetIn(const s : TDynSet;e : integer) : boolean;
+    function DynSetIn(const S : TDynSet;E : Integer) : Boolean;
 
     { d:=s1+s2; }
-    procedure DynSetUnion(var d : TDynSet;const s1,s2 : TDynSet);
+    procedure DynSetUnion(var D : TDynSet;const S1,S2 : TDynSet);
 
     { d:=s1*s2; }
-    procedure DynSetIntersect(var d : TDynSet;const s1,s2 : TDynSet);
+    procedure DynSetIntersect(var D : TDynSet;const S1,S2 : TDynSet);
 
     { d:=s1-s2; }
-    procedure DynSetDiff(var d : TDynSet;const s1,s2 : TDynSet);
+    procedure DynSetDiff(var D : TDynSet;const S1,S2 : TDynSet);
 
     { s1<>s2; }
-    function DynSetNotEqual(const s1,s2 : TDynSet) : boolean;
+    function DynSetNotEqual(const S1,S2 : TDynSet) : Boolean;
 
     { output DynSet }
-    procedure PrintDynSet(var f : text;s : TDynSet);
+    procedure PrintDynSet(var F : Text;S : TDynSet);
 
   implementation
 
     uses
-      cutils;
+      CUtils;
 
-    procedure DynSetInclude(var s : tDynset;e : integer);
+    procedure DynSetInclude(var S : TDynSet;E : Integer);
       var
-        e8 : Integer;
+        E8 : Integer;
       begin
-        e8:=e div 8;
-        if e8>high(s) then
-          SetLength(s,e8+1);
-        s[e8]:=s[e8] or (1 shl (e mod 8));
+        E8:=E div 8;
+        if E8>High(S) then
+          SetLength(S,E8+1);
+        S[E8]:=S[E8] or (1 shl (E mod 8));
       end;
 
 
-    procedure DynSetIncludeSet(var d : tDynset;const s : tDynset);
+    procedure DynSetIncludeSet(var D : TDynSet;const S : TDynSet);
       var
-        i : integer;
+        I : Integer;
       begin
-        if length(s)>length(d) then
-          SetLength(d,length(s));
-        for i:=0 to high(s) do
-          d[i]:=d[i] or s[i];
+        if Length(S)>Length(D) then
+          SetLength(D,Length(S));
+        for I:=0 to High(S) do
+          D[I]:=D[I] or S[I];
       end;
 
 
-    procedure DynSetExcludeSet(var d : tDynset;const s : tDynset);
+    procedure DynSetExcludeSet(var D : TDynSet;const S : TDynSet);
       var
-        i : integer;
+        I : Integer;
       begin
-        if length(s)>length(d) then
-          SetLength(d,length(s));
-        for i:=0 to high(s) do
-          d[i]:=d[i] and not(s[i]);
+        if Length(S)>Length(D) then
+          SetLength(D,Length(S));
+        for I:=0 to High(S) do
+          D[I]:=D[I] and not(S[I]);
       end;
 
 
-    procedure DynSetExclude(var s : tDynset;e : integer);
+    procedure DynSetExclude(var S : TDynSet;E : Integer);
       var
-        e8 : Integer;
+        E8 : Integer;
       begin
-        e8:=e div 8;
-        if e8<=high(s) then
-          s[e8]:=s[e8] and not(1 shl (e mod 8));
+        E8:=E div 8;
+        if E8<=High(S) then
+          S[E8]:=S[E8] and not(1 shl (E mod 8));
       end;
 
 
-    function DynSetIn(const s : tDynset;e : integer) : boolean;
+    function DynSetIn(const S : TDynSet;E : Integer) : Boolean;
       var
-        e8 : Integer;
+        E8 : Integer;
       begin
-        e8:=e div 8;
-        if e8<=high(s) then
-          result:=(s[e8] and (1 shl (e mod 8)))<>0
+        E8:=E div 8;
+        if E8<=High(S) then
+          Result:=(S[E8] and (1 shl (E mod 8)))<>0
         else
-          result:=false;
+          Result:=False;
       end;
 
 
-    procedure DynSetUnion(var d : tDynset;const s1,s2 : tDynset);
+    procedure DynSetUnion(var D : TDynSet;const S1,S2 : TDynSet);
       var
-        i : integer;
+        I : Integer;
       begin
-        SetLength(d,max(Length(s1),Length(s2)));
-        for i:=0 to min(high(s1),high(s2)) do
-          d[i]:=s1[i] or s2[i];
-        if high(s1)<high(s2) then
-          for i:=high(s1)+1 to high(s2) do
-            d[i]:=s2[i]
+        SetLength(D,Max(Length(S1),Length(S2)));
+        for I:=0 to Min(High(S1),High(S2)) do
+          D[I]:=S1[I] or S2[I];
+        if High(S1)<High(S2) then
+          for I:=High(S1)+1 to High(S2) do
+            D[I]:=S2[I]
         else
-          for i:=high(s2)+1 to high(s1) do
-            d[i]:=s1[i];
+          for I:=High(S2)+1 to High(S1) do
+            D[I]:=S1[I];
       end;
 
 
-    procedure DynSetIntersect(var d : tDynset;const s1,s2 : tDynset);
+    procedure DynSetIntersect(var D : TDynSet;const S1,S2 : TDynSet);
       var
-        i : integer;
+        I : Integer;
       begin
-        SetLength(d,min(Length(s1),Length(s2)));
-        for i:=0 to high(d) do
-          d[i]:=s1[i] and s2[i];
+        SetLength(D,Min(Length(S1),Length(S2)));
+        for I:=0 to High(D) do
+          D[I]:=S1[I] and S2[I];
       end;
 
 
-    procedure DynSetDiff(var d : tDynset;const s1,s2 : tDynset);
+    procedure DynSetDiff(var D : TDynSet;const S1,S2 : TDynSet);
       var
-        i : integer;
+        I : Integer;
       begin
-        SetLength(d,length(s1));
-        for i:=0 to high(d) do
-          if i>high(s2) then
-            d[i]:=s1[i]
+        SetLength(D,Length(S1));
+        for I:=0 to High(D) do
+          if I>High(S2) then
+            D[I]:=S1[I]
           else
-            d[i]:=s1[i] and not(s2[i]);
+            D[I]:=S1[I] and not(S2[I]);
       end;
 
 
-    function DynSetNotEqual(const s1,s2 : tDynset) : boolean;
+    function DynSetNotEqual(const S1,S2 : TDynSet) : Boolean;
       var
-        i : integer;
+        I : Integer;
       begin
-        result:=true;
+        Result:=True;
         { one set could be larger than the other }
-        if length(s1)>length(s2) then
+        if Length(S1)>Length(S2) then
           begin
-            for i:=0 to high(s2) do
-              if s1[i]<>s2[i] then
-                exit;
+            for I:=0 to High(S2) do
+              if S1[I]<>S2[I] then
+                Exit;
             { check remaining part being zero }
-            for i:=length(s2) to high(s1) do
-              if s1[i]<>0 then
-                exit;
+            for I:=Length(S2) to High(S1) do
+              if S1[I]<>0 then
+                Exit;
           end
         else
           begin
-            for i:=0 to high(s1) do
-              if s1[i]<>s2[i] then
-                exit;
+            for I:=0 to High(S1) do
+              if S1[I]<>S2[I] then
+                Exit;
             { check remaining part being zero }
-            for i:=length(s1) to high(s2) do
-              if s2[i]<>0 then
-                exit;
+            for I:=Length(S1) to High(S2) do
+              if S2[I]<>0 then
+                Exit;
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    procedure PrintDynSet(var f : text;s : TDynSet);
+    procedure PrintDynSet(var F : Text;S : TDynSet);
       var
-        i : integer;
-        first : boolean;
+        I : Integer;
+        First : Boolean;
       begin
-        first:=true;
-        for i:=0 to Length(s)*8 do
+        First:=True;
+        for I:=0 to Length(S)*8 do
           begin
-            if DynSetIn(s,i) then
+            if DynSetIn(S,I) then
               begin
-                if not(first) then
-                  write(f,',');
-                write(f,i);
-                first:=false;
+                if not(First) then
+                  Write(F,',');
+                Write(F,I);
+                First:=False;
               end;
           end;
       end;

@@ -26,63 +26,63 @@ unit pgentype;
 interface
 
 uses
-  cclasses,
+  CClasses,
   tokens,
-  globtype,
-  symtype,symbase;
+  GlobType,
+  symtype,SymBase;
 
 const
   inline_specialization_block_types = [bt_type,bt_var_type,bt_const_type,bt_body,bt_except];
 
 type
-  pspecializationstate = ^tspecializationstate;
-  tspecializationstate = record
-    oldsymtablestack      : TSymTableStack;
-    oldextendeddefs       : tfphashobjectlist;
-    oldgenericdummysyms   : tfphashobjectlist;
-    oldspecializestate    : pspecializationstate;
+  PSpecializationState = ^TSpecializationState;
+  TSpecializationState = record
+    OldSymTableStack      : TSymTableStack;
+    oldextendeddefs       : TFPHashObjectList;
+    oldgenericdummysyms   : TFPHashObjectList;
+    oldspecializestate    : PSpecializationState;
     oldcurrent_genericdef : TDef;
-    oldoptoken            : ttoken;
+    oldoptoken            : TToken;
   end;
 
-  tspecializationcontext=class
+  TSpecializationContext=class
   public
-    paramlist : tfpobjectlist;
-    poslist : tfplist;
-    prettyname : ansistring;
-    specializename : ansistring;
-    genname : ansistring;
+    paramlist : TFPObjectList;
+    poslist : TFPList;
+    prettyname : AnsiString;
+    specializename : AnsiString;
+    genname : AnsiString;
     sym : TSym;
-    symtable : TSymTable;
+    SymTable : TSymTable;
     forwarddef : TDef;
     constructor create;
-    destructor destroy;override;
-    function getcopy:tspecializationcontext;
+    destructor Destroy;override;
+    function getcopy:TSpecializationContext;
   end;
 
 
 implementation
 
-constructor tspecializationcontext.create;
+constructor TSpecializationContext.create;
 begin
-  paramlist:=tfpobjectlist.create(false);
-  poslist:=tfplist.create;
+  paramlist:=TFPObjectList.create(false);
+  poslist:=TFPList.create;
 end;
 
-destructor tspecializationcontext.destroy;
+destructor TSpecializationContext.Destroy;
 begin
   paramlist.free;
   paramlist := nil;
-  tfplist.FreeAndNilDisposing(poslist,TypeInfo(TFilePosInfo));
-  inherited destroy;
+  TFPList.FreeAndNilDisposing(poslist,TypeInfo(TFilePosInfo));
+  inherited Destroy;
 end;
 
-function tspecializationcontext.getcopy:tspecializationcontext;
+function TSpecializationContext.getcopy:TSpecializationContext;
 var
   posinfo : PFilePosInfo;
-  i : longint;
+  i : LongInt;
 begin
-  result:=tspecializationcontext.create;
+  result:=TSpecializationContext.create;
   result.paramlist.capacity:=paramlist.count;
   for i:=0 to paramlist.count-1 do
     begin
@@ -99,7 +99,7 @@ begin
   result.specializename:=specializename;
   result.genname:=genname;
   result.sym:=sym;
-  result.symtable:=symtable;
+  result.SymTable:=SymTable;
   result.forwarddef:=forwarddef;
 end;
 

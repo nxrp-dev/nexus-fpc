@@ -26,35 +26,35 @@ unit ncpumem;
 interface
 
   uses
-    globtype,
+    GlobType,
     cgbase,
     symtype,
     node,nmem,ncgmem;
 
   type
-    taarch64loadparentfpnode = class(tcgloadparentfpnode)
+    TAArch64LoadParentFPNode = class(TCGLoadParentFPNode)
       procedure pass_generate_code; override;
     end;
 
-    taarch64vecnode = class(tcgvecnode)
+    TAArch64VecNode = class(TCGVecNode)
      protected
-      function valid_index_size(size: tcgsize): boolean; override;
+      function valid_index_size(size: TCgSize): boolean; override;
      public
-       procedure update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint); override;
+       procedure update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint); override;
     end;
 
 implementation
 
   uses
-    cutils,verbose,
+    CUtils,Verbose,
     defutil,
-    aasmdata,cpubase,
+    AAsmData,cpubase,
     cgutils,
     cgobj;
 
   { taarch64loadparentfpnode }
 
-  procedure taarch64loadparentfpnode.pass_generate_code;
+  procedure TAArch64LoadParentFPNode.pass_generate_code;
     begin
       inherited pass_generate_code;
       { see the comments in tcgaarch64.g_proc_entry }
@@ -76,7 +76,7 @@ implementation
 
   { taarch64vecnode }
 
-  function taarch64vecnode.valid_index_size(size: tcgsize): boolean;
+  function TAArch64VecNode.valid_index_size(size: TCgSize): boolean;
     begin
       { all sizes are ok if we handle the "reference reg mul", because
          a) we use a 64 bit register for 64 bit values, and a 32 bit one (that
@@ -89,9 +89,9 @@ implementation
     end;
 
 
-  procedure taarch64vecnode.update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint);
+  procedure TAArch64VecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
     var
-      base: tregister;
+      base: TRegister;
       oldoffset: asizeint;
       shift: byte;
     begin
@@ -132,11 +132,11 @@ implementation
           register }
         location.reference.index:=cg.makeregsize(CurrentAsmData.CurrAsmList,location.reference.index,OS_64);
       location.reference.shiftimm:=shift;
-      location.reference.alignment:=newalignment(location.reference.alignment,l);
+      location.reference.alignment:=NewAlignment(location.reference.alignment,l);
     end;
 
 
 begin
-  cloadparentfpnode:=taarch64loadparentfpnode;
-  cvecnode:=taarch64vecnode;
+  CLoadParentFPNode:=TAArch64LoadParentFPNode;
+  CVecNode:=TAArch64VecNode;
 end.

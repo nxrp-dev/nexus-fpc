@@ -29,22 +29,22 @@ unit rax86;
 interface
 
 uses
-  aasmbase,aasmtai,aasmdata,aasmcpu,
-  cpubase,rautils,cclasses;
+  aasmbase,aasmtai,AAsmData,aasmcpu,
+  cpubase,rautils,CClasses;
 
 { Parser helpers }
-function is_prefix(t:tasmop):boolean;
-function is_override(t:tasmop):boolean;
-Function CheckPrefix(prefixop,op:tasmop): Boolean;
-Function CheckOverride(overrideop,op:tasmop): Boolean;
+function is_prefix(t:TAsmOp):boolean;
+function is_override(t:TAsmOp):boolean;
+Function CheckPrefix(prefixop,op:TAsmOp): Boolean;
+Function CheckOverride(overrideop,op:TAsmOp): Boolean;
 
 type
   Tx86Operand=class(TOperand)
-    opsize  : topsize;
+    opsize  : TOpSize;
     vopext  : smallint;      // bitmask: vector-operand extention AVX512 (e.g. vaddps xmm0 {k1} {z})
     vbcst   : byte;
-    Procedure SetSize(_size:longint;force:boolean);override;
-    Procedure SetCorrectSize(opcode:tasmop);override;
+    Procedure SetSize(_size:LongInt;force:boolean);override;
+    Procedure SetCorrectSize(opcode:TAsmOp);override;
     Function CheckOperand(ins : TInstruction): boolean; override;
     { handles the @Code symbol }
     Procedure SetupCode;
@@ -60,8 +60,8 @@ type
   { Tx86Instruction }
 
   Tx86Instruction=class(TInstruction)
-    opsize  : topsize;
-    constructor Create(optype : tcoperand);override;
+    opsize  : TOpSize;
+    constructor Create(optype : TCOperand);override;
     { Operand sizes }
     procedure AddReferenceSizes; virtual;
     procedure SetInstructionOpsize;
@@ -70,7 +70,7 @@ type
     { Additional actions required by specific reader }
     procedure FixupOpcode;virtual;
     { opcode adding }
-    function ConcatInstruction(p : TAsmList) : tai;override;
+    function ConcatInstruction(p : TAsmList) : TAI;override;
     function getstring(aAddMemRefSize: boolean = true): string;
     { returns true, if the opcode might have an extension as used by AVX512 }
     function MightHaveExtension : boolean;
@@ -78,17 +78,17 @@ type
 
 const
   AsmPrefixes = 8;
-  AsmPrefix : array[0..AsmPrefixes-1] of TasmOP =(
+  AsmPrefix : array[0..AsmPrefixes-1] of TAsmOp =(
     A_LOCK,A_REP,A_REPE,A_REPNE,A_REPNZ,A_REPZ,A_XACQUIRE,A_XRELEASE
   );
 
   AsmOverrides = 6;
-  AsmOverride : array[0..AsmOverrides-1] of TasmOP =(
+  AsmOverride : array[0..AsmOverrides-1] of TAsmOp =(
     A_SEGCS,A_SEGES,A_SEGDS,A_SEGFS,A_SEGGS,A_SEGSS
   );
 
   CondAsmOps=3;
-  CondAsmOp:array[0..CondAsmOps-1] of TasmOp=(
+  CondAsmOp:array[0..CondAsmOps-1] of TAsmOp=(
     A_CMOVcc, A_Jcc, A_SETcc
   );
   CondAsmOpStr:array[0..CondAsmOps-1] of string[4]=(
@@ -98,19 +98,19 @@ const
 implementation
 
 uses
-  globtype,globals,systems,verbose,
-  procinfo,
+  GlobType,Globals,Systems,Verbose,
+  ProcInfo,
   cgbase,cgutils,
-  itcpugas,cgx86, cutils;
+  itcpugas,cgx86, CUtils;
 
 
 {*****************************************************************************
                               Parser Helpers
 *****************************************************************************}
 
-function is_prefix(t:tasmop):boolean;
+function is_prefix(t:TAsmOp):boolean;
 var
-  i : longint;
+  i : LongInt;
 Begin
   is_prefix:=false;
   for i:=1 to AsmPrefixes do
@@ -122,9 +122,9 @@ Begin
 end;
 
 
-function is_override(t:tasmop):boolean;
+function is_override(t:TAsmOp):boolean;
 var
-  i : longint;
+  i : LongInt;
 Begin
   is_override:=false;
   for i:=1 to AsmOverrides do
@@ -136,7 +136,7 @@ Begin
 end;
 
 
-Function CheckPrefix(prefixop,op:tasmop): Boolean;
+Function CheckPrefix(prefixop,op:TAsmOp): Boolean;
 { Checks if the prefix is valid with the following opcode }
 { return false if not, otherwise true                          }
 Begin
@@ -169,7 +169,7 @@ Begin
 end;
 
 
-Function CheckOverride(overrideop,op:tasmop): Boolean;
+Function CheckOverride(overrideop,op:TAsmOp): Boolean;
 { Check if the override is valid, and if so then }
 { update the instr variable accordingly.         }
 Begin
@@ -188,7 +188,7 @@ end;
                               TX86Operand
 *****************************************************************************}
 
-Procedure Tx86Operand.SetSize(_size:longint;force:boolean);
+Procedure Tx86Operand.SetSize(_size:LongInt;force:boolean);
 begin
   inherited SetSize(_size,force);
   { OS_64 will be set to S_L and be fixed later
@@ -206,7 +206,7 @@ begin
 end;
 
 
-Procedure Tx86Operand.SetCorrectSize(opcode:tasmop);
+Procedure Tx86Operand.SetCorrectSize(opcode:TAsmOp);
 begin
   if gas_needsuffix[opcode]=attsufFPU then
     begin
@@ -257,7 +257,7 @@ begin
         begin
           if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset>0) then
             begin
-              if CurrentSettings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBW:
@@ -267,7 +267,7 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='[RBP+offset]';
                     else
-                      internalerror(2019061001);
+                      InternalError(2019061001);
                   end;
                 end
               else
@@ -280,7 +280,7 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='+offset(%rbp)';
                     else
-                      internalerror(2019061002);
+                      InternalError(2019061002);
                   end;
                 end;
               if CurrentProcInfo.procdef.proccalloption=pocall_register then
@@ -290,7 +290,7 @@ begin
             end
           else if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset<0) then
             begin
-              if CurrentSettings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBW:
@@ -300,7 +300,7 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='[RBP-offset]';
                     else
-                      internalerror(2019061003);
+                      InternalError(2019061003);
                   end;
                 end
               else
@@ -313,7 +313,7 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='-offset(%rbp)';
                     else
-                      internalerror(2019061004);
+                      InternalError(2019061004);
                   end;
                 end;
               message1(asmr_w_direct_ebp_neg_offset,ErrorRefStr);
@@ -321,7 +321,7 @@ begin
           else if ((ins.opcode<>A_LEA) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) or
             ((ins.opcode=A_LEA) and (getsupreg(ins.operands[2].opr.reg)<>RS_ESP) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) then
             begin
-              if CurrentSettings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.AsmMode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBD:
@@ -329,7 +329,7 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='[RSP-offset]';
                     else
-                      internalerror(2019061005);
+                      InternalError(2019061005);
                   end;
                 end
               else
@@ -340,15 +340,15 @@ begin
                     R_SUBQ:
                       ErrorRefStr:='-offset(%rsp)';
                     else
-                      internalerror(2019061006);
+                      InternalError(2019061006);
                   end;
                 end;
               message1(asmr_w_direct_esp_neg_offset,ErrorRefStr);
             end;
         end;
-      if (cs_create_pic in CurrentSettings.moduleswitches) and
-         assigned(opr.ref.symbol) and
-         not assigned(opr.ref.relsymbol) then
+      if (cs_create_pic in CurrentSettings.ModuleSwitches) and
+         Assigned(opr.ref.symbol) and
+         not Assigned(opr.ref.relsymbol) then
         begin
           if not(opr.ref.refaddr in [addr_pic,addr_pic_no_got]) then
             begin
@@ -406,7 +406,7 @@ end;
                               T386Instruction
 *****************************************************************************}
 
-constructor Tx86Instruction.Create(optype : tcoperand);
+constructor Tx86Instruction.Create(optype : TCOperand);
 begin
   inherited Create(optype);
   Opsize:=S_NO;
@@ -418,8 +418,8 @@ end;
 procedure Tx86Instruction.AddReferenceSizes;
 
 var
-  operand2,i,j,k : longint;
-  s : tasmsymbol;
+  operand2,i,j,k : LongInt;
+  s : TAsmSymbol;
   so : aint;
   ExistsMemRefNoSize: boolean;
   ExistsMemRef: boolean;
@@ -431,7 +431,7 @@ var
   memopsize: integer;
   memoffset: asizeint;
   vbcst: byte;
-  mmregs: Set of TSubregister;
+  mmregs: Set of TSubRegister;
   multiplicator: integer;
   bcst1,bcst2: string;
 
@@ -514,7 +514,7 @@ begin
               msbBCST32: memrefsize := 32;
               msbBCST64: memrefsize := 64;
               else
-                Internalerror(2019081015);
+                InternalError(2019081015);
             end;
           end
           else
@@ -663,7 +663,7 @@ begin
                            S_XMM : memrefsize := 128;
                            S_YMM : memrefsize := 256;
                            S_ZMM : memrefsize := 512;
-                           else Internalerror(2019081010);
+                           else InternalError(2019081010);
                          end;
                          break;
                        end;
@@ -693,7 +693,7 @@ begin
                              S_XMM : memrefsize := 128;
                              S_YMM : memrefsize := 256;
                              S_ZMM : memrefsize := 512;
-                             else Internalerror(777200);
+                             else InternalError(777200);
                            end;
                            break;
                          end;
@@ -711,7 +711,7 @@ begin
                     msiMemRegConst128: memrefsize := 128;
                     msiMemRegConst256: memrefsize := 256;
                     msiMemRegConst512: memrefsize := 512;
-                    else Internalerror(2019081012);
+                    else InternalError(2019081012);
                   end;
                 end;
               end;
@@ -775,7 +775,7 @@ begin
             msiMultiple:
               ;
             else
-              Internalerror(2020111001);
+              InternalError(2020111001);
           end;
 
           if memrefsize > -1 then
@@ -791,7 +791,7 @@ begin
                   OPR_LOCAL: memopsize := operands[i].opr.localvarsize * 8;
               OPR_REFERENCE:
                   if operands[i].opr.ref.refaddr = addr_pic then
-                    memopsize := sizeof(pint) * 8
+                    memopsize := sizeof(PInt) * 8
                   else
                     memopsize := operands[i].opr.varsize * 8;
               else
@@ -897,7 +897,7 @@ begin
                                    tx86operand(operands[i]).size   := OS_M64;
                                  end;
                       else
-                        Internalerror(2019081017);
+                        InternalError(2019081017);
                     end;
                   end
                   else
@@ -1256,7 +1256,7 @@ begin
                                                           break;
                                                         end;
                                      else
-                                       Internalerror(2019081018);
+                                       InternalError(2019081018);
                                    end;
                                  end;
                                end;
@@ -1276,7 +1276,7 @@ begin
                    msiUnsupported,
                    msiMultiple: Message(asmr_e_unable_to_determine_reference_size); // TODO individual message
                   else
-                    Internalerror(2019081008);
+                    InternalError(2019081008);
                 end;
               end;
           OPR_CONSTANT:
@@ -1300,7 +1300,7 @@ begin
                             end;
 {$else}
                   csiMem64: begin
-                              internalerror(2019050910);
+                              InternalError(2019050910);
                             end;
 {$endif}
                   csiUnknown, csiMultiple, csiNoSize:
@@ -1369,7 +1369,7 @@ begin
                           tx86operand(operands[i]).opsize:=opsize
                         else
                          begin
-                           if (m_delphi in CurrentSettings.modeswitches) then
+                           if (m_delphi in CurrentSettings.ModeSwitches) then
                              Message(asmr_w_unable_to_determine_reference_size_using_dword)
                            else
                              Message(asmr_e_unable_to_determine_reference_size);
@@ -1385,7 +1385,7 @@ begin
                      else if not(NoMemorySizeRequired(opcode) or
                        (opcode=A_JMP) or (opcode=A_JCC) or (opcode=A_CALL) or (opcode=A_LCALL) or (opcode=A_LJMP)) then
                        begin
-                         if (m_delphi in CurrentSettings.modeswitches) then
+                         if (m_delphi in CurrentSettings.ModeSwitches) then
                            Message(asmr_w_unable_to_determine_reference_size_using_dword)
                          else
                            Message(asmr_e_unable_to_determine_reference_size);
@@ -1402,7 +1402,7 @@ begin
                      s:=operands[i].opr.symbol;
                      so:=operands[i].opr.symofs;
                      operands[i].opr.typ:=OPR_REFERENCE;
-                     Fillchar(operands[i].opr.ref,sizeof(treference),0);
+                     Fillchar(operands[i].opr.ref,sizeof(TReference),0);
                      operands[i].opr.ref.symbol:=s;
                      operands[i].opr.ref.offset:=so;
                    end;
@@ -1488,7 +1488,7 @@ procedure Tx86Instruction.SetInstructionOpsize;
     iSizeMask: int64;
     bBroadcastMemRef: boolean;
     bExistMemRef: boolean;
-    ValidOpSizes: Set of topsize;
+    ValidOpSizes: Set of TOpSize;
   begin
     Result := False;
 
@@ -1635,7 +1635,7 @@ begin
                 if tx86operand(operands[1]).opsize=S_NO then
                   begin
                     tx86operand(operands[1]).opsize:=S_B;
-                    if (m_delphi in CurrentSettings.modeswitches) then
+                    if (m_delphi in CurrentSettings.ModeSwitches) then
                       Message(asmr_w_unable_to_determine_reference_size_using_byte)
                     else
                       Message(asmr_e_unable_to_determine_reference_size);
@@ -1692,7 +1692,7 @@ end;
 procedure Tx86Instruction.CheckOperandSizes;
 var
   sizeerr : boolean;
-  i : longint;
+  i : LongInt;
 begin
   { Check only the most common opcodes here, the others are done in
     the assembler pass }
@@ -1751,8 +1751,8 @@ begin
   if sizeerr then
    begin
      { if range checks are on then generate an error }
-     if (cs_compilesystem in CurrentSettings.moduleswitches) or
-        not (cs_check_range in CurrentSettings.localswitches) then
+     if (cs_compilesystem in CurrentSettings.ModuleSwitches) or
+        not (cs_check_range in CurrentSettings.LocalSwitches) then
        Message(asmr_w_size_suffix_and_dest_dont_match)
      else
        Message(asmr_e_size_suffix_and_dest_dont_match);
@@ -1817,12 +1817,12 @@ end;
                               opcode Adding
 *****************************************************************************}
 
-function Tx86Instruction.ConcatInstruction(p : TAsmList) : tai;
+function Tx86Instruction.ConcatInstruction(p : TAsmList) : TAI;
 var
-  siz   : topsize;
-  i     : longint;
+  siz   : TOpSize;
+  i     : LongInt;
   asize : int64;
-  ai   : taicpu;
+  ai   : TAICPU;
 begin
   ConcatInstruction:=nil;
 
@@ -2004,7 +2004,7 @@ begin
       (TargetInfo.system in [system_i386_linux,system_i386_android]) then
      Message(asmr_w_enter_not_supported_by_linux);
 
-  ai:=taicpu.op_none(opcode,siz);
+  ai:=TAICPU.op_none(opcode,siz);
   ai.fileinfo:=filepos;
   ai.SetOperandOrder(op_att);
   ai.Ops:=Ops;
@@ -2051,7 +2051,7 @@ begin
        OPR_REFERENCE:
          begin
 
-           if CurrentSettings.optimizerswitches <> [] then
+           if CurrentSettings.OptimizerSwitches <> [] then
             if (not(MemRefInfo(opcode).MemRefSize in MemRefSizeInfoVMems)) and (opcode<>A_XLAT) and not is_x86_string_op(opcode) then
              optimize_ref(operands[i].opr.ref,true);
 
@@ -2118,7 +2118,7 @@ begin
     ai.is_jmp := True;
 
  { Concat the opcode or give an error }
-  if assigned(ai) then
+  if Assigned(ai) then
     p.concat(ai)
   else
    Message(asmr_e_invalid_opcode_and_operand);
@@ -2127,7 +2127,7 @@ end;
 
 function Tx86Instruction.getstring(aAddMemRefSize: boolean): string;
 var
-  i : longint;
+  i : LongInt;
   s, sval : string;
   regnr: string;
   addsize : boolean;

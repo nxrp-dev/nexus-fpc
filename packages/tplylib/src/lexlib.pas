@@ -43,12 +43,12 @@ interface
 
 var
 
-yyinput, yyoutput : Text;        (* input and output file *)
-yyline            : ShortString;      (* current input line *)
-yylineno, yycolno : Integer;     (* current input position *)
-yytext            : ShortString;      (* matched text (should be considered r/o) *)
-yyleng            : Byte         (* length of matched text *)
-  absolute yytext;
+YYInput, YYOutput : Text;        (* input and output file *)
+YYLine            : ShortString;      (* current input line *)
+YYLineNo, YYColNo : Integer;     (* current input position *)
+YYText            : ShortString;      (* matched text (should be considered r/o) *)
+YYLeng            : Byte         (* length of matched text *)
+  absolute YYText;
 
 (* I/O routines:
 
@@ -76,26 +76,26 @@ var get_char: function  : AnsiChar;
   (* obtain one character from the input file (null character at end-of-
      file) *)
 
-var unget_char : procedure ( c : AnsiChar );
+var unget_char : procedure ( C : AnsiChar );
   (* return one character to the input file to be reread in subsequent calls
      to get_char *)
 
-var put_char: procedure ( c : AnsiChar );
+var put_char: procedure ( C : AnsiChar );
   (* write one character to the output file *)
 
 (* Utility routines: *)
 
-procedure echo;
+procedure Echo;
   (* echoes the current match to the output stream *)
 
-procedure yymore;
+procedure YYMore;
   (* append the next match to the current one *)
 
-procedure yyless ( n : Integer );
+procedure YYLess ( N : Integer );
   (* truncate yytext to size n and return the remaining characters to the
      input stream *)
 
-procedure reject;
+procedure Reject;
   (* reject the current match and execute the next one *)
 
   (* reject does not actually cause the input to be rescanned; instead,
@@ -103,11 +103,11 @@ procedure reject;
      you should not try to modify the input stream or the yytext variable
      when rejecting a match. *)
 
-procedure return ( n : Integer );
-procedure returnc ( c : AnsiChar );
+procedure Return ( N : Integer );
+procedure ReturnC ( C : AnsiChar );
   (* sets the return value of yylex *)
 
-procedure start ( state : Integer );
+procedure Start ( State : Integer );
   (* puts the lexical analyzer in the given start state; state=0 denotes
      the default start state, other values are user-defined *)
 
@@ -122,7 +122,7 @@ procedure start ( state : Integer );
 type
   yywrap_t = function (): Boolean;
 var
-  yywrap: yywrap_t;
+  YYWrap: yywrap_t;
   (* The default yywrap routine supplied here closes input and output files
      and returns true (causing yylex to terminate). *)
 
@@ -131,100 +131,100 @@ var
 
 var
 
-yystate    : Integer; (* current state of lexical analyzer *)
-yyactchar  : AnsiChar;    (* current character *)
-yylastchar : AnsiChar;    (* last matched character (#0 if none) *)
-yyrule     : Integer; (* matched rule *)
-yyreject   : Boolean; (* current match rejected? *)
-yydone     : Boolean; (* yylex return value set? *)
-yyretval   : Integer; (* yylex return value *)
+YYState    : Integer; (* current state of lexical analyzer *)
+YYActChar  : AnsiChar;    (* current character *)
+YYLastChar : AnsiChar;    (* last matched character (#0 if none) *)
+YYRule     : Integer; (* matched rule *)
+YYReject   : Boolean; (* current match rejected? *)
+YYDone     : Boolean; (* yylex return value set? *)
+YYRetVal   : Integer; (* yylex return value *)
 
-procedure yynew;
+procedure YYNew;
   (* starts next match; initializes state information of the lexical
      analyzer *)
 
-procedure yyscan;
+procedure YYScan;
   (* gets next character from the input stream and updates yytext and
      yyactchar accordingly *)
 
-procedure yymark ( n : Integer );
+procedure YYMark ( N : Integer );
   (* marks position for rule no. n *)
 
-procedure yymatch ( n : Integer );
+procedure YYMatch ( N : Integer );
   (* declares a match for rule number n *)
 
-function yyfind ( var n : Integer ) : Boolean;
+function YYFind ( var N : Integer ) : Boolean;
   (* finds the last match and the corresponding marked position and adjusts
      the matched string accordingly; returns:
      - true if a rule has been matched, false otherwise
      - n: the number of the matched rule *)
 
-function yydefault : Boolean;
+function YYDefault : Boolean;
   (* executes the default action (copy character); returns true unless
      at end-of-file *)
 
-procedure yyclear;
+procedure YYClear;
   (* reinitializes state information after lexical analysis has been
      finished *)
 
 implementation
 
-procedure fatal ( msg : ShortString );
+procedure Fatal ( Msg : ShortString );
   (* writes a fatal error message and halts program *)
   begin
-    writeln('LexLib: ', msg);
-    halt(1);
+    WriteLn('LexLib: ', Msg);
+    Halt(1);
   end(*fatal*);
 
 (* I/O routines: *)
 
-const nl = #10;  (* newline character *)
+const NL = #10;  (* newline character *)
 
-const max_chars = 2048;
+const MaxChars = 2048;
 
 var
 
-bufptr : Integer;
-buf    : array [1..max_chars] of AnsiChar;
+BufPtr : Integer;
+Buf    : array [1..MaxChars] of AnsiChar;
 
-function lexlib_get_char : AnsiChar;
-  var i : Integer;
+function LexLibGetChar : AnsiChar;
+  var I : Integer;
   begin
-    if (bufptr=0) and not eof(yyinput) then
+    if (BufPtr=0) and not EOF(YYInput) then
       begin
-        readln(yyinput, yyline);
-        inc(yylineno); yycolno := 1;
-        buf[1] := nl;
-        for i := 1 to length(yyline) do
-          buf[i+1] := yyline[length(yyline)-i+1];
-        inc(bufptr, length(yyline)+1);
+        ReadLn(YYInput, YYLine);
+        Inc(YYLineNo); YYColNo := 1;
+        Buf[1] := NL;
+        for I := 1 to Length(YYLine) do
+          Buf[I+1] := YYLine[Length(YYLine)-I+1];
+        Inc(BufPtr, Length(YYLine)+1);
       end;
-    if bufptr>0 then
+    if BufPtr>0 then
       begin
-        lexlib_get_char := buf[bufptr];
-        dec(bufptr);
-        inc(yycolno);
+        LexLibGetChar := Buf[BufPtr];
+        Dec(BufPtr);
+        Inc(YYColNo);
       end
     else
-      lexlib_get_char := #0;
+      LexLibGetChar := #0;
   end(*get_char*);
 
-procedure lexlib_unget_char ( c : AnsiChar );
+procedure LexLibUngetChar ( C : AnsiChar );
   begin
-    if bufptr=max_chars then fatal('input buffer overflow');
-    inc(bufptr);
-    dec(yycolno);
-    buf[bufptr] := c;
+    if BufPtr=MaxChars then Fatal('input buffer overflow');
+    Inc(BufPtr);
+    Dec(YYColNo);
+    Buf[BufPtr] := C;
   end(*unget_char*);
 
-procedure lexlib_put_char ( c : AnsiChar );
+procedure LexLibPutChar ( C : AnsiChar );
   begin
-    if c=#0 then
+    if C=#0 then
       { ignore }
-    else if c=nl then
-      writeln(yyoutput)
+    else if C=NL then
+      WriteLn(YYOutput)
     else
-      write(yyoutput, c)
+      Write(YYOutput, C)
   end(*put_char*);
 
 (* Variables:
@@ -248,172 +248,172 @@ procedure lexlib_put_char ( c : AnsiChar );
 
 const
 
-max_matches = 1024;
-max_rules   = 256;
+MaxMatches = 1024;
+MaxRules   = 256;
 
 var
 
-yystext            : ShortString;
-yysstate, yylstate : Integer;
-yymatches          : Integer;
-yystack            : array [1..max_matches] of Integer;
-yypos              : array [1..max_rules] of Integer;
-yysleng            : Byte;
+YYSText            : ShortString;
+YYSState, YYLState : Integer;
+YYMatches          : Integer;
+YYStack            : array [1..MaxMatches] of Integer;
+YYPos              : array [1..MaxRules] of Integer;
+YYSLeng            : Byte;
 
 (* Utilities: *)
 
-procedure echo;
-  var i : Integer;
+procedure Echo;
+  var I : Integer;
   begin
-    for i := 1 to yyleng do
-      put_char(yytext[i])
+    for I := 1 to YYLeng do
+      put_char(YYText[I])
   end(*echo*);
 
-procedure yymore;
+procedure YYMore;
   begin
-    yystext := yytext;
+    YYSText := YYText;
   end(*yymore*);
 
-procedure yyless ( n : Integer );
-  var i : Integer;
+procedure YYLess ( N : Integer );
+  var I : Integer;
   begin
-    for i := yyleng downto n+1 do
-      unget_char(yytext[i]);
-    yyleng := n;
+    for I := YYLeng downto N+1 do
+      unget_char(YYText[I]);
+    YYLeng := N;
   end(*yyless*);
 
-procedure reject;
-  var i : Integer;
+procedure Reject;
+  var I : Integer;
   begin
-    yyreject := true;
-    for i := yyleng+1 to yysleng do
-      yytext := yytext+get_char();
-    dec(yymatches);
+    YYReject := True;
+    for I := YYLeng+1 to YYSLeng do
+      YYText := YYText+get_char();
+    Dec(YYMatches);
   end(*reject*);
 
-procedure return ( n : Integer );
+procedure Return ( N : Integer );
   begin
-    yyretval := n;
-    yydone := true;
+    YYRetVal := N;
+    YYDone := True;
   end(*return*);
 
-procedure returnc ( c : AnsiChar );
+procedure ReturnC ( C : AnsiChar );
   begin
-    yyretval := ord(c);
-    yydone := true;
+    YYRetVal := Ord(C);
+    YYDone := True;
   end(*returnc*);
 
-procedure start ( state : Integer );
+procedure Start ( State : Integer );
   begin
-    yysstate := state;
+    YYSState := State;
   end(*start*);
 
 (* yywrap: *)
 
-function lexlib_yywrap : Boolean;
+function LexLibYYWrap : Boolean;
   begin
-    close(yyinput);
-    close(yyoutput);
-    lexlib_yywrap := true;
+    Close(YYInput);
+    Close(YYOutput);
+    LexLibYYWrap := True;
   end(*yywrap*);
 
 (* Internal routines: *)
 
-procedure yynew;
+procedure YYNew;
   begin
-    if yylastchar<>#0 then
-      if yylastchar=nl then
-        yylstate := 1
+    if YYLastChar<>#0 then
+      if YYLastChar=NL then
+        YYLState := 1
       else
-        yylstate := 0;
-    yystate := yysstate+yylstate;
-    yytext  := yystext;
-    yystext := '';
-    yymatches := 0;
-    yydone := false;
+        YYLState := 0;
+    YYState := YYSState+YYLState;
+    YYText  := YYSText;
+    YYSText := '';
+    YYMatches := 0;
+    YYDone := False;
   end(*yynew*);
 
-procedure yyscan;
+procedure YYScan;
   begin
-    if yyleng=255 then fatal('yytext overflow');
-    yyactchar := get_char();
-    inc(yyleng);
-    yytext[yyleng] := yyactchar;
+    if YYLeng=255 then Fatal('yytext overflow');
+    YYActChar := get_char();
+    Inc(YYLeng);
+    YYText[YYLeng] := YYActChar;
   end(*yyscan*);
 
-procedure yymark ( n : Integer );
+procedure YYMark ( N : Integer );
   begin
-    if n>max_rules then fatal('too many rules');
-    yypos[n] := yyleng;
+    if N>MaxRules then Fatal('too many rules');
+    YYPos[N] := YYLeng;
   end(*yymark*);
 
-procedure yymatch ( n : Integer );
+procedure YYMatch ( N : Integer );
   begin
-    inc(yymatches);
-    if yymatches>max_matches then fatal('match stack overflow');
-    yystack[yymatches] := n;
+    Inc(YYMatches);
+    if YYMatches>MaxMatches then Fatal('match stack overflow');
+    YYStack[YYMatches] := N;
   end(*yymatch*);
 
-function yyfind ( var n : Integer ) : Boolean;
+function YYFind ( var N : Integer ) : Boolean;
   begin
-    yyreject := false;
-    while (yymatches>0) and (yypos[yystack[yymatches]]=0) do
-      dec(yymatches);
-    if yymatches>0 then
+    YYReject := False;
+    while (YYMatches>0) and (YYPos[YYStack[YYMatches]]=0) do
+      Dec(YYMatches);
+    if YYMatches>0 then
       begin
-        yysleng := yyleng;
-        n       := yystack[yymatches];
-        yyless(yypos[n]);
-        yypos[n] := 0;
-        if yyleng>0 then
-          yylastchar := yytext[yyleng]
+        YYSLeng := YYLeng;
+        N       := YYStack[YYMatches];
+        YYLess(YYPos[N]);
+        YYPos[N] := 0;
+        if YYLeng>0 then
+          YYLastChar := YYText[YYLeng]
         else
-          yylastchar := #0;
-        yyfind := true;
+          YYLastChar := #0;
+        YYFind := True;
       end
     else
       begin
-        yyless(0);
-        yylastchar := #0;
-        yyfind := false;
+        YYLess(0);
+        YYLastChar := #0;
+        YYFind := False;
       end
   end(*yyfind*);
 
-function yydefault : Boolean;
+function YYDefault : Boolean;
   begin
-    yyreject := false;
-    yyactchar := get_char();
-    if yyactchar<>#0 then
+    YYReject := False;
+    YYActChar := get_char();
+    if YYActChar<>#0 then
       begin
-        put_char(yyactchar);
-        yydefault := true;
+        put_char(YYActChar);
+        YYDefault := True;
       end
     else
       begin
-        yylstate := 1;
-        yydefault := false;
+        YYLState := 1;
+        YYDefault := False;
       end;
-    yylastchar := yyactchar;
+    YYLastChar := YYActChar;
   end(*yydefault*);
 
-procedure yyclear;
+procedure YYClear;
   begin
-    bufptr := 0;
-    yysstate := 0;
-    yylstate := 1;
-    yylastchar := #0;
-    yytext := '';
-    yystext := '';
+    BufPtr := 0;
+    YYSState := 0;
+    YYLState := 1;
+    YYLastChar := #0;
+    YYText := '';
+    YYSText := '';
   end(*yyclear*);
 
 begin
-  yywrap := @lexlib_yywrap;
-  get_char:= @lexlib_get_char;
-  unget_char:= @lexlib_unget_char;
-  put_char:= @lexlib_put_char;
-  assign(yyinput, '');
-  assign(yyoutput, '');
-  reset(yyinput); rewrite(yyoutput);
-  yylineno := 0;
-  yyclear;
+  YYWrap := @LexLibYYWrap;
+  get_char:= @LexLibGetChar;
+  unget_char:= @LexLibUngetChar;
+  put_char:= @LexLibPutChar;
+  Assign(YYInput, '');
+  Assign(YYOutput, '');
+  Reset(YYInput); Rewrite(YYOutput);
+  YYLineNo := 0;
+  YYClear;
 end(*LexLib*).

@@ -16,16 +16,16 @@
 {$MODE objfpc}
 {$H+}
 
-program rstconv;
+program RstConv;
 
 uses
 {$ifdef unix}
-  cwstring,
+  CWString,
 {$endif}
-  sysutils, classes, jsonparser, fpjson, charset, cpall;
+  SysUtils, Classes, JSONParser, FPJSON, CharSet, CPAll;
 
 resourcestring
-  help =
+  Help =
     'rstconv [-h|--help]    Displays this help'+LineEnding+
     'rstconv options        Convert .rsj/.rst file'+LineEnding+LineEnding+
     'Options are:'+LineEnding+
@@ -53,7 +53,7 @@ resourcestring
   InvalidOption = 'Invalid option - ';
   RequiredOption = 'Required option is absent - ';
   OptionAlreadySpecified = 'Option has already been specified - ';
-  NoOutFilename = 'No output filename specified';
+  NoOutFileName = 'No output filename specified';
   InvalidOutputFormat = 'Invalid output format -';
   MessageNumberTooBig = 'Message number too big';
   InvalidRange = 'Invalid range of the first message number';
@@ -69,105 +69,105 @@ type
   end;
 
 var
-  InFilename, OutFilename: String;
+  InFileName, OutFileName: String;
   ConstItems: TCollection;
   HeaderCharSet: String;
   Identifier: String;
-  OutputCodePage: Longint;
+  OutputCodePage: LongInt;
   FirstMessage: Word;
   MessageTable: Boolean;
 
 procedure ReadRSTFile;
 var
-  f: Text;
-  s: String;
-  item: TConstItem;
-  DotPos, EqPos, i, j: Integer;
+  F: Text;
+  S: String;
+  Item: TConstItem;
+  DotPos, EqPos, I, J: Integer;
 begin
-  Assign(f, InFilename);
-  Reset(f);
+  Assign(F, InFileName);
+  Reset(F);
 
-  while not eof(f) do begin
-    ReadLn(f, s);
+  while not EOF(F) do begin
+    ReadLn(F, S);
     If (Length(S)=0) or (S[1]='#') then
       continue;
-    item := TConstItem(ConstItems.Add);
+    Item := TConstItem(ConstItems.Add);
 
-    DotPos := Pos('.', s);
-    EqPos := Pos('=', s);
+    DotPos := Pos('.', S);
+    EqPos := Pos('=', S);
     if DotPos > EqPos then // paranoia checking.
       DotPos := 0;
-    item.ModuleName := Copy(s, 1, DotPos - 1);
-    item.ConstName := Copy(s, DotPos + 1, EqPos - DotPos - 1);
+    Item.ModuleName := Copy(S, 1, DotPos - 1);
+    Item.ConstName := Copy(S, DotPos + 1, EqPos - DotPos - 1);
 
-    item.Value := '';
-    i := EqPos + 1;
-    while i <= Length(s) do begin
-      if s[i] = '''' then begin
-        Inc(i);
-        j := i;
-        while (i <= Length(s)) and (s[i] <> '''') do
-          Inc(i);
-        item.Value := item.Value + Copy(s, j, i - j);
-        Inc(i);
-      end else if s[i] = '#' then begin
-        Inc(i);
-        j := i;
-        while (i <= Length(s)) and (s[i] in ['0'..'9']) do
-          Inc(i);
-        item.Value := item.Value + Chr(StrToInt(Copy(s, j, i - j)));
-      end else if s[i] = '+' then begin
-        ReadLn(f, s);
-        i := 1;
+    Item.Value := '';
+    I := EqPos + 1;
+    while I <= Length(S) do begin
+      if S[I] = '''' then begin
+        Inc(I);
+        J := I;
+        while (I <= Length(S)) and (S[I] <> '''') do
+          Inc(I);
+        Item.Value := Item.Value + Copy(S, J, I - J);
+        Inc(I);
+      end else if S[I] = '#' then begin
+        Inc(I);
+        J := I;
+        while (I <= Length(S)) and (S[I] in ['0'..'9']) do
+          Inc(I);
+        Item.Value := Item.Value + Chr(StrToInt(Copy(S, J, I - J)));
+      end else if S[I] = '+' then begin
+        ReadLn(F, S);
+        I := 1;
       end else
-        Inc(i);
+        Inc(I);
     end;
   end;
 
-  Close(f);
+  Close(F);
 end;
 
 procedure ReadRSJFile;
 var
   Stream: TFileStream;
   Parser: TJSONParser;
-  JsonItems,
+  JSONItems,
   RawStringData: TJSONArray;
-  JsonData, JsonItem: TJSONObject;
+  JSONData, JSONItem: TJSONObject;
   S: String;
-  item: TConstItem;
+  Item: TConstItem;
   DotPos, I, J: Integer;
 begin
   if OutputCodePage<>-1 then
     DefaultSystemCodePage:=OutputCodePage;
-  Stream := TFileStream.Create(InFilename, fmOpenRead or fmShareDenyNone);
+  Stream := TFileStream.Create(InFileName, fmOpenRead or fmShareDenyNone);
   Parser := TJSONParser.Create(Stream);
   try
-    JsonData := Parser.Parse as TJSONObject;
+    JSONData := Parser.Parse as TJSONObject;
     try
-      JsonItems := JsonData.Arrays['strings'];
-      for I := 0 to JsonItems.Count - 1 do
+      JSONItems := JSONData.Arrays['strings'];
+      for I := 0 to JSONItems.Count - 1 do
       begin
-        item := TConstItem(ConstItems.Add);
-        JsonItem := JsonItems.Items[I] as TJSONObject;
-        S := JsonItem.Get('name');
-        DotPos := Pos('.', s);
-        item.ModuleName := Copy(s, 1, DotPos - 1);
-        item.ConstName := Copy(s, DotPos + 1, Length(S) - DotPos);
+        Item := TConstItem(ConstItems.Add);
+        JSONItem := JSONItems.Items[I] as TJSONObject;
+        S := JSONItem.Get('name');
+        DotPos := Pos('.', S);
+        Item.ModuleName := Copy(S, 1, DotPos - 1);
+        Item.ConstName := Copy(S, DotPos + 1, Length(S) - DotPos);
         if OutputCodePage=-1 then
           begin
-            RawStringData:=JsonItem.Get('sourcebytes',TJSONArray(nil));
-            SetLength(item.Value, RawStringData.Count);
-            for J := 1 to Length(item.Value) do
-              item.Value[J]:=char(RawStringData.Integers[J-1]);
+            RawStringData:=JSONItem.Get('sourcebytes',TJSONArray(nil));
+            SetLength(Item.Value, RawStringData.Count);
+            for J := 1 to Length(Item.Value) do
+              Item.Value[J]:=Char(RawStringData.Integers[J-1]);
           end
         else
           { automatically converts from UTF-16 to the correct code page due
             to the change of DefaultSystemCodePage to OutputCodePage above }
-          item.Value := JsonItem.Get('value');
+          Item.Value := JSONItem.Get('value');
       end;
     finally
-      JsonData.Free;
+      JSONData.Free;
     end;
   finally
     Parser.Free;
@@ -177,87 +177,87 @@ end;
 
 procedure ConvertToGettextPO;
 var
-  i, j: Integer;
-  f: Text;
-  item: TConstItem;
-  s: String;
-  c: Char;
+  I, J: Integer;
+  F: Text;
+  Item: TConstItem;
+  S: String;
+  C: Char;
 
 begin
-  Assign(f, OutFilename);
-  Rewrite(f);
+  Assign(F, OutFileName);
+  Rewrite(F);
 
   if HeaderCharSet<>'' then begin
     // Write file header  with
-    WriteLn(f, 'msgid ""');
-    WriteLn(f, 'msgstr ""');
-    WriteLn(f, '"MIME-Version: 1.0\n"');
-    WriteLn(f, '"Content-Type: text/plain; charset=', HeaderCharSet, '\n"');
-    WriteLn(f, '"Content-Transfer-Encoding: 8bit\n"');
-    WriteLn(f);
+    WriteLn(F, 'msgid ""');
+    WriteLn(F, 'msgstr ""');
+    WriteLn(F, '"MIME-Version: 1.0\n"');
+    WriteLn(F, '"Content-Type: text/plain; charset=', HeaderCharSet, '\n"');
+    WriteLn(F, '"Content-Transfer-Encoding: 8bit\n"');
+    WriteLn(F);
   end;
 
-  for i := 0 to ConstItems.Count - 1 do begin
-    item := TConstItem(ConstItems.items[i]);
+  for I := 0 to ConstItems.Count - 1 do begin
+    Item := TConstItem(ConstItems.Items[I]);
 
     // Convert string to C-style syntax
-    s := '';
-    for j := 1 to Length(item.Value) do begin
-      c := item.Value[j];
-      case c of
-        #9:  s := s + '\t';
-        #10: s := s + '\n';
+    S := '';
+    for J := 1 to Length(Item.Value) do begin
+      C := Item.Value[J];
+      case C of
+        #9:  S := S + '\t';
+        #10: S := S + '\n';
 {$IFNDEF UNIX}
         #13: ;
         #1..#8, #11..#12, #14..#31, #128..#255:
 {$ELSE}
         #1..#8, #11..#31, #128..#255:
 {$ENDIF}
-          s := s + '\' +
-            Chr(Ord(c) shr 6 + 48) +
-            Chr((Ord(c) shr 3) and 7 + 48) +
-            Chr(Ord(c) and 7 + 48);
-        '\': s := s + '\\';
-        '"': s := s + '\"';
-      else s := s + c;
+          S := S + '\' +
+            Chr(Ord(C) shr 6 + 48) +
+            Chr((Ord(C) shr 3) and 7 + 48) +
+            Chr(Ord(C) and 7 + 48);
+        '\': S := S + '\\';
+        '"': S := S + '\"';
+      else S := S + C;
       end;
     end;
 
     // Write msg entry
-    WriteLn(f, '#: ', item.ModuleName, ':', item.ConstName);
-    j := Pos('\n', s);
-    if j > 0 then begin
-      WriteLn(f, 'msgid ""');
-      while j > 0 do begin
-        Writeln(f, '"',copy(s, 1, j+1),'"');
-        Delete(s, 1, j+1);
-        j := Pos('\n', s);
+    WriteLn(F, '#: ', Item.ModuleName, ':', Item.ConstName);
+    J := Pos('\n', S);
+    if J > 0 then begin
+      WriteLn(F, 'msgid ""');
+      while J > 0 do begin
+        WriteLn(F, '"',Copy(S, 1, J+1),'"');
+        Delete(S, 1, J+1);
+        J := Pos('\n', S);
       end;
-      if s <> '' then
-        Writeln(f, '"',s,'"');
+      if S <> '' then
+        WriteLn(F, '"',S,'"');
     end
     else
-      WriteLn(f, 'msgid "', s, '"');
-    WriteLn(f, 'msgstr ""');
-    WriteLn(f);
+      WriteLn(F, 'msgid "', S, '"');
+    WriteLn(F, 'msgstr ""');
+    WriteLn(F);
   end;
 
-  Close(f);
+  Close(F);
 end;
 
 // This routine stores rst file in rc format. Can be written as MESSAGETABLE
 // as STRINGTABLE. Beware! OS/2 RC doesn't support lines longer than 255 chars.
 procedure ConvertToRC;
 var
-  i, j: Integer;
-  f: Text;
-  item: TConstItem;
-  s: String;
-  c: Char;
+  I, J: Integer;
+  F: Text;
+  Item: TConstItem;
+  S: String;
+  C: Char;
 
 begin
-  Assign(f, OutFilename);
-  Rewrite(f);
+  Assign(F, OutFileName);
+  Rewrite(F);
 
   If MessageTable then
     WriteLn(F, 'MESSAGETABLE')
@@ -267,52 +267,52 @@ begin
   WriteLn(F, 'BEGIN');
   If Identifier<>'' then WriteLn(F, '#define ', Identifier);
 
-  for i := 0 to ConstItems.Count - 1 do begin
-    item := TConstItem(ConstItems.items[i]);
+  for I := 0 to ConstItems.Count - 1 do begin
+    Item := TConstItem(ConstItems.Items[I]);
 
     // Convert string to C-style syntax
-    s := '';
-    for j := 1 to Length(item.Value) do begin
-      c := item.Value[j];
-      case c of
-        #9:  s := s + '\t';
-        #10: s := s + '\n"'#13#10'"';
+    S := '';
+    for J := 1 to Length(Item.Value) do begin
+      C := Item.Value[J];
+      case C of
+        #9:  S := S + '\t';
+        #10: S := S + '\n"'#13#10'"';
 {$IFNDEF UNIX}
         #13: ;
         #1..#8, #11..#12, #14..#31, #128..#255:
 {$ELSE}
         #1..#8, #11..#31, #128..#255:
 {$ENDIF}
-          s := s + '\' +
-            Chr(Ord(c) shr 6 + 48) +
-            Chr((Ord(c) shr 3) and 7 + 48) +
-            Chr(Ord(c) and 7 + 48);
-        '\': s := s + '\\';
-        '"': s := s + '\"';
-      else s := s + c;
+          S := S + '\' +
+            Chr(Ord(C) shr 6 + 48) +
+            Chr((Ord(C) shr 3) and 7 + 48) +
+            Chr(Ord(C) and 7 + 48);
+        '\': S := S + '\\';
+        '"': S := S + '\"';
+      else S := S + C;
       end;
     end;
 
     // Write msg entry
-    WriteLn(f, '/* ', item.ModuleName, ':', item.ConstName, '*/');
-    WriteLn(f, '/* ', s, ' */');
+    WriteLn(F, '/* ', Item.ModuleName, ':', Item.ConstName, '*/');
+    WriteLn(F, '/* ', S, ' */');
     If Identifier<>'' then Write(F, Identifier, '+');
-    WriteLn(f, I+FirstMessage,' "', s, '"');
-    WriteLn(f);
+    WriteLn(F, I+FirstMessage,' "', S, '"');
+    WriteLn(F);
   end;
 
   WriteLn(F, 'END');
-  Close(f);
+  Close(F);
 end;
 
 // This routine stores rst file in OS/2 msg format. This format is preffered
 // for help screens, messages, etc.
 procedure ConvertToOS2MSG;
 var
-  i, j: Integer;
-  f: Text;
-  item: TConstItem;
-  s: String;
+  I, J: Integer;
+  F: Text;
+  Item: TConstItem;
+  S: String;
 begin
   If (ConstItems.Count+FirstMessage-1)>9999 then
   begin
@@ -322,57 +322,57 @@ begin
 
   Identifier:=Copy(UpperCase(Identifier), 1, 3);
 
-  Assign(f, OutFilename);
-  Rewrite(f);
+  Assign(F, OutFileName);
+  Rewrite(F);
 
-  WriteLn(f, Identifier);
+  WriteLn(F, Identifier);
 
   // Fake entry, because MKMSGF limitation
-  WriteLn(f, Format('%s%.4d?: ',[Identifier, FirstMessage-1]));
+  WriteLn(F, Format('%s%.4d?: ',[Identifier, FirstMessage-1]));
 
-  for i := 0 to ConstItems.Count - 1 do begin
-    item := TConstItem(ConstItems.items[i]);
+  for I := 0 to ConstItems.Count - 1 do begin
+    Item := TConstItem(ConstItems.Items[I]);
 
     // Prepare comment string
     // Convert string to C-style syntax
-    s := '';
-    j:=1;
-    while j<=Length(item.Value) do
+    S := '';
+    J:=1;
+    while J<=Length(Item.Value) do
     begin
-      if copy(item.Value, j, 2)=#13#10 then
+      if Copy(Item.Value, J, 2)=#13#10 then
       begin
-        s:=s+#13#10';';
-        Inc(j, 2);
+        S:=S+#13#10';';
+        Inc(J, 2);
       end else begin
-        s := s + item.Value[j];
-        Inc(j);
+        S := S + Item.Value[J];
+        Inc(J);
       end;
     end;
 
     // Write msg entry
-    WriteLn(f, ';', item.ModuleName, '.', item.ConstName);
-    WriteLn(f, Format(';%s%.4dP: %s %%0',[Identifier, i+FirstMessage, s]));
-    WriteLn(f, Format('%s%.4dP: %s %%0',[Identifier, i+FirstMessage, Item.Value]));
+    WriteLn(F, ';', Item.ModuleName, '.', Item.ConstName);
+    WriteLn(F, Format(';%s%.4dP: %s %%0',[Identifier, I+FirstMessage, S]));
+    WriteLn(F, Format('%s%.4dP: %s %%0',[Identifier, I+FirstMessage, Item.Value]));
   end;
 
-  Close(f);
+  Close(F);
 end;
 
 type
   TConversionProc = procedure;
 var
-  i: Integer;
+  I: Integer;
   ConversionProc: TConversionProc;
   OutputFormat: String;
 begin
 
   if (ParamStr(1) = '-h') or (ParamStr(1) = '--help') then begin
-    WriteLn(help);
-    for i:=low(word) to high(word) do
-      if mappingavailable(i) then
-        writeln('                   ',getmap(i)^.cpname);
+    WriteLn(Help);
+    for I:=Low(Word) to High(Word) do
+      if MappingAvailable(I) then
+        WriteLn('                   ',GetMap(I)^.CPName);
     { UTF-8 is not supported via the CharSet unit }
-    writeln('                   UTF-8');
+    WriteLn('                   UTF-8');
     exit;
   end;
 
@@ -384,100 +384,100 @@ begin
   MessageTable:=True;
   OutputCodePage:=-1;
 
-  i := 1;
-  while i <= ParamCount do begin
-    if ParamStr(i) = '-i' then begin
-      if InFilename <> '' then begin
+  I := 1;
+  while I <= ParamCount do begin
+    if ParamStr(I) = '-i' then begin
+      if InFileName <> '' then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-i');
         Halt(1);
       end;
-      InFilename := ParamStr(i + 1);
-      Inc(i, 2);
-    end else if ParamStr(i) = '-o' then begin
-      if OutFilename <> '' then begin
+      InFileName := ParamStr(I + 1);
+      Inc(I, 2);
+    end else if ParamStr(I) = '-o' then begin
+      if OutFileName <> '' then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-o');
         Halt(1);
       end;
-      OutFilename := ParamStr(i + 1);
-      Inc(i, 2);
-    end else if ParamStr(i) = '-f' then begin
+      OutFileName := ParamStr(I + 1);
+      Inc(I, 2);
+    end else if ParamStr(I) = '-f' then begin
       if OutputFormat <> '' then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-f');
         Halt(1);
       end;
-      if ParamStr(i + 1) = 'po' then
+      if ParamStr(I + 1) = 'po' then
         OutputFormat:='po'
-      else if ParamStr(i + 1) = 'msg' then begin
+      else if ParamStr(I + 1) = 'msg' then begin
         OutputFormat:='msg';
         ConversionProc := @ConvertToOS2MSG;
-      end else if ParamStr(i + 1) = 'rc' then begin
+      end else if ParamStr(I + 1) = 'rc' then begin
         OutputFormat:='rc';
         ConversionProc := @ConvertToRC;
       end else begin
-        WriteLn(StdErr, InvalidOutputFormat, ParamStr(i + 1));
+        WriteLn(StdErr, InvalidOutputFormat, ParamStr(I + 1));
         Halt(1);
       end;
-      Inc(i, 2);
-    end else if ParamStr(i) = '-c' then begin
+      Inc(I, 2);
+    end else if ParamStr(I) = '-c' then begin
       if (OutputFormat='') or (OutputFormat='po') then begin
         if HeaderCharSet <> '' then begin
           WriteLn(StdErr, OptionAlreadySpecified, '-c');
           Halt(1);
         end;
-        HeaderCharSet:=ParamStr(i+1);
+        HeaderCharSet:=ParamStr(I+1);
       end else
       begin
         if Identifier <> '' then begin
           WriteLn(StdErr, OptionAlreadySpecified, '-c');
           Halt(1);
         end;
-        Identifier:=ParamStr(i+1);
+        Identifier:=ParamStr(I+1);
       end;
-      Inc(i, 2);
-    end else if ParamStr(i) = '-s' then begin
+      Inc(I, 2);
+    end else if ParamStr(I) = '-s' then begin
       if not MessageTable then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-s');
         Halt(1);
       end;
       MessageTable:=False;
-      Inc(i);
-    end else if ParamStr(i) = '-n' then begin
+      Inc(I);
+    end else if ParamStr(I) = '-n' then begin
       if FirstMessage <> 0 then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-n');
         Halt(1);
       end;
       try
-        FirstMessage := StrToInt(ParamStr(i + 1));
-        If (FirstMessage<1) then raise EConvertError.Create(InvalidRange+' '+ParamStr(i+1));
+        FirstMessage := StrToInt(ParamStr(I + 1));
+        If (FirstMessage<1) then raise EConvertError.Create(InvalidRange+' '+ParamStr(I+1));
       except
         on EConvertError do
         begin
-          WriteLn(StdErr, InvalidOption, ParamStr(i));
+          WriteLn(StdErr, InvalidOption, ParamStr(I));
           Halt(1);
         end;
       end;
-      Inc(i, 2);
-    end else if ParamStr(i) = '-p' then
+      Inc(I, 2);
+    end else if ParamStr(I) = '-p' then
       begin
-        if paramcount=i then
+        if ParamCount=I then
           begin
             WriteLn(StdErr, MissingOption,'-p');
             Halt(1)
           end;
-        if UpperCase(paramstr(i+1))<>'UTF-8' then
-          if not mappingavailable(ParamStr(i+1)) then
+        if UpperCase(ParamStr(I+1))<>'UTF-8' then
+          if not MappingAvailable(ParamStr(I+1)) then
             begin
-              WriteLn(StdErr, UnsupportedOutputCodePage, ParamStr(i+1));
+              WriteLn(StdErr, UnsupportedOutputCodePage, ParamStr(I+1));
               Halt(1);
             end
           else
-            OutputCodePage:=getmap(ParamStr(i+1))^.cp
+            OutputCodePage:=GetMap(ParamStr(I+1))^.CP
         else
           OutputCodePage:=CP_UTF8;
-        Inc(i, 2);
+        Inc(I, 2);
       end
     else begin
-      WriteLn(StdErr, InvalidOption, ParamStr(i));
+      WriteLn(StdErr, InvalidOption, ParamStr(I));
       Halt(1);
     end;
   end;
@@ -497,14 +497,14 @@ begin
     Halt(1);
   end;
 
-  if OutFilename = '' then begin
-    WriteLn(StdErr, NoOutFilename);
+  if OutFileName = '' then begin
+    WriteLn(StdErr, NoOutFileName);
     Halt(1);
   end;
 
   ConstItems := TCollection.Create(TConstItem);
 
-  if ExtractFileExt(InFilename) = '.rsj' then
+  if ExtractFileExt(InFileName) = '.rsj' then
     ReadRSJFile
   else
     begin

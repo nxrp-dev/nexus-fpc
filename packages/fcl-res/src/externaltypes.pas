@@ -26,31 +26,31 @@ type
 
 type
   TExtHeader = packed record
-    magic : TExternalResMagic;  //'FPCRES'
-    version : byte;             //EXT_CURRENT_VERSION
-    endianess : byte;           //EXT_ENDIAN_BIG or EXT_ENDIAN_LITTLE
-    count : longword;           //resource count
-    nodesize : longword;        //size of header (up to string table, excluded)
-    hdrsize  : longword;        //size of header (up to string table, included)
-    reserved1 : longword;
-    reserved2 : longword;
-    reserved3 : longword;
+    Magic : TExternalResMagic;  //'FPCRES'
+    Version : Byte;             //EXT_CURRENT_VERSION
+    Endianess : Byte;           //EXT_ENDIAN_BIG or EXT_ENDIAN_LITTLE
+    Count : LongWord;           //resource count
+    NodeSize : LongWord;        //size of header (up to string table, excluded)
+    HdrSize  : LongWord;        //size of header (up to string table, included)
+    Reserved1 : LongWord;
+    Reserved2 : LongWord;
+    Reserved3 : LongWord;
   end;
 
   TResInfoNode = packed record
-    nameid : longword;          //name offset / integer ID / languageID
-    ncount : longword;          //named sub-entries count
-    idcountsize : longword;     //id sub-entries count / resource size
-    subptr : longword;          //first sub-entry offset
+    NameID : LongWord;          //name offset / integer ID / languageID
+    NCount : LongWord;          //named sub-entries count
+    IDCountSize : LongWord;     //id sub-entries count / resource size
+    SubPtr : LongWord;          //first sub-entry offset
   end;
 
 const
-  EXTERNAL_RESMAGIC : TExternalResMagic = 'FPCRES';
+  External_ResMagic : TExternalResMagic = 'FPCRES';
 
-  EXT_CURRENT_VERSION = 1;
+  ExtCurrentVersion = 1;
 
-  EXT_ENDIAN_BIG = 1;
-  EXT_ENDIAN_LITTLE = 2;
+  ExtEndianBig = 1;
+  ExtEndianLittle = 2;
 
 
 implementation

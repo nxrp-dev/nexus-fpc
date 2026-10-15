@@ -26,9 +26,9 @@ unit optutils;
   interface
 
     uses
-      cclasses,
+      CClasses,
       node,
-      globtype;
+      GlobType;
 
     type
       { this implementation should be really improved,
@@ -50,7 +50,7 @@ unit optutils;
     procedure CalcDefSum(p : TNode);
 
     { calculates/estimates the field execution weight of optinfo }
-    procedure CalcExecutionWeights(p : TNode;Initial : longint = 100);
+    procedure CalcExecutionWeights(p : TNode;Initial : LongInt = 100);
 
     { determines the optinfo.defsum field for the given node
       this field contains a sum of all expressions defined by
@@ -64,8 +64,8 @@ unit optutils;
   implementation
 
     uses
-      cutils,cdynset,
-      verbose,
+      CUtils,CDynSet,
+      Verbose,
       optbase,
       ncal,nbas,nflw,nutils,nset,ncon;
 
@@ -76,7 +76,7 @@ unit optutils;
       begin
         node.allocoptinfo;
         p:=Includes(node);
-        if assigned(p) then
+        if Assigned(p) then
           begin
             result:=false;
             node.optinfo^.index:=p.optinfo^.index;
@@ -92,7 +92,7 @@ unit optutils;
 
     function TIndexedNodeSet.Includes(node : TNode) : TNode;
       var
-        i : longint;
+        i : LongInt;
       begin
         for i:=0 to Count-1 do
           if TNode(List[i]).isequal(node) then
@@ -110,7 +110,7 @@ unit optutils;
       begin
         result:=false;
         p:=Includes(node);
-        if assigned(p) then
+        if Assigned(p) then
           begin
             if inherited Remove(p)<>-1 then
               result:=true;
@@ -124,16 +124,16 @@ unit optutils;
       begin
         for i:=0 to s.count-1 do
           begin
-            writeln(f,'=============================== Node ',i,' ===============================');
+            WriteLn(f,'=============================== Node ',i,' ===============================');
             printnode(f,TNode(s[i]));
-            writeln(f);
+            WriteLn(f);
           end;
       end;
 
 
-    function PrintNodeDFA(var n: TNode; arg: pointer): foreachnoderesult;
+    function PrintNodeDFA(var n: TNode; arg: pointer): TForEachNodeResult;
       begin
-        if assigned(n.optinfo) and ((n.optinfo^.life<>nil) or (n.optinfo^.use<>nil) or (n.optinfo^.def<>nil)) then
+        if Assigned(n.optinfo) and ((n.optinfo^.life<>nil) or (n.optinfo^.use<>nil) or (n.optinfo^.def<>nil)) then
           begin
             write(text(arg^),nodetype2str[n.nodetype],'(',n.fileinfo.line,',',n.fileinfo.column,') Life: ');
             PrintDynSet(text(arg^),n.optinfo^.life);
@@ -141,13 +141,13 @@ unit optutils;
             PrintDynSet(text(arg^),n.optinfo^.def);
             write(text(arg^),' Use: ');
             PrintDynSet(text(arg^),n.optinfo^.use);
-            if assigned(n.successor) then
+            if Assigned(n.successor) then
               write(text(arg^),' Successor: ',nodetype2str[n.successor.nodetype],'(',n.successor.fileinfo.line,',',n.successor.fileinfo.column,')')
             else
               write(text(arg^),' Successor: nil');
             write(text(arg^),' DefSum: ');
             PrintDynSet(text(arg^),n.optinfo^.defsum);
-            writeln(text(arg^));
+            WriteLn(text(arg^));
           end;
         result:=fen_false;
       end;
@@ -227,7 +227,7 @@ unit optutils;
       function DoSet(p : TNode;succ : TNode) : TNode;
         var
           hp1,hp2, oldexitsuccessor: TNode;
-          i : longint;
+          i : LongInt;
         begin
           result:=nil;
           if p=nil then
@@ -237,26 +237,26 @@ unit optutils;
               begin
                 hp1:=p;
                 result:=p;
-                while assigned(hp1) do
+                while Assigned(hp1) do
                   begin
                     { does another statement follow? }
-                    if assigned(tstatementnode(hp1).next) then
+                    if Assigned(TStatementNode(hp1).next) then
                       begin
-                        hp2:=DoSet(tstatementnode(hp1).statement,tstatementnode(hp1).next);
-                        if assigned(hp2) then
-                          tstatementnode(hp1).successor:=hp2
+                        hp2:=DoSet(TStatementNode(hp1).statement,TStatementNode(hp1).next);
+                        if Assigned(hp2) then
+                          TStatementNode(hp1).successor:=hp2
                         else
-                          tstatementnode(hp1).successor:=tstatementnode(hp1).next;
+                          TStatementNode(hp1).successor:=TStatementNode(hp1).next;
                       end
                     else
                       begin
-                        hp2:=DoSet(tstatementnode(hp1).statement,succ);
-                        if assigned(hp2) then
-                          tstatementnode(hp1).successor:=hp2
+                        hp2:=DoSet(TStatementNode(hp1).statement,succ);
+                        if Assigned(hp2) then
+                          TStatementNode(hp1).successor:=hp2
                         else
-                          tstatementnode(hp1).successor:=succ;
+                          TStatementNode(hp1).successor:=succ;
                       end;
-                    hp1:=tstatementnode(hp1).next;
+                    hp1:=TStatementNode(hp1).next;
                   end;
               end;
             blockn:
@@ -265,9 +265,9 @@ unit optutils;
                 oldexitsuccessor:=Exitsuccessor;
                 if nf_block_with_exit in p.flags then
                   Exitsuccessor:=succ;
-                DoSet(tblocknode(p).statements,succ);
-                if assigned(tblocknode(p).statements) then
-                  p.successor:=tblocknode(p).statements
+                DoSet(TBlockNode(p).statements,succ);
+                if Assigned(TBlockNode(p).statements) then
+                  p.successor:=TBlockNode(p).statements
                 else
                   p.successor:=succ;
                 Exitsuccessor:=oldexitsuccessor;
@@ -278,9 +278,9 @@ unit optutils;
                 result:=p;
                 { the successor of the last node of the for body is the dummy loop iteration node
                   it allows the dfa to inject needed life information into the loop }
-                tfornode(p).loopiteration:=cnothingnode.create;
+                TForNode(p).loopiteration:=CNothingNode.create;
 
-                DoSet(tfornode(p).t2,tfornode(p).loopiteration);
+                DoSet(TForNode(p).t2,TForNode(p).loopiteration);
                 p.successor:=succ;
                 BreakContinueStack.Pop;
               end;
@@ -299,16 +299,16 @@ unit optutils;
                 BreakContinueStack.Push(succ,p);
                 result:=p;
                 { the successor of the last node of the while/repeat body is the while node itself }
-                DoSet(twhilerepeatnode(p).right,p);
+                DoSet(TWhileRepeatNode(p).right,p);
 
                 p.successor:=succ;
 
                 { special case: we do not do a dyn. dfa, but we should handle endless loops }
-                if is_constboolnode(twhilerepeatnode(p).left) then
+                if is_constboolnode(TWhileRepeatNode(p).left) then
                   begin
-                    if ((lnf_testatbegin in twhilerepeatnode(p).loopflags) and
-                      getbooleanvalue(twhilerepeatnode(p).left)) or (not(lnf_testatbegin in twhilerepeatnode(p).loopflags) and
-                      not(getbooleanvalue(twhilerepeatnode(p).left))) then
+                    if ((lnf_testatbegin in TWhileRepeatNode(p).loopflags) and
+                      getbooleanvalue(TWhileRepeatNode(p).left)) or (not(lnf_testatbegin in TWhileRepeatNode(p).loopflags) and
+                      not(getbooleanvalue(TWhileRepeatNode(p).left))) then
                       p.successor:=nil;
                   end;
 
@@ -317,8 +317,8 @@ unit optutils;
             ifn:
               begin
                 result:=p;
-                DoSet(tifnode(p).right,succ);
-                DoSet(tifnode(p).t1,succ);
+                DoSet(TIfNode(p).right,succ);
+                DoSet(TIfNode(p).t1,succ);
                 p.successor:=succ;
               end;
             labeln:
@@ -334,9 +334,9 @@ unit optutils;
             goton:
               begin
                 result:=p;
-                if not(assigned(tgotonode(p).labelnode)) then
-                  internalerror(2007050701);
-                p.successor:=tgotonode(p).labelnode;
+                if not(Assigned(TGotoNode(p).labelnode)) then
+                  InternalError(2007050701);
+                p.successor:=TGotoNode(p).labelnode;
               end;
             exitn:
               begin
@@ -346,16 +346,16 @@ unit optutils;
             casen:
               begin
                 result:=p;
-                DoSet(tcasenode(p).elseblock,succ);
-                for i:=0 to tcasenode(p).blocks.count-1 do
-                  DoSet(pcaseblock(tcasenode(p).blocks[i])^.statement,succ);
+                DoSet(TCaseNode(p).elseblock,succ);
+                for i:=0 to TCaseNode(p).blocks.count-1 do
+                  DoSet(PCaseBlock(TCaseNode(p).blocks[i])^.statement,succ);
                 p.successor:=succ;
               end;
             calln:
               begin
                 { not sure if this is enough (FK) }
                 result:=p;
-                if cnf_call_never_returns in tcallnode(p).callnodeflags then
+                if cnf_call_never_returns in TCallNode(p).callnodeflags then
                   p.successor:=nil
                 else
                   p.successor:=succ;
@@ -383,7 +383,7 @@ unit optutils;
             tryexceptn,
             tryfinallyn,
             onn:
-              internalerror(2007050501);
+              InternalError(2007050501);
             else
               ;
           end;
@@ -397,18 +397,18 @@ unit optutils;
       end;
 
 
-    function adddef(var n: TNode; arg: pointer): foreachnoderesult;
+    function adddef(var n: TNode; arg: pointer): TForEachNodeResult;
       var
         defsum : PDFASet absolute arg;
       begin
-        if assigned(n.optinfo) then
+        if Assigned(n.optinfo) then
           begin
             DynSetIncludeSet(defsum^,n.optinfo^.def);
             { for nodes itself do not necessarily expose the definition of the counter as
               the counter might be undefined after the for loop, so include here the counter
               explicitly }
-            if (n.nodetype=forn) and assigned(tfornode(n).left.optinfo) then
-              DynSetInclude(defsum^,tfornode(n).left.optinfo^.index);
+            if (n.nodetype=forn) and Assigned(TForNode(n).left.optinfo) then
+              DynSetInclude(defsum^,TForNode(n).left.optinfo^.index);
           end;
         Result:=fen_false;
       end;
@@ -420,41 +420,41 @@ unit optutils;
       begin
         p.allocoptinfo;
         defsum:=@p.optinfo^.defsum;
-        if not assigned(defsum^) then
+        if not Assigned(defsum^) then
             foreachnodestatic(pm_postprocess,p,@adddef,defsum);
       end;
 
 
-    function SetExecutionWeight(var n: TNode; arg: pointer): foreachnoderesult;
+    function SetExecutionWeight(var n: TNode; arg: pointer): TForEachNodeResult;
       var
-        Weight, CaseWeight : longint;
+        Weight, CaseWeight : LongInt;
         i : Integer;
       begin
         Result:=fen_false;
         n.allocoptinfo;
-        Weight:=max(plongint(arg)^,1);
+        Weight:=max(PLongInt(arg)^,1);
         case n.nodetype of
           casen:
             begin
-              CalcExecutionWeights(tcasenode(n).left,Weight);
-              CaseWeight:=max(Weight div tcasenode(n).labelcnt,1);
-              for i:=0 to tcasenode(n).blocks.count-1 do
-                CalcExecutionWeights(pcaseblock(tcasenode(n).blocks[i])^.statement,CaseWeight);
+              CalcExecutionWeights(TCaseNode(n).left,Weight);
+              CaseWeight:=max(Weight div TCaseNode(n).labelcnt,1);
+              for i:=0 to TCaseNode(n).blocks.count-1 do
+                CalcExecutionWeights(PCaseBlock(TCaseNode(n).blocks[i])^.statement,CaseWeight);
 
-              CalcExecutionWeights(tcasenode(n).elseblock,CaseWeight);
+              CalcExecutionWeights(TCaseNode(n).elseblock,CaseWeight);
               Result:=fen_norecurse_false;
             end;
           whilerepeatn:
             begin
-              CalcExecutionWeights(twhilerepeatnode(n).right,Weight*8);
-              CalcExecutionWeights(twhilerepeatnode(n).left,Weight*8);
+              CalcExecutionWeights(TWhileRepeatNode(n).right,Weight*8);
+              CalcExecutionWeights(TWhileRepeatNode(n).left,Weight*8);
               Result:=fen_norecurse_false;
             end;
           ifn:
             begin
-              CalcExecutionWeights(tifnode(n).left,Weight);
-              CalcExecutionWeights(tifnode(n).right,Weight div 2);
-              CalcExecutionWeights(tifnode(n).t1,Weight div 2);
+              CalcExecutionWeights(TIfNode(n).left,Weight);
+              CalcExecutionWeights(TIfNode(n).right,Weight div 2);
+              CalcExecutionWeights(TIfNode(n).t1,Weight div 2);
               Result:=fen_norecurse_false;
             end;
           else
@@ -464,18 +464,18 @@ unit optutils;
       end;
 
 
-    procedure CalcExecutionWeights(p : TNode;Initial : longint = 100);
+    procedure CalcExecutionWeights(p : TNode;Initial : LongInt = 100);
       begin
-        if assigned(p) then
+        if Assigned(p) then
           foreachnodestatic(pm_postprocess,p,@SetExecutionWeight,Pointer(@Initial));
       end;
 
 
-    function adduse(var n: TNode; arg: pointer): foreachnoderesult;
+    function adduse(var n: TNode; arg: pointer): TForEachNodeResult;
       var
         usesum : PDFASet absolute arg;
       begin
-        if assigned(n.optinfo) then
+        if Assigned(n.optinfo) then
           DynSetIncludeSet(usesum^,n.optinfo^.use);
         Result:=fen_false;
       end;
@@ -487,15 +487,15 @@ unit optutils;
       begin
         p.allocoptinfo;
         usesum:=@p.optinfo^.usesum;
-        if not assigned(usesum^) then
+        if not Assigned(usesum^) then
             foreachnodestatic(pm_postprocess,p,@adduse,usesum);
       end;
 
 
     function has_life_info(n : TNode) : boolean;
       begin
-        result:=assigned(n) and assigned(n.optinfo) and
-          assigned(n.optinfo^.life);
+        result:=Assigned(n) and Assigned(n.optinfo) and
+          Assigned(n.optinfo^.life);
       end;
 
 end.

@@ -9,7 +9,7 @@ unit YaccLib;
 
 interface
 
-const yymaxdepth = 1024;
+const YYMaxDepth = 1024;
   (* default stack size of parser *)
 
 type YYSType = Integer;
@@ -17,30 +17,30 @@ type YYSType = Integer;
 
 var
 
-yychar   : Integer; (* current lookahead character *)
-yynerrs  : Integer; (* current number of syntax errors reported by the
+YYChar   : Integer; (* current lookahead character *)
+YYNErrs  : Integer; (* current number of syntax errors reported by the
                        parser *)
-yydebug  : Boolean; (* set to true to enable debugging output of parser *)
+YYDebug  : Boolean; (* set to true to enable debugging output of parser *)
 
-procedure yyerror ( msg : String );
+procedure yyerror ( Msg : String );
   (* error message printing routine used by the parser *)
 
-procedure yyclearin;
+procedure YYClearIn;
   (* delete the current lookahead token *)
 
-procedure yyaccept;
+procedure YYAccept;
   (* trigger accept action of the parser; yyparse accepts returning 0, as if
      it reached end of input *)
 
-procedure yyabort;
+procedure YYAbort;
   (* like yyaccept, but causes parser to return with value 1, as if an
      unrecoverable syntax error had been encountered *)
 
-procedure yyerrlab;
+procedure YYErrLab;
   (* causes error recovery to be started, as if a syntax error had been
      encountered *)
 
-procedure yyerrok;
+procedure YYErrOK;
   (* when in error mode, resets the parser to its normal mode of
      operation *)
 
@@ -48,39 +48,39 @@ procedure yyerrok;
 
 var
 
-yyflag    : ( yyfnone, yyfaccept, yyfabort, yyferror );
-yyerrflag : Integer;
+YYFlag    : ( yyfnone, yyfaccept, yyfabort, yyferror );
+YYErrFlag : Integer;
 
 implementation
 
-procedure yyerror ( msg : String );
+procedure yyerror ( Msg : String );
   begin
-    writeln(msg);
+    WriteLn(Msg);
   end(*yyerrmsg*);
 
-procedure yyclearin;
+procedure YYClearIn;
   begin
-    yychar := -1;
+    YYChar := -1;
   end(*yyclearin*);
 
-procedure yyaccept;
+procedure YYAccept;
   begin
-    yyflag := yyfaccept;
+    YYFlag := yyfaccept;
   end(*yyaccept*);
 
-procedure yyabort;
+procedure YYAbort;
   begin
-    yyflag := yyfabort;
+    YYFlag := yyfabort;
   end(*yyabort*);
 
-procedure yyerrlab;
+procedure YYErrLab;
   begin
-    yyflag := yyferror;
+    YYFlag := yyferror;
   end(*yyerrlab*);
 
-procedure yyerrok;
+procedure YYErrOK;
   begin
-    yyerrflag := 0;
+    YYErrFlag := 0;
   end(*yyerrork*);
 
 end(*YaccLib*).

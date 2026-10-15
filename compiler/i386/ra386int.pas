@@ -29,7 +29,7 @@ Unit ra386int;
       rax86int;
 
     type
-      ti386intreader = class(tx86intreader)
+      TI386IntReader = class(TX86IntReader)
         // procedure handleopcode;override;
       end;
 
@@ -37,7 +37,7 @@ Unit ra386int;
   implementation
 
     uses
-      rabase,systems,rax86,aasmcpu;
+      rabase,Systems,rax86,aasmcpu;
 
 (*
     procedure ti386intreader.handleopcode;
@@ -62,11 +62,11 @@ Unit ra386int;
 *****************************************************************************}
 
 const
-  asmmode_i386_intel_info : tasmmodeinfo =
+  asmmode_i386_intel_info : TAsmModeInfo =
           (
             id    : asmmode_i386_intel;
             idtxt : 'INTEL';
-            casmreader : ti386intreader;
+            CAsmReader : TI386IntReader;
           );
 
 begin

@@ -29,50 +29,50 @@ unit hlcgcpu;
 interface
 
   uses
-    aasmdata,
+    AAsmData,
     symdef,
     hlcgx86;
 
   type
-    thlcgcpu = class(thlcgx86)
-     procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);override;
+    THLCGCPU = class(THLCGX86)
+     procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);override;
     end;
 
 implementation
 
   uses
-    globtype,globals,verbose,
-    fmodule,systems,
+    GlobType,Globals,Verbose,
+    FModule,Systems,
     aasmbase,aasmtai,aasmcpu,
     symconst,
     hlcgobj,
     cgbase,cgutils,cgobj,cpubase,cgcpu,cpupi;
 
-  procedure thlcgcpu.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);
+  procedure THLCGCPU.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: LongInt);
     var
       make_global : boolean;
-      href : treference;
-      sym : tasmsymbol;
-      r : treference;
+      href : TReference;
+      sym : TAsmSymbol;
+      r : TReference;
     begin
       if not(procdef.proctypeoption in [potype_function,potype_procedure]) then
-        Internalerror(200006137);
-      if not assigned(procdef.struct) or
+        InternalError(200006137);
+      if not Assigned(procdef.struct) or
          (procdef.procoptions*[po_classmethod, po_staticmethod,
            po_methodpointer, po_interrupt, po_iocheck]<>[]) then
-        Internalerror(200006138);
+        InternalError(200006138);
       if procdef.owner.symtabletype<>ObjectSymtable then
-        Internalerror(200109191);
+        InternalError(200109191);
 
       make_global:=false;
       if (not CurrentModule.is_unit) or create_smartlink or
-         (procdef.owner.defowner.owner.symtabletype=globalsymtable) then
+         (procdef.owner.defowner.owner.symtabletype=GlobalSymTable) then
         make_global:=true;
 
       if make_global then
-        List.concat(Tai_symbol.Createname_global(labelname,AT_FUNCTION,0,procdef))
+        List.concat(TAISymbol.Createname_global(labelname,AT_FUNCTION,0,procdef))
       else
-        List.concat(Tai_symbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
+        List.concat(TAISymbol.Createname_hidden(labelname,AT_FUNCTION,0,procdef));
 
       { set param1 interface to self  }
       g_adjust_self_value(list,procdef,ioffset);
@@ -81,43 +81,43 @@ implementation
           not is_objectpascal_helper(procdef.struct) then
         begin
           if (procdef.extnumber=$ffff) then
-            Internalerror(2000061301);
+            InternalError(2000061301);
           { load vmt from first parameter }
           { win64 uses a different abi }
           if x86_64_use_ms_abi(procdef.proccalloption) then
-            reference_reset_base(href,voidpointertype,NR_RCX,0,ctempposinvalid,sizeof(pint),[])
+            reference_reset_base(href,voidpointertype,NR_RCX,0,ctempposinvalid,sizeof(PInt),[])
           else
-            reference_reset_base(href,voidpointertype,NR_RDI,0,ctempposinvalid,sizeof(pint),[]);
+            reference_reset_base(href,voidpointertype,NR_RDI,0,ctempposinvalid,sizeof(PInt),[]);
           cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_RAX);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_RAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
-          list.concat(taicpu.op_ref(A_JMP,S_Q,href));
+          reference_reset_base(href,voidpointertype,NR_RAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(PInt),[]);
+          list.concat(TAICPU.op_ref(A_JMP,S_Q,href));
         end
       else
         begin
           sym:=CurrentAsmData.RefAsmSymbol(procdef.mangledname,AT_FUNCTION);
-          reference_reset_symbol(r,sym,0,sizeof(pint),[]);
-          if (cs_create_pic in CurrentSettings.moduleswitches) and
+          reference_reset_symbol(r,sym,0,sizeof(PInt),[]);
+          if (cs_create_pic in CurrentSettings.ModuleSwitches) and
              { darwin/x86_64's assembler doesn't want @PLT after call symbols }
              not(TargetInfo.system in systems_darwin) then
             r.refaddr:=addr_pic
           else
             r.refaddr:=addr_full;
 
-          list.concat(taicpu.op_ref(A_JMP,S_NO,r));
+          list.concat(TAICPU.op_ref(A_JMP,S_NO,r));
         end;
 
-      List.concat(Tai_symbol_end.Createname(labelname));
+      List.concat(TAISymbolEnd.Createname(labelname));
     end;
 
 
-  procedure create_hlcodegen_cpu(hlcgobjhelpers: thlcgobjhelpersclass);
+  procedure create_hlcodegen_cpu(hlcgobjhelpers: THLCGObjHelpersClass);
     begin
-      hlcg:=thlcgcpu.create(hlcgobjhelpers);
+      hlcg:=THLCGCPU.create(hlcgobjhelpers);
       create_codegen;
     end;
 
 begin
-  chlcgobj:=thlcgcpu;
+  CHLCGObj:=THLCGCPU;
   create_hlcodegen:=@create_hlcodegen_cpu;
 end.

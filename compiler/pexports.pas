@@ -32,18 +32,18 @@ implementation
 
     uses
        { common }
-       cutils,
+       CUtils,
        { global }
-       globals,globtype,tokens,verbose,constexp,
-       systems,
-       ppu,fmodule,
+       Globals,GlobType,tokens,Verbose,ConstExp,
+       Systems,
+       ppu,FModule,
        { symtable }
-       symconst,symbase,symdef,symtype,symsym,
+       symconst,SymBase,symdef,symtype,SymSym,
        { pass 1 }
        node,
        ncon,
        { parser }
-       scanner,
+       Scanner,
        pbase,pexpr,
        { obj-c }
        objcutil,
@@ -62,10 +62,10 @@ implementation
         srsym      : TSym;
         srsymtable : TSymTable;
         hpname     : shortstring;
-        index      : longint;
-        options    : texportoptions;
+        index      : LongInt;
+        options    : TExportOptions;
 
-        function IsGreater(hp1,hp2:texported_item):boolean;
+        function IsGreater(hp1,hp2:TExportedItem):boolean;
         var
           i2 : boolean;
         begin
@@ -125,7 +125,7 @@ implementation
                          an underline }
                        if InternalProcName[1]='_' then
                          delete(InternalProcName,1,1)
-                       else if (TargetInfo.system=system_i386_win32) and UseDeffileForExports then
+                       else if (TargetInfo.system=system_i386_win32) and UseDefFileForExports then
                          begin
                            Message(parser_e_dlltool_unit_var_problem);
                            Message(parser_e_dlltool_unit_var_problem2);
@@ -138,14 +138,14 @@ implementation
                      begin
                        pt:=comp_expr([ef_accept_equal]);
                        if pt.nodetype=ordconstn then
-                        if (Tordconstnode(pt).value<int64(low(index))) or
-                           (Tordconstnode(pt).value>int64(high(index))) then
+                        if (TOrdConstNode(pt).value<int64(low(index))) or
+                           (TOrdConstNode(pt).value>int64(high(index))) then
                           begin
                             index:=0;
-                            message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(index)),tostr(high(index)))
+                            message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(index)),ToStr(high(index)))
                           end
                         else
-                          index:=Tordconstnode(pt).value.svalue
+                          index:=TOrdConstNode(pt).value.svalue
                        else
                         begin
                           index:=0;
@@ -155,7 +155,7 @@ implementation
                        pt.free;
                        pt := nil;
                        if TargetInfo.system=system_i386_win32 then
-                        DefString:=srsym.realname+'='+InternalProcName+' @ '+tostr(index)
+                        DefString:=srsym.realname+'='+InternalProcName+' @ '+ToStr(index)
                        else
                         DefString:=srsym.realname+'='+InternalProcName; {Index ignored!}
                      end;
@@ -163,9 +163,9 @@ implementation
                      begin
                        pt:=comp_expr([ef_accept_equal]);
                        if pt.nodetype=stringconstn then
-                         hpname:=strpas(pchar(@tstringconstnode(pt).valueas[0]))
+                         hpname:=StrPas(pchar(@TStringConstNode(pt).valueas[0]))
                        else if is_constcharnode(pt) then
-                         hpname:=chr(tordconstnode(pt).value.svalue and $ff)
+                         hpname:=chr(TOrdConstNode(pt).value.svalue and $ff)
                        else
                          message(type_e_string_expr_expected);
                        include(options,eo_name);
@@ -186,8 +186,8 @@ implementation
                      end;
                     if (DefString<>'') and
                         (
-                          UseDeffileForExports or
-                          (cs_link_deffile in CurrentSettings.globalswitches)
+                          UseDefFileForExports or
+                          (cs_link_deffile in CurrentSettings.GlobalSwitches)
                         ) then
                      DefFile.AddExport(DefString);
                   end;
@@ -246,14 +246,14 @@ implementation
                               odt_objcclass:
                                 exportobjcclass(TObjectDef(TTypeSym(srsym).typedef));
                               else
-                                internalerror(2009092601);
+                                InternalError(2009092601);
                             end;
                           else
-                            internalerror(2009092602);
+                            InternalError(2009092602);
                         end;
                       end;
                    else
-                     internalerror(2019050502);
+                     InternalError(2019050502);
                    end; // Case srsym.typ
              end
            else

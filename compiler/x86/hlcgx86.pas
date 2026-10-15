@@ -29,27 +29,27 @@ interface
 {$i fpcdefs.inc}
 
   uses
-    globtype,
-    aasmdata,
+    GlobType,
+    AAsmData,
     cgbase,
     symtype,symdef,
     parabase,
     hlcgobj, hlcg2ll;
 
   type
-    thlcgx86 = class(thlcg2ll)
+    THLCGX86 = class(THLCG2LL)
      protected
-      procedure gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: tcgpara); override;
+      procedure gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: TCGPara); override;
       procedure a_jmp_external_name(list: TAsmList; const externalname: TSymStr); override;
      public
       procedure a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara); override;
-      procedure a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: tregister); override;
+      procedure a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: TRegister); override;
     end;
 
 implementation
 
   uses
-    globals,systems,
+    Globals,Systems,
     aasmbase,
     cgutils,
 
@@ -57,19 +57,19 @@ implementation
 
 { thlcgx86 }
 
-  procedure thlcgx86.gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: tcgpara);
+  procedure THLCGX86.gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: TCGPara);
     begin
       { the caller will pop a value from the fpu stack }
-      if assigned(resloc.location) and
+      if Assigned(resloc.location) and
          (resloc.location^.loc=LOC_FPUREGISTER) then
-        list.concat(taicpu.op_none(A_FLDZ));
+        list.concat(TAICPU.op_none(A_FLDZ));
     end;
 
 
-  procedure thlcgx86.a_jmp_external_name(list: TAsmList; const externalname: TSymStr);
+  procedure THLCGX86.a_jmp_external_name(list: TAsmList; const externalname: TSymStr);
     var
-      ref : treference;
-      sym : tasmsymbol;
+      ref : TReference;
+      sym : TAsmSymbol;
     begin
      if (TargetInfo.system = system_i386_darwin) then
        begin
@@ -79,20 +79,20 @@ implementation
        end;
 
       sym:=CurrentAsmData.RefAsmSymbol(externalname,AT_FUNCTION);
-      reference_reset_symbol(ref,sym,0,sizeof(pint),[]);
+      reference_reset_symbol(ref,sym,0,sizeof(PInt),[]);
 
       { create pic'ed? }
-      if (cs_create_pic in CurrentSettings.moduleswitches) and
+      if (cs_create_pic in CurrentSettings.ModuleSwitches) and
          { darwin/x86_64's assembler doesn't want @PLT after call symbols }
          not(TargetInfo.system in [system_x86_64_darwin,system_i386_iphonesim,system_x86_64_iphonesim]) then
         ref.refaddr:=addr_pic
       else
         ref.refaddr:=addr_full;
-      list.concat(taicpu.op_ref(A_JMP,S_NO,ref));
+      list.concat(TAICPU.op_ref(A_JMP,S_NO,ref));
     end;
 
 
-  procedure thlcgx86.a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara);
+  procedure THLCGX86.a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara);
     begin
       if not (cgpara.Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
         (cgpara.size=OS_ADDR) then
@@ -101,12 +101,12 @@ implementation
         inherited;
     end;
 
-  procedure thlcgx86.a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: tregister);
+  procedure THLCGX86.a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: TRegister);
     const
-      bit_set_clr_instr: array[boolean] of tasmop = (A_BTR,A_BTS);
+      bit_set_clr_instr: array[boolean] of TAsmOp = (A_BTR,A_BTS);
     begin
 
-        list.concat(taicpu.op_reg_reg(bit_set_clr_instr[doset],S_NO,bitnumber,dest));
+        list.concat(TAICPU.op_reg_reg(bit_set_clr_instr[doset],S_NO,bitnumber,dest));
     end;
 
 

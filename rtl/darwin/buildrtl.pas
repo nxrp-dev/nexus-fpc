@@ -18,7 +18,7 @@ unit buildrtl;
 {$endif CPUI386}
       linuxvcs,
       sysutils, typinfo, math,
-      charset, cpall, character, unixcp, getopts,
+      charset, CPAll, character, unixcp, getopts,
       errors, dl, dynlibs,
       types, sysconst, fpwidestring,
       cthreads, sortbase, classes, fgl, rtlconsts, dos, cwstring, bsd;

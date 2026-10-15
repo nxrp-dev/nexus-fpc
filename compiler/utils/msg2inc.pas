@@ -30,7 +30,7 @@ const
 {$else}
   eollen=2;
 {$endif}
-  msgparts = 20;
+  MsgParts = 20;
 
 type
   TMode=(M_Char,M_Tex,M_Intel,M_String,M_Renumber);
@@ -44,11 +44,11 @@ var
   MsgTxt     : pchar;
   EnumTxt    : pchar;
   enumsize,
-  msgsize    : longint;
+  MsgSize    : LongInt;
 
-  msgidxmax  : array[1..msgparts] of longint;
-  msgs       : array[0..msgparts,0..999] of boolean;
-  msgcodepage: TSystemCodePage;
+  MsgIdxMax  : array[1..MsgParts] of LongInt;
+  msgs       : array[0..MsgParts,0..999] of boolean;
+  MsgCodePage: TSystemCodePage;
 
 procedure LoadMsgFile(const fn:string);
 var
@@ -57,7 +57,7 @@ var
   multiline : boolean;
   code : word;
   numpart,numidx,
-  line,i,j,num  : longint;
+  line,i,j,num  : LongInt;
   ptxt,
   penum   : pchar;
   number,
@@ -65,30 +65,30 @@ var
 
   procedure err(const msgstr:string);
   begin
-    writeln('error in line ',line,': ',msgstr);
+    WriteLn('error in line ',line,': ',msgstr);
     error:=true;
   end;
 
 begin
-  Writeln('Loading messagefile ',fn);
-  msgcodepage:=CP_ACP;
+  WriteLn('Loading messagefile ',fn);
+  MsgCodePage:=CP_ACP;
 {Read the message file}
   assign(f,fn);
   {$push} {$I-}
    reset(f);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
      WriteLn('fatal error: '+fn+' not found');
      halt(1);
    end;
 { First parse the file and count bytes needed }
-  fillchar(msgidxmax,sizeof(msgidxmax),0);
+  fillchar(MsgIdxMax,sizeof(MsgIdxMax),0);
   fillchar(msgs,sizeof(msgs),0);
   error:=false;
   line:=0;
   multiline:=false;
-  msgsize:=0;
+  MsgSize:=0;
   while not eof(f) do
    begin
      readln(f,s);
@@ -98,7 +98,7 @@ begin
         if s=']' then
          multiline:=false
         else if (s='') or (s[1] <> '#') then
-         inc(msgsize,length(s)+1); { +1 for linebreak }
+         inc(MsgSize,length(s)+1); { +1 for linebreak }
       end
      else
       begin
@@ -131,18 +131,18 @@ begin
                err('duplicate number found');
               msgs[numpart,numidx]:=true;
               { check range }
-              if numpart > msgparts then
+              if numpart > MsgParts then
                err('number is to large')
               else
-               if numidx > msgidxmax[numpart] then
-                msgidxmax[numpart]:=numidx;
+               if numidx > MsgIdxMax[numpart] then
+                MsgIdxMax[numpart]:=numidx;
               if s[j+1]='[' then
                begin
-                 inc(msgsize,j-i);
+                 inc(MsgSize,j-i);
                  multiline:=true
                end
               else
-               inc(msgsize,length(s)-i+1);
+               inc(MsgSize,length(s)-i+1);
               inc(enumsize,j);
             end
            else
@@ -150,7 +150,7 @@ begin
          end
         else if (Length(s)>11) and (Copy(s,1,11)='# CodePage ') then
          begin
-           val(Copy(s,12,Length(s)-11),msgcodepage,code);
+           val(Copy(s,12,Length(s)-11),MsgCodePage,code);
            if code<>0 then
              err('illegal code page number: '+s);
          end;
@@ -161,15 +161,15 @@ begin
   if error then
    begin
      close(f);
-     writeln('aborting');
+     WriteLn('aborting');
      halt(1);
    end;
 { alloc memory }
-  getmem(msgtxt,msgsize);
+  GetMem(MsgTxt,MsgSize);
 { no linebreak after last entry }
-  dec(msgsize);
-  ptxt:=msgtxt;
-  getmem(enumtxt,enumsize);
+  dec(MsgSize);
+  ptxt:=MsgTxt;
+  GetMem(enumtxt,enumsize);
   penum:=enumtxt;
 { now read the buffer in mem }
   reset(f);
@@ -249,15 +249,15 @@ end;
 procedure WriteEnumFile(const fn:string);
 var
   t : text;
-  i : longint;
+  i : LongInt;
   p : pchar;
   start : boolean;
 begin
-  writeln('Writing enumfile '+fn);
+  WriteLn('Writing enumfile '+fn);
 {Open textfile}
   assign(t,fn);
   rewrite(t);
-  writeln(t,'const');
+  WriteLn(t,'const');
 {Parse buffer in msgbuf and create indexs}
   p:=enumtxt;
   start:=true;
@@ -270,7 +270,7 @@ begin
       end;
      if p^=#0 then
       begin
-        writeln(t,';');
+        WriteLn(t,';');
         start:=true;
       end
      else
@@ -279,26 +279,26 @@ begin
       end;
      inc(p);
    end;
-  writeln(t,'');
+  WriteLn(t,'');
   { msgtxt size }
-  writeln(t,'  MsgTxtSize = ',msgsize,';');
-  writeln(t,'');
+  WriteLn(t,'  MsgTxtSize = ',MsgSize,';');
+  WriteLn(t,'');
   { max msg idx table }
-  writeln(t,'  MsgIdxMax : array[1..20] of longint=(');
+  WriteLn(t,'  MsgIdxMax : array[1..20] of LongInt=(');
   write(t,'    ');
   for i:=1 to 20 do
    begin
-     write(t,msgidxmax[i]+1);
+     write(t,MsgIdxMax[i]+1);
      if i<20 then
       write(t,',');
      if i=10 then
       begin
-        writeln(t,'');
+        WriteLn(t,'');
         write(t,'    ');
       end;
    end;
-  writeln(t,'');
-  writeln(t,'  );');
+  WriteLn(t,'');
+  WriteLn(t,'  );');
   close(t);
 end;
 
@@ -311,7 +311,7 @@ procedure WriteStringFile(const fn,constname:string);
 const
   maxslen=240; { to overcome aligning problems }
 
-  function l0(l:longint):string;
+  function l0(l:LongInt):string;
   var
     s : string[16];
   begin
@@ -325,29 +325,29 @@ var
   t      : text;
   f      : file;
   slen,
-  len,i  : longint;
+  len,i  : LongInt;
   p      : pchar;
   s      : string;
   start,
   quote  : boolean;
 begin
-  writeln('Writing stringfile ',fn);
+  WriteLn('Writing stringfile ',fn);
 {Open textfile}
   assign(t,fn);
   rewrite(t);
-  writeln(t,'const '+constname+'_codepage=',msgcodepage:5,';');
-  writeln(t,'{$ifdef Delphi}');
-  writeln(t,'const '+constname+' : array[0..000000] of string[',maxslen,']=(');
-  writeln(t,'{$else Delphi}');
-  writeln(t,'const '+constname+' : array[0..000000,1..',maxslen,'] of char=(');
+  WriteLn(t,'const '+constname+'_codepage=',MsgCodePage:5,';');
+  WriteLn(t,'{$ifdef Delphi}');
+  WriteLn(t,'const '+constname+' : array[0..000000] of string[',maxslen,']=(');
+  WriteLn(t,'{$else Delphi}');
+  WriteLn(t,'const '+constname+' : array[0..000000,1..',maxslen,'] of char=(');
   write(t,'{$endif Delphi}');
 {Parse buffer in msgbuf and create indexs}
-  p:=msgtxt;
+  p:=MsgTxt;
   slen:=0;
   len:=0;
   quote:=false;
   start:=true;
-  for i:=1 to msgsize do
+  for i:=1 to MsgSize do
    begin
      if slen>=maxslen then
       begin
@@ -368,9 +368,9 @@ begin
            quote:=false;
          end;
         if slen>0 then
-          writeln(t,'+')
+          WriteLn(t,'+')
         else
-          writeln(t);
+          WriteLn(t);
         len:=0;
         start:=false;
       end;
@@ -405,11 +405,11 @@ begin
    end;
   if quote then
    write(t,'''');
-  writeln(t,'');
-  writeln(t,');');
+  WriteLn(t,'');
+  WriteLn(t,');');
   close(t);
 {update arraysize}
-  s:=l0((msgsize-1) div maxslen); { we start with 0 }
+  s:=l0((MsgSize-1) div maxslen); { we start with 0 }
   assign(f,fn);
   reset(f,1);
   seek(f,22+34+2*eollen+2*length(constname));
@@ -426,7 +426,7 @@ end;
 
 procedure WriteCharFile(const fn,constname:string);
 
-  function l0(l:longint):string;
+  function l0(l:LongInt):string;
   var
     s : string[16];
   begin
@@ -447,26 +447,26 @@ procedure WriteCharFile(const fn,constname:string);
 var
   t       : text;
   f       : file;
-  cidx,i  : longint;
+  cidx,i  : LongInt;
   p       : pchar;
   s       : string;
 begin
-  writeln('Writing charfile '+fn);
+  WriteLn('Writing charfile '+fn);
 {Open textfile}
   assign(t,fn);
   rewrite(t);
-  writeln(t,'const ',constname,' : array[1..00000] of char=(');
+  WriteLn(t,'const ',constname,' : array[1..00000] of char=(');
 {Parse buffer in msgbuf and create indexs}
-  p:=msgtxt;
+  p:=MsgTxt;
   cidx:=0;
-  for i:=1to msgsize do
+  for i:=1to MsgSize do
    begin
      if cidx=15 then
       begin
         if cidx>0 then
-         writeln(t,',')
+         WriteLn(t,',')
         else
-         writeln(t,'');
+         WriteLn(t,'');
         write(t,'  ');
         cidx:=0;
       end
@@ -479,10 +479,10 @@ begin
      inc(cidx);
      inc(p);
    end;
-  writeln(t,');');
+  WriteLn(t,');');
   close(t);
 {update arraysize}
-  s:=l0(msgsize);
+  s:=l0(MsgSize);
   assign(f,fn);
   reset(f,1);
   seek(f,18+length(constname));
@@ -498,23 +498,23 @@ end;
 procedure WriteIntelFile(const fn,constname:string);
 var
   t      : text;
-  len,i  : longint;
+  len,i  : LongInt;
   p      : pchar;
   start,
   quote  : boolean;
 begin
-  writeln('Writing Intelfile ',fn);
+  WriteLn('Writing Intelfile ',fn);
 {Open textfile}
   assign(t,fn);
   rewrite(t);
-  writeln(t,'procedure '+constname+';assembler;');
-  writeln(t,'asm');
+  WriteLn(t,'procedure '+constname+';assembler;');
+  WriteLn(t,'asm');
 {Parse buffer in msgbuf and create indexs}
-  p:=msgtxt;
+  p:=MsgTxt;
   len:=0;
   start:=true;
   quote:=false;
-  for i:=1to msgsize do
+  for i:=1to MsgSize do
    begin
      if len>70 then
       begin
@@ -523,7 +523,7 @@ begin
            write(t,'''');
            quote:=false;
          end;
-        writeln(t,'');
+        WriteLn(t,'');
         start:=true;
       end;
      if start then
@@ -558,8 +558,8 @@ begin
    end;
   if quote then
    write(t,'''');
-  writeln(t,'');
-  writeln(t,'end;');
+  WriteLn(t,'');
+  WriteLn(t,'end;');
   close(t);
 end;
 
@@ -571,16 +571,16 @@ end;
 procedure RenumberFile(const fn,name:string);
 var
   f,t  : text;
-  i    : longint;
+  i    : LongInt;
   s,s1 : string;
 begin
-  Writeln('Renumbering ',fn);
+  WriteLn('Renumbering ',fn);
 {Read the message file}
   assign(f,fn);
   {$push} {$I-}
    reset(f);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
      WriteLn('*** message file '+fn+' not found ***');
      exit;
@@ -597,10 +597,10 @@ begin
         str(i,s1);
         while length(s1)<3 do
          s1:='0'+s1;
-        writeln(t,Name+s1+Copy(s,6,255));
+        WriteLn(t,Name+s1+Copy(s,6,255));
       end
      else
-      writeln(t,s);
+      WriteLn(t,s);
    end;
   close(t);
   close(f);
@@ -616,7 +616,7 @@ end;
 
 Function EscapeString (Const S : String) : String;
 Var
-  I  : longint;
+  I  : LongInt;
   hs : string;
 begin
   hs:='';
@@ -650,19 +650,19 @@ procedure WriteTexFile(const infn,outfn:string);
 var
   t,f   : text;
   line,
-  i,k   : longint;
+  i,k   : LongInt;
   number,
   s,s1  : string;
   texoutput : boolean;
 begin
-  Writeln('Loading messagefile ',infn);
-  writeln('Writing TeXfile ',outfn);
+  WriteLn('Loading messagefile ',infn);
+  WriteLn('Writing TeXfile ',outfn);
 { Open infile }
   assign(f,infn);
   {$push} {$I-}
    reset(f);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
      WriteLn('*** message file '+infn+' not found ***');
      exit;
@@ -672,10 +672,10 @@ begin
   rewrite(t);
   If texheader then
     begin
-    writeln (t,'\documentclass{article}');
-    writeln (t,'\usepackage{html}');
-    writeln (t,'\usepackage{fpc}');
-    writeln (t,'\begin{document}');
+    WriteLn (t,'\documentclass{article}');
+    WriteLn (t,'\usepackage{html}');
+    WriteLn (t,'\usepackage{fpc}');
+    WriteLn (t,'\begin{document}');
     end;
 { Parse }
   line:=0;
@@ -693,7 +693,7 @@ begin
         if s[1]='%' then
          begin
            Delete(s,1,1);
-           writeln(t,s);
+           WriteLn(t,s);
          end
         else
          begin
@@ -728,17 +728,17 @@ begin
               if s[i+k]='_' then
                inc(i,k+1);
               if number<>'' then
-                writeln(t,'\index[msgnr]{',number,'}');
-              writeln(t,'\index[msgtxt]{',escapestring(Copy(s,i,255)),'}');
-              writeln(t,'\item ['+s1+escapestring(Copy(s,i,255))+'] \hfill \\');
+                WriteLn(t,'\index[msgnr]{',number,'}');
+              WriteLn(t,'\index[msgtxt]{',escapestring(Copy(s,i,255)),'}');
+              WriteLn(t,'\item ['+s1+escapestring(Copy(s,i,255))+'] \hfill \\');
             end
            else
-            writeln('error in line: ',line,' skipping');
+            WriteLn('error in line: ',line,' skipping');
          end;
       end;
    end;
   If TexHeader then
-    writeln (t,'\end{document}');
+    WriteLn (t,'\end{document}');
   close(t);
   close(f);
 end;
@@ -756,15 +756,15 @@ var
 
   procedure helpscreen;
   begin
-    writeln('usage : msg2inc [Options] <msgfile> <incfile> <constname>');
-    writeln('<Options> can be : -T     Create .doc TeX file');
-    writeln('                   -TS    Create .doc TeX file (stand-alone)');
-    writeln('                   -I     Intel style asm output');
-    writeln('                   -S     array of string');
-    writeln('                   -C     array of char');
-    writeln('                   -R     renumber section <incfile>');
-    writeln('                   -V     Show version');
-    writeln('             -? or -H     This HelpScreen');
+    WriteLn('usage : msg2inc [Options] <msgfile> <incfile> <constname>');
+    WriteLn('<Options> can be : -T     Create .doc TeX file');
+    WriteLn('                   -TS    Create .doc TeX file (stand-alone)');
+    WriteLn('                   -I     Intel style asm output');
+    WriteLn('                   -S     array of string');
+    WriteLn('                   -C     array of char');
+    WriteLn('                   -R     renumber section <incfile>');
+    WriteLn('                   -V     Show version');
+    WriteLn('             -? or -H     This HelpScreen');
     halt(1);
   end;
 
@@ -772,7 +772,7 @@ begin
   Files:=0;
   for i:=1 to paramcount do
    begin
-     para:=paramstr(i);
+     para:=ParamStr(i);
      if (para[1]='-') then
       begin
         ch:=upcase(para[2]);
@@ -789,8 +789,8 @@ begin
          'C' : Mode:=M_Char;
          'R' : Mode:=M_Renumber;
          'V' : begin
-                 Writeln('Msg2Inc ',version,' for Free Pascal (C) 1998-2002 Peter Vreman');
-                 Writeln;
+                 WriteLn('Msg2Inc ',version,' for Free Pascal (C) 1998-2002 Peter Vreman');
+                 WriteLn;
                  Halt;
                end;
      '?','H' : helpscreen;

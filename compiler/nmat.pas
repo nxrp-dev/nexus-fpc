@@ -26,7 +26,7 @@ unit nmat;
 interface
 
     uses
-       tpcompilerreal,
+       TPCompilerReal,
        node,symtype;
 
     type
@@ -36,7 +36,7 @@ interface
 
        TModDivNodeFlags = set of TModDivNodeFlag;
 
-       tmoddivnode = class(TBinOpNode)
+       TModDivNode = class(TBinOpNode)
           moddivnodeflags : TModDivNodeFlags;
           constructor create(t:TNodeType;l,r : TNode); override;
           constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
@@ -56,9 +56,9 @@ interface
           function firstoptimize: TNode; virtual;
           function first_moddivint: TNode; virtual;
        end;
-       tmoddivnodeclass = class of tmoddivnode;
+       TModDivNodeClass = class of TModDivNode;
 
-       tshlshrnode = class(TBinOpNode)
+       TShlShrNode = class(TBinOpNode)
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
@@ -71,24 +71,24 @@ interface
           function first_shlshr64bitint: TNode; virtual;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
        end;
-       tshlshrnodeclass = class of tshlshrnode;
+       TShlShrNodeClass = class of TShlShrNode;
 
-       tunaryminusnode = class(TUnaryNode)
+       TUnaryMinusNode = class(TUnaryNode)
           constructor create(expr : TNode);virtual;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
        end;
-       tunaryminusnodeclass = class of tunaryminusnode;
+       TUnaryMinusNodeClass = class of TUnaryMinusNode;
 
-       tunaryplusnode = class(TUnaryNode)
+       TUnaryPlusNode = class(TUnaryNode)
          constructor create(expr : TNode);virtual;
          function pass_1 : TNode;override;
          function pass_typecheck:TNode;override;
        end;
-       tunaryplusnodeclass = class of tunaryplusnode;
+       TUnaryPlusNodeClass = class of TUnaryPlusNode;
 
-       tnotnode = class(TUnaryNode)
+       TNotNode = class(TUnaryNode)
           constructor create(expr : TNode);virtual;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
@@ -97,21 +97,21 @@ interface
           function track_state_pass(exec_known:boolean):boolean;override;
        {$endif}
        end;
-       tnotnodeclass = class of tnotnode;
+       TNotNodeClass = class of TNotNode;
 
     var
-       cmoddivnode : tmoddivnodeclass = tmoddivnode;
-       cshlshrnode : tshlshrnodeclass = tshlshrnode;
-       cunaryminusnode : tunaryminusnodeclass = tunaryminusnode;
-       cunaryplusnode : tunaryplusnodeclass = tunaryplusnode;
-       cnotnode : tnotnodeclass = tnotnode;
+       CModDivNode : TModDivNodeClass = TModDivNode;
+       CShlShrNode : TShlShrNodeClass = TShlShrNode;
+       CUnaryMinusNode : TUnaryMinusNodeClass = TUnaryMinusNode;
+       CUnaryPlusNode : TUnaryPlusNodeClass = TUnaryPlusNode;
+       CNotNode : TNotNodeClass = TNotNode;
 
 implementation
 
     uses
-      systems,
-      verbose,globals,cutils,compinnr,
-      globtype,constexp,
+      Systems,
+      Verbose,Globals,CUtils,compinnr,
+      GlobType,ConstExp,
       symconst,symdef,symcpu,
       defcmp,defutil,
       htypechk,pass_1,
@@ -124,46 +124,46 @@ implementation
  ****************************************************************************}
 
 
-    constructor tmoddivnode.create(t:TNodeType;l,r : TNode);
+    constructor TModDivNode.create(t:TNodeType;l,r : TNode);
       begin
         inherited create(t, l, r);
         moddivnodeflags:=[];
       end;
 
 
-    constructor tmoddivnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
+    constructor TModDivNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(tppuset1(moddivnodeflags));
+        ppufile.getset(TPPUSet1(moddivnodeflags));
       end;
 
 
-    procedure tmoddivnode.ppuwrite(ppufile:TCompilerPPUFile);
+    procedure TModDivNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(tppuset1(moddivnodeflags));
+        ppufile.putset(TPPUSet1(moddivnodeflags));
       end;
 
 
-    function tmoddivnode.simplify(forinline : boolean):TNode;
+    function TModDivNode.simplify(forinline : boolean):TNode;
       var
-        rv,lv : tconstexprint;
+        rv,lv : TConstExprInt;
         hp: TNode;
       begin
         result:=nil;
 
         if is_constintnode(right) then
           begin
-            rv:=tordconstnode(right).value;
+            rv:=TOrdConstNode(right).value;
             if rv = 1 then
               begin
                 case nodetype of
                   modn:
-                    result := cordconstnode.create(0,left.resultdef,true);
+                    result := COrdConstNode.create(0,left.resultdef,true);
                   divn:
                     result := left.getcopy;
                   else
-                    internalerror(2019050518);
+                    InternalError(2019050518);
                 end;
                 exit;
               end;
@@ -174,7 +174,7 @@ implementation
                 if not (nf_generic_para in flags) then
                   Message(parser_e_division_by_zero);
                 { recover }
-                tordconstnode(right).value := 1;
+                TOrdConstNode(right).value := 1;
               end;
             { the following simplification is also required for correctness
               on x86, as its transformation of divisions by constants to
@@ -182,7 +182,7 @@ implementation
             if (rv=-1) and
                (nodetype=divn) then
               begin
-                result:=cunaryminusnode.create(left);
+                result:=CUnaryMinusNode.create(left);
                 left:=nil;
                 exit;
               end;
@@ -191,28 +191,28 @@ implementation
                begin
                  Message(cg_e_mod_only_defined_for_pos_quotient);
                  { recover }
-                 tordconstnode(right).value := 1;
+                 TOrdConstNode(right).value := 1;
                end
             else if (rv=-1) and
               (nodetype=modn) then
               begin
-                result:=cordconstnode.create(0,left.resultdef,true);
+                result:=COrdConstNode.create(0,left.resultdef,true);
                 left:=nil;
                 exit;
               end;
-            if (nodetype=divn) and (left.nodetype=divn) and is_constintnode(tmoddivnode(left).right) and
+            if (nodetype=divn) and (left.nodetype=divn) and is_constintnode(TModDivNode(left).right) and
               { we need a type and the types must be consistent }
-              assigned(resultdef) and
+              Assigned(resultdef) and
               (compare_defs(resultdef,left.resultdef,nothingn)=te_exact) then
               begin
                 { re-use the current node so we get the result type right }
-                right:=caddnode.create_internal(muln,right,tmoddivnode(left).right.getcopy);
-                hp:=tmoddivnode(left).left.getcopy;
+                right:=CAddNode.create_internal(muln,right,TModDivNode(left).right.getcopy);
+                hp:=TModDivNode(left).left.getcopy;
                 left.Free;
                 left:=hp;
                 Result:=getcopy;
                 Result.resultdef:=nil;
-                Result:=ctypeconvnode.create_internal(Result,resultdef);
+                Result:=CTypeConvNode.create_internal(Result,resultdef);
                 exit;
               end;
 
@@ -238,26 +238,26 @@ implementation
                     else
                       result:=create_simplified_ord_const(lv mod rv,resultdef,forinline,false);
                   divn:
-                    result:=create_simplified_ord_const(lv div rv,resultdef,forinline,cs_check_overflow in localswitches);
+                    result:=create_simplified_ord_const(lv div rv,resultdef,forinline,cs_check_overflow in LocalSwitches);
                   else
-                    internalerror(2019050519);
+                    InternalError(2019050519);
                 end;
              end;
           end;
       end;
 
 
-    function tmoddivnode.dogetcopy: TNode;
+    function TModDivNode.dogetcopy: TNode;
       var
-        n: tmoddivnode;
+        n: TModDivNode;
       begin
-        n:=tmoddivnode(inherited dogetcopy);
+        n:=TModDivNode(inherited dogetcopy);
         n.moddivnodeflags:=moddivnodeflags;
         result:=n;
       end;
 
 
-    function tmoddivnode.use_moddiv64bitint_helper: boolean;
+    function TModDivNode.use_moddiv64bitint_helper: boolean;
       begin
         { not with an ifdef around the call to this routine, because e.g. the
           Java VM has a signed 64 bit division opcode, but not an unsigned
@@ -274,14 +274,14 @@ implementation
       end;
 
 
-    function tmoddivnode.pass_typecheck:TNode;
+    function TModDivNode.pass_typecheck:TNode;
       var
         else_block,
         hp,t : TNode;
         rd,ld : TOrdDef;
         else_statements,
-        statements : tstatementnode;
-        result_data : ttempcreatenode;
+        statements : TStatementNode;
+        result_data : TTempCreateNode;
         nd : TOrdDef;
       begin
          result:=nil;
@@ -321,15 +321,15 @@ implementation
              inserttypeconv(right,s64currencytype);
              if CodeGenError then
                exit;
-             hp:=cmoddivnode.create(nodetype,
-               ctypeconvnode.create_internal(left,s64inttype),
-               ctypeconvnode.create_internal(right,s64inttype));
-             tmoddivnode(hp).moddivnodeflags:=moddivnodeflags;
+             hp:=CModDivNode.create(nodetype,
+               CTypeConvNode.create_internal(left,s64inttype),
+               CTypeConvNode.create_internal(right,s64inttype));
+             TModDivNode(hp).moddivnodeflags:=moddivnodeflags;
              left:=nil;
              right:=nil;
              if nodetype=divn then
-               hp:=caddnode.create_internal(muln,hp,cordconstnode.create(10000,s64inttype,false));
-             result:=ctypeconvnode.create_internal(hp,s64currencytype);
+               hp:=CAddNode.create_internal(muln,hp,COrdConstNode.create(10000,s64inttype,false));
+             result:=CTypeConvNode.create_internal(hp,s64currencytype);
              TypeCheckPass(result);
              include(result.flags,nf_is_currency);
              exit;
@@ -350,7 +350,7 @@ implementation
            as in bug report 21566 PM }
 
          result:=simplify(false);
-         if assigned(result) then
+         if Assigned(result) then
            exit;
 
          rd:=TOrdDef(right.resultdef);
@@ -366,8 +366,8 @@ implementation
          { (tbs/tw8870)                                                                }
          if (rd.ordtype in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(left) and
-              (tordconstnode(left).value >= 0) and
-              (tordconstnode(left).value <= get_max_value(rd))) or
+              (TOrdConstNode(left).value >= 0) and
+              (TOrdConstNode(left).value <= get_max_value(rd))) or
              (not is_signed(ld) and
               (rd.size >= ld.size))) then
            begin
@@ -382,8 +382,8 @@ implementation
            end
          else if (ld.ordtype in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(right) and
-              (tordconstnode(right).value >= 0) and
-              (tordconstnode(right).value <= get_max_value(ld))) or
+              (TOrdConstNode(right).value >= 0) and
+              (TOrdConstNode(right).value <= get_max_value(ld))) or
              (not is_signed(rd) and
               (ld.size >= rd.size))) then
            begin
@@ -469,48 +469,48 @@ implementation
            end;
 
          result:=simplify(false);
-         if assigned(result) then
+         if Assigned(result) then
            exit;
 
          if (nodetype=modn) and (mdnf_isomod in moddivnodeflags) then
            begin
              result:=internalstatements(statements);
              else_block:=internalstatements(else_statements);
-             result_data:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+             result_data:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
 
              { right <=0? }
-             addstatement(statements,cifnode.create_internal(caddnode.create_internal(lten,right.getcopy,cordconstnode.create(0,resultdef,false)),
+             addstatement(statements,CIfNode.create_internal(CAddNode.create_internal(lten,right.getcopy,COrdConstNode.create(0,resultdef,false)),
                { then: result:=left mod right }
-               ccallnode.createintern('fpc_divbyzero',nil),
+               CCallNode.createintern('fpc_divbyzero',nil),
                nil
                ));
 
              { prepare else block }
              { result:=(-left) mod right }
-             addstatement(else_statements,cassignmentnode.create(ctemprefnode.create(result_data),cmoddivnode.create(modn,cunaryminusnode.create(left.getcopy),right.getcopy)));
+             addstatement(else_statements,CAssignmentNode.create(CTempRefNode.create(result_data),CModDivNode.create(modn,CUnaryMinusNode.create(left.getcopy),right.getcopy)));
              { result<>0? }
-             addstatement(else_statements,cifnode.create_internal(caddnode.create_internal(unequaln,ctemprefnode.create(result_data),cordconstnode.create(0,resultdef,false)),
+             addstatement(else_statements,CIfNode.create_internal(CAddNode.create_internal(unequaln,CTempRefNode.create(result_data),COrdConstNode.create(0,resultdef,false)),
                { then: result:=right-result }
-               cassignmentnode.create_internal(ctemprefnode.create(result_data),caddnode.create_internal(subn,right.getcopy,ctemprefnode.create(result_data))),
+               CAssignmentNode.create_internal(CTempRefNode.create(result_data),CAddNode.create_internal(subn,right.getcopy,CTempRefNode.create(result_data))),
                nil
                ));
 
              addstatement(statements,result_data);
              { if left>=0 }
-             addstatement(statements,cifnode.create_internal(caddnode.create_internal(gten,left.getcopy,cordconstnode.create(0,resultdef,false)),
+             addstatement(statements,CIfNode.create_internal(CAddNode.create_internal(gten,left.getcopy,COrdConstNode.create(0,resultdef,false)),
                { then: result:=left mod right }
-               cassignmentnode.create_internal(ctemprefnode.create(result_data),cmoddivnode.create(modn,left.getcopy,right.getcopy)),
+               CAssignmentNode.create_internal(CTempRefNode.create(result_data),CModDivNode.create(modn,left.getcopy,right.getcopy)),
                { else block }
                else_block
                ));
 
-             addstatement(statements,ctempdeletenode.create_normal_temp(result_data));
-             addstatement(statements,ctemprefnode.create(result_data));
+             addstatement(statements,CTempDeleteNode.create_normal_temp(result_data));
+             addstatement(statements,CTempRefNode.create(result_data));
            end;
       end;
 
 
-    function tmoddivnode.first_moddivint: TNode;
+    function TModDivNode.first_moddivint: TNode;
 {$ifdef cpuneedsdivhelper}
       var
         procname: string[31];
@@ -541,19 +541,19 @@ implementation
           scurrency:
             procname := procname + 'currency';
           else
-            internalerror(2015070501);
+            InternalError(2015070501);
         end;
 
-        result := ccallnode.createintern(procname,ccallparanode.create(left,
-          ccallparanode.create(right,nil)));
+        result := CCallNode.createintern(procname,CCallParaNode.create(left,
+          CCallParaNode.create(right,nil)));
         left := nil;
         right := nil;
         FirstPass(result);
 
         if result.resultdef.typ<>orddef then
-          internalerror(2013031701);
+          InternalError(2013031701);
         if resultdef.typ<>orddef then
-          internalerror(2013031702);
+          InternalError(2013031702);
         if TOrdDef(result.resultdef).ordtype <> TOrdDef(resultdef).ordtype then
           inserttypeconv(result,resultdef);
       end;
@@ -564,7 +564,7 @@ implementation
 {$endif cpuneedsdiv32helper}
 
 
-    function tmoddivnode.first_moddiv64bitint: TNode;
+    function TModDivNode.first_moddiv64bitint: TNode;
       var
         procname: string[31];
       begin
@@ -590,26 +590,26 @@ implementation
         else
           procname := procname + 'qword';
 
-        result := ccallnode.createintern(procname,ccallparanode.create(left,
-          ccallparanode.create(right,nil)));
+        result := CCallNode.createintern(procname,CCallParaNode.create(left,
+          CCallParaNode.create(right,nil)));
         left := nil;
         right := nil;
         FirstPass(result);
       end;
 
 
-    function tmoddivnode.firstoptimize: TNode;
+    function TModDivNode.firstoptimize: TNode;
       var
-        power,shiftval : longint;
-        statements : tstatementnode;
-        temp,resulttemp : ttempcreatenode;
+        power,shiftval : LongInt;
+        statements : TStatementNode;
+        temp,resulttemp : TTempCreateNode;
         masknode : TNode;
         invertsign: Boolean;
       begin
         result := nil;
         { divide/mod a number by a constant which is a power of 2? }
         if (right.nodetype = ordconstn) and
-          isabspowerof2(tordconstnode(right).value,power) and
+          IsAbsPowerOf2(TOrdConstNode(right).value,power) and
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
           { for 64 bit, we leave the optimization to the cg }
             (not is_signed(resultdef)) then
@@ -623,9 +623,9 @@ implementation
               begin
                 if is_signed(resultdef) then
                   begin
-                    invertsign:=tordconstnode(right).value<0;
+                    invertsign:=TOrdConstNode(right).value<0;
                     if is_64bitint(left.resultdef) then
-                      if not (cs_opt_size in CurrentSettings.optimizerswitches) then
+                      if not (cs_opt_size in CurrentSettings.OptimizerSwitches) then
                         shiftval:=63
                       else
                         { the shift code is a lot bigger than the call to }
@@ -635,11 +635,11 @@ implementation
                       shiftval:=left.resultdef.size*8-1;
 
                     result:=internalstatements(statements);
-                    temp:=ctempcreatenode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
-                    resulttemp:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                    temp:=CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
+                    resulttemp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                     addstatement(statements,resulttemp);
                     addstatement(statements,temp);
-                    addstatement(statements,cassignmentnode.create(ctemprefnode.create(temp),
+                    addstatement(statements,CAssignmentNode.create(CTempRefNode.create(temp),
                      left));
                     left:=nil;
 
@@ -647,102 +647,102 @@ implementation
                       for power=1 (i.e. division by 2), masknode is simply (temp shr shiftval)}
                     if power=1 then
                       masknode:=
-                        cshlshrnode.create(shrn,
-                          ctemprefnode.create(temp),
-                          cordconstnode.create(shiftval,u8inttype,false)
+                        CShlShrNode.create(shrn,
+                          CTempRefNode.create(temp),
+                          COrdConstNode.create(shiftval,u8inttype,false)
                         )
                     else
                       masknode:=
-                        caddnode.create(andn,
-                          cinlinenode.create(in_sar_x_y,false,
-                            ccallparanode.create(cordconstnode.create(shiftval,u8inttype,false),
-                            ccallparanode.create(ctemprefnode.create(temp),nil))
+                        CAddNode.create(andn,
+                          CInlineNode.create(in_sar_x_y,false,
+                            CCallParaNode.create(COrdConstNode.create(shiftval,u8inttype,false),
+                            CCallParaNode.create(CTempRefNode.create(temp),nil))
                           ),
-                          cordconstnode.create(tcgint((qword(1) shl power)-1),
+                          COrdConstNode.create(TCGInt((qword(1) shl power)-1),
                             right.resultdef,false)
                         );
 
                     if invertsign then
-                      addstatement(statements,cassignmentnode.create(ctemprefnode.create(resulttemp),
-                        cunaryminusnode.create(
-                          cinlinenode.create(in_sar_x_y,false,
-                            ccallparanode.create(cordconstnode.create(power,u8inttype,false),
-                            ccallparanode.create(caddnode.create(addn,ctemprefnode.create(temp),
+                      addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),
+                        CUnaryMinusNode.create(
+                          CInlineNode.create(in_sar_x_y,false,
+                            CCallParaNode.create(COrdConstNode.create(power,u8inttype,false),
+                            CCallParaNode.create(CAddNode.create(addn,CTempRefNode.create(temp),
                               masknode),nil
                             )))))
                       )
                     else
-                      addstatement(statements,cassignmentnode.create(ctemprefnode.create(resulttemp),
-                        cinlinenode.create(in_sar_x_y,false,
-                          ccallparanode.create(cordconstnode.create(power,u8inttype,false),
-                          ccallparanode.create(caddnode.create(addn,ctemprefnode.create(temp),
+                      addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),
+                        CInlineNode.create(in_sar_x_y,false,
+                          CCallParaNode.create(COrdConstNode.create(power,u8inttype,false),
+                          CCallParaNode.create(CAddNode.create(addn,CTempRefNode.create(temp),
                             masknode),nil
                           ))))
                       );
-                    addstatement(statements,ctempdeletenode.create(temp));
-                    addstatement(statements,ctempdeletenode.create_normal_temp(resulttemp));
-                    addstatement(statements,ctemprefnode.create(resulttemp));
+                    addstatement(statements,CTempDeleteNode.create(temp));
+                    addstatement(statements,CTempDeleteNode.create_normal_temp(resulttemp));
+                    addstatement(statements,CTempRefNode.create(resulttemp));
                     right.Free;
                     right := nil;
                   end
                 else
                   begin
-                    tordconstnode(right).value:=power;
-                    result:=cshlshrnode.create(shrn,left,right)
+                    TOrdConstNode(right).value:=power;
+                    result:=CShlShrNode.create(shrn,left,right)
                   end;
               end
             else if is_signed(resultdef) then    { signed modulus }
               begin
-                if (cs_opt_size in CurrentSettings.optimizerswitches) then
+                if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
                   exit;
 
                 shiftval:=left.resultdef.size*8-1;
-                tordconstnode(right).value.uvalue:=qword((qword(1) shl power)-1);
+                TOrdConstNode(right).value.uvalue:=qword((qword(1) shl power)-1);
 
                 result:=internalstatements(statements);
-                temp:=ctempcreatenode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
-                resulttemp:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
+                temp:=CTempCreateNode.create(left.resultdef,left.resultdef.size,tt_persistent,true);
+                resulttemp:=CTempCreateNode.create(resultdef,resultdef.size,tt_persistent,true);
                 addstatement(statements,resulttemp);
                 addstatement(statements,temp);
-                addstatement(statements,cassignmentnode.create(ctemprefnode.create(temp),left));
+                addstatement(statements,CAssignmentNode.create(CTempRefNode.create(temp),left));
                 { mask:=sar(left,sizeof(left)*8-1) and ((1 shl power)-1); }
                 if power=1 then
                   masknode:=
-                    cshlshrnode.create(shrn,
-                      ctemprefnode.create(temp),
-                      cordconstnode.create(shiftval,u8inttype,false)
+                    CShlShrNode.create(shrn,
+                      CTempRefNode.create(temp),
+                      COrdConstNode.create(shiftval,u8inttype,false)
                     )
                 else
                   masknode:=
-                    caddnode.create(andn,
-                      cinlinenode.create(in_sar_x_y,false,
-                        ccallparanode.create(cordconstnode.create(shiftval,u8inttype,false),
-                        ccallparanode.create(ctemprefnode.create(temp),nil))
+                    CAddNode.create(andn,
+                      CInlineNode.create(in_sar_x_y,false,
+                        CCallParaNode.create(COrdConstNode.create(shiftval,u8inttype,false),
+                        CCallParaNode.create(CTempRefNode.create(temp),nil))
                       ),
-                      cordconstnode.create(tcgint((qword(1) shl power)-1),
+                      COrdConstNode.create(TCGInt((qword(1) shl power)-1),
                         right.resultdef,false)
                     );
-                addstatement(statements,cassignmentnode.create(ctemprefnode.create(resulttemp),masknode));
+                addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),masknode));
 
                 { result:=((left+mask) and right)-mask; }
-                addstatement(statements,cassignmentnode.create(ctemprefnode.create(resulttemp),
-                  caddnode.create(subn,
-                    caddnode.create(andn,
+                addstatement(statements,CAssignmentNode.create(CTempRefNode.create(resulttemp),
+                  CAddNode.create(subn,
+                    CAddNode.create(andn,
                       right,
-                      caddnode.create(addn,
-                        ctemprefnode.create(temp),
-                        ctemprefnode.create(resulttemp))),
-                  ctemprefnode.create(resulttemp))
+                      CAddNode.create(addn,
+                        CTempRefNode.create(temp),
+                        CTempRefNode.create(resulttemp))),
+                  CTempRefNode.create(resulttemp))
                 ));
 
-                addstatement(statements,ctempdeletenode.create(temp));
-                addstatement(statements,ctempdeletenode.create_normal_temp(resulttemp));
-                addstatement(statements,ctemprefnode.create(resulttemp));
+                addstatement(statements,CTempDeleteNode.create(temp));
+                addstatement(statements,CTempDeleteNode.create_normal_temp(resulttemp));
+                addstatement(statements,CTempRefNode.create(resulttemp));
               end
             else
               begin
-                tordconstnode(right).value.uvalue:=qword((qword(1) shl power)-1);
-                result := caddnode.create(andn,left,right);
+                TOrdConstNode(right).value.uvalue:=qword((qword(1) shl power)-1);
+                result := CAddNode.create(andn,left,right);
               end;
             { left and right are reused }
             left := nil;
@@ -753,7 +753,7 @@ implementation
       end;
 
 
-    function tmoddivnode.pass_1 : TNode;
+    function TModDivNode.pass_1 : TNode;
       begin
          result:=nil;
          FirstPass(left);
@@ -763,21 +763,21 @@ implementation
 
          { Try to optimize mod/div }
          result := firstoptimize;
-         if assigned(result) then
+         if Assigned(result) then
            exit;
 
          { 64bit }
          if use_moddiv64bitint_helper then
            begin
              result := first_moddiv64bitint;
-             if assigned(result) then
+             if Assigned(result) then
                exit;
              expectloc:=LOC_REGISTER;
            end
          else
            begin
              result := first_moddivint;
-             if assigned(result) then
+             if Assigned(result) then
                exit;
            end;
          expectloc:=LOC_REGISTER;
@@ -810,11 +810,11 @@ implementation
                               TSHLSHRNODE
  ****************************************************************************}
 
-    function tshlshrnode.simplify(forinline : boolean):TNode;
+    function TShlShrNode.simplify(forinline : boolean):TNode;
       var
-        lvalue, rvalue, mask : Tconstexprint;
+        lvalue, rvalue, mask : TConstExprInt;
         rangedef: TDef;
-        size: longint;
+        size: LongInt;
       begin
         result:=nil;
         { constant folding }
@@ -824,18 +824,18 @@ implementation
               begin
                 case resultdef.size of
                   1,2,4:
-                    rvalue:=tordconstnode(right).value and byte($1f);
+                    rvalue:=TOrdConstNode(right).value and byte($1f);
                   8:
-                    rvalue:=tordconstnode(right).value and byte($3f);
+                    rvalue:=TOrdConstNode(right).value and byte($3f);
                   else
-                    internalerror(2013122302);
+                    InternalError(2013122302);
                 end;
               end
             else
-              rvalue:=tordconstnode(right).value;
+              rvalue:=TOrdConstNode(right).value;
             if is_constintnode(left) then
                begin
-                 lvalue:=tordconstnode(left).value;
+                 lvalue:=TOrdConstNode(left).value;
                  getrangedefmasksize(resultdef, rangedef, mask, size);
                  { shr is an unsigned operation, so cut off upper bits }
                  if forinline then
@@ -846,7 +846,7 @@ implementation
                     shln:
                       lvalue:=lvalue shl rvalue;
                     else
-                      internalerror(2019050517);
+                      InternalError(2019050517);
                  end;
                  { discard shifted-out bits (shl never triggers overflow/range errors) }
                  if forinline and
@@ -860,18 +860,18 @@ implementation
                 left:=nil;
               end
             { optimize "a shl n1 shl n2" and "a shr n1 shr n2" }
-            else if (nodetype=left.nodetype) and is_constintnode(tshlshrnode(left).right) and
+            else if (nodetype=left.nodetype) and is_constintnode(TShlShrNode(left).right) and
               { do not overflow the variable being shifted }
-              (tordconstnode(right).value+tordconstnode(tshlshrnode(left).right).value<tshlshrnode(left).left.resultdef.size*8) then
+              (TOrdConstNode(right).value+TOrdConstNode(TShlShrNode(left).right).value<TShlShrNode(left).left.resultdef.size*8) then
               begin
                 result:=left;
                 left:=nil;
-                tordconstnode(tshlshrnode(result).right).value:=tordconstnode(tshlshrnode(result).right).value+tordconstnode(right).value;
+                TOrdConstNode(TShlShrNode(result).right).value:=TOrdConstNode(TShlShrNode(result).right).value+TOrdConstNode(right).value;
               end;
           end
         else if is_constintnode(left) then
           begin
-            lvalue:=tordconstnode(left).value;
+            lvalue:=TOrdConstNode(left).value;
             if forinline then
               begin
                 getrangedefmasksize(resultdef, rangedef, mask, size);
@@ -879,14 +879,14 @@ implementation
               end;
             { '0 shl x' and '0 shr x' are 0 }
             if (lvalue=0) and
-               ((cs_opt_level4 in CurrentSettings.optimizerswitches) or
+               ((cs_opt_level4 in CurrentSettings.OptimizerSwitches) or
                 not might_have_sideeffects(right)) then
-              result:=cordconstnode.create(0,resultdef,true);
+              result:=COrdConstNode.create(0,resultdef,true);
           end;
       end;
 
 
-    function tshlshrnode.pass_typecheck:TNode;
+    function TShlShrNode.pass_typecheck:TNode;
       var
          t : TNode;
       begin
@@ -919,7 +919,7 @@ implementation
            end;
 
 {$ifdef SUPPORT_MMX}
-         if (cs_mmx in CurrentSettings.localswitches) and
+         if (cs_mmx in CurrentSettings.LocalSwitches) and
            is_mmx_able_array(left.resultdef) and
            ((is_mmx_able_array(right.resultdef) and
              equal_defs(left.resultdef,right.resultdef)
@@ -945,7 +945,7 @@ implementation
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
                      inserttypeconv(left,s32inttype)
 {$else}
-                     internalerror(2013031301);
+                     InternalError(2013031301);
 {$endif}
                    end
                  else
@@ -953,7 +953,7 @@ implementation
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
                      inserttypeconv(left,u32inttype);
 {$else}
-                     internalerror(2013031302);
+                     InternalError(2013031302);
 {$endif}
                    end
                end;
@@ -964,13 +964,13 @@ implementation
          resultdef:=left.resultdef;
 
          result:=simplify(false);
-         if assigned(result) then
+         if Assigned(result) then
            exit;
       end;
 
 
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-    function tshlshrnode.first_shlshr64bitint: TNode;
+    function TShlShrNode.first_shlshr64bitint: TNode;
       var
         procname: string[31];
       begin
@@ -989,8 +989,8 @@ implementation
           procname := 'fpc_shr_'+procname;
         { this order of parameters works at least for the arm,
           however it should work for any calling conventions (FK) }
-        result := ccallnode.createintern(procname,ccallparanode.create(right,
-          ccallparanode.create(left,nil)));
+        result := CCallNode.createintern(procname,CCallParaNode.create(right,
+          CCallParaNode.create(left,nil)));
         left := nil;
         right := nil;
         FirstPass(result);
@@ -998,7 +998,7 @@ implementation
 {$endif not cpu64bitalu and not cpuhighleveltarget}
 
 
-    function tshlshrnode.pass_1 : TNode;
+    function TShlShrNode.pass_1 : TNode;
       begin
          result:=nil;
          FirstPass(left);
@@ -1019,24 +1019,24 @@ implementation
                             TUNARYMINUSNODE
  ****************************************************************************}
 
-    constructor tunaryminusnode.create(expr : TNode);
+    constructor TUnaryMinusNode.create(expr : TNode);
       begin
         inherited create(unaryminusn,expr);
       end;
 
 
-    function tunaryminusnode.simplify(forinline : boolean):TNode;
+    function TUnaryMinusNode.simplify(forinline : boolean):TNode;
       begin
         result:=nil;
         { constant folding }
         if is_constintnode(left) then
           begin
-             result:=create_simplified_ord_const(-tordconstnode(left).value,resultdef,forinline,cs_check_overflow in localswitches);
+             result:=create_simplified_ord_const(-TOrdConstNode(left).value,resultdef,forinline,cs_check_overflow in LocalSwitches);
              exit;
           end;
         if is_constrealnode(left) then
           begin
-             trealconstnode(left).NegateValue;
+             TRealConstNode(left).NegateValue;
              result:=left;
              left:=nil;
              exit;
@@ -1048,9 +1048,9 @@ implementation
 
               As this result in -(1.0-1.0)=0.0 instead of 0.0, this is only valid in fastmath mode
             }
-            if (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (left.nodetype=subn) then
+            if (cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and (left.nodetype=subn) then
               begin
-                result:=caddnode.create(subn,taddnode(left).right.getcopy,taddnode(left).left.getcopy);
+                result:=CAddNode.create(subn,TAddNode(left).right.getcopy,TAddNode(left).left.getcopy);
                 exit;
               end;
 
@@ -1060,14 +1060,14 @@ implementation
               this operation is always valid as reals do not use a two's complement representation for negative
               numbers, -real means just flip the sign bit
             }
-            if (left.nodetype=muln) and ((taddnode(left).left.nodetype=unaryminusn)) then
+            if (left.nodetype=muln) and ((TAddNode(left).left.nodetype=unaryminusn)) then
               begin
-                result:=caddnode.create(muln,tunaryminusnode(taddnode(left).left).left.getcopy,taddnode(left).right.getcopy);
+                result:=CAddNode.create(muln,TUnaryMinusNode(TAddNode(left).left).left.getcopy,TAddNode(left).right.getcopy);
                 exit;
               end;
-            if (left.nodetype=muln) and ((taddnode(left).right.nodetype=unaryminusn)) then
+            if (left.nodetype=muln) and ((TAddNode(left).right.nodetype=unaryminusn)) then
               begin
-                result:=caddnode.create(muln,taddnode(left).left.getcopy,tunaryminusnode(taddnode(left).right).left.getcopy);
+                result:=CAddNode.create(muln,TAddNode(left).left.getcopy,TUnaryMinusNode(TAddNode(left).right).left.getcopy);
                 exit;
               end;
 
@@ -1077,14 +1077,14 @@ implementation
               this operation is always valid as reals do not use a two's complement representation for negative
               numbers, -real means just flip the sign bit
             }
-            if (left.nodetype=slashn) and ((taddnode(left).left.nodetype=unaryminusn)) then
+            if (left.nodetype=slashn) and ((TAddNode(left).left.nodetype=unaryminusn)) then
               begin
-                result:=caddnode.create(slashn,tunaryminusnode(taddnode(left).left).left.getcopy,taddnode(left).right.getcopy);
+                result:=CAddNode.create(slashn,TUnaryMinusNode(TAddNode(left).left).left.getcopy,TAddNode(left).right.getcopy);
                 exit;
               end;
-            if (left.nodetype=slashn) and ((taddnode(left).right.nodetype=unaryminusn)) then
+            if (left.nodetype=slashn) and ((TAddNode(left).right.nodetype=unaryminusn)) then
               begin
-                result:=caddnode.create(slashn,taddnode(left).left.getcopy,tunaryminusnode(taddnode(left).right).left.getcopy);
+                result:=CAddNode.create(slashn,TAddNode(left).left.getcopy,TUnaryMinusNode(TAddNode(left).right).left.getcopy);
                 exit;
               end;
 
@@ -1099,23 +1099,23 @@ implementation
               end;
           end
         { transform -(x+1) or -(1+x) into not(x) }
-        else if is_integer(left.resultdef) and is_signed(left.resultdef) and (left.nodetype=addn) and ((localswitches*[cs_check_overflow,cs_check_range])=[]) then
+        else if is_integer(left.resultdef) and is_signed(left.resultdef) and (left.nodetype=addn) and ((LocalSwitches*[cs_check_overflow,cs_check_range])=[]) then
           begin
-            if is_constintnode(taddnode(left).right) and (tordconstnode(taddnode(left).right).value=1) then
+            if is_constintnode(TAddNode(left).right) and (TOrdConstNode(TAddNode(left).right).value=1) then
               begin
-                result:=cnotnode.create(taddnode(left).left.getcopy);
+                result:=CNotNode.create(TAddNode(left).left.getcopy);
                 exit;
               end
-            else if is_constintnode(taddnode(left).left) and (tordconstnode(taddnode(left).left).value=1) then
+            else if is_constintnode(TAddNode(left).left) and (TOrdConstNode(TAddNode(left).left).value=1) then
               begin
-                result:=cnotnode.create(taddnode(left).right.getcopy);
+                result:=CNotNode.create(TAddNode(left).right.getcopy);
                 exit;
               end;
           end;
       end;
 
 
-    function tunaryminusnode.pass_typecheck : TNode;
+    function TUnaryMinusNode.pass_typecheck : TNode;
       var
          t : TNode;
       begin
@@ -1134,7 +1134,7 @@ implementation
            exit;
 
          result:=simplify(false);
-         if assigned(result) then
+         if Assigned(result) then
            exit;
 
          resultdef:=left.resultdef;
@@ -1148,14 +1148,14 @@ implementation
          else if left.resultdef.typ=floatdef then
            begin
              if not(TFloatDef(left.resultdef).floattype in [s64comp,s64currency]) and
-               (cs_excessprecision in CurrentSettings.localswitches) then
+               (cs_excessprecision in CurrentSettings.LocalSwitches) then
                begin
                  inserttypeconv(left,pbestrealtype^);
                  resultdef:=left.resultdef
                end;
            end
 {$ifdef SUPPORT_MMX}
-         else if (cs_mmx in CurrentSettings.localswitches) and
+         else if (cs_mmx in CurrentSettings.LocalSwitches) and
            is_mmx_able_array(left.resultdef) then
              begin
                { if saturation is on, left.resultdef isn't
@@ -1176,7 +1176,7 @@ implementation
              else if is_16bit(left.resultdef) then
                inserttypeconv(left,s16inttype)
              else
-               internalerror(2013040701);
+               InternalError(2013040701);
              resultdef:=left.resultdef;
            end
          else if (left.resultdef.typ=orddef) then
@@ -1201,7 +1201,7 @@ implementation
     { generic code     }
     { overridden by:   }
     {   i386           }
-    function tunaryminusnode.pass_1 : TNode;
+    function TUnaryMinusNode.pass_1 : TNode;
       begin
         result:=nil;
         FirstPass(left);
@@ -1211,7 +1211,7 @@ implementation
         if (left.resultdef.typ=floatdef) then
           expectloc:=LOC_FPUREGISTER
 {$ifdef SUPPORT_MMX}
-        else if (cs_mmx in CurrentSettings.localswitches) and
+        else if (cs_mmx in CurrentSettings.LocalSwitches) and
           is_mmx_able_array(left.resultdef) then
           expectloc:=LOC_MMXREGISTER
 {$endif SUPPORT_MMX}
@@ -1223,20 +1223,20 @@ implementation
                              TUNARYPLUSNODE
  ****************************************************************************}
 
-    constructor tunaryplusnode.create(expr: TNode);
+    constructor TUnaryPlusNode.create(expr: TNode);
       begin
         inherited create(unaryplusn,expr);
       end;
 
-    function tunaryplusnode.pass_1: TNode;
+    function TUnaryPlusNode.pass_1: TNode;
       begin
         result:=nil;
         { can never happen because all the conversions happen
           in pass_typecheck }
-        internalerror(201012250);
+        InternalError(201012250);
       end;
 
-    function tunaryplusnode.pass_typecheck: TNode;
+    function TUnaryPlusNode.pass_typecheck: TNode;
       var
         t:TNode;
       begin
@@ -1259,7 +1259,7 @@ implementation
            (left.resultdef.typ=floatdef) or
            is_currency(left.resultdef)
 {$ifdef SUPPORT_MMX}
-           or ((cs_mmx in CurrentSettings.localswitches) and
+           or ((cs_mmx in CurrentSettings.LocalSwitches) and
                 is_mmx_able_array(left.resultdef))
 {$endif SUPPORT_MMX}
         then
@@ -1276,7 +1276,7 @@ implementation
             else if is_16bit(left.resultdef) then
               inserttypeconv(left,s16inttype)
             else
-              internalerror(2013040702);
+              InternalError(2013040702);
             result:=left;
             left:=nil;
           end
@@ -1310,15 +1310,15 @@ implementation
         gten,gtn,lten,ltn,unequaln,equaln
       );
 
-    constructor tnotnode.create(expr : TNode);
+    constructor TNotNode.create(expr : TNode);
       begin
          inherited create(notn,expr);
       end;
 
 
-    function tnotnode.simplify(forinline : boolean):TNode;
+    function TNotNode.simplify(forinline : boolean):TNode;
       var
-        v : tconstexprint;
+        v : TConstExprInt;
         t : TNode;
         def : TDef;
       begin
@@ -1327,8 +1327,8 @@ implementation
         if left.nodetype=notn then
           begin
             { Double not. Remove both }
-            result:=Tnotnode(left).left;
-            tnotnode(left).left:=nil;
+            result:=TNotNode(left).left;
+            TNotNode(left).left:=nil;
             exit;
           end;
 
@@ -1337,7 +1337,7 @@ implementation
            { Not of boolean expression. Turn around the operator and remove
              the not. This is not allowed for sets with the gten/lten,
              because there is no ltn/gtn support }
-           if (taddnode(left).left.resultdef.typ<>setdef) or
+           if (TAddNode(left).left.resultdef.typ<>setdef) or
               (left.nodetype in [equaln,unequaln]) then
             begin
               result:=left;
@@ -1351,7 +1351,7 @@ implementation
         if (left.nodetype=ordconstn) and
           (left.resultdef.typ=orddef) then
           begin
-             v:=tordconstnode(left).value;
+             v:=TOrdConstNode(left).value;
              def:=left.resultdef;
              if not calc_not_ordvalue(v,def) then
                CGMessage(type_e_mismatch);
@@ -1362,11 +1362,11 @@ implementation
                generator using the size of left
                }
              if not(forinline) then
-               t:=cordconstnode.create(v,def,false)
+               t:=COrdConstNode.create(v,def,false)
              else
                begin
                  { cut off the value if necessary }
-                 t:=cordconstnode.create(v,left.resultdef,false);
+                 t:=COrdConstNode.create(v,left.resultdef,false);
                  { now convert to node's resultdef }
                  inserttypeconv_explicit(t,def);
                end;
@@ -1376,7 +1376,7 @@ implementation
       end;
 
 
-    function tnotnode.pass_typecheck : TNode;
+    function TNotNode.pass_typecheck : TNode;
       var
          t : TNode;
       begin
@@ -1400,7 +1400,7 @@ implementation
          resultdef:=left.resultdef;
 
          result:=simplify(false);
-         if assigned(result) then
+         if Assigned(result) then
            exit;
 
          if is_boolean(resultdef) then
@@ -1408,7 +1408,7 @@ implementation
            end
          else
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.localswitches) and
+           if (cs_mmx in CurrentSettings.LocalSwitches) and
              is_mmx_able_array(left.resultdef) then
              begin
              end
@@ -1438,7 +1438,7 @@ implementation
       end;
 
 
-    function tnotnode.pass_1 : TNode;
+    function TNotNode.pass_1 : TNode;
       begin
          result:=nil;
          FirstPass(left);
@@ -1459,7 +1459,7 @@ implementation
            end
          else
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in CurrentSettings.localswitches) and
+           if (cs_mmx in CurrentSettings.LocalSwitches) and
              is_mmx_able_array(left.resultdef) then
              expectloc:=LOC_MMXREGISTER
          else
@@ -1477,7 +1477,7 @@ implementation
       end;
 
 {$ifdef state_tracking}
-    function Tnotnode.track_state_pass(exec_known:boolean):boolean;
+    function TNotNode.track_state_pass(exec_known:boolean):boolean;
       begin
         track_state_pass:=true;
         if left.track_state_pass(exec_known) then

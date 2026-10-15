@@ -29,7 +29,7 @@ interface
       node,ncgcnv,defutil;
 
     type
-       tx86typeconvnode = class(tcgtypeconvnode)
+       TX86TypeConvNode = class(TCGTypeConvNode)
        private
          function int_to_real_mm_location: boolean;
        protected
@@ -60,18 +60,18 @@ interface
 implementation
 
    uses
-      verbose,globals,globtype,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      Verbose,Globals,GlobType,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       symconst,symdef,
       cgbase,cga,pass_1,pass_2,
-      cpuinfo,
+      CPUInfo,
       ncnv,
       cpubase,
       cgutils,cgobj,hlcgobj,cgx86,
       tgobj;
 
 
-    function tx86typeconvnode.first_real_to_real : TNode;
+    function TX86TypeConvNode.first_real_to_real : TNode;
       begin
          first_real_to_real:=nil;
          if use_vectorfpu(resultdef) then
@@ -81,17 +81,17 @@ implementation
       end;
 
 
-    procedure tx86typeconvnode.second_int_to_bool;
+    procedure TX86TypeConvNode.second_int_to_bool;
       var
 {$ifndef cpu64bitalu}
         hreg2,
-        hregister : tregister;
-        href      : treference;
+        hregister : TRegister;
+        href      : TReference;
         i         : integer;
 {$endif not cpu64bitalu}
-        resflags  : tresflags;
-        hlabel    : tasmlabel;
-        newsize   : tcgsize;
+        resflags  : TResFlags;
+        hlabel    : TAsmLabel;
+        newsize   : TCgSize;
       begin
          SecondPass(left);
          if CodeGenError then
@@ -176,7 +176,7 @@ implementation
                 cg.a_label(CurrentAsmData.CurrAsmList,hlabel);
               end;
             else
-              internalerror(10062);
+              InternalError(10062);
          end;
          if (left.location.loc<>LOC_JUMP) then
            begin
@@ -212,26 +212,26 @@ implementation
        end;
 
 
-    function tx86typeconvnode.int_to_real_mm_location : boolean;
+    function TX86TypeConvNode.int_to_real_mm_location : boolean;
       begin
         result:=use_vectorfpu(resultdef) and
 {$ifdef cpu64bitalu}
            ((TOrdDef(left.resultdef).ordtype in [s32bit,s64bit]) or
             ((TOrdDef(left.resultdef).ordtype in [u32bit,u64bit]) and
-             (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]))
+             (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]))
            );
 {$else cpu64bitalu}
            ((TOrdDef(left.resultdef).ordtype=s32bit)
 {$ifdef i386}
             or ((TOrdDef(left.resultdef).ordtype=u32bit) and
-             (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]))
+             (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]))
 {$endif i386}
            );
 {$endif cpu64bitalu}
       end;
 
 
-    function tx86typeconvnode.first_int_to_real : TNode;
+    function TX86TypeConvNode.first_int_to_real : TNode;
       begin
         first_int_to_real:=nil;
         if (left.resultdef.size<4) then
@@ -247,13 +247,13 @@ implementation
       end;
 
 
-    procedure tx86typeconvnode.second_int_to_real;
+    procedure TX86TypeConvNode.second_int_to_real;
       var
          leftref,
-         href : treference;
-         l1,l2 : tasmlabel;
-         op: tasmop;
-         opsize: topsize;
+         href : TReference;
+         l1,l2 : TAsmLabel;
+         op: TAsmOp;
+         opsize: TOpSize;
          signtested : boolean;
          use_bt: boolean;  { true = use BT (386+), false = use TEST (286-) }
       begin
@@ -279,21 +279,21 @@ implementation
                   else
                     op:=A_VCVTUSI2SD;
                 else
-                  internalerror(2007120902);
+                  InternalError(2007120902);
               end
             else
               begin
                 { do not use is_signed here as it checks the boundaries instead
                   of the ordtype }
                 if not(TOrdDef(left.resultdef).ordtype in [s32bit,s64bit]) then
-                  Internalerror(2020101001);
+                  InternalError(2020101001);
                 case location.size of
                   OS_F32:
                     op:=A_CVTSI2SS;
                   OS_F64:
                     op:=A_CVTSI2SD;
                   else
-                    internalerror(2007120904);
+                    InternalError(2007120904);
                 end;
               end;
 
@@ -306,29 +306,29 @@ implementation
               s64bit,u64bit:
                 opsize:=S_Q;
               else
-                internalerror(2007120903);
+                InternalError(2007120903);
             end;
             case left.location.loc of
               LOC_REFERENCE,
               LOC_CREFERENCE:
                 begin
                   href:=left.location.reference;
-                  tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
                   if UseAVX then
                     { VCVTSI2.. requires a second source operand to copy bits 64..127 }
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg_reg(op,opsize,href,location.register,location.register))
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg_reg(op,opsize,href,location.register,location.register))
                   else
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,opsize,href,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,opsize,href,location.register));
                 end;
               LOC_REGISTER,
               LOC_CREGISTER:
                 if UseAVX then
                     { VCVTSI2.. requires a second source operand to copy bits 64..127 }
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(op,opsize,left.location.register,location.register,location.register))
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(op,opsize,left.location.register,location.register,location.register))
                 else
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,opsize,left.location.register,location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,opsize,left.location.register,location.register));
               else
-                internalerror(2019050708);
+                InternalError(2019050708);
             end;
           end
         else
@@ -348,7 +348,7 @@ implementation
                 else
                   begin
 
-                    internalerror(2013052510);
+                    InternalError(2013052510);
 
                   end;
                 signtested:=true;
@@ -361,7 +361,7 @@ implementation
             { don't change left.location.reference, because if it's a temp we
               need the original location at the end so we can free it }
             leftref:=left.location.reference;
-            tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,leftref);
+            TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,leftref);
 
             { For u32bit we need to load it as comp and need to
               make it 64bits }
@@ -374,7 +374,7 @@ implementation
                 cg.a_load_const_ref(CurrentAsmData.CurrAsmList,OS_32,0,href);
                 dec(href.offset,4);
                 { could be a temp with an offset > 32 bit on x86_64 }
-                tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
                 leftref:=href;
               end;
 
@@ -384,7 +384,7 @@ implementation
               scurrency,
               s64bit:
                 begin
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_ref(A_FILD,S_IQ,leftref));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_FILD,S_IQ,leftref));
                 end;
               u64bit:
                 begin
@@ -409,40 +409,40 @@ implementation
                        else
                          begin
 
-                           internalerror(2013052511);
+                           InternalError(2013052511);
 
                          end;
                      end;
 
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_ref(A_FILD,S_IQ,leftref));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_FILD,S_IQ,leftref));
                    if use_bt then
                      cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NC,l2)
                    else
                      cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_E,l2);
                    cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,const_align(sizeof(pint)));
-                   CurrentAsmData.asmlists[al_typedconsts].concat(Tai_label.Create(l1));
+                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,Const_Align(sizeof(PInt)));
+                   CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(l1));
                    { I got this constant from a test program (FK) }
                    { It's actually the bit representation of 2^64 as a Single [Kit] }
-                   CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($5f800000));
+                   CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($5f800000));
                    reference_reset_symbol(href,l1,0,4,[]);
-                   tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                   CurrentAsmData.CurrAsmList.concat(Taicpu.Op_ref(A_FADD,S_FS,href));
+                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.Op_ref(A_FADD,S_FS,href));
                    cg.a_label(CurrentAsmData.CurrAsmList,l2);
                 end
               else
                 begin
                   if left.resultdef.size<4 then
-                    internalerror(2007120901);
-                 CurrentAsmData.CurrAsmList.concat(taicpu.op_ref(A_FILD,S_IL,leftref));
+                    InternalError(2007120901);
+                 CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_FILD,S_IL,leftref));
                 end;
             end;
-            tcgx86(cg).inc_fpu_stack;
+            TCGX86(cg).inc_fpu_stack;
             location.register:=NR_ST;
             tg.ungetiftemp(CurrentAsmData.CurrAsmList,leftref);
           end;
       end;
 
 begin
-  ctypeconvnode:=tx86typeconvnode
+  CTypeConvNode:=TX86TypeConvNode
 end.

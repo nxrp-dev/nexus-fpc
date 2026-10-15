@@ -25,40 +25,40 @@ unit pmodules;
 
 interface
 
-uses fmodule;
+uses FModule;
 
-    function proc_unit(curr: tmodule):boolean;
-    function parse_unit_interface_declarations(curr : tmodule) : boolean;
-    function proc_unit_implementation(curr: tmodule):boolean;
-    function proc_package(curr: tmodule) : boolean;
-    function finish_package(curr: tmodule) : boolean;
-    function proc_program(curr: tmodule; islibrary : boolean) : boolean;
-    function proc_program_declarations(curr : tmodule; islibrary : boolean) : boolean;
-    function finish_compile_unit(module:tmodule): boolean;
-    function finish_unit(module:tmodule): boolean;
+    function proc_unit(curr: TModule):boolean;
+    function parse_unit_interface_declarations(curr : TModule) : boolean;
+    function proc_unit_implementation(curr: TModule):boolean;
+    function proc_package(curr: TModule) : boolean;
+    function finish_package(curr: TModule) : boolean;
+    function proc_program(curr: TModule; IsLibrary : boolean) : boolean;
+    function proc_program_declarations(curr : TModule; IsLibrary : boolean) : boolean;
+    function finish_compile_unit(module:TModule): boolean;
+    function finish_unit(module:TModule): boolean;
 
 implementation
 
     uses
        SysUtils,
-       globtype,systems,tokens,
-       cutils,cfileutl,cclasses,comphook,
-       globals,verbose,finput,fppu,globstat,fpcp,fpkg,
-       symconst,symbase,symtype,symdef,symsym,symtable,defutil,symcreat,
+       GlobType,Systems,tokens,
+       CUtils,CFileUtl,CClasses,CompHook,
+       Globals,Verbose,FinPut,fppu,GlobStat,fpcp,fpkg,
+       symconst,SymBase,symtype,symdef,SymSym,SymTable,defutil,symcreat,
        wpoinfo,
-       aasmtai,aasmdata,aasmbase,aasmcpu,
+       aasmtai,AAsmData,aasmbase,aasmcpu,
        cgbase,ngenutil,
        nbas,nutils,ncgutil,
-       link,assemble,import,export,gendef,ppu,comprsrc,dbgbase,
-       cresstr,procinfo,
+       link,assemble,import,export,gendef,ppu,comprsrc,DbgBase,
+       CResStr,ProcInfo,
        objcgutl,
        pkgutil,nxpackagefile,
        wpobase,
-       scanner,pbase,pexpr,psystem,psub,pgenutil,pparautl,ncgvmt,ncgrtti,
-       cpuinfo;
+       Scanner,pbase,pexpr,psystem,psub,pgenutil,pparautl,ncgvmt,ncgrtti,
+       CPUInfo;
 
 
-    procedure create_objectfile(curr : tmodule);
+    procedure create_objectfile(curr : TModule);
       var
         DLLScanner      : TDLLScanner;
         s               : string;
@@ -69,10 +69,10 @@ implementation
            (not curr.linkOtherSharedLibs.Empty) then
          begin
            { Init DLLScanner }
-           if assigned(CDLLScanner[Ord(TargetInfo.system)]) then
+           if Assigned(CDLLScanner[Ord(TargetInfo.system)]) then
             DLLScanner:=CDLLScanner[Ord(TargetInfo.system)].Create
            else
-            internalerror(200104121);
+            InternalError(200104121);
            KeepShared:=TCmdStrList.Create;
            { Walk all shared libs }
            While not curr.linkOtherSharedLibs.Empty do
@@ -86,7 +86,7 @@ implementation
            { Recreate import section }
            if (TargetInfo.system=system_i386_win32) then
             begin
-              if assigned(CurrentAsmData.asmlists[al_imports]) then
+              if Assigned(CurrentAsmData.asmlists[al_imports]) then
                CurrentAsmData.asmlists[al_imports].clear
               else
                CurrentAsmData.asmlists[al_imports]:=TAsmList.Create;
@@ -104,12 +104,12 @@ implementation
 
         { allow a target-specific pass over all assembler code (used by LLVM
           to insert type definitions }
-        cnodeutils.InsertObjectInfo;
+        CNodeUtils.InsertObjectInfo;
 
         { Start and end module debuginfo, at least required for stabs
           to insert n_sourcefile lines }
-        if (cs_debuginfo in CurrentSettings.moduleswitches) or
-           (cs_use_lineinfo in CurrentSettings.globalswitches) then
+        if (cs_debuginfo in CurrentSettings.ModuleSwitches) or
+           (cs_use_lineinfo in CurrentSettings.GlobalSwitches) then
           CurrentDebugInfo.insertmoduleinfo;
 
         { create the .s file and assemble it }
@@ -130,20 +130,20 @@ implementation
       end;
 
 
-    procedure insertobjectfile(curr : tmodule);
+    procedure insertobjectfile(curr : TModule);
     { Insert the used object file for this unit in the used list for this unit }
       begin
-        curr.linkunitofiles.add(ExtractFileName(curr.objfilename),link_static);
+        curr.linkunitofiles.add(ExtractFileName(curr.ObjFileName),link_static);
         curr.headerflags:=curr.headerflags or uf_static_linked;
 
         if create_smartlink_library then
           begin
-            curr.linkunitstaticlibs.add(curr.staticlibfilename ,link_smart);
+            curr.linkunitstaticlibs.add(curr.StaticLibFileName ,link_smart);
             curr.headerflags:=curr.headerflags or uf_smart_linked;
           end;
-        if cs_lto in CurrentSettings.moduleswitches then
+        if cs_lto in CurrentSettings.ModuleSwitches then
           begin
-            curr.linkunitofiles.add(ChangeFileExt(curr.objfilename,LTOExt),link_lto);
+            curr.linkunitofiles.add(ChangeFileExt(curr.ObjFileName,LTOExt),link_lto);
             curr.headerflags:=curr.headerflags or uf_lto_linked;
           end;
       end;
@@ -170,48 +170,48 @@ implementation
           end;
       end;
 
-    Function CheckResourcesUsed(curr : tmodule) : boolean;
+    Function CheckResourcesUsed(curr : TModule) : boolean;
       var
-        hp           : tused_unit;
+        hp           : TUsedUnit;
         found        : Boolean;
       begin
         CheckResourcesUsed:=tf_has_winlike_resources in TargetInfo.flags;
         if not CheckResourcesUsed then exit;
 
-        hp:=tused_unit(usedunits.first);
+        hp:=TUsedUnit(usedunits.first);
         found:=mf_has_resourcefiles in curr.moduleflags;
         while Assigned(hp) and not found do
           begin
-            found:=not assigned(hp.u.package) and (mf_has_resourcefiles in hp.u.moduleflags);
-            hp:=tused_unit(hp.next);
+            found:=not Assigned(hp.u.package) and (mf_has_resourcefiles in hp.u.moduleflags);
+            hp:=TUsedUnit(hp.next);
           end;
         CheckResourcesUsed:=found;
       end;
 
-    function AddUnit(curr : tmodule; const s:string; addasused:boolean = true): tppumodule;
+    function AddUnit(curr : TModule; const s:string; addasused:boolean = true): TPPUModule;
       var
-        hp : tppumodule;
+        hp : TPPUModule;
         unitsym : TUnitSym;
         isnew : boolean;
-        uu: tused_unit;
+        uu: TUsedUnit;
 
       begin
         { load unit }
         hp:=registerunit(curr,s,'',isnew);
         if isnew then
-          usedunits.concat(tused_unit.create(hp,true,addasused,nil));
+          usedunits.concat(TUsedUnit.create(hp,true,addasused,nil));
         hp.adddependency(curr,curr.in_interface); { adddependency before loadppu for invalid cycle test }
         hp.loadppu(curr);
-        tmodule.finish_module(hp);
+        TModule.finish_module(hp);
 
         { add to symtable stack }
-        if assigned(hp.globalsymtable) then
-          symtablestack.push(hp.globalsymtable);
-        if (m_mac in CurrentSettings.modeswitches) and
-            assigned(hp.globalmacrosymtable) then
-          macrosymtablestack.push(hp.globalmacrosymtable);
+        if Assigned(hp.GlobalSymTable) then
+          SymTableStack.push(hp.GlobalSymTable);
+        if (m_mac in CurrentSettings.ModeSwitches) and
+            Assigned(hp.GlobalMacroSymTable) then
+          MacroSymTableStack.push(hp.GlobalMacroSymTable);
         { insert unitsym }
-        unitsym:=cunitsym.create(hp.modulename^,hp);
+        unitsym:=CUnitSym.create(hp.ModuleName^,hp);
         inc(unitsym.refs);
         TAbstractUnitSymTable(curr.localsymtable).insertunit(unitsym);
         if addasused then
@@ -223,42 +223,42 @@ implementation
         result:=hp;
       end;
 
-    function maybeloadvariantsunit(curr : tmodule) : boolean;
+    function maybeloadvariantsunit(curr : TModule) : boolean;
       var
-        hp : tmodule;
+        hp : TModule;
         addsystemnamespace : Boolean;
       begin
         result:=true;
         { Do we need the variants unit? Skip this
           for VarUtils unit for bootstrapping }
         if not(mf_uses_variants in curr.moduleflags) or
-           (curr.modulename^='VARUTILS') or
-           (curr.modulename^='SYSTEM.VARUTILS') then
+           (curr.ModuleName^='VARUTILS') or
+           (curr.ModuleName^='SYSTEM.VARUTILS') then
           exit;
         { Variants unit already loaded? }
-        hp:=tmodule(loaded_units.first);
-        while assigned(hp) do
+        hp:=TModule(loaded_units.first);
+        while Assigned(hp) do
           begin
-            if (hp.modulename^='VARIANTS') or (hp.modulename^='SYSTEM.VARIANTS') then
+            if (hp.ModuleName^='VARIANTS') or (hp.ModuleName^='SYSTEM.VARIANTS') then
               exit;
-            hp:=tmodule(hp.next);
+            hp:=TModule(hp.next);
           end;
         { Variants unit is not loaded yet, load it now }
         Message(parser_w_implicit_uses_of_variants_unit);
-        addsystemnamespace:=namespacelist.Find('System')=Nil;
+        addsystemnamespace:=NamespaceList.Find('System')=Nil;
         if addsystemnamespace then
-          namespacelist.concat('System');
+          NamespaceList.concat('System');
         result:=AddUnit(curr,'variants').state in [ms_compiled,ms_processed];
         if addsystemnamespace then
-          namespacelist.Remove('System');
+          NamespaceList.Remove('System');
       end;
 
 
-    function MaybeRemoveResUnit(curr : tmodule) : boolean;
+    function MaybeRemoveResUnit(curr : TModule) : boolean;
       var
         resources_used : boolean;
-        hp : tmodule;
-        uu : tused_unit;
+        hp : TModule;
+        uu : TUsedUnit;
         unitname : shortstring;
       begin
         { We simply remove the unit from:
@@ -278,39 +278,39 @@ implementation
               unitname:='FPINTRES';
             Message1(unit_u_unload_resunit,unitname);
             { find the module }
-            hp:=tmodule(loaded_units.first);
-            while assigned(hp) do
+            hp:=TModule(loaded_units.first);
+            while Assigned(hp) do
               begin
-                if hp.is_unit and (hp.modulename^=unitname) then break;
-                hp:=tmodule(hp.next);
+                if hp.is_unit and (hp.ModuleName^=unitname) then break;
+                hp:=TModule(hp.next);
               end;
-            if not assigned(hp) then
-              internalerror(200801071);
+            if not Assigned(hp) then
+              InternalError(200801071);
             { Imported resource support belongs to its package. Removing that
               module would invalidate the provider's dependency closure. }
-            if assigned(hp.package) then
+            if Assigned(hp.package) then
               exit(resources_used);
             { find its tused_unit in the global list }
-            uu:=tused_unit(usedunits.first);
-            while assigned(uu) do
+            uu:=TUsedUnit(usedunits.first);
+            while Assigned(uu) do
               begin
                 if uu.u=hp then break;
-                uu:=tused_unit(uu.next);
+                uu:=TUsedUnit(uu.next);
               end;
-            if not assigned(uu) then
-              internalerror(200801072);
+            if not Assigned(uu) then
+              InternalError(200801072);
            { remove the tused_unit }
             usedunits.Remove(uu);
             uu.Free;
             // Remove from local list
-            uu:=tused_unit(curr.used_units.first);
-            while assigned(uu) do
+            uu:=TUsedUnit(curr.used_units.first);
+            while Assigned(uu) do
               begin
                 if uu.u=hp then break;
-                uu:=tused_unit(uu.next);
+                uu:=TUsedUnit(uu.next);
               end;
-            if not assigned(uu) then
-              internalerror(2024020701);
+            if not Assigned(uu) then
+              InternalError(2024020701);
             curr.used_units.Remove(uu);
             uu.Free;
             uu := nil;
@@ -327,27 +327,27 @@ implementation
         { The PPU's text-model flag cannot prove that System.Char was
           declared with the matching width. }
         if search_system_type('CHAR').typedef.size <>
-           1+Ord(compilerwide_unicode_strings) then
-          Comment(V_Fatal,'System.Char width does not match this compiler invocation''s default text model');
+           1+Ord(CompilerWide_Unicode_Strings) then
+          Comment(VFatal,'System.Char width does not match this compiler invocation''s default text model');
       end;
 
 
-    function loadsystemunit(curr : tmodule) : boolean;
+    function loadsystemunit(curr : TModule) : boolean;
       var
-        state: tglobalstate;
-        sys : tmodule;
+        state: TGlobalState;
+        sys : TModule;
 
       begin
         Result:=False;
         { we are going to rebuild the symtablestack, clear it first }
-        symtablestack.clear;
-        macrosymtablestack.clear;
+        SymTableStack.clear;
+        MacroSymTableStack.clear;
 
         { macro symtable }
-        macrosymtablestack.push(initialmacrosymtable);
+        MacroSymTableStack.push(initialmacrosymtable);
 
         { are we compiling the system unit? }
-        if (cs_compilesystem in CurrentSettings.moduleswitches) then
+        if (cs_compilesystem in CurrentSettings.ModuleSwitches) then
          begin
            systemunit:=TGlobalSymTable(curr.localsymtable);
            { create system defines }
@@ -364,11 +364,11 @@ implementation
           internal types from the system unit }
         Sys:=AddUnit(curr,'system');
         Result:=Assigned(Sys) and (Sys.State in [ms_processed,ms_compiled]);
-        systemunit:=TGlobalSymTable(symtablestack.top);
+        systemunit:=TGlobalSymTable(SymTableStack.top);
 
         { load_intern_types resets the scanner... }
         CurrentScanner.tempcloseinputfile;
-        state:=tglobalstate.create(false);
+        state:=TGlobalState.create(false);
         load_intern_types;
         state.restore;
         FreeAndNil(state);
@@ -381,17 +381,17 @@ implementation
         generrorsym.owner:=systemunit;
         generrordef.owner:=systemunit;
         { default the extended RTTI options to that of TObject }
-        if assigned(class_tobject) then
+        if Assigned(class_tobject) then
           CurrentModule.rtti_directive.options:=class_tobject.rtti.options;
       end;
 
 
     { load default units, like language mode units
       Return true if all units were loaded, no recompilation needed. }
-    function loaddefaultunits(curr :tmodule) : boolean;
+    function loaddefaultunits(curr :TModule) : boolean;
 
       var
-        profileunit : tppumodule;
+        profileunit : TPPUModule;
         profilesym : TUnitSym;
         isnew : boolean;
 
@@ -403,9 +403,9 @@ implementation
 
         begin
           m:=AddUnit(curr,s,true);
-          OK:=assigned(m) and (m.state in [ms_processed,ms_compiled]);
+          OK:=Assigned(m) and (m.state in [ms_processed,ms_compiled]);
           if not ok then
-            Message2(unit_f_cant_find_ppu,s,curr.realmodulename^);
+            Message2(unit_f_cant_find_ppu,s,curr.RealModuleName^);
           Result:=ok and Result;
         end;
 
@@ -415,14 +415,14 @@ implementation
         if not(curr.is_unit) then
          begin
            { Heaptrc unit, load heaptrace before any other units especially objpas }
-           if (cs_use_heaptrc in CurrentSettings.globalswitches) then
+           if (cs_use_heaptrc in CurrentSettings.GlobalSwitches) then
              CheckAddUnit('heaptrc');
            { Valgrind requires c memory manager }
-           if (cs_gdb_valgrind in CurrentSettings.globalswitches) or
-              (([cs_sanitize_address]*CurrentSettings.moduleswitches)<>[]) then
+           if (cs_gdb_valgrind in CurrentSettings.GlobalSwitches) or
+              (([cs_sanitize_address]*CurrentSettings.ModuleSwitches)<>[]) then
              CheckAddUnit('cmem');
            { Lineinfo unit }
-           if (cs_use_lineinfo in CurrentSettings.globalswitches) then begin
+           if (cs_use_lineinfo in CurrentSettings.GlobalSwitches) then begin
              case TargetDbg.id of
                dbg_stabs:
                  CheckAddUnit('lineinfo');
@@ -441,36 +441,36 @@ implementation
              else
                CheckAddUnit('fpintres');
          end
-        else if (cs_checkpointer in CurrentSettings.localswitches) then
+        else if (cs_checkpointer in CurrentSettings.LocalSwitches) then
           CheckAddUnit('heaptrc');
         { Objpas unit? }
-        if m_objpas in CurrentSettings.modeswitches then
+        if m_objpas in CurrentSettings.ModeSwitches then
           CheckAddUnit('objpas');
 
         { The profiling runtime can require a source rebuild, including when a
           cached dependency changes. Register it as an implicit uses entry so
           loadunits and the normal sequential continuation can finish it. The
           synchronous AddUnit path only supports loading already usable PPUs. }
-        if not curr.is_unit and not curr.islibrary and
+        if not curr.is_unit and not curr.IsLibrary and
            (TargetInfo.system=system_x86_64_win64) and
-           (cs_nexus_profile in CurrentSettings.moduleswitches) then
+           (cs_nexus_profile in CurrentSettings.ModuleSwitches) then
           begin
             profileunit:=registerunit(curr,'nxprofilerruntime','',isnew);
             if isnew then
-              usedunits.concat(tused_unit.create(profileunit,false,true,nil));
-            profilesym:=cunitsym.create('NXPROFILERRUNTIME',nil);
+              usedunits.concat(TUsedUnit.create(profileunit,false,true,nil));
+            profilesym:=CUnitSym.create('NXPROFILERRUNTIME',nil);
             inc(profilesym.refs);
             curr.addusedunit(profileunit,true,profilesym);
           end;
 
         { Macpas unit? }
-        if m_mac in CurrentSettings.modeswitches then
+        if m_mac in CurrentSettings.ModeSwitches then
           CheckAddUnit('macpas');
 
-        if m_iso in CurrentSettings.modeswitches then
+        if m_iso in CurrentSettings.ModeSwitches then
           CheckAddUnit('iso7185');
 
-        if m_extpas in CurrentSettings.modeswitches then
+        if m_extpas in CurrentSettings.ModeSwitches then
           begin
             { basic procedures for Extended Pascal are for now provided by the iso unit }
             CheckAddUnit('iso7185');
@@ -478,25 +478,25 @@ implementation
           end;
 
         { blocks support? }
-        if m_blocks in CurrentSettings.modeswitches then
+        if m_blocks in CurrentSettings.ModeSwitches then
           CheckAddUnit('blockrtl');
 
         { Objective-C support unit? }
-        if (m_objectivec1 in CurrentSettings.modeswitches) then
+        if (m_objectivec1 in CurrentSettings.ModeSwitches) then
           begin
             { interface to Objective-C run time }
             CheckAddUnit('objc');
             loadobjctypes;
             { NSObject }
             if not(curr.is_unit) or
-               (curr.modulename^<>'OBJCBASE') then
+               (curr.ModuleName^<>'OBJCBASE') then
               CheckAddUnit('objcbase');
           end;
       end;
 
     { Load units provided on the command line
       Return true if all units were loaded, no recompilation needed. }
-    function loadautounits(curr: tmodule) : boolean;
+    function loadautounits(curr: TModule) : boolean;
 
       Procedure CheckAddUnit(s: string);
 
@@ -506,7 +506,7 @@ implementation
 
         begin
           m:=AddUnit(curr,s,true);
-          OK:=assigned(m) and (m.state in [ms_compiled,ms_processed]);
+          OK:=Assigned(m) and (m.state in [ms_compiled,ms_processed]);
           Result:=ok and Result;
         end;
 
@@ -514,7 +514,7 @@ implementation
         hs,s : string;
       begin
         Result:=True;
-        hs:=autoloadunits;
+        hs:=AutoloadUnits;
         repeat
           s:=GetToken(hs,',');
           if s='' then
@@ -523,13 +523,13 @@ implementation
         until false;
       end;
 
-    procedure parseusesclause(curr: tmodule; iscontains:boolean=false);
+    procedure parseusesclause(curr: TModule; iscontains:boolean=false);
 
       var
-         s,sorg  : ansistring;
+         s,sorg  : AnsiString;
          fn      : string;
-         pu  : tused_unit;
-         hp2     : tmodule;
+         pu  : TUsedUnit;
+         hp2     : TModule;
          unitsym : TUnitSym;
          filepos : TFilePosInfo;
          isnew : boolean;
@@ -568,25 +568,25 @@ implementation
           if s='OBJPAS' then
            Message(parser_w_no_objpas_use_mode);
           { Using the unit itself is not possible }
-          if (s<>curr.modulename^) then
+          if (s<>curr.ModuleName^) then
            begin
              { check if the unit is already used }
              hp2:=nil;
-             pu:=tused_unit(curr.used_units.first);
-             while assigned(pu) do
+             pu:=TUsedUnit(curr.used_units.first);
+             while Assigned(pu) do
               begin
-                if (pu.u.modulename^=s) then
+                if (pu.u.ModuleName^=s) then
                  begin
                    hp2:=pu.u;
                    break;
                  end;
-                pu:=tused_unit(pu.next);
+                pu:=TUsedUnit(pu.next);
               end;
-             if not assigned(hp2) then
+             if not Assigned(hp2) then
                begin
                hp2:=registerunit(curr,sorg,fn,isnew);
                if isnew then
-                 usedunits.concat(tused_unit.create(hp2,curr.in_interface,true,nil));
+                 usedunits.concat(TUsedUnit.create(hp2,curr.in_interface,true,nil));
                end
              else
                Message1(sym_e_duplicate_id,s);
@@ -594,7 +594,7 @@ implementation
                can not use the modulename because that can be different
                when -Un is used }
              CurrentTokenPos:=filepos;
-             unitsym:=cunitsym.create(sorg,nil);
+             unitsym:=CUnitSym.create(sorg,nil);
              { the current module uses the unit hp2 }
              curr.addusedunit(hp2,true,unitsym);
            end
@@ -610,19 +610,19 @@ implementation
         until false;
       end;
 
-    function loadunits(curr: tmodule; frominterface : boolean) : boolean;
+    function loadunits(curr: TModule; frominterface : boolean) : boolean;
 
       var
-        pu  : tused_unit;
-        state: tglobalstate;
-        lu : tmodule;
+        pu  : TUsedUnit;
+        state: TGlobalState;
+        lu : TModule;
 
         procedure restorestate;
           begin
             state.restore;
-            if assigned(CurrentScanner) and (CurrentModule.scanner=CurrentScanner) then
+            if Assigned(CurrentScanner) and (CurrentModule.Scanner=CurrentScanner) then
               begin
-                if assigned(CurrentScanner.inputfile) then
+                if Assigned(CurrentScanner.inputfile) then
                   CurrentScanner.tempopeninputfile;
               end;
             state.free;
@@ -632,15 +632,15 @@ implementation
       begin
         Result:=true;
         CurrentScanner.tempcloseinputfile;
-        state:=tglobalstate.create(false);
+        state:=TGlobalState.create(false);
 
         { reset verbosity (otherwise the used units would use curr's pmessage) }
-        CurrentSettings.pmessage:=nil;
+        CurrentSettings.PMessage:=nil;
         RestoreLocalVerbosity(nil);
 
         { Load the units }
-        pu:=tused_unit(curr.used_units.first);
-        while assigned(pu) do
+        pu:=TUsedUnit(curr.used_units.first);
+        while Assigned(pu) do
           begin
             lu:=pu.u;
             { Only load the units that are in the current
@@ -655,30 +655,30 @@ implementation
                  lu.adddependency(curr,frominterface);
                end;
                { always call loadppu for the cycle test }
-               tppumodule(lu).loadppu(curr);
+               TPPUModule(lu).loadppu(curr);
                if not (curr.state in [ms_compile,ms_compiling_wait,ms_compiling_waitintf,ms_compiling_waitimpl]) then
                begin
                  {$IFDEF DEBUG_PPU_CYCLES}
-                 writeln('loadunits STOPPED ',curr.modulename^,' ',curr.statestr);
+                 WriteLn('loadunits STOPPED ',curr.ModuleName^,' ',curr.StateStr);
                  {$ENDIF}
                  Result:=false;
                  break;
                end;
-               if not lu.interface_compiled or lu.do_reload or tmodule.ctask_fast_backtrack then
+               if not lu.interface_compiled or lu.do_reload or TModule.ctask_fast_backtrack then
                begin
                  { an used unit is delayed
                    Important: do not break, load the remaining uses section, so the scheduler
                               has more information about cycles }
                  {$IFDEF DEBUG_PPU_CYCLES}
-                 writeln('PPUALGO loadunits ',curr.modulename^,' ',curr.statestr,' ',BoolToStr(pu.in_interface,'interface','implementation'),' uses "',pu.u.modulename^,'", state=',pu.u.statestr,', waiting ...');
+                 WriteLn('PPUALGO loadunits ',curr.ModuleName^,' ',curr.StateStr,' ',BoolToStr(pu.in_interface,'interface','implementation'),' uses "',pu.u.ModuleName^,'", state=',pu.u.StateStr,', waiting ...');
                  {$ENDIF}
-                 tmodule.ctask_fast_backtrack:=true;
+                 TModule.ctask_fast_backtrack:=true;
                  Result:=false;
                end;
                { check hints }
                pu.check_hints;
              end;
-            pu:=tused_unit(pu.next);
+            pu:=TUsedUnit(pu.next);
           end;
 
         Restorestate;
@@ -689,17 +689,17 @@ implementation
        this can only be called after all units were actually loaded!
      }
 
-     procedure connect_loaded_units(_module : tmodule; preservest:TSymTable);
+     procedure connect_loaded_units(_module : TModule; preservest:TSymTable);
 
      var
-       pu  : tused_unit;
-       sorg   : ansistring;
+       pu  : TUsedUnit;
+       sorg   : AnsiString;
        unitsymtable: TAbstractUnitSymTable;
 
      begin
        // writeln(_module.get_modulename,': Connecting units');
-       pu:=tused_unit(_module.used_units.first);
-       while assigned(pu) do
+       pu:=TUsedUnit(_module.used_units.first);
+       while Assigned(pu) do
          begin
          {
          Writeln('Connect : ',Assigned(_module.modulename), ' ', assigned(pu.u), ' ' ,assigned(pu.u.modulename));
@@ -726,13 +726,13 @@ implementation
            pu.checksum:=pu.u.crc;
            pu.interface_checksum:=pu.u.interface_crc;
            pu.indirect_checksum:=pu.u.indirect_crc;
-           if tppumodule(pu.u).nsprefix<>'' then
+           if TPPUModule(pu.u).nsprefix<>'' then
              begin
                { use the name as declared in the uses section for -Un }
-               sorg:=tppumodule(pu.u).nsprefix+'.'+pu.unitsym.realname;
+               sorg:=TPPUModule(pu.u).nsprefix+'.'+pu.unitsym.realname;
                { update unitsym now that we have access to the full name }
                pu.unitsym.free;
-               pu.unitsym:=cunitsym.create(sorg,pu.u);
+               pu.unitsym:=CUnitSym.create(sorg,pu.u);
              end
            else
              begin
@@ -745,40 +745,40 @@ implementation
              localsymtable will be nil after the interface uses clause is parsed and the local symtable
              is moved to the global.
            }
-           if assigned(_module.localsymtable) then
+           if Assigned(_module.localsymtable) then
              unitsymtable:=TAbstractUnitSymTable(_module.localsymtable)
            else
-             unitsymtable:=TAbstractUnitSymTable(_module.globalsymtable);
+             unitsymtable:=TAbstractUnitSymTable(_module.GlobalSymTable);
            // Writeln('Adding used unit sym ',pu.unitsym.realName,' to table ',unitsymtable.get_name);
            unitsymtable.insertunit(pu.unitsym);
            { add to symtable stack }
            // Writeln('Adding used unit symtable ',pu.u.globalsymtable.name^,' (',pu.u.globalsymtable.DefList.Count, ' defs) to stack');
-           if assigned(preservest) then
-             symtablestack.pushafter(pu.u.globalsymtable,preservest)
+           if Assigned(preservest) then
+             SymTableStack.pushafter(pu.u.GlobalSymTable,preservest)
            else
-             symtablestack.push(pu.u.globalsymtable);
-           if (m_mac in CurrentSettings.modeswitches) and
-              assigned(pu.u.globalmacrosymtable) then
-             macrosymtablestack.push(pu.u.globalmacrosymtable);
+             SymTableStack.push(pu.u.GlobalSymTable);
+           if (m_mac in CurrentSettings.ModeSwitches) and
+              Assigned(pu.u.GlobalMacroSymTable) then
+             MacroSymTableStack.push(pu.u.GlobalMacroSymTable);
 
            end;
-         pu:=tused_unit(pu.next);
+         pu:=TUsedUnit(pu.next);
          end;
        // writeln(_module.get_modulename,': Done Connecting units');
      end;
 
 
 
-     procedure reset_all_defs(curr: tmodule);
+     procedure reset_all_defs(curr: TModule);
        begin
-         if assigned(curr.wpoinfo) then
+         if Assigned(curr.wpoinfo) then
            curr.wpoinfo.resetdefs;
        end;
 
 
     procedure free_localsymtables(st:TSymTable);
       var
-        i   : longint;
+        i   : LongInt;
         def : TStoredDef;
         pd  : TProcDef;
       begin
@@ -788,7 +788,7 @@ implementation
             if def.typ=procdef then
               begin
                 pd:=TProcDef(def);
-                if assigned(pd.localst) and
+                if Assigned(pd.localst) and
                    (pd.localst.symtabletype<>staticsymtable) and
                    not(po_inline in pd.procoptions) then
                   begin
@@ -803,7 +803,7 @@ implementation
       end;
 
 
-    procedure free_unregistered_localsymtable_elements(curr : tmodule);
+    procedure free_unregistered_localsymtable_elements(curr : TModule);
       procedure remove_from_procdeflist(adef: TDef);
         var
           i: Integer;
@@ -812,10 +812,10 @@ implementation
           if adef=nil then exit;
           if (adef.typ in [objectdef, recorddef]) and (adef is TAbstractRecordDef) then
             begin
-              if TAbstractRecordDef(adef).symtable<>nil then
-                for i:=0 to TAbstractRecordDef(adef).symtable.DefList.Count-1 do
+              if TAbstractRecordDef(adef).SymTable<>nil then
+                for i:=0 to TAbstractRecordDef(adef).SymTable.DefList.Count-1 do
                   begin
-                    childdef:=TDef(TAbstractRecordDef(adef).symtable.DefList[i]);
+                    childdef:=TDef(TAbstractRecordDef(adef).SymTable.DefList[i]);
                     remove_from_procdeflist(childdef);
                   end;
             end
@@ -833,7 +833,7 @@ implementation
         end;
 
       var
-        i: longint;
+        i: LongInt;
         def: TDef;
         sym: TSym;
       begin
@@ -841,7 +841,7 @@ implementation
           begin
             def:=TDef(curr.localsymtable.deflist[i]);
             { since commit 48986 deflist might have NIL entries }
-            if not assigned(def) then
+            if not Assigned(def) then
               continue;
             { this also frees def, as the defs are owned by the symtable }
             if not def.IsRegistered and
@@ -868,7 +868,7 @@ implementation
 
     procedure setupglobalswitches;
       begin
-        if (cs_create_pic in CurrentSettings.moduleswitches) then
+        if (cs_create_pic in CurrentSettings.ModuleSwitches) then
           begin
             def_system_macro('FPC_PIC');
             def_system_macro('PIC');
@@ -876,22 +876,22 @@ implementation
       end;
 
 
-    function create_main_proc(const name:TSymStr;potype:TProcTypeOption;st:TSymTable):tcgprocinfo;
+    function create_main_proc(const name:TSymStr;potype:TProcTypeOption;st:TSymTable):TCGProcInfo;
       var
         ps  : TProcSym;
         pd  : TProcDef;
       begin
         { there should be no current_procinfo available }
-        if assigned(CurrentProcInfo) then
-         internalerror(200304275);
+        if Assigned(CurrentProcInfo) then
+         InternalError(200304275);
         {Generate a procsym for main}
-        ps:=cprocsym.create('$'+name);
+        ps:=CProcSym.create('$'+name);
         { always register the symbol }
         ps.RegisterSym;
         { main are always used }
         inc(ps.refs);
         st.insertsym(ps);
-        pd:=TProcDef(cnodeutils.create_main_procdef(TargetInfo.cprefix+name,potype,ps));
+        pd:=TProcDef(CNodeUtils.create_main_procdef(TargetInfo.cprefix+name,potype,ps));
         { We don't need a local symtable, change it into the static symtable }
         if not (potype in [potype_mainstub,potype_pkgstub,potype_libmainstub]) then
           begin
@@ -905,7 +905,7 @@ implementation
           pd.proccalloption:=pocall_cdecl;
         handle_calling_convention(pd,hcc_default_actions_impl);
         { set procinfo and current_procinfo.procdef }
-        result:=tcgprocinfo(cprocinfo.create(nil));
+        result:=TCGProcInfo(CProcInfo.create(nil));
         result.procdef:=pd;
         { main proc does always a call e.g. to init system unit }
         if potype<>potype_pkgstub then
@@ -913,12 +913,12 @@ implementation
       end;
 
 
-    procedure release_main_proc(curr: tmodule; pi:tcgprocinfo);
+    procedure release_main_proc(curr: TModule; pi:TCGProcInfo);
       begin
         { remove localst as it was replaced by staticsymtable }
         pi.procdef.localst:=nil;
         { remove procinfo }
-        curr.procinfo:=nil;
+        curr.ProcInfo:=nil;
         pi.free;
         pi:=nil;
       end;
@@ -927,18 +927,18 @@ implementation
 
     { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
 
-    procedure maybe_load_got(curr: tmodule);
+    procedure maybe_load_got(curr: TModule);
 {$if defined(i386)}
        var
          gotvarsym : TStaticVarSym;
 {$endif i386 or sparcgen}
       begin
 {$if defined(i386)}
-         if (cs_create_pic in CurrentSettings.moduleswitches) and
+         if (cs_create_pic in CurrentSettings.ModuleSwitches) and
             (tf_pic_uses_got in TargetInfo.flags) then
            begin
              { insert symbol for got access in assembler code}
-             gotvarsym:=cstaticvarsym.create('_GLOBAL_OFFSET_TABLE_',
+             gotvarsym:=CStaticVarSym.create('_GLOBAL_OFFSET_TABLE_',
                           vs_value,voidpointertype,[vo_is_external]);
              gotvarsym.set_mangledname('_GLOBAL_OFFSET_TABLE_');
              curr.localsymtable.insertsym(gotvarsym);
@@ -949,7 +949,7 @@ implementation
 {$endif i386 or sparcgen}
       end;
 
-    function gen_implicit_initfinal(curr: tmodule; flag:TModuleFlag;st:TSymTable):tcgprocinfo;
+    function gen_implicit_initfinal(curr: TModule; flag:TModuleFlag;st:TSymTable):TCGProcInfo;
       begin
         { create procdef }
         case flag of
@@ -966,18 +966,18 @@ implementation
                 result.procdef.aliasnames.concat('PASCALFINALIZE');
             end;
           else
-            internalerror(200304253);
+            InternalError(200304253);
         end;
-        result.code:=cnothingnode.create;
+        result.code:=CNothingNode.create;
       end;
 
 
     procedure copy_macro(p:TObject; arg:pointer);
       begin
-        TModule(arg).globalmacrosymtable.insertsym(TMacro(p).getcopy);
+        TModule(arg).GlobalMacroSymTable.insertsym(TMacro(p).getcopy);
       end;
 
-    function try_consume_hintdirective(var moduleopt:tmoduleoptions; var deprecatedmsg:pshortstring):boolean;
+    function try_consume_hintdirective(var moduleopt:TModuleOptions; var deprecatedmsg:PShortString):boolean;
       var
         deprecated_seen,
         last_is_deprecated:boolean;
@@ -1025,11 +1025,11 @@ implementation
           if ((CurrentScanner.token=_CSTRING) or (CurrentScanner.token=_CCHAR)) and last_is_deprecated then
             begin
               if deprecatedmsg<>nil then
-                internalerror(201001221);
+                InternalError(201001221);
               if CurrentScanner.token=_CSTRING then
-                deprecatedmsg:=stringdup(CurrentScanner.cstringpattern)
+                deprecatedmsg:=StringDup(CurrentScanner.cstringpattern)
               else
-                deprecatedmsg:=stringdup(CurrentScanner.pattern);
+                deprecatedmsg:=StringDup(CurrentScanner.pattern);
               consume(CurrentScanner.token);
               include(moduleopt,mo_has_deprecated_msg);
             end;
@@ -1039,20 +1039,20 @@ implementation
 
 
 type
-    tfinishstate=record
-      InitializationProcedure:tcgprocinfo;
-      FinalizationProcedure:tcgprocinfo;
+    TFinishState=record
+      InitializationProcedure:TCGProcInfo;
+      FinalizationProcedure:TCGProcInfo;
     end;
-    pfinishstate=^tfinishstate;
+    PFinishState=^TFinishState;
 
 
 
-    function proc_unit_implementation(curr: tmodule):boolean;
+    function proc_unit_implementation(curr: TModule):boolean;
 
       var
         InitializationProcedure,
-        FinalizationProcedure : tcgprocinfo;
-        finishstate:pfinishstate;
+        FinalizationProcedure : TCGProcInfo;
+        finishstate:PFinishState;
 
 
       begin
@@ -1064,7 +1064,7 @@ type
         SetCurrentModule(curr);
 
         { We get here only after used modules were loaded }
-        connect_loaded_units(curr,curr.globalsymtable);
+        connect_loaded_units(curr,curr.GlobalSymTable);
 
         { All units are read, now give them a number }
         curr.updatemaps;
@@ -1080,14 +1080,14 @@ type
           end;
 
         { further, changing the globalsymtable is not allowed anymore }
-        curr.globalsymtable.sealed:=true;
-        symtablestack.push(curr.localsymtable);
+        curr.GlobalSymTable.sealed:=true;
+        SymTableStack.push(curr.localsymtable);
 
         if not curr.interface_only then
           begin
-            Message1(parser_u_parsing_implementation,curr.modulename^);
+            Message1(parser_u_parsing_implementation,curr.ModuleName^);
             if curr.in_interface then
-              internalerror(200212285);
+              InternalError(200212285);
 
             { Compile the unit }
             InitializationProcedure:=create_main_proc(make_mangledname('',curr.localsymtable,'init$'),potype_unitinit,curr.localsymtable);
@@ -1124,7 +1124,7 @@ type
           curr.state:=ms_compiling_waitfinish;
       end;
 
-    function parse_unit_interface_declarations(curr : tmodule) : boolean;
+    function parse_unit_interface_declarations(curr : TModule) : boolean;
 
       begin
         result:=true;
@@ -1145,14 +1145,14 @@ type
             curr.consume_semicolon_after_uses:=false;
           end;
         { now push our own symtable }
-        symtablestack.push(curr.globalsymtable);
+        SymTableStack.push(curr.GlobalSymTable);
         { Dump stack
           Write(curr.modulename^);
           symtablestack.dump;
           }
 
         { ... parse the declarations }
-        Message1(parser_u_parsing_interface,curr.realmodulename^);
+        Message1(parser_u_parsing_interface,curr.RealModuleName^);
 
         read_interface_declarations;
 
@@ -1161,18 +1161,18 @@ type
           are put in the globalmacrosymtable that will only be used by other
           units. The current unit continues to use the localmacrosymtable }
 
-        if (m_mac in CurrentSettings.modeswitches) then
+        if (m_mac in CurrentSettings.ModeSwitches) then
           begin
-            curr.globalmacrosymtable:=TMacroSymTable.create(true);
+            curr.GlobalMacroSymTable:=TMacroSymTable.create(true);
             curr.localmacrosymtable.SymList.ForEachCall(@copy_macro,curr);
           end;
 
         { leave when we got an error }
-        if (Errorcount>0) and not status.skip_error then
+        if (ErrorCount>0) and not status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(Errorcount));
-            status.skip_error:=true;
-            symtablestack.pop(curr.globalsymtable);
+            Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+            status.SkipError:=true;
+            SymTableStack.pop(curr.GlobalSymTable);
             curr.state:=ms_moduleerror;
 {$ifdef DEBUG_NODE_XML}
             XMLFinalizeNodeFile('unit');
@@ -1181,13 +1181,13 @@ type
           end;
 
         { Our interface is compiled, generate interface CRC and switch to implementation }
-        if Errorcount=0 then
-          tppumodule(curr).getppucrc;
+        if ErrorCount=0 then
+          TPPUModule(curr).getppucrc;
         curr.in_interface:=false;
         curr.interface_compiled:=true;
 
         { Parse the implementation section }
-        if (m_mac in CurrentSettings.modeswitches) and try_to_consume(_END) then
+        if (m_mac in CurrentSettings.ModeSwitches) and try_to_consume(_END) then
           curr.interface_only:=true
         else
           curr.interface_only:=false;
@@ -1195,7 +1195,7 @@ type
         parse_only:=false;
 
         { create static symbol table }
-        curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
+        curr.localsymtable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
 
 
         { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
@@ -1203,12 +1203,12 @@ type
         if not curr.interface_only then
           begin
             consume(_IMPLEMENTATION);
-            Message1(unit_u_loading_implementation_units,curr.modulename^);
+            Message1(unit_u_loading_implementation_units,curr.ModuleName^);
             { Read the implementation units }
             if CurrentScanner.token=_USES then
               begin
               parseusesclause(curr);
-              if not loadunits(curr,false) or tmodule.ctask_fast_backtrack then
+              if not loadunits(curr,false) or TModule.ctask_fast_backtrack then
                 curr.state:=ms_compiling_waitimpl;
               { do not consume the semicolon yet, because the units in the uses clause
                 may not yet be loaded and conditional compilation expressions may
@@ -1222,10 +1222,10 @@ type
         if curr.state in [ms_compiled,ms_processed] then
            begin
            // Writeln('Popping global symtable ?');
-           symtablestack.pop(curr.globalsymtable);
+           SymTableStack.pop(curr.GlobalSymTable);
            end;
 
-        if (Errorcount=0) and tppumodule(curr).dependent_module_crc_mismatch then
+        if (ErrorCount=0) and TPPUModule(curr).dependent_module_crc_mismatch then
           { a dependent module needs recompile }
           curr.state:=ms_compiling_waitimpl;
 
@@ -1235,11 +1235,11 @@ type
           result:=proc_unit_implementation(curr);
       end;
 
-    function proc_unit(curr: tmodule):boolean;
+    function proc_unit(curr: TModule):boolean;
       var
-         main_file: tinputfile;
+         main_file: TInputFile;
          s1,s2  : ^string; {Saves stack space}
-         unitname : ansistring;
+         unitname : AnsiString;
          unitname8 : string[8];
          feature : TFeature;
          load_ok : boolean;
@@ -1247,11 +1247,11 @@ type
       begin
          result:=true;
 
-         if m_mac in CurrentSettings.modeswitches then
+         if m_mac in CurrentSettings.ModeSwitches then
            curr.mode_switch_allowed:= false;
 
          consume(_UNIT);
-         if curr.is_initial then
+         if curr.IsInitial then
           Status.IsExe:=false;
 
          unitname:=CurrentScanner.orgpattern;
@@ -1265,11 +1265,11 @@ type
 
          { create filenames and unit name }
          main_file := CurrentScanner.inputfile;
-         while assigned(main_file.next) do
+         while Assigned(main_file.next) do
            main_file := main_file.next;
 
          new(s1);
-         s1^:=curr.modulename^;
+         s1^:=curr.ModuleName^;
          curr.SetFileName(main_file.path+main_file.name,true);
          curr.SetModuleName(unitname);
 
@@ -1280,30 +1280,30 @@ type
          { check for system unit }
          new(s2);
          s2^:=upper(ChangeFileExt(ExtractFileName(main_file.name),''));
-         unitname8:=copy(curr.modulename^,1,8);
-         if (cs_check_unit_name in CurrentSettings.globalswitches) and
+         unitname8:=copy(curr.ModuleName^,1,8);
+         if (cs_check_unit_name in CurrentSettings.GlobalSwitches) and
             (
              not(
-                 (curr.modulename^=s2^) or
+                 (curr.ModuleName^=s2^) or
                  (
-                  (length(curr.modulename^)>8) and
+                  (length(curr.ModuleName^)>8) and
                   (unitname8=s2^)
                  )
                 )
              or
              (
               (length(s1^)>8) and
-              (s1^<>curr.modulename^)
+              (s1^<>curr.ModuleName^)
              )
             ) then
-           Message2(unit_e_illegal_unit_name,curr.realmodulename^,s1^);
-         if (curr.modulename^='SYSTEM') then
-           include(CurrentSettings.moduleswitches,cs_compilesystem);
+           Message2(unit_e_illegal_unit_name,curr.RealModuleName^,s1^);
+         if (curr.ModuleName^='SYSTEM') then
+           include(CurrentSettings.ModuleSwitches,cs_compilesystem);
          dispose(s2);
          dispose(s1);
 
          if (TargetInfo.system in systems_unit_program_exports) then
-           exportlib.preparelib(curr.realmodulename^);
+           exportlib.preparelib(curr.RealModuleName^);
 
          { parse hint directives }
          try_consume_hintdirective(curr.moduleoptions, curr.deprecatedmsg);
@@ -1316,49 +1316,49 @@ type
 
          { generate now the global symboltable,
            define first as local to overcome dependency conflicts }
-         curr.localsymtable:=TGlobalSymTable.create(curr.modulename^,curr.moduleid);
+         curr.localsymtable:=TGlobalSymTable.create(curr.ModuleName^,curr.ModuleID);
 
          { insert unitsym of this unit to prevent other units having
            the same name }
-         TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+         TAbstractUnitSymTable(curr.localsymtable).insertunit(CUnitSym.create(curr.RealModuleName^,curr));
 
          { load default system unit, it must be loaded before interface is parsed
            else we cannot use e.g. feature switches before the next real token }
-         if curr.is_initial then
+         if curr.IsInitial then
            load_packages;
          load_ok:=loadsystemunit(curr);
 
          { system unit is loaded, now insert feature defines }
          for feature:=low(TFeature) to high(TFeature) do
-           if feature in features then
-             def_system_macro('FPC_HAS_FEATURE_'+featurestr[feature]);
+           if feature in Features then
+             def_system_macro('FPC_HAS_FEATURE_'+FeatureStr[feature]);
 
          consume(_INTERFACE);
 
          { global switches are read, so further changes aren't allowed  }
          curr.in_global:=false;
 
-         message1(unit_u_loading_interface_units,curr.modulename^);
+         message1(unit_u_loading_interface_units,curr.ModuleName^);
 
          { update status }
-         status.currentmodule:=curr.realmodulename^;
+         status.CurrentModule:=curr.RealModuleName^;
 
          { maybe turn off m_objpas if we are compiling objpas }
-         if (curr.modulename^='OBJPAS') then
-           exclude(CurrentSettings.modeswitches,m_objpas);
+         if (curr.ModuleName^='OBJPAS') then
+           exclude(CurrentSettings.ModeSwitches,m_objpas);
 
          { maybe turn off m_mac if we are compiling macpas }
-         if (curr.modulename^='MACPAS') then
-           exclude(CurrentSettings.modeswitches,m_mac);
+         if (curr.ModuleName^='MACPAS') then
+           exclude(CurrentSettings.ModeSwitches,m_mac);
 
          parse_only:=true;
 
          { load default units, like language mode units }
-         if not(cs_compilesystem in CurrentSettings.moduleswitches) then
+         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
            load_ok:=loaddefaultunits(curr) and load_ok;
 
          { insert qualifier for the system unit (allows system.writeln) }
-         if not(cs_compilesystem in CurrentSettings.moduleswitches) and
+         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
             (CurrentScanner.token=_USES) then
            begin
              // We do this as late as possible.
@@ -1367,11 +1367,11 @@ type
              else
                CurrentNamespaceList:=Nil;
              parseusesclause(curr);
-             load_ok:=loadunits(curr,true) and load_ok and not tmodule.ctask_fast_backtrack;
+             load_ok:=loadunits(curr,true) and load_ok and not TModule.ctask_fast_backtrack;
              { has it been compiled at a higher level ?}
              if curr.state in [ms_compiled,ms_processed] then
                begin
-                 Message1(parser_u_already_compiled,curr.realmodulename^);
+                 Message1(parser_u_already_compiled,curr.RealModuleName^);
                  exit;
                end;
 
@@ -1381,7 +1381,7 @@ type
            curr.consume_semicolon_after_uses:=false;
 
          { move the global symtable from the temporary local to global }
-         CurrentModule.globalsymtable:=CurrentModule.localsymtable;
+         CurrentModule.GlobalSymTable:=CurrentModule.localsymtable;
          CurrentModule.localsymtable:=nil;
 
          { Now we check if we can continue. }
@@ -1392,7 +1392,7 @@ type
          { create whole program optimisation information (may already be
            updated in the interface, e.g., in case of classrefdef typed
            constants }
-         curr.wpoinfo:=tunitwpoinfo.create;
+         curr.wpoinfo:=TUnitWPOInfo.create;
 
          { Can we continue compiling ? }
          result:=curr.state<>ms_compiling_waitintf;
@@ -1400,22 +1400,22 @@ type
            result:=parse_unit_interface_declarations(curr);
       end;
 
-    procedure module_is_done(curr: tmodule);inline;
+    procedure module_is_done(curr: TModule);inline;
       begin
-        dispose(pfinishstate(curr.finishstate));
+        dispose(PFinishState(curr.finishstate));
         curr.finishstate:=nil;
       end;
 
-    function finish_compile_unit(module: tmodule): boolean;
+    function finish_compile_unit(module: TModule): boolean;
 
       function is_assembler_generated:boolean;
       var
-        hal : tasmlisttype;
+        hal : TAsmListType;
       begin
         result:=false;
-        if Errorcount=0 then
+        if ErrorCount=0 then
           begin
-            for hal:=low(TasmlistType) to high(TasmlistType) do
+            for hal:=low(TAsmListType) to high(TAsmListType) do
               if not CurrentAsmData.asmlists[hal].empty then
                 begin
                   result:=true;
@@ -1430,10 +1430,10 @@ type
 {$endif EXTDEBUG}
         force_init_final : boolean;
         InitializationProcedure,
-        FinalizationProcedure : tcgprocinfo;
+        FinalizationProcedure : TCGProcInfo;
         ag , wait_dep: boolean;
-        finishstate : tfinishstate;
-        old_module, wait_m: tmodule;
+        finishstate : TFinishState;
+        old_module, wait_m: TModule;
       begin
          result:=true;
          { curr is now module }
@@ -1441,9 +1441,9 @@ type
          old_module:=CurrentModule;
          SetCurrentModule(module);
 
-         if not assigned(module.finishstate) then
-           internalerror(2012091801);
-         finishstate:=pfinishstate(module.finishstate)^;
+         if not Assigned(module.finishstate) then
+           InternalError(2012091801);
+         finishstate:=PFinishState(module.finishstate)^;
 
          FinalizationProcedure:=finishstate.FinalizationProcedure;
          InitializationProcedure:=finishstate.InitializationProcedure;
@@ -1458,20 +1458,20 @@ type
          generate_attr_constrs(CurrentModule.used_rtti_attrs);
 
          { Generate VMTs }
-         if Errorcount=0 then
+         if ErrorCount=0 then
            begin
-             write_vmts(module.globalsymtable,true);
+             write_vmts(module.GlobalSymTable,true);
              write_vmts(module.localsymtable,false);
            end;
 
          { add implementations for synthetic method declarations added by
            the compiler }
-         add_synthetic_method_implementations(module.globalsymtable);
+         add_synthetic_method_implementations(module.GlobalSymTable);
          add_synthetic_method_implementations(module.localsymtable);
 
          { if the unit contains ansi/widestrings, initialization and
            finalization code must be forced }
-         force_init_final:=TGlobalSymTable(module.globalsymtable).needs_init_final or
+         force_init_final:=TGlobalSymTable(module.GlobalSymTable).needs_init_final or
                            TStaticSymTable(module.localsymtable).needs_init_final;
 
          { should we force unit initialization? }
@@ -1479,28 +1479,28 @@ type
          { Now the sole purpose of this is to change 'init' to 'init_implicit',
            is it needed at all? (Sergei) }
          { it's needed in case cnodeutils.force_init = true }
-         if (force_init_final or cnodeutils.force_init) and
+         if (force_init_final or CNodeUtils.force_init) and
             (
-              not assigned(InitializationProcedure) or
+              not Assigned(InitializationProcedure) or
               has_no_code(InitializationProcedure.code)
             ) then
            begin
              { first release the not used init procinfo }
-             if assigned(InitializationProcedure) then
+             if Assigned(InitializationProcedure) then
                begin
                  release_proc_symbol(InitializationProcedure.procdef);
                  release_main_proc(module,InitializationProcedure);
                end;
              InitializationProcedure:=gen_implicit_initfinal(module,mf_init,module.localsymtable);
            end;
-         if (force_init_final or cnodeutils.force_final) and
+         if (force_init_final or CNodeUtils.force_final) and
             (
-              not assigned(FinalizationProcedure) or
+              not Assigned(FinalizationProcedure) or
               has_no_code(FinalizationProcedure.code)
             ) then
            begin
              { first release the not used finalize procinfo }
-             if assigned(FinalizationProcedure) then
+             if Assigned(FinalizationProcedure) then
                begin
                  release_proc_symbol(FinalizationProcedure.procdef);
                  release_main_proc(module,FinalizationProcedure);
@@ -1512,12 +1512,12 @@ type
            which variables are used in both init and finalize we can now
            generate the code. This is required to prevent putting a variable in
            a register that is also used in the finalize body (PFV) }
-         if assigned(InitializationProcedure) then
+         if Assigned(InitializationProcedure) then
            begin
-             if (force_init_final or cnodeutils.force_init) or
+             if (force_init_final or CNodeUtils.force_init) or
                 not(has_no_code(InitializationProcedure.code)) then
                begin
-                 InitializationProcedure.code:=cnodeutils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
+                 InitializationProcedure.code:=CNodeUtils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
                  InitializationProcedure.generate_code_tree;
                  include(module.moduleflags,mf_init);
                end
@@ -1526,13 +1526,13 @@ type
              InitializationProcedure.resetprocdef;
              release_main_proc(module,InitializationProcedure);
            end;
-         if assigned(FinalizationProcedure) then
+         if Assigned(FinalizationProcedure) then
            begin
              if force_init_final or
-                cnodeutils.force_init or
+                CNodeUtils.force_init or
                 not(has_no_code(FinalizationProcedure.code)) then
                begin
-                 FinalizationProcedure.code:=cnodeutils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                 FinalizationProcedure.code:=CNodeUtils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
                  FinalizationProcedure.generate_code_tree;
                  include(module.moduleflags,mf_finalize);
                end
@@ -1542,8 +1542,8 @@ type
              release_main_proc(module,FinalizationProcedure);
            end;
 
-         symtablestack.pop(module.localsymtable);
-         symtablestack.pop(module.globalsymtable);
+         SymTableStack.pop(module.localsymtable);
+         SymTableStack.pop(module.GlobalSymTable);
 
          { the last char should always be a point }
          { Do not attempt to read next token after dot,
@@ -1553,12 +1553,12 @@ type
          { reset wpo flags for all defs }
          reset_all_defs(module);
 
-         if (Errorcount=0) then
+         if (ErrorCount=0) then
            begin
              { tests, if all (interface) forwards are resolved }
-             TStoredSymTable(module.globalsymtable).check_forwards;
+             TStoredSymTable(module.GlobalSymTable).check_forwards;
              { check if all private fields are used }
-             TStoredSymTable(module.globalsymtable).allprivatesused;
+             TStoredSymTable(module.GlobalSymTable).allprivatesused;
 
              { test static symtable }
              TStoredSymTable(module.localsymtable).allsymbolsused;
@@ -1571,10 +1571,10 @@ type
            end;
 
          { leave when we got an error }
-         if (Errorcount>0) and not status.skip_error then
+         if (ErrorCount>0) and not status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(Errorcount));
-            status.skip_error:=true;
+            Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+            status.SkipError:=true;
             module_is_done(module);
             module.state:=ms_moduleerror;
 {$ifdef DEBUG_NODE_XML}
@@ -1585,34 +1585,34 @@ type
           end;
 
          { if an Objective-C module, generate rtti and module info }
-         MaybeGenerateObjectiveCImageInfo(module.globalsymtable,module.localsymtable);
+         MaybeGenerateObjectiveCImageInfo(module.GlobalSymTable,module.localsymtable);
 
          { do we need to add the variants unit? }
          maybeloadvariantsunit(module);
 
          { generate rtti/init tables }
-         write_persistent_type_info(module.globalsymtable,true);
+         write_persistent_type_info(module.GlobalSymTable,true);
          write_persistent_type_info(module.localsymtable,false);
 
          { Tables }
-         cnodeutils.InsertThreadvars;
+         CNodeUtils.InsertThreadvars;
 
          { Resource strings }
          GenerateResourceStrings;
 
          { Widestring typed constants }
-         cnodeutils.InsertWideInits;
+         CNodeUtils.InsertWideInits;
 
          { Resourcestring references }
-         cnodeutils.InsertResStrInits;
+         CNodeUtils.InsertResStrInits;
 
          { generate debuginfo }
-         if (cs_debuginfo in CurrentSettings.moduleswitches) then
+         if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
            CurrentDebugInfo.inserttypeinfo;
 
          { Linux unit aliases must be emitted before implementation symbols
            are released, and become part of the unit's cached object file. }
-         if (TargetInfo.system in systems_linux) and assigned(module._exports.first) then
+         if (TargetInfo.system in systems_linux) and Assigned(module._exports.first) then
            exportlib.generatelib;
 
          { generate imports }
@@ -1646,7 +1646,7 @@ type
         if ErrorCount=0 then
           begin
           wait_m:=module.find_used_unit_compiling;
-          wait_dep:=tppumodule(module).dependent_module_has_our_crc;
+          wait_dep:=TPPUModule(module).dependent_module_has_our_crc;
           if (wait_m<>nil) or wait_dep then
             begin
               { Some used units are still compiling, so their CRCs can change
@@ -1655,9 +1655,9 @@ type
                 Compute the final CRC of this module and wait.
                 Needed for compiling circular dependent units. }
               {$IFDEF Debug_FreeParseMem}
-              writeln('finish_compile_unit ',module.realmodulename^,' waiting for used unit CRCs...');
+              WriteLn('finish_compile_unit ',module.RealModuleName^,' waiting for used unit CRCs...');
               {$ENDIF}
-              tppumodule(module).getppucrc;
+              TPPUModule(module).getppucrc;
               module.crc_final:=true;
               module.state:=ms_compiled_waitcrc;
               SetCurrentModule(old_module);
@@ -1669,7 +1669,7 @@ type
         result:=finish_unit(module);
       end;
 
-    function finish_unit(module: tmodule): boolean;
+    function finish_unit(module: TModule): boolean;
 
       var
 {$ifdef EXTDEBUG}
@@ -1678,14 +1678,14 @@ type
         store_interface_crc,
         store_indirect_crc : cardinal;
 {$ifdef debug_devirt}
-        i : longint;
+        i : LongInt;
 {$endif}
-        hstatus : TFPCHeapStatus;
-        old_module: tmodule;
+        HStatus : TFPCHeapStatus;
+        old_module: TModule;
 
       begin
         {$IFDEF Debug_FreeParseMem}
-        writeln('finish_unit ',module.realmodulename^,' write ppu and free mem...');
+        WriteLn('finish_unit ',module.RealModuleName^,' write ppu and free mem...');
         {$ENDIF}
         result:=ErrorCount=0;
 
@@ -1699,34 +1699,34 @@ type
         store_crc:=module.crc;
 {$endif EXTDEBUG}
         if result then
-          tppumodule(module).writeppu;
+          TPPUModule(module).writeppu;
 
-        if not(cs_compilesystem in CurrentSettings.moduleswitches) then
+        if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
           begin
             if store_interface_crc<>module.interface_crc then
-              Message1(unit_u_interface_crc_changed,module.ppufilename);
+              Message1(unit_u_interface_crc_changed,module.PPUFileName);
             if store_indirect_crc<>module.indirect_crc then
-              Message1(unit_u_indirect_crc_changed,module.ppufilename);
+              Message1(unit_u_indirect_crc_changed,module.PPUFileName);
           end;
 {$ifdef EXTDEBUG}
-        if not(cs_compilesystem in CurrentSettings.moduleswitches) then
+        if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
           if (store_crc<>module.crc) then
-            Message1(unit_u_implementation_crc_changed,module.ppufilename);
+            Message1(unit_u_implementation_crc_changed,module.PPUFileName);
 {$endif EXTDEBUG}
 
         { release unregistered defs/syms from the localsymtable }
         free_unregistered_localsymtable_elements(module);
         { release local symtables that are not needed anymore }
-        free_localsymtables(module.globalsymtable);
+        free_localsymtables(module.GlobalSymTable);
         free_localsymtables(module.localsymtable);
 
         { leave when we got an error }
-        if (Errorcount>0) then
+        if (ErrorCount>0) then
           begin
-            if not status.skip_error then
+            if not status.SkipError then
               begin
-                Message1(unit_f_errors_in_unit,tostr(Errorcount));
-                status.skip_error:=true;
+                Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+                status.SkipError:=true;
               end;
             module_is_done(module);
             module.state := ms_moduleerror;
@@ -1739,7 +1739,7 @@ type
 
 {$ifdef debug_devirt}
         { print out all instantiated class/object types }
-        writeln('constructed object/class/classreftypes in ',module.realmodulename^);
+        WriteLn('constructed object/class/classreftypes in ',module.RealModuleName^);
         for i := 0 to module.wpoinfo.createdobjtypes.count-1 do
           begin
             write('  ',TDef(module.wpoinfo.createdobjtypes[i]).GetTypeName);
@@ -1747,14 +1747,14 @@ type
               objectdef:
                 case TObjectDef(module.wpoinfo.createdobjtypes[i]).objecttype of
                   odt_object:
-                    writeln(' (object)');
+                    WriteLn(' (object)');
                   odt_class:
-                    writeln(' (class)');
+                    WriteLn(' (class)');
                   else
-                    internalerror(2008101103);
+                    InternalError(2008101103);
                 end;
               else
-                internalerror(2008101104);
+                InternalError(2008101104);
             end;
           end;
 
@@ -1765,17 +1765,17 @@ type
               objectdef:
                 case TObjectDef(module.wpoinfo.createdclassrefobjtypes[i]).objecttype of
                   odt_class:
-                    writeln(' (classrefdef)');
+                    WriteLn(' (classrefdef)');
                   else
-                    internalerror(2008101105);
+                    InternalError(2008101105);
                 end
               else
-                internalerror(2008101102);
+                InternalError(2008101102);
             end;
           end;
 {$endif debug_devirt}
 
-        Message1(unit_u_finished_compiling,module.modulename^);
+        Message1(unit_u_finished_compiling,module.ModuleName^);
 
         module_is_done(module);
         module.end_of_parsing;
@@ -1783,13 +1783,13 @@ type
 {$ifdef DEBUG_NODE_XML}
         XMLFinalizeNodeFile('unit');
 {$endif DEBUG_NODE_XML}
-        if ((status.verbosity and V_Status)<>0) then
+        if ((status.verbosity and VStatus)<>0) then
         begin
           {$IF defined(Debug_FreeParseMem)}
-          writeln('finish_unit ',module.realmodulename^,' wrote ppu and freed mem.');
+          WriteLn('finish_unit ',module.RealModuleName^,' wrote ppu and freed mem.');
           {$ENDIF}
-          hstatus:=GetFPCHeapStatus;
-          WriteLn(DStr(hstatus.CurrHeapUsed shr 10),'/',DStr(hstatus.CurrHeapSize shr 10),' Kb Used');
+          HStatus:=GetFPCHeapStatus;
+          WriteLn(DStr(HStatus.CurrHeapUsed shr 10),'/',DStr(HStatus.CurrHeapSize shr 10),' Kb Used');
         end;
 
         module.state:=ms_compiled;
@@ -1797,10 +1797,10 @@ type
         SetCurrentModule(old_module);
       end;
 
-    function proc_package(curr: tmodule) : boolean;
+    function proc_package(curr: TModule) : boolean;
       var
-        main_file : tinputfile;
-        module_name: ansistring;
+        main_file : TInputFile;
+        module_name: AnsiString;
         feature : TFeature;
       begin
          Result:=True;
@@ -1814,7 +1814,7 @@ type
            begin
              message1(parser_e_packages_not_supported,TargetInfo.name);
              curr.state:=ms_moduleerror;
-             status.skip_error:=true;
+             status.SkipError:=true;
              exit(false);
            end;
 
@@ -1823,7 +1823,7 @@ type
 
          { get correct output names }
          main_file := CurrentScanner.inputfile;
-         while assigned(main_file.next) do
+         while Assigned(main_file.next) do
            main_file := main_file.next;
 
          curr.SetFileName(main_file.path+main_file.name,true);
@@ -1841,14 +1841,14 @@ type
            end;
 
          curr.setmodulename(module_name);
-         curr.ispackage:=true;
+         curr.IsPackage:=true;
          if OutputFileName='' then
-           curr.sharedlibfilename:=ExtractFilePath(curr.sharedlibfilename)+
+           curr.SharedLibFileName:=ExtractFilePath(curr.SharedLibFileName)+
              module_name+NexusPackageLibraryExtension;
          exportlib.preparelib(module_name);
 
          if tf_library_needs_pic in TargetInfo.flags then
-           include(CurrentSettings.moduleswitches,cs_create_pic);
+           include(CurrentSettings.ModuleSwitches,cs_create_pic);
 
          { setup things using the switches, do this before the semicolon, because after the semicolon has been
            read, all following directives are parsed as well }
@@ -1870,10 +1870,10 @@ type
 
          { insert after the unit symbol tables the static symbol table }
          { of the program                                             }
-         curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
+         curr.localsymtable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
 
          { ensure that no packages are picked up from the options }
-         packagelist.clear;
+         PackageList.clear;
 
          { There should always be a requires, except for the system package. So we load here }
          if Assigned(curr) then
@@ -1914,18 +1914,18 @@ type
            already provided by one of the loaded packages }
          load_packages;
 
-         if packagelist.Count>0 then
+         if PackageList.Count>0 then
            begin
              { this means the SYSTEM unit *must* be part of one of the required
                packages, so load it }
              AddUnit(curr,'system',false);
-             systemunit:=TGlobalSymTable(symtablestack.top);
+             systemunit:=TGlobalSymTable(SymTableStack.top);
              load_intern_types;
              checksystemcharwidth;
              { system unit is loaded, now insert feature defines }
              for feature:=low(TFeature) to high(TFeature) do
-               if feature in features then
-                 def_system_macro('FPC_HAS_FEATURE_'+featurestr[feature]);
+               if feature in Features then
+                 def_system_macro('FPC_HAS_FEATURE_'+FeatureStr[feature]);
            end;
 
          { Register contained units before yielding to the existing scheduler. }
@@ -1934,7 +1934,7 @@ type
            begin
              { Cached contained units can dereference built-in types while
                loading their dependencies, before finish_package is reached. }
-             if not assigned(systemunit) then
+             if not Assigned(systemunit) then
                loadsystemunit(curr);
              parseusesclause(curr,true);
              loadunits(curr,false);
@@ -1944,34 +1944,34 @@ type
          result:=false;
       end;
 
-    function finish_package(curr: tmodule) : boolean;
+    function finish_package(curr: TModule) : boolean;
       var
-        hp,hp2 : tmodule;
-        pkg : tpcppackage;
-        main_procinfo : tcgprocinfo;
+        hp,hp2 : TModule;
+        pkg : TPCPPackage;
+        main_procinfo : TCGProcInfo;
         force_init_final : boolean;
-        uu : tused_unit;
-        pentry : ppackageentry;
-        i : longint;
+        uu : TUsedUnit;
+        pentry : PPackageEntry;
+        i : LongInt;
       begin
          result:=true;
          SetCurrentModule(curr);
          main_procinfo:=nil;
          { A package without requirements can provide System itself. }
-         hp:=tmodule(loaded_units.first);
-         while assigned(hp) do
+         hp:=TModule(loaded_units.first);
+         while Assigned(hp) do
            begin
-             if (hp.modulename^='SYSTEM') and not assigned(systemunit) then
+             if (hp.ModuleName^='SYSTEM') and not Assigned(systemunit) then
                begin
-                 systemunit:=TGlobalSymTable(hp.globalsymtable);
+                 systemunit:=TGlobalSymTable(hp.GlobalSymTable);
                  load_intern_types;
                  checksystemcharwidth;
                end;
-             hp:=tmodule(hp.next);
+             hp:=TModule(hp.next);
            end;
-         if not assigned(systemunit) then
-           Comment(V_Fatal,'Package '+curr.realmodulename^+' does not contain or require the System unit');
-         pkg:=tpcppackage.create(curr.realmodulename^);
+         if not Assigned(systemunit) then
+           Comment(VFatal,'Package '+curr.RealModuleName^+' does not contain or require the System unit');
+         pkg:=TPCPPackage.create(curr.RealModuleName^);
          { All units are read, now give them a number }
          curr.updatemaps;
          connect_loaded_units(curr,nil);
@@ -1981,74 +1981,74 @@ type
              curr.consume_semicolon_after_uses:=false;
            end;
 
-         hp:=tmodule(loaded_units.first);
-         while assigned(hp) do
+         hp:=TModule(loaded_units.first);
+         while Assigned(hp) do
            begin
-             if (hp<>curr) and not assigned(hp.package) then
+             if (hp<>curr) and not Assigned(hp.package) then
                begin
                  if mf_package_deny in hp.moduleflags then
-                   message1(package_e_unit_deny_package,hp.realmodulename^);
+                   message1(package_e_unit_deny_package,hp.RealModuleName^);
                  { part of the package's used, aka contained units? }
-                 uu:=tused_unit(curr.used_units.first);
-                 while assigned(uu) do
+                 uu:=TUsedUnit(curr.used_units.first);
+                 while Assigned(uu) do
                    begin
                      if uu.u=hp then
                        break;
-                     uu:=tused_unit(uu.next);
+                     uu:=TUsedUnit(uu.next);
                    end;
-                 if not assigned(uu) then
-                   message2(package_n_implicit_unit_import,hp.realmodulename^,curr.realmodulename^);
+                 if not Assigned(uu) then
+                   message2(package_n_implicit_unit_import,hp.RealModuleName^,curr.RealModuleName^);
                end;
              { was this unit listed as a contained unit? If so => error }
-             if (hp<>curr) and assigned(hp.package) then
+             if (hp<>curr) and Assigned(hp.package) then
                begin
-                 uu:=tused_unit(curr.used_units.first);
-                 while assigned(uu) do
+                 uu:=TUsedUnit(curr.used_units.first);
+                 while Assigned(uu) do
                    begin
                      if uu.u=hp then
                        break;
-                     uu:=tused_unit(uu.next);
+                     uu:=TUsedUnit(uu.next);
                    end;
-                 if assigned(uu) then
-                   message2(package_e_unit_already_contained_in_package,hp.realmodulename^,hp.package.realpackagename^);
+                 if Assigned(uu) then
+                   message2(package_e_unit_already_contained_in_package,hp.RealModuleName^,hp.package.realpackagename^);
                end;
-             hp:=tmodule(hp.next);
+             hp:=TModule(hp.next);
            end;
 
          {Insert the name of the main program into the symbol table.}
-         if curr.realmodulename^<>'' then
-           TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+         if curr.RealModuleName^<>'' then
+           TAbstractUnitSymTable(curr.localsymtable).insertunit(CUnitSym.create(curr.RealModuleName^,curr));
 
-         Message1(parser_u_parsing_implementation,curr.mainsource);
+         Message1(parser_u_parsing_implementation,curr.MainSource);
 
-         symtablestack.push(curr.localsymtable);
+         SymTableStack.push(curr.localsymtable);
 
          { create whole program optimisation information }
-         curr.wpoinfo:=tunitwpoinfo.create;
+         curr.wpoinfo:=TUnitWPOInfo.create;
 
          { should we force unit initialization? }
          force_init_final:=TStaticSymTable(curr.localsymtable).needs_init_final;
-         if force_init_final or cnodeutils.force_init then
+         if force_init_final or CNodeUtils.force_init then
            {InitializationProcedure:=gen_implicit_initfinal(mf_init,curr.localsymtable)};
 
          { Add symbol to the exports section for win32 so smartlinking a
            DLL will include the edata section }
-         if assigned(exportlib) and
+         if Assigned(exportlib) and
             (TargetInfo.system=system_i386_win32) and
             (mf_has_exports in curr.moduleflags) then
-           CurrentAsmData.asmlists[al_procedures].concat(tai_const.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
+           CurrentAsmData.asmlists[al_procedures].concat(TAIConst.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
 
          { all labels must be defined before generating code }
-         if Errorcount=0 then
+         if ErrorCount=0 then
            TStoredSymTable(curr.localsymtable).checklabels;
 
-         symtablestack.pop(curr.localsymtable);
+         SymTableStack.pop(curr.localsymtable);
 
          { consume the last point }
          consume(_END);
          consume(_POINT);
 
-         if (Errorcount=0) then
+         if (ErrorCount=0) then
            begin
              { test static symtable }
              TStoredSymTable(curr.localsymtable).allsymbolsused;
@@ -2060,12 +2060,12 @@ type
 
          if TargetInfo.system in systems_all_windows then
            begin
-             symtablestack.push(curr.localsymtable);
+             SymTableStack.push(curr.localsymtable);
              main_procinfo:=create_main_proc('_PkgEntryPoint',potype_pkgstub,curr.localsymtable);
              main_procinfo.procdef.aliasnames.concat('_DLLMainCRTStartup');
              main_procinfo.code:=generate_pkg_stub(main_procinfo.procdef);
              main_procinfo.generate_code;
-             symtablestack.pop(curr.localsymtable);
+             SymTableStack.pop(curr.localsymtable);
            end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -2073,10 +2073,10 @@ type
 {$endif DEBUG_NODE_XML}
 
          { leave when we got an error }
-         if (Errorcount>0) and not status.skip_error then
+         if (ErrorCount>0) and not status.SkipError then
            begin
-             Message1(unit_f_errors_in_unit,tostr(Errorcount));
-             status.skip_error:=true;
+             Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+             status.SkipError:=true;
              curr.state:=ms_moduleerror;
              pkg.free;
              pkg := nil;
@@ -2085,15 +2085,15 @@ type
 
          { remove all unused units, this happens when units are removed
            from the uses clause in the source and the ppu was already being loaded }
-         hp:=tmodule(loaded_units.first);
-         while assigned(hp) do
+         hp:=TModule(loaded_units.first);
+         while Assigned(hp) do
           begin
             hp2:=hp;
-            hp:=tmodule(hp.next);
-            if assigned(hp2.package) then
+            hp:=TModule(hp.next);
+            if Assigned(hp2.package) then
               add_package_unit_ref(hp2.package);
             if hp2.is_unit and
-               not assigned(hp2.globalsymtable) then
+               not Assigned(hp2.GlobalSymTable) then
               loaded_units.remove(hp2);
           end;
 
@@ -2101,37 +2101,37 @@ type
 
          if TargetInfo.system in [system_x86_64_win64,system_x86_64_linux] then
            begin
-             cnodeutils.InsertInitFinalTable(curr);
-             cnodeutils.InsertThreadvarTablesTable;
-             cnodeutils.InsertResourceTablesTable;
-             cnodeutils.InsertWideInitsTablesTable;
-             cnodeutils.InsertResStrTablesTable;
+             CNodeUtils.InsertInitFinalTable(curr);
+             CNodeUtils.InsertThreadvarTablesTable;
+             CNodeUtils.InsertResourceTablesTable;
+             CNodeUtils.InsertWideInitsTablesTable;
+             CNodeUtils.InsertResStrTablesTable;
              emit_package_descriptor;
              if TargetInfo.system=system_x86_64_linux then
                begin
-                 cnodeutils.InsertResourceInfo(CheckResourcesUsed(curr));
+                 CNodeUtils.InsertResourceInfo(CheckResourcesUsed(curr));
                  export.exportname('FPC_RESLOCATION',[eo_name]);
                end;
            end;
 
          { force exports }
-         uu:=tused_unit(usedunits.first);
-         while assigned(uu) do
+         uu:=TUsedUnit(usedunits.first);
+         while Assigned(uu) do
            begin
-             if not assigned(systemunit) and (uu.u.modulename^='SYSTEM') then
+             if not Assigned(systemunit) and (uu.u.ModuleName^='SYSTEM') then
                begin
-                 systemunit:=TGlobalSymTable(uu.u.globalsymtable);
+                 systemunit:=TGlobalSymTable(uu.u.GlobalSymTable);
                  load_intern_types;
                  checksystemcharwidth;
                end;
-             if not assigned(uu.u.package) then
+             if not Assigned(uu.u.package) then
                export_unit(uu.u);
 
-             uu:=tused_unit(uu.next);
+             uu:=TUsedUnit(uu.next);
            end;
 
          { generate debuginfo }
-         if (cs_debuginfo in CurrentSettings.moduleswitches) then
+         if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
            CurrentDebugInfo.inserttypeinfo;
 
          exportlib.generatelib;
@@ -2139,7 +2139,7 @@ type
          exportlib.ignoreduplicates:=false;
 
          { create import libraries for all packages }
-         if packagelist.count>0 then
+         if PackageList.count>0 then
            createimportlibfromexternals;
 
          { generate imports }
@@ -2147,38 +2147,38 @@ type
            importlib.generatelib;
 
          { Reference all DEBUGINFO sections from the main .fpc section }
-         if (cs_debuginfo in CurrentSettings.moduleswitches) then
+         if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
            CurrentDebugInfo.referencesections(CurrentAsmData.asmlists[al_procedures]);
 
          { we add all loaded units that are not part of a package to the
            package; this includes units in the "contains" section as well
            as implicitly imported ones }
-         hp:=tmodule(loaded_units.first);
-         while assigned(hp) do
+         hp:=TModule(loaded_units.first);
+         while Assigned(hp) do
           begin
             if (hp<>curr) then
               begin
-                if not assigned(hp.package) then
+                if not Assigned(hp.package) then
                   begin
                     pkg.addunit(hp);
                     check_for_indirect_package_usages(hp.used_units);
                   end
                 else
                   begin
-                    pentry:=ppackageentry(packagelist.find(hp.package.packagename^));
-                    if not assigned(pentry) then
-                      internalerror(2015112301);
+                    pentry:=PPackageEntry(PackageList.find(hp.package.packagename^));
+                    if not Assigned(pentry) then
+                      InternalError(2015112301);
                     pkg.add_required_package(hp.package);
                   end;
               end;
-            hp:=tmodule(hp.next);
+            hp:=TModule(hp.next);
           end;
 
          { A declared dependency also owns initialization/lifetime work
            when none of its units contributed a referenced symbol. }
-         for i:=0 to packagelist.count-1 do
+         for i:=0 to PackageList.count-1 do
            begin
-             pentry:=ppackageentry(packagelist[i]);
+             pentry:=PPackageEntry(PackageList[i]);
              if pentry^.direct then
                pkg.add_required_package(pentry^.package);
            end;
@@ -2196,16 +2196,16 @@ type
          { We might need the symbols info if not using
            the default do_extractsymbolinfo
            which is a dummy function PM }
-         needsymbolinfo:=do_extractsymbolinfo<>@def_extractsymbolinfo;
+         NeedSymbolInfo:=Do_ExtractSymbolInfo<>@Def_ExtractSymbolInfo;
          { release all local symtables that are not needed anymore }
-         if (not needsymbolinfo) then
+         if (not NeedSymbolInfo) then
            free_localsymtables(curr.localsymtable);
 
          { leave when we got an error }
-         if (Errorcount>0) and not status.skip_error then
+         if (ErrorCount>0) and not status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(Errorcount));
-            status.skip_error:=true;
+            Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+            status.SkipError:=true;
             curr.state:=ms_moduleerror;
             pkg.free;
             pkg := nil;
@@ -2215,12 +2215,12 @@ type
          if (not curr.is_unit) then
            begin
              { create the executable when we are at level 1 }
-             if (curr.is_initial) then
+             if (curr.IsInitial) then
                begin
                  { create global resource file by collecting all resource files }
                  CollectResourceFiles;
                  { write .def file }
-                 if (cs_link_deffile in CurrentSettings.globalswitches) then
+                 if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
                    deffile.writefile;
 
                  if DrainClangAssemblerQueue then
@@ -2233,16 +2233,16 @@ type
                      { insert all .o files from all loaded units and
                        unload the units, we don't need them anymore.
                        Keep the curr because that is still needed }
-                     hp:=tmodule(loaded_units.first);
-                     while assigned(hp) do
+                     hp:=TModule(loaded_units.first);
+                     while Assigned(hp) do
                       begin
                         { only link in those units which should become part of this
                           package }
-                        if not assigned(hp.package) then
+                        if not Assigned(hp.package) then
                           linker.AddModuleFiles(hp);
-                        hp2:=tmodule(hp.next);
+                        hp2:=TModule(hp.next);
                         if (hp<>curr) and
-                           (not needsymbolinfo) then
+                           (not NeedSymbolInfo) then
                           begin
                             loaded_units.remove(hp);
                             hp.free;
@@ -2258,10 +2258,10 @@ type
                end;
 
              { Give Fatal with error count for linker errors }
-             if (Errorcount>0) and not status.skip_error then
+             if (ErrorCount>0) and not status.SkipError then
               begin
-                Message1(unit_f_errors_in_unit,tostr(Errorcount));
-                status.skip_error:=true;
+                Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+                status.SkipError:=true;
                 curr.state:=ms_moduleerror;
                 result:=false;
               end;
@@ -2276,23 +2276,23 @@ type
            end;
       end;
 
-    procedure proc_create_executable(curr, sysinitmod: tmodule; islibrary : boolean);
+    procedure proc_create_executable(curr, sysinitmod: TModule; IsLibrary : boolean);
 
       var
         program_uses_checkpointer : boolean;
-        hp,hp2 : tmodule;
+        hp,hp2 : TModule;
 
       begin
             { create global resource file by collecting all resource files }
             CollectResourceFiles;
             { write .def file }
-            if (cs_link_deffile in CurrentSettings.globalswitches) then
+            if (cs_link_deffile in CurrentSettings.GlobalSwitches) then
              deffile.writefile;
             if not DrainClangAssemblerQueue then
               exit;
             { link SysInit (if any) first, to have behavior consistent with
               assembler startup files }
-            if assigned(sysinitmod) then
+            if Assigned(sysinitmod) then
               linker.AddModuleFiles(sysinitmod);
             { Does any unit use checkpointer function }
             program_uses_checkpointer:=false;
@@ -2302,20 +2302,20 @@ type
             { insert all .o files from all loaded units and
               unload the units, we don't need them anymore.
               Keep the curr because that is still needed }
-            hp:=tmodule(loaded_units.first);
-            while assigned(hp) do
+            hp:=TModule(loaded_units.first);
+            while Assigned(hp) do
              begin
-               if (hp<>sysinitmod) and not assigned(hp.package) then
+               if (hp<>sysinitmod) and not Assigned(hp.package) then
                  begin
                    linker.AddModuleFiles(hp);
                    if mf_checkpointer_called in hp.moduleflags then
                      program_uses_checkpointer:=true;
                  end;
-               hp2:=tmodule(hp.next);
-               if assigned(hp.package) then
+               hp2:=TModule(hp.next);
+               if Assigned(hp.package) then
                  add_package_unit_ref(hp.package);
                if (hp<>curr) and
-                  (not needsymbolinfo) then
+                  (not NeedSymbolInfo) then
                  begin
                    loaded_units.remove(hp);
                    hp.free;
@@ -2324,16 +2324,16 @@ type
                hp:=hp2;
              end;
             { free also unneeded units we didn't free before }
-            if not needsymbolinfo then
+            if not NeedSymbolInfo then
               unloaded_units.Clear;
             { Does any unit use checkpointer function }
             if program_uses_checkpointer then
-              Message1(link_w_program_uses_checkpointer,curr.modulename^);
+              Message1(link_w_program_uses_checkpointer,curr.ModuleName^);
 
             { add all directly used packages as libraries }
             add_package_libs(linker);
             { finally we can create an executable }
-            if curr.islibrary then
+            if curr.IsLibrary then
               linker.MakeSharedLibrary
             else
               linker.MakeExecutable;
@@ -2343,10 +2343,10 @@ type
 
       end;
 
-    procedure proc_program_after_parsing(curr : tmodule; islibrary : boolean);
+    procedure proc_program_after_parsing(curr : TModule; IsLibrary : boolean);
 
       var
-        sysinitmod, hp,hp2 : tmodule;
+        sysinitmod, hp,hp2 : TModule;
         resources_used : boolean;
 
       begin
@@ -2365,7 +2365,7 @@ type
         { reset wpo flags for all defs }
         reset_all_defs(curr);
 
-        if (Errorcount=0) then
+        if (ErrorCount=0) then
           begin
             { test static symtable }
             TStoredSymTable(curr.localsymtable).allsymbolsused;
@@ -2376,23 +2376,23 @@ type
           end;
 
         { leave when we got an error }
-        if (Errorcount>0) and not status.skip_error then
+        if (ErrorCount>0) and not status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(Errorcount));
-            status.skip_error:=true;
+            Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+            status.SkipError:=true;
             curr.state:=ms_moduleerror;
             exit;
           end;
 
         { remove all unused units, this happens when units are removed
           from the uses clause in the source and the ppu was already being loaded }
-        hp:=tmodule(loaded_units.first);
-        while assigned(hp) do
+        hp:=TModule(loaded_units.first);
+        while Assigned(hp) do
          begin
            hp2:=hp;
-           hp:=tmodule(hp.next);
+           hp:=TModule(hp.next);
            if hp2.is_unit and
-              not assigned(hp2.globalsymtable) then
+              not Assigned(hp2.GlobalSymTable) then
                begin
                  loaded_units.remove(hp2);
                  unloaded_units.concat(hp2);
@@ -2408,7 +2408,7 @@ type
 
         linker.initsysinitunitname;
         if (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) and
-           assigned(find_module_from_symtable(systemunit).package) then
+           Assigned(find_module_from_symtable(systemunit).package) then
           linker.sysinitunit:='sysinitpkg';
         if TargetInfo.system in systems_internal_sysinit then
         begin
@@ -2418,7 +2418,7 @@ type
         else
           sysinitmod:=nil;
 
-        cnodeutils.InsertThreadvars;
+        CNodeUtils.InsertThreadvars;
 
         { generate rtti/init tables }
         write_persistent_type_info(curr.localsymtable,false);
@@ -2427,45 +2427,45 @@ type
         MaybeGenerateObjectiveCImageInfo(nil,curr.localsymtable);
 
         { generate debuginfo }
-        if (cs_debuginfo in CurrentSettings.moduleswitches) then
+        if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
           CurrentDebugInfo.inserttypeinfo;
 
-        if islibrary or (TargetInfo.system in systems_unit_program_exports) then
+        if IsLibrary or (TargetInfo.system in systems_unit_program_exports) then
           exportlib.generatelib;
 
         { Reference all DEBUGINFO sections from the main .fpc section }
-        if (cs_debuginfo in CurrentSettings.moduleswitches) then
+        if (cs_debuginfo in CurrentSettings.ModuleSwitches) then
           CurrentDebugInfo.referencesections(CurrentAsmData.asmlists[al_procedures]);
 
         { Resource strings }
         GenerateResourceStrings;
 
         { Windows widestring needing initialization }
-        cnodeutils.InsertWideInits;
+        CNodeUtils.InsertWideInits;
 
         { Resourcestring references (const foo:string=someresourcestring) }
-        cnodeutils.InsertResStrInits;
+        CNodeUtils.InsertResStrInits;
 
         { insert Tables and StackLength }
-        cnodeutils.InsertInitFinalTable(curr);
-        cnodeutils.InsertThreadvarTablesTable;
-        cnodeutils.InsertResourceTablesTable;
-        cnodeutils.InsertWideInitsTablesTable;
-        cnodeutils.InsertResStrTablesTable;
-        cnodeutils.InsertMemorySizes;
+        CNodeUtils.InsertInitFinalTable(curr);
+        CNodeUtils.InsertThreadvarTablesTable;
+        CNodeUtils.InsertResourceTablesTable;
+        CNodeUtils.InsertWideInitsTablesTable;
+        CNodeUtils.InsertResStrTablesTable;
+        CNodeUtils.InsertMemorySizes;
 
         if (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) and
-           assigned(find_module_from_symtable(systemunit).package) then
+           Assigned(find_module_from_symtable(systemunit).package) then
           emit_package_descriptor;
 
         { Insert symbol to resource info }
-        cnodeutils.InsertResourceInfo(resources_used);
+        CNodeUtils.InsertResourceInfo(resources_used);
 
         { create callframe info }
         create_dwarf_frame;
 
         { create import library for all packages }
-        if packagelist.count>0 then
+        if PackageList.count>0 then
           createimportlibfromexternals;
 
         { generate imports }
@@ -2481,32 +2481,32 @@ type
         { We might need the symbols info if not using
           the default do_extractsymbolinfo
           which is a dummy function PM }
-        needsymbolinfo:=
-          (do_extractsymbolinfo<>@def_extractsymbolinfo) or
-          ((CurrentSettings.genwpoptimizerswitches*WPOptimizationsNeedingAllUnitInfo)<>[]);
+        NeedSymbolInfo:=
+          (Do_ExtractSymbolInfo<>@Def_ExtractSymbolInfo) or
+          ((CurrentSettings.GenWPOptimizerSwitches*WPOptimizationsNeedingAllUnitInfo)<>[]);
 
         { release all local symtables that are not needed anymore }
-        if (not needsymbolinfo) then
+        if (not NeedSymbolInfo) then
           free_localsymtables(curr.localsymtable);
 
         { leave when we got an error }
-        if (Errorcount>0) and not status.skip_error then
+        if (ErrorCount>0) and not status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(Errorcount));
-            status.skip_error:=true;
+            Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+            status.SkipError:=true;
             curr.state:=ms_moduleerror;
             exit;
           end;
         { create the executable when we are at level 1 }
 
-        if (not curr.is_unit) and (curr.is_initial) then
-          proc_create_executable(curr,sysinitmod,islibrary);
+        if (not curr.is_unit) and (curr.IsInitial) then
+          proc_create_executable(curr,sysinitmod,IsLibrary);
 
         { Give Fatal with error count for linker errors }
-        if (Errorcount>0) and not status.skip_error then
+        if (ErrorCount>0) and not status.SkipError then
          begin
-           Message1(unit_f_errors_in_unit,tostr(Errorcount));
-           status.skip_error:=true;
+           Message1(unit_f_errors_in_unit,ToStr(ErrorCount));
+           status.SkipError:=true;
          end;
 
         curr.crc_final:=true;
@@ -2514,13 +2514,13 @@ type
 
       end;
 
-    function proc_program_declarations(curr : tmodule; islibrary : boolean) : boolean;
+    function proc_program_declarations(curr : TModule; IsLibrary : boolean) : boolean;
 
       var
         initpd    : TProcDef;
         FinalizationProcedure,
         InitializationProcedure,
-        main_procinfo : tcgprocinfo;
+        main_procinfo : TCGProcInfo;
         force_init_final : boolean;
 
       begin
@@ -2545,23 +2545,23 @@ type
           end;
 
         {Insert the name of the main program into the symbol table.}
-        if curr.realmodulename^<>'' then
-          TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+        if curr.RealModuleName^<>'' then
+          TAbstractUnitSymTable(curr.localsymtable).insertunit(CUnitSym.create(curr.RealModuleName^,curr));
 
-        Message1(parser_u_parsing_implementation,curr.mainsource);
+        Message1(parser_u_parsing_implementation,curr.MainSource);
 
-        symtablestack.push(curr.localsymtable);
+        SymTableStack.push(curr.localsymtable);
 
 
         { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
         maybe_load_got(curr);
 
         { create whole program optimisation information }
-        curr.wpoinfo:=tunitwpoinfo.create;
+        curr.wpoinfo:=TUnitWPOInfo.create;
 
         { The program initialization needs an alias, so it can be called
           from the bootstrap code.}
-        if islibrary then
+        if IsLibrary then
          begin
            initpd:=nil;
            { ToDo: other systems that use indirect entry info, but check back with Windows! }
@@ -2575,7 +2575,7 @@ type
                main_procinfo := nil;
              end;
 
-           main_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,mainaliasname),potype_proginit,curr.localsymtable);
+           main_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,MainAliasName),potype_proginit,curr.localsymtable);
            { Win32 startup code needs a single name }
            if not(TargetInfo.system in systems_darwin) then
              main_procinfo.procdef.aliasnames.concat('PASCALMAIN')
@@ -2585,7 +2585,7 @@ type
            if not(TargetInfo.system in systems_darwin) then
              initpd:=main_procinfo.procdef;
 
-           cnodeutils.RegisterModuleInitFunction(initpd);
+           CNodeUtils.RegisterModuleInitFunction(initpd);
          end
         else if (TargetInfo.system in systems_darwin) then
           begin
@@ -2595,7 +2595,7 @@ type
               parameters. This function cannot be in the system unit, because
               its name can be configured on the command line (for use with e.g.
               SDL, where the main function should be called SDL_main) }
-            main_procinfo:=create_main_proc(mainaliasname,potype_mainstub,curr.localsymtable);
+            main_procinfo:=create_main_proc(MainAliasName,potype_mainstub,curr.localsymtable);
             call_through_new_name(main_procinfo.procdef,TargetInfo.cprefix+'FPC_SYSTEMMAIN');
             main_procinfo.free;
             { now create the PASCALMAIN routine (which will be called from
@@ -2604,7 +2604,7 @@ type
           end
         else
           begin
-            main_procinfo:=create_main_proc(mainaliasname,potype_proginit,curr.localsymtable);
+            main_procinfo:=create_main_proc(MainAliasName,potype_proginit,curr.localsymtable);
             main_procinfo.procdef.aliasnames.concat('PASCALMAIN');
           end;
         main_procinfo.parse_body;
@@ -2622,7 +2622,7 @@ type
           end;
 
         { Generate specializations of objectdefs methods }
-        if Errorcount=0 then
+        if ErrorCount=0 then
           generate_specialization_procs;
 
         { generate construction functions for all attributes in the program }
@@ -2630,7 +2630,7 @@ type
         generate_attr_constrs(curr.used_rtti_attrs);
 
         { Generate VMTs }
-        if Errorcount=0 then
+        if ErrorCount=0 then
           write_vmts(curr.localsymtable,false);
 
         { add implementations for synthetic method declarations added by
@@ -2639,24 +2639,24 @@ type
 
         { should we force unit initialization? }
         force_init_final:=TStaticSymTable(curr.localsymtable).needs_init_final;
-        if force_init_final or cnodeutils.force_init then
+        if force_init_final or CNodeUtils.force_init then
           InitializationProcedure:=gen_implicit_initfinal(curr,mf_init,curr.localsymtable);
 
         { Add symbol to the exports section for win32 so smartlinking a
           DLL will include the edata section }
-        if assigned(exportlib) and
+        if Assigned(exportlib) and
            (TargetInfo.system=system_i386_win32) and
            (mf_has_exports in curr.moduleflags) then
-          CurrentAsmData.asmlists[al_procedures].concat(tai_const.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
+          CurrentAsmData.asmlists[al_procedures].concat(TAIConst.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
 
-        if (force_init_final or cnodeutils.force_final) and
+        if (force_init_final or CNodeUtils.force_final) and
            (
-             not assigned(FinalizationProcedure)
+             not Assigned(FinalizationProcedure)
              or has_no_code(FinalizationProcedure.code)
            ) then
           begin
             { first release the not used finalize procinfo }
-            if assigned(FinalizationProcedure) then
+            if Assigned(FinalizationProcedure) then
               begin
                 release_proc_symbol(FinalizationProcedure.procdef);
                 release_main_proc(curr,FinalizationProcedure);
@@ -2668,33 +2668,33 @@ type
          { be finalized, so they can finalize any units they use                       }
          { Place in "pure assembler" list so that the llvm assembler writer
            directly emits the generated directives }
-         if (islibrary) then
-           cnodeutils.RegisterModuleFiniFunction(search_system_proc('fpc_lib_exit'));
+         if (IsLibrary) then
+           CNodeUtils.RegisterModuleFiniFunction(search_system_proc('fpc_lib_exit'));
 
         { all labels must be defined before generating code }
-        if Errorcount=0 then
+        if ErrorCount=0 then
           TStoredSymTable(curr.localsymtable).checklabels;
 
         { See remark in unit init/final }
         main_procinfo.generate_code_tree;
         main_procinfo.resetprocdef;
         release_main_proc(curr,main_procinfo);
-        if assigned(InitializationProcedure) then
+        if Assigned(InitializationProcedure) then
           begin
             { initialization can be implicit only }
             include(curr.moduleflags,mf_init);
-            InitializationProcedure.code:=cnodeutils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
+            InitializationProcedure.code:=CNodeUtils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
             InitializationProcedure.generate_code;
             InitializationProcedure.resetprocdef;
             release_main_proc(curr,InitializationProcedure);
           end;
-        if assigned(FinalizationProcedure) then
+        if Assigned(FinalizationProcedure) then
           begin
             if force_init_final or
-               cnodeutils.force_init or
+               CNodeUtils.force_init or
                not(has_no_code(FinalizationProcedure.code)) then
               begin
-                FinalizationProcedure.code:=cnodeutils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                FinalizationProcedure.code:=CNodeUtils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
                 FinalizationProcedure.generate_code_tree;
                 include(curr.moduleflags,mf_finalize);
               end;
@@ -2702,20 +2702,20 @@ type
             release_main_proc(curr,FinalizationProcedure);
           end;
 
-        symtablestack.pop(curr.localsymtable);
+        SymTableStack.pop(curr.localsymtable);
 
         { consume the last point }
         consume(_POINT);
 
 
-        proc_program_after_parsing(curr,islibrary);
+        proc_program_after_parsing(curr,IsLibrary);
 
 
       end;
 
-    procedure proc_library_header(curr: tmodule);
+    procedure proc_library_header(curr: TModule);
       var
-        program_name : ansistring;
+        program_name : AnsiString;
 
       begin
         consume(_LIBRARY);
@@ -2728,14 +2728,14 @@ type
            consume(_ID);
          end;
         curr.setmodulename(program_name);
-        curr.islibrary:=true;
+        curr.IsLibrary:=true;
         exportlib.preparelib(program_name);
 
         if tf_library_needs_pic in TargetInfo.flags then
          begin
-           include(CurrentSettings.moduleswitches,cs_create_pic);
+           include(CurrentSettings.ModuleSwitches,cs_create_pic);
            { also set create_pic for all unit compilation }
-           include(InitSettings.moduleswitches,cs_create_pic);
+           include(InitSettings.ModuleSwitches,cs_create_pic);
          end;
 
         { setup things using the switches, do this before the semicolon, because after the semicolon has been
@@ -2749,15 +2749,15 @@ type
 
     type
       TProgramParam = record
-        name : ansistring;
+        name : AnsiString;
         nr : dword;
       end;
       TProgramParamArray = array of TProgramParam;
 
-      procedure proc_program_header(curr: tmodule; out sc : TProgramParamArray);
+      procedure proc_program_header(curr: TModule; out sc : TProgramParamArray);
 
         var
-          program_name : ansistring;
+          program_name : AnsiString;
           paramnum : integer;
 
         begin
@@ -2779,12 +2779,12 @@ type
                consume(_LKLAMMER);
                paramnum:=1;
                repeat
-                 if m_isolike_program_para in CurrentSettings.modeswitches then
+                 if m_isolike_program_para in CurrentSettings.ModeSwitches then
                    begin
                      if (CurrentScanner.pattern<>'INPUT') and (CurrentScanner.pattern<>'OUTPUT') then
                        begin
                          { the symtablestack is not setup here, so text must be created later on }
-                         Setlength(sc,length(sc)+1);
+                         SetLength(sc,length(sc)+1);
                          with sc[high(sc)] do
                            begin
                              name:=CurrentScanner.pattern;
@@ -2808,15 +2808,15 @@ type
 {$endif DEBUG_NODE_XML}
         end;
 
-    function proc_program(curr: tmodule; islibrary : boolean) : boolean;
+    function proc_program(curr: TModule; IsLibrary : boolean) : boolean;
 
       var
-         main_file : tinputfile;
+         main_file : TInputFile;
          consume_semicolon_after_loaded : boolean;
          ps : TProgramParaSym;
          textsym : TTypeSym;
          sc : TProgramParamArray;
-         i : Longint;
+         i : LongInt;
          feature : TFeature;
          load_ok : boolean;
 
@@ -2832,7 +2832,7 @@ type
          sc:=nil;
 
          { DLL defaults to create reloc info }
-         if islibrary or (TargetInfo.system in [system_aarch64_win64]) then
+         if IsLibrary or (TargetInfo.system in [system_aarch64_win64]) then
            begin
              if not RelocSectionSetExplicitly then
                RelocSection:=true;
@@ -2840,12 +2840,12 @@ type
 
          { get correct output names }
          main_file := CurrentScanner.inputfile;
-         while assigned(main_file.next) do
+         while Assigned(main_file.next) do
            main_file := main_file.next;
 
          curr.SetFileName(main_file.path+main_file.name,true);
 
-         if islibrary then
+         if IsLibrary then
            begin
              proc_library_header(curr);
              consume_semicolon_after_loaded:=true;
@@ -2859,13 +2859,13 @@ type
          else
            begin
              if (TargetInfo.system in systems_unit_program_exports) then
-               exportlib.preparelib(curr.realmodulename^);
+               exportlib.preparelib(curr.RealModuleName^);
 
              { setup things using the switches }
              setupglobalswitches;
 
 {$ifdef DEBUG_NODE_XML}
-             XMLInitializeNodeFile('program', curr.realmodulename^);
+             XMLInitializeNodeFile('program', curr.RealModuleName^);
 {$endif DEBUG_NODE_XML}
            end;
 
@@ -2879,7 +2879,7 @@ type
 
          { insert after the unit symbol tables the static symbol table
            of the program                                              }
-         curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
+         curr.localsymtable:=TStaticSymTable.create(curr.RealModuleName^,curr.ModuleID);
 
          { load system unit }
          load_ok:=loadsystemunit(curr);
@@ -2893,8 +2893,8 @@ type
 
          { system unit is loaded, now insert feature defines }
          for feature:=low(TFeature) to high(TFeature) do
-           if feature in features then
-             def_system_macro('FPC_HAS_FEATURE_'+featurestr[feature]);
+           if feature in Features then
+             def_system_macro('FPC_HAS_FEATURE_'+FeatureStr[feature]);
 
          { load standard units, e.g objpas,profile unit }
          load_ok:=loaddefaultunits(curr) and load_ok;
@@ -2906,11 +2906,11 @@ type
          if length(sc)>0 then
            begin
              textsym:=search_system_type('TEXT');
-             if not(assigned(textsym)) then
-               internalerror(2013011201);
+             if not(Assigned(textsym)) then
+               InternalError(2013011201);
              for i:=0 to high(sc) do
                begin
-                 ps:=cprogramparasym.create(sc[i].name,sc[i].nr);
+                 ps:=CProgramParaSym.create(sc[i].name,sc[i].nr);
                  curr.localsymtable.insertsym(ps,true);
                end;
            end;
@@ -2928,14 +2928,14 @@ type
            end
          else begin
            curr.consume_semicolon_after_uses:=false;
-           if tmodule.ctask_fast_backtrack then
+           if TModule.ctask_fast_backtrack then
              load_ok:=false; { some used units are not fully compiled }
          end;
 
          { Also load compiler-injected dependencies when there is no uses clause. }
          load_ok:=loadunits(curr,false) and load_ok;
 
-         if curr.is_initial then
+         if curr.IsInitial then
            load_ok:=false; { delay program, so ctask can finish all units }
          if not load_ok then
            curr.state:=ms_compiling_wait;
@@ -2944,7 +2944,7 @@ type
 
          result:=curr.state<>ms_compiling_wait;
          if result then
-           result:=proc_program_declarations(curr,islibrary)
+           result:=proc_program_declarations(curr,IsLibrary)
       end;
 
 end.

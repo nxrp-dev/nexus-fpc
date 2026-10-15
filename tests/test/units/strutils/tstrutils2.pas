@@ -29,7 +29,7 @@ uses
   fpwidestring,
  {$endif}
  {$ifdef USE_CPALL_UNIT}
-  cpall,
+  CPAll,
  {$endif}
 {$endif def USE_INTERNAL_UNICODE}
   StrUtils;

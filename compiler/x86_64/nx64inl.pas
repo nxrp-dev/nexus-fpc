@@ -29,7 +29,7 @@ interface
        nx86inl;
 
     type
-       tx8664inlinenode = class(tx86inlinenode)
+       TX8664InlineNode = class(TX86InlineNode)
         protected
           procedure maybe_remove_round_trunc_typeconv; override;
        end;
@@ -40,7 +40,7 @@ implementation
     symconst,
     node,ncnv,ninl;
 
-  procedure tx8664inlinenode.maybe_remove_round_trunc_typeconv;
+  procedure TX8664InlineNode.maybe_remove_round_trunc_typeconv;
     var
       temp: TNode;
     begin
@@ -56,17 +56,17 @@ implementation
         will insert the necessary type conversion again }
       if (left.nodetype=typeconvn) and
          not(nf_explicit in left.flags) and
-         (ttypeconvnode(left).left.resultdef.typ=floatdef) then
+         (TTypeConvNode(left).left.resultdef.typ=floatdef) then
         begin
           { get rid of the type conversion, so the use_vectorfpu will be
             applied to the original type }
-          temp:=ttypeconvnode(left).left;
-          ttypeconvnode(left).left:=nil;
+          temp:=TTypeConvNode(left).left;
+          TTypeConvNode(left).left:=nil;
           left.free;
           left:=temp;
         end;
     end;
 
 begin
-   cinlinenode:=tx8664inlinenode;
+   CInlineNode:=TX8664InlineNode;
 end.

@@ -28,30 +28,30 @@ unit cgx86;
   interface
 
     uses
-       globtype,
+       GlobType,
        cgbase,cgutils,cgobj,
-       aasmbase,aasmtai,aasmdata,aasmcpu,
-       cpubase,cpuinfo,rgx86,
+       aasmbase,aasmtai,AAsmData,aasmcpu,
+       cpubase,CPUInfo,rgx86,
        symconst,symtype,symdef,
        parabase;
 
     type
-      tcopymode=(copy_mov,copy_mmx,copy_string,copy_mm,copy_avx,copy_avx512,copy_fpc_move);
+      TCopyMode=(copy_mov,copy_mmx,copy_string,copy_mm,copy_avx,copy_avx512,copy_fpc_move);
 
-      tcgx86 = class(tcg)
-        rgfpu   : Trgx86fpu;
+      TCGX86 = class(TCG)
+        rgfpu   : TRGX86FPU;
         procedure done_register_allocators;override;
 
-        function getfpuregister(list:TAsmList;size:Tcgsize):Tregister;override;
-        function getmmxregister(list:TAsmList):Tregister;
-        function getmmregister(list:TAsmList;size:Tcgsize):Tregister;override;
+        function getfpuregister(list:TAsmList;size:TCgSize):TRegister;override;
+        function getmmxregister(list:TAsmList):TRegister;
+        function getmmregister(list:TAsmList;size:TCgSize):TRegister;override;
 
-        procedure getcpuregister(list:TAsmList;r:Tregister);override;
-        procedure ungetcpuregister(list:TAsmList;r:Tregister);override;
-        procedure alloccpuregisters(list:TAsmList;rt:Tregistertype;const r:Tcpuregisterset);override;
-        procedure dealloccpuregisters(list:TAsmList;rt:Tregistertype;const r:Tcpuregisterset);override;
-        function  uses_registers(rt:Tregistertype):boolean;override;
-        procedure add_reg_instruction(instr:Tai;r:tregister);override;
+        procedure getcpuregister(list:TAsmList;r:TRegister);override;
+        procedure ungetcpuregister(list:TAsmList;r:TRegister);override;
+        procedure alloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);override;
+        procedure dealloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);override;
+        function  uses_registers(rt:TRegisterType):boolean;override;
+        procedure add_reg_instruction(instr:TAI;r:TRegister);override;
         procedure dec_fpu_stack;
         procedure inc_fpu_stack;
 
@@ -59,112 +59,112 @@ unit cgx86;
         procedure a_call_name_near(list : TAsmList;const s : string; weak: boolean);
         procedure a_call_name_static(list : TAsmList;const s : string);override;
         procedure a_call_name_static_near(list : TAsmList;const s : string);
-        procedure a_call_reg(list : TAsmList;reg : tregister);override;
-        procedure a_call_reg_near(list : TAsmList;reg : tregister);
+        procedure a_call_reg(list : TAsmList;reg : TRegister);override;
+        procedure a_call_reg_near(list : TAsmList;reg : TRegister);
 
-        procedure a_op_const_reg(list : TAsmList; Op: TOpCG; size: TCGSize; a: tcgint; reg: TRegister); override;
-        procedure a_op_const_ref(list : TAsmList; Op: TOpCG; size: TCGSize; a: tcgint; const ref: TReference); override;
-        procedure a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TCGSize; src, dst: TRegister); override;
-        procedure a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TCGSize; const ref: TReference; reg: TRegister); override;
-        procedure a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TCGSize;reg: TRegister; const ref: TReference); override;
-        procedure a_op_ref(list : TAsmList; Op: TOpCG; size: TCGSize; const ref: TReference); override;
+        procedure a_op_const_reg(list : TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister); override;
+        procedure a_op_const_ref(list : TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; const ref: TReference); override;
+        procedure a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TCgSize; src, dst: TRegister); override;
+        procedure a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TCgSize; const ref: TReference; reg: TRegister); override;
+        procedure a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TCgSize;reg: TRegister; const ref: TReference); override;
+        procedure a_op_ref(list : TAsmList; Op: TOpCG; size: TCgSize; const ref: TReference); override;
 
 
-        procedure a_op_const_reg_reg(list : TAsmList; op : Topcg; size : Tcgsize; a : tcgint; src,dst : Tregister); override;
-        procedure a_op_reg_reg_reg(list : TAsmList; op : TOpCg; size : tcgsize; src1,src2,dst : tregister); override;
+        procedure a_op_const_reg_reg(list : TAsmList; op : TOpCG; size : TCgSize; a : TCGInt; src,dst : TRegister); override;
+        procedure a_op_reg_reg_reg(list : TAsmList; op : TOpCG; size : TCgSize; src1,src2,dst : TRegister); override;
 
 
         { move instructions }
-        procedure a_load_const_reg(list : TAsmList; tosize: tcgsize; a : tcgint;reg : tregister);override;
-        procedure a_load_const_ref(list : TAsmList; tosize: tcgsize; a : tcgint;const ref : treference);override;
-        procedure a_load_reg_ref(list : TAsmList;fromsize,tosize: tcgsize; reg : tregister;const ref : treference);override;
+        procedure a_load_const_reg(list : TAsmList; tosize: TCgSize; a : TCGInt;reg : TRegister);override;
+        procedure a_load_const_ref(list : TAsmList; tosize: TCgSize; a : TCGInt;const ref : TReference);override;
+        procedure a_load_reg_ref(list : TAsmList;fromsize,tosize: TCgSize; reg : TRegister;const ref : TReference);override;
         { final as a_load_ref_reg_internal() should be overridden instead }
-        procedure a_load_ref_reg(list : TAsmList;fromsize,tosize: tcgsize;const ref : treference;reg : tregister);override;final;
-        procedure a_load_reg_reg(list : TAsmList;fromsize,tosize: tcgsize;reg1,reg2 : tregister);override;
-        procedure a_loadaddr_ref_reg(list : TAsmList;const ref : treference;r : tregister);override;
+        procedure a_load_ref_reg(list : TAsmList;fromsize,tosize: TCgSize;const ref : TReference;reg : TRegister);override;final;
+        procedure a_load_reg_reg(list : TAsmList;fromsize,tosize: TCgSize;reg1,reg2 : TRegister);override;
+        procedure a_loadaddr_ref_reg(list : TAsmList;const ref : TReference;r : TRegister);override;
 
         { bit scan instructions }
-        procedure a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCGSize; src, dst: TRegister); override;
+        procedure a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister); override;
 
         { fpu move instructions }
-        procedure a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: tcgsize; reg1, reg2: tregister); override;
-        procedure a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: tcgsize; const ref: treference; reg: tregister); override;
-        procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: tcgsize; reg: tregister; const ref: treference); override;
-        procedure a_loadfpu_ref_cgpara(list : TAsmList;size : tcgsize;const ref : treference;const cgpara : TCGPara); override;
+        procedure a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister); override;
+        procedure a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister); override;
+        procedure a_loadfpu_reg_ref(list: TAsmList; fromsize, tosize: TCgSize; reg: TRegister; const ref: TReference); override;
+        procedure a_loadfpu_ref_cgpara(list : TAsmList;size : TCgSize;const ref : TReference;const cgpara : TCGPara); override;
 
         { vector register move instructions }
-        procedure a_loadmm_reg_reg(list: TAsmList; fromsize, tosize : tcgsize;reg1, reg2: tregister;shuffle : pmmshuffle); override;
-        procedure a_loadmm_ref_reg(list: TAsmList; fromsize, tosize : tcgsize;const ref: treference; reg: tregister;shuffle : pmmshuffle); override;
-        procedure a_loadmm_reg_ref(list: TAsmList; fromsize, tosize : tcgsize;reg: tregister; const ref: treference;shuffle : pmmshuffle); override;
-        procedure a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : tcgsize;const ref: treference; reg: tregister;shuffle : pmmshuffle); override;
-        procedure a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : tcgsize;src,dst: tregister;shuffle : pmmshuffle);override;
-        procedure a_opmm_ref_reg_reg(list : TAsmList;Op : TOpCG;size : tcgsize;const ref : treference;src,dst : tregister;shuffle : pmmshuffle);override;
-        procedure a_opmm_reg_reg_reg(list : TAsmList;Op : TOpCG;size : tcgsize;src1,src2,dst : tregister;shuffle : pmmshuffle);override;
+        procedure a_loadmm_reg_reg(list: TAsmList; fromsize, tosize : TCgSize;reg1, reg2: TRegister;shuffle : PMMShuffle); override;
+        procedure a_loadmm_ref_reg(list: TAsmList; fromsize, tosize : TCgSize;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
+        procedure a_loadmm_reg_ref(list: TAsmList; fromsize, tosize : TCgSize;reg: TRegister; const ref: TReference;shuffle : PMMShuffle); override;
+        procedure a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : TCgSize;const ref: TReference; reg: TRegister;shuffle : PMMShuffle); override;
+        procedure a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : TCgSize;src,dst: TRegister;shuffle : PMMShuffle);override;
+        procedure a_opmm_ref_reg_reg(list : TAsmList;Op : TOpCG;size : TCgSize;const ref : TReference;src,dst : TRegister;shuffle : PMMShuffle);override;
+        procedure a_opmm_reg_reg_reg(list : TAsmList;Op : TOpCG;size : TCgSize;src1,src2,dst : TRegister;shuffle : PMMShuffle);override;
 
         {  comparison operations }
-        procedure a_cmp_const_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;a : tcgint;reg : tregister;
-          l : tasmlabel);override;
-        procedure a_cmp_const_ref_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;a : tcgint;const ref : treference;
-          l : tasmlabel);override;
-        procedure a_cmp_reg_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;reg1,reg2 : tregister;l : tasmlabel); override;
-        procedure a_cmp_ref_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;const ref: treference; reg : tregister; l : tasmlabel); override;
-        procedure a_cmp_reg_ref_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;reg : tregister; const ref: treference; l : tasmlabel); override;
+        procedure a_cmp_const_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;a : TCGInt;reg : TRegister;
+          l : TAsmLabel);override;
+        procedure a_cmp_const_ref_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;a : TCGInt;const ref : TReference;
+          l : TAsmLabel);override;
+        procedure a_cmp_reg_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;reg1,reg2 : TRegister;l : TAsmLabel); override;
+        procedure a_cmp_ref_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;const ref: TReference; reg : TRegister; l : TAsmLabel); override;
+        procedure a_cmp_reg_ref_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;reg : TRegister; const ref: TReference; l : TAsmLabel); override;
 
         procedure a_jmp_name(list : TAsmList;const s : string);override;
-        procedure a_jmp_always(list : TAsmList;l: tasmlabel); override;
-        procedure a_jmp_flags(list : TAsmList;const f : TResFlags;l: tasmlabel); override;
+        procedure a_jmp_always(list : TAsmList;l: TAsmLabel); override;
+        procedure a_jmp_flags(list : TAsmList;const f : TResFlags;l: TAsmLabel); override;
 
-        procedure g_flags2reg(list: TAsmList; size: TCgSize; const f: tresflags; reg: TRegister); override;
-        procedure g_flags2ref(list: TAsmList; size: TCgSize; const f: tresflags; const ref: TReference); override;
+        procedure g_flags2reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister); override;
+        procedure g_flags2ref(list: TAsmList; size: TCgSize; const f: TResFlags; const ref: TReference); override;
 
         { returns the copy mode g_concatcopy will use depending on the length of the data, however, there is one except when this might be wrong:
           if the references contain a segment override g_concatcopy might use copy_string instead of other copying methods }
-        class function getcopymode(len: tcgint): tcopymode;
-        procedure g_concatcopy(list : TAsmList;const source,dest : treference;len : tcgint);override;
+        class function getcopymode(len: TCGInt): TCopyMode;
+        procedure g_concatcopy(list : TAsmList;const source,dest : TReference;len : TCGInt);override;
 
         { entry/exit code helpers }
-        procedure g_stackpointer_alloc(list : TAsmList;localsize : longint);override;
-        procedure g_proc_entry(list : TAsmList;localsize : longint;nostackframe:boolean);override;
+        procedure g_stackpointer_alloc(list : TAsmList;localsize : LongInt);override;
+        procedure g_proc_entry(list : TAsmList;localsize : LongInt;nostackframe:boolean);override;
         procedure g_save_registers(list: TAsmList); override;
         procedure g_restore_registers(list: TAsmList); override;
 
-        procedure g_overflowcheck(list: TAsmList; const l:tlocation;def:TDef);override;
+        procedure g_overflowcheck(list: TAsmList; const l:TLocation;def:TDef);override;
 
-        procedure make_simple_ref(list:TAsmList;var ref: treference);inline;
-        procedure make_direct_ref(list:TAsmList;var ref: treference);
+        procedure make_simple_ref(list:TAsmList;var ref: TReference);inline;
+        procedure make_direct_ref(list:TAsmList;var ref: TReference);
 
-        function get_darwin_call_stub(const s: string; weak: boolean): tasmsymbol;
+        function get_darwin_call_stub(const s: string; weak: boolean): TAsmSymbol;
 
         procedure generate_leave(list : TAsmList);
       protected
-        procedure a_load_ref_reg_internal(list : TAsmList;fromsize,tosize: tcgsize;const ref : treference;reg : tregister;isdirect:boolean);virtual;
+        procedure a_load_ref_reg_internal(list : TAsmList;fromsize,tosize: TCgSize;const ref : TReference;reg : TRegister;isdirect:boolean);virtual;
 
-        procedure a_jmp_cond(list : TAsmList;cond : TOpCmp;l: tasmlabel);
-        procedure check_register_size(size:tcgsize;reg:tregister);
+        procedure a_jmp_cond(list : TAsmList;cond : TOpCmp;l: TAsmLabel);
+        procedure check_register_size(size:TCgSize;reg:TRegister);
 
-        procedure opmm_loc_reg(list: TAsmList; Op: TOpCG; size : tcgsize;loc : tlocation;dst: tregister; shuffle : pmmshuffle);
-        procedure opmm_loc_reg_reg(list : TAsmList;Op : TOpCG;size : tcgsize;loc : tlocation;src,dst : tregister;shuffle : pmmshuffle);
+        procedure opmm_loc_reg(list: TAsmList; Op: TOpCG; size : TCgSize;loc : TLocation;dst: TRegister; shuffle : PMMShuffle);
+        procedure opmm_loc_reg_reg(list : TAsmList;Op : TOpCG;size : TCgSize;loc : TLocation;src,dst : TRegister;shuffle : PMMShuffle);
 
-        procedure sizes2load(s1,s2 : tcgsize;var op: tasmop; var s3: topsize);
+        procedure sizes2load(s1,s2 : TCgSize;var op: TAsmOp; var s3: TOpSize);
 
-        procedure floatload(list: TAsmList; t : tcgsize;const ref : treference);
-        procedure floatstore(list: TAsmList; t : tcgsize;const ref : treference);
-        procedure floatloadops(t : tcgsize;var op : tasmop;var s : topsize);
-        procedure floatstoreops(t : tcgsize;var op : tasmop;var s : topsize);
+        procedure floatload(list: TAsmList; t : TCgSize;const ref : TReference);
+        procedure floatstore(list: TAsmList; t : TCgSize;const ref : TReference);
+        procedure floatloadops(t : TCgSize;var op : TAsmOp;var s : TOpSize);
+        procedure floatstoreops(t : TCgSize;var op : TAsmOp;var s : TOpSize);
 
         procedure internal_restore_regs(list: TAsmList; use_pop: boolean);
 
-        procedure make_simple_ref(list:TAsmList;var ref: treference;isdirect:boolean);
+        procedure make_simple_ref(list:TAsmList;var ref: TReference;isdirect:boolean);
       end;
 
    const
 {$if defined(x86_64)}
-      TCGSize2OpSize: Array[tcgsize] of topsize =
+      TCGSize2OpSize: Array[TCgSize] of TOpSize =
         (S_NO,S_B,S_W,S_L,S_Q,S_XMM,S_B,S_W,S_L,S_Q,S_XMM,
          S_FS,S_FL,S_FX,S_IQ,S_FXX,
          S_NO,S_NO,S_NO,S_MD,S_XMM,S_YMM,S_ZMM);
 {$elseif defined(i386)}
-      TCGSize2OpSize: Array[tcgsize] of topsize =
+      TCGSize2OpSize: Array[TCgSize] of TOpSize =
         (S_NO,S_B,S_W,S_L,S_L,S_T,S_B,S_W,S_L,S_L,S_L,
          S_FS,S_FL,S_FX,S_IQ,S_FXX,
          S_NO,S_NO,S_NO,S_MD,S_XMM,S_YMM,S_ZMM);
@@ -180,14 +180,14 @@ unit cgx86;
     function UseLeave: boolean;
 
     { Gets the byte alignment of a reference }
-    function GetRefAlignment(ref: treference): Byte; {$IFDEF USEINLINE}inline;{$ENDIF}
+    function GetRefAlignment(ref: TReference): Byte; {$IFDEF USEINLINE}inline;{$ENDIF}
 
   implementation
 
     uses
-       globals,verbose,systems,cutils,
+       Globals,Verbose,Systems,CUtils,
        symcpu,
-       paramgr,procinfo,
+       paramgr,ProcInfo,
        tgobj,ncgutil;
 
     { modern CPUs prefer add/sub over inc/dec because add/sub break instructions dependencies on flags
@@ -195,9 +195,9 @@ unit cgx86;
     function UseIncDec: boolean;
       begin
 {$if defined(x86_64)}
-        Result:=cs_opt_size in CurrentSettings.optimizerswitches;
+        Result:=cs_opt_size in CurrentSettings.OptimizerSwitches;
 {$elseif defined(i386)}
-        Result:=(cs_opt_size in CurrentSettings.optimizerswitches) or (CurrentSettings.cputype in [cpu_386]);
+        Result:=(cs_opt_size in CurrentSettings.OptimizerSwitches) or (CurrentSettings.CPUType in [cpu_386]);
 {$endif}
       end;
 
@@ -206,13 +206,13 @@ unit cgx86;
       begin
 {$if defined(x86_64)}
         { Modern processors should be happy with mov;pop, maybe except older AMDs }
-        Result:=cs_opt_size in CurrentSettings.optimizerswitches;
+        Result:=cs_opt_size in CurrentSettings.OptimizerSwitches;
 {$elseif defined(i386)}
-        Result:=(cs_opt_size in CurrentSettings.optimizerswitches) or (CurrentSettings.optimizecputype<cpu_Pentium2);
+        Result:=(cs_opt_size in CurrentSettings.OptimizerSwitches) or (CurrentSettings.OptimizeCPUType<cpu_Pentium2);
 {$endif}
       end;
 
-    function GetRefAlignment(ref: treference): Byte; {$IFDEF USEINLINE}inline;{$ENDIF}
+    function GetRefAlignment(ref: TReference): Byte; {$IFDEF USEINLINE}inline;{$ENDIF}
       begin
 {$ifdef x86_64}
         { The stack pointer and base pointer will be aligned to 16-byte boundaries if the machine code is well-behaved }
@@ -229,14 +229,14 @@ unit cgx86;
       end;
 
     const
-      TOpCG2AsmOp: Array[topcg] of TAsmOp = (A_NONE,A_MOV,A_ADD,A_AND,A_DIV,
+      TOpCG2AsmOp: Array[TOpCG] of TAsmOp = (A_NONE,A_MOV,A_ADD,A_AND,A_DIV,
                             A_IDIV,A_IMUL,A_MUL,A_NEG,A_NOT,A_OR,
                             A_SAR,A_SHL,A_SHR,A_SUB,A_XOR,A_ROL,A_ROR);
 
-      TOpCmp2AsmCond: Array[topcmp] of TAsmCond = (C_NONE,
+      TOpCmp2AsmCond: Array[TOpCmp] of TAsmCond = (C_NONE,
           C_E,C_G,C_L,C_GE,C_LE,C_NE,C_BE,C_B,C_AE,C_A);
 
-    procedure Tcgx86.done_register_allocators;
+    procedure TCGX86.done_register_allocators;
       begin
         rg[R_INTREGISTER].free;
         rg[R_MMREGISTER].free;
@@ -246,24 +246,24 @@ unit cgx86;
       end;
 
 
-    function Tcgx86.getfpuregister(list:TAsmList;size:Tcgsize):Tregister;
+    function TCGX86.getfpuregister(list:TAsmList;size:TCgSize):TRegister;
       begin
         result:=rgfpu.getregisterfpu(list);
       end;
 
 
-    function Tcgx86.getmmxregister(list:TAsmList):Tregister;
+    function TCGX86.getmmxregister(list:TAsmList):TRegister;
       begin
-        if not assigned(rg[R_MMXREGISTER]) then
-          internalerror(2003121204);
+        if not Assigned(rg[R_MMXREGISTER]) then
+          InternalError(2003121204);
         result:=rg[R_MMXREGISTER].getregister(list,R_SUBNONE);
       end;
 
 
-    function Tcgx86.getmmregister(list:TAsmList;size:Tcgsize):Tregister;
+    function TCGX86.getmmregister(list:TAsmList;size:TCgSize):TRegister;
       begin
-        if not assigned(rg[R_MMREGISTER]) then
-          internalerror(2003121234);
+        if not Assigned(rg[R_MMREGISTER]) then
+          InternalError(2003121234);
         case size of
           OS_F64:
             result:=rg[R_MMREGISTER].getregister(list,R_SUBMMD);
@@ -280,21 +280,21 @@ unit cgx86;
           OS_M512:
             result:=rg[R_MMREGISTER].getregister(list,R_SUBMMZ);
           else
-            internalerror(200506041);
+            InternalError(200506041);
         end;
       end;
 
 
-    procedure Tcgx86.getcpuregister(list:TAsmList;r:Tregister);
+    procedure TCGX86.getcpuregister(list:TAsmList;r:TRegister);
       begin
         if getregtype(r)=R_FPUREGISTER then
-          internalerror(2003121210)
+          InternalError(2003121210)
         else
           inherited getcpuregister(list,r);
       end;
 
 
-    procedure tcgx86.ungetcpuregister(list:TAsmList;r:Tregister);
+    procedure TCGX86.ungetcpuregister(list:TAsmList;r:TRegister);
       begin
         if getregtype(r)=R_FPUREGISTER then
           rgfpu.ungetregisterfpu(list,r)
@@ -303,21 +303,21 @@ unit cgx86;
       end;
 
 
-    procedure Tcgx86.alloccpuregisters(list:TAsmList;rt:Tregistertype;const r:Tcpuregisterset);
+    procedure TCGX86.alloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);
       begin
         if rt<>R_FPUREGISTER then
           inherited alloccpuregisters(list,rt,r);
       end;
 
 
-    procedure Tcgx86.dealloccpuregisters(list:TAsmList;rt:Tregistertype;const r:Tcpuregisterset);
+    procedure TCGX86.dealloccpuregisters(list:TAsmList;rt:TRegisterType;const r:TCPURegisterSet);
       begin
         if rt<>R_FPUREGISTER then
           inherited dealloccpuregisters(list,rt,r);
       end;
 
 
-    function  Tcgx86.uses_registers(rt:Tregistertype):boolean;
+    function  TCGX86.uses_registers(rt:TRegisterType):boolean;
       begin
         if rt=R_FPUREGISTER then
           result:=false
@@ -326,25 +326,25 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.add_reg_instruction(instr:Tai;r:tregister);
+    procedure TCGX86.add_reg_instruction(instr:TAI;r:TRegister);
       begin
         if getregtype(r)<>R_FPUREGISTER then
           inherited add_reg_instruction(instr,r);
       end;
 
 
-    procedure tcgx86.dec_fpu_stack;
+    procedure TCGX86.dec_fpu_stack;
       begin
         if rgfpu.fpuvaroffset<=0 then
-          internalerror(200604201);
+          InternalError(200604201);
         dec(rgfpu.fpuvaroffset);
       end;
 
 
-    procedure tcgx86.inc_fpu_stack;
+    procedure TCGX86.inc_fpu_stack;
       begin
         if rgfpu.fpuvaroffset>=7 then
-          internalerror(2012062901);
+          InternalError(2012062901);
         inc(rgfpu.fpuvaroffset);
       end;
 
@@ -357,7 +357,7 @@ unit cgx86;
                        This is private property, keep out! :)
 ****************************************************************************}
 
-    procedure tcgx86.sizes2load(s1,s2 : tcgsize; var op: tasmop; var s3: topsize);
+    procedure TCGX86.sizes2load(s1,s2 : TCgSize; var op: TAsmOp; var s3: TOpSize);
 
        begin
          { ensure to have always valid sizes }
@@ -370,7 +370,7 @@ unit cgx86;
              if S1 in [OS_8,OS_S8] then
                s3 := S_B
              else
-               internalerror(200109221);
+               InternalError(200109221);
            OS_16,OS_S16:
              case s1 of
                OS_8,OS_S8:
@@ -378,7 +378,7 @@ unit cgx86;
                OS_16,OS_S16:
                  s3 := S_W;
                else
-                 internalerror(200109222);
+                 InternalError(200109222);
              end;
            OS_32,OS_S32:
              case s1 of
@@ -389,7 +389,7 @@ unit cgx86;
                OS_32,OS_S32:
                  s3 := S_L;
                else
-                 internalerror(200109223);
+                 InternalError(200109223);
              end;
 {$ifdef x86_64}
            OS_64,OS_S64:
@@ -409,11 +409,11 @@ unit cgx86;
                OS_64,OS_S64:
                  s3 := S_Q;
                else
-                 internalerror(200304302);
+                 InternalError(200304302);
              end;
 {$endif x86_64}
            else
-             internalerror(200109227);
+             InternalError(200109227);
          end;
          if s3 in [S_B,S_W,S_L,S_Q] then
            op := A_MOV
@@ -429,18 +429,18 @@ unit cgx86;
        end;
 
 
-    procedure tcgx86.make_simple_ref(list:TAsmList;var ref: treference);
+    procedure TCGX86.make_simple_ref(list:TAsmList;var ref: TReference);
       begin
         make_simple_ref(list,ref,false);
       end;
 
 
-    procedure tcgx86.make_simple_ref(list:TAsmList;var ref: treference;isdirect:boolean);
+    procedure TCGX86.make_simple_ref(list:TAsmList;var ref: TReference;isdirect:boolean);
       var
 
-        hreg : tregister;
+        hreg : TRegister;
 
-        href : treference;
+        href : TReference;
 {$ifdef i386}
         add_hreg: boolean;
 {$endif i386}
@@ -463,20 +463,20 @@ unit cgx86;
           it is actually (offset+@symbol-RIP) that should fit into 32 bits. Since two last
           members aren't known until link time, ABIs place very pessimistic limits
           on offset values, e.g. SysV AMD64 allows +/-$1000000 (16 megabytes) }
-        if ((ref.offset<low(longint)) or (ref.offset>high(longint))) or
-           ((cs_large in CurrentSettings.globalswitches) and assigned(ref.symbol)) or
+        if ((ref.offset<low(LongInt)) or (ref.offset>high(LongInt))) or
+           ((cs_large in CurrentSettings.GlobalSwitches) and Assigned(ref.symbol)) or
            { absolute address is not a common thing in x64, but nevertheless a possible one }
            ((ref.base=NR_NO) and (ref.index=NR_NO) and (ref.symbol=nil)) then
           begin
             { Load constant value to register }
             hreg:=GetAddressRegister(list);
-            if (cs_large in CurrentSettings.globalswitches) and assigned(ref.symbol) then
+            if (cs_large in CurrentSettings.GlobalSwitches) and Assigned(ref.symbol) then
               begin
-                list.concat(taicpu.op_sym_ofs_reg(A_MOVABS,S_Q,ref.symbol,ref.offset+10,hreg));
+                list.concat(TAICPU.op_sym_ofs_reg(A_MOVABS,S_Q,ref.symbol,ref.offset+10,hreg));
                 ref.symbol:=nil;
               end
             else
-              list.concat(taicpu.op_const_reg(A_MOV,S_Q,ref.offset,hreg));
+              list.concat(TAICPU.op_const_reg(A_MOV,S_Q,ref.offset,hreg));
             ref.offset:=0;
             {if assigned(ref.symbol) then
               begin
@@ -494,15 +494,15 @@ unit cgx86;
                 reference_reset_base(href,hreg,0,ref.temppos,ref.alignment,[]);
                 href.index:=ref.index;
                 href.scalefactor:=ref.scalefactor;
-                list.concat(taicpu.op_ref_reg(A_LEA,S_Q,href,hreg));
+                list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,href,hreg));
                 ref.index:=hreg;
                 ref.scalefactor:=1;
                end;
           end;
 
-        if assigned(ref.symbol) then
+        if Assigned(ref.symbol) then
           begin
-            if cs_create_pic in CurrentSettings.moduleswitches then
+            if cs_create_pic in CurrentSettings.ModuleSwitches then
               begin
                 { Local symbols must not be accessed via the GOT }
                 if (ref.symbol.bind=AB_LOCAL) then
@@ -515,7 +515,7 @@ unit cgx86;
                         hreg:=getaddressregister(list);
                         href.refaddr:=addr_pic_no_got;
                         href.base:=NR_RIP;
-                        list.concat(taicpu.op_ref_reg(A_LEA,S_Q,href,hreg));
+                        list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,href,hreg));
                         ref.symbol:=nil;
                       end
                     else
@@ -531,7 +531,7 @@ unit cgx86;
                     hreg:=getaddressregister(list);
                     href.refaddr:=addr_pic;
                     href.base:=NR_RIP;
-                    list.concat(taicpu.op_ref_reg(A_MOV,S_Q,href,hreg));
+                    list.concat(TAICPU.op_ref_reg(A_MOV,S_Q,href,hreg));
                     ref.symbol:=nil;
                   end;
 
@@ -548,7 +548,7 @@ unit cgx86;
                     reference_reset_base(href,ref.base,0,ref.temppos,ref.alignment,[]);
                     href.index:=hreg;
                     ref.base:=getaddressregister(list);
-                    list.concat(taicpu.op_ref_reg(A_LEA,S_Q,href,ref.base));
+                    list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,href,ref.base));
                   end;
               end
             else
@@ -564,11 +564,11 @@ unit cgx86;
                   else
                     begin
                       { Use temp register to load calculated 64-bit symbol address for complex references }
-                      reference_reset_symbol(href,ref.symbol,0,sizeof(pint),[]);
+                      reference_reset_symbol(href,ref.symbol,0,sizeof(PInt),[]);
                       href.base:=NR_RIP;
                       href.refaddr:=addr_pic_no_got;
                       hreg:=GetAddressRegister(list);
-                      list.concat(taicpu.op_ref_reg(A_LEA,S_Q,href,hreg));
+                      list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,href,hreg));
                       ref.symbol:=nil;
                       if ref.base=NR_NO then
                         ref.base:=hreg
@@ -583,7 +583,7 @@ unit cgx86;
                           reference_reset_base(href,ref.base,0,ref.temppos,ref.alignment,[]);
                           href.index:=hreg;
                           ref.base:=getaddressregister(list);
-                          list.concat(taicpu.op_ref_reg(A_LEA,S_Q,href,ref.base));
+                          list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,href,ref.base));
                         end;
                     end;
 
@@ -593,10 +593,10 @@ unit cgx86;
         add_hreg:=false;
         if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
           begin
-            if assigned(ref.symbol) and
-               not(assigned(ref.relsymbol)) and
+            if Assigned(ref.symbol) and
+               not(Assigned(ref.relsymbol)) and
                ((ref.symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL,AB_PRIVATE_EXTERN]) or
-                (cs_create_pic in CurrentSettings.moduleswitches)) then
+                (cs_create_pic in CurrentSettings.ModuleSwitches)) then
              begin
                if ref.symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL,AB_PRIVATE_EXTERN] then
                  begin
@@ -614,15 +614,15 @@ unit cgx86;
                add_hreg:=true
              end
           end
-        else if (cs_create_pic in CurrentSettings.moduleswitches) and
-           assigned(ref.symbol) then
+        else if (cs_create_pic in CurrentSettings.ModuleSwitches) and
+           Assigned(ref.symbol) then
           begin
-            reference_reset_symbol(href,ref.symbol,0,sizeof(pint),[]);
+            reference_reset_symbol(href,ref.symbol,0,sizeof(PInt),[]);
             href.base:=CurrentProcInfo.got;
             href.refaddr:=addr_pic;
             include(CurrentProcInfo.flags,pi_needs_got);
             hreg:=getaddressregister(list);
-            list.concat(taicpu.op_ref_reg(A_MOV,S_L,href,hreg));
+            list.concat(TAICPU.op_ref_reg(A_MOV,S_L,href,hreg));
             ref.symbol:=nil;
             add_hreg:=true;
           end;
@@ -641,7 +641,7 @@ unit cgx86;
                 { don't use add, as the flags may contain a value }
                 reference_reset_base(href,ref.base,0,ref.temppos,ref.alignment,[]);
                 href.index:=hreg;
-                list.concat(taicpu.op_ref_reg(A_LEA,S_L,href,hreg));
+                list.concat(TAICPU.op_ref_reg(A_LEA,S_L,href,hreg));
                 ref.base:=hreg;
               end;
           end;
@@ -649,16 +649,16 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.make_direct_ref(list:tasmlist;var ref:treference);
+    procedure TCGX86.make_direct_ref(list:TAsmList;var ref:TReference);
       var
-        href : treference;
-        hreg : tregister;
+        href : TReference;
+        hreg : TRegister;
       begin
-        if assigned(ref.symbol) and (ref.symbol.bind in asmsymbindindirect) then
+        if Assigned(ref.symbol) and (ref.symbol.bind in asmsymbindindirect) then
           begin
             { load the symbol into a register }
             hreg:=getaddressregister(list);
-            reference_reset_symbol(href,ref.symbol,0,sizeof(pint),[]);
+            reference_reset_symbol(href,ref.symbol,0,sizeof(PInt),[]);
             { tell make_simple_ref that we are loading the symbol address via an indirect
               symbol and that hence it should not call make_direct_ref() again }
             a_load_ref_reg_internal(list,OS_ADDR,OS_ADDR,href,hreg,true);
@@ -677,7 +677,7 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.floatloadops(t : tcgsize;var op : tasmop;var s : topsize);
+    procedure TCGX86.floatloadops(t : TCgSize;var op : TAsmOp;var s : TOpSize);
       begin
          case t of
             OS_F32 :
@@ -701,27 +701,27 @@ unit cgx86;
                  s:=S_IQ;
               end;
             else
-              internalerror(200204043);
+              InternalError(200204043);
          end;
       end;
 
 
-    procedure tcgx86.floatload(list: TAsmList; t : tcgsize;const ref : treference);
+    procedure TCGX86.floatload(list: TAsmList; t : TCgSize;const ref : TReference);
 
       var
-         op : tasmop;
-         s : topsize;
-         tmpref : treference;
+         op : TAsmOp;
+         s : TOpSize;
+         tmpref : TReference;
       begin
          tmpref:=ref;
          make_simple_ref(list,tmpref);
          floatloadops(t,op,s);
-         list.concat(Taicpu.Op_ref(op,s,tmpref));
+         list.concat(TAICPU.Op_ref(op,s,tmpref));
          inc_fpu_stack;
       end;
 
 
-    procedure tcgx86.floatstoreops(t : tcgsize;var op : tasmop;var s : topsize);
+    procedure TCGX86.floatstoreops(t : TCgSize;var op : TAsmOp;var s : TOpSize);
 
       begin
          case t of
@@ -746,35 +746,35 @@ unit cgx86;
                   s:=S_IQ;
                end;
             else
-               internalerror(200204042);
+               InternalError(200204042);
          end;
       end;
 
 
-    procedure tcgx86.floatstore(list: TAsmList; t : tcgsize;const ref : treference);
+    procedure TCGX86.floatstore(list: TAsmList; t : TCgSize;const ref : TReference);
 
       var
-         op : tasmop;
-         s : topsize;
-         tmpref : treference;
+         op : TAsmOp;
+         s : TOpSize;
+         tmpref : TReference;
       begin
          tmpref:=ref;
          make_simple_ref(list,tmpref);
          floatstoreops(t,op,s);
-         list.concat(Taicpu.Op_ref(op,s,tmpref));
+         list.concat(TAICPU.Op_ref(op,s,tmpref));
          { storing non extended floats can cause a floating point overflow }
-         if ((t<>OS_F80) and (cs_fpu_fwait in CurrentSettings.localswitches))
+         if ((t<>OS_F80) and (cs_fpu_fwait in CurrentSettings.LocalSwitches))
 
            then
-           list.concat(Taicpu.Op_none(A_FWAIT,S_NO));
+           list.concat(TAICPU.Op_none(A_FWAIT,S_NO));
          dec_fpu_stack;
       end;
 
 
-    procedure tcgx86.check_register_size(size:tcgsize;reg:tregister);
+    procedure TCGX86.check_register_size(size:TCgSize;reg:TRegister);
       begin
         if TCGSize2OpSize[size]<>TCGSize2OpSize[reg_cgsize(reg)] then
-          internalerror(200306031);
+          InternalError(200306031);
       end;
 
 
@@ -782,34 +782,34 @@ unit cgx86;
                               Assembler code
 ****************************************************************************}
 
-    procedure tcgx86.a_jmp_name(list : TAsmList;const s : string);
+    procedure TCGX86.a_jmp_name(list : TAsmList;const s : string);
       var
-        r: treference;
+        r: TReference;
       begin
         if (TargetInfo.system <> system_i386_darwin) then
-          list.concat(taicpu.op_sym(A_JMP,S_NO,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)))
+          list.concat(TAICPU.op_sym(A_JMP,S_NO,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)))
         else
           begin
-            reference_reset_symbol(r,get_darwin_call_stub(s,false),0,sizeof(pint),[]);
+            reference_reset_symbol(r,get_darwin_call_stub(s,false),0,sizeof(PInt),[]);
             r.refaddr:=addr_full;
-            list.concat(taicpu.op_ref(A_JMP,S_NO,r));
+            list.concat(TAICPU.op_ref(A_JMP,S_NO,r));
           end;
       end;
 
 
-    procedure tcgx86.a_jmp_always(list : TAsmList;l: tasmlabel);
+    procedure TCGX86.a_jmp_always(list : TAsmList;l: TAsmLabel);
       begin
         a_jmp_cond(list, OC_NONE, l);
       end;
 
 
-    function tcgx86.get_darwin_call_stub(const s: string; weak: boolean): tasmsymbol;
+    function TCGX86.get_darwin_call_stub(const s: string; weak: boolean): TAsmSymbol;
       var
         stubname: string;
       begin
         stubname := 'L'+s+'$stub';
         result := CurrentAsmData.getasmsymbol(stubname);
-        if assigned(result) then
+        if Assigned(result) then
           exit;
 
         if CurrentAsmData.asmlists[al_imports]=nil then
@@ -817,29 +817,29 @@ unit cgx86;
 
         new_section(CurrentAsmData.asmlists[al_imports],sec_stub,'',0);
         result := CurrentAsmData.DefineAsmSymbol(stubname,AB_LOCAL,AT_FUNCTION,voidcodepointertype);
-        CurrentAsmData.asmlists[al_imports].concat(Tai_symbol.Create(result,0));
+        CurrentAsmData.asmlists[al_imports].concat(TAISymbol.Create(result,0));
         { register as a weak symbol if necessary }
         if weak then
           CurrentAsmData.weakrefasmsymbol(s,AT_FUNCTION);
-        CurrentAsmData.asmlists[al_imports].concat(tai_directive.create(asd_indirect_symbol,s));
-        CurrentAsmData.asmlists[al_imports].concat(taicpu.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(taicpu.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(taicpu.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(taicpu.op_none(A_HLT));
-        CurrentAsmData.asmlists[al_imports].concat(taicpu.op_none(A_HLT));
+        CurrentAsmData.asmlists[al_imports].concat(TAIDirective.create(asd_indirect_symbol,s));
+        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
+        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
+        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
+        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
+        CurrentAsmData.asmlists[al_imports].concat(TAICPU.op_none(A_HLT));
       end;
 
 
-    procedure tcgx86.a_call_name(list : TAsmList;const s : string; weak: boolean);
+    procedure TCGX86.a_call_name(list : TAsmList;const s : string; weak: boolean);
       begin
         a_call_name_near(list,s,weak);
       end;
 
 
-    procedure tcgx86.a_call_name_near(list : TAsmList;const s : string; weak: boolean);
+    procedure TCGX86.a_call_name_near(list : TAsmList;const s : string; weak: boolean);
       var
-        sym : tasmsymbol;
-        r : treference;
+        sym : TAsmSymbol;
+        r : TReference;
       begin
 
         if (TargetInfo.system <> system_i386_darwin) then
@@ -848,8 +848,8 @@ unit cgx86;
               sym:=CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)
             else
               sym:=CurrentAsmData.WeakRefAsmSymbol(s,AT_FUNCTION);
-            reference_reset_symbol(r,sym,0,sizeof(pint),[]);
-            if (cs_create_pic in CurrentSettings.moduleswitches) and
+            reference_reset_symbol(r,sym,0,sizeof(PInt),[]);
+            if (cs_create_pic in CurrentSettings.ModuleSwitches) and
                { darwin's assembler doesn't want @PLT after call symbols }
                not(TargetInfo.system in [system_x86_64_darwin,system_i386_iphonesim,system_x86_64_iphonesim]) then
               begin
@@ -860,58 +860,58 @@ unit cgx86;
           end
         else
           begin
-            reference_reset_symbol(r,get_darwin_call_stub(s,weak),0,sizeof(pint),[]);
+            reference_reset_symbol(r,get_darwin_call_stub(s,weak),0,sizeof(PInt),[]);
             r.refaddr:=addr_full;
           end;
-        list.concat(taicpu.op_ref(A_CALL,S_NO,r));
+        list.concat(TAICPU.op_ref(A_CALL,S_NO,r));
       end;
 
 
-    procedure tcgx86.a_call_name_static(list : TAsmList;const s : string);
+    procedure TCGX86.a_call_name_static(list : TAsmList;const s : string);
       begin
         a_call_name_static_near(list,s);
       end;
 
 
-    procedure tcgx86.a_call_name_static_near(list : TAsmList;const s : string);
+    procedure TCGX86.a_call_name_static_near(list : TAsmList;const s : string);
       var
-        sym : tasmsymbol;
-        r : treference;
+        sym : TAsmSymbol;
+        r : TReference;
       begin
         sym:=CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION);
-        reference_reset_symbol(r,sym,0,sizeof(pint),[]);
+        reference_reset_symbol(r,sym,0,sizeof(PInt),[]);
         r.refaddr:=addr_full;
-        list.concat(taicpu.op_ref(A_CALL,S_NO,r));
+        list.concat(TAICPU.op_ref(A_CALL,S_NO,r));
       end;
 
 
-    procedure tcgx86.a_call_reg(list : TAsmList;reg : tregister);
+    procedure TCGX86.a_call_reg(list : TAsmList;reg : TRegister);
       begin
         a_call_reg_near(list,reg);
       end;
 
 
-    procedure tcgx86.a_call_reg_near(list: TAsmList; reg: tregister);
+    procedure TCGX86.a_call_reg_near(list: TAsmList; reg: TRegister);
       begin
-        list.concat(taicpu.op_reg(A_CALL,S_NO,reg));
+        list.concat(TAICPU.op_reg(A_CALL,S_NO,reg));
       end;
 
 
 {********************** load instructions ********************}
 
-    procedure tcgx86.a_load_const_reg(list : TAsmList; tosize: TCGSize; a : tcgint; reg : TRegister);
+    procedure TCGX86.a_load_const_reg(list : TAsmList; tosize: TCgSize; a : TCGInt; reg : TRegister);
 
       begin
         check_register_size(tosize,reg);
         { the optimizer will change it to "xor reg,reg" when loading zero, }
         { no need to do it here too (JM)                                   }
-        list.concat(taicpu.op_const_reg(A_MOV,TCGSize2OpSize[tosize],a,reg))
+        list.concat(TAICPU.op_const_reg(A_MOV,TCGSize2OpSize[tosize],a,reg))
       end;
 
 
-    procedure tcgx86.a_load_const_ref(list : TAsmList; tosize: tcgsize; a : tcgint;const ref : treference);
+    procedure TCGX86.a_load_const_ref(list : TAsmList; tosize: TCgSize; a : TCGInt;const ref : TReference);
       var
-        tmpref : treference;
+        tmpref : TReference;
         tmpreg: TRegister;
       begin
         tmpref:=ref;
@@ -919,7 +919,7 @@ unit cgx86;
 {$ifdef x86_64}
         { x86_64 only supports signed 32 bits constants directly }
         if (tosize in [OS_S64,OS_64]) and
-           ((a<low(longint)) or (a>high(longint))) then
+           ((a<low(LongInt)) or (a>high(LongInt))) then
           begin
             tmpreg:=getintregister(list,tosize);
             a_load_const_reg(list,tosize,a,tmpreg);
@@ -927,17 +927,17 @@ unit cgx86;
           end
         else
 {$endif x86_64}
-          list.concat(taicpu.op_const_ref(A_MOV,TCGSize2OpSize[tosize],a,tmpref));
+          list.concat(TAICPU.op_const_ref(A_MOV,TCGSize2OpSize[tosize],a,tmpref));
       end;
 
 
-    procedure tcgx86.a_load_reg_ref(list : TAsmList; fromsize,tosize: TCGSize; reg : tregister;const ref : treference);
+    procedure TCGX86.a_load_reg_ref(list : TAsmList; fromsize,tosize: TCgSize; reg : TRegister;const ref : TReference);
       var
-        op: tasmop;
-        s: topsize;
-        tmpsize : tcgsize;
-        tmpreg  : tregister;
-        tmpref  : treference;
+        op: TAsmOp;
+        s: TOpSize;
+        tmpsize : TCgSize;
+        tmpreg  : TRegister;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
@@ -967,26 +967,26 @@ unit cgx86;
               else
 {$endif x86_64}
                 tmpsize:=tosize;
-              list.concat(taicpu.op_reg_reg(op,s,reg,tmpreg));
+              list.concat(TAICPU.op_reg_reg(op,s,reg,tmpreg));
               a_load_reg_ref(list,tmpsize,tosize,tmpreg,tmpref);
             end;
         else
-          list.concat(taicpu.op_reg_ref(op,s,reg,tmpref));
+          list.concat(TAICPU.op_reg_ref(op,s,reg,tmpref));
         end;
       end;
 
 
-    procedure tcgx86.a_load_ref_reg(list : TAsmList;fromsize,tosize : tcgsize;const ref: treference;reg : tregister);
+    procedure TCGX86.a_load_ref_reg(list : TAsmList;fromsize,tosize : TCgSize;const ref: TReference;reg : TRegister);
       begin
         a_load_ref_reg_internal(list,fromsize,tosize,ref,reg,false);
       end;
 
 
-    procedure tcgx86.a_load_ref_reg_internal(list : TAsmList;fromsize,tosize : tcgsize;const ref: treference;reg : tregister;isdirect:boolean);
+    procedure TCGX86.a_load_ref_reg_internal(list : TAsmList;fromsize,tosize : TCgSize;const ref: TReference;reg : TRegister;isdirect:boolean);
       var
-        op: tasmop;
-        s: topsize;
-        tmpref  : treference;
+        op: TAsmOp;
+        s: TOpSize;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref,isdirect);
@@ -999,15 +999,15 @@ unit cgx86;
         if s in [S_BL,S_WL,S_L] then
           reg:=makeregsize(list,reg,OS_32);
 {$endif x86_64}
-        list.concat(taicpu.op_ref_reg(op,s,tmpref,reg));
+        list.concat(TAICPU.op_ref_reg(op,s,tmpref,reg));
       end;
 
 
-    procedure tcgx86.a_load_reg_reg(list : TAsmList;fromsize,tosize : tcgsize;reg1,reg2 : tregister);
+    procedure TCGX86.a_load_reg_reg(list : TAsmList;fromsize,tosize : TCgSize;reg1,reg2 : TRegister);
       var
-        op: tasmop;
-        s: topsize;
-        instr:Taicpu;
+        op: TAsmOp;
+        s: TOpSize;
+        instr:TAICPU;
       begin
         check_register_size(fromsize,reg1);
         check_register_size(tosize,reg2);
@@ -1029,7 +1029,7 @@ unit cgx86;
 {$endif x86_64}
         if (reg1<>reg2) then
           begin
-            instr:=taicpu.op_reg_reg(op,s,reg1,reg2);
+            instr:=TAICPU.op_reg_reg(op,s,reg1,reg2);
             { Notify the register allocator that we have written a move instruction so
               it can try to eliminate it. }
             if (reg1<>CurrentProcInfo.framepointer) and (reg1<>NR_STACK_POINTER_REG) then
@@ -1039,14 +1039,14 @@ unit cgx86;
 {$ifdef x86_64}
         { avoid merging of registers and killing the zero extensions (FK) }
         if (tosize in [OS_64,OS_S64]) and (s=S_L) then
-          list.concat(taicpu.op_const_reg(A_AND,S_L,$ffffffff,reg2));
+          list.concat(TAICPU.op_const_reg(A_AND,S_L,$ffffffff,reg2));
 {$endif x86_64}
       end;
 
 
-    procedure tcgx86.a_loadaddr_ref_reg(list : TAsmList;const ref : treference;r : tregister);
+    procedure TCGX86.a_loadaddr_ref_reg(list : TAsmList;const ref : TReference;r : TRegister);
       var
-        dirref,tmpref : treference;
+        dirref,tmpref : TReference;
 
         tmpreg : TRegister;
 
@@ -1078,16 +1078,16 @@ unit cgx86;
                         tmpref.base:=tmpreg;
                         if base<>NR_NO then
                           tmpref.index:=base;
-                        list.concat(Taicpu.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,tmpreg));
+                        list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,tmpreg));
                         segment:=NR_NO;
                         base:=tmpreg;
                         symbol:=nil;
                         refaddr:=addr_no;
                       end
                     else
-                      Internalerror(2018110402);
+                      InternalError(2018110402);
                   else
-                    Internalerror(2018110403);
+                    InternalError(2018110403);
                 end;
               end;
 {$endif i386}
@@ -1110,34 +1110,34 @@ unit cgx86;
                         tmpref.base:=tmpreg;
                         if base<>NR_NO then
                           tmpref.index:=base;
-                        list.concat(Taicpu.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,tmpreg));
+                        list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,tmpreg));
                         segment:=NR_NO;
                         base:=tmpreg;
                         symbol:=nil;
                         refaddr:=addr_no;
                       end
                     else
-                      Internalerror(2019012003);
+                      InternalError(2019012003);
                   else
-                    Internalerror(2019012004);
+                    InternalError(2019012004);
                 end;
               end;
 {$endif x86_64}
             if (base=NR_NO) and (index=NR_NO) then
               begin
-                if assigned(dirref.symbol) then
+                if Assigned(dirref.symbol) then
                   begin
                     if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
                        ((dirref.symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) or
-                        (cs_create_pic in CurrentSettings.moduleswitches)) then
+                        (cs_create_pic in CurrentSettings.ModuleSwitches)) then
                       begin
                         if (dirref.symbol.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) or
-                           ((cs_create_pic in CurrentSettings.moduleswitches) and
+                           ((cs_create_pic in CurrentSettings.ModuleSwitches) and
                             (dirref.symbol.bind in [AB_COMMON,AB_GLOBAL,AB_PRIVATE_EXTERN])) then
                           begin
                              reference_reset_base(tmpref,
                                g_indirect_sym_load(list,dirref.symbol.name,asmsym2indsymflags(dirref.symbol)),
-                               offset,ctempposinvalid,sizeof(pint),[]);
+                               offset,ctempposinvalid,sizeof(PInt),[]);
                              a_loadaddr_ref_reg(list,tmpref,r);
                           end
                        else
@@ -1146,47 +1146,47 @@ unit cgx86;
                            reference_reset_base(tmpref,CurrentProcInfo.got,offset,dirref.temppos,dirref.alignment,[]);
                            tmpref.symbol:=symbol;
                            tmpref.relsymbol:=CurrentProcInfo.CurrGOTLabel;
-                           list.concat(Taicpu.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,r));
+                           list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,r));
                          end;
                       end
-                    else if (cs_create_pic in CurrentSettings.moduleswitches)
+                    else if (cs_create_pic in CurrentSettings.ModuleSwitches)
 {$ifdef x86_64}
                              and not(dirref.symbol.bind=AB_LOCAL)
 {$endif x86_64}
                             then
                       begin
 {$ifdef x86_64}
-                        reference_reset_symbol(tmpref,dirref.symbol,0,sizeof(pint),[]);
+                        reference_reset_symbol(tmpref,dirref.symbol,0,sizeof(PInt),[]);
                         tmpref.refaddr:=addr_pic;
                         tmpref.base:=NR_RIP;
-                        list.concat(taicpu.op_ref_reg(A_MOV,S_Q,tmpref,r));
+                        list.concat(TAICPU.op_ref_reg(A_MOV,S_Q,tmpref,r));
 {$else x86_64}
-                        reference_reset_symbol(tmpref,dirref.symbol,0,sizeof(pint),[]);
+                        reference_reset_symbol(tmpref,dirref.symbol,0,sizeof(PInt),[]);
                         tmpref.refaddr:=addr_pic;
                         tmpref.base:=CurrentProcInfo.got;
                         include(CurrentProcInfo.flags,pi_needs_got);
-                        list.concat(taicpu.op_ref_reg(A_MOV,S_L,tmpref,r));
+                        list.concat(TAICPU.op_ref_reg(A_MOV,S_L,tmpref,r));
 {$endif x86_64}
                         if offset<>0 then
                           a_op_const_reg(list,OP_ADD,OS_ADDR,offset,r);
                       end
 {$ifdef x86_64}
                     else if (TargetInfo.system in (systems_all_windows+[system_x86_64_darwin,system_x86_64_iphonesim]))
-			 or (cs_create_pic in CurrentSettings.moduleswitches)
+			 or (cs_create_pic in CurrentSettings.ModuleSwitches)
 			 then
                       begin
                         { Win64 and Darwin/x86_64 always require RIP-relative addressing }
                         tmpref:=dirref;
                         tmpref.base:=NR_RIP;
                         tmpref.refaddr:=addr_pic_no_got;
-                        list.concat(Taicpu.op_ref_reg(A_LEA,S_Q,tmpref,r));
+                        list.concat(TAICPU.op_ref_reg(A_LEA,S_Q,tmpref,r));
                       end
 {$endif x86_64}
                     else
                       begin
                         tmpref:=dirref;
                         tmpref.refaddr:=ADDR_FULL;
-                        list.concat(Taicpu.op_ref_reg(A_MOV,tcgsize2opsize[OS_ADDR],tmpref,r));
+                        list.concat(TAICPU.op_ref_reg(A_MOV,tcgsize2opsize[OS_ADDR],tmpref,r));
                       end
                   end
                 else
@@ -1202,12 +1202,12 @@ unit cgx86;
               begin
                 tmpref:=dirref;
                 make_simple_ref(list,tmpref);
-                list.concat(Taicpu.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,r));
+                list.concat(TAICPU.op_ref_reg(A_LEA,tcgsize2opsize[OS_ADDR],tmpref,r));
               end;
             if segment<>NR_NO then
               begin
 
-                cgmessage(cg_e_cant_use_far_pointer_there);
+                CGMessage(cg_e_cant_use_far_pointer_there);
 
               end;
           end;
@@ -1216,23 +1216,23 @@ unit cgx86;
 
     { all fpu load routines expect that R_ST[0-7] means an fpu regvar and }
     { R_ST means "the current value at the top of the fpu stack" (JM)     }
-    procedure tcgx86.a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: tcgsize; reg1, reg2: tregister);
+    procedure TCGX86.a_loadfpu_reg_reg(list: TAsmList; fromsize, tosize: TCgSize; reg1, reg2: TRegister);
 
        var
-         href: treference;
-         op: tasmop;
-         s: topsize;
+         href: TReference;
+         op: TAsmOp;
+         s: TOpSize;
        begin
          if (reg1<>NR_ST) then
            begin
              floatloadops(tosize,op,s);
-             list.concat(taicpu.op_reg(op,s,rgfpu.correct_fpuregister(reg1,rgfpu.fpuvaroffset)));
+             list.concat(TAICPU.op_reg(op,s,rgfpu.correct_fpuregister(reg1,rgfpu.fpuvaroffset)));
              inc_fpu_stack;
            end;
          if (reg2<>NR_ST) then
            begin
              floatstoreops(tosize,op,s);
-             list.concat(taicpu.op_reg(op,s,rgfpu.correct_fpuregister(reg2,rgfpu.fpuvaroffset)));
+             list.concat(TAICPU.op_reg(op,s,rgfpu.correct_fpuregister(reg2,rgfpu.fpuvaroffset)));
              dec_fpu_stack;
            end;
          { OS_F80 < OS_C64, but OS_C64 fits perfectly in OS_F80 }
@@ -1250,9 +1250,9 @@ unit cgx86;
        end;
 
 
-    procedure tcgx86.a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: tcgsize; const ref: treference; reg: tregister);
+    procedure TCGX86.a_loadfpu_ref_reg(list: TAsmList; fromsize, tosize: TCgSize; const ref: TReference; reg: TRegister);
        var
-         tmpref : treference;
+         tmpref : TReference;
        begin
          tmpref:=ref;
          make_simple_ref(list,tmpref);
@@ -1261,9 +1261,9 @@ unit cgx86;
        end;
 
 
-    procedure tcgx86.a_loadfpu_reg_ref(list: TAsmList; fromsize,tosize: tcgsize; reg: tregister; const ref: treference);
+    procedure TCGX86.a_loadfpu_reg_ref(list: TAsmList; fromsize,tosize: TCgSize; reg: TRegister; const ref: TReference);
        var
-         tmpref : treference;
+         tmpref : TReference;
        begin
          tmpref:=ref;
          make_simple_ref(list,tmpref);
@@ -1287,9 +1287,9 @@ unit cgx86;
        end;
 
 
-    procedure tcgx86.a_loadfpu_ref_cgpara(list: TAsmList; size: tcgsize; const ref: treference; const cgpara: TCGPara);
+    procedure TCGX86.a_loadfpu_ref_cgpara(list: TAsmList; size: TCgSize; const ref: TReference; const cgpara: TCGPara);
       var
-        href: treference;
+        href: TReference;
       begin
         if cgpara.location^.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
           begin
@@ -1303,15 +1303,15 @@ unit cgx86;
       end;
 
 
-    function get_scalar_mm_op(fromsize,tosize : tcgsize;aligned : boolean) : tasmop;
+    function get_scalar_mm_op(fromsize,tosize : TCgSize;aligned : boolean) : TAsmOp;
       const
-        convertopsse : array[OS_F32..OS_F128,OS_F32..OS_F128] of tasmop = (
+        convertopsse : array[OS_F32..OS_F128,OS_F32..OS_F128] of TAsmOp = (
           (A_MOVSS,A_CVTSS2SD,A_NONE,A_NONE,A_NONE),
           (A_CVTSD2SS,A_MOVSD,A_NONE,A_NONE,A_NONE),
           (A_NONE,A_NONE,A_NONE,A_NONE,A_NONE),
           (A_NONE,A_NONE,A_NONE,A_MOVQ,A_NONE),
           (A_NONE,A_NONE,A_NONE,A_NONE,A_MOVAPS));
-        convertopavx : array[OS_F32..OS_F128,OS_F32..OS_F128] of tasmop = (
+        convertopavx : array[OS_F32..OS_F128,OS_F32..OS_F128] of TAsmOp = (
           (A_VMOVSS,A_VCVTSS2SD,A_NONE,A_NONE,A_NONE),
           (A_VCVTSD2SS,A_VMOVSD,A_NONE,A_NONE,A_NONE),
           (A_NONE,A_NONE,A_NONE,A_NONE,A_NONE),
@@ -1389,15 +1389,15 @@ unit cgx86;
               result:=A_MOVDQU;
           end
         else
-          internalerror(2010060104);
+          InternalError(2010060104);
         if result=A_NONE then
-          internalerror(200312205);
+          InternalError(200312205);
       end;
 
 
-    procedure tcgx86.a_loadmm_reg_reg(list: TAsmList; fromsize, tosize : tcgsize;reg1, reg2: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_loadmm_reg_reg(list: TAsmList; fromsize, tosize : TCgSize;reg1, reg2: TRegister;shuffle : PMMShuffle);
       var
-        instr : taicpu;
+        instr : TAICPU;
         op : TAsmOp;
       begin
         if shuffle=nil then
@@ -1407,36 +1407,36 @@ unit cgx86;
               case fromsize of
                 OS_F32:
                   if UseAVX then
-                    instr:=taicpu.op_reg_reg(A_VMOVAPS,S_NO,reg1,reg2)
+                    instr:=TAICPU.op_reg_reg(A_VMOVAPS,S_NO,reg1,reg2)
                   else
-                    instr:=taicpu.op_reg_reg(A_MOVAPS,S_NO,reg1,reg2);
+                    instr:=TAICPU.op_reg_reg(A_MOVAPS,S_NO,reg1,reg2);
                 OS_F64:
                   if UseAVX then
-                    instr:=taicpu.op_reg_reg(A_VMOVAPD,S_NO,reg1,reg2)
+                    instr:=TAICPU.op_reg_reg(A_VMOVAPD,S_NO,reg1,reg2)
                   else
-                    instr:=taicpu.op_reg_reg(A_MOVAPD,S_NO,reg1,reg2);
+                    instr:=TAICPU.op_reg_reg(A_MOVAPD,S_NO,reg1,reg2);
                 OS_M64:
                   if UseAVX then
-                    instr:=taicpu.op_reg_reg(A_VMOVQ,S_NO,reg1,reg2)
+                    instr:=TAICPU.op_reg_reg(A_VMOVQ,S_NO,reg1,reg2)
                   else
-                    instr:=taicpu.op_reg_reg(A_MOVQ,S_NO,reg1,reg2);
+                    instr:=TAICPU.op_reg_reg(A_MOVQ,S_NO,reg1,reg2);
                 OS_M128:
                   if UseAVX then
-                    instr:=taicpu.op_reg_reg(A_VMOVDQA,S_NO,reg1,reg2)
+                    instr:=TAICPU.op_reg_reg(A_VMOVDQA,S_NO,reg1,reg2)
                   else
-                    instr:=taicpu.op_reg_reg(A_MOVDQA,S_NO,reg1,reg2);
+                    instr:=TAICPU.op_reg_reg(A_MOVDQA,S_NO,reg1,reg2);
                 OS_M256,
                 OS_M512:
                   if UseAVX then
-                    instr:=taicpu.op_reg_reg(A_VMOVDQA,S_NO,reg1,reg2)
+                    instr:=TAICPU.op_reg_reg(A_VMOVDQA,S_NO,reg1,reg2)
                   else
                     { SSE doesn't support 512-bit vectors }
                     InternalError(2018012933);
                 else
-                  internalerror(2006091201);
+                  InternalError(2006091201);
               end
             else
-              internalerror(200312202);
+              InternalError(200312202);
             add_move_instruction(instr);
           end
         else if shufflescalar(shuffle) then
@@ -1456,9 +1456,9 @@ unit cgx86;
 
             { A_VCVTSD2SS and A_VCVTSS2SD require always three operands }
             if (op=A_VCVTSD2SS) or (op=A_VCVTSS2SD) then
-              instr:=taicpu.op_reg_reg_reg(op,S_NO,reg1,reg1,reg2)
+              instr:=TAICPU.op_reg_reg_reg(op,S_NO,reg1,reg1,reg2)
             else
-              instr:=taicpu.op_reg_reg(op,S_NO,reg1,reg2);
+              instr:=TAICPU.op_reg_reg(op,S_NO,reg1,reg2);
 
             case op of
               A_VMOVAPD,
@@ -1477,15 +1477,15 @@ unit cgx86;
             end;
           end
         else
-          internalerror(200312201);
+          InternalError(200312201);
         list.concat(instr);
       end;
 
 
-    procedure tcgx86.a_loadmm_ref_reg(list: TAsmList; fromsize, tosize : tcgsize;const ref: treference; reg: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_loadmm_ref_reg(list: TAsmList; fromsize, tosize : TCgSize;const ref: TReference; reg: TRegister;shuffle : PMMShuffle);
        var
-         tmpref  : treference;
-         op : tasmop;
+         tmpref  : TReference;
+         op : TAsmOp;
        begin
          tmpref:=ref;
          make_simple_ref(list,tmpref);
@@ -1541,7 +1541,7 @@ unit cgx86;
                    end
                  else
                    { SSE doesn't support 256-bit vectors }
-                   Internalerror(2020010401);
+                   InternalError(2020010401);
                OS_M512:
                  { Use ZMM integer transfer }
                  if UseAVX then
@@ -1556,9 +1556,9 @@ unit cgx86;
                    InternalError(2018012939);
                else
                  { No valid transfer command available }
-                 internalerror(2017121410);
+                 InternalError(2017121410);
              end;
-             list.concat(taicpu.op_ref_reg(op,S_NO,tmpref,reg));
+             list.concat(TAICPU.op_ref_reg(op,S_NO,tmpref,reg));
            end
          else if shufflescalar(shuffle) then
            begin
@@ -1566,20 +1566,20 @@ unit cgx86;
 
              { A_VCVTSD2SS and A_VCVTSS2SD require always three operands }
              if (op=A_VCVTSD2SS) or (op=A_VCVTSS2SD) then
-               list.concat(taicpu.op_ref_reg_reg(op,S_NO,tmpref,reg,reg))
+               list.concat(TAICPU.op_ref_reg_reg(op,S_NO,tmpref,reg,reg))
              else
-               list.concat(taicpu.op_ref_reg(op,S_NO,tmpref,reg))
+               list.concat(TAICPU.op_ref_reg(op,S_NO,tmpref,reg))
            end
          else
-           internalerror(200312252);
+           InternalError(200312252);
        end;
 
 
-    procedure tcgx86.a_loadmm_reg_ref(list: TAsmList; fromsize, tosize : tcgsize;reg: tregister; const ref: treference;shuffle : pmmshuffle);
+    procedure TCGX86.a_loadmm_reg_ref(list: TAsmList; fromsize, tosize : TCgSize;reg: TRegister; const ref: TReference;shuffle : PMMShuffle);
        var
-         hreg : tregister;
-         tmpref  : treference;
-         op : tasmop;
+         hreg : TRegister;
+         tmpref  : TReference;
+         op : TAsmOp;
 
        begin
          tmpref:=ref;
@@ -1647,9 +1647,9 @@ unit cgx86;
                    InternalError(2018012945);
                else
                  { No valid transfer command available }
-                 internalerror(2017121411);
+                 InternalError(2017121411);
              end;
-             list.concat(taicpu.op_reg_ref(op,S_NO,reg,tmpref));
+             list.concat(TAICPU.op_reg_ref(op,S_NO,reg,tmpref));
            end
          else if shufflescalar(shuffle) then
            begin
@@ -1660,23 +1660,23 @@ unit cgx86;
 
                  { A_VCVTSD2SS and A_VCVTSS2SD require always three operands }
                  if (op=A_VCVTSD2SS) or (op=A_VCVTSS2SD) then
-                   list.concat(taicpu.op_reg_reg_reg(op,S_NO,reg,reg,hreg))
+                   list.concat(TAICPU.op_reg_reg_reg(op,S_NO,reg,reg,hreg))
                  else
-                   list.concat(taicpu.op_reg_reg(op,S_NO,reg,hreg));
+                   list.concat(TAICPU.op_reg_reg(op,S_NO,reg,hreg));
 
-                 list.concat(taicpu.op_reg_ref(get_scalar_mm_op(tosize,tosize,tcgsize2size[tosize]=tmpref.alignment),S_NO,hreg,tmpref))
+                 list.concat(TAICPU.op_reg_ref(get_scalar_mm_op(tosize,tosize,tcgsize2size[tosize]=tmpref.alignment),S_NO,hreg,tmpref))
                end
              else
-               list.concat(taicpu.op_reg_ref(get_scalar_mm_op(fromsize,tosize,tcgsize2size[tosize]=tmpref.alignment),S_NO,reg,tmpref));
+               list.concat(TAICPU.op_reg_ref(get_scalar_mm_op(fromsize,tosize,tcgsize2size[tosize]=tmpref.alignment),S_NO,reg,tmpref));
            end
          else
-           internalerror(2003122501);
+           InternalError(2003122501);
        end;
 
 
-    procedure tcgx86.a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : tcgsize;const ref: treference; reg: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_opmm_ref_reg(list: TAsmList; Op: TOpCG; size : TCgSize;const ref: TReference; reg: TRegister;shuffle : PMMShuffle);
       var
-        l : tlocation;
+        l : TLocation;
       begin
         l.loc:=LOC_REFERENCE;
         l.reference:=ref;
@@ -1685,9 +1685,9 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : tcgsize;src,dst: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_opmm_reg_reg(list: TAsmList; Op: TOpCG; size : TCgSize;src,dst: TRegister;shuffle : PMMShuffle);
      var
-       l : tlocation;
+       l : TLocation;
      begin
        l.loc:=LOC_MMREGISTER;
        l.register:=src;
@@ -1696,9 +1696,9 @@ unit cgx86;
      end;
 
 
-    procedure tcgx86.opmm_loc_reg_reg(list: TAsmList; Op: TOpCG; size : tcgsize;loc : tlocation;src,dst: tregister; shuffle : pmmshuffle);
+    procedure TCGX86.opmm_loc_reg_reg(list: TAsmList; Op: TOpCG; size : TCgSize;loc : TLocation;src,dst: TRegister; shuffle : PMMShuffle);
       const
-        opmm2asmop : array[0..1,OS_F32..OS_F64,topcg] of tasmop = (
+        opmm2asmop : array[0..1,OS_F32..OS_F64,TOpCG] of TAsmOp = (
           ( { scalar }
             ( { OS_F32 }
               A_NOP,A_NOP,A_VADDSS,A_NOP,A_VDIVSS,A_NOP,A_NOP,A_VMULSS,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_VSUBSS,A_NOP,A_NOP,A_NOP
@@ -1721,20 +1721,20 @@ unit cgx86;
         );
 
       var
-        resultreg : tregister;
-        asmop : tasmop;
+        resultreg : TRegister;
+        asmop : TAsmOp;
       begin
         { this is an internally used procedure so the parameters have
           some constrains
         }
         if loc.size<>size then
-          internalerror(2013061108);
+          InternalError(2013061108);
         resultreg:=dst;
         { deshuffle }
         //!!!
         if (shuffle<>nil) and not(shufflescalar(shuffle)) then
           begin
-            internalerror(2013061107);
+            InternalError(2013061107);
           end
         else if (shuffle=nil) then
           asmop:=opmm2asmop[1,size,op]
@@ -1745,35 +1745,35 @@ unit cgx86;
             if asmop=A_NOP then
               begin
                 { do vectorized and shuffle finally }
-                internalerror(2010060103);
+                InternalError(2010060103);
               end;
           end
         else
-          internalerror(2013061106);
+          InternalError(2013061106);
         if asmop=A_NOP then
-          internalerror(2013061105);
+          InternalError(2013061105);
         case loc.loc of
           LOC_CREFERENCE,LOC_REFERENCE:
             begin
               make_simple_ref(CurrentAsmData.CurrAsmList,loc.reference);
-              list.concat(taicpu.op_ref_reg_reg(asmop,S_NO,loc.reference,src,resultreg));
+              list.concat(TAICPU.op_ref_reg_reg(asmop,S_NO,loc.reference,src,resultreg));
             end;
           LOC_CMMREGISTER,LOC_MMREGISTER:
-            list.concat(taicpu.op_reg_reg_reg(asmop,S_NO,loc.register,src,resultreg));
+            list.concat(TAICPU.op_reg_reg_reg(asmop,S_NO,loc.register,src,resultreg));
           else
-            internalerror(2013061104);
+            InternalError(2013061104);
         end;
         { shuffle }
         if resultreg<>dst then
           begin
-            internalerror(2013061103);
+            InternalError(2013061103);
           end;
       end;
 
 
-    procedure tcgx86.a_opmm_reg_reg_reg(list: TAsmList; Op: TOpCG; size : tcgsize;src1,src2,dst: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_opmm_reg_reg_reg(list: TAsmList; Op: TOpCG; size : TCgSize;src1,src2,dst: TRegister;shuffle : PMMShuffle);
       var
-        l : tlocation;
+        l : TLocation;
       begin
         l.loc:=LOC_MMREGISTER;
         l.register:=src1;
@@ -1782,9 +1782,9 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.a_opmm_ref_reg_reg(list: TAsmList; Op: TOpCG; size : tcgsize;const ref: treference; src,dst: tregister;shuffle : pmmshuffle);
+    procedure TCGX86.a_opmm_ref_reg_reg(list: TAsmList; Op: TOpCG; size : TCgSize;const ref: TReference; src,dst: TRegister;shuffle : PMMShuffle);
       var
-        l : tlocation;
+        l : TLocation;
       begin
         l.loc:=LOC_REFERENCE;
         l.reference:=ref;
@@ -1793,9 +1793,9 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.opmm_loc_reg(list: TAsmList; Op: TOpCG; size : tcgsize;loc : tlocation;dst: tregister; shuffle : pmmshuffle);
+    procedure TCGX86.opmm_loc_reg(list: TAsmList; Op: TOpCG; size : TCgSize;loc : TLocation;dst: TRegister; shuffle : PMMShuffle);
       const
-        opmm2asmop : array[0..1,OS_F32..OS_F64,topcg] of tasmop = (
+        opmm2asmop : array[0..1,OS_F32..OS_F64,TOpCG] of TAsmOp = (
           ( { scalar }
             ( { OS_F32 }
               A_NOP,A_NOP,A_ADDSS,A_NOP,A_DIVSS,A_NOP,A_NOP,A_MULSS,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_SUBSS,A_XORPS,A_NOP,A_NOP
@@ -1816,7 +1816,7 @@ unit cgx86;
             )
           )
         );
-        opmm2asmop_avx : array[0..1,OS_F32..OS_F64,topcg] of tasmop = (
+        opmm2asmop_avx : array[0..1,OS_F32..OS_F64,TOpCG] of TAsmOp = (
           ( { scalar }
             ( { OS_F32 }
               A_NOP,A_NOP,A_VADDSS,A_NOP,A_VDIVSS,A_NOP,A_NOP,A_VMULSS,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_VSUBSS,A_VXORPS,A_NOP,A_NOP
@@ -1837,27 +1837,27 @@ unit cgx86;
             )
           )
         );
-        opmm2asmop_full : array[topcg] of tasmop = (
+        opmm2asmop_full : array[TOpCG] of TAsmOp = (
           A_NOP,A_NOP,A_NOP,A_PAND,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_POR,A_NOP,A_NOP,A_NOP,A_NOP,A_PXOR,A_NOP,A_NOP
         );
-        opmm2asmop_full_avx : array[topcg] of tasmop = (
+        opmm2asmop_full_avx : array[TOpCG] of TAsmOp = (
           A_NOP,A_NOP,A_NOP,A_VPAND,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_NOP,A_VPOR,A_NOP,A_NOP,A_NOP,A_NOP,A_VPXOR,A_NOP,A_NOP
         );
       var
-        resultreg : tregister;
-        asmop : tasmop;
+        resultreg : TRegister;
+        asmop : TAsmOp;
       begin
         { this is an internally used procedure so the parameters have
           some constrains
         }
         if loc.size<>size then
-          internalerror(200312213);
+          InternalError(200312213);
         resultreg:=dst;
         { deshuffle }
         //!!!
         if (shuffle<>nil) and not(shufflescalar(shuffle)) then
           begin
-            internalerror(2010060101);
+            InternalError(2010060101);
           end
         else if shuffle=nil then
           begin
@@ -1866,7 +1866,7 @@ unit cgx86;
                 asmop:=opmm2asmop_full_avx[op];
 {$ifdef x86_64}
                 { A_VPXOR does not support the upper 16 registers }
-                if (asmop=A_VPXOR) and (FPUX86_HAS_32MMREGS in fpu_capabilities[CurrentSettings.fputype]) then
+                if (asmop=A_VPXOR) and (FPUX86_HAS_32MMREGS in fpu_capabilities[CurrentSettings.FPUType]) then
                   asmop:=A_VPXORD;
 {$endif x86_64}
                 if size in [OS_M256,OS_M512] then
@@ -1889,40 +1889,40 @@ unit cgx86;
               asmop:=opmm2asmop[0,size,op];
           end
         else
-          internalerror(200312211);
+          InternalError(200312211);
         if asmop=A_NOP then
-          internalerror(200312216);
+          InternalError(200312216);
         case loc.loc of
           LOC_CREFERENCE,LOC_REFERENCE:
             begin
               make_simple_ref(CurrentAsmData.CurrAsmList,loc.reference);
               if UseAVX then
-                list.concat(taicpu.op_ref_reg_reg(asmop,S_NO,loc.reference,resultreg,resultreg))
+                list.concat(TAICPU.op_ref_reg_reg(asmop,S_NO,loc.reference,resultreg,resultreg))
               else
-                list.concat(taicpu.op_ref_reg(asmop,S_NO,loc.reference,resultreg));
+                list.concat(TAICPU.op_ref_reg(asmop,S_NO,loc.reference,resultreg));
             end;
           LOC_CMMREGISTER,LOC_MMREGISTER:
             if UseAVX then
-              list.concat(taicpu.op_reg_reg_reg(asmop,S_NO,loc.register,resultreg,resultreg))
+              list.concat(TAICPU.op_reg_reg_reg(asmop,S_NO,loc.register,resultreg,resultreg))
             else
-              list.concat(taicpu.op_reg_reg(asmop,S_NO,loc.register,resultreg));
+              list.concat(TAICPU.op_reg_reg(asmop,S_NO,loc.register,resultreg));
           else
-            internalerror(200312214);
+            InternalError(200312214);
         end;
         { shuffle }
         if resultreg<>dst then
           begin
-            internalerror(200312212);
+            InternalError(200312212);
           end;
       end;
 
 
 
-    procedure tcgx86.a_op_const_reg_reg(list:TAsmList;op:Topcg;size:Tcgsize;
-                                        a:tcgint;src,dst:Tregister);
+    procedure TCGX86.a_op_const_reg_reg(list:TAsmList;op:TOpCG;size:TCgSize;
+                                        a:TCGInt;src,dst:TRegister);
       var
-        power,al  : longint;
-        href : treference;
+        power,al  : LongInt;
+        href : TReference;
       begin
         power:=0;
         optimize_op_const(size,op,a);
@@ -1941,30 +1941,30 @@ unit cgx86;
             ;
         end;
         if (op in [OP_MUL,OP_IMUL]) and (size in [OS_32,OS_S32,OS_64,OS_S64]) and
-          not(cs_check_overflow in CurrentSettings.localswitches) and
-          (a>1) and ispowerof2(int64(a-1),power) and (power in [1..3]) then
+          not(cs_check_overflow in CurrentSettings.LocalSwitches) and
+          (a>1) and IsPowerOf2(int64(a-1),power) and (power in [1..3]) then
           begin
             reference_reset_base(href,src,0,ctempposinvalid,0,[]);
             href.index:=src;
             href.scalefactor:=a-1;
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op in [OP_MUL,OP_IMUL]) and (size in [OS_32,OS_S32,OS_64,OS_S64]) and
-          not(cs_check_overflow in CurrentSettings.localswitches) and
-          (a>1) and ispowerof2(int64(a),power) and (power in [1..3]) then
+          not(cs_check_overflow in CurrentSettings.LocalSwitches) and
+          (a>1) and IsPowerOf2(int64(a),power) and (power in [1..3]) then
           begin
             reference_reset_base(href,NR_NO,0,ctempposinvalid,0,[]);
             href.index:=src;
             href.scalefactor:=a;
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op in [OP_MUL,OP_IMUL]) and (size in [OS_16,OS_S16,OS_32,OS_S32,OS_64,OS_S64]) and
-          (a>1) and (a<=maxLongint) and not ispowerof2(int64(a),power) then
+          (a>1) and (a<=maxLongint) and not IsPowerOf2(int64(a),power) then
           begin
             { MUL with overflow checking should be handled specifically in the code generator }
-            if (op=OP_MUL) and (cs_check_overflow in CurrentSettings.localswitches) then
-              internalerror(2014011801);
-            list.concat(taicpu.op_const_reg_reg(A_IMUL,TCgSize2OpSize[size],a,src,dst));
+            if (op=OP_MUL) and (cs_check_overflow in CurrentSettings.LocalSwitches) then
+              InternalError(2014011801);
+            list.concat(TAICPU.op_const_reg_reg(A_IMUL,TCgSize2OpSize[size],a,src,dst));
           end
         else if (op=OP_ADD) and
           ((size in [OS_32,OS_S32]) or
@@ -1972,24 +1972,24 @@ unit cgx86;
            ((size=OS_64) and (a>=0) and (a<=maxLongint)) or
            ((size=OS_S64) and (a>=-maxLongint) and (a<=maxLongint))
           ) and
-          not(cs_check_overflow in CurrentSettings.localswitches) then
+          not(cs_check_overflow in CurrentSettings.LocalSwitches) then
           begin
             { a might still be in the range 0x80000000 to 0xffffffff
               which might trigger a range check error as
               reference_reset_base expects a longint value. }
 {$push} {$R-}{$Q-}
-            al := longint (a);
+            al := LongInt (a);
 {$pop}
             reference_reset_base(href,src,al,ctempposinvalid,0,[]);
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op=OP_SHL) and (size in [OS_32,OS_S32,OS_64,OS_S64]) and
           (int64(a)>=1) and (int64(a)<=3) then
           begin
             reference_reset_base(href,NR_NO,0,ctempposinvalid,0,[]);
             href.index:=src;
-            href.scalefactor:=1 shl longint(a);
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            href.scalefactor:=1 shl LongInt(a);
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op=OP_SUB) and
           ((size in [OS_32,OS_S32]) or
@@ -1997,13 +1997,13 @@ unit cgx86;
            ((size=OS_64) and (a>=0) and (a<=maxLongint)) or
            ((size=OS_S64) and (a>=-maxLongint) and (a<=maxLongint))
           ) and
-          not(cs_check_overflow in CurrentSettings.localswitches) then
+          not(cs_check_overflow in CurrentSettings.LocalSwitches) then
           begin
             reference_reset_base(href,src,-a,ctempposinvalid,0,[]);
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op in [OP_ROR,OP_ROL]) and
-          (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and
+          (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
           (size in [OS_32,OS_S32
 {$ifdef x86_64}
             ,OS_64,OS_S64
@@ -2011,29 +2011,29 @@ unit cgx86;
           ]) then
           begin
             if op=OP_ROR then
-              list.concat(taicpu.op_const_reg_reg(A_RORX,TCgSize2OpSize[size], a,src,dst))
+              list.concat(TAICPU.op_const_reg_reg(A_RORX,TCgSize2OpSize[size], a,src,dst))
             else
-              list.concat(taicpu.op_const_reg_reg(A_RORX,TCgSize2OpSize[size],TCgSize2Size[size]*8-a,src,dst));
+              list.concat(TAICPU.op_const_reg_reg(A_RORX,TCgSize2OpSize[size],TCgSize2Size[size]*8-a,src,dst));
           end
         else
           inherited a_op_const_reg_reg(list,op,size,a,src,dst);
       end;
 
 
-    procedure tcgx86.a_op_reg_reg_reg(list: TAsmList; op: TOpCg;
-      size: tcgsize; src1, src2, dst: tregister);
+    procedure TCGX86.a_op_reg_reg_reg(list: TAsmList; op: TOpCG;
+      size: TCgSize; src1, src2, dst: TRegister);
       var
-        href : treference;
+        href : TReference;
       begin
         if (op=OP_ADD) and (size in [OS_32,OS_S32,OS_64,OS_S64]) and
-          not(cs_check_overflow in CurrentSettings.localswitches) then
+          not(cs_check_overflow in CurrentSettings.LocalSwitches) then
           begin
             reference_reset_base(href,src1,0,ctempposinvalid,0,[]);
             href.index:=src2;
-            list.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
+            list.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[size],href,dst));
           end
         else if (op in [OP_SAR,OP_SHR,OP_SHL]) and
-          (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and
+          (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
           (size in [OS_32,OS_S32
 {$ifdef x86_64}
             ,OS_64,OS_S64
@@ -2042,11 +2042,11 @@ unit cgx86;
           begin
             case op of
               OP_SAR:
-                list.concat(taicpu.op_reg_reg_reg(A_SARX,TCgSize2OpSize[size],src1,src2,dst));
+                list.concat(TAICPU.op_reg_reg_reg(A_SARX,TCgSize2OpSize[size],src1,src2,dst));
               OP_SHL:
-                list.concat(taicpu.op_reg_reg_reg(A_SHLX,TCgSize2OpSize[size],src1,src2,dst));
+                list.concat(TAICPU.op_reg_reg_reg(A_SHLX,TCgSize2OpSize[size],src1,src2,dst));
               else
-                list.concat(taicpu.op_reg_reg_reg(A_SHRX,TCgSize2OpSize[size],src1,src2,dst));
+                list.concat(TAICPU.op_reg_reg_reg(A_SHRX,TCgSize2OpSize[size],src1,src2,dst));
             end;
           end
         else
@@ -2055,10 +2055,10 @@ unit cgx86;
 
 
 
-    procedure tcgx86.a_op_const_reg(list : TAsmList; Op: TOpCG; size: TCGSize; a: tcgint; reg: TRegister);
+    procedure TCGX86.a_op_const_reg(list : TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; reg: TRegister);
 {$ifdef x86_64}
       var
-        tmpreg : tregister;
+        tmpreg : TRegister;
 {$endif x86_64}
       begin
         optimize_op_const(size, op, a);
@@ -2066,7 +2066,7 @@ unit cgx86;
         { x86_64 only supports signed 32 bits constants directly }
         if not(op in [OP_NONE,OP_MOVE]) and
            (size in [OS_S64,OS_64]) and
-            ((a<low(longint)) or (a>high(longint))) then
+            ((a<low(LongInt)) or (a>high(LongInt))) then
           begin
             tmpreg:=getintregister(list,size);
             a_load_const_reg(list,size,a,tmpreg);
@@ -2089,66 +2089,66 @@ unit cgx86;
             begin
               { should be handled specifically in the code               }
               { generator because of the silly register usage restraints }
-              internalerror(200109224);
+              InternalError(200109224);
             end;
           OP_MUL,OP_IMUL:
             begin
-              if not (cs_check_overflow in CurrentSettings.localswitches) then
+              if not (cs_check_overflow in CurrentSettings.LocalSwitches) then
                 op:=OP_IMUL;
               if op = OP_IMUL then
-                list.concat(taicpu.op_const_reg(A_IMUL,TCgSize2OpSize[size],a,reg))
+                list.concat(TAICPU.op_const_reg(A_IMUL,TCgSize2OpSize[size],a,reg))
               else
                 { OP_MUL should be handled specifically in the code        }
                 { generator because of the silly register usage restraints }
-                internalerror(200109225);
+                InternalError(200109225);
             end;
           OP_ADD, OP_SUB:
-            if not(cs_check_overflow in CurrentSettings.localswitches) and
+            if not(cs_check_overflow in CurrentSettings.LocalSwitches) and
                (a = 1) and
                UseIncDec then
               begin
                 if op = OP_ADD then
-                  list.concat(taicpu.op_reg(A_INC,TCgSize2OpSize[size],reg))
+                  list.concat(TAICPU.op_reg(A_INC,TCgSize2OpSize[size],reg))
                 else
-                  list.concat(taicpu.op_reg(A_DEC,TCgSize2OpSize[size],reg))
+                  list.concat(TAICPU.op_reg(A_DEC,TCgSize2OpSize[size],reg))
               end
             else
-              list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
+              list.concat(TAICPU.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
 
           OP_AND,OP_OR:
-            list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
+            list.concat(TAICPU.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
 
           OP_XOR:
             if (aword(a)=high(aword)) then
-              list.concat(taicpu.op_reg(A_NOT,TCgSize2OpSize[size],reg))
+              list.concat(TAICPU.op_reg(A_NOT,TCgSize2OpSize[size],reg))
             else
-              list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
+              list.concat(TAICPU.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],ImmInt(a),reg));
 
           OP_SHL,OP_SHR,OP_SAR,OP_ROL,OP_ROR:
             begin
 {$if defined(x86_64)}
               if (a and 63) <> 0 Then
-                list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 63,reg));
+                list.concat(TAICPU.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 63,reg));
               if (a shr 6) <> 0 Then
-                internalerror(200609073);
+                InternalError(200609073);
 {$elseif defined(i386)}
               if (a and 31) <> 0 Then
-                list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,reg));
+                list.concat(TAICPU.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,reg));
               if (a shr 5) <> 0 Then
-                internalerror(200609071);
+                InternalError(200609071);
 {$endif}
             end
-          else internalerror(200609072);
+          else InternalError(200609072);
         end;
       end;
 
 
-    procedure tcgx86.a_op_const_ref(list : TAsmList; Op: TOpCG; size: TCGSize; a: tcgint; const ref: TReference);
+    procedure TCGX86.a_op_const_ref(list : TAsmList; Op: TOpCG; size: TCgSize; a: TCGInt; const ref: TReference);
       var
 {$ifdef x86_64}
-        tmpreg : tregister;
+        tmpreg : TRegister;
 {$endif x86_64}
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         optimize_op_const(size, op, a);
         if op in [OP_NONE,OP_MOVE] then
@@ -2161,7 +2161,7 @@ unit cgx86;
 {$ifdef x86_64}
         { x86_64 only supports signed 32 bits constants directly }
         if (size in [OS_S64,OS_64]) and
-            ((a<low(longint)) or (a>high(longint))) then
+            ((a<low(LongInt)) or (a>high(LongInt))) then
           begin
             tmpreg:=getintregister(list,size);
             a_load_const_reg(list,size,a,tmpreg);
@@ -2178,11 +2178,11 @@ unit cgx86;
             Begin
               { should be handled specifically in the code               }
               { generator because of the silly register usage restraints }
-              internalerror(200109231);
+              InternalError(200109231);
             End;
           OP_MUL,OP_IMUL:
             begin
-              if not (cs_check_overflow in CurrentSettings.localswitches) then
+              if not (cs_check_overflow in CurrentSettings.LocalSwitches) then
                 op:=OP_IMUL;
               { can't multiply a memory location directly with a constant }
               if op = OP_IMUL then
@@ -2190,50 +2190,50 @@ unit cgx86;
               else
                 { OP_MUL should be handled specifically in the code        }
                 { generator because of the silly register usage restraints }
-                internalerror(200109232);
+                InternalError(200109232);
             end;
           OP_ADD, OP_SUB:
-            if not(cs_check_overflow in CurrentSettings.localswitches) and
+            if not(cs_check_overflow in CurrentSettings.LocalSwitches) and
                (a = 1) and
                UseIncDec then
               begin
                 if op = OP_ADD then
-                  list.concat(taicpu.op_ref(A_INC,TCgSize2OpSize[size],tmpref))
+                  list.concat(TAICPU.op_ref(A_INC,TCgSize2OpSize[size],tmpref))
                 else
-                  list.concat(taicpu.op_ref(A_DEC,TCgSize2OpSize[size],tmpref))
+                  list.concat(TAICPU.op_ref(A_DEC,TCgSize2OpSize[size],tmpref))
               end
             else
-              list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
+              list.concat(TAICPU.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
 
           OP_AND,OP_OR:
-            list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
+            list.concat(TAICPU.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
 
           OP_XOR:
             if (aword(a)=high(aword)) then
-              list.concat(taicpu.op_ref(A_NOT,TCgSize2OpSize[size],tmpref))
+              list.concat(TAICPU.op_ref(A_NOT,TCgSize2OpSize[size],tmpref))
             else
-              list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
+              list.concat(TAICPU.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
 
           OP_SHL,OP_SHR,OP_SAR,OP_ROL,OP_ROR:
             begin
 {$if defined(x86_64)}
               if (a and 63) <> 0 Then
-                list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 63,tmpref));
+                list.concat(TAICPU.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 63,tmpref));
               if (a shr 6) <> 0 Then
-                internalerror(2013111003);
+                InternalError(2013111003);
 {$elseif defined(i386)}
               if (a and 31) <> 0 Then
-                list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,tmpref));
+                list.concat(TAICPU.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,tmpref));
               if (a shr 5) <> 0 Then
-                internalerror(2013111002);
+                InternalError(2013111002);
 {$endif}
             end
-          else internalerror(68992);
+          else InternalError(68992);
         end;
       end;
 
 
-    procedure tcgx86.a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TCGSize; src, dst: TRegister);
+    procedure TCGX86.a_op_reg_reg(list : TAsmList; Op: TOpCG; size: TCgSize; src, dst: TRegister);
       const
 {$if defined(cpu64bitalu)}
         REGCX=NR_CL;
@@ -2243,26 +2243,26 @@ unit cgx86;
         REGCX_Size = OS_32;
 {$endif}
       var
-        dstsize: topsize;
-        instr:Taicpu;
+        dstsize: TOpSize;
+        instr:TAICPU;
       begin
         if not(Op in [OP_SHR,OP_SHL,OP_SAR,OP_ROL,OP_ROR]) then
           check_register_size(size,src);
         check_register_size(size,dst);
         dstsize := tcgsize2opsize[size];
-        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.localswitches) then
+        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.LocalSwitches) then
           op:=OP_IMUL;
         case op of
           OP_NEG,OP_NOT:
             begin
               if src<>dst then
                 a_load_reg_reg(list,size,size,src,dst);
-              list.concat(taicpu.op_reg(TOpCG2AsmOp[op],dstsize,dst));
+              list.concat(TAICPU.op_reg(TOpCG2AsmOp[op],dstsize,dst));
             end;
           OP_MUL,OP_DIV,OP_IDIV:
             { special stuff, needs separate handling inside code }
             { generator                                          }
-            internalerror(200109233);
+            InternalError(200109233);
           OP_SHR,OP_SHL,OP_SAR,OP_ROL,OP_ROR:
             begin
               { Use ecx to load the value, that allows better coalescing }
@@ -2272,38 +2272,38 @@ unit cgx86;
                 later by the register allocator (not correcting it will cause
                 it to be deallocated one instruction too late) }
               ungetcpuregister(list,REGCX);
-              list.concat(taicpu.op_reg_reg(Topcg2asmop[op],tcgsize2opsize[size],NR_CL,dst));
+              list.concat(TAICPU.op_reg_reg(Topcg2asmop[op],tcgsize2opsize[size],NR_CL,dst));
             end;
           else
             begin
               if reg2opsize(src) <> dstsize then
-                internalerror(200109226);
+                InternalError(200109226);
               { x86 does not have an 8 Bit imul, so do 16 Bit multiplication
                 we do not need to zero/sign extend as we discard the upper bits anyways }
               if (TOpCG2AsmOp[op]=A_IMUL) and (size in [OS_8,OS_S8]) then
                 begin
                   { this might only happen if no overflow checking is done }
-                  if cs_check_overflow in CurrentSettings.localswitches then
-                    Internalerror(2021011601);
+                  if cs_check_overflow in CurrentSettings.LocalSwitches then
+                    InternalError(2021011601);
                   src:=makeregsize(list,src,OS_16);
                   dst:=makeregsize(list,dst,OS_16);
                   dstsize:=S_W;
                 end;
-              instr:=taicpu.op_reg_reg(TOpCG2AsmOp[op],dstsize,src,dst);
+              instr:=TAICPU.op_reg_reg(TOpCG2AsmOp[op],dstsize,src,dst);
               list.concat(instr);
             end;
         end;
       end;
 
 
-    procedure tcgx86.a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TCGSize; const ref: TReference; reg: TRegister);
+    procedure TCGX86.a_op_ref_reg(list : TAsmList; Op: TOpCG; size: TCgSize; const ref: TReference; reg: TRegister);
       var
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
         check_register_size(size,reg);
-        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.localswitches) then
+        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.LocalSwitches) then
           op:=OP_IMUL;
         case op of
           OP_NEG,OP_NOT:
@@ -2313,17 +2313,17 @@ unit cgx86;
           OP_MUL,OP_DIV,OP_IDIV:
             { special stuff, needs separate handling inside code }
             { generator                                          }
-            internalerror(200109239);
+            InternalError(200109239);
           else
             begin
               reg := makeregsize(list,reg,size);
-              list.concat(taicpu.op_ref_reg(TOpCG2AsmOp[op],tcgsize2opsize[size],tmpref,reg));
+              list.concat(TAICPU.op_ref_reg(TOpCG2AsmOp[op],tcgsize2opsize[size],tmpref,reg));
             end;
         end;
       end;
 
 
-    procedure tcgx86.a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TCGSize;reg: TRegister; const ref: TReference);
+    procedure TCGX86.a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TCgSize;reg: TRegister; const ref: TReference);
       const
 {$if defined(cpu64bitalu)}
         REGCX=NR_CL;
@@ -2333,7 +2333,7 @@ unit cgx86;
         REGCX_Size = OS_32;
 {$endif}
       var
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
@@ -2350,7 +2350,7 @@ unit cgx86;
                 performance issues on modern out-of-order execution x86 CPUs }
         if not (op in [OP_SHR,OP_SHL,OP_SAR,OP_ROL,OP_ROR]) then
           check_register_size(size,reg);
-        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.localswitches) then
+        if (op=OP_MUL) and not (cs_check_overflow in CurrentSettings.LocalSwitches) then
           op:=OP_IMUL;
         case op of
           OP_NEG,OP_NOT:
@@ -2364,7 +2364,7 @@ unit cgx86;
                 later by the register allocator (not correcting it will cause
                 it to be deallocated one instruction too late) }
               ungetcpuregister(list,REGCX);
-              list.concat(taicpu.op_reg_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],NR_CL,tmpref));
+              list.concat(TAICPU.op_reg_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],NR_CL,tmpref));
             end;
           OP_IMUL:
             begin
@@ -2374,29 +2374,29 @@ unit cgx86;
           OP_MUL,OP_DIV,OP_IDIV:
             { special stuff, needs separate handling inside code }
             { generator                                          }
-            internalerror(200109238);
+            InternalError(200109238);
           else
             begin
-              list.concat(taicpu.op_reg_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],reg,tmpref));
+              list.concat(TAICPU.op_reg_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],reg,tmpref));
             end;
         end;
       end;
 
-    procedure tcgx86.a_op_ref(list: TAsmList; Op: TOpCG; size: TCGSize; const ref: TReference);
+    procedure TCGX86.a_op_ref(list: TAsmList; Op: TOpCG; size: TCgSize; const ref: TReference);
       var
-        tmpref: treference;
+        tmpref: TReference;
       begin
         if not (Op in [OP_NOT,OP_NEG]) then
-          internalerror(2020050705);
+          InternalError(2020050705);
         tmpref:=ref;
         make_simple_ref(list,tmpref);
-        list.concat(taicpu.op_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],tmpref));
+        list.concat(TAICPU.op_ref(TOpCG2AsmOp[op],tcgsize2opsize[size],tmpref));
       end;
 
-     procedure tcgx86.a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCGSize; src, dst: TRegister);
+     procedure TCGX86.a_bit_scan_reg_reg(list: TAsmList; reverse,not_zero: boolean; srcsize, dstsize: TCgSize; src, dst: TRegister);
      var
-       tmpreg: tregister;
-       opsize: topsize;
+       tmpreg: TRegister;
+       opsize: TOpSize;
        l : TAsmLabel;
      begin
        { no bsf/bsr for byte }
@@ -2432,23 +2432,23 @@ unit cgx86;
 
          If not_zero: just a lone bsx suffices. }
 
-       if (not not_zero) and (CPUX86_HINT_BSX_DEST_UNCHANGED_ON_ZF_1 in cpu_optimization_hints[CurrentSettings.optimizecputype]) then
+       if (not not_zero) and (CPUX86_HINT_BSX_DEST_UNCHANGED_ON_ZF_1 in cpu_optimization_hints[CurrentSettings.OptimizeCPUType]) then
          begin
-           list.concat(taicpu.op_const_reg(A_MOV,opsize,$ff,tmpreg));
+           list.concat(TAICPU.op_const_reg(A_MOV,opsize,$ff,tmpreg));
            a_reg_alloc(list,NR_DEFAULTFLAGS);
          end;
 
        if not reverse then
-         list.concat(taicpu.op_reg_reg(A_BSF,opsize,src,tmpreg))
+         list.concat(TAICPU.op_reg_reg(A_BSF,opsize,src,tmpreg))
        else
-         list.concat(taicpu.op_reg_reg(A_BSR,opsize,src,tmpreg));
+         list.concat(TAICPU.op_reg_reg(A_BSR,opsize,src,tmpreg));
 
-       if (not not_zero) and not (CPUX86_HINT_BSX_DEST_UNCHANGED_ON_ZF_1 in cpu_optimization_hints[CurrentSettings.optimizecputype]) then
+       if (not not_zero) and not (CPUX86_HINT_BSX_DEST_UNCHANGED_ON_ZF_1 in cpu_optimization_hints[CurrentSettings.OptimizeCPUType]) then
          begin
            CurrentAsmData.getjumplabel(l);
            a_jmp_cond(list,OC_NE,l);
            a_reg_dealloc(list,NR_DEFAULTFLAGS);
-           list.concat(taicpu.op_const_reg(A_MOV,opsize,$ff,tmpreg));
+           list.concat(TAICPU.op_const_reg(A_MOV,opsize,$ff,tmpreg));
            a_label(list,l);
          end;
 
@@ -2458,18 +2458,18 @@ unit cgx86;
 
 {*************** compare instructions ****************}
 
-    procedure tcgx86.a_cmp_const_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;a : tcgint;reg : tregister;
-      l : tasmlabel);
+    procedure TCGX86.a_cmp_const_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;a : TCGInt;reg : TRegister;
+      l : TAsmLabel);
 
 {$ifdef x86_64}
       var
-        tmpreg : tregister;
+        tmpreg : TRegister;
 {$endif x86_64}
       begin
 {$ifdef x86_64}
         { x86_64 only supports signed 32 bits constants directly }
         if (size in [OS_S64,OS_64]) and
-            ((a<low(longint)) or (a>high(longint))) then
+            ((a<low(LongInt)) or (a>high(LongInt))) then
           begin
             tmpreg:=getintregister(list,size);
             a_load_const_reg(list,size,a,tmpreg);
@@ -2478,27 +2478,27 @@ unit cgx86;
           end;
 {$endif x86_64}
         cg.a_reg_alloc(list,NR_DEFAULTFLAGS);
-        list.concat(taicpu.op_const_reg(A_CMP,tcgsize2opsize[size],a,reg));
+        list.concat(TAICPU.op_const_reg(A_CMP,tcgsize2opsize[size],a,reg));
         a_jmp_cond(list,cmp_op,l);
         cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
       end;
 
 
-    procedure tcgx86.a_cmp_const_ref_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;a : tcgint;const ref : treference;
-      l : tasmlabel);
+    procedure TCGX86.a_cmp_const_ref_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;a : TCGInt;const ref : TReference;
+      l : TAsmLabel);
 
       var
 {$ifdef x86_64}
-        tmpreg : tregister;
+        tmpreg : TRegister;
 {$endif x86_64}
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
 {$ifdef x86_64}
         { x86_64 only supports signed 32 bits constants directly }
         if (size in [OS_S64,OS_64]) and
-           ((a<low(longint)) or (a>high(longint))) then
+           ((a<low(LongInt)) or (a>high(LongInt))) then
           begin
             tmpreg:=getintregister(list,size);
             a_load_const_reg(list,size,a,tmpreg);
@@ -2507,62 +2507,62 @@ unit cgx86;
           end;
 {$endif x86_64}
         cg.a_reg_alloc(list,NR_DEFAULTFLAGS);
-        list.concat(taicpu.op_const_ref(A_CMP,TCgSize2OpSize[size],a,tmpref));
+        list.concat(TAICPU.op_const_ref(A_CMP,TCgSize2OpSize[size],a,tmpref));
         a_jmp_cond(list,cmp_op,l);
         cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
       end;
 
 
-    procedure tcgx86.a_cmp_reg_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;
-      reg1,reg2 : tregister;l : tasmlabel);
+    procedure TCGX86.a_cmp_reg_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;
+      reg1,reg2 : TRegister;l : TAsmLabel);
 
       begin
         check_register_size(size,reg1);
         check_register_size(size,reg2);
         cg.a_reg_alloc(list,NR_DEFAULTFLAGS);
-        list.concat(taicpu.op_reg_reg(A_CMP,TCgSize2OpSize[size],reg1,reg2));
+        list.concat(TAICPU.op_reg_reg(A_CMP,TCgSize2OpSize[size],reg1,reg2));
         a_jmp_cond(list,cmp_op,l);
         cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
       end;
 
 
-    procedure tcgx86.a_cmp_ref_reg_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;const ref: treference; reg : tregister;l : tasmlabel);
+    procedure TCGX86.a_cmp_ref_reg_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;const ref: TReference; reg : TRegister;l : TAsmLabel);
       var
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
         check_register_size(size,reg);
         cg.a_reg_alloc(list,NR_DEFAULTFLAGS);
-        list.concat(taicpu.op_ref_reg(A_CMP,TCgSize2OpSize[size],tmpref,reg));
+        list.concat(TAICPU.op_ref_reg(A_CMP,TCgSize2OpSize[size],tmpref,reg));
         a_jmp_cond(list,cmp_op,l);
         cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
       end;
 
 
-    procedure tcgx86.a_cmp_reg_ref_label(list : TAsmList;size : tcgsize;cmp_op : topcmp;reg : tregister;const ref: treference; l : tasmlabel);
+    procedure TCGX86.a_cmp_reg_ref_label(list : TAsmList;size : TCgSize;cmp_op : TOpCmp;reg : TRegister;const ref: TReference; l : TAsmLabel);
       var
-        tmpref  : treference;
+        tmpref  : TReference;
       begin
         tmpref:=ref;
         make_simple_ref(list,tmpref);
         check_register_size(size,reg);
         cg.a_reg_alloc(list,NR_DEFAULTFLAGS);
-        list.concat(taicpu.op_reg_ref(A_CMP,TCgSize2OpSize[size],reg,tmpref));
+        list.concat(TAICPU.op_reg_ref(A_CMP,TCgSize2OpSize[size],reg,tmpref));
         a_jmp_cond(list,cmp_op,l);
         cg.a_reg_dealloc(list,NR_DEFAULTFLAGS);
       end;
 
 
-    procedure tcgx86.a_jmp_cond(list : TAsmList;cond : TOpCmp;l: tasmlabel);
+    procedure TCGX86.a_jmp_cond(list : TAsmList;cond : TOpCmp;l: TAsmLabel);
       var
-        ai : taicpu;
+        ai : TAICPU;
       begin
         if cond=OC_None then
-          ai := Taicpu.Op_sym(A_JMP,S_NO,l)
+          ai := TAICPU.Op_sym(A_JMP,S_NO,l)
         else
           begin
-            ai:=Taicpu.Op_sym(A_Jcc,S_NO,l);
+            ai:=TAICPU.Op_sym(A_Jcc,S_NO,l);
             ai.SetCondition(TOpCmp2AsmCond[cond]);
           end;
         ai.is_jmp:=true;
@@ -2570,18 +2570,18 @@ unit cgx86;
       end;
 
 
-     procedure tcgx86.a_jmp_flags(list : TAsmList;const f : TResFlags;l: tasmlabel);
+     procedure TCGX86.a_jmp_flags(list : TAsmList;const f : TResFlags;l: TAsmLabel);
        var
-         ai : taicpu;
-         hl : tasmlabel;
-         f2 : tresflags;
+         ai : TAICPU;
+         hl : TAsmLabel;
+         f2 : TResFlags;
        begin
          hl:=nil;
          f2:=f;
          case f of
            F_FNE:
              begin
-               ai:=Taicpu.op_sym(A_Jcc,S_NO,l);
+               ai:=TAICPU.op_sym(A_Jcc,S_NO,l);
                ai.SetCondition(C_P);
                ai.is_jmp:=true;
                list.concat(ai);
@@ -2592,7 +2592,7 @@ unit cgx86;
                { JP before JA/JAE is redundant, but it must be generated here
                  and left for peephole optimizer to remove. }
                CurrentAsmData.getjumplabel(hl);
-               ai:=Taicpu.op_sym(A_Jcc,S_NO,hl);
+               ai:=TAICPU.op_sym(A_Jcc,S_NO,hl);
                ai.SetCondition(C_P);
                ai.is_jmp:=true;
                list.concat(ai);
@@ -2601,21 +2601,21 @@ unit cgx86;
            else
              ;
          end;
-         ai := Taicpu.op_sym(A_Jcc,S_NO,l);
+         ai := TAICPU.op_sym(A_Jcc,S_NO,l);
          ai.SetCondition(flags_to_cond(f2));
          ai.is_jmp := true;
          list.concat(ai);
-         if assigned(hl) then
+         if Assigned(hl) then
            a_label(list,hl);
        end;
 
 
-    procedure tcgx86.g_flags2reg(list: TAsmList; size: TCgSize; const f: tresflags; reg: TRegister);
+    procedure TCGX86.g_flags2reg(list: TAsmList; size: TCgSize; const f: TResFlags; reg: TRegister);
       var
-        ai : taicpu;
-        f2 : tresflags;
-        hreg,hreg2 : tregister;
-        op: tasmop;
+        ai : TAICPU;
+        f2 : TResFlags;
+        hreg,hreg2 : TRegister;
+        op: TAsmOp;
       begin
         hreg2:=NR_NO;
         op:=A_AND;
@@ -2624,7 +2624,7 @@ unit cgx86;
           F_FE,F_FNE,F_FB,F_FBE:
             begin
               hreg2:=getintregister(list,OS_8);
-              ai:=Taicpu.op_reg(A_SETcc,S_B,hreg2);
+              ai:=TAICPU.op_reg(A_SETcc,S_B,hreg2);
               if (f=F_FNE) then       { F_FNE means "PF or (not ZF)" }
                 begin
                   ai.setcondition(C_P);
@@ -2641,21 +2641,21 @@ unit cgx86;
             ;
         end;
         hreg:=makeregsize(list,reg,OS_8);
-        ai:=Taicpu.op_reg(A_SETcc,S_B,hreg);
+        ai:=TAICPU.op_reg(A_SETcc,S_B,hreg);
         ai.setcondition(flags_to_cond(f2));
         list.concat(ai);
         if (hreg2<>NR_NO) then
-          list.concat(taicpu.op_reg_reg(op,S_B,hreg2,hreg));
+          list.concat(TAICPU.op_reg_reg(op,S_B,hreg2,hreg));
         if reg<>hreg then
           a_load_reg_reg(list,OS_8,size,hreg,reg);
       end;
 
 
-    procedure tcgx86.g_flags2ref(list: TAsmList; size: TCgSize; const f: tresflags; const ref: TReference);
+    procedure TCGX86.g_flags2ref(list: TAsmList; size: TCgSize; const f: TResFlags; const ref: TReference);
       var
-        ai : taicpu;
-        tmpref  : treference;
-        f2 : tresflags;
+        ai : TAICPU;
+        tmpref  : TReference;
+        f2 : TResFlags;
       begin
         f2:=f;
         case f of
@@ -2673,7 +2673,7 @@ unit cgx86;
          make_simple_ref(list,tmpref);
          if not(size in [OS_8,OS_S8]) then
            a_load_const_ref(list,size,0,tmpref);
-         ai:=Taicpu.op_ref(A_SETcc,S_B,tmpref);
+         ai:=TAICPU.op_ref(A_SETcc,S_B,tmpref);
          ai.setcondition(flags_to_cond(f2));
          list.concat(ai);
 {$ifndef cpu64bitalu}
@@ -2686,7 +2686,7 @@ unit cgx86;
       end;
 
 
-    class function tcgx86.getcopymode(len: tcgint): tcopymode;
+    class function TCGX86.getcopymode(len: TCGInt): TCopyMode;
       const
 {$if defined(cpu64bitalu)}
         copy_len_sizes = [1, 2, 4, 8];
@@ -2694,20 +2694,20 @@ unit cgx86;
         copy_len_sizes = [1, 2, 4];
 {$endif}
       var
-        helpsize: tcgint;
+        helpsize: TCGInt;
       begin
         result:=copy_mov;
         helpsize:=3*sizeof(aword);
-        if cs_opt_size in CurrentSettings.optimizerswitches then
+        if cs_opt_size in CurrentSettings.OptimizerSwitches then
           helpsize:=2*sizeof(aword);
 
         { avx helps only to reduce size, using it in general does at least not help on
           an i7-4770
           but using the xmm registers reduces register pressure (FK) }
-        if (FPUX86_HAS_AVXUNIT in fpu_capabilities[CurrentSettings.fputype]) and
+        if (FPUX86_HAS_AVXUNIT in fpu_capabilities[CurrentSettings.FPUType]) and
           ((len mod 4)=0) and (len<=48) {$ifndef i386}and (len>=16){$endif i386} then
           result:=copy_avx
-        else if (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) and
+        else if (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) and
           ((len mod 4)=0) and (len<=128) {$ifndef i386}and (len>=16){$endif i386} then
           result:=copy_avx512
         else
@@ -2715,16 +2715,16 @@ unit cgx86;
           but using the xmm registers reduces register pressure (FK) }
         if
   {$ifdef x86_64}
-          ((CurrentSettings.fputype>=fpu_sse64)
+          ((CurrentSettings.FPUType>=fpu_sse64)
   {$else x86_64}
-          ((CurrentSettings.fputype>=fpu_sse)
+          ((CurrentSettings.FPUType>=fpu_sse)
   {$endif x86_64}
-            or (CPUX86_HAS_SSE2 in cpu_capabilities[CurrentSettings.cputype])) and
+            or (CPUX86_HAS_SSE2 in cpu_capabilities[CurrentSettings.CPUType])) and
            ({$ifdef i386}(len=8) or {$endif i386}(len=16) or (len=24) or (len=32) or (len=40) or (len=48)) then
            result:=copy_mm
         else
 
-        if (cs_mmx in CurrentSettings.localswitches) and
+        if (cs_mmx in CurrentSettings.LocalSwitches) and
            not(pi_uses_fpu in CurrentProcInfo.flags) and
            ({$ifdef i386}(len=8) or {$endif i386}(len=16) or (len=24) or (len=32)) then
           result:=copy_mmx
@@ -2732,12 +2732,12 @@ unit cgx86;
           if len>helpsize then
             result:=copy_string;
 
-        if (result=copy_string) and not(CPUX86_HINT_FAST_SHORT_REP_MOVS in cpu_optimization_hints[CurrentSettings.optimizecputype]) and
+        if (result=copy_string) and not(CPUX86_HINT_FAST_SHORT_REP_MOVS in cpu_optimization_hints[CurrentSettings.OptimizeCPUType]) and
           { we can use the move variant only if the subroutine does another call }
           (pi_do_call in CurrentProcInfo.flags) then
           result:=copy_fpc_move;
 
-        if (cs_opt_size in CurrentSettings.optimizerswitches) and
+        if (cs_opt_size in CurrentSettings.OptimizerSwitches) and
            not((len<=16) and (result in [copy_mmx,copy_mm,copy_avx])) and
            not(len in copy_len_sizes) then
           result:=copy_string;
@@ -2746,7 +2746,7 @@ unit cgx86;
 
 { ************* concatcopy ************ }
 
-    procedure Tcgx86.g_concatcopy(list:TAsmList;const source,dest:Treference;len:tcgint);
+    procedure TCGX86.g_concatcopy(list:TAsmList;const source,dest:TReference;len:TCGInt);
 
     const
 {$if defined(cpu64bitalu)}
@@ -2762,14 +2762,14 @@ unit cgx86;
 {$endif}
 
     var
-      srcref,dstref,tmpref:Treference;
-      r,r0,r1,r2,r3:Tregister;
+      srcref,dstref,tmpref:TReference;
+      r,r0,r1,r2,r3:TRegister;
       copysize:byte;
-      cgsize:Tcgsize;
-      cm:tcopymode;
+      cgsize:TCgSize;
+      cm:TCopyMode;
       saved_ds,saved_es: Boolean;
       hlist: TAsmList;
-      helpsize: tcgint;
+      helpsize: TCGInt;
     begin
       srcref:=source;
       dstref:=dest;
@@ -3007,7 +3007,7 @@ unit cgx86;
                 inc(dstref.offset,4);
                 dec(len,4);
               end;
-            list.concatList(hlist);
+            list.ConcatList(hlist);
             hlist.free;
           end;
 
@@ -3020,8 +3020,8 @@ unit cgx86;
                 a_loadaddr_ref_reg(list,dstref,REGDI);
                 saved_es:=false;
 {$ifdef volatile_es}
-                list.concat(taicpu.op_reg(A_PUSH,push_segment_size,NR_DS));
-                list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_ES));
+                list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,NR_DS));
+                list.concat(TAICPU.op_reg(A_POP,push_segment_size,NR_ES));
 {$endif volatile_es}
               end
             else
@@ -3033,16 +3033,16 @@ unit cgx86;
 {$ifdef volatile_es}
                 saved_es:=false;
 {$else volatile_es}
-                list.concat(taicpu.op_reg(A_PUSH,push_segment_size,NR_ES));
+                list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,NR_ES));
                 saved_es:=true;
 {$endif volatile_es}
                 if dstref.segment<>NR_NO then
-                  list.concat(taicpu.op_reg(A_PUSH,push_segment_size,dstref.segment))
+                  list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,dstref.segment))
                 else if (dstref.base=NR_BP) or (dstref.base=NR_SP) then
-                  list.concat(taicpu.op_reg(A_PUSH,push_segment_size,NR_SS))
+                  list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,NR_SS))
                 else
-                  internalerror(2014040401);
-                list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_ES));
+                  InternalError(2014040401);
+                list.concat(TAICPU.op_reg(A_POP,push_segment_size,NR_ES));
               end;
             getcpuregister(list,REGSI);
 
@@ -3059,27 +3059,27 @@ unit cgx86;
                 tmpref:=srcref;
                 tmpref.segment:=NR_NO;
                 a_loadaddr_ref_reg(list,tmpref,REGSI);
-                list.concat(taicpu.op_reg(A_PUSH,push_segment_size,NR_DS));
+                list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,NR_DS));
                 saved_ds:=true;
                 if srcref.segment<>NR_NO then
-                  list.concat(taicpu.op_reg(A_PUSH,push_segment_size,srcref.segment))
+                  list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,srcref.segment))
                 else if (srcref.base=NR_BP) or (srcref.base=NR_SP) then
-                  list.concat(taicpu.op_reg(A_PUSH,push_segment_size,NR_SS))
+                  list.concat(TAICPU.op_reg(A_PUSH,push_segment_size,NR_SS))
                 else
-                  internalerror(2014040402);
-                list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_DS));
+                  InternalError(2014040402);
+                list.concat(TAICPU.op_reg(A_POP,push_segment_size,NR_DS));
               end;
 
             getcpuregister(list,REGCX);
-            if ts_cld in CurrentSettings.targetswitches then
-              list.concat(Taicpu.op_none(A_CLD,S_NO));
-            if ((cs_opt_size in CurrentSettings.optimizerswitches) and
+            if ts_cld in CurrentSettings.TargetSwitches then
+              list.concat(TAICPU.op_none(A_CLD,S_NO));
+            if ((cs_opt_size in CurrentSettings.OptimizerSwitches) and
                (len>sizeof(aint)+(sizeof(aint) div 2))) or
-               ((len<=128) and (CPUX86_HINT_FAST_SHORT_REP_MOVS in cpu_optimization_hints[CurrentSettings.optimizecputype])) then
+               ((len<=128) and (CPUX86_HINT_FAST_SHORT_REP_MOVS in cpu_optimization_hints[CurrentSettings.OptimizeCPUType])) then
               begin
                 a_load_const_reg(list,OS_INT,len,REGCX);
-                list.concat(Taicpu.op_none(A_REP,S_NO));
-                list.concat(Taicpu.op_none(A_MOVSB,S_NO));
+                list.concat(TAICPU.op_none(A_REP,S_NO));
+                list.concat(TAICPU.op_none(A_MOVSB,S_NO));
               end
             else
               begin
@@ -3088,36 +3088,36 @@ unit cgx86;
                 if helpsize>1 then
                   begin
                     a_load_const_reg(list,OS_INT,helpsize,REGCX);
-                    list.concat(Taicpu.op_none(A_REP,S_NO));
+                    list.concat(TAICPU.op_none(A_REP,S_NO));
                   end;
                 if helpsize>0 then
                   begin
 {$if defined(cpu64bitalu)}
-                    list.concat(Taicpu.op_none(A_MOVSQ,S_NO))
+                    list.concat(TAICPU.op_none(A_MOVSQ,S_NO))
 {$elseif defined(cpu32bitalu)}
-                    list.concat(Taicpu.op_none(A_MOVSD,S_NO));
+                    list.concat(TAICPU.op_none(A_MOVSD,S_NO));
 {$endif}
                   end;
                 if len>=4 then
                   begin
                     dec(len,4);
-                    list.concat(Taicpu.op_none(A_MOVSD,S_NO));
+                    list.concat(TAICPU.op_none(A_MOVSD,S_NO));
                   end;
                 if len>=2 then
                   begin
                     dec(len,2);
-                    list.concat(Taicpu.op_none(A_MOVSW,S_NO));
+                    list.concat(TAICPU.op_none(A_MOVSW,S_NO));
                   end;
                 if len=1 then
-                  list.concat(Taicpu.op_none(A_MOVSB,S_NO));
+                  list.concat(TAICPU.op_none(A_MOVSB,S_NO));
               end;
             ungetcpuregister(list,REGCX);
             ungetcpuregister(list,REGSI);
             ungetcpuregister(list,REGDI);
             if saved_ds then
-              list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_DS));
+              list.concat(TAICPU.op_reg(A_POP,push_segment_size,NR_DS));
             if saved_es then
-              list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_ES));
+              list.concat(TAICPU.op_reg(A_POP,push_segment_size,NR_ES));
           end
         else
           { copy by using move, should be a good fallback in all other cases }
@@ -3130,21 +3130,21 @@ unit cgx86;
                               Entry/Exit Code Helpers
 ****************************************************************************}
 
-    procedure tcgx86.g_stackpointer_alloc(list : TAsmList;localsize : longint);
+    procedure TCGX86.g_stackpointer_alloc(list : TAsmList;localsize : LongInt);
 
-      procedure decrease_sp(a : tcgint);
+      procedure decrease_sp(a : TCGInt);
         var
-          href : treference;
+          href : TReference;
         begin
 {$ifdef x86_64}
           if localsize=8 then
-            list.concat(Taicpu.op_reg(A_PUSH,TCGSize2OpSize[OS_ADDR],NR_RAX))
+            list.concat(TAICPU.op_reg(A_PUSH,TCGSize2OpSize[OS_ADDR],NR_RAX))
           else
 {$endif x86_64}
             begin
               reference_reset_base(href,NR_STACK_POINTER_REG,-a,ctempposinvalid,0,[]);
               { normally, lea is a better choice than a sub to adjust the stack pointer }
-              list.concat(Taicpu.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_STACK_POINTER_REG));
+              list.concat(TAICPU.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_STACK_POINTER_REG));
             end;
         end;
 
@@ -3152,9 +3152,9 @@ unit cgx86;
 {$ifndef NOTARGETWIN}
 
       var
-        href : treference;
+        href : TReference;
         i : integer;
-        again : tasmlabel;
+        again : TAsmLabel;
 
 {$endif NOTARGETWIN}
 {$endif x86}
@@ -3174,9 +3174,9 @@ unit cgx86;
                     for i:=1 to localsize div winstackpagesize do
                       begin
                          reference_reset_base(href,NR_ESP,localsize-i*winstackpagesize,ctempposinvalid,4,[]);
-                         list.concat(Taicpu.op_reg_ref(A_MOV,S_L,NR_EAX,href));
+                         list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
                       end;
-                    list.concat(Taicpu.op_reg(A_PUSH,S_L,NR_EAX));
+                    list.concat(TAICPU.op_reg(A_PUSH,S_L,NR_EAX));
                  end
                else
                  begin
@@ -3186,19 +3186,19 @@ unit cgx86;
                       called after saving registers with "push" instruction
                       without creating an unbalanced "pop edi" in epilogue }
                     a_reg_alloc(list,NR_EDI);
-                    list.concat(Taicpu.op_reg(A_PUSH,S_L,NR_EDI));
-                    list.concat(Taicpu.op_const_reg(A_MOV,S_L,localsize div winstackpagesize,NR_EDI));
+                    list.concat(TAICPU.op_reg(A_PUSH,S_L,NR_EDI));
+                    list.concat(TAICPU.op_const_reg(A_MOV,S_L,localsize div winstackpagesize,NR_EDI));
                     a_label(list,again);
                     decrease_sp(winstackpagesize-4);
-                    list.concat(Taicpu.op_reg(A_PUSH,S_L,NR_EAX));
+                    list.concat(TAICPU.op_reg(A_PUSH,S_L,NR_EAX));
                     if UseIncDec then
-                      list.concat(Taicpu.op_reg(A_DEC,S_L,NR_EDI))
+                      list.concat(TAICPU.op_reg(A_DEC,S_L,NR_EDI))
                     else
-                      list.concat(Taicpu.op_const_reg(A_SUB,S_L,1,NR_EDI));
+                      list.concat(TAICPU.op_const_reg(A_SUB,S_L,1,NR_EDI));
                     a_jmp_cond(list,OC_NE,again);
                     decrease_sp(localsize mod winstackpagesize-4);
                     reference_reset_base(href,NR_ESP,localsize-4,ctempposinvalid,4,[]);
-                    list.concat(Taicpu.op_ref_reg(A_MOV,S_L,href,NR_EDI));
+                    list.concat(TAICPU.op_ref_reg(A_MOV,S_L,href,NR_EDI));
                     a_reg_dealloc(list,NR_EDI);
                  end
              end
@@ -3218,24 +3218,24 @@ unit cgx86;
                     for i:=1 to localsize div winstackpagesize do
                       begin
                          reference_reset_base(href,NR_RSP,localsize-i*winstackpagesize+4,ctempposinvalid,4,[]);
-                         list.concat(Taicpu.op_reg_ref(A_MOV,S_L,NR_EAX,href));
+                         list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
                       end;
                     reference_reset_base(href,NR_RSP,0,ctempposinvalid,4,[]);
-                    list.concat(Taicpu.op_reg_ref(A_MOV,S_L,NR_EAX,href));
+                    list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
                  end
                else
                  begin
                     CurrentAsmData.getjumplabel(again);
                     getcpuregister(list,NR_R10);
-                    list.concat(Taicpu.op_const_reg(A_MOV,S_Q,localsize div winstackpagesize,NR_R10));
+                    list.concat(TAICPU.op_const_reg(A_MOV,S_Q,localsize div winstackpagesize,NR_R10));
                     a_label(list,again);
                     decrease_sp(winstackpagesize);
                     reference_reset_base(href,NR_RSP,0,ctempposinvalid,4,[]);
-                    list.concat(Taicpu.op_reg_ref(A_MOV,S_L,NR_EAX,href));
+                    list.concat(TAICPU.op_reg_ref(A_MOV,S_L,NR_EAX,href));
                     if UseIncDec then
-                      list.concat(Taicpu.op_reg(A_DEC,S_Q,NR_R10))
+                      list.concat(TAICPU.op_reg(A_DEC,S_Q,NR_R10))
                     else
-                      list.concat(Taicpu.op_const_reg(A_SUB,S_Q,1,NR_R10));
+                      list.concat(TAICPU.op_const_reg(A_SUB,S_Q,1,NR_R10));
                     a_jmp_cond(list,OC_NE,again);
                     decrease_sp(localsize mod winstackpagesize);
                     ungetcpuregister(list,NR_R10);
@@ -3249,17 +3249,17 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.g_proc_entry(list : TAsmList;localsize : longint;nostackframe:boolean);
+    procedure TCGX86.g_proc_entry(list : TAsmList;localsize : LongInt;nostackframe:boolean);
       var
-        stackmisalignment: longint;
-        regsize: longint;
+        stackmisalignment: LongInt;
+        regsize: LongInt;
 
 
       procedure push_regs;
         var
-          r: longint;
-          usedregs: tcpuregisterset;
-          regs_to_save_int: tcpuregisterarray;
+          r: LongInt;
+          usedregs: TCPURegisterSet;
+          regs_to_save_int: TCPURegisterArray;
           hreg: TRegister;
         begin
           regsize:=0;
@@ -3270,13 +3270,13 @@ unit cgx86;
               begin
                 inc(regsize,sizeof(aint));
                 hreg:=newreg(R_INTREGISTER,regs_to_save_int[r],R_SUBWHOLE);
-                list.concat(Taicpu.Op_reg(A_PUSH,tcgsize2opsize[OS_ADDR],hreg));
+                list.concat(TAICPU.Op_reg(A_PUSH,tcgsize2opsize[OS_ADDR],hreg));
                 if CurrentProcInfo.framepointer<>NR_STACK_POINTER_REG then
-                  CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(pint)*2+localsize))
+                  CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(PInt)*2+localsize))
                 else
                   begin
-                    CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(pint)+localsize));
-                    CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(pint));
+                    CurrentAsmData.asmcfi.cfa_offset(list,hreg,-(regsize+sizeof(PInt)+localsize));
+                    CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(PInt));
                   end;
               end;
         end;
@@ -3284,24 +3284,24 @@ unit cgx86;
       begin
         regsize:=0;
         stackmisalignment:=0;
-        list.concat(tai_regalloc.alloc(NR_STACK_POINTER_REG,nil));
+        list.concat(TAIRegAlloc.alloc(NR_STACK_POINTER_REG,nil));
 
 {$ifdef i386}
         { interrupt support for i386 }
         if (po_interrupt in CurrentProcInfo.procdef.procoptions) then
           begin
             { .... also the segment registers }
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_GS));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_FS));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_ES));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_DS));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_W,NR_GS));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_W,NR_FS));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_W,NR_ES));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_W,NR_DS));
             { save the registers of an interrupt procedure }
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_EDI));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_ESI));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_EDX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_ECX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_EBX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_EAX));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_EDI));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_ESI));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_EDX));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_ECX));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_EBX));
+            list.concat(TAICPU.Op_reg(A_PUSH,S_L,NR_EAX));
             { pushf, push %cs, 4*selector registers, 6*general purpose registers }
             inc(stackmisalignment,4+4+4*2+6*4);
           end;
@@ -3311,28 +3311,28 @@ unit cgx86;
         if not nostackframe then
           begin
             { return address }
-            inc(stackmisalignment,sizeof(pint));
+            inc(stackmisalignment,sizeof(PInt));
             if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
               begin
 {$ifdef i386}
                 if (not paramanager.use_fixed_stack) then
                   push_regs;
 {$endif i386}
-                CGmessage(cg_d_stackframe_omited);
+                CGMessage(cg_d_stackframe_omited);
               end
             else
               begin
-                list.concat(tai_regalloc.alloc(CurrentProcInfo.framepointer,nil));
+                list.concat(TAIRegAlloc.alloc(CurrentProcInfo.framepointer,nil));
 
                 { push <frame_pointer> }
-                inc(stackmisalignment,sizeof(pint));
+                inc(stackmisalignment,sizeof(PInt));
                 include(rg[R_INTREGISTER].preserved_by_proc,RS_FRAME_POINTER_REG);
-                list.concat(Taicpu.op_reg(A_PUSH,tcgsize2opsize[OS_ADDR],NR_FRAME_POINTER_REG));
+                list.concat(TAICPU.op_reg(A_PUSH,tcgsize2opsize[OS_ADDR],NR_FRAME_POINTER_REG));
                 { Return address and FP are both on stack }
-                CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,2*sizeof(pint));
-                CurrentAsmData.asmcfi.cfa_offset(list,NR_FRAME_POINTER_REG,-(2*sizeof(pint)));
+                CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,2*sizeof(PInt));
+                CurrentAsmData.asmcfi.cfa_offset(list,NR_FRAME_POINTER_REG,-(2*sizeof(PInt)));
                 if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
-                  list.concat(Taicpu.op_reg_reg(A_MOV,tcgsize2opsize[OS_ADDR],NR_STACK_POINTER_REG,NR_FRAME_POINTER_REG))
+                  list.concat(TAICPU.op_reg_reg(A_MOV,tcgsize2opsize[OS_ADDR],NR_STACK_POINTER_REG,NR_FRAME_POINTER_REG))
                 else
                   begin
                     push_regs;
@@ -3348,16 +3348,16 @@ unit cgx86;
 
             { allocate stackframe space }
             if (localsize<>0) or
-               ((TargetInfo.stackalign>sizeof(pint)) and
+               ((TargetInfo.stackalign>sizeof(PInt)) and
                 (stackmisalignment <> 0) and
                 ((pi_do_call in CurrentProcInfo.flags) or
                  (po_assembler in CurrentProcInfo.procdef.procoptions))) then
               begin
-                if TargetInfo.stackalign>sizeof(pint) then
+                if TargetInfo.stackalign>sizeof(PInt) then
                   localsize := align(localsize+stackmisalignment,TargetInfo.stackalign)-stackmisalignment;
                 g_stackpointer_alloc(list,localsize);
                 if CurrentProcInfo.framepointer=NR_STACK_POINTER_REG then
-                  CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(pint));
+                  CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(PInt));
                 CurrentProcInfo.final_localsize:=localsize;
               end
 
@@ -3381,7 +3381,7 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.g_save_registers(list: TAsmList);
+    procedure TCGX86.g_save_registers(list: TAsmList);
       begin
 {$ifdef i386}
         if paramanager.use_fixed_stack then
@@ -3390,7 +3390,7 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.g_restore_registers(list: TAsmList);
+    procedure TCGX86.g_restore_registers(list: TAsmList);
       begin
 {$ifdef i386}
         if paramanager.use_fixed_stack then
@@ -3399,13 +3399,13 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.internal_restore_regs(list: TAsmList; use_pop: boolean);
+    procedure TCGX86.internal_restore_regs(list: TAsmList; use_pop: boolean);
       var
-        r: longint;
-        hreg: tregister;
-        href: treference;
-        usedregs: tcpuregisterset;
-        regs_to_save_int: tcpuregisterarray;
+        r: LongInt;
+        hreg: TRegister;
+        href: TReference;
+        usedregs: TCPURegisterSet;
+        regs_to_save_int: TCPURegisterArray;
       begin
         href:=CurrentProcInfo.save_regs_ref;
         usedregs:=rg[R_INTREGISTER].used_in_proc-paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption);
@@ -3417,7 +3417,7 @@ unit cgx86;
               { Allocate register so the optimizer does not remove the load }
               a_reg_alloc(list,hreg);
               if use_pop then
-                list.concat(Taicpu.Op_reg(A_POP,tcgsize2opsize[OS_ADDR],hreg))
+                list.concat(TAICPU.Op_reg(A_POP,tcgsize2opsize[OS_ADDR],hreg))
               else
                 begin
                   a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,hreg);
@@ -3428,37 +3428,37 @@ unit cgx86;
       end;
 
 
-    procedure tcgx86.generate_leave(list: TAsmList);
+    procedure TCGX86.generate_leave(list: TAsmList);
       begin
         if UseLeave then
-          list.concat(taicpu.op_none(A_LEAVE,S_NO))
+          list.concat(TAICPU.op_none(A_LEAVE,S_NO))
         else
           begin
 {$if defined(x86_64)}
             CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_RSP);
-            list.Concat(taicpu.op_reg_reg(A_MOV,S_Q,NR_RBP,NR_RSP));
+            list.Concat(TAICPU.op_reg_reg(A_MOV,S_Q,NR_RBP,NR_RSP));
             CurrentAsmData.asmcfi.cfa_restore(list,NR_RBP);
             CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,8);
-            list.Concat(taicpu.op_reg(A_POP,S_Q,NR_RBP));
+            list.Concat(TAICPU.op_reg(A_POP,S_Q,NR_RBP));
 {$elseif defined(i386)}
             CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_ESP);
-            list.Concat(taicpu.op_reg_reg(A_MOV,S_L,NR_EBP,NR_ESP));
+            list.Concat(TAICPU.op_reg_reg(A_MOV,S_L,NR_EBP,NR_ESP));
             CurrentAsmData.asmcfi.cfa_restore(list,NR_EBP);
             CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,4);
-            list.Concat(taicpu.op_reg(A_POP,S_L,NR_EBP));
+            list.Concat(TAICPU.op_reg(A_POP,S_L,NR_EBP));
 {$endif}
           end;
       end;
 
 
     { produces if necessary overflowcode }
-    procedure tcgx86.g_overflowcheck(list: TAsmList; const l:tlocation;def:TDef);
+    procedure TCGX86.g_overflowcheck(list: TAsmList; const l:TLocation;def:TDef);
       var
-         hl : tasmlabel;
-         ai : taicpu;
+         hl : TAsmLabel;
+         ai : TAICPU;
          cond : TAsmCond;
       begin
-         if not(cs_check_overflow in CurrentSettings.localswitches) then
+         if not(cs_check_overflow in CurrentSettings.LocalSwitches) then
           exit;
          CurrentAsmData.getjumplabel(hl);
          if not ((def.typ=pointerdef) or
@@ -3468,7 +3468,7 @@ unit cgx86;
            cond:=C_NO
          else
            cond:=C_NB;
-         ai:=Taicpu.Op_Sym(A_Jcc,S_NO,hl);
+         ai:=TAICPU.Op_Sym(A_Jcc,S_NO,hl);
          ai.SetCondition(cond);
          ai.is_jmp:=true;
          list.concat(ai);

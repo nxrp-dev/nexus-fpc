@@ -49,90 +49,90 @@ uses
   LexBase;
 
 
-procedure listDFATable;
+procedure ListDFATable;
   (* list DFA table *)
 
 implementation
 
 uses LexTable;
 
-procedure listTrans(cc : CClassPtr; next_state : Integer);
+procedure ListTrans(CC : PCClass; NextState : Integer);
   (* list a transition in the format
         cc : next_state *)
   begin
-    write(yylst, cclassOrCharStr(cc^):30, ' : ', next_state:5);
+    Write(YYLst, CClassOrCharStr(CC^):30, ' : ', NextState:5);
   end(*listTrans*);
 
 {$ifdef debug}
 
-procedure listPosTable;
+procedure ListPosTable;
   (* lists the position table *)
   var
-    p, i : Integer;
+    P, I : Integer;
   begin
-    if n_pos=0 then exit;
-    writeln(yylst);
-    for p := 1 to n_pos do
-      with pos_table^[p] do
+    if NPos=0 then Exit;
+    WriteLn(YYLst);
+    for P := 1 to NPos do
+      with PosTable^[P] do
         begin
-          write(yylst, p:5, '     ');
-          if pos_type=char_pos then
-            write(yylst, singleQuoteStr(c):20)
-          else if pos_type=cclass_pos then
-            write(yylst, cclassStr(cc^):20)
-          else if pos_type=mark_pos then
-            if pos=0 then
-              write(yylst, '# (rule '+intStr(rule)+')':20)
+          Write(YYLst, P:5, '     ');
+          if PosType=CharPos then
+            Write(YYLst, SingleQuoteStr(C):20)
+          else if PosType=CClassPos then
+            Write(YYLst, CClassStr(CC^):20)
+          else if PosType=MarkPos then
+            if POS=0 then
+              Write(YYLst, '# (rule '+IntStr(Rule)+')':20)
             else
-              write(yylst, '/ (rule '+intStr(rule)+')':20);
-          write(yylst, ' ':5);
-          for i := 1 to size(follow_pos^) do
-            if follow_pos^[i]>0 then write(yylst, follow_pos^[i]:5, ' ');
-          writeln(yylst);
+              Write(YYLst, '/ (rule '+IntStr(Rule)+')':20);
+          Write(YYLst, ' ':5);
+          for I := 1 to Size(FollowPos^) do
+            if FollowPos^[I]>0 then Write(YYLst, FollowPos^[I]:5, ' ');
+          WriteLn(YYLst);
         end;
-    writeln(yylst);
+    WriteLn(YYLst);
   end(*listPosTable*);
 
 {$endif}
 
-procedure listDFATable;
-  var k, state : Integer;
+procedure ListDFATable;
+  var K, State : Integer;
   begin
 {$ifdef debug}
     (* list position table: *)
-    writeln(yylst);
-    writeln(yylst, '( positions : )');
-    listPosTable;
+    WriteLn(YYLst);
+    WriteLn(YYLst, '( positions : )');
+    ListPosTable;
     (* list state table: *)
-    writeln(yylst);
-    writeln(yylst, '( states : )');
+    WriteLn(YYLst);
+    WriteLn(YYLst, '( states : )');
 {$endif}
-    writeln(yylst);
-    for state := 0 to pred(n_states) do
+    WriteLn(YYLst);
+    for State := 0 to Pred(NStates) do
       begin
-        writeln(yylst);
-        write(yylst, state);
-        with state_table^[state] do
+        WriteLn(YYLst);
+        Write(YYLst, State);
+        with StateTable^[State] do
           begin
-            if final then
-              write(yylst, '* :')
+            if Final then
+              Write(YYLst, '* :')
             else
-              write(yylst, '  :');
+              Write(YYLst, '  :');
 {$ifdef debug}
-            for k := 1 to size(state_pos^) do
-              write(yylst, ' ', state_pos^[k]:5);
+            for K := 1 to Size(StatePos^) do
+              Write(YYLst, ' ', StatePos^[K]:5);
 {$else}
-            for k := 1 to size(state_pos^) do
-              with pos_table^[state_pos^[k]] do
-                if (pos_type=mark_pos) and (pos=0) then
-                  write(yylst, ' ', rule:5);
+            for K := 1 to Size(StatePos^) do
+              with PosTable^[StatePos^[K]] do
+                if (PosType=MarkPos) and (POS=0) then
+                  Write(YYLst, ' ', Rule:5);
 {$endif}
-            writeln(yylst);
-            for k := trans_lo to trans_hi do
-              with trans_table^[k] do
+            WriteLn(YYLst);
+            for K := TransLo to TransHi do
+              with TransTable^[K] do
                 begin
-                  listTrans(cc, next_state);
-                  writeln(yylst);
+                  ListTrans(CC, NextState);
+                  WriteLn(YYLst);
                 end;
           end;
       end;

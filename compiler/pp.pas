@@ -131,7 +131,7 @@ uses
     catch,
   {$endif}
 {$endif NOCATCH}
-  globals,compiler;
+  Globals,compiler;
 
 var
   oldexit : pointer;
@@ -148,28 +148,28 @@ begin
       100:
         begin
            erroraddr:=nil;
-           writeln('Error while reading file');
+           WriteLn('Error while reading file');
         end;
       101:
         begin
            erroraddr:=nil;
-           writeln('Error while writing file');
+           WriteLn('Error while writing file');
         end;
       202:
         begin
            erroraddr:=nil;
-           writeln('Error: Stack Overflow');
+           WriteLn('Error: Stack Overflow');
         end;
       203:
         begin
            erroraddr:=nil;
-           writeln('Error: Out of memory');
+           WriteLn('Error: Out of memory');
         end;
      end;
      { we cannot use current_filepos.file because all memory might have been
        freed already !
        But we can use global parser_current_file var }
-     Writeln('Compilation aborted ',parser_current_file,':',CurrentFilePos.line);
+     WriteLn('Compilation aborted ',Parser_Current_File,':',CurrentFilePos.line);
    end;
 end;
 

@@ -9,9 +9,9 @@ program tcpstr17;
 uses
   fpwidestring,
 {$ifdef android}
-  cp1251,
+  CP1251,
 {$else}
-  cp866,
+  CP866,
 {$endif}
   unicodeducet;
 

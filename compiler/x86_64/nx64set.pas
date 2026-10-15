@@ -26,26 +26,26 @@ unit nx64set;
 interface
 
     uses
-      constexp,
-      globtype,
+      ConstExp,
+      GlobType,
       nset,nx86set;
 
     type
-      tx8664casenode = class(tx86casenode)
+      TX8664CaseNode = class(TX86CaseNode)
          procedure optimizevalues(var max_linear_list:int64;var max_dist:qword);override;
-         procedure genjumptable(hp : pcaselabel;min_,max_ : int64);override;
+         procedure genjumptable(hp : PCaseLabel;min_,max_ : int64);override;
       end;
 
 
 implementation
 
     uses
-      systems,cpuinfo,
-      verbose,globals,
-      defutil,cutils,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      Systems,CPUInfo,
+      Verbose,Globals,
+      defutil,CUtils,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       cgbase,
-      cpubase,procinfo,
+      cpubase,ProcInfo,
       cga,cgutils,cgobj,cgx86;
 
 
@@ -53,7 +53,7 @@ implementation
                             TX8664CASENODE
 *****************************************************************************}
 
-    procedure tx8664casenode.optimizevalues(var max_linear_list:int64;var max_dist:qword);
+    procedure TX8664CaseNode.optimizevalues(var max_linear_list:int64;var max_dist:qword);
       begin
         inc(max_linear_list,9);
       end;
@@ -61,16 +61,16 @@ implementation
 
     { Always generate position-independent jump table, it is twice less in size at a price
       of two extra instructions (which shouldn't cause more slowdown than pipeline trashing) }
-    procedure tx8664casenode.genjumptable(hp : pcaselabel; min_,max_ : int64);
+    procedure TX8664CaseNode.genjumptable(hp : PCaseLabel; min_,max_ : int64);
       var
         last: TConstExprInt;
         tablelabel: TAsmLabel;
         basereg,indexreg,jumpreg: TRegister;
         href: TReference;
         jtlist: TAsmList;
-        opcgsize: tcgsize;
+        opcgsize: TCgSize;
         sectype: TAsmSectiontype;
-        jtitemconsttype: taiconst_type;
+        jtitemconsttype: TAIConstType;
         AlmostExhaustive: Boolean;
         lv, hv: TConstExprInt;
         ExhaustiveLimit, Range, x, oldmin : aint;
@@ -78,27 +78,27 @@ implementation
       const
         ExhaustiveLimitBase = 32;
 
-      procedure genitem(t : pcaselabel);
+      procedure genitem(t : PCaseLabel);
         var
           i : TConstExprInt;
         begin
-          if assigned(t^.less) then
+          if Assigned(t^.less) then
             genitem(t^.less);
           { fill possible hole }
           i:=last+1;
           while i<=t^._low-1 do
             begin
-              jtlist.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
+              jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
               i:=i+1;
             end;
           i:=t^._low;
           while i<=t^._high do
             begin
-              jtlist.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
+              jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
               i:=i+1;
             end;
           last:=t^._high;
-          if assigned(t^.greater) then
+          if Assigned(t^.greater) then
             genitem(t^.greater);
         end;
 
@@ -124,7 +124,7 @@ implementation
             getrange(left.resultdef,lv,hv);
             Range := aint(max_)-aint(min_);
 
-            if (cs_opt_size in CurrentSettings.optimizerswitches) then
+            if (cs_opt_size in CurrentSettings.OptimizerSwitches) then
               { Limit size of jump tables for small enumerations so they have
                 to be at least two-thirds full before being considered for the
                 "almost exhaustive" treatment }
@@ -168,7 +168,7 @@ implementation
         jumpreg:=cg.getaddressregister(jtlist);
         cg.a_load_ref_reg(jtlist,OS_S32,OS_ADDR,href,jumpreg);
         { add table address }
-        reference_reset_base(href,basereg,0,ctempposinvalid,sizeof(pint),[]);
+        reference_reset_base(href,basereg,0,ctempposinvalid,sizeof(PInt),[]);
         href.index:=jumpreg;
         href.scalefactor:=1;
         cg.a_loadaddr_ref_reg(jtlist,href,jumpreg);
@@ -193,7 +193,7 @@ implementation
 
         jtlist := CurrentProcInfo.aktlocaldata;
         new_section(jtlist,sectype,CurrentProcInfo.procdef.mangledname,4);
-        jtlist.concat(Tai_label.Create(tablelabel));
+        jtlist.concat(TAILabel.Create(tablelabel));
 
         if AlmostExhaustive then
           begin
@@ -201,7 +201,7 @@ implementation
             x := lv.svalue;
             while x < oldmin do
               begin
-                jtlist.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
+                jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
                 Inc(x);
               end;
 
@@ -213,7 +213,7 @@ implementation
             hv := hv - 1;
             while x <= hv.svalue do
               begin
-                jtlist.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
+                jtlist.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
                 Inc(x);
               end;
 
@@ -223,5 +223,5 @@ implementation
       end;
 
 begin
-   ccasenode:=tx8664casenode;
+   CCaseNode:=TX8664CaseNode;
 end.

@@ -28,36 +28,36 @@ unit cpupi;
   interface
 
     uses
-       psub,procinfo,psabiehpi,aasmdata;
+       psub,ProcInfo,psabiehpi,AAsmData;
 
     type
-       tcpuprocinfo = class(tpsabiehprocinfo)
-         constructor create(aparent:tprocinfo);override;
+       TCPUProcInfo = class(TPSABIEHProcInfo)
+         constructor create(aparent:TProcInfo);override;
          procedure set_first_temp_offset;override;
-         function calc_stackframe_size:longint;override;
+         function calc_stackframe_size:LongInt;override;
          procedure generate_parameter_info;override;
-         procedure allocate_got_register(list: tasmlist);override;
+         procedure allocate_got_register(list: TAsmList);override;
        end;
 
 
   implementation
 
     uses
-      cutils,
-      systems,globals,globtype,
+      CUtils,
+      Systems,Globals,GlobType,
       cgobj,tgobj,paramgr,
       cpubase,
       cgutils,
       symconst;
 
-    constructor tcpuprocinfo.create(aparent:tprocinfo);
+    constructor TCPUProcInfo.create(aparent:TProcInfo);
       begin
         inherited create(aparent);
         got:=NR_EBX;
       end;
 
 
-    procedure tcpuprocinfo.set_first_temp_offset;
+    procedure TCPUProcInfo.set_first_temp_offset;
       begin
         if paramanager.use_fixed_stack then
           begin
@@ -67,17 +67,17 @@ unit cpupi;
             if (tg.direction < 0) and
                not(po_nostackframe in procdef.procoptions) then
               { compensate for the return address and the "pushl %ebp" }
-              tg.setalignmentmismatch(sizeof(pint)*2);
+              tg.setalignmentmismatch(sizeof(PInt)*2);
           end;
       end;
 
 
-    function tcpuprocinfo.calc_stackframe_size:longint;
+    function TCPUProcInfo.calc_stackframe_size:LongInt;
       begin
         { align to 4 bytes at least
           otherwise all those subl $2,%esp are meaningless PM }
         if TargetInfo.stackalign<=4 then
-          result:=Align(tg.direction*tg.lasttemp,min(CurrentSettings.alignment.localalignmax,4))
+          result:=Align(tg.direction*tg.lasttemp,min(CurrentSettings.alignment.LocalAlignMax,4))
         else
           { aligned during stack frame allocation, because also depends number
             of saved registers }
@@ -85,7 +85,7 @@ unit cpupi;
       end;
 
 
-    procedure tcpuprocinfo.generate_parameter_info;
+    procedure TCPUProcInfo.generate_parameter_info;
       begin
         inherited generate_parameter_info;
         { Para_stack_size is only used to determine how many bytes to remove
@@ -97,9 +97,9 @@ unit cpupi;
       end;
 
 
-    procedure tcpuprocinfo.allocate_got_register(list: tasmlist);
+    procedure TCPUProcInfo.allocate_got_register(list: TAsmList);
       begin
-        if (pi_uses_threadvar in flags) and (tf_section_threadvars in TargetInfo.flags) and (CurrentSettings.tlsmodel in [tlsm_global_dynamic]) then
+        if (pi_uses_threadvar in flags) and (tf_section_threadvars in TargetInfo.flags) and (CurrentSettings.TLSModel in [tlsm_global_dynamic]) then
           begin
             { FIXME: It is better to use an imaginary register for GOT and
               if EBX is needed for some reason just allocate EBX and
@@ -107,10 +107,10 @@ unit cpupi;
             cg.getcpuregister(list,NR_EBX);
             got := NR_EBX;
           end
-        else if cs_create_pic in CurrentSettings.moduleswitches then
+        else if cs_create_pic in CurrentSettings.ModuleSwitches then
           got := cg.getaddressregister(list);
       end;
 
 begin
-   cprocinfo:=tcpuprocinfo;
+   CProcInfo:=TCPUProcInfo;
 end.

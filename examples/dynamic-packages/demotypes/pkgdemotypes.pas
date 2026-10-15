@@ -31,7 +31,7 @@ procedure ClearManaged(var Value: TManaged);
 procedure RaiseProbe;
 function ClassAddress: Pointer;
 function RTTIAddress: Pointer;
-procedure BeginLog(const Filename: string);
+procedure BeginLog(const FileName: string);
 procedure LogLine(const Value: string);
 implementation
 type
@@ -39,7 +39,7 @@ type
     function GetValue: LongInt;
   end;
 var
-  LogFilename: string;
+  LogFileName: string;
 function TValue.GetValue: LongInt;
 begin Result:=42; end;
 destructor TPackageValue.Destroy;
@@ -69,18 +69,18 @@ function ClassAddress: Pointer;
 begin Result:=Pointer(TPackageValue); end;
 function RTTIAddress: Pointer;
 begin Result:=TypeInfo(TPackageValue); end;
-procedure BeginLog(const Filename: string);
+procedure BeginLog(const FileName: string);
 var F: Text;
 begin
-  LogFilename:=Filename;
-  Assign(F,LogFilename); Rewrite(F); Close(F);
+  LogFileName:=FileName;
+  Assign(F,LogFileName); Rewrite(F); Close(F);
   LogLine('init='+Trace);
 end;
 procedure LogLine(const Value: string);
 var F: Text;
 begin
-  if LogFilename='' then Exit;
-  Assign(F,LogFilename); Append(F);
+  if LogFileName='' then Exit;
+  Assign(F,LogFileName); Append(F);
   WriteLn(F,Value); Close(F);
 end;
 initialization

@@ -51,151 +51,151 @@ const
 
 (* symbolic character constants: *)
 
-bs   = #8;      (* backspace character *)
-tab  = #9;      (* tab character *)
-nl   = #10;     (* newline character *)
-cr   = #13;     (* carriage return *)
-ff   = #12;     (* form feed character *)
+BS   = #8;      (* backspace character *)
+Tab  = #9;      (* tab character *)
+NL   = #10;     (* newline character *)
+CR   = #13;     (* carriage return *)
+FF   = #12;     (* form feed character *)
 
 var
 
 (* Filenames: *)
 
-lfilename     : String;
-pasfilename   : String;
-lstfilename   : String;
-codfilename   : String;
-codfilepath1,
-codfilepath2  : String; { Under linux, binary and conf file
+LFileName     : String;
+PasFileName   : String;
+LstFileName   : String;
+CodFileName   : String;
+CodFilePath1,
+CodFilePath2  : String; { Under linux, binary and conf file
                           are not in the same path}
 
 (* Lex input, output, list and code template file: *)
 
-yyin, yylst, yyout, yycod : Text;
+YYIn, YYLst, YYOut, YYCod : Text;
 
 (* the following values are initialized and updated by the parser: *)
 
-line : String;  (* current input line *)
-lno  : Integer; (* current line number *)
+Line : String;  (* current input line *)
+LNo  : Integer; (* current line number *)
 
 const
 
-max_elems  = 1000;  (* maximum size of integer sets *)
+MaxElems  = 1000;  (* maximum size of integer sets *)
 
 type
 
 (* String and character class pointers: *)
 
-StrPtr    = ^String;
-CClass    = set of Char;
-CClassPtr = ^CClass;
+PStr    = ^String;
+TCClass    = set of Char;
+PCClass = ^TCClass;
 
 (* Sorted integer sets: *)
 
-IntSet    = array [0..max_elems] of Integer;
+TIntSet    = array [0..MaxElems] of Integer;
               (* word 0 is size *)
-IntSetPtr = ^IntSet;
+PIntSet = ^TIntSet;
 
 (* Regular expressions: *)
 
-RegExpr = ^Node;
+PRegExpr = ^TNode;
 
-NodeType = (mark_node,    (* marker node *)
-            char_node,    (* character node *)
-            str_node,     (* string node *)
-            cclass_node,  (* character class node *)
-            star_node,    (* star node *)
-            plus_node,    (* plus node *)
-            opt_node,     (* option node *)
-            cat_node,     (* concatenation node *)
-            alt_node);    (* alternatives node (|) *)
+TNodeType = (MarkNode,    (* marker node *)
+            CharNode,    (* character node *)
+            StrNode,     (* string node *)
+            CClassNode,  (* character class node *)
+            StarNode,    (* star node *)
+            PlusNode,    (* plus node *)
+            OptNode,     (* option node *)
+            CatNode,     (* concatenation node *)
+            AltNode);    (* alternatives node (|) *)
 
-Node = record case node_type : NodeType of
-         mark_node : (rule, pos : Integer);
-         char_node : (c : Char);
-         str_node : (str : StrPtr);
-         cclass_node : (cc : CClassPtr);
-         star_node, plus_node, opt_node : (r : RegExpr);
-         cat_node, alt_node : (r1, r2 : RegExpr);
+TNode = record case NodeType : TNodeType of
+         MarkNode : (Rule, POS : Integer);
+         CharNode : (C : Char);
+         StrNode : (Str : PStr);
+         CClassNode : (CC : PCClass);
+         StarNode, PlusNode, OptNode : (R : PRegExpr);
+         CatNode, AltNode : (R1, R2 : PRegExpr);
        end;
 
 (* Some standard character classes: *)
 
 const
 
-letters   : CClass = ['A'..'Z','a'..'z','_'];
-digits    : CClass = ['0'..'9'];
-alphanums : CClass = ['A'..'Z','a'..'z','_','0'..'9'];
+Letters   : TCClass = ['A'..'Z','a'..'z','_'];
+Digits    : TCClass = ['0'..'9'];
+Alphanums : TCClass = ['A'..'Z','a'..'z','_','0'..'9'];
 
 (* Operations: *)
 
 (* Strings and character classes: *)
 
-function newStr(str : String) : StrPtr;
+function NewStr(Str : String) : PStr;
   (* creates a string pointer (only the space actually needed for the given
      string is allocated) *)
-function newCClass(cc : CClass) : CClassPtr;
+function NewCClass(CC : TCClass) : PCClass;
   (* creates a CClass pointer *)
 
 (* Integer sets (set arguments are passed by reference even if they are not
    modified, for greater efficiency): *)
 
-procedure empty(var M : IntSet);
+procedure Empty(var M : TIntSet);
   (* initializes M as empty *)
-procedure singleton(var M : IntSet; i : Integer);
+procedure Singleton(var M : TIntSet; I : Integer);
   (* initializes M as a singleton set containing the element i *)
-procedure include(var M : IntSet; i : Integer);
+procedure Include(var M : TIntSet; I : Integer);
   (* include i in M *)
-procedure exclude(var M : IntSet; i : Integer);
+procedure Exclude(var M : TIntSet; I : Integer);
   (* exclude i from M *)
-procedure setunion(var M, N : IntSet);
+procedure SetUnion(var M, N : TIntSet);
   (* adds N to M *)
-procedure setminus(var M, N : IntSet);
+procedure SetMinus(var M, N : TIntSet);
   (* removes N from M *)
-procedure intersect(var M, N : IntSet);
+procedure Intersect(var M, N : TIntSet);
   (* removes from M all elements NOT in N *)
-function size(var M : IntSet) : Integer;
+function Size(var M : TIntSet) : Integer;
   (* cardinality of set M *)
-function member(i : Integer; var M : IntSet) : Boolean;
+function Member(I : Integer; var M : TIntSet) : Boolean;
   (* tests for membership of i in M *)
-function isempty(var M : IntSet) : Boolean;
+function Isempty(var M : TIntSet) : Boolean;
   (* checks whether M is an empty set *)
-function equal(var M, N : IntSet) : Boolean;
+function Equal(var M, N : TIntSet) : Boolean;
   (* checks whether M and N are equal *)
-function subseteq(var M, N : IntSet) : Boolean;
+function SubsetEq(var M, N : TIntSet) : Boolean;
   (* checks whether M is a subset of N *)
-function newIntSet : IntSetPtr;
+function NewIntSet : PIntSet;
   (* creates a pointer to an empty integer set *)
 
 (* Constructors for regular expressions: *)
 
-const epsExpr : RegExpr = nil;
+const EpsExpr : PRegExpr = nil;
   (* empty regular expression *)
-function markExpr(rule, pos : Integer) : RegExpr;
+function MarkExpr(Rule, POS : Integer) : PRegExpr;
   (* markers are used to denote endmarkers of rules, as well as other
      special positions in rules, e.g. the position of the lookahead
      operator; they are considered nullable; by convention, we use
      the following pos numbers:
      - 0: endmarker position
      - 1: lookahead operator position *)
-function charExpr(c : Char) : RegExpr;
+function CharExpr(C : Char) : PRegExpr;
   (* character c *)
-function strExpr(str : StrPtr) : RegExpr;
+function StrExpr(Str : PStr) : PRegExpr;
   (* "str" *)
-function cclassExpr(cc : CClassPtr) : RegExpr;
+function CClassExpr(CC : PCClass) : PRegExpr;
   (* [str] where str are the literals in cc *)
-function starExpr(r : RegExpr) : RegExpr;
+function StarExpr(R : PRegExpr) : PRegExpr;
   (* r* *)
-function plusExpr(r : RegExpr) : RegExpr;
+function PlusExpr(R : PRegExpr) : PRegExpr;
   (* r+ *)
-function optExpr(r : RegExpr) : RegExpr;
+function OptExpr(R : PRegExpr) : PRegExpr;
   (* r? *)
-function mnExpr(r : RegExpr; m, n : Integer) : RegExpr;
+function MNExpr(R : PRegExpr; M, N : Integer) : PRegExpr;
   (* constructor expanding expression r{m,n} to the corresponding
      alt expression r^m|...|r^n *)
-function catExpr(r1, r2 : RegExpr) : RegExpr;
+function CatExpr(R1, R2 : PRegExpr) : PRegExpr;
   (* r1r2 *)
-function altExpr(r1, r2 : RegExpr) : RegExpr;
+function AltExpr(R1, R2 : PRegExpr) : PRegExpr;
   (* r1|r2 *)
 
 (* Unifiers for regular expressions:
@@ -204,37 +204,37 @@ function altExpr(r1, r2 : RegExpr) : RegExpr;
    the other arguments of the predicate are instantiated to the
    corresponding values. *)
 
-function is_epsExpr(r : RegExpr) : Boolean;
+function IsEpsExpr(R : PRegExpr) : Boolean;
   (* empty regular expression *)
-function is_markExpr(r : RegExpr; var rule, pos : Integer) : Boolean;
+function IsMarkExpr(R : PRegExpr; var Rule, POS : Integer) : Boolean;
   (* marker expression *)
-function is_charExpr(r : RegExpr; var c : Char) : Boolean;
+function IsCharExpr(R : PRegExpr; var C : Char) : Boolean;
   (* character c *)
-function is_strExpr(r : RegExpr; var str : StrPtr) : Boolean;
+function IsStrExpr(R : PRegExpr; var Str : PStr) : Boolean;
   (* "str" *)
-function is_cclassExpr(r : RegExpr; var cc : CClassPtr) : Boolean;
+function IsCClassExpr(R : PRegExpr; var CC : PCClass) : Boolean;
   (* [str] where str are the literals in cc *)
-function is_starExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsStarExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   (* r1* *)
-function is_plusExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsPlusExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   (* r1+ *)
-function is_optExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsOptExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   (* r1? *)
-function is_catExpr(r : RegExpr; var r1, r2 : RegExpr) : Boolean;
+function IsCatExpr(R : PRegExpr; var R1, R2 : PRegExpr) : Boolean;
   (* r1r2 *)
-function is_altExpr(r : RegExpr; var r1, r2 : RegExpr) : Boolean;
+function IsAltExpr(R : PRegExpr; var R1, R2 : PRegExpr) : Boolean;
   (* r1|r2 *)
 
 (* Quicksort: *)
 
 type
 
-OrderPredicate = function (i, j : Integer) : Boolean;
-SwapProc = procedure (i, j : Integer);
+TOrderPredicate = function (I, J : Integer) : Boolean;
+TSwapProc = procedure (I, J : Integer);
 
-procedure quicksort(lo, hi: Integer;
-                    less : OrderPredicate;
-                    swap : SwapProc);
+procedure QuickSort(Lo, Hi: Integer;
+                    Less : TOrderPredicate;
+                    Swap : TSwapProc);
   (* General inplace sorting procedure based on the quicksort algorithm.
      This procedure can be applied to any sequential data structure;
      only the corresponding routines less which compares, and swap which
@@ -253,13 +253,13 @@ procedure quicksort(lo, hi: Integer;
 
 type
 
-TableLookupProc = function(k : Integer) : String;
-TableEntryProc  = procedure(k : Integer; symbol : String);
+TTableLookupProc = function(K : Integer) : String;
+TTableEntryProc  = procedure(K : Integer; Symbol : String);
 
-function key(symbol : String;
-             table_size : Integer;
-             lookup : TableLookupProc;
-             entry  : TableEntryProc) : Integer;
+function Key(Symbol : String;
+             TableSize : Integer;
+             Lookup : TTableLookupProc;
+             Entry  : TTableEntryProc) : Integer;
   (* returns a hash table key for symbol; inserts the symbol into the
      table if necessary
      - table_size is the symbol table size and must be a fixed prime number
@@ -268,62 +268,62 @@ function key(symbol : String;
      - entry is the table entry procedure which is assumed to store the
        given symbol at the given location *)
 
-function definedKey(symbol : String;
-                    table_size : Integer;
-                    lookup : TableLookupProc) : Boolean;
+function DefinedKey(Symbol : String;
+                    TableSize : Integer;
+                    Lookup : TTableLookupProc) : Boolean;
   (* checks the table to see if symbol is in the table *)
 
 (* Utility routines: *)
 
-function min(i, j : Integer) : Integer;
-function max(i, j : Integer) : Integer;
+function Min(I, J : Integer) : Integer;
+function Max(I, J : Integer) : Integer;
   (* minimum and maximum of two integers *)
-function nchars(cc : CClass) : Integer;
+function NChars(CC : TCClass) : Integer;
   (* returns the cardinality (number of characters) of a character class *)
-function upper(str : String) : String;
+function Upper(Str : String) : String;
   (* returns str converted to uppercase *)
-function strip(str : String) : String;
+function Strip(Str : String) : String;
   (* returns str with leading and trailing blanks stripped off *)
-function blankStr(str : String) : String;
+function BlankStr(Str : String) : String;
   (* returns string of same length as str, with all non-whitespace characters
      replaced by blanks *)
-function intStr(i : Integer) : String;
+function IntStr(I : Integer) : String;
   (* returns the string representation of i *)
-function isInt(str : String; var i : Integer) : Boolean;
+function IsInt(Str : String; var I : Integer) : Boolean;
   (* checks whether str represents an integer; if so, returns the
      value of it in i *)
-function path(filename : String) : String;
+function Path(FileName : String) : String;
   (* returns the path in filename *)
-function root(filename : String) : String;
+function Root(FileName : String) : String;
   (* returns root (i.e. extension stripped from filename) of
      filename *)
-function addExt(filename, ext : String) : String;
+function AddExt(FileName, Ext : String) : String;
   (* if filename has no extension and last filename character is not '.',
      add extension ext to filename *)
-function file_size(filename : String) : LongInt;
+function GetFileSize(FileName : String) : LongInt;
   (* determines file size in bytes *)
 
 (* Utility functions for list generating routines: *)
 
-function charStr(c : char; reserved : CClass) : String;
+function CharStr(C : Char; Reserved : TCClass) : String;
   (* returns a print name for character c, using the standard escape
      conventions; reserved is the class of `reserved' special characters
      which should be quoted with \ (\ itself is always quoted) *)
-function singleQuoteStr(str : String) : String;
+function SingleQuoteStr(Str : String) : String;
   (* returns print name of str enclosed in single quotes, using the
      standard escape conventions *)
-function doubleQuoteStr(str : String) : String;
+function DoubleQuoteStr(Str : String) : String;
   (* returns print name of str enclosed in double quotes, using the
      standard escape conventions *)
-function cclassStr(cc : CClass) : String;
+function CClassStr(CC : TCClass) : String;
   (* returns print name of character class cc, using the standard escape
      conventions; if cc contains more than 128 elements, the complement
      notation (^) is used; if cc is the class of all (non-null) characters
      except newline, the period notation is used *)
-function cclassOrCharStr(cc : CClass) : String;
+function CClassOrCharStr(CC : TCClass) : String;
   (* returns a print name for character class cc (either cclassStr, or,
      if cc contains only one element, character in single quotes) *)
-function regExprStr(r : RegExpr) : String;
+function RegExprStr(R : PRegExpr) : String;
   (* unparses a regular expression *)
 
 implementation
@@ -332,513 +332,513 @@ uses LexMsgs;
 
 (* String and character class pointers: *)
 
-function newStr(str : String) : StrPtr;
-  var strp : StrPtr;
+function NewStr(Str : String) : PStr;
+  var StrP : PStr;
   begin
-    new(strp);
-    strp^ := str;
-    newStr := strp;
+    New(StrP);
+    StrP^ := Str;
+    NewStr := StrP;
   end(*newStr*);
 
-function newCClass(cc : CClass) : CClassPtr;
-  var ccp : CClassPtr;
+function NewCClass(CC : TCClass) : PCClass;
+  var CCP : PCClass;
   begin
-    new(ccp);
-    ccp^ := cc;
-    newCClass := ccp;
+    New(CCP);
+    CCP^ := CC;
+    NewCClass := CCP;
   end(*newCClass*);
 
 (* Integer sets: *)
 
-procedure empty(var M : IntSet);
+procedure Empty(var M : TIntSet);
   begin
     M[0] := 0;
   end(*empty*);
 
-procedure singleton(var M : IntSet; i : Integer);
+procedure Singleton(var M : TIntSet; I : Integer);
   begin
-    M[0] := 1; M[1] := i;
+    M[0] := 1; M[1] := I;
   end(*singleton*);
 
-procedure include(var M : IntSet; i : Integer);
-  var l, r, k : Integer;
+procedure Include(var M : TIntSet; I : Integer);
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    if (k>M[0]) or (M[k]<>i) then
+    if (K>M[0]) or (M[K]<>I) then
       begin
-        if M[0]>=max_elems then fatal(intset_overflow);
-        if (k<=M[0]) and (M[k]<i) then
+        if M[0]>=MaxElems then Fatal(IntsetOverflow);
+        if (K<=M[0]) and (M[K]<I) then
           begin
-            move(M[k+1], M[k+2], (M[0]-k)*sizeOf(Integer));
-            M[k+1] := i;
+            Move(M[K+1], M[K+2], (M[0]-K)*SizeOf(Integer));
+            M[K+1] := I;
           end
         else
           begin
-            move(M[k], M[k+1], (M[0]-k+1)*sizeOf(Integer));
-            M[k] := i;
+            Move(M[K], M[K+1], (M[0]-K+1)*SizeOf(Integer));
+            M[K] := I;
           end;
-        inc(M[0]);
+        Inc(M[0]);
       end;
   end(*include*);
 
-procedure exclude(var M : IntSet; i : Integer);
-  var l, r, k : Integer;
+procedure Exclude(var M : TIntSet; I : Integer);
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    if (k<=M[0]) and (M[k]=i) then
+    if (K<=M[0]) and (M[K]=I) then
       begin
-        move(M[k+1], M[k], (M[0]-k)*sizeOf(Integer));
-        dec(M[0]);
+        Move(M[K+1], M[K], (M[0]-K)*SizeOf(Integer));
+        Dec(M[0]);
       end;
   end(*exclude*);
 
-procedure setunion(var M, N : IntSet);
+procedure SetUnion(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, j, i_M, i_N : Integer;
+    K : TIntSet;
+    I, J, IndexM, IndexN : Integer;
   begin
     (* merge sort: *)
-    i := 0; i_M := 1; i_N := 1;
-    while (i_M<=M[0]) and (i_N<=N[0]) do
+    I := 0; IndexM := 1; IndexN := 1;
+    while (IndexM<=M[0]) and (IndexN<=N[0]) do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        if M[i_M]<N[i_N] then
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        if M[IndexM]<N[IndexN] then
           begin
-            K[i] := M[i_M]; inc(i_M);
+            K[I] := M[IndexM]; Inc(IndexM);
           end
-        else if N[i_N]<M[i_M] then
+        else if N[IndexN]<M[IndexM] then
           begin
-            K[i] := N[i_N]; inc(i_N);
+            K[I] := N[IndexN]; Inc(IndexN);
           end
         else
           begin
-            K[i] := M[i_M]; inc(i_M); inc(i_N);
+            K[I] := M[IndexM]; Inc(IndexM); Inc(IndexN);
           end
       end;
-    for j := i_M to M[0] do
+    for J := IndexM to M[0] do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        K[i] := M[j];
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        K[I] := M[J];
       end;
-    for j := i_N to N[0] do
+    for J := IndexN to N[0] do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        K[i] := N[j];
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        K[I] := N[J];
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*setunion*);
 
-procedure setminus(var M, N : IntSet);
+procedure SetMinus(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, i_M, i_N : Integer;
+    K : TIntSet;
+    I, IndexM, IndexN : Integer;
   begin
-    i := 0; i_N := 1;
-    for i_M := 1 to M[0] do
+    I := 0; IndexN := 1;
+    for IndexM := 1 to M[0] do
       begin
-        while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-        if (i_N>N[0]) or (N[i_N]>M[i_M]) then
+        while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+        if (IndexN>N[0]) or (N[IndexN]>M[IndexM]) then
           begin
-            inc(i);
-            K[i] := M[i_M];
+            Inc(I);
+            K[I] := M[IndexM];
           end
         else
-          inc(i_N);
+          Inc(IndexN);
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*setminus*);
 
-procedure intersect(var M, N : IntSet);
+procedure Intersect(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, i_M, i_N : Integer;
+    K : TIntSet;
+    I, IndexM, IndexN : Integer;
   begin
-    i := 0; i_N := 1;
-    for i_M := 1 to M[0] do
+    I := 0; IndexN := 1;
+    for IndexM := 1 to M[0] do
       begin
-        while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-        if (i_N<=N[0]) and (N[i_N]=M[i_M]) then
+        while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+        if (IndexN<=N[0]) and (N[IndexN]=M[IndexM]) then
           begin
-            inc(i);
-            K[i] := M[i_M];
-            inc(i_N);
+            Inc(I);
+            K[I] := M[IndexM];
+            Inc(IndexN);
           end
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*intersect*);
 
-function size(var M : IntSet) : Integer;
+function Size(var M : TIntSet) : Integer;
   begin
-    size := M[0]
+    Size := M[0]
   end(*size*);
 
-function member(i : Integer; var M : IntSet) : Boolean;
-  var l, r, k : Integer;
+function Member(I : Integer; var M : TIntSet) : Boolean;
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    member := (k<=M[0]) and (M[k]=i);
+    Member := (K<=M[0]) and (M[K]=I);
   end(*member*);
 
-function isempty(var M : IntSet) : Boolean;
+function Isempty(var M : TIntSet) : Boolean;
   begin
-    isempty := M[0]=0
+    Isempty := M[0]=0
   end(*isempty*);
 
-function equal(var M, N : IntSet) : Boolean;
-  var i : Integer;
+function Equal(var M, N : TIntSet) : Boolean;
+  var I : Integer;
   begin
     if M[0]<>N[0] then
-      equal := false
+      Equal := False
     else
       begin
-        for i := 1 to M[0] do
-          if M[i]<>N[i] then
+        for I := 1 to M[0] do
+          if M[I]<>N[I] then
             begin
-              equal := false;
-              exit
+              Equal := False;
+              Exit
             end;
-        equal := true
+        Equal := True
       end
   end(*equal*);
 
-function subseteq(var M, N : IntSet) : Boolean;
+function SubsetEq(var M, N : TIntSet) : Boolean;
   var
-    i_M, i_N : Integer;
+    IndexM, IndexN : Integer;
   begin
     if M[0]>N[0] then
-      subseteq := false
+      SubsetEq := False
     else
       begin
-        i_N := 1;
-        for i_M := 1 to M[0] do
+        IndexN := 1;
+        for IndexM := 1 to M[0] do
           begin
-            while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-            if (i_N>N[0]) or (N[i_N]>M[i_M]) then
+            while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+            if (IndexN>N[0]) or (N[IndexN]>M[IndexM]) then
               begin
-                subseteq := false;
-                exit
+                SubsetEq := False;
+                Exit
               end
             else
-              inc(i_N);
+              Inc(IndexN);
           end;
-        subseteq := true
+        SubsetEq := True
       end;
   end(*subseteq*);
 
-function newIntSet : IntSetPtr;
+function NewIntSet : PIntSet;
   var
-    MP : IntSetPtr;
+    MP : PIntSet;
   begin
-    getmem(MP, (max_elems+1)*sizeOf(Integer));
+    GetMem(MP, (MaxElems+1)*SizeOf(Integer));
     MP^[0] := 0;
-    newIntSet := MP
+    NewIntSet := MP
   end(*newIntSet*);
 
 (* Constructors for regular expressions: *)
 
-function newExpr(node_type : NodeType) : RegExpr;
+function NewExpr(NodeType : TNodeType) : PRegExpr;
   (* Allocate the complete record, including variant alignment padding. *)
-  var x : RegExpr;
+  var X : PRegExpr;
   begin
-    new(x);
-    x^.node_type := node_type;
-    newExpr := x
+    New(X);
+    X^.NodeType := NodeType;
+    NewExpr := X
   end(*newExpr*);
-function markExpr(rule, pos : Integer) : RegExpr;
-  var x : RegExpr;
+function MarkExpr(Rule, POS : Integer) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(mark_node);
-    x^.rule := rule;
-    x^.pos  := pos;
-    markExpr := x
+    X := NewExpr(MarkNode);
+    X^.Rule := Rule;
+    X^.POS  := POS;
+    MarkExpr := X
   end(*markExpr*);
-function charExpr(c : Char) : RegExpr;
-  var x : RegExpr;
+function CharExpr(C : Char) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(char_node);
-    x^.c := c;
-    charExpr := x
+    X := NewExpr(CharNode);
+    X^.C := C;
+    CharExpr := X
   end(*charExpr*);
-function strExpr(str : StrPtr) : RegExpr;
-  var x : RegExpr;
+function StrExpr(Str : PStr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(str_node);
-    x^.str := str;
-    strExpr := x
+    X := NewExpr(StrNode);
+    X^.Str := Str;
+    StrExpr := X
   end(*strExpr*);
-function cclassExpr(cc : CClassPtr) : RegExpr;
-  var x : RegExpr;
+function CClassExpr(CC : PCClass) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(cclass_node);
-    x^.cc := cc;
-    cclassExpr := x
+    X := NewExpr(CClassNode);
+    X^.CC := CC;
+    CClassExpr := X
   end(*cclassExpr*);
-function starExpr(r : RegExpr) : RegExpr;
-  var x : RegExpr;
+function StarExpr(R : PRegExpr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(star_node);
-    x^.r := r;
-    starExpr := x
+    X := NewExpr(StarNode);
+    X^.R := R;
+    StarExpr := X
   end(*starExpr*);
-function plusExpr(r : RegExpr) : RegExpr;
-  var x : RegExpr;
+function PlusExpr(R : PRegExpr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(plus_node);
-    x^.r := r;
-    plusExpr := x
+    X := NewExpr(PlusNode);
+    X^.R := R;
+    PlusExpr := X
   end(*plusExpr*);
-function optExpr(r : RegExpr) : RegExpr;
-  var x : RegExpr;
+function OptExpr(R : PRegExpr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(opt_node);
-    x^.r := r;
-    optExpr := x
+    X := NewExpr(OptNode);
+    X^.R := R;
+    OptExpr := X
   end(*optExpr*);
-function mnExpr(r : RegExpr; m, n : Integer) : RegExpr;
+function MNExpr(R : PRegExpr; M, N : Integer) : PRegExpr;
   var
-    ri, rmn : RegExpr;
-    i : Integer;
+    RI, RMN : PRegExpr;
+    I : Integer;
   begin
-    if (m>n) or (n=0) then
-      mnExpr := epsExpr
+    if (M>N) or (N=0) then
+      MNExpr := EpsExpr
     else
       begin
         (* construct r^m: *)
-        if m=0 then
-          ri := epsExpr
+        if M=0 then
+          RI := EpsExpr
         else
           begin
-            ri := r;
-            for i := 2 to m do
-              ri := catExpr(ri, r);
+            RI := R;
+            for I := 2 to M do
+              RI := CatExpr(RI, R);
           end;
         (* construct r{m,n}: *)
-        rmn := ri;                  (* r{m,n} := r^m *)
-        for i := m+1 to n do
+        RMN := RI;                  (* r{m,n} := r^m *)
+        for I := M+1 to N do
           begin
-            if is_epsExpr(ri) then
-              ri := r
+            if IsEpsExpr(RI) then
+              RI := R
             else
-              ri := catExpr(ri, r);
-            rmn := altExpr(rmn, ri)  (* r{m,n} := r{m,n} | r^i,
+              RI := CatExpr(RI, R);
+            RMN := AltExpr(RMN, RI)  (* r{m,n} := r{m,n} | r^i,
                                         i=m+1,...,n *)
           end;
-        mnExpr := rmn
+        MNExpr := RMN
       end
   end(*mnExpr*);
-function catExpr(r1, r2 : RegExpr) : RegExpr;
-  var x : RegExpr;
+function CatExpr(R1, R2 : PRegExpr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(cat_node);
-    x^.r1 := r1;
-    x^.r2 := r2;
-    catExpr := x
+    X := NewExpr(CatNode);
+    X^.R1 := R1;
+    X^.R2 := R2;
+    CatExpr := X
   end(*catExpr*);
-function altExpr(r1, r2 : RegExpr) : RegExpr;
-  var x : RegExpr;
+function AltExpr(R1, R2 : PRegExpr) : PRegExpr;
+  var X : PRegExpr;
   begin
-    x := newExpr(alt_node);
-    x^.r1 := r1;
-    x^.r2 := r2;
-    altExpr := x
+    X := NewExpr(AltNode);
+    X^.R1 := R1;
+    X^.R2 := R2;
+    AltExpr := X
   end(*altExpr*);
 
 (* Unifiers for regular expressions: *)
 
-function is_epsExpr(r : RegExpr) : Boolean;
+function IsEpsExpr(R : PRegExpr) : Boolean;
   begin
-    is_epsExpr := r=epsExpr
+    IsEpsExpr := R=EpsExpr
   end(*is_epsExpr*);
-function is_markExpr(r : RegExpr; var rule, pos : Integer) : Boolean;
+function IsMarkExpr(R : PRegExpr; var Rule, POS : Integer) : Boolean;
   begin
-    if r=epsExpr then
-      is_markExpr := false
-    else if r^.node_type=mark_node then
+    if R=EpsExpr then
+      IsMarkExpr := False
+    else if R^.NodeType=MarkNode then
       begin
-        is_markExpr := true;
-        rule := r^.rule;
-        pos  := r^.pos;
+        IsMarkExpr := True;
+        Rule := R^.Rule;
+        POS  := R^.POS;
       end
     else
-      is_markExpr := false
+      IsMarkExpr := False
   end(*is_markExpr*);
-function is_charExpr(r : RegExpr; var c : Char) : Boolean;
+function IsCharExpr(R : PRegExpr; var C : Char) : Boolean;
   begin
-    if r=epsExpr then
-      is_charExpr := false
-    else if r^.node_type=char_node then
+    if R=EpsExpr then
+      IsCharExpr := False
+    else if R^.NodeType=CharNode then
       begin
-        is_charExpr := true;
-        c := r^.c
+        IsCharExpr := True;
+        C := R^.C
       end
     else
-      is_charExpr := false
+      IsCharExpr := False
   end(*is_charExpr*);
-function is_strExpr(r : RegExpr; var str : StrPtr) : Boolean;
+function IsStrExpr(R : PRegExpr; var Str : PStr) : Boolean;
   begin
-    if r=epsExpr then
-      is_strExpr := false
-    else if r^.node_type=str_node then
+    if R=EpsExpr then
+      IsStrExpr := False
+    else if R^.NodeType=StrNode then
       begin
-        is_strExpr := true;
-        str := r^.str;
+        IsStrExpr := True;
+        Str := R^.Str;
       end
     else
-      is_strExpr := false
+      IsStrExpr := False
   end(*is_strExpr*);
-function is_cclassExpr(r : RegExpr; var cc : CClassPtr) : Boolean;
+function IsCClassExpr(R : PRegExpr; var CC : PCClass) : Boolean;
   begin
-    if r=epsExpr then
-      is_cclassExpr := false
-    else if r^.node_type=cclass_node then
+    if R=EpsExpr then
+      IsCClassExpr := False
+    else if R^.NodeType=CClassNode then
       begin
-        is_cclassExpr := true;
-        cc := r^.cc
+        IsCClassExpr := True;
+        CC := R^.CC
       end
     else
-      is_cclassExpr := false
+      IsCClassExpr := False
   end(*is_cclassExpr*);
-function is_starExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsStarExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   begin
-    if r=epsExpr then
-      is_starExpr := false
-    else if r^.node_type=star_node then
+    if R=EpsExpr then
+      IsStarExpr := False
+    else if R^.NodeType=StarNode then
       begin
-        is_starExpr := true;
-        r1 := r^.r
+        IsStarExpr := True;
+        R1 := R^.R
       end
     else
-      is_starExpr := false
+      IsStarExpr := False
   end(*is_starExpr*);
-function is_plusExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsPlusExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   begin
-    if r=epsExpr then
-      is_plusExpr := false
-    else if r^.node_type=plus_node then
+    if R=EpsExpr then
+      IsPlusExpr := False
+    else if R^.NodeType=PlusNode then
       begin
-        is_plusExpr := true;
-        r1 := r^.r
+        IsPlusExpr := True;
+        R1 := R^.R
       end
     else
-      is_plusExpr := false
+      IsPlusExpr := False
   end(*is_plusExpr*);
-function is_optExpr(r : RegExpr; var r1 : RegExpr) : Boolean;
+function IsOptExpr(R : PRegExpr; var R1 : PRegExpr) : Boolean;
   begin
-    if r=epsExpr then
-      is_optExpr := false
-    else if r^.node_type=opt_node then
+    if R=EpsExpr then
+      IsOptExpr := False
+    else if R^.NodeType=OptNode then
       begin
-        is_optExpr := true;
-        r1 := r^.r
+        IsOptExpr := True;
+        R1 := R^.R
       end
     else
-      is_optExpr := false
+      IsOptExpr := False
   end(*is_optExpr*);
-function is_catExpr(r : RegExpr; var r1, r2 : RegExpr) : Boolean;
+function IsCatExpr(R : PRegExpr; var R1, R2 : PRegExpr) : Boolean;
   begin
-    if r=epsExpr then
-      is_catExpr := false
-    else if r^.node_type=cat_node then
+    if R=EpsExpr then
+      IsCatExpr := False
+    else if R^.NodeType=CatNode then
       begin
-        is_catExpr := true;
-        r1 := r^.r1;
-        r2 := r^.r2
+        IsCatExpr := True;
+        R1 := R^.R1;
+        R2 := R^.R2
       end
     else
-      is_catExpr := false
+      IsCatExpr := False
   end(*is_catExpr*);
-function is_altExpr(r : RegExpr; var r1, r2 : RegExpr) : Boolean;
+function IsAltExpr(R : PRegExpr; var R1, R2 : PRegExpr) : Boolean;
   begin
-    if r=epsExpr then
-      is_altExpr := false
-    else if r^.node_type=alt_node then
+    if R=EpsExpr then
+      IsAltExpr := False
+    else if R^.NodeType=AltNode then
       begin
-        is_altExpr := true;
-        r1 := r^.r1;
-        r2 := r^.r2
+        IsAltExpr := True;
+        R1 := R^.R1;
+        R2 := R^.R2
       end
     else
-      is_altExpr := false
+      IsAltExpr := False
   end(*is_altExpr*);
 
 (* Quicksort: *)
 
-procedure quicksort(lo, hi: Integer;
-                    less : OrderPredicate;
-                    swap : SwapProc);
+procedure QuickSort(Lo, Hi: Integer;
+                    Less : TOrderPredicate;
+                    Swap : TSwapProc);
   (* derived from the quicksort routine in QSORT.PAS in the Turbo Pascal
      distribution *)
-  procedure sort(l, r: Integer);
-    var i, j, k : Integer;
+  procedure Sort(L, R: Integer);
+    var I, J, K : Integer;
     begin
-      i := l; j := r; k := (l+r) DIV 2;
+      I := L; J := R; K := (L+R) DIV 2;
       repeat
-        while less(i, k) do inc(i);
-        while less(k, j) do dec(j);
-        if i<=j then
+        while Less(I, K) do Inc(I);
+        while Less(K, J) do Dec(J);
+        if I<=J then
           begin
-            swap(i, j);
-            if k=i then k := j (* pivot element swapped! *)
-            else if k=j then k := i;
-            inc(i); dec(j);
+            Swap(I, J);
+            if K=I then K := J (* pivot element swapped! *)
+            else if K=J then K := I;
+            Inc(I); Dec(J);
           end;
-      until i>j;
-      if l<j then sort(l,j);
-      if i<r then sort(i,r);
+      until I>J;
+      if L<J then Sort(L,J);
+      if I<R then Sort(I,R);
     end(*sort*);
   begin
-    if lo<hi then sort(lo,hi);
+    if Lo<Hi then Sort(Lo,Hi);
   end(*quicksort*);
 
 (* Generic hash table routines: *)
 
-function hash(str : String; table_size : Integer) : Integer;
+function Hash(Str : String; TableSize : Integer) : Integer;
   (* computes a hash key for str *)
-  var i, key : Integer;
+  var I, Key : Integer;
   begin
-    key := 0;
-    for i := 1 to length(str) do
-      inc(key, ord(str[i]));
-    hash := key mod table_size + 1;
+    Key := 0;
+    for I := 1 to Length(Str) do
+      Inc(Key, Ord(Str[I]));
+    Hash := Key mod TableSize + 1;
   end(*hash*);
 
-procedure newPos(var pos, incr, count : Integer; table_size : Integer);
+procedure NewPos(var POS, Incr, Count : Integer; TableSize : Integer);
   (* computes a new position in the table (quadratic collision strategy)
      - pos: current position (+inc)
      - incr: current increment (+2)
@@ -848,321 +848,321 @@ procedure newPos(var pos, incr, count : Integer; table_size : Integer);
      note that n^2-(n-1)^2 = 2n-1 <=> n^2 = (n-1)^2 + (2n-1) for n>0,
      i.e. the increment inc=2n-1 increments by two in each collision *)
   begin
-    inc(count);
-    inc(pos, incr);
-    if pos>table_size then pos := pos mod table_size + 1;
-    inc(incr, 2)
+    Inc(Count);
+    Inc(POS, Incr);
+    if POS>TableSize then POS := POS mod TableSize + 1;
+    Inc(Incr, 2)
   end(*newPos*);
 
-function key(symbol : String;
-             table_size : Integer;
-             lookup : TableLookupProc;
-             entry  : TableEntryProc) : Integer;
-  var pos, incr, count : Integer;
+function Key(Symbol : String;
+             TableSize : Integer;
+             Lookup : TTableLookupProc;
+             Entry  : TTableEntryProc) : Integer;
+  var POS, Incr, Count : Integer;
   begin
-    pos := hash(symbol, table_size);
-    incr := 1;
-    count := 0;
-    while count<=table_size do
-      if lookup(pos)='' then
+    POS := Hash(Symbol, TableSize);
+    Incr := 1;
+    Count := 0;
+    while Count<=TableSize do
+      if Lookup(POS)='' then
         begin
-          entry(pos, symbol);
-          key := pos;
-          exit
+          Entry(POS, Symbol);
+          Key := POS;
+          Exit
         end
-      else if lookup(pos)=symbol then
+      else if Lookup(POS)=Symbol then
         begin
-          key := pos;
-          exit
+          Key := POS;
+          Exit
         end
       else
-        newPos(pos, incr, count, table_size);
-    fatal(sym_table_overflow)
+        NewPos(POS, Incr, Count, TableSize);
+    Fatal(SymTableOverflow)
   end(*key*);
 
-function definedKey(symbol : String;
-                    table_size : Integer;
-                    lookup : TableLookupProc) : Boolean;
-  var pos, incr, count : Integer;
+function DefinedKey(Symbol : String;
+                    TableSize : Integer;
+                    Lookup : TTableLookupProc) : Boolean;
+  var POS, Incr, Count : Integer;
   begin
-    pos := hash(symbol, table_size);
-    incr := 1;
-    count := 0;
-    while count<=table_size do
-      if lookup(pos)='' then
+    POS := Hash(Symbol, TableSize);
+    Incr := 1;
+    Count := 0;
+    while Count<=TableSize do
+      if Lookup(POS)='' then
         begin
-          definedKey := false;
-          exit
+          DefinedKey := False;
+          Exit
         end
-      else if lookup(pos)=symbol then
+      else if Lookup(POS)=Symbol then
         begin
-          definedKey := true;
-          exit
+          DefinedKey := True;
+          Exit
         end
       else
-        newPos(pos, incr, count, table_size);
-    definedKey := false
+        NewPos(POS, Incr, Count, TableSize);
+    DefinedKey := False
   end(*definedKey*);
 
 (* Utility routines: *)
 
-function min(i, j : Integer) : Integer;
+function Min(I, J : Integer) : Integer;
   begin
-    if i<j then
-      min := i
+    if I<J then
+      Min := I
     else
-      min := j
+      Min := J
   end(*min*);
-function max(i, j : Integer) : Integer;
+function Max(I, J : Integer) : Integer;
   begin
-    if i>j then
-      max := i
+    if I>J then
+      Max := I
     else
-      max := j
+      Max := J
   end(*max*);
-function nchars(cc : CClass) : Integer;
+function NChars(CC : TCClass) : Integer;
   var
-    c : Char;
-    count : Integer;
+    C : Char;
+    Count : Integer;
   begin
-    count := 0;
-    for c := #0 to #255 do if c in cc then inc(count);
-    nchars := count;
+    Count := 0;
+    for C := #0 to #255 do if C in CC then Inc(Count);
+    NChars := Count;
   end(*nchars*);
-function upper(str : String) : String;
-  var i : Integer;
+function Upper(Str : String) : String;
+  var I : Integer;
   begin
-    for i := 1 to length(str) do
-      str[i] := upCase(str[i]);
-    upper := str
+    for I := 1 to Length(Str) do
+      Str[I] := UpCase(Str[I]);
+    Upper := Str
   end(*upper*);
-function strip(str : String) : String;
+function Strip(Str : String) : String;
   begin
-    while (length(str)>0) and ((str[1]=' ') or (str[1]=tab)) do
-      delete(str, 1, 1);
-    while (length(str)>0) and
-          ((str[length(str)]= ' ') or
-           (str[length(str)]=tab)) do
-      delete(str, length(str), 1);
-    strip := str;
+    while (Length(Str)>0) and ((Str[1]=' ') or (Str[1]=Tab)) do
+      Delete(Str, 1, 1);
+    while (Length(Str)>0) and
+          ((Str[Length(Str)]= ' ') or
+           (Str[Length(Str)]=Tab)) do
+      Delete(Str, Length(Str), 1);
+    Strip := Str;
   end(*strip*);
-function blankStr(str : String) : String;
-  var i : Integer;
+function BlankStr(Str : String) : String;
+  var I : Integer;
   begin
-    for i := 1 to length(str) do
-      if str[i]<>tab then str[i] := ' ';
-    blankStr := str;
+    for I := 1 to Length(Str) do
+      if Str[I]<>Tab then Str[I] := ' ';
+    BlankStr := Str;
   end(*blankStr*);
-function intStr(i : Integer) : String;
-  var s : String;
+function IntStr(I : Integer) : String;
+  var S : String;
   begin
-    str(i, s);
-    intStr := s
+    Str(I, S);
+    IntStr := S
   end(*intStr*);
-function isInt(str : String; var i : Integer) : Boolean;
-  var res : Integer;
+function IsInt(Str : String; var I : Integer) : Boolean;
+  var Res : Integer;
   begin
-    val(str, i, res);
-    isInt := res = 0;
+    Val(Str, I, Res);
+    IsInt := Res = 0;
   end(*isInt*);
-function path(filename : String) : String;
-  var i : Integer;
+function Path(FileName : String) : String;
+  var I : Integer;
   begin
-    i := length(filename);
-    while (i>0) and (filename[i]<>DirectorySeparator) and (filename[i]<>':') do
-      dec(i);
-    path := copy(filename, 1, i);
+    I := Length(FileName);
+    while (I>0) and (FileName[I]<>DirectorySeparator) and (FileName[I]<>':') do
+      Dec(I);
+    Path := Copy(FileName, 1, I);
   end(*path*);
-function root(filename : String) : String;
+function Root(FileName : String) : String;
   var
-    i : Integer;
+    I : Integer;
   begin
-    root := filename;
-    for i := length(filename) downto 1 do
-      case filename[i] of
+    Root := FileName;
+    for I := Length(FileName) downto 1 do
+      case FileName[I] of
         '.' :
           begin
-            root := copy(filename, 1, i-1);
-            exit
+            Root := Copy(FileName, 1, I-1);
+            Exit
           end;
-        DirectorySeparator : exit;
+        DirectorySeparator : Exit;
         else
       end;
   end(*root*);
-function addExt(filename, ext : String) : String;
+function AddExt(FileName, Ext : String) : String;
   (* implemented with goto for maximum efficiency *)
-  label x;
+  label X;
   var
-    i : Integer;
+    I : Integer;
   begin
-    addExt := filename;
-    for i := length(filename) downto 1 do
-      case filename[i] of
-        '.' : exit;
-        DirectorySeparator: goto x;
+    AddExt := FileName;
+    for I := Length(FileName) downto 1 do
+      case FileName[I] of
+        '.' : Exit;
+        DirectorySeparator: goto X;
         else
       end;
-    x : addExt := filename+'.'+ext
+    X : AddExt := FileName+'.'+Ext
   end(*addExt*);
-function file_size(filename : String) : LongInt;
-  var f : File;
+function GetFileSize(FileName : String) : LongInt;
+  var F : File;
   begin
-    assign(f, filename);
-    reset(f, 1);
-    if ioresult=0 then
-      file_size := fileSize(f)
+    Assign(F, FileName);
+    Reset(F, 1);
+    if IOResult=0 then
+      GetFileSize := FileSize(F)
     else
-      file_size := 0;
-    close(f);
+      GetFileSize := 0;
+    Close(F);
   end(*file_size*);
 
 (* Utility functions for list generating routines: *)
 
-function charStr(c : char; reserved : CClass) : String;
-  function octStr(c : char) : String;
+function CharStr(C : Char; Reserved : TCClass) : String;
+  function OctStr(C : Char) : String;
     (* return octal string representation of character c *)
     begin
-      octStr := intStr(ord(c) div 64)+intStr((ord(c) mod 64) div 8)+
-                intStr(ord(c) mod 8);
+      OctStr := IntStr(Ord(C) div 64)+IntStr((Ord(C) mod 64) div 8)+
+                IntStr(Ord(C) mod 8);
     end(*octStr*);
   begin
-    case c of
+    case C of
       #0..#7,      (* nonprintable characters *)
       #11,#14..#31,
-      #127..#255 : charStr := '\'+octStr(c);
-      bs         : charStr := '\b';
-      tab        : charStr := '\t';
-      nl         : charStr := '\n';
-      cr         : charStr := '\c';
-      ff         : charStr := '\f';
-      '\'        : charStr := '\\';
-      else if c in reserved then
-        charStr := '\'+c
+      #127..#255 : CharStr := '\'+OctStr(C);
+      BS         : CharStr := '\b';
+      Tab        : CharStr := '\t';
+      NL         : CharStr := '\n';
+      CR         : CharStr := '\c';
+      FF         : CharStr := '\f';
+      '\'        : CharStr := '\\';
+      else if C in Reserved then
+        CharStr := '\'+C
       else
-        charStr := c
+        CharStr := C
     end
   end(*charStr*);
 
-function singleQuoteStr(str : String) : String;
+function SingleQuoteStr(Str : String) : String;
   var
-    i : Integer;
-    str1 : String;
+    I : Integer;
+    Str1 : String;
   begin
-    str1 := '';
-    for i := 1 to length(str) do
-      str1 := str1+charStr(str[i], ['''']);
-    singleQuoteStr := ''''+str1+''''
+    Str1 := '';
+    for I := 1 to Length(Str) do
+      Str1 := Str1+CharStr(Str[I], ['''']);
+    SingleQuoteStr := ''''+Str1+''''
   end(*singleQuoteStr*);
 
-function doubleQuoteStr(str : String) : String;
+function DoubleQuoteStr(Str : String) : String;
   var
-    i : Integer;
-    str1 : String;
+    I : Integer;
+    Str1 : String;
   begin
-    str1 := '';
-    for i := 1 to length(str) do
-      str1 := str1+charStr(str[i], ['"']);
-    doubleQuoteStr := '"'+str1+'"'
+    Str1 := '';
+    for I := 1 to Length(Str) do
+      Str1 := Str1+CharStr(Str[I], ['"']);
+    DoubleQuoteStr := '"'+Str1+'"'
   end(*doubleQuoteStr*);
 
-function cclassStr(cc : CClass) : String;
+function CClassStr(CC : TCClass) : String;
   const
-    reserved : CClass = ['^','-',']'];
+    Reserved : TCClass = ['^','-',']'];
     MaxChar = #255;
   var
-    c1, c2 : Char;
-    str : String;
+    C1, C2 : Char;
+    Str : String;
     Quit: Boolean;
   begin
-    if cc=[#1..#255]-[nl] then
-      cclassStr := '.'
+    if CC=[#1..#255]-[NL] then
+      CClassStr := '.'
     else
       begin
-        str := '';
-        if nchars(cc)>128 then
+        Str := '';
+        if NChars(CC)>128 then
           begin
-            str := '^';
-            cc := [#0..#255]-cc;
+            Str := '^';
+            CC := [#0..#255]-CC;
           end;
-        c1 := chr(0);
+        C1 := Chr(0);
         Quit := False;
         while not Quit do  begin
-          if c1 in cc then  begin
-            c2 := c1;
-            while (c2<MaxChar) and (succ(c2) in cc) do
-              c2 := succ(c2);
-            if c1=c2
-             then  str := str+charStr(c1, reserved)
+          if C1 in CC then  begin
+            C2 := C1;
+            while (C2<MaxChar) and (Succ(C2) in CC) do
+              C2 := Succ(C2);
+            if C1=C2
+             then  Str := Str+CharStr(C1, Reserved)
              else
-               if c2=succ(c1)
-                then  str := str+charStr(c1, reserved)+charStr(c2, reserved)
-                else  str := str+charStr(c1, reserved)+'-'+charStr(c2, reserved);
-              c1 := c2;
+               if C2=Succ(C1)
+                then  Str := Str+CharStr(C1, Reserved)+CharStr(C2, Reserved)
+                else  Str := Str+CharStr(C1, Reserved)+'-'+CharStr(C2, Reserved);
+              C1 := C2;
           end;
-          Quit := c1 = MaxChar;
+          Quit := C1 = MaxChar;
           if not Quit then
-            c1 := Succ(c1);
+            C1 := Succ(C1);
         end; { of while }
-        cclassStr := '['+str+']'
+        CClassStr := '['+Str+']'
       end
   end(*cclassStr*);
 
-function cclassOrCharStr(cc : CClass) : String;
-  var count : Integer;
-      c, c1 : Char;
+function CClassOrCharStr(CC : TCClass) : String;
+  var Count : Integer;
+      C, C1 : Char;
   begin
-    count := 0;
-    for c := #0 to #255 do
-      if c in cc then
+    Count := 0;
+    for C := #0 to #255 do
+      if C in CC then
         begin
-          c1 := c;
-          inc(count);
-          if count>1 then
+          C1 := C;
+          Inc(Count);
+          if Count>1 then
             begin
-              cclassOrCharStr := cclassStr(cc);
-              exit;
+              CClassOrCharStr := CClassStr(CC);
+              Exit;
             end;
         end;
-    if count=1 then
-      cclassOrCharStr := singleQuoteStr(c1)
+    if Count=1 then
+      CClassOrCharStr := SingleQuoteStr(C1)
     else
-      cclassOrCharStr := '[]';
+      CClassOrCharStr := '[]';
   end(*cclassOrCharStr*);
 
-function regExprStr(r : RegExpr) : String;
-  function unparseExpr(r : RegExpr) : String;
-    var rule_no, pos : Integer;
-        c : Char;
-        str : StrPtr;
-        cc : CClassPtr;
-        r1, r2 : RegExpr;
+function RegExprStr(R : PRegExpr) : String;
+  function UnparseExpr(R : PRegExpr) : String;
+    var RuleNo, POS : Integer;
+        C : Char;
+        Str : PStr;
+        CC : PCClass;
+        R1, R2 : PRegExpr;
     begin
-      if is_epsExpr(r) then
-        unparseExpr := ''
-      else if is_markExpr(r, rule_no, pos) then
-        unparseExpr := '#('+intStr(rule_no)+','+intStr(pos)+')'
-      else if is_charExpr(r, c) then
-        unparseExpr := charStr(c, [ '"','.','^','$','[',']','*','+','?',
+      if IsEpsExpr(R) then
+        UnparseExpr := ''
+      else if IsMarkExpr(R, RuleNo, POS) then
+        UnparseExpr := '#('+IntStr(RuleNo)+','+IntStr(POS)+')'
+      else if IsCharExpr(R, C) then
+        UnparseExpr := CharStr(C, [ '"','.','^','$','[',']','*','+','?',
                                     '{','}','|','(',')','/','<','>'])
-      else if is_strExpr(r, str) then
-        unparseExpr := doubleQuoteStr(str^)
-      else if is_cclassExpr(r, cc) then
-        unparseExpr := cclassStr(cc^)
-      else if is_starExpr(r, r1) then
-        unparseExpr := unparseExpr(r1)+'*'
-      else if is_plusExpr(r, r1) then
-        unparseExpr := unparseExpr(r1)+'+'
-      else if is_optExpr(r, r1) then
-        unparseExpr := unparseExpr(r1)+'?'
-      else if is_catExpr(r, r1, r2) then
-        unparseExpr := '('+unparseExpr(r1)+unparseExpr(r2)+')'
-      else if is_altExpr(r, r1, r2) then
-        unparseExpr := '('+unparseExpr(r1)+'|'+unparseExpr(r2)+')'
+      else if IsStrExpr(R, Str) then
+        UnparseExpr := DoubleQuoteStr(Str^)
+      else if IsCClassExpr(R, CC) then
+        UnparseExpr := CClassStr(CC^)
+      else if IsStarExpr(R, R1) then
+        UnparseExpr := UnparseExpr(R1)+'*'
+      else if IsPlusExpr(R, R1) then
+        UnparseExpr := UnparseExpr(R1)+'+'
+      else if IsOptExpr(R, R1) then
+        UnparseExpr := UnparseExpr(R1)+'?'
+      else if IsCatExpr(R, R1, R2) then
+        UnparseExpr := '('+UnparseExpr(R1)+UnparseExpr(R2)+')'
+      else if IsAltExpr(R, R1, R2) then
+        UnparseExpr := '('+UnparseExpr(R1)+'|'+UnparseExpr(R2)+')'
       else
-        fatal('invalid expression');
+        Fatal('invalid expression');
     end(*unparseExpr*);
   begin
-    regExprStr := unparseExpr(r);
+    RegExprStr := UnparseExpr(R);
   end(*regExprStr*);
 
 end(*LexBase*).

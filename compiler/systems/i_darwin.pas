@@ -26,7 +26,7 @@ unit i_darwin;
 interface
 
 uses
-   systems,nxartifactid;
+   Systems,nxartifactid;
 
 const
    res_macho_info : TResInfo =
@@ -65,7 +65,7 @@ const
         cpu          : cpu_x86_64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX';
-        exeext       : '';
+        ExeExt       : '';
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
@@ -99,24 +99,24 @@ const
         endian       : endian_little;
         alignment    :
           (
-            procalign       : 16;
-            loopalign       : 8;
-            jumpalign       : 16;
-            jumpalignskipmax    : 10;
-            coalescealign   : 0;
-            coalescealignskipmax: 0;
-            constalignmin   : 0;
-            constalignmax   : 64;
-            varalignmin     : 0;
-            varalignmax     : 64;
-            localalignmin   : 4;
-            localalignmax   : 16;
-            recordalignmin  : 0;
-            recordalignmax  : 16;
-            maxCrecordalign : 16
+            ProcAlign       : 16;
+            LoopAlign       : 8;
+            JumpAlign       : 16;
+            JumpAlignSkipMax    : 10;
+            CoalesceAlign   : 0;
+            CoalesceAlignSkipMax: 0;
+            ConstAlignMin   : 0;
+            ConstAlignMax   : 64;
+            VarAlignMin     : 0;
+            VarAlignMax     : 64;
+            LocalAlignMin   : 4;
+            LocalAlignMax   : 16;
+            RecordAlignMin  : 0;
+            RecordAlignMax  : 16;
+            MaxCRecordAlign : 16
           );
         first_parm_offset : 16;
-        stacksize   : 262144;
+        StackSize   : 262144;
         stackalign   : 16;
         abi : abi_default;
       );
@@ -133,7 +133,7 @@ const
         cpu          : cpu_x86_64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN'; // also define darwin for code compatibility
-        exeext       : '';
+        ExeExt       : '';
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
@@ -167,24 +167,24 @@ const
         endian       : endian_little;
         alignment    :
           (
-            procalign       : 16;
-            loopalign       : 8;
-            jumpalign       : 16;
-            jumpalignskipmax    : 10;
-            coalescealign   : 0;
-            coalescealignskipmax: 0;
-            constalignmin   : 0;
-            constalignmax   : 64;
-            varalignmin     : 0;
-            varalignmax     : 64;
-            localalignmin   : 4;
-            localalignmax   : 16;
-            recordalignmin  : 0;
-            recordalignmax  : 16;
-            maxCrecordalign : 16
+            ProcAlign       : 16;
+            LoopAlign       : 8;
+            JumpAlign       : 16;
+            JumpAlignSkipMax    : 10;
+            CoalesceAlign   : 0;
+            CoalesceAlignSkipMax: 0;
+            ConstAlignMin   : 0;
+            ConstAlignMax   : 64;
+            VarAlignMin     : 0;
+            VarAlignMax     : 64;
+            LocalAlignMin   : 4;
+            LocalAlignMax   : 16;
+            RecordAlignMin  : 0;
+            RecordAlignMax  : 16;
+            MaxCRecordAlign : 16
           );
         first_parm_offset : 16;
-        stacksize   : 262144;
+        StackSize   : 262144;
         stackalign   : 16;
         abi : abi_default;
       );
@@ -203,7 +203,7 @@ const
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN';
-        exeext       : '';
+        ExeExt       : '';
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
@@ -237,24 +237,24 @@ const
         endian       : endian_little;
         alignment    :
           (
-            procalign       : 16;
-            loopalign       : 4;
-            jumpalign       : 0;
-            jumpalignskipmax    : 0;
-            coalescealign   : 0;
-            coalescealignskipmax: 0;
-            constalignmin   : 0;
-            constalignmax   : 64;
-            varalignmin     : 0;
-            varalignmax     : 16;
-            localalignmin   : 4;
-            localalignmax   : 16;
-            recordalignmin  : 0;
-            recordalignmax  : 16;
-            maxCrecordalign : 16
+            ProcAlign       : 16;
+            LoopAlign       : 4;
+            JumpAlign       : 0;
+            JumpAlignSkipMax    : 0;
+            CoalesceAlign   : 0;
+            CoalesceAlignSkipMax: 0;
+            ConstAlignMin   : 0;
+            ConstAlignMax   : 64;
+            VarAlignMin     : 0;
+            VarAlignMax     : 16;
+            LocalAlignMin   : 4;
+            LocalAlignMax   : 16;
+            RecordAlignMin  : 0;
+            RecordAlignMax  : 16;
+            MaxCRecordAlign : 16
           );
         first_parm_offset : 16;
-        stacksize   : 8*1024*1024;
+        StackSize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
       );
@@ -270,7 +270,7 @@ const
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX';
-        exeext       : '';
+        ExeExt       : '';
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
@@ -304,24 +304,24 @@ const
         endian       : endian_little;
         alignment    :
           (
-            procalign       : 16;
-            loopalign       : 4;
-            jumpalign       : 0;
-            jumpalignskipmax    : 0;
-            coalescealign   : 0;
-            coalescealignskipmax: 0;
-            constalignmin   : 0;
-            constalignmax   : 64;
-            varalignmin     : 0;
-            varalignmax     : 64;
-            localalignmin   : 4;
-            localalignmax   : 16;
-            recordalignmin  : 0;
-            recordalignmax  : 16;
-            maxCrecordalign : 16
+            ProcAlign       : 16;
+            LoopAlign       : 4;
+            JumpAlign       : 0;
+            JumpAlignSkipMax    : 0;
+            CoalesceAlign   : 0;
+            CoalesceAlignSkipMax: 0;
+            ConstAlignMin   : 0;
+            ConstAlignMax   : 64;
+            VarAlignMin     : 0;
+            VarAlignMax     : 64;
+            LocalAlignMin   : 4;
+            LocalAlignMax   : 16;
+            RecordAlignMin  : 0;
+            RecordAlignMax  : 16;
+            MaxCRecordAlign : 16
           );
         first_parm_offset : 16;
-        stacksize   : 8*1024*1024;
+        StackSize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
       );
@@ -338,7 +338,7 @@ const
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN'; // also define darwin for code compatibility
-        exeext       : '';
+        ExeExt       : '';
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
@@ -372,24 +372,24 @@ const
         endian       : endian_little;
         alignment    :
           (
-            procalign       : 16;
-            loopalign       : 4;
-            jumpalign       : 0;
-            jumpalignskipmax    : 0;
-            coalescealign   : 0;
-            coalescealignskipmax: 0;
-            constalignmin   : 0;
-            constalignmax   : 64;
-            varalignmin     : 0;
-            varalignmax     : 16;
-            localalignmin   : 4;
-            localalignmax   : 16;
-            recordalignmin  : 0;
-            recordalignmax  : 16;
-            maxCrecordalign : 16
+            ProcAlign       : 16;
+            LoopAlign       : 4;
+            JumpAlign       : 0;
+            JumpAlignSkipMax    : 0;
+            CoalesceAlign   : 0;
+            CoalesceAlignSkipMax: 0;
+            ConstAlignMin   : 0;
+            ConstAlignMax   : 64;
+            VarAlignMin     : 0;
+            VarAlignMax     : 16;
+            LocalAlignMin   : 4;
+            LocalAlignMax   : 16;
+            RecordAlignMin  : 0;
+            RecordAlignMax  : 16;
+            MaxCRecordAlign : 16
           );
         first_parm_offset : 16;
-        stacksize   : 8*1024*1024;
+        StackSize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
       );

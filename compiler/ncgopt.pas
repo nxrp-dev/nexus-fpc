@@ -27,7 +27,7 @@ interface
 uses node, nopt;
 
 type
-  tcgaddsstringcharoptnode = class(taddsstringcharoptnode)
+  TCGAddSStringCharOptNode = class(TAddSStringCharOptNode)
      function pass_typecheck: TNode; override;
      function pass_1: TNode; override;
      procedure pass_generate_code; override;
@@ -37,10 +37,10 @@ type
 implementation
 
 uses
-  globtype,globals,
+  GlobType,Globals,
   pass_1,defutil,
   symdef,
-  aasmbase,aasmdata,
+  aasmbase,AAsmData,
   ncnv, ncon, pass_2,
   cgbase, cpubase,
   tgobj, cgobj, hlcgobj, cgutils;
@@ -50,7 +50,7 @@ uses
                              TCGADDOPTNODE
 *****************************************************************************}
 
-function tcgaddsstringcharoptnode.pass_typecheck: TNode;
+function TCGAddSStringCharOptNode.pass_typecheck: TNode;
 begin
   pass_typecheck := nil;
   TypeCheckPass(left);
@@ -65,7 +65,7 @@ begin
 end;
 
 
-function tcgaddsstringcharoptnode.pass_1: TNode;
+function TCGAddSStringCharOptNode.pass_1: TNode;
 begin
   pass_1 := nil;
   FirstPass(left);
@@ -76,11 +76,11 @@ begin
 end;
 
 
-procedure tcgaddsstringcharoptnode.pass_generate_code;
+procedure TCGAddSStringCharOptNode.pass_generate_code;
 var
-  l: tasmlabel;
-  href,href2 :  treference;
-  hreg, lengthreg: tregister;
+  l: TAsmLabel;
+  href,href2 :  TReference;
+  hreg, lengthreg: TRegister;
   checklength: boolean;
   len : integer;
 begin
@@ -174,7 +174,7 @@ begin
       cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_8,OS_8,hreg,href2);
     end
   else
-    cg.a_load_const_ref(CurrentAsmData.CurrAsmList,OS_8,tordconstnode(right).value.svalue,href2);
+    cg.a_load_const_ref(CurrentAsmData.CurrAsmList,OS_8,TOrdConstNode(right).value.svalue,href2);
   lengthreg:=cg.makeregsize(CurrentAsmData.CurrAsmList,lengthreg,OS_8);
   { increase the string length }
   cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_8,1,lengthreg);
@@ -185,5 +185,5 @@ begin
 end;
 
 begin
-  caddsstringcharoptnode := tcgaddsstringcharoptnode;
+  CAddSStringCharOptNode := TCGAddSStringCharOptNode;
 end.

@@ -40,71 +40,71 @@ interface
 
 var
 
-act_prec : Integer;
+ActPrec : Integer;
   (* active precedence level in token and precedence declarations (0 in
      %token declaration) *)
-act_type : Integer;
+ActType : Integer;
   (* active type tag in token, precedence and type declarations *)
 
-procedure yyerror ( msg : String );
+procedure yyerror ( Msg : String );
   (* YaccLib.yyerror redefined to ignore 'syntax error' message; the parser
      does its own error handling *)
 
-function sym ( k : Integer ) : Integer;
+function Sym ( K : Integer ) : Integer;
   (* returns internal symbol number for the symbol k; if k is yet undefined,
      a new nonterminal or literal symbol is created, according to the
      appearance of symbol k (nonterminal if an ordinary identifier, literal
      otherwise) *)
 
-function ntsym ( k : Integer ) : Integer;
+function NTSym ( K : Integer ) : Integer;
   (* like sym, but requires symbol k to be a nonterminal symbol; if it
      is already defined a literal, an error message is issued, and a dummy
      nonterminal symbol returned *)
 
-function litsym ( k : Integer; n : Integer ) : Integer;
+function LitSym ( K : Integer; N : Integer ) : Integer;
   (* same for literal symbols; if n>0 it denotes the literal number to be
      assigned to the symbol; when a new literal identifier is defined, a
      corresponding constant definition is also written to the definition
      file *)
 
-procedure next_section;
+procedure NextSection;
   (* find next section mark (%%) in code template *)
 
-procedure definitions;
+procedure Definitions;
   (* if necessary, write out definition of the semantic value type YYSType *)
 
-procedure copy_code;
+procedure CopyCode;
   (* copy Turbo Pascal code section ( %{ ... %} ) to output file *)
 
-procedure copy_action;
+procedure CopyAction;
   (* copy an action to the output file *)
 
-procedure copy_single_action;
+procedure CopySingleAction;
   (* like copy_action, but action must be single statement terminated
      with `;' *)
 
-procedure copy_rest_of_file;
+procedure CopyRestOfFile;
   (* copies the rest of the source file to the output file *)
 
-procedure start_rule ( sym : Integer );
+procedure StartRule ( Sym : Integer );
   (* start a new rule with lhs nonterminal symbol sym *)
 
-procedure start_body;
+procedure StartBody;
   (* start a new rule body (rhs) *)
 
-procedure end_body;
+procedure EndBody;
   (* end a rule body *)
 
-procedure add_symbol ( sym : Integer );
+procedure AddSymbol ( Sym : Integer );
   (* add the denoted symbol to the current rule body *)
 
-procedure add_action;
+procedure AddAction;
   (* add an action to the current rule body *)
 
-procedure add_rule_prec ( sym : Integer );
+procedure AddRulePrec ( Sym : Integer );
   (* add the precedence of terminal symbol sym to the current rule *)
 
-procedure generate_parser;
+procedure GenerateParser;
   (* generate the parse table *)
 
 implementation
@@ -112,484 +112,484 @@ implementation
 uses YaccBase, YaccTabl, YaccClos, YaccLR0, YaccLook,
   YaccPars, YaccMsgs;
 
-procedure yyerror ( msg : String );
+procedure yyerror ( Msg : String );
   begin
-    if msg='syntax error' then
+    if Msg='syntax error' then
       (* ignore *)
     else
-      fatal(msg)
+      Fatal(Msg)
   end(*yyerror*);
 
-function act_char : char;
+function ActChar : Char;
   begin
-    if cno>length(line) then
-      if eof(yyin) then
-        act_char := #0
+    if CNo>Length(Line) then
+      if EOF(YYIn) then
+        ActChar := #0
       else
-        act_char := nl
+        ActChar := NL
     else
-      act_char := line[cno]
+      ActChar := Line[CNo]
   end(*act_char*);
 
-function lookahead_char : char;
+function LookaheadChar : Char;
   begin
-    if succ(cno)>length(line) then
-      if eof(yyin) then
-        lookahead_char := #0
+    if Succ(CNo)>Length(Line) then
+      if EOF(YYIn) then
+        LookaheadChar := #0
       else
-        lookahead_char := nl
+        LookaheadChar := NL
     else
-      lookahead_char := line[succ(cno)]
+      LookaheadChar := Line[Succ(CNo)]
   end(*lookahead_char*);
 
-procedure next_char;
+procedure NextChar;
   begin
-    if cno>length(line) then
-      if eof(yyin) then
+    if CNo>Length(Line) then
+      if EOF(YYIn) then
         { nop }
       else
         begin
-          readln(yyin, line);
-          inc(lno); cno := 1
+          ReadLn(YYIn, Line);
+          Inc(LNo); CNo := 1
         end
     else
-      inc(cno)
+      Inc(CNo)
   end(*next_char*);
 
 var
 
 (* Current rule: *)
 
-act_rule      : RuleRec;
+ActRule      : TRuleRec;
 
 (* Actions: *)
 
-n_act : Integer;
-p_act : Boolean;
+NAct : Integer;
+PAct : Boolean;
 
-function sym ( k : Integer ) : Integer;
-  var s : Integer;
+function Sym ( K : Integer ) : Integer;
+  var S : Integer;
   begin
-    if is_def_key(k, s) then
-      sym := s
-    else if sym_table^[k].pname^[1]='''' then
+    if IsDefKey(K, S) then
+      Sym := S
+    else if SymTable^[K].Pname^[1]='''' then
       begin
-        s := new_lit;
-        def_key(k, s);
-        sym := s;
+        S := NewLit;
+        DefKey(K, S);
+        Sym := S;
       end
     else
       begin
-        s := new_nt;
-        def_key(k, s);
-        sym := s;
+        S := NewNT;
+        DefKey(K, S);
+        Sym := S;
       end
   end(*sym*);
 
-function ntsym ( k : Integer ) : Integer;
-  var s : Integer;
+function NTSym ( K : Integer ) : Integer;
+  var S : Integer;
   begin
-    if is_def_key(k, s) then
-      if s<0 then
-        ntsym := s
+    if IsDefKey(K, S) then
+      if S<0 then
+        NTSym := S
       else
         begin
-          error(nonterm_expected);
-          ntsym := -1;
+          Error(NonTermExpected);
+          NTSym := -1;
         end
-    else if sym_table^[k].pname^[1]='''' then
+    else if SymTable^[K].Pname^[1]='''' then
       begin
-        error(nonterm_expected);
-        ntsym := -1;
+        Error(NonTermExpected);
+        NTSym := -1;
       end
     else
       begin
-        s := new_nt;
-        def_key(k, s);
-        ntsym := s;
+        S := NewNT;
+        DefKey(K, S);
+        NTSym := S;
       end
   end(*ntsym*);
 
-function litsym ( k : Integer; n : Integer ) : Integer;
-  var s : Integer;
+function LitSym ( K : Integer; N : Integer ) : Integer;
+  var S : Integer;
   begin
-    if is_def_key(k, s) then
-      if s>=0 then
+    if IsDefKey(K, S) then
+      if S>=0 then
         begin
-          if n>0 then error(double_tokennum_def);
-          litsym := s;
+          if N>0 then Error(DoubleTokenNumDef);
+          LitSym := S;
         end
       else
         begin
-          error(literal_expected);
-          litsym := 1;
+          Error(LiteralExpected);
+          LitSym := 1;
         end
-    else if sym_table^[k].pname^[1]='''' then
+    else if SymTable^[K].Pname^[1]='''' then
       begin
-        if n>0 then
+        if N>0 then
           begin
-            add_lit(n);
-            s := n;
+            AddLit(N);
+            S := N;
           end
         else
-          s := new_lit;
-        def_key(k, s);
-        litsym := s;
+          S := NewLit;
+        DefKey(K, S);
+        LitSym := S;
       end
     else
       begin
-        if n>0 then
+        if N>0 then
           begin
-            add_lit(n);
-            s := n;
+            AddLit(N);
+            S := N;
           end
         else
-          s := new_lit;
-        def_key(k, s);
-        writeln(yyout, 'const ', pname(s), ' = ', s, ';');
-        litsym := s;
+          S := NewLit;
+        DefKey(K, S);
+        WriteLn(YYOut, 'const ', Pname(S), ' = ', S, ';');
+        LitSym := S;
       end;
   end(*litsym*);
 
-procedure next_section;
-  var line : String;
+procedure NextSection;
+  var Line : String;
   begin
-    while not eof(yycod) do
+    while not EOF(YYCod) do
       begin
-        readln(yycod, line);
-        if line='%%' then exit;
-        writeln(yyout, line);
+        ReadLn(YYCod, Line);
+        if Line='%%' then Exit;
+        WriteLn(YYOut, Line);
       end;
   end(*next_section*);
 
-procedure definitions;
-  var i : Integer;
+procedure Definitions;
+  var I : Integer;
   begin
-    if n_types>0 then
+    if NTypes>0 then
       begin
-        writeln(yyout);
-        writeln(yyout, 'type YYSType = record case Integer of');
-        for i := 1 to n_types do
-          writeln(yyout, ' ':15, i:3, ' : ( ',
-                         'yy', sym_table^[type_table^[i]].pname^, ' : ',
-                         sym_table^[type_table^[i]].pname^, ' );');
-        writeln(yyout, ' ':15, 'end(*YYSType*);');
+        WriteLn(YYOut);
+        WriteLn(YYOut, 'type YYSType = record case Integer of');
+        for I := 1 to NTypes do
+          WriteLn(YYOut, ' ':15, I:3, ' : ( ',
+                         'yy', SymTable^[TypeTable^[I]].Pname^, ' : ',
+                         SymTable^[TypeTable^[I]].Pname^, ' );');
+        WriteLn(YYOut, ' ':15, 'end(*YYSType*);');
       end;
   end(*definitions*);
 
-procedure copy_code;
-  var str_state : Boolean;
+procedure CopyCode;
+  var StrState : Boolean;
   begin
-    str_state := false;
-    while act_char<>#0 do
-      if act_char=nl then
+    StrState := False;
+    while ActChar<>#0 do
+      if ActChar=NL then
         begin
-          writeln(yyout);
-          next_char;
+          WriteLn(YYOut);
+          NextChar;
         end
-      else if act_char='''' then
+      else if ActChar='''' then
         begin
-          write(yyout, '''');
-          str_state := not str_state;
-          next_char;
+          Write(YYOut, '''');
+          StrState := not StrState;
+          NextChar;
         end
-      else if not str_state and (act_char='%') and (lookahead_char='}') then
-        exit
+      else if not StrState and (ActChar='%') and (LookaheadChar='}') then
+        Exit
       else
         begin
-          write(yyout, act_char);
-          next_char;
+          Write(YYOut, ActChar);
+          NextChar;
         end;
   end(*copy_code*);
 
-procedure scan_val;
+procedure ScanVal;
   (* process a $ value in an action
      (not very pretty, but it does its job) *)
-  var tag, numstr : String; i, code : Integer;
+  var Tag, NumStr : String; I, Code : Integer;
   begin
-    tokleng := 0;
-    next_char;
-    if act_char='<' then
+    TokLeng := 0;
+    NextChar;
+    if ActChar='<' then
       begin
         (* process type tag: *)
-        next_char;
-        tag := '';
-        while (act_char<>nl) and (act_char<>#0) and (act_char<>'>') do
+        NextChar;
+        Tag := '';
+        while (ActChar<>NL) and (ActChar<>#0) and (ActChar<>'>') do
           begin
-            tag := tag+act_char;
-            next_char;
+            Tag := Tag+ActChar;
+            NextChar;
           end;
-        if act_char='>' then
+        if ActChar='>' then
           begin
-            if not search_type(tag) then
+            if not SearchType(Tag) then
               begin
-                tokleng := length(tag);
-                error(unknown_identifier);
+                TokLeng := Length(Tag);
+                Error(UnknownIdentifier);
               end;
-            next_char;
+            NextChar;
           end
         else
-          error(syntax_error);
+          Error(SyntaxError);
       end
     else
-      tag := '';
-    tokleng := 0;
-    if act_char='$' then
+      Tag := '';
+    TokLeng := 0;
+    if ActChar='$' then
       begin
         (* left-hand side value: *)
-        write(yyout, 'yyval');
+        Write(YYOut, 'yyval');
         (* check for value type: *)
-        if (tag='') and (n_types>0) then with act_rule do
-          if sym_type^[lhs_sym]>0 then
-            tag := sym_table^[sym_type^[lhs_sym]].pname^
+        if (Tag='') and (NTypes>0) then with ActRule do
+          if SymType^[LHSSym]>0 then
+            Tag := SymTable^[SymType^[LHSSym]].Pname^
           else
             begin
-              tokleng := 1;
-              error(type_error);
+              TokLeng := 1;
+              Error(TypeError);
             end;
-        if tag<>'' then write(yyout, '.yy', tag);
-        next_char;
+        if Tag<>'' then Write(YYOut, '.yy', Tag);
+        NextChar;
       end
     else
       begin
         (* right-hand side value: *)
-        if act_char='-' then
+        if ActChar='-' then
           begin
-            numstr := '-';
-            next_char;
+            NumStr := '-';
+            NextChar;
           end
         else
-          numstr := '';
-        while ('0'<=act_char) and (act_char<='9') do
+          NumStr := '';
+        while ('0'<=ActChar) and (ActChar<='9') do
           begin
-            numstr := numstr+act_char;
-            next_char;
+            NumStr := NumStr+ActChar;
+            NextChar;
           end;
-        if numstr<>'' then
+        if NumStr<>'' then
           begin
-            val(numstr, i, code);
-            if code=0 then
-              if i<=act_rule.rhs_len then
+            Val(NumStr, I, Code);
+            if Code=0 then
+              if I<=ActRule.RHSLen then
                 begin
-                  write(yyout, 'yyv[yysp-', act_rule.rhs_len-i, ']');
+                  Write(YYOut, 'YYV[YYSP-', ActRule.RHSLen-I, ']');
                   (* check for value type: *)
-                  if (tag='') and (n_types>0) then with act_rule do
-                    if i<=0 then
+                  if (Tag='') and (NTypes>0) then with ActRule do
+                    if I<=0 then
                       begin
-                        tokleng := length(numstr)+1;
-                        error(type_error);
+                        TokLeng := Length(NumStr)+1;
+                        Error(TypeError);
                       end
-                    else if sym_type^[rhs_sym[i]]>0 then
-                      tag := sym_table^[sym_type^[rhs_sym[i]]].pname^
+                    else if SymType^[RHSSym[I]]>0 then
+                      Tag := SymTable^[SymType^[RHSSym[I]]].Pname^
                     else
                       begin
-                        tokleng := length(numstr)+1;
-                        error(type_error);
+                        TokLeng := Length(NumStr)+1;
+                        Error(TypeError);
                       end;
-                  if tag<>'' then write(yyout, '.yy', tag);
+                  if Tag<>'' then Write(YYOut, '.yy', Tag);
                 end
               else
                 begin
-                  tokleng := length(numstr);
-                  error(range_error);
+                  TokLeng := Length(NumStr);
+                  Error(RangeError);
                 end
             else
-              error(syntax_error)
+              Error(SyntaxError)
           end
         else
-          error(syntax_error)
+          Error(SyntaxError)
       end
   end(*scan_val*);
 
-procedure copy_action;
-  var str_state : Boolean;
+procedure CopyAction;
+  var StrState : Boolean;
   begin
-    str_state := false;
-    while act_char=' ' do next_char;
-    write(yyout, ' ':9);
-    while act_char<>#0 do
-      if act_char=nl then
+    StrState := False;
+    while ActChar=' ' do NextChar;
+    Write(YYOut, ' ':9);
+    while ActChar<>#0 do
+      if ActChar=NL then
         begin
-          writeln(yyout);
-          next_char;
-          while act_char=' ' do next_char;
-          write(yyout, ' ':9);
+          WriteLn(YYOut);
+          NextChar;
+          while ActChar=' ' do NextChar;
+          Write(YYOut, ' ':9);
         end
-      else if act_char='''' then
+      else if ActChar='''' then
         begin
-          write(yyout, '''');
-          str_state := not str_state;
-          next_char;
+          Write(YYOut, '''');
+          StrState := not StrState;
+          NextChar;
         end
-      else if not str_state and (act_char='}') then
+      else if not StrState and (ActChar='}') then
         begin
-          writeln(yyout);
-          exit;
+          WriteLn(YYOut);
+          Exit;
         end
-      else if not str_state and (act_char='$') then
-        scan_val
+      else if not StrState and (ActChar='$') then
+        ScanVal
       else
         begin
-          write(yyout, act_char);
-          next_char;
+          Write(YYOut, ActChar);
+          NextChar;
         end;
   end(*copy_action*);
 
-procedure copy_single_action;
-  var str_state : Boolean;
+procedure CopySingleAction;
+  var StrState : Boolean;
   begin
-    str_state := false;
-    while act_char=' ' do next_char;
-    write(yyout, ' ':9);
-    while act_char<>#0 do
-      if act_char=nl then
+    StrState := False;
+    while ActChar=' ' do NextChar;
+    Write(YYOut, ' ':9);
+    while ActChar<>#0 do
+      if ActChar=NL then
         begin
-          writeln(yyout);
-          next_char;
-          while act_char=' ' do next_char;
-          write(yyout, ' ':9);
+          WriteLn(YYOut);
+          NextChar;
+          while ActChar=' ' do NextChar;
+          Write(YYOut, ' ':9);
         end
-      else if act_char='''' then
+      else if ActChar='''' then
         begin
-          write(yyout, '''');
-          str_state := not str_state;
-          next_char;
+          Write(YYOut, '''');
+          StrState := not StrState;
+          NextChar;
         end
-      else if not str_state and (act_char=';') then
+      else if not StrState and (ActChar=';') then
         begin
-          writeln(yyout, ';');
-          exit;
+          WriteLn(YYOut, ';');
+          Exit;
         end
-      else if not str_state and (act_char='$') then
-        scan_val
+      else if not StrState and (ActChar='$') then
+        ScanVal
       else
         begin
-          write(yyout, act_char);
-          next_char;
+          Write(YYOut, ActChar);
+          NextChar;
         end;
   end(*copy_single_action*);
 
-procedure copy_rest_of_file;
+procedure CopyRestOfFile;
   begin
-    while act_char<>#0 do
-      if act_char=nl then
+    while ActChar<>#0 do
+      if ActChar=NL then
         begin
-          writeln(yyout);
-          next_char;
+          WriteLn(YYOut);
+          NextChar;
         end
       else
         begin
-          write(yyout, act_char);
-          next_char;
+          Write(YYOut, ActChar);
+          NextChar;
         end;
   end(*copy_rest_of_file*);
 
-procedure start_rule ( sym : Integer );
+procedure StartRule ( Sym : Integer );
   begin
-    if n_rules=0 then
+    if NRules=0 then
       begin
         (* fix start nonterminal of the grammar: *)
-        if startnt=0 then startnt := sym;
+        if StartNT=0 then StartNT := Sym;
         (* add augmented start production: *)
-        with act_rule do
+        with ActRule do
           begin
-            lhs_sym := -1;
-            rhs_len := 2;
-            rhs_sym[1] := startnt;
-            rhs_sym[2] := 0; (* end marker *)
+            LHSSym := -1;
+            RHSLen := 2;
+            RHSSym[1] := StartNT;
+            RHSSym[2] := 0; (* end marker *)
           end;
-        add_rule(newRuleRec(act_rule));
+        AddRule(NewRuleRec(ActRule));
       end;
-    act_rule.lhs_sym := sym;
+    ActRule.LHSSym := Sym;
   end(*start_rule*);
 
-procedure start_body;
+procedure StartBody;
   begin
-    act_rule.rhs_len := 0;
-    p_act := false;
-    writeln(yyout, n_rules:4, ' : begin');
+    ActRule.RHSLen := 0;
+    PAct := False;
+    WriteLn(YYOut, NRules:4, ' : begin');
   end(*start_body*);
 
-procedure end_body;
+procedure EndBody;
   begin
-    if not p_act and (act_rule.rhs_len>0) then
+    if not PAct and (ActRule.RHSLen>0) then
       (* add default action: *)
-      writeln(yyout, ' ':9, 'yyval := yyv[yysp-',
-                            act_rule.rhs_len-1, '];');
-    add_rule(newRuleRec(act_rule));
-    writeln(yyout, ' ':7, 'end;');
+      WriteLn(YYOut, ' ':9, 'yyval := YYV[YYSP-',
+                            ActRule.RHSLen-1, '];');
+    AddRule(NewRuleRec(ActRule));
+    WriteLn(YYOut, ' ':7, 'end;');
   end(*end_body*);
 
-procedure add_rule_action;
+procedure AddRuleAction;
   (* process an action inside a rule *)
-  var k : Integer; r : RuleRec;
+  var K : Integer; R : TRuleRec;
   begin
-    writeln(yyout, ' ':7, 'end;');
-    inc(n_act);
-    k := get_key('$$'+intStr(n_act));
-    with r do
+    WriteLn(YYOut, ' ':7, 'end;');
+    Inc(NAct);
+    K := GetKey('$$'+IntStr(NAct));
+    with R do
       begin
-        lhs_sym := new_nt;
-        def_key(k, lhs_sym);
-        rhs_len := 0;
+        LHSSym := NewNT;
+        DefKey(K, LHSSym);
+        RHSLen := 0;
       end;
-    with act_rule do
+    with ActRule do
       begin
-        inc(rhs_len);
-        if rhs_len>max_rule_len then fatal(rule_table_overflow);
-        rhs_sym[rhs_len] := r.lhs_sym;
+        Inc(RHSLen);
+        if RHSLen>MaxRuleLen then Fatal(RuleTableOverflow);
+        RHSSym[RHSLen] := R.LHSSym;
       end;
-    add_rule(newRuleRec(r));
-    rule_prec^[n_rules+1] := rule_prec^[n_rules];
-    rule_prec^[n_rules] := 0;
-    writeln(yyout, n_rules:4, ' : begin');
+    AddRule(NewRuleRec(R));
+    RulePrec^[NRules+1] := RulePrec^[NRules];
+    RulePrec^[NRules] := 0;
+    WriteLn(YYOut, NRules:4, ' : begin');
   end(*add_rule_action*);
 
-procedure add_symbol ( sym : Integer );
+procedure AddSymbol ( Sym : Integer );
   begin
-    if p_act then add_rule_action;
-    p_act := false;
-    with act_rule do
+    if PAct then AddRuleAction;
+    PAct := False;
+    with ActRule do
       begin
-        inc(rhs_len);
-        if rhs_len>max_rule_len then fatal(rule_table_overflow);
-        rhs_sym[rhs_len] := sym;
-        if sym>=0 then rule_prec^[n_rules+1] := sym_prec^[sym]
+        Inc(RHSLen);
+        if RHSLen>MaxRuleLen then Fatal(RuleTableOverflow);
+        RHSSym[RHSLen] := Sym;
+        if Sym>=0 then RulePrec^[NRules+1] := SymPrec^[Sym]
       end
   end(*add_symbol*);
 
-procedure add_action;
+procedure AddAction;
   begin
-    if p_act then add_rule_action;
-    p_act := true;
+    if PAct then AddRuleAction;
+    PAct := True;
   end(*add_action*);
 
-procedure add_rule_prec ( sym : Integer );
+procedure AddRulePrec ( Sym : Integer );
   begin
-    rule_prec^[n_rules+1] := sym_prec^[sym];
+    RulePrec^[NRules+1] := SymPrec^[Sym];
   end(*add_rule_prec*);
 
-procedure generate_parser;
+procedure GenerateParser;
   begin
-    if startnt=0 then error(empty_grammar);
-    if errors=0 then
+    if StartNT=0 then Error(EmptyGrammar);
+    if Errors=0 then
       begin
-        write('sort ... ');
-        sort_rules; rule_offsets;
-        write('closures ... ');
-        closures;
-        write('first sets ... ');
-        first_sets;
-        write('LR0 set ... ');
+        Write('sort ... ');
+        SortRules; RuleOffsets;
+        Write('closures ... ');
+        Closures;
+        Write('first sets ... ');
+        FirstSets;
+        Write('LR0 set ... ');
         LR0Set;
-        write('lookaheads ... ');
-        lookaheads;
-        writeln;
-        write('code generation ... ');
-        parse_table;
+        Write('lookaheads ... ');
+        Lookaheads;
+        WriteLn;
+        Write('code generation ... ');
+        ParseTable;
       end;
   end(*generate_parser*);
 
 begin
-  n_act := 0;
+  NAct := 0;
 end(*YaccSem*).

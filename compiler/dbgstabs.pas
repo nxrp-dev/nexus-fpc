@@ -26,11 +26,11 @@ unit dbgstabs;
 interface
 
     uses
-      tpcompilerreal,
-      cclasses,
-      systems,dbgbase,cgbase,
-      symconst,symtype,symdef,symsym,symtable,symbase,
-      aasmtai,aasmdata;
+      TPCompilerReal,
+      CClasses,
+      Systems,DbgBase,cgbase,
+      symconst,symtype,symdef,SymSym,SymTable,SymBase,
+      aasmtai,AAsmData;
 
     const
       { stab types }
@@ -60,7 +60,7 @@ interface
     type
       TDebugInfoStabs=class(TDebugInfo)
       protected
-        dbgtype: tdbg;
+        dbgtype: TDbg;
         stabsdir: TStabType;
         def_stab,
         regvar_stab,
@@ -76,27 +76,27 @@ interface
         writing_def_stabs  : boolean;
         global_stab_number : word;
         vardatadef: TRecordDef;
-        tagtypeprefix: ansistring;
+        tagtypeprefix: AnsiString;
         function use_tag_prefix(def : TDef) : boolean;
         { tsym writing }
         function  sym_var_value(const s:string;arg:pointer):string;
-        function  sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):ansistring;
-        procedure write_sym_stabstr(list:TAsmList;sym:TSym;const ss:ansistring);
+        function  sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):AnsiString;
+        procedure write_sym_stabstr(list:TAsmList;sym:TSym;const ss:AnsiString);
         function  staticvarsym_mangled_name(sym: TStaticVarSym):string;virtual;
         procedure maybe_add_vmt_sym(list:TAsmList;def: TObjectDef);virtual;
         { tdef writing }
         function  def_stab_number(def:TDef):string;
         function  def_stab_classnumber(def:TAbstractRecordDef):string;
         function  def_var_value(const s:string;arg:pointer):string;
-        function  def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):ansistring;
-        procedure write_def_stabstr(list:TAsmList;def:TDef;const ss:ansistring);virtual;
+        function  def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):AnsiString;
+        procedure write_def_stabstr(list:TAsmList;def:TDef;const ss:AnsiString);virtual;
         procedure field_add_stabstr(p:TObject;arg:pointer);
         procedure method_add_stabstr(p:TObject;arg:pointer);
         procedure field_write_defs(p:TObject;arg:pointer);
-        function  get_enum_defstr(def: TEnumDef; lowerbound: longint): ansistring;
-        function  get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: tregister): ansistring;
-        function  base_stabs_str(typ: longint; const other, desc, value: ansistring): ansistring;overload;
-        function  base_stabs_str(const typ, other, desc, value: ansistring): ansistring;overload;virtual;
+        function  get_enum_defstr(def: TEnumDef; lowerbound: LongInt): AnsiString;
+        function  get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: TRegister): AnsiString;
+        function  base_stabs_str(typ: LongInt; const other, desc, value: AnsiString): AnsiString;overload;
+        function  base_stabs_str(const typ, other, desc, value: AnsiString): AnsiString;overload;virtual;
         function  gen_procdef_startsym_stabs(def: TProcDef): TAsmList;virtual;
         function  gen_procdef_endsym_stabs(def: TProcDef): TAsmList;virtual;
       protected
@@ -149,12 +149,12 @@ interface
 implementation
 
     uses
-      SysUtils,cutils,cfileutl,
-      globals,globtype,verbose,constexp,
+      SysUtils,CUtils,CFileUtl,
+      Globals,GlobType,Verbose,ConstExp,
       defutil, cgutils, parabase,
-      cpuinfo,cpubase,cpupi,paramgr,
-      aasmbase,procinfo,
-      finput,fmodule,ppu,
+      CPUInfo,cpubase,cpupi,paramgr,
+      aasmbase,ProcInfo,
+      FinPut,FModule,ppu,
       symutil;
 
 
@@ -163,17 +163,17 @@ implementation
 
     function GetOffsetStr(reference : TReference) : string;
     begin
-      GetOffsetStr:=tostr(reference.offset);
+      GetOffsetStr:=ToStr(reference.offset);
     end;
 
     function GetParaOffsetStr(reference : TCGParaReference) : string;
     begin
-      GetParaOffsetStr:=tostr(reference.offset);
+      GetParaOffsetStr:=ToStr(reference.offset);
     end;
 
     function GetSymName(Sym : TSymEntry) : string;
     begin
-      if Not (cs_stabs_preservecase in CurrentSettings.globalswitches) then
+      if Not (cs_stabs_preservecase in CurrentSettings.GlobalSwitches) then
         result := Sym.Name
       else
         result := Sym.RealName;
@@ -185,7 +185,7 @@ implementation
 
     function GetSymTableName(SymTable : TSymTable) : string;
     begin
-      if Not (cs_stabs_preservecase in CurrentSettings.globalswitches) then
+      if Not (cs_stabs_preservecase in CurrentSettings.GlobalSwitches) then
         result := SymTable.Name^
       else
         result := SymTable.RealName^;
@@ -197,10 +197,10 @@ implementation
       memsizeinc = 512;
 
     type
-       get_var_value_proc=function(const s:string;arg:pointer):string of object;
+       TGetVarValueProc=function(const s:string;arg:pointer):string of object;
 
 
-    function string_evaluate(s:string;get_var_value:get_var_value_proc;get_var_value_arg:pointer;const vars:array of string):ansistring;
+    function string_evaluate(s:string;get_var_value:TGetVarValueProc;get_var_value_arg:pointer;const vars:array of string):AnsiString;
     (*
      S contains a prototype of a result. Stabstr_evaluate will expand
      variables and parameters.
@@ -218,13 +218,13 @@ implementation
     var i,j:byte;
         varname:string[63];
         varno,varcounter:byte;
-        varvalues:array[0..9] of pshortstring;
+        varvalues:array[0..9] of PShortString;
         {1 kb of parameters is the limit. 256 extra bytes are allocated to
          ensure buffer integrity.}
         varvaluedata:array[0..maxdata+256] of char;
         varptr:Pchar;
         varidx : byte;
-        len:longint;
+        len:LongInt;
         r:Pchar;
 
     begin
@@ -254,19 +254,19 @@ implementation
                    s[i]:=char(varcounter);
                    inc(i);
                  until s[i]='}';
-                 varvalues[varcounter]:=pshortstring(varptr);
+                 varvalues[varcounter]:=PShortString(varptr);
                  if varptr>@varvaluedata[maxdata] then
-                   internalerrorproc(200411152);
-                 pshortstring(varptr)^:=get_var_value(varname,get_var_value_arg);
-                 inc(len,length(pshortstring(varptr)^));
-                 inc(varptr,length(pshortstring(varptr)^)+1);
+                   InternalErrorProc(200411152);
+                 PShortString(varptr)^:=get_var_value(varname,get_var_value_arg);
+                 inc(len,length(PShortString(varptr)^));
+                 inc(varptr,length(PShortString(varptr)^)+1);
                  inc(varcounter);
                end
              else if s[i+1] in ['1'..'9'] then
                begin
                  varidx:=byte(s[i+1])-byte('1');
                  if varidx>high(vars) then
-                   internalerror(200509263);
+                   InternalError(200509263);
                  inc(len,length(vars[varidx]));
                  inc(i);
                end;
@@ -277,7 +277,7 @@ implementation
         end;
 
       {Second pass, writeout result.}
-      setlength(result,len);
+      SetLength(result,len);
       r:=pchar(result);
       i:=1;
       while i<=length(s) do
@@ -323,7 +323,7 @@ implementation
         end;
       { verify that the length was correct }
       if r^<>#0 then
-        internalerror(200802031);
+        InternalError(200802031);
     end;
 
 
@@ -341,7 +341,7 @@ implementation
         { Stab must already be written, or we must be busy writing it }
         if writing_def_stabs and
            not(def.dbg_state in [dbg_state_writing,dbg_state_written,dbg_state_queued]) then
-          internalerror(200403091);
+          InternalError(200403091);
 
         { Keep track of used stabs, this info is only useful for stabs
           referenced by the symbols. Definitions will always include all
@@ -363,7 +363,7 @@ implementation
               defnumberlist.count:=global_stab_number+250;
             defnumberlist[global_stab_number]:=def;
           end;
-        result:=tostr(def.stab_number);
+        result:=ToStr(def.stab_number);
       end;
 
 
@@ -372,9 +372,9 @@ implementation
         if def.stab_number=0 then
           def_stab_number(def);
         if (def.typ=objectdef) and (TObjectDef(def).objecttype=odt_class) then
-          result:=tostr(def.stab_number-1)
+          result:=ToStr(def.stab_number-1)
         else
-          result:=tostr(def.stab_number);
+          result:=ToStr(def.stab_number);
       end;
 
 
@@ -388,15 +388,15 @@ implementation
           result:=def_stab_number(def)
         else if s='sym_name' then
           begin
-            if assigned(def.typesym) then
+            if Assigned(def.typesym) then
                result:=GetSymName(TTypeSym(def.typesym));
           end
         else if s='savesize' then
-          result:=tostr(def.size);
+          result:=ToStr(def.size);
       end;
 
 
-    function TDebugInfoStabs.def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):ansistring;
+    function TDebugInfoStabs.def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):AnsiString;
       begin
         result:=string_evaluate(s,@def_var_value,def,vars);
       end;
@@ -406,7 +406,7 @@ implementation
       var
         spec    : string[3];
         varsize : asizeint;
-        newss   : ansistring;
+        newss   : AnsiString;
         ss      : pansistring absolute arg;
       begin
         if (TSym(p).visibility=vis_hidden) then
@@ -435,12 +435,12 @@ implementation
 
                 newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(TFieldVarSym(p)),
                                      spec+def_stab_number(TFieldVarSym(p).vardef),
-                                     tostr(TConstExprInt(TFieldVarSym(p).fieldoffset)*8),tostr(varsize*8)])
+                                     ToStr(TConstExprInt(TFieldVarSym(p).fieldoffset)*8),ToStr(varsize*8)])
               end
             else
               newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(TFieldVarSym(p)),
                                    spec+def_stab_number(TFieldVarSym(p).vardef),
-                                   tostr(TConstExprInt(TFieldVarSym(p).fieldoffset)),tostr(TFieldVarSym(p).vardef.packedbitsize)]);
+                                   ToStr(TConstExprInt(TFieldVarSym(p).fieldoffset)),ToStr(TFieldVarSym(p).vardef.packedbitsize)]);
             ss^:=ss^+newss;
           end;
       end;
@@ -450,12 +450,12 @@ implementation
       var
         virtualind,argnames : string;
         pd     : TProcDef;
-        lindex : longint;
+        lindex : LongInt;
         arglength : byte;
         sp : char;
         i : integer;
         parasym : TParaVarSym;
-        newss   : ansistring;
+        newss   : AnsiString;
         ss      : pansistring absolute arg;
       begin
         if TSym(p).typ = procsym then
@@ -470,7 +470,7 @@ implementation
                lindex := pd.extnumber;
                {doesnt seem to be necessary
                lindex := lindex or $80000000;}
-               virtualind := '*'+tostr(lindex)+';'+def_stab_classnumber(pd.struct)+';'
+               virtualind := '*'+ToStr(lindex)+';'+def_stab_classnumber(pd.struct)+';'
              end
             else
              virtualind := '.';
@@ -502,17 +502,17 @@ implementation
                       vs_value :
                         ;
                       vs_final:
-                        internalerror(2019050911);
+                        InternalError(2019050911);
                     end;
                   end
                 else
                   begin
                     { if the arg definition is like (v: ^byte;..
                     there is no sym attached to data !!! }
-                    if assigned(Parasym.vardef.typesym) then
+                    if Assigned(Parasym.vardef.typesym) then
                       begin
                         arglength := length(GetSymName(Parasym.vardef.typesym));
-                        argnames := argnames + tostr(arglength)+GetSymName(Parasym.vardef.typesym);
+                        argnames := argnames + ToStr(arglength)+GetSymName(Parasym.vardef.typesym);
                       end
                     else
                       argnames:=argnames+'11unnamedtype';
@@ -555,11 +555,11 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.write_def_stabstr(list:TAsmList;def:TDef;const ss:ansistring);
+    procedure TDebugInfoStabs.write_def_stabstr(list:TAsmList;def:TDef;const ss:AnsiString);
       var
         stabchar : string[2];
         symname  : string[20];
-        st    : ansistring;
+        st    : AnsiString;
       begin
         { type prefix }
         if use_tag_prefix(def) then
@@ -576,7 +576,7 @@ implementation
           begin
             { Type names for types defined in the current unit are already written in
               the typesym }
-            if (def.owner.symtabletype=globalsymtable) and
+            if (def.owner.symtabletype=GlobalSymTable) and
                not(def.owner.iscurrentunit) then
               symname:='${sym_name}'
             else
@@ -588,15 +588,15 @@ implementation
           unit and then the linenumber is invalid in the current sourcefile }
         st:=st+def_stabstr_evaluate(def,'",'+base_stabs_str(def_stab,'0','0','0'),[]);
         { add to list }
-        list.concat(Tai_stab.create_ansistr(stabsdir,st));
+        list.concat(TAIStab.create_ansistr(stabsdir,st));
       end;
 
 
     procedure TDebugInfoStabs.appenddef_string(list:TAsmList;def:TStringDef);
       var
         bytest,charst,longst : string;
-        ss : ansistring;
-        slen : longint;
+        ss : AnsiString;
+        slen : LongInt;
       begin
         ss:='';
         case def.stringtype of
@@ -609,7 +609,7 @@ implementation
               charst:=def_stab_number(cansichartype);
               bytest:=def_stab_number(u8inttype);
               ss:=def_stabstr_evaluate(def,'s$1length:$2,0,8;st:ar$2;1;$3;$4,8,$5;;',
-                          [tostr(slen+1),bytest,tostr(slen),charst,tostr(slen*8)]);
+                          [ToStr(slen+1),bytest,ToStr(slen),charst,ToStr(slen*8)]);
             end;
           st_longstring:
             begin
@@ -617,7 +617,7 @@ implementation
               bytest:=def_stab_number(u8inttype);
               longst:=def_stab_number(u32inttype);
               ss:=def_stabstr_evaluate(def,'s$1length:$2,0,32;dummy:$6,32,8;st:ar$2;1;$3;$4,40,$5;;',
-                          [tostr(def.len+5),longst,tostr(def.len),charst,tostr(def.len*8),bytest]);
+                          [ToStr(def.len+5),longst,ToStr(def.len),charst,ToStr(def.len*8),bytest]);
            end;
          st_ansistring:
            begin
@@ -635,32 +635,32 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.get_enum_defstr(def: TEnumDef; lowerbound: longint): ansistring;
+    function TDebugInfoStabs.get_enum_defstr(def: TEnumDef; lowerbound: LongInt): AnsiString;
       var
-        i: longint;
+        i: LongInt;
         p: TEnumSym;
       begin
         { we can specify the size with @s<size>; prefix PM }
         if def.size <> std_param_align then
-          result:='@s'+tostr(def.size*8)+';e'
+          result:='@s'+ToStr(def.size*8)+';e'
         else
           result:='e';
         { the if-test is required because pred(def.minval) might overflow;
           the longint() typecast should be safe because stabs is not
           supported for 64 bit targets }
         if (def.minval<>lowerbound) then
-          for i:=lowerbound to pred(longint(def.minval)) do
-            result:=result+'<invalid>:'+tostr(i)+',';
+          for i:=lowerbound to pred(LongInt(def.minval)) do
+            result:=result+'<invalid>:'+ToStr(i)+',';
 
-        for i := 0 to def.symtable.SymList.Count - 1 do
+        for i := 0 to def.SymTable.SymList.Count - 1 do
           begin
-            p := TEnumSym(def.symtable.SymList[i]);
+            p := TEnumSym(def.SymTable.SymList[i]);
             if p.value<def.minval then
               continue
             else
             if p.value>def.maxval then
               break;
-            result:=result+GetSymName(p)+':'+tostr(p.value)+',';
+            result:=result+GetSymName(p)+':'+ToStr(p.value)+',';
           end;
         { the final ',' is required to have a valid stabs }
         result:=result+';';
@@ -674,10 +674,10 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_ord(list:TAsmList;def:TOrdDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:='';
-        if cs_gdb_valgrind in CurrentSettings.globalswitches then
+        if cs_gdb_valgrind in CurrentSettings.GlobalSwitches then
           begin
             case def.ordtype of
               uvoid :
@@ -699,7 +699,7 @@ implementation
               u128bit:
                 ss:=def_stabstr_evaluate(def,'r${numberstring};0;-1;',[]);
               else
-                ss:=def_stabstr_evaluate(def,'r${numberstring};$1;$2;',[tostr(longint(def.low.svalue)),tostr(longint(def.high.svalue))]);
+                ss:=def_stabstr_evaluate(def,'r${numberstring};$1;$2;',[ToStr(LongInt(def.low.svalue)),ToStr(LongInt(def.high.svalue))]);
             end;
           end
         else
@@ -733,10 +733,10 @@ implementation
               else
                 begin
                   if def.size <> std_param_align then
-                    ss:='@s'+tostr(def.size*8)+';'
+                    ss:='@s'+ToStr(def.size*8)+';'
                   else
                     ss:='';
-                  ss:=ss+def_stabstr_evaluate(def,'r${numberstring};$1;$2;',[tostr(longint(def.low.svalue)),tostr(longint(def.high.svalue))]);
+                  ss:=ss+def_stabstr_evaluate(def,'r${numberstring};$1;$2;',[ToStr(LongInt(def.low.svalue)),ToStr(LongInt(def.high.svalue))]);
                 end;
             end;
          end;
@@ -746,12 +746,12 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_float(list:TAsmList;def:TFloatDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:='';
         case def.floattype of
-          s32real,
-          s64real,
+          S32Real,
+          S64Real,
           s80real,
           sc80real:
             ss:=def_stabstr_evaluate(def,'r$1;${savesize};0;',[def_stab_number(s32inttype)]);
@@ -765,7 +765,7 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_file(list:TAsmList;def:TFileDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
 {$ifdef cpu64bitaddr}
         ss:=def_stabstr_evaluate(def,'s${savesize}HANDLE:$1,0,32;MODE:$1,32,32;RECSIZE:$2,64,64;'+
@@ -787,10 +787,10 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_record(list:TAsmList;def:TRecordDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
-        ss:='s'+tostr(def.size);
-        def.symtable.SymList.ForEachCall(@field_add_stabstr,@ss);
+        ss:='s'+ToStr(def.size);
+        def.SymTable.SymList.ForEachCall(@field_add_stabstr,@ss);
         ss[length(ss)]:=';';
         write_def_stabstr(list,def,ss);
       end;
@@ -800,7 +800,7 @@ implementation
 
         procedure do_write_object(list:TAsmList;def:TObjectDef);
         var
-          ss : ansistring;
+          ss : AnsiString;
           anc    : TObjectDef;
         begin
           ss:='';
@@ -813,8 +813,8 @@ implementation
               exit;
             end;
 
-          ss:='s'+tostr(TObjectSymTable(def.symtable).datasize);
-          if assigned(def.childof) then
+          ss:='s'+ToStr(TObjectSymTable(def.SymTable).DataSize);
+          if Assigned(def.childof) then
             begin
               {only one ancestor not virtual, public, at base offset 0 }
               {       !1           ,    0       2         0    ,       }
@@ -822,19 +822,19 @@ implementation
             end;
 
           {virtual table to implement yet}
-          def.symtable.symList.ForEachCall(@field_add_stabstr,@ss);
+          def.SymTable.symList.ForEachCall(@field_add_stabstr,@ss);
 
           if (oo_has_vmt in def.objectoptions) and
              (
-              not assigned(def.childof) or
+              not Assigned(def.childof) or
               not(oo_has_vmt in def.childof.objectoptions)
              ) then
-            ss:=ss+'$vf'+def_stab_classnumber(def)+':'+def_stab_number(vmtarraytype)+','+tostr(def.vmt_offset*8)+';';
-          def.symtable.symList.ForEachCall(@method_add_stabstr,@ss);
+            ss:=ss+'$vf'+def_stab_classnumber(def)+':'+def_stab_number(vmtarraytype)+','+ToStr(def.vmt_offset*8)+';';
+          def.SymTable.symList.ForEachCall(@method_add_stabstr,@ss);
           if (oo_has_vmt in def.objectoptions) then
             begin
                anc := def;
-               while assigned(anc.childof) and (oo_has_vmt in anc.childof.objectoptions) do
+               while Assigned(anc.childof) and (oo_has_vmt in anc.childof.objectoptions) do
                  anc := anc.childof;
                { just in case anc = self }
                ss:=ss+';~%'+def_stab_classnumber(anc)+';';
@@ -847,7 +847,7 @@ implementation
       var
         oldtypesym : TSym;
       begin
-        TObjectDef(def).symtable.symList.ForEachCall(@field_write_defs,list);
+        TObjectDef(def).SymTable.symList.ForEachCall(@field_write_defs,list);
         { classes require special code to write the record and the invisible pointer }
         if is_class(def) then
           begin
@@ -870,13 +870,13 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_variant(list:TAsmList;def:TVariantDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
-        if not assigned(vardatadef) then
+        if not Assigned(vardatadef) then
           exit;
 
-        ss:='s'+tostr(vardatadef.size);
-        vardatadef.symtable.SymList.ForEachCall(@field_add_stabstr,@ss);
+        ss:='s'+ToStr(vardatadef.size);
+        vardatadef.SymTable.SymList.ForEachCall(@field_add_stabstr,@ss);
         ss[length(ss)]:=';';
         write_def_stabstr(list,def,ss);
       end;
@@ -884,7 +884,7 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_pointer(list:TAsmList;def:TPointerDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:='*'+def_stab_number(TPointerDef(def).pointeddef);
         write_def_stabstr(list,def,ss);
@@ -894,7 +894,7 @@ implementation
     procedure TDebugInfoStabs.appenddef_set(list:TAsmList;def:TSetDef);
       var
         st,
-        ss : ansistring;
+        ss : AnsiString;
         elementdefstabnr: string;
       begin
         { ugly hack: create a temporary subrange type if the lower bound of
@@ -904,27 +904,27 @@ implementation
           begin
             { allocate a def number }
             inc(global_stab_number);
-            elementdefstabnr:=tostr(global_stab_number);
+            elementdefstabnr:=ToStr(global_stab_number);
             { anonymous subrange def }
             st:='":t'+elementdefstabnr+'=';
             if (def.elementdef.typ = enumdef) then
               st:=st+get_enum_defstr(TEnumDef(def.elementdef),def.setbase)
             else
-              st:=st+def_stabstr_evaluate(def.elementdef,'r'+elementdefstabnr+';$1;$2;',[tostr(longint(def.setbase)),tostr(longint(get_max_value(def.elementdef).svalue))]);
+              st:=st+def_stabstr_evaluate(def.elementdef,'r'+elementdefstabnr+';$1;$2;',[ToStr(LongInt(def.setbase)),ToStr(LongInt(get_max_value(def.elementdef).svalue))]);
             st:=st+'",'+base_stabs_str(def_stab,'0','0','0');
             { add to list }
-            list.concat(Tai_stab.create_ansistr(stabsdir,st));
+            list.concat(TAIStab.create_ansistr(stabsdir,st));
           end
         else
           elementdefstabnr:=def_stab_number(def.elementdef);
-        ss:=def_stabstr_evaluate(def,'@s$1;S$2',[tostr(def.size*8),elementdefstabnr]);
+        ss:=def_stabstr_evaluate(def,'@s$1;S$2',[ToStr(def.size*8),elementdefstabnr]);
         write_def_stabstr(list,def,ss);
       end;
 
 
     procedure TDebugInfoStabs.appenddef_formal(list:TAsmList;def:TFormalDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:=def_stabstr_evaluate(def,'${numberstring};',[]);
         write_def_stabstr(list,def,ss);
@@ -934,29 +934,29 @@ implementation
     procedure TDebugInfoStabs.appenddef_array(list:TAsmList;def:TArrayDef);
       var
         tempstr: shortstring;
-        ss : ansistring;
+        ss : AnsiString;
       begin
         if not is_packed_array(def) then
           begin
             { Try to used P if ememlent size is smaller than
               usual integer }
             if def.elesize <> std_param_align then
-              tempstr:='ar@s'+tostr(def.elesize*8)+';$1;$2;$3;$4'
+              tempstr:='ar@s'+ToStr(def.elesize*8)+';$1;$2;$3;$4'
             else
               tempstr:='ar$1;$2;$3;$4';
             if is_dynamic_array(def) then
               tempstr:='*'+tempstr;
             ss:=def_stabstr_evaluate(def,tempstr,[def_stab_number(TArrayDef(def).rangedef),
-                     tostr(TArrayDef(def).lowrange),tostr(TArrayDef(def).highrange),def_stab_number(TArrayDef(def).elementdef)])
+                     ToStr(TArrayDef(def).lowrange),ToStr(TArrayDef(def).highrange),def_stab_number(TArrayDef(def).elementdef)])
           end
         else
           begin
             // the @P seems to be ignored by gdb
             tempstr:=def_stabstr_evaluate(TArrayDef(def).rangedef,'r${numberstring};$1;$2;',
-              [tostr(TArrayDef(def).lowrange),tostr(TArrayDef(def).highrange)]);
+              [ToStr(TArrayDef(def).lowrange),ToStr(TArrayDef(def).highrange)]);
             // will only show highrange-lowrange+1 bits in gdb
             ss:=def_stabstr_evaluate(def,'@s$1;@S;S$2',
-              [tostr(TConstExprInt(TArrayDef(def).elepackedbitsize) * TArrayDef(def).elecount),tempstr]);
+              [ToStr(TConstExprInt(TArrayDef(def).elepackedbitsize) * TArrayDef(def).elecount),tempstr]);
           end;
         write_def_stabstr(list,def,ss);
       end;
@@ -964,7 +964,7 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_procvar(list:TAsmList;def:TProcVarDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:='*f'+def_stab_number(TProcVarDef(def).returndef);
         write_def_stabstr(list,def,ss);
@@ -973,7 +973,7 @@ implementation
 
     procedure TDebugInfoStabs.appenddef_undefined(list:TAsmList;def:TUndefinedDef);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:=def_stabstr_evaluate(def,'${numberstring};',[]);
         write_def_stabstr(list,def,ss);
@@ -983,7 +983,7 @@ implementation
     procedure TDebugInfoStabs.beforeappenddef(list:TAsmList;def:TDef);
       var
         anc : TObjectDef;
-        i : longint;
+        i : LongInt;
       begin
         { write dependencies first }
         case def.typ of
@@ -1017,15 +1017,15 @@ implementation
           procvardef :
             begin
               appenddef(list,TProcVarDef(def).returndef);
-              if assigned(TProcVarDef(def).parast) then
+              if Assigned(TProcVarDef(def).parast) then
                 write_symtable_defs(list,TProcVarDef(def).parast);
             end;
           procdef :
             begin
               appenddef(list,TProcDef(def).returndef);
-              if assigned(TProcDef(def).parast) then
+              if Assigned(TProcDef(def).parast) then
                 write_symtable_defs(list,TProcDef(def).parast);
-              if assigned(TProcDef(def).localst) and
+              if Assigned(TProcDef(def).localst) and
                  (TProcDef(def).localst.symtabletype=localsymtable) then
                 write_symtable_defs(list,TProcDef(def).localst);
             end;
@@ -1035,16 +1035,16 @@ implementation
               appenddef(list,TArrayDef(def).elementdef);
             end;
           recorddef :
-            TRecordDef(def).symtable.symList.ForEachCall(@field_write_defs,list);
+            TRecordDef(def).SymTable.symList.ForEachCall(@field_write_defs,list);
           enumdef :
-            if assigned(TEnumDef(def).basedef) then
+            if Assigned(TEnumDef(def).basedef) then
               appenddef(list,TEnumDef(def).basedef);
           objectdef :
             begin
               { make sure we don't write child classdefs before their parent }
               { classdefs, because this crashes gdb                          }
               anc:=TObjectDef(def);
-              while assigned(anc.childof) do
+              while Assigned(anc.childof) do
                 begin
                   anc:=anc.childof;
                   case anc.dbg_state of
@@ -1068,12 +1068,12 @@ implementation
                   end;
                 end;
               appenddef(list,vmtarraytype);
-              if assigned(TObjectDef(def).ImplementedInterfaces) then
+              if Assigned(TObjectDef(def).ImplementedInterfaces) then
                 for i:=0 to TObjectDef(def).ImplementedInterfaces.Count-1 do
                   appenddef(list,TImplementedInterface(TObjectDef(def).ImplementedInterfaces[i]).IntfDef);
               { first the parents }
               anc:=TObjectDef(def);
-              while assigned(anc.childof) do
+              while Assigned(anc.childof) do
                 begin
                   anc:=anc.childof;
                   { in case this is an object family declared in another unit
@@ -1087,7 +1087,7 @@ implementation
                   }
                   def_stab_number(anc);
                   appenddef(list,anc);
-                  if assigned(anc.ImplementedInterfaces) then
+                  if Assigned(anc.ImplementedInterfaces) then
                     for i:=0 to anc.ImplementedInterfaces.Count-1 do
                       appenddef(list,TImplementedInterface(anc.ImplementedInterfaces[i]).IntfDef);
                 end;
@@ -1100,13 +1100,13 @@ implementation
 
     procedure TDebugInfoStabs.appendprocdef(list:TAsmList;def:TProcDef);
       var
-        hs : ansistring;
+        hs : AnsiString;
         templist : TAsmList;
         prev_procdef : TProcDef;
       begin
         if not(def.in_currentunit) or
            { happens for init procdef of units without init section }
-           not assigned(def.procstarttai) then
+           not Assigned(def.procstarttai) then
           exit;
 
         { mark as used so the local type defs also be written }
@@ -1115,23 +1115,23 @@ implementation
         current_procdef:=def;
 
         templist:=gen_procdef_endsym_stabs(def);
-        CurrentAsmData.asmlists[al_procedures].insertlistafter(def.procendtai,templist);
+        CurrentAsmData.asmlists[al_procedures].InsertListAfter(def.procendtai,templist);
 
         { FUNC stabs }
         templist.free;
         templist:=gen_procdef_startsym_stabs(def);
-        CurrentAsmData.asmlists[al_procedures].insertlistbefore(def.procstarttai,templist);
+        CurrentAsmData.asmlists[al_procedures].InsertListBefore(def.procstarttai,templist);
 
         { para types }
-        if assigned(def.parast) then
+        if Assigned(def.parast) then
           write_symtable_syms(templist,def.parast);
         { local type defs and vars should not be written
           inside the main proc stab }
-        if assigned(def.localst) and
+        if Assigned(def.localst) and
            (def.localst.symtabletype=localsymtable) then
           write_symtable_syms(templist,def.localst);
 
-        if assigned(def.funcretsym) and
+        if Assigned(def.funcretsym) and
            (TAbstractNormalVarSym(def.funcretsym).refs>0) then
           begin
             if TAbstractNormalVarSym(def.funcretsym).localloc.loc=LOC_REFERENCE then
@@ -1141,18 +1141,18 @@ implementation
                   hs:='X*'
                 else
                   hs:='X';
-                templist.concat(Tai_stab.create(stabsdir,strpnew(
+                templist.concat(TAIStab.create(stabsdir,StrPNew(
                    '"'+GetSymName(def.procsym)+':'+hs+def_stab_number(def.returndef)+'",'+
                    base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(TAbstractNormalVarSym(def.funcretsym).localloc.reference)))));
-                if (m_result in CurrentSettings.modeswitches) then
-                  templist.concat(Tai_stab.create(stabsdir,strpnew(
+                if (m_result in CurrentSettings.ModeSwitches) then
+                  templist.concat(TAIStab.create(stabsdir,StrPNew(
                      '"RESULT:'+hs+def_stab_number(def.returndef)+'",'+
                      base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(TAbstractNormalVarSym(def.funcretsym).localloc.reference)))));
               end;
           end;
 
 
-        CurrentAsmData.asmlists[al_procedures].insertlistbefore(def.procstarttai,templist);
+        CurrentAsmData.asmlists[al_procedures].InsertListBefore(def.procstarttai,templist);
 
         templist.free;
         templist := nil;
@@ -1176,24 +1176,24 @@ implementation
         else if s='ownername' then
           result:=GetSymTableName(sym.owner)
         else if s='line' then
-          result:=tostr(sym.fileinfo.line)
+          result:=ToStr(sym.fileinfo.line)
         else
-          internalerror(200401152);
+          InternalError(200401152);
       end;
 
 
-    function TDebugInfoStabs.sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):ansistring;
+    function TDebugInfoStabs.sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):AnsiString;
       begin
         result:=string_evaluate(s,@sym_var_value,sym,vars);
       end;
 
 
-    procedure TDebugInfoStabs.write_sym_stabstr(list:TAsmList;sym:TSym;const ss:ansistring);
+    procedure TDebugInfoStabs.write_sym_stabstr(list:TAsmList;sym:TSym;const ss:AnsiString);
       begin
         if ss='' then
           exit;
         { add to list }
-        list.concat(Tai_stab.create_ansistr(stabsdir,ss));
+        list.concat(TAIStab.create_ansistr(stabsdir,ss));
       end;
 
 
@@ -1206,9 +1206,9 @@ implementation
     procedure TDebugInfoStabs.maybe_add_vmt_sym(list: TAsmList; def: TObjectDef);
       begin
         if (oo_has_vmt in def.objectoptions) and
-           assigned(def.owner) and
-           assigned(def.owner.name) then
-          list.concat(Tai_stab.create_ansistr(stabsdir,ansistring('"vmt_')+GetSymTableName(def.owner)+TObjectDef(def).objname^+':S'+
+           Assigned(def.owner) and
+           Assigned(def.owner.name) then
+          list.concat(TAIStab.create_ansistr(stabsdir,AnsiString('"vmt_')+GetSymTableName(def.owner)+TObjectDef(def).objname^+':S'+
                  def_stab_number(vmttype)+'",'+
                  base_stabs_str(globalvarsym_inited_stab,'0','0',ApplyAsmSymbolRestrictions(TObjectDef(def).vmt_mangledname))));
       end;
@@ -1216,7 +1216,7 @@ implementation
 
     procedure TDebugInfoStabs.appendsym_fieldvar(list:TAsmList;sym:TFieldVarSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:='';
         if (sym.owner.symtabletype in [ObjectSymtable,recordsymtable]) and
@@ -1229,10 +1229,10 @@ implementation
 
     procedure TDebugInfoStabs.appendsym_staticvar(list:TAsmList;sym:TStaticVarSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
         st : string;
         threadvaroffset : string;
-        regidx : Tregisterindex;
+        regidx : TRegisterIndex;
         nsym : byte;
       begin
         { external symbols can't be resolved at link time, so we
@@ -1253,7 +1253,7 @@ implementation
               { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi", "eip", "ps", "cs", "ss", "ds", "es", "fs", "gs", }
               { this is the register order for GDB}
               if regidx<>0 then
-                ss:=sym_stabstr_evaluate(sym,'"${name}:r$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[st,tostr(regstabs_table[regidx])]);
+                ss:=sym_stabstr_evaluate(sym,'"${name}:r$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[st,ToStr(regstabs_table[regidx])]);
             end;
           else
             begin
@@ -1283,9 +1283,9 @@ implementation
 
     procedure TDebugInfoStabs.appendsym_localvar(list:TAsmList;sym:TLocalVarSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
         st : string;
-        regidx : Tregisterindex;
+        regidx : TRegisterIndex;
       begin
         { There is no space allocated for not referenced locals }
         if (sym.owner.symtabletype=localsymtable) and (sym.refs=0) then
@@ -1305,23 +1305,23 @@ implementation
               { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi", "eip", "ps", "cs", "ss", "ds", "es", "fs", "gs", }
               { this is the register order for GDB}
               if regidx<>0 then
-                ss:=sym_stabstr_evaluate(sym,'"${name}:r$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[st,tostr(regstabs_table[regidx])]);
+                ss:=sym_stabstr_evaluate(sym,'"${name}:r$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[st,ToStr(regstabs_table[regidx])]);
             end;
           LOC_REFERENCE :
             { offset to ebp => will not work if the framepointer is esp
               so some optimizing will make things harder to debug }
             ss:=sym_stabstr_evaluate(sym,'"${name}:$1",'+base_stabs_str(localvarsymref_stab,'0','${line}','$2'),[st,getoffsetstr(sym.localloc.reference)])
           else
-            internalerror(2003091814);
+            InternalError(2003091814);
         end;
         write_sym_stabstr(list,sym,ss);
       end;
 
 
-    function TDebugInfoStabs.get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: tregister): ansistring;
+    function TDebugInfoStabs.get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: TRegister): AnsiString;
       var
         ltyp: string[1];
-        regidx : Tregisterindex;
+        regidx : TRegisterIndex;
       begin
         result:='';
         if typ='p' then
@@ -1332,17 +1332,17 @@ implementation
         { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi", "eip", "ps", "cs", "ss", "ds", "es", "fs", "gs", }
         { this is the register order for GDB}
         if regidx<>0 then
-          result:=sym_stabstr_evaluate(sym,'"${name}:$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[ltyp+stabstr,tostr(longint(regstabs_table[regidx]))]);
+          result:=sym_stabstr_evaluate(sym,'"${name}:$1",'+base_stabs_str(regvar_stab,'0','${line}','$2'),[ltyp+stabstr,ToStr(LongInt(regstabs_table[regidx]))]);
       end;
 
 
-    function TDebugInfoStabs.base_stabs_str(typ: longint; const other, desc, value: ansistring): ansistring;
+    function TDebugInfoStabs.base_stabs_str(typ: LongInt; const other, desc, value: AnsiString): AnsiString;
       begin
-        result:=base_stabs_str(tostr(typ),other,desc,value);
+        result:=base_stabs_str(ToStr(typ),other,desc,value);
       end;
 
 
-    function TDebugInfoStabs.base_stabs_str(const typ, other, desc, value: ansistring): ansistring;
+    function TDebugInfoStabs.base_stabs_str(const typ, other, desc, value: AnsiString): AnsiString;
       begin
         result:=typ+','+other+','+desc+','+value
       end;
@@ -1352,7 +1352,7 @@ implementation
       var
         RType : Char;
         Obj,Info,
-        mangledname: ansistring;
+        mangledname: AnsiString;
       begin
         result:=TAsmList.create;
         { "The stab representing a procedure is located immediately
@@ -1372,26 +1372,26 @@ implementation
           RType := 'F'
         else
           RType := 'f';
-        if assigned(def.owner) then
+        if Assigned(def.owner) then
           begin
             if (def.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
               obj := GetSymTableName(def.owner)+'__'+GetSymName(def.procsym);
-            if not(cs_gdb_valgrind in CurrentSettings.globalswitches) and
+            if not(cs_gdb_valgrind in CurrentSettings.GlobalSwitches) and
                (def.owner.symtabletype=localsymtable) and
-               assigned(def.owner.defowner) and
-               assigned(TProcDef(def.owner.defowner).procsym) then
+               Assigned(def.owner.defowner) and
+               Assigned(TProcDef(def.owner.defowner).procsym) then
               info := ','+GetSymName(def.procsym)+','+GetSymName(TProcDef(def.owner.defowner).procsym);
           end;
         mangledname:=ApplyAsmSymbolRestrictions(def.mangledname);
-        result.concat(Tai_stab.Create_ansistr(stabsdir,'"'+obj+':'+RType+def_stab_number(def.returndef)+info+'",'+
-          base_stabs_str(procdef_stab,'0',tostr(def.fileinfo.line),mangledname)));
+        result.concat(TAIStab.Create_ansistr(stabsdir,'"'+obj+':'+RType+def_stab_number(def.returndef)+info+'",'+
+          base_stabs_str(procdef_stab,'0',ToStr(def.fileinfo.line),mangledname)));
       end;
 
 
     function TDebugInfoStabs.gen_procdef_endsym_stabs(def: TProcDef): TAsmList;
       var
-        ss, mangledname: ansistring;
-        stabsendlabel: tasmlabel;
+        ss, mangledname: AnsiString;
+        stabsendlabel: TAsmLabel;
       begin
         result:=TAsmList.create;
 
@@ -1403,21 +1403,21 @@ implementation
             mangledname:=def.mangledname;
             // LBRAC
             if af_stabs_use_function_absolute_addresses in TargetAsm.flags then
-              ss:=tostr(STABS_N_LBRAC)+',0,0,'+mangledname
+              ss:=ToStr(STABS_N_LBRAC)+',0,0,'+mangledname
             else
-              ss:=tostr(STABS_N_LBRAC)+',0,0,0';
-            result.concat(Tai_stab.Create_ansistr(stab_stabn,ss));
+              ss:=ToStr(STABS_N_LBRAC)+',0,0,0';
+            result.concat(TAIStab.Create_ansistr(stab_stabn,ss));
 
             // RBRAC
-            ss:=tostr(STABS_N_RBRAC)+',0,0,'+stabsendlabel.name;
+            ss:=ToStr(STABS_N_RBRAC)+',0,0,'+stabsendlabel.name;
             stabsendlabel.increfs;
             if not(af_stabs_use_function_absolute_addresses in TargetAsm.flags) then
               ss:=ss+'-'+mangledname;
-            result.concat(Tai_stab.Create_ansistr(stab_stabn,ss));
+            result.concat(TAIStab.Create_ansistr(stab_stabn,ss));
 
             { the stabsendlabel must come after all other stabs for this }
             { function                                                   }
-            result.concat(tai_label.create(stabsendlabel));
+            result.concat(TAILabel.create(stabsendlabel));
 
             { Add a "size" stab as described in the last paragraph of 2.5 at  }
             { http://sourceware.org/gdb/current/onlinedocs/stabs_2.html#SEC12 }
@@ -1427,18 +1427,18 @@ implementation
             { This stab must come after all other stabs for the procedure,    }
             { including the LBRAC/RBRAC ones                                  }
             if (TargetInfo.system in systems_darwin) then
-              result.concat(Tai_stab.create(stabsdir,
-                strpnew('"",'+base_stabs_str(procdef_stab,'0','0',stabsendlabel.name+'-'+mangledname))));
+              result.concat(TAIStab.create(stabsdir,
+                StrPNew('"",'+base_stabs_str(procdef_stab,'0','0',stabsendlabel.name+'-'+mangledname))));
           end;
       end;
 
 
     procedure TDebugInfoStabs.appendsym_paravar(list:TAsmList;sym:TParaVarSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
         c  : string[1];
         st : string;
-        regidx : Tregisterindex;
+        regidx : TRegisterIndex;
       begin
         ss:='';
          { set loc to LOC_REFERENCE to get somewhat usable debugging info }
@@ -1451,7 +1451,7 @@ implementation
                 regidx:=findreg_by_number(sym.localloc.register);
               LOC_REFERENCE: ;
               else
-                internalerror(2003091815);
+                InternalError(2003091815);
             end;
             if (po_classmethod in TAbstractProcDef(sym.owner.defowner).procoptions) or
                (po_staticmethod in TAbstractProcDef(sym.owner.defowner).procoptions) then
@@ -1463,7 +1463,7 @@ implementation
                   begin
                     regidx:=findreg_by_number(sym.localloc.register);
                     ss:=sym_stabstr_evaluate(sym,'"pvmt:r$1",'+base_stabs_str(regvar_stab,'0','0','$2'),
-                      [def_stab_number(pvmttype),tostr(regstabs_table[regidx])]);
+                      [def_stab_number(pvmttype),ToStr(regstabs_table[regidx])]);
                   end
                 end
             else
@@ -1483,7 +1483,7 @@ implementation
                       c:='a';
                     regidx:=findreg_by_number(sym.localloc.register);
                     ss:=sym_stabstr_evaluate(sym,'"$$t:$1",'+base_stabs_str(regvar_stab,'0','0','$2'),
-                        [c+def_stab_number(TProcDef(sym.owner.defowner).struct),tostr(regstabs_table[regidx])]);
+                        [c+def_stab_number(TProcDef(sym.owner.defowner).struct),ToStr(regstabs_table[regidx])]);
                   end
               end;
           end
@@ -1539,7 +1539,7 @@ implementation
                   ss:=sym_stabstr_evaluate(sym,'"${name}:$1",'+base_stabs_str(paravarsymref_stab,'0','${line}','$2'),[c+st,getoffsetstr(sym.localloc.reference)])
                 end;
               else
-                internalerror(2003091805);
+                InternalError(2003091805);
             end;
           end;
         write_sym_stabstr(list,sym,ss);
@@ -1571,39 +1571,39 @@ implementation
     procedure TDebugInfoStabs.appendsym_const(list:TAsmList;sym:TConstSym);
       var
         st : string;
-        ss : ansistring;
-        i : longint;
+        ss : AnsiString;
+        i : LongInt;
       begin
         ss:='';
         { Don't write info for default parameter values, the N_Func breaks
           the N_Func for the function itself.
           Valgrind does not support constants }
         if (sym.owner.symtabletype=parasymtable) or
-           (cs_gdb_valgrind in CurrentSettings.globalswitches) then
+           (cs_gdb_valgrind in CurrentSettings.GlobalSwitches) then
           exit;
         case sym.consttyp of
           conststring:
             begin
               if sym.value.len<200 then
                 begin
-                  setlength(ss,sym.value.len);
+                  SetLength(ss,sym.value.len);
                   for i:=0 to sym.value.len-1 do
                     ss[i+1]:=pchar(sym.value.valueptr)[i];
                   if TargetDbg.id=dbg_stabs then
-                    st:='s'''+backspace_quote(octal_quote(ss,[#0..#9,#11,#12,#14..#31,'''']),['"','\',#10,#13])+''''
+                    st:='s'''+Backspace_Quote(Octal_Quote(ss,[#0..#9,#11,#12,#14..#31,'''']),['"','\',#10,#13])+''''
                   else
-                    st:='s'''+stabx_quote_const(octal_quote(ss,[#0..#9,#11,#12,#14..#31,'''']))+'''';
+                    st:='s'''+stabx_quote_const(Octal_Quote(ss,[#0..#9,#11,#12,#14..#31,'''']))+'''';
                 end
               else
                 st:='<constant string too long>';
             end;
           constord:
-            st:='i'+tostr(sym.value.valueord);
+            st:='i'+ToStr(sym.value.valueord);
           constpointer:
-            st:='i'+tostr(sym.value.valueordptr);
+            st:='i'+ToStr(sym.value.valueordptr);
           constreal:
             begin
-              st:=realtostr(pbestreal(sym.value.valueptr)^);
+              st:=RealToStr(PBestReal(sym.value.valueptr)^);
               st := 'r'+st;
             end;
           else
@@ -1619,12 +1619,12 @@ implementation
 
     procedure TDebugInfoStabs.appendsym_type(list:TAsmList;sym:TTypeSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
         stabchar : string[2];
       begin
         ss:='';
-        if not assigned(sym.typedef) then
-          internalerror(200509262);
+        if not Assigned(sym.typedef) then
+          InternalError(200509262);
         if use_tag_prefix(sym.typedef) then
           stabchar:=tagtypeprefix
         else
@@ -1636,7 +1636,7 @@ implementation
 
     procedure TDebugInfoStabs.appendsym_label(list:TAsmList;sym:TLabelSym);
       var
-        ss : ansistring;
+        ss : AnsiString;
       begin
         ss:=sym_stabstr_evaluate(sym,'"${name}",'+base_stabs_str(localvarsymref_stab,'0','${line}','0'),[]);
         write_sym_stabstr(list,sym,ss);
@@ -1652,20 +1652,20 @@ implementation
         stabsvarlist,
         stabstypelist : TAsmList;
         storefilepos  : TFilePosInfo;
-        i  : longint;
+        i  : LongInt;
         vardatatype : TTypeSym;
       begin
         storefilepos:=CurrentFilePos;
         CurrentFilePos:=CurrentModule.mainfilepos;
 
         global_stab_number:=0;
-        defnumberlist:=TFPObjectlist.create(false);
-        deftowritelist:=TFPObjectlist.create(false);
+        defnumberlist:=TFPObjectList.create(false);
+        deftowritelist:=TFPObjectList.create(false);
         stabsvarlist:=TAsmList.create;
         stabstypelist:=TAsmList.create;
 
         vardatatype:=try_search_system_type('TVARDATA');
-        if assigned(vardatatype) then
+        if Assigned(vardatatype) then
           vardatadef:=TRecordDef(vardatatype.typedef);
 
         { include symbol that will be referenced from the main to be sure to
@@ -1673,22 +1673,22 @@ implementation
         include(CurrentModule.moduleflags,mf_has_stabs_debuginfo);
         if not(TargetInfo.system in systems_darwin) then
           begin
-            new_section(CurrentAsmData.asmlists[al_stabs],sec_data,GetSymTableName(CurrentModule.localsymtable),sizeof(pint));
-            CurrentAsmData.asmlists[al_stabs].concat(tai_symbol.Createname_global(make_mangledname('DEBUGINFO',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
+            new_section(CurrentAsmData.asmlists[al_stabs],sec_data,GetSymTableName(CurrentModule.localsymtable),sizeof(PInt));
+            CurrentAsmData.asmlists[al_stabs].concat(TAISymbol.Createname_global(make_mangledname('DEBUGINFO',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
           end
         else
-          new_section(CurrentAsmData.asmlists[al_stabs],sec_code,GetSymTableName(CurrentModule.localsymtable),sizeof(pint));
+          new_section(CurrentAsmData.asmlists[al_stabs],sec_code,GetSymTableName(CurrentModule.localsymtable),sizeof(PInt));
 
         { write all global/local variables. This will flag all required tdefs  }
-        if assigned(CurrentModule.globalsymtable) then
-          write_symtable_syms(stabsvarlist,CurrentModule.globalsymtable);
-        if assigned(CurrentModule.localsymtable) then
+        if Assigned(CurrentModule.GlobalSymTable) then
+          write_symtable_syms(stabsvarlist,CurrentModule.GlobalSymTable);
+        if Assigned(CurrentModule.localsymtable) then
           write_symtable_syms(stabsvarlist,CurrentModule.localsymtable);
 
         { write all procedures and methods. This will flag all required tdefs }
-        if assigned(CurrentModule.globalsymtable) then
-          write_symtable_procdefs(stabsvarlist,CurrentModule.globalsymtable);
-        if assigned(CurrentModule.localsymtable) then
+        if Assigned(CurrentModule.GlobalSymTable) then
+          write_symtable_procdefs(stabsvarlist,CurrentModule.GlobalSymTable);
+        if Assigned(CurrentModule.localsymtable) then
           write_symtable_procdefs(stabsvarlist,CurrentModule.localsymtable);
 
         { reset unit type info flag }
@@ -1697,20 +1697,20 @@ implementation
         { write used types from the used units }
         write_used_unit_type_info(stabstypelist,CurrentModule);
         { last write the types from this unit }
-        if assigned(CurrentModule.globalsymtable) then
-          write_symtable_defs(stabstypelist,CurrentModule.globalsymtable);
-        if assigned(CurrentModule.localsymtable) then
+        if Assigned(CurrentModule.GlobalSymTable) then
+          write_symtable_defs(stabstypelist,CurrentModule.GlobalSymTable);
+        if Assigned(CurrentModule.localsymtable) then
           write_symtable_defs(stabstypelist,CurrentModule.localsymtable);
 
         write_remaining_defs_to_write(stabstypelist);
 
-        CurrentAsmData.asmlists[al_stabs].concatlist(stabstypelist);
-        CurrentAsmData.asmlists[al_stabs].concatlist(stabsvarlist);
+        CurrentAsmData.asmlists[al_stabs].ConcatList(stabstypelist);
+        CurrentAsmData.asmlists[al_stabs].ConcatList(stabsvarlist);
 
         { reset stab numbers }
         for i:=0 to defnumberlist.count-1 do
           begin
-            if assigned(defnumberlist[i]) then
+            if Assigned(defnumberlist[i]) then
               begin
                 TDef(defnumberlist[i]).stab_number:=0;
                 TDef(defnumberlist[i]).dbg_state:=dbg_state_unused;
@@ -1734,23 +1734,23 @@ implementation
       var
         currfileinfo,
         lastfileinfo : TFilePosInfo;
-        currfuncname : pshortstring;
+        currfuncname : PShortString;
         currsectype  : TAsmSectiontype;
-        hlabel       : tasmlabel;
-        hp : tai;
-        infile : tinputfile;
+        hlabel       : TAsmLabel;
+        hp : TAI;
+        infile : TInputFile;
       begin
         FillChar(lastfileinfo,sizeof(lastfileinfo),0);
         currfuncname:=nil;
         currsectype:=sec_code;
-        hp:=Tai(list.first);
-        while assigned(hp) do
+        hp:=TAI(list.first);
+        while Assigned(hp) do
           begin
             case hp.typ of
               ait_section :
-                currsectype:=tai_section(hp).sectype;
+                currsectype:=TAISection(hp).sectype;
               ait_function_name :
-                currfuncname:=tai_function_name(hp).funcname;
+                currfuncname:=TAIFunctionName(hp).funcname;
               ait_force_line :
                 lastfileinfo.line:=-1;
               else
@@ -1760,25 +1760,25 @@ implementation
             if (currsectype=sec_code) and
                (hp.typ=ait_instruction) then
               begin
-                currfileinfo:=tailineinfo(hp).fileinfo;
+                currfileinfo:=TAILineInfo(hp).fileinfo;
                 { file changed ? (must be before line info) }
                 if (currfileinfo.fileindex<>0) and
                    ((lastfileinfo.fileindex<>currfileinfo.fileindex) or
                     (lastfileinfo.moduleindex<>currfileinfo.moduleindex)) then
                   begin
-                    infile:=get_module(currfileinfo.moduleindex).sourcefiles.get_file(currfileinfo.fileindex);
-                    if assigned(infile) then
+                    infile:=Get_Module(currfileinfo.moduleindex).SourceFiles.Get_File(currfileinfo.fileindex);
+                    if Assigned(infile) then
                       begin
                         CurrentAsmData.getlabel(hlabel,alt_dbgfile);
                         { emit stabs }
-                        if not(ds_stabs_abs_include_files in CurrentSettings.debugswitches) or
-                           path_absolute(infile.path) then
-                          list.insertbefore(Tai_stab.Create_str(stabsdir,'"'+BsToSlash(FixPath(infile.path,false))+FixFileName(infile.name)+'",'+tostr(stabs_n_includefile)+
+                        if not(ds_stabs_abs_include_files in CurrentSettings.DebugSwitches) or
+                           Path_Absolute(infile.path) then
+                          list.insertbefore(TAIStab.Create_str(stabsdir,'"'+BSToSlash(FixPath(infile.path,false))+FixFileName(infile.name)+'",'+ToStr(stabs_n_includefile)+
                                             ',0,0,'+hlabel.name),hp)
                         else
-                          list.insertbefore(Tai_stab.Create_str(stabsdir,'"'+BsToSlash(FixPath(getcurrentdir,false)+FixPath(infile.path,false))+FixFileName(infile.name)+'",'+tostr(stabs_n_includefile)+
+                          list.insertbefore(TAIStab.Create_str(stabsdir,'"'+BSToSlash(FixPath(getcurrentdir,false)+FixPath(infile.path,false))+FixFileName(infile.name)+'",'+ToStr(stabs_n_includefile)+
                                             ',0,0,'+hlabel.name),hp);
-                        list.insertbefore(tai_label.create(hlabel),hp);
+                        list.insertbefore(TAILabel.create(hlabel),hp);
                         hlabel.increfs;
 
                         { force new line info }
@@ -1789,63 +1789,63 @@ implementation
                 { line changed ? }
                 if (currfileinfo.line>lastfileinfo.line) and (currfileinfo.line<>0) then
                   begin
-                     if assigned(currfuncname) and
+                     if Assigned(currfuncname) and
                         not(af_stabs_use_function_absolute_addresses in TargetAsm.flags) then
                       begin
                         CurrentAsmData.getlabel(hlabel,alt_dbgline);
-                        list.insertbefore(Tai_stab.Create_str(stab_stabn,tostr(stabs_n_textline)+',0,'+tostr(currfileinfo.line)+','+
+                        list.insertbefore(TAIStab.Create_str(stab_stabn,ToStr(stabs_n_textline)+',0,'+ToStr(currfileinfo.line)+','+
                                           hlabel.name+' - '+currfuncname^),hp);
-                        list.insertbefore(tai_label.create(hlabel),hp);
+                        list.insertbefore(TAILabel.create(hlabel),hp);
                         hlabel.increfs;
                       end
                      else
-                      list.insertbefore(Tai_stab.Create_str(stab_stabd,tostr(stabs_n_textline)+',0,'+tostr(currfileinfo.line)),hp);
+                      list.insertbefore(TAIStab.Create_str(stab_stabd,ToStr(stabs_n_textline)+',0,'+ToStr(currfileinfo.line)),hp);
                   end;
                 lastfileinfo:=currfileinfo;
               end;
 
-            hp:=tai(hp.next);
+            hp:=TAI(hp.next);
           end;
       end;
 
 
     procedure TDebugInfoStabs.insertmoduleinfo;
       var
-        hlabel : tasmlabel;
-        infile : tinputfile;
+        hlabel : TAsmLabel;
+        infile : TInputFile;
       begin
         { emit main source n_sourcefile for start of module }
         CurrentAsmData.getlabel(hlabel,alt_dbgfile);
-        infile:=CurrentModule.sourcefiles.get_file(1);
-        new_section(CurrentAsmData.asmlists[al_start],sec_code,make_mangledname('DEBUGSTART',CurrentModule.localsymtable,''),sizeof(pint),secorder_begin);
+        infile:=CurrentModule.SourceFiles.Get_File(1);
+        new_section(CurrentAsmData.asmlists[al_start],sec_code,make_mangledname('DEBUGSTART',CurrentModule.localsymtable,''),sizeof(PInt),secorder_begin);
         if not(TargetInfo.system in systems_darwin) then
-          CurrentAsmData.asmlists[al_start].concat(tai_symbol.Createname_global(make_mangledname('DEBUGSTART',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
-        CurrentAsmData.asmlists[al_start].concat(Tai_stab.Create_str(stabsdir,'"'+BsToSlash(FixPath(getcurrentdir,false))+'",'+
+          CurrentAsmData.asmlists[al_start].concat(TAISymbol.Createname_global(make_mangledname('DEBUGSTART',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
+        CurrentAsmData.asmlists[al_start].concat(TAIStab.Create_str(stabsdir,'"'+BSToSlash(FixPath(getcurrentdir,false))+'",'+
           base_stabs_str(stabs_n_sourcefile,'0','0',hlabel.name)));
-        CurrentAsmData.asmlists[al_start].concat(Tai_stab.Create_str(stabsdir,'"'+BsToSlash(FixPath(infile.path,false))+FixFileName(infile.name)+'",'+
+        CurrentAsmData.asmlists[al_start].concat(TAIStab.Create_str(stabsdir,'"'+BSToSlash(FixPath(infile.path,false))+FixFileName(infile.name)+'",'+
           base_stabs_str(stabs_n_sourcefile,'0','0',hlabel.name)));
         hlabel.increfs;
-        CurrentAsmData.asmlists[al_start].concat(tai_label.create(hlabel));
+        CurrentAsmData.asmlists[al_start].concat(TAILabel.create(hlabel));
         { for darwin, you need a "module marker" too to work around      }
         { either some assembler or gdb bug (radar 4386531 according to a }
         { comment in dbxout.c of Apple's gcc)                            }
         if (TargetInfo.system in systems_darwin) then
-          CurrentAsmData.asmlists[al_end].concat(Tai_stab.Create_str(stabsdir,'"",'+base_stabs_str(STABS_N_OSO,'0','0','0')));
+          CurrentAsmData.asmlists[al_end].concat(TAIStab.Create_str(stabsdir,'"",'+base_stabs_str(STABS_N_OSO,'0','0','0')));
         { emit empty n_sourcefile for end of module }
         CurrentAsmData.getlabel(hlabel,alt_dbgfile);
-        new_section(CurrentAsmData.asmlists[al_end],sec_code,make_mangledname('DEBUGEND',CurrentModule.localsymtable,''),sizeof(pint),secorder_end);
+        new_section(CurrentAsmData.asmlists[al_end],sec_code,make_mangledname('DEBUGEND',CurrentModule.localsymtable,''),sizeof(PInt),secorder_end);
         if not(TargetInfo.system in systems_darwin) then
-          CurrentAsmData.asmlists[al_end].concat(tai_symbol.Createname_global(make_mangledname('DEBUGEND',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
-        CurrentAsmData.asmlists[al_end].concat(Tai_stab.Create_str(stabsdir,'"",'+base_stabs_str(stabs_n_sourcefile,'0','0',hlabel.name)));
-        CurrentAsmData.asmlists[al_end].concat(tai_label.create(hlabel));
+          CurrentAsmData.asmlists[al_end].concat(TAISymbol.Createname_global(make_mangledname('DEBUGEND',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
+        CurrentAsmData.asmlists[al_end].concat(TAIStab.Create_str(stabsdir,'"",'+base_stabs_str(stabs_n_sourcefile,'0','0',hlabel.name)));
+        CurrentAsmData.asmlists[al_end].concat(TAILabel.create(hlabel));
         hlabel.increfs;
       end;
 
 
         procedure TDebugInfoStabs.referencesections(list: TAsmList);
       var
-        hp : tmodule;
-        dbgtable : tai_symbol;
+        hp : TModule;
+        dbgtable : TAISymbol;
       begin
         { Reference all DEBUGINFO sections from the main .fpc section }
         if (TargetInfo.system in systems_darwin) then
@@ -1854,21 +1854,21 @@ implementation
         { make sure the debuginfo doesn't get stripped out }
         if (TargetInfo.system in systems_darwin) then
           begin
-            dbgtable:=tai_symbol.createname('DEBUGINFOTABLE',AT_METADATA,0,voidpointertype);
-            list.concat(tai_directive.create(asd_no_dead_strip,dbgtable.sym.name));
+            dbgtable:=TAISymbol.createname('DEBUGINFOTABLE',AT_METADATA,0,voidpointertype);
+            list.concat(TAIDirective.create(asd_no_dead_strip,dbgtable.sym.name));
             list.concat(dbgtable);
           end;
         { include reference to all debuginfo sections of used units }
-        hp:=tmodule(loaded_units.first);
-        while assigned(hp) do
+        hp:=TModule(loaded_units.first);
+        while Assigned(hp) do
           begin
-            If (mf_has_stabs_debuginfo in hp.moduleflags) and not assigned(hp.package) then
+            If (mf_has_stabs_debuginfo in hp.moduleflags) and not Assigned(hp.package) then
               begin
-                list.concat(Tai_const.Createname(make_mangledname('DEBUGINFO',hp.localsymtable,''),0));
-                list.concat(Tai_const.Createname(make_mangledname('DEBUGSTART',hp.localsymtable,''),0));
-                list.concat(Tai_const.Createname(make_mangledname('DEBUGEND',hp.localsymtable,''),0));
+                list.concat(TAIConst.Createname(make_mangledname('DEBUGINFO',hp.localsymtable,''),0));
+                list.concat(TAIConst.Createname(make_mangledname('DEBUGSTART',hp.localsymtable,''),0));
+                list.concat(TAIConst.Createname(make_mangledname('DEBUGEND',hp.localsymtable,''),0));
               end;
-            hp:=tmodule(hp.next);
+            hp:=TModule(hp.next);
           end;
       end;
 

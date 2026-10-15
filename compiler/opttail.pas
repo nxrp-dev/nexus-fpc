@@ -33,8 +33,8 @@ unit opttail;
   implementation
 
     uses
-      globtype,
-      symconst,symsym,
+      GlobType,
+      symconst,SymSym,
       defcmp,defutil,
       nutils,nbas,nflw,ncal,nld,ncnv,nmem,
       pass_1,
@@ -43,27 +43,27 @@ unit opttail;
     procedure do_opttail(var n : TNode;p : TProcDef);
 
       var
-        labelnode : tlabelnode;
+        labelnode : TLabelNode;
 
       function find_and_replace_tailcalls(var n : TNode) : boolean;
 
         var
-          usedcallnode : tcallnode;
+          usedcallnode : TCallNode;
 
-        function has_copyback_paras(call: tcallnode): boolean;
+        function has_copyback_paras(call: TCallNode): boolean;
           var
-            n: tcallparanode;
+            n: TCallParaNode;
           begin
-            n:=tcallparanode(call.left);
+            n:=TCallParaNode(call.left);
             result:=false;
-            while assigned(n) do
+            while Assigned(n) do
               begin
-                if assigned(n.fparacopyback) then
+                if Assigned(n.fparacopyback) then
                   begin
                     result:=true;
                     exit;
                   end;
-                n:=tcallparanode(n.right);
+                n:=TCallParaNode(n.right);
               end;
           end;
 
@@ -71,20 +71,20 @@ unit opttail;
           begin
             result:=
               (n.nodetype=calln) and
-              (tcallnode(n).procdefinition=p) and
-              (not assigned(tcallnode(n).methodpointer)) and
-              (not has_copyback_paras(tcallnode(n)));
+              (TCallNode(n).procdefinition=p) and
+              (not Assigned(TCallNode(n).methodpointer)) and
+              (not has_copyback_paras(TCallNode(n)));
             if result then
-              usedcallnode:=tcallnode(n)
+              usedcallnode:=TCallNode(n)
             else
               { obsolete type cast? }
-              result:=((n.nodetype=typeconvn) and (ttypeconvnode(n).convtype=tc_equal) and is_optimizable_recursivecall(ttypeconvnode(n).left));
+              result:=((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_equal) and is_optimizable_recursivecall(TTypeConvNode(n).left));
           end;
 
         function is_resultassignment(n : TNode) : boolean;
           begin
-            result:=((n.nodetype=loadn) and (tloadnode(n).symtableentry=p.funcretsym)) or
-              ((n.nodetype=typeconvn) and (ttypeconvnode(n).convtype=tc_equal) and is_resultassignment(ttypeconvnode(n).left));
+            result:=((n.nodetype=loadn) and (TLoadNode(n).symtableentry=p.funcretsym)) or
+              ((n.nodetype=typeconvn) and (TTypeConvNode(n).convtype=tc_equal) and is_resultassignment(TTypeConvNode(n).left));
           end;
 
         var
@@ -93,10 +93,10 @@ unit opttail;
           hp : TNode;
           nodes,
           calcstatements,
-          copystatements : tstatementnode;
-          paranode : tcallparanode;
-          tempnode : ttempcreatenode;
-          loadnode : tloadnode;
+          copystatements : TStatementNode;
+          paranode : TCallParaNode;
+          tempnode : TTempCreateNode;
+          loadnode : TLoadNode;
           oldnodetree : TNode;
           useaddr : boolean;
         begin
@@ -110,15 +110,15 @@ unit opttail;
               begin
                 hp:=n;
                 { search last node }
-                while assigned(tstatementnode(hp).right) do
-                  hp:=tstatementnode(hp).right;
-                result:=find_and_replace_tailcalls(tstatementnode(hp).left);
+                while Assigned(TStatementNode(hp).right) do
+                  hp:=TStatementNode(hp).right;
+                result:=find_and_replace_tailcalls(TStatementNode(hp).left);
               end;
             ifn:
               begin
-                result:=find_and_replace_tailcalls(tifnode(n).right);
+                result:=find_and_replace_tailcalls(TIfNode(n).right);
                 { avoid short bool eval here }
-                result:=find_and_replace_tailcalls(tifnode(n).t1) or result;
+                result:=find_and_replace_tailcalls(TIfNode(n).t1) or result;
               end;
             calln,
             assignn:
@@ -139,10 +139,10 @@ unit opttail;
 
                     calcnodes:=internalstatements(calcstatements);
                     copynodes:=internalstatements(copystatements);
-                    paranode:=tcallparanode(usedcallnode.left);
-                    while assigned(paranode) do
+                    paranode:=TCallParaNode(usedcallnode.left);
+                    while Assigned(paranode) do
                       begin
-                        if assigned(paranode.fparainit) then
+                        if Assigned(paranode.fparainit) then
                           begin
                             addstatement(calcstatements,paranode.fparainit);
                             paranode.fparainit:=nil;
@@ -154,48 +154,48 @@ unit opttail;
                           is_open_array(paranode.parasym.vardef));
                         if useaddr then
                           begin
-                            tempnode:=ctempcreatenode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
+                            tempnode:=CTempCreateNode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
-                              cassignmentnode.create(
-                                ctemprefnode.create(tempnode),
-                                caddrnode.create_internal(paranode.left)
+                              CAssignmentNode.create(
+                                CTempRefNode.create(tempnode),
+                                CAddrNode.create_internal(paranode.left)
                                 ));
                           end
                         else
                           begin
-                            tempnode:=ctempcreatenode.create(paranode.left.resultdef,paranode.left.resultdef.size,tt_persistent,true);
+                            tempnode:=CTempCreateNode.create(paranode.left.resultdef,paranode.left.resultdef.size,tt_persistent,true);
                             addstatement(calcstatements,tempnode);
                             addstatement(calcstatements,
-                              cassignmentnode.create_internal(
-                                ctemprefnode.create(tempnode),
+                              CAssignmentNode.create_internal(
+                                CTempRefNode.create(tempnode),
                                 paranode.left
                                 ));
                           end;
 
                         { "cast" away const varspezs }
-                        loadnode:=cloadnode.create(paranode.parasym,paranode.parasym.owner);
-                        include(tloadnode(loadnode).loadnodeflags,loadnf_isinternal_ignoreconst);
+                        loadnode:=CLoadNode.create(paranode.parasym,paranode.parasym.owner);
+                        include(TLoadNode(loadnode).loadnodeflags,loadnf_isinternal_ignoreconst);
 
                         { load the address of the symbol instead of symbol }
                         if useaddr then
-                          include(tloadnode(loadnode).loadnodeflags,loadnf_load_addr);
+                          include(TLoadNode(loadnode).loadnodeflags,loadnf_load_addr);
                         addstatement(copystatements,
-                          cassignmentnode.create_internal(
+                          CAssignmentNode.create_internal(
                             loadnode,
-                            ctemprefnode.create(tempnode)
+                            CTempRefNode.create(tempnode)
                             ));
-                        addstatement(copystatements,ctempdeletenode.create_normal_temp(tempnode));
+                        addstatement(copystatements,CTempDeleteNode.create_normal_temp(tempnode));
 
                         { reused }
                         paranode.left:=nil;
-                        paranode:=tcallparanode(paranode.right);
+                        paranode:=TCallParaNode(paranode.right);
                       end;
 
                     oldnodetree:=n;
                     n:=internalstatements(nodes);
 
-                    if assigned(usedcallnode.callinitblock) then
+                    if Assigned(usedcallnode.callinitblock) then
                       begin
                         addstatement(nodes,usedcallnode.callinitblock);
                         usedcallnode.callinitblock:=nil;
@@ -205,9 +205,9 @@ unit opttail;
                     addstatement(nodes,copynodes);
 
                     { create goto }
-                    addstatement(nodes,cgotonode.create(labelnode.labsym));
+                    addstatement(nodes,CGotoNode.create(labelnode.labsym));
 
-                    if assigned(usedcallnode.callcleanupblock) then
+                    if Assigned(usedcallnode.callcleanupblock) then
                       begin
                         { callcleanupblock should contain only temp. node clean up }
                         checktreenodetypes(usedcallnode.callcleanupblock,
@@ -224,16 +224,16 @@ unit opttail;
                   end;
               end;
             blockn:
-              result:=find_and_replace_tailcalls(tblocknode(n).left);
+              result:=find_and_replace_tailcalls(TBlockNode(n).left);
             else
               ;
           end;
         end;
 
       var
-        s : tstatementnode;
+        s : TStatementNode;
         oldnodes : TNode;
-        i : longint;
+        i : LongInt;
         labelsym : TLabelSym;
       begin
         { check if the parameters actually would support tail recursion elimination }
@@ -247,14 +247,14 @@ unit opttail;
                is_managed_type(vardef) then
               begin
 {$ifdef debug_opttail}
-        writeln('====================================================================================');
+        WriteLn('====================================================================================');
         write('callnode: ',p.gettypename,' tail call opt disabled because parameter ',i,' ',realname,' ');
         if is_managed_type(vardef) then
           write('is managed ')
         else if (varspez=vs_out) then
           write('is out parameter');
-        writeln;
-        writeln('====================================================================================');
+        WriteLn;
+        WriteLn('====================================================================================');
 {$endif debug_opttail}
                 exit;
               end;
@@ -266,35 +266,35 @@ unit opttail;
             if is_managed_type(vardef) then
               begin
 {$ifdef debug_opttail}
-        writeln('====================================================================================');
-        writeln('callnode: ',p.gettypename,' tail call opt disabled because local ',i,' ',realname,' is managed');
-        writeln('====================================================================================');
+        WriteLn('====================================================================================');
+        WriteLn('callnode: ',p.gettypename,' tail call opt disabled because local ',i,' ',realname,' is managed');
+        WriteLn('====================================================================================');
 {$endif debug_opttail}
                 exit;
               end;
 {$endif fix_opttail}
 
-        labelsym:=clabelsym.create('$opttail');
-        labelnode:=clabelnode.create(cnothingnode.create,labelsym);
+        labelsym:=CLabelSym.create('$opttail');
+        labelnode:=CLabelNode.create(CNothingNode.create,labelsym);
         if find_and_replace_tailcalls(n) then
           begin
 {$ifdef debug_opttail}
-        writeln('====================================================================================');
-        writeln('Tail call optimization found:');
-        writeln('====================================================================================');
+        WriteLn('====================================================================================');
+        WriteLn('Tail call optimization found:');
+        WriteLn('====================================================================================');
         write('callnode: ',p.gettypename);
-        writeln('====================================================================================');
+        WriteLn('====================================================================================');
 {$endif debug_opttail}
             oldnodes:=n;
             n:=internalstatements(s);
             addstatement(s,labelnode);
             addstatement(s,oldnodes);
 {$ifdef debug_opttail}
-        writeln('====================================================================================');
+        WriteLn('====================================================================================');
         write('Tail call replaced by: ');
-        printnode(output,n);
-        writeln('====================================================================================');
-        writeln;
+        printnode(Output,n);
+        WriteLn('====================================================================================');
+        WriteLn;
 {$endif debug_opttail}
           end
         else

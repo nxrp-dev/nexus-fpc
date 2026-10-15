@@ -30,7 +30,7 @@ unit aasmcpu;
 interface
 
     uses
-      globtype,verbose,
+      GlobType,Verbose,
       cpubase,
       cgbase,cgutils,
       aasmbase,aasmtai,aasmsym,
@@ -79,7 +79,7 @@ interface
         but this requires adjusting the opcode table }
       //OT_SIZE_MASK = $3000001F;  { all the size attributes  }
       OT_SIZE_MASK = $E000001F;  { all the size attributes  }
-      OT_NON_SIZE  = longint(not(longint(OT_SIZE_MASK)));
+      OT_NON_SIZE  = LongInt(not(LongInt(OT_SIZE_MASK)));
 
       { Bits 8..10: modifiers }
       OT_SIGNED    = $00000100;  { the operand need to be signed -128-127 }
@@ -410,7 +410,7 @@ interface
 
 
 
-      InsProp : array[tasmop] of TInsProp =
+      InsProp : array[TAsmOp] of TInsProp =
 {$if defined(x86_64)}
         {$i x8664pro.inc}
 {$elseif defined(i386)}
@@ -421,7 +421,7 @@ interface
       TOperandOrder = (op_intel,op_att);
 
       {Instruction flags }
-      tinsflag = (
+      TInsFlag = (
         { please keep these in order and in sync with IF_SMASK }
         IF_SM,                  { size match first two operands  }
         IF_SM2,
@@ -555,7 +555,7 @@ interface
         IF_DALL                 { destination, index and mask registers should be distinct (use together with IF_DISTINCT) }
 
       );
-      tinsflags=set of tinsflag;
+      TInsFlags=set of TInsFlag;
 
     const
       IF_SMASK=[IF_SM,IF_SM2,IF_SB,IF_SW,IF_SD];
@@ -566,59 +566,59 @@ interface
 
 
     type
-      tinsentry=packed record
-        opcode  : tasmop;
+      TInsEntry=packed record
+        opcode  : TAsmOp;
         ops     : byte;
         optypes : array[0..max_operands-1] of int64;
         code    : array[0..maxinfolen] of char;
-        flags   : tinsflags;
+        flags   : TInsFlags;
       end;
-      pinsentry=^tinsentry;
+      PInsEntry=^TInsEntry;
 
       { alignment for operator }
-      tai_align = class(tai_align_abstract)
-         function calculatefillbuf(var buf : tfillbuffer;executable : boolean):pchar;override;
+      TAIAlign = class(TAIAlignAbstract)
+         function calculatefillbuf(var buf : TFillBuffer;executable : boolean):pchar;override;
       end;
 
       { taicpu }
 
-      taicpu = class(tai_cpu_abstract_sym)
-         opsize    : topsize;
-         constructor op_none(op : tasmop);
-         constructor op_none(op : tasmop;_size : topsize);
+      TAICPU = class(TAICPUAbstractSym)
+         opsize    : TOpSize;
+         constructor op_none(op : TAsmOp);
+         constructor op_none(op : TAsmOp;_size : TOpSize);
 
-         constructor op_reg(op : tasmop;_size : topsize;_op1 : tregister);
-         constructor op_const(op : tasmop;_size : topsize;_op1 : aint);
-         constructor op_ref(op : tasmop;_size : topsize;const _op1 : treference);
+         constructor op_reg(op : TAsmOp;_size : TOpSize;_op1 : TRegister);
+         constructor op_const(op : TAsmOp;_size : TOpSize;_op1 : aint);
+         constructor op_ref(op : TAsmOp;_size : TOpSize;const _op1 : TReference);
 
-         constructor op_reg_reg(op : tasmop;_size : topsize;_op1,_op2 : tregister);
-         constructor op_reg_ref(op : tasmop;_size : topsize;_op1 : tregister;const _op2 : treference);
-         constructor op_reg_const(op:tasmop; _size: topsize; _op1: tregister; _op2: aint);
+         constructor op_reg_reg(op : TAsmOp;_size : TOpSize;_op1,_op2 : TRegister);
+         constructor op_reg_ref(op : TAsmOp;_size : TOpSize;_op1 : TRegister;const _op2 : TReference);
+         constructor op_reg_const(op:TAsmOp; _size: TOpSize; _op1: TRegister; _op2: aint);
 
-         constructor op_const_reg(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister);
-         constructor op_const_const(op : tasmop;_size : topsize;_op1,_op2 : aint);
-         constructor op_const_ref(op : tasmop;_size : topsize;_op1 : aint;const _op2 : treference);
+         constructor op_const_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister);
+         constructor op_const_const(op : TAsmOp;_size : TOpSize;_op1,_op2 : aint);
+         constructor op_const_ref(op : TAsmOp;_size : TOpSize;_op1 : aint;const _op2 : TReference);
 
-         constructor op_ref_reg(op : tasmop;_size : topsize;const _op1 : treference;_op2 : tregister);
+         constructor op_ref_reg(op : TAsmOp;_size : TOpSize;const _op1 : TReference;_op2 : TRegister);
 
-         constructor op_reg_reg_reg(op : tasmop;_size : topsize;_op1,_op2,_op3 : tregister);
-         constructor op_const_reg_reg(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister;_op3 : tregister);
-         constructor op_const_ref_reg(op : tasmop;_size : topsize;_op1 : aint;const _op2 : treference;_op3 : tregister);
-         constructor op_reg_ref_reg(op : tasmop;_size : topsize;_op1 : tregister; const _op2 : treference;_op3 : tregister);
-         constructor op_ref_reg_reg(op : tasmop;_size : topsize;const _op1 : treference;_op2,_op3 : tregister);
-         constructor op_const_reg_ref(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister;const _op3 : treference);
-         constructor op_reg_reg_ref(op : tasmop;_size : topsize;_op1,_op2 : tregister;const _op3 : treference);
-         constructor op_const_reg_reg_reg(op : tasmop;_size : topsize;_op1 : aint;_op2, _op3, _op4 : tregister);
+         constructor op_reg_reg_reg(op : TAsmOp;_size : TOpSize;_op1,_op2,_op3 : TRegister);
+         constructor op_const_reg_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister;_op3 : TRegister);
+         constructor op_const_ref_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;const _op2 : TReference;_op3 : TRegister);
+         constructor op_reg_ref_reg(op : TAsmOp;_size : TOpSize;_op1 : TRegister; const _op2 : TReference;_op3 : TRegister);
+         constructor op_ref_reg_reg(op : TAsmOp;_size : TOpSize;const _op1 : TReference;_op2,_op3 : TRegister);
+         constructor op_const_reg_ref(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister;const _op3 : TReference);
+         constructor op_reg_reg_ref(op : TAsmOp;_size : TOpSize;_op1,_op2 : TRegister;const _op3 : TReference);
+         constructor op_const_reg_reg_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2, _op3, _op4 : TRegister);
 
          { this is for Jmp instructions }
-         constructor op_cond_sym(op : tasmop;cond:TAsmCond;_size : topsize;_op1 : tasmsymbol);
+         constructor op_cond_sym(op : TAsmOp;cond:TAsmCond;_size : TOpSize;_op1 : TAsmSymbol);
 
-         constructor op_sym(op : tasmop;_size : topsize;_op1 : tasmsymbol);
-         constructor op_sym_ofs(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint);
-         constructor op_sym_ofs_reg(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint;_op2 : tregister);
-         constructor op_sym_ofs_ref(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint;const _op2 : treference);
+         constructor op_sym(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol);
+         constructor op_sym_ofs(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt);
+         constructor op_sym_ofs_reg(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt;_op2 : TRegister);
+         constructor op_sym_ofs_ref(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
 
-         procedure changeopsize(siz:topsize); {$ifdef USEINLINE}inline;{$endif USEINLINE}
+         procedure changeopsize(siz:TOpSize); {$ifdef USEINLINE}inline;{$endif USEINLINE}
 
          function  GetString:string;
 
@@ -635,34 +635,34 @@ interface
            because in case of smartlinking assembler is generated twice so at the second run wrong
            assembler is generated.
            }
-         function FixNonCommutativeOpcodes: tasmop;
+         function FixNonCommutativeOpcodes: TAsmOp;
       private
          FOperandOrder : TOperandOrder;
-         procedure init(_size : topsize); { this need to be called by all constructor }
+         procedure init(_size : TOpSize); { this need to be called by all constructor }
       public
          { the next will reset all instructions that can change in pass 2 }
          procedure ResetPass1;override;
          procedure ResetPass2;override;
          function  CheckIfValid:boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
-         function  Pass1(objdata:TObjData):longint;override;
+         function  Pass1(objdata:TObjData):LongInt;override;
          procedure Pass2(objdata:TObjData);override;
          procedure SetOperandOrder(order:TOperandOrder);
-         function is_same_reg_move(regtype: Tregistertype):boolean;override;
+         function is_same_reg_move(regtype: TRegisterType):boolean;override;
          { register spilling code }
-         function spilling_get_operation_type(opnr: longint): topertype;override;
+         function spilling_get_operation_type(opnr: LongInt): TOperType;override;
 
          property OperandOrder : TOperandOrder read FOperandOrder;
       private
          { next fields are filled in pass1, so pass2 is faster }
          insentry  : PInsEntry;
-         insoffset : longint;
-         LastInsOffset : longint; { need to be public to be reset }
+         insoffset : LongInt;
+         LastInsOffset : LongInt; { need to be public to be reset }
          inssize   : shortint;
          EVEXTupleState: TEVEXTupleState; { AVX512 disp8*N }
 {$ifdef x86_64}
          rex       : byte;
 {$endif x86_64}
-         function  InsEnd:longint;
+         function  InsEnd:LongInt;
          procedure create_ot(objdata:TObjData);
          function  Matches(p:PInsEntry):boolean;
          function  calcsize(p:PInsEntry):shortint;
@@ -675,20 +675,20 @@ interface
          function  DistinctRegisters(aAll:boolean):boolean;  { distinct vector registers? }
          function  FindInsentry(objdata:TObjData):boolean;
          function  CheckUseEVEX: boolean;
-         procedure CheckEVEXTuple(const aInput:toper; aInsEntry: pInsentry; aIsVector128, aIsVector256, aIsVector512, aIsEVEXW1: boolean);
+         procedure CheckEVEXTuple(const aInput:TOper; aInsEntry: PInsEntry; aIsVector128, aIsVector256, aIsVector512, aIsEVEXW1: boolean);
       end;
 
-    function is_64_bit_ref(const ref:treference):boolean;
-    function is_32_bit_ref(const ref:treference):boolean;
-    function is_16_bit_ref(const ref:treference):boolean;
-    function get_ref_address_size(const ref:treference):byte;
-    function get_default_segment_of_ref(const ref:treference):tregister;
-    procedure optimize_ref(var ref:treference; inlineasm: boolean);
+    function is_64_bit_ref(const ref:TReference):boolean;
+    function is_32_bit_ref(const ref:TReference):boolean;
+    function is_16_bit_ref(const ref:TReference):boolean;
+    function get_ref_address_size(const ref:TReference):byte;
+    function get_default_segment_of_ref(const ref:TReference):TRegister;
+    procedure optimize_ref(var ref:TReference; inlineasm: boolean);
     { returns true if opcode can be used with one memory operand without size }
     function NoMemorySizeRequired(opcode : TAsmOp) : Boolean;
 
-    function spilling_create_load(const ref:treference;r:tregister):Taicpu;
-    function spilling_create_store(r:tregister; const ref:treference):Taicpu;
+    function spilling_create_load(const ref:TReference;r:TRegister):TAICPU;
+    function spilling_create_store(r:TRegister; const ref:TReference):TAICPU;
 
     function MemRefInfo(aAsmop: TAsmOp): TInsTabMemRefSizeInfoRec;
     function MightHaveExtension(AsmOp : TAsmOp) : Boolean;
@@ -706,7 +706,7 @@ interface
       PExternChain = ^TExternChain;
 
       TExternChain = Record
-        psym : pshortstring;
+        psym : PShortString;
         is_defined : boolean;
         next : PExternChain;
       end;
@@ -720,18 +720,18 @@ interface
 implementation
 
      uses
-       cutils,
-       globals,
-       systems,
+       CUtils,
+       Globals,
+       Systems,
        itcpugas,
-       cpuinfo;
+       CPUInfo;
 
     procedure AddSymbol(symname : string; defined : boolean);
     var
        EC : PExternChain;
     begin
       EC:=FEC;
-      while assigned(EC) do
+      while Assigned(EC) do
         begin
           if EC^.psym^=symname then
             begin
@@ -744,7 +744,7 @@ implementation
       New(EC);
       EC^.next:=FEC;
       FEC:=EC;
-      FEC^.psym:=stringdup(symname);
+      FEC^.psym:=StringDup(symname);
       FEC^.is_defined := defined;
     end;
 
@@ -753,10 +753,10 @@ implementation
        EC : PExternChain;
     begin
       EC:=FEC;
-      while assigned(EC) do
+      while Assigned(EC) do
         begin
           FEC:=EC^.next;
-          stringdispose(EC^.psym);
+          StringDispose(EC^.psym);
           Dispose(EC);
           EC:=FEC;
         end;
@@ -767,10 +767,10 @@ implementation
 *****************************************************************************}
 
      type
-       TInsTabCache=array[TasmOp] of longint;
+       TInsTabCache=array[TAsmOp] of LongInt;
        PInsTabCache=^TInsTabCache;
 
-       TInsTabMemRefSizeInfoCache=array[TasmOp] of TInsTabMemRefSizeInfoRec;
+       TInsTabMemRefSizeInfoCache=array[TAsmOp] of TInsTabMemRefSizeInfoRec;
        PInsTabMemRefSizeInfoCache=^TInsTabMemRefSizeInfoCache;
 
      const
@@ -785,7 +785,7 @@ implementation
      const
 {$if defined(x86_64)}
        { Intel style operands ! }
-         opsize_2_type:array[0..2,topsize] of int64=(
+         opsize_2_type:array[0..2,TOpSize] of int64=(
          (OT_NONE,
           OT_BITS8,OT_BITS16,OT_BITS32,OT_BITS64,OT_BITS16,OT_BITS32,OT_BITS32,OT_BITS64,OT_BITS64,OT_BITS64,
           OT_BITS16,OT_BITS32,OT_BITS64,
@@ -821,12 +821,12 @@ implementation
          )
        );
 
-      reg_ot_table : array[tregisterindex] of longint = (
+      reg_ot_table : array[TRegisterIndex] of LongInt = (
         {$i r8664ot.inc}
       );
 {$elseif defined(i386)}
        { Intel style operands ! }
-       opsize_2_type:array[0..2,topsize] of int64=(
+       opsize_2_type:array[0..2,TOpSize] of int64=(
          (OT_NONE,
           OT_BITS8,OT_BITS16,OT_BITS32,OT_BITS64,OT_BITS16,OT_BITS32,OT_BITS32,
           OT_BITS16,OT_BITS32,OT_BITS64,
@@ -862,7 +862,7 @@ implementation
          )
       );
 
-      reg_ot_table : array[tregisterindex] of longint = (
+      reg_ot_table : array[TRegisterIndex] of LongInt = (
         {$i r386ot.inc}
       );
 {$endif}
@@ -876,7 +876,7 @@ implementation
     function MightHaveExtension(AsmOp : TAsmOp): Boolean;
       var
         i,j: LongInt;
-        insentry: pinsentry;
+        insentry: PInsEntry;
       begin
         Result:=true;
         i:=InsTabCache^[AsmOp];
@@ -901,16 +901,16 @@ implementation
 
     { Operation type for spilling code }
     type
-      toperation_type_table=array[tasmop,0..Max_Operands] of topertype;
+      TOperationTypeTable=array[TAsmOp,0..Max_Operands] of TOperType;
     var
-      operation_type_table : ^toperation_type_table;
+      operation_type_table : ^TOperationTypeTable;
 
 
 {****************************************************************************
                               TAI_ALIGN
  ****************************************************************************}
 
-    function tai_align.calculatefillbuf(var buf : tfillbuffer;executable : boolean):pchar;
+    function TAIAlign.calculatefillbuf(var buf : TFillBuffer;executable : boolean):pchar;
       const
         { Updated according to
           Software Optimization Guide for AMD Family 15h Processors, Version 3.08, January 2014
@@ -943,7 +943,7 @@ implementation
 
       var
         bufptr : pchar;
-        j : longint;
+        j : LongInt;
         localsize: byte;
       begin
         inherited calculatefillbuf(buf,executable);
@@ -956,7 +956,7 @@ implementation
            while (localsize>0) do
             begin
 
-              if (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.cputype]) then
+              if (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) then
                 begin
                   for j:=low(alignarray_cmovcpus) to high(alignarray_cmovcpus) do
                    if (localsize>=length(alignarray_cmovcpus[j])) then
@@ -985,13 +985,13 @@ implementation
                                  Taicpu Constructors
 *****************************************************************************}
 
-    procedure taicpu.changeopsize(siz:topsize); {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    procedure TAICPU.changeopsize(siz:TOpSize); {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         opsize:=siz;
       end;
 
 
-    procedure taicpu.init(_size : topsize);
+    procedure TAICPU.init(_size : TOpSize);
       begin
          { default order is att }
          FOperandOrder:=op_att;
@@ -1005,21 +1005,21 @@ implementation
       end;
 
 
-    constructor taicpu.op_none(op : tasmop);
+    constructor TAICPU.op_none(op : TAsmOp);
       begin
          inherited create(op);
          init(S_NO);
       end;
 
 
-    constructor taicpu.op_none(op : tasmop;_size : topsize);
+    constructor TAICPU.op_none(op : TAsmOp;_size : TOpSize);
       begin
          inherited create(op);
          init(_size);
       end;
 
 
-    constructor taicpu.op_reg(op : tasmop;_size : topsize;_op1 : tregister);
+    constructor TAICPU.op_reg(op : TAsmOp;_size : TOpSize;_op1 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1028,7 +1028,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const(op : tasmop;_size : topsize;_op1 : aint);
+    constructor TAICPU.op_const(op : TAsmOp;_size : TOpSize;_op1 : aint);
       begin
          inherited create(op);
          init(_size);
@@ -1037,7 +1037,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_ref(op : tasmop;_size : topsize;const _op1 : treference);
+    constructor TAICPU.op_ref(op : TAsmOp;_size : TOpSize;const _op1 : TReference);
       begin
          inherited create(op);
          init(_size);
@@ -1046,7 +1046,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg(op : tasmop;_size : topsize;_op1,_op2 : tregister);
+    constructor TAICPU.op_reg_reg(op : TAsmOp;_size : TOpSize;_op1,_op2 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1056,7 +1056,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_const(op:tasmop; _size: topsize; _op1: tregister; _op2: aint);
+    constructor TAICPU.op_reg_const(op:TAsmOp; _size: TOpSize; _op1: TRegister; _op2: aint);
       begin
          inherited create(op);
          init(_size);
@@ -1066,7 +1066,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_ref(op : tasmop;_size : topsize;_op1 : tregister;const _op2 : treference);
+    constructor TAICPU.op_reg_ref(op : TAsmOp;_size : TOpSize;_op1 : TRegister;const _op2 : TReference);
       begin
          inherited create(op);
          init(_size);
@@ -1076,7 +1076,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_reg(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister);
+    constructor TAICPU.op_const_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1086,7 +1086,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_const(op : tasmop;_size : topsize;_op1,_op2 : aint);
+    constructor TAICPU.op_const_const(op : TAsmOp;_size : TOpSize;_op1,_op2 : aint);
       begin
          inherited create(op);
          init(_size);
@@ -1096,7 +1096,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_ref(op : tasmop;_size : topsize;_op1 : aint;const _op2 : treference);
+    constructor TAICPU.op_const_ref(op : TAsmOp;_size : TOpSize;_op1 : aint;const _op2 : TReference);
       begin
          inherited create(op);
          init(_size);
@@ -1106,7 +1106,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_ref_reg(op : tasmop;_size : topsize;const _op1 : treference;_op2 : tregister);
+    constructor TAICPU.op_ref_reg(op : TAsmOp;_size : TOpSize;const _op1 : TReference;_op2 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1116,7 +1116,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg_reg(op : tasmop;_size : topsize;_op1,_op2,_op3 : tregister);
+    constructor TAICPU.op_reg_reg_reg(op : TAsmOp;_size : TOpSize;_op1,_op2,_op3 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1127,7 +1127,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_reg_reg(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister;_op3 : tregister);
+    constructor TAICPU.op_const_reg_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister;_op3 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1138,7 +1138,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_ref_reg(op : tasmop;_size : topsize;_op1 : tregister; const _op2 : treference;_op3 : tregister);
+    constructor TAICPU.op_reg_ref_reg(op : TAsmOp;_size : TOpSize;_op1 : TRegister; const _op2 : TReference;_op3 : TRegister);
       begin
         inherited create(op);
         init(_size);
@@ -1149,7 +1149,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_ref_reg_reg(op : tasmop;_size : topsize;const _op1 : treference;_op2,_op3 : tregister);
+    constructor TAICPU.op_ref_reg_reg(op : TAsmOp;_size : TOpSize;const _op1 : TReference;_op2,_op3 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1160,7 +1160,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_ref_reg(op : tasmop;_size : topsize;_op1 : aint;const _op2 : treference;_op3 : tregister);
+    constructor TAICPU.op_const_ref_reg(op : TAsmOp;_size : TOpSize;_op1 : aint;const _op2 : TReference;_op3 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1171,7 +1171,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const_reg_ref(op : tasmop;_size : topsize;_op1 : aint;_op2 : tregister;const _op3 : treference);
+    constructor TAICPU.op_const_reg_ref(op : TAsmOp;_size : TOpSize;_op1 : aint;_op2 : TRegister;const _op3 : TReference);
       begin
          inherited create(op);
          init(_size);
@@ -1182,7 +1182,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg_ref(op : tasmop;_size : topsize;_op1,_op2 : tregister;const _op3 : treference);
+    constructor TAICPU.op_reg_reg_ref(op : TAsmOp;_size : TOpSize;_op1,_op2 : TRegister;const _op3 : TReference);
       begin
         inherited create(op);
         init(_size);
@@ -1192,7 +1192,7 @@ implementation
         loadref(2,_op3);
       end;
 
-    constructor taicpu.op_const_reg_reg_reg(op : tasmop; _size : topsize; _op1 : aint; _op2, _op3, _op4 : tregister);
+    constructor TAICPU.op_const_reg_reg_reg(op : TAsmOp; _size : TOpSize; _op1 : aint; _op2, _op3, _op4 : TRegister);
       begin
         inherited create(op);
         init(_size);
@@ -1204,7 +1204,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_cond_sym(op : tasmop;cond:TAsmCond;_size : topsize;_op1 : tasmsymbol);
+    constructor TAICPU.op_cond_sym(op : TAsmOp;cond:TAsmCond;_size : TOpSize;_op1 : TAsmSymbol);
       begin
          inherited create(op);
          init(_size);
@@ -1214,7 +1214,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym(op : tasmop;_size : topsize;_op1 : tasmsymbol);
+    constructor TAICPU.op_sym(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol);
       begin
          inherited create(op);
          init(_size);
@@ -1223,7 +1223,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym_ofs(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint);
+    constructor TAICPU.op_sym_ofs(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt);
       begin
          inherited create(op);
          init(_size);
@@ -1232,7 +1232,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym_ofs_reg(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint;_op2 : tregister);
+    constructor TAICPU.op_sym_ofs_reg(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt;_op2 : TRegister);
       begin
          inherited create(op);
          init(_size);
@@ -1242,7 +1242,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym_ofs_ref(op : tasmop;_size : topsize;_op1 : tasmsymbol;_op1ofs:longint;const _op2 : treference);
+    constructor TAICPU.op_sym_ofs_ref(op : TAsmOp;_size : TOpSize;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
       begin
          inherited create(op);
          init(_size);
@@ -1252,9 +1252,9 @@ implementation
       end;
 
 
-    function taicpu.GetString:string;
+    function TAICPU.GetString:string;
       var
-        i : longint;
+        i : LongInt;
         s : string;
         regnr: string;
         addsize : boolean;
@@ -1382,7 +1382,7 @@ implementation
       end;
 
 
-    procedure taicpu.Swapoperands;
+    procedure TAICPU.Swapoperands;
       var
         p : POper;
       begin
@@ -1412,12 +1412,12 @@ implementation
                 oper[2]:=p;
               end;
           else
-            internalerror(201108141);
+            InternalError(201108141);
         end;
       end;
 
 
-    procedure taicpu.SetOperandOrder(order:TOperandOrder);
+    procedure TAICPU.SetOperandOrder(order:TOperandOrder);
       begin
         if FOperandOrder<>order then
          begin
@@ -1427,7 +1427,7 @@ implementation
       end;
 
 
-    function taicpu.FixNonCommutativeOpcodes: tasmop;
+    function TAICPU.FixNonCommutativeOpcodes: TAsmOp;
       begin
         result:=opcode;
 
@@ -1489,7 +1489,7 @@ implementation
 *****************************************************************************}
 
     type
-      ea = packed record
+      TEffectiveAddress = packed record
         sib_present : boolean;
         bytes : byte;
         size  : byte;
@@ -1500,12 +1500,12 @@ implementation
 {$endif x86_64}
       end;
 
-    procedure taicpu.create_ot(objdata:TObjData);
+    procedure TAICPU.create_ot(objdata:TObjData);
       {
         this function will also fix some other fields which only needs to be once
       }
       var
-        i,l,relsize : longint;
+        i,l,relsize : LongInt;
         currsym : TObjSymbol;
       begin
         if ops=0 then
@@ -1573,14 +1573,14 @@ implementation
                       { Jumps use a relative offset which can be 8bit,
                         for other opcodes we always need to generate the full
                         32bit address }
-                      if assigned(objdata) and
+                      if Assigned(objdata) and
                          is_jmp then
                         begin
                           currsym:=objdata.symbolref(ref^.symbol);
                           l:=ref^.offset;
 {$push}
 {$r-,q-} { disable also overflow as address returns a qword for x86_64 }
-                          if assigned(currsym) then
+                          if Assigned(currsym) then
                             inc(l,currsym.address);
 {$pop}
                           { when it is a forward jump we need to compensate the
@@ -1596,7 +1596,7 @@ implementation
                           relsize:=(InsOffset+2)-l;
                           if (relsize>=-128) and (relsize<=127) and
                              (
-                              not assigned(currsym) or
+                              not Assigned(currsym) or
                               (currsym.objsection=objdata.currobjsec)
                              ) then
                             ot:=OT_IMM8 or OT_SHORT
@@ -1666,19 +1666,19 @@ implementation
                     assembler }
                 end;
               else
-                internalerror(200402266);
+                InternalError(200402266);
             end;
           end;
       end;
 
 
-    function taicpu.InsEnd:longint;
+    function TAICPU.InsEnd:LongInt;
       begin
         InsEnd:=InsOffset+InsSize;
       end;
 
 
-      function taicpu.Matches(p:PInsEntry):boolean;
+      function TAICPU.Matches(p:PInsEntry):boolean;
       { * IF_SM stands for Size Match: any operand whose size is not
        * explicitly specified by the template is `really' intended to be
        * the same size as the first size-specified operand.
@@ -1702,11 +1702,11 @@ implementation
       var
         insot,
         currot: int64;
-        i,j,asize,oprs : longint;
-        insflags:tinsflags;
+        i,j,asize,oprs : LongInt;
+        insflags:TInsFlags;
         vopext: int64;
         EvexRegs :boolean;
-        siz : array[0..max_operands-1] of longint;
+        siz : array[0..max_operands-1] of LongInt;
       begin
         result:=false;
 
@@ -1782,7 +1782,7 @@ implementation
                else if IF_AR2 in insflags then
                  siz[2]:=asize
                else
-                 internalerror(2017092101);
+                 InternalError(2017092101);
              end
             else
              begin
@@ -1908,7 +1908,7 @@ implementation
       end;
 
 
-    procedure taicpu.ResetPass1;
+    procedure TAICPU.ResetPass1;
       begin
         { we need to reset everything here, because the choosen insentry
           can be invalid for a new situation where the previously optimized
@@ -1919,10 +1919,10 @@ implementation
       end;
 
 
-    procedure taicpu.ResetPass2;
+    procedure TAICPU.ResetPass2;
       begin
         { we are here in a second pass, check if the instruction can be optimized }
-        if assigned(InsEntry) and
+        if Assigned(InsEntry) and
            (IF_PASS2 in InsEntry^.flags) then
          begin
            InsEntry:=nil;
@@ -1932,14 +1932,14 @@ implementation
       end;
 
 
-    function taicpu.CheckIfValid:boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function TAICPU.CheckIfValid:boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         result:=FindInsEntry(nil);
       end;
 
 
-    function taicpu.DistinctRegisters(aAll:boolean):boolean; { distinct vector registers? }
-      var i : longint;
+    function TAICPU.DistinctRegisters(aAll:boolean):boolean; { distinct vector registers? }
+      var i : LongInt;
           nr : array[0..max_operands-1] of shortint;
       begin
         result:=true;
@@ -1970,9 +1970,9 @@ implementation
       end;
 
 
-    function taicpu.FindInsentry(objdata:TObjData):boolean;
+    function TAICPU.FindInsentry(objdata:TObjData):boolean;
       var
-        i : longint;
+        i : LongInt;
       begin
         result:=false;
       { Things which may only be done once, not when a second pass is done to
@@ -2030,7 +2030,7 @@ implementation
         inssize:=-1;
       end;
 
-    function taicpu.CheckUseEVEX: boolean;
+    function TAICPU.CheckUseEVEX: boolean;
     var
       i: integer;
     begin
@@ -2047,7 +2047,7 @@ implementation
       end;
     end;
 
-    procedure taicpu.CheckEVEXTuple(const aInput:toper; aInsEntry: pInsentry; aIsVector128, aIsVector256, aIsVector512, aIsEVEXW1: boolean);
+    procedure TAICPU.CheckEVEXTuple(const aInput:TOper; aInsEntry: PInsEntry; aIsVector128, aIsVector256, aIsVector512, aIsEVEXW1: boolean);
     var
       i: integer;
       tuplesize: integer;
@@ -2198,7 +2198,7 @@ implementation
               case aIsEVEXW1 of
                 false: if aIsVector512 then tuplesize := 32;
                 else
-                  Internalerror(2019081013);
+                  InternalError(2019081013);
               end;
             end
             else if IF_THVM in aInsEntry^.Flags then
@@ -2250,7 +2250,7 @@ implementation
 
 
 
-    function taicpu.Pass1(objdata:TObjData):longint;
+    function TAICPU.Pass1(objdata:TObjData):LongInt;
       begin
         Pass1:=0;
         { Save the old offset and set the new offset }
@@ -2305,7 +2305,7 @@ implementation
         $26, $2E, $36, $3E, $64, $65
       );
 
-    procedure taicpu.Pass2(objdata:TObjData);
+    procedure TAICPU.Pass2(objdata:TObjData);
       begin
         { error in pass1 ? }
         if insentry=nil then
@@ -2333,7 +2333,7 @@ implementation
       end;
 
 
-    function is_64_bit_ref(const ref:treference):boolean;
+    function is_64_bit_ref(const ref:TReference):boolean;
       begin
 {$if defined(x86_64)}
         result:=not is_32_bit_ref(ref);
@@ -2343,7 +2343,7 @@ implementation
       end;
 
 
-    function is_32_bit_ref(const ref:treference):boolean;
+    function is_32_bit_ref(const ref:TReference):boolean;
       begin
 {$if defined(x86_64)}
         result:=(ref.refaddr=addr_no) and
@@ -2358,10 +2358,10 @@ implementation
       end;
 
 
-    function is_16_bit_ref(const ref:treference):boolean;
+    function is_16_bit_ref(const ref:TReference):boolean;
       var
-        ir,br : Tregister;
-        isub,bsub : tsubregister;
+        ir,br : TRegister;
+        isub,bsub : TSubRegister;
       begin
         if (ref.index<>NR_NO) and (getregtype(ref.index)=R_MMREGISTER) then
           exit(false);
@@ -2385,7 +2385,7 @@ implementation
       end;
 
 
-    function get_ref_address_size(const ref:treference):byte;
+    function get_ref_address_size(const ref:TReference):byte;
       begin
         if is_64_bit_ref(ref) then
           result:=64
@@ -2394,11 +2394,11 @@ implementation
         else if is_16_bit_ref(ref) then
           result:=16
         else
-          internalerror(2017101601);
+          InternalError(2017101601);
       end;
 
 
-    function get_default_segment_of_ref(const ref:treference):tregister;
+    function get_default_segment_of_ref(const ref:TReference):TRegister;
       begin
         { for 16-bit registers, we allow base and index to be swapped, that's
         why we also we check whether ref.index=NR_BP. For 32-bit registers,
@@ -2416,7 +2416,7 @@ implementation
       end;
 
 
-    procedure optimize_ref(var ref:treference; inlineasm: boolean);
+    procedure optimize_ref(var ref:TReference; inlineasm: boolean);
       var
         ss_equals_ds: boolean;
         tmpreg: TRegister;
@@ -2484,7 +2484,7 @@ implementation
       end;
 
 
-        function taicpu.NeedAddrPrefix(opidx: byte): boolean;
+        function TAICPU.NeedAddrPrefix(opidx: byte): boolean;
       begin
 {$if defined(x86_64)}
         result:=(oper[opidx]^.typ=top_ref) and is_32_bit_ref(oper[opidx]^.ref^);
@@ -2494,7 +2494,7 @@ implementation
       end;
 
 
-    function taicpu.NeedAddrPrefix:boolean;
+    function TAICPU.NeedAddrPrefix:boolean;
       var
         i: Integer;
       begin
@@ -2505,27 +2505,27 @@ implementation
       end;
 
 
-    procedure badreg(r:Tregister);
+    procedure badreg(r:TRegister);
       begin
         Message1(asmw_e_invalid_register,generic_regname(r));
       end;
 
 
-    function regval(r:Tregister):byte;
+    function regval(r:TRegister):byte;
       const
         intsupreg2opcode: array[0..7] of byte=
         // ax cx dx bx si di bp sp   -- in x86reg.dat
         // ax cx dx bx sp bp si di   -- needed order
           (0, 1, 2, 3, 6, 7, 5, 4);
-        maxsupreg: array[tregistertype] of tsuperregister=
+        maxsupreg: array[TRegisterType] of TSuperRegister=
 {$ifdef x86_64}
           (0, 16, 9, 8, 32, 32, 8, 0, 0, 0, 0, 0);
 {$else x86_64}
           (0,  8, 9, 8,  8, 32, 8, 0, 0, 0, 0, 0);
 {$endif x86_64}
       var
-        rs: tsuperregister;
-        rt: tregistertype;
+        rs: TSuperRegister;
+        rt: TRegisterType;
       begin
         rs:=getsupreg(r);
         rt:=getregtype(r);
@@ -2545,7 +2545,7 @@ implementation
 
 
 {$if defined(x86_64)}
-    function rexbits(r: tregister): byte;
+    function rexbits(r: TRegister): byte;
       begin
         result:=0;
         case getregtype(r) of
@@ -2575,14 +2575,14 @@ implementation
 
 
 
-    function process_ea_ref_64_32(const input:toper;var output:ea;rfield:longint; uselargeoffset,forceSibByte: boolean):boolean;
+    function process_ea_ref_64_32(const input:TOper;var Output:TEffectiveAddress;rfield:LongInt; uselargeoffset,forceSibByte: boolean):boolean;
       var
-        sym   : tasmsymbol;
+        sym   : TAsmSymbol;
         md,s  : byte;
         base,index,scalefactor,
-        o     : longint;
-        ir,br : Tregister;
-        isub,bsub : tsubregister;
+        o     : LongInt;
+        ir,br : TRegister;
+        isub,bsub : TSubRegister;
       begin
         result:=false;
         ir:=input.ref^.index;
@@ -2598,21 +2598,21 @@ implementation
         if ((ir<>NR_NO) and (getregtype(ir)=R_MMREGISTER) and (br<>NR_NO) and (getregtype(br)<>R_INTREGISTER)) or // vector memory (AVX2)
            ((ir<>NR_NO) and (getregtype(ir)<>R_INTREGISTER) and (getregtype(ir)<>R_MMREGISTER)) or
            ((br<>NR_NO) and (br<>NR_RIP) and (getregtype(br)<>R_INTREGISTER)) then
-          internalerror(200301081);
+          InternalError(200301081);
         { it's direct address }
         if (br=NR_NO) and (ir=NR_NO) then
          begin
-           output.sib_present:=true;
-           output.bytes:=4;
-           output.modrm:=4 or (rfield shl 3);
-           output.sib:=$25;
+           Output.sib_present:=true;
+           Output.bytes:=4;
+           Output.modrm:=4 or (rfield shl 3);
+           Output.sib:=$25;
          end
         else if (br=NR_RIP) and (ir=NR_NO) then
           begin
             { rip based }
-            output.sib_present:=false;
-            output.bytes:=4;
-            output.modrm:=5 or (rfield shl 3);
+            Output.sib_present:=false;
+            Output.bytes:=4;
+            Output.modrm:=5 or (rfield shl 3);
           end
         else
         { it's an indirection }
@@ -2640,7 +2640,7 @@ implementation
            if (ir=NR_ESP) or ((s<>1) and (s<>2) and (s<>4) and (s<>8) and (ir<>NR_NO)) then
             exit;
 
-           output.rex:=output.rex or (rexbits(br) and $F1) or (rexbits(ir) and $F2);
+           Output.rex:=Output.rex or (rexbits(br) and $F1) or (rexbits(ir) and $F2);
            result:=true;
 
 
@@ -2834,43 +2834,43 @@ implementation
             else
              md:=2;
            if (br=NR_NO) or (md=2) then
-            output.bytes:=4
+            Output.bytes:=4
            else
-            output.bytes:=md;
+            Output.bytes:=md;
            { SIB needed ? }
            if not forceSibByte and (ir=NR_NO) and (br<>NR_RSP) and (br<>NR_R12) and (br<>NR_ESP) and (br<>NR_R12D)  then
             begin
-              output.sib_present:=false;
-              output.modrm:=(md shl 6) or (rfield shl 3) or base;
+              Output.sib_present:=false;
+              Output.modrm:=(md shl 6) or (rfield shl 3) or base;
             end
            else
             begin
-              output.sib_present:=true;
-              output.modrm:=(md shl 6) or (rfield shl 3) or 4;
-              output.sib:=(scalefactor shl 6) or (index shl 3) or base;
+              Output.sib_present:=true;
+              Output.modrm:=(md shl 6) or (rfield shl 3) or 4;
+              Output.sib:=(scalefactor shl 6) or (index shl 3) or base;
             end;
          end;
-        output.size:=1+ord(output.sib_present)+output.bytes;
+        Output.size:=1+ord(Output.sib_present)+Output.bytes;
         result:=true;
       end;
 
 
 {$elseif defined(i386)}
 
-    function process_ea_ref_32(const input:toper;out output:ea;rfield:longint; uselargeoffset: boolean):boolean;
+    function process_ea_ref_32(const input:TOper;out Output:TEffectiveAddress;rfield:LongInt; uselargeoffset: boolean):boolean;
       var
-        sym   : tasmsymbol;
+        sym   : TAsmSymbol;
         md,s  : byte;
         base,index,scalefactor,
-        o     : longint;
-        ir,br : Tregister;
-        isub,bsub : tsubregister;
+        o     : LongInt;
+        ir,br : TRegister;
+        isub,bsub : TSubRegister;
       begin
         result:=false;
         if ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)=R_MMREGISTER) and (input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) or // vector memory (AVX2)
            ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)<>R_INTREGISTER) and (getregtype(input.ref^.index)<>R_MMREGISTER)) or
            ((input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) then
-         internalerror(2003010802);
+         InternalError(2003010802);
 
 
         ir:=input.ref^.index;
@@ -2884,9 +2884,9 @@ implementation
         if (br=NR_NO) and (ir=NR_NO) then
          begin
            { it's a pure offset }
-           output.sib_present:=false;
-           output.bytes:=4;
-           output.modrm:=5 or (rfield shl 3);
+           Output.sib_present:=false;
+           Output.bytes:=4;
+           Output.modrm:=5 or (rfield shl 3);
          end
         else
         { it's an indirection }
@@ -2996,32 +2996,32 @@ implementation
             else
              md:=2;
            if (br=NR_NO) or (md=2) then
-            output.bytes:=4
+            Output.bytes:=4
            else
-            output.bytes:=md;
+            Output.bytes:=md;
            { SIB needed ? }
            if (ir=NR_NO) and (br<>NR_ESP) then
             begin
-              output.sib_present:=false;
-              output.modrm:=(longint(md) shl 6) or (rfield shl 3) or base;
+              Output.sib_present:=false;
+              Output.modrm:=(LongInt(md) shl 6) or (rfield shl 3) or base;
             end
            else
             begin
-              output.sib_present:=true;
-              output.modrm:=(longint(md) shl 6) or (rfield shl 3) or 4;
-              output.sib:=(scalefactor shl 6) or (index shl 3) or base;
+              Output.sib_present:=true;
+              Output.modrm:=(LongInt(md) shl 6) or (rfield shl 3) or 4;
+              Output.sib:=(scalefactor shl 6) or (index shl 3) or base;
             end;
          end;
-        if output.sib_present then
-         output.size:=2+output.bytes
+        if Output.sib_present then
+         Output.size:=2+Output.bytes
         else
-         output.size:=1+output.bytes;
+         Output.size:=1+Output.bytes;
         result:=true;
       end;
 
-    procedure maybe_swap_index_base(var br,ir:Tregister);
+    procedure maybe_swap_index_base(var br,ir:TRegister);
       var
-        tmpreg: Tregister;
+        tmpreg: TRegister;
       begin
         if ((br=NR_NO) or (br=NR_SI) or (br=NR_DI)) and
            ((ir=NR_NO) or (ir=NR_BP) or (ir=NR_BX)) then
@@ -3032,19 +3032,19 @@ implementation
           end;
       end;
 
-    function process_ea_ref_16(const input:toper;out output:ea;rfield:longint; uselargeoffset: boolean):boolean;
+    function process_ea_ref_16(const input:TOper;out Output:TEffectiveAddress;rfield:LongInt; uselargeoffset: boolean):boolean;
       var
-        sym   : tasmsymbol;
+        sym   : TAsmSymbol;
         md,s  : byte;
         base,
-        o     : longint;
-        ir,br : Tregister;
-        isub,bsub : tsubregister;
+        o     : LongInt;
+        ir,br : TRegister;
+        isub,bsub : TSubRegister;
       begin
         result:=false;
         if ((input.ref^.index<>NR_NO) and (getregtype(input.ref^.index)<>R_INTREGISTER)) or
            ((input.ref^.base<>NR_NO) and (getregtype(input.ref^.base)<>R_INTREGISTER)) then
-          internalerror(2003010803);
+          InternalError(2003010803);
 
 
         ir:=input.ref^.index;
@@ -3058,8 +3058,8 @@ implementation
         if (br=NR_NO) and (ir=NR_NO) then
           begin
             { it's a pure offset }
-            output.bytes:=2;
-            output.modrm:=6 or (rfield shl 3);
+            Output.bytes:=2;
+            Output.modrm:=6 or (rfield shl 3);
           end
         else
           { it's an indirection }
@@ -3097,56 +3097,56 @@ implementation
               md:=1
             else
               md:=2;
-            output.bytes:=md;
-            output.modrm:=(longint(md) shl 6) or (rfield shl 3) or base;
+            Output.bytes:=md;
+            Output.modrm:=(LongInt(md) shl 6) or (rfield shl 3) or base;
           end;
-        output.size:=1+output.bytes;
-        output.sib_present:=false;
+        Output.size:=1+Output.bytes;
+        Output.sib_present:=false;
         result:=true;
       end;
 {$endif}
 
 {$ifdef x86_64}
-    function process_ea(const input:toper;out output:ea;rfield:longint; uselargeoffset, forceSibByte: boolean):boolean;
+    function process_ea(const input:TOper;out Output:TEffectiveAddress;rfield:LongInt; uselargeoffset, forceSibByte: boolean):boolean;
 {$else x86_64}
-    function process_ea(const input:toper;out output:ea;rfield:longint; uselargeoffset: boolean):boolean;
+    function process_ea(const input:TOper;out Output:TEffectiveAddress;rfield:LongInt; uselargeoffset: boolean):boolean;
 {$endif x86_64}
       var
         rv  : byte;
       begin
         result:=false;
-        fillchar(output,sizeof(output),0);
+        fillchar(Output,sizeof(Output),0);
         {Register ?}
         if (input.typ=top_reg) then
           begin
             rv:=regval(input.reg);
-            output.modrm:=$c0 or (rfield shl 3) or rv;
-            output.size:=1;
+            Output.modrm:=$c0 or (rfield shl 3) or rv;
+            Output.size:=1;
 {$ifdef x86_64}
-            output.rex:=output.rex or (rexbits(input.reg) and $F1);
+            Output.rex:=Output.rex or (rexbits(input.reg) and $F1);
 {$endif x86_64}
             result:=true;
             exit;
           end;
         {No register, so memory reference.}
         if input.typ<>top_ref then
-          internalerror(200409263);
+          InternalError(200409263);
 {$if defined(x86_64)}
-        result:=process_ea_ref_64_32(input,output,rfield, uselargeoffset,forceSibByte);
+        result:=process_ea_ref_64_32(input,Output,rfield, uselargeoffset,forceSibByte);
 {$elseif defined(i386)}
         if is_16_bit_ref(input.ref^) then
-          result:=process_ea_ref_16(input,output,rfield, uselargeoffset)
+          result:=process_ea_ref_16(input,Output,rfield, uselargeoffset)
         else
-          result:=process_ea_ref_32(input,output,rfield, uselargeoffset);
+          result:=process_ea_ref_32(input,Output,rfield, uselargeoffset);
 {$endif}
       end;
 
-    function taicpu.calcsize(p:PInsEntry):shortint;
+    function TAICPU.calcsize(p:PInsEntry):shortint;
       var
         codes : pchar;
         c     : byte;
         len     : shortint;
-        ea_data : ea;
+        ea_data : TEffectiveAddress;
         exists_evex: boolean;
         exists_vex: boolean;
         exists_vex_extension: boolean;
@@ -3227,7 +3227,7 @@ implementation
 
               end;
             &44,&45,&46:
-              inc(len,sizeof(pint));
+              inc(len,sizeof(PInt));
             &54,&55,&56:
               inc(len,8);
             &40,&41,&42,
@@ -3476,7 +3476,7 @@ implementation
       end;
 
 
-    procedure taicpu.write0x66prefix(objdata:TObjData);
+    procedure TAICPU.write0x66prefix(objdata:TObjData);
       const
         b66: Byte=$66;
       begin
@@ -3485,7 +3485,7 @@ implementation
       end;
 
 
-    procedure taicpu.write0x67prefix(objdata:TObjData);
+    procedure TAICPU.write0x67prefix(objdata:TObjData);
       const
         b67: Byte=$67;
       begin
@@ -3494,7 +3494,7 @@ implementation
       end;
 
 
-        procedure taicpu.gencode(objdata: TObjData);
+        procedure TAICPU.gencode(objdata: TObjData);
       {
        * the actual codes (C syntax, i.e. octal):
        * \0            - terminates the code. (Unless it's a literal of course.)
@@ -3581,7 +3581,7 @@ implementation
 
         currval : aint;
 
-        currsym : tobjsymbol;
+        currsym : TObjSymbol;
         currrelreloc,
         currabsreloc,
         currabsreloc32 : TObjRelocationType;
@@ -3589,7 +3589,7 @@ implementation
         rexwritten : boolean;
 {$endif x86_64}
 
-        procedure getvalsym(opidx:longint);
+        procedure getvalsym(opidx:LongInt);
           begin
             case oper[opidx]^.typ of
               top_ref :
@@ -3682,7 +3682,7 @@ implementation
 {$ifdef i386}
            { Special case of '_GLOBAL_OFFSET_TABLE_'
              which needs a special relocation type R_386_GOTPC }
-           if assigned (p) and
+           if Assigned (p) and
               (p.name='_GLOBAL_OFFSET_TABLE_') and
               (tf_pic_uses_got in TargetInfo.flags) then
              begin
@@ -3701,7 +3701,7 @@ implementation
 {$ifdef x86_64}
            { Computed offset is not yet correct for GOTPC relocation }
            { RELOC_GOTPCREL, RELOC_REX_GOTPCRELX, RELOC_GOTPCRELX need special handling }
-           if assigned(p) and (RelocType in [RELOC_GOTPCREL, RELOC_REX_GOTPCRELX, RELOC_GOTPCRELX]) and
+           if Assigned(p) and (RelocType in [RELOC_GOTPCREL, RELOC_REX_GOTPCRELX, RELOC_GOTPCRELX]) and
               { These relocations seem to be used only for ELF
                 which always has relocs_use_addend set to true
                 so that it is the orgsize of the last relocation which needs to be fixed PM  }
@@ -3719,12 +3719,12 @@ implementation
       var
         i: integer;
         c : byte;
-        pb : pbyte;
+        pb : PByte;
         codes : pchar;
         bytes : array[0..3] of byte;
         rfield,
-        data,s,opidx : longint;
-        ea_data : ea;
+        data,s,opidx : LongInt;
+        ea_data : TEffectiveAddress;
         relsym : TObjSymbol;
         mod11 : boolean;
 
@@ -3757,8 +3757,8 @@ implementation
 
       begin
         { safety check }
-        if objdata.currobjsec.size<>longword(insoffset) then
-          internalerror(200130121);
+        if objdata.currobjsec.size<>LongWord(insoffset) then
+          InternalError(200130121);
 
         { those variables are initialized inside local procedures, the dfa cannot handle this yet }
         currsym:=nil;
@@ -3856,7 +3856,7 @@ implementation
                                  end;
                                end;
                       else
-                        Internalerror(2019081014);
+                        InternalError(2019081014);
                     end;
 
 
@@ -3953,7 +3953,7 @@ implementation
           if (opmode > ops) or
              (opmode < -1) then
           begin
-            Internalerror(777100);
+            InternalError(777100);
           end
           else if opmode = -1 then
           begin
@@ -3978,7 +3978,7 @@ implementation
               EVEXvvvv := EVEXvvvv or (1 shl 3);
             {$endif x86_64}
           end
-          else Internalerror(777101);
+          else InternalError(777101);
 
           if not(needed_VEX_Extension) then
           begin
@@ -4156,7 +4156,7 @@ implementation
                   NR_SS:
                     bytes[0]:=$16;
                   else
-                    internalerror(777004);
+                    InternalError(777004);
                 end;
                 if c=&4 then
                   inc(bytes[0]);
@@ -4170,7 +4170,7 @@ implementation
                   NR_GS:
                     bytes[0]:=$a8;
                   else
-                    internalerror(777005);
+                    InternalError(777005);
                 end;
                 if c=&5 then
                   inc(bytes[0]);
@@ -4196,8 +4196,8 @@ implementation
               begin
                 getvalsym(c-&14);
                 if (currval<-128) or (currval>127) then
-                 Message2(asmw_e_value_exceeds_bounds,'signed byte',tostr(currval));
-                if assigned(currsym) then
+                 Message2(asmw_e_value_exceeds_bounds,'signed byte',ToStr(currval));
+                if Assigned(currsym) then
                   objdata_writereloc(currval,1,currsym,currabsreloc)
                 else
                   objdata.writeint8(shortint(currval));
@@ -4206,8 +4206,8 @@ implementation
               begin
                 getvalsym(c-&20);
                 if (currval<-256) or (currval>255) then
-                 Message2(asmw_e_value_exceeds_bounds,'byte',tostr(currval));
-                if assigned(currsym) then
+                 Message2(asmw_e_value_exceeds_bounds,'byte',ToStr(currval));
+                if Assigned(currsym) then
                  objdata_writereloc(currval,1,currsym,currabsreloc)
                 else
                  objdata.writeuint8(byte(currval));
@@ -4224,17 +4224,17 @@ implementation
                 if IF_IMM3 in insentry^.flags then
                   begin
                     if (currval<0) or (currval>7) then
-                      Message2(asmw_e_value_exceeds_bounds,'unsigned triad',tostr(currval));
+                      Message2(asmw_e_value_exceeds_bounds,'unsigned triad',ToStr(currval));
                   end
                 else if IF_IMM4 in insentry^.flags then
                   begin
                     if (currval<0) or (currval>15) then
-                      Message2(asmw_e_value_exceeds_bounds,'unsigned nibble',tostr(currval));
+                      Message2(asmw_e_value_exceeds_bounds,'unsigned nibble',ToStr(currval));
                   end
                 else
                   if (currval<0) or (currval>255) then
-                    Message2(asmw_e_value_exceeds_bounds,'unsigned byte',tostr(currval));
-                if assigned(currsym) then
+                    Message2(asmw_e_value_exceeds_bounds,'unsigned byte',ToStr(currval));
+                if Assigned(currsym) then
                  objdata_writereloc(currval,1,currsym,currabsreloc)
                 else
                  objdata.writeuint8(byte(currval));
@@ -4245,9 +4245,9 @@ implementation
 
                 { currval is an aint so this cannot happen on i8086 and causes only a warning }
                 if (currval<-65536) or (currval>65535) then
-                 Message2(asmw_e_value_exceeds_bounds,'word',tostr(currval));
+                 Message2(asmw_e_value_exceeds_bounds,'word',ToStr(currval));
 
-                if assigned(currsym)
+                if Assigned(currsym)
 
                 then
                  objdata_writereloc(currval,2,currsym,currabsreloc)
@@ -4262,14 +4262,14 @@ implementation
 
                 if opsize=S_Q then
                   begin
-                    if assigned(currsym) then
+                    if Assigned(currsym) then
                      objdata_writereloc(currval,8,currsym,currabsreloc)
                     else
                      objdata.writeInt64LE(int64(currval));
                   end
                 else
                   begin
-                    if assigned(currsym) then
+                    if Assigned(currsym) then
                       objdata_writereloc(currval,4,currsym,currabsreloc32)
                     else
                       objdata.writeInt32LE(int32(currval));
@@ -4279,7 +4279,7 @@ implementation
             &40,&41,&42 :    // 040..042
               begin
                 getvalsym(c-&40);
-                if assigned(currsym)
+                if Assigned(currsym)
 
                 then
                  objdata_writereloc(currval,4,currsym,currabsreloc32)
@@ -4290,12 +4290,12 @@ implementation
               begin      // address size (we support only default address sizes).
                 getvalsym(c-&44);
 {$if defined(x86_64)}
-                if assigned(currsym) then
+                if Assigned(currsym) then
                   objdata_writereloc(currval,8,currsym,currabsreloc)
                 else
                   objdata.writeInt64LE(int64(currval));
 {$elseif defined(i386)}
-                if assigned(currsym) then
+                if Assigned(currsym) then
                   objdata_writereloc(currval,4,currsym,currabsreloc32)
                 else
                   objdata.writeInt32LE(int32(currval));
@@ -4307,17 +4307,17 @@ implementation
                 data:=currval-insend;
 {$push}
 {$r-,q-} { disable also overflow as address returns a qword for x86_64 }
-                if assigned(currsym) then
+                if Assigned(currsym) then
                  inc(data,currsym.address);
 {$pop}
                 if (data>127) or (data<-128) then
-                 Message1(asmw_e_short_jmp_out_of_range,tostr(data));
+                 Message1(asmw_e_short_jmp_out_of_range,ToStr(data));
                 objdata.writeint8(shortint(data));
               end;
             &54,&55,&56:   // 054..056 - qword immediate operand
               begin
                 getvalsym(c-&54);
-                if assigned(currsym) then
+                if Assigned(currsym) then
                   objdata_writereloc(currval,8,currsym,currabsreloc)
                 else
                   objdata.writeInt64LE(int64(currval));
@@ -4333,7 +4333,7 @@ implementation
               begin
                 getvalsym(c-&64);
 
-                if assigned(currsym) then
+                if Assigned(currsym) then
                  objdata_writereloc(currval,4,currsym,currrelreloc)
                 else
                  objdata_writereloc(currval-insend,4,nil,currabsreloc32)
@@ -4342,7 +4342,7 @@ implementation
             &70,&71,&72 :  // 070..072 - long relative operand
               begin
                 getvalsym(c-&70);
-                if assigned(currsym) then
+                if Assigned(currsym) then
                  objdata_writereloc(currval,4,currsym,currrelreloc)
                 else
                  objdata_writereloc(currval-insend,4,nil,currabsreloc32)
@@ -4360,11 +4360,11 @@ implementation
 {$ifdef x86_64}
                 { for i386 as aint type is longint the
                   following test is useless }
-                if (currval<low(longint)) or (currval>high(longint)) then
-                  Message2(asmw_e_value_exceeds_bounds,'signed dword',tostr(currval));
+                if (currval<low(LongInt)) or (currval>high(LongInt)) then
+                  Message2(asmw_e_value_exceeds_bounds,'signed dword',ToStr(currval));
 {$endif x86_64}
 
-                if assigned(currsym) then
+                if Assigned(currsym) then
                   objdata_writereloc(currval,4,currsym,currabsreloc32)
                 else
                   objdata.writeInt32LE(int32(currval));
@@ -4466,7 +4466,7 @@ implementation
                     objdata.writebytes(bytes,1);
                   end
                 else
-                  Internalerror(2014032001);
+                  InternalError(2014032001);
               end;
             &350..&352: ; // EVEX flags =>> nothing todo
             &370..&377: ; // VEX and EVEX flags =>> nothing todo
@@ -4482,7 +4482,7 @@ implementation
 {$ifdef x86_64}
                 if not(needed_VEX or needed_EVEX) then  // TG
                   if (rex<>0) and not(rexwritten) then
-                    internalerror(200603191);
+                    InternalError(200603191);
 {$endif x86_64}
                 if (c>=&100) and (c<=&227) then  // 0100..0227
                  begin
@@ -4608,7 +4608,7 @@ implementation
       end;
 
 
-    function taicpu.is_same_reg_move(regtype: Tregistertype):boolean;
+    function TAICPU.is_same_reg_move(regtype: TRegisterType):boolean;
       begin
         result:=(((opcode=A_MOV) or (opcode=A_XCHG)) and
                  (regtype = R_INTREGISTER) and
@@ -4641,11 +4641,11 @@ implementation
 
     procedure build_spilling_operation_type_table;
       var
-        opcode : tasmop;
+        opcode : TAsmOp;
       begin
         new(operation_type_table);
-        fillchar(operation_type_table^,sizeof(toperation_type_table),byte(operand_read));
-        for opcode:=low(tasmop) to high(tasmop) do
+        fillchar(operation_type_table^,sizeof(TOperationTypeTable),byte(operand_read));
+        for opcode:=low(TAsmOp) to high(TAsmOp) do
           with InsProp[opcode] do
           begin
               if Ch_Rop1 in Ch then
@@ -4676,7 +4676,7 @@ implementation
               end;
 
 
-    function taicpu.spilling_get_operation_type(opnr: longint): topertype;
+    function TAICPU.spilling_get_operation_type(opnr: LongInt): TOperType;
       begin
         { the information in the instruction table is made for the string copy
           operation MOVSD so hack here (FK)
@@ -4692,7 +4692,7 @@ implementation
               1:
                 result:=operand_write;
               else
-                internalerror(200506055);
+                InternalError(200506055);
             end
           end
         else if (opcode=A_VMOVHPD) or (opcode=A_VMOVHPS) or (opcode=A_VMOVLHPS) or (opcode=A_VMOVLPD) or (opcode=A_VMOVLPS) then
@@ -4704,7 +4704,7 @@ implementation
                 1:
                   result:=operand_readwrite;
                 else
-                  internalerror(2024060101);
+                  InternalError(2024060101);
               end
             else if ops=3 then
               case opnr of
@@ -4713,10 +4713,10 @@ implementation
                 2:
                   result:=operand_write;
                 else
-                  internalerror(2024060102);
+                  InternalError(2024060102);
               end
             else
-              internalerror(2024060103);
+              InternalError(2024060103);
           end
         { IMUL has 1, 2 and 3-operand forms }
         else if opcode=A_IMUL then
@@ -4726,7 +4726,7 @@ implementation
                 if opnr=0 then
                   result:=operand_read
                 else
-                  internalerror(2014011802);
+                  InternalError(2014011802);
               2:
                 begin
                   case opnr of
@@ -4735,7 +4735,7 @@ implementation
                     1:
                       result:=operand_readwrite;
                     else
-                      internalerror(2014011803);
+                      InternalError(2014011803);
                   end;
                 end;
               3:
@@ -4746,11 +4746,11 @@ implementation
                     2:
                       result:=operand_write;
                     else
-                      internalerror(2014011804);
+                      InternalError(2014011804);
                   end;
                 end;
               else
-                internalerror(2014011805);
+                InternalError(2014011805);
             end;
           end
         else
@@ -4758,9 +4758,9 @@ implementation
       end;
 
 
-    function spilling_create_load(const ref:treference;r:tregister):Taicpu;
+    function spilling_create_load(const ref:TReference;r:TRegister):TAICPU;
       var
-        tmpref: treference;
+        tmpref: TReference;
       begin
         tmpref:=ref;
 
@@ -4771,57 +4771,57 @@ implementation
                 inc(tmpref.offset);
               { we don't need special code here for 32 bit loads on x86_64, since
                 those will automatically zero-extend the upper 32 bits. }
-              result:=taicpu.op_ref_reg(A_MOV,reg2opsize(r),tmpref,r);
+              result:=TAICPU.op_ref_reg(A_MOV,reg2opsize(r),tmpref,r);
             end;
           R_MMREGISTER :
-            if CurrentSettings.fputype in fpu_avx_instructionsets then
+            if CurrentSettings.FPUType in fpu_avx_instructionsets then
               case getsubreg(r) of
                 R_SUBMMD:
-                  result:=taicpu.op_ref_reg(A_VMOVSD,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_VMOVSD,S_NO,tmpref,r);
                 R_SUBMMS:
-                  result:=taicpu.op_ref_reg(A_VMOVSS,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_VMOVSS,S_NO,tmpref,r);
                 R_SUBQ,
                 R_SUBMMWHOLE:
-                  result:=taicpu.op_ref_reg(A_VMOVQ,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_VMOVQ,S_NO,tmpref,r);
                 R_SUBMMY:
                    if ref.alignment>=32 then
-                     result:=taicpu.op_ref_reg(A_VMOVDQA,S_NO,tmpref,r)
+                     result:=TAICPU.op_ref_reg(A_VMOVDQA,S_NO,tmpref,r)
                    else
-                     result:=taicpu.op_ref_reg(A_VMOVDQU,S_NO,tmpref,r);
+                     result:=TAICPU.op_ref_reg(A_VMOVDQU,S_NO,tmpref,r);
                 R_SUBMMZ:
                    if ref.alignment>=64 then
-                     result:=taicpu.op_ref_reg(A_VMOVDQA64,S_NO,tmpref,r)
+                     result:=TAICPU.op_ref_reg(A_VMOVDQA64,S_NO,tmpref,r)
                    else
-                     result:=taicpu.op_ref_reg(A_VMOVDQU64,S_NO,tmpref,r);
+                     result:=TAICPU.op_ref_reg(A_VMOVDQU64,S_NO,tmpref,r);
                 R_SUBMMX:
-                  result:=taicpu.op_ref_reg(A_VMOVDQU,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_VMOVDQU,S_NO,tmpref,r);
                 else
-                  internalerror(200506043);
+                  InternalError(200506043);
               end
             else
               case getsubreg(r) of
                 R_SUBMMD:
-                  result:=taicpu.op_ref_reg(A_MOVSD,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_MOVSD,S_NO,tmpref,r);
                 R_SUBMMS:
-                  result:=taicpu.op_ref_reg(A_MOVSS,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_MOVSS,S_NO,tmpref,r);
                 R_SUBQ,
                 R_SUBMMWHOLE:
-                  result:=taicpu.op_ref_reg(A_MOVQ,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_MOVQ,S_NO,tmpref,r);
                 R_SUBMMX:
-                  result:=taicpu.op_ref_reg(A_MOVDQA,S_NO,tmpref,r);
+                  result:=TAICPU.op_ref_reg(A_MOVDQA,S_NO,tmpref,r);
                 else
-                  internalerror(2005060405);
+                  InternalError(2005060405);
               end;
           else
-            internalerror(2004010411);
+            InternalError(2004010411);
         end;
       end;
 
 
-    function spilling_create_store(r:tregister; const ref:treference):Taicpu;
+    function spilling_create_store(r:TRegister; const ref:TReference):TAICPU;
       var
-        size: topsize;
-        tmpref: treference;
+        size: TOpSize;
+        tmpref: TReference;
       begin
         tmpref:=ref;
 
@@ -4840,47 +4840,47 @@ implementation
                   r:=newreg(getregtype(r),getsupreg(r),R_SUBWHOLE);
                 end;
 {$endif x86_64}
-              result:=taicpu.op_reg_ref(A_MOV,size,r,tmpref);
+              result:=TAICPU.op_reg_ref(A_MOV,size,r,tmpref);
             end;
           R_MMREGISTER :
-            if CurrentSettings.fputype in fpu_avx_instructionsets then
+            if CurrentSettings.FPUType in fpu_avx_instructionsets then
               case getsubreg(r) of
                 R_SUBMMD:
-                  result:=taicpu.op_reg_ref(A_VMOVSD,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_VMOVSD,S_NO,r,tmpref);
                 R_SUBMMS:
-                  result:=taicpu.op_reg_ref(A_VMOVSS,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_VMOVSS,S_NO,r,tmpref);
                 R_SUBMMY:
                    if ref.alignment>=32 then
-                     result:=taicpu.op_reg_ref(A_VMOVDQA,S_NO,r,tmpref)
+                     result:=TAICPU.op_reg_ref(A_VMOVDQA,S_NO,r,tmpref)
                    else
-                     result:=taicpu.op_reg_ref(A_VMOVDQU,S_NO,r,tmpref);
+                     result:=TAICPU.op_reg_ref(A_VMOVDQU,S_NO,r,tmpref);
                 R_SUBMMZ:
                    if ref.alignment>=64 then
-                     result:=taicpu.op_reg_ref(A_VMOVDQA64,S_NO,r,tmpref)
+                     result:=TAICPU.op_reg_ref(A_VMOVDQA64,S_NO,r,tmpref)
                    else
-                     result:=taicpu.op_reg_ref(A_VMOVDQU64,S_NO,r,tmpref);
+                     result:=TAICPU.op_reg_ref(A_VMOVDQU64,S_NO,r,tmpref);
                 R_SUBQ,
                 R_SUBMMWHOLE:
-                  result:=taicpu.op_reg_ref(A_VMOVQ,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_VMOVQ,S_NO,r,tmpref);
                 else
-                  internalerror(200506042);
+                  InternalError(200506042);
               end
             else
               case getsubreg(r) of
                 R_SUBMMD:
-                  result:=taicpu.op_reg_ref(A_MOVSD,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_MOVSD,S_NO,r,tmpref);
                 R_SUBMMS:
-                  result:=taicpu.op_reg_ref(A_MOVSS,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_MOVSS,S_NO,r,tmpref);
                 R_SUBQ,
                 R_SUBMMWHOLE:
-                  result:=taicpu.op_reg_ref(A_MOVQ,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_MOVQ,S_NO,r,tmpref);
                 R_SUBMMX:
-                  result:=taicpu.op_reg_ref(A_MOVDQA,S_NO,r,tmpref);
+                  result:=TAICPU.op_reg_ref(A_MOVDQA,S_NO,r,tmpref);
                 else
-                  internalerror(2005060404);
+                  InternalError(2005060404);
               end;
           else
-            internalerror(2004010412);
+            InternalError(2004010412);
         end;
       end;
 
@@ -4893,10 +4893,10 @@ implementation
 
     procedure BuildInsTabCache;
       var
-        i : longint;
+        i : LongInt;
       begin
         new(instabcache);
-        FillChar(instabcache^,sizeof(tinstabcache),$ff);
+        FillChar(instabcache^,sizeof(TInsTabCache),$ff);
         i:=0;
         while (i<InsTabEntries) do
          begin
@@ -4909,9 +4909,9 @@ implementation
 
     procedure BuildInsTabMemRefSizeInfoCache;
     var
-      AsmOp: TasmOp;
-      i,j: longint;
-      iCntOpcodeValError: longint;
+      AsmOp: TAsmOp;
+      i,j: LongInt;
+      iCntOpcodeValError: LongInt;
       insentry  : PInsEntry;
 
       MRefInfo: TMemRefSizeInfo;
@@ -5581,10 +5581,10 @@ implementation
     procedure InitAsm;
       begin
         build_spilling_operation_type_table;
-        if not assigned(instabcache) then
+        if not Assigned(instabcache) then
           BuildInsTabCache;
 
-        if not assigned(InsTabMemRefSizeInfoCache) then
+        if not Assigned(InsTabMemRefSizeInfoCache) then
           BuildInsTabMemRefSizeInfoCache;
 
       end;
@@ -5592,18 +5592,18 @@ implementation
 
     procedure DoneAsm;
       begin
-        if assigned(operation_type_table) then
+        if Assigned(operation_type_table) then
           begin
             dispose(operation_type_table);
             operation_type_table:=nil;
           end;
-        if assigned(instabcache) then
+        if Assigned(instabcache) then
           begin
             dispose(instabcache);
             instabcache:=nil;
           end;
 
-        if assigned(InsTabMemRefSizeInfoCache) then
+        if Assigned(InsTabMemRefSizeInfoCache) then
         begin
           dispose(InsTabMemRefSizeInfoCache);
           InsTabMemRefSizeInfoCache:=nil;
@@ -5612,6 +5612,6 @@ implementation
 
 
 begin
-  cai_align:=tai_align;
-  cai_cpu:=taicpu;
+  CAIAlign:=TAIAlign;
+  cai_cpu:=TAICPU;
 end.

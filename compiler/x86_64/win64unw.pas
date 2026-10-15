@@ -26,7 +26,7 @@ unit win64unw;
 interface
 
 uses
-  cclasses,globtype,aasmbase,aasmdata,aasmtai,cgbase,ogbase;
+  CClasses,GlobType,aasmbase,AAsmData,aasmtai,cgbase,ogbase;
 
 type
   TWin64CFI=class
@@ -42,19 +42,19 @@ type
     FXdataSec:TObjSection;
     FPrologueEndPos:aword;
     FPrologueEndSeen:Boolean;
-    FName: pshortstring;
+    FName: PShortString;
     procedure AddElement(objdata:TObjData;aCode,aInfo:Integer;aOffs:dword);
   public
     constructor create;
-    destructor destroy;override;
+    destructor Destroy;override;
     procedure generate_prologue_data(objdata:TObjData);
     procedure start_frame(objdata:TObjData; const name: string);
     procedure end_frame(objdata:TObjData);
     procedure end_prologue(objdata:TObjData);
-    procedure push_reg(objdata:TObjData;reg:tregister);
-    procedure save_reg(objdata:TObjData;reg:tregister;ofs:dword);
-    procedure save_xmm(objdata:TObjData;reg:tregister;ofs:dword);
-    procedure set_frame(objdata:TObjData; reg:tregister;ofs:dword);
+    procedure push_reg(objdata:TObjData;reg:TRegister);
+    procedure save_reg(objdata:TObjData;reg:TRegister;ofs:dword);
+    procedure save_xmm(objdata:TObjData;reg:TRegister;ofs:dword);
+    procedure set_frame(objdata:TObjData; reg:TRegister;ofs:dword);
     procedure stack_alloc(objdata:TObjData;ofs:dword);
     procedure switch_to_handlerdata(objdata:TObjData);
   end;
@@ -63,7 +63,7 @@ type
 implementation
 
 uses
-  cutils,globals,verbose,cpubase;
+  CUtils,Globals,Verbose,cpubase;
 
 const
   UWOP_PUSH_NONVOL     = 0;  { info = register number }
@@ -85,7 +85,7 @@ const
 
 
 type
-  tai_seh_directive_x64=class(tai_seh_directive)
+  TAISEHDirectiveX64=class(TAISEHDirective)
     procedure generate_code(objdata:TObjData);override;
   end;
 
@@ -97,7 +97,7 @@ type
   end;
 
 var
-  current_unw: TWin64Cfi;
+  current_unw: TWin64CFI;
 
 function EncodeReg(r: TRegister): integer;
 begin
@@ -140,11 +140,11 @@ begin
   FElements:=TLinkedList.Create;
 end;
 
-destructor TWin64CFI.destroy;
+destructor TWin64CFI.Destroy;
 begin
   FElements.Free;
-  stringdispose(FName);
-  inherited destroy;
+  StringDispose(FName);
+  inherited Destroy;
 end;
 
 procedure TWin64CFI.AddElement(objdata:TObjData;aCode,aInfo:Integer;aOffs:dword);
@@ -245,14 +245,14 @@ begin
   if odd(FCount) then
     objdata.writebytes(zero,2);
   if Assigned(FHandler) then
-    objdata.writereloc(0,sizeof(longint),FHandler,RELOC_RVA);
+    objdata.writereloc(0,sizeof(LongInt),FHandler,RELOC_RVA);
 end;
 
 procedure TWin64CFI.start_frame(objdata:TObjData;const name:string);
 begin
-  if assigned(FName) then
-    internalerror(2011072306);
-  FName:=stringdup(name);
+  if Assigned(FName) then
+    InternalError(2011072306);
+  FName:=StringDup(name);
   FFrameStartSym:=objdata.symbolref(name);
   FFrameStartSec:=objdata.CurrObjSec;
   FCount:=0;
@@ -268,8 +268,8 @@ end;
 
 procedure TWin64CFI.switch_to_handlerdata(objdata:TObjData);
 begin
-  if not assigned(FName) then
-    internalerror(2011072310);
+  if not Assigned(FName) then
+    InternalError(2011072310);
 
   if FHandler=nil then
     CGMessage(asmw_e_handlerdata_no_handler);
@@ -284,8 +284,8 @@ procedure TWin64CFI.end_frame(objdata:TObjData);
 var
   pdatasec:TObjSection;
 begin
-  if not assigned(FName) then
-    internalerror(2011072307);
+  if not Assigned(FName) then
+    InternalError(2011072307);
 
   if FXdataSec=nil then
     generate_prologue_data(objdata);
@@ -311,23 +311,23 @@ begin
   FXdataSec:=nil;
   FXdataSym:=nil;
   FFlags:=0;
-  stringdispose(FName);
+  StringDispose(FName);
 end;
 
 procedure TWin64CFI.end_prologue(objdata:TObjData);
 begin
-  if not assigned(FName) then
-    internalerror(2011072312);
+  if not Assigned(FName) then
+    InternalError(2011072312);
   FPrologueEndPos:=objdata.CurrObjSec.Size;
   FPrologueEndSeen:=true;
 end;
 
-procedure TWin64CFI.push_reg(objdata:TObjData;reg:tregister);
+procedure TWin64CFI.push_reg(objdata:TObjData;reg:TRegister);
 begin
   AddElement(objdata,UWOP_PUSH_NONVOL,EncodeReg(reg),0);
 end;
 
-procedure TWin64CFI.save_reg(objdata:TObjData;reg:tregister;ofs:dword);
+procedure TWin64CFI.save_reg(objdata:TObjData;reg:TRegister;ofs:dword);
 var
   info: Integer;
 begin
@@ -338,7 +338,7 @@ begin
     AddElement(objdata,UWOP_SAVE_NONVOL_FAR,info,ofs);
 end;
 
-procedure TWin64CFI.save_xmm(objdata:TObjData;reg:tregister;ofs:dword);
+procedure TWin64CFI.save_xmm(objdata:TObjData;reg:TRegister;ofs:dword);
 var
   info: Integer;
 begin
@@ -349,7 +349,7 @@ begin
     AddElement(objdata,UWOP_SAVE_XMM128_FAR, info, ofs);
 end;
 
-procedure TWin64CFI.set_frame(objdata:TObjData;reg:tregister;ofs:dword);
+procedure TWin64CFI.set_frame(objdata:TObjData;reg:TRegister;ofs:dword);
 var
   info: Integer;
 begin
@@ -376,7 +376,7 @@ begin
     AddElement(objdata,UWOP_ALLOC_LARGE,1,ofs);
 end;
 
-procedure tai_seh_directive_x64.generate_code(objdata:TObjData);
+procedure TAISEHDirectiveX64.generate_code(objdata:TObjData);
 begin
   case kind of
     ash_proc:
@@ -406,15 +406,15 @@ begin
     ash_pushframe: {TBD};
     ash_pushnv,
     ash_savenv:
-      internalerror(2019050712);
+      InternalError(2019050712);
     else
-      internalerror(2020041901);
+      InternalError(2020041901);
   end;
 end;
 
 
 initialization
-  cai_seh_directive:=tai_seh_directive_x64;
+  CAISEHDirective:=TAISEHDirectiveX64;
   current_unw:=TWin64CFI.Create;
 finalization
   current_unw.Free;

@@ -29,15 +29,15 @@ unit aoptutils;
     uses
       cpubase,aasmtai,aasmcpu;
 
-    function MatchOpType(const p : taicpu;type0: toptype) : Boolean;
-    function MatchOpType(const p : taicpu;type0,type1 : toptype) : Boolean;
-    function MatchOpType(const p : taicpu; type0,type1,type2 : toptype) : Boolean;
+    function MatchOpType(const p : TAICPU;type0: TOpType) : Boolean;
+    function MatchOpType(const p : TAICPU;type0,type1 : TOpType) : Boolean;
+    function MatchOpType(const p : TAICPU; type0,type1,type2 : TOpType) : Boolean;
 
     { skips all labels and returns the next "real" instruction }
-    function SkipLabels(hp: tai; out hp2: tai): boolean;
+    function SkipLabels(hp: TAI; out hp2: TAI): boolean;
 
     { sets hp2 to hp and returns True if hp is not nil }
-    function SetAndTest(const hp: tai; out hp2: tai): Boolean; inline;
+    function SetAndTest(const hp: TAI; out hp2: TAI): Boolean; inline;
 
     { Set Store and Result to Condition (useful as an inline assignment in a conditional block) }
     function SetAndTest(const Condition: Boolean; out Store: Boolean): Boolean; inline;
@@ -52,33 +52,33 @@ unit aoptutils;
       aasmbase;
 
 
-    function MatchOpType(const p : taicpu; type0: toptype) : Boolean; inline;
+    function MatchOpType(const p : TAICPU; type0: TOpType) : Boolean; inline;
       begin
         Result:=(p.ops=1) and (p.oper[0]^.typ=type0);
       end;
 
 
-    function MatchOpType(const p : taicpu; type0,type1 : toptype) : Boolean; inline;
+    function MatchOpType(const p : TAICPU; type0,type1 : TOpType) : Boolean; inline;
       begin
         Result:=(p.ops=2) and (p.oper[0]^.typ=type0) and (p.oper[1]^.typ=type1);
       end;
 
 
-    function MatchOpType(const p : taicpu; type0,type1,type2 : toptype) : Boolean; inline;
+    function MatchOpType(const p : TAICPU; type0,type1,type2 : TOpType) : Boolean; inline;
       begin
         Result:=(p.ops=3) and (p.oper[0]^.typ=type0) and (p.oper[1]^.typ=type1) and (p.oper[2]^.typ=type2);
       end;
 
     { skips all labels and returns the next "real" instruction }
-    function SkipLabels(hp: tai; out hp2: tai): boolean;
+    function SkipLabels(hp: TAI; out hp2: TAI): boolean;
       begin
-        while assigned(hp.next) and
-              (tai(hp.next).typ in SkipInstr + [ait_label]) Do
-          hp := tai(hp.next);
-        if assigned(hp.next) then
+        while Assigned(hp.next) and
+              (TAI(hp.next).typ in SkipInstr + [ait_label]) Do
+          hp := TAI(hp.next);
+        if Assigned(hp.next) then
           begin
             SkipLabels := True;
-            hp2 := tai(hp.next)
+            hp2 := TAI(hp.next)
           end
         else
           begin
@@ -88,7 +88,7 @@ unit aoptutils;
       end;
 
     { sets hp2 to hp and returns True if hp is not nil }
-    function SetAndTest(const hp: tai; out hp2: tai): Boolean;
+    function SetAndTest(const hp: TAI; out hp2: TAI): Boolean;
       begin
         hp2 := hp;
         Result := Assigned(hp);

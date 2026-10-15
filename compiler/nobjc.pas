@@ -34,31 +34,31 @@ uses
   node;
 
 type
-  tobjcselectornode = class(TUnaryNode)
+  TObjCSelectorNode = class(TUnaryNode)
    public
     constructor create(formethod: TNode);
     function pass_typecheck: TNode;override;
     function pass_1: TNode;override;
   end;
-  tobjcselectornodeclass = class of tobjcselectornode;
+  TObjCSelectorNodeClass = class of TObjCSelectorNode;
 
-  tobjcprotocolnode = class(TUnaryNode)
+  TObjCProtocolNode = class(TUnaryNode)
    public
     constructor create(forprotocol: TNode);
     function pass_typecheck: TNode;override;
     function pass_1: TNode;override;
   end;
-  tobjcprotocolnodeclass = class of tobjcprotocolnode;
+  TObjCProtocolNodeClass = class of TObjCProtocolNode;
 
 var
-  cobjcselectornode : tobjcselectornodeclass;
-  cobjcprotocolnode : tobjcprotocolnodeclass;
+  CObjCSelectorNode : TObjCSelectorNodeClass;
+  CObjCProtocolNode : TObjCProtocolNodeClass;
 
 implementation
 
 uses
-  globtype,globals,
-  verbose,pass_1,
+  GlobType,Globals,
+  Verbose,pass_1,
   symdef,symconst,
   ncon,ncal,
   objcutil,
@@ -69,19 +69,19 @@ uses
                             TOBJCSELECTORNODE
 *****************************************************************************}
 
-constructor tobjcselectornode.create(formethod: TNode);
+constructor TObjCSelectorNode.create(formethod: TNode);
   begin
     inherited create(objcselectorn,formethod);
   end;
 
 
-function tobjcselectornode.pass_typecheck: TNode;
+function TObjCSelectorNode.pass_typecheck: TNode;
   var
-    len: longint;
+    len: LongInt;
     s: shortstring;
   begin
     s:='';
-    if not(m_objectivec1 in CurrentSettings.modeswitches) then
+    if not(m_objectivec1 in CurrentSettings.ModeSwitches) then
       Message(parser_f_modeswitch_objc_required);
     result:=nil;
     TypeCheckPass(left);
@@ -102,15 +102,15 @@ function tobjcselectornode.pass_typecheck: TNode;
         end;
       stringconstn:
         begin
-          if not objcvalidselectorname(tstringconstnode(left).asconstpchar,
-                                       tstringconstnode(left).len) then
+          if not objcvalidselectorname(TStringConstNode(left).asconstpchar,
+                                       TStringConstNode(left).len) then
             begin
-              len:=tstringconstnode(left).len;
+              len:=TStringConstNode(left).len;
               if (len>255) then
                 len:=255;
-              setlength(s,len);
+              SetLength(s,len);
               if len>0 then
-                move(tstringconstnode(left).valueas[0],s[1],len);
+                move(TStringConstNode(left).valueas[0],s[1],len);
               CGMessage1(type_e_invalid_objc_selector_name,s);
               exit;
             end;
@@ -122,7 +122,7 @@ function tobjcselectornode.pass_typecheck: TNode;
   end;
 
 
-function tobjcselectornode.pass_1: TNode;
+function TObjCSelectorNode.pass_1: TNode;
   begin
     result:=nil;
     expectloc:=LOC_CREFERENCE;
@@ -133,15 +133,15 @@ function tobjcselectornode.pass_1: TNode;
                             TOBJPROTOCOLNODE
 *****************************************************************************}
 
-constructor tobjcprotocolnode.create(forprotocol: TNode);
+constructor TObjCProtocolNode.create(forprotocol: TNode);
   begin
     inherited create(objcprotocoln,forprotocol);
   end;
 
 
-function tobjcprotocolnode.pass_typecheck: TNode;
+function TObjCProtocolNode.pass_typecheck: TNode;
   begin
-    if not(m_objectivec1 in CurrentSettings.modeswitches) then
+    if not(m_objectivec1 in CurrentSettings.ModeSwitches) then
       Message(parser_f_modeswitch_objc_required);
     result:=nil;
     TypeCheckPass(left);
@@ -153,10 +153,10 @@ function tobjcprotocolnode.pass_typecheck: TNode;
   end;
 
 
-function tobjcprotocolnode.pass_1: TNode;
+function TObjCProtocolNode.pass_1: TNode;
   begin
-    result:=ccallnode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
-      ccallparanode.create(cstringconstnode.createstr(TObjectDef(left.resultdef).objextname^),nil),
+    result:=CCallNode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
+      CCallParaNode.create(CStringConstNode.createstr(TObjectDef(left.resultdef).objextname^),nil),
       resultdef
     );
     TypeCheckPass(result);

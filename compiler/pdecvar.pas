@@ -27,23 +27,23 @@ unit pdecvar;
 interface
 
     uses
-      tpcompilerreal,
-      cclasses,
-      symtable,symsym,symdef,symtype;
+      TPCompilerReal,
+      CClasses,
+      SymTable,SymSym,symdef,symtype;
 
     type
-      tvar_dec_option=(vd_record,vd_object,vd_threadvar,vd_class,vd_final,vd_canreorder,vd_check_generic);
-      tvar_dec_options=set of tvar_dec_option;
+      TVarDecOption=(vd_record,vd_object,vd_threadvar,vd_class,vd_final,vd_canreorder,vd_check_generic);
+      TVarDecOptions=set of TVarDecOption;
 
     function  read_property_dec(is_classproperty:boolean;astruct:TAbstractRecordDef):TPropertySym;
 
-    procedure read_var_decls(options:Tvar_dec_options;out had_generic:boolean);
+    procedure read_var_decls(options:TVarDecOptions;out had_generic:boolean);
 
-    procedure read_record_fields(options:Tvar_dec_options; reorderlist: TFPObjectList; variantdesc: PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
+    procedure read_record_fields(options:TVarDecOptions; reorderlist: TFPObjectList; variantdesc: PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
 
     procedure read_public_and_external(vs: TAbstractVarSym);
 
-    procedure try_consume_sectiondirective(var asection: ansistring);
+    procedure try_consume_sectiondirective(var asection: AnsiString);
 
     function check_allowed_for_var_or_const(def:TDef;allowdynarray:boolean):boolean;
 
@@ -52,23 +52,23 @@ implementation
     uses
        SysUtils,
        { common }
-       cutils,
+       CUtils,
        { global }
-       globtype,globals,tokens,verbose,constexp,
-       systems,
+       GlobType,Globals,tokens,Verbose,ConstExp,
+       Systems,
        { symtable }
-       symconst,symbase,defutil,defcmp,symutil,symcreat,
+       symconst,SymBase,defutil,defcmp,symutil,symcreat,
 {$ifdef i386}
        symcpu,
 {$endif i386}
-       fmodule,htypechk,procdefutil,
+       FModule,htypechk,procdefutil,
        { pass 1 }
-       node,pass_1,aasmbase,aasmdata,
+       node,pass_1,aasmbase,AAsmData,
        ncon,nset,ncnv,nld,nutils,
        { codegen }
        ngenutil,
        { parser }
-       scanner,
+       Scanner,
        pbase,pexpr,ptype,ptconst,pdecsub,pparautl;
 
 
@@ -78,7 +78,7 @@ implementation
           symbol }
         function parse_symlist(pl:TPropAccessList;out def:TDef):boolean;
           var
-            idx : longint;
+            idx : LongInt;
             sym : TSym;
             srsymtable : TSymTable;
             st  : TSymTable;
@@ -88,13 +88,13 @@ implementation
             def:=nil;
             if CurrentScanner.token=_ID then
              begin
-               if assigned(astruct) then
+               if Assigned(astruct) then
                  sym:=search_struct_member(astruct,CurrentScanner.pattern)
                else
                  searchsym(CurrentScanner.pattern,sym,srsymtable);
-               if assigned(sym) then
+               if Assigned(sym) then
                 begin
-                  if assigned(astruct) and
+                  if Assigned(astruct) and
                      not is_visible_for_object(sym,astruct) then
                     Message(parser_e_cant_access_private_member);
                   case sym.typ of
@@ -136,15 +136,15 @@ implementation
                        if not is_object(def) and not is_record(def) then
                          message(sym_e_type_must_be_rec_or_object);
                        consume(_POINT);
-                       if assigned(def) then
+                       if Assigned(def) then
                         begin
                           st:=def.GetSymtable(gs_record);
-                          if assigned(st) then
+                          if Assigned(st) then
                            begin
                              sym:=TSym(st.Find(CurrentScanner.pattern));
-                             if not(assigned(sym)) and is_object(def) then
+                             if not(Assigned(sym)) and is_object(def) then
                                sym:=search_struct_member(TObjectDef(def),CurrentScanner.pattern);
-                             if assigned(sym) then
+                             if Assigned(sym) then
                               begin
                                 pl.addsym(sl_subscript,sym);
                                 case sym.typ of
@@ -180,7 +180,7 @@ implementation
                      begin
                        consume(_LECKKLAMMER);
                        repeat
-                         if assigned(def) and (def.typ=arraydef) then
+                         if Assigned(def) and (def.typ=arraydef) then
                           begin
                             idx:=0;
                             p:=comp_expr([ef_accept_equal]);
@@ -190,11 +190,11 @@ implementation
                                  begin
                                    { type/range checking }
                                    inserttypeconv(p,TArrayDef(def).rangedef);
-                                   if (Tordconstnode(p).value<int64(low(longint))) or
-                                      (Tordconstnode(p).value>int64(high(longint))) then
+                                   if (TOrdConstNode(p).value<int64(low(LongInt))) or
+                                      (TOrdConstNode(p).value>int64(high(LongInt))) then
                                      message(parser_e_array_range_out_of_bounds)
                                    else
-                                     idx:=Tordconstnode(p).value.svalue
+                                     idx:=TOrdConstNode(p).value.svalue
                                  end
                                else
                                 Message(type_e_ordinal_expr_expected)
@@ -262,12 +262,12 @@ implementation
             var
               sym: TProcSym;
             begin
-              if not assigned(astruct) then
+              if not Assigned(astruct) then
                 handle_calling_convention(pd,hcc_default_actions_intf)
               else
                 handle_calling_convention(pd,hcc_default_actions_intf_struct);
-              sym:=cprocsym.create(prefix+lower(p.realname));
-              symtablestack.top.insertsym(sym);
+              sym:=CProcSym.create(prefix+lower(p.realname));
+              SymTableStack.top.insertsym(sym);
               pd.procsym:=sym;
               include(pd.procoptions,po_dispid);
               include(pd.procoptions,po_global);
@@ -282,7 +282,7 @@ implementation
             var
               hasread, haswrite: boolean;
               pt: TNode;
-              hdispid: longint;
+              hdispid: LongInt;
               hparavs: TParaVarSym;
             begin
               p.propaccesslist[palt_read].clear;
@@ -301,10 +301,10 @@ implementation
                 begin
                   pt:=comp_expr([ef_accept_equal]);
                   if is_constintnode(pt) then
-                    if (Tordconstnode(pt).value<int64(low(longint))) or (Tordconstnode(pt).value>int64(high(longint))) then
-                      message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(longint)),tostr(high(longint)))
+                    if (TOrdConstNode(pt).value<int64(low(LongInt))) or (TOrdConstNode(pt).value>int64(high(LongInt))) then
+                      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(LongInt)),ToStr(high(LongInt)))
                     else
-                      hdispid:=Tordconstnode(pt).value.svalue
+                      hdispid:=TOrdConstNode(pt).value.svalue
                   else
                     Message(parser_e_dispid_must_be_ord_const);
                   pt.free;
@@ -328,7 +328,7 @@ implementation
                 begin
                   { add an extra parameter, a placeholder of the value to set }
                   inc(paranr);
-                  hparavs:=cparavarsym.create('$value',10*paranr,vs_value,p.propdef,[]);
+                  hparavs:=CParaVarSym.create('$value',10*paranr,vs_value,p.propdef,[]);
                   writepd.parast.insertsym(hparavs);
 
                   writepd.proctypeoption:=potype_propsetter;
@@ -349,7 +349,7 @@ implementation
          pt : TNode;
          sc : TFPObjectList;
          paranr : word;
-         i      : longint;
+         i      : LongInt;
 	 s : single;
          ImplIntf     : TImplementedInterface;
          found,
@@ -364,13 +364,13 @@ implementation
          { Generate temp procdefs to search for matching read/write
            procedures. the readprocdef will store all definitions }
          paranr:=0;
-         readprocdef:=cprocdef.create(normal_function_level,false);
-         writeprocdef:=cprocdef.create(normal_function_level,false);
+         readprocdef:=CProcDef.create(normal_function_level,false);
+         writeprocdef:=CProcDef.create(normal_function_level,false);
 
          readprocdef.struct:=astruct;
          writeprocdef.struct:=astruct;
 
-         if assigned(astruct) and is_classproperty then
+         if Assigned(astruct) and is_classproperty then
            begin
              readprocdef.procoptions:=[po_staticmethod,po_classmethod];
              writeprocdef.procoptions:=[po_staticmethod,po_classmethod];
@@ -383,23 +383,23 @@ implementation
               exit;
            end;
          { Generate propertysym and insert in symtablestack }
-         p:=cpropertysym.create(CurrentScanner.orgpattern);
-         p.visibility:=symtablestack.top.currentvisibility;
-         p.default:=longint($80000000);
+         p:=CPropertySym.create(CurrentScanner.orgpattern);
+         p.visibility:=SymTableStack.top.currentvisibility;
+         p.default:=LongInt($80000000);
          if is_classproperty then
            include(p.symoptions, sp_static);
-         symtablestack.top.insertsym(p);
+         SymTableStack.top.insertsym(p);
          consume(_ID);
          { property parameters ? }
          if try_to_consume(_LECKKLAMMER) then
            begin
               { Published indexed properties are allowed in Delphi in interfaces compiled with $M+. }
               if (p.visibility=vis_published) and
-                not((m_delphi in CurrentSettings.modeswitches) and is_interfacecom_or_dispinterface(astruct)) then
+                not((m_delphi in CurrentSettings.ModeSwitches) and is_interfacecom_or_dispinterface(astruct)) then
                 Message(parser_e_cant_publish_that_property);
               { create a list of the parameters }
               p.parast:=TParaSymTable.create(nil,0);
-              symtablestack.push(p.parast);
+              SymTableStack.push(p.parast);
               sc:=TFPObjectList.create(false);
               repeat
                 if try_to_consume(_VAR) then
@@ -408,14 +408,14 @@ implementation
                   varspez:=vs_const
                 else if try_to_consume(_CONSTREF) then
                   varspez:=vs_constref
-                else if (m_out in CurrentSettings.modeswitches) and try_to_consume(_OUT) then
+                else if (m_out in CurrentSettings.ModeSwitches) and try_to_consume(_OUT) then
                   varspez:=vs_out
                 else
                   varspez:=vs_value;
                 sc.clear;
                 repeat
                   inc(paranr);
-                  hreadparavs:=cparavarsym.create(CurrentScanner.orgpattern,10*paranr,varspez,generrordef,[]);
+                  hreadparavs:=CParaVarSym.create(CurrentScanner.orgpattern,10*paranr,varspez,generrordef,[]);
                   p.parast.insertsym(hreadparavs);
                   sc.add(hreadparavs);
                   consume(_ID);
@@ -426,8 +426,8 @@ implementation
                       begin
                         consume(_OF);
                         { define range and type of range }
-                        hdef:=carraydef.create_openarray;
-                        hdef.owner:=astruct.symtable;
+                        hdef:=CArrayDef.create_openarray;
+                        hdef.owner:=astruct.SymTable;
                         { define field type }
                         single_type(arraytype,[]);
                         TArrayDef(hdef).elementdef:=arraytype;
@@ -442,7 +442,7 @@ implementation
               until not try_to_consume(_SEMICOLON);
               sc.free;
               sc := nil;
-              symtablestack.pop(p.parast);
+              SymTableStack.pop(p.parast);
               consume(_RECKKLAMMER);
 
               { the parser need to know if a property has parameters, the
@@ -483,7 +483,7 @@ implementation
 
                          inserttypeconv_internal(pt,s32inttype);
 
-                       p.index:=tordconstnode(pt).value.svalue;
+                       p.index:=TOrdConstNode(pt).value.svalue;
                      end
                    else
                      begin
@@ -501,11 +501,11 @@ implementation
          else
            begin
               { do an property override }
-              if (astruct.typ=objectdef) and assigned(TObjectDef(astruct).childof) then
+              if (astruct.typ=objectdef) and Assigned(TObjectDef(astruct).childof) then
                 overridden:=search_struct_member(TObjectDef(astruct).childof,p.name)
               else
                 overridden:=nil;
-              if assigned(overridden) and
+              if Assigned(overridden) and
                  (overridden.typ=propertysym) and
                  not(is_dispinterface(astruct)) then
                 begin
@@ -553,7 +553,7 @@ implementation
                       begin
                         readprocdef.returndef:=p.propdef;
                         { Insert hidden parameters }
-                        if assigned(astruct) then
+                        if Assigned(astruct) then
                           handle_calling_convention(readprocdef,hcc_default_actions_intf_struct)
                         else
                           handle_calling_convention(readprocdef,hcc_default_actions_intf);
@@ -576,10 +576,10 @@ implementation
                           of the of the property }
                         writeprocdef.returndef:=voidtype;
                         inc(paranr);
-                        hparavs:=cparavarsym.create('$value',10*paranr,vs_value,p.propdef,[]);
+                        hparavs:=CParaVarSym.create('$value',10*paranr,vs_value,p.propdef,[]);
                         writeprocdef.parast.insertsym(hparavs);
                         { Insert hidden parameters }
-                        if not assigned(astruct) then
+                        if not Assigned(astruct) then
                           handle_calling_convention(writeprocdef,hcc_default_actions_intf)
                         else
                           handle_calling_convention(writeprocdef,hcc_default_actions_intf_struct);
@@ -600,10 +600,10 @@ implementation
            parse_dispinterface(p,readprocdef,writeprocdef,paranr);
 
          { stored is not allowed for dispinterfaces, records or class properties }
-         if assigned(astruct) and not(is_dispinterface(astruct) or is_record(astruct)) and not is_classproperty then
+         if Assigned(astruct) and not(is_dispinterface(astruct) or is_record(astruct)) and not is_classproperty then
            begin
              { ppo_stored is default on for not overridden properties }
-             if not assigned(p.overriddenpropsym) then
+             if not Assigned(p.overriddenpropsym) then
                include(p.propoptions,ppo_stored);
              if try_to_consume(_STORED) then
               begin
@@ -632,7 +632,7 @@ implementation
                          methods
                        }
                        sym:=nil;
-                       if (not assigned(astruct) or
+                       if (not Assigned(astruct) or
                            (search_struct_member(astruct,CurrentScanner.pattern)=nil)) and
                           searchsym(CurrentScanner.pattern,sym,srsymtable) and
                           (sym.typ = constsym) then
@@ -658,32 +658,32 @@ implementation
                             procsym :
                               begin
                                  { Create a temporary procvardef to handle parameters }
-                                 storedprocdef:=cprocvardef.create(normal_function_level,true);
+                                 storedprocdef:=CProcVarDef.create(normal_function_level,true);
                                  include(storedprocdef.procoptions,po_methodpointer);
                                  { Return type must be boolean }
                                  storedprocdef.returndef:=pasbool1type;
                                  { Add index parameter if needed }
                                  if ppo_indexed in p.propoptions then
                                    begin
-                                     hparavs:=cparavarsym.create('$index',10,vs_value,p.indexdef,[]);
+                                     hparavs:=CParaVarSym.create('$index',10,vs_value,p.indexdef,[]);
                                      storedprocdef.parast.insertsym(hparavs);
                                    end;
 
                                  { Insert hidden parameters }
-                                 if not assigned(astruct) then
+                                 if not Assigned(astruct) then
                                    handle_calling_convention(storedprocdef,hcc_default_actions_intf)
                                  else
                                    handle_calling_convention(storedprocdef,hcc_default_actions_intf_struct);
                                  p.propaccesslist[palt_stored].procdef:=TProcSym(sym).Find_procdef_bypara(storedprocdef.paras,storedprocdef.returndef,[cpo_allowdefaults,cpo_ignorehidden]);
-                                 if not assigned(p.propaccesslist[palt_stored].procdef) then
+                                 if not Assigned(p.propaccesslist[palt_stored].procdef) then
                                    message(parser_e_ill_property_storage_sym);
                                  { Not needed anymore }
                                  storedprocdef.owner.deletedef(storedprocdef);
                               end;
                             fieldvarsym :
                               begin
-                                if not assigned(def) then
-                                  internalerror(200310073);
+                                if not Assigned(def) then
+                                  InternalError(200310073);
                                 if (ppo_hasparameters in p.propoptions) or
                                    not(is_boolean(def)) then
                                  Message(parser_e_stored_property_must_be_boolean);
@@ -696,7 +696,7 @@ implementation
                   end;
               end;
            end;
-         if has_implicit_default(p) and not assigned(p.overriddenpropsym) then
+         if has_implicit_default(p) and not Assigned(p.overriddenpropsym) then
            begin
               p.default:=0;
            end;
@@ -729,36 +729,36 @@ implementation
                     setconstn :
                       begin
                         if (SourceInfo.endian=TargetInfo.endian) then
-                          p.default:=plongint(tsetconstnode(pt).value_set)^
+                          p.default:=PLongInt(TSetConstNode(pt).value_set)^
                         else
-                          p.default:=longint(reverse_longword(plongword(tsetconstnode(pt).value_set)^));
+                          p.default:=LongInt(Reverse_LongWord(plongword(TSetConstNode(pt).value_set)^));
                         include(p.propoptions,ppo_default_is_set);
                       end;
                     ordconstn :
                       if is_real(p.propdef) then
                         begin
-                          if TOrdconstnode(pt).value.is_negative then
-                            s:=TOrdconstnode(pt).value.svalue
+                          if TOrdConstNode(pt).value.Is_Negative then
+                            s:=TOrdConstNode(pt).value.svalue
                           else
-                            s:=TOrdconstnode(pt).value.uvalue;
-                          p.default:=plongint(@s)^;
+                            s:=TOrdConstNode(pt).value.uvalue;
+                          p.default:=PLongInt(@s)^;
                           include(p.propoptions,ppo_default_is_single);
                         end
-                      else if (Tordconstnode(pt).value<int64(low(longint))) or
-                         (Tordconstnode(pt).value>int64(high(cardinal))) then
-                        message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(longint)),tostr(high(cardinal)))
+                      else if (TOrdConstNode(pt).value<int64(low(LongInt))) or
+                         (TOrdConstNode(pt).value>int64(high(cardinal))) then
+                        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(LongInt)),ToStr(high(cardinal)))
                       else
-                        p.default:=longint(tordconstnode(pt).value.svalue);
+                        p.default:=LongInt(TOrdConstNode(pt).value.svalue);
                     niln :
                       p.default:=0;
                     realconstn:
                       begin
-                        s:=Single(trealconstnode(pt).value_real);
-                        p.default:=plongint(@s)^;
+                        s:=Single(TRealConstNode(pt).value_real);
+                        p.default:=PLongInt(@s)^;
                         include(p.propoptions,ppo_default_is_single);
                       end;
                     else if not CodeGenError then
-                      internalerror(2019050525);
+                      InternalError(2019050525);
                   end;
                   pt.free;
                   pt := nil;
@@ -766,7 +766,7 @@ implementation
            end
          else if not is_record(astruct) and try_to_consume(_NODEFAULT) then
            begin
-              p.default:=longint($80000000);
+              p.default:=LongInt($80000000);
            end;
 (*
          else {if allow_default_property(p) then
@@ -794,7 +794,7 @@ implementation
              else if is_class(p.propdef) then
                begin
                  ImplIntf:=find_implemented_interface(TObjectDef(p.propdef),TObjectDef(def));
-                 if assigned(ImplIntf) then
+                 if Assigned(ImplIntf) then
                    begin
                      if compare_defs(ImplIntf.IntfDef,def,nothingn)<te_equal then
                        begin
@@ -815,20 +815,20 @@ implementation
                end;
 
 
-             if not assigned(p.propaccesslist[palt_read].firstsym) then
+             if not Assigned(p.propaccesslist[palt_read].firstsym) then
                begin
                  message(parser_e_implements_must_read_specifier);
                  exit;
                end;
-             if assigned(p.propaccesslist[palt_read].procdef) and
+             if Assigned(p.propaccesslist[palt_read].procdef) and
                 (TProcDef(p.propaccesslist[palt_read].procdef).proccalloption<>pocall_default) then
                message(parser_e_implements_getter_not_default_cc);
-             if assigned(p.propaccesslist[palt_write].firstsym) then
+             if Assigned(p.propaccesslist[palt_write].firstsym) then
                begin
                  message(parser_e_implements_must_not_have_write_specifier);
                  exit;
                end;
-             if assigned(p.propaccesslist[palt_stored].firstsym) then
+             if Assigned(p.propaccesslist[palt_stored].firstsym) then
                begin
                  message(parser_e_implements_must_not_have_stored_specifier);
                  exit;
@@ -874,7 +874,7 @@ implementation
                        ImplIntf.ImplementsField:=p.propaccesslist[palt_read].firstsym^.sym;
                      end
                    else
-                     internalerror(200802161);
+                     InternalError(200802161);
                  end;
                  if not is_interface(p.propdef) then
                    case ImplIntf.IType of
@@ -882,7 +882,7 @@ implementation
                      etStaticMethodResult:  ImplIntf.IType := etStaticMethodClass;
                      etFieldValue:          ImplIntf.IType := etFieldValueClass;
                    else
-                     internalerror(200912101);
+                     InternalError(200912101);
                    end;
                end
              else
@@ -890,7 +890,7 @@ implementation
            until not try_to_consume(_COMMA);
 
          { register propgetter and propsetter procdefs }
-         if assigned(CurrentModule) and CurrentModule.in_interface then
+         if Assigned(CurrentModule) and CurrentModule.in_interface then
            begin
              if readprocdef.proctypeoption=potype_propgetter then
                readprocdef.RegisterDef
@@ -935,7 +935,7 @@ implementation
 
 
     var
-       variantrecordlevel : longint = 0;
+       variantrecordlevel : LongInt = 0;
 
 
     procedure read_public_and_external_sc(sc:TFPObjectList);
@@ -977,14 +977,14 @@ implementation
       C_name:=vs.realname;
 
       { macpas specific handling due to some switches}
-      if (m_mac in CurrentSettings.modeswitches) then
+      if (m_mac in CurrentSettings.ModeSwitches) then
         begin
-          if (cs_external_var in CurrentSettings.localswitches) then
+          if (cs_external_var in CurrentSettings.LocalSwitches) then
             begin {The effect of this is the same as if cvar; external; has been given as directives.}
               is_cdecl:=true;
               is_external_var:=true;
             end
-          else if (cs_externally_visible in CurrentSettings.localswitches) then
+          else if (cs_externally_visible in CurrentSettings.LocalSwitches) then
             begin {The effect of this is the same as if cvar has been given as directives and it's made public.}
               is_cdecl:=true;
               is_public_var:=true;
@@ -1097,7 +1097,7 @@ implementation
     end;
 
 
-    procedure try_consume_sectiondirective(var asection: ansistring);
+    procedure try_consume_sectiondirective(var asection: AnsiString);
       begin
         if CurrentScanner.idtoken=_SECTION then
           begin
@@ -1134,13 +1134,13 @@ implementation
     end;
 
 
-    procedure read_var_decls(options:Tvar_dec_options;out had_generic:boolean);
+    procedure read_var_decls(options:TVarDecOptions;out had_generic:boolean);
 
         procedure read_default_value(sc : TFPObjectList);
         var
           vs : TAbstractNormalVarSym;
           tcsym : TStaticVarSym;
-          templist : tasmlist;
+          templist : TAsmList;
         begin
           vs:=TAbstractNormalVarSym(sc[0]);
           if sc.count>1 then
@@ -1151,10 +1151,10 @@ implementation
           case vs.typ of
             localvarsym :
               begin
-                tcsym:=cstaticvarsym.create('$default'+vs.realname,vs_const,vs.vardef,[]);
+                tcsym:=CStaticVarSym.create('$default'+vs.realname,vs_const,vs.vardef,[]);
                 include(tcsym.symoptions,sp_internal);
-                symtablestack.top.insertsym(tcsym);
-                templist:=tasmlist.create;
+                SymTableStack.top.insertsym(tcsym);
+                templist:=TAsmList.create;
                 read_typed_const(templist,tcsym,false);
                 { in case of a generic routine, this initialisation value is not
                   used, and will be re-parsed during specialisations (and the
@@ -1163,7 +1163,7 @@ implementation
                 if not parse_generic then
                   begin
                     vs.defaultconstsym:=tcsym;
-                    CurrentAsmData.asmlists[al_typedconsts].concatlist(templist);
+                    CurrentAsmData.asmlists[al_typedconsts].ConcatList(templist);
                   end;
                 templist.free;
                 templist := nil;
@@ -1173,7 +1173,7 @@ implementation
                 read_typed_const(CurrentAsmData.asmlists[al_typedconsts],TStaticVarSym(vs),false);
               end;
             else
-              internalerror(200611051);
+              InternalError(200611051);
           end;
           vs.varstate:=vs_initialised;
         end;
@@ -1219,18 +1219,18 @@ implementation
           if (pt.nodetype=stringconstn) or
             (is_constcharnode(pt)) then
             begin
-              abssym:=cabsolutevarsym.create(vs.realname,vs.vardef);
+              abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
               abssym.fileinfo:=vs.fileinfo;
               if pt.nodetype=stringconstn then
-                abssym.asmname:=stringdup(tstringconstnode(pt).asrawbytestring)
+                abssym.asmname:=StringDup(TStringConstNode(pt).asrawbytestring)
               else
-                abssym.asmname:=stringdup(chr(tordconstnode(pt).value.svalue));
+                abssym.asmname:=StringDup(chr(TOrdConstNode(pt).value.svalue));
               abssym.abstyp:=toasm;
             end
           { address }
           else if is_constintnode(pt) then
             begin
-              abssym:=cabsolutevarsym.create(vs.realname,vs.vardef);
+              abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
               abssym.fileinfo:=vs.fileinfo;
               abssym.abstyp:=toaddr;
 {$ifndef cpu64bitaddr}
@@ -1238,14 +1238,14 @@ implementation
                 test is useless (value is a 64 bit entity) and will always fail
                 for positive values (since int64(high(abssym.addroffset))=-1
               }
-              if (Tordconstnode(pt).value<int64(low(abssym.addroffset))) or
-                 (Tordconstnode(pt).value>int64(high(abssym.addroffset))) then
-                message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(abssym.addroffset)),tostr(high(abssym.addroffset)))
+              if (TOrdConstNode(pt).value<int64(low(abssym.addroffset))) or
+                 (TOrdConstNode(pt).value>int64(high(abssym.addroffset))) then
+                message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(abssym.addroffset)),ToStr(high(abssym.addroffset)))
              else
 {$endif}
-                abssym.addroffset:=Tordconstnode(pt).value.svalue;
+                abssym.addroffset:=TOrdConstNode(pt).value.svalue;
 {$if defined(i386)}
-              tcpuabsolutevarsym(abssym).absseg:=false;
+              TCPUAbsoluteVarSym(abssym).absseg:=false;
 {$endif i386}
             end
           { variable }
@@ -1271,7 +1271,7 @@ implementation
                         possible, but they're definitely all bad.
                       }
                       if (TUnaryNode(hp).left.nodetype=typeconvn) and
-                         (ttypeconvnode(TUnaryNode(hp).left).convtype in
+                         (TTypeConvNode(TUnaryNode(hp).left).convtype in
                            [tc_pchar_2_string,tc_pointer_2_array,
                             tc_intf_2_string,tc_intf_2_guid,
                             tc_dynarray_2_variant,tc_interface_2_variant,
@@ -1292,13 +1292,13 @@ implementation
               if (hp.nodetype=loadn) then
                 begin
                   { we should check the result type of loadn }
-                  if not (tloadnode(hp).symtableentry.typ in [fieldvarsym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
+                  if not (TLoadNode(hp).symtableentry.typ in [fieldvarsym,staticvarsym,localvarsym,paravarsym,absolutevarsym]) then
                     Message(parser_e_absolute_only_to_var_or_const);
-                  if vs=tloadnode(hp).symtableentry then
+                  if vs=TLoadNode(hp).symtableentry then
                     Message(parser_e_absolute_sym_cannot_reference_itself)
                   else
                     begin
-                      abssym:=cabsolutevarsym.create(vs.realname,vs.vardef);
+                      abssym:=CAbsoluteVarSym.create(vs.realname,vs.vardef);
                       abssym.fileinfo:=vs.fileinfo;
                       abssym.abstyp:=tovar;
                       abssym.ref:=node_to_propaccesslist(pt);
@@ -1323,7 +1323,7 @@ implementation
           pt.free;
           pt := nil;
           { replace old varsym with the new absolutevarsym }
-          if assigned(abssym) then
+          if Assigned(abssym) then
             begin
               st:=vs.owner;
               vs.owner.Deletesym(vs);
@@ -1336,22 +1336,22 @@ implementation
          sc   : TFPObjectList;
          vs   : TAbstractVarSym;
          hdef : TDef;
-         i    : longint;
-         flags : thccflags;
+         i    : LongInt;
+         flags : THCCFlags;
          first,
          isgeneric,
          semicoloneaten,
          allowdefaultvalue,
          hasdefaultvalue : boolean;
          hintsymoptions  : TSymOptions;
-         deprecatedmsg   : pshortstring;
+         deprecatedmsg   : PShortString;
          old_block_type  : TBlockType;
          typepos,
          tmp_filepos,
          old_current_filepos     : TFilePosInfo;
       begin
-         old_block_type:=block_type;
-         block_type:=bt_var;
+         old_block_type:=Block_Type;
+         Block_Type:=bt_var;
          { Force an expected ID error message }
          if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
@@ -1371,20 +1371,20 @@ implementation
                if (CurrentScanner.token = _ID) then
                  begin
                    isgeneric:=(vd_check_generic in options) and
-                                not (m_delphi in CurrentSettings.modeswitches) and
+                                not (m_delphi in CurrentSettings.ModeSwitches) and
                                 (CurrentScanner.idtoken=_GENERIC);
-                   case symtablestack.top.symtabletype of
+                   case SymTableStack.top.symtabletype of
                      localsymtable :
-                       vs:=clocalvarsym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
+                       vs:=CLocalVarSym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
                      staticsymtable,
-                     globalsymtable :
+                     GlobalSymTable :
                        begin
-                         vs:=cstaticvarsym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
+                         vs:=CStaticVarSym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
                          if vd_threadvar in options then
                            include(vs.varoptions,vo_is_thread_var);
                        end;
                      else
-                       internalerror(200411064);
+                       InternalError(200411064);
                    end;
                    sc.add(vs);
                    if isgeneric then
@@ -1415,11 +1415,11 @@ implementation
                        { ensure correct error position }
                        old_current_filepos:=CurrentFilePos;
                        CurrentFilePos:=tmp_filepos;
-                       symtablestack.top.insertsym(vs);
+                       SymTableStack.top.insertsym(vs);
                        CurrentFilePos:=old_current_filepos;
                      end
                    else
-                     symtablestack.top.insertsym(vs);
+                     SymTableStack.top.insertsym(vs);
                  end;
              until not try_to_consume(_COMMA);
 
@@ -1427,12 +1427,12 @@ implementation
                break;
 
              { read variable type def }
-             block_type:=bt_var_type;
+             Block_Type:=bt_var_type;
              consume(_COLON);
              typepos:=CurrentTokenPos;
 
 {$ifdef gpc_mode}
-             if (m_gpc in CurrentSettings.modeswitches) and
+             if (m_gpc in CurrentSettings.ModeSwitches) and
                 (token=_ID) and
                 (CurrentScanner.orgpattern='__asmname__') then
                read_gpc_name(sc);
@@ -1444,7 +1444,7 @@ implementation
                  vs:=TAbstractVarSym(sc[i]);
                  vs.vardef:=hdef;
                end;
-             block_type:=bt_var;
+             Block_Type:=bt_var;
 
              { Process procvar directives }
              if maybe_parse_proc_directives(hdef) then
@@ -1474,14 +1474,14 @@ implementation
                  vs:=TAbstractVarSym(sc[i]);
                  vs.symoptions := vs.symoptions + hintsymoptions;
                  if deprecatedmsg<>nil then
-                   vs.deprecatedmsg:=stringdup(deprecatedmsg^);
+                   vs.deprecatedmsg:=StringDup(deprecatedmsg^);
                end;
-             stringdispose(deprecatedmsg);
+             StringDispose(deprecatedmsg);
 
              { Handling of Delphi typed const = initialized vars }
              if allowdefaultvalue and
                 (CurrentScanner.token=_EQ) and
-                (symtablestack.top.symtabletype<>parasymtable) then
+                (SymTableStack.top.symtabletype<>parasymtable) then
                begin
                  { Add calling convention for procvar }
                  if (
@@ -1492,7 +1492,7 @@ implementation
                    begin
                      if po_is_function_ref in TProcVarDef(hdef).procoptions then
                        begin
-                         if not (m_function_references in CurrentSettings.modeswitches) and
+                         if not (m_function_references in CurrentSettings.ModeSwitches) and
                              not (po_is_block in TProcVarDef(hdef).procoptions) then
                            messagepos(typepos,sym_e_error_in_type_def)
                          else
@@ -1531,7 +1531,7 @@ implementation
                  maybe_parse_proc_directives(hdef);
                  if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).procoptions) then
                    begin
-                     if not (m_function_references in CurrentSettings.modeswitches) and
+                     if not (m_function_references in CurrentSettings.ModeSwitches) and
                          not (po_is_block in TProcVarDef(hdef).procoptions) then
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
@@ -1555,7 +1555,7 @@ implementation
                  handle_calling_convention(hdef,flags);
                  { Handling of Delphi typed const = initialized vars }
                  if (CurrentScanner.token=_EQ) and
-                    (symtablestack.top.symtabletype<>parasymtable) then
+                    (SymTableStack.top.symtabletype<>parasymtable) then
                    begin
                      read_default_value(sc);
                      hasdefaultvalue:=true;
@@ -1566,13 +1566,13 @@ implementation
              if (
                  (
                   ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
-                  (m_cvar_support in CurrentSettings.modeswitches)
+                  (m_cvar_support in CurrentSettings.ModeSwitches)
                  ) or
                  (
-                  (m_mac in CurrentSettings.modeswitches) and
+                  (m_mac in CurrentSettings.ModeSwitches) and
                   (
-                   (cs_external_var in CurrentSettings.localswitches) or
-                   (cs_externally_visible in CurrentSettings.localswitches)
+                   (cs_external_var in CurrentSettings.LocalSwitches) or
+                   (cs_externally_visible in CurrentSettings.LocalSwitches)
                   )
                  )
                 ) then
@@ -1585,14 +1585,14 @@ implementation
                  if (vs.typ=staticvarsym) and
                     not(vo_is_typed_const in vs.varoptions) and
                     not(vo_is_external in vs.varoptions) then
-                   cnodeutils.insertbssdata(TStaticVarSym(vs));
+                   CNodeUtils.insertbssdata(TStaticVarSym(vs));
                  if vo_is_public in vs.varoptions then
                    CurrentModule.add_public_asmsym(vs.mangledname,AB_GLOBAL,AT_DATA);
                end;
 
              first:=false;
            end;
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
          { free the list }
          sc.free;
          sc := nil;
@@ -1605,11 +1605,11 @@ implementation
         st : TSymTable;
       begin
         result:=true;
-        st:=symtablestack.top;
+        st:=SymTableStack.top;
         if not (st.symtabletype in [recordsymtable,objectsymtable]) then
           exit;
         stowner:=TDef(st.defowner);
-        while assigned(stowner) and (stowner.typ in [objectdef,recorddef]) do
+        while Assigned(stowner) and (stowner.typ in [objectdef,recorddef]) do
           begin
             if def.typ=arraydef then
               begin
@@ -1627,7 +1627,7 @@ implementation
               end
             else
               tmpdef:=def;
-            if assigned(tmpdef) and
+            if Assigned(tmpdef) and
                 (is_object(tmpdef) or is_record(tmpdef)) and
                 is_owned_by(TAbstractRecordDef(stowner),TAbstractRecordDef(tmpdef)) then
               begin
@@ -1640,10 +1640,10 @@ implementation
       end;
 
 
-    procedure read_record_fields(options:Tvar_dec_options; reorderlist: TFPObjectList; variantdesc : PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
+    procedure read_record_fields(options:TVarDecOptions; reorderlist: TFPObjectList; variantdesc : PPVariantRecDesc;out had_generic:boolean; out attr_element_count : integer);
       var
          sc : TFPObjectList;
-         i  : longint;
+         i  : LongInt;
          hs,sorg : string;
          gendef,hdef,casetype : TDef;
          { maxsize contains the max. size of a variant }
@@ -1661,10 +1661,10 @@ implementation
          visibility : TVisibility;
          recst : TAbstractRecordSymTable;
          unionsymtable : TRecordSymTable;
-         offset : longint;
+         offset : LongInt;
          uniondef : TRecordDef;
          hintsymoptions : TSymOptions;
-         deprecatedmsg : pshortstring;
+         deprecatedmsg : PShortString;
          hadgendummy,
          semicoloneaten,
          removeclassoption: boolean;
@@ -1672,9 +1672,9 @@ implementation
          old_block_type: TBlockType;
          typepos : TFilePosInfo;
       begin
-         old_block_type:=block_type;
-         block_type:=bt_var;
-         recst:=TAbstractRecordSymTable(symtablestack.top);
+         old_block_type:=Block_Type;
+         Block_Type:=bt_var;
+         recst:=TAbstractRecordSymTable(SymTableStack.top);
          { Force an expected ID error message }
          if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
@@ -1685,19 +1685,19 @@ implementation
          attr_element_count:=0;
          while (CurrentScanner.token=_ID) and
             not(((vd_object in options) or
-                 ((vd_record in options) and (m_advanced_records in CurrentSettings.modeswitches))) and
+                 ((vd_record in options) and (m_advanced_records in CurrentSettings.ModeSwitches))) and
                 ((CurrentScanner.idtoken in [_PUBLIC,_PRIVATE,_PUBLISHED,_PROTECTED,_STRICT]) or
-                 ((m_final_fields in CurrentSettings.modeswitches) and
+                 ((m_final_fields in CurrentSettings.ModeSwitches) and
                   (CurrentScanner.idtoken=_FINAL)))) do
            begin
-             visibility:=symtablestack.top.currentvisibility;
+             visibility:=SymTableStack.top.currentvisibility;
              semicoloneaten:=false;
              sc.clear;
              repeat
                sorg:=CurrentScanner.orgpattern;
                if CurrentScanner.token=_ID then
                  begin
-                   vs:=cfieldvarsym.create(sorg,vs_value,generrordef,[]);
+                   vs:=CFieldVarSym.create(sorg,vs_value,generrordef,[]);
 
                    { normally the visibility is set via addfield, but sometimes
                      we collect symbols so we can add them in a batch of
@@ -1710,7 +1710,7 @@ implementation
                else
                  vs:=nil;
                consume(_ID);
-               if assigned(vs) and
+               if Assigned(vs) and
                   (
                     not had_generic or
                     not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS])
@@ -1724,10 +1724,10 @@ implementation
                else
                  vs.free; // no nil needed
              until not try_to_consume(_COMMA);
-             if m_delphi in CurrentSettings.modeswitches then
-               block_type:=bt_var_type
+             if m_delphi in CurrentSettings.ModeSwitches then
+               Block_Type:=bt_var_type
              else
-               block_type:=old_block_type;
+               Block_Type:=old_block_type;
              if had_generic and (sc.count=0) then
                break;
              consume(_COLON);
@@ -1742,18 +1742,18 @@ implementation
              if df_specialization in CurrentStructDef.defoptions then
                begin
                  srsymtable:=CurrentStructDef.genericdef.getsymtable(gs_record);
-                 if not assigned(srsymtable) then
-                   internalerror(2024041204);
+                 if not Assigned(srsymtable) then
+                   InternalError(2024041204);
                  srsym:=TSym(srsymtable.find(TAbstractVarSym(sc[0]).name));
-                 if not assigned(srsym) then
-                   internalerror(2024041205);
+                 if not Assigned(srsym) then
+                   InternalError(2024041205);
                  if srsym.typ<>fieldvarsym then
-                   internalerror(2024041206);
+                   InternalError(2024041206);
                  gendef:=TFieldVarSym(srsym).vardef;
                end;
 
              read_anon_type(hdef,false,TStoredDef(gendef));
-             block_type:=bt_var;
+             Block_Type:=bt_var;
              { allow only static fields reference to struct where they are declared }
              if not (vd_class in options) then
                begin
@@ -1763,7 +1763,7 @@ implementation
                end;
 
              { field type is a generic param so set a flag in the struct }
-             if assigned(hdef.typesym) and (sp_generic_para in hdef.typesym.symoptions) then
+             if Assigned(hdef.typesym) and (sp_generic_para in hdef.typesym.symoptions) then
                include(CurrentStructDef.defoptions,df_has_generic_fields);
 
              { Process procvar directives }
@@ -1790,9 +1790,9 @@ implementation
                  { insert any additional hint directives }
                  fieldvs.symoptions := fieldvs.symoptions + hintsymoptions;
                  if deprecatedmsg<>nil then
-                   fieldvs.deprecatedmsg:=stringdup(deprecatedmsg^);
+                   fieldvs.deprecatedmsg:=StringDup(deprecatedmsg^);
                end;
-               stringdispose(deprecatedmsg);
+               StringDispose(deprecatedmsg);
 
              { Records and objects can't have default values }
              { for a record there doesn't need to be a ; before the END or )    }
@@ -1811,7 +1811,7 @@ implementation
                begin
                  if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).procoptions) then
                    begin
-                     if not (m_function_references in CurrentSettings.modeswitches) and
+                     if not (m_function_references in CurrentSettings.ModeSwitches) and
                          not (po_is_block in TProcVarDef(hdef).procoptions) then
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
@@ -1854,7 +1854,7 @@ implementation
 
              if (visibility=vis_published) and
                 not(oo_can_have_published in TObjectDef(hdef).objectoptions) and
-                not(m_delphi in CurrentSettings.modeswitches) then
+                not(m_delphi in CurrentSettings.ModeSwitches) then
                begin
                  MessagePos(TFieldVarSym(sc[0]).fileinfo,parser_e_only_publishable_classes_can_be_published);
                  visibility:=vis_public;
@@ -1870,7 +1870,7 @@ implementation
                      if vd_threadvar in options then
                        include(hstaticvs.varoptions,vo_is_thread_var);
                      if not parse_generic then
-                       cnodeutils.insertbssdata(hstaticvs);
+                       CNodeUtils.insertbssdata(hstaticvs);
                      if vd_final in options then
                        hstaticvs.varspez:=vs_final;
                    end;
@@ -1896,13 +1896,13 @@ implementation
              else
                { we may reorder the fields before adding them to the symbol
                  table }
-               reorderlist.concatlistcopy(sc)
+               reorderlist.ConcatListCopy(sc)
            end;
 
-         if m_delphi in CurrentSettings.modeswitches then
-           block_type:=bt_var_type
+         if m_delphi in CurrentSettings.ModeSwitches then
+           Block_Type:=bt_var_type
          else
-           block_type:=old_block_type;
+           Block_Type:=old_block_type;
          { Check for Case }
          if (vd_record in options) and
             try_to_consume(_CASE) then
@@ -1912,7 +1912,7 @@ implementation
               maxpadalign:=0;
 
               { already inside a variant record? if not, setup a new variantdesc chain }
-              if not(assigned(variantdesc)) then
+              if not(Assigned(variantdesc)) then
                 variantdesc:=@TRecordDef(TRecordSymTable(recst).defowner).variantrecdesc;
 
               { else just concat the info to the given one }
@@ -1926,18 +1926,18 @@ implementation
                   sorg:=CurrentScanner.orgpattern;
                   hs:=CurrentScanner.pattern;
                   searchsym(hs,srsym,srsymtable);
-                  if not(assigned(srsym) and (srsym.typ in [typesym,unitsym])) then
+                  if not(Assigned(srsym) and (srsym.typ in [typesym,unitsym])) then
                     begin
                       consume(_ID);
                       consume(_COLON);
-                      fieldvs:=cfieldvarsym.create(sorg,vs_value,generrordef,[]);
+                      fieldvs:=CFieldVarSym.create(sorg,vs_value,generrordef,[]);
                       variantdesc^^.variantselector:=fieldvs;
-                      symtablestack.top.insertsym(fieldvs);
+                      SymTableStack.top.insertsym(fieldvs);
                     end;
                 end;
               read_anon_type(casetype,true,nil);
-              block_type:=bt_var;
-              if assigned(fieldvs) then
+              Block_Type:=bt_var;
+              if Assigned(fieldvs) then
                 begin
                   fieldvs.vardef:=casetype;
                   recst.addfield(fieldvs,recst.currentvisibility);
@@ -1950,16 +1950,16 @@ implementation
                 Message(type_e_ordinal_expr_expected);
               consume(_OF);
 
-              UnionSymtable:=TRecordSymTable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
-              UnionDef:=crecorddef.create('',unionsymtable);
+              UnionSymtable:=TRecordSymTable.create('',CurrentSettings.PackRecords,CurrentSettings.alignment.RecordAlignMin);
+              UnionDef:=CRecordDef.create('',unionsymtable);
               uniondef.isunion:=true;
 
-              startvarrecsize:=UnionSymtable.datasize;
+              startvarrecsize:=UnionSymtable.DataSize;
               { align the bitpacking to the next byte }
-              UnionSymtable.datasize:=startvarrecsize;
+              UnionSymtable.DataSize:=startvarrecsize;
               startvarrecalign:=UnionSymtable.fieldalignment;
               startpadalign:=Unionsymtable.padalignment;
-              symtablestack.push(UnionSymtable);
+              SymTableStack.push(UnionSymtable);
               repeat
                 SetLength(variantdesc^^.branches,length(variantdesc^^.branches)+1);
                 fillchar(variantdesc^^.branches[high(variantdesc^^.branches)],
@@ -1970,14 +1970,14 @@ implementation
                     Message(parser_e_illegal_expression);
                   inserttypeconv(pt,casetype);
                   { iso pascal does not support ranges in variant record definitions }
-                  if (([m_iso,m_extpas]*CurrentSettings.modeswitches)=[]) and try_to_consume(_POINTPOINT) then
-                    pt:=crangenode.create(pt,comp_expr([ef_accept_equal]))
+                  if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and try_to_consume(_POINTPOINT) then
+                    pt:=CRangeNode.create(pt,comp_expr([ef_accept_equal]))
                   else
                     begin
                       with variantdesc^^.branches[high(variantdesc^^.branches)] do
                         begin
                           SetLength(values,length(values)+1);
-                          values[high(values)]:=tordconstnode(pt).value;
+                          values[high(values)]:=TOrdConstNode(pt).value;
                         end;
                     end;
                   pt.free;
@@ -1987,10 +1987,10 @@ implementation
                   else
                     break;
                 until false;
-                if m_delphi in CurrentSettings.modeswitches then
-                  block_type:=bt_var_type
+                if m_delphi in CurrentSettings.ModeSwitches then
+                  Block_Type:=bt_var_type
                 else
-                  block_type:=old_block_type;
+                  Block_Type:=old_block_type;
                 consume(_COLON);
                 { read the vars }
                 consume(_LKLAMMER);
@@ -2001,11 +2001,11 @@ implementation
                 consume(_RKLAMMER);
 
                 { calculates maximal variant size }
-                maxsize:=max(maxsize,unionsymtable.datasize);
+                maxsize:=max(maxsize,unionsymtable.DataSize);
                 maxalignment:=max(maxalignment,unionsymtable.fieldalignment);
                 maxpadalign:=max(maxpadalign,unionsymtable.padalignment);
                 { the items of the next variant are overlayed }
-                unionsymtable.datasize:=startvarrecsize;
+                unionsymtable.DataSize:=startvarrecsize;
                 unionsymtable.fieldalignment:=startvarrecalign;
                 unionsymtable.padalignment:=startpadalign;
                 if (CurrentScanner.token<>_END) and (CurrentScanner.token<>_RKLAMMER) then
@@ -2013,9 +2013,9 @@ implementation
                 else
                   break;
               until (CurrentScanner.token=_END) or (CurrentScanner.token=_RKLAMMER);
-              symtablestack.pop(UnionSymtable);
+              SymTableStack.pop(UnionSymtable);
               { at last set the record size to that of the biggest variant }
-              unionsymtable.datasize:=maxsize;
+              unionsymtable.DataSize:=maxsize;
               unionsymtable.fieldalignment:=maxalignment;
               unionsymtable.addalignmentpadding;
               { Align the offset where the union symtable is added }
@@ -2024,7 +2024,7 @@ implementation
                 { (within the global min/max limits)                     }
                 0, { default }
                 C_alignment:
-                  usedalign:=used_align(unionsymtable.recordalignment,CurrentSettings.alignment.recordalignmin,CurrentSettings.alignment.maxCrecordalign);
+                  usedalign:=Used_Align(unionsymtable.recordalignment,CurrentSettings.alignment.RecordAlignMin,CurrentSettings.alignment.MaxCRecordAlign);
                 { 1 byte alignment if we are bitpacked }
                 bit_alignment:
                   usedalign:=1;
@@ -2033,10 +2033,10 @@ implementation
                 { otherwise alignment at the packrecords alignment of the }
                 { current record                                          }
                 else
-                  usedalign:=used_align(recst.fieldalignment,CurrentSettings.alignment.recordalignmin,CurrentSettings.alignment.recordalignmax);
+                  usedalign:=Used_Align(recst.fieldalignment,CurrentSettings.alignment.RecordAlignMin,CurrentSettings.alignment.RecordAlignMax);
               end;
-              offset:=align(recst.datasize,usedalign);
-              recst.datasize:=offset+unionsymtable.datasize;
+              offset:=align(recst.DataSize,usedalign);
+              recst.DataSize:=offset+unionsymtable.DataSize;
 
               if unionsymtable.recordalignment>recst.fieldalignment then
                 recst.fieldalignment:=unionsymtable.recordalignment;
@@ -2050,7 +2050,7 @@ implementation
          { free the list }
          sc.free;
          sc := nil;
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
       end;
 
 end.

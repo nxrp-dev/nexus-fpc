@@ -28,11 +28,11 @@ unit link;
 interface
 
     uses
-      sysutils,
-      cclasses,
-      systems,
-      fmodule,
-      globtype,
+      SysUtils,
+      CClasses,
+      Systems,
+      FModule,
+      GlobType,
       ldscript,
       ogbase,
       owbase;
@@ -41,7 +41,7 @@ interface
       TLinkerInfo=record
         ExeCmd,
         DllCmd,
-        ExtDbgCmd     : array[1..3] of ansistring;
+        ExtDbgCmd     : array[1..3] of AnsiString;
         ResName       : string[100];
         ScriptName    : string[100];
         ExtraOptions  : TCmdStr;
@@ -60,7 +60,7 @@ interface
          OrderedSymbols: TCmdStrList;
          Constructor Create;virtual;
          Destructor Destroy;override;
-         procedure AddModuleFiles(hp:tmodule);
+         procedure AddModuleFiles(hp:TModule);
          Procedure AddObject(const S,unitpath : TPathStr;isunit:boolean);
          Procedure AddStaticLibrary(const S : TCmdStr);
          Procedure AddSharedLibrary(S : TCmdStr);
@@ -68,7 +68,7 @@ interface
          Procedure AddSharedCLibrary(S : TCmdStr);
          Procedure AddFramework(S : TCmdStr);
          Procedure AddOrderedSymbol(const s: TCmdStr);
-         procedure AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: longint;isvar:boolean);virtual;
+         procedure AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: LongInt;isvar:boolean);virtual;
          Procedure InitSysInitUnitName;virtual;
          Function  MakeExecutable:boolean;virtual;
          Function  MakeSharedLibrary:boolean;virtual;
@@ -127,7 +127,7 @@ interface
          procedure ParseLdScript(src:TScriptLexer);
       protected
          linkscript : TCmdStrList;
-         ScriptCount : longint;
+         ScriptCount : LongInt;
          IsHandled : TBooleanDynArray;
          property CArObjectReader:TObjectReaderClass read FCArObjectReader write FCArObjectReader;
          property CObjInput:TObjInputClass read FCObjInput write FCObjInput;
@@ -141,7 +141,7 @@ interface
          function GetDataSize(aExeOutput: TExeOutput): QWord;virtual;
          function GetBssSize(aExeOutput: TExeOutput): QWord;virtual;
          function ExecutableFilename:String;virtual;
-         function SharedLibFilename:String;virtual;
+         function SharedLibFileName:String;virtual;
       public
          IsSharedLibrary : boolean;
          UseStabs : boolean;
@@ -149,10 +149,10 @@ interface
          Destructor Destroy;override;
          Function  MakeExecutable:boolean;override;
          Function  MakeSharedLibrary:boolean;override;
-         procedure AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: longint;isvar:boolean);override;
+         procedure AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: LongInt;isvar:boolean);override;
        end;
 
-      TLinkerClass = class of Tlinker;
+      TLinkerClass = class of TLinker;
 
     var
       Linker  : TLinker;
@@ -161,7 +161,7 @@ interface
     function FindLibraryFile(s:TCmdStr;const prefix,ext:TCmdStr;var foundfile : TCmdStr) : boolean;
     function FindDLL(const s:TCmdStr;var founddll:TCmdStr):boolean;
 
-    procedure RegisterLinker(id:tlink;c:TLinkerClass);
+    procedure RegisterLinker(id:TLink;c:TLinkerClass);
 
     procedure InitLinker;
     procedure DoneLinker;
@@ -170,16 +170,16 @@ interface
 Implementation
 
     uses
-      cutils,cfileutl,cstreams,
+      CUtils,CFileUtl,CStreams,
 {$ifdef hasUnix}
-      baseunix,
+      BaseUnix,
 {$endif hasUnix}
-      cscript,globals,verbose,comphook,ppu,fpchash,triplet,tripletcpu,
+      CScript,Globals,Verbose,CompHook,ppu,FPCHash,triplet,tripletcpu,
       aasmbase,aasmcpu,
       ogmap;
 
     var
-      CLinker : array[tlink] of TLinkerClass;
+      CLinker : array[TLink] of TLinkerClass;
 
 {*****************************************************************************
                                    Helpers
@@ -189,24 +189,24 @@ Implementation
       var
         fs : TCStream;
         bufcount,
-        bufsize  : Integer;
+        BufSize  : Integer;
         buf      : TByteDynArray;
       begin
         result:=0;
-        bufsize:=64*1024;
+        BufSize:=64*1024;
         fs:=CFileStreamClass.Create(fn,fmOpenRead or fmShareDenyNone);
         if CStreamError<>0 then
           begin
             fs.Free;
             fs := nil;
-            Comment(V_Error,'Can''t open file: '+fn);
+            Comment(VError,'Can''t open file: '+fn);
             exit;
           end;
-        setlength(buf,bufsize);
+        SetLength(buf,BufSize);
         repeat
-          bufcount:=fs.Read(buf[0],bufsize);
-          result:=UpdateCrc32(result,buf[0],bufcount);
-        until bufcount<bufsize;
+          bufcount:=fs.Read(buf[0],BufSize);
+          result:=UpdateCRC32(result,buf[0],bufcount);
+        until bufcount<BufSize;
         buf:=nil;
         fs.Free;
         fs := nil;
@@ -228,7 +228,7 @@ Implementation
          so there is no object files to look for at
          the host. Look for the corresponding assembler file instead,
          because it will be assembled to object file on the target.}
-        if isunit and (cs_assemble_on_target in CurrentSettings.globalswitches) then
+        if isunit and (cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
           s:=ChangeFileExt(s,TargetInfo.asmext);
 
         { when it does not belong to the unit then check if
@@ -255,10 +255,10 @@ Implementation
           for all finds don't use the directory caching }
         found:=false;
         if isunit and (OutputUnitDir<>'') then
-          found:=FindFile(s,OutPutUnitDir,false,foundfile)
+          found:=FindFile(s,OutputUnitDir,false,foundfile)
         else
           if OutputExeDir<>'' then
-            found:=FindFile(s,OutPutExeDir,false,foundfile);
+            found:=FindFile(s,OutputExeDir,false,foundfile);
         if (not found) and (unitpath<>'') then
          found:=FindFile(s,unitpath,false,foundfile);
         if (not found) then
@@ -268,14 +268,14 @@ Implementation
         if (not found) then
          found:=CurrentModule.localobjectsearchpath.FindFile(s,false,foundfile);
         if (not found) then
-         found:=objectsearchpath.FindFile(s,false,foundfile);
-        if not(cs_link_on_target in CurrentSettings.globalswitches) and (not found) then
-         found:=FindFile(s,exepath,false,foundfile);
-        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
+         found:=ObjectSearchPath.FindFile(s,false,foundfile);
+        if not(cs_link_on_target in CurrentSettings.GlobalSwitches) and (not found) then
+         found:=FindFile(s,ExePath,false,foundfile);
+        if not(cs_link_nolink in CurrentSettings.GlobalSwitches) and (not found) then
          Message1(exec_w_objfile_not_found,s);
 
         {Restore file extension}
-        if isunit and (cs_assemble_on_target in CurrentSettings.globalswitches) then
+        if isunit and (cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
           foundfile:= ChangeFileExt(foundfile,TargetInfo.objext);
 
         findobjectfile:=ScriptFixFileName(foundfile);
@@ -295,7 +295,7 @@ Implementation
           3. windir,windir/system,windir/system32 }
         Found:=FindFile(s,'.'+SourceInfo.DirSep,false,founddll);
         if (not found) then
-         Found:=librarysearchpath.FindFile(s,false,founddll);
+         Found:=LibrarySearchPath.FindFile(s,false,founddll);
 
         { when cross compiling, it is pretty useless to search windir etc. for dlls }
         if (not found) and (SourceInfo.system=TargetInfo.system) then
@@ -346,14 +346,14 @@ Implementation
            4. exe path of the compiler (not when linking on target)
           for all searches don't use the directory cache }
         found:=FindFile(s, CurDirRelPath(SourceInfo), false,foundfile);
-        if (not found) and (CurrentModule.outputpath<>'') then
-         found:=FindFile(s,CurrentModule.outputpath,false,foundfile);
+        if (not found) and (CurrentModule.OutputPath<>'') then
+         found:=FindFile(s,CurrentModule.OutputPath,false,foundfile);
         if (not found) then
          found:=CurrentModule.locallibrarysearchpath.FindFile(s,false,foundfile);
         if (not found) then
-         found:=librarysearchpath.FindFile(s,false,foundfile);
-        if not(cs_link_on_target in CurrentSettings.globalswitches) and (not found) then
-         found:=FindFile(s,exepath,false,foundfile);
+         found:=LibrarySearchPath.FindFile(s,false,foundfile);
+        if not(cs_link_on_target in CurrentSettings.GlobalSwitches) and (not found) then
+         found:=FindFile(s,ExePath,false,foundfile);
         foundfile:=ScriptFixFileName(foundfile);
         findlibraryfile:=found;
       end;
@@ -366,10 +366,10 @@ Implementation
     Constructor TLinker.Create;
       begin
         Inherited Create;
-        ObjectFiles:=TCmdStrList.Create_no_double;
-        SharedLibFiles:=TCmdStrList.Create_no_double;
-        StaticLibFiles:=TCmdStrList.Create_no_double;
-        FrameworkFiles:=TCmdStrList.Create_no_double;
+        ObjectFiles:=TCmdStrList.Create_No_Double;
+        SharedLibFiles:=TCmdStrList.Create_No_Double;
+        StaticLibFiles:=TCmdStrList.Create_No_Double;
+        FrameworkFiles:=TCmdStrList.Create_No_Double;
         OrderedSymbols:=TCmdStrList.Create;
       end;
 
@@ -390,16 +390,16 @@ Implementation
       end;
 
 
-    procedure TLinker.AddModuleFiles(hp:tmodule);
+    procedure TLinker.AddModuleFiles(hp:TModule);
       var
-        mask : longint;
-        i,j  : longint;
+        mask : LongInt;
+        i,j  : LongInt;
         ImportLibrary : TImportLibrary;
         ImportSymbol  : TImportSymbol;
       begin
         with hp do
          begin
-           if not assigned(hp.package) and (mf_has_resourcefiles in moduleflags) then
+           if not Assigned(hp.package) and (mf_has_resourcefiles in moduleflags) then
              HasResources:=true;
            if mf_has_exports in moduleflags then
              HasExports:=true;
@@ -409,34 +409,34 @@ Implementation
               { create mask which unit files need linking }
               mask:=link_always;
               { lto linking ?}
-              if (cs_lto in CurrentSettings.moduleswitches) and
+              if (cs_lto in CurrentSettings.ModuleSwitches) and
                  ((headerflags and uf_lto_linked)<>0) and
-                 (not(cs_lto_nosystem in InitSettings.globalswitches) or
-                  (hp.modulename^<>'SYSTEM')) then
+                 (not(cs_lto_nosystem in InitSettings.GlobalSwitches) or
+                  (hp.ModuleName^<>'SYSTEM')) then
                 begin
                   mask:=mask or link_lto;
                 end
               else
                 begin
                   { static linking ? }
-                  if (cs_link_static in CurrentSettings.globalswitches) then
+                  if (cs_link_static in CurrentSettings.GlobalSwitches) then
                    begin
                      if (headerflags and uf_static_linked)=0 then
                       begin
                         { if static not avail then try smart linking }
                         if (headerflags and uf_smart_linked)<>0 then
                          begin
-                           Message1(exec_t_unit_not_static_linkable_switch_to_smart,modulename^);
+                           Message1(exec_t_unit_not_static_linkable_switch_to_smart,ModuleName^);
                            mask:=mask or link_smart;
                          end
                         else
-                         Message1(exec_e_unit_not_smart_or_static_linkable,modulename^);
+                         Message1(exec_e_unit_not_smart_or_static_linkable,ModuleName^);
                       end
                      else
                        mask:=mask or link_static;
                    end;
                   { smart linking ? }
-                  if (cs_link_smart in CurrentSettings.globalswitches) then
+                  if (cs_link_smart in CurrentSettings.GlobalSwitches) then
                    begin
                      if (headerflags and uf_smart_linked)=0 then
                       begin
@@ -447,28 +447,28 @@ Implementation
                              regular object files
                            }
                            if create_smartlink_library then
-                             Message1(exec_t_unit_not_smart_linkable_switch_to_static,modulename^);
+                             Message1(exec_t_unit_not_smart_linkable_switch_to_static,ModuleName^);
                            mask:=mask or link_static;
                          end
                         else
-                         Message1(exec_e_unit_not_smart_or_static_linkable,modulename^);
+                         Message1(exec_e_unit_not_smart_or_static_linkable,ModuleName^);
                       end
                      else
                       mask:=mask or link_smart;
                    end;
                   { shared linking }
-                  if (cs_link_shared in CurrentSettings.globalswitches) then
+                  if (cs_link_shared in CurrentSettings.GlobalSwitches) then
                    begin
                      if (headerflags and uf_shared_linked)=0 then
                       begin
                         { if shared not avail then try static linking }
                         if (headerflags and uf_static_linked)<>0 then
                          begin
-                           Message1(exec_t_unit_not_shared_linkable_switch_to_static,modulename^);
+                           Message1(exec_t_unit_not_shared_linkable_switch_to_static,ModuleName^);
                            mask:=mask or link_static;
                          end
                         else
-                         Message1(exec_e_unit_not_shared_or_static_linkable,modulename^);
+                         Message1(exec_e_unit_not_shared_or_static_linkable,ModuleName^);
                       end
                      else
                       mask:=mask or link_shared;
@@ -504,12 +504,12 @@ Implementation
                  end;
              end;
            { ordered symbols }
-           OrderedSymbols.concatList(linkorderedsymbols);
+           OrderedSymbols.ConcatList(linkorderedsymbols);
          end;
       end;
 
 
-    procedure TLinker.AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: longint;isvar:boolean);
+    procedure TLinker.AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: LongInt;isvar:boolean);
       begin
       end;
 
@@ -543,7 +543,7 @@ Implementation
         if s='' then
           exit;
         found:=FindLibraryFile(s,TargetInfo.staticlibprefix,TargetInfo.staticlibext,ns);
-        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
+        if not(cs_link_nolink in CurrentSettings.GlobalSwitches) and (not found) then
           Message1(exec_w_libfile_not_found,s);
         StaticLibFiles.Concat(ns);
       end;
@@ -587,7 +587,7 @@ Implementation
         if s='' then
          exit;
         found:=FindLibraryFile(s,TargetInfo.staticclibprefix,TargetInfo.staticclibext,ns);
-        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
+        if not(cs_link_nolink in CurrentSettings.GlobalSwitches) and (not found) then
          Message1(exec_w_libfile_not_found,s);
         StaticLibFiles.Concat(ns);
       end;
@@ -622,7 +622,7 @@ Implementation
     Procedure TLinker.ExpandAndApplyOrder(var Src:TCmdStrList);
       var
         p : TLinkStrMap;
-        i : longint;
+        i : LongInt;
       begin
         // call Virtual TLinker method to initialize
         LoadPredefinedLibraryOrder;
@@ -674,9 +674,9 @@ Implementation
         if (OrderedSymbols.Empty) or
            not(tf_supports_symbolorderfile in TargetInfo.flags) then
           exit;
-        symfile:=TScript.Create(outputexedir+UniqueName('symbol_order')+'.fpc');
+        symfile:=TScript.Create(OutputExeDir+UniqueName('symbol_order')+'.fpc');
         item:=TCmdStrListItem(OrderedSymbols.First);
-        while assigned(item) do
+        while Assigned(item) do
           begin
             symfile.add(item.str);
             item:=TCmdStrListItem(item.next);
@@ -703,7 +703,7 @@ Implementation
             else if TargetInfo.system in systems_iphonesim then
               result:='_iossim_dynamic'
             else
-              internalerror(2022071010);
+              InternalError(2022071010);
           end
         else
           begin
@@ -728,27 +728,27 @@ Implementation
         sanitizerlibrarypath: TCmdStr;
         sanitizerlibraryfiles: TCmdStrList;
         searchrec: TSearchRec;
-        searchres: longint;
+        searchres: LongInt;
         clangsearchdirsfile: text;
       begin
         sanitizerlibraryfiles:=TCmdStrList.Create;
         result:=false;
-        if (cs_sanitize_address in CurrentSettings.moduleswitches) and
-           not(cs_link_on_target in CurrentSettings.globalswitches) then
+        if (cs_sanitize_address in CurrentSettings.ModuleSwitches) and
+           not(cs_link_on_target in CurrentSettings.GlobalSwitches) then
           begin
           { ask clang }
-          clang:=FindUtil('clang'+llvmutilssuffix);
+          clang:=FindUtil('clang'+LLVMUtilsSuffix);
           if clang<>'' then
             begin
-              clangsearchdirspath:=outputexedir+UniqueName('clangsearchdirs');
-              searchres:=shell(maybequoted(clang)+' -target '+targettriplet(triplet_llvm)+' -print-file-name=lib > '+maybequoted(clangsearchdirspath));
+              clangsearchdirspath:=OutputExeDir+UniqueName('clangsearchdirs');
+              searchres:=shell(MaybeQuoted(clang)+' -target '+targettriplet(triplet_llvm)+' -print-file-name=lib > '+MaybeQuoted(clangsearchdirspath));
               if searchres=0 then
                 begin
                   AssignFile(clangsearchdirsfile,clangsearchdirspath);
 {$push}{$i-}
                   reset(clangsearchdirsfile);
 {$pop}
-                  if ioresult=0 then
+                  if IOResult=0 then
                     begin
                       readln(clangsearchdirsfile,textline);
                       sanitizerlibrarydir:=FixFileName(textline+'/'+platformname);
@@ -776,7 +776,7 @@ Implementation
             end;
           end;
         if result then
-          ObjectFiles.concatList(sanitizerlibraryfiles);
+          ObjectFiles.ConcatList(sanitizerlibraryfiles);
         sanitizerlibraryfiles.free;
         sanitizerlibraryfiles := nil;
       end;
@@ -787,10 +787,10 @@ Implementation
         inherited Create;
         { set generic defaults }
         FillChar(Info,sizeof(Info),0);
-        if cs_link_on_target in CurrentSettings.globalswitches then
+        if cs_link_on_target in CurrentSettings.GlobalSwitches then
           begin
-            Info.ResName:=ChangeFileExt(inputfilename,'_link.res');
-            Info.ScriptName:=ChangeFileExt(inputfilename,'_script.res');
+            Info.ResName:=ChangeFileExt(InputFileName,'_link.res');
+            Info.ScriptName:=ChangeFileExt(InputFileName,'_script.res');
           end
         else
           begin
@@ -812,7 +812,7 @@ Implementation
 
     Destructor TExternalLinker.Destroy;
       begin
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -827,33 +827,33 @@ Implementation
         FoundBin : TCmdStr;
         UtilExe  : TCmdStr;
       begin
-        if cs_link_on_target in CurrentSettings.globalswitches then
+        if cs_link_on_target in CurrentSettings.GlobalSwitches then
           begin
             { If linking on target, don't add any path PM }
             { change extension only on platforms that use an exe extension, otherwise on OpenBSD 'ld.bfd' gets
               converted to 'ld' }
-            if TargetInfo.exeext<>'' then
-              FindUtil:=ChangeFileExt(s,TargetInfo.exeext)
+            if TargetInfo.ExeExt<>'' then
+              FindUtil:=ChangeFileExt(s,TargetInfo.ExeExt)
             else
               FindUtil:=s;
             exit;
           end;
         { change extension only on platforms that use an exe extension, otherwise on OpenBSD 'ld.bfd' gets converted
           to 'ld' }
-        if SourceInfo.exeext<>'' then
-          UtilExe:=ChangeFileExt(s,SourceInfo.exeext)
+        if SourceInfo.ExeExt<>'' then
+          UtilExe:=ChangeFileExt(s,SourceInfo.ExeExt)
         else
           UtilExe:=s;
         FoundBin:='';
         Found:=false;
-        if utilsdirectory<>'' then
-         Found:=FindFile(utilexe,utilsdirectory,false,Foundbin);
+        if UtilsDirectory<>'' then
+         Found:=FindFile(utilexe,UtilsDirectory,false,Foundbin);
         if (not Found) then
          Found:=FindExe(utilexe,false,Foundbin);
-        if throwerror and (not Found) and not(cs_link_nolink in CurrentSettings.globalswitches) then
+        if throwerror and (not Found) and not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
          begin
            Message1(exec_e_util_not_found,utilexe);
-           CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
+           CurrentSettings.GlobalSwitches:=CurrentSettings.GlobalSwitches+[cs_link_nolink];
          end;
         if (FoundBin<>'') then
          Message1(exec_t_using_util,FoundBin);
@@ -868,7 +868,7 @@ Implementation
         st : TCmdStr;
       begin
         if not (tf_no_backquote_support in SourceInfo.flags) or
-           (cs_link_on_target in CurrentSettings.globalswitches) then
+           (cs_link_on_target in CurrentSettings.GlobalSwitches) then
            begin
              CatFileContent:='`cat '+MaybeQuoted(para)+'`';
              Exit;
@@ -897,40 +897,40 @@ Implementation
 
     Function TExternalLinker.DoExec(const command:TCmdStr; para:TCmdStr;showinfo,useshell:boolean):boolean;
       var
-        exitcode: longint;
+        exitcode: LongInt;
       begin
         DoExec:=true;
-        if not(cs_link_nolink in CurrentSettings.globalswitches) then
+        if not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
          begin
            FlushOutput;
            if useshell then
-             exitcode:=shell(maybequoted(command)+' '+para)
+             exitcode:=shell(MaybeQuoted(command)+' '+para)
            else
              try
                exitcode:=RequotedExecuteProcess(command,para);
              except on E:EOSError do
                begin
                  Message1(exec_e_cant_call_linker,e.Message);
-                 CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
+                 CurrentSettings.GlobalSwitches:=CurrentSettings.GlobalSwitches+[cs_link_nolink];
                  DoExec:=false;
                end;
              end;
            if (exitcode<>0) then
              begin
                Message(exec_e_error_while_linking);
-               CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
+               CurrentSettings.GlobalSwitches:=CurrentSettings.GlobalSwitches+[cs_link_nolink];
                DoExec:=false;
              end;
          end;
       { Update asmres when externmode is set }
-        if cs_link_nolink in CurrentSettings.globalswitches then
+        if cs_link_nolink in CurrentSettings.GlobalSwitches then
          begin
            if showinfo then
              begin
-               if CurrentModule.islibrary then
-                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.sharedlibfilename)
+               if CurrentModule.IsLibrary then
+                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.SharedLibFileName)
                else
-                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.exefilename);
+                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.ExeFileName);
              end
            else
             AsmRes.AddLinkCommand(Command,Para,'');
@@ -941,16 +941,16 @@ Implementation
     Function TExternalLinker.MakeStaticLibrary:boolean;
 
       var
-        total_size, power : longint;
+        total_size, power : LongInt;
 
-        function GetNextFiles(const maxCmdLength : Longint; var item : TCmdStrListItem; const addfilecmd : string) : TCmdStr;
+        function GetNextFiles(const maxCmdLength : LongInt; var item : TCmdStrListItem; const addfilecmd : string) : TCmdStr;
           var
             ItemExists : boolean;
-	    ItemSize : longint;
+	    ItemSize : LongInt;
 	    fs : file;
           begin
             result := '';
-            while (assigned(item) and ((length(result) + length(item.str) + 1) < maxCmdLength)) do begin
+            while (Assigned(item) and ((length(result) + length(item.str) + 1) < maxCmdLength)) do begin
               ItemExists:=FileExists(FixFilename(item.str),true);
 	      ItemSize:=0;
 	      if ItemExists then
@@ -961,7 +961,7 @@ Implementation
                   system.close(fs);
                   system.inc(total_size,align(ItemSize,16));
                 end;
-              if (cs_link_nolink in CurrentSettings.globalswitches) or
+              if (cs_link_nolink in CurrentSettings.GlobalSwitches) or
                  (ItemExists and (ItemSize>0)) then
                 result := result + ' ' + addfilecmd + item.str;
               item := TCmdStrListItem(item.next);
@@ -970,7 +970,7 @@ Implementation
 
         function get_wlib_record_size: integer;
 	  var
-            nb_pages,page_size : longint;
+            nb_pages,page_size : LongInt;
           begin
             { Set wlib page size to a sensible value }
             if total_size>0 then
@@ -983,7 +983,7 @@ Implementation
                 result:=nb_pages;
               end
             else
-              result:=max(16,nextpowerof2(SmartLinkOFiles.count div 16, power));
+              result:=max(16,NextPowerOf2(SmartLinkOFiles.count div 16, power));
           end;
 
       var
@@ -999,15 +999,15 @@ Implementation
         MakeStaticLibrary:=false;
 	total_size:=0;
       { remove the library, to be sure that it is rewritten }
-        DeleteFile(CurrentModule.staticlibfilename);
+        DeleteFile(CurrentModule.StaticLibFileName);
       { Call AR }
-        smartpath:=FixPath(ChangeFileExt(CurrentModule.asmfilename,TargetInfo.smartext),false);
+        smartpath:=FixPath(ChangeFileExt(CurrentModule.AsmFileName,TargetInfo.smartext),false);
         SplitBinCmd(TargetAr.arcmd,binstr,cmdstr);
-        binstr := FindUtil(utilsprefix + binstr);
+        binstr := FindUtil(UtilsPrefix + binstr);
         if TargetAr.arfirstcmd<>'' then
           begin
             SplitBinCmd(TargetAr.arfirstcmd,firstbinstr,firstcmd);
-            firstbinstr := FindUtil(utilsprefix + firstbinstr);
+            firstbinstr := FindUtil(UtilsPrefix + firstbinstr);
           end
         else
           begin
@@ -1023,28 +1023,28 @@ Implementation
         if scripted_ar then
           begin
             scriptfile := FixFileName(smartpath+'arscript.txt');
-            Replace(cmdstr,'$SCRIPT',maybequoted(scriptfile));
+            Replace(cmdstr,'$SCRIPT',MaybeQuoted(scriptfile));
             Assign(script, scriptfile);
             Rewrite(script);
             try
               if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                writeln(script, 'CREATE ' + CurrentModule.staticlibfilename)
+                WriteLn(script, 'CREATE ' + CurrentModule.StaticLibFileName)
               else { wlib case }
-                writeln(script,'-q -p=',get_wlib_record_size,' -fo -c -b '+
-                  maybequoted(CurrentModule.staticlibfilename));
+                WriteLn(script,'-q -p=',get_wlib_record_size,' -fo -c -b '+
+                  MaybeQuoted(CurrentModule.StaticLibFileName));
               current := TCmdStrListItem(SmartLinkOFiles.First);
               while current <> nil do
                 begin
                   if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                  writeln(script, 'ADDMOD ' + current.str)
+                  WriteLn(script, 'ADDMOD ' + current.str)
                   else
-                    writeln(script,'+' + current.str);
+                    WriteLn(script,'+' + current.str);
                   current := TCmdStrListItem(current.next);
                 end;
               if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
                 begin
-                  writeln(script, 'SAVE');
-                  writeln(script, 'END');
+                  WriteLn(script, 'SAVE');
+                  WriteLn(script, 'END');
                 end;
             finally
               Close(script);
@@ -1054,10 +1054,10 @@ Implementation
         else
           begin
             ar_creates_different_output_file:=(Pos('$OUTPUTLIB',cmdstr)>0) or (Pos('$OUTPUTLIB',firstcmd)>0);
-            Replace(cmdstr,'$LIB',maybequoted(CurrentModule.staticlibfilename));
-            Replace(firstcmd,'$LIB',maybequoted(CurrentModule.staticlibfilename));
-            Replace(cmdstr,'$OUTPUTLIB',maybequoted(CurrentModule.staticlibfilename+'.tmp'));
-            Replace(firstcmd,'$OUTPUTLIB',maybequoted(CurrentModule.staticlibfilename+'.tmp'));
+            Replace(cmdstr,'$LIB',MaybeQuoted(CurrentModule.StaticLibFileName));
+            Replace(firstcmd,'$LIB',MaybeQuoted(CurrentModule.StaticLibFileName));
+            Replace(cmdstr,'$OUTPUTLIB',MaybeQuoted(CurrentModule.StaticLibFileName+'.tmp'));
+            Replace(firstcmd,'$OUTPUTLIB',MaybeQuoted(CurrentModule.StaticLibFileName+'.tmp'));
             if TargetAr.id=ar_watcom_wlib_omf then
               begin
                 Replace(cmdstr,'$RECSIZE','-p='+IntToStr(get_wlib_record_size));
@@ -1079,26 +1079,26 @@ Implementation
                 success:=DoExec(binstr,nextcmd,false,true);
               if ar_creates_different_output_file then
                 begin
-                  if FileExists(CurrentModule.staticlibfilename,false) then
-                    DeleteFile(CurrentModule.staticlibfilename);
-                  if FileExists(CurrentModule.staticlibfilename+'.tmp',false) then
-                    RenameFile(CurrentModule.staticlibfilename+'.tmp',CurrentModule.staticlibfilename);
+                  if FileExists(CurrentModule.StaticLibFileName,false) then
+                    DeleteFile(CurrentModule.StaticLibFileName);
+                  if FileExists(CurrentModule.StaticLibFileName+'.tmp',false) then
+                    RenameFile(CurrentModule.StaticLibFileName+'.tmp',CurrentModule.StaticLibFileName);
                 end;
               first := false;
-            until (not assigned(current)) or (not success);
+            until (not Assigned(current)) or (not success);
           end;
 
         if (TargetAr.arfinishcmd <> '') then
           begin
             SplitBinCmd(TargetAr.arfinishcmd,binstr,cmdstr);
-            binstr := FindUtil(utilsprefix + binstr);
-            Replace(cmdstr,'$LIB',maybequoted(CurrentModule.staticlibfilename));
+            binstr := FindUtil(UtilsPrefix + binstr);
+            Replace(cmdstr,'$LIB',MaybeQuoted(CurrentModule.StaticLibFileName));
             success:=DoExec(binstr,cmdstr,false,true);
           end;
 
         { Clean up }
-        if not(cs_asm_leave in CurrentSettings.globalswitches) then
-         if not(cs_link_nolink in CurrentSettings.globalswitches) then
+        if not(cs_asm_leave in CurrentSettings.GlobalSwitches) then
+         if not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
           begin
             while not SmartLinkOFiles.Empty do
               DeleteFile(SmartLinkOFiles.GetFirst);
@@ -1125,7 +1125,7 @@ Implementation
         if pid=0 then
           pid:=GetProcessID;
         if pid>0 then
-          result:=str+tostr(pid)
+          result:=str+ToStr(pid)
         else
           result:=str;
       end;
@@ -1133,7 +1133,7 @@ Implementation
 
     function TExternalLinker.PostProcessELFExecutable(const fn : string;isdll:boolean):boolean;
       type
-        TElf32header=packed record
+        TELF32Header=packed record
           magic0123         : array[0..3] of char;
           file_class        : byte;
           data_encoding     : byte;
@@ -1142,12 +1142,12 @@ Implementation
 
           e_type            : word;
           e_machine         : word;
-          e_version         : longint;
-          e_entry           : longint;          { entrypoint }
-          e_phoff           : longint;          { program header offset }
+          e_version         : LongInt;
+          e_entry           : LongInt;          { entrypoint }
+          e_phoff           : LongInt;          { program header offset }
 
-          e_shoff           : longint;          { sections header offset }
-          e_flags           : longint;
+          e_shoff           : LongInt;          { sections header offset }
+          e_flags           : LongInt;
           e_ehsize          : word;             { elf header size in bytes }
           e_phentsize       : word;             { size of an entry in the program header array }
           e_phnum           : word;             { 0..e_phnum-1 of entrys }
@@ -1155,22 +1155,22 @@ Implementation
           e_shnum           : word;             { 0..e_shnum-1 of entrys }
           e_shstrndx        : word;             { index of string section header }
         end;
-        TElf32sechdr=packed record
-          sh_name           : longint;
-          sh_type           : longint;
-          sh_flags          : longint;
-          sh_addr           : longint;
+        TELF32SecHdr=packed record
+          sh_name           : LongInt;
+          sh_type           : LongInt;
+          sh_flags          : LongInt;
+          sh_addr           : LongInt;
 
-          sh_offset         : longint;
-          sh_size           : longint;
-          sh_link           : longint;
-          sh_info           : longint;
+          sh_offset         : LongInt;
+          sh_size           : LongInt;
+          sh_link           : LongInt;
+          sh_info           : LongInt;
 
-          sh_addralign      : longint;
-          sh_entsize        : longint;
+          sh_addralign      : LongInt;
+          sh_entsize        : LongInt;
         end;
 
-        telf64header=packed record
+        TELF64Header=packed record
           magic0123         : array[0..3] of char;
           file_class        : byte;
           data_encoding     : byte;
@@ -1179,11 +1179,11 @@ Implementation
 
           e_type            : word;
           e_machine         : word;
-          e_version         : longword;
+          e_version         : LongWord;
           e_entry           : qword;            { entrypoint }
           e_phoff           : qword;            { program header offset }
           e_shoff           : qword;            { sections header offset }
-          e_flags           : longword;
+          e_flags           : LongWord;
           e_ehsize          : word;             { elf header size in bytes }
           e_phentsize       : word;             { size of an entry in the program header array }
           e_phnum           : word;             { 0..e_phnum-1 of entrys }
@@ -1191,21 +1191,21 @@ Implementation
           e_shnum           : word;             { 0..e_shnum-1 of entrys }
           e_shstrndx        : word;             { index of string section header }
         end;
-        TElf64sechdr=packed record
-          sh_name           : longword;
-          sh_type           : longword;
+        TELF64SecHdr=packed record
+          sh_name           : LongWord;
+          sh_type           : LongWord;
           sh_flags          : qword;
           sh_addr           : qword;
           sh_offset         : qword;
           sh_size           : qword;
-          sh_link           : longword;
-          sh_info           : longword;
+          sh_link           : LongWord;
+          sh_info           : LongWord;
           sh_addralign      : qword;
           sh_entsize        : qword;
         end;
 
 
-      function MayBeSwapHeader(h : telf32header) : telf32header;
+      function MayBeSwapHeader(h : TELF32Header) : TELF32Header;
         begin
           result:=h;
           if SourceInfo.endian<>TargetInfo.endian then
@@ -1228,7 +1228,7 @@ Implementation
         end;
 
 
-      function MayBeSwapHeader(h : telf64header) : telf64header;
+      function MayBeSwapHeader(h : TELF64Header) : TELF64Header;
         begin
           result:=h;
           if SourceInfo.endian<>TargetInfo.endian then
@@ -1251,7 +1251,7 @@ Implementation
         end;
 
 
-      function MaybeSwapSecHeader(h : telf32sechdr) : telf32sechdr;
+      function MaybeSwapSecHeader(h : TELF32SecHdr) : TELF32SecHdr;
         begin
           result:=h;
           if SourceInfo.endian<>TargetInfo.endian then
@@ -1271,7 +1271,7 @@ Implementation
         end;
 
 
-      function MaybeSwapSecHeader(h : telf64sechdr) : telf64sechdr;
+      function MaybeSwapSecHeader(h : TELF64SecHdr) : TELF64SecHdr;
         begin
           result:=h;
           if SourceInfo.endian<>TargetInfo.endian then
@@ -1293,9 +1293,9 @@ Implementation
       var
         f : file;
 
-      function ReadSectionName(pos : longint) : String;
+      function ReadSectionName(pos : LongInt) : String;
         var
-          oldpos : longint;
+          oldpos : LongInt;
           c : char;
         begin
           oldpos:=filepos(f);
@@ -1312,12 +1312,12 @@ Implementation
         end;
 
       var
-        elfheader32 : TElf32header;
-        secheader32 : TElf32sechdr;
-        elfheader64 : TElf64header;
-        secheader64 : TElf64sechdr;
-        i : longint;
-        stringoffset : longint;
+        elfheader32 : TELF32Header;
+        secheader32 : TELF32SecHdr;
+        elfheader64 : TELF64Header;
+        secheader64 : TELF64SecHdr;
+        i : LongInt;
+        stringoffset : LongInt;
         secname : string;
       begin
         Result:=false;
@@ -1325,10 +1325,10 @@ Implementation
         assign(f,fn);
         {$push}{$I-}
         reset(f,1);
-        if ioresult<>0 then
+        if IOResult<>0 then
           Message1(execinfo_f_cant_open_executable,fn);
         { read header }
-        blockread(f,elfheader32,sizeof(tElf32header));
+        blockread(f,elfheader32,sizeof(TELF32Header));
         with elfheader32 do
           if not((magic0123[0]=#$7f) and (magic0123[1]='E') and (magic0123[2]='L') and (magic0123[3]='F')) then
             Exit;
@@ -1338,13 +1338,13 @@ Implementation
               elfheader32:=MayBeSwapHeader(elfheader32);
               seek(f,elfheader32.e_shoff);
               { read string section header }
-              seek(f,elfheader32.e_shoff+sizeof(TElf32sechdr)*elfheader32.e_shstrndx);
+              seek(f,elfheader32.e_shoff+sizeof(TELF32SecHdr)*elfheader32.e_shstrndx);
               blockread(f,secheader32,sizeof(secheader32));
               secheader32:=MaybeSwapSecHeader(secheader32);
               stringoffset:=secheader32.sh_offset;
 
               seek(f,elfheader32.e_shoff);
-              status.datasize:=0;
+              status.DataSize:=0;
               for i:=0 to elfheader32.e_shnum-1 do
                 begin
                   blockread(f,secheader32,sizeof(secheader32));
@@ -1353,20 +1353,20 @@ Implementation
                   case secname of
                     '.text':
                       begin
-                        Message1(execinfo_x_codesize,tostr(secheader32.sh_size));
-                        status.codesize:=secheader32.sh_size;
+                        Message1(execinfo_x_codesize,ToStr(secheader32.sh_size));
+                        status.CodeSize:=secheader32.sh_size;
                       end;
                     '.fpcdata',
                     '.rodata',
                     '.data':
                       begin
-                        Message1(execinfo_x_initdatasize,tostr(secheader32.sh_size));
-                        inc(status.datasize,secheader32.sh_size);
+                        Message1(execinfo_x_initdatasize,ToStr(secheader32.sh_size));
+                        inc(status.DataSize,secheader32.sh_size);
                       end;
                     '.bss':
                       begin
-                        Message1(execinfo_x_uninitdatasize,tostr(secheader32.sh_size));
-                        inc(status.datasize,secheader32.sh_size);
+                        Message1(execinfo_x_uninitdatasize,ToStr(secheader32.sh_size));
+                        inc(status.DataSize,secheader32.sh_size);
                       end;
                   end;
                 end;
@@ -1374,20 +1374,20 @@ Implementation
           2:
             begin
               seek(f,0);
-              blockread(f,elfheader64,sizeof(tElf64header));
+              blockread(f,elfheader64,sizeof(TELF64Header));
               with elfheader64 do
                 if not((magic0123[0]=#$7f) and (magic0123[1]='E') and (magic0123[2]='L') and (magic0123[3]='F')) then
                   Exit;
               elfheader64:=MayBeSwapHeader(elfheader64);
               seek(f,elfheader64.e_shoff);
               { read string section header }
-              seek(f,elfheader64.e_shoff+sizeof(TElf64sechdr)*elfheader64.e_shstrndx);
+              seek(f,elfheader64.e_shoff+sizeof(TELF64SecHdr)*elfheader64.e_shstrndx);
               blockread(f,secheader64,sizeof(secheader64));
               secheader64:=MaybeSwapSecHeader(secheader64);
               stringoffset:=secheader64.sh_offset;
 
               seek(f,elfheader64.e_shoff);
-              status.datasize:=0;
+              status.DataSize:=0;
               for i:=0 to elfheader64.e_shnum-1 do
                 begin
                   blockread(f,secheader64,sizeof(secheader64));
@@ -1396,20 +1396,20 @@ Implementation
                   case secname of
                     '.text':
                       begin
-                        Message1(execinfo_x_codesize,tostr(secheader64.sh_size));
-                        status.codesize:=secheader64.sh_size;
+                        Message1(execinfo_x_codesize,ToStr(secheader64.sh_size));
+                        status.CodeSize:=secheader64.sh_size;
                       end;
                     '.fpcdata',
                     '.rodata',
                     '.data':
                       begin
-                        Message1(execinfo_x_initdatasize,tostr(secheader64.sh_size));
-                        inc(status.datasize,secheader64.sh_size);
+                        Message1(execinfo_x_initdatasize,ToStr(secheader64.sh_size));
+                        inc(status.DataSize,secheader64.sh_size);
                       end;
                     '.bss':
                       begin
-                        Message1(execinfo_x_uninitdatasize,tostr(secheader64.sh_size));
-                        inc(status.datasize,secheader64.sh_size);
+                        Message1(execinfo_x_uninitdatasize,ToStr(secheader64.sh_size));
+                        inc(status.DataSize,secheader64.sh_size);
                       end;
                   end;
                 end;
@@ -1419,7 +1419,7 @@ Implementation
         end;
         close(f);
         {$pop}
-        if ioresult<>0 then
+        if IOResult<>0 then
           ;
         Result:=true;
       end;
@@ -1428,19 +1428,19 @@ Implementation
     function TExternalLinker.PostProcessMachExecutable(const fn : string;isdll:boolean):boolean;
       type
         TMachHeader=record
-          magic       : longword;
-          cputype     : integer;
+          magic       : LongWord;
+          CPUType     : integer;
           cpusubtype  : integer;
-          filetype    : longword;
-          ncmds       : longword;
-          sizeofcmds  : longword;
-          flags       : longword;
-          reserved    : longword;
+          filetype    : LongWord;
+          ncmds       : LongWord;
+          sizeofcmds  : LongWord;
+          flags       : LongWord;
+          reserved    : LongWord;
         end;
 
         TMachLoadCommand = record
-          cmd : longword;
-          cmdsize : longword;
+          cmd : LongWord;
+          cmdsize : LongWord;
         end;
 
         TMachSegmentCommand64 = record
@@ -1460,14 +1460,14 @@ Implementation
         machheader : TMachHeader;
         machloadcmd : TMachLoadCommand;
         machsegmentcommand64 :TMachSegmentCommand64;
-        i : longint;
+        i : LongInt;
       begin
         Result:=false;
         { open file }
         assign(f,fn);
         {$push}{$I-}
         reset(f,1);
-        if ioresult<>0 then
+        if IOResult<>0 then
           Message1(execinfo_f_cant_open_executable,fn);
 
         blockread(f,machheader,sizeof(TMachHeader));
@@ -1485,18 +1485,18 @@ Implementation
                   case StrPas(@machsegmentcommand64.segname) of
                     '__TEXT':
                       begin
-                        Message1(execinfo_x_codesize,tostr(machsegmentcommand64.vmsize));
-                        status.codesize:=machsegmentcommand64.vmsize;
+                        Message1(execinfo_x_codesize,ToStr(machsegmentcommand64.vmsize));
+                        status.CodeSize:=machsegmentcommand64.vmsize;
                       end;
                     '__DATA_CONST':
                       begin
-                        Message1(execinfo_x_initdatasize,tostr(machsegmentcommand64.vmsize));
-                        inc(status.datasize,machsegmentcommand64.vmsize);
+                        Message1(execinfo_x_initdatasize,ToStr(machsegmentcommand64.vmsize));
+                        inc(status.DataSize,machsegmentcommand64.vmsize);
                       end;
                     '__DATA':
                       begin
-                        Message1(execinfo_x_uninitdatasize,tostr(machsegmentcommand64.vmsize));
-                        inc(status.datasize,machsegmentcommand64.vmsize);
+                        Message1(execinfo_x_uninitdatasize,ToStr(machsegmentcommand64.vmsize));
+                        inc(status.DataSize,machsegmentcommand64.vmsize);
                       end;
                   end;
                   Seek(f,FilePos(f)+machloadcmd.cmdsize-sizeof(machloadcmd)-sizeof(machsegmentcommand64));
@@ -1509,7 +1509,7 @@ Implementation
           end;
         close(f);
         {$pop}
-        if ioresult<>0 then
+        if IOResult<>0 then
           ;
         Result:=true;
       end;
@@ -1545,35 +1545,35 @@ Implementation
         FStaticLibraryList := nil;
         FImportLibraryList.Free;
         FImportLibraryList := nil;
-        if assigned(IsHandled) then
+        if Assigned(IsHandled) then
           begin
             IsHandled:=nil;
             ScriptCount:=0;
           end;
-        if assigned(exeoutput) then
+        if Assigned(exeoutput) then
           begin
             exeoutput.free;
             exeoutput:=nil;
           end;
-        if assigned(exemap) then
+        if Assigned(exemap) then
           begin
             exemap.free;
             exemap:=nil;
           end;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    procedure TInternalLinker.AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: longint;isvar:boolean);
+    procedure TInternalLinker.AddImportSymbol(const libname,symname,symmangledname:TCmdStr;OrdNr: LongInt;isvar:boolean);
       var
         ImportLibrary : TImportLibrary;
         ImportSymbol  : TFPHashObject;
       begin
         ImportLibrary:=TImportLibrary(ImportLibraryList.Find(libname));
-        if not assigned(ImportLibrary) then
+        if not Assigned(ImportLibrary) then
           ImportLibrary:=TImportLibrary.Create(ImportLibraryList,libname);
         ImportSymbol:=TFPHashObject(ImportLibrary.ImportSymbolList.Find(symname));
-        if not assigned(ImportSymbol) then
+        if not Assigned(ImportSymbol) then
           ImportSymbol:=TImportSymbol.Create(ImportLibrary.ImportSymbolList,symname,symmangledname,OrdNr,isvar);
       end;
 
@@ -1602,7 +1602,7 @@ Implementation
             if FindLibraryFile(s,TargetInfo.staticClibprefix,TargetInfo.staticClibext,s2) then
               LinkScript.Concat('READSTATICLIBRARY '+MaybeQuoted(s2))
             else
-              Comment(V_Error,'Import library not found for '+S);
+              Comment(VError,'Import library not found for '+S);
           end;
       end;
 
@@ -1624,7 +1624,7 @@ Implementation
         bsssec: TExeSection;
       begin
         bsssec:=aExeOutput.findexesection('.bss');
-        if assigned(bsssec) then
+        if Assigned(bsssec) then
           Result:=bsssec.size
         else
           Result:=0;
@@ -1694,14 +1694,14 @@ Implementation
     procedure TInternalLinker.Load_ReadObject(const para:TCmdStr);
       var
         objdata   : TObjData;
-        objinput  : TObjinput;
+        objinput  : TObjInput;
         objreader : TObjectReader;
         fn        : TCmdStr;
       begin
         fn:=FindObjectFile(para,'',false);
-        Comment(V_Tried,'Reading object '+fn);
+        Comment(VTried,'Reading object '+fn);
         objinput:=CObjInput.Create;
-        objreader:=TObjectreader.create;
+        objreader:=TObjectReader.create;
         if objreader.openfile(fn) then
           begin
             if objinput.ReadObjData(objreader,objdata) then
@@ -1727,8 +1727,8 @@ Implementation
         { Don't load import libraries }
         if copy(ExtractFileName(para),1,6)='libimp' then
           exit;
-        Comment(V_Tried,'Opening library '+para);
-        objreader:=CArObjectreader.createAr(para,true);
+        Comment(VTried,'Opening library '+para);
+        objreader:=CArObjectReader.createAr(para,true);
         if ErrorCount>0 then
           exit;
         if objreader.isarchive then
@@ -1751,7 +1751,7 @@ Implementation
             end
           else       { try parsing as script }
             begin
-              Comment(V_Tried,'Interpreting '+para+' as ld script');
+              Comment(VTried,'Interpreting '+para+' as ld script');
               ScriptLexer:=TScriptLexer.Create(objreader);
               ParseLdScript(ScriptLexer);
               ScriptLexer.Free;
@@ -1782,11 +1782,11 @@ Implementation
       var
         s{, para}, keyword : String;
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
       begin
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             s:=hp.str;
@@ -1798,7 +1798,7 @@ Implementation
             keyword:=Upper(GetToken(s,' '));
             {para:=}GetToken(s,' ');
             if Trim(s)<>'' then
-              Comment(V_Warning,'Unknown part "'+s+'" in "'+hp.str+'" internal linker script');
+              Comment(VWarning,'Unknown part "'+s+'" in "'+hp.str+'" internal linker script');
             if (keyword<>'SYMBOL') and
                (keyword<>'SYMBOLS') and
                (keyword<>'STABS') and
@@ -1820,7 +1820,7 @@ Implementation
                (keyword<>'GROUP') and
                (keyword<>'ENDGROUP')
                then
-              Comment(V_Warning,'Unknown keyword "'+keyword+'" in "'+hp.str
+              Comment(VWarning,'Unknown keyword "'+keyword+'" in "'+hp.str
                 +'" internal linker script');
             hp:=TCmdStrListItem(hp.next);
           end;
@@ -1831,16 +1831,16 @@ Implementation
     procedure TInternalLinker.ParseScript_PostCheck;
       var
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
       begin
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             if not IsHandled[i] then
               begin
-                Comment(V_Warning,'"'+hp.str+
+                Comment(VWarning,'"'+hp.str+
                   '" internal linker script not handled');
               end;
             hp:=TCmdStrListItem(hp.next);
@@ -1865,13 +1865,13 @@ Implementation
         para,
         keyword : String;
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
         handled : boolean;
       begin
         exeoutput.Load_Start;
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             s:=hp.str;
@@ -1919,13 +1919,13 @@ Implementation
         para,
         keyword : String;
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
         handled : boolean;
       begin
         exeoutput.Order_Start;
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             s:=hp.str;
@@ -1974,13 +1974,13 @@ Implementation
         para,
         keyword : String;
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
         handled : boolean;
       begin
         exeoutput.MemPos_Start;
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             s:=hp.str;
@@ -2013,13 +2013,13 @@ Implementation
         para,
         keyword : String;
         hp : TCmdStrListItem;
-        i : longint;
+        i : LongInt;
         handled : boolean;
       begin
         exeoutput.DataPos_Start;
         hp:=TCmdStrListItem(linkscript.first);
         i:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             inc(i);
             s:=hp.str;
@@ -2052,12 +2052,12 @@ Implementation
       var
         hp : TCmdStrListItem;
       begin
-        if not assigned(exemap) then
+        if not Assigned(exemap) then
           exit;
         exemap.Add('Used linker script');
         exemap.Add('');
         hp:=TCmdStrListItem(linkscript.first);
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             exemap.Add(hp.str);
             hp:=TCmdStrListItem(hp.next);
@@ -2082,8 +2082,8 @@ Implementation
 { TODO: Load custom linker script}
         DefaultLinkScript;
 
-        if (cs_link_map in CurrentSettings.globalswitches) then
-          exemap:=texemap.create(CurrentModule.mapfilename);
+        if (cs_link_map in CurrentSettings.GlobalSwitches) then
+          exemap:=TExeMap.create(CurrentModule.MapFileName);
 
         PrintLinkerScript;
 
@@ -2124,7 +2124,7 @@ Implementation
         if ErrorCount>0 then
           goto myexit;
 
-        if cs_link_separate_dbg_file in CurrentSettings.globalswitches then
+        if cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches then
           begin
             { create debuginfo, which is an executable without data on disk }
             dbgname:=ChangeFileExt(outputname,'.dbg');
@@ -2149,19 +2149,19 @@ Implementation
         { Post check that everything was handled }
         ParseScript_PostCheck;
 
-        status.codesize:=GetCodeSize(exeoutput);
-        status.datasize:=GetDataSize(exeoutput);
+        status.CodeSize:=GetCodeSize(exeoutput);
+        status.DataSize:=GetDataSize(exeoutput);
         bsssize:=GetBssSize(exeoutput);
 
         { Executable info }
-        Message1(execinfo_x_codesize,tostr(status.codesize));
-        Message1(execinfo_x_initdatasize,tostr(status.datasize));
-        Message1(execinfo_x_uninitdatasize,tostr(bsssize));
-        Message1(execinfo_x_stackreserve,tostr(stacksize));
+        Message1(execinfo_x_codesize,ToStr(status.CodeSize));
+        Message1(execinfo_x_initdatasize,ToStr(status.DataSize));
+        Message1(execinfo_x_uninitdatasize,ToStr(bsssize));
+        Message1(execinfo_x_stackreserve,ToStr(StackSize));
 
       myexit:
         { close map }
-        if assigned(exemap) then
+        if Assigned(exemap) then
           begin
             exemap.free;
             exemap:=nil;
@@ -2177,13 +2177,13 @@ Implementation
 
     function TInternalLinker.ExecutableFilename:String;
       begin
-        result:=CurrentModule.exefilename;
+        result:=CurrentModule.ExeFileName;
       end;
 
 
-    function TInternalLinker.SharedLibFilename:String;
+    function TInternalLinker.SharedLibFileName:String;
       begin
-        result:=CurrentModule.sharedlibfilename;
+        result:=CurrentModule.SharedLibFileName;
       end;
 
 
@@ -2192,7 +2192,7 @@ Implementation
         IsSharedLibrary:=false;
         result:=RunLinkScript(ExecutableFilename);
 {$ifdef hasUnix}
-        fpchmod(CurrentModule.exefilename,493);
+        fpchmod(CurrentModule.ExeFileName,493);
 {$endif hasUnix}
       end;
 
@@ -2200,7 +2200,7 @@ Implementation
     function TInternalLinker.MakeSharedLibrary:boolean;
       begin
         IsSharedLibrary:=true;
-        result:=RunLinkScript(SharedLibFilename);
+        result:=RunLinkScript(SharedLibFileName);
       end;
 
 
@@ -2222,7 +2222,7 @@ Implementation
                                  Init/Done
 *****************************************************************************}
 
-    procedure RegisterLinker(id:tlink;c:TLinkerClass);
+    procedure RegisterLinker(id:TLink;c:TLinkerClass);
       begin
         CLinker[id]:=c;
       end;
@@ -2230,24 +2230,24 @@ Implementation
 
     procedure InitLinker;
       begin
-        if (cs_link_extern in CurrentSettings.globalswitches) and
-           assigned(CLinker[TargetInfo.linkextern]) then
+        if (cs_link_extern in CurrentSettings.GlobalSwitches) and
+           Assigned(CLinker[TargetInfo.linkextern]) then
           begin
             linker:=CLinker[TargetInfo.linkextern].Create;
           end
         else
-          if assigned(CLinker[TargetInfo.link]) then
+          if Assigned(CLinker[TargetInfo.link]) then
             begin
               linker:=CLinker[TargetInfo.link].Create;
             end
         else
-          linker:=Tlinker.Create;
+          linker:=TLinker.Create;
       end;
 
 
     procedure DoneLinker;
       begin
-        if assigned(linker) then
+        if Assigned(linker) then
          Linker.Free;
          Linker := nil;
       end;

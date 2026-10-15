@@ -109,21 +109,21 @@ uses
   YaccLib, YaccBase, YaccMsgs, YaccSem, YaccTabl, YaccPars, SysUtils;
 
 const ID = 257;
-const C_ID = 258;
-const LITERAL = 259;
-const LITID = 260;
-const NUMBER = 261;
-const PTOKEN = 262;
-const PLEFT = 263;
-const PRIGHT = 264;
-const PNONASSOC = 265;
-const PTYPE = 266;
-const PSTART = 267;
-const PPREC = 268;
+const CID = 258;
+const Literal = 259;
+const LitID = 260;
+const Number = 261;
+const PToken = 262;
+const PLeft = 263;
+const PRight = 264;
+const PNonAssoc = 265;
+const PType = 266;
+const PStart = 267;
+const PPrec = 268;
 const PP = 269;
-const LCURL = 270;
-const RCURL = 271;
-const ILLEGAL = 272;
+const LCurl = 270;
+const RCurl = 271;
+const Illegal = 272;
 
 var yylval : YYSType;
 
@@ -131,392 +131,392 @@ function yylex : Integer; forward;
 
 function yyparse : Integer;
 
-var yystate, yysp, yyn : Integer;
-    yys : array [1..yymaxdepth] of Integer;
-    yyv : array [1..yymaxdepth] of YYSType;
+var YYState, YYSP, YYN : Integer;
+    YYS : array [1..YYMaxDepth] of Integer;
+    YYV : array [1..YYMaxDepth] of YYSType;
     yyval : YYSType;
 
-procedure yyaction ( yyruleno : Integer );
+procedure YYAction ( YYRuleNo : Integer );
   (* local definitions: *)
 begin
   (* actions: *)
-  case yyruleno of
+  case YYRuleNo of
    1 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
    2 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
    3 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
    4 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
    5 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
    6 : begin
-         yyerrok;
+         YYErrOK;
        end;
    7 : begin
-         yyerrok;
+         YYErrOK;
        end;
    8 : begin
-         yyerrok;
+         YYErrOK;
        end;
    9 : begin
-         yyerrok;
+         YYErrOK;
        end;
   10 : begin
-         yyerrok;
+         YYErrOK;
        end;
   11 : begin
-         yyerrok;
+         YYErrOK;
        end;
   12 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   13 : begin
-         yyerrok;
+         YYErrOK;
        end;
   14 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   15 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   16 : begin
-         error(rcurl_expected);
+         Error(RCurlExpected);
        end;
   17 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   18 : begin
-         yyerrok;
+         YYErrOK;
        end;
   19 : begin
-         yyerrok;
+         YYErrOK;
        end;
   20 : begin
-         yyerrok;
+         YYErrOK;
        end;
   21 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   22 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   23 : begin
-         error(rbrace_expected);
+         Error(RBraceExpected);
        end;
   24 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   25 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   26 : begin
-         error(rangle_expected);
+         Error(RAngleExpected);
        end;
   27 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   28 : begin
-         sort_types;
-         definitions;
-         next_section;
+         SortTypes;
+         Definitions;
+         NextSection;
        end;
   29 : begin
-         next_section;
-         generate_parser;
-         next_section;
+         NextSection;
+         GenerateParser;
+         NextSection;
        end;
   30 : begin
-         yyval := yyv[yysp-5];
+         yyval := YYV[YYSP-5];
        end;
   31 : begin
        end;
   32 : begin
-         copy_rest_of_file;
+         CopyRestOfFile;
        end;
   33 : begin
        end;
   34 : begin
-         yyerrok;
+         YYErrOK;
        end;
   35 : begin
-         error(error_in_def);
+         Error(ErrorInDef);
        end;
   36 : begin
-         startnt := ntsym(yyv[yysp-0]);
+         StartNT := NTSym(YYV[YYSP-0]);
        end;
   37 : begin
-         error(ident_expected);
+         Error(IdentExpected);
        end;
   38 : begin
-         copy_code;
+         CopyCode;
        end;
   39 : begin
-         yyval := yyv[yysp-2];
+         yyval := YYV[YYSP-2];
        end;
   40 : begin
-         act_prec := 0;
+         ActPrec := 0;
        end;
   41 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   42 : begin
-         act_prec := new_prec_level(left);
+         ActPrec := NewPrecLevel(Left);
        end;
   43 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   44 : begin
-         act_prec := new_prec_level(right);
+         ActPrec := NewPrecLevel(Right);
        end;
   45 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   46 : begin
-         act_prec := new_prec_level(nonassoc);
+         ActPrec := NewPrecLevel(NonAssoc);
        end;
   47 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   48 : begin
-         yyval := yyv[yysp-2];
+         yyval := YYV[YYSP-2];
        end;
   49 : begin
-         yyval := yyv[yysp-1];
+         yyval := YYV[YYSP-1];
        end;
   50 : begin
-         act_type := 0;
+         ActType := 0;
        end;
   51 : begin
-         act_type := yyv[yysp-1]; add_type(yyv[yysp-1]);
+         ActType := YYV[YYSP-1]; AddType(YYV[YYSP-1]);
        end;
   52 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   53 : begin
-         yyerrok;
+         YYErrOK;
        end;
   54 : begin
-         yyerrok;
+         YYErrOK;
        end;
   55 : begin
-         error(ident_expected);
+         Error(IdentExpected);
        end;
   56 : begin
-         error(error_in_def);
+         Error(ErrorInDef);
        end;
   57 : begin
-         error(ident_expected);
+         Error(IdentExpected);
        end;
   58 : begin
-         if act_type<>0 then
-         sym_type^[yyv[yysp-0]] := act_type;
-         if act_prec<>0 then
-         sym_prec^[yyv[yysp-0]] := act_prec;
+         if ActType<>0 then
+         SymType^[YYV[YYSP-0]] := ActType;
+         if ActPrec<>0 then
+         SymPrec^[YYV[YYSP-0]] := ActPrec;
        end;
   59 : begin
-         litsym(yyv[yysp-0], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec;
+         LitSym(YYV[YYSP-0], 0);
+         if ActType<>0 then
+         SymType^[LitSym(YYV[YYSP-0], 0)] := ActType;
+         if ActPrec<>0 then
+         SymPrec^[LitSym(YYV[YYSP-0], 0)] := ActPrec;
        end;
   60 : begin
-         litsym(yyv[yysp-0], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-0], 0)] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-0], 0)] := act_prec;
+         LitSym(YYV[YYSP-0], 0);
+         if ActType<>0 then
+         SymType^[LitSym(YYV[YYSP-0], 0)] := ActType;
+         if ActPrec<>0 then
+         SymPrec^[LitSym(YYV[YYSP-0], 0)] := ActPrec;
        end;
   61 : begin
-         litsym(yyv[yysp-1], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec;
+         LitSym(YYV[YYSP-1], 0);
+         if ActType<>0 then
+         SymType^[LitSym(YYV[YYSP-1], YYV[YYSP-0])] := ActType;
+         if ActPrec<>0 then
+         SymPrec^[LitSym(YYV[YYSP-1], 0)]  := ActPrec;
        end;
   62 : begin
-         litsym(yyv[yysp-1], 0);
-         if act_type<>0 then
-         sym_type^[litsym(yyv[yysp-1], yyv[yysp-0])] := act_type;
-         if act_prec<>0 then
-         sym_prec^[litsym(yyv[yysp-1], 0)]  := act_prec;
+         LitSym(YYV[YYSP-1], 0);
+         if ActType<>0 then
+         SymType^[LitSym(YYV[YYSP-1], YYV[YYSP-0])] := ActType;
+         if ActPrec<>0 then
+         SymPrec^[LitSym(YYV[YYSP-1], 0)]  := ActPrec;
        end;
   63 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   64 : begin
-         yyerrok;
+         YYErrOK;
        end;
   65 : begin
-         yyerrok;
+         YYErrOK;
        end;
   66 : begin
-         error(ident_expected);
+         Error(IdentExpected);
        end;
   67 : begin
-         error(error_in_def);
+         Error(ErrorInDef);
        end;
   68 : begin
-         error(ident_expected);
+         Error(IdentExpected);
        end;
   69 : begin
-         if act_type<>0 then
-         sym_type^[ntsym(yyv[yysp-0])] := act_type;
+         if ActType<>0 then
+         SymType^[NTSym(YYV[YYSP-0])] := ActType;
        end;
   70 : begin
-         next_section;
+         NextSection;
        end;
   71 : begin
-         yyval := yyv[yysp-1];
+         yyval := YYV[YYSP-1];
        end;
   72 : begin
-         copy_code;
+         CopyCode;
        end;
   73 : begin
-         next_section;
+         NextSection;
        end;
   74 : begin
-         yyval := yyv[yysp-4];
+         yyval := YYV[YYSP-4];
        end;
   75 : begin
-         yyerrok;
+         YYErrOK;
        end;
   76 : begin
-         error(error_in_rule);
+         Error(ErrorInRule);
        end;
   77 : begin
-         error(error_in_rule);
+         Error(ErrorInRule);
        end;
   78 : begin
-         start_rule(ntsym(yyv[yysp-0]));
+         StartRule(NTSym(YYV[YYSP-0]));
        end;
   79 : begin
-         start_body;
+         StartBody;
        end;
   80 : begin
-         end_body;
+         EndBody;
        end;
   81 : begin
-         yyval := yyv[yysp-0];
+         yyval := YYV[YYSP-0];
        end;
   82 : begin
-         start_body;
+         StartBody;
        end;
   83 : begin
-         end_body;
+         EndBody;
        end;
   84 : begin
        end;
   85 : begin
-         add_symbol(yyv[yysp-0]); yyerrok;
+         AddSymbol(YYV[YYSP-0]); YYErrOK;
        end;
   86 : begin
-         add_symbol(sym(yyv[yysp-0])); yyerrok;
+         AddSymbol(Sym(YYV[YYSP-0])); YYErrOK;
        end;
   87 : begin
-         add_symbol(sym(yyv[yysp-0])); yyerrok;
+         AddSymbol(Sym(YYV[YYSP-0])); YYErrOK;
        end;
   88 : begin
-         add_action; yyerrok;
+         AddAction; YYErrOK;
        end;
   89 : begin
-         error(error_in_rule);
+         Error(ErrorInRule);
        end;
   90 : begin
-         copy_action;
+         CopyAction;
        end;
   91 : begin
-         yyval := yyv[yysp-2];
+         yyval := YYV[YYSP-2];
        end;
   92 : begin
-         copy_single_action;
+         CopySingleAction;
        end;
   93 : begin
        end;
   94 : begin
-         add_rule_prec(yyv[yysp-0]);
+         AddRulePrec(YYV[YYSP-0]);
        end;
   95 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   96 : begin
-         add_rule_prec(litsym(yyv[yysp-0], 0));
+         AddRulePrec(LitSym(YYV[YYSP-0], 0));
        end;
   97 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
   98 : begin
-         add_rule_prec(litsym(yyv[yysp-0], 0));
+         AddRulePrec(LitSym(YYV[YYSP-0], 0));
        end;
   99 : begin
-         yyval := yyv[yysp-3];
+         yyval := YYV[YYSP-3];
        end;
  100 : begin
-         yyval := yyv[yysp-1];
+         yyval := YYV[YYSP-1];
        end;
  101 : begin
        end;
  102 : begin
-         add_action;
+         AddAction;
        end;
   end;
 end(*yyaction*);
 
 (* parse table: *)
 
-type YYARec = record
-                sym, act : Integer;
+type TYYARec = record
+                Sym, Act : Integer;
               end;
-     YYRRec = record
-                len, sym : Integer;
+     TYYRRec = record
+                Len, Sym : Integer;
               end;
 
 const
 
-yynacts   = 251;
-yyngotos  = 146;
-yynstates = 128;
-yynrules  = 102;
+YYNActs   = 251;
+YYNGotos  = 146;
+YYNStates = 128;
+YYNRules  = 102;
 
-yya : array [1..yynacts] of YYARec = (
+YYA : array [1..YYNActs] of TYYARec = (
 { 0: }
 { 1: }
-  ( sym: 256; act: 12 ),
-  ( sym: 262; act: 13 ),
-  ( sym: 263; act: 14 ),
-  ( sym: 264; act: 15 ),
-  ( sym: 265; act: 16 ),
-  ( sym: 266; act: 17 ),
-  ( sym: 267; act: 18 ),
-  ( sym: 269; act: 19 ),
-  ( sym: 270; act: 20 ),
+  ( Sym: 256; Act: 12 ),
+  ( Sym: 262; Act: 13 ),
+  ( Sym: 263; Act: 14 ),
+  ( Sym: 264; Act: 15 ),
+  ( Sym: 265; Act: 16 ),
+  ( Sym: 266; Act: 17 ),
+  ( Sym: 267; Act: 18 ),
+  ( Sym: 269; Act: 19 ),
+  ( Sym: 270; Act: 20 ),
 { 2: }
-  ( sym: 0; act: 0 ),
+  ( Sym: 0; Act: 0 ),
 { 3: }
 { 4: }
 { 5: }
 { 6: }
-  ( sym: 256; act: 24 ),
-  ( sym: 257; act: 25 ),
+  ( Sym: 256; Act: 24 ),
+  ( Sym: 257; Act: 25 ),
 { 7: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 262; act: -50 ),
-  ( sym: 263; act: -50 ),
-  ( sym: 264; act: -50 ),
-  ( sym: 265; act: -50 ),
-  ( sym: 266; act: -50 ),
-  ( sym: 267; act: -50 ),
-  ( sym: 269; act: -50 ),
-  ( sym: 270; act: -50 ),
+  ( Sym: 60; Act: 28 ),
+  ( Sym: 256; Act: -50 ),
+  ( Sym: 257; Act: -50 ),
+  ( Sym: 262; Act: -50 ),
+  ( Sym: 263; Act: -50 ),
+  ( Sym: 264; Act: -50 ),
+  ( Sym: 265; Act: -50 ),
+  ( Sym: 266; Act: -50 ),
+  ( Sym: 267; Act: -50 ),
+  ( Sym: 269; Act: -50 ),
+  ( Sym: 270; Act: -50 ),
 { 8: }
 { 9: }
 { 10: }
@@ -531,122 +531,122 @@ yya : array [1..yynacts] of YYARec = (
 { 19: }
 { 20: }
 { 21: }
-  ( sym: 256; act: 34 ),
-  ( sym: 271; act: 35 ),
+  ( Sym: 256; Act: 34 ),
+  ( Sym: 271; Act: 35 ),
 { 22: }
-  ( sym: 256; act: 39 ),
-  ( sym: 270; act: 20 ),
-  ( sym: 258; act: -70 ),
+  ( Sym: 256; Act: 39 ),
+  ( Sym: 270; Act: 20 ),
+  ( Sym: 258; Act: -70 ),
 { 23: }
 { 24: }
 { 25: }
 { 26: }
-  ( sym: 256; act: 43 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 262; act: -49 ),
-  ( sym: 263; act: -49 ),
-  ( sym: 264; act: -49 ),
-  ( sym: 265; act: -49 ),
-  ( sym: 266; act: -49 ),
-  ( sym: 267; act: -49 ),
-  ( sym: 269; act: -49 ),
-  ( sym: 270; act: -49 ),
+  ( Sym: 256; Act: 43 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 262; Act: -49 ),
+  ( Sym: 263; Act: -49 ),
+  ( Sym: 264; Act: -49 ),
+  ( Sym: 265; Act: -49 ),
+  ( Sym: 266; Act: -49 ),
+  ( Sym: 267; Act: -49 ),
+  ( Sym: 269; Act: -49 ),
+  ( Sym: 270; Act: -49 ),
 { 27: }
-  ( sym: 257; act: 25 ),
+  ( Sym: 257; Act: 25 ),
 { 28: }
 { 29: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
+  ( Sym: 60; Act: 28 ),
+  ( Sym: 256; Act: -50 ),
+  ( Sym: 257; Act: -50 ),
+  ( Sym: 259; Act: -50 ),
+  ( Sym: 260; Act: -50 ),
 { 30: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
+  ( Sym: 60; Act: 28 ),
+  ( Sym: 256; Act: -50 ),
+  ( Sym: 257; Act: -50 ),
+  ( Sym: 259; Act: -50 ),
+  ( Sym: 260; Act: -50 ),
 { 31: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
+  ( Sym: 60; Act: 28 ),
+  ( Sym: 256; Act: -50 ),
+  ( Sym: 257; Act: -50 ),
+  ( Sym: 259; Act: -50 ),
+  ( Sym: 260; Act: -50 ),
 { 32: }
-  ( sym: 60; act: 28 ),
-  ( sym: 256; act: -50 ),
-  ( sym: 257; act: -50 ),
-  ( sym: 259; act: -50 ),
-  ( sym: 260; act: -50 ),
+  ( Sym: 60; Act: 28 ),
+  ( Sym: 256; Act: -50 ),
+  ( Sym: 257; Act: -50 ),
+  ( Sym: 259; Act: -50 ),
+  ( Sym: 260; Act: -50 ),
 { 33: }
 { 34: }
 { 35: }
 { 36: }
-  ( sym: 258; act: 51 ),
+  ( Sym: 258; Act: 51 ),
 { 37: }
-  ( sym: 124; act: 56 ),
-  ( sym: 256; act: 57 ),
-  ( sym: 258; act: 51 ),
-  ( sym: 0; act: -29 ),
-  ( sym: 269; act: -29 ),
+  ( Sym: 124; Act: 56 ),
+  ( Sym: 256; Act: 57 ),
+  ( Sym: 258; Act: 51 ),
+  ( Sym: 0; Act: -29 ),
+  ( Sym: 269; Act: -29 ),
 { 38: }
 { 39: }
 { 40: }
 { 41: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 62 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 262; act: -48 ),
-  ( sym: 263; act: -48 ),
-  ( sym: 264; act: -48 ),
-  ( sym: 265; act: -48 ),
-  ( sym: 266; act: -48 ),
-  ( sym: 267; act: -48 ),
-  ( sym: 269; act: -48 ),
-  ( sym: 270; act: -48 ),
+  ( Sym: 44; Act: 61 ),
+  ( Sym: 256; Act: 62 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 262; Act: -48 ),
+  ( Sym: 263; Act: -48 ),
+  ( Sym: 264; Act: -48 ),
+  ( Sym: 265; Act: -48 ),
+  ( Sym: 266; Act: -48 ),
+  ( Sym: 267; Act: -48 ),
+  ( Sym: 269; Act: -48 ),
+  ( Sym: 270; Act: -48 ),
 { 42: }
 { 43: }
 { 44: }
-  ( sym: 62; act: 64 ),
-  ( sym: 256; act: 65 ),
+  ( Sym: 62; Act: 64 ),
+  ( Sym: 256; Act: 65 ),
 { 45: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 256; Act: 71 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 46: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 256; Act: 71 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 47: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 256; Act: 71 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 48: }
-  ( sym: 256; act: 71 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 256; Act: 71 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 49: }
 { 50: }
 { 51: }
 { 52: }
 { 53: }
 { 54: }
-  ( sym: 269; act: 19 ),
-  ( sym: 0; act: -31 ),
+  ( Sym: 269; Act: 19 ),
+  ( Sym: 0; Act: -31 ),
 { 55: }
 { 56: }
 { 57: }
 { 58: }
-  ( sym: 256; act: 34 ),
-  ( sym: 271; act: 35 ),
+  ( Sym: 256; Act: 34 ),
+  ( Sym: 271; Act: 35 ),
 { 59: }
 { 60: }
-  ( sym: 256; act: 83 ),
-  ( sym: 257; act: 25 ),
+  ( Sym: 256; Act: 83 ),
+  ( Sym: 257; Act: 25 ),
 { 61: }
 { 62: }
 { 63: }
@@ -654,97 +654,97 @@ yya : array [1..yynacts] of YYARec = (
 { 65: }
 { 66: }
 { 67: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -47 ),
-  ( sym: 263; act: -47 ),
-  ( sym: 264; act: -47 ),
-  ( sym: 265; act: -47 ),
-  ( sym: 266; act: -47 ),
-  ( sym: 267; act: -47 ),
-  ( sym: 269; act: -47 ),
-  ( sym: 270; act: -47 ),
+  ( Sym: 44; Act: 61 ),
+  ( Sym: 256; Act: 86 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 262; Act: -47 ),
+  ( Sym: 263; Act: -47 ),
+  ( Sym: 264; Act: -47 ),
+  ( Sym: 265; Act: -47 ),
+  ( Sym: 266; Act: -47 ),
+  ( Sym: 267; Act: -47 ),
+  ( Sym: 269; Act: -47 ),
+  ( Sym: 270; Act: -47 ),
 { 68: }
-  ( sym: 261; act: 88 ),
-  ( sym: 44; act: -59 ),
-  ( sym: 256; act: -59 ),
-  ( sym: 257; act: -59 ),
-  ( sym: 259; act: -59 ),
-  ( sym: 260; act: -59 ),
-  ( sym: 262; act: -59 ),
-  ( sym: 263; act: -59 ),
-  ( sym: 264; act: -59 ),
-  ( sym: 265; act: -59 ),
-  ( sym: 266; act: -59 ),
-  ( sym: 267; act: -59 ),
-  ( sym: 269; act: -59 ),
-  ( sym: 270; act: -59 ),
+  ( Sym: 261; Act: 88 ),
+  ( Sym: 44; Act: -59 ),
+  ( Sym: 256; Act: -59 ),
+  ( Sym: 257; Act: -59 ),
+  ( Sym: 259; Act: -59 ),
+  ( Sym: 260; Act: -59 ),
+  ( Sym: 262; Act: -59 ),
+  ( Sym: 263; Act: -59 ),
+  ( Sym: 264; Act: -59 ),
+  ( Sym: 265; Act: -59 ),
+  ( Sym: 266; Act: -59 ),
+  ( Sym: 267; Act: -59 ),
+  ( Sym: 269; Act: -59 ),
+  ( Sym: 270; Act: -59 ),
 { 69: }
 { 70: }
-  ( sym: 261; act: 88 ),
-  ( sym: 44; act: -60 ),
-  ( sym: 256; act: -60 ),
-  ( sym: 257; act: -60 ),
-  ( sym: 259; act: -60 ),
-  ( sym: 260; act: -60 ),
-  ( sym: 262; act: -60 ),
-  ( sym: 263; act: -60 ),
-  ( sym: 264; act: -60 ),
-  ( sym: 265; act: -60 ),
-  ( sym: 266; act: -60 ),
-  ( sym: 267; act: -60 ),
-  ( sym: 269; act: -60 ),
-  ( sym: 270; act: -60 ),
+  ( Sym: 261; Act: 88 ),
+  ( Sym: 44; Act: -60 ),
+  ( Sym: 256; Act: -60 ),
+  ( Sym: 257; Act: -60 ),
+  ( Sym: 259; Act: -60 ),
+  ( Sym: 260; Act: -60 ),
+  ( Sym: 262; Act: -60 ),
+  ( Sym: 263; Act: -60 ),
+  ( Sym: 264; Act: -60 ),
+  ( Sym: 265; Act: -60 ),
+  ( Sym: 266; Act: -60 ),
+  ( Sym: 267; Act: -60 ),
+  ( Sym: 269; Act: -60 ),
+  ( Sym: 270; Act: -60 ),
 { 71: }
 { 72: }
 { 73: }
 { 74: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -45 ),
-  ( sym: 263; act: -45 ),
-  ( sym: 264; act: -45 ),
-  ( sym: 265; act: -45 ),
-  ( sym: 266; act: -45 ),
-  ( sym: 267; act: -45 ),
-  ( sym: 269; act: -45 ),
-  ( sym: 270; act: -45 ),
+  ( Sym: 44; Act: 61 ),
+  ( Sym: 256; Act: 86 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 262; Act: -45 ),
+  ( Sym: 263; Act: -45 ),
+  ( Sym: 264; Act: -45 ),
+  ( Sym: 265; Act: -45 ),
+  ( Sym: 266; Act: -45 ),
+  ( Sym: 267; Act: -45 ),
+  ( Sym: 269; Act: -45 ),
+  ( Sym: 270; Act: -45 ),
 { 75: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -43 ),
-  ( sym: 263; act: -43 ),
-  ( sym: 264; act: -43 ),
-  ( sym: 265; act: -43 ),
-  ( sym: 266; act: -43 ),
-  ( sym: 267; act: -43 ),
-  ( sym: 269; act: -43 ),
-  ( sym: 270; act: -43 ),
+  ( Sym: 44; Act: 61 ),
+  ( Sym: 256; Act: 86 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 262; Act: -43 ),
+  ( Sym: 263; Act: -43 ),
+  ( Sym: 264; Act: -43 ),
+  ( Sym: 265; Act: -43 ),
+  ( Sym: 266; Act: -43 ),
+  ( Sym: 267; Act: -43 ),
+  ( Sym: 269; Act: -43 ),
+  ( Sym: 270; Act: -43 ),
 { 76: }
-  ( sym: 44; act: 61 ),
-  ( sym: 256; act: 86 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 262; act: -41 ),
-  ( sym: 263; act: -41 ),
-  ( sym: 264; act: -41 ),
-  ( sym: 265; act: -41 ),
-  ( sym: 266; act: -41 ),
-  ( sym: 267; act: -41 ),
-  ( sym: 269; act: -41 ),
-  ( sym: 270; act: -41 ),
+  ( Sym: 44; Act: 61 ),
+  ( Sym: 256; Act: 86 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 262; Act: -41 ),
+  ( Sym: 263; Act: -41 ),
+  ( Sym: 264; Act: -41 ),
+  ( Sym: 265; Act: -41 ),
+  ( Sym: 266; Act: -41 ),
+  ( Sym: 267; Act: -41 ),
+  ( Sym: 269; Act: -41 ),
+  ( Sym: 270; Act: -41 ),
 { 77: }
-  ( sym: 58; act: 91 ),
+  ( Sym: 58; Act: 91 ),
 { 78: }
 { 79: }
 { 80: }
@@ -753,10 +753,10 @@ yya : array [1..yynacts] of YYARec = (
 { 83: }
 { 84: }
 { 85: }
-  ( sym: 256; act: 95 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 256; Act: 95 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 86: }
 { 87: }
 { 88: }
@@ -764,37 +764,37 @@ yya : array [1..yynacts] of YYARec = (
 { 90: }
 { 91: }
 { 92: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 256; act: 107 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 268; act: 108 ),
-  ( sym: 0; act: -93 ),
-  ( sym: 59; act: -93 ),
-  ( sym: 124; act: -93 ),
-  ( sym: 258; act: -93 ),
-  ( sym: 269; act: -93 ),
+  ( Sym: 61; Act: 105 ),
+  ( Sym: 123; Act: 106 ),
+  ( Sym: 256; Act: 107 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 268; Act: 108 ),
+  ( Sym: 0; Act: -93 ),
+  ( Sym: 59; Act: -93 ),
+  ( Sym: 124; Act: -93 ),
+  ( Sym: 258; Act: -93 ),
+  ( Sym: 269; Act: -93 ),
 { 93: }
-  ( sym: 258; act: 51 ),
+  ( Sym: 258; Act: 51 ),
 { 94: }
 { 95: }
 { 96: }
 { 97: }
 { 98: }
-  ( sym: 59; act: 112 ),
-  ( sym: 0; act: -83 ),
-  ( sym: 124; act: -83 ),
-  ( sym: 256; act: -83 ),
-  ( sym: 258; act: -83 ),
-  ( sym: 269; act: -83 ),
+  ( Sym: 59; Act: 112 ),
+  ( Sym: 0; Act: -83 ),
+  ( Sym: 124; Act: -83 ),
+  ( Sym: 256; Act: -83 ),
+  ( Sym: 258; Act: -83 ),
+  ( Sym: 269; Act: -83 ),
 { 99: }
 { 100: }
 { 101: }
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
 { 102: }
 { 103: }
 { 104: }
@@ -804,102 +804,102 @@ yya : array [1..yynacts] of YYARec = (
 { 108: }
 { 109: }
 { 110: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 256; act: 107 ),
-  ( sym: 257; act: 25 ),
-  ( sym: 259; act: 72 ),
-  ( sym: 260; act: 73 ),
-  ( sym: 268; act: 108 ),
-  ( sym: 0; act: -93 ),
-  ( sym: 59; act: -93 ),
-  ( sym: 124; act: -93 ),
-  ( sym: 258; act: -93 ),
-  ( sym: 269; act: -93 ),
+  ( Sym: 61; Act: 105 ),
+  ( Sym: 123; Act: 106 ),
+  ( Sym: 256; Act: 107 ),
+  ( Sym: 257; Act: 25 ),
+  ( Sym: 259; Act: 72 ),
+  ( Sym: 260; Act: 73 ),
+  ( Sym: 268; Act: 108 ),
+  ( Sym: 0; Act: -93 ),
+  ( Sym: 59; Act: -93 ),
+  ( Sym: 124; Act: -93 ),
+  ( Sym: 258; Act: -93 ),
+  ( Sym: 269; Act: -93 ),
 { 111: }
 { 112: }
 { 113: }
-  ( sym: 125; act: 119 ),
-  ( sym: 256; act: 120 ),
+  ( Sym: 125; Act: 119 ),
+  ( Sym: 256; Act: 120 ),
 { 114: }
 { 115: }
 { 116: }
 { 117: }
-  ( sym: 59; act: 112 ),
-  ( sym: 0; act: -80 ),
-  ( sym: 124; act: -80 ),
-  ( sym: 256; act: -80 ),
-  ( sym: 258; act: -80 ),
-  ( sym: 269; act: -80 ),
+  ( Sym: 59; Act: 112 ),
+  ( Sym: 0; Act: -80 ),
+  ( Sym: 124; Act: -80 ),
+  ( Sym: 256; Act: -80 ),
+  ( Sym: 258; Act: -80 ),
+  ( Sym: 269; Act: -80 ),
 { 118: }
 { 119: }
 { 120: }
 { 121: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 ),
+  ( Sym: 61; Act: 105 ),
+  ( Sym: 123; Act: 106 ),
+  ( Sym: 0; Act: -101 ),
+  ( Sym: 59; Act: -101 ),
+  ( Sym: 124; Act: -101 ),
+  ( Sym: 256; Act: -101 ),
+  ( Sym: 258; Act: -101 ),
+  ( Sym: 269; Act: -101 ),
 { 122: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 ),
+  ( Sym: 61; Act: 105 ),
+  ( Sym: 123; Act: 106 ),
+  ( Sym: 0; Act: -101 ),
+  ( Sym: 59; Act: -101 ),
+  ( Sym: 124; Act: -101 ),
+  ( Sym: 256; Act: -101 ),
+  ( Sym: 258; Act: -101 ),
+  ( Sym: 269; Act: -101 ),
 { 123: }
-  ( sym: 61; act: 105 ),
-  ( sym: 123; act: 106 ),
-  ( sym: 0; act: -101 ),
-  ( sym: 59; act: -101 ),
-  ( sym: 124; act: -101 ),
-  ( sym: 256; act: -101 ),
-  ( sym: 258; act: -101 ),
-  ( sym: 269; act: -101 )
+  ( Sym: 61; Act: 105 ),
+  ( Sym: 123; Act: 106 ),
+  ( Sym: 0; Act: -101 ),
+  ( Sym: 59; Act: -101 ),
+  ( Sym: 124; Act: -101 ),
+  ( Sym: 256; Act: -101 ),
+  ( Sym: 258; Act: -101 ),
+  ( Sym: 269; Act: -101 )
 { 124: }
 { 125: }
 { 126: }
 { 127: }
 );
 
-yyg : array [1..yyngotos] of YYARec = (
+YYG : array [1..YYNGotos] of TYYARec = (
 { 0: }
-  ( sym: -27; act: 1 ),
-  ( sym: -2; act: 2 ),
+  ( Sym: -27; Act: 1 ),
+  ( Sym: -2; Act: 2 ),
 { 1: }
-  ( sym: -32; act: 3 ),
-  ( sym: -16; act: 4 ),
-  ( sym: -15; act: 5 ),
-  ( sym: -13; act: 6 ),
-  ( sym: -12; act: 7 ),
-  ( sym: -11; act: 8 ),
-  ( sym: -10; act: 9 ),
-  ( sym: -9; act: 10 ),
-  ( sym: -8; act: 11 ),
+  ( Sym: -32; Act: 3 ),
+  ( Sym: -16; Act: 4 ),
+  ( Sym: -15; Act: 5 ),
+  ( Sym: -13; Act: 6 ),
+  ( Sym: -12; Act: 7 ),
+  ( Sym: -11; Act: 8 ),
+  ( Sym: -10; Act: 9 ),
+  ( Sym: -9; Act: 10 ),
+  ( Sym: -8; Act: 11 ),
 { 2: }
 { 3: }
 { 4: }
-  ( sym: -33; act: 21 ),
+  ( Sym: -33; Act: 21 ),
 { 5: }
-  ( sym: -29; act: 22 ),
+  ( Sym: -29; Act: 22 ),
 { 6: }
-  ( sym: -3; act: 23 ),
+  ( Sym: -3; Act: 23 ),
 { 7: }
-  ( sym: -34; act: 26 ),
-  ( sym: -24; act: 27 ),
+  ( Sym: -34; Act: 26 ),
+  ( Sym: -24; Act: 27 ),
 { 8: }
-  ( sym: -39; act: 29 ),
+  ( Sym: -39; Act: 29 ),
 { 9: }
-  ( sym: -38; act: 30 ),
+  ( Sym: -38; Act: 30 ),
 { 10: }
-  ( sym: -37; act: 31 ),
+  ( Sym: -37; Act: 31 ),
 { 11: }
-  ( sym: -35; act: 32 ),
+  ( Sym: -35; Act: 32 ),
 { 12: }
 { 13: }
 { 14: }
@@ -910,100 +910,100 @@ yyg : array [1..yyngotos] of YYARec = (
 { 19: }
 { 20: }
 { 21: }
-  ( sym: -17; act: 33 ),
+  ( Sym: -17; Act: 33 ),
 { 22: }
-  ( sym: -44; act: 36 ),
-  ( sym: -28; act: 37 ),
-  ( sym: -16; act: 38 ),
+  ( Sym: -44; Act: 36 ),
+  ( Sym: -28; Act: 37 ),
+  ( Sym: -16; Act: 38 ),
 { 23: }
 { 24: }
 { 25: }
 { 26: }
-  ( sym: -42; act: 40 ),
-  ( sym: -40; act: 41 ),
-  ( sym: -3; act: 42 ),
+  ( Sym: -42; Act: 40 ),
+  ( Sym: -40; Act: 41 ),
+  ( Sym: -3; Act: 42 ),
 { 27: }
-  ( sym: -3; act: 44 ),
+  ( Sym: -3; Act: 44 ),
 { 28: }
 { 29: }
-  ( sym: -34; act: 45 ),
-  ( sym: -24; act: 27 ),
+  ( Sym: -34; Act: 45 ),
+  ( Sym: -24; Act: 27 ),
 { 30: }
-  ( sym: -34; act: 46 ),
-  ( sym: -24; act: 27 ),
+  ( Sym: -34; Act: 46 ),
+  ( Sym: -24; Act: 27 ),
 { 31: }
-  ( sym: -34; act: 47 ),
-  ( sym: -24; act: 27 ),
+  ( Sym: -34; Act: 47 ),
+  ( Sym: -24; Act: 27 ),
 { 32: }
-  ( sym: -34; act: 48 ),
-  ( sym: -24; act: 27 ),
+  ( Sym: -34; Act: 48 ),
+  ( Sym: -24; Act: 27 ),
 { 33: }
 { 34: }
 { 35: }
 { 36: }
-  ( sym: -43; act: 49 ),
-  ( sym: -4; act: 50 ),
+  ( Sym: -43; Act: 49 ),
+  ( Sym: -4; Act: 50 ),
 { 37: }
-  ( sym: -47; act: 52 ),
-  ( sym: -43; act: 53 ),
-  ( sym: -31; act: 54 ),
-  ( sym: -21; act: 55 ),
-  ( sym: -4; act: 50 ),
+  ( Sym: -47; Act: 52 ),
+  ( Sym: -43; Act: 53 ),
+  ( Sym: -31; Act: 54 ),
+  ( Sym: -21; Act: 55 ),
+  ( Sym: -4; Act: 50 ),
 { 38: }
-  ( sym: -45; act: 58 ),
+  ( Sym: -45; Act: 58 ),
 { 39: }
 { 40: }
 { 41: }
-  ( sym: -42; act: 59 ),
-  ( sym: -18; act: 60 ),
-  ( sym: -3; act: 42 ),
+  ( Sym: -42; Act: 59 ),
+  ( Sym: -18; Act: 60 ),
+  ( Sym: -3; Act: 42 ),
 { 42: }
 { 43: }
 { 44: }
-  ( sym: -25; act: 63 ),
+  ( Sym: -25; Act: 63 ),
 { 45: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 67 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 66 ),
+  ( Sym: -36; Act: 67 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 46: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 74 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 66 ),
+  ( Sym: -36; Act: 74 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 47: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 75 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 66 ),
+  ( Sym: -36; Act: 75 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 48: }
-  ( sym: -41; act: 66 ),
-  ( sym: -36; act: 76 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 66 ),
+  ( Sym: -36; Act: 76 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 49: }
 { 50: }
-  ( sym: -48; act: 77 ),
+  ( Sym: -48; Act: 77 ),
 { 51: }
 { 52: }
 { 53: }
 { 54: }
-  ( sym: -30; act: 78 ),
-  ( sym: -15; act: 79 ),
+  ( Sym: -30; Act: 78 ),
+  ( Sym: -15; Act: 79 ),
 { 55: }
-  ( sym: -52; act: 80 ),
+  ( Sym: -52; Act: 80 ),
 { 56: }
 { 57: }
 { 58: }
-  ( sym: -17; act: 81 ),
+  ( Sym: -17; Act: 81 ),
 { 59: }
 { 60: }
-  ( sym: -42; act: 82 ),
-  ( sym: -3; act: 42 ),
+  ( Sym: -42; Act: 82 ),
+  ( Sym: -3; Act: 42 ),
 { 61: }
 { 62: }
 { 63: }
@@ -1011,86 +1011,86 @@ yyg : array [1..yyngotos] of YYARec = (
 { 65: }
 { 66: }
 { 67: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 84 ),
+  ( Sym: -18; Act: 85 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 68: }
-  ( sym: -7; act: 87 ),
+  ( Sym: -7; Act: 87 ),
 { 69: }
 { 70: }
-  ( sym: -7; act: 89 ),
+  ( Sym: -7; Act: 89 ),
 { 71: }
 { 72: }
 { 73: }
 { 74: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 84 ),
+  ( Sym: -18; Act: 85 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 75: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 84 ),
+  ( Sym: -18; Act: 85 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 76: }
-  ( sym: -41; act: 84 ),
-  ( sym: -18; act: 85 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 84 ),
+  ( Sym: -18; Act: 85 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 77: }
-  ( sym: -19; act: 90 ),
+  ( Sym: -19; Act: 90 ),
 { 78: }
 { 79: }
 { 80: }
-  ( sym: -49; act: 92 ),
+  ( Sym: -49; Act: 92 ),
 { 81: }
-  ( sym: -46; act: 93 ),
+  ( Sym: -46; Act: 93 ),
 { 82: }
 { 83: }
 { 84: }
 { 85: }
-  ( sym: -41; act: 94 ),
-  ( sym: -6; act: 68 ),
-  ( sym: -5; act: 69 ),
-  ( sym: -3; act: 70 ),
+  ( Sym: -41; Act: 94 ),
+  ( Sym: -6; Act: 68 ),
+  ( Sym: -5; Act: 69 ),
+  ( Sym: -3; Act: 70 ),
 { 86: }
 { 87: }
 { 88: }
 { 89: }
 { 90: }
-  ( sym: -50; act: 96 ),
+  ( Sym: -50; Act: 96 ),
 { 91: }
 { 92: }
-  ( sym: -53; act: 97 ),
-  ( sym: -51; act: 98 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
-  ( sym: -14; act: 101 ),
-  ( sym: -6; act: 102 ),
-  ( sym: -5; act: 103 ),
-  ( sym: -3; act: 104 ),
+  ( Sym: -53; Act: 97 ),
+  ( Sym: -51; Act: 98 ),
+  ( Sym: -26; Act: 99 ),
+  ( Sym: -22; Act: 100 ),
+  ( Sym: -14; Act: 101 ),
+  ( Sym: -6; Act: 102 ),
+  ( Sym: -5; Act: 103 ),
+  ( Sym: -3; Act: 104 ),
 { 93: }
-  ( sym: -43; act: 109 ),
-  ( sym: -4; act: 50 ),
+  ( Sym: -43; Act: 109 ),
+  ( Sym: -4; Act: 50 ),
 { 94: }
 { 95: }
 { 96: }
-  ( sym: -49; act: 110 ),
+  ( Sym: -49; Act: 110 ),
 { 97: }
 { 98: }
-  ( sym: -20; act: 111 ),
+  ( Sym: -20; Act: 111 ),
 { 99: }
 { 100: }
-  ( sym: -54; act: 113 ),
+  ( Sym: -54; Act: 113 ),
 { 101: }
-  ( sym: -6; act: 114 ),
-  ( sym: -5; act: 115 ),
-  ( sym: -3; act: 116 ),
+  ( Sym: -6; Act: 114 ),
+  ( Sym: -5; Act: 115 ),
+  ( Sym: -3; Act: 116 ),
 { 102: }
 { 103: }
 { 104: }
@@ -1100,51 +1100,51 @@ yyg : array [1..yyngotos] of YYARec = (
 { 108: }
 { 109: }
 { 110: }
-  ( sym: -53; act: 97 ),
-  ( sym: -51; act: 117 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
-  ( sym: -14; act: 101 ),
-  ( sym: -6; act: 102 ),
-  ( sym: -5; act: 103 ),
-  ( sym: -3; act: 104 ),
+  ( Sym: -53; Act: 97 ),
+  ( Sym: -51; Act: 117 ),
+  ( Sym: -26; Act: 99 ),
+  ( Sym: -22; Act: 100 ),
+  ( Sym: -14; Act: 101 ),
+  ( Sym: -6; Act: 102 ),
+  ( Sym: -5; Act: 103 ),
+  ( Sym: -3; Act: 104 ),
 { 111: }
 { 112: }
 { 113: }
-  ( sym: -23; act: 118 ),
+  ( Sym: -23; Act: 118 ),
 { 114: }
-  ( sym: -57; act: 121 ),
+  ( Sym: -57; Act: 121 ),
 { 115: }
-  ( sym: -56; act: 122 ),
+  ( Sym: -56; Act: 122 ),
 { 116: }
-  ( sym: -58; act: 123 ),
+  ( Sym: -58; Act: 123 ),
 { 117: }
-  ( sym: -20; act: 111 ),
+  ( Sym: -20; Act: 111 ),
 { 118: }
 { 119: }
 { 120: }
 { 121: }
-  ( sym: -55; act: 124 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
+  ( Sym: -55; Act: 124 ),
+  ( Sym: -53; Act: 125 ),
+  ( Sym: -26; Act: 99 ),
+  ( Sym: -22; Act: 100 ),
 { 122: }
-  ( sym: -55; act: 126 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 ),
+  ( Sym: -55; Act: 126 ),
+  ( Sym: -53; Act: 125 ),
+  ( Sym: -26; Act: 99 ),
+  ( Sym: -22; Act: 100 ),
 { 123: }
-  ( sym: -55; act: 127 ),
-  ( sym: -53; act: 125 ),
-  ( sym: -26; act: 99 ),
-  ( sym: -22; act: 100 )
+  ( Sym: -55; Act: 127 ),
+  ( Sym: -53; Act: 125 ),
+  ( Sym: -26; Act: 99 ),
+  ( Sym: -22; Act: 100 )
 { 124: }
 { 125: }
 { 126: }
 { 127: }
 );
 
-yyd : array [0..yynstates-1] of Integer = (
+YYD : array [0..YYNStates-1] of Integer = (
 { 0: } -33,
 { 1: } 0,
 { 2: } 0,
@@ -1275,7 +1275,7 @@ yyd : array [0..yynstates-1] of Integer = (
 { 127: } -99
 );
 
-yyal : array [0..yynstates-1] of Integer = (
+YYAL : array [0..YYNStates-1] of Integer = (
 { 0: } 1,
 { 1: } 1,
 { 2: } 10,
@@ -1406,7 +1406,7 @@ yyal : array [0..yynstates-1] of Integer = (
 { 127: } 252
 );
 
-yyah : array [0..yynstates-1] of Integer = (
+YYAH : array [0..YYNStates-1] of Integer = (
 { 0: } 0,
 { 1: } 9,
 { 2: } 10,
@@ -1537,7 +1537,7 @@ yyah : array [0..yynstates-1] of Integer = (
 { 127: } 251
 );
 
-yygl : array [0..yynstates-1] of Integer = (
+YYGL : array [0..YYNStates-1] of Integer = (
 { 0: } 1,
 { 1: } 3,
 { 2: } 12,
@@ -1668,7 +1668,7 @@ yygl : array [0..yynstates-1] of Integer = (
 { 127: } 147
 );
 
-yygh : array [0..yynstates-1] of Integer = (
+YYGH : array [0..YYNStates-1] of Integer = (
 { 0: } 2,
 { 1: } 11,
 { 2: } 11,
@@ -1799,728 +1799,728 @@ yygh : array [0..yynstates-1] of Integer = (
 { 127: } 146
 );
 
-yyr : array [1..yynrules] of YYRRec = (
-{ 1: } ( len: 1; sym: -3 ),
-{ 2: } ( len: 1; sym: -4 ),
-{ 3: } ( len: 1; sym: -5 ),
-{ 4: } ( len: 1; sym: -6 ),
-{ 5: } ( len: 1; sym: -7 ),
-{ 6: } ( len: 1; sym: -8 ),
-{ 7: } ( len: 1; sym: -9 ),
-{ 8: } ( len: 1; sym: -10 ),
-{ 9: } ( len: 1; sym: -11 ),
-{ 10: } ( len: 1; sym: -12 ),
-{ 11: } ( len: 1; sym: -13 ),
-{ 12: } ( len: 1; sym: -14 ),
-{ 13: } ( len: 1; sym: -15 ),
-{ 14: } ( len: 1; sym: -16 ),
-{ 15: } ( len: 1; sym: -17 ),
-{ 16: } ( len: 1; sym: -17 ),
-{ 17: } ( len: 1; sym: -18 ),
-{ 18: } ( len: 1; sym: -19 ),
-{ 19: } ( len: 1; sym: -20 ),
-{ 20: } ( len: 1; sym: -21 ),
-{ 21: } ( len: 1; sym: -22 ),
-{ 22: } ( len: 1; sym: -23 ),
-{ 23: } ( len: 1; sym: -23 ),
-{ 24: } ( len: 1; sym: -24 ),
-{ 25: } ( len: 1; sym: -25 ),
-{ 26: } ( len: 1; sym: -25 ),
-{ 27: } ( len: 1; sym: -26 ),
-{ 28: } ( len: 0; sym: -29 ),
-{ 29: } ( len: 0; sym: -31 ),
-{ 30: } ( len: 6; sym: -2 ),
-{ 31: } ( len: 0; sym: -30 ),
-{ 32: } ( len: 1; sym: -30 ),
-{ 33: } ( len: 0; sym: -27 ),
-{ 34: } ( len: 2; sym: -27 ),
-{ 35: } ( len: 2; sym: -27 ),
-{ 36: } ( len: 2; sym: -32 ),
-{ 37: } ( len: 2; sym: -32 ),
-{ 38: } ( len: 0; sym: -33 ),
-{ 39: } ( len: 3; sym: -32 ),
-{ 40: } ( len: 0; sym: -35 ),
-{ 41: } ( len: 4; sym: -32 ),
-{ 42: } ( len: 0; sym: -37 ),
-{ 43: } ( len: 4; sym: -32 ),
-{ 44: } ( len: 0; sym: -38 ),
-{ 45: } ( len: 4; sym: -32 ),
-{ 46: } ( len: 0; sym: -39 ),
-{ 47: } ( len: 4; sym: -32 ),
-{ 48: } ( len: 3; sym: -32 ),
-{ 49: } ( len: 2; sym: -32 ),
-{ 50: } ( len: 0; sym: -34 ),
-{ 51: } ( len: 3; sym: -34 ),
-{ 52: } ( len: 1; sym: -36 ),
-{ 53: } ( len: 2; sym: -36 ),
-{ 54: } ( len: 3; sym: -36 ),
-{ 55: } ( len: 1; sym: -36 ),
-{ 56: } ( len: 2; sym: -36 ),
-{ 57: } ( len: 3; sym: -36 ),
-{ 58: } ( len: 1; sym: -41 ),
-{ 59: } ( len: 1; sym: -41 ),
-{ 60: } ( len: 1; sym: -41 ),
-{ 61: } ( len: 2; sym: -41 ),
-{ 62: } ( len: 2; sym: -41 ),
-{ 63: } ( len: 1; sym: -40 ),
-{ 64: } ( len: 2; sym: -40 ),
-{ 65: } ( len: 3; sym: -40 ),
-{ 66: } ( len: 1; sym: -40 ),
-{ 67: } ( len: 2; sym: -40 ),
-{ 68: } ( len: 3; sym: -40 ),
-{ 69: } ( len: 1; sym: -42 ),
-{ 70: } ( len: 0; sym: -44 ),
-{ 71: } ( len: 2; sym: -28 ),
-{ 72: } ( len: 0; sym: -45 ),
-{ 73: } ( len: 0; sym: -46 ),
-{ 74: } ( len: 5; sym: -28 ),
-{ 75: } ( len: 2; sym: -28 ),
-{ 76: } ( len: 1; sym: -28 ),
-{ 77: } ( len: 2; sym: -28 ),
-{ 78: } ( len: 0; sym: -48 ),
-{ 79: } ( len: 0; sym: -50 ),
-{ 80: } ( len: 6; sym: -43 ),
-{ 81: } ( len: 1; sym: -47 ),
-{ 82: } ( len: 0; sym: -52 ),
-{ 83: } ( len: 4; sym: -47 ),
-{ 84: } ( len: 0; sym: -49 ),
-{ 85: } ( len: 2; sym: -49 ),
-{ 86: } ( len: 2; sym: -49 ),
-{ 87: } ( len: 2; sym: -49 ),
-{ 88: } ( len: 2; sym: -49 ),
-{ 89: } ( len: 2; sym: -49 ),
-{ 90: } ( len: 0; sym: -54 ),
-{ 91: } ( len: 3; sym: -53 ),
-{ 92: } ( len: 1; sym: -53 ),
-{ 93: } ( len: 0; sym: -51 ),
-{ 94: } ( len: 0; sym: -56 ),
-{ 95: } ( len: 4; sym: -51 ),
-{ 96: } ( len: 0; sym: -57 ),
-{ 97: } ( len: 4; sym: -51 ),
-{ 98: } ( len: 0; sym: -58 ),
-{ 99: } ( len: 4; sym: -51 ),
-{ 100: } ( len: 2; sym: -51 ),
-{ 101: } ( len: 0; sym: -55 ),
-{ 102: } ( len: 1; sym: -55 )
+YYR : array [1..YYNRules] of TYYRRec = (
+{ 1: } ( Len: 1; Sym: -3 ),
+{ 2: } ( Len: 1; Sym: -4 ),
+{ 3: } ( Len: 1; Sym: -5 ),
+{ 4: } ( Len: 1; Sym: -6 ),
+{ 5: } ( Len: 1; Sym: -7 ),
+{ 6: } ( Len: 1; Sym: -8 ),
+{ 7: } ( Len: 1; Sym: -9 ),
+{ 8: } ( Len: 1; Sym: -10 ),
+{ 9: } ( Len: 1; Sym: -11 ),
+{ 10: } ( Len: 1; Sym: -12 ),
+{ 11: } ( Len: 1; Sym: -13 ),
+{ 12: } ( Len: 1; Sym: -14 ),
+{ 13: } ( Len: 1; Sym: -15 ),
+{ 14: } ( Len: 1; Sym: -16 ),
+{ 15: } ( Len: 1; Sym: -17 ),
+{ 16: } ( Len: 1; Sym: -17 ),
+{ 17: } ( Len: 1; Sym: -18 ),
+{ 18: } ( Len: 1; Sym: -19 ),
+{ 19: } ( Len: 1; Sym: -20 ),
+{ 20: } ( Len: 1; Sym: -21 ),
+{ 21: } ( Len: 1; Sym: -22 ),
+{ 22: } ( Len: 1; Sym: -23 ),
+{ 23: } ( Len: 1; Sym: -23 ),
+{ 24: } ( Len: 1; Sym: -24 ),
+{ 25: } ( Len: 1; Sym: -25 ),
+{ 26: } ( Len: 1; Sym: -25 ),
+{ 27: } ( Len: 1; Sym: -26 ),
+{ 28: } ( Len: 0; Sym: -29 ),
+{ 29: } ( Len: 0; Sym: -31 ),
+{ 30: } ( Len: 6; Sym: -2 ),
+{ 31: } ( Len: 0; Sym: -30 ),
+{ 32: } ( Len: 1; Sym: -30 ),
+{ 33: } ( Len: 0; Sym: -27 ),
+{ 34: } ( Len: 2; Sym: -27 ),
+{ 35: } ( Len: 2; Sym: -27 ),
+{ 36: } ( Len: 2; Sym: -32 ),
+{ 37: } ( Len: 2; Sym: -32 ),
+{ 38: } ( Len: 0; Sym: -33 ),
+{ 39: } ( Len: 3; Sym: -32 ),
+{ 40: } ( Len: 0; Sym: -35 ),
+{ 41: } ( Len: 4; Sym: -32 ),
+{ 42: } ( Len: 0; Sym: -37 ),
+{ 43: } ( Len: 4; Sym: -32 ),
+{ 44: } ( Len: 0; Sym: -38 ),
+{ 45: } ( Len: 4; Sym: -32 ),
+{ 46: } ( Len: 0; Sym: -39 ),
+{ 47: } ( Len: 4; Sym: -32 ),
+{ 48: } ( Len: 3; Sym: -32 ),
+{ 49: } ( Len: 2; Sym: -32 ),
+{ 50: } ( Len: 0; Sym: -34 ),
+{ 51: } ( Len: 3; Sym: -34 ),
+{ 52: } ( Len: 1; Sym: -36 ),
+{ 53: } ( Len: 2; Sym: -36 ),
+{ 54: } ( Len: 3; Sym: -36 ),
+{ 55: } ( Len: 1; Sym: -36 ),
+{ 56: } ( Len: 2; Sym: -36 ),
+{ 57: } ( Len: 3; Sym: -36 ),
+{ 58: } ( Len: 1; Sym: -41 ),
+{ 59: } ( Len: 1; Sym: -41 ),
+{ 60: } ( Len: 1; Sym: -41 ),
+{ 61: } ( Len: 2; Sym: -41 ),
+{ 62: } ( Len: 2; Sym: -41 ),
+{ 63: } ( Len: 1; Sym: -40 ),
+{ 64: } ( Len: 2; Sym: -40 ),
+{ 65: } ( Len: 3; Sym: -40 ),
+{ 66: } ( Len: 1; Sym: -40 ),
+{ 67: } ( Len: 2; Sym: -40 ),
+{ 68: } ( Len: 3; Sym: -40 ),
+{ 69: } ( Len: 1; Sym: -42 ),
+{ 70: } ( Len: 0; Sym: -44 ),
+{ 71: } ( Len: 2; Sym: -28 ),
+{ 72: } ( Len: 0; Sym: -45 ),
+{ 73: } ( Len: 0; Sym: -46 ),
+{ 74: } ( Len: 5; Sym: -28 ),
+{ 75: } ( Len: 2; Sym: -28 ),
+{ 76: } ( Len: 1; Sym: -28 ),
+{ 77: } ( Len: 2; Sym: -28 ),
+{ 78: } ( Len: 0; Sym: -48 ),
+{ 79: } ( Len: 0; Sym: -50 ),
+{ 80: } ( Len: 6; Sym: -43 ),
+{ 81: } ( Len: 1; Sym: -47 ),
+{ 82: } ( Len: 0; Sym: -52 ),
+{ 83: } ( Len: 4; Sym: -47 ),
+{ 84: } ( Len: 0; Sym: -49 ),
+{ 85: } ( Len: 2; Sym: -49 ),
+{ 86: } ( Len: 2; Sym: -49 ),
+{ 87: } ( Len: 2; Sym: -49 ),
+{ 88: } ( Len: 2; Sym: -49 ),
+{ 89: } ( Len: 2; Sym: -49 ),
+{ 90: } ( Len: 0; Sym: -54 ),
+{ 91: } ( Len: 3; Sym: -53 ),
+{ 92: } ( Len: 1; Sym: -53 ),
+{ 93: } ( Len: 0; Sym: -51 ),
+{ 94: } ( Len: 0; Sym: -56 ),
+{ 95: } ( Len: 4; Sym: -51 ),
+{ 96: } ( Len: 0; Sym: -57 ),
+{ 97: } ( Len: 4; Sym: -51 ),
+{ 98: } ( Len: 0; Sym: -58 ),
+{ 99: } ( Len: 4; Sym: -51 ),
+{ 100: } ( Len: 2; Sym: -51 ),
+{ 101: } ( Len: 0; Sym: -55 ),
+{ 102: } ( Len: 1; Sym: -55 )
 );
 
 
-const _error = 256; (* error token *)
+const ParserErrorFlag = 256; (* error token *)
 
-function yyact(state, sym : Integer; var act : Integer) : Boolean;
+function YYAct(State, Sym : Integer; var Act : Integer) : Boolean;
   (* search action table *)
-  var k : Integer;
+  var K : Integer;
   begin
-    k := yyal[state];
-    while (k<=yyah[state]) and (yya[k].sym<>sym) do inc(k);
-    if k>yyah[state] then
-      yyact := false
+    K := YYAL[State];
+    while (K<=YYAH[State]) and (YYA[K].Sym<>Sym) do Inc(K);
+    if K>YYAH[State] then
+      YYAct := False
     else
       begin
-        act := yya[k].act;
-        yyact := true;
+        Act := YYA[K].Act;
+        YYAct := True;
       end;
   end(*yyact*);
 
-function yygoto(state, sym : Integer; var nstate : Integer) : Boolean;
+function YYGoto(State, Sym : Integer; var NState : Integer) : Boolean;
   (* search goto table *)
-  var k : Integer;
+  var K : Integer;
   begin
-    k := yygl[state];
-    while (k<=yygh[state]) and (yyg[k].sym<>sym) do inc(k);
-    if k>yygh[state] then
-      yygoto := false
+    K := YYGL[State];
+    while (K<=YYGH[State]) and (YYG[K].Sym<>Sym) do Inc(K);
+    if K>YYGH[State] then
+      YYGoto := False
     else
       begin
-        nstate := yyg[k].act;
-        yygoto := true;
+        NState := YYG[K].Act;
+        YYGoto := True;
       end;
   end(*yygoto*);
 
-label parse, next, error, errlab, shift, reduce, accept, abort;
+label Parse, Next, Error, ErrLab, Shift, Reduce, Accept, Abort;
 
 begin(*yyparse*)
 
   (* initialize: *)
 
-  yystate := 0; yychar := -1; yynerrs := 0; yyerrflag := 0; yysp := 0;
+  YYState := 0; YYChar := -1; YYNErrs := 0; YYErrFlag := 0; YYSP := 0;
 
 {$ifdef yydebug}
-  yydebug := true;
+  YYDebug := True;
 {$else}
-  yydebug := false;
+  YYDebug := False;
 {$endif}
 
-parse:
+Parse:
 
   (* push state and value: *)
 
-  inc(yysp);
-  if yysp>yymaxdepth then
+  Inc(YYSP);
+  if YYSP>YYMaxDepth then
     begin
       yyerror('yyparse stack overflow');
-      goto abort;
+      goto Abort;
     end;
-  yys[yysp] := yystate; yyv[yysp] := yyval;
+  YYS[YYSP] := YYState; YYV[YYSP] := yyval;
 
-next:
+Next:
 
-  if (yyd[yystate]=0) and (yychar=-1) then
+  if (YYD[YYState]=0) and (YYChar=-1) then
     (* get next symbol *)
     begin
-      yychar := yylex; if yychar<0 then yychar := 0;
+      YYChar := yylex; if YYChar<0 then YYChar := 0;
     end;
 
-  if yydebug then writeln('state ', yystate, ', char ', yychar);
+  if YYDebug then WriteLn('state ', YYState, ', char ', YYChar);
 
   (* determine parse action: *)
 
-  yyn := yyd[yystate];
-  if yyn<>0 then goto reduce; (* simple state *)
+  YYN := YYD[YYState];
+  if YYN<>0 then goto Reduce; (* simple state *)
 
   (* no default action; search parse table *)
 
-  if not yyact(yystate, yychar, yyn) then goto error
-  else if yyn>0 then                      goto shift
-  else if yyn<0 then                      goto reduce
-  else                                    goto accept;
+  if not YYAct(YYState, YYChar, YYN) then goto Error
+  else if YYN>0 then                      goto Shift
+  else if YYN<0 then                      goto Reduce
+  else                                    goto Accept;
 
-error:
+Error:
 
   (* error; start error recovery: *)
 
-  if yyerrflag=0 then yyerror('syntax error');
+  if YYErrFlag=0 then yyerror('syntax error');
 
-errlab:
+ErrLab:
 
-  if yyerrflag=0 then inc(yynerrs);     (* new error *)
+  if YYErrFlag=0 then Inc(YYNErrs);     (* new error *)
 
-  if yyerrflag<=2 then                  (* incomplete recovery; try again *)
+  if YYErrFlag<=2 then                  (* incomplete recovery; try again *)
     begin
-      yyerrflag := 3;
+      YYErrFlag := 3;
       (* uncover a state with shift action on error token *)
-      while (yysp>0) and not ( yyact(yys[yysp], _error, yyn) and
-                               (yyn>0) ) do
+      while (YYSP>0) and not ( YYAct(YYS[YYSP], ParserErrorFlag, YYN) and
+                               (YYN>0) ) do
         begin
-          if yydebug then
-            if yysp>1 then
-              writeln('error recovery pops state ', yys[yysp], ', uncovers ',
-                      yys[yysp-1])
+          if YYDebug then
+            if YYSP>1 then
+              WriteLn('error recovery pops state ', YYS[YYSP], ', uncovers ',
+                      YYS[YYSP-1])
             else
-              writeln('error recovery fails ... abort');
-          dec(yysp);
+              WriteLn('error recovery fails ... abort');
+          Dec(YYSP);
         end;
-      if yysp=0 then goto abort; (* parser has fallen from stack; abort *)
-      yystate := yyn;            (* simulate shift on error *)
-      goto parse;
+      if YYSP=0 then goto Abort; (* parser has fallen from stack; abort *)
+      YYState := YYN;            (* simulate shift on error *)
+      goto Parse;
     end
   else                                  (* no shift yet; discard symbol *)
     begin
-      if yydebug then writeln('error recovery discards char ', yychar);
-      if yychar=0 then goto abort; (* end of input; abort *)
-      yychar := -1; goto next;     (* clear lookahead char and try again *)
+      if YYDebug then WriteLn('error recovery discards char ', YYChar);
+      if YYChar=0 then goto Abort; (* end of input; abort *)
+      YYChar := -1; goto Next;     (* clear lookahead char and try again *)
     end;
 
-shift:
+Shift:
 
   (* go to new state, clear lookahead character: *)
 
-  yystate := yyn; yychar := -1; yyval := yylval;
-  if yyerrflag>0 then dec(yyerrflag);
+  YYState := YYN; YYChar := -1; yyval := yylval;
+  if YYErrFlag>0 then Dec(YYErrFlag);
 
-  goto parse;
+  goto Parse;
 
-reduce:
+Reduce:
 
   (* execute action, pop rule from stack, and go to next state: *)
 
-  if yydebug then writeln('reduce ', -yyn);
+  if YYDebug then WriteLn('reduce ', -YYN);
 
-  yyflag := yyfnone; yyaction(-yyn);
-  dec(yysp, yyr[-yyn].len);
-  if yygoto(yys[yysp], yyr[-yyn].sym, yyn) then yystate := yyn;
+  YYFlag := yyfnone; YYAction(-YYN);
+  Dec(YYSP, YYR[-YYN].Len);
+  if YYGoto(YYS[YYSP], YYR[-YYN].Sym, YYN) then YYState := YYN;
 
   (* handle action calls to yyaccept, yyabort and yyerror: *)
 
-  case yyflag of
-    yyfaccept : goto accept;
-    yyfabort  : goto abort;
-    yyferror  : goto errlab;
+  case YYFlag of
+    yyfaccept : goto Accept;
+    yyfabort  : goto Abort;
+    yyferror  : goto ErrLab;
   end;
 
-  goto parse;
+  goto Parse;
 
-accept:
+Accept:
 
-  yyparse := 0; exit;
+  yyparse := 0; Exit;
 
-abort:
+Abort:
 
-  yyparse := 1; exit;
+  yyparse := 1; Exit;
 
 end(*yyparse*);
 
 
 (* Lexical analyzer (implemented in Turbo Pascal for maximum efficiency): *)
 
-function yylex : integer;
-  function end_of_input : boolean;
+function yylex : Integer;
+  function EndOfInput : Boolean;
     begin
-      end_of_input := (cno>length(line)) and eof(yyin)
+      EndOfInput := (CNo>Length(Line)) and EOF(YYIn)
     end(*end_of_input*);
-  procedure scan;
+  procedure Scan;
     (* scan for nonempty character, skip comments *)
-    procedure scan_comment;
-      var p : integer;
+    procedure ScanComment;
+      var P : Integer;
       begin
-        p := pos('*/', copy(line, cno, length(line)));
-        if p>0 then
-          cno := cno+succ(p)
+        P := POS('*/', Copy(Line, CNo, Length(Line)));
+        if P>0 then
+          CNo := CNo+Succ(P)
         else
           begin
-            while (p=0) and not eof(yyin) do
+            while (P=0) and not EOF(YYIn) do
               begin
-                readln(yyin, line);
-                inc(lno);
-                p := pos('*/', line)
+                ReadLn(YYIn, Line);
+                Inc(LNo);
+                P := POS('*/', Line)
               end;
-            if p=0 then
+            if P=0 then
               begin
-                cno := succ(length(line));
-                error(open_comment_at_eof);
+                CNo := Succ(Length(Line));
+                Error(OpenCommentAtEOF);
               end
             else
-              cno := succ(succ(p))
+              CNo := Succ(Succ(P))
           end
       end(*scan_comment*);
     begin
-      while not end_of_input do
-        if cno<=length(line) then
-          case line[cno] of
-            ' ', tab : inc(cno);
+      while not EndOfInput do
+        if CNo<=Length(Line) then
+          case Line[CNo] of
+            ' ', Tab : Inc(CNo);
             '/' :
-              if (cno<length(line)) and (line[succ(cno)]='*') then
+              if (CNo<Length(Line)) and (Line[Succ(CNo)]='*') then
                 begin
-                  inc(cno, 2);
-                  scan_comment
+                  Inc(CNo, 2);
+                  ScanComment
                 end
               else
-                exit
+                Exit
             else
-              exit
+              Exit
           end
         else
           begin
-            readln(yyin, line);
-            inc(lno); cno := 1;
+            ReadLn(YYIn, Line);
+            Inc(LNo); CNo := 1;
           end
     end(*scan*);
-  function scan_ident : integer;
+  function ScanIdent : Integer;
     (* scan an identifier *)
     var
-      idstr : String;
+      IDStr : String;
     begin
-      idstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and (
-            ('A'<=upCase(line[cno])) and (upCase(line[cno])<='Z') or
-            ('0'<=line[cno]) and (line[cno]<='9') or
-            (line[cno]='_') or
-            (line[cno]='.') ) do
+      IDStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and (
+            ('A'<=UpCase(Line[CNo])) and (UpCase(Line[CNo])<='Z') or
+            ('0'<=Line[CNo]) and (Line[CNo]<='9') or
+            (Line[CNo]='_') or
+            (Line[CNo]='.') ) do
 	begin
-	  idstr := idstr+line[cno];
-	  inc(cno)
+	  IDStr := IDStr+Line[CNo];
+	  Inc(CNo)
 	end;
-      yylval := get_key(idstr);
-      scan;
-      if not end_of_input and (line[cno]=':') then
-        scan_ident := C_ID
+      yylval := GetKey(IDStr);
+      Scan;
+      if not EndOfInput and (Line[CNo]=':') then
+        ScanIdent := CID
       else
-        scan_ident := ID
+        ScanIdent := ID
     end(*scan_ident*);
-  function scan_literal: integer;
+  function ScanLiteral: Integer;
     (* scan a literal, i.e. string *)
     var
-      idstr : String;
-      oct_val : Byte;
+      IDStr : String;
+      OctVal : Byte;
     begin
-      idstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and (line[cno]<>idstr[1]) do
-        if line[cno]='\' then
-          if cno<length(line) then
+      IDStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and (Line[CNo]<>IDStr[1]) do
+        if Line[CNo]='\' then
+          if CNo<Length(Line) then
             begin
-              inc(cno);
-              case line[cno] of
+              Inc(CNo);
+              case Line[CNo] of
                 'n' :
                   begin
-                    idstr := idstr+nl;
-                    inc(cno)
+                    IDStr := IDStr+NL;
+                    Inc(CNo)
                   end;
                 'r' :
                   begin
-                    idstr := idstr+cr;
-                    inc(cno)
+                    IDStr := IDStr+CR;
+                    Inc(CNo)
                   end;
                 't' :
                   begin
-                    idstr := idstr+tab;
-                    inc(cno)
+                    IDStr := IDStr+Tab;
+                    Inc(CNo)
                   end;
                 'b' :
                   begin
-                    idstr := idstr+bs;
-                    inc(cno)
+                    IDStr := IDStr+BS;
+                    Inc(CNo)
                   end;
                 'f' :
                   begin
-                    idstr := idstr+ff;
-                    inc(cno)
+                    IDStr := IDStr+FF;
+                    Inc(CNo)
                   end;
                 '0'..'7' :
                   begin
-                    oct_val := ord(line[cno])-ord('0');
-                    inc(cno);
-                    while (cno<=length(line)) and
-                          ('0'<=line[cno]) and
-                          (line[cno]<='7') do
+                    OctVal := Ord(Line[CNo])-Ord('0');
+                    Inc(CNo);
+                    while (CNo<=Length(Line)) and
+                          ('0'<=Line[CNo]) and
+                          (Line[CNo]<='7') do
                       begin
-                        oct_val := oct_val*8+ord(line[cno])-ord('0');
-                        inc(cno)
+                        OctVal := OctVal*8+Ord(Line[CNo])-Ord('0');
+                        Inc(CNo)
                       end;
-                    idstr := idstr+chr(oct_val)
+                    IDStr := IDStr+Chr(OctVal)
                   end
                 else
                   begin
-                    idstr := idstr+line[cno];
-                    inc(cno)
+                    IDStr := IDStr+Line[CNo];
+                    Inc(CNo)
                   end
               end
             end
           else
-            inc(cno)
+            Inc(CNo)
         else
           begin
-            idstr := idstr+line[cno];
-            inc(cno)
+            IDStr := IDStr+Line[CNo];
+            Inc(CNo)
           end;
-      if cno>length(line) then
-        error(missing_string_terminator)
+      if CNo>Length(Line) then
+        Error(MissingStringTerminator)
       else
-        inc(cno);
-      if length(idstr)=2 then
+        Inc(CNo);
+      if Length(IDStr)=2 then
         begin
-          yylval := ord(idstr[2]);
-          scan_literal := LITERAL;
+          yylval := Ord(IDStr[2]);
+          ScanLiteral := Literal;
         end
-      else if length(idstr)>1 then
+      else if Length(IDStr)>1 then
         begin
-          yylval := get_key(''''+copy(idstr, 2, pred(length(idstr)))+'''');
-          scan_literal := LITID;
+          yylval := GetKey(''''+Copy(IDStr, 2, Pred(Length(IDStr)))+'''');
+          ScanLiteral := LitID;
         end
       else
-        scan_literal := ILLEGAL;
+        ScanLiteral := Illegal;
     end(*scan_literal*);
-  function scan_num : integer;
+  function ScanNum : Integer;
     (* scan an unsigned integer *)
     var
-      numstr : String;
-      code : integer;
+      NumStr : String;
+      Code : Integer;
     begin
-      numstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and
-            ('0'<=line[cno]) and (line[cno]<='9') do
+      NumStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and
+            ('0'<=Line[CNo]) and (Line[CNo]<='9') do
         begin
-          numstr := numstr+line[cno];
-          inc(cno)
+          NumStr := NumStr+Line[CNo];
+          Inc(CNo)
         end;
-      val(numstr, yylval, code);
-      if code=0 then
-        scan_num := NUMBER
+      Val(NumStr, yylval, Code);
+      if Code=0 then
+        ScanNum := Number
       else
-        scan_num := ILLEGAL;
+        ScanNum := Illegal;
     end(*scan_num*);
-  function scan_keyword : integer;
+  function ScanKeyword : Integer;
     (* scan %xy *)
-    function lookup(key : String; var tok : integer) : boolean;
+    function Lookup(Key : String; var Tok : Integer) : Boolean;
       (* table of Yacc keywords (unstopped): *)
       const
-        no_of_entries = 11;
-        max_entry_length = 8;
-        keys : array [1..no_of_entries] of String[max_entry_length] = (
+        NoOfEntries = 11;
+        MaxEntryLength = 8;
+        Keys : array [1..NoOfEntries] of String[MaxEntryLength] = (
           '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
           'start', 'term', 'token', 'type');
-        toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
-          PSTART, PTOKEN, PTOKEN, PTYPE);
-      var m, n, k : integer;
+        Toks : array [1..NoOfEntries] of Integer = (
+          PToken, PNonAssoc, PNonAssoc, PLeft, PNonAssoc, PPrec, PRight,
+          PStart, PToken, PToken, PType);
+      var M, N, K : Integer;
       begin
         (* binary search: *)
-        m := 1; n := no_of_entries;
-        lookup := true;
-        while m<=n do
+        M := 1; N := NoOfEntries;
+        Lookup := True;
+        while M<=N do
           begin
-            k := m+(n-m) div 2;
-            if key=keys[k] then
+            K := M+(N-M) div 2;
+            if Key=Keys[K] then
               begin
-                tok := toks[k];
-                exit
+                Tok := Toks[K];
+                Exit
               end
-            else if key>keys[k] then
-              m := k+1
+            else if Key>Keys[K] then
+              M := K+1
             else
-              n := k-1
+              N := K-1
           end;
-        lookup := false
+        Lookup := False
       end(*lookup*);
     var
-      keywstr : String;
-      tok : integer;
+      KeywStr : String;
+      Tok : Integer;
     begin
-      inc(cno);
-      if cno<=length(line) then
-        case line[cno] of
+      Inc(CNo);
+      if CNo<=Length(Line) then
+        case Line[CNo] of
           '<' :
             begin
-              scan_keyword := PLEFT;
-              inc(cno)
+              ScanKeyword := PLeft;
+              Inc(CNo)
             end;
           '>' :
             begin
-              scan_keyword := PRIGHT;
-              inc(cno)
+              ScanKeyword := PRight;
+              Inc(CNo)
             end;
           '=' :
             begin
-              scan_keyword := PPREC;
-              inc(cno)
+              ScanKeyword := PPrec;
+              Inc(CNo)
             end;
           '%', '\' :
             begin
-              scan_keyword := PP;
-              inc(cno)
+              ScanKeyword := PP;
+              Inc(CNo)
             end;
           '{' :
             begin
-              scan_keyword := LCURL;
-              inc(cno)
+              ScanKeyword := LCurl;
+              Inc(CNo)
             end;
           '}' :
             begin
-              scan_keyword := RCURL;
-              inc(cno)
+              ScanKeyword := RCurl;
+              Inc(CNo)
             end;
           'A'..'Z', 'a'..'z', '0'..'9' :
             begin
-              keywstr := line[cno];
-              inc(cno);
-              while (cno<=length(line)) and (
-                    ('A'<=upCase(line[cno])) and (upCase(line[cno])<='Z') or
-                    ('0'<=line[cno]) and (line[cno]<='Z') ) do
+              KeywStr := Line[CNo];
+              Inc(CNo);
+              while (CNo<=Length(Line)) and (
+                    ('A'<=UpCase(Line[CNo])) and (UpCase(Line[CNo])<='Z') or
+                    ('0'<=Line[CNo]) and (Line[CNo]<='Z') ) do
                 begin
-                  keywstr := keywstr+line[cno];
-                  inc(cno)
+                  KeywStr := KeywStr+Line[CNo];
+                  Inc(CNo)
                 end;
-              if lookup(keywstr, tok) then
-                scan_keyword := tok
+              if Lookup(KeywStr, Tok) then
+                ScanKeyword := Tok
               else
-                scan_keyword := ILLEGAL
+                ScanKeyword := Illegal
             end;
-          else scan_keyword := ILLEGAL
+          else ScanKeyword := Illegal
         end
       else
-        scan_keyword := ILLEGAL;
+        ScanKeyword := Illegal;
     end(*scan_keyword*);
-  function scan_char : integer;
+  function ScanChar : Integer;
     (* scan any single character *)
     begin
-      scan_char := ord(line[cno]);
-      inc(cno)
+      ScanChar := Ord(Line[CNo]);
+      Inc(CNo)
     end(*scan_char*);
-  var lno0, cno0 : integer;
+  var LNo0, CNo0 : Integer;
   begin
-    tokleng := 0;
-    scan;
-    lno0 := lno; cno0 := cno;
-    if end_of_input then
+    TokLeng := 0;
+    Scan;
+    LNo0 := LNo; CNo0 := CNo;
+    if EndOfInput then
       yylex := 0
     else
-      case line[cno] of
-        'A'..'Z', 'a'..'z', '_' : yylex := scan_ident;
-	'''', '"' : yylex := scan_literal;
-	'0'..'9' : yylex := scan_num;
-	'%', '\' : yylex := scan_keyword;
+      case Line[CNo] of
+        'A'..'Z', 'a'..'z', '_' : yylex := ScanIdent;
+	'''', '"' : yylex := ScanLiteral;
+	'0'..'9' : yylex := ScanNum;
+	'%', '\' : yylex := ScanKeyword;
         '=' :
-          if (cno<length(line)) and (line[succ(cno)]='{') then
+          if (CNo<Length(Line)) and (Line[Succ(CNo)]='{') then
             begin
-              inc(cno);
-              yylex := scan_char
+              Inc(CNo);
+              yylex := ScanChar
             end
           else
-            yylex := scan_char;
-	else yylex := scan_char;
+            yylex := ScanChar;
+	else yylex := ScanChar;
       end;
-    if lno=lno0 then
-      tokleng := cno-cno0
+    if LNo=LNo0 then
+      TokLeng := CNo-CNo0
   end(*yylex*);
 
 (* Main program: *)
 
-var i : Integer;
+var I : Integer;
 
 begin
 {$ifdef Unix}
-  codfilepath1:=path(paramstr(0));
-  if (codfilepath1<>'') then
-    codfilepath1:=codfilepath1+'../lib/fpc/lexyacc/'
+  CodFilePath1:=Path(ParamStr(0));
+  if (CodFilePath1<>'') then
+    CodFilePath1:=CodFilePath1+'../lib/fpc/lexyacc/'
   else
-    codfilepath1:='/usr/local/lib/fpc/lexyacc/';
-  codfilepath2:='/usr/lib/fpc/lexyacc/';
+    CodFilePath1:='/usr/local/lib/fpc/lexyacc/';
+  CodFilePath2:='/usr/lib/fpc/lexyacc/';
 {$else}
-  codfilepath1:=path(paramstr(0));
-  codfilepath2:='';
+  CodFilePath1:=Path(ParamStr(0));
+  CodFilePath2:='';
 {$endif}
 
   (* sign-on: *)
 
-  writeln(sign_on);
+  WriteLn(SignOn);
 
   (* parse command line: *)
 
-  if paramCount=0 then
+  if ParamCount=0 then
     begin
-      writeln(usage);
-      writeln(options);
-      halt(0);
+      WriteLn(Usage);
+      WriteLn(Options);
+      Halt(0);
     end;
 
-  yfilename := '';
-  pasfilename := '';
+  YFileName := '';
+  PasFileName := '';
 
-  for i := 1 to paramCount do
-    if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-V' then
-        verbose := true
-      else if upper(paramStr(i))='-D' then
-        debug := true
+  for I := 1 to ParamCount do
+    if Copy(ParamStr(I), 1, 1)='-' then
+      if Upper(ParamStr(I))='-V' then
+        Verbose := True
+      else if Upper(ParamStr(I))='-D' then
+        Debug := True
       else
         begin
-          writeln(invalid_option, paramStr(i));
-          halt(1);
+          WriteLn(InvalidOption, ParamStr(I));
+          Halt(1);
         end
-    else if yfilename='' then
-      yfilename := addExt(paramStr(i), 'y')
-    else if pasfilename='' then
-      pasfilename := addExt(paramStr(i), 'pas')
+    else if YFileName='' then
+      YFileName := AddExt(ParamStr(I), 'y')
+    else if PasFileName='' then
+      PasFileName := AddExt(ParamStr(I), 'pas')
     else
       begin
-        writeln(illegal_no_args);
-        halt(1);
+        WriteLn(IllegalNoArgs);
+        Halt(1);
       end;
 
-  if yfilename='' then
+  if YFileName='' then
     begin
-      writeln(illegal_no_args);
-      halt(1);
+      WriteLn(IllegalNoArgs);
+      Halt(1);
     end;
 
-  if pasfilename='' then pasfilename := root(yfilename)+'.pas';
-  lstfilename := root(yfilename)+'.lst';
+  if PasFileName='' then PasFileName := Root(YFileName)+'.pas';
+  LstFileName := Root(YFileName)+'.lst';
 
   (* open files: *)
 
-  assign(yyin, yfilename);
-  assign(yyout, pasfilename);
-  assign(yylst, lstfilename);
+  Assign(YYIn, YFileName);
+  Assign(YYOut, PasFileName);
+  Assign(YYLst, LstFileName);
 
-  reset(yyin);    if ioresult<>0 then fatal(cannot_open_file+yfilename);
-  rewrite(yyout); if ioresult<>0 then fatal(cannot_open_file+pasfilename);
-  rewrite(yylst); if ioresult<>0 then fatal(cannot_open_file+lstfilename);
+  Reset(YYIn);    if IOResult<>0 then Fatal(CannotOpenFile+YFileName);
+  Rewrite(YYOut); if IOResult<>0 then Fatal(CannotOpenFile+PasFileName);
+  Rewrite(YYLst); if IOResult<>0 then Fatal(CannotOpenFile+LstFileName);
 
   (* search code template *)
-  codfilename := 'yyparse.cod';
-  assign(yycod, codfilename);
-  reset(yycod);
-  if ioresult<>0 then
+  CodFileName := 'yyparse.cod';
+  Assign(YYCod, CodFileName);
+  Reset(YYCod);
+  if IOResult<>0 then
     begin
-      codfilename := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yyparse.cod';
-      assign(yycod, codfilename);
-      reset(yycod);
-      if ioresult<>0 then
+      CodFileName := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yyparse.cod';
+      Assign(YYCod, CodFileName);
+      Reset(YYCod);
+      if IOResult<>0 then
         begin
-          codfilename := codfilepath1+'yyparse.cod';
-          assign(yycod, codfilename);
-          reset(yycod);
-          if (codfilepath2<>'') and (ioresult<>0) then
+          CodFileName := CodFilePath1+'yyparse.cod';
+          Assign(YYCod, CodFileName);
+          Reset(YYCod);
+          if (CodFilePath2<>'') and (IOResult<>0) then
             begin
-              codfilename := codfilepath2+'yyparse.cod';
-              assign(yycod, codfilename);
-              reset(yycod);
-              if ioresult<>0 then
-                fatal(cannot_open_file+codfilename);
+              CodFileName := CodFilePath2+'yyparse.cod';
+              Assign(YYCod, CodFileName);
+              Reset(YYCod);
+              if IOResult<>0 then
+                Fatal(CannotOpenFile+CodFileName);
             end;
         end;
     end;
 
   (* parse source grammar: *)
 
-  write('parse ... ');
+  Write('parse ... ');
 
-  lno := 0; cno := 1; line := '';
+  LNo := 0; CNo := 1; Line := '';
 
-  next_section;
-  if debug then writeln(yyout, '{$define yydebug}');
+  NextSection;
+  if Debug then WriteLn(YYOut, '{$define yydebug}');
 
   if yyparse=0 then
     { done }
-  else if yychar=0 then
-    error(unexpected_eof)
+  else if YYChar=0 then
+    Error(UnexpectedEOF)
   else
-    error(syntax_error);
+    Error(SyntaxError);
 
-  if errors=0 then writeln('DONE');
+  if Errors=0 then WriteLn('DONE');
 
   (* close files: *)
 
-  close(yyin); close(yyout); close(yylst); close(yycod);
+  Close(YYIn); Close(YYOut); Close(YYLst); Close(YYCod);
 
   (* print statistics: *)
 
-  if errors>0 then
-    writeln( lno, ' lines, ',
-             errors, ' errors found.' )
+  if Errors>0 then
+    WriteLn( LNo, ' lines, ',
+             Errors, ' errors found.' )
   else
     begin
-      writeln( lno, ' lines, ',
-               n_rules-1, '/', max_rules-1, ' rules, ',
-               n_states, '/', max_states, ' s, ',
-               n_items, '/', max_items, ' i, ',
-               n_trans, '/', max_trans, ' t, ',
-               n_redns, '/', max_redns, ' r.');
-      if shift_reduce>0 then
-        writeln(shift_reduce, ' shift/reduce conflicts.');
-      if reduce_reduce>0 then
-        writeln(reduce_reduce, ' reduce/reduce conflicts.');
-      if never_reduced>0 then
-        writeln(never_reduced, ' rules never reduced.');
+      WriteLn( LNo, ' lines, ',
+               NRules-1, '/', MaxRules-1, ' rules, ',
+               NStates, '/', MaxStates, ' s, ',
+               NItems, '/', MaxItems, ' i, ',
+               NTrans, '/', MaxTrans, ' t, ',
+               NRedns, '/', MaxRedns, ' r.');
+      if ShiftReduce>0 then
+        WriteLn(ShiftReduce, ' shift/reduce conflicts.');
+      if ReduceReduce>0 then
+        WriteLn(ReduceReduce, ' reduce/reduce conflicts.');
+      if NeverReduced>0 then
+        WriteLn(NeverReduced, ' rules never reduced.');
     end;
 
-  if warnings>0 then writeln(warnings, ' warnings.');
+  if Warnings>0 then WriteLn(Warnings, ' warnings.');
 
   (* terminate: *)
 
-  if errors>0 then
+  if Errors>0 then
     begin
-      erase(yyout);
-      if ioresult<>0 then ;
+      Erase(YYOut);
+      if IOResult<>0 then ;
     end;
 
-  if file_size(lstfilename)=0 then
-    erase(yylst)
+  if GetFileSize(LstFileName)=0 then
+    Erase(YYLst)
   else
-    writeln('(see ', lstfilename, ' for more information)');
+    WriteLn('(see ', LstFileName, ' for more information)');
 
-  halt(errors);
+  Halt(Errors);
 
 end(*Yacc*).

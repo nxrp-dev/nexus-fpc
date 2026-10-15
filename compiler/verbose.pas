@@ -27,13 +27,13 @@ interface
 
     uses
 {$IFNDEF USE_FAKE_SYSUTILS}
-      sysutils,
+      SysUtils,
 {$ELSE}
-      fksysutl,
+      FKSysUtl,
 {$ENDIF}
-      cutils,
-      globtype,finput,
-      cmsgs;
+      CUtils,
+      GlobType,FinPut,
+      CMsgs;
 
 {$ifndef EXTERN_MSG}
   {$i msgtxt.inc}
@@ -42,52 +42,52 @@ interface
 {$i msgidx.inc}
 
     var
-      msg : pmessage;
+      Msg : PMessage;
 
     type
-      tmsgqueueevent = procedure(const s:TMsgStr;v,w:longint) of object;
+      TMsgQueueEvent = procedure(const s:TMsgStr;v,w:LongInt) of object;
 
     var
-      msgfilename : string = '';
+      MsgFileName : string = '';
 
-    procedure SetRedirectFile(const fn:string);
-    function  SetVerbosity(const s:TCmdStr):boolean;
+    procedure SetRedirectFile(const FN:string);
+    function  SetVerbosity(const S:TCmdStr):Boolean;
     procedure PrepareReport;
 
-    function  CheckVerbosity(v:longint):boolean;
-    function  SetMessageVerbosity(v:longint;state:TMsgState):boolean;
-    procedure RestoreLocalVerbosity(pstate : PMessageStateRecord);
-    procedure FreeLocalVerbosity(var fstate : PMessageStateRecord);
+    function  CheckVerbosity(V:LongInt):Boolean;
+    function  SetMessageVerbosity(V:LongInt;State:TMsgState):Boolean;
+    procedure RestoreLocalVerbosity(PState : PMessageStateRecord);
+    procedure FreeLocalVerbosity(var FState : PMessageStateRecord);
 
-    function ChangeMessageVerbosity(s: ansistring; var i: integer;state:TMsgState): boolean;
+    function ChangeMessageVerbosity(S: AnsiString; var I: Integer;State:TMsgState): Boolean;
     procedure ShowStatus;
-    function  ErrorCount:longint;
-    procedure SetErrorFlags(const s:string);
+    function  ErrorCount:LongInt;
+    procedure SetErrorFlags(const S:string);
     procedure GenerateError;
-    procedure Internalerror(i:longint);noreturn;
-    procedure Internalerror(i:longint; const s : ansistring);noreturn;
-    procedure Comment(l:longint;s:ansistring);
-    function  MessageStr(w:longint):TMsgStr;
-    procedure Message(w:longint;onqueue:tmsgqueueevent=nil);
-    procedure Message1(w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure Message2(w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure Message3(w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure Message4(w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos(const pos:TFilePosInfo;w:longint;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos1(const pos:TFilePosInfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos2(const pos:TFilePosInfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos3(const pos:TFilePosInfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos4(const pos:TFilePosInfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure InternalError(I:LongInt);Noreturn;
+    procedure InternalError(I:LongInt; const S : AnsiString);Noreturn;
+    procedure Comment(L:LongInt;S:AnsiString);
+    function  MessageStr(W:LongInt):TMsgStr;
+    procedure Message(W:LongInt;OnQueue:TMsgQueueEvent=nil);
+    procedure Message1(W:LongInt;const S1:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure Message2(W:LongInt;const S1,S2:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure Message3(W:LongInt;const S1,S2,S3:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure Message4(W:LongInt;const S1,S2,S3,S4:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure MessagePos(const Pos:TFilePosInfo;W:LongInt;OnQueue:TMsgQueueEvent=nil);
+    procedure MessagePos1(const Pos:TFilePosInfo;W:LongInt;const S1:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure MessagePos2(const Pos:TFilePosInfo;W:LongInt;const S1,S2:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure MessagePos3(const Pos:TFilePosInfo;W:LongInt;const S1,S2,S3:TMsgStr;OnQueue:TMsgQueueEvent=nil);
+    procedure MessagePos4(const Pos:TFilePosInfo;W:LongInt;const S1,S2,S3,S4:TMsgStr;OnQueue:TMsgQueueEvent=nil);
 
     { message calls with codegenerror support }
-    procedure cgmessage(t : longint);
-    procedure cgmessage1(t : longint;const s : TMsgStr);
-    procedure cgmessage2(t : longint;const s1,s2 : TMsgStr);
-    procedure cgmessage3(t : longint;const s1,s2,s3 : TMsgStr);
-    procedure CGMessagePos(const pos:TFilePosInfo;t:longint);
-    procedure CGMessagePos1(const pos:TFilePosInfo;t:longint;const s1:TMsgStr);
-    procedure CGMessagePos2(const pos:TFilePosInfo;t:longint;const s1,s2:TMsgStr);
-    procedure CGMessagePos3(const pos:TFilePosInfo;t:longint;const s1,s2,s3:TMsgStr);
+    procedure CGMessage(T : LongInt);
+    procedure CGMessage1(T : LongInt;const S : TMsgStr);
+    procedure CGMessage2(T : LongInt;const S1,S2 : TMsgStr);
+    procedure CGMessage3(T : LongInt;const S1,S2,S3 : TMsgStr);
+    procedure CGMessagePos(const Pos:TFilePosInfo;T:LongInt);
+    procedure CGMessagePos1(const Pos:TFilePosInfo;T:LongInt;const S1:TMsgStr);
+    procedure CGMessagePos2(const Pos:TFilePosInfo;T:LongInt;const S1,S2:TMsgStr);
+    procedure CGMessagePos3(const Pos:TFilePosInfo;T:LongInt;const S1,S2,S3:TMsgStr);
 
     procedure FlushOutput;
 
@@ -96,26 +96,26 @@ interface
 
 
     const
-      printnodespacing = '   ';
+      PrintNodeSpacing = '   ';
     var
       { indention used when writing a node tree to the screen }
-      printnodeindention : string;
+      PrintNodeIndention : string;
 
 
      { Node dumping support functions }
-     procedure printnodeindent; inline;
-     procedure printnodeunindent; inline;
+     procedure PrintNodeIndent; inline;
+     procedure PrintNodeUnindent; inline;
 {$ifdef DEBUG_NODE_XML}
-     function SanitiseXMLString(const S: ansistring): ansistring;
-     function WritePointer(const P: Pointer): ansistring;
-     function WriteConstPUInt(const P: TConstPtrUInt): ansistring;
-     function WriteGUID(const GUID: TGUID): ansistring;
+     function SanitiseXMLString(const S: AnsiString): AnsiString;
+     function WritePointer(const P: Pointer): AnsiString;
+     function WriteConstPUInt(const P: TConstPtrUInt): AnsiString;
+     function WriteGUID(const GUID: TGUID): AnsiString;
 {$endif DEBUG_NODE_XML}
 
 implementation
 
     uses
-      comphook,fmodule,constexp,globals,cfileutl,switches,cclasses;
+      CompHook,FModule,ConstExp,Globals,CFileUtl,Switches,CClasses;
 
 {****************************************************************************
                        Extra Handlers for default compiler
@@ -123,367 +123,367 @@ implementation
 
     procedure DoneRedirectFile;
       begin
-        if status.use_redir then
+        if Status.UseRedir then
          begin
-           close(status.redirfile);
-           status.use_redir:=false;
+           Close(Status.RedirFile);
+           Status.UseRedir:=False;
          end;
-        if status.use_bugreport then
+        if Status.UseBugReport then
          begin
-           close(status.reportbugfile);
-           status.use_bugreport:=false;
+           Close(Status.ReportBugFile);
+           Status.UseBugReport:=False;
          end;
       end;
 
 
-    procedure SetRedirectFile(const fn:string);
+    procedure SetRedirectFile(const FN:string);
       begin
         { close old redirection file because FileRedirection is handled in both passes }
-        if status.use_redir then
-          close(status.redirfile);
+        if Status.UseRedir then
+          Close(Status.RedirFile);
 
-        assign(status.redirfile,fn);
+        Assign(Status.RedirFile,FN);
       {$push}{$I-}
-        append(status.redirfile);
-        if ioresult <> 0 then
+        Append(Status.RedirFile);
+        if IOResult <> 0 then
           begin
-            assign(status.redirfile,fn);
-            rewrite(status.redirfile);
+            Assign(Status.RedirFile,FN);
+            Rewrite(Status.RedirFile);
           end;
       {$pop}
-        status.use_redir:=(ioresult=0);
+        Status.UseRedir:=(IOResult=0);
       end;
 
 
     procedure PrepareReport;
       var
-        fn : string;
+        FN : string;
       begin
-        if status.use_bugreport then
-         exit;
-        fn:='fpcdebug.txt';
-        assign(status.reportbugfile,fn);
+        if Status.UseBugReport then
+         Exit;
+        FN:='fpcdebug.txt';
+        Assign(Status.ReportBugFile,FN);
         {$push}{$I-}
-         append(status.reportbugfile);
-         if ioresult <> 0 then
-          rewrite(status.reportbugfile);
+         Append(Status.ReportBugFile);
+         if IOResult <> 0 then
+          Rewrite(Status.ReportBugFile);
         {$pop}
-        status.use_bugreport:=(ioresult=0);
-        if status.use_bugreport then
-         writeln(status.reportbugfile,'FPC bug report file');
+        Status.UseBugReport:=(IOResult=0);
+        if Status.UseBugReport then
+         WriteLn(Status.ReportBugFile,'FPC bug report file');
       end;
 
-    procedure RestoreLocalVerbosity(pstate : PMessageStateRecord);
+    procedure RestoreLocalVerbosity(PState : PMessageStateRecord);
       { apply the whole stack of message/verbosity changes }
       var
-        msgset : thashset;
-        msgfound : boolean;
+        MsgSet : THashSet;
+        MsgFound : Boolean;
       begin
-        msg^.ResetStates;
-        if not assigned(pstate) then
-          exit;
-        msgset:=thashset.create(10,false,false);
-        while assigned(pstate) do
+        Msg^.ResetStates;
+        if not Assigned(PState) then
+          Exit;
+        MsgSet:=THashSet.Create(10,False,False);
+        while Assigned(PState) do
           begin
             {$IFDEF DEBUG_MESSAGESTATE}
-            if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
-              Internalerror(2026030702);
+            if Assigned(PState^.Owner) and (PState^.Owner<>CurrentModule) then
+              InternalError(2026030702);
             {$ENDIF}
-            msgfound:=false;
+            MsgFound:=False;
             { only apply the newest message state }
-            if not assigned(msgset.findoradd(@pstate^.value,sizeof(pstate^.value),msgfound)) or
-                not msgfound then
-              SetMessageVerbosity(pstate^.value,pstate^.state);
-            pstate:=pstate^.next;
+            if not Assigned(MsgSet.FindOrAdd(@PState^.Value,SizeOf(PState^.Value),MsgFound)) or
+                not MsgFound then
+              SetMessageVerbosity(PState^.Value,PState^.State);
+            PState:=PState^.Next;
           end;
-        msgset.free;
-        msgset := nil;
+        MsgSet.Free;
+        MsgSet := nil;
       end;
 
-    procedure FreeLocalVerbosity(var fstate : PMessageStateRecord);
-    var pstate : PMessageStateRecord;
+    procedure FreeLocalVerbosity(var FState : PMessageStateRecord);
+    var PState : PMessageStateRecord;
       begin
-        pstate:=unaligned(fstate);
-        while assigned(pstate) do
+        PState:=unaligned(FState);
+        while Assigned(PState) do
           begin
-            unaligned(fstate):=pstate^.next;
+            unaligned(FState):=PState^.Next;
             {$IFDEF DEBUG_MESSAGESTATE}
-            if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
-              Internalerror(2026030703);
+            if Assigned(PState^.Owner) and (PState^.Owner<>CurrentModule) then
+              InternalError(2026030703);
             {$ENDIF}
-            dispose(pstate);
-            pstate:=unaligned(fstate);
+            Dispose(PState);
+            PState:=unaligned(FState);
           end;
       end;
 
-    function ChangeMessageVerbosity(s: ansistring; var i : integer;state:TMsgState): boolean;
+    function ChangeMessageVerbosity(S: AnsiString; var I : Integer;State:TMsgState): Boolean;
       var
-        tok  : ansistring;
-        msgnr, code : longint;
+        Tok  : AnsiString;
+        MsgNr, Code : LongInt;
       begin
         { delete everything up to and including 'm' }
-        delete(s,1,i);
+        Delete(S,1,I);
         { the rest of the string must be message numbers }
-        inc(i,length(s)+1);
-        result:=false;
+        Inc(I,Length(S)+1);
+        Result:=False;
         repeat
-          tok:=GetToken(s,',');
-          if (tok='') then
-            break;
-          val(tok, msgnr, code);
-          if (code<>0) then
-            exit;
-          if not msg^.valid(msgnr) then
-            exit
+          Tok:=GetToken(S,',');
+          if (Tok='') then
+            Break;
+          Val(Tok, MsgNr, Code);
+          if (Code<>0) then
+            Exit;
+          if not Msg^.Valid(MsgNr) then
+            Exit
           else
-            recordpendingmessagestate(msgnr, state);
-        until false;
-        result:=true;
+            RecordPendingMessageState(MsgNr, State);
+        until False;
+        Result:=True;
       end;
 
-    function SetMessageVerbosity(v:longint;state:TMsgState):boolean;
+    function SetMessageVerbosity(V:LongInt;State:TMsgState):Boolean;
       begin
-        result:=msg^.setverbosity(v,state);
+        Result:=Msg^.SetVerbosity(V,State);
       end;
 
-    function CheckVerbosity(v:longint):boolean;
+    function CheckVerbosity(V:LongInt):Boolean;
       begin
-        result:=do_checkverbosity(v);
+        Result:=Do_CheckVerbosity(V);
       end;
 
 
-    function SetVerbosity(const s:TCmdStr):boolean;
+    function SetVerbosity(const S:TCmdStr):Boolean;
       const
-        message_verbosity:array[boolean] of TMsgState=(ms_off_global,ms_on_global);
+        MessageVerbosity:array[Boolean] of TMsgState=(ms_off_global,ms_on_global);
       var
-        m : Longint;
-        i : Integer;
-        inverse : boolean;
-        c : char;
+        M : LongInt;
+        I : Integer;
+        Inverse : Boolean;
+        C : Char;
       begin
-        Setverbosity:=false;
-        val(s,m,i);
-        if (i=0) and (s<>'') then
-         status.verbosity:=m
+        SetVerbosity:=False;
+        Val(S,M,I);
+        if (I=0) and (S<>'') then
+         Status.Verbosity:=M
         else
          begin
-           i:=1;
-           while i<=length(s) do
+           I:=1;
+           while I<=Length(S) do
              begin
-                c:=upcase(s[i]);
-                inverse:=false;
+                C:=UpCase(S[I]);
+                Inverse:=False;
                 { on/off ? }
-                if (i<length(s)) then
-                 case s[i+1] of
+                if (I<Length(S)) then
+                 case S[I+1] of
                   '-' : begin
-                          inc(i);
-                          inverse:=true;
+                          Inc(I);
+                          Inverse:=True;
                         end;
-                  '+' : inc(i);
+                  '+' : Inc(I);
                  end;
                 { handle switch }
-                case c of
+                case C of
                 { Special cases }
-                 '0' : status.verbosity:=V_Default;
-                 'A' : status.verbosity:=V_All;
+                 '0' : Status.Verbosity:=VDefault;
+                 'A' : Status.Verbosity:=VAll;
                  'B' : begin
-                          if inverse then
-                            status.print_source_path:=false
+                          if Inverse then
+                            Status.PrintSourcePath:=False
                           else
-                            status.print_source_path:=true;
+                            Status.PrintSourcePath:=True;
                        end;
-                 'M' : if not ChangeMessageVerbosity(s,i,message_verbosity[inverse]) then
+                 'M' : if not ChangeMessageVerbosity(S,I,MessageVerbosity[Inverse]) then
                          begin
-                           result:=false;
-                           exit
+                           Result:=False;
+                           Exit
                          end;
                  'P' : begin
-                         if inverse then
-                          paraprintnodetree:=0
+                         if Inverse then
+                          ParaPrintNodeTree:=0
                          else
-                          paraprintnodetree:=1;
+                          ParaPrintNodeTree:=1;
                        end;
                  'Q' : begin
-                          if inverse then
-                            status.showmsgnrs:=false
+                          if Inverse then
+                            Status.ShowMsgNrs:=False
                           else
-                            status.showmsgnrs:=true;
+                            Status.ShowMsgNrs:=True;
                        end;
                  'R' : begin
-                          if inverse then
+                          if Inverse then
                             begin
-                               status.use_gccoutput:=false;
-                               status.use_stderr:=false;
+                               Status.UseGCCOutput:=False;
+                               Status.UseStdErr:=False;
                             end
                           else
                             begin
-                               status.use_gccoutput:=true;
-                               status.use_stderr:=true;
+                               Status.UseGCCOutput:=True;
+                               Status.UseStdErr:=True;
                             end;
                        end;
                  'V' : PrepareReport;
                  'Z' : begin
-                          if inverse then
-                            status.use_stderr:=false
+                          if Inverse then
+                            Status.UseStdErr:=False
                           else
-                            status.use_stderr:=true;
+                            Status.UseStdErr:=True;
                        end;
                 { Normal cases - do an or }
-                 'C' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Conditional)
+                 'C' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VConditional)
                        else
-                         status.verbosity:=status.verbosity or V_Conditional;
-                 'D' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Debug)
+                         Status.Verbosity:=Status.Verbosity or VConditional;
+                 'D' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VDebug)
                        else
-                         status.verbosity:=status.verbosity or V_Debug;
-                 'E' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Error)
+                         Status.Verbosity:=Status.Verbosity or VDebug;
+                 'E' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VError)
                        else
-                         status.verbosity:=status.verbosity or V_Error;
-                 'H' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Hint)
+                         Status.Verbosity:=Status.Verbosity or VError;
+                 'H' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VHint)
                        else
-                         status.verbosity:=status.verbosity or V_Hint;
-                 'I' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Info)
+                         Status.Verbosity:=Status.Verbosity or VHint;
+                 'I' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VInfo)
                        else
-                         status.verbosity:=status.verbosity or V_Info;
-                 'J' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Parallel)
+                         Status.Verbosity:=Status.Verbosity or VInfo;
+                 'J' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VParallel)
                        else
-                         status.verbosity:=status.verbosity or V_Parallel;
-                 'L' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Status)
+                         Status.Verbosity:=Status.Verbosity or VParallel;
+                 'L' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VStatus)
                        else
-                         status.verbosity:=status.verbosity or V_Status;
-                 'N' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Note)
+                         Status.Verbosity:=Status.Verbosity or VStatus;
+                 'N' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VNote)
                        else
-                         status.verbosity:=status.verbosity or V_Note;
-                 'S' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_TimeStamps)
+                         Status.Verbosity:=Status.Verbosity or VNote;
+                 'S' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VTimeStamps)
                        else
-                         status.verbosity:=status.verbosity or V_TimeStamps;
-                 'T' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Tried)
+                         Status.Verbosity:=Status.Verbosity or VTimeStamps;
+                 'T' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VTried)
                        else
-                         status.verbosity:=status.verbosity or V_Tried;
-                 'U' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Used)
+                         Status.Verbosity:=Status.Verbosity or VTried;
+                 'U' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VUsed)
                        else
-                         status.verbosity:=status.verbosity or V_Used;
-                 'W' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Warning)
+                         Status.Verbosity:=Status.Verbosity or VUsed;
+                 'W' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VWarning)
                        else
-                         status.verbosity:=status.verbosity or V_Warning;
-                 'X' : if inverse then
-                         status.verbosity:=status.verbosity and (not V_Executable)
+                         Status.Verbosity:=Status.Verbosity or VWarning;
+                 'X' : if Inverse then
+                         Status.Verbosity:=Status.Verbosity and (not VExecutable)
                        else
-                         status.verbosity:=status.verbosity or V_Executable;
+                         Status.Verbosity:=Status.Verbosity or VExecutable;
                  end;
-                inc(i);
+                Inc(I);
              end;
            end;
-        if status.verbosity=0 then
-         status.verbosity:=V_Default;
-        setverbosity:=true;
+        if Status.Verbosity=0 then
+         Status.Verbosity:=VDefault;
+        SetVerbosity:=True;
       end;
 
 
-    procedure Loadprefixes;
+    procedure LoadPrefixes;
 
-        function loadprefix(w:longint):string;
+        function LoadPrefix(W:LongInt):string;
         var
-          s : string;
-          idx : longint;
+          S : string;
+          Idx : LongInt;
         begin
-          s:=msg^.get(w,[]);
-          idx:=pos('_',s);
-          if idx>0 then
-           Loadprefix:=Copy(s,idx+1,255)
+          S:=Msg^.Get(W,[]);
+          Idx:=Pos('_',S);
+          if Idx>0 then
+           LoadPrefix:=Copy(S,Idx+1,255)
           else
-           Loadprefix:=s;
+           LoadPrefix:=S;
         end;
 
       begin
       { Load the prefixes }
-        fatalstr:=Loadprefix(general_i_fatal);
-        errorstr:=Loadprefix(general_i_error);
-        warningstr:=Loadprefix(general_i_warning);
-        notestr:=Loadprefix(general_i_note);
-        hintstr:=Loadprefix(general_i_hint);
+        FatalStr:=LoadPrefix(general_i_fatal);
+        ErrorStr:=LoadPrefix(general_i_error);
+        WarningStr:=LoadPrefix(general_i_warning);
+        NoteStr:=LoadPrefix(general_i_note);
+        HintStr:=LoadPrefix(general_i_hint);
       end;
 
 
-    procedure LoadMsgFile(const fn:string);
+    procedure LoadMsgFile(const FN:string);
       begin
         { reload the internal messages if not already loaded }
 {$ifndef EXTERN_MSG}
-        if not msg^.msgintern then
-         msg^.LoadIntern(@msgtxt,msgtxtsize,msgtxt_codepage);
+        if not Msg^.MsgIntern then
+         Msg^.LoadIntern(@MsgTxt,MsgTxtSize,msgtxt_codepage);
 {$endif}
-        if not msg^.LoadExtern(fn) then
+        if not Msg^.LoadExtern(FN) then
          begin
 {$ifdef EXTERN_MSG}
-           writeln('Fatal: Cannot find error message file.');
-           halt(3);
+           WriteLn('Fatal: Cannot find error message file.');
+           Halt(3);
 {$else}
-           msg^.LoadIntern(@msgtxt,msgtxtsize,msgtxt_codepage);
+           Msg^.LoadIntern(@MsgTxt,MsgTxtSize,msgtxt_codepage);
 {$endif}
          end;
         { reload the prefixes using the new messages }
-        Loadprefixes;
+        LoadPrefixes;
       end;
 
 
     procedure MaybeLoadMessageFile;
       begin
         { Load new message file }
-        if (msgfilename<>'')  then
+        if (MsgFileName<>'')  then
          begin
-           LoadMsgFile(msgfilename);
-           msgfilename:='';
+           LoadMsgFile(MsgFileName);
+           MsgFileName:='';
          end;
       end;
 
 
     var
-      lastfileidx,
-      lastmoduleidx : longint;
+      LastFileIdx,
+      LastModuleIdx : LongInt;
 
 
     Procedure UpdateStatus;
       var
-        module : tmodule;
+        Module : TModule;
       begin
       { fix status }
-        status.currentline:=CurrentFilePos.line;
-        status.currentcolumn:=CurrentFilePos.column;
-        if (CurrentFilePos.moduleindex <> lastmoduleidx) or
-           (CurrentFilePos.fileindex <> lastfileidx) then
+        Status.CurrentLine:=CurrentFilePos.Line;
+        Status.CurrentColumn:=CurrentFilePos.Column;
+        if (CurrentFilePos.ModuleIndex <> LastModuleIdx) or
+           (CurrentFilePos.FileIndex <> LastFileIdx) then
         begin
-          module:=get_module(CurrentFilePos.moduleindex);
-          if assigned(module) and assigned(module.sourcefiles) then
+          Module:=Get_Module(CurrentFilePos.ModuleIndex);
+          if Assigned(Module) and Assigned(Module.SourceFiles) then
             begin
               { update status record }
-              status.currentmodule:=module.modulename^;
-              status.currentsourceppufilename:=module.ppufilename;
-              status.currentmodulestate:=ModuleStateStr[module.state];
-              status.currentsource:=module.sourcefiles.get_file_name(CurrentFilePos.fileindex);
-              status.currentsourcepath:=module.sourcefiles.get_file_path(CurrentFilePos.fileindex);
-              status.sources_avail:=module.sources_avail;
+              Status.CurrentModule:=Module.ModuleName^;
+              Status.CurrentSourcePPUFileName:=Module.PPUFileName;
+              Status.CurrentModuleState:=ModuleStateStr[Module.State];
+              Status.CurrentSource:=Module.SourceFiles.Get_File_Name(CurrentFilePos.FileIndex);
+              Status.CurrentSourcePath:=Module.SourceFiles.Get_File_Path(CurrentFilePos.FileIndex);
+              Status.SourcesAvail:=Module.SourcesAvail;
               { if currentsourcepath is relative, make it absolute }
-              if not path_absolute(status.currentsourcepath) then
-                status.currentsourcepath:=GetCurrentDir+status.currentsourcepath;
+              if not Path_Absolute(Status.CurrentSourcePath) then
+                Status.CurrentSourcePath:=GetCurrentDir+Status.CurrentSourcePath;
 
               { update lastfileidx only if name known PM }
-              if status.currentsource<>'' then
-                lastfileidx:=CurrentFilePos.fileindex
+              if Status.CurrentSource<>'' then
+                LastFileIdx:=CurrentFilePos.FileIndex
               else
-                lastfileidx:=0;
+                LastFileIdx:=0;
 
-              lastmoduleidx:=module.moduleid;
+              LastModuleIdx:=Module.ModuleID;
             end;
         end;
       end;
@@ -492,85 +492,85 @@ implementation
     procedure ShowStatus;
       begin
         UpdateStatus;
-        if do_status() then
+        if Do_Status() then
           raise ECompilerAbort.Create;
       end;
 
 
-    function ErrorCount:longint;
+    function ErrorCount:LongInt;
       begin
-        ErrorCount:=status.errorcount;
+        ErrorCount:=Status.ErrorCount;
       end;
 
 
-    procedure SetErrorFlags(const s:string);
+    procedure SetErrorFlags(const S:string);
       var
-        code : integer;
-        i,j,l : longint;
+        Code : Integer;
+        I,J,L : LongInt;
       begin
       { empty string means error count = 1 for backward compatibility (PFV) }
-        if s='' then
+        if S='' then
          begin
-           status.maxerrorcount:=1;
-           exit;
+           Status.MaxErrorCount:=1;
+           Exit;
          end;
-        i:=0;
-        while (i<length(s)) do
+        I:=0;
+        while (I<Length(S)) do
          begin
-           inc(i);
-           case s[i] of
+           Inc(I);
+           case S[I] of
              '0'..'9' :
                 begin
-                  j:=i;
-                  while (j<=length(s)) and (s[j] in ['0'..'9']) do
-                   inc(j);
-                  val(copy(s,i,j-i),l,code);
-                  if code<>0 then
-                   l:=1;
-                  status.maxerrorcount:=l;
-                  i:=j-1;
+                  J:=I;
+                  while (J<=Length(S)) and (S[J] in ['0'..'9']) do
+                   Inc(J);
+                  Val(Copy(S,I,J-I),L,Code);
+                  if Code<>0 then
+                   L:=1;
+                  Status.MaxErrorCount:=L;
+                  I:=J-1;
                 end;
               'w','W' :
                 begin
-                  if (i<length(s)) and (s[i+1]='-') then
+                  if (I<Length(S)) and (S[I+1]='-') then
                     begin
-                      inc(i);
-                      status.errorwarning:=false;
+                      Inc(I);
+                      Status.ErrorWarning:=False;
                     end
                   else
                     begin
-                      status.errorwarning:=true;
+                      Status.ErrorWarning:=True;
                       { Enable writing of warnings, to avoid getting errors without any message }
-                      status.verbosity:=status.verbosity or V_Warning;
+                      Status.Verbosity:=Status.Verbosity or VWarning;
                     end;
                 end;
               'n','N' :
                 begin
-                  if (i<length(s)) and (s[i+1]='-') then
+                  if (I<Length(S)) and (S[I+1]='-') then
                     begin
-                      inc(i);
-                      status.errornote:=false;
+                      Inc(I);
+                      Status.ErrorNote:=False;
                     end
                   else
                     begin
-                      status.errornote:=true;
+                      Status.ErrorNote:=True;
                       { Enable writing of notes, to avoid getting errors without any message }
-                      status.verbosity:=status.verbosity or V_Note;
+                      Status.Verbosity:=Status.Verbosity or VNote;
                     end;
 
                 end;
               'h','H' :
                 begin
-                  if (i<length(s)) and (s[i+1]='-') then
+                  if (I<Length(S)) and (S[I+1]='-') then
                     begin
-                      inc(i);
-                      status.errorhint:=false;
+                      Inc(I);
+                      Status.ErrorHint:=False;
                     end
                   else
                     begin
-                      status.errorhint:=true;
+                      Status.ErrorHint:=True;
                       { Enable writing of hints, to avoid getting errors without any message }
-                      status.verbosity:=status.verbosity or V_Hint;
+                      Status.Verbosity:=Status.Verbosity or VHint;
                     end;
                 end;
            end;
@@ -580,307 +580,307 @@ implementation
 
     procedure GenerateError;
       begin
-        inc(status.errorcount);
+        Inc(Status.ErrorCount);
       end;
 
 
-    procedure internalerror(i : longint);noreturn;
+    procedure InternalError(I : LongInt);Noreturn;
     begin
-      InternalError(i,'');
+      InternalError(I,'');
     end;
 
-    procedure InternalError(i:longint; const s : ansistring);noreturn;
-      procedure doraise;
+    procedure InternalError(I:LongInt; const S : AnsiString);Noreturn;
+      procedure DoRaise;
         begin
           raise ECompilerAbort.Create;
         end;
       begin
         UpdateStatus;
-        do_internalerrorex(i,s);
+        Do_InternalErrorEx(I,S);
         GenerateError;
-        doraise;
+        DoRaise;
       end;
 
-    procedure Comment(l:longint;s:ansistring);
+    procedure Comment(L:LongInt;S:AnsiString);
       var
-        dostop : boolean;
+        DoStop : Boolean;
       begin
-        dostop:=((l and V_Fatal)<>0);
-        if ((l and V_Error)<>0) or
-           ((l and V_Fatal)<>0) or
-           (status.errorwarning and ((l and V_Warning)<>0)) or
-           (status.errornote and ((l and V_Note)<>0)) or
-           (status.errorhint and ((l and V_Hint)<>0)) then
+        DoStop:=((L and VFatal)<>0);
+        if ((L and VError)<>0) or
+           ((L and VFatal)<>0) or
+           (Status.ErrorWarning and ((L and VWarning)<>0)) or
+           (Status.ErrorNote and ((L and VNote)<>0)) or
+           (Status.ErrorHint and ((L and VHint)<>0)) then
          GenerateError
         else
-         if l and V_Warning <> 0 then
-          inc(status.countWarnings)
+         if L and VWarning <> 0 then
+          Inc(Status.CountWarnings)
          else
-          if l and V_Note <> 0 then
-           inc(status.countNotes)
+          if L and VNote <> 0 then
+           Inc(Status.CountNotes)
           else
-           if l and V_Hint <> 0 then
-            inc(status.countHints);
+           if L and VHint <> 0 then
+            Inc(Status.CountHints);
       { check verbosity level }
-        if not CheckVerbosity(l) then
-          exit;
-        if (l and V_LineInfoMask)<>0 then
-          l:=l or V_LineInfo;
+        if not CheckVerbosity(L) then
+          Exit;
+        if (L and VLineInfoMask)<>0 then
+          L:=L or VLineInfo;
       { Create status info }
         UpdateStatus;
       { Fix replacements }
-        DefaultReplacements(s,false);
+        DefaultReplacements(S,False);
       { show comment }
-        if do_comment(l,s) or dostop then
+        if Do_Comment(L,S) or DoStop then
           raise ECompilerAbort.Create;
-        if (status.errorcount>=status.maxerrorcount) and not status.skip_error then
+        if (Status.ErrorCount>=Status.MaxErrorCount) and not Status.SkipError then
          begin
-           Message1(unit_f_errors_in_unit,tostr(status.errorcount));
-           status.skip_error:=true;
+           Message1(unit_f_errors_in_unit,ToStr(Status.ErrorCount));
+           Status.SkipError:=True;
            raise ECompilerAbort.Create;
          end;
       end;
 
-    function GetMessageState(m:longint):TMsgState;
+    function GetMessageState(M:LongInt):TMsgState;
       var
-        i: integer;
+        I: Integer;
       begin
-        i:=m div 1000;
+        I:=M div 1000;
         { get the default state }
-        Result:=msg^.msgstates[i][m mod 1000];
+        Result:=Msg^.MsgStates[I][M mod 1000];
 
         { and search at the current unit settings }
         { todo }
       end;
 
-    Procedure Msg2Comment(s:ansistring;w:longint;onqueue:tmsgqueueevent);
+    Procedure Msg2Comment(S:AnsiString;W:LongInt;OnQueue:TMsgQueueEvent);
       var
-        idx,i,v : longint;
-        dostop  : boolean;
-        doqueue : boolean;
-        st      : TMsgState;
-        ch      : char;
+        Idx,I,V : LongInt;
+        DoStop  : Boolean;
+        DoQueue : Boolean;
+        ST      : TMsgState;
+        CH      : Char;
       begin
       {Reset}
-        dostop:=false;
-        doqueue:=false;
-        v:=0;
+        DoStop:=False;
+        DoQueue:=False;
+        V:=0;
       {Parse options}
-        idx:=pos('_',s);
-        if idx=0 then
-         v:=V_None
+        Idx:=Pos('_',S);
+        if Idx=0 then
+         V:=VNone
         else
-         if (idx >= 1) And (idx <= 5) then
+         if (Idx >= 1) And (Idx <= 5) then
           begin
-            for i:=1 to idx do
+            for I:=1 to Idx do
              begin
-               ch:=upcase(s[i]);
-               case ch of
+               CH:=UpCase(S[I]);
+               case CH of
                 'F' :
                   begin
-                    v:=v or V_Fatal;
+                    V:=V or VFatal;
                     GenerateError;
-                    dostop:=true;
+                    DoStop:=True;
                   end;
                 'E','W','N','H':
                   begin
-                    if ch='E' then
-                      st:=ms_error
+                    if CH='E' then
+                      ST:=ms_error
                     else
-                      st:=GetMessageState(w);
+                      ST:=GetMessageState(W);
                     { We only want to know about local value }
-                    st:= TMsgState(ord(st) and ms_local_mask);
-                    if st=ms_error then
+                    ST:= TMsgState(Ord(ST) and ms_local_mask);
+                    if ST=ms_error then
                       begin
-                        v:=v or V_Error;
+                        V:=V or VError;
                         GenerateError;
                       end
-                    else if st<>ms_off then
-                      case ch of
+                    else if ST<>ms_off then
+                      case CH of
                        'W':
                          begin
-                           v:=v or V_Warning;
-                           if CheckVerbosity(V_Warning) then
-                             if status.errorwarning then
+                           V:=V or VWarning;
+                           if CheckVerbosity(VWarning) then
+                             if Status.ErrorWarning then
                               GenerateError
                              else
-                              inc(status.countWarnings);
+                              Inc(Status.CountWarnings);
                          end;
                        'N' :
                          begin
-                           v:=v or V_Note;
-                           if CheckVerbosity(V_Note) then
-                             if status.errornote then
+                           V:=V or VNote;
+                           if CheckVerbosity(VNote) then
+                             if Status.ErrorNote then
                               GenerateError
                              else
-                              inc(status.countNotes);
+                              Inc(Status.CountNotes);
                          end;
                        'H' :
                          begin
-                           v:=v or V_Hint;
-                           if CheckVerbosity(V_Hint) then
-                             if status.errorhint then
+                           V:=V or VHint;
+                           if CheckVerbosity(VHint) then
+                             if Status.ErrorHint then
                               GenerateError
                              else
-                              inc(status.countHints);
+                              Inc(Status.CountHints);
                          end;
                       end;
                   end;
                 'O' :
-                  v:=v or V_Normal;
+                  V:=V or VNormal;
                 'I' :
-                  v:=v or V_Info;
+                  V:=V or VInfo;
                 'L' :
-                  v:=v or V_LineInfo;
+                  V:=V or VLineInfo;
                 'U' :
-                  v:=v or V_Used;
+                  V:=V or VUsed;
                 'T' :
-                  v:=v or V_Tried;
+                  V:=V or VTried;
                 'C' :
-                  v:=v or V_Conditional;
+                  V:=V or VConditional;
                 'D' :
-                  v:=v or V_Debug;
+                  V:=V or VDebug;
                 'X' :
-                  v:=v or V_Executable;
+                  V:=V or VExecutable;
                 'S' :
-                  dostop:=true;
+                  DoStop:=True;
                 '_' : ;
                end;
              end;
           end;
-        Delete(s,1,idx);
+        Delete(S,1,Idx);
       { check verbosity level }
-        if not CheckVerbosity(v) then
+        if not CheckVerbosity(V) then
           begin
-            doqueue := onqueue <> nil;
-            if not doqueue then
-              exit;
+            DoQueue := OnQueue <> nil;
+            if not DoQueue then
+              Exit;
           end;
-        if (v and V_LineInfoMask)<>0 then
-          v:=v or V_LineInfo;
+        if (V and VLineInfoMask)<>0 then
+          V:=V or VLineInfo;
       { fix status }
         UpdateStatus;
       { Fix replacements }
-        DefaultReplacements(s,false);
-        if status.showmsgnrs and ((v and V_Normal)=0) then
-          s:='('+tostr(w)+') '+s;
-        if doqueue then
+        DefaultReplacements(S,False);
+        if Status.ShowMsgNrs and ((V and VNormal)=0) then
+          S:='('+ToStr(W)+') '+S;
+        if DoQueue then
           begin
-            onqueue(s,v,w);
-            exit;
+            OnQueue(S,V,W);
+            Exit;
           end;
       { show comment }
-        if do_comment(v,s) or dostop then
+        if Do_Comment(V,S) or DoStop then
           raise ECompilerAbort.Create;
-        if (status.errorcount>=status.maxerrorcount) and not status.skip_error then
+        if (Status.ErrorCount>=Status.MaxErrorCount) and not Status.SkipError then
           begin
-            Message1(unit_f_errors_in_unit,tostr(status.errorcount));
-            status.skip_error:=true;
+            Message1(unit_f_errors_in_unit,ToStr(Status.ErrorCount));
+            Status.SkipError:=True;
             raise ECompilerAbort.Create;
           end;
       end;
 
 
-    function  MessageStr(w:longint):TMsgStr;
+    function  MessageStr(W:LongInt):TMsgStr;
       begin
         MaybeLoadMessageFile;
-        MessageStr:=msg^.Get(w,[]);
+        MessageStr:=Msg^.Get(W,[]);
       end;
 
 
-    procedure Message(w:longint;onqueue:tmsgqueueevent=nil);
+    procedure Message(W:LongInt;OnQueue:TMsgQueueEvent=nil);
       begin
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[]),w,onqueue);
+        Msg2Comment(Msg^.Get(W,[]),W,OnQueue);
       end;
 
 
-    procedure Message1(w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure Message1(W:LongInt;const S1:TMsgStr;OnQueue:TMsgQueueEvent=nil);
 
       begin
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1]),w,onqueue);
+        Msg2Comment(Msg^.Get(W,[S1]),W,OnQueue);
       end;
 
 
-    procedure Message2(w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure Message2(W:LongInt;const S1,S2:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       begin
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2]),w,onqueue);
+        Msg2Comment(Msg^.Get(W,[S1,S2]),W,OnQueue);
       end;
 
 
-    procedure Message3(w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure Message3(W:LongInt;const S1,S2,S3:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       begin
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2,s3]),w,onqueue);
+        Msg2Comment(Msg^.Get(W,[S1,S2,S3]),W,OnQueue);
       end;
 
 
-    procedure Message4(w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure Message4(W:LongInt;const S1,S2,S3,S4:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       begin
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2,s3,s4]),w,onqueue);
+        Msg2Comment(Msg^.Get(W,[S1,S2,S3,S4]),W,OnQueue);
       end;
 
 
-    procedure MessagePos(const pos:TFilePosInfo;w:longint;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos(const Pos:TFilePosInfo;W:LongInt;OnQueue:TMsgQueueEvent=nil);
       var
-        oldpos : TFilePosInfo;
+        OldPos : TFilePosInfo;
       begin
-        oldpos:=CurrentFilePos;
-        CurrentFilePos:=pos;
+        OldPos:=CurrentFilePos;
+        CurrentFilePos:=Pos;
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[]),w,onqueue);
-        CurrentFilePos:=oldpos;
+        Msg2Comment(Msg^.Get(W,[]),W,OnQueue);
+        CurrentFilePos:=OldPos;
       end;
 
 
-    procedure MessagePos1(const pos:TFilePosInfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos1(const Pos:TFilePosInfo;W:LongInt;const S1:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       var
-        oldpos : TFilePosInfo;
+        OldPos : TFilePosInfo;
       begin
-        oldpos:=CurrentFilePos;
-        CurrentFilePos:=pos;
+        OldPos:=CurrentFilePos;
+        CurrentFilePos:=Pos;
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1]),w,onqueue);
-        CurrentFilePos:=oldpos;
+        Msg2Comment(Msg^.Get(W,[S1]),W,OnQueue);
+        CurrentFilePos:=OldPos;
       end;
 
 
-    procedure MessagePos2(const pos:TFilePosInfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos2(const Pos:TFilePosInfo;W:LongInt;const S1,S2:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       var
-        oldpos : TFilePosInfo;
+        OldPos : TFilePosInfo;
       begin
-        oldpos:=CurrentFilePos;
-        CurrentFilePos:=pos;
+        OldPos:=CurrentFilePos;
+        CurrentFilePos:=Pos;
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2]),w,onqueue);
-        CurrentFilePos:=oldpos;
+        Msg2Comment(Msg^.Get(W,[S1,S2]),W,OnQueue);
+        CurrentFilePos:=OldPos;
       end;
 
 
-    procedure MessagePos3(const pos:TFilePosInfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos3(const Pos:TFilePosInfo;W:LongInt;const S1,S2,S3:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       var
-        oldpos : TFilePosInfo;
+        OldPos : TFilePosInfo;
       begin
-        oldpos:=CurrentFilePos;
-        CurrentFilePos:=pos;
+        OldPos:=CurrentFilePos;
+        CurrentFilePos:=Pos;
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2,s3]),w,onqueue);
-        CurrentFilePos:=oldpos;
+        Msg2Comment(Msg^.Get(W,[S1,S2,S3]),W,OnQueue);
+        CurrentFilePos:=OldPos;
       end;
 
 
-    procedure MessagePos4(const pos:TFilePosInfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos4(const Pos:TFilePosInfo;W:LongInt;const S1,S2,S3,S4:TMsgStr;OnQueue:TMsgQueueEvent=nil);
       var
-        oldpos : TFilePosInfo;
+        OldPos : TFilePosInfo;
       begin
-        oldpos:=CurrentFilePos;
-        CurrentFilePos:=pos;
+        OldPos:=CurrentFilePos;
+        CurrentFilePos:=Pos;
         MaybeLoadMessageFile;
-        Msg2Comment(msg^.Get(w,[s1,s2,s3,s4]),w,onqueue);
-        CurrentFilePos:=oldpos;
+        Msg2Comment(Msg^.Get(W,[S1,S2,S3,S4]),W,OnQueue);
+        CurrentFilePos:=OldPos;
       end;
 
 
@@ -888,109 +888,109 @@ implementation
             override the message calls to set codegenerror
 *****************************************************************************}
 
-    procedure cgmessage(t : longint);
+    procedure CGMessage(T : LongInt);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.Message(t);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.Message(T);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessage1(t : longint;const s : TMsgStr);
+    procedure CGMessage1(T : LongInt;const S : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.Message1(t,s);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.Message1(T,S);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessage2(t : longint;const s1,s2 : TMsgStr);
+    procedure CGMessage2(T : LongInt;const S1,S2 : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.Message2(t,s1,s2);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.Message2(T,S1,S2);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessage3(t : longint;const s1,s2,s3 : TMsgStr);
+    procedure CGMessage3(T : LongInt;const S1,S2,S3 : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.Message3(t,s1,s2,s3);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.Message3(T,S1,S2,S3);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
 
-    procedure cgmessagepos(const pos:TFilePosInfo;t : longint);
+    procedure CGMessagePos(const Pos:TFilePosInfo;T : LongInt);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.MessagePos(pos,t);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.MessagePos(Pos,T);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessagepos1(const pos:TFilePosInfo;t : longint;const s1 : TMsgStr);
+    procedure CGMessagePos1(const Pos:TFilePosInfo;T : LongInt;const S1 : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.MessagePos1(pos,t,s1);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.MessagePos1(Pos,T,S1);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessagepos2(const pos:TFilePosInfo;t : longint;const s1,s2 : TMsgStr);
+    procedure CGMessagePos2(const Pos:TFilePosInfo;T : LongInt;const S1,S2 : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.MessagePos2(pos,t,s1,s2);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.MessagePos2(Pos,T,S1,S2);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
-    procedure cgmessagepos3(const pos:TFilePosInfo;t : longint;const s1,s2,s3 : TMsgStr);
+    procedure CGMessagePos3(const Pos:TFilePosInfo;T : LongInt;const S1,S2,S3 : TMsgStr);
       var
-         olderrorcount : longint;
+         OldErrorCount : LongInt;
       begin
          if not(CodeGenError) then
            begin
-              olderrorcount:=Errorcount;
-              verbose.MessagePos3(pos,t,s1,s2,s3);
-              CodeGenError:=olderrorcount<>Errorcount;
+              OldErrorCount:=ErrorCount;
+              Verbose.MessagePos3(Pos,T,S1,S2,S3);
+              CodeGenError:=OldErrorCount<>ErrorCount;
            end;
       end;
 
 
     procedure FlushOutput;
       begin
-        if not (Status.Use_StdErr) then (* StdErr is flushed after every line *)
+        if not (Status.UseStdErr) then (* StdErr is flushed after every line *)
           begin
-            if Status.Use_Redir then
+            if Status.UseRedir then
               Flush(Status.RedirFile)
             else
               Flush(Output);
@@ -1005,139 +1005,139 @@ implementation
     procedure InitVerbose;
       begin
       { Init }
-        msg:=new(pmessage,Init(20,msgidxmax));
-        if msg=nil then
+        Msg:=New(PMessage,Init(20,MsgIdxMax));
+        if Msg=nil then
          begin
-           writeln('Fatal: MsgIdx Wrong');
-           halt(3);
+           WriteLn('Fatal: MsgIdx Wrong');
+           Halt(3);
          end;
 {$ifndef EXTERN_MSG}
-        msg^.LoadIntern(@msgtxt,msgtxtsize,msgtxt_codepage);
+        Msg^.LoadIntern(@MsgTxt,MsgTxtSize,msgtxt_codepage);
 {$else EXTERN_MSG}
-        LoadMsgFile(exepath+'errore.msg');
+        LoadMsgFile(ExePath+'errore.msg');
 {$endif EXTERN_MSG}
-        FillChar(Status,sizeof(TCompilerStatus),0);
-        status.verbosity:=V_Default;
+        FillChar(Status,SizeOf(TCompilerStatus),0);
+        Status.Verbosity:=VDefault;
         Status.MaxErrorCount:=50;
-        Status.codesize:=aword(-1);
-        Status.datasize:=aword(-1);
-        Loadprefixes;
-        lastfileidx:=-1;
-        lastmoduleidx:=-1;
-        status.currentmodule:='';
-        status.currentsourceppufilename:='';
-        status.currentsource:='';
-        status.currentsourcepath:='';
+        Status.CodeSize:=AWord(-1);
+        Status.DataSize:=AWord(-1);
+        LoadPrefixes;
+        LastFileIdx:=-1;
+        LastModuleIdx:=-1;
+        Status.CurrentModule:='';
+        Status.CurrentSourcePPUFileName:='';
+        Status.CurrentSource:='';
+        Status.CurrentSourcePath:='';
         { Register internalerrorproc for cutils/cclasses }
-        internalerrorproc:=@internalerror;
+        InternalErrorProc:=@InternalError;
       end;
 
 
     procedure DoneVerbose;
       begin
-        if assigned(msg) then
+        if Assigned(Msg) then
          begin
-           dispose(msg,Done);
-           msg:=nil;
+           Dispose(Msg,Done);
+           Msg:=nil;
          end;
         DoneRedirectFile;
       end;
 
 
-    procedure printnodeindent; inline;
+    procedure PrintNodeIndent; inline;
       begin
-        printnodeindention:=printnodeindention+printnodespacing;
+        PrintNodeIndention:=PrintNodeIndention+PrintNodeSpacing;
       end;
 
 
-    procedure printnodeunindent; inline;
+    procedure PrintNodeUnindent; inline;
       begin
-        delete(printnodeindention,1,length(printnodespacing));
+        Delete(PrintNodeIndention,1,Length(PrintNodeSpacing));
       end;
 
 {$ifdef DEBUG_NODE_XML}
-    function WritePointer(const P: Pointer): ansistring;
+    function WritePointer(const P: Pointer): AnsiString;
       begin
         case PtrUInt(P) of
           0:
             WritePointer := 'nil';
           1..$FFFF:
-            WritePointer := '$' + hexstr(PtrUInt(P), 4);
+            WritePointer := '$' + HexStr(PtrUInt(P), 4);
           $10000..$FFFFFFFF:
-            WritePointer := '$' + hexstr(PtrUInt(P), 8);
+            WritePointer := '$' + HexStr(PtrUInt(P), 8);
     {$ifdef cpu64bitaddr}
           else
-            WritePointer := '$' + hexstr(PtrUInt(P), 2*sizeof(Pointer));
+            WritePointer := '$' + HexStr(PtrUInt(P), 2*SizeOf(Pointer));
     {$endif cpu64bitaddr}
         end;
       end;
 
 
-    function WriteConstPUInt(const P: TConstPtrUInt): ansistring;
+    function WriteConstPUInt(const P: TConstPtrUInt): AnsiString;
       begin
         case P of
           0:
             WriteConstPUInt := 'nil';
           1..$FFFF:
-            WriteConstPUInt := '$' + hexstr(P, 4);
+            WriteConstPUInt := '$' + HexStr(P, 4);
           $10000..$FFFFFFFF:
-            WriteConstPUInt := '$' + hexstr(P, 8);
+            WriteConstPUInt := '$' + HexStr(P, 8);
     {$ifdef cpu64bitaddr}
           else
-            WriteConstPUInt := '$' + hexstr(P, 2*sizeof(TConstPtrUInt));
+            WriteConstPUInt := '$' + HexStr(P, 2*SizeOf(TConstPtrUInt));
     {$endif cpu64bitaddr}
         end;
       end;
 
 
-    function WriteGUID(const GUID: TGUID): ansistring;
+    function WriteGUID(const GUID: TGUID): AnsiString;
       var
-        i: Integer;
+        I: Integer;
       begin
-        Result := '{' + hexstr(GUID.D1, 8) + '-' + hexstr(GUID.D2, 4) + '-' + hexstr(GUID.D3, 4) + '-';
-        for i := 0 to 7 do
-          Result := Result + hexstr(GUID.D4[i], 2);
+        Result := '{' + HexStr(GUID.D1, 8) + '-' + HexStr(GUID.D2, 4) + '-' + HexStr(GUID.D3, 4) + '-';
+        for I := 0 to 7 do
+          Result := Result + HexStr(GUID.D4[I], 2);
 
         Result := Result + '}';
       end;
 
 
-    function SanitiseXMLString(const S: ansistring): ansistring;
+    function SanitiseXMLString(const S: AnsiString): AnsiString;
       var
         X, UTF8Len, CurrentChar: Integer;
-        needs_quoting, in_quotes, add_end_quote: Boolean;
+        NeedsQuoting, InQuotes, AddEndQuote: Boolean;
         DoASCII: Boolean;
 
         { Write the given byte as #xxx }
         procedure EncodeControlChar(Value: Byte);
           begin
             if X = Length(Result) then
-              add_end_quote := False;
+              AddEndQuote := False;
 
             Delete(Result, X, 1);
-            if in_quotes then
+            if InQuotes then
               begin
-                Insert('#' + tostr(Value) + '''', Result, X);
+                Insert('#' + ToStr(Value) + '''', Result, X);
 
                 { If the entire string consists of control characters, it
                   doesn't need quoting, so only set the flag here }
-                needs_quoting := True;
+                NeedsQuoting := True;
 
-                in_quotes := False;
+                InQuotes := False;
               end
             else
-              Insert('#' + tostr(Value), Result, X);
+              Insert('#' + ToStr(Value), Result, X);
           end;
 
         { Write the given byte as either a plain character or an XML keyword }
         procedure EncodeStandardChar(Value: Byte);
           begin
-            if not in_quotes then
+            if not InQuotes then
               begin
-                in_quotes := True;
+                InQuotes := True;
                 if (X < Length(Result)) then
                   begin
-                    needs_quoting := True;
+                    NeedsQuoting := True;
                     Insert('''', Result, X + 1)
                   end;
               end;
@@ -1146,7 +1146,7 @@ implementation
             case CurrentChar of
               Ord('#'):
                 { Required to differentiate '#27' from the escape code #27, for example }
-                needs_quoting:=true;
+                NeedsQuoting:=True;
 
               Ord('<'):
                 begin
@@ -1165,13 +1165,13 @@ implementation
                 end;
               Ord('"'):
                 begin
-                  needs_quoting := True;
+                  NeedsQuoting := True;
                   Delete(Result, X, 1);
                   Insert('&quot;', Result, X);
                 end;
               Ord(''''):
                 begin
-                  needs_quoting:=true;
+                  NeedsQuoting:=True;
                   { Simply double it like in pascal strings }
                   Insert('''', Result, X);
                 end;
@@ -1183,12 +1183,12 @@ implementation
         { Convert character between $80 and $FF to UTF-8 }
         procedure EncodeExtendedChar(Value: Byte);
           begin
-            if not in_quotes then
+            if not InQuotes then
               begin
-                in_quotes := True;
+                InQuotes := True;
                 if (X < Length(Result)) then
                   begin
-                    needs_quoting := True;
+                    NeedsQuoting := True;
                     Insert('''', Result, X + 1)
                   end;
               end;
@@ -1209,7 +1209,7 @@ implementation
           end;
 
       begin
-        needs_quoting := False;
+        NeedsQuoting := False;
         Result := S;
 
         { Gets set to True if an invalid UTF-8 sequence is found }
@@ -1218,9 +1218,9 @@ implementation
         { By setting in_quotes to false here, we can exclude the single
           quotation marks surrounding the string if it doesn't contain any
           control characters, or consists entirely of control characters. }
-        in_quotes := False;
+        InQuotes := False;
 
-        add_end_quote := True;
+        AddEndQuote := True;
 
         X := Length(Result);
         while X > 0 do
@@ -1238,26 +1238,26 @@ implementation
               { UTF-8 continuation byte }
               $80..$BF:
                 begin
-                  if not in_quotes then
+                  if not InQuotes then
                     begin
-                      in_quotes := True;
+                      InQuotes := True;
                       if (X < Length(Result)) then
                         begin
-                          needs_quoting := True;
+                          NeedsQuoting := True;
                           Insert('''', Result, X + 1)
                         end;
                     end;
 
                   UTF8Len := 1;
                   repeat
-                    inc(UTF8Len);
-                    dec(X);
-                  until (X = 0) or (UTF8Len >= 4) or (ord(Result[X]) shr 6 <> 2);
+                    Inc(UTF8Len);
+                    Dec(X);
+                  until (X = 0) or (UTF8Len >= 4) or (Ord(Result[X]) shr 6 <> 2);
 
                   if (X = 0) or (Utf8CodepointLen(@Result[X], UTF8Len, False) <> UTF8Len) then
                     begin
                       DoASCII := True;
-                      break;
+                      Break;
                     end;
                 end;
 
@@ -1276,10 +1276,10 @@ implementation
         if DoASCII then
           begin
             { Reset the flags and Result }
-            needs_quoting := False;
+            NeedsQuoting := False;
             Result := S;
-            in_quotes := False;
-            add_end_quote := True;
+            InQuotes := False;
+            AddEndQuote := True;
 
             for X := Length(Result) downto 1 do
               begin
@@ -1301,12 +1301,12 @@ implementation
               end;
           end;
 
-        if needs_quoting then
+        if NeedsQuoting then
           begin
-            if in_quotes then
+            if InQuotes then
               Result := '''' + Result;
 
-            if add_end_quote then
+            if AddEndQuote then
               Result := Result + '''';
           end;
       end;

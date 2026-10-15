@@ -33,12 +33,12 @@ type
   TldScriptToken=char;
 
   TScriptLexer=class(TObject)
-    data: ansistring;
+    data: AnsiString;
     curtoken: TldScriptToken;
     curtokenstr: string;
-    curpos: longint;
-    line: longint;
-    linestart: longint;
+    curpos: LongInt;
+    line: LongInt;
+    linestart: LongInt;
   public
     constructor Create(aReader:TObjectReader);
     procedure nextToken;
@@ -77,7 +77,7 @@ const
 implementation
 
 uses
-  sysutils;
+  SysUtils;
 
 const
   NameChars=['A'..'Z','a'..'z','_','.','$','0'..'9','+','-','=',',','*','?','/','~','\','[',']'];
@@ -97,7 +97,7 @@ end;
 
 procedure TScriptLexer.nextToken;
   var
-    p,start: longint;
+    p,start: LongInt;
   begin
     p:=curpos;
     repeat

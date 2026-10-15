@@ -14,14 +14,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit sourcehandler;
+unit SourceHandler;
 
 {$MODE OBJFPC} {$H+}
 
 interface
 
 uses
-  Classes, SysUtils, resource;
+  Classes, SysUtils, Resource;
 
 type
   ESourceFilesException = class(Exception);
@@ -35,106 +35,106 @@ type
   TSourceFiles = class
   private
   protected
-    fFileList : TStringList;
-    fRCIncludeDirs: TStringList;
-    fRCDefines: TStringList;
-    fStreamList : TFPList;
-    fRCMode: Boolean;
+    FFileList : TStringList;
+    FRCIncludeDirs: TStringList;
+    FRCDefines: TStringList;
+    FStreamList : TFPList;
+    FRCMode: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Load(aResources : TResources);
-    property FileList : TStringList read fFileList;
-    property RCIncludeDirs: TStringList read fRCIncludeDirs;
-    property RCDefines: TStringList read fRCDefines;
-    property RCMode: Boolean read fRCMode write fRCMode;
+    procedure Load(AResources : TResources);
+    property FileList : TStringList Read FFileList;
+    property RCIncludeDirs: TStringList Read FRCIncludeDirs;
+    property RCDefines: TStringList Read FRCDefines;
+    property RCMode: Boolean Read FRCMode Write FRCMode;
   end;
 
 implementation
 
-uses msghandler, closablefilestream, rcreader;
+uses MsgHandler, ClosableFileStream, RCReader;
 
 { TSourceFiles }
 
 constructor TSourceFiles.Create;
 begin
   inherited Create;
-  fFileList:=TStringList.Create;
-  fStreamList:=TFPList.Create;
-  fRCDefines:= TStringList.Create;
-  fRCIncludeDirs:= TStringList.Create;
-  fRCMode:=False;
+  FFileList:=TStringList.Create;
+  FStreamList:=TFPList.Create;
+  FRCDefines:= TStringList.Create;
+  FRCIncludeDirs:= TStringList.Create;
+  FRCMode:=False;
 end;
 
 destructor TSourceFiles.Destroy;
-var i : integer;
+var I : Integer;
 begin
-  fRCIncludeDirs.Free;
-  fRCDefines.Free;
-  fFileList.Free;
-  for i:=0 to fStreamList.Count-1 do
-    TStream(fStreamList[i]).Free;
-  fStreamList.Free;
+  FRCIncludeDirs.Free;
+  FRCDefines.Free;
+  FFileList.Free;
+  for I:=0 to FStreamList.Count-1 do
+    TStream(FStreamList[I]).Free;
+  FStreamList.Free;
   inherited;
 end;
 
-procedure TSourceFiles.Load(aResources: TResources);
-var aReader : TAbstractResourceReader;
-    aStream : TClosableFileStream;
-    i : integer;
-    tmpres : TResources;
-    olddir : String;
+procedure TSourceFiles.Load(AResources: TResources);
+var AReader : TAbstractResourceReader;
+    AStream : TClosableFileStream;
+    I : Integer;
+    TmpRes : TResources;
+    OldDir : String;
 begin
-  olddir:=GetCurrentDir;
-  tmpres:=TResources.Create;
+  OldDir:=GetCurrentDir;
+  TmpRes:=TResources.Create;
   try
-    for i:=0 to fFileList.Count-1 do
+    for I:=0 to FFileList.Count-1 do
     begin
-      Messages.DoVerbose(Format('Trying to open file %s...',[fFileList[i]]));
+      Messages.DoVerbose(Format('Trying to open file %s...',[FFileList[I]]));
       try
-        aStream:=TClosableFileStream.Create(fFileList[i],fmOpenRead or fmShareDenyWrite);
+        AStream:=TClosableFileStream.Create(FFileList[I],fmOpenRead or fmShareDenyWrite);
       except
-        raise ECantOpenFileException.Create(fFileList[i]);
+        raise ECantOpenFileException.Create(FFileList[I]);
       end;
-      fStreamList.Add(aStream);
+      FStreamList.Add(AStream);
       { the RC reader reads anything, so handle that separately }
-      if fRCMode then
-        aReader:=TRCResourceReader.Create
+      if FRCMode then
+        AReader:=TRCResourceReader.Create
       else
         try
-          aReader:=TResources.FindReader(aStream);
+          AReader:=TResources.FindReader(AStream);
         except
-          raise EUnknownInputFormatException.Create(fFileList[i]);
+          raise EUnknownInputFormatException.Create(FFileList[I]);
         end;
-      Messages.DoVerbose(Format('Chosen reader: %s',[aReader.Description]));
+      Messages.DoVerbose(Format('Chosen reader: %s',[AReader.Description]));
       try
         Messages.DoVerbose('Reading resource information...');
-        if aReader is TRCResourceReader then begin
-          TRCResourceReader(aReader).RCIncludeDirs.Assign(fRCIncludeDirs);
-          TRCResourceReader(aReader).RCDefines.Assign(fRCDefines);
-          SetCurrentDir(ExtractFilePath(ExpandFileName(fFileList[i])));
+        if AReader is TRCResourceReader then begin
+          TRCResourceReader(AReader).RCIncludeDirs.Assign(FRCIncludeDirs);
+          TRCResourceReader(AReader).RCDefines.Assign(FRCDefines);
+          SetCurrentDir(ExtractFilePath(ExpandFileName(FFileList[I])));
         end;
         try
-          tmpres.LoadFromStream(aStream,aReader);
+          TmpRes.LoadFromStream(AStream,AReader);
         except
-           on e :EParserError do
+           on E :EParserError do
               begin
-                e.message:=fFileList[i]+': '+e.message;
+                E.Message:=FFileList[I]+': '+E.Message;
               raise;
             end;
         end;
-        aResources.MoveFrom(tmpres);
+        AResources.MoveFrom(TmpRes);
         Messages.DoVerbose('Resource information read');
       finally
-        if aReader is TRCResourceReader then begin
-          SetCurrentDir(olddir);
+        if AReader is TRCResourceReader then begin
+          SetCurrentDir(OldDir);
         end;
-        aReader.Free;
+        AReader.Free;
       end;
     end;
-    Messages.DoVerbose(Format('%d resources read.',[aResources.Count]));
+    Messages.DoVerbose(Format('%d resources read.',[AResources.Count]));
   finally
-    tmpres.Free;
+    TmpRes.Free;
   end;
 end;
 

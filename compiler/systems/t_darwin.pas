@@ -31,25 +31,25 @@ interface
 implementation
 
   uses
-    sysutils,
-    cutils,cfileutl,cclasses,
-    verbose,systems,globtype,globals,
-    symconst,cscript,triplet,
-    fmodule,aasmbase,aasmtai,aasmdata,aasmcpu,cpubase,symsym,symdef,
+    SysUtils,
+    CUtils,CFileUtl,CClasses,
+    Verbose,Systems,GlobType,Globals,
+    symconst,CScript,triplet,
+    FModule,aasmbase,aasmtai,AAsmData,aasmcpu,cpubase,SymSym,symdef,
     import,export,link,comprsrc,rescmn,i_darwin,expunix,
-    cgutils,cgbase,cgobj,cpuinfo,ogbase;
+    cgutils,cgbase,cgobj,CPUInfo,ogbase;
 
   type
-    timportlibdarwin=class(timportlib)
+    TImportLibDarwin=class(TImportLib)
       procedure generatelib;override;
     end;
 
-    texportlibdarwin=class(texportlibunix)
+    TExportLibDarwin=class(TExportLibUnix)
       procedure setinitname(list: TAsmList; const s: string); override;
       procedure setfininame(list: TAsmList; const s: string); override;
     end;
 
-    tlinkerdarwin=class(texternallinker)
+    TLinkerDarwin=class(TExternalLinker)
     private
       LinkSymsFileName   : TCmdStr;
       function WriteFileList: TCmdStr;
@@ -75,7 +75,7 @@ implementation
                              TIMPORTLIBDARWIN
 *****************************************************************************}
 
-    procedure timportlibdarwin.generatelib;
+    procedure TImportLibDarwin.generatelib;
       begin
       end;
 
@@ -84,17 +84,17 @@ implementation
                              TEXPORTLIBDARWIN
 *****************************************************************************}
 
-    procedure texportlibdarwin.setinitname(list: TAsmList; const s: string);
+    procedure TExportLibDarwin.setinitname(list: TAsmList; const s: string);
       begin
-        new_section(list,sec_init_func,'',sizeof(pint));
-        list.concat(Tai_const.Createname(s,0));
+        new_section(list,sec_init_func,'',sizeof(PInt));
+        list.concat(TAIConst.Createname(s,0));
       end;
 
 
-    procedure texportlibdarwin.setfininame(list: TAsmList; const s: string);
+    procedure TExportLibDarwin.setfininame(list: TAsmList; const s: string);
       begin
-        new_section(list,sec_term_func,'',sizeof(pint));
-        list.concat(Tai_const.Createname(s,0));
+        new_section(list,sec_term_func,'',sizeof(PInt));
+        list.concat(TAIConst.Createname(s,0));
       end;
 
 
@@ -102,19 +102,19 @@ implementation
                                   TLINKERBSD
 *****************************************************************************}
 
-    constructor tlinkerdarwin.Create;
+    constructor TLinkerDarwin.Create;
       begin
         inherited;
-        if not Dontlinkstdlibpath Then
-          LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib',true)
+        if not DontLinkStdlibPath Then
+          LibrarySearchPath.AddLibraryPath(SysRootPath,'=/usr/lib',true)
       end;
 
 
-    procedure tlinkerdarwin.SetDefaultInfo;
+    procedure TLinkerDarwin.SetDefaultInfo;
       var
         LdProgram : string;
       begin
-        if cs_link_lld in CurrentSettings.globalswitches then
+        if cs_link_lld in CurrentSettings.GlobalSwitches then
           LdProgram:='ld64.lld'
         else
           LdProgram:='ld';
@@ -137,12 +137,12 @@ implementation
              than 60KB of data (first 4KB of address space is always invalid)
            }
            ExeCmd[1]:=LdProgram+' $PRTOBJ $TARGET $OPT $STATIC $GCSECTIONS $STRIP $MAP $LTO $ORDERSYMS $RPATH -L. -o $EXE $ARCH $VERSION $SYSROOT $LIBSEARCHPATH $FILELIST $LIBRARIES';
-           if not(cs_gdb_valgrind in CurrentSettings.globalswitches) then
+           if not(cs_gdb_valgrind in CurrentSettings.GlobalSwitches) then
              ExeCmd[1]:=ExeCmd[1]+' -pagezero_size 0x10000';
   {$else ndef cpu64bitaddr}
            ExeCmd[1]:=LdProgram+' $PRTOBJ $TARGET $OPT $STATIC $GCSECTIONS $STRIP $MAP $LTO $ORDERSYMS $RPATH -L. -o $EXE $ARCH $VERSION $SYSROOT $LIBSEARCHPATH $FILELIST $LIBRARIES';
   {$endif ndef cpu64bitaddr}
-           if (apptype<>app_bundle) then
+           if (AppType<>app_bundle) then
              DllCmd[1]:=LdProgram+' $PRTOBJ $TARGET $OPT $GCSECTIONS $MAP $LTO $ORDERSYMS $RPATH -dynamic -dylib -L. -o $EXE $ARCH $VERSION $SYSROOT $LIBSEARCHPATH $FILELIST $LIBRARIES'
            else
              DllCmd[1]:=LdProgram+' $PRTOBJ $TARGET $OPT $GCSECTIONS $MAP $LTO $ORDERSYMS $RPATH -dynamic -bundle -L. -o $EXE $ARCH $VERSION $SYRSROOT $LIBSEARCHPATH $FILELIST $LIBRARIES';
@@ -152,7 +152,7 @@ implementation
       end;
 
 
-    procedure tlinkerdarwin.LoadPredefinedLibraryOrder;
+    procedure TLinkerDarwin.LoadPredefinedLibraryOrder;
       begin
         // put your linkorder/linkalias overrides here.
         // Note: assumes only called when reordering/aliasing is used.
@@ -161,13 +161,13 @@ implementation
       end;
 
 
-    procedure tlinkerdarwin.InitSysInitUnitName;
+    procedure TLinkerDarwin.InitSysInitUnitName;
       begin
         SysInitUnit:='sysinit';
       end;
 
 
-    function tlinkerdarwin.GetDarwinCrt1ObjName(isdll: boolean): TCmdStr;
+    function TLinkerDarwin.GetDarwinCrt1ObjName(isdll: boolean): TCmdStr;
       begin
         if not isdll then
           begin
@@ -176,14 +176,14 @@ implementation
                   system_x86_64_darwin:
                     begin
                       { 10.8 and later: no crt1.* }
-                      if MacOSXVersionMin.relationto(10,8,0)>=0 then
+                      if MacOSXVersionMin.RelationTo(10,8,0)>=0 then
                         exit('');
                       { x86: crt1.10.6.o -> crt1.10.5.o -> crt1.o }
                       { others: crt1.10.5 -> crt1.o }
                       if (TargetInfo.system in [system_i386_darwin,system_x86_64_darwin]) and
-                         (MacOSXVersionMin.relationto(10,6,0)>=0) then
+                         (MacOSXVersionMin.RelationTo(10,6,0)>=0) then
                         exit('crt1.10.6.o');
-                      if MacOSXVersionMin.relationto(10,5,0)>=0 then
+                      if MacOSXVersionMin.RelationTo(10,5,0)>=0 then
                         exit('crt1.10.5.o');
                     end;
                   system_i386_iphonesim,
@@ -194,7 +194,7 @@ implementation
                         What those recent versions could be, is anyone's guess. It
                         still seems to work with 8.1 and no longer with 8.3, so use
                         8.1 as a cut-off point }
-                      if iPhoneOSVersionMin.relationto(8,1,0)>0 then
+                      if IPhoneOSVersionMin.RelationTo(8,1,0)>0 then
                         exit('');
                     end;
                   system_aarch64_ios,
@@ -202,14 +202,14 @@ implementation
                     { never anything }
                     exit('');
                   else
-                    Internalerror(2019050709);
+                    InternalError(2019050709);
             end;
             { nothing special -> default }
             result:='crt1.o';
           end
         else
           begin
-            if (apptype=app_bundle) then
+            if (AppType=app_bundle) then
               begin
                 case TargetInfo.system of
                   system_i386_darwin,
@@ -217,14 +217,14 @@ implementation
                     begin
                       { < 10.6: bundle1.o
                         >= 10.6: nothing }
-                      if MacOSXVersionMin.relationto(10,6,0)>=0 then
+                      if MacOSXVersionMin.RelationTo(10,6,0)>=0 then
                         exit('');
                     end;
                   system_aarch64_ios:
                     begin
                       { iOS: < 3.1: bundle1.o
                              >= 3.1: nothing }
-                      if iPhoneOSVersionMin.relationto(3,1,0)>=0 then
+                      if IPhoneOSVersionMin.RelationTo(3,1,0)>=0 then
                         exit('');
                     end;
                   system_i386_iphonesim,
@@ -232,13 +232,13 @@ implementation
                   system_aarch64_iphonesim:
                     begin
                       { see rule for crt1.o }
-                      if iPhoneOSVersionMin.relationto(8,1,0)>0 then
+                      if IPhoneOSVersionMin.RelationTo(8,1,0)>0 then
                         exit('');
                     end;
                   system_aarch64_darwin:
                     exit('');
                   else
-                    Internalerror(2019050710);
+                    InternalError(2019050710);
                 end;
                 result:='bundle1.o';
               end
@@ -252,16 +252,16 @@ implementation
                         = 10.5: dylib1.10.5.o
                         < 10.5: dylib1.o
                       }
-                      if MacOSXVersionMin.relationto(10,6,0)>=0 then
+                      if MacOSXVersionMin.RelationTo(10,6,0)>=0 then
                         exit('');
-                      if MacOSXVersionMin.relationto(10,5,0)>=0 then
+                      if MacOSXVersionMin.RelationTo(10,5,0)>=0 then
                         exit('dylib1.10.5.o');
                     end;
                   system_aarch64_ios:
                     begin
                       { iOS: < 3.1: dylib1.o
                              >= 3.1: nothing }
-                      if iPhoneOSVersionMin.relationto(3,1,0)>=0 then
+                      if IPhoneOSVersionMin.RelationTo(3,1,0)>=0 then
                         exit('');
                     end;
                   system_i386_iphonesim,
@@ -269,13 +269,13 @@ implementation
                   system_aarch64_iphonesim:
                     begin
                       { see rule for crt1.o }
-                      if iPhoneOSVersionMin.relationto(8,1,0)>0 then
+                      if IPhoneOSVersionMin.RelationTo(8,1,0)>0 then
                         exit('');
                     end;
                   system_aarch64_darwin:
                     exit('');
                   else
-                    Internalerror(2019050711);
+                    InternalError(2019050711);
                 end;
                 result:='dylib1.o';
               end;
@@ -283,7 +283,7 @@ implementation
       end;
 
 
-    function tlinkerdarwin.GetDarwinPrtobjName(isdll: boolean): TCmdStr;
+    function TLinkerDarwin.GetDarwinPrtobjName(isdll: boolean): TCmdStr;
       var
         startupfile: TCmdStr;
       begin
@@ -292,14 +292,14 @@ implementation
         startupfile:=GetDarwinCrt1ObjName(isdll);
         if startupfile<>'' then
           begin
-           if not librarysearchpath.FindFile(startupfile,false,result) then
+           if not LibrarySearchPath.FindFile(startupfile,false,result) then
              result:='/usr/lib/'+startupfile;
           end;
-        result:=maybequoted(result);
+        result:=MaybeQuoted(result);
       end;
 
 
-    function tlinkerdarwin.GetLinkArch: TCmdStr;
+    function TLinkerDarwin.GetLinkArch: TCmdStr;
       begin
         case TargetInfo.system of
           system_i386_darwin,
@@ -313,41 +313,41 @@ implementation
           system_aarch64_darwin:
             result:='-arch arm64';
           else
-            internalerror(2014121801);
+            InternalError(2014121801);
         end;
       end;
 
 
-    function tlinkerdarwin.GetLinkVersion: TCmdStr;
+    function TLinkerDarwin.GetLinkVersion: TCmdStr;
       begin
-        if MacOSXVersionMin.isvalid then
+        if MacOSXVersionMin.IsValid then
           begin
            { This does not depend on the target version but on the toolchain
              version, but we only know the former and not the latter }
-           if MacOSXVersionMin.relationto(11,0,0)>=0 then
+           if MacOSXVersionMin.RelationTo(11,0,0)>=0 then
              result:='-macos_version_min '+MacOSXVersionMin.str
            else
              result:='-macosx_version_min '+MacOSXVersionMin.str;
           end
-        else if iPhoneOSVersionMin.isvalid then
+        else if IPhoneOSVersionMin.IsValid then
           begin
             if TargetInfo.system in [system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim] then
-              result:='-ios_simulator_version_min '+iPhoneOSVersionMin.str
+              result:='-ios_simulator_version_min '+IPhoneOSVersionMin.str
             else
-              result:='-iphoneos_version_min '+iPhoneOSVersionMin.str;
+              result:='-iphoneos_version_min '+IPhoneOSVersionMin.str;
           end
         else
           begin
-            internalerror(2022090920)
+            InternalError(2022090920)
           end;
       end;
 
 
-    function tlinkerdarwin.GetSysroot: TCmdStr;
+    function TLinkerDarwin.GetSysroot: TCmdStr;
       begin
-        if sysrootpath<>'' then
+        if SysRootPath<>'' then
           begin
-            result:='-syslibroot '+maybequoted(sysrootpath);
+            result:='-syslibroot '+MaybeQuoted(SysRootPath);
           end
         else
           begin
@@ -356,43 +356,43 @@ implementation
       end;
 
 
-    function tlinkerdarwin.GetLibSearchPath: TCmdStr;
+    function TLinkerDarwin.GetLibSearchPath: TCmdStr;
       var
         HPath: TCmdStrListItem;
       begin
         result:='';
         HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
-        while assigned(HPath) do
+        while Assigned(HPath) do
          begin
-           result:=result+' '+maybequoted('-L'+HPath.Str);
+           result:=result+' '+MaybeQuoted('-L'+HPath.Str);
            HPath:=TCmdStrListItem(HPath.Next);
          end;
         HPath:=TCmdStrListItem(LibrarySearchPath.First);
-        while assigned(HPath) do
+        while Assigned(HPath) do
          begin
-           result:=result+' '+maybequoted('-L'+HPath.Str);
+           result:=result+' '+MaybeQuoted('-L'+HPath.Str);
            HPath:=TCmdStrListItem(HPath.Next);
          end;
 
         HPath:=TCmdStrListItem(CurrentModule.localframeworksearchpath.First);
-        while assigned(HPath) do
+        while Assigned(HPath) do
          begin
-           result:=result+' '+maybequoted('-F'+HPath.Str);
+           result:=result+' '+MaybeQuoted('-F'+HPath.Str);
            HPath:=TCmdStrListItem(HPath.Next);
          end;
         HPath:=TCmdStrListItem(FrameworkSearchPath.First);
-        while assigned(HPath) do
+        while Assigned(HPath) do
          begin
-           result:=result+' '+maybequoted('-F'+HPath.Str);
+           result:=result+' '+MaybeQuoted('-F'+HPath.Str);
            HPath:=TCmdStrListItem(HPath.Next);
          end;
       end;
 
 
-    function tlinkerdarwin.GetLibraries: TCmdStr;
+    function TLinkerDarwin.GetLibraries: TCmdStr;
       var
         s: TCmdStr;
-        i: longint;
+        i: LongInt;
       begin
         result:='';
         while not SharedLibFiles.Empty do
@@ -403,7 +403,7 @@ implementation
                 i:=Pos(TargetInfo.sharedlibext,s);
                 if i>0 then
                   Delete(s,i,length(s));
-                result:=result+' '+maybequoted('-l'+s);
+                result:=result+' '+MaybeQuoted('-l'+s);
               end;
            { be sure that libc is the last lib }
            if not ReOrderEntries then
@@ -414,12 +414,12 @@ implementation
 
         while not FrameworkFiles.empty do
           begin
-            result:=result+' -framework '+maybequoted(FrameworkFiles.GetFirst);
+            result:=result+' -framework '+MaybeQuoted(FrameworkFiles.GetFirst);
           end;
       end;
 
 
-    function tlinkerdarwin.WriteFileList: TCmdStr;
+    function TLinkerDarwin.WriteFileList: TCmdStr;
     Var
       FilesList    : TScript;
       s            : TCmdStr;
@@ -428,7 +428,7 @@ implementation
          ExpandAndApplyOrder(SharedLibFiles);
 
       { main objectfiles and static libraries: in filelist file to avoid overflowing command line limit }
-      result:=UniqueName(outputexedir+'linkfiles')+'.res';
+      result:=UniqueName(OutputExeDir+'linkfiles')+'.res';
       FilesList:=TScript.Create(result);
       while not ObjectFiles.Empty do
         begin
@@ -450,7 +450,7 @@ implementation
     end;
 
 
-    function tlinkerdarwin.MakeExecutable:boolean;
+    function TLinkerDarwin.MakeExecutable:boolean;
     var
       binstr,
       cmdstr,
@@ -468,8 +468,8 @@ implementation
       sanitizerLibraryDir: TCmdStr;
       success : boolean;
     begin
-      if not(cs_link_nolink in CurrentSettings.globalswitches) then
-       Message1(exec_i_linking,CurrentModule.exefilename);
+      if not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
+       Message1(exec_i_linking,CurrentModule.ExeFileName);
 
     { Create some replacements }
       StaticStr:='';
@@ -479,24 +479,24 @@ implementation
       targetstr:='';
       ltostr:='';
 
-      if (cs_link_map in CurrentSettings.globalswitches) then
-        mapstr:='-map '+maybequoted(ChangeFileExt(CurrentModule.exefilename,'.map'));
+      if (cs_link_map in CurrentSettings.GlobalSwitches) then
+        mapstr:='-map '+MaybeQuoted(ChangeFileExt(CurrentModule.ExeFileName,'.map'));
 
-      if (cs_link_staticflag in CurrentSettings.globalswitches) then
+      if (cs_link_staticflag in CurrentSettings.GlobalSwitches) then
         StaticStr:='-static';
-      if (cs_link_strip in CurrentSettings.globalswitches) then
+      if (cs_link_strip in CurrentSettings.GlobalSwitches) then
         StripStr:='-x';
 
-      if (cs_link_smart in CurrentSettings.globalswitches) then
+      if (cs_link_smart in CurrentSettings.GlobalSwitches) then
         GCSectionsStr:='-dead_strip -no_dead_strip_inits_and_terms';
 
       { add custom LTO library if using custom clang }
-      if (cs_lto in CurrentSettings.moduleswitches) and
-         not(cs_link_on_target in CurrentSettings.globalswitches) and
-         (utilsdirectory<>'') and
-         FileExists(utilsdirectory+'/../lib/libLTO.dylib',false) then
+      if (cs_lto in CurrentSettings.ModuleSwitches) and
+         not(cs_link_on_target in CurrentSettings.GlobalSwitches) and
+         (UtilsDirectory<>'') and
+         FileExists(UtilsDirectory+'/../lib/libLTO.dylib',false) then
         begin
-          ltostr:='-lto_library '+maybequoted(utilsdirectory+'/../lib/libLTO.dylib');
+          ltostr:='-lto_library '+MaybeQuoted(UtilsDirectory+'/../lib/libLTO.dylib');
         end;
 
       { Write symbol order file }
@@ -504,14 +504,14 @@ implementation
 
     { Call linker }
       SplitBinCmd(Info.ExeCmd[1],binstr,cmdstr);
-      Replace(cmdstr,'$EXE',maybequoted(CurrentModule.exefilename));
+      Replace(cmdstr,'$EXE',MaybeQuoted(CurrentModule.ExeFileName));
       Replace(cmdstr,'$OPT',Info.ExtraOptions);
       Replace(cmdstr,'$TARGET',targetstr);
       Replace(cmdstr,'$MAP',mapstr);
-      Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
+      Replace(cmdstr,'$RES',MaybeQuoted(OutputExeDir+Info.ResName));
       Replace(cmdstr,'$LTO',ltostr);
       if ordersymfile<>'' then
-        Replace(cmdstr,'$ORDERSYMS','-order_file '+maybequoted(ordersymfile))
+        Replace(cmdstr,'$ORDERSYMS','-order_file '+MaybeQuoted(ordersymfile))
       else
         Replace(cmdstr,'$ORDERSYMS','');
 
@@ -519,7 +519,7 @@ implementation
         begin
           { also add the executable path as search path in case the asan
             library gets copied into the application bundle }
-          Replace(cmdstr,'$RPATH','-rpath @executable_path -rpath '+maybequoted(sanitizerLibraryDir))
+          Replace(cmdstr,'$RPATH','-rpath @executable_path -rpath '+MaybeQuoted(sanitizerLibraryDir))
         end
       else
         begin
@@ -537,18 +537,18 @@ implementation
       Replace(cmdstr,'$VERSION',GetLinkVersion);
       Replace(cmdstr,'$SYSROOT',GetSysroot);
       Replace(cmdstr,'$LIBSEARCHPATH',GetLibSearchPath);
-      Replace(cmdstr,'$FILELIST','-filelist '+maybequoted(linkfiles));
+      Replace(cmdstr,'$FILELIST','-filelist '+MaybeQuoted(linkfiles));
       Replace(cmdstr,'$LIBRARIES',GetLibraries);
-      BinStr:=FindUtil(utilsprefix+BinStr);
+      BinStr:=FindUtil(UtilsPrefix+BinStr);
 
       { create dsym file? }
       extdbgbinstr:='';
       extdbgcmdstr:='';
       if (TargetDbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
-         (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
+         (cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
         begin
-          extdbgbinstr:=FindUtil(utilsprefix+'dsymutil');
-          extdbgcmdstr:=maybequoted(CurrentModule.exefilename);
+          extdbgbinstr:=FindUtil(UtilsPrefix+'dsymutil');
+          extdbgcmdstr:=MaybeQuoted(CurrentModule.ExeFileName);
         end;
 
       success:=DoExec(BinStr,CmdStr,true,false);
@@ -557,23 +557,23 @@ implementation
         success:=DoExec(extdbgbinstr,extdbgcmdstr,false,false);
 
       { Remove ResponseFile }
-      if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
+      if (success) and not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
        begin
-         DeleteFile(outputexedir+Info.ResName);
+         DeleteFile(OutputExeDir+Info.ResName);
          if ordersymfile<>'' then
            DeleteFile(ordersymfile);
          DeleteFile(linkfiles);
        end;
 
      { Post process }
-     if success and not(cs_link_nolink in CurrentSettings.globalswitches) then
-       success:=PostProcessExecutable(CurrentModule.exefilename,false);
+     if success and not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
+       success:=PostProcessExecutable(CurrentModule.ExeFileName,false);
 
       MakeExecutable:=success;   { otherwise a recursive call to link method }
     end;
 
 
-  function tlinkerdarwin.MakeSharedLibrary: boolean;
+  function TLinkerDarwin.MakeSharedLibrary: boolean;
     var
       InitStr,
       FiniStr,
@@ -595,25 +595,25 @@ implementation
       GCSectionsStr:='';
       mapstr:='';
       ltostr:='';
-      if not(cs_link_nolink in CurrentSettings.globalswitches) then
-       Message1(exec_i_linking,CurrentModule.sharedlibfilename);
+      if not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
+       Message1(exec_i_linking,CurrentModule.SharedLibFileName);
 
       { Write symbol order file }
       ordersymfile:=WriteSymbolOrderFile;
 
-      if (cs_link_smart in CurrentSettings.globalswitches) then
+      if (cs_link_smart in CurrentSettings.GlobalSwitches) then
         GCSectionsStr:='-dead_strip -no_dead_strip_inits_and_terms';
 
-      if (cs_link_map in CurrentSettings.globalswitches) then
-        mapstr:='-map '+maybequoted(ChangeFileExt(CurrentModule.sharedlibfilename,'.map'));
+      if (cs_link_map in CurrentSettings.GlobalSwitches) then
+        mapstr:='-map '+MaybeQuoted(ChangeFileExt(CurrentModule.SharedLibFileName,'.map'));
 
       { add custom LTO library if using custom clang }
-      if (cs_lto in CurrentSettings.moduleswitches) and
-         not(cs_link_on_target in CurrentSettings.globalswitches) and
-         (utilsdirectory<>'') and
-         FileExists(utilsdirectory+'/../lib/libLTO.dylib',false) then
+      if (cs_lto in CurrentSettings.ModuleSwitches) and
+         not(cs_link_on_target in CurrentSettings.GlobalSwitches) and
+         (UtilsDirectory<>'') and
+         FileExists(UtilsDirectory+'/../lib/libLTO.dylib',false) then
         begin
-          ltostr:='-lto_library '+maybequoted(utilsdirectory+'/../lib/libLTO.dylib');
+          ltostr:='-lto_library '+MaybeQuoted(UtilsDirectory+'/../lib/libLTO.dylib');
         end;
 
       targetstr:='';
@@ -623,17 +623,17 @@ implementation
 
       { Call linker }
       SplitBinCmd(Info.DllCmd[1],binstr,cmdstr);
-      Replace(cmdstr,'$EXE',maybequoted(ExpandFileName(CurrentModule.sharedlibfilename)));
+      Replace(cmdstr,'$EXE',MaybeQuoted(ExpandFileName(CurrentModule.SharedLibFileName)));
       Replace(cmdstr,'$OPT',Info.ExtraOptions);
       Replace(cmdstr,'$TARGET',targetstr);
-      Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
+      Replace(cmdstr,'$RES',MaybeQuoted(OutputExeDir+Info.ResName));
       Replace(cmdstr,'$INIT',InitStr);
       Replace(cmdstr,'$FINI',FiniStr);
       Replace(cmdstr,'$GCSECTIONS',GCSectionsStr);
       Replace(cmdstr,'$MAP',mapstr);
       Replace(cmdstr,'$LTO',ltostr);
       if ordersymfile<>'' then
-        Replace(cmdstr,'$ORDERSYMS','-order_file '+maybequoted(ordersymfile))
+        Replace(cmdstr,'$ORDERSYMS','-order_file '+MaybeQuoted(ordersymfile))
       else
         Replace(cmdstr,'$ORDERSYMS','');
       { add asan library if known }
@@ -641,7 +641,7 @@ implementation
         begin
           { also add the executable path as search path in case the asan
             library gets copied into the application bundle }
-          Replace(cmdstr,'$RPATH','-rpath @executable_path -rpath '+maybequoted(sanitizerLibraryDir))
+          Replace(cmdstr,'$RPATH','-rpath @executable_path -rpath '+MaybeQuoted(sanitizerLibraryDir))
         end
       else
         begin
@@ -656,55 +656,55 @@ implementation
       Replace(cmdstr,'$VERSION',GetLinkVersion);
       Replace(cmdstr,'$SYSROOT',GetSysroot);
       Replace(cmdstr,'$LIBSEARCHPATH',GetLibSearchPath);
-      Replace(cmdstr,'$FILELIST','-filelist '+maybequoted(linkfiles));
+      Replace(cmdstr,'$FILELIST','-filelist '+MaybeQuoted(linkfiles));
       Replace(cmdstr,'$LIBRARIES',GetLibraries);
-      BinStr:=FindUtil(utilsprefix+BinStr);
+      BinStr:=FindUtil(UtilsPrefix+BinStr);
 
       { create dsym file? }
       extdbgbinstr:='';
       extdbgcmdstr:='';
       if (TargetDbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
-         (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
+         (cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
         begin
-          extdbgbinstr:=FindUtil(utilsprefix+'dsymutil');
-          extdbgcmdstr:=maybequoted(CurrentModule.sharedlibfilename);
+          extdbgbinstr:=FindUtil(UtilsPrefix+'dsymutil');
+          extdbgcmdstr:=MaybeQuoted(CurrentModule.SharedLibFileName);
         end;
 
       LinkSymsFileName:='';
-      if not texportlibunix(exportlib).exportedsymnames.empty then
+      if not TExportLibUnix(exportlib).exportedsymnames.empty then
         begin
           LinkSymsFileName:=UniqueName('linksyms')+'.fpc';
-          assign(exportedsyms,outputexedir+LinkSymsFileName);
+          assign(exportedsyms,OutputExeDir+LinkSymsFileName);
           rewrite(exportedsyms);
           repeat
-            writeln(exportedsyms,texportlibunix(exportlib).exportedsymnames.getfirst);
-          until texportlibunix(exportlib).exportedsymnames.empty;
+            WriteLn(exportedsyms,TExportLibUnix(exportlib).exportedsymnames.GetFirst);
+          until TExportLibUnix(exportlib).exportedsymnames.empty;
           close(exportedsyms);
-          cmdstr:=cmdstr+' -exported_symbols_list '+maybequoted(outputexedir+LinkSymsFileName);
+          cmdstr:=cmdstr+' -exported_symbols_list '+MaybeQuoted(OutputExeDir+LinkSymsFileName);
         end;
 
       success:=DoExec(BinStr,cmdstr,true,false);
       if (success and
           (extdbgbinstr<>'') and
-          (cs_link_nolink in CurrentSettings.globalswitches)) then
+          (cs_link_nolink in CurrentSettings.GlobalSwitches)) then
         success:=DoExec(extdbgbinstr,extdbgcmdstr,false,false);
 
     { Strip the library ? }
-      if success and (cs_link_strip in CurrentSettings.globalswitches) then
+      if success and (cs_link_strip in CurrentSettings.GlobalSwitches) then
        begin
          SplitBinCmd(Info.DllCmd[2],binstr,cmdstr);
-         Replace(cmdstr,'$EXE',maybequoted(CurrentModule.sharedlibfilename));
-         success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,false,false);
+         Replace(cmdstr,'$EXE',MaybeQuoted(CurrentModule.SharedLibFileName));
+         success:=DoExec(FindUtil(UtilsPrefix+binstr),cmdstr,false,false);
        end;
 
     { Remove temporary files }
-      if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
+      if (success) and not(cs_link_nolink in CurrentSettings.GlobalSwitches) then
         begin
-          DeleteFile(outputexedir+Info.ResName);
+          DeleteFile(OutputExeDir+Info.ResName);
           if ordersymfile<>'' then
             DeleteFile(ordersymfile);
            if LinkSymsFileName<>'' then
-             DeleteFile(outputexedir+LinkSymsFileName);
+             DeleteFile(OutputExeDir+LinkSymsFileName);
            DeleteFile(linkfiles);
         end;
 
@@ -722,24 +722,24 @@ implementation
 *****************************************************************************}
 
 initialization
-  RegisterLinker(ld_darwin,tlinkerdarwin);
+  RegisterLinker(ld_darwin,TLinkerDarwin);
 {$ifdef x86_64}
-  RegisterImport(system_x86_64_darwin,timportlibdarwin);
-  RegisterExport(system_x86_64_darwin,texportlibdarwin);
+  RegisterImport(system_x86_64_darwin,TImportLibDarwin);
+  RegisterExport(system_x86_64_darwin,TExportLibDarwin);
   RegisterTarget(system_x86_64_darwin_info);
-  RegisterImport(system_x86_64_iphonesim,timportlibdarwin);
-  RegisterExport(system_x86_64_iphonesim,texportlibdarwin);
+  RegisterImport(system_x86_64_iphonesim,TImportLibDarwin);
+  RegisterExport(system_x86_64_iphonesim,TExportLibDarwin);
   RegisterTarget(system_x86_64_iphonesim_info);
 {$endif}
 {$ifdef aarch64}
-  RegisterImport(system_aarch64_ios,timportlibdarwin);
-  RegisterExport(system_aarch64_ios,texportlibdarwin);
+  RegisterImport(system_aarch64_ios,TImportLibDarwin);
+  RegisterExport(system_aarch64_ios,TExportLibDarwin);
   RegisterTarget(system_aarch64_ios_info);
-  RegisterImport(system_aarch64_darwin,timportlibdarwin);
-  RegisterExport(system_aarch64_darwin,texportlibdarwin);
+  RegisterImport(system_aarch64_darwin,TImportLibDarwin);
+  RegisterExport(system_aarch64_darwin,TExportLibDarwin);
   RegisterTarget(system_aarch64_darwin_info);
-  RegisterImport(system_aarch64_iphonesim,timportlibdarwin);
-  RegisterExport(system_aarch64_iphonesim,texportlibdarwin);
+  RegisterImport(system_aarch64_iphonesim,TImportLibDarwin);
+  RegisterExport(system_aarch64_iphonesim,TExportLibDarwin);
   RegisterTarget(system_aarch64_iphonesim_info);
 {$endif aarch64}
 

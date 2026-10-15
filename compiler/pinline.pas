@@ -28,7 +28,7 @@ interface
     uses
       symtype,
       node,
-      globals;
+      Globals;
 
     function new_dispose_statement(is_new:boolean) : TNode;
     function new_function : TNode;
@@ -47,29 +47,29 @@ implementation
 
     uses
        { global }
-       globtype,tokens,verbose,constexp,
-       systems,compinnr,
+       GlobType,tokens,Verbose,ConstExp,
+       Systems,compinnr,
        { symtable }
-       symbase,symconst,symdef,symsym,symtable,defutil,
+       SymBase,symconst,symdef,SymSym,SymTable,defutil,
        { pass 1 }
        pass_1,htypechk,
        ncal,nmem,ncnv,ninl,ncon,nld,nbas,ngenutil,nutils,
        { parser }
-       scanner,
+       Scanner,
        pbase,pexpr;
 
 
     function new_dispose_statement(is_new:boolean) : TNode;
       var
-        newstatement : tstatementnode;
-        temp         : ttempcreatenode;
-        para         : tcallparanode;
+        newstatement : TStatementNode;
+        temp         : TTempCreateNode;
+        para         : TCallParaNode;
         p,p2     : TNode;
         again    : boolean; { dummy for do_proc_call }
         destructorname : TIDString;
         sym      : TSym;
         classh   : TObjectDef;
-        callflag : tcallnodeflag;
+        callflag : TCallNodeFlag;
         destructorpos,
         storepos : TFilePosInfo;
         variantdesc : PVariantRecDesc;
@@ -78,12 +78,12 @@ implementation
 
       procedure ReadVariantRecordConstants;
         var
-          i,j : longint;
+          i,j : LongInt;
         begin
-          if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) and (is_record(TPointerDef(p.resultdef).pointeddef)) then
+          if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) and (is_record(TPointerDef(p.resultdef).pointeddef)) then
             begin
               variantdesc:=TRecordDef(TPointerDef(p.resultdef).pointeddef).variantrecdesc;
-              while (CurrentScanner.token=_COMMA) and assigned(variantdesc) do
+              while (CurrentScanner.token=_COMMA) and Assigned(variantdesc) do
                 begin
                   consume(_COMMA);
                   p2:=factor(false,[]);
@@ -96,7 +96,7 @@ implementation
                       for i:=0 to high(variantdesc^.branches) do
                         begin
                           for j:=0 to high(variantdesc^.branches[i].values) do
-                            if variantdesc^.branches[i].values[j]=tordconstnode(p2).value then
+                            if variantdesc^.branches[i].values[j]=TOrdConstNode(p2).value then
                               begin
                                 found:=true;
                                 variantselectsymbol:=TFieldVarSym(variantdesc^.variantselector);
@@ -111,11 +111,11 @@ implementation
                           if is_new then
                             begin
                               { if no tag-field is given, do not create an assignment statement for it }
-                              if assigned(variantselectsymbol) then
+                              if Assigned(variantselectsymbol) then
                                 { setup variant selector }
-                                addstatement(newstatement,cassignmentnode.create(
-                                    csubscriptnode.create(variantselectsymbol,
-                                      cderefnode.create(ctemprefnode.create(temp))),
+                                addstatement(newstatement,CAssignmentNode.create(
+                                    CSubscriptNode.create(variantselectsymbol,
+                                      CDerefNode.create(CTempRefNode.create(temp))),
                                     p2));
                             end;
                         end
@@ -139,7 +139,7 @@ implementation
           end
         else
           set_varstate(p,vs_readwritten,[vsf_must_be_valid]);
-        if (m_mac in CurrentSettings.modeswitches) and
+        if (m_mac in CurrentSettings.ModeSwitches) and
            is_class(p.resultdef) then
           begin
             classh:=TObjectDef(p.resultdef);
@@ -148,12 +148,12 @@ implementation
             { create/free method in a macpas descendent object (since those }
             { are not supposed to be called automatically when you call     }
             { new/dispose)                                                  }
-            while assigned(classh.childof) do
+            while Assigned(classh.childof) do
               classh := classh.childof;
             if is_new then
               begin
                 sym:=search_struct_member(classh,'CREATE');
-                p2 := cloadvmtaddrnode.create(ctypenode.create(p.resultdef));
+                p2 := CLoadVMTAddrNode.create(CTypeNode.create(p.resultdef));
               end
             else
               begin
@@ -161,14 +161,14 @@ implementation
                 p2 := p;
              end;
 
-            if not(assigned(sym)) then
+            if not(Assigned(sym)) then
               begin
                  p.free;
                  p := nil;
                  if is_new then
                    p2.free;
                    p2 := nil;
-                 new_dispose_statement := cerrornode.create;
+                 new_dispose_statement := CErrorNode.create;
                  consume_all_until(_RKLAMMER);
                  consume(_RKLAMMER);
                  exit;
@@ -180,14 +180,14 @@ implementation
             DoTypeCheckPass(p2);
 
             if (p2.nodetype=calln) and
-               assigned(tcallnode(p2).procdefinition) then
+               Assigned(TCallNode(p2).procdefinition) then
               begin
                 if is_new then
                   begin
-                    if (tcallnode(p2).procdefinition.proctypeoption<>potype_constructor) then
+                    if (TCallNode(p2).procdefinition.proctypeoption<>potype_constructor) then
                       Message(parser_e_expr_have_to_be_constructor_call);
                     p2.resultdef:=p.resultdef;
-                    p2:=cassignmentnode.create(p,p2);
+                    p2:=CAssignmentNode.create(p,p2);
                     TypeCheckPass(p2);
                   end
                 else
@@ -199,11 +199,11 @@ implementation
                   end
               end
             else
-              internalerror(2005061202);
+              InternalError(2005061202);
             new_dispose_statement := p2;
           end
         { constructor,destructor specified }
-        else if (([m_mac,m_iso,m_extpas]*CurrentSettings.modeswitches)=[]) and
+        else if (([m_mac,m_iso,m_extpas]*CurrentSettings.ModeSwitches)=[]) and
                 try_to_consume(_COMMA) then
           begin
             { extended syntax of new and dispose }
@@ -220,7 +220,7 @@ implementation
                  p.free;
                  p := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=cnothingnode.create;
+                 new_dispose_statement:=CNothingNode.create;
                  exit;
               end;
 
@@ -232,7 +232,7 @@ implementation
                  p.free;
                  p := nil;
                  consume(_RKLAMMER);
-                 new_dispose_statement:=cerrornode.create;
+                 new_dispose_statement:=CErrorNode.create;
                  exit;
               end;
             { first parameter must be an object or class }
@@ -264,7 +264,7 @@ implementation
 
             { the second parameter of new/dispose must be a call }
             { to a cons-/destructor                              }
-            if (not assigned(sym)) or (sym.typ<>procsym) then
+            if (not Assigned(sym)) or (sym.typ<>procsym) then
               begin
                  if is_new then
                   Message(parser_e_expr_have_to_be_constructor_call)
@@ -272,7 +272,7 @@ implementation
                   Message(parser_e_expr_have_to_be_destructor_call);
                  p.free;
                  p := nil;
-                 new_dispose_statement:=cerrornode.create;
+                 new_dispose_statement:=CErrorNode.create;
               end
             else
               begin
@@ -280,11 +280,11 @@ implementation
                   p is also used in the assignment below }
                 if is_new then
                   begin
-                    p2:=cderefnode.create(p.getcopy);
+                    p2:=CDerefNode.create(p.getcopy);
                     include(TDerefNode(p2).derefnodeflags,drnf_no_checkpointer);
                   end
                 else
-                  p2:=cderefnode.create(p);
+                  p2:=CDerefNode.create(p);
                 DoTypeCheckPass(p2);
                 if is_new then
                   callflag:=cnf_new_call
@@ -294,11 +294,11 @@ implementation
                   do_member_read(classh,false,sym,p2,again,[callflag],nil)
                 else
                   begin
-                    if not(m_fpc in CurrentSettings.modeswitches) then
+                    if not(m_fpc in CurrentSettings.ModeSwitches) then
                       do_member_read(classh,false,sym,p2,again,[callflag],nil)
                     else
                       begin
-                        p2:=ccallnode.create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
+                        p2:=CCallNode.create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
                         { support dispose(p,done()); }
                         if try_to_consume(_LKLAMMER) then
                           begin
@@ -316,18 +316,18 @@ implementation
                 DoTypeCheckPass(p2);
 
                 if (p2.nodetype=calln) and
-                   assigned(tcallnode(p2).procdefinition) then
+                   Assigned(TCallNode(p2).procdefinition) then
                   begin
                     if is_new then
                      begin
-                       if (tcallnode(p2).procdefinition.proctypeoption<>potype_constructor) then
+                       if (TCallNode(p2).procdefinition.proctypeoption<>potype_constructor) then
                          Message(parser_e_expr_have_to_be_constructor_call);
                        p2.resultdef:=p.resultdef;
-                       p2:=cassignmentnode.create(p,p2);
+                       p2:=CAssignmentNode.create(p,p2);
                      end
                     else
                      begin
-                       if (tcallnode(p2).procdefinition.proctypeoption<>potype_destructor) then
+                       if (TCallNode(p2).procdefinition.proctypeoption<>potype_destructor) then
                          Message(parser_e_expr_have_to_be_destructor_call);
                      end;
                   end
@@ -351,13 +351,13 @@ implementation
                       p.free;
                       p := nil;
                       consume(_RKLAMMER);
-                      new_dispose_statement:=cnothingnode.create;
+                      new_dispose_statement:=CNothingNode.create;
                       exit;
                    end
                  else
                    begin
                      Message1(type_e_pointer_type_expected,p.resultdef.typename);
-                     new_dispose_statement:=cerrornode.create;
+                     new_dispose_statement:=CErrorNode.create;
                    end;
                end
              else
@@ -368,7 +368,7 @@ implementation
                   if (TPointerDef(p.resultdef).pointeddef.typ=orddef) and
                      (TOrdDef(TPointerDef(p.resultdef).pointeddef).ordtype=uvoid) then
                     begin
-                      if m_delphi in CurrentSettings.modeswitches then
+                      if m_delphi in CurrentSettings.ModeSwitches then
                        Message(parser_w_no_new_dispose_on_void_pointers)
                       else
                        Message(parser_e_no_new_dispose_on_void_pointers);
@@ -381,30 +381,30 @@ implementation
                   if is_new then
                    begin
                      { create temp for result }
-                     temp := ctempcreatenode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
+                     temp := CTempCreateNode.create(p.resultdef,p.resultdef.size,tt_persistent,true);
                      addstatement(newstatement,temp);
 
                      { create call to fpc_getmem }
-                     para := ccallparanode.create(cordconstnode.create
+                     para := CCallParaNode.create(COrdConstNode.create
                          (TPointerDef(p.resultdef).pointeddef.size,ptruinttype,true),nil);
-                     addstatement(newstatement,cassignmentnode.create(
-                         ctemprefnode.create(temp),
-                         ccallnode.createintern('fpc_getmem',para)));
+                     addstatement(newstatement,CAssignmentNode.create(
+                         CTempRefNode.create(temp),
+                         CCallNode.createintern('fpc_getmem',para)));
 
                      { create call to fpc_initialize }
                      if is_managed_type(TPointerDef(p.resultdef).pointeddef) or
-                       ((m_isolike_io in CurrentSettings.modeswitches) and (TPointerDef(p.resultdef).pointeddef.typ=filedef)) then
-                       addstatement(newstatement,cnodeutils.initialize_data_node(cderefnode.create(ctemprefnode.create(temp)),false));
+                       ((m_isolike_io in CurrentSettings.ModeSwitches) and (TPointerDef(p.resultdef).pointeddef.typ=filedef)) then
+                       addstatement(newstatement,CNodeUtils.initialize_data_node(CDerefNode.create(CTempRefNode.create(temp)),false));
 
                      { copy the temp to the destination }
-                     addstatement(newstatement,cassignmentnode.create(
+                     addstatement(newstatement,CAssignmentNode.create(
                          p,
-                         ctemprefnode.create(temp)));
+                         CTempRefNode.create(temp)));
 
                      ReadVariantRecordConstants;
 
                      { release temp }
-                     addstatement(newstatement,ctempdeletenode.create(temp));
+                     addstatement(newstatement,CTempDeleteNode.create(temp));
                    end
                   else
                    begin
@@ -414,23 +414,23 @@ implementation
                        if might_have_sideeffects(p) then
                          begin
                            { ensure that p gets evaluated only once, in case it is e.g. a call }
-                           temp:=ctempcreatenode.create_value(p.resultdef,p.resultdef.size,tt_persistent,true,p);
+                           temp:=CTempCreateNode.create_value(p.resultdef,p.resultdef.size,tt_persistent,true,p);
                            addstatement(newstatement,temp);
-                           addstatement(newstatement,cnodeutils.finalize_data_node(cderefnode.create(ctemprefnode.create(temp))));
+                           addstatement(newstatement,CNodeUtils.finalize_data_node(CDerefNode.create(CTempRefNode.create(temp))));
                          end
                        else
-                         addstatement(newstatement,cnodeutils.finalize_data_node(cderefnode.create(p.getcopy)));
+                         addstatement(newstatement,CNodeUtils.finalize_data_node(CDerefNode.create(p.getcopy)));
 
                      ReadVariantRecordConstants;
 
                      { create call to fpc_freemem }
-                     if not assigned(temp) then
-                       para := ccallparanode.create(p,nil)
+                     if not Assigned(temp) then
+                       para := CCallParaNode.create(p,nil)
                      else
-                       para := ccallparanode.create(ctemprefnode.create(temp),nil);
-                     addstatement(newstatement,ccallnode.createintern('fpc_freemem',para));
-                     if assigned(temp) then
-                       addstatement(newstatement,ctempdeletenode.create(temp));
+                       para := CCallParaNode.create(CTempRefNode.create(temp),nil);
+                     addstatement(newstatement,CCallNode.createintern('fpc_freemem',para));
+                     if Assigned(temp) then
+                       addstatement(newstatement,CTempDeleteNode.create(temp));
                    end;
                end;
           end;
@@ -455,7 +455,7 @@ implementation
            consume(_RKLAMMER);
            p1.free;
            p1 := nil;
-           new_function:=cerrornode.create;
+           new_function:=CErrorNode.create;
            exit;
          end;
 
@@ -466,7 +466,7 @@ implementation
            consume(_RKLAMMER);
            p1.free;
            p1 := nil;
-           new_function:=cerrornode.create;
+           new_function:=CErrorNode.create;
            exit;
          end;
 
@@ -477,9 +477,9 @@ implementation
               Message(parser_w_use_extended_syntax_for_objects);
 
             if p1.nodetype=typen then
-              ttypenode(p1).allowed:=true;
+              TTypeNode(p1).allowed:=true;
 
-            p1:=cinlinenode.create(in_new_x,false,p1);
+            p1:=CInlineNode.create(in_new_x,false,p1);
           end
         else
           begin
@@ -491,13 +491,13 @@ implementation
                consume(_RKLAMMER);
                p1.free;
                p1 := nil;
-               new_function:=cerrornode.create;
+               new_function:=CErrorNode.create;
                exit;
              end;
             classh:=TObjectDef(TPointerDef(p1.resultdef).pointeddef);
             { use the objectdef for loading the VMT }
             p2:=p1;
-            p1:=ctypenode.create(TPointerDef(p1.resultdef).pointeddef);
+            p1:=CTypeNode.create(TPointerDef(p1.resultdef).pointeddef);
             DoTypeCheckPass(p1);
             { search the constructor also in the symbol tables of
               the parents }
@@ -509,8 +509,8 @@ implementation
             DoTypeCheckPass(p1);
             if not(
                    (p1.nodetype=calln) and
-                   assigned(tcallnode(p1).procdefinition) and
-                   (tcallnode(p1).procdefinition.proctypeoption=potype_constructor)
+                   Assigned(TCallNode(p1).procdefinition) and
+                   (TCallNode(p1).procdefinition.proctypeoption=potype_constructor)
                   ) then
               Message(parser_e_expr_have_to_be_constructor_call);
             { constructors return boolean, update resultdef to return
@@ -531,13 +531,13 @@ implementation
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        if not assigned(paras) then
+        if not Assigned(paras) then
          begin
-           result:=cerrornode.create;
+           result:=CErrorNode.create;
            CGMessage1(parser_e_wrong_parameter_size,'SetLength');
            exit;
          end;
-        result:=cinlinenode.create(in_setlength_x,false,paras);
+        result:=CInlineNode.create(in_setlength_x,false,paras);
       end;
 
 
@@ -551,14 +551,14 @@ implementation
         paras:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
         procname:='';
-        if assigned(paras) and
-           assigned(tcallparanode(paras).right) and
-           assigned(tcallparanode(tcallparanode(paras).right).right) then
+        if Assigned(paras) and
+           Assigned(TCallParaNode(paras).right) and
+           Assigned(TCallParaNode(TCallParaNode(paras).right).right) then
           begin
-            DoTypeCheckPass(tcallparanode(tcallparanode(paras).right).left);
-            DoTypeCheckPass(tcallparanode(tcallparanode(tcallparanode(paras).right).right).left);
-            pcharpara:=tcallparanode(tcallparanode(paras).right).left;
-            strpara:=tcallparanode(tcallparanode(tcallparanode(paras).right).right).left;
+            DoTypeCheckPass(TCallParaNode(TCallParaNode(paras).right).left);
+            DoTypeCheckPass(TCallParaNode(TCallParaNode(TCallParaNode(paras).right).right).left);
+            pcharpara:=TCallParaNode(TCallParaNode(paras).right).left;
+            strpara:=TCallParaNode(TCallParaNode(TCallParaNode(paras).right).right).left;
             if strpara.resultdef.typ=stringdef then
               begin
                 { if there are three parameters and the first parameter
@@ -567,9 +567,9 @@ implementation
                 if is_ansistring(strpara.resultdef) then
                   begin
                     cp:=TStringDef(strpara.resultdef).encoding;
-                    if (cp=globals.CP_NONE) then
+                    if (cp=Globals.CP_NONE) then
                       cp:=0;
-                    paras:=ccallparanode.create(genintconstnode(cp),paras);
+                    paras:=CCallParaNode.create(genintconstnode(cp),paras);
                   end;
                 procname:='fpc_setstring_'+TStringDef(strpara.resultdef).stringtypname;
                 { decide which version to call based on the second parameter }
@@ -586,13 +586,13 @@ implementation
         { default version (for error message) in case of missing or wrong
           parameters }
         if procname='' then
-          if m_default_unicodestring in CurrentSettings.modeswitches then
+          if m_default_unicodestring in CurrentSettings.ModeSwitches then
             procname:='fpc_setstring_unicodestr_pwidechar'
-          else if m_default_ansistring in CurrentSettings.modeswitches then
+          else if m_default_ansistring in CurrentSettings.ModeSwitches then
             procname:='fpc_setstring_ansistr_pansichar'
           else
             procname:='fpc_setstring_shortstr';
-        result:=ccallnode.createintern(procname,paras)
+        result:=CCallNode.createintern(procname,paras)
       end;
 
 
@@ -602,19 +602,19 @@ implementation
         paras   : TNode;
         npara,
         destppn,
-        ppn     : tcallparanode;
+        ppn     : TCallParaNode;
       begin
         { for easy exiting if something goes wrong }
-        result := cerrornode.create;
+        result := CErrorNode.create;
 
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        ppn:=tcallparanode(paras);
+        ppn:=TCallParaNode(paras);
 
-        if not assigned(paras) or
-           (assigned(ppn.right) and
-            assigned(tcallparanode(ppn.right).right)) then
+        if not Assigned(paras) or
+           (Assigned(ppn.right) and
+            Assigned(TCallParaNode(ppn.right).right)) then
          begin
            if isinit then
              CGMessage1(parser_e_wrong_parameter_size,'Initialize')
@@ -624,28 +624,28 @@ implementation
          end;
 
         { 2 arguments? }
-        if assigned(ppn.right) then
+        if Assigned(ppn.right) then
          begin
-           destppn:=tcallparanode(ppn.right);
+           destppn:=TCallParaNode(ppn.right);
            { create call to fpc_initialize/finalize_array }
-           npara:=ccallparanode.create(ctypeconvnode.create
+           npara:=CCallParaNode.create(CTypeConvNode.create
                      (ppn.left,s32inttype),
-                  ccallparanode.create(caddrnode.create_internal
-                     (crttinode.create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
-                  ccallparanode.create(caddrnode.create_internal
+                  CCallParaNode.create(CAddrNode.create_internal
+                     (CRTTINode.create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
+                  CCallParaNode.create(CAddrNode.create_internal
                      (destppn.left),nil)));
            if isinit then
-             newblock:=ccallnode.createintern('fpc_initialize_array',npara)
+             newblock:=CCallNode.createintern('fpc_initialize_array',npara)
            else
-             newblock:=ccallnode.createintern('fpc_finalize_array',npara);
+             newblock:=CCallNode.createintern('fpc_finalize_array',npara);
            destppn.left:=nil;
          end
         else
          begin
            if isinit then
-             newblock:=cnodeutils.initialize_data_node(ppn.left,true)
+             newblock:=CNodeUtils.initialize_data_node(ppn.left,true)
            else
-             newblock:=cnodeutils.finalize_data_node(ppn.left);
+             newblock:=CNodeUtils.finalize_data_node(ppn.left);
          end;
         ppn.left:=nil;
         paras.free;
@@ -667,23 +667,23 @@ implementation
       end;
 
 
-    function inline_copy_insert_delete(nr:tinlinenumber;const name:string;checkempty:boolean) : TNode;
+    function inline_copy_insert_delete(nr:TInlineNumber;const name:string;checkempty:boolean) : TNode;
       var
         paras   : TNode;
         { for easy exiting if something goes wrong }
       begin
-        result := cerrornode.create;
+        result := CErrorNode.create;
 
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
         consume(_RKLAMMER);
-        if not assigned(paras) and checkempty then
+        if not Assigned(paras) and checkempty then
           begin
             CGMessage1(parser_e_wrong_parameter_size,name);
             exit;
           end;
         result.free;
-        result:=cinlinenode.create(nr,false,paras);
+        result:=CInlineNode.create(nr,false,paras);
       end;
 
 

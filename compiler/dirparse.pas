@@ -28,8 +28,8 @@ unit dirparse;
 interface
 
     uses
-      globtype,
-      systems;
+      GlobType,
+      Systems;
 
      function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
      function UpdateOptimizerStr(s:ShortString;var a:TOptimizerSwitches):boolean;
@@ -40,20 +40,20 @@ interface
 implementation
 
     uses
-      globals,
-      cutils,
-      symtable;
+      Globals,
+      CUtils,
+      SymTable;
 
      function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
       var
          tok  : ShortString;
          vstr : ShortString;
-        l    : longint;
+        l    : LongInt;
         code : integer;
         b    : TAlignmentInfo;
       begin
         UpdateAlignmentStr:=true;
-        uppervar(s);
+        UpperVar(s);
         fillchar(b,sizeof(b),0);
         repeat
           tok:=GetToken(s,'=');
@@ -62,43 +62,43 @@ implementation
           vstr:=GetToken(s,',');
           val(vstr,l,code);
           if tok='PROC' then
-           b.procalign:=l
+           b.ProcAlign:=l
           else if tok='JUMP' then
-           b.jumpalign:=l
+           b.JumpAlign:=l
           else if tok='LOOP' then
-           b.loopalign:=l
+           b.LoopAlign:=l
           else if tok='CONSTMIN' then
            begin
-             b.constalignmin:=l;
-             if l>b.constalignmax then
-               b.constalignmax:=l;
+             b.ConstAlignMin:=l;
+             if l>b.ConstAlignMax then
+               b.ConstAlignMax:=l;
            end
           else if tok='CONSTMAX' then
-           b.constalignmax:=l
+           b.ConstAlignMax:=l
           else if tok='VARMIN' then
            begin
-             b.varalignmin:=l;
-             if l>b.varalignmax then
-               b.varalignmax:=l;
+             b.VarAlignMin:=l;
+             if l>b.VarAlignMax then
+               b.VarAlignMax:=l;
            end
           else if tok='VARMAX' then
-           b.varalignmax:=l
+           b.VarAlignMax:=l
           else if tok='LOCALMIN' then
            begin
-             b.localalignmin:=l;
-             if l>b.localalignmax then
-               b.localalignmax:=l;
+             b.LocalAlignMin:=l;
+             if l>b.LocalAlignMax then
+               b.LocalAlignMax:=l;
            end
           else if tok='LOCALMAX' then
-           b.localalignmax:=l
+           b.LocalAlignMax:=l
           else if tok='RECORDMIN' then
            begin
-             b.recordalignmin:=l;
-             if l>b.recordalignmax then
-               b.recordalignmax:=l;
+             b.RecordAlignMin:=l;
+             if l>b.RecordAlignMax then
+               b.RecordAlignMax:=l;
            end
           else if tok='RECORDMAX' then
-           b.recordalignmax:=l
+           b.RecordAlignMax:=l
 
 {          disabled for now as - as Jonas pointed out - this
            is a matter of abi
@@ -120,7 +120,7 @@ implementation
         opt   : TOptimizerSwitch;
       begin
         result:=true;
-        uppervar(s);
+        UpperVar(s);
         repeat
           tok:=GetToken(s,',');
           if tok='' then
@@ -162,7 +162,7 @@ implementation
         opt   : TWPOptimizerSwitch;
       begin
         result:=true;
-        uppervar(s);
+        UpperVar(s);
         repeat
           tok:=GetToken(s,',');
           if tok='' then
@@ -215,7 +215,7 @@ implementation
         opt   : TDebugSwitch;
       begin
         result:=true;
-        uppervar(s);
+        UpperVar(s);
         repeat
           tok:=GetToken(s,',');
           if tok='' then
@@ -254,7 +254,7 @@ implementation
         tok,
          value : ShortString;
         setstr: string[2];
-        equalspos: longint;
+        equalspos: LongInt;
         doset,
         gotvalue,
         found : boolean;
@@ -269,7 +269,7 @@ implementation
           setstr:=upper(copy(tok,length(tok),1));
           if setstr='-' then
             begin
-              setlength(tok,length(tok)-1);
+              SetLength(tok,length(tok)-1);
               doset:=false;
             end
           else
@@ -284,7 +284,7 @@ implementation
               gotvalue:=true;
             end;
           found:=false;
-          uppervar(tok);
+          UpperVar(tok);
           for opt:=low(TTargetSwitch) to high(TTargetSwitch) do
             begin
               if TargetSwitchStr[opt].name=tok then
@@ -321,12 +321,12 @@ implementation
                     begin
                       case opt of
                         ts_auto_getter_prefix:
-                          prop_auto_getter_prefix:=value;
+                          Prop_Auto_Getter_Prefix:=value;
                         ts_auto_setter_predix:
-                          prop_auto_setter_prefix:=value;
+                          Prop_Auto_Setter_Prefix:=value;
                         else
                           begin
-                            writeln('Internalerror 2012053001');
+                            WriteLn('Internalerror 2012053001');
                             halt(1);
                           end;
                       end;

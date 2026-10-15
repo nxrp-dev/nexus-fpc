@@ -28,29 +28,29 @@ unit aasmdef;
 interface
 
 uses
-  globtype,
-  aasmbase,aasmdata,
+  GlobType,
+  aasmbase,AAsmData,
   symtype;
 
 type
   TAsmDataDef = class(TAsmData)
-    function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: TDef) : TAsmSymbol; override;
+    function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmsymbind;_typ:TAsmsymtype; def: TDef) : TAsmSymbol; override;
   end;
 
 implementation
 
 uses
-  globals,cutils,systems,
+  Globals,CUtils,Systems,
   aasmtai,aasmcnst,
   symdef,
-  fmodule;
+  FModule;
 
 
-function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: TDef): TAsmSymbol;
+function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmsymbind; _typ: TAsmsymtype; def: TDef): TAsmSymbol;
   var
-    symind: tasmsymbol;
+    symind: TAsmSymbol;
     ptrdef: TDef;
-    tcb: ttai_typedconstbuilder;
+    tcb: TTAITypedConstBuilder;
     wasdefined: boolean;
   begin
     result:=DefineAsmSymbolByClassBase(symclass,s,_bind,_typ,def,wasdefined);
@@ -65,11 +65,11 @@ function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: 
         (_typ=AT_DATA_FORCEINDIRECT)
        ) then
       begin
-        ptrdef:=cpointerdef.getreusable(def);
+        ptrdef:=CPointerDef.getreusable(def);
         symind:=CurrentAsmData.DefineAsmSymbol(s,AB_INDIRECT,AT_DATA,ptrdef);
-        tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-        tcb.emit_tai(Tai_const.Create_sym_offset(result,0),ptrdef);
-        CurrentAsmData.AsmLists[al_indirectglobals].concatlist(tcb.get_final_asmlist(
+        tcb:=CTAITypedConstBuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
+        tcb.emit_tai(TAIConst.Create_sym_offset(result,0),ptrdef);
+        CurrentAsmData.AsmLists[al_indirectglobals].ConcatList(tcb.get_final_asmlist(
           symind,ptrdef,
           sec_rodata,
           lower(symind.name),
@@ -84,7 +84,7 @@ function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: 
 
 begin
   { Do not overwrite if already set, by powerpc specific code for example }
-  if not assigned(casmdata) then
+  if not Assigned(casmdata) then
     casmdata:=TAsmDataDef;
 end.
 

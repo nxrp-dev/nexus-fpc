@@ -25,17 +25,17 @@ Program ppumove;
 uses
 
 {$IFNDEF USE_FAKE_SYSUTILS}
-  sysutils,
+  SysUtils,
 {$ELSE}
-  fksysutl,
+  FKSysUtl,
 {$ENDIF}
 
 {$ifdef unix}
-  Baseunix,Unix, Dos,
+  BaseUnix,Unix, Dos,
 {$else unix}
   dos,
 {$endif unix}
-  cutils,ppu,entfile,systems,nxartifactid,
+  CUtils,ppu,entfile,Systems,nxartifactid,
   getopts;
 
 const
@@ -88,7 +88,7 @@ Var
   Buffer      : Pointer;
   ObjFiles    : PLinkOEnt;
   BatchFile   : Text;
-  Libs        : ansistring;
+  Libs        : AnsiString;
 
 {*****************************************************************************
                                  Helpers
@@ -99,20 +99,20 @@ Procedure Error(const s:string;stop:boolean);
   Write an error message to stderr
 }
 begin
-  writeln(stderr,s);
+  WriteLn(stderr,s);
   if stop then
    halt(1);
 end;
 
 
-function Shell(const s:string):longint;
+function Shell(const s:string):LongInt;
 {
   Run a shell command and return the exitcode
 }
 begin
   if Batch then
    begin
-     Writeln(BatchFile,s);
+     WriteLn(BatchFile,s);
      Shell:=0;
      exit;
    end;
@@ -151,7 +151,7 @@ Function ChangeFileExt(Const HStr,ext:String):String;
   extension is found
 }
 var
-  j : longint;
+  j : LongInt;
 begin
   j:=length(Hstr);
   while (j>0) and (Hstr[j]<>'.') do
@@ -168,7 +168,7 @@ Function ForceExtension(Const HStr,ext:String):String;
   Return a filename which certainly has the extension ext
 }
 var
-  j : longint;
+  j : LongInt;
 begin
   j:=length(Hstr);
   while (j>0) and (Hstr[j]<>'.') do
@@ -185,7 +185,7 @@ Procedure AddToLinkFiles(const S : String);
   No duplicates allowed.
 }
 Var
-  P : PLinKOEnt;
+  P : PLinkOEnt;
 begin
   P:=ObjFiles;
   { Don't add files twice }
@@ -216,7 +216,7 @@ begin
   {$push}{$I-}
    mkdir(n+'.sl');
   {$pop}
-  if ioresult<>0 then;
+  if IOResult<>0 then;
 { Extract }
   if Shell(arbin+' x '+libfn)<>0 then
    Error('Fatal: Error running '+arbin,true);
@@ -238,10 +238,10 @@ Function DoPPU(const PPUFn,PPLFn:String):Boolean;
 }
 Var
   inppu,
-  outppu : tppufile;
+  outppu : TPPUFile;
   b,
   untilb : byte;
-  l,m    : longint;
+  l,m    : LongInt;
   f      : file;
   ext,
   s      : string;
@@ -253,7 +253,7 @@ begin
   gotltofiles:=false;
   If Not Quiet then
    Write ('Processing ',PPUFn,'...');
-  inppu:=tppufile.create(PPUFn);
+  inppu:=TPPUFile.create(PPUFn);
   if not inppu.openfile then
    begin
      inppu.free;
@@ -271,7 +271,7 @@ begin
   if ppuversion<>CurrentPPUVersion then
    begin
      inppu.free;
-     Error('Error: Wrong PPU Version '+tostr(ppuversion)+' in '+PPUFn,false);
+     Error('Error: Wrong PPU Version '+ToStr(ppuversion)+' in '+PPUFn,false);
      Exit;
    end;
 { No .o file generated for this ppu, just skip }
@@ -279,7 +279,7 @@ begin
    begin
      inppu.free;
      If Not Quiet then
-      Writeln (' No files.');
+      WriteLn (' No files.');
      DoPPU:=true;
      Exit;
    end;
@@ -299,9 +299,9 @@ begin
    end;
 { Create the new ppu }
   if PPUFn=PPLFn then
-   outppu:=tppufile.create('ppumove.$$$')
+   outppu:=TPPUFile.create('ppumove.$$$')
   else
-   outppu:=tppufile.create(PPLFn);
+   outppu:=TPPUFile.create(PPLFn);
   outppu.createfile;
 { Create new header, with the new flags }
   outppu.header:=inppu.header;
@@ -330,15 +330,15 @@ begin
              begin
                inppu.free;
                outppu.free;
-               Error('Error: Wrong PPU Long Version '+tostr(ppulongversion)+' in '+PPUFn,false);
+               Error('Error: Wrong PPU Long Version '+ToStr(ppulongversion)+' in '+PPUFn,false);
                Exit;
              end;
-           outppu.putlongint(longint(ppulongversion));
+           outppu.putlongint(LongInt(ppulongversion));
          end;
        repeat
-         inppu.getdatabuf(buffer^,bufsize,l);
+         inppu.getdatabuf(buffer^,BufSize,l);
          outppu.putdata(buffer^,l);
-       until l<bufsize;
+       until l<BufSize;
        outppu.writeentry(b);
      end;
   until (b=untilb);
@@ -432,9 +432,9 @@ begin
          end
        else
          repeat
-           inppu.getdatabuf(buffer^,bufsize,l);
+           inppu.getdatabuf(buffer^,BufSize,l);
            outppu.putdata(buffer^,l);
-         until l<bufsize;
+         until l<BufSize;
        outppu.writeentry(b);
      end;
   until b=ibend;
@@ -452,11 +452,11 @@ begin
       assign(f,'ppumove.$$$');
       rename(f,PPUFn);
      {$pop}
-     if ioresult<>0 then;
+     if IOResult<>0 then;
    end;
 { the end }
   If Not Quiet then
-   Writeln (' Done.');
+   WriteLn (' Done.');
   DoPPU:=True;
 end;
 
@@ -474,7 +474,7 @@ begin
   DoFile:=DoPPU(InputPath+FileName,InputPath+ForceExtension(FileName,PPLExt));
 {$else}
   DoFile:=false;
-  findfirst(filename,$20,dir);
+  findfirst(FileName,$20,dir);
   while doserror=0 do
    begin
      if not DoPPU(InputPath+Dir.Name,InputPath+ForceExtension(Dir.Name,PPLExt)) then
@@ -492,7 +492,7 @@ Procedure DoLink;
   Link the object files together to form a (shared) library
 }
 Var
-  Names : ansistring;
+  Names : AnsiString;
   f     : file;
   Err   : boolean;
   P     : PLinkOEnt;
@@ -512,7 +512,7 @@ begin
   if Names='' then
    begin
      If not Quiet then
-      Writeln('Error: no files found to be linked');
+      WriteLn('Error: no files found to be linked');
      exit;
    end;
   If not Quiet then
@@ -546,7 +546,7 @@ Procedure usage;
   Print usage and exit.
 }
 begin
-  Writeln(paramstr(0),': [-qhvbsS] [-e ext] [-o name] [-d path] [-P binutils prefix] file [file ...]');
+  WriteLn(ParamStr(0),': [-qhvbsS] [-e ext] [-o name] [-d path] [-P binutils prefix] file [file ...]');
   Halt(0);
 end;
 
@@ -599,23 +599,23 @@ begin
   if (OptInd<ParamCount) and (OutputFile='') then
    Error('Error: when moving multiple units, specify an output name.',true);
 { alloc a buffer }
-  GetMem (Buffer,Bufsize);
+  GetMem (Buffer,BufSize);
   If Buffer=Nil then
    Error('Error: could not allocate memory for buffer.',true);
 end;
 
 
 var
-  i : longint;
+  i : LongInt;
 begin
   Libs:='';
   ProcessOpts;
 { Write Header }
   if not Quiet then
    begin
-     Writeln(Title+' '+Version);
-     Writeln(Copyright);
-     Writeln;
+     WriteLn(Title+' '+Version);
+     WriteLn(Copyright);
+     WriteLn;
    end;
 { fix the libext and outputfilename }
   if Makestatic then
@@ -623,7 +623,7 @@ begin
   else
    LibExt:=SharedLibExt;
   if OutputFile='' then
-   OutputFile:=Paramstr(OptInd);
+   OutputFile:=ParamStr(OptInd);
   OutputFileForPPU:=OutputFile;
 { fix filename }
 {$ifdef unix}
@@ -650,7 +650,7 @@ begin
    end;
 { Process Files }
   i:=OptInd;
-  While (i<=ParamCount) and Dofile(ChangeFileExt(Paramstr(i),PPUExt)) do
+  While (i<=ParamCount) and Dofile(ChangeFileExt(ParamStr(i),PPUExt)) do
    Inc(i);
 { Do Linking stage }
   if i<=ParamCount then
@@ -661,7 +661,7 @@ begin
   if Batch then
    begin
      if Not Quiet then
-      Writeln('Writing pmove'+BatchExt);
+      WriteLn('Writing pmove'+BatchExt);
      Close(BatchFile);
 {$ifdef unix}
   FPChmod('pmove'+BatchExt,493);
@@ -669,5 +669,5 @@ begin
    end;
 { The End }
   if Not Quiet then
-   Writeln('Done.');
+   WriteLn('Done.');
 end.

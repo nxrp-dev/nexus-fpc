@@ -36,13 +36,13 @@ uses
   fpwidestring,
 {$endif}
 {$IFNDEF USE_FAKE_SYSUTILS}
-  sysutils,math,
+  SysUtils,math,
 {$ELSE}
-  fksysutl,
+  FKSysUtl,
 {$ENDIF}
-  verbose,comphook,systems,
-  cutils,cfileutl,cclasses,globals,options,switches,fmodule,parser,symtable,
-  assemble,link,dbgbase,import,export,tokens,wpo
+  Verbose,CompHook,Systems,
+  CUtils,CFileUtl,CClasses,Globals,options,Switches,FModule,parser,SymTable,
+  assemble,link,DbgBase,import,export,tokens,wpo
   { cpu parameter handling }
   ,cpupara
   { procinfo stuff }
@@ -69,15 +69,15 @@ uses
 {$ifdef windows}
   ,i_win
 {$endif windows}
-  ,ctask
-  ,globtype;
+  ,CTask
+  ,GlobType;
 
-function Compile(const cmd:TCmdStr):longint;
+function Compile(const cmd:TCmdStr):LongInt;
 
 implementation
 
 uses
-  finput,
+  FinPut,
   fppu,
   aasmcpu;
 
@@ -111,7 +111,7 @@ begin
    end;
 { Free memory for the others }
   CompilerInited:=false;
-  do_doneSymbolInfo;
+  Do_DoneSymbolInfo;
   DoneSymtable;
   DoneGlobals;
   DoneFileUtils;
@@ -138,7 +138,7 @@ begin
   InitVerbose;
   inittokens;
   InitSymtable; {Must come before read_arguments, to enable macrosymstack}
-  do_initSymbolInfo;
+  Do_InitSymbolInfo;
   CompilerInited:=true;
 { this is needed here for the IDE
   in case of compilation failure
@@ -159,16 +159,16 @@ begin
 end;
 
 
-function Compile(const cmd:TCmdStr):longint;
+function Compile(const cmd:TCmdStr):LongInt;
 
 {$maxfpuregisters 0}
 
-  procedure writecmdstrlist(w:longint;l:TCmdStrList);
+  procedure writecmdstrlist(w:LongInt;l:TCmdStrList);
   var
     hp : TCmdStrListItem;
   begin
     hp:=TCmdStrListItem(l.first);
-    while assigned(hp) do
+    while Assigned(hp) do
      begin
        Message1(w,hp.str);
        hp:=TCmdStrListItem(hp.next);
@@ -176,14 +176,14 @@ function Compile(const cmd:TCmdStr):longint;
   end;
 
 var
-  timestr    : string[20];
+  TimeStr    : string[20];
   linkstr    : string[64];
 {$ifdef SHOWUSEDMEM}
-  hstatus : TFPCHeapStatus;
+  HStatus : TFPCHeapStatus;
 {$endif SHOWUSEDMEM}
   ExceptionMask : TFPUExceptionMask;
   totaltime : real;
-  m : tppumodule;
+  m : TPPUModule;
 
 begin
   m:=nil;
@@ -193,37 +193,37 @@ begin
        SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,
                          exOverflow, exUnderflow, exPrecision]);
 
-       GetLocalTime(startsystime);
-       starttime := getrealtime(startsystime);
+       GetLocalTime(StartSysTime);
+       StartTime := GetRealTime(StartSysTime);
 
        { Initialize the compiler }
        InitCompiler(cmd);
 
        { apply global messages/verbosity }
-       flushpendingswitchesstate;
-       FreeLocalVerbosity(CurrentSettings.pmessage);
+       FlushPendingSwitchesState;
+       FreeLocalVerbosity(CurrentSettings.PMessage);
 
        { show some info }
-       Message1(general_t_compilername,FixFileName(system.paramstr(0)));
+       Message1(general_t_compilername,FixFileName(system.ParamStr(0)));
        Message1(general_d_sourceos,SourceInfo.name);
        Message1(general_i_targetos,TargetInfo.name);
-       Message1(general_t_exepath,exepath);
-       WriteCmdStrList(general_t_unitpath,unitsearchpath);
-       WriteCmdStrList(general_t_includepath,includesearchpath);
-       WriteCmdStrList(general_t_librarypath,librarysearchpath);
-       WriteCmdStrList(general_t_objectpath,objectsearchpath);
-       WriteCmdStrList(general_t_unitscope,namespacelist);
+       Message1(general_t_exepath,ExePath);
+       WriteCmdStrList(general_t_unitpath,UnitSearchPath);
+       WriteCmdStrList(general_t_includepath,IncludeSearchPath);
+       WriteCmdStrList(general_t_librarypath,LibrarySearchPath);
+       WriteCmdStrList(general_t_objectpath,ObjectSearchPath);
+       WriteCmdStrList(general_t_unitscope,NamespaceList);
 
        { Compile the program }
   {$ifdef PREPROCWRITE}
-       if parapreprocess then
-        parser.preprocess(inputfilepath+inputfilename)
+       if ParaPreprocess then
+        parser.preprocess(InputFilePath+InputFileName)
        else
   {$endif PREPROCWRITE}
          begin
-         m:=tppumodule.create(Nil,'',inputfilepath+inputfilename,false);
+         m:=TPPUModule.create(Nil,'',InputFilePath+InputFileName,false);
          m.state:=ms_compile;
-         m.is_initial:=true;
+         m.IsInitial:=true;
          { We need to add the initial module manually to the list of units }
          addloadedunit(m);
          main_module:=m;
@@ -233,28 +233,28 @@ begin
 
 
        { Show statistics }
-       if status.errorcount=0 then
+       if status.ErrorCount=0 then
         begin
-          totaltime:=getrealtime-starttime;
+          totaltime:=GetRealTime-StartTime;
           if totaltime<0 then
             totaltime:=totaltime+3600.0*24.0;
           if round(frac(totaltime)*10) >= 10 then
             totaltime:=trunc(totaltime) + 1;
-          timestr:=tostr(trunc(totaltime))+'.'+tostr(round(frac(totaltime)*10));
-          if status.codesize<>aword(-1) then
-            linkstr:=', '+tostr(status.codesize)+' ' +MessageStr(general_text_bytes_code)+', '+tostr(status.datasize)+' '+MessageStr(general_text_bytes_data)
+          TimeStr:=ToStr(trunc(totaltime))+'.'+ToStr(round(frac(totaltime)*10));
+          if status.CodeSize<>aword(-1) then
+            linkstr:=', '+ToStr(status.CodeSize)+' ' +MessageStr(general_text_bytes_code)+', '+ToStr(status.DataSize)+' '+MessageStr(general_text_bytes_data)
           else
             linkstr:='';
-          Message3(general_i_abslines_compiled,tostr(status.compiledlines),timestr,linkstr);
-          if (Status.Verbosity and V_Warning = V_Warning) and
+          Message3(general_i_abslines_compiled,ToStr(status.CompiledLines),TimeStr,linkstr);
+          if (Status.Verbosity and VWarning = VWarning) and
                                                (Status.CountWarnings <> 0) then
-           Message1 (general_i_number_of_warnings, tostr (Status.CountWarnings));
-          if (Status.Verbosity and V_Hint = V_Hint) and
+           Message1 (general_i_number_of_warnings, ToStr (Status.CountWarnings));
+          if (Status.Verbosity and VHint = VHint) and
                                                   (Status.CountHints <> 0) then
-           Message1 (general_i_number_of_hints, tostr (Status.CountHints));
-          if (Status.Verbosity and V_Note = V_Note) and
+           Message1 (general_i_number_of_hints, ToStr (Status.CountHints));
+          if (Status.Verbosity and VNote = VNote) and
                                                (Status.CountNotes <> 0) then
-           Message1 (general_i_number_of_notes, tostr (Status.CountNotes));
+           Message1 (general_i_number_of_notes, ToStr (Status.CountNotes));
         end;
      finally
        { no message possible after this !!    }
@@ -270,7 +270,7 @@ begin
           { in case of 50 errors, this could cause another exception,
             suppress this exception
           }
-          if assigned(m) then
+          if Assigned(m) then
             Message(general_f_compilation_aborted)
           else
             Message(general_f_compiler_aborted);
@@ -337,9 +337,9 @@ begin
           { in case of 50 errors, this could cause another exception,
             suppress this exception
           }
-          if not exception_raised then
+          if not Exception_Raised then
             begin
-              exception_raised:=true;
+              Exception_Raised:=true;
               Message(general_e_exception_raised);
             end
           else
@@ -353,12 +353,12 @@ begin
       end;
   end;
 {$ifdef SHOWUSEDMEM}
-      hstatus:=GetFPCHeapStatus;
-      Writeln('Max Memory used/heapsize: ',DStr(hstatus.MaxHeapUsed shr 10),'/',DStr(hstatus.MaxHeapSize shr 10),' Kb');
+      HStatus:=GetFPCHeapStatus;
+      WriteLn('Max Memory used/heapsize: ',DStr(HStatus.MaxHeapUsed shr 10),'/',DStr(HStatus.MaxHeapSize shr 10),' Kb');
 {$endif SHOWUSEDMEM}
 
   { Set the return value if an error has occurred }
-  if status.errorcount=0 then
+  if status.ErrorCount=0 then
     result:=0
   else
     result:=1;

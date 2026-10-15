@@ -47,7 +47,7 @@ uses
   fpwidestring,
  {$endif}
  {$ifdef USE_CPALL_UNIT}
-  cpall,
+  CPAll,
  {$endif}
   SysUtils;
 

@@ -26,12 +26,12 @@ unit dbgbase;
 interface
 
     uses
-      cclasses,
-      systems,
+      CClasses,
+      Systems,
       parabase,
-      symconst,symbase,symdef,symtype,symsym,
-      fmodule,
-      aasmtai,aasmdata;
+      symconst,SymBase,symdef,symtype,SymSym,
+      FModule,
+      aasmtai,AAsmData;
 
     type
       TDebugInfo=class
@@ -75,12 +75,12 @@ interface
         procedure appendsym_absolute(list:TAsmList;sym:TAbsoluteVarSym);virtual;
         procedure appendsym_property(list:TAsmList;sym:TPropertySym);virtual;
         { symtable }
-        procedure write_symtable_parasyms(list:TAsmList;paras: tparalist);
+        procedure write_symtable_parasyms(list:TAsmList;paras: TParaList);
         procedure write_symtable_syms(list:TAsmList;st:TSymTable);
         procedure write_symtable_defs(list:TAsmList;st:TSymTable);
         procedure write_symtable_procdefs(list:TAsmList;st:TSymTable);
         procedure reset_unit_type_info;
-        procedure write_used_unit_type_info(list:TAsmList;hp:tmodule);
+        procedure write_used_unit_type_info(list:TAsmList;hp:TModule);
       public
         constructor Create;virtual;
         procedure inserttypeinfo;virtual;
@@ -91,20 +91,20 @@ interface
       TDebugInfoClass=class of TDebugInfo;
 
     var
-      CDebugInfo : array[tdbg] of TDebugInfoClass;
-      CurrentDebugInfo : tdebuginfo;
+      CDebugInfo : array[TDbg] of TDebugInfoClass;
+      CurrentDebugInfo : TDebugInfo;
 
-    procedure InitDebugInfo(hp:tmodule; restore_current_debuginfo : boolean);
-    procedure DoneDebugInfo(hp:tmodule; out current_debuginfo_reset : boolean);
+    procedure InitDebugInfo(hp:TModule; restore_current_debuginfo : boolean);
+    procedure DoneDebugInfo(hp:TModule; out current_debuginfo_reset : boolean);
     procedure RegisterDebugInfo(const r:TDbgInfo;c:TDebugInfoClass);
 
 
 implementation
 
     uses
-      cutils,
-      globals,
-      verbose,
+      CUtils,
+      Globals,
+      Verbose,
       cgbase;
 
 
@@ -282,7 +282,7 @@ implementation
                 write all local type defs }
             end;
         else
-          internalerror(200601281);
+          InternalError(200601281);
         end;
         afterappenddef(list,def);
         def.dbg_state := dbg_state_written;
@@ -308,9 +308,9 @@ implementation
                   dbg_state_written:
                     continue;
                   dbg_state_writing:
-                    internalerror(200610052);
+                    InternalError(200610052);
                   dbg_state_unused:
-                    internalerror(200610053);
+                    InternalError(200610053);
                   dbg_state_used:
                     appenddef(list,def);
                   dbg_state_queued:
@@ -323,8 +323,8 @@ implementation
                         definition is not inside the current unit and hence will
                         not be encountered }
                       if def.typ<>objectdef then
-                        internalerror(2012072401);
-                      if not assigned(TObjectDef(def).childof) or
+                        InternalError(2012072401);
+                      if not Assigned(TObjectDef(def).childof) or
                          (TObjectDef(def).childof.dbg_state=dbg_state_written) then
                         appenddef(list,def)
                       else if TObjectDef(def).childof.dbg_state=dbg_state_queued then
@@ -339,7 +339,7 @@ implementation
                           wait until the next iteration }
                         deftowritelist.add(def)
                       else
-                        internalerror(2012072402);
+                        InternalError(2012072402);
                     end;
                 end;
               end;
@@ -423,7 +423,7 @@ implementation
         beforeappendsym(list,sym);
         case sym.typ of
           staticvarsym :
-            if not assigned(TStaticVarSym(sym).fieldvarsym) or
+            if not Assigned(TStaticVarSym(sym).fieldvarsym) or
                not(df_generic in TDef(TStaticVarSym(sym).fieldvarsym.owner.defowner).defoptions) then
               appendsym_staticvar(list,TStaticVarSym(sym));
           unitsym:
@@ -456,7 +456,7 @@ implementation
             { ignore namespace syms, they are only of internal use }
             ;
           else
-            internalerror(200601242);
+            InternalError(200601242);
         end;
         afterappendsym(list,sym);
         sym.isdbgwritten:=true;
@@ -470,14 +470,14 @@ implementation
     procedure TDebugInfo.write_symtable_defs(list:TAsmList;st:TSymTable);
       var
         def : TDef;
-        i   : longint;
+        i   : LongInt;
         nonewadded : boolean;
       begin
         case st.symtabletype of
           staticsymtable :
-            list.concat(tai_comment.Create(strpnew('Defs - Begin Staticsymtable')));
-          globalsymtable :
-            list.concat(tai_comment.Create(strpnew('Defs - Begin unit '+st.name^+' has index '+tostr(st.moduleid))));
+            list.concat(TAIComment.Create(StrPNew('Defs - Begin Staticsymtable')));
+          GlobalSymTable :
+            list.concat(TAIComment.Create(StrPNew('Defs - Begin unit '+st.name^+' has index '+ToStr(st.ModuleID))));
           else
             ;
         end;
@@ -495,18 +495,18 @@ implementation
         until nonewadded;
         case st.symtabletype of
           staticsymtable :
-            list.concat(tai_comment.Create(strpnew('Defs - End Staticsymtable')));
-          globalsymtable :
-            list.concat(tai_comment.Create(strpnew('Defs - End unit '+st.name^+' has index '+tostr(st.moduleid))));
+            list.concat(TAIComment.Create(StrPNew('Defs - End Staticsymtable')));
+          GlobalSymTable :
+            list.concat(TAIComment.Create(StrPNew('Defs - End unit '+st.name^+' has index '+ToStr(st.ModuleID))));
           else
             ;
         end;
       end;
 
 
-    procedure TDebugInfo.write_symtable_parasyms(list:TAsmList;paras: tparalist);
+    procedure TDebugInfo.write_symtable_parasyms(list:TAsmList;paras: TParaList);
       var
-        i   : longint;
+        i   : LongInt;
         sym : TSym;
       begin
         for i:=0 to paras.Count-1 do
@@ -526,14 +526,14 @@ implementation
 
     procedure TDebugInfo.write_symtable_syms(list:TAsmList;st:TSymTable);
       var
-        i   : longint;
+        i   : LongInt;
         sym : TSym;
       begin
         case st.symtabletype of
           staticsymtable :
-            list.concat(tai_comment.Create(strpnew('Syms - Begin Staticsymtable')));
-          globalsymtable :
-            list.concat(tai_comment.Create(strpnew('Syms - Begin unit '+st.name^+' has index '+tostr(st.moduleid))));
+            list.concat(TAIComment.Create(StrPNew('Syms - Begin Staticsymtable')));
+          GlobalSymTable :
+            list.concat(TAIComment.Create(StrPNew('Syms - Begin unit '+st.name^+' has index '+ToStr(st.ModuleID))));
           else
             ;
         end;
@@ -544,15 +544,15 @@ implementation
                (not sym.isdbgwritten) and
                { avoid all generic symbols }
                not (sp_generic_dummy in sym.symoptions) and
-               not ((sym.typ=typesym) and assigned(TTypeSym(sym).typedef) and
+               not ((sym.typ=typesym) and Assigned(TTypeSym(sym).typedef) and
                     (df_generic in TTypeSym(sym).typedef.defoptions)) then
               appendsym(list,sym);
           end;
         case st.symtabletype of
           staticsymtable :
-            list.concat(tai_comment.Create(strpnew('Syms - End Staticsymtable')));
-          globalsymtable :
-            list.concat(tai_comment.Create(strpnew('Syms - End unit '+st.name^+' has index '+tostr(st.moduleid))));
+            list.concat(TAIComment.Create(StrPNew('Syms - End Staticsymtable')));
+          GlobalSymTable :
+            list.concat(TAIComment.Create(StrPNew('Syms - End unit '+st.name^+' has index '+ToStr(st.ModuleID))));
           else
             ;
         end;
@@ -561,7 +561,7 @@ implementation
 
     procedure TDebugInfo.write_symtable_procdefs(list:TAsmList;st:TSymTable);
       var
-        i   : longint;
+        i   : LongInt;
         def : TDef;
       begin
         for i:=0 to st.DefList.Count-1 do
@@ -571,12 +571,12 @@ implementation
               procdef :
                 begin
                   appendprocdef(list,TProcDef(def));
-                  if assigned(TProcDef(def).localst) then
+                  if Assigned(TProcDef(def).localst) then
                     write_symtable_procdefs(list,TProcDef(def).localst);
                 end;
               objectdef,recorddef :
                 begin
-                  write_symtable_procdefs(list,TAbstractRecordDef(def).symtable);
+                  write_symtable_procdefs(list,TAbstractRecordDef(def).SymTable);
                 end;
               else
                 ;
@@ -587,25 +587,25 @@ implementation
 
     procedure TDebugInfo.reset_unit_type_info;
       var
-        hp : tmodule;
+        hp : TModule;
       begin
-        hp:=tmodule(loaded_units.first);
-        while assigned(hp) do
+        hp:=TModule(loaded_units.first);
+        while Assigned(hp) do
           begin
             hp.is_dbginfo_written:=false;
-            hp:=tmodule(hp.next);
+            hp:=TModule(hp.next);
           end;
       end;
 
 
-    procedure TDebugInfo.write_used_unit_type_info(list:TAsmList;hp:tmodule);
+    procedure TDebugInfo.write_used_unit_type_info(list:TAsmList;hp:TModule);
       var
-        pu : tused_unit;
+        pu : TUsedUnit;
       begin
-        pu:=tused_unit(hp.used_units.first);
-        while assigned(pu) do
+        pu:=TUsedUnit(hp.used_units.first);
+        while Assigned(pu) do
           begin
-            if not pu.u.is_dbginfo_written and not assigned(pu.u.package) then
+            if not pu.u.is_dbginfo_written and not Assigned(pu.u.package) then
               begin
                 { prevent infinite loop for circular dependencies }
                 pu.u.is_dbginfo_written:=true;
@@ -613,10 +613,10 @@ implementation
                   strategy to reduce the recursion in writing all
                   dependent stabs }
                 write_used_unit_type_info(list,pu.u);
-                if assigned(pu.u.globalsymtable) then
-                  write_symtable_defs(list,pu.u.globalsymtable);
+                if Assigned(pu.u.GlobalSymTable) then
+                  write_symtable_defs(list,pu.u.GlobalSymTable);
               end;
-            pu:=tused_unit(pu.next);
+            pu:=TUsedUnit(pu.next);
           end;
       end;
 
@@ -625,11 +625,11 @@ implementation
                            Init / Done
 ****************************************************************************}
 
-    procedure InitDebugInfo(hp:tmodule; restore_current_debuginfo : boolean);
+    procedure InitDebugInfo(hp:TModule; restore_current_debuginfo : boolean);
       begin
-        if not assigned(CDebugInfo[TargetDbg.id]) then
+        if not Assigned(CDebugInfo[TargetDbg.id]) then
           begin
-            Comment(V_Fatal,'cg_f_debuginfo_output_not_supported');
+            Comment(VFatal,'cg_f_debuginfo_output_not_supported');
             exit;
           end;
 
@@ -638,17 +638,17 @@ implementation
         if restore_current_debuginfo then
           begin
             if CurrentDebugInfo=nil then
-              CurrentDebugInfo:=tdebuginfo(hp.DebugInfo)
+              CurrentDebugInfo:=TDebugInfo(hp.DebugInfo)
             else
-              internalerror(2012032101);
+              InternalError(2012032101);
           end;
       end;
 
 
-    procedure DoneDebugInfo(hp:tmodule; out current_debuginfo_reset : boolean);
+    procedure DoneDebugInfo(hp:TModule; out current_debuginfo_reset : boolean);
       begin
         current_debuginfo_reset:=false;
-        if assigned(hp.DebugInfo) then
+        if Assigned(hp.DebugInfo) then
           begin
             if hp.DebugInfo=CurrentDebugInfo then
               begin
@@ -663,13 +663,13 @@ implementation
 
     procedure RegisterDebugInfo(const r:TDbgInfo;c:TDebugInfoClass);
       var
-        t : tdbg;
+        t : TDbg;
       begin
         t:=r.id;
-        if assigned(dbginfos[t]) then
-          writeln('Warning: DebugInfo is already registered!')
+        if Assigned(dbginfos[t]) then
+          WriteLn('Warning: DebugInfo is already registered!')
         else
-          Getmem(dbginfos[t],sizeof(TDbgInfo));
+          GetMem(dbginfos[t],sizeof(TDbgInfo));
         dbginfos[t]^:=r;
         CDebugInfo[t]:=c;
       end;

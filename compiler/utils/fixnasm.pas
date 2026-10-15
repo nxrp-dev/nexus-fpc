@@ -21,9 +21,9 @@ var
   para,bytes,flags,
   opcode,lastop,
   s : string;
-  i,j : longint;
+  i,j : LongInt;
 begin
-  writeln('Fixing insns.dat -> i386ins.dat');
+  WriteLn('Fixing insns.dat -> i386ins.dat');
   assign(t,'insns.dat');
   reset(t);
   assign(f,'insns.new');
@@ -42,9 +42,9 @@ begin
          opcode:=Copy(s,1,i-1);
         if opcode<>lastop then
          begin
-           writeln(f,'');
-           writeln(f,'[',Copy(s,1,i-1),']');
-           writeln(f,'(Ch_All, Ch_None, Ch_None)');
+           WriteLn(f,'');
+           WriteLn(f,'[',Copy(s,1,i-1),']');
+           WriteLn(f,'(Ch_All, Ch_None, Ch_None)');
            lastop:=opcode;
          end;
         while (i<length(s)) and (s[i+1]=' ') do
@@ -66,10 +66,10 @@ begin
         if i=0 then
          i:=255;
         flags:=Copy(s,1,i-1);
-        writeln(f,para,bytes,flags);
+        WriteLn(f,para,bytes,flags);
       end
      else
-      writeln(f,s);
+      WriteLn(f,s);
    end;
   close(f);
   close(t);

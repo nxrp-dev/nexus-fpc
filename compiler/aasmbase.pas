@@ -32,8 +32,8 @@ unit aasmbase;
 interface
 
     uses
-       cutils,cclasses,
-       globtype,globals,systems
+       CUtils,CClasses,
+       GlobType,Globals,Systems
        ;
 
     type
@@ -82,7 +82,7 @@ interface
        TSymbolPairKind = (spk_set, spk_set_global, spk_thumb_set, spk_localentry);
 
     const
-       asmlabeltypeprefix : array[TAsmLabeltype] of string[2] = ('j','a','d','l','f','t','c','eb','ee');
+       asmlabeltypeprefix : array[TAsmLabelType] of string[2] = ('j','a','d','l','f','t','c','eb','ee');
        asmsymbindname : array[TAsmsymbind] of string[23] = ('none', 'external','common',
        'local','global','weak external','private external','lazy','import','internal temp',
        'indirect','external indirect','weak');
@@ -193,7 +193,7 @@ interface
        private
          { this need to be incremented with every symbol loading into the
            TAsmList with loadsym/loadref/const_symbol (PFV) }
-         refs       : longint;
+         refs       : LongInt;
        public
          { on avr the compiler needs to replace cond. jumps with too large offsets
            so we have to store an offset somewhere to calculate jump distances }
@@ -205,12 +205,12 @@ interface
          altsymbol  : TAsmSymbol;
          { Cached objsymbol }
          cachedobjsymbol : TObject;
-         constructor Create(AList:TFPHashObjectList;const s:TSymStr;_bind:TAsmsymbind;_typ:Tasmsymtype);
-         function getaltcopy(AList:TFPHashObjectList;altnr: longint): TAsmSymbol; virtual;
+         constructor Create(AList:TFPHashObjectList;const s:TSymStr;_bind:TAsmsymbind;_typ:TAsmsymtype);
+         function getaltcopy(AList:TFPHashObjectList;altnr: LongInt): TAsmSymbol; virtual;
          function  is_used:boolean;
          procedure increfs;
          procedure decrefs;
-         function getrefs: longint;
+         function getrefs: LongInt;
        end;
        TAsmSymbolClass = class of TAsmSymbol;
 
@@ -221,25 +221,25 @@ interface
          { this constructor is only supposed to be used internally by
            createstatoc/createlocal -> disable warning that constructors should
            be public }
-         constructor create_non_global(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType; const prefix: TSymStr);
+         constructor create_non_global(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType; const prefix: TSymStr);
        public
          {$pop}
-         labelnr   : longint;
+         labelnr   : LongInt;
          labeltype : TAsmLabelType;
          is_set    : boolean;
          is_public : boolean;
          defined_in_asmstatement : boolean;
-         constructor Createlocal(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType);
-         constructor Createstatic(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType);
-         constructor Createglobal(AList: TFPHashObjectList; const modulename: TSymStr; nr: longint; ltyp: TAsmLabelType);
-         function getaltcopy(AList:TFPHashObjectList;altnr: longint): TAsmSymbol; override;
+         constructor Createlocal(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType);
+         constructor Createstatic(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType);
+         constructor Createglobal(AList: TFPHashObjectList; const ModuleName: TSymStr; nr: LongInt; ltyp: TAsmLabelType);
+         function getaltcopy(AList:TFPHashObjectList;altnr: LongInt): TAsmSymbol; override;
        end;
 
     function create_smartlink_sections:boolean;inline;
     function create_smartlink_library:boolean;inline;
     function create_smartlink:boolean;inline;
 
-    function ApplyAsmSymbolRestrictions(const s: ansistring): ansistring;
+    function ApplyAsmSymbolRestrictions(const s: AnsiString): AnsiString;
 
     { dummy default noop callback }
     procedure default_global_used;
@@ -256,7 +256,7 @@ interface
 implementation
 
     uses
-      verbose,fpchash;
+      Verbose,FPCHash;
 
 
     function create_smartlink_sections:boolean;inline;
@@ -268,7 +268,7 @@ implementation
 
     function create_smartlink_library:boolean;inline;
       begin
-        result:=(cs_Create_smart in CurrentSettings.moduleswitches) and
+        result:=(cs_Create_smart in CurrentSettings.ModuleSwitches) and
                 (tf_smartlink_library in TargetInfo.flags) and
                 not create_smartlink_sections;
       end;
@@ -281,15 +281,15 @@ implementation
                  (tf_smartlink_sections in TargetInfo.flags)
                 ) or
                 (
-                 (cs_Create_smart in CurrentSettings.moduleswitches) and
+                 (cs_Create_smart in CurrentSettings.ModuleSwitches) and
                  (tf_smartlink_library in TargetInfo.flags)
                 );
       end;
 
 
-    function ApplyAsmSymbolRestrictions(const s: ansistring): ansistring;
+    function ApplyAsmSymbolRestrictions(const s: AnsiString): AnsiString;
       var
-        i : longint;
+        i : LongInt;
         rchar, ochar: char;
         crc: Cardinal;
         charstoremove: integer;
@@ -304,12 +304,12 @@ implementation
         if (TargetAsm.labelmaxlen<>-1) and (Length(Result)>TargetAsm.labelmaxlen) then
           begin
             crc:=0;
-            crc:=UpdateCrc32(crc,Result[1],Length(Result));
+            crc:=UpdateCRC32(crc,Result[1],Length(Result));
             charstoremove:=Length(Result)-TargetAsm.labelmaxlen+13;
             Delete(Result,(Length(Result)-charstoremove) div 2,charstoremove);
-            Result:='_'+TargetAsm.dollarsign+'CRC'+hexstr(crc,8)+Result;
+            Result:='_'+TargetAsm.dollarsign+'CRC'+HexStr(crc,8)+Result;
             if Length(Result)>TargetAsm.labelmaxlen then
-              Internalerror(2020042502);
+              InternalError(2020042502);
           end;
       end;
 
@@ -318,7 +318,7 @@ implementation
                                  TAsmSymbol
 *****************************************************************************}
 
-    constructor TAsmSymbol.Create(AList:TFPHashObjectList;const s:TSymStr;_bind:TAsmsymbind;_typ:Tasmsymtype);
+    constructor TAsmSymbol.Create(AList:TFPHashObjectList;const s:TSymStr;_bind:TAsmsymbind;_typ:TAsmsymtype);
       begin;
         inherited Create(AList,s);
         bind:=_bind;
@@ -328,9 +328,9 @@ implementation
       end;
 
 
-    function TAsmSymbol.getaltcopy(AList:TFPHashObjectList;altnr: longint): TAsmSymbol;
+    function TAsmSymbol.getaltcopy(AList:TFPHashObjectList;altnr: LongInt): TAsmSymbol;
       begin
-        result := TAsmSymbol(TAsmSymbolClass(classtype).Create(AList,name+'_'+tostr(altnr),bind,typ));
+        result := TAsmSymbol(TAsmSymbolClass(classtype).Create(AList,name+'_'+ToStr(altnr),bind,typ));
       end;
 
 
@@ -350,11 +350,11 @@ implementation
       begin
         dec(refs);
         if refs<0 then
-          internalerror(200211121);
+          InternalError(200211121);
       end;
 
 
-    function TAsmSymbol.getrefs: longint;
+    function TAsmSymbol.getrefs: LongInt;
       begin
         getrefs := refs;
       end;
@@ -364,21 +364,21 @@ implementation
                                  TAsmLabel
 *****************************************************************************}
 
-    constructor TAsmLabel.Createlocal(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType);
+    constructor TAsmLabel.Createlocal(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType);
       begin
         create_non_global(AList,nr,ltyp,TargetAsm.labelprefix);
       end;
 
 
-    constructor TAsmLabel.Createstatic(AList:TFPHashObjectList;nr:longint;ltyp:TAsmLabelType);
+    constructor TAsmLabel.Createstatic(AList:TFPHashObjectList;nr:LongInt;ltyp:TAsmLabelType);
       begin
         create_non_global(AList,nr,ltyp,'_$$fpclocal$_l');
       end;
 
 
-    constructor TAsmLabel.Createglobal(AList:TFPHashObjectList;const modulename:TSymStr;nr:longint;ltyp:TAsmLabelType);
+    constructor TAsmLabel.Createglobal(AList:TFPHashObjectList;const ModuleName:TSymStr;nr:LongInt;ltyp:TAsmLabelType);
       begin
-        inherited Create(AList,'_$'+modulename+'$_L'+asmlabeltypeprefix[ltyp]+tostr(nr),AB_GLOBAL,AT_DATA);
+        inherited Create(AList,'_$'+ModuleName+'$_L'+asmlabeltypeprefix[ltyp]+ToStr(nr),AB_GLOBAL,AT_DATA);
         labelnr:=nr;
         labeltype:=ltyp;
         is_set:=false;
@@ -388,7 +388,7 @@ implementation
       end;
 
 
-    function TAsmLabel.getaltcopy(AList:TFPHashObjectList;altnr: longint): TAsmSymbol;
+    function TAsmLabel.getaltcopy(AList:TFPHashObjectList;altnr: LongInt): TAsmSymbol;
       begin;
         result := inherited getaltcopy(AList,altnr);
         TAsmLabel(result).labelnr:=labelnr;
@@ -401,12 +401,12 @@ implementation
           AB_LOCAL:
             ;
           else
-            internalerror(2006053101);
+            InternalError(2006053101);
         end;
       end;
 
 
-    constructor TAsmLabel.create_non_global(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType; const prefix: TSymStr);
+    constructor TAsmLabel.create_non_global(AList: TFPHashObjectList; nr: LongInt; ltyp: TAsmLabelType; const prefix: TSymStr);
       var
         asmtyp: TAsmsymtype;
       begin
@@ -418,7 +418,7 @@ implementation
           else
             asmtyp:=AT_LABEL;
         end;
-        inherited Create(AList,prefix+asmlabeltypeprefix[ltyp]+tostr(nr),AB_LOCAL,asmtyp);
+        inherited Create(AList,prefix+asmlabeltypeprefix[ltyp]+ToStr(nr),AB_LOCAL,asmtyp);
         labelnr:=nr;
         labeltype:=ltyp;
         is_set:=false;

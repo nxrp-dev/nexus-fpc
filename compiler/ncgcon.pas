@@ -27,43 +27,43 @@ unit ncgcon;
 interface
 
     uses
-       tpcompilerreal,
+       TPCompilerReal,
        aasmbase,
        symtype,
        ncon;
 
     type
-       tcgrealconstnode = class(trealconstnode)
+       TCGRealConstNode = class(TRealConstNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgordconstnode = class(tordconstnode)
+       TCGOrdConstNode = class(TOrdConstNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgpointerconstnode = class(tpointerconstnode)
+       TCGPointerConstNode = class(TPointerConstNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgstringconstnode = class(tstringconstnode)
+       TCGStringConstNode = class(TStringConstNode)
           procedure pass_generate_code;override;
        protected
          procedure load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean); virtual;
        end;
 
-       tcgsetconstnode = class(tsetconstnode)
+       TCGSetConstNode = class(TSetConstNode)
          protected
-          function emitvarsetconst: tasmsymbol; virtual;
+          function emitvarsetconst: TAsmSymbol; virtual;
           procedure handlevarsetconst;
          public
           procedure pass_generate_code;override;
        end;
 
-       tcgnilnode = class(tnilnode)
+       TCGNilNode = class(TNilNode)
           procedure pass_generate_code;override;
        end;
 
-       tcgguidconstnode = class(tguidconstnode)
+       TCGGUIDConstNode = class(TGUIDConstNode)
           procedure pass_generate_code;override;
        end;
 
@@ -71,13 +71,13 @@ interface
 implementation
 
     uses
-      globtype,widestr,systems,
-      verbose,globals,cutils,
+      GlobType,WideStr,Systems,
+      Verbose,Globals,CUtils,
       aasmcnst,
-      symconst,symdef,aasmtai,aasmdata,defutil,
-      cpuinfo,cpubase,
+      symconst,symdef,aasmtai,AAsmData,defutil,
+      CPUInfo,cpubase,
       cgbase,cgutils,
-      hlcgobj,cclasses
+      hlcgobj,CClasses
       ;
 
 
@@ -85,34 +85,34 @@ implementation
                            TCGREALCONSTNODE
 *****************************************************************************}
 
-    procedure tcgrealconstnode.pass_generate_code;
+    procedure TCGRealConstNode.pass_generate_code;
       { I suppose the parser/pass_1 must make sure the generated real  }
       { constants are actually supported by the target processor? (JM) }
       const
-        floattype2ait:array[TFloatType] of tairealconsttype=
+        floattype2ait:array[TFloatType] of TAIRealConstType=
           (aitrealconst_s32bit,aitrealconst_s64bit,aitrealconst_s80bit,aitrealconst_s80bit,aitrealconst_s64comp,aitrealconst_s64comp);
 
       { Since the value is stored always as bestreal, we share a single pool
         between all float types. This requires the type to
         be matched along with the value }
       type
-        tfloatkey = record
-          value: bestreal;
+        TFloatKey = record
+          value: BestReal;
           typ: TFloatType;
         end;
 
       var
-         lastlabel : tasmlabel;
-         realait : tairealconsttype;
+         lastlabel : TAsmLabel;
+         realait : TAIRealConstType;
          entry : PHashSetItem;
-         key: tfloatkey;
+         key: TFloatKey;
 
       begin
-        location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),const_align(resultdef.alignment),[]);
+        location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),Const_Align(resultdef.alignment),[]);
         lastlabel:=nil;
         realait:=floattype2ait[TFloatDef(resultdef).floattype];
         { const already used ? }
-        if not assigned(lab_real) then
+        if not Assigned(lab_real) then
           begin
             { there may be gap between record fields, zero it out }
             fillchar(key,sizeof(key),0);
@@ -123,39 +123,39 @@ implementation
             lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
-             if not(assigned(lab_real)) then
+             if not(Assigned(lab_real)) then
                begin
                   CurrentAsmData.getdatalabel(lastlabel);
                   entry^.Data:=lastlabel;
                   lab_real:=lastlabel;
                   maybe_new_object_file(CurrentAsmData.asmlists[al_typedconsts]);
-                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,const_align(resultdef.alignment));
-                  CurrentAsmData.asmlists[al_typedconsts].concat(Tai_label.Create(lastlabel));
+                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,Const_Align(resultdef.alignment));
+                  CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(lastlabel));
                   case realait of
                     aitrealconst_s32bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s32real(Single(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s32real(Single(value_real)));
                       end;
 
                     aitrealconst_s64bit :
                       begin
-                          CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(Double(value_real)));
+                          CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64real(Double(value_real)));
                      end;
 
                     aitrealconst_s80bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,TFloatDef(resultdef).size));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s80real(value_real,TFloatDef(resultdef).size));
                       end;
 
                     { the round is necessary for native compilers where comp isn't a float }
                     aitrealconst_s64comp :
-                      if (value_real>bestreal(High(Int64))) or (value_real<bestreal(Low(Int64))) then
+                      if (value_real>BestReal(High(Int64))) or (value_real<BestReal(Low(Int64))) then
                         message(parser_e_range_check_error)
                       else
-                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s64compreal(Round(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(TAIRealConst.create_s64compreal(Round(value_real)));
                   end;
                   if (tf_needs_symbol_size in TargetInfo.flags) then
-                    CurrentAsmData.asmlists[al_typedconsts].concat(Tai_symbol_end.Create(lastlabel));
+                    CurrentAsmData.asmlists[al_typedconsts].concat(TAISymbolEnd.Create(lastlabel));
                end;
           end;
         location.reference.symbol:=lab_real;
@@ -165,7 +165,7 @@ implementation
                             TCGORDCONSTNODE
 *****************************************************************************}
 
-    procedure tcgordconstnode.pass_generate_code;
+    procedure TCGOrdConstNode.pass_generate_code;
       begin
          location_reset(location,LOC_CONSTANT,def_cgsize(resultdef));
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
@@ -180,7 +180,7 @@ implementation
                           TCGPOINTERCONSTNODE
 *****************************************************************************}
 
-    procedure tcgpointerconstnode.pass_generate_code;
+    procedure TCGPointerConstNode.pass_generate_code;
       begin
          { an integer const. behaves as a memory reference }
          location_reset(location,LOC_CONSTANT,OS_ADDR);
@@ -192,22 +192,22 @@ implementation
                           TCGSTRINGCONSTNODE
 *****************************************************************************}
 
-    procedure tcgstringconstnode.pass_generate_code;
+    procedure TCGStringConstNode.pass_generate_code;
       var
-         lastlabel: tasmlabofs;
-         l: longint;
+         lastlabel: TAsmLabOfs;
+         l: LongInt;
          pool: THashSet;
          entry: PHashSetItem;
          winlikewidestring: boolean;
          elementdef: TDef;
          strpointerdef: TDef;
-         datatcb: ttai_typedconstbuilder;
+         datatcb: TTAITypedConstBuilder;
          datadef: TDef;
-         t : tai_string;
+         t : TAIString;
 
 
       const
-        PoolMap: array[tconststringtype] of TConstPoolType = (
+        PoolMap: array[TConstStringType] of TConstPoolType = (
           sp_conststr,
           sp_shortstr,
           sp_longstr,
@@ -231,7 +231,7 @@ implementation
                strpointerdef:=widecharpointertype;
              end;
            else
-             internalerror(2014032803);
+             InternalError(2014032803);
          end;
          { for empty ansistrings we could return a constant 0 }
          if (cst_type in [cst_ansistring,cst_widestring,cst_unicodestring]) and (len=0) then
@@ -242,7 +242,7 @@ implementation
           end;
          winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
          { const already used ? }
-         if not assigned(lab_str) then
+         if not Assigned(lab_str) then
            begin
               pool := CurrentAsmData.ConstPools[PoolMap[cst_type]];
 
@@ -257,9 +257,9 @@ implementation
               lab_str := TAsmLabel(entry^.Data);  // is it needed anymore?
 
               { :-(, we must generate a new entry }
-              if not assigned(entry^.Data) then
+              if not Assigned(entry^.Data) then
                 begin
-                  datatcb:=ctai_typedconstbuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+                  datatcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
                    case cst_type of
                       cst_ansistring:
                         begin
@@ -271,7 +271,7 @@ implementation
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
                                if lastlabel.ofs<>datatcb.get_string_symofs(st_ansistring,false) then
-                                 internalerror(2012051703);
+                                 InternalError(2012051703);
                              end;
                            { no contents of the datatcb itself to concatenate,
                              as we will just return the address of the emitted
@@ -291,7 +291,7 @@ implementation
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
                                if lastlabel.ofs<>datatcb.get_string_symofs(TStringDef(resultdef).stringtype,winlikewidestring) then
-                                 internalerror(2012051702);
+                                 InternalError(2012051702);
                              end;
                            { no contents of the datatcb itself to concatenate,
                              as we will just return the address of the emitted
@@ -308,14 +308,14 @@ implementation
                            l:=len;
 
                           { include length and terminating zero for quick conversion to pchar }
-                          datadef:=carraydef.getreusable(cansichartype,l+2);
+                          datadef:=CArrayDef.getreusable(cansichartype,l+2);
                           datatcb.maybe_begin_aggregate(datadef);
-                          datatcb.emit_tai(Tai_const.Create_8bit(l),cansichartype);
-                          t:=Tai_string.Create_Data(asconstpchar,l,true);
+                          datatcb.emit_tai(TAIConst.Create_8bit(l),cansichartype);
+                          t:=TAIString.Create_Data(asconstpchar,l,true);
                           datatcb.emit_tai(t,datadef);
                           datatcb.maybe_end_aggregate(datadef);
-                          CurrentAsmData.asmlists[al_typedconsts].concatList(
-                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,const_align(sizeof(pint)))
+                          CurrentAsmData.asmlists[al_typedconsts].ConcatList(
+                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,Const_Align(sizeof(PInt)))
                           );
                         end;
                       cst_conststring:
@@ -326,17 +326,17 @@ implementation
                             string can be used for pchar assignments (but it's
                             also used for array-of-char assignments, in which
                             case the terminating #0 is not part of the data) }
-                          datadef:=carraydef.getreusable(cansichartype,len+1);
+                          datadef:=CArrayDef.getreusable(cansichartype,len+1);
                           datatcb.maybe_begin_aggregate(datadef);
-                          t:=Tai_string.Create_Data(asconstpchar,len,true);
+                          t:=TAIString.Create_Data(asconstpchar,len,true);
                           datatcb.emit_tai(t,datadef);
                           datatcb.maybe_end_aggregate(datadef);
-                          CurrentAsmData.asmlists[al_typedconsts].concatList(
-                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,const_align(sizeof(pint)))
+                          CurrentAsmData.asmlists[al_typedconsts].ConcatList(
+                            datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,Const_Align(sizeof(PInt)))
                           );
                         end;
                       else
-                        internalerror(2013120103);
+                        InternalError(2013120103);
                    end;
                    datatcb.free;
                    datatcb := nil;
@@ -352,19 +352,19 @@ implementation
            end
          else
            begin
-             location_reset_ref(location, LOC_CREFERENCE, def_cgsize(resultdef), const_align(strpointerdef.size), []);
+             location_reset_ref(location, LOC_CREFERENCE, def_cgsize(resultdef), Const_Align(strpointerdef.size), []);
              location.reference.symbol:=lab_str;
            end;
       end;
 
 
-    procedure tcgstringconstnode.load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean);
+    procedure TCGStringConstNode.load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean);
       var
-        href: treference;
+        href: TReference;
       begin
         reference_reset_symbol(href, lab_str,
-          ctai_typedconstbuilder.get_string_symofs(TStringDef(resultdef).stringtype, winlikewidestring),
-          const_align(strpointerdef.size),[]);
+          CTAITypedConstBuilder.get_string_symofs(TStringDef(resultdef).stringtype, winlikewidestring),
+          Const_Align(strpointerdef.size),[]);
         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, elementdef, strpointerdef, href, location.register)
       end;
 
@@ -373,46 +373,46 @@ implementation
                            TCGSETCONSTNODE
 *****************************************************************************}
 
-    function tcgsetconstnode.emitvarsetconst: tasmsymbol;
+    function TCGSetConstNode.emitvarsetconst: TAsmSymbol;
       type
-        setbytes=array[0..31] of byte;
-        Psetbytes=^setbytes;
+        TSetBytes=array[0..31] of byte;
+        PSetBytes=^TSetBytes;
       var
-        lab: tasmlabel;
-        i: longint;
-        tcb: ttai_typedconstbuilder;
+        lab: TAsmLabel;
+        i: LongInt;
+        tcb: TTAITypedConstBuilder;
       begin
         CurrentAsmData.getdatalabel(lab);
         result:=lab;
         lab_set:=lab;
-        tcb:=ctai_typedconstbuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+        tcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
         tcb.maybe_begin_aggregate(resultdef);
         if (SourceInfo.endian=TargetInfo.endian) then
           for i:=0 to resultdef.size-1 do
-            tcb.emit_tai(tai_const.create_8bit(Psetbytes(value_set)^[i]),u8inttype)
+            tcb.emit_tai(TAIConst.create_8bit(PSetBytes(value_set)^[i]),u8inttype)
         else
           for i:=0 to resultdef.size-1 do
-            tcb.emit_tai(tai_const.create_8bit(reverse_byte(Psetbytes(value_set)^[i])),u8inttype);
+            tcb.emit_tai(TAIConst.create_8bit(Reverse_Byte(PSetBytes(value_set)^[i])),u8inttype);
         tcb.maybe_end_aggregate(resultdef);
-        CurrentAsmData.asmlists[al_typedconsts].concatlist(tcb.get_final_asmlist(
-          result,resultdef,sec_rodata_norel,result.name,const_align(8)));
+        CurrentAsmData.asmlists[al_typedconsts].ConcatList(tcb.get_final_asmlist(
+          result,resultdef,sec_rodata_norel,result.name,Const_Align(8)));
         tcb.free;
         tcb := nil;
       end;
 
 
-    procedure tcgsetconstnode.handlevarsetconst;
+    procedure TCGSetConstNode.handlevarsetconst;
       var
          entry       : PHashSetItem;
       begin
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,const_align(8),[]);
+        location_reset_ref(location,LOC_CREFERENCE,OS_NO,Const_Align(8),[]);
         { const already used ? }
-        if not assigned(lab_set) then
+        if not Assigned(lab_set) then
           begin
             entry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.size);
 
              { :-(, we must generate a new entry }
-             if not assigned(entry^.Data) then
+             if not Assigned(entry^.Data) then
                entry^.Data:=emitvarsetconst;
              lab_set := TAsmSymbol(entry^.Data);
           end;
@@ -420,10 +420,10 @@ implementation
       end;
 
 
-    procedure tcgsetconstnode.pass_generate_code;
+    procedure TCGSetConstNode.pass_generate_code;
        type
-         setbytes=array[0..31] of byte;
-         Psetbytes=^setbytes;
+         TSetBytes=array[0..31] of byte;
+         PSetBytes=^TSetBytes;
 
         procedure smallsetconst;
           begin
@@ -438,7 +438,7 @@ implementation
               end
             else
               begin
-                location.value:=aint(reverse_longword(Pcardinal(value_set)^));
+                location.value:=aint(Reverse_LongWord(Pcardinal(value_set)^));
               end;
             if (TargetInfo.endian=endian_big) then
               location.value:=location.value shr (32-resultdef.size*8);
@@ -459,7 +459,7 @@ implementation
                              TCGNILNODE
 *****************************************************************************}
 
-    procedure tcgnilnode.pass_generate_code;
+    procedure TCGNilNode.pass_generate_code;
       begin
          location_reset(location,LOC_CONSTANT,OS_ADDR);
          location.value:=0;
@@ -470,28 +470,28 @@ implementation
                           TCGGUIDCONSTNODE
 *****************************************************************************}
 
-    procedure tcgguidconstnode.pass_generate_code;
+    procedure TCGGUIDConstNode.pass_generate_code;
       var
-         lastlabel   : tasmlabel;
+         lastlabel   : TAsmLabel;
          entry       : PHashSetItem;
-         datatcb     : ttai_typedconstbuilder;
+         datatcb     : TTAITypedConstBuilder;
       begin
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,const_align(16),[]);
+        location_reset_ref(location,LOC_CREFERENCE,OS_NO,Const_Align(16),[]);
         lastlabel:=nil;
         { const already used ? }
-        if not assigned(lab_set) then
+        if not Assigned(lab_set) then
           begin
             entry:=CurrentAsmData.ConstPools[sp_guids].FindOrAdd(@value,sizeof(value));
             lab_set:=TAsmLabel(entry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
-             if not assigned(entry^.Data) then
+             if not Assigned(entry^.Data) then
                begin
                  CurrentAsmData.getdatalabel(lastlabel);
-                 datatcb:=ctai_typedconstbuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
+                 datatcb:=CTAITypedConstBuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
                  datatcb.emit_guid_const(value);
-                 CurrentAsmData.asmlists[al_typedconsts].concatList(
-                   datatcb.get_final_asmlist(lastlabel,rec_tguid,sec_rodata_norel,lastlabel.name,const_align(16)));
+                 CurrentAsmData.asmlists[al_typedconsts].ConcatList(
+                   datatcb.get_final_asmlist(lastlabel,rec_tguid,sec_rodata_norel,lastlabel.name,Const_Align(16)));
                  datatcb.free;
                  datatcb := nil;
                  lab_set:=lastlabel;
@@ -503,11 +503,11 @@ implementation
 
 
 begin
-   crealconstnode:=tcgrealconstnode;
-   cordconstnode:=tcgordconstnode;
-   cpointerconstnode:=tcgpointerconstnode;
-   cstringconstnode:=tcgstringconstnode;
-   csetconstnode:=tcgsetconstnode;
-   cnilnode:=tcgnilnode;
-   cguidconstnode:=tcgguidconstnode;
+   CRealConstNode:=TCGRealConstNode;
+   COrdConstNode:=TCGOrdConstNode;
+   CPointerConstNode:=TCGPointerConstNode;
+   CStringConstNode:=TCGStringConstNode;
+   CSetConstNode:=TCGSetConstNode;
+   CNilNode:=TCGNilNode;
+   CGUIDConstNode:=TCGGUIDConstNode;
 end.

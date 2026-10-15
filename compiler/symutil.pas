@@ -26,8 +26,8 @@ unit symutil;
 interface
 
     uses
-       tpcompilerreal,
-       symconst,symbase,symtype,symsym;
+       TPCompilerReal,
+       symconst,SymBase,symtype,SymSym;
 
     function is_funcret_sym(p:TSymEntry):boolean;
 
@@ -41,9 +41,9 @@ interface
 implementation
 
     uses
-       systems,
-       globtype,cpuinfo,constexp,verbose,
-       widestr,
+       Systems,
+       GlobType,CPUInfo,ConstExp,Verbose,
+       WideStr,
        symdef;
 
 
@@ -86,14 +86,14 @@ implementation
              end;
            constwstring :
              begin
-               if (comparewidestrings(sym1.value.valuews,sym2.value.valuews)=0) then
+               if (CompareWideStrings(sym1.value.valuews,sym2.value.valuews)=0) then
                  equal_constsym:=true;
              end;
            constreal :
              if nanequal then
-               equal_constsym:=CompareByte(pbestreal(sym1.value.valueptr)^,pbestreal(sym2.value.valueptr)^,sizeof(pbestreal^))=0
+               equal_constsym:=CompareByte(PBestReal(sym1.value.valueptr)^,PBestReal(sym2.value.valueptr)^,sizeof(PBestReal^))=0
              else
-               equal_constsym:=pbestreal(sym1.value.valueptr)^=pbestreal(sym2.value.valueptr)^;
+               equal_constsym:=PBestReal(sym1.value.valueptr)^=PBestReal(sym2.value.valueptr)^;
            constset :
              equal_constsym:=(PNormalSet(sym1.value.valueptr)^=PNormalSet(sym2.value.valueptr)^);
            constnil :

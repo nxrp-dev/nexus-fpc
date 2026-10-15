@@ -32,12 +32,12 @@ implementation
 
 uses
    SysUtils,
-   cclasses,widestr,
-   cutils,globtype,globals,systems,
-   symbase,symconst,symtype,defutil, symdef,symsym,symtable,
-   verbose,fmodule,ppu,
-   aasmtai,aasmdata,aasmcnst,
-   aasmcpu;
+   CClasses,WideStr,
+   CUtils,GlobType,Globals,Systems,
+   SymBase,SymConst,SymType,DefUtil, SymDef,SymSym,SymTable,
+   Verbose,FModule,PPU,
+   AAsmTai,AAsmData,AAsmCnst,
+   AAsmCPU;
 
     Type
       { These are used to form a singly-linked list, ordered by hash value }
@@ -45,11 +45,11 @@ uses
         Sym   : TConstSym;
         Name  : String;
         AValue : TAnsiCharDynArray;
-        WValue : tcompilerwidestring; // just a reference, do not free.
-        Len   : Longint; // in bytes, not characters
-        hash  : Cardinal;
-        isUnicode : Boolean;
-        constructor Create(asym:TConstSym);
+        WValue : TCompilerWideString; // just a reference, do not free.
+        Len   : LongInt; // in bytes, not characters
+        Hash  : Cardinal;
+        IsUnicode : Boolean;
+        constructor Create(ASym:TConstSym);
         destructor  Destroy;override;
         procedure CalcHash;
       end;
@@ -57,7 +57,7 @@ uses
       Tresourcestrings=class
       private
         List : TLinkedList;
-        procedure ConstSym_Register(p:TObject;arg:pointer);
+        procedure ConstSymRegister(P:TObject;Arg:Pointer);
       public
         constructor Create;
         destructor  Destroy;override;
@@ -72,29 +72,29 @@ uses
                           TRESOURCESTRING_ITEM
   ---------------------------------------------------------------------}
 
-    constructor TResourceStringItem.Create(asym:TConstSym);
+    constructor TResourceStringItem.Create(ASym:TConstSym);
 
     var
-      pw : tcompilerwidestring;
-      t : TDef;
+      PW : TCompilerWideString;
+      T : TDef;
 
       begin
         inherited Create;
-        Sym:=Asym;
-        Name:=lower(asym.owner.name^+'.'+asym.Name);
-        isUnicode:=is_systemunit_unicode;
+        Sym:=ASym;
+        Name:=Lower(ASym.Owner.Name^+'.'+ASym.Name);
+        IsUnicode:=is_systemunit_unicode;
         if IsUnicode then
           begin
-          T:=aSym.constdef;
-          WValue:=asym.value.valuews;
-          Len:=WValue.len*sizeOf(tcompilerwidechar);
+          T:=ASym.ConstDef;
+          WValue:=ASym.Value.ValueWS;
+          Len:=WValue.Len*SizeOf(TCompilerWideChar);
           end
         else
           begin
-          Len:=asym.value.len;
+          Len:=ASym.Value.Len;
           SetLength(AValue,Len);
-          if len>0 then
-            Move(asym.value.valueptr^,AValue[0],Len);
+          if Len>0 then
+            Move(ASym.Value.ValuePtr^,AValue[0],Len);
           end;
         CalcHash;
       end;
@@ -108,40 +108,40 @@ uses
 
     procedure TResourceStringItem.CalcHash;
       Var
-        g : Cardinal;
-        llen,wlen,I : longint;
+        G : Cardinal;
+        LLen,WLen,I : LongInt;
         P : PByte;
-        pc : PAnsiChar;
+        PC : PAnsiChar;
 
       begin
-        pc:=nil;
-        hash:=0;
+        PC:=nil;
+        Hash:=0;
         if IsUnicode then
           begin
           // Need to calculate hash on UTF8 encoded string, GNU gettext.
-          llen:=UnicodeToUtf8(nil,0,PUnicodeChar(wValue.data),wValue.len);
-          getmem(pc,llen);
-          UnicodeToUtf8(PC,llen,wValue.asconstpunicodechar,len);
-          P:=PByte(pc);
-          llen:=llen-1; // Take of terminating #0
+          LLen:=UnicodeToUtf8(nil,0,PUnicodeChar(WValue.Data),WValue.Len);
+          GetMem(PC,LLen);
+          UnicodeToUtf8(PC,LLen,WValue.AsConstPUnicodeChar,Len);
+          P:=PByte(PC);
+          LLen:=LLen-1; // Take of terminating #0
           end
         else
           begin
-          llen:=Len;
+          LLen:=Len;
           P:=PByte(AValue);
           end;
-        For I:=0 to lLen-1 do { 0 terminated }
+        For I:=0 to LLen-1 do { 0 terminated }
          begin
-           hash:=hash shl 4;
-           inc(Hash,P[i]);
-           g:=hash and ($f shl 28);
-           if g<>0 then
+           Hash:=Hash shl 4;
+           Inc(Hash,P[I]);
+           G:=Hash and ($f shl 28);
+           if G<>0 then
             begin
-              hash:=hash xor (g shr 24);
-              hash:=hash xor g;
+              Hash:=Hash xor (G shr 24);
+              Hash:=Hash xor G;
             end;
          end;
-        if Assigned(Pc) then
+        if Assigned(PC) then
           FreeMem(PC);
         If Hash=0 then
           Hash:=$ffffffff;
@@ -152,78 +152,78 @@ uses
                           Tresourcestrings
   ---------------------------------------------------------------------}
 
-    Constructor Tresourcestrings.Create;
+    Constructor TResourceStrings.Create;
       begin
         List:=TAsmList.Create;
       end;
 
 
-    Destructor Tresourcestrings.Destroy;
+    Destructor TResourceStrings.Destroy;
       begin
         List.Free;
         List := nil;
       end;
 
 
-    procedure Tresourcestrings.CreateResourceStringData;
+    procedure TResourceStrings.CreateResourceStringData;
       Var
-        namelab,
-        valuelab : tasmlabofs;
+        NameLab,
+        ValueLab : TAsmLabOfs;
         R : TResourceStringItem;
-        resstrdef: TDef;
-        tcb : ttai_typedconstbuilder;
-        enc : TStringEncoding;
-        charlen : longint;
-        st : TStringType;
-        strcharpointertype: TDef;
+        ResStrDef: TDef;
+        TCB : TTAITypedConstBuilder;
+        Enc : TStringEncoding;
+        CharLen : LongInt;
+        ST : TStringType;
+        StrCharPointerType: TDef;
 
       begin
-        resstrdef:=search_system_type('TRESOURCESTRINGRECORD').typedef;
+        ResStrDef:=search_system_type('TRESOURCESTRINGRECORD').TypeDef;
 
-        tcb:=ctai_typedconstbuilder.create([tcalo_vectorized_dead_strip_start,tcalo_data_force_indirect,tcalo_is_public_asm]);
+        TCB:=CTAITypedConstBuilder.Create([tcalo_vectorized_dead_strip_start,tcalo_data_force_indirect,tcalo_is_public_asm]);
         { Write unitname entry }
-        tcb.maybe_begin_aggregate(resstrdef);
-        namelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],@CurrentModule.localsymtable.name^[1],length(CurrentModule.localsymtable.name^),getansistringcodepage);
-        tcb.emit_string_offset(namelab,length(CurrentModule.localsymtable.name^),st_ansistring,false,charpointertype);
-        tcb.emit_tai(tai_const.create_nil_dataptr,cansistringtype);
-        tcb.emit_tai(tai_const.create_nil_dataptr,cansistringtype);
-        tcb.emit_ord_const(0,u32inttype);
-        tcb.maybe_end_aggregate(resstrdef);
-        CurrentAsmData.asmlists[al_resourcestrings].concatList(
-          tcb.get_final_asmlist_vectorized_dead_strip(
-            nil,resstrdef,'RESSTR','',CurrentModule.localsymtable,sizeof(pint)
+        TCB.maybe_begin_aggregate(ResStrDef);
+        NameLab:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],@CurrentModule.LocalSymTable.Name^[1],Length(CurrentModule.LocalSymTable.Name^),GetAnsiStringCodePage);
+        TCB.emit_string_offset(NameLab,Length(CurrentModule.LocalSymTable.Name^),st_ansistring,False,CharPointerType);
+        TCB.emit_tai(TAIConst.create_nil_dataptr,CAnsiStringType);
+        TCB.emit_tai(TAIConst.create_nil_dataptr,CAnsiStringType);
+        TCB.emit_ord_const(0,U32IntType);
+        TCB.maybe_end_aggregate(ResStrDef);
+        CurrentAsmData.AsmLists[al_resourcestrings].ConcatList(
+          TCB.get_final_asmlist_vectorized_dead_strip(
+            nil,ResStrDef,'RESSTR','',CurrentModule.LocalSymTable,SizeOf(PInt)
           )
         );
-        tcb.free;
+        TCB.Free;
 
         { Add entries }
         R:=TResourceStringItem(List.First);
-        while assigned(R) do
+        while Assigned(R) do
           begin
-            tcb:=ctai_typedconstbuilder.create([tcalo_vectorized_dead_strip_item,tcalo_data_force_indirect]);
-            valuelab.lab:=nil;
-            valuelab.ofs:=0;
-            charlen:=R.Len;
-            st:=st_ansistring;
-            strcharpointertype:=charpointertype;;
-            if (R.len<>0) then
+            TCB:=CTAITypedConstBuilder.Create([tcalo_vectorized_dead_strip_item,tcalo_data_force_indirect]);
+            ValueLab.Lab:=nil;
+            ValueLab.Ofs:=0;
+            CharLen:=R.Len;
+            ST:=st_ansistring;
+            StrCharPointerType:=CharPointerType;;
+            if (R.Len<>0) then
               begin
-              if R.isUnicode and assigned(R.WValue) then
+              if R.IsUnicode and Assigned(R.WValue) then
                 begin
-                  enc:=TStringDef(cunicodestringtype).encoding;
-                  valuelab:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_const],R.WValue,enc,False);
-                  charlen:=getlengthwidestring(R.WValue);
-                  st:=st_unicodestring;
-                  strcharpointertype:=widecharpointertype;;
+                  Enc:=TStringDef(CUnicodeStringType).Encoding;
+                  ValueLab:=TCB.emit_unicodestring_const(CurrentAsmData.AsmLists[al_const],R.WValue,Enc,False);
+                  CharLen:=GetLengthWideString(R.WValue);
+                  ST:=st_unicodestring;
+                  StrCharPointerType:=WideCharPointerType;;
                 end
               else
                 begin
-                  if assigned(R.AValue) then
-                    valuelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],PAnsiChar(R.AValue),R.Len,getansistringcodepage);
+                  if Assigned(R.AValue) then
+                    ValueLab:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],PAnsiChar(R.AValue),R.Len,GetAnsiStringCodePage);
                 end;
               end;
-            CurrentAsmData.asmlists[al_const].concat(cai_align.Create(sizeof(pint)));
-            namelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],@R.Name[1],length(R.name),getansistringcodepage);
+            CurrentAsmData.AsmLists[al_const].Concat(CAIAlign.Create(SizeOf(PInt)));
+            NameLab:=TCB.emit_ansistring_const(CurrentAsmData.AsmLists[al_const],@R.Name[1],Length(R.Name),GetAnsiStringCodePage);
             {
               Resourcestring index:
                   TResourceStringRecord = Packed Record
@@ -233,157 +233,157 @@ uses
                      HashValue    : LongWord;
                    end;
             }
-            tcb.maybe_begin_aggregate(resstrdef);
-            tcb.emit_string_offset(namelab,length(R.name),st_ansistring,false,charpointertype);
-            tcb.emit_string_offset(valuelab,charlen,st,false,strcharpointertype);
-            tcb.emit_string_offset(valuelab,charlen,st,false,strcharpointertype);
-            tcb.emit_ord_const(R.hash,u32inttype);
-            tcb.maybe_end_aggregate(resstrdef);
-            CurrentAsmData.asmlists[al_resourcestrings].concatList(
-              tcb.get_final_asmlist_vectorized_dead_strip(
-                R.Sym,resstrdef,'RESSTR',R.Sym.Name,R.Sym.Owner,sizeof(pint))
+            TCB.maybe_begin_aggregate(ResStrDef);
+            TCB.emit_string_offset(NameLab,Length(R.Name),st_ansistring,False,CharPointerType);
+            TCB.emit_string_offset(ValueLab,CharLen,ST,False,StrCharPointerType);
+            TCB.emit_string_offset(ValueLab,CharLen,ST,False,StrCharPointerType);
+            TCB.emit_ord_const(R.Hash,U32IntType);
+            TCB.maybe_end_aggregate(ResStrDef);
+            CurrentAsmData.AsmLists[al_resourcestrings].ConcatList(
+              TCB.get_final_asmlist_vectorized_dead_strip(
+                R.Sym,ResStrDef,'RESSTR',R.Sym.Name,R.Sym.Owner,SizeOf(PInt))
             );
             R:=TResourceStringItem(R.Next);
-            tcb.free;
-            tcb := nil;
+            TCB.Free;
+            TCB := nil;
           end;
-        tcb:=ctai_typedconstbuilder.create([tcalo_vectorized_dead_strip_end,tcalo_data_force_indirect,tcalo_is_public_asm]);
-        tcb.begin_anonymous_record(internaltypeprefixName[itp_emptyrec],
-          default_settings.packrecords,sizeof(pint),
-          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
-        CurrentAsmData.AsmLists[al_resourcestrings].concatList(
-          tcb.get_final_asmlist_vectorized_dead_strip(
-            nil,tcb.end_anonymous_record,'RESSTR','',CurrentModule.localsymtable,sizeof(pint)
+        TCB:=CTAITypedConstBuilder.Create([tcalo_vectorized_dead_strip_end,tcalo_data_force_indirect,tcalo_is_public_asm]);
+        TCB.begin_anonymous_record(InternalTypePrefixName[itp_emptyrec],
+          Default_Settings.PackRecords,SizeOf(PInt),
+          TargetInfos[Ord(TargetInfo.System)]^.Alignment.RecordAlignMin);
+        CurrentAsmData.AsmLists[al_resourcestrings].ConcatList(
+          TCB.get_final_asmlist_vectorized_dead_strip(
+            nil,TCB.end_anonymous_record,'RESSTR','',CurrentModule.LocalSymTable,SizeOf(PInt)
           )
         );
-        tcb.free;
-        tcb := nil;
+        TCB.Free;
+        TCB := nil;
       end;
 
-    procedure Tresourcestrings.WriteRSJFile;
+    procedure TResourceStrings.WriteRSJFile;
       Var
         F: Text;
         R: TResourceStringItem;
         ResFileName: string;
         I,Len: Integer;
-        C: tcompilerwidechar;
-        W: tcompilerwidestring;
+        C: TCompilerWideChar;
+        W: TCompilerWideString;
         P : PByte;
 
       begin
-        ResFileName:=ChangeFileExt(CurrentModule.ppufilename,'.rsj');
-        message1 (general_i_writingresourcefile,ExtractFileName(ResFileName));
+        ResFileName:=ChangeFileExt(CurrentModule.PPUFileName,'.rsj');
+        Message1 (general_i_writingresourcefile,ExtractFileName(ResFileName));
         Assign(F,ResFileName);
         {$push}{$i-}
-        Rewrite(f);
+        Rewrite(F);
         {$pop}
-        if IOresult<>0 then
+        if IOResult<>0 then
           begin
-            message1(general_e_errorwritingresourcefile,ResFileName);
-            exit;
+            Message1(general_e_errorwritingresourcefile,ResFileName);
+            Exit;
           end;
         { write the data in two formats:
            a) backward compatible: the plain bytes from the source file
            b) portable: converted to utf-16
         }
-        writeln(f,'{"version":1,"strings":[');
+        WriteLn(F,'{"version":1,"strings":[');
         R:=TResourceStringItem(List.First);
-        while assigned(R) do
+        while Assigned(R) do
           begin
-            write(f, '{"hash":',R.Hash,',"name":"',R.Name,'","sourcebytes":[');
-            if R.isUnicode then
-              P:=PByte(R.WValue.asconstpunicodechar)
+            Write(F, '{"hash":',R.Hash,',"name":"',R.Name,'","sourcebytes":[');
+            if R.IsUnicode then
+              P:=PByte(R.WValue.AsConstPUnicodeChar)
             else
               P:=PByte(R.AValue);
-            for i:=0 to R.Len-1 do
+            for I:=0 to R.Len-1 do
               begin
-                write(f,P[i]);
-                if i<>R.Len-1 then
-                  write(f,',');
+                Write(F,P[I]);
+                if I<>R.Len-1 then
+                  Write(F,',');
               end;
-            write(f,'],"value":"');
-            if Not r.isUnicode then
+            Write(F,'],"value":"');
+            if Not R.IsUnicode then
               begin
-              initwidestring(W);
-              ascii2unicode(PAnsiChar(R.AValue),R.Len,CurrentSettings.sourcecodepage,W);
+              InitWideString(W);
+              ASCII2Unicode(PAnsiChar(R.AValue),R.Len,CurrentSettings.SourceCodePage,W);
               end
             else
               begin
               W:=R.WValue;
               end;
-            for I := 0 to W.len - 1 do
+            for I := 0 to W.Len - 1 do
               begin
                 C := W.Data[I];
                 case C of
                   Ord('"'), Ord('\'), Ord('/'):
-                    write(f, '\', Chr(C));
+                    Write(F, '\', Chr(C));
                   8:
-                    write(f, '\b');
+                    Write(F, '\b');
                   9:
-                    write(f, '\t');
+                    Write(F, '\t');
                   10:
-                    write(f, '\n');
+                    Write(F, '\n');
                   13:
-                    write(f, '\r');
+                    Write(F, '\r');
                   12:
-                    write(f, '\f');
+                    Write(F, '\f');
                   else
                   if (C < 32) or (C > 127) then
-                    write(f,'\u',hexStr(Longint(C), 4))
+                    Write(F,'\u',HexStr(LongInt(C), 4))
                   else
-                    write(f,Chr(C));
+                    Write(F,Chr(C));
                 end;
               end;
             if W<>R.WValue then
-              donewidestring(W);
-            write(f,'"}');
+              DoneWideString(W);
+            Write(F,'"}');
             R:=TResourceStringItem(R.Next);
-            if assigned(R) then
-              writeln(f,',')
+            if Assigned(R) then
+              WriteLn(F,',')
             else
-              writeln(f);
+              WriteLn(F);
           end;
-        writeln(f,']}');
-        close(f);
+        WriteLn(F,']}');
+        Close(F);
       end;
 
-    procedure Tresourcestrings.ConstSym_Register(p:TObject;arg:pointer);
+    procedure TResourceStrings.ConstSymRegister(P:TObject;Arg:Pointer);
       begin
-        if (TSym(p).typ=constsym) and
-           (TConstSym(p).consttyp in [constresourcestring,constwresourcestring]) then
-          List.Concat(TResourceStringItem.Create(TConstSym(p)));
+        if (TSym(P).Typ=ConstSym) and
+           (TConstSym(P).ConstTyp in [ConstResourceString,ConstWResourceString]) then
+          List.Concat(TResourceStringItem.Create(TConstSym(P)));
       end;
 
 
-    procedure Tresourcestrings.RegisterResourceStrings;
+    procedure TResourceStrings.RegisterResourceStrings;
       begin
-        if assigned(CurrentModule.globalsymtable) then
-          CurrentModule.globalsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
-        CurrentModule.localsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
+        if Assigned(CurrentModule.GlobalSymTable) then
+          CurrentModule.GlobalSymTable.SymList.ForEachCall(@ConstSymRegister,nil);
+        CurrentModule.LocalSymTable.SymList.ForEachCall(@ConstSymRegister,nil);
       end;
 
 
     Procedure GenerateResourceStrings;
       var
-        resstrs : Tresourcestrings;
+        ResStrs : TResourceStrings;
       begin
         { needed for the typed constant defs that get generated/looked up }
-        if assigned(CurrentModule.globalsymtable) then
-          symtablestack.push(CurrentModule.globalsymtable);
-        symtablestack.push(CurrentModule.localsymtable);
-        resstrs:=Tresourcestrings.Create;
-        resstrs.RegisterResourceStrings;
-        if not resstrs.List.Empty then
+        if Assigned(CurrentModule.GlobalSymTable) then
+          SymTableStack.Push(CurrentModule.GlobalSymTable);
+        SymTableStack.Push(CurrentModule.LocalSymTable);
+        ResStrs:=TResourceStrings.Create;
+        ResStrs.RegisterResourceStrings;
+        if not ResStrs.List.Empty then
           begin
-            include(CurrentModule.moduleflags,mf_has_resourcestrings);
-            resstrs.CreateResourceStringData;
-            resstrs.WriteRSJFile;
+            Include(CurrentModule.ModuleFlags,mf_has_resourcestrings);
+            ResStrs.CreateResourceStringData;
+            ResStrs.WriteRSJFile;
           end;
-        resstrs.Free;
-        resstrs := nil;
-        symtablestack.pop(CurrentModule.localsymtable);
-        if assigned(CurrentModule.globalsymtable) then
-          symtablestack.pop(CurrentModule.globalsymtable);
+        ResStrs.Free;
+        ResStrs := nil;
+        SymTableStack.Pop(CurrentModule.LocalSymTable);
+        if Assigned(CurrentModule.GlobalSymTable) then
+          SymTableStack.Pop(CurrentModule.GlobalSymTable);
       end;
 
 end.

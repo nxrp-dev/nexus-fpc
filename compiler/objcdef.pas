@@ -34,7 +34,7 @@ interface
       type into the internal format used by the run time. Returns false
       if a type is not representable by the Objective-C run time, and in
       that case also the failing definition.  }
-    function objctryencodetype(def: TDef; out encodedtype: ansistring; out founderror: TDef): boolean;
+    function objctryencodetype(def: TDef; out encodedtype: AnsiString; out founderror: TDef): boolean;
 
     { Check whether a type can be used in an Objective-C method
       signature or field declaration.  }
@@ -45,27 +45,27 @@ interface
       type name. bpacked indicates whether a record/array is bitpacked.
       On error, founderror contains the type that triggered the error. }
     type
-      trecordinfostate = (ris_initial, ris_afterpointer, ris_dontprint);
+      TRecordInfoState = (ris_initial, ris_afterpointer, ris_dontprint);
 
-    function objcaddencodedtype(def: TDef; recordinfostate: trecordinfostate; bpacked: boolean; var encodedstr: ansistring; out founderror: TDef): boolean;
+    function objcaddencodedtype(def: TDef; recordinfostate: TRecordInfoState; bpacked: boolean; var encodedstr: AnsiString; out founderror: TDef): boolean;
 
 implementation
 
   uses
-    globtype,
-    cutils,cclasses,
-    verbose,
-    symtable,symconst,symsym,symdef,
+    GlobType,
+    CUtils,CClasses,
+    Verbose,
+    SymTable,symconst,SymSym,symdef,
     defutil,paramgr;
 
 {******************************************************************
                           Type encoding
 *******************************************************************}
 
-    function encoderecst(const recname: ansistring; recst: TAbstractRecordSymTable; var encodedstr: ansistring; out founderror: TDef): boolean;
+    function encoderecst(const recname: AnsiString; recst: TAbstractRecordSymTable; var encodedstr: AnsiString; out founderror: TDef): boolean;
       var
-        variantstarts: tfplist;
-        i, varindex: longint;
+        variantstarts: TFPList;
+        i, varindex: LongInt;
         field,
         firstfield: TFieldVarSym;
         firstfieldvariant,
@@ -81,7 +81,7 @@ implementation
             if (TSym(recst.symlist[i]).typ<>fieldvarsym) then
               continue;
             field:=TFieldVarSym(recst.symlist[i]);
-            if not assigned(firstfield) then
+            if not Assigned(firstfield) then
               firstfield:=field
             else if (vo_is_first_field in field.varoptions) then
               begin
@@ -89,7 +89,7 @@ implementation
                   firstfieldvariant:=true;
               end;
           end;
-        variantstarts:=tfplist.create;
+        variantstarts:=TFPList.create;
         encodedstr:=encodedstr+'{'+recname+'=';
         for i:=0 to recst.symlist.count-1 do
           begin
@@ -122,14 +122,14 @@ implementation
                         dec(varindex);
                       end;
                     if (varindex<0) then
-                      internalerror(2009081805);
+                      InternalError(2009081805);
 
                     { variant at the same level as a previous one }
                     variantstarts.count:=varindex+1;
                     { No need to add this field, it has the same offset as the
                       previous one at this position.  }
                     if TFieldVarSym(variantstarts[varindex]).fieldoffset<>field.fieldoffset then
-                      internalerror(2009081601);
+                      InternalError(2009081601);
                     { close previous variant sub-part and start new one }
                     encodedstr:=encodedstr+'}{?=';
                   end
@@ -146,14 +146,14 @@ implementation
       end;
 
 
-    function objcaddencodedtype(def: TDef; recordinfostate: trecordinfostate; bpacked: boolean; var encodedstr: ansistring; out founderror: TDef): boolean;
+    function objcaddencodedtype(def: TDef; recordinfostate: TRecordInfoState; bpacked: boolean; var encodedstr: AnsiString; out founderror: TDef): boolean;
       var
-        recname: ansistring;
+        recname: AnsiString;
         recdef: TRecordDef;
         objdef: TObjectDef;
         len: aint;
         c: char;
-        newstate: trecordinfostate;
+        newstate: TRecordInfoState;
         addrpara: boolean;
       begin
         result:=true;
@@ -163,7 +163,7 @@ implementation
               case TStringDef(def).stringtype of
                 st_shortstring:
                   { include length byte }
-                  encodedstr:=encodedstr+'['+tostr(TStringDef(def).len+1)+'C]';
+                  encodedstr:=encodedstr+'['+ToStr(TStringDef(def).len+1)+'C]';
                 else
                   { While we could handle refcounted Pascal strings correctly
                     when such methods are called from Pascal code, things would
@@ -179,7 +179,7 @@ implementation
             begin
               if bpacked and
                  not is_void(def) then
-                encodedstr:=encodedstr+'b'+tostr(def.packedbitsize)
+                encodedstr:=encodedstr+'b'+ToStr(def.packedbitsize)
               else
                 begin
                   if is_void(def) then
@@ -200,7 +200,7 @@ implementation
                         8:
                           c:='q';
                         else
-                          internalerror(2009081502);
+                          InternalError(2009081502);
                       end;
                       if not is_signed(def) then
                         c:=upcase(c);
@@ -235,9 +235,9 @@ implementation
           floatdef :
             begin
               case TFloatDef(def).floattype of
-                s32real:
+                S32Real:
                   c:='f';
-                s64real:
+                S64Real:
                   c:='d';
                 else
                   begin
@@ -251,14 +251,14 @@ implementation
             result:=false;
           recorddef :
             begin
-              if assigned(def.typesym) then
+              if Assigned(def.typesym) then
                 recname:=def.typename
               else
                 recname:='?';
 
               if (recordinfostate<>ris_dontprint) then
                 begin
-                  if not encoderecst(recname,TAbstractRecordSymTable(TRecordDef(def).symtable),encodedstr,founderror) then
+                  if not encoderecst(recname,TAbstractRecordSymTable(TRecordDef(def).SymTable),encodedstr,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -273,7 +273,7 @@ implementation
               recdef:=TRecordDef(search_system_type('TVARDATA').typedef);
               if (recordinfostate<>ris_dontprint) then
                 begin
-                  if not encoderecst(recdef.typename,TAbstractRecordSymTable(recdef.symtable),encodedstr,founderror) then
+                  if not encoderecst(recdef.typename,TAbstractRecordSymTable(recdef.SymTable),encodedstr,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -295,10 +295,10 @@ implementation
                   if (newstate<>ris_dontprint) then
                     { anonymous (objc)class definitions do not exist }
                     begin
-                      if not encoderecst(objdef.objextname^,TAbstractRecordSymTable(objdef.symtable),encodedstr,founderror) then
+                      if not encoderecst(objdef.objextname^,TAbstractRecordSymTable(objdef.SymTable),encodedstr,founderror) then
                         { The fields of an Objective-C class should always be
                           encodeable.  }
-                        internalerror(2009081702);
+                        InternalError(2009081702);
                     end
                   else
                     encodedstr:=encodedstr+'{'+objdef.objextname^+'}'
@@ -311,7 +311,7 @@ implementation
                 classrefdefs the same as such forward-defined structs.  }
               else
                 begin
-                  if assigned(def.typesym) then
+                  if Assigned(def.typesym) then
                     recname:=def.typename
                   else
                     recname:='?';
@@ -329,7 +329,7 @@ implementation
                 encodedstr:=encodedstr+'{?=';
               { Encode the set itself as an array. Without an encompassing
                 record, these are always passed by reference in C.  }
-              encodedstr:=encodedstr+'['+tostr(def.size)+'C]';
+              encodedstr:=encodedstr+'['+ToStr(def.size)+'C]';
               if not addrpara then
                 encodedstr:=encodedstr+'}';
             end;
@@ -351,11 +351,11 @@ implementation
                       { convert from bits to bytes for bitpacked arrays }
                       len:=(len+7) div 8;
                       { and encode as plain array of bytes }
-                      encodedstr:=encodedstr+'['+tostr(len)+'C]';
+                      encodedstr:=encodedstr+'['+ToStr(len)+'C]';
                     end
                   else
                     begin
-                      encodedstr:=encodedstr+'['+tostr(len);
+                      encodedstr:=encodedstr+'['+ToStr(len);
                       { Embedded structured types in the array are printed
                         in full regardless of the current recordinfostate.  }
                       if not objcaddencodedtype(TArrayDef(def).elementdef,ris_initial,false,encodedstr,founderror) then
@@ -393,7 +393,7 @@ implementation
                     end;
                   if newstate<>ris_dontprint then
                     begin
-                      if not encoderecst(def.typename,TAbstractRecordSymTable(TObjectDef(def).symtable),encodedstr,founderror) then
+                      if not encoderecst(def.typename,TAbstractRecordSymTable(TObjectDef(def).SymTable),encodedstr,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -419,23 +419,23 @@ implementation
               odt_objcprotocol:
                 encodedstr:=encodedstr+'@';
               else
-                internalerror(2009081509);
+                InternalError(2009081509);
             end;
           undefineddef,
           errordef :
             result:=false;
           procdef :
             { must be done via objcencodemethod() }
-            internalerror(2009081511);
+            InternalError(2009081511);
         else
-          internalerror(2009150812);
+          InternalError(2009150812);
         end;
         if not result then
           founderror:=def;
       end;
 
 
-    function objctryencodetype(def: TDef; out encodedtype: ansistring; out founderror: TDef): boolean;
+    function objctryencodetype(def: TDef; out encodedtype: AnsiString; out founderror: TDef): boolean;
       begin
         result:=objcaddencodedtype(def,ris_initial,false,encodedtype,founderror);
       end;
@@ -445,13 +445,13 @@ implementation
                     ObjC type validity checking
 *******************************************************************}
 
-    function objcdochecktype(def: TDef; recordinfostate: trecordinfostate; out founderror: TDef): boolean; forward;
+    function objcdochecktype(def: TDef; recordinfostate: TRecordInfoState; out founderror: TDef): boolean; forward;
 
-    function checkrecsttype(recst: TAbstractRecordSymTable; recordinfostate: trecordinfostate; out founderror: TDef): boolean;
+    function checkrecsttype(recst: TAbstractRecordSymTable; recordinfostate: TRecordInfoState; out founderror: TDef): boolean;
       var
-        i: longint;
+        i: LongInt;
         field: TFieldVarSym;
-        newstate: trecordinfostate;
+        newstate: TRecordInfoState;
       begin
         result:=false;
         newstate:=recordinfostate;
@@ -475,11 +475,11 @@ implementation
       end;
 
 
-    function objcdochecktype(def: TDef; recordinfostate: trecordinfostate; out founderror: TDef): boolean;
+    function objcdochecktype(def: TDef; recordinfostate: TRecordInfoState; out founderror: TDef): boolean;
       var
         recdef: TRecordDef;
         objdef: TObjectDef;
-        newstate: trecordinfostate;
+        newstate: TRecordInfoState;
       begin
         result:=true;
         case def.typ of
@@ -516,8 +516,8 @@ implementation
           floatdef :
             begin
               case TFloatDef(def).floattype of
-                s32real,
-                s64real:
+                S32Real,
+                S64Real:
                   ;
                 else
                   result:=false;
@@ -529,7 +529,7 @@ implementation
             begin
               if (recordinfostate<>ris_dontprint) then
                 begin
-                  if not checkrecsttype(TAbstractRecordSymTable(TRecordDef(def).symtable),recordinfostate,founderror) then
+                  if not checkrecsttype(TAbstractRecordSymTable(TRecordDef(def).SymTable),recordinfostate,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -542,7 +542,7 @@ implementation
               recdef:=TRecordDef(search_system_type('TVARDATA').typedef);
               if (recordinfostate<>ris_dontprint) then
                 begin
-                  if not checkrecsttype(TAbstractRecordSymTable(recdef.symtable),recordinfostate,founderror) then
+                  if not checkrecsttype(TAbstractRecordSymTable(recdef.SymTable),recordinfostate,founderror) then
                     begin
                       result:=false;
                       { report the exact (nested) error definition }
@@ -560,7 +560,7 @@ implementation
                     newstate:=succ(newstate);
                   if (newstate<>ris_dontprint) then
                     begin
-                      if not checkrecsttype(TAbstractRecordSymTable(objdef.symtable),recordinfostate,founderror) then
+                      if not checkrecsttype(TAbstractRecordSymTable(objdef.SymTable),recordinfostate,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -612,7 +612,7 @@ implementation
                     end;
                   if newstate<>ris_dontprint then
                     begin
-                      if not checkrecsttype(TAbstractRecordSymTable(TObjectDef(def).symtable),newstate,founderror) then
+                      if not checkrecsttype(TAbstractRecordSymTable(TObjectDef(def).SymTable),newstate,founderror) then
                         begin
                           result:=false;
                           { report the exact (nested) error definition }
@@ -630,7 +630,7 @@ implementation
               odt_objcprotocol:
                 ;
               else
-                internalerror(2009081709);
+                InternalError(2009081709);
             end;
           undefineddef,
           errordef :
@@ -638,7 +638,7 @@ implementation
           procdef :
             result:=false;
         else
-          internalerror(2009170812);
+          InternalError(2009170812);
         end;
         if not result then
           founderror:=def;

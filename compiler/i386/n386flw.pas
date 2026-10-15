@@ -29,20 +29,20 @@ interface
     node,nflw,ncgflw,psub;
 
   type
-    ti386raisenode=class(tcgraisenode)
+    TI386RaiseNode=class(TCGRaiseNode)
       function pass_1 : TNode;override;
     end;
 
-    ti386onnode=class(tcgonnode)
+    TI386OnNode=class(TCGOnNode)
       procedure pass_generate_code;override;
     end;
 
-    ti386tryexceptnode=class(tcgtryexceptnode)
+    TI386TryExceptNode=class(TCGTryExceptNode)
       procedure pass_generate_code;override;
     end;
 
-    ti386tryfinallynode=class(tcgtryfinallynode)
-      finalizepi: tcgprocinfo;
+    TI386TryFinallyNode=class(TCGTryFinallyNode)
+      finalizepi: TCGProcInfo;
       constructor create(l,r:TNode);override;
       constructor create_implicit(l,r:TNode);override;
       function pass_1: TNode;override;
@@ -54,32 +54,32 @@ interface
 implementation
 
   uses
-    cutils,globtype,globals,verbose,systems,fmodule,
+    CUtils,GlobType,Globals,Verbose,Systems,FModule,
     nbas,ncal,nmem,nutils,
-    symconst,symbase,symtable,symsym,symdef,
+    symconst,SymBase,SymTable,SymSym,symdef,
     cgbase,cgobj,cgcpu,cgutils,tgobj,
     cpubase,htypechk,
     parabase,paramgr,pass_1,pass_2,ncgutil,cga,
-    aasmbase,aasmtai,aasmdata,aasmcpu,procinfo,cpupi,procdefutil;
+    aasmbase,aasmtai,AAsmData,aasmcpu,ProcInfo,cpupi,procdefutil;
 
   var
-    endexceptlabel: tasmlabel;
+    endexceptlabel: TAsmLabel;
 
 
 { ti386raisenode }
 
-function ti386raisenode.pass_1 : TNode;
+function TI386RaiseNode.pass_1 : TNode;
   var
-    statements : tstatementnode;
-    raisenode : tcallnode;
+    statements : TStatementNode;
+    raisenode : TCallNode;
   begin
     { difference from generic code is that address stack is not popped on reraise }
-    if (TargetInfo.system<>system_i386_win32) or assigned(left) then
+    if (TargetInfo.system<>system_i386_win32) or Assigned(left) then
       result:=inherited pass_1
     else
       begin
         result:=internalstatements(statements);
-        raisenode:=ccallnode.createintern('fpc_reraise',nil);
+        raisenode:=CCallNode.createintern('fpc_reraise',nil);
         include(raisenode.callnodeflags,cnf_call_never_returns);
         addstatement(statements,raisenode);
       end;
@@ -87,7 +87,7 @@ end;
 
 { ti386onnode }
 
-procedure ti386onnode.pass_generate_code;
+procedure TI386OnNode.pass_generate_code;
   var
     oldflowcontrol : TFlowControl;
     exceptvarsym : TLocalVarSym;
@@ -107,25 +107,25 @@ procedure ti386onnode.pass_generate_code;
     cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
     { Retrieve exception variable }
-    if assigned(excepTSymtable) then
+    if Assigned(excepTSymtable) then
       exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
     else
       exceptvarsym:=nil;
 
-    if assigned(exceptvarsym) then
+    if Assigned(exceptvarsym) then
       begin
         exceptvarsym.localloc.loc:=LOC_REFERENCE;
         exceptvarsym.localloc.size:=OS_ADDR;
-        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(pint),voidpointertype,exceptvarsym.localloc.reference);
+        tg.GetLocal(CurrentAsmData.CurrAsmList,sizeof(PInt),voidpointertype,exceptvarsym.localloc.reference);
         cg.a_load_reg_ref(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,exceptvarsym.localloc.reference);
       end;
     cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
 
-    if assigned(right) then
+    if Assigned(right) then
       SecondPass(right);
 
     { deallocate exception symbol }
-    if assigned(exceptvarsym) then
+    if Assigned(exceptvarsym) then
       begin
         tg.UngetLocal(CurrentAsmData.CurrAsmList,exceptvarsym.localloc.reference);
         exceptvarsym.localloc.loc:=LOC_INVALID;
@@ -138,26 +138,26 @@ procedure ti386onnode.pass_generate_code;
 
 { ti386tryfinallynode }
 
-function reset_regvars(var n: TNode; arg: pointer): foreachnoderesult;
+function reset_regvars(var n: TNode; arg: pointer): TForEachNodeResult;
   begin
     case n.nodetype of
       temprefn:
         make_not_regable(n,[]);
       calln:
-        include(tprocinfo(arg).flags,pi_do_call);
+        include(TProcInfo(arg).flags,pi_do_call);
       else ;
     end;
     result:=fen_true;
   end;
 
-function copy_parasize(var n: TNode; arg: pointer): foreachnoderesult;
+function copy_parasize(var n: TNode; arg: pointer): TForEachNodeResult;
   begin
     if n.nodetype=calln then
-        tcgprocinfo(arg).allocate_push_parasize(tcallnode(n).pushed_parasize);
+        TCGProcInfo(arg).allocate_push_parasize(TCallNode(n).pushed_parasize);
     result:=fen_true;
   end;
 
-constructor ti386tryfinallynode.create(l, r: TNode);
+constructor TI386TryFinallyNode.create(l, r: TNode);
   begin
     inherited create(l,r);
     if (TargetInfo.system<>system_i386_win32) or
@@ -168,7 +168,7 @@ constructor ti386tryfinallynode.create(l, r: TNode);
       (df_generic in CurrentProcInfo.procdef.defoptions)
       then
       exit;
-    finalizepi:=tcgprocinfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
     { Regvar optimization for symbols is suppressed when using exceptions, but
       temps may be still placed into registers. This must be fixed. }
     foreachnodestatic(r,@reset_regvars,finalizepi);
@@ -177,7 +177,7 @@ constructor ti386tryfinallynode.create(l, r: TNode);
     include(finalizepi.flags,pi_uses_exceptions);
   end;
 
-constructor ti386tryfinallynode.create_implicit(l, r: TNode);
+constructor TI386TryFinallyNode.create_implicit(l, r: TNode);
   begin
     inherited create_implicit(l, r);
     if (TargetInfo.system<>system_i386_win32) then
@@ -190,14 +190,14 @@ constructor ti386tryfinallynode.create_implicit(l, r: TNode);
     if df_generic in CurrentProcInfo.procdef.defoptions then
       InternalError(2013012501);
 
-    finalizepi:=tcgprocinfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
+    finalizepi:=TCGProcInfo(CurrentProcInfo.create_for_outlining('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype,r));
     include(finalizepi.flags,pi_has_assembler_block);
     include(finalizepi.flags,pi_do_call);
     include(finalizepi.flags,pi_uses_exceptions);
   end;
 
 
-function ti386tryfinallynode.pass_1: TNode;
+function TI386TryFinallyNode.pass_1: TNode;
   var
     selfsym: TParaVarSym;
   begin
@@ -216,14 +216,14 @@ function ti386tryfinallynode.pass_1: TNode;
       end;
   end;
 
-function ti386tryfinallynode.dogetcopy: TNode;
+function TI386TryFinallyNode.dogetcopy: TNode;
   var
-    n: ti386tryfinallynode;
+    n: TI386TryFinallyNode;
   begin
-    n:=ti386tryfinallynode(inherited dogetcopy);
+    n:=TI386TryFinallyNode(inherited dogetcopy);
     if TargetInfo.system=system_i386_win32 then
       begin
-        n.finalizepi:=tcgprocinfo(cprocinfo.create(finalizepi.parent));
+        n.finalizepi:=TCGProcInfo(CProcInfo.create(finalizepi.parent));
         n.finalizepi.force_nested;
         n.finalizepi.procdef:=create_outline_procdef('$fin$',CurrentProcInfo.procdef.struct,potype_exceptfilter,voidtype);
         n.finalizepi.entrypos:=finalizepi.entrypos;
@@ -232,28 +232,28 @@ function ti386tryfinallynode.dogetcopy: TNode;
         n.finalizepi.exitswitches:=finalizepi.exitswitches;
         n.finalizepi.flags:=finalizepi.flags;
         { node already transformed? }
-        if assigned(finalizepi.code) then
+        if Assigned(finalizepi.code) then
           begin
             n.finalizepi.code:=finalizepi.code.getcopy;
-            n.right:=ccallnode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
+            n.right:=CCallNode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
             FirstPass(n.right);
           end;
       end;
     result:=n;
   end;
 
-function ti386tryfinallynode.simplify(forinline: boolean): TNode;
+function TI386TryFinallyNode.simplify(forinline: boolean): TNode;
   begin
     result:=inherited simplify(forinline);
     if (TargetInfo.system<>system_i386_win32) then
       exit;
 
     { actually, this is not really the right place to do a node transformation like this }
-    if (result=nil) and assigned(finalizepi) and (not(assigned(finalizepi.code))) then
+    if (result=nil) and Assigned(finalizepi) and (not(Assigned(finalizepi.code))) then
       begin
         finalizepi.code:=right;
         foreachnodestatic(right,@copy_parasize,finalizepi);
-        right:=ccallnode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
+        right:=CCallNode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
         FirstPass(right);
         { For implicit frames, no actual code is available at this time,
           it is added later in assembler form. So store the nested procinfo
@@ -268,11 +268,11 @@ function ti386tryfinallynode.simplify(forinline: boolean): TNode;
 
 procedure emit_scope_start(handler,data: TAsmSymbol);
   var
-    href: treference;
-    hreg: tregister;
+    href: TReference;
+    hreg: TRegister;
   begin
     hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_ADDR);
-    reference_reset_base(href,hreg,0,ctempposinvalid,sizeof(pint),[]);
+    reference_reset_base(href,hreg,0,ctempposinvalid,sizeof(PInt),[]);
     href.segment:=NR_FS;
     emit_reg_reg(A_XOR,S_L,hreg,hreg);
     emit_sym(A_PUSH,S_L,data);
@@ -284,20 +284,20 @@ procedure emit_scope_start(handler,data: TAsmSymbol);
 
 procedure emit_scope_end;
   var
-    href: treference;
-    hreg,hreg2: tregister;
+    href: TReference;
+    hreg,hreg2: TRegister;
   begin
     hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_ADDR);
     hreg2:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_ADDR);
-    reference_reset_base(href,hreg,0,ctempposinvalid,sizeof(pint),[]);
+    reference_reset_base(href,hreg,0,ctempposinvalid,sizeof(PInt),[]);
     href.segment:=NR_FS;
     emit_reg_reg(A_XOR,S_L,hreg,hreg);
     emit_reg(A_POP,S_L,hreg2);
-    emit_const_reg(A_ADD,S_L,3*sizeof(pint),NR_ESP);
+    emit_const_reg(A_ADD,S_L,3*sizeof(PInt),NR_ESP);
     emit_reg_ref(A_MOV,S_L,hreg2,href);
   end;
 
-procedure ti386tryfinallynode.pass_generate_code;
+procedure TI386TryFinallyNode.pass_generate_code;
   var
     finallylabel,
     exceptlabel,
@@ -308,10 +308,10 @@ procedure ti386tryfinallynode.pass_generate_code;
     breakfinallylabel,
     oldCurrExitLabel,
     oldContinueLabel,
-    oldBreakLabel : tasmlabel;
+    oldBreakLabel : TAsmLabel;
     oldflowcontrol,tryflowcontrol : TFlowControl;
     is_safecall: boolean;
-    sym : tasmsymbol;
+    sym : TAsmSymbol;
   begin
     if (TargetInfo.system<>system_i386_win32) then
       begin
@@ -342,7 +342,7 @@ procedure ti386tryfinallynode.pass_generate_code;
     else
       CurrentAsmData.getjumplabel(exitfinallylabel);
     CurrentProcInfo.CurrExitLabel:=exitfinallylabel;
-    if assigned(CurrentProcInfo.CurrBreakLabel) then
+    if Assigned(CurrentProcInfo.CurrBreakLabel) then
       begin
         oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
         oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
@@ -385,7 +385,7 @@ procedure ti386tryfinallynode.pass_generate_code;
       end;
 
     { try code }
-    if assigned(left) then
+    if Assigned(left) then
       begin
         SecondPass(left);
         tryflowcontrol:=flowcontrol;
@@ -394,7 +394,7 @@ procedure ti386tryfinallynode.pass_generate_code;
       end;
 
     { don't generate line info for internal cleanup }
-    CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+    CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
     cg.a_label(CurrentAsmData.CurrAsmList,finallylabel);
     emit_scope_end;
@@ -409,12 +409,12 @@ procedure ti386tryfinallynode.pass_generate_code;
       end;
 
     { end cleanup }
-    CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+    CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
     { generate finally code as a separate procedure }
     { !!! this resets flowcontrol, how to check flow away? }
     if not implicitframe then
-      tcgprocinfo(CurrentProcInfo).generate_exceptfilter(finalizepi);
+      TCGProcInfo(CurrentProcInfo).generate_exceptfilter(finalizepi);
 
     flowcontrol:=[fc_inflowcontrol];
     { right is a call to finalizer procedure }
@@ -428,7 +428,7 @@ procedure ti386tryfinallynode.pass_generate_code;
       exit;
 
     { don't generate line info for internal cleanup }
-    CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoStart));
+    CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoStart));
 
     if not implicitframe then
       begin
@@ -457,10 +457,10 @@ procedure ti386tryfinallynode.pass_generate_code;
     cg.a_label(CurrentAsmData.CurrAsmList,endfinallylabel);
 
     { end cleanup }
-    CurrentAsmData.CurrAsmList.concat(tai_marker.create(mark_NoLineInfoEnd));
+    CurrentAsmData.CurrAsmList.concat(TAIMarker.create(mark_NoLineInfoEnd));
 
     CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-    if assigned(CurrentProcInfo.CurrBreakLabel) then
+    if Assigned(CurrentProcInfo.CurrBreakLabel) then
       begin
         CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
         CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
@@ -470,7 +470,7 @@ procedure ti386tryfinallynode.pass_generate_code;
 
 { ti386tryexceptnode }
 
-procedure ti386tryexceptnode.pass_generate_code;
+procedure TI386TryExceptNode.pass_generate_code;
   var
     exceptlabel,oldendexceptlabel,
     lastonlabel,
@@ -482,15 +482,15 @@ procedure ti386tryexceptnode.pass_generate_code;
     breaktrylabel,
     oldCurrExitLabel,
     oldContinueLabel,
-    oldBreakLabel : tasmlabel;
+    oldBreakLabel : TAsmLabel;
     onlabel,
-    filterlabel: tasmlabel;
+    filterlabel: TAsmLabel;
     oldflowcontrol,tryflowcontrol,
     exceptflowcontrol : TFlowControl;
     hnode : TNode;
-    hlist : tasmlist;
-    onnodecount : tai_const;
-    sym : tasmsymbol;
+    hlist : TAsmList;
+    onnodecount : TAIConst;
+    sym : TAsmSymbol;
   label
     errorexit;
   begin
@@ -521,7 +521,7 @@ procedure ti386tryexceptnode.pass_generate_code;
 
     { save the old labels for control flow statements }
     oldCurrExitLabel:=CurrentProcInfo.CurrExitLabel;
-    if assigned(CurrentProcInfo.CurrBreakLabel) then
+    if Assigned(CurrentProcInfo.CurrBreakLabel) then
       begin
         oldContinueLabel:=CurrentProcInfo.CurrContinueLabel;
         oldBreakLabel:=CurrentProcInfo.CurrBreakLabel;
@@ -530,7 +530,7 @@ procedure ti386tryexceptnode.pass_generate_code;
     { get new labels for the control flow statements }
     CurrentAsmData.getjumplabel(exittrylabel);
     CurrentAsmData.getjumplabel(exitexceptlabel);
-    if assigned(CurrentProcInfo.CurrBreakLabel) then
+    if Assigned(CurrentProcInfo.CurrBreakLabel) then
       begin
         CurrentAsmData.getjumplabel(breaktrylabel);
         CurrentAsmData.getjumplabel(continuetrylabel);
@@ -544,7 +544,7 @@ procedure ti386tryexceptnode.pass_generate_code;
     filterlabel:=nil;
 
     { start of scope }
-    if assigned(right) then
+    if Assigned(right) then
       begin
         CurrentAsmData.getaddrlabel(filterlabel);
         sym:=CurrentAsmData.RefAsmSymbol('__FPC_on_handler',AT_FUNCTION);
@@ -564,7 +564,7 @@ procedure ti386tryexceptnode.pass_generate_code;
 
     { set control flow labels for the try block }
     CurrentProcInfo.CurrExitLabel:=exittrylabel;
-    if assigned(oldBreakLabel) then
+    if Assigned(oldBreakLabel) then
       begin
         CurrentProcInfo.CurrContinueLabel:=continuetrylabel;
         CurrentProcInfo.CurrBreakLabel:=breaktrylabel;
@@ -604,7 +604,7 @@ procedure ti386tryexceptnode.pass_generate_code;
     { set control flow labels for the except block }
     { and the on statements                        }
     CurrentProcInfo.CurrExitLabel:=exitexceptlabel;
-    if assigned(oldBreakLabel) then
+    if Assigned(oldBreakLabel) then
       begin
         CurrentProcInfo.CurrContinueLabel:=continueexceptlabel;
         CurrentProcInfo.CurrBreakLabel:=breakexceptlabel;
@@ -612,44 +612,44 @@ procedure ti386tryexceptnode.pass_generate_code;
 
     flowcontrol:=[fc_inflowcontrol];
     { on statements }
-    if assigned(right) then
+    if Assigned(right) then
       begin
         { emit filter table to a temporary asmlist }
         hlist:=TAsmList.Create;
         new_section(hlist,sec_rodata,filterlabel.name,4);
         cg.a_label(hlist,filterlabel);
-        onnodecount:=tai_const.create_32bit(0);
+        onnodecount:=TAIConst.create_32bit(0);
         hlist.concat(onnodecount);
 
         hnode:=right;
-        while assigned(hnode) do
+        while Assigned(hnode) do
           begin
             if hnode.nodetype<>onn then
               InternalError(2011103101);
             CurrentAsmData.getjumplabel(onlabel);
-            sym:=CurrentAsmData.RefAsmSymbol(tonnode(hnode).excepttype.vmt_mangledname,AT_DATA,true);
-            hlist.concat(tai_const.create_sym(sym));
-            hlist.concat(tai_const.create_sym(onlabel));
+            sym:=CurrentAsmData.RefAsmSymbol(TOnNode(hnode).excepttype.vmt_mangledname,AT_DATA,true);
+            hlist.concat(TAIConst.create_sym(sym));
+            hlist.concat(TAIConst.create_sym(onlabel));
             CurrentModule.add_extern_asmsym(sym);
             cg.a_label(CurrentAsmData.CurrAsmList,onlabel);
             SecondPass(hnode);
             inc(onnodecount.value);
-            hnode:=tonnode(hnode).left;
+            hnode:=TOnNode(hnode).left;
           end;
         { add 'else' node to the filter list, too }
-        if assigned(t1) then
+        if Assigned(t1) then
           begin
-            hlist.concat(tai_const.create_32bit(-1));
-            hlist.concat(tai_const.create_sym(lastonlabel));
+            hlist.concat(TAIConst.create_32bit(-1));
+            hlist.concat(TAIConst.create_sym(lastonlabel));
             inc(onnodecount.value);
           end;
         { now move filter table to permanent list all at once }
-        CurrentProcInfo.aktlocaldata.concatlist(hlist);
+        CurrentProcInfo.aktlocaldata.ConcatList(hlist);
         hlist.free;
       end;
 
     cg.a_label(CurrentAsmData.CurrAsmList,lastonlabel);
-    if assigned(t1) then
+    if Assigned(t1) then
       begin
         { here we don't have to reset flowcontrol           }
         { the default and on flowcontrols are handled equal }
@@ -690,7 +690,7 @@ errorexit:
 
     { restore the control flow labels }
     CurrentProcInfo.CurrExitLabel:=oldCurrExitLabel;
-    if assigned(oldBreakLabel) then
+    if Assigned(oldBreakLabel) then
       begin
         CurrentProcInfo.CurrContinueLabel:=oldContinueLabel;
         CurrentProcInfo.CurrBreakLabel:=oldBreakLabel;
@@ -702,8 +702,8 @@ errorexit:
   end;
 
 initialization
-  craisenode:=ti386raisenode;
-  connode:=ti386onnode;
-  ctryexceptnode:=ti386tryexceptnode;
-  ctryfinallynode:=ti386tryfinallynode;
+  CRaiseNode:=TI386RaiseNode;
+  COnNode:=TI386OnNode;
+  CTryExceptNode:=TI386TryExceptNode;
+  CTryFinallyNode:=TI386TryFinallyNode;
 end.

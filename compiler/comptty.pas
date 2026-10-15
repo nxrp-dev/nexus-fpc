@@ -45,7 +45,7 @@ implementation
 {$endif}
 {$ifdef mswindows}
   uses
-   windows;
+   Windows;
 {$endif mswindows}
 
 var

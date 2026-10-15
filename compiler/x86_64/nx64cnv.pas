@@ -30,7 +30,7 @@ interface
       nx86cnv;
 
     type
-       tx8664typeconvnode = class(tx86typeconvnode)
+       TX8664TypeConvNode = class(TX86TypeConvNode)
          protected
          function first_nothing : TNode;override;
          { procedure second_int_to_int;override; }
@@ -60,16 +60,16 @@ interface
 implementation
 
     uses
-      verbose,globals,globtype,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      Verbose,Globals,GlobType,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       symconst,symdef,
       cgbase,cga,
       ncnv,
-      cpubase,cpuinfo,
+      cpubase,CPUInfo,
       cgutils,cgobj,hlcgobj,cgx86;
 
 
-    function tx8664typeconvnode.first_nothing : TNode;
+    function TX8664TypeConvNode.first_nothing : TNode;
       begin
         result:=nil;
         { If typecasting between a Single or Double and a record of equal size,
@@ -87,12 +87,12 @@ implementation
       end;
 
 
-    function tx8664typeconvnode.first_int_to_real : TNode;
+    function TX8664TypeConvNode.first_int_to_real : TNode;
       begin
         result:=nil;
         if use_vectorfpu(resultdef) and
            (TOrdDef(left.resultdef).ordtype=u32bit) and
-           not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) then
+           not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
             inserttypeconv(left,s64inttype);
             FirstPass(left);
@@ -104,20 +104,20 @@ implementation
       end;
 
 
-    procedure tx8664typeconvnode.second_int_to_real;
+    procedure TX8664TypeConvNode.second_int_to_real;
       var
-         href : treference;
-         l1,l2 : tasmlabel;
-         op : tasmop;
+         href : TReference;
+         l1,l2 : TAsmLabel;
+         op : TAsmOp;
       begin
-        if use_vectorfpu(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) then
+        if use_vectorfpu(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.FPUType]) then
           begin
             if is_double(resultdef) then
               op:=A_CVTSI2SD
             else if is_single(resultdef) then
               op:=A_CVTSI2SS
             else
-              internalerror(200506061);
+              InternalError(200506061);
 
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
@@ -140,47 +140,47 @@ implementation
                        begin
                          cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                          emit_const_reg(A_BT,S_Q,63,left.location.register);
-                         CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_Q,left.location.register,location.register));
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_Q,left.location.register,location.register));
                        end;
                      LOC_REFERENCE :
                        begin
                          href:=left.location.reference;
-                         tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                         TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
                          inc(href.offset,4);
                          cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                          emit_const_ref(A_BT,S_L,31,href);
                          dec(href.offset,4);
-                         CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_Q,href,location.register));
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_Q,href,location.register));
                        end;
                      else
-                       internalerror(200710181);
+                       InternalError(200710181);
                    end;
 
                    cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NC,l2);
                    cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
-                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,const_align(sizeof(pint)));
-                   CurrentAsmData.asmlists[al_typedconsts].concat(Tai_label.Create(l1));
+                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,Const_Align(sizeof(PInt)));
+                   CurrentAsmData.asmlists[al_typedconsts].concat(TAILabel.Create(l1));
                    reference_reset_symbol(href,l1,0,4,[]);
                    { simplify for PIC }
-                   tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
 
                    { I got these constant from a test program (FK) }
                    if is_double(resultdef) then
                      begin
                        { double (2^64) }
-                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit(0));
-                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($43f00000));
-                       tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
-                       CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSD,S_NO,href,location.register));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit(0));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($43f00000));
+                       TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSD,S_NO,href,location.register));
                      end
                    else if is_single(resultdef) then
                      begin
                        { single(2^64) }
-                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($5f800000));
-                       CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSS,S_NO,href,location.register));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(TAIConst.Create_32bit($5f800000));
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ADDSS,S_NO,href,location.register));
                      end
                    else
-                     internalerror(200506071);
+                     InternalError(200506071);
                    cg.a_label(CurrentAsmData.CurrAsmList,l2);
                 end
               else
@@ -193,5 +193,5 @@ implementation
 
 
 begin
-   ctypeconvnode:=tx8664typeconvnode;
+   CTypeConvNode:=TX8664TypeConvNode;
 end.

@@ -26,7 +26,7 @@ unit cstreams;
 interface
 
    uses
-     cutils;
+     CUtils;
 
 
 {****************************************************************************
@@ -56,7 +56,7 @@ interface
 
 var
 { Used for Error reporting instead of exceptions }
-  CStreamError : longint;
+  CStreamError : LongInt;
 
 type
 { Fake TComponent class, it isn't used any further }
@@ -67,18 +67,18 @@ type
 
   TCStream = class(TObject)
   private
-    function GetPosition: Longint; {$ifdef USEINLINE}inline;{$endif}
-    procedure SetPosition(Pos: Longint); {$ifdef USEINLINE}inline;{$endif}
-    function GetSize: Longint;
+    function GetPosition: LongInt; {$ifdef USEINLINE}inline;{$endif}
+    procedure SetPosition(Pos: LongInt); {$ifdef USEINLINE}inline;{$endif}
+    function GetSize: LongInt;
   protected
-    procedure SetSize(NewSize: Longint); virtual;
+    procedure SetSize(NewSize: LongInt); virtual;
   public
-    function Read(var Buffer; Count: Longint): Longint; virtual; abstract;
-    function Write(const Buffer; Count: Longint): Longint; virtual; abstract;
-    function Seek(Offset: Longint; Origin: Word): Longint; virtual; abstract;
-    procedure ReadBuffer(var Buffer; Count: Longint);
-    procedure WriteBuffer(const Buffer; Count: Longint);
-    function CopyFrom(Source: TCStream; Count: Longint): Longint;
+    function Read(var Buffer; Count: LongInt): LongInt; virtual; abstract;
+    function Write(const Buffer; Count: LongInt): LongInt; virtual; abstract;
+    function Seek(Offset: LongInt; Origin: Word): LongInt; virtual; abstract;
+    procedure ReadBuffer(var Buffer; Count: LongInt);
+    procedure WriteBuffer(const Buffer; Count: LongInt);
+    function CopyFrom(Source: TCStream; Count: LongInt): LongInt;
     function ReadComponent(Instance: TCComponent): TCComponent; {$ifdef USEINLINE}inline;{$endif}
     function ReadComponentRes(Instance: TCComponent): TCComponent; {$ifdef USEINLINE}inline;{$endif}
     procedure WriteComponent(Instance: TCComponent); {$ifdef USEINLINE}inline;{$endif}
@@ -92,12 +92,12 @@ type
     function ReadWord : Word; {$ifdef USEINLINE}inline;{$endif}
     function ReadDWord : Cardinal; {$ifdef USEINLINE}inline;{$endif}
     function ReadAnsiString : AnsiString;
-    procedure WriteByte(b : Byte); {$ifdef USEINLINE}inline;{$endif}
-    procedure WriteWord(w : Word); {$ifdef USEINLINE}inline;{$endif}
-    procedure WriteDWord(d : Cardinal); {$ifdef USEINLINE}inline;{$endif}
+    procedure WriteByte(B : Byte); {$ifdef USEINLINE}inline;{$endif}
+    procedure WriteWord(W : Word); {$ifdef USEINLINE}inline;{$endif}
+    procedure WriteDWord(D : Cardinal); {$ifdef USEINLINE}inline;{$endif}
     Procedure WriteAnsiString (const S : AnsiString);
-    property Position: Longint read GetPosition write SetPosition;
-    property Size: Longint read GetSize write SetSize;
+    property Position: LongInt read GetPosition write SetPosition;
+    property Size: LongInt read GetSize write SetSize;
   end;
 
 { TCCustomFileStream class }
@@ -107,8 +107,8 @@ type
     FFileName : AnsiString;
   public
     constructor Create(const AFileName: AnsiString; Mode: Word); virtual; abstract;
-    function EOF: boolean; virtual; abstract;
-    property FileName : AnsiString Read FFilename;
+    function EOF: Boolean; virtual; abstract;
+    property FileName : AnsiString Read FFileName;
   end;
 
 { TFileStream class }
@@ -117,14 +117,14 @@ type
   Private
     FHandle: File;
   protected
-    procedure SetSize(NewSize: Longint); override;
+    procedure SetSize(NewSize: LongInt); override;
   public
     constructor Create(const AFileName: AnsiString; Mode: Word); override;
     destructor Destroy; override;
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Write(const Buffer; Count: Longint): Longint; override;
-    function Seek(Offset: Longint; Origin: Word): Longint; override;
-    function EOF: boolean; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
+    function Seek(Offset: LongInt; Origin: Word): LongInt; override;
+    function EOF: Boolean; override;
   end;
 
   TCFileStreamClass = class of TCCustomFileStream;
@@ -151,12 +151,12 @@ type
   TCCustomMemoryStream = class(TCStream)
   private
     FMemory: Pointer;
-    FSize, FPosition: Longint;
+    FSize, FPosition: LongInt;
   protected
-    procedure SetPointer(Ptr: Pointer; ASize: Longint); {$ifdef USEINLINE}inline;{$endif}
+    procedure SetPointer(Ptr: Pointer; ASize: LongInt); {$ifdef USEINLINE}inline;{$endif}
   public
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Seek(Offset: Longint; Origin: Word): Longint; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Seek(Offset: LongInt; Origin: Word): LongInt; override;
     procedure SaveToStream(Stream: TCStream); {$ifdef USEINLINE}inline;{$endif}
     procedure SaveToFile(const FileName: string);
     property Memory: Pointer read FMemory;
@@ -166,18 +166,18 @@ type
 
   TCMemoryStream = class(TCCustomMemoryStream)
   private
-    FCapacity: Longint;
-    procedure SetCapacity(NewCapacity: Longint);
+    FCapacity: LongInt;
+    procedure SetCapacity(NewCapacity: LongInt);
   protected
-    function Realloc(var NewCapacity: Longint): Pointer; virtual;
-    property Capacity: Longint read FCapacity write SetCapacity;
+    function Realloc(var NewCapacity: LongInt): Pointer; virtual;
+    property Capacity: LongInt read FCapacity write SetCapacity;
   public
     destructor Destroy; override;
     procedure Clear;
     procedure LoadFromStream(Stream: TCStream);
     procedure LoadFromFile(const FileName: string);
-    procedure SetSize(NewSize: Longint); override;
-    function Write(const Buffer; Count: Longint): Longint; override;
+    procedure SetSize(NewSize: LongInt); override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
   end;
 
 
@@ -190,37 +190,37 @@ implementation
                                    TCStream
 *****************************************************************************}
 
-  function TCStream.GetPosition: Longint;
+  function TCStream.GetPosition: LongInt;
 
     begin
        Result:=Seek(0,soFromCurrent);
     end;
 
-  procedure TCStream.SetPosition(Pos: Longint);
+  procedure TCStream.SetPosition(Pos: LongInt);
 
     begin
-       Seek(pos,soFromBeginning);
+       Seek(Pos,soFromBeginning);
     end;
 
-  function TCStream.GetSize: Longint;
+  function TCStream.GetSize: LongInt;
 
     var
-       p : longint;
+       P : LongInt;
 
     begin
-       p:=GetPosition;
+       P:=GetPosition;
        GetSize:=Seek(0,soFromEnd);
-       Seek(p,soFromBeginning);
+       Seek(P,soFromBeginning);
     end;
 
-  procedure TCStream.SetSize(NewSize: Longint);
+  procedure TCStream.SetSize(NewSize: LongInt);
 
     begin
     // We do nothing. Pipe streams don't support this
     // As well as possible read-only streams !!
     end;
 
-  procedure TCStream.ReadBuffer(var Buffer; Count: Longint);
+  procedure TCStream.ReadBuffer(var Buffer; Count: LongInt);
 
     begin
        CStreamError:=0;
@@ -228,7 +228,7 @@ implementation
          CStreamError:=102;
     end;
 
-  procedure TCStream.WriteBuffer(const Buffer; Count: Longint);
+  procedure TCStream.WriteBuffer(const Buffer; Count: LongInt);
 
     begin
        CStreamError:=0;
@@ -236,27 +236,27 @@ implementation
          CStreamError:=103;
     end;
 
-  function TCStream.CopyFrom(Source: TCStream; Count: Longint): Longint;
+  function TCStream.CopyFrom(Source: TCStream; Count: LongInt): LongInt;
 
     var
-       i : longint;
-       buffer : array[0..1023] of byte;
+       I : LongInt;
+       Buffer : array[0..1023] of Byte;
 
     begin
        CStreamError:=0;
        Result:=0;
        while Count>0 do
          begin
-            if (Count>sizeof(buffer)) then
-              i:=sizeof(Buffer)
+            if (Count>SizeOf(Buffer)) then
+              I:=SizeOf(Buffer)
             else
-              i:=Count;
-            i:=Source.Read(buffer,i);
-            i:=Write(buffer,i);
-            dec(count,i);
-            inc(Result,i);
-            if i=0 then
-              exit;
+              I:=Count;
+            I:=Source.Read(Buffer,I);
+            I:=Write(Buffer,I);
+            Dec(Count,I);
+            Inc(Result,I);
+            if I=0 then
+              Exit;
          end;
     end;
 
@@ -301,36 +301,36 @@ implementation
   function TCStream.ReadByte : Byte;
 
     var
-       b : Byte;
+       B : Byte;
 
     begin
-       ReadBuffer(b,1);
-       ReadByte:=b;
+       ReadBuffer(B,1);
+       ReadByte:=B;
     end;
 
   function TCStream.ReadWord : Word;
 
     var
-       w : Word;
+       W : Word;
 
     begin
-       ReadBuffer(w,2);
-       ReadWord:=w;
+       ReadBuffer(W,2);
+       ReadWord:=W;
     end;
 
   function TCStream.ReadDWord : Cardinal;
 
     var
-       d : Cardinal;
+       D : Cardinal;
 
     begin
-       ReadBuffer(d,4);
-       ReadDWord:=d;
+       ReadBuffer(D,4);
+       ReadDWord:=D;
     end;
 
   Function TCStream.ReadAnsiString : AnsiString;
   Var
-    TheSize : Longint;
+    TheSize : LongInt;
     P : PByte ;
   begin
     Result:='';
@@ -341,13 +341,13 @@ implementation
      begin
        ReadBuffer (Pointer(Result)^,TheSize);
        P:=PByte(PtrInt(Result)+TheSize);
-       p^:=0;
+       P^:=0;
      end;
    end;
 
   Procedure TCStream.WriteAnsiString (const S : AnsiString);
 
-  Var L : Longint;
+  Var L : LongInt;
 
   begin
     L:=Length(S);
@@ -355,22 +355,22 @@ implementation
     WriteBuffer (Pointer(S)^,L);
   end;
 
-  procedure TCStream.WriteByte(b : Byte);
+  procedure TCStream.WriteByte(B : Byte);
 
     begin
-       WriteBuffer(b,1);
+       WriteBuffer(B,1);
     end;
 
-  procedure TCStream.WriteWord(w : Word);
+  procedure TCStream.WriteWord(W : Word);
 
     begin
-       WriteBuffer(w,2);
+       WriteBuffer(W,2);
     end;
 
-  procedure TCStream.WriteDWord(d : Cardinal);
+  procedure TCStream.WriteDWord(D : Cardinal);
 
     begin
-       WriteBuffer(d,4);
+       WriteBuffer(D,4);
     end;
 
 
@@ -380,27 +380,27 @@ implementation
 
 constructor TCFileStream.Create(const AFileName: AnsiString; Mode: Word);
 var
-  oldfilemode : byte;
+  OldFileMode : Byte;
 begin
   FFileName:=AFileName;
-  If Mode=fmcreate then
+  If Mode=fmCreate then
     begin
-      system.assign(FHandle,AFileName);
+      System.Assign(FHandle,AFileName);
       {$push} {$I-}
-       system.rewrite(FHandle,1);
+       System.Rewrite(FHandle,1);
       {$pop}
       CStreamError:=IOResult;
     end
   else
     begin
-      oldfilemode:=filemode;
-      filemode:=$40 or Mode;
-      system.assign(FHandle,AFileName);
+      OldFileMode:=FileMode;
+      FileMode:=$40 or Mode;
+      System.Assign(FHandle,AFileName);
       {$push} {$I-}
-       system.reset(FHandle,1);
+       System.Reset(FHandle,1);
       {$pop}
       CStreamError:=IOResult;
-      filemode:=oldfilemode;
+      FileMode:=OldFileMode;
     end;
 end;
 
@@ -414,7 +414,7 @@ begin
 end;
 
 
-function TCFileStream.Read(var Buffer; Count: Longint): Longint;
+function TCFileStream.Read(var Buffer; Count: LongInt): LongInt;
 begin
   CStreamError:=0;
   Result:=0;
@@ -423,7 +423,7 @@ begin
 end;
 
 
-function TCFileStream.Write(const Buffer; Count: Longint): Longint;
+function TCFileStream.Write(const Buffer; Count: LongInt): LongInt;
 begin
   CStreamError:=0;
   Result:=0;
@@ -432,7 +432,7 @@ begin
 end;
 
 
-Procedure TCFileStream.SetSize(NewSize: Longint);
+Procedure TCFileStream.SetSize(NewSize: LongInt);
 begin
   {$push} {$I-}
    System.Seek(FHandle,NewSize);
@@ -442,45 +442,45 @@ begin
 end;
 
 
-function TCFileStream.Seek(Offset: Longint; Origin: Word): Longint;
+function TCFileStream.Seek(Offset: LongInt; Origin: Word): LongInt;
 var
-  l : longint;
+  L : LongInt;
 begin
   {$push} {$I-}
    case Origin of
      soFromBeginning :
        begin
          System.Seek(FHandle,Offset);
-         l:=Offset;
+         L:=Offset;
        end;
      soFromCurrent :
        begin
-         l:=System.FilePos(FHandle);
-         inc(l,Offset);
-         System.Seek(FHandle,l);
+         L:=System.FilePos(FHandle);
+         Inc(L,Offset);
+         System.Seek(FHandle,L);
        end;
      soFromEnd :
        begin
-         l:=System.FileSize(FHandle);
-         dec(l,Offset);
-         if l<0 then
-          l:=0;
-         System.Seek(FHandle,l);
+         L:=System.FileSize(FHandle);
+         Dec(L,Offset);
+         if L<0 then
+          L:=0;
+         System.Seek(FHandle,L);
        end;
      else
        begin
          CStreamError:=103;
-         l:=Offset;
+         L:=Offset;
        end;
    end;
   {$pop}
   CStreamError:=IOResult;
-  Result:=l;
+  Result:=L;
 end;
 
-function TCFileStream.EOF: boolean;
+function TCFileStream.EOF: Boolean;
 begin
-  EOF:=system.eof(FHandle);
+  EOF:=System.EOF(FHandle);
 end;
 
 
@@ -491,7 +491,7 @@ end;
 
 constructor TCRangeStream.Create(ABase: TCStream; AOffset, ASize: LongInt);
 begin
-  if not assigned(ABase) then
+  if not Assigned(ABase) then
     CStreamError:=155
   else
     { we allow to be positioned directly at the end for appending }
@@ -502,7 +502,7 @@ begin
         FBase:=ABase;
         FOffset:=AOffset;
         if ASize<0 then
-          FSize:=maxLongint-FOffset
+          FSize:=MaxLongInt-FOffset
         else
           FSize:=ASize;
         FMaxOffset:=FOffset+FSize-1;
@@ -516,11 +516,11 @@ begin
   if Count>0 then
     begin
       FBase.Seek(FOffset+FPosition,soFromBeginning);
-      result:=FBase.Read(Buffer,Count);
+      Result:=FBase.Read(Buffer,Count);
     end
   else
-    result:=0;
-  FPosition:=FPosition+result;
+    Result:=0;
+  FPosition:=FPosition+Result;
 end;
 
 
@@ -530,11 +530,11 @@ begin
   if Count>0 then
     begin
       FBase.Seek(FOffset+FPosition,soFromBeginning);
-      result:=FBase.Write(Buffer,Count);
+      Result:=FBase.Write(Buffer,Count);
     end
   else
-    result:=0;
-  FPosition:=FPosition+result;
+    Result:=0;
+  FPosition:=FPosition+Result;
 end;
 
 
@@ -574,7 +574,7 @@ end;
 {*                             TCustomMemoryStream                          *}
 {****************************************************************************}
 
-procedure TCCustomMemoryStream.SetPointer(Ptr: Pointer; ASize: Longint);
+procedure TCCustomMemoryStream.SetPointer(Ptr: Pointer; ASize: LongInt);
 
 begin
   FMemory:=Ptr;
@@ -582,27 +582,27 @@ begin
 end;
 
 
-function TCCustomMemoryStream.Read(var Buffer; Count: Longint): Longint;
+function TCCustomMemoryStream.Read(var Buffer; Count: LongInt): LongInt;
 
 begin
   Result:=0;
-  If (FSize>0) and (FPosition<Fsize) then
+  If (FSize>0) and (FPosition<FSize) then
     begin
     Result:=FSize-FPosition;
     If Result>Count then Result:=Count;
     Move (Pointer(PtrUInt(FMemory)+PtrUInt(FPosition))^,Buffer,Result);
-    FPosition:=Fposition+Result;
+    FPosition:=FPosition+Result;
     end;
 end;
 
 
-function TCCustomMemoryStream.Seek(Offset: Longint; Origin: Word): Longint;
+function TCCustomMemoryStream.Seek(Offset: LongInt; Origin: Word): LongInt;
 
 begin
   Case Origin of
     soFromBeginning : FPosition:=Offset;
     soFromEnd       : FPosition:=FSize+Offset;
-    soFromCurrent   : FpoSition:=FPosition+Offset;
+    soFromCurrent   : FPosition:=FPosition+Offset;
   end;
   Result:=FPosition;
 end;
@@ -624,7 +624,7 @@ begin
     S:=CFileStreamClass.Create (FileName,fmCreate);
     SaveToStream(S);
   finally
-    S.free;
+    S.Free;
     S := nil;
   end;
 end;
@@ -637,29 +637,29 @@ end;
 
 Const TMSGrow = 4096; { Use 4k blocks. }
 
-procedure TCMemoryStream.SetCapacity(NewCapacity: Longint);
+procedure TCMemoryStream.SetCapacity(NewCapacity: LongInt);
 
 begin
-  SetPointer (Realloc(NewCapacity),Fsize);
+  SetPointer (Realloc(NewCapacity),FSize);
   FCapacity:=NewCapacity;
 end;
 
 
-function TCMemoryStream.Realloc(var NewCapacity: Longint): Pointer;
+function TCMemoryStream.Realloc(var NewCapacity: LongInt): Pointer;
 
-Var MoveSize : Longint;
+Var MoveSize : LongInt;
 
 begin
   CStreamError:=0;
   If NewCapacity>0 Then // round off to block size.
-    NewCapacity := (NewCapacity + (TMSGrow-1)) and not (TMSGROW-1);
+    NewCapacity := (NewCapacity + (TMSGrow-1)) and not (TMSGrow-1);
   // Only now check !
   If NewCapacity=FCapacity then
     Result:=FMemory
   else
     If NewCapacity=0 then
       begin
-        FreeMem (FMemory,Fcapacity);
+        FreeMem (FMemory,FCapacity);
         Result:=nil;
       end
     else
@@ -671,7 +671,7 @@ begin
         begin
         MoveSize:=FSize;
         If MoveSize>NewCapacity then MoveSize:=NewCapacity;
-        Move (Fmemory^,Result^,MoveSize);
+        Move (FMemory^,Result^,MoveSize);
         FreeMem (FMemory,FCapacity);
         end;
       end;
@@ -713,13 +713,13 @@ begin
     S:=CFileStreamClass.Create (FileName,fmOpenRead);
     LoadFromStream(S);
   finally
-    S.free;
+    S.Free;
     S := nil;
   end;
 end;
 
 
-procedure TCMemoryStream.SetSize(NewSize: Longint);
+procedure TCMemoryStream.SetSize(NewSize: LongInt);
 
 begin
   SetCapacity (NewSize);
@@ -729,24 +729,24 @@ begin
 end;
 
 
-function TCMemoryStream.Write(const Buffer; Count: Longint): Longint;
+function TCMemoryStream.Write(const Buffer; Count: LongInt): LongInt;
 
-Var NewPos : Longint;
+Var NewPos : LongInt;
 
 begin
   If Count=0 then
    begin
      Result:=0;
-     exit;
+     Exit;
    end;
   NewPos:=FPosition+Count;
-  If NewPos>Fsize then
+  If NewPos>FSize then
     begin
     IF NewPos>FCapacity then
       SetCapacity (NewPos);
-    FSize:=Newpos;
+    FSize:=NewPos;
     end;
-  System.Move (Buffer,Pointer(Ptruint(FMemory)+PtrUInt(FPosition))^,Count);
+  System.Move (Buffer,Pointer(PtrUInt(FMemory)+PtrUInt(FPosition))^,Count);
   FPosition:=NewPos;
   Result:=Count;
 end;

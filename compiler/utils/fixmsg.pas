@@ -1,11 +1,11 @@
 type
-  trtabrec=record
+  TRTabRec=record
     name : string[12];
-    idx  : longint;
+    idx  : LongInt;
   end;
 
 const
-  trtab : array[0..10] of trtabrec=(
+  trtab : array[0..10] of TRTabRec=(
     (name:'general';idx:1000),
     (name:'scan';idx:2000),
     (name:'parser';idx:3000),
@@ -22,9 +22,9 @@ const
 var
   t,f : text;
   s,hs : string;
-  i,j,k : longint;
+  i,j,k : LongInt;
 begin
-  assign(t,paramstr(1));
+  assign(t,ParamStr(1));
   reset(t);
   assign(f,'New.msg');
   rewrite(f);
@@ -59,7 +59,7 @@ begin
             break;
           end;
       end;
-     writeln(f,s);
+     WriteLn(f,s);
    end;
   close(f);
   close(t);

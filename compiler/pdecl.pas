@@ -26,13 +26,13 @@ unit pdecl;
 interface
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
     { common }
-      cclasses,
+      CClasses,
       { global }
-      globtype,
+      GlobType,
       { symtable }
-      symsym,symdef,symtype,
+      SymSym,symdef,symtype,
       { pass_1 }
       node;
 
@@ -48,32 +48,32 @@ interface
     procedure property_dec;
     procedure resourcestring_dec(out had_generic:boolean);
     procedure parse_rttiattributes(var rtti_attrs_def:TRTTIAttributeList);
-    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:tidstring;genericdef:TDef;generictypelist:tfphashobjectlist;out newtype:TTypeSym):TDef;
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;genericdef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
 
 implementation
 
     uses
        SysUtils,
        { common }
-       cutils,
+       CUtils,
        { global }
-       globals,tokens,verbose,widestr,constexp,
-       systems,aasmdata,fmodule,compinnr,
+       Globals,tokens,Verbose,WideStr,ConstExp,
+       Systems,AAsmData,FModule,compinnr,
        { symtable }
-       symconst,symbase,symcpu,symcreat,defutil,defcmp,symtable,symutil,
+       symconst,SymBase,symcpu,symcreat,defutil,defcmp,SymTable,symutil,
        { pass 1 }
        ninl,ncon,nobj,ngenutil,nld,nmem,ncal,pass_1,
        { parser }
-       scanner,
+       Scanner,
        pbase,pexpr,ptype,ptconst,pdecsub,pdecvar,pdecobj,pgenutil,pparautl,
        procdefutil,
        { cpu-information }
-       cpuinfo
+       CPUInfo
        ;
 
     function is_system_custom_attribute_descendant(def:TDef):boolean;
     begin
-      if not assigned(class_tcustomattribute) then
+      if not Assigned(class_tcustomattribute) then
         class_tcustomattribute:=TObjectDef(search_system_type('TCUSTOMATTRIBUTE').typedef);
       Result:=def_is_related(def,class_tcustomattribute);
     end;
@@ -83,15 +83,15 @@ implementation
         hp : TConstSym;
         p : TNode;
         ps : PConstSet;
-        pd : pbestreal;
-        pg : pguid;
+        pd : PBestReal;
+        pg : PGUID;
         sp : pchar;
-        pw : tcompilerwidestring;
+        pw : TCompilerWideString;
         storetokenpos : TFilePosInfo;
       begin
         readconstant:=nil;
         if orgname='' then
-         internalerror(9584582);
+         InternalError(9584582);
         hp:=nil;
         p:=comp_expr([ef_accept_equal]);
         nodetype:=p.nodetype;
@@ -101,65 +101,65 @@ implementation
            ordconstn:
              begin
                if p.resultdef.typ=pointerdef then
-                 hp:=cconstsym.create_ordptr(orgname,constpointer,tordconstnode(p).value.uvalue,p.resultdef)
+                 hp:=CConstSym.create_ordptr(orgname,constpointer,TOrdConstNode(p).value.uvalue,p.resultdef)
                else
-                 hp:=cconstsym.create_ord(orgname,constord,tordconstnode(p).value,p.resultdef);
+                 hp:=CConstSym.create_ord(orgname,constord,TOrdConstNode(p).value,p.resultdef);
              end;
            stringconstn:
              begin
                if is_wide_or_unicode_string(p.resultdef) then
                  begin
-                   initwidestring(pw);
-                   copywidestring(tstringconstnode(p).valuews,pw);
-                   hp:=cconstsym.create_wstring(orgname,constwstring,pw);
+                   InitWideString(pw);
+                   CopyWideString(TStringConstNode(p).valuews,pw);
+                   hp:=CConstSym.create_wstring(orgname,constwstring,pw);
                  end
                else
                  begin
-                   getmem(sp,tstringconstnode(p).len+1);
-                   sp[tstringconstnode(p).len]:=#0;
-                   if tstringconstnode(p).len>0 then
-                     move(tstringconstnode(p).valueas[0],sp^,tstringconstnode(p).len+1);
+                   GetMem(sp,TStringConstNode(p).len+1);
+                   sp[TStringConstNode(p).len]:=#0;
+                   if TStringConstNode(p).len>0 then
+                     move(TStringConstNode(p).valueas[0],sp^,TStringConstNode(p).len+1);
                    { if a non-default ansistring code page has been specified,
                      keep it }
                    if is_ansistring(p.resultdef) and
                       (TStringDef(p.resultdef).encoding<>0) then
-                     hp:=cconstsym.create_string(orgname,conststring,sp,tstringconstnode(p).len,p.resultdef)
+                     hp:=CConstSym.create_string(orgname,conststring,sp,TStringConstNode(p).len,p.resultdef)
                    else
-                     hp:=cconstsym.create_string(orgname,conststring,sp,tstringconstnode(p).len,nil);
+                     hp:=CConstSym.create_string(orgname,conststring,sp,TStringConstNode(p).len,nil);
                  end;
              end;
            realconstn :
              begin
                 new(pd);
-                pd^:=trealconstnode(p).value_real;
-                hp:=cconstsym.create_ptr(orgname,constreal,pd,p.resultdef);
+                pd^:=TRealConstNode(p).value_real;
+                hp:=CConstSym.create_ptr(orgname,constreal,pd,p.resultdef);
              end;
            setconstn :
              begin
                new(ps);
-               if assigned(tsetconstnode(p).value_set) then
-                 ps^:=tsetconstnode(p).value_set^
+               if Assigned(TSetConstNode(p).value_set) then
+                 ps^:=TSetConstNode(p).value_set^
                else
                  ps^:=[];
-               hp:=cconstsym.create_ptr(orgname,constset,ps,p.resultdef);
+               hp:=CConstSym.create_ptr(orgname,constset,ps,p.resultdef);
              end;
            pointerconstn :
              begin
-               hp:=cconstsym.create_ordptr(orgname,constpointer,tpointerconstnode(p).value,p.resultdef);
+               hp:=CConstSym.create_ordptr(orgname,constpointer,TPointerConstNode(p).value,p.resultdef);
              end;
            niln :
              begin
-               hp:=cconstsym.create_ord(orgname,constnil,0,p.resultdef);
+               hp:=CConstSym.create_ord(orgname,constnil,0,p.resultdef);
              end;
            typen :
              begin
                if is_interface(p.resultdef) then
                 begin
-                  if assigned(TObjectDef(p.resultdef).iidguid) then
+                  if Assigned(TObjectDef(p.resultdef).iidguid) then
                    begin
                      new(pg);
                      pg^:=TObjectDef(p.resultdef).iidguid^;
-                     hp:=cconstsym.create_ptr(orgname,constguid,pg,p.resultdef);
+                     hp:=CConstSym.create_ptr(orgname,constguid,pg,p.resultdef);
                    end
                   else
                    Message1(parser_e_interface_has_no_guid,TObjectDef(p.resultdef).objrealname^);
@@ -175,14 +175,14 @@ implementation
                  values (mostly 0, except for (Bit)SizeOf()) }
                if not parse_generic then
                  Message(parser_e_cannot_evaluate_expression_at_compile_time);
-               case tinlinenode(p).inlinenumber of
+               case TInlineNode(p).inlinenumber of
                  in_sizeof_x:
                    begin
-                     hp:=cconstsym.create_ord(orgname,constord,1,p.resultdef);
+                     hp:=CConstSym.create_ord(orgname,constord,1,p.resultdef);
                    end;
                  in_bitsizeof_x:
                    begin
-                     hp:=cconstsym.create_ord(orgname,constord,8,p.resultdef);
+                     hp:=CConstSym.create_ord(orgname,constord,8,p.resultdef);
                    end;
                  { add other cases here if necessary }
                  else
@@ -195,7 +195,7 @@ implementation
                  untyped so we need to pass a placeholder constant
                  instead of givng an error }
                if nf_generic_para in p.flags then
-                 hp:=cconstsym.create_ord(orgname,constnil,0,p.resultdef)
+                 hp:=CConstSym.create_ord(orgname,constnil,0,p.resultdef)
                else
                  Message(parser_e_illegal_expression);
              end;
@@ -223,9 +223,9 @@ implementation
          orgname : TIDString;
          hdef : TDef;
          sym : TSym;
-         flags : thccflags;
+         flags : THCCFlags;
          dummysymoptions : TSymOptions;
-         deprecatedmsg : pshortstring;
+         deprecatedmsg : PShortString;
          storetokenpos,filepos : TFilePosInfo;
          nodetype : TNodeType;
          old_block_type : TBlockType;
@@ -234,16 +234,16 @@ implementation
          expect_directive,
          skip_initialiser : boolean;
          varspez : TVarSpez;
-         asmtype : tasmlisttype;
+         asmtype : TAsmListType;
       begin
-         old_block_type:=block_type;
-         block_type:=bt_const;
+         old_block_type:=Block_Type;
+         Block_Type:=bt_const;
          had_generic:=false;
          first:=true;
          repeat
            orgname:=CurrentScanner.orgpattern;
            filepos:=CurrentTokenPos;
-           isgeneric:=not (m_delphi in CurrentSettings.modeswitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
+           isgeneric:=not (m_delphi in CurrentSettings.ModeSwitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
            consume(_ID);
            case CurrentScanner.token of
 
@@ -255,16 +255,16 @@ implementation
                    dummysymoptions:=[];
                    deprecatedmsg:=nil;
                    try_consume_hintdirective(dummysymoptions,deprecatedmsg);
-                   if assigned(sym) then
+                   if Assigned(sym) then
                      begin
                        sym.symoptions:=sym.symoptions+dummysymoptions;
                        sym.deprecatedmsg:=deprecatedmsg;
-                       sym.visibility:=symtablestack.top.currentvisibility;
-                       symtablestack.top.insertsym(sym);
+                       sym.visibility:=SymTableStack.top.currentvisibility;
+                       SymTableStack.top.insertsym(sym);
                        sym.RegisterSym;
                      end
                    else
-                     stringdispose(deprecatedmsg);
+                     StringDispose(deprecatedmsg);
                    consume(_SEMICOLON);
                 end;
 
@@ -277,14 +277,14 @@ implementation
                      end;
                    { set the blocktype first so a consume also supports a
                      caret, to support const s : ^string = nil }
-                   block_type:=bt_const_type;
+                   Block_Type:=bt_const_type;
                    consume(_COLON);
                    read_anon_type(hdef,false,nil);
-                   block_type:=bt_const;
+                   Block_Type:=bt_const;
                    { create symbol }
                    storetokenpos:=CurrentTokenPos;
                    CurrentTokenPos:=filepos;
-                   if not (cs_typed_const_writable in CurrentSettings.localswitches) then
+                   if not (cs_typed_const_writable in CurrentSettings.LocalSwitches) then
                      begin
                        varspez:=vs_const;
                        asmtype:=al_rotypedconsts;
@@ -297,20 +297,20 @@ implementation
                    { if we are dealing with structure const then we need to handle it as a
                      structure static variable: create a symbol in unit symtable and a reference
                      to it from the structure or linking will fail }
-                   if symtablestack.top.symtabletype in [recordsymtable,ObjectSymtable] then
+                   if SymTableStack.top.symtabletype in [recordsymtable,ObjectSymtable] then
                      begin
                        { note: we keep hdef so that we might at least read the
                                constant data correctly for error recovery }
                        check_allowed_for_var_or_const(hdef,false);
-                       sym:=cfieldvarsym.create(orgname,varspez,hdef,[]);
-                       symtablestack.top.insertsym(sym);
-                       sym:=make_field_static(symtablestack.top,TFieldVarSym(sym));
+                       sym:=CFieldVarSym.create(orgname,varspez,hdef,[]);
+                       SymTableStack.top.insertsym(sym);
+                       sym:=make_field_static(SymTableStack.top,TFieldVarSym(sym));
                      end
                    else
                      begin
-                       sym:=cstaticvarsym.create(orgname,varspez,hdef,[]);
-                       sym.visibility:=symtablestack.top.currentvisibility;
-                       symtablestack.top.insertsym(sym);
+                       sym:=CStaticVarSym.create(orgname,varspez,hdef,[]);
+                       sym.visibility:=SymTableStack.top.currentvisibility;
+                       SymTableStack.top.insertsym(sym);
                      end;
                    sym.RegisterSym;
                    CurrentTokenPos:=storetokenpos;
@@ -361,9 +361,9 @@ implementation
          until (CurrentScanner.token<>_ID) or
                (in_structure and
                 ((CurrentScanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
-                 ((m_final_fields in CurrentSettings.modeswitches) and
+                 ((m_final_fields in CurrentSettings.ModeSwitches) and
                   (CurrentScanner.idtoken=_FINAL))));
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
       end;
 
 
@@ -372,7 +372,7 @@ implementation
         labelsym : TLabelSym;
       begin
          consume(_LABEL);
-         if not(cs_support_goto in CurrentSettings.moduleswitches) then
+         if not(cs_support_goto in CurrentSettings.ModuleSwitches) then
            Message(sym_e_goto_and_label_not_supported);
          repeat
            if not(CurrentScanner.token in [_ID,_INTCONST]) then
@@ -380,29 +380,29 @@ implementation
            else
              begin
                 if CurrentScanner.token=_ID then
-                  labelsym:=clabelsym.create(CurrentScanner.orgpattern)
+                  labelsym:=CLabelSym.create(CurrentScanner.orgpattern)
                 else
                   begin
                     { strip leading 0's in iso mode }
-                    if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) then
+                    if (([m_iso,m_extpas]*CurrentSettings.ModeSwitches)<>[]) then
                       while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
                         delete(CurrentScanner.pattern,1,1);
-                    labelsym:=clabelsym.create(CurrentScanner.pattern);
+                    labelsym:=CLabelSym.create(CurrentScanner.pattern);
                   end;
 
-                symtablestack.top.insertsym(labelsym);
-                if m_non_local_goto in CurrentSettings.modeswitches then
+                SymTableStack.top.insertsym(labelsym);
+                if m_non_local_goto in CurrentSettings.ModeSwitches then
                   begin
-                    if symtablestack.top.symtabletype=localsymtable then
+                    if SymTableStack.top.symtabletype=localsymtable then
                       begin
-                        labelsym.jumpbuf:=clocalvarsym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
-                        symtablestack.top.insertsym(labelsym.jumpbuf);
+                        labelsym.jumpbuf:=CLocalVarSym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
+                        SymTableStack.top.insertsym(labelsym.jumpbuf);
                       end
                     else
                       begin
-                        labelsym.jumpbuf:=cstaticvarsym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
-                        symtablestack.top.insertsym(labelsym.jumpbuf);
-                        cnodeutils.insertbssdata(TStaticVarSym(labelsym.jumpbuf));
+                        labelsym.jumpbuf:=CStaticVarSym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
+                        SymTableStack.top.insertsym(labelsym.jumpbuf);
+                        CNodeUtils.insertbssdata(TStaticVarSym(labelsym.jumpbuf));
                       end;
                     include(labelsym.jumpbuf.symoptions,sp_internal);
                     { the buffer will be setup later, but avoid a hint }
@@ -415,17 +415,17 @@ implementation
          consume(_SEMICOLON);
       end;
 
-    function find_create_constructor(objdef:TObjectDef):tsymentry;
+    function find_create_constructor(objdef:TObjectDef):TSymEntry;
       begin
-         while assigned(objdef) do
+         while Assigned(objdef) do
            begin
-             result:=objdef.symtable.Find('CREATE');
-             if assigned(result) then
+             result:=objdef.SymTable.Find('CREATE');
+             if Assigned(result) then
                exit;
              objdef:=objdef.childof;
            end;
          // A class without a constructor called 'create'?!?
-         internalerror(2012111101);
+         InternalError(2012111101);
       end;
 
     procedure parse_rttiattributes(var rtti_attrs_def:TRTTIAttributeList);
@@ -437,10 +437,10 @@ implementation
           if try_to_consume(_LKLAMMER) then
             begin
               { we only want constants here }
-              old_block_type:=block_type;
-              block_type:=bt_const;
+              old_block_type:=Block_Type;
+              Block_Type:=bt_const;
               result:=parse_paras(false,false,_RKLAMMER);
-              block_type:=old_block_type;
+              Block_Type:=old_block_type;
               consume(_RKLAMMER);
             end
           else
@@ -449,11 +449,11 @@ implementation
 
       var
         p,paran,pcalln,ptmp : TNode;
-        ecnt : longint;
+        ecnt : LongInt;
         i,pcount : sizeint;
         paras : array of TNode;
         od : TObjectDef;
-        constrsym : tsymentry;
+        constrsym : TSymEntry;
         typesym : TTypeSym;
         parasok : boolean;
       begin
@@ -464,8 +464,8 @@ implementation
           p:=factor(false,[ef_type_only,ef_check_attr_suffix]);
           if p.nodetype=typen then
             begin
-              typesym:=TTypeSym(ttypenode(p).typesym);
-              od:=TObjectDef(ttypenode(p).typedef);
+              typesym:=TTypeSym(TTypeNode(p).typesym);
+              od:=TObjectDef(TTypeNode(p).typedef);
 
               { Check if the attribute class is related to TCustomAttribute }
               if not is_system_custom_attribute_descendant(od) then
@@ -480,14 +480,14 @@ implementation
               { Search the tprocdef of the constructor which has to be called. }
               constrsym:=find_create_constructor(od);
               if constrsym.typ<>procsym then
-                internalerror(2018102301);
+                InternalError(2018102301);
 
-              pcalln:=ccallnode.create(paran,TProcSym(constrsym),od.symtable,cloadvmtaddrnode.create(p),[cnf_no_convert_procvar],nil);
+              pcalln:=CCallNode.create(paran,TProcSym(constrsym),od.SymTable,CLoadVMTAddrNode.create(p),[cnf_no_convert_procvar],nil);
               p:=nil;
-              ecnt:=errorcount;
+              ecnt:=ErrorCount;
               TypeCheckPass(pcalln);
 
-              if (pcalln.nodetype=calln) and assigned(tcallnode(pcalln).procdefinition) and not CodeGenError then
+              if (pcalln.nodetype=calln) and Assigned(TCallNode(pcalln).procdefinition) and not CodeGenError then
                 begin
                   { TODO: once extended RTTI for methods is supported, reject a
                           constructor if it doesn't have extended RTTI enabled }
@@ -495,38 +495,38 @@ implementation
                   { collect the parameters of the call node as there might be
                     compile time type conversions (e.g. a Byte parameter being
                     passed a value > 255) }
-                  paran:=tcallnode(pcalln).left;
+                  paran:=TCallNode(pcalln).left;
 
                   { only count visible parameters (thankfully open arrays are not
                     supported, otherwise we'd need to handle those as well) }
                   parasok:=true;
                   paras:=nil;
-                  if assigned(paran) then
+                  if Assigned(paran) then
                     begin
                       ptmp:=paran;
                       pcount:=0;
-                      while assigned(ptmp) do
+                      while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in tcallparanode(ptmp).parasym.varoptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.varoptions) then
                             inc(pcount);
-                          ptmp:=tcallparanode(ptmp).right;
+                          ptmp:=TCallParaNode(ptmp).right;
                         end;
-                      setlength(paras,pcount);
+                      SetLength(paras,pcount);
                       ptmp:=paran;
                       pcount:=0;
-                      while assigned(ptmp) do
+                      while Assigned(ptmp) do
                         begin
-                          if not (vo_is_hidden_para in tcallparanode(ptmp).parasym.varoptions) then
+                          if not (vo_is_hidden_para in TCallParaNode(ptmp).parasym.varoptions) then
                             begin
-                              if not is_constnode(tcallparanode(ptmp).left) then
+                              if not is_constnode(TCallParaNode(ptmp).left) then
                                 begin
                                   parasok:=false;
-                                  messagepos(tcallparanode(ptmp).left.fileinfo,type_e_constant_expr_expected);
+                                  messagepos(TCallParaNode(ptmp).left.fileinfo,type_e_constant_expr_expected);
                                 end;
-                              paras[high(paras)-pcount]:=tcallparanode(ptmp).left.getcopy;
+                              paras[high(paras)-pcount]:=TCallParaNode(ptmp).left.getcopy;
                               inc(pcount);
                             end;
-                          ptmp:=tcallparanode(ptmp).right;
+                          ptmp:=TCallParaNode(ptmp).right;
                         end;
                     end;
 
@@ -534,9 +534,9 @@ implementation
                     begin
                       { Add attribute to attribute list which will be added
                         to the property which is defined next. }
-                      if not assigned(rtti_attrs_def) then
+                      if not Assigned(rtti_attrs_def) then
                         rtti_attrs_def:=TRTTIAttributeList.create;
-                      rtti_attrs_def.addattribute(typesym,tcallnode(pcalln).procdefinition,pcalln,paras);
+                      rtti_attrs_def.addattribute(typesym,TCallNode(pcalln).procdefinition,pcalln,paras);
                     end
                   else
                     begin
@@ -549,7 +549,7 @@ implementation
                 end
               else begin
                 { provide *some* error in case there hasn't been one }
-                if errorcount=ecnt then
+                if ErrorCount=ecnt then
                   message(parser_e_illegal_expression);
                 pcalln.free;
                 pcalln := nil;
@@ -570,7 +570,7 @@ implementation
       end;
 
 
-    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:tidstring;genericdef:TDef;generictypelist:tfphashobjectlist;out newtype:TTypeSym):TDef;
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:TIDString;genericdef:TDef;generictypelist:TFPHashObjectList;out newtype:TTypeSym):TDef;
       var
         wasforward : boolean;
         objecttype : TObjectTyp;
@@ -584,7 +584,7 @@ implementation
             (CurrentScanner.token=_OBJCCLASS) or
             (CurrentScanner.token=_OBJCPROTOCOL) or
             (CurrentScanner.token=_OBJCCATEGORY)) and
-           (assigned(TTypeSym(sym).typedef)) and
+           (Assigned(TTypeSym(sym).typedef)) and
            is_implicit_pointer_object_type(TTypeSym(sym).typedef) and
            (oo_is_forward in TObjectDef(TTypeSym(sym).typedef).objectoptions) then
          begin
@@ -594,7 +594,7 @@ implementation
              _CLASS :
                objecttype:=default_class_type;
              _INTERFACE :
-               case CurrentSettings.interfacetype of
+               case CurrentSettings.InterfaceType of
                  it_interfacecom:
                    objecttype:=odt_interfacecom;
                  it_interfacecorba:
@@ -610,10 +610,10 @@ implementation
              _OBJCPROTOCOL :
                objecttype:=odt_objcprotocol;
              else
-               internalerror(200811072);
+               InternalError(200811072);
            end;
            consume(CurrentScanner.token);
-           if assigned(genericdef) then
+           if Assigned(genericdef) then
              gendef:=TStoredDef(genericdef)
            else
              { determine the generic def in case we are in a nested type
@@ -647,14 +647,14 @@ implementation
     procedure pd_set_objc_related_result(def: tobject; para: pointer);
       var
         pd: TProcDef;
-        i, firstcamelend: longint;
+        i, firstcamelend: LongInt;
         inferresult: boolean;
       begin
         if TDef(def).typ<>procdef then
           exit;
         pd:=TProcDef(def);
         if not(po_msgstr in pd.procoptions) then
-          internalerror(2019082401);
+          InternalError(2019082401);
         firstcamelend:=length(pd.messageinf.str^);
         for i:=1 to length(pd.messageinf.str^) do
           if pd.messageinf.str^[i] in ['A'..'Z'] then
@@ -702,28 +702,28 @@ implementation
          defpos,storetokenpos : TFilePosInfo;
          old_block_type : TBlockType;
          old_checkforwarddefs: TFPObjectList;
-         flags : thccflags;
+         flags : THCCFlags;
          setdummysym,
          first,
          isgeneric,
          isunique,
          istyperenaming : boolean;
-         generictypelist : tfphashobjectlist;
-         localgenerictokenbuf : tdynamicarray;
+         generictypelist : TFPHashObjectList;
+         localgenerictokenbuf : TDynamicArray;
          p:TNode;
          gendef : TStoredDef;
          s : shortstring;
-         i : longint;
+         i : LongInt;
 {$ifdef x86}
          segment_register: string;
 {$endif x86}
       begin
-         old_block_type:=block_type;
+         old_block_type:=Block_Type;
          { save unit container of forward declarations -
            we can be inside nested class type block }
          old_checkforwarddefs:=CurrentModule.checkforwarddefs;
          CurrentModule.checkforwarddefs:=TFPObjectList.Create(false);
-         block_type:=bt_type;
+         Block_Type:=bt_type;
          hdef:=nil;
          first:=true;
          had_generic:=false;
@@ -736,13 +736,13 @@ implementation
            localgenerictokenbuf:=nil;
 
            { class attribute definitions? }
-           if m_prefixed_attributes in CurrentSettings.modeswitches then
+           if m_prefixed_attributes in CurrentSettings.ModeSwitches then
              while CurrentScanner.token=_LECKKLAMMER do
                parse_rttiattributes(rtti_attrs_def);
 
            { fpc generic declaration? }
            if first then
-             had_generic:=not(m_delphi in CurrentSettings.modeswitches) and try_to_consume(_GENERIC);
+             had_generic:=not(m_delphi in CurrentSettings.ModeSwitches) and try_to_consume(_GENERIC);
            isgeneric:=had_generic;
 
            typename:=CurrentScanner.pattern;
@@ -750,13 +750,13 @@ implementation
            consume(_ID);
 
            { delphi generic declaration? }
-           if (m_delphi in CurrentSettings.modeswitches) then
+           if (m_delphi in CurrentSettings.ModeSwitches) then
              isgeneric:=CurrentScanner.token=_LSHARPBRACKET;
 
            { Generic type declaration? }
            if isgeneric then
              begin
-               if assigned(CurrentGenericDef) then
+               if Assigned(CurrentGenericDef) then
                  Message(parser_f_no_generic_inside_generic);
 
                consume(_LSHARPBRACKET);
@@ -780,24 +780,24 @@ implementation
 
            { MacPas object model is more like Delphi's than like TP's, but }
            { uses the object keyword instead of class                      }
-           if (m_mac in CurrentSettings.modeswitches) and
+           if (m_mac in CurrentSettings.ModeSwitches) and
               (CurrentScanner.token = _OBJECT) then
              CurrentScanner.token := _CLASS;
 
            { Start recording a generic template }
-           if assigned(generictypelist) then
+           if Assigned(generictypelist) then
              begin
-               localgenerictokenbuf:=tdynamicarray.create(256);
+               localgenerictokenbuf:=TDynamicArray.create(256);
                CurrentScanner.startrecordtokens(localgenerictokenbuf);
              end;
 
            { is the type already defined? -- must be in the current symtable,
              not in a nested symtable or one higher up the stack -> don't
              use searchsym & friends! }
-           sym:=TSym(symtablestack.top.find(gentypename));
+           sym:=TSym(SymTableStack.top.find(gentypename));
            newtype:=nil;
            { found a symbol with this name? }
-           if assigned(sym) then
+           if Assigned(sym) then
             begin
               if (sym.typ=typesym) and
                  { this should not be a symbol that was created by a generic
@@ -811,7 +811,7 @@ implementation
                end;
             end;
            { no old type reused ? Then insert this new type }
-           if not assigned(newtype) then
+           if not Assigned(newtype) then
             begin
               if isgeneric then
                 begin
@@ -836,21 +836,21 @@ implementation
                     already exists and if not we need to insert a symbol with
                     the non-generic name (available in (org)typename) that is a
                     undefineddef, so that inline specializations can be used }
-                  sym:=TSym(symtablestack.top.Find(typename));
-                  if not assigned(sym) then
+                  sym:=TSym(SymTableStack.top.Find(typename));
+                  if not Assigned(sym) then
                     begin
-                      sym:=ctypesym.create(orgtypename,cundefineddef.create(true));
+                      sym:=CTypeSym.create(orgtypename,CUndefinedDef.create(true));
                       Include(sym.symoptions,sp_generic_dummy);
                       TTypeSym(sym).typedef.typesym:=sym;
-                      sym.visibility:=symtablestack.top.currentvisibility;
+                      sym.visibility:=SymTableStack.top.currentvisibility;
                       { add as dummy symbol before adding it to the symtable stack }
                       add_generic_dummysym(sym,typename);
-                      symtablestack.top.insertsym(sym);
+                      SymTableStack.top.insertsym(sym);
                       TTypeSym(sym).typedef.owner:=sym.owner;
                     end
                   else
                     { this is not allowed in non-Delphi modes }
-                    if not (m_delphi in CurrentSettings.modeswitches) then
+                    if not (m_delphi in CurrentSettings.ModeSwitches) then
                       Message1(sym_e_duplicate_id,genorgtypename)
                     else
                       begin
@@ -862,7 +862,7 @@ implementation
                 end
               else
                 begin
-                  if assigned(sym) and (sym.typ=typesym) and
+                  if Assigned(sym) and (sym.typ=typesym) and
                       (TTypeSym(sym).typedef.typ=undefineddef) and
                       (sp_generic_dummy in sym.symoptions) then
                     begin
@@ -880,20 +880,20 @@ implementation
                   gendef:=determine_generic_def(gentypename);
                 end;
               { insert a new type if we don't reuse an existing symbol }
-              if not assigned(newtype) then
+              if not Assigned(newtype) then
                 begin
-                  newtype:=ctypesym.create(genorgtypename,hdef);
-                  newtype.visibility:=symtablestack.top.currentvisibility;
-                  symtablestack.top.insertsym(newtype);
+                  newtype:=CTypeSym.create(genorgtypename,hdef);
+                  newtype.visibility:=SymTableStack.top.currentvisibility;
+                  SymTableStack.top.insertsym(newtype);
                 end;
               CurrentTokenPos:=defpos;
               CurrentTokenPos:=storetokenpos;
               { read the type definition }
               read_named_type(hdef,newtype,gendef,generictypelist,false,isunique);
               { update the definition of the type }
-              if assigned(hdef) then
+              if Assigned(hdef) then
                 begin
-                  if assigned(hdef.typesym) then
+                  if Assigned(hdef.typesym) then
                     begin
                       istyperenaming:=true;
                       include(newtype.symoptions,sp_explicitrename);
@@ -931,12 +931,12 @@ implementation
                                 end
                               else
                                 begin
-                                  if (tordconstnode(p).value<0) or (tordconstnode(p).value>65535) then
+                                  if (TOrdConstNode(p).value<0) or (TOrdConstNode(p).value>65535) then
                                     begin
                                       Message(parser_e_invalid_codepage);
-                                      tordconstnode(p).value:=0;
+                                      TOrdConstNode(p).value:=0;
                                     end;
-                                  TStringDef(hdef).encoding:=int64(tordconstnode(p).value);
+                                  TStringDef(hdef).encoding:=int64(TOrdConstNode(p).value);
                                 end;
                               p.free;
                               p := nil;
@@ -952,7 +952,7 @@ implementation
                       if hdef is TAbstractRecordDef then
                         TAbstractRecordDef(hdef).setobjrealname(newtype.RealName);
                     end;
-                  if not assigned(hdef.typesym) then
+                  if not Assigned(hdef.typesym) then
                     begin
                       hdef.typesym:=newtype;
                       if sp_generic_dummy in newtype.symoptions then
@@ -962,8 +962,8 @@ implementation
               { in non-Delphi modes we need a reference to the generic def
                 without the generic suffix, so it can be found easily when
                 parsing method implementations }
-              if isgeneric and assigned(sym) and
-                  not (m_delphi in CurrentSettings.modeswitches) and
+              if isgeneric and Assigned(sym) and
+                  not (m_delphi in CurrentSettings.ModeSwitches) and
                   (TTypeSym(sym).typedef.typ=undefineddef) then
                 begin
                   { don't free the undefineddef as the defids rely on the count
@@ -981,23 +981,23 @@ implementation
                   ) then
                 hdef.RegisterDef;
               { KAZ: handle TGUID declaration in system unit }
-              if (cs_compilesystem in CurrentSettings.moduleswitches) and
-                 assigned(hdef) and
+              if (cs_compilesystem in CurrentSettings.ModuleSwitches) and
+                 Assigned(hdef) and
                  (hdef.typ=recorddef) then
                 begin
-                  if not assigned(rec_tguid) and
+                  if not Assigned(rec_tguid) and
                      (gentypename='TGUID') and
                      (hdef.size=16) then
                     rec_tguid:=TRecordDef(hdef)
-                  else if not assigned(rec_jmp_buf) and
+                  else if not Assigned(rec_jmp_buf) and
                      (gentypename='JMP_BUF') then
                     rec_jmp_buf:=TRecordDef(hdef)
-                  else if not assigned(rec_exceptaddr) and
+                  else if not Assigned(rec_exceptaddr) and
                      (gentypename='TEXCEPTADDR') then
                     rec_exceptaddr:=TRecordDef(hdef);
                 end;
             end;
-           if assigned(hdef) then
+           if Assigned(hdef) then
             begin
               case hdef.typ of
                 pointerdef :
@@ -1009,7 +1009,7 @@ implementation
   {$if defined(i386)}
                     if try_to_consume(_FAR) then
                      begin
-                       tcpupointerdef(hdef).x86pointertyp:=x86pt_near_fs;
+                       TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_fs;
                        consume(_SEMICOLON);
                      end
                     else
@@ -1020,18 +1020,18 @@ implementation
                            begin
                              segment_register:=get_stringconst;
                              case UpCase(segment_register) of
-                               'CS': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_cs;
-                               'DS': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_ds;
-                               'SS': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_ss;
-                               'ES': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_es;
-                               'FS': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_fs;
-                               'GS': tcpupointerdef(hdef).x86pointertyp:=x86pt_near_gs;
+                               'CS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_cs;
+                               'DS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_ds;
+                               'SS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_ss;
+                               'ES': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_es;
+                               'FS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_fs;
+                               'GS': TCPUPointerDef(hdef).x86pointertyp:=x86pt_near_gs;
                                else
                                  Message(asmr_e_invalid_register);
                              end;
                            end
                          else
-                           tcpupointerdef(hdef).x86pointertyp:=x86pt_near;
+                           TCPUPointerDef(hdef).x86pointertyp:=x86pt_near;
                          consume(_SEMICOLON);
                        end;
 {$endif x86}
@@ -1054,7 +1054,7 @@ implementation
                        parse_proctype_directives(TProcVarDef(hdef));
                        if po_is_function_ref in TProcVarDef(hdef).procoptions then
                          begin
-                           if not (m_function_references in CurrentSettings.modeswitches) and
+                           if not (m_function_references in CurrentSettings.ModeSwitches) and
                                not (po_is_block in TProcVarDef(hdef).procoptions) then
                              messagepos(storetokenpos,sym_e_error_in_type_def)
                            else
@@ -1128,10 +1128,10 @@ implementation
                     { watch out for crashes in case of errors }
                     if is_objc_class_or_protocol(hdef) and
                        (not is_objccategory(hdef) or
-                        assigned(TObjectDef(hdef).childof)) then
+                        Assigned(TObjectDef(hdef).childof)) then
                       begin
                         TObjectDef(hdef).finish_objc_data;
-                        TObjectDef(hdef).symtable.DefList.ForEachCall(@pd_set_objc_related_result,nil);
+                        TObjectDef(hdef).SymTable.DefList.ForEachCall(@pd_set_objc_related_result,nil);
                       end;
 
                     if is_cppclass(hdef) then
@@ -1167,7 +1167,7 @@ implementation
              end;
 
            { Stop recording a generic template }
-           if assigned(generictypelist) then
+           if Assigned(generictypelist) then
              begin
                CurrentScanner.stoprecordtokens;
                TStoredDef(hdef).generictokenbuf:=localgenerictokenbuf;
@@ -1187,7 +1187,7 @@ implementation
                generictypelist := nil;
              end;
 
-           if not (m_delphi in CurrentSettings.modeswitches) and
+           if not (m_delphi in CurrentSettings.ModeSwitches) and
                (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC) then
              begin
                had_generic:=true;
@@ -1198,7 +1198,7 @@ implementation
            else
              had_generic:=false;
            first:=false;
-           if assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
+           if Assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
              Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).typesym.prettyname);
 
  {$ifdef DEBUG_NODE_XML}
@@ -1209,14 +1209,14 @@ implementation
          until ((CurrentScanner.token<>_ID) and (CurrentScanner.token<>_LECKKLAMMER)) or
                (in_structure and
                 ((CurrentScanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
-                 ((m_final_fields in CurrentSettings.modeswitches) and
+                 ((m_final_fields in CurrentSettings.ModeSwitches) and
                   (CurrentScanner.idtoken=_FINAL))));
          { resolve type block forward declarations and restore a unit
            container for them }
          resolve_forward_types;
          CurrentModule.checkforwarddefs.free;
          CurrentModule.checkforwarddefs:=old_checkforwarddefs;
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
       end;
 
 
@@ -1248,15 +1248,15 @@ implementation
          old_block_type: TBlockType;
       begin
          consume(_PROPERTY);
-         if not(symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) then
+         if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
            message(parser_e_property_only_sgr);
-         old_block_type:=block_type;
-         block_type:=bt_const;
+         old_block_type:=Block_Type;
+         Block_Type:=bt_const;
          repeat
            read_property_dec(false, nil);
            consume(_SEMICOLON);
          until CurrentScanner.token<>_ID;
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
       end;
 
 
@@ -1265,13 +1265,13 @@ implementation
     { the top symbol table of symtablestack                }
       begin
         consume(_THREADVAR);
-        if not(symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) then
+        if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
           message(parser_e_threadvars_only_sg);
-        if f_threading in features then
+        if f_threading in Features then
           read_var_decls([vd_threadvar,vd_check_generic],had_generic)
         else
           begin
-            Message1(parser_f_unsupported_feature,featurestr[f_threading]);
+            Message1(parser_f_unsupported_feature,FeatureStr[f_threading]);
             read_var_decls([vd_check_generic],had_generic);
           end;
       end;
@@ -1282,27 +1282,27 @@ implementation
          orgname : TIDString;
          p : TNode;
          dummysymoptions : TSymOptions;
-         deprecatedmsg : pshortstring;
+         deprecatedmsg : PShortString;
          storetokenpos,filepos : TFilePosInfo;
          old_block_type : TBlockType;
          sp : pchar;
          sym : TSym;
          first,
          isgeneric : boolean;
-         pw : tcompilerwidestring;
+         pw : TCompilerWideString;
 
       begin
          consume(_RESOURCESTRING);
-         if not(symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) then
+         if not(SymTableStack.top.symtabletype in [staticsymtable,GlobalSymTable]) then
            message(parser_e_resourcestring_only_sg);
          first:=true;
          had_generic:=false;
-         old_block_type:=block_type;
-         block_type:=bt_const;
+         old_block_type:=Block_Type;
+         Block_Type:=bt_const;
          repeat
            orgname:=CurrentScanner.orgpattern;
            filepos:=CurrentTokenPos;
-           isgeneric:=not (m_delphi in CurrentSettings.modeswitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
+           isgeneric:=not (m_delphi in CurrentSettings.ModeSwitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
            consume(_ID);
            case CurrentScanner.token of
              _EQ:
@@ -1319,43 +1319,43 @@ implementation
                              begin
                                 if not is_systemunit_unicode then
                                   begin
-                                  getmem(sp,2);
-                                  sp[0]:=chr(tordconstnode(p).value.svalue);
+                                  GetMem(sp,2);
+                                  sp[0]:=chr(TOrdConstNode(p).value.svalue);
                                   sp[1]:=#0;
-                                  sym:=cconstsym.create_string(orgname,constresourcestring,sp,1,nil);
+                                  sym:=CConstSym.create_string(orgname,constresourcestring,sp,1,nil);
                                   end
                                 else
                                   begin
-                                  initwidestring(pw);
-                                  setlengthwidestring(pw,1);
-                                  pw.data[0]:=tordconstnode(p).value.svalue;
-                                  sym:=cconstsym.create_wstring(orgname,constwresourcestring,pw);
+                                  InitWideString(pw);
+                                  SetLengthWideString(pw,1);
+                                  pw.data[0]:=TOrdConstNode(p).value.svalue;
+                                  sym:=CConstSym.create_wstring(orgname,constwresourcestring,pw);
                                   end;
                              end
                            else
                              Message(parser_e_illegal_expression);
                         end;
                       stringconstn:
-                        with Tstringconstnode(p) do
+                        with TStringConstNode(p) do
                           begin
                              if not is_systemunit_unicode  then
                                begin
                                if cst_type in [cst_widestring,cst_unicodestring] then
                                  changestringtype(getansistringdef);
-                               getmem(sp,len+1);
+                               GetMem(sp,len+1);
                                sp[len]:=#0;
                                if len>0 then
                                  move(valueas[0],sp^,len);
-                               sym:=cconstsym.create_string(orgname,constresourcestring,sp,len,nil);
+                               sym:=CConstSym.create_string(orgname,constresourcestring,sp,len,nil);
                                end
                              else
                                begin
                                // For unicode rtl, resourcestrings are unicodestrings
                                if cst_type in [cst_conststring,cst_longstring, cst_shortstring,cst_ansistring] then
                                  changestringtype(cunicodestringtype);
-                               initwidestring(pw);
-                               copywidestring(valuews,pw);
-                               sym:=cconstsym.create_wstring(orgname,constwresourcestring,pw);
+                               InitWideString(pw);
+                               CopyWideString(valuews,pw);
+                               sym:=CConstSym.create_wstring(orgname,constwresourcestring,pw);
                                end;
                           end;
                       else
@@ -1366,14 +1366,14 @@ implementation
                    dummysymoptions:=[];
                    deprecatedmsg:=nil;
                    try_consume_hintdirective(dummysymoptions,deprecatedmsg);
-                   if assigned(sym) then
+                   if Assigned(sym) then
                      begin
                        sym.symoptions:=sym.symoptions+dummysymoptions;
                        sym.deprecatedmsg:=deprecatedmsg;
-                       symtablestack.top.insertsym(sym);
+                       SymTableStack.top.insertsym(sym);
                      end
                    else
-                     stringdispose(deprecatedmsg);
+                     StringDispose(deprecatedmsg);
                    consume(_SEMICOLON);
                    p.free;
                    p := nil;
@@ -1390,7 +1390,7 @@ implementation
            end;
            first:=false;
          until CurrentScanner.token<>_ID;
-         block_type:=old_block_type;
+         Block_Type:=old_block_type;
       end;
 
 end.

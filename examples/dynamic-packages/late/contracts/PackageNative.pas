@@ -7,7 +7,7 @@ function NativePackageHandle(const Name: string): HMODULE;
 function PackageSymbol(Handle: HMODULE; const Name: string): Pointer;
 function PackageResourceExists(Handle: HMODULE; ID: Word): Boolean;
 implementation
-uses {$ifdef windows}Windows{$else}dl{$endif};
+uses {$ifdef windows}Windows{$else}DL{$endif};
 function PackageFileName(const Stem: string): string;
 begin
   Result:=Stem+'.nxpl';

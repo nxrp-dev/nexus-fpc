@@ -20,35 +20,35 @@ Unit CPUInfo;
 Interface
 
   uses
-    globtype;
+    GlobType;
 
 Type
 
 
 
    { possible supported processors for this target }
-   tcputype =
+   TCPUType =
       (cpu_none
       );
 
    { copied from arm/cpuinfo unit for arm specific
      TSettings field }
-   tinstructionset = (is_thumb,is_arm);
+   TInstructionSet = (is_thumb,is_arm);
 
 
 Type
-   tfputype =
+   TFPUType =
      (fpu_none,
       fpu_soft
      );
 
-   tcontrollertype =
+   TControllerType =
      (ct_none
      );
 
-   tcontrollerdatatype = record
-      controllertypestr, controllerunitstr: string[20];
-      cputype: tcputype; fputype: tfputype;
+   TControllerDataType = record
+      ControllerTypeStr, controllerunitstr: string[20];
+      CPUType: TCPUType; FPUType: TFPUType;
       flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
    end;
 
@@ -61,13 +61,13 @@ Const
      but we don't care about this warning }
    {$PUSH}
     {$WARN 3177 OFF}
-   embedded_controllers : array [tcontrollertype] of tcontrollerdatatype =
+   embedded_controllers : array [TControllerType] of TControllerDataType =
    (
-      (controllertypestr:''; controllerunitstr:''; cputype:cpu_none; fputype:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
+      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
    {$POP}
 
-   cputypestr : array[tcputype] of string[8] = ('none');
-   fputypestr : array[tfputype] of string[6] = ('none','soft');
+   CPUTypeStr : array[TCPUType] of string[8] = ('none');
+   FPUTypeStr : array[TFPUType] of string[6] = ('none','soft');
 
 Implementation
 

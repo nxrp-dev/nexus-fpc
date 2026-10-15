@@ -36,19 +36,19 @@ interface
       aasmtai;
 
     type
-      tai_cpu_abstract_sym = class(tai_cpu_abstract)
+      TAICPUAbstractSym = class(TAICPUAbstract)
       protected
-         procedure ppubuildderefimploper(var o:toper);override;
-         procedure ppuderefoper(var o:toper);override;
+         procedure ppubuildderefimploper(var o:TOper);override;
+         procedure ppuderefoper(var o:TOper);override;
       end;
 
 implementation
 
     uses
-      symsym;
+      SymSym;
 
 
-    procedure tai_cpu_abstract_sym.ppubuildderefimploper(var o:toper);
+    procedure TAICPUAbstractSym.ppubuildderefimploper(var o:TOper);
       begin
         case o.typ of
           top_local :
@@ -59,7 +59,7 @@ implementation
       end;
 
 
-    procedure tai_cpu_abstract_sym.ppuderefoper(var o:toper);
+    procedure TAICPUAbstractSym.ppuderefoper(var o:TOper);
       begin
         case o.typ of
           top_ref :

@@ -26,12 +26,12 @@ unit aasmcpu;
 interface
 
 uses
-  tpcompilerreal,
-  cclasses,globtype,globals,verbose,
-  aasmbase,aasmtai,aasmdata,aasmsym,
+  TPCompilerReal,
+  CClasses,GlobType,Globals,Verbose,
+  aasmbase,aasmtai,AAsmData,aasmsym,
   ogbase,
   symtype,
-  cpubase,cpuinfo,cgbase,cgutils;
+  cpubase,CPUInfo,cgbase,cgutils;
 
     const
       { "mov reg,reg" source operand number }
@@ -55,7 +55,7 @@ uses
                      $00000200;
 
       OT_SIZE_MASK = $000003FF;  { all the size attributes  }
-      OT_NON_SIZE  = longint(not OT_SIZE_MASK);
+      OT_NON_SIZE  = LongInt(not OT_SIZE_MASK);
 
       OT_SIGNED    = $00000100;  { the operand need to be signed -128-127 }
 
@@ -134,79 +134,79 @@ uses
       IF_FPA        = $00100000;
 
       { if the instruction can change in a second pass }
-      IF_PASS2  = longint($80000000);
+      IF_PASS2  = LongInt($80000000);
 
     type
-      TInsTabCache=array[TasmOp] of longint;
+      TInsTabCache=array[TAsmOp] of LongInt;
       PInsTabCache=^TInsTabCache;
 
-      tinsentry = record
-        opcode  : tasmop;
+      TInsEntry = record
+        opcode  : TAsmOp;
         ops     : byte;
-        optypes : array[0..3] of longint;
+        optypes : array[0..3] of LongInt;
         code    : array[0..maxinfolen] of char;
-        flags   : longint;
+        flags   : LongInt;
       end;
 
-      pinsentry=^tinsentry;
+      PInsEntry=^TInsEntry;
 
     var
       InsTabCache : PInsTabCache;
 
     type
-      taicpu = class(tai_cpu_abstract_sym)
+      TAICPU = class(TAICPUAbstractSym)
          oppostfix : TOpPostfix;
-         procedure loadshifterop(opidx:longint;const so:tshifterop);
-         procedure loadconditioncode(opidx: longint; const c: tasmcond);
-         procedure loadrealconst(opidx: longint; const _value: bestreal);
-         procedure loadregset(opidx: longint; _basereg: tregister; _nregs: byte; _regsetindex: byte = 255);
-         procedure loadindexedreg(opidx: longint; _indexedreg: tregister; _regindex: byte);
+         procedure loadshifterop(opidx:LongInt;const so:TShifterOp);
+         procedure loadconditioncode(opidx: LongInt; const c: TAsmCond);
+         procedure loadrealconst(opidx: LongInt; const _value: BestReal);
+         procedure loadregset(opidx: LongInt; _basereg: TRegister; _nregs: byte; _regsetindex: byte = 255);
+         procedure loadindexedreg(opidx: LongInt; _indexedreg: TRegister; _regindex: byte);
 
-         constructor op_none(op : tasmop);
+         constructor op_none(op : TAsmOp);
 
-         constructor op_reg(op : tasmop;_op1 : tregister);
-         constructor op_ref(op : tasmop;const _op1 : treference);
-         constructor op_const(op : tasmop;_op1 : longint);
+         constructor op_reg(op : TAsmOp;_op1 : TRegister);
+         constructor op_ref(op : TAsmOp;const _op1 : TReference);
+         constructor op_const(op : TAsmOp;_op1 : LongInt);
 
-         constructor op_reg_reg(op : tasmop;_op1,_op2 : tregister);
-         constructor op_reg_ref(op : tasmop;_op1 : tregister;const _op2 : treference);
-         constructor op_reg_cond(op: tasmop; _op1: tregister; _op2: tasmcond);
-         constructor op_reg_const(op:tasmop; _op1: tregister; _op2: aint);
-         constructor op_reg_const_shifterop(op : tasmop;_op1: tregister; _op2: aint;_op3 : tshifterop);
-         constructor op_reg_realconst(op: tasmop; _op1: tregister; _op2: bestreal);
+         constructor op_reg_reg(op : TAsmOp;_op1,_op2 : TRegister);
+         constructor op_reg_ref(op : TAsmOp;_op1 : TRegister;const _op2 : TReference);
+         constructor op_reg_cond(op: TAsmOp; _op1: TRegister; _op2: TAsmCond);
+         constructor op_reg_const(op:TAsmOp; _op1: TRegister; _op2: aint);
+         constructor op_reg_const_shifterop(op : TAsmOp;_op1: TRegister; _op2: aint;_op3 : TShifterOp);
+         constructor op_reg_realconst(op: TAsmOp; _op1: TRegister; _op2: BestReal);
 
-         constructor op_indexedreg_reg(op : tasmop;_op1: tregister; _op1index: byte; _op2 : tregister);
-         constructor op_reg_indexedreg(op : tasmop;_op1: tregister; _op2 : tregister; _op2index: byte);
+         constructor op_indexedreg_reg(op : TAsmOp;_op1: TRegister; _op1index: byte; _op2 : TRegister);
+         constructor op_reg_indexedreg(op : TAsmOp;_op1: TRegister; _op2 : TRegister; _op2index: byte);
 
-         constructor op_reg_reg_reg(op : tasmop;_op1,_op2,_op3 : tregister);
-         constructor op_reg_reg_reg_reg(op : tasmop;_op1,_op2,_op3,_op4 : tregister);
-         constructor op_reg_reg_const(op : tasmop;_op1,_op2 : tregister; _op3: aint);
-         constructor op_reg_reg_const_const(op : tasmop;_op1,_op2 : tregister; _op3, _op4: aint);
-         constructor op_reg_reg_const_shifterop(op : tasmop;_op1,_op2 : tregister; _op3: aint; const _op4 : tshifterop);
-         constructor op_reg_reg_sym_ofs(op : tasmop;_op1,_op2 : tregister; _op3: tasmsymbol;_op3ofs: longint);
-         constructor op_reg_reg_ref(op : tasmop;_op1,_op2 : tregister; const _op3: treference);
-         constructor op_reg_reg_shifterop(op : tasmop;_op1,_op2 : tregister;_op3 : tshifterop);
-         constructor op_reg_reg_reg_shifterop(op : tasmop;_op1,_op2,_op3 : tregister; const _op4 : tshifterop);
-         constructor op_reg_reg_reg_cond(op : tasmop;_op1,_op2,_op3 : tregister; const _op4: tasmcond);
-         constructor op_reg_const_ref(op: tasmop; _op1: tregister; _op2: aint; _op3: treference);
+         constructor op_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3 : TRegister);
+         constructor op_reg_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3,_op4 : TRegister);
+         constructor op_reg_reg_const(op : TAsmOp;_op1,_op2 : TRegister; _op3: aint);
+         constructor op_reg_reg_const_const(op : TAsmOp;_op1,_op2 : TRegister; _op3, _op4: aint);
+         constructor op_reg_reg_const_shifterop(op : TAsmOp;_op1,_op2 : TRegister; _op3: aint; const _op4 : TShifterOp);
+         constructor op_reg_reg_sym_ofs(op : TAsmOp;_op1,_op2 : TRegister; _op3: TAsmSymbol;_op3ofs: LongInt);
+         constructor op_reg_reg_ref(op : TAsmOp;_op1,_op2 : TRegister; const _op3: TReference);
+         constructor op_reg_reg_shifterop(op : TAsmOp;_op1,_op2 : TRegister;_op3 : TShifterOp);
+         constructor op_reg_reg_reg_shifterop(op : TAsmOp;_op1,_op2,_op3 : TRegister; const _op4 : TShifterOp);
+         constructor op_reg_reg_reg_cond(op : TAsmOp;_op1,_op2,_op3 : TRegister; const _op4: TAsmCond);
+         constructor op_reg_const_ref(op: TAsmOp; _op1: TRegister; _op2: aint; _op3: TReference);
 
-         constructor op_const_ref(op:tasmop; _op1: aint; _op2: treference);
+         constructor op_const_ref(op:TAsmOp; _op1: aint; _op2: TReference);
 
          { this is for Jmp instructions }
-         constructor op_cond_sym(op : tasmop;cond:TAsmCond;_op1 : tasmsymbol);
+         constructor op_cond_sym(op : TAsmOp;cond:TAsmCond;_op1 : TAsmSymbol);
 
          { ldN(r)/stN }
-         constructor op_regset_reg_ref(op: tasmop; basereg: tregister; nregs: byte; const ref: treference);
+         constructor op_regset_reg_ref(op: TAsmOp; basereg: TRegister; nregs: byte; const ref: TReference);
 
-         constructor op_sym(op : tasmop;_op1 : tasmsymbol);
-         constructor op_sym_ofs(op : tasmop;_op1 : tasmsymbol;_op1ofs:longint);
-         constructor op_reg_sym_ofs(op : tasmop;_op1 : tregister;_op2:tasmsymbol;_op2ofs : longint);
-         constructor op_sym_ofs_ref(op : tasmop;_op1 : tasmsymbol;_op1ofs:longint;const _op2 : treference);
+         constructor op_sym(op : TAsmOp;_op1 : TAsmSymbol);
+         constructor op_sym_ofs(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt);
+         constructor op_reg_sym_ofs(op : TAsmOp;_op1 : TRegister;_op2:TAsmSymbol;_op2ofs : LongInt);
+         constructor op_sym_ofs_ref(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
 
-         function is_same_reg_move(regtype: Tregistertype):boolean; override;
+         function is_same_reg_move(regtype: TRegisterType):boolean; override;
 
-         function spilling_get_operation_type(opnr: longint): topertype;override;
-         function spilling_get_operation_type_ref(opnr: longint; reg: tregister): topertype;override;
+         function spilling_get_operation_type(opnr: LongInt): TOperType;override;
+         function spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;override;
 
          { assembler }
       public
@@ -215,21 +215,21 @@ uses
          procedure ResetPass2;override;
          function  CheckIfValid:boolean;
          function GetString:string;
-         function  Pass1(objdata:TObjData):longint;override;
+         function  Pass1(objdata:TObjData):LongInt;override;
          procedure Pass2(objdata:TObjData);override;
       protected
-         procedure ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);override;
-         procedure ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);override;
-         procedure ppubuildderefimploper(var o:toper);override;
-         procedure ppuderefoper(var o:toper);override;
+         procedure ppuloadoper(ppufile:TCompilerPPUFile;var o:TOper);override;
+         procedure ppuwriteoper(ppufile:TCompilerPPUFile;const o:TOper);override;
+         procedure ppubuildderefimploper(var o:TOper);override;
+         procedure ppuderefoper(var o:TOper);override;
       end;
 
-      tai_align = class(tai_align_abstract)
+      TAIAlign = class(TAIAlignAbstract)
         { nothing to add }
       end;
 
     type
-      tsimplereftype =
+      TSimpleRefType =
          { valid reference }
         (sr_simple,
          { invalid reference, should not be generated by the code generator (but
@@ -239,15 +239,15 @@ uses
            must be simplified (also rejected in inline assembly) }
          sr_complex);
 
-    function simple_ref_type(op: tasmop; size:tcgsize; oppostfix: toppostfix; const ref: treference): tsimplereftype;
-    function can_be_shifter_operand(opc: tasmop; opnr: longint): boolean;
-    function valid_shifter_operand(opc: tasmop; useszr, usessp, is64bit: boolean; sm: tshiftmode; shiftimm: longint): boolean;
+    function simple_ref_type(op: TAsmOp; size:TCgSize; oppostfix: TOpPostfix; const ref: TReference): TSimpleRefType;
+    function can_be_shifter_operand(opc: TAsmOp; opnr: LongInt): boolean;
+    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; shiftimm: LongInt): boolean;
 
-    function spilling_create_load(const ref: treference; r: tregister): taicpu;
-    function spilling_create_store(r: tregister; const ref: treference): taicpu;
+    function spilling_create_load(const ref: TReference; r: TRegister): TAICPU;
+    function spilling_create_store(r: TRegister; const ref: TReference): TAICPU;
 
-    function setoppostfix(i : taicpu;pf : toppostfix) : taicpu;
-    function setcondition(i : taicpu;c : tasmcond) : taicpu;
+    function setoppostfix(i : TAICPU;pf : TOpPostfix) : TAICPU;
+    function setcondition(i : TAICPU;c : TAsmCond) : TAICPU;
 
     { inserts pc relative symbols at places where they are reachable
       and transforms special instructions to valid instruction encodings }
@@ -260,10 +260,10 @@ uses
 implementation
 
   uses
-    cutils,rgobj,itcpugas,aoptcpu;
+    CUtils,rgobj,itcpugas,aoptcpu;
 
 
-    procedure taicpu.loadshifterop(opidx:longint;const so:tshifterop);
+    procedure TAICPU.loadshifterop(opidx:LongInt;const so:TShifterOp);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -279,7 +279,7 @@ implementation
       end;
 
 
-    procedure taicpu.loadconditioncode(opidx: longint; const c: tasmcond);
+    procedure TAICPU.loadconditioncode(opidx: LongInt; const c: TAsmCond);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -294,7 +294,7 @@ implementation
       end;
 
 
-    procedure taicpu.loadrealconst(opidx:longint;const _value:bestreal);
+    procedure TAICPU.loadrealconst(opidx:LongInt;const _value:BestReal);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -307,7 +307,7 @@ implementation
       end;
 
 
-    procedure taicpu.loadregset(opidx: longint; _basereg: tregister; _nregs: byte; _regsetindex: byte = 255);
+    procedure TAICPU.loadregset(opidx: LongInt; _basereg: TRegister; _nregs: byte; _regsetindex: byte = 255);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -322,7 +322,7 @@ implementation
       end;
 
 
-    procedure taicpu.loadindexedreg(opidx: longint; _indexedreg: tregister; _regindex: byte);
+    procedure TAICPU.loadindexedreg(opidx: LongInt; _indexedreg: TRegister; _regindex: byte);
       begin
         allocate_oper(opidx+1);
         with oper[opidx]^ do
@@ -340,14 +340,14 @@ implementation
                                  taicpu Constructors
 *****************************************************************************}
 
-    constructor taicpu.op_none(op : tasmop);
+    constructor TAICPU.op_none(op : TAsmOp);
       begin
          inherited create(op);
       end;
 
 
     { for pld }
-    constructor taicpu.op_ref(op : tasmop;const _op1 : treference);
+    constructor TAICPU.op_ref(op : TAsmOp;const _op1 : TReference);
       begin
          inherited create(op);
          ops:=1;
@@ -355,7 +355,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg(op : tasmop;_op1 : tregister);
+    constructor TAICPU.op_reg(op : TAsmOp;_op1 : TRegister);
       begin
          inherited create(op);
          ops:=1;
@@ -363,7 +363,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_const(op : tasmop;_op1 : longint);
+    constructor TAICPU.op_const(op : TAsmOp;_op1 : LongInt);
       begin
          inherited create(op);
          ops:=1;
@@ -371,7 +371,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg(op : tasmop;_op1,_op2 : tregister);
+    constructor TAICPU.op_reg_reg(op : TAsmOp;_op1,_op2 : TRegister);
       begin
          inherited create(op);
          ops:=2;
@@ -380,7 +380,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_const(op:tasmop; _op1: tregister; _op2: aint);
+    constructor TAICPU.op_reg_const(op:TAsmOp; _op1: TRegister; _op2: aint);
       begin
          inherited create(op);
          ops:=2;
@@ -389,7 +389,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_const_shifterop(op: tasmop; _op1: tregister; _op2: aint; _op3: tshifterop);
+    constructor TAICPU.op_reg_const_shifterop(op: TAsmOp; _op1: TRegister; _op2: aint; _op3: TShifterOp);
       begin
         inherited create(op);
         ops:=3;
@@ -399,7 +399,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_ref(op : tasmop;_op1 : tregister;const _op2 : treference);
+    constructor TAICPU.op_reg_ref(op : TAsmOp;_op1 : TRegister;const _op2 : TReference);
       begin
          inherited create(op);
          ops:=2;
@@ -408,7 +408,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_cond(op: tasmop; _op1: tregister; _op2: tasmcond);
+    constructor TAICPU.op_reg_cond(op: TAsmOp; _op1: TRegister; _op2: TAsmCond);
       begin
         inherited create(op);
         ops:=2;
@@ -417,7 +417,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg_reg(op : tasmop;_op1,_op2,_op3 : tregister);
+    constructor TAICPU.op_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3 : TRegister);
       begin
          inherited create(op);
          ops:=3;
@@ -427,7 +427,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_reg_reg_reg(op : tasmop;_op1,_op2,_op3,_op4 : tregister);
+    constructor TAICPU.op_reg_reg_reg_reg(op : TAsmOp;_op1,_op2,_op3,_op4 : TRegister);
       begin
          inherited create(op);
          ops:=4;
@@ -438,7 +438,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_realconst(op : tasmop; _op1 : tregister; _op2 : bestreal);
+    constructor TAICPU.op_reg_realconst(op : TAsmOp; _op1 : TRegister; _op2 : BestReal);
       begin
          inherited create(op);
          ops:=2;
@@ -447,7 +447,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_indexedreg_reg(op: tasmop; _op1: tregister; _op1index: byte; _op2: tregister);
+    constructor TAICPU.op_indexedreg_reg(op: TAsmOp; _op1: TRegister; _op1index: byte; _op2: TRegister);
       begin
         inherited create(op);
         ops:=2;
@@ -456,7 +456,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_indexedreg(op: tasmop; _op1: tregister; _op2: tregister; _op2index: byte);
+    constructor TAICPU.op_reg_indexedreg(op: TAsmOp; _op1: TRegister; _op2: TRegister; _op2index: byte);
       begin
         inherited create(op);
         ops:=2;
@@ -465,7 +465,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_reg_const(op : tasmop;_op1,_op2 : tregister; _op3: aint);
+     constructor TAICPU.op_reg_reg_const(op : TAsmOp;_op1,_op2 : TRegister; _op3: aint);
        begin
          inherited create(op);
          ops:=3;
@@ -475,7 +475,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_reg_const_const(op: tasmop; _op1, _op2: tregister; _op3, _op4: aint);
+     constructor TAICPU.op_reg_reg_const_const(op: TAsmOp; _op1, _op2: TRegister; _op3, _op4: aint);
        begin
          inherited create(op);
          ops:=4;
@@ -486,7 +486,7 @@ implementation
        end;
 
 
-     constructor taicpu.op_reg_reg_const_shifterop(op: tasmop; _op1, _op2: tregister; _op3: aint; const _op4: tshifterop);
+     constructor TAICPU.op_reg_reg_const_shifterop(op: TAsmOp; _op1, _op2: TRegister; _op3: aint; const _op4: TShifterOp);
        begin
          inherited create(op);
          ops:=4;
@@ -497,7 +497,7 @@ implementation
        end;
 
 
-     constructor taicpu.op_reg_reg_sym_ofs(op : tasmop;_op1,_op2 : tregister; _op3: tasmsymbol;_op3ofs: longint);
+     constructor TAICPU.op_reg_reg_sym_ofs(op : TAsmOp;_op1,_op2 : TRegister; _op3: TAsmSymbol;_op3ofs: LongInt);
        begin
          inherited create(op);
          ops:=3;
@@ -507,7 +507,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_reg_ref(op : tasmop;_op1,_op2 : tregister; const _op3: treference);
+     constructor TAICPU.op_reg_reg_ref(op : TAsmOp;_op1,_op2 : TRegister; const _op3: TReference);
        begin
          inherited create(op);
          ops:=3;
@@ -517,7 +517,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_reg_shifterop(op : tasmop;_op1,_op2 : tregister;_op3 : tshifterop);
+     constructor TAICPU.op_reg_reg_shifterop(op : TAsmOp;_op1,_op2 : TRegister;_op3 : TShifterOp);
       begin
          inherited create(op);
          ops:=3;
@@ -527,7 +527,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_reg_reg_shifterop(op : tasmop;_op1,_op2,_op3 : tregister; const _op4 : tshifterop);
+     constructor TAICPU.op_reg_reg_reg_shifterop(op : TAsmOp;_op1,_op2,_op3 : TRegister; const _op4 : TShifterOp);
       begin
          inherited create(op);
          ops:=4;
@@ -537,7 +537,7 @@ implementation
          loadshifterop(3,_op4);
       end;
 
-     constructor taicpu.op_reg_reg_reg_cond(op: tasmop; _op1, _op2, _op3: tregister; const _op4: tasmcond);
+     constructor TAICPU.op_reg_reg_reg_cond(op: TAsmOp; _op1, _op2, _op3: TRegister; const _op4: TAsmCond);
        begin
          inherited create(op);
          ops:=4;
@@ -548,7 +548,7 @@ implementation
        end;
 
 
-     constructor taicpu.op_const_ref(op : tasmop; _op1 : aint; _op2 : treference);
+     constructor TAICPU.op_const_ref(op : TAsmOp; _op1 : aint; _op2 : TReference);
       begin
          inherited create(op);
          ops:=2;
@@ -557,7 +557,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_cond_sym(op : tasmop;cond:TAsmCond;_op1 : tasmsymbol);
+    constructor TAICPU.op_cond_sym(op : TAsmOp;cond:TAsmCond;_op1 : TAsmSymbol);
       begin
          inherited create(op);
          condition:=cond;
@@ -566,7 +566,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_regset_reg_ref(op: tasmop; basereg: tregister; nregs: byte; const ref: treference);
+    constructor TAICPU.op_regset_reg_ref(op: TAsmOp; basereg: TRegister; nregs: byte; const ref: TReference);
       begin
         inherited create(op);
         ops:=2;
@@ -575,7 +575,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym(op : tasmop;_op1 : tasmsymbol);
+    constructor TAICPU.op_sym(op : TAsmOp;_op1 : TAsmSymbol);
       begin
          inherited create(op);
          ops:=1;
@@ -583,7 +583,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym_ofs(op : tasmop;_op1 : tasmsymbol;_op1ofs:longint);
+    constructor TAICPU.op_sym_ofs(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt);
       begin
          inherited create(op);
          ops:=1;
@@ -591,7 +591,7 @@ implementation
       end;
 
 
-     constructor taicpu.op_reg_sym_ofs(op : tasmop;_op1 : tregister;_op2:tasmsymbol;_op2ofs : longint);
+     constructor TAICPU.op_reg_sym_ofs(op : TAsmOp;_op1 : TRegister;_op2:TAsmSymbol;_op2ofs : LongInt);
       begin
          inherited create(op);
          ops:=2;
@@ -600,7 +600,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_sym_ofs_ref(op : tasmop;_op1 : tasmsymbol;_op1ofs:longint;const _op2 : treference);
+    constructor TAICPU.op_sym_ofs_ref(op : TAsmOp;_op1 : TAsmSymbol;_op1ofs:LongInt;const _op2 : TReference);
       begin
          inherited create(op);
          ops:=2;
@@ -609,7 +609,7 @@ implementation
       end;
 
 
-    constructor taicpu.op_reg_const_ref(op : tasmop;_op1 : tregister;_op2 : aint;_op3 : treference);
+    constructor TAICPU.op_reg_const_ref(op : TAsmOp;_op1 : TRegister;_op2 : aint;_op3 : TReference);
       begin
          inherited create(op);
          ops:=3;
@@ -619,7 +619,7 @@ implementation
       end;
 
 
-    function taicpu.is_same_reg_move(regtype: Tregistertype):boolean;
+    function TAICPU.is_same_reg_move(regtype: TRegisterType):boolean;
       begin
         { allow the register allocator to remove unnecessary moves }
         result:=(
@@ -635,7 +635,7 @@ implementation
       end;
 
 
-    function spilling_create_op(op: tasmop; const ref: treference; r: tregister): taicpu;
+    function spilling_create_op(op: TAsmOp; const ref: TReference; r: TRegister): TAICPU;
       const
         { invalid sizes for aarch64 are 0 }
         subreg2bytesize: array[TSubRegister] of byte =
@@ -645,26 +645,26 @@ implementation
       begin
         scalefactor:=subreg2bytesize[getsubreg(r)];
         if scalefactor=0 then
-          internalerror(2014120301);
+          InternalError(2014120301);
         if (ref.offset>4095*scalefactor) or
            ((ref.offset>255) and
             ((ref.offset mod scalefactor)<>0)) or
            (ref.offset<-256) then
-          internalerror(2014120302);
+          InternalError(2014120302);
         case getregtype(r) of
           R_INTREGISTER,
           R_MMREGISTER:
-            result:=taicpu.op_reg_ref(op,r,ref);
+            result:=TAICPU.op_reg_ref(op,r,ref);
           else
-            internalerror(2004010407);
+            InternalError(2004010407);
         end;
       end;
 
 
-    function is_valid_load_symbol(op: tasmop; oppostfix: toppostfix; const ref: treference): tsimplereftype;
+    function is_valid_load_symbol(op: TAsmOp; oppostfix: TOpPostfix; const ref: TReference): TSimpleRefType;
       begin
         result:=sr_complex;
-        if not assigned(ref.symboldata) and
+        if not Assigned(ref.symboldata) and
            not(ref.refaddr in [addr_pic,addr_gotpageoffset,addr_gotpage,addr_pageoffset,addr_page]) then
           exit;
         { can't use pre-/post-indexed mode here (makes no sense either) }
@@ -674,8 +674,8 @@ implementation
         if (ref.refaddr=addr_pic) and
            (not (op in [A_LDR,A_B,A_BL,A_ADR]) or
             not(oppostfix in [PF_NONE,PF_W,PF_SW]) or
-            (not assigned(ref.symbol) and
-             not assigned(ref.symboldata))) then
+            (not Assigned(ref.symbol) and
+             not Assigned(ref.symboldata))) then
           exit;
         { if this is a (got) page offset load, we must have a base register and a
           symbol (except if we have an ADD with a non-got page offset load) }
@@ -687,7 +687,7 @@ implementation
                  (ref.refaddr=addr_gotpageoffset)
                ) and
                (
-                 not assigned(ref.symbol) or
+                 not Assigned(ref.symbol) or
                  (ref.base=NR_NO)
                )
              ) or
@@ -696,7 +696,7 @@ implementation
                  (op=A_ADD) and
                  (ref.refaddr=addr_pageoffset)
                ) and
-               not assigned(ref.symbol) and
+               not Assigned(ref.symbol) and
                (ref.base=NR_NO)
              ) or
             (ref.index<>NR_NO) or
@@ -719,9 +719,9 @@ implementation
       end;
 
 
-    function simple_ref_type(op: tasmop; size:tcgsize; oppostfix: toppostfix; const ref: treference): tsimplereftype;
+    function simple_ref_type(op: TAsmOp; size:TCgSize; oppostfix: TOpPostfix; const ref: TReference): TSimpleRefType;
       var
-        accesssize: longint;
+        accesssize: LongInt;
       begin
         result:=sr_internal_illegal;
         { post-indexed is only allowed for vector and immediate loads/stores }
@@ -752,8 +752,8 @@ implementation
           end;
 
         { LDR literal or GOT entry: 32 or 64 bit, label }
-        if assigned(ref.symboldata) or
-           assigned(ref.symbol) then
+        if Assigned(ref.symboldata) or
+           Assigned(ref.symbol) then
           begin
             { we generate these kind of references internally; at least for now,
               they should never end up here with an extra base or offset or so }
@@ -936,7 +936,7 @@ implementation
       end;
 
 
-    function can_be_shifter_operand(opc: tasmop; opnr: longint): boolean;
+    function can_be_shifter_operand(opc: TAsmOp; opnr: LongInt): boolean;
       begin
         case opc of
           A_ADD,
@@ -963,7 +963,7 @@ implementation
       end;
 
 
-    function valid_shifter_operand(opc: tasmop; useszr, usessp, is64bit: boolean; sm: tshiftmode; shiftimm: longint): boolean;
+    function valid_shifter_operand(opc: TAsmOp; useszr, usessp, is64bit: boolean; sm: TShiftMode; shiftimm: LongInt): boolean;
       begin
         case opc of
           A_ADD,
@@ -1008,9 +1008,9 @@ implementation
       end;
 
 
-    function spilling_create_load(const ref: treference; r: tregister): taicpu;
+    function spilling_create_load(const ref: TReference; r: TRegister): TAICPU;
       var
-        op: tasmop;
+        op: TAsmOp;
       begin
         if (ref.index<>NR_NO) or
            (ref.offset<-256) or
@@ -1022,9 +1022,9 @@ implementation
       end;
 
 
-    function spilling_create_store(r: tregister; const ref: treference): taicpu;
+    function spilling_create_store(r: TRegister; const ref: TReference): TAICPU;
       var
-        op: tasmop;
+        op: TAsmOp;
       begin
         if (ref.index<>NR_NO) or
            (ref.offset<-256) or
@@ -1036,7 +1036,7 @@ implementation
       end;
 
 
-    function taicpu.spilling_get_operation_type(opnr: longint): topertype;
+    function TAICPU.spilling_get_operation_type(opnr: LongInt): TOperType;
       begin
         case opcode of
           A_B,A_BL,A_BR,A_BLR,
@@ -1155,7 +1155,7 @@ implementation
              else
                result:=operand_read;
            else
-             Internalerror(2019090803);
+             InternalError(2019090803);
 {$else EXTDEBUG}
            else
              if opnr=0 then
@@ -1167,7 +1167,7 @@ implementation
       end;
 
 
-    function taicpu.spilling_get_operation_type_ref(opnr: longint; reg: tregister): topertype;
+    function TAICPU.spilling_get_operation_type_ref(opnr: LongInt; reg: TRegister): TOperType;
       begin
         result:=operand_read;
         if (oper[opnr]^.ref^.base = reg) and
@@ -1194,14 +1194,14 @@ implementation
 
     procedure InitAsm;
       begin
-        if not assigned(instabcache) then
+        if not Assigned(instabcache) then
           BuildInsTabCache;
       end;
 
 
     procedure DoneAsm;
       begin
-        if assigned(instabcache) then
+        if Assigned(instabcache) then
           begin
             dispose(instabcache);
             instabcache:=nil;
@@ -1209,25 +1209,25 @@ implementation
       end;
 
 
-    function setoppostfix(i : taicpu;pf : toppostfix) : taicpu;
+    function setoppostfix(i : TAICPU;pf : TOpPostfix) : TAICPU;
       begin
         i.oppostfix:=pf;
         result:=i;
       end;
 
 
-    function setcondition(i : taicpu;c : tasmcond) : taicpu;
+    function setcondition(i : TAICPU;c : TAsmCond) : TAICPU;
       begin
         i.condition:=c;
         result:=i;
       end;
 
 
-    Function SimpleGetNextInstruction(Current: tai; Var Next: tai): Boolean;
+    Function SimpleGetNextInstruction(Current: TAI; Var Next: TAI): Boolean;
       Begin
-        Current:=tai(Current.Next);
+        Current:=TAI(Current.Next);
         While Assigned(Current) And (Current.typ In SkipInstr) Do
-          Current:=tai(Current.Next);
+          Current:=TAI(Current.Next);
         Next:=Current;
         If Assigned(Next) And Not(Next.typ In SkipInstr) Then
            Result:=True
@@ -1601,9 +1601,9 @@ implementation
       | Round toward zero               | 1 | 1 |
       +---------------------------------+---+---+
 *)
-    function taicpu.GetString:string;
+    function TAICPU.GetString:string;
       var
-        i : longint;
+        i : LongInt;
         s : string;
         addsize : boolean;
       begin
@@ -1677,7 +1677,7 @@ implementation
       end;
 
 
-    procedure taicpu.ResetPass1;
+    procedure TAICPU.ResetPass1;
       begin
         { we need to reset everything here, because the choosen insentry
           can be invalid for a new situation where the previously optimized
@@ -1685,25 +1685,25 @@ implementation
       end;
 
 
-    procedure taicpu.ResetPass2;
+    procedure TAICPU.ResetPass2;
       begin
         { we are here in a second pass, check if the instruction can be optimized }
       end;
 
 
-    function taicpu.CheckIfValid:boolean;
+    function TAICPU.CheckIfValid:boolean;
       begin
         Result:=False; { unimplemented }
       end;
 
 
-    function taicpu.Pass1(objdata:TObjData):longint;
+    function TAICPU.Pass1(objdata:TObjData):LongInt;
       begin
         Pass1:=0;
       end;
 
 
-    procedure taicpu.Pass2(objdata:TObjData);
+    procedure TAICPU.Pass2(objdata:TObjData);
       begin
         { error in pass1 ? }
         CurrentFilePos:=fileinfo;
@@ -1712,27 +1712,27 @@ implementation
       end;
 
 
-    procedure taicpu.ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);
+    procedure TAICPU.ppuloadoper(ppufile:TCompilerPPUFile;var o:TOper);
       begin
       end;
 
 
-    procedure taicpu.ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);
+    procedure TAICPU.ppuwriteoper(ppufile:TCompilerPPUFile;const o:TOper);
       begin
       end;
 
 
-    procedure taicpu.ppubuildderefimploper(var o:toper);
+    procedure TAICPU.ppubuildderefimploper(var o:TOper);
       begin
       end;
 
 
-    procedure taicpu.ppuderefoper(var o:toper);
+    procedure TAICPU.ppuderefoper(var o:TOper);
       begin
       end;
 
 
 begin
-  cai_align:=tai_align;
+  CAIAlign:=TAIAlign;
 end.
 

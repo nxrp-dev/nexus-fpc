@@ -42,10 +42,10 @@ interface
 implementation
 
     uses
-      globtype,comphook,
-      globals,
-      procinfo,
-      verbose,
+      GlobType,CompHook,
+      Globals,
+      ProcInfo,
+      Verbose,
       symdef
 {$ifdef extdebug}
       ,htypechk
@@ -68,11 +68,11 @@ implementation
         CodeGenError:=false;
         repeat
           CurrentFilePos:=p.fileinfo;
-          CurrentSettings.localswitches:=p.localswitches;
+          CurrentSettings.LocalSwitches:=p.LocalSwitches;
           status.verbosity:=p.verbosity;
           hp:=p.pass_typecheck;
           { should the node be replaced? }
-          if assigned(hp) then
+          if Assigned(hp) then
             begin
               node_changed:=true;
               oldflags:=p.flags;
@@ -83,8 +83,8 @@ implementation
               if nf_generic_para in oldflags then
                 include(p.flags,nf_generic_para);
             end;
-        until not assigned(hp) or
-              assigned(hp.resultdef);
+        until not Assigned(hp) or
+              Assigned(hp.resultdef);
         if CodeGenError then
           begin
             include(p.transientflags,tnf_error);
@@ -98,7 +98,7 @@ implementation
       var
          oldcodegenerror  : boolean;
          oldlocalswitches : TLocalSwitches;
-         oldverbosity     : longint;
+         oldverbosity     : LongInt;
          oldpos    : TFilePosInfo;
       begin
         node_changed:=false;
@@ -106,10 +106,10 @@ implementation
           begin
             oldcodegenerror:=CodeGenError;
             oldpos:=CurrentFilePos;
-            oldlocalswitches:=CurrentSettings.localswitches;
+            oldlocalswitches:=CurrentSettings.LocalSwitches;
             oldverbosity:=status.verbosity;
             TypeCheckPassInternalLoop(p, node_changed);
-            CurrentSettings.localswitches:=oldlocalswitches;
+            CurrentSettings.LocalSwitches:=oldlocalswitches;
             CurrentFilePos:=oldpos;
             status.verbosity:=oldverbosity;
             CodeGenError:=CodeGenError or oldcodegenerror;
@@ -152,7 +152,7 @@ implementation
          oldcodegenerror  : boolean;
          oldlocalswitches : TLocalSwitches;
          oldpos    : TFilePosInfo;
-         oldverbosity: longint;
+         oldverbosity: LongInt;
          hp : TNode;
          nodechanged : boolean;
       begin
@@ -163,7 +163,7 @@ implementation
            begin
              oldcodegenerror:=CodeGenError;
              oldpos:=CurrentFilePos;
-             oldlocalswitches:=CurrentSettings.localswitches;
+             oldlocalswitches:=CurrentSettings.LocalSwitches;
              oldverbosity:=status.verbosity;
              CodeGenError:=false;
              repeat
@@ -173,7 +173,7 @@ implementation
                  InternalError(2022112401);
 
                { checks make always a call }
-               if ([cs_check_range,cs_check_overflow,cs_check_stack] * CurrentSettings.localswitches <> []) then
+               if ([cs_check_range,cs_check_overflow,cs_check_stack] * CurrentSettings.LocalSwitches <> []) then
                  include(CurrentProcInfo.flags,pi_do_call);
                { determine the resultdef if not done }
                if (p.resultdef=nil) then
@@ -185,16 +185,16 @@ implementation
                if not(tnf_error in p.transientflags) then
                  begin
                    CurrentFilePos:=p.fileinfo;
-                   CurrentSettings.localswitches:=p.localswitches;
+                   CurrentSettings.LocalSwitches:=p.LocalSwitches;
                    status.verbosity:=p.verbosity;
                    { first pass }
                    hp:=p.pass_1;
                    { inlining happens in pass_1 and can cause new }
                    { simplify opportunities                       }
-                   if not assigned(hp) then
+                   if not Assigned(hp) then
                      hp:=p.simplify(true);
                    { should the node be replaced? }
-                   if assigned(hp) then
+                   if Assigned(hp) then
                      begin
                        p.free;
                        { switch to new node }
@@ -203,18 +203,18 @@ implementation
                    if CodeGenError then
                      include(p.transientflags,tnf_error);
                  end;
-             until not assigned(hp) or
+             until not Assigned(hp) or
                    (tnf_pass1_done in hp.transientflags);
              include(p.transientflags,tnf_pass1_done);
 {$ifdef EXTDEBUG}
              if not(tnf_error in p.transientflags) then
                begin
                  if (p.expectloc=LOC_INVALID) then
-                   Comment(V_Warning,'Expectloc is not set in firstpass: '+nodetype2str[p.nodetype]);
+                   Comment(VWarning,'Expectloc is not set in firstpass: '+nodetype2str[p.nodetype]);
                end;
 {$endif EXTDEBUG}
              CodeGenError:=CodeGenError or oldcodegenerror;
-             CurrentSettings.localswitches:=oldlocalswitches;
+             CurrentSettings.LocalSwitches:=oldlocalswitches;
              CurrentFilePos:=oldpos;
              status.verbosity:=oldverbosity;
            end
@@ -228,13 +228,13 @@ implementation
          CodeGenError:=false;
          FirstPass(p);
 {$ifdef state_tracking}
-         writeln('TRACKSTART');
-         writeln('before');
+         WriteLn('TRACKSTART');
+         WriteLn('before');
          writenode(p);
          DoTrackStatePass(p);
-         writeln('after');
+         WriteLn('after');
          writenode(p);
-         writeln('TRACKDONE');
+         WriteLn('TRACKDONE');
 {$endif}
          DoFirstPass:=CodeGenError;
       end;

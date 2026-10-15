@@ -14,7 +14,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit closablefilestream;
+unit ClosableFileStream;
 
 {$MODE OBJFPC} {$H+}
 
@@ -30,28 +30,28 @@ type
 
   TClosableFileStream = class(TStream)
   private
-    fStream : TFileStream;
-    fFileName : string;
-    fMode : word;
-    fListener : TClosableFileNotifier;
-    fPosition : int64;
+    FStream : TFileStream;
+    FFileName : string;
+    FMode : Word;
+    FListener : TClosableFileNotifier;
+    FPosition : Int64;
     procedure EnsureHandleOpen;
   protected
     procedure SetSize(const NewSize: Int64); override;
-    function RetryOpen : boolean;
+    function RetryOpen : Boolean;
   public
     constructor Create(const AFileName: String; Mode: Word);
     destructor Destroy; override;
-    function Read(var Buffer; Count: Longint): Longint; override;
-    function Write(const Buffer; Count: Longint): Longint; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+    function Write(const Buffer; Count: LongInt): LongInt; override;
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
     procedure CloseHandle;
 end;
 
 TClosableFileNotifier = class
 protected
-  procedure NotifyFileOpened(aStream : TClosableFileStream); virtual; abstract;
-  function NotifyOpenFailed(aStream: TClosableFileStream) : boolean;
+  procedure NotifyFileOpened(AStream : TClosableFileStream); virtual; abstract;
+  function NotifyOpenFailed(AStream: TClosableFileStream) : Boolean;
     virtual; abstract;
 end;
 
@@ -61,25 +61,25 @@ implementation
 type
   PQueueItem = ^TQueueItem;
   TQueueItem = record
-    prev : PQueueItem;
-    next : PQueueItem;
-    data : pointer;
+    Prev : PQueueItem;
+    Next : PQueueItem;
+    Data : Pointer;
   end;
 
   { TFIFOQueue }
 
   TFIFOQueue = class
   private
-    fHead : PQueueItem;
-    fTail : PQueueItem;
-    fCount : integer;
+    FHead : PQueueItem;
+    FTail : PQueueItem;
+    FCount : Integer;
   protected
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Add(p : pointer);
+    procedure Add(P : Pointer);
     function Remove : Pointer;
-    property Count : integer read fCount;
+    property Count : Integer Read FCount;
   end;
 
 
@@ -87,13 +87,13 @@ type
 
   TFileKeeper = class(TClosableFileNotifier)
   private
-    fOpenFiles : TFIFOQueue;
-    fMaxOpen : longint;
+    FOpenFiles : TFIFOQueue;
+    FMaxOpen : LongInt;
   private
-    procedure CloseFiles(const count : integer);
+    procedure CloseFiles(const Count : Integer);
   protected
-    procedure NotifyFileOpened(aStream : TClosableFileStream);  override;
-    function NotifyOpenFailed(aStream: TClosableFileStream) : boolean; override;
+    procedure NotifyFileOpened(AStream : TClosableFileStream);  override;
+    function NotifyOpenFailed(AStream: TClosableFileStream) : Boolean; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -103,105 +103,105 @@ type
 
 constructor TFIFOQueue.Create;
 begin
-  fHead:=nil;
-  fTail:=nil;
-  fCount:=0;
+  FHead:=nil;
+  FTail:=nil;
+  FCount:=0;
 end;
 
 destructor TFIFOQueue.Destroy;
 var
-  el : PQueueItem;
+  El : PQueueItem;
 begin
-  while fHead<>nil do
+  while FHead<>nil do
   begin
-    el:=fHead;
-    fHead:=fHead^.next;
-    FreeMem(el);
+    El:=FHead;
+    FHead:=FHead^.Next;
+    FreeMem(El);
   end;
 end;
 
-procedure TFIFOQueue.Add(p: pointer);
+procedure TFIFOQueue.Add(P: Pointer);
 var
-  el : PQueueItem;
+  El : PQueueItem;
 begin
-  el:=GetMem(sizeof(TQueueItem));
-  el^.data:=p;
-  el^.prev:=nil;
-  el^.next:=fHead;
-  if fHead<>nil then
-    fHead^.prev:=el;
-  fHead:=el;
-  if fTail=nil then
-    fTail:=fHead;
-  inc(fCount);
+  El:=GetMem(SizeOf(TQueueItem));
+  El^.Data:=P;
+  El^.Prev:=nil;
+  El^.Next:=FHead;
+  if FHead<>nil then
+    FHead^.Prev:=El;
+  FHead:=El;
+  if FTail=nil then
+    FTail:=FHead;
+  Inc(FCount);
 end;
 
 function TFIFOQueue.Remove: Pointer;
 var
-  el : PQueueItem;
+  El : PQueueItem;
 begin
-  if fCount=0 then
+  if FCount=0 then
   begin
     Result:=nil;
     exit;
   end;
-  Result:=fTail^.data;
-  el:=fTail;
-  fTail:=fTail^.prev;
-  if fTail=nil then
-    fHead:=nil
+  Result:=FTail^.Data;
+  El:=FTail;
+  FTail:=FTail^.Prev;
+  if FTail=nil then
+    FHead:=nil
   else
-    fTail^.next:=nil;
-  FreeMem(el);
-  dec(fCount);
+    FTail^.Next:=nil;
+  FreeMem(El);
+  Dec(FCount);
 end;
 
 { TFileKeeper }
 
-procedure TFileKeeper.CloseFiles(const count: integer);
+procedure TFileKeeper.CloseFiles(const Count: Integer);
 var
-  i,max : integer;
-  tmp : TClosableFileStream;
+  I,Max : Integer;
+  Tmp : TClosableFileStream;
 begin
-  max:=count;
-  if fOpenFiles.Count<max then
-    max:=fOpenFiles.Count;
-  for i:=0 to max-1 do
+  Max:=Count;
+  if FOpenFiles.Count<Max then
+    Max:=FOpenFiles.Count;
+  for I:=0 to Max-1 do
   begin
-    tmp:=TClosableFileStream(fOpenFiles.Remove);
-    tmp.CloseHandle;
+    Tmp:=TClosableFileStream(FOpenFiles.Remove);
+    Tmp.CloseHandle;
   end;
 end;
 
-procedure TFileKeeper.NotifyFileOpened(aStream: TClosableFileStream);
+procedure TFileKeeper.NotifyFileOpened(AStream: TClosableFileStream);
 begin
-   fOpenFiles.Add(aStream);
-   if (fOpenFiles.Count>=fMaxOpen) then
+   FOpenFiles.Add(AStream);
+   if (FOpenFiles.Count>=FMaxOpen) then
      CloseFiles(1);
 end;
 
-function TFileKeeper.NotifyOpenFailed(aStream: TClosableFileStream) : boolean;
+function TFileKeeper.NotifyOpenFailed(AStream: TClosableFileStream) : Boolean;
 var
-  decrement : longint;
+  Decrement : LongInt;
 begin
-  Result:=false;
-  decrement:=round(0.1*fOpenFiles.Count);
-  if decrement<=0 then exit;
-  CloseFiles(decrement);
-  Result:=aStream.RetryOpen;
+  Result:=False;
+  Decrement:=Round(0.1*FOpenFiles.Count);
+  if Decrement<=0 then exit;
+  CloseFiles(Decrement);
+  Result:=AStream.RetryOpen;
   if Result then
-    fMaxOpen:=fOpenFiles.Count+1;
+    FMaxOpen:=FOpenFiles.Count+1;
 end;
 
 constructor TFileKeeper.Create;
 begin
-  fOpenFiles:=TFIFOQueue.Create;
-  fMaxOpen:=high(longint);
+  FOpenFiles:=TFIFOQueue.Create;
+  FMaxOpen:=High(LongInt);
 end;
 
 destructor TFileKeeper.Destroy;
 begin
-  fOpenFiles.Free;
+  FOpenFiles.Free;
 end;
 
 var
@@ -211,79 +211,79 @@ var
 
 procedure TClosableFileStream.EnsureHandleOpen;
 begin
-  if fStream<>nil then
+  if FStream<>nil then
     exit;
   try
-    fStream:=TFileStream.Create(fFileName,fMode);
+    FStream:=TFileStream.Create(FFileName,FMode);
   except
-    if not fListener.NotifyOpenFailed(self) then
+    if not FListener.NotifyOpenFailed(Self) then
       raise;
   end;
-  fStream.Position:=fPosition;
-  fListener.NotifyFileOpened(self);
+  FStream.Position:=FPosition;
+  FListener.NotifyFileOpened(Self);
 end;
 
 procedure TClosableFileStream.SetSize(const NewSize: Int64);
 begin
   EnsureHandleOpen;
-  fStream.Size:=NewSize;
+  FStream.Size:=NewSize;
 end;
 
-function TClosableFileStream.RetryOpen: boolean;
+function TClosableFileStream.RetryOpen: Boolean;
 begin
   try
-    fStream:=TFileStream.Create(fFileName,fMode);
+    FStream:=TFileStream.Create(FFileName,FMode);
   except
-    Result:=false;
+    Result:=False;
     exit;
   end;
-  Result:=true;
+  Result:=True;
 end;
 
 constructor TClosableFileStream.Create(const AFileName: String; Mode: Word);
 begin
-  fListener:=FileKeeper;
-  fFileName:=aFileName;
-  fMode:=Mode;
-  fPosition:=0;
-  fStream:=nil;
+  FListener:=FileKeeper;
+  FFileName:=AFileName;
+  FMode:=Mode;
+  FPosition:=0;
+  FStream:=nil;
   EnsureHandleOpen;
   //if the file has been created, ensure that further openings don't recreate
   //it again!
-  if fMode=fmCreate then
-    fMode:=fmOpenReadWrite;
+  if FMode=fmCreate then
+    FMode:=fmOpenReadWrite;
 end;
 
 destructor TClosableFileStream.Destroy;
 begin
-  if fStream<>nil then
+  if FStream<>nil then
     CloseHandle;
 end;
 
-function TClosableFileStream.Read(var Buffer; Count: Longint): Longint;
+function TClosableFileStream.Read(var Buffer; Count: LongInt): LongInt;
 begin
   EnsureHandleOpen;
-  Result:=fStream.Read(Buffer,Count);
+  Result:=FStream.Read(Buffer,Count);
 end;
 
-function TClosableFileStream.Write(const Buffer; Count: Longint): Longint;
+function TClosableFileStream.Write(const Buffer; Count: LongInt): LongInt;
 begin
   EnsureHandleOpen;
-  Result:=fStream.Write(Buffer,Count);
+  Result:=FStream.Write(Buffer,Count);
 end;
 
 function TClosableFileStream.Seek(const Offset: Int64; Origin: TSeekOrigin
   ): Int64;
 begin
   EnsureHandleOpen;
-  Result:=fStream.Seek(Offset,Origin);
+  Result:=FStream.Seek(Offset,Origin);
 end;
 
 procedure TClosableFileStream.CloseHandle;
 begin
-  fPosition:=fStream.Position;
-  fStream.Free;
-  fStream:=nil;
+  FPosition:=FStream.Position;
+  FStream.Free;
+  FStream:=nil;
 end;
 
 initialization

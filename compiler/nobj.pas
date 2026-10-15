@@ -26,16 +26,16 @@ unit nobj;
 interface
 
     uses
-       cutils,cclasses,
-       globtype,
-       symdef,symsym
+       CUtils,CClasses,
+       GlobType,
+       symdef,SymSym
        ;
 
     type
       TVMTBuilder=class
       private
         _Class : TObjectDef;
-        handledprotocols: tfpobjectlist;
+        handledprotocols: TFPObjectList;
         function  is_new_vmt_entry(pd:TProcDef; out overridesclasshelper: boolean):boolean;
         procedure add_new_vmt_entry(pd:TProcDef; allowoverridingmethod: boolean);
         function  check_msg_str(vmtpd, pd: TProcDef):boolean;
@@ -62,9 +62,9 @@ procedure build_vmt(def:TObjectDef);
 implementation
 
     uses
-       globals,verbose,systems,
+       Globals,Verbose,Systems,
        node,
-       symbase,symtable,symconst,symtype,symcpu,
+       SymBase,SymTable,symconst,symtype,symcpu,
        defcmp,
        pparautl;
 
@@ -82,7 +82,7 @@ implementation
 
     procedure TVMTBuilder.add_new_vmt_entry(pd:TProcDef; allowoverridingmethod: boolean);
       var
-        i : longint;
+        i : LongInt;
         vmtentry : PVMTEntry;
         vmtpd : TProcDef;
       begin
@@ -103,7 +103,7 @@ implementation
           end;
 
         { check that all methods have overload directive }
-        if not(m_fpc in CurrentSettings.modeswitches) then
+        if not(m_fpc in CurrentSettings.ModeSwitches) then
           begin
             for i:=0 to _class.vmtentries.count-1 do
               begin
@@ -127,7 +127,7 @@ implementation
              { store vmt entry number in procdef }
              if (pd.extnumber<>$ffff) and
                 (pd.extnumber<>_class.VMTEntries.Count) then
-               internalerror(200810283);
+               InternalError(200810283);
              pd.extnumber:=_class.VMTEntries.Count;
              new(vmtentry);
              vmtentry^.procdef:=pd;
@@ -157,13 +157,13 @@ implementation
               { the compiler should have ensured that the protocol or parent
                 class method has a message name specified }
               if not(po_msgstr in vmtpd.procoptions) then
-                internalerror(2009070601);
+                InternalError(2009070601);
               if not(po_msgstr in pd.procoptions) then
                 begin
                   { copy the protocol's/parent class' message name to the one in
                     the class if none has been specified there }
                   include(pd.procoptions,po_msgstr);
-                  pd.messageinf.str:=stringdup(vmtpd.messageinf.str^);
+                  pd.messageinf.str:=StringDup(vmtpd.messageinf.str^);
                 end
               else
                 begin
@@ -183,7 +183,7 @@ implementation
         po_comp = [po_classmethod,po_virtualmethod,po_staticmethod,po_interrupt,po_iocheck,po_msgint,
                    po_exports,po_varargs,po_explicitparaloc,po_nostackframe];
       var
-        i : longint;
+        i : LongInt;
         hasequalpara,
         hasoverloads,
         pdoverload : boolean;
@@ -283,7 +283,7 @@ implementation
                             { there may be a lot of these in auto-translated
                               headers, so only calculate the fulltypename if
                               the hint will be shown  }
-                            else if CheckVerbosity(V_Hint) then
+                            else if CheckVerbosity(VHint) then
                               if not is_objccategory(_class) then
                                 MessagePos1(pd.fileinfo,parser_h_should_use_override,FullTypeName(TDef(vmtpd.owner.defowner),nil))
                               else
@@ -307,7 +307,7 @@ implementation
                             if (po_abstractmethod in vmtpd.procoptions) then
                               dec(TObjectDef(pd.owner.defowner).abstractcnt);
                             if (vmtpd.extnumber<>i) then
-                              internalerror(2011083101);
+                              InternalError(2011083101);
                             pd.extnumber:=vmtpd.extnumber;
                             vmtpd:=pd;
                           end;
@@ -383,7 +383,7 @@ implementation
                         dec(TObjectDef(pd.owner.defowner).abstractcnt);
 
                       if (vmtpd.extnumber<>i) then
-                        internalerror(200611084);
+                        InternalError(200611084);
                       pd.extnumber:=vmtpd.extnumber;
                       { in case of Java, copy the real name from the parent,
                         since overriding "Destroy" with "destroy" is not
@@ -426,7 +426,7 @@ implementation
 
         function found_category_method(st: TSymTable): boolean;
           var
-            entrycount: longint;
+            entrycount: LongInt;
             cat: TObjectDef;
             vmtpd: TProcDef;
             vmtvis: TVisibility;
@@ -471,7 +471,7 @@ implementation
           that case the category method will in fact replace class X'
           "overriding" method }
         if is_objcclass(_class) and
-           assigned(_class.childof) and
+           Assigned(_class.childof) and
            search_objc_helper(_class.childof,pd.procsym.name,srsym,st) then
           begin
             overridesclasshelper:=found_category_method(st);
@@ -497,10 +497,10 @@ implementation
         result:=nil;
         hashedid.id:=name;
         hclass:=_class;
-        while assigned(hclass) do
+        while Assigned(hclass) do
           begin
-            srsym:=TSym(hclass.symtable.FindWithHash(hashedid));
-            if assigned(srsym) and
+            srsym:=TSym(hclass.SymTable.FindWithHash(hashedid));
+            if Assigned(srsym) and
                (srsym.typ=procsym) and
                ((hclass=_class) or
                 is_visible_for_object(srsym,_class)) then
@@ -540,18 +540,18 @@ implementation
 
     procedure TVMTBuilder.intf_get_procdefs(ImplIntf:TImplementedInterface;IntfDef:TObjectDef);
       var
-        i   : longint;
+        i   : LongInt;
         def : TDef;
         hs,
         prefix,
         mappedname: string;
         implprocdef: TProcDef;
       begin
-        prefix:=ImplIntf.IntfDef.symtable.name^+'.';
-        for i:=0 to IntfDef.symtable.DefList.Count-1 do
+        prefix:=ImplIntf.IntfDef.SymTable.name^+'.';
+        for i:=0 to IntfDef.SymTable.DefList.Count-1 do
           begin
-            def:=TDef(IntfDef.symtable.DefList[i]);
-            if assigned(def) and
+            def:=TDef(IntfDef.SymTable.DefList[i]);
+            if Assigned(def) and
                (def.typ=procdef) then
               begin
                 { Find implementing procdef
@@ -565,12 +565,12 @@ implementation
                 mappedname:=ImplIntf.GetMapping(hs);
                 if mappedname<>'' then
                   implprocdef:=intf_search_procdef_by_name(TProcDef(def),mappedname);
-                if not assigned(implprocdef) then
+                if not Assigned(implprocdef) then
                   if (mappedname='') or (ImplIntf.IntfDef<>IntfDef) then
                     implprocdef:=intf_search_procdef_by_name(TProcDef(def),TProcDef(def).procsym.name);
 
                 { Add procdef to the implemented interface }
-                if assigned(implprocdef) then
+                if Assigned(implprocdef) then
                   begin
                     if (TObjectDef(implprocdef.struct).objecttype<>odt_objcclass) then
                       begin
@@ -590,7 +590,7 @@ implementation
                         if not(po_msgstr in TProcDef(def).procoptions) then
                           begin
                             include(TProcDef(def).procoptions,po_msgstr);
-                            implprocdef.messageinf.str:=stringdup(TProcDef(def).messageinf.str^);
+                            implprocdef.messageinf.str:=StringDup(TProcDef(def).messageinf.str^);
                           end
                         else
                           begin
@@ -613,7 +613,7 @@ implementation
 
     procedure TVMTBuilder.intf_get_procdefs_recursive(ImplIntf:TImplementedInterface;IntfDef:TObjectDef);
       begin
-        if assigned(IntfDef.childof) then
+        if Assigned(IntfDef.childof) then
           intf_get_procdefs_recursive(ImplIntf,IntfDef.childof);
         intf_get_procdefs(ImplIntf,IntfDef);
       end;
@@ -621,7 +621,7 @@ implementation
 
     procedure TVMTBuilder.prot_get_procdefs_recursive(ImplProt:TImplementedInterface;ProtDef:TObjectDef);
       var
-        i: longint;
+        i: LongInt;
       begin
         { don't check the same protocol twice }
         if handledprotocols.IndexOf(ProtDef)<>-1 then
@@ -635,16 +635,16 @@ implementation
 
     procedure TVMTBuilder.intf_optimize_vtbls;
       type
-        tcompintfentry = record
-          weight: longint;
-          compintf: longint;
+        TCompIntfEntry = record
+          weight: LongInt;
+          compintf: LongInt;
         end;
       var
-        aequals: array of longint;
-        compats: array of tcompintfentry;
-        impls: array of longint;
+        aequals: array of LongInt;
+        compats: array of TCompIntfEntry;
+        impls: array of LongInt;
         ImplIntfCount,
-        w,i,j,k: longint;
+        w,i,j,k: LongInt;
         ImplIntfI,
         ImplIntfJ  : TImplementedInterface;
         cij: boolean;
@@ -656,7 +656,7 @@ implementation
         SetLength(compats,ImplIntfCount);
         SetLength(aequals,ImplIntfCount);
         SetLength(impls,ImplIntfCount);
-        filldword(compats[0],(sizeof(tcompintfentry) div sizeof(dword))*ImplIntfCount,dword(-1));
+        filldword(compats[0],(sizeof(TCompIntfEntry) div sizeof(dword))*ImplIntfCount,dword(-1));
         filldword(aequals[0],ImplIntfCount,dword(-1));
         filldword(impls[0],ImplIntfCount,dword(-1));
         { ismergepossible is a containing relation
@@ -731,7 +731,7 @@ implementation
 
     procedure TVMTBuilder.intf_allocate_vtbls;
       var
-        i : longint;
+        i : LongInt;
         ImplIntf : TImplementedInterface;
       begin
         { Allocation vtbl space }
@@ -742,11 +742,11 @@ implementation
             if (ImplIntf.VtblImplIntf=ImplIntf) and (ImplIntf.IType=etStandard) then
               begin
                 { allocate a pointer in the object memory }
-                with TObjectSymTable(_class.symtable) do
+                with TObjectSymTable(_class.SymTable) do
                   begin
-                    datasize:=align(datasize,voidpointertype.alignment);
-                    ImplIntf.Ioffset:=datasize;
-                    datasize:=datasize+voidpointertype.size;
+                    DataSize:=align(DataSize,voidpointertype.alignment);
+                    ImplIntf.Ioffset:=DataSize;
+                    DataSize:=DataSize+voidpointertype.size;
                   end;
               end;
           end;
@@ -763,7 +763,7 @@ implementation
 
     procedure TVMTBuilder.create_vmt_def;
       var
-        i: longint;
+        i: LongInt;
         vmtdef: TRecordDef;
         systemvmt: TDef;
         sym: TSym;
@@ -792,25 +792,25 @@ implementation
           exit;
 
         { create VMT type definition }
-        vmtdef:=crecorddef.create_internal(
+        vmtdef:=CRecordDef.create_internal(
           '$vmtdef',
           0,
-          TargetInfo.alignment.recordalignmin,
-          _class.symtable);
+          TargetInfo.alignment.RecordAlignMin,
+          _class.SymTable);
 
         { standard VMT fields }
         case _Class.objecttype of
           odt_class:
             begin
               systemvmt:=search_system_type('TVMT').typedef;
-              if not assigned(systemvmt) then
+              if not Assigned(systemvmt) then
                 Message1(cg_f_internal_type_not_found,'TVMT');
 
               { does the TVMT type look like we expect? (so that this code is
                 easily triggered in case the definition of the VMT would
                 change) }
               if (systemvmt.typ<>recorddef) or
-                 (TRecordDef(systemvmt).symtable.SymList.count<>27) then
+                 (TRecordDef(systemvmt).SymTable.SymList.count<>27) then
                 Message1(cg_f_internal_type_does_not_match,'TVMT');
               { system.tvmt is a record that represents the VMT of TObject,
                 including its virtual methods. We only want the non-method
@@ -818,11 +818,11 @@ implementation
                 the VMT we generated here only add the 12 first fields }
               for i:=0 to 11 do
                 begin
-                  sym:=TSym(TRecordDef(systemvmt).symtable.SymList[i]);
+                  sym:=TSym(TRecordDef(systemvmt).SymTable.SymList[i]);
                   if sym.typ in [procsym,propertysym] then
                     continue;
                   if sym.typ<>fieldvarsym then
-                    internalerror(2015052602);
+                    InternalError(2015052602);
                   vmtdef.add_field_by_def('',TFieldVarSym(sym).vardef);
                 end;
             end;
@@ -840,13 +840,13 @@ implementation
 {$endif WITHDMT}
             end;
           else
-            internalerror(2015052605);
+            InternalError(2015052605);
         end;
 
         { now add the methods }
         for i:=0 to _class.vmtentries.count-1 do
           vmtdef.add_field_by_def('',
-            cprocvardef.getreusableprocaddr(PVMTEntry(_class.vmtentries[i])^.procdef,pc_address_only)
+            CProcVarDef.getreusableprocaddr(PVMTEntry(_class.vmtentries[i])^.procdef,pc_address_only)
           );
         { the VMT ends with a nil pointer }
         vmtdef.add_field_by_def('',voidcodepointertype);
@@ -855,7 +855,7 @@ implementation
 
     procedure TVMTBuilder.build;
       var
-        i : longint;
+        i : LongInt;
         def : TDef;
         old_current_structdef : TAbstractRecordDef;
         overridesclasshelper : boolean;
@@ -864,15 +864,15 @@ implementation
         CurrentStructDef:=_class;
 
         { inherit (copy) VMT from parent object }
-        if assigned(_class.childof) then
+        if Assigned(_class.childof) then
           _class.copyvmtentries(_class.childof);
 
         { process all procdefs, we must process the defs to
           keep the same order as that is written in the source
           to be compatible with the indexes in the interface vtable (PFV) }
-        for i:=0 to _class.symtable.DefList.Count-1 do
+        for i:=0 to _class.SymTable.DefList.Count-1 do
           begin
-            def:=TDef(_class.symtable.DefList[i]);
+            def:=TDef(_class.SymTable.DefList[i]);
             if def.typ=procdef then
               begin
                 { VMT entry }
@@ -882,7 +882,7 @@ implementation
           end;
         insert_struct_hidden_paras(_class);
         build_interface_mappings;
-        if assigned(_class.ImplementedInterfaces) and
+        if Assigned(_class.ImplementedInterfaces) and
            not(is_objc_class_or_protocol(_class)) and
            not(is_java_class_or_interface(_class)) then
           begin
@@ -899,12 +899,12 @@ implementation
     procedure TVMTBuilder.build_interface_mappings;
       var
         ImplIntf : TImplementedInterface;
-        i: longint;
+        i: LongInt;
       begin
         { Find Procdefs implementing the interfaces (both Objective-C protocols
           and Java interfaces can have multiple parent interfaces, but in that
           case obviously no implementations are required) }
-        if assigned(_class.ImplementedInterfaces) and
+        if Assigned(_class.ImplementedInterfaces) and
            not(_class.objecttype in [odt_objcprotocol,odt_interfacejava]) and
            // abstract java classes do not have to implement all interface
            // methods. todo: check that non-abstract descendents do!
@@ -927,7 +927,7 @@ implementation
                     intf_optimize_vtbls() method, but we can't do this for
                     protocols/Java interfaces -> check for duplicates here
                     already. }
-                  handledprotocols:=tfpobjectlist.create(false);
+                  handledprotocols:=TFPObjectList.create(false);
                   for i:=0 to _class.ImplementedInterfaces.count-1 do
                     begin
                       ImplIntf:=TImplementedInterface(_class.ImplementedInterfaces[i]);
@@ -937,7 +937,7 @@ implementation
                   handledprotocols := nil;
                 end
               else
-                internalerror(2009091801);
+                InternalError(2009091801);
             end
           end;
       end;

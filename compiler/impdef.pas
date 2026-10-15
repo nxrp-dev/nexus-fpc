@@ -47,7 +47,7 @@ interface
 implementation
 
 uses
-  cfileutl;
+  CFileUtl;
 
 {$IFDEF STANDALONE}
 var
@@ -66,7 +66,7 @@ var
   impname:string;
   TheWord:array[0..1]of char;
   PEoffset:cardinal;
-  loaded:longint;
+  loaded:LongInt;
 
 function DOSstubOK(var x:cardinal):longbool;
 begin
@@ -84,7 +84,7 @@ begin
 end;
 
 
-function isPE(x:longint):longbool;
+function isPE(x:LongInt):longbool;
 begin
   seek(f,x);
   blockread(f,TheWord,2,loaded);
@@ -163,7 +163,7 @@ procedure CreateTempDir(const s:string);
     {$push} {$I-}
      mkdir(s);
     {$pop}
-    if ioresult<>0 then;
+    if IOResult<>0 then;
   end;
  end;
 procedure call_as(const name:string);
@@ -191,12 +191,12 @@ procedure call_ar;
   {$push} {$I-}
   RmDir(path);
   {$pop}
-  if ioresult<>0 then;
+  if IOResult<>0 then;
  end;
 procedure makeasm(index:cardinal;name:pchar;isData:longbool);
  type
-  tt=array[1..1]of pchar;
-  pt=^tt;
+  TTemplateArray=array[1..1]of pchar;
+  PTemplateArray=^TTemplateArray;
  const
   fn_template:array[1..24]of pchar=(
    '.section .idata$2',
@@ -253,12 +253,12 @@ procedure makeasm(index:cardinal;name:pchar;isData:longbool);
    ':',
    '.ascii      "\000"'
   );
-  posit:array[longbool,1..4]of longint=((4,13,14,24),(4,12,13,19));
+  posit:array[longbool,1..4]of LongInt=((4,13,14,24),(4,12,13,19));
  var
-  template:array[longbool]of pt absolute __template;
+  template:array[longbool]of PTemplateArray absolute __template;
   f:text;
   s:string;
-  i:longint;
+  i:LongInt;
   n:string;
   common_name,asmout:string;
   __d:dirstr;
@@ -285,13 +285,13 @@ procedure makeasm(index:cardinal;name:pchar;isData:longbool);
          insert(__n+__x,s,9);
         end;
       end;
-      writeln(f,s);
+      WriteLn(f,s);
      end;
     close(f);
     call_as(asmout);
     common_created:=true;
    end;
-  n:=strpas(name);
+  n:=StrPas(name);
   str(succ(index):0,s);
   asmout:=path+dirsep+s+'.sw';
   assign(f,asmout);
@@ -307,15 +307,15 @@ procedure makeasm(index:cardinal;name:pchar;isData:longbool);
      s:=n+s
     else if i=posit[isData,4]then
      insert(n,s,9);
-    writeln(f,s);
+    WriteLn(f,s);
    end;
   close(f);
   call_as(asmout);
  end;
 procedure ProcessEdata;
   type
-   a8=array[0..7]of char;
-  function GetSectionName(rva:cardinal;var Flags:cardinal):a8;
+   TSectionNameChars=array[0..7]of char;
+  function GetSectionName(rva:cardinal;var Flags:cardinal):TSectionNameChars;
    var
     i:cardinal;
     LocObjOfs:cardinal;
@@ -330,7 +330,7 @@ procedure ProcessEdata;
       blockread(f,LocObj,sizeof(LocObj));
       if(rva>=LocObj.VirtAddr)and(rva<=LocObj.VirtAddr+LocObj.RawSize)then
        begin
-        GetSectionName:=a8(LocObj.ObjName);
+        GetSectionName:=TSectionNameChars(LocObj.ObjName);
         Flags:=LocObj.flags;
        end;
      end;
@@ -382,7 +382,7 @@ procedure ProcessEdata;
          if(__textname<>'')or(impname='')then
           begin
            rewrite(t);
-           writeln(t,'EXPORTS');
+           WriteLn(t,'EXPORTS');
           end;
         end;
 {$ENDIF}
@@ -391,7 +391,7 @@ procedure ProcessEdata;
         isData:=Fl and IMAGE_SCN_CNT_CODE<>IMAGE_SCN_CNT_CODE;
 {$IFDEF STANDALONE}
        if(__textname<>'')or(impname='')then
-        writeln(t,cstring,' @',succ(ordinal):0,' ',kind[isData]);
+        WriteLn(t,cstring,' @',succ(ordinal):0,' ',kind[isData]);
        if impname<>''then
 {$ENDIF}
        makeasm(j,cstring,isData);
@@ -434,7 +434,7 @@ function makedef(const binname,
 {$ENDIF}
                        libname:string):longbool;
 var
-  OldFileMode:longint;
+  OldFileMode:LongInt;
 begin
   assign(f,binname);
 {$IFDEF STANDALONE}

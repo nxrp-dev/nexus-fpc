@@ -26,16 +26,16 @@ unit tripletcpu;
 interface
 
 uses
-  globtype;
+  GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
-  globals, systems, cpuinfo;
+  Globals, Systems, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
   begin
     if TargetInfo.system in systems_darwin then
       result:='arm64'

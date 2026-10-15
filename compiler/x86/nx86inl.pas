@@ -29,7 +29,7 @@ interface
        node,ninl,ncginl;
 
     type
-       tx86inlinenode = class(tcginlinenode)
+       TX86InlineNode = class(TCGInlineNode)
          protected
           procedure maybe_remove_round_trunc_typeconv; virtual;
          public
@@ -89,32 +89,32 @@ interface
 implementation
 
     uses
-      systems,
-      globtype,globals,
-      verbose,compinnr,fmodule,
+      Systems,
+      GlobType,Globals,
+      Verbose,compinnr,FModule,
       defutil,
-      aasmbase,aasmdata,aasmcpu,
+      aasmbase,AAsmData,aasmcpu,
       symconst,symtype,symdef,symcpu,
       ncnv,
       htypechk,
       cgbase,pass_1,pass_2,
-      cpuinfo,cpubase,nutils,
-      ncal,ncgutil,nld,ncon,nadd,nmat,constexp,
+      CPUInfo,cpubase,nutils,
+      ncal,ncgutil,nld,ncon,nadd,nmat,ConstExp,
       tgobj,
-      cga,cgutils,cgx86,cgobj,hlcgobj,cutils;
+      cga,cgutils,cgx86,cgobj,hlcgobj,CUtils;
 
 
 {*****************************************************************************
                               TX86INLINENODE
 *****************************************************************************}
 
-     procedure tx86inlinenode.maybe_remove_round_trunc_typeconv;
+     procedure TX86InlineNode.maybe_remove_round_trunc_typeconv;
        begin
          { only makes a difference for x86_64 }
        end;
 
 
-     function tx86inlinenode.pass_typecheck_cpu: TNode;
+     function TX86InlineNode.pass_typecheck_cpu: TNode;
        begin
          Result:=nil;
          case inlinenumber of
@@ -161,7 +161,7 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_cpu: TNode;
+     function TX86InlineNode.first_cpu: TNode;
        begin
          Result:=nil;
          case inlinenumber of
@@ -190,20 +190,20 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_pi : TNode;
+     function TX86InlineNode.first_pi : TNode;
       begin
         expectloc:=LOC_FPUREGISTER;
         Result:=nil;
       end;
 
 
-     function tx86inlinenode.first_arctan_real : TNode;
+     function TX86InlineNode.first_arctan_real : TNode;
       begin
         expectloc:=LOC_FPUREGISTER;
         Result:=nil;
       end;
 
-     function tx86inlinenode.first_abs_real : TNode;
+     function TX86InlineNode.first_abs_real : TNode;
        begin
          if use_vectorfpu(resultdef) then
            expectloc:=LOC_MMREGISTER
@@ -212,7 +212,7 @@ implementation
         first_abs_real := nil;
       end;
 
-     function tx86inlinenode.first_sqr_real : TNode;
+     function TX86InlineNode.first_sqr_real : TNode;
       begin
         if use_vectorfpu(resultdef) then
           expectloc:=LOC_MMREGISTER
@@ -221,7 +221,7 @@ implementation
         first_sqr_real := nil;
       end;
 
-     function tx86inlinenode.first_sqrt_real : TNode;
+     function TX86InlineNode.first_sqrt_real : TNode;
       begin
         if use_vectorfpu(resultdef) then
           expectloc:=LOC_MMREGISTER
@@ -230,26 +230,26 @@ implementation
         first_sqrt_real := nil;
       end;
 
-     function tx86inlinenode.first_ln_real : TNode;
+     function TX86InlineNode.first_ln_real : TNode;
       begin
         expectloc:=LOC_FPUREGISTER;
         Result:=nil;
       end;
 
-     function tx86inlinenode.first_cos_real : TNode;
+     function TX86InlineNode.first_cos_real : TNode;
       begin
         expectloc:=LOC_FPUREGISTER;
         Result:=nil;
       end;
 
-     function tx86inlinenode.first_sin_real : TNode;
+     function TX86InlineNode.first_sin_real : TNode;
       begin
         expectloc:=LOC_FPUREGISTER;
         Result:=nil;
       end;
 
 
-     function tx86inlinenode.first_round_real : TNode;
+     function TX86InlineNode.first_round_real : TNode;
       begin
         maybe_remove_round_trunc_typeconv;
 {$ifdef x86_64}
@@ -262,10 +262,10 @@ implementation
       end;
 
 
-     function tx86inlinenode.first_trunc_real: TNode;
+     function TX86InlineNode.first_trunc_real: TNode;
        begin
          maybe_remove_round_trunc_typeconv;
-         if (cs_opt_size in CurrentSettings.optimizerswitches)
+         if (cs_opt_size in CurrentSettings.OptimizerSwitches)
 {$ifdef x86_64}
            and not(use_vectorfpu(left.resultdef))
 {$endif x86_64}
@@ -284,11 +284,11 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_popcnt: TNode;
+     function TX86InlineNode.first_popcnt: TNode;
        begin
          Result:=nil;
 
-         if (CPUX86_HAS_POPCNT in cpu_capabilities[CurrentSettings.cputype])
+         if (CPUX86_HAS_POPCNT in cpu_capabilities[CurrentSettings.CPUType])
   {$ifdef i386}
             and not is_64bit(left.resultdef)
   {$endif i386}
@@ -300,10 +300,10 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_fma : TNode;
+     function TX86InlineNode.first_fma : TNode;
        begin
 
-         if ((fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]) and
+         if ((fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]) and
            ((is_double(resultdef)) or (is_single(resultdef))) then
            begin
              expectloc:=LOC_MMREGISTER;
@@ -315,9 +315,9 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_frac_real : TNode;
+     function TX86InlineNode.first_frac_real : TNode;
        begin
-         if (CurrentSettings.fputype>=fpu_sse41) and
+         if (CurrentSettings.FPUType>=fpu_sse41) and
            ((is_double(resultdef)) or (is_single(resultdef))) then
            begin
              maybe_remove_round_trunc_typeconv;
@@ -329,9 +329,9 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_int_real : TNode;
+     function TX86InlineNode.first_int_real : TNode;
        begin
-         if (CurrentSettings.fputype>=fpu_sse41) and
+         if (CurrentSettings.FPUType>=fpu_sse41) and
            ((is_double(resultdef)) or (is_single(resultdef))) then
            begin
              Result:=nil;
@@ -342,13 +342,13 @@ implementation
        end;
 
 
-     function tx86inlinenode.first_minmax: TNode;
+     function TX86InlineNode.first_minmax: TNode;
        begin
 
          if
 {$ifdef i386}
-           ((CurrentSettings.fputype>=fpu_sse) and is_single(resultdef)) or
-           ((CurrentSettings.fputype>=fpu_sse2) and is_double(resultdef))
+           ((CurrentSettings.FPUType>=fpu_sse) and is_single(resultdef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and is_double(resultdef))
 {$else i386}
            ((is_double(resultdef)) or (is_single(resultdef)))
 {$endif i386}
@@ -361,7 +361,7 @@ implementation
 
          if
 {$ifndef x86_64}
-           (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.cputype]) and
+           (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and
 {$endif x86_64}
            (
 {$ifdef x86_64}
@@ -378,23 +378,23 @@ implementation
        end;
 
 
-     function tx86inlinenode.simplify(forinline : boolean) : TNode;
+     function TX86InlineNode.simplify(forinline : boolean) : TNode;
        var
          temp : TNode;
        begin
-         if (CurrentSettings.fputype>=fpu_sse41) and
+         if (CurrentSettings.FPUType>=fpu_sse41) and
            (inlinenumber=in_int_real) and (left.nodetype=typeconvn) and
            not(nf_explicit in left.flags) and
-           (ttypeconvnode(left).left.resultdef.typ=floatdef) and
-           ((is_double(ttypeconvnode(left).left.resultdef)) or (is_single(ttypeconvnode(left).left.resultdef))) then
+           (TTypeConvNode(left).left.resultdef.typ=floatdef) and
+           ((is_double(TTypeConvNode(left).left.resultdef)) or (is_single(TTypeConvNode(left).left.resultdef))) then
            begin
              { get rid of the type conversion }
-             temp:=ttypeconvnode(left).left;
-             ttypeconvnode(left).left:=nil;
+             temp:=TTypeConvNode(left).left;
+             TTypeConvNode(left).left:=nil;
              left.free;
              left:=temp;
              result:=self.getcopy;
-             tinlinenode(result).resultdef:=temp.resultdef;
+             TInlineNode(result).resultdef:=temp.resultdef;
              TypeCheckPass(result);
            end
          else
@@ -402,14 +402,14 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.pass_generate_code_cpu;
+     procedure TX86InlineNode.pass_generate_code_cpu;
 
        var
          paraarray : array[1..4] of TNode;
          i : integer;
          op: TAsmOp;
 
-       procedure inport(dreg:TRegister;dsize:topsize;dtype:TDef);
+       procedure inport(dreg:TRegister;dsize:TOpSize;dtype:TDef);
          var
            portnumber: TNode;
          begin
@@ -420,7 +420,7 @@ implementation
               (portnumber.location.value<=255) then
              begin
                hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_IN,dsize,portnumber.location.value,dreg));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_IN,dsize,portnumber.location.value,dreg));
                location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
                location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
                hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,dreg);
@@ -431,7 +431,7 @@ implementation
                hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
                hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,u16inttype,portnumber.location,NR_DX);
                hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_IN,dsize,NR_DX,dreg));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_IN,dsize,NR_DX,dreg));
                hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
                location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
                location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
@@ -441,12 +441,12 @@ implementation
          end;
 
 
-       procedure outport(dreg:TRegister;dsize:topsize;dtype:TDef);
+       procedure outport(dreg:TRegister;dsize:TOpSize;dtype:TDef);
          var
            portnumber, portdata: TNode;
          begin
-           portnumber:=tcallparanode(tcallparanode(left).right).left;
-           portdata:=tcallparanode(left).left;
+           portnumber:=TCallParaNode(TCallParaNode(left).right).left;
+           portdata:=TCallParaNode(left).left;
            SecondPass(portdata);
            SecondPass(portnumber);
            hlcg.getcpuregister(CurrentAsmData.CurrAsmList,dreg);
@@ -454,63 +454,63 @@ implementation
            if (portnumber.location.loc=LOC_CONSTANT) and
               (portnumber.location.value>=0) and
               (portnumber.location.value<=255) then
-             CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_OUT,dsize,dreg,portnumber.location.value))
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_OUT,dsize,dreg,portnumber.location.value))
            else
              begin
                hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
                hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,portnumber.resultdef,u16inttype,portnumber.location,NR_DX);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_OUT,dsize,dreg,NR_DX));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_OUT,dsize,dreg,NR_DX));
                hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_DX);
              end;
            hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,dreg);
          end;
 
 
-       procedure get_segreg(segreg:tregister);
+       procedure get_segreg(segreg:TRegister);
          begin
            location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
            location.register:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
-           CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MOV,TCGSize2OpSize[def_cgsize(resultdef)],segreg,location.register));
+           CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MOV,TCGSize2OpSize[def_cgsize(resultdef)],segreg,location.register));
          end;
 
 
-      function GetConstInt(n: TNode): longint;
+      function GetConstInt(n: TNode): LongInt;
         begin
           Result:=0;
           if is_constintnode(n) then
-            result:=tordconstnode(n).value.svalue
+            result:=TOrdConstNode(n).value.svalue
           else
             Message(type_e_constant_expr_expected);
         end;
 
 
-      procedure GetParameters(count: longint);
+      procedure GetParameters(count: LongInt);
         var
-          i: longint;
+          i: LongInt;
           p: TNode;
         begin
           if (count=1) and
-             (not (left is tcallparanode)) then
+             (not (left is TCallParaNode)) then
             paraarray[1]:=left
           else
             begin
               p:=left;
               for i := count downto 1 do
                 begin
-                  paraarray[i]:=tcallparanode(p).paravalue;
-                  p:=tcallparanode(p).nextpara;
+                  paraarray[i]:=TCallParaNode(p).paravalue;
+                  p:=TCallParaNode(p).nextpara;
                 end;
             end;
         end;
 
-      procedure location_force_mmxreg(list:TAsmList;var l: tlocation;maybeconst:boolean);
+      procedure location_force_mmxreg(list:TAsmList;var l: TLocation;maybeconst:boolean);
         var
-          reg : tregister;
+          reg : TRegister;
         begin
           if (l.loc<>LOC_MMXREGISTER)  and
              ((l.loc<>LOC_CMMXREGISTER) or (not maybeconst)) then
             begin
-              reg:=tcgx86(cg).getmmxregister(list);
+              reg:=TCGX86(cg).getmmxregister(list);
               cg.a_loadmm_loc_reg(list,OS_M64,l,reg,nil);
               location_freetemp(list,l);
               location_reset(l,LOC_MMXREGISTER,OS_M64);
@@ -518,9 +518,9 @@ implementation
             end;
         end;
 
-      procedure location_make_ref(var loc: tlocation);
+      procedure location_make_ref(var loc: TLocation);
         var
-          hloc: tlocation;
+          hloc: TLocation;
         begin
           case loc.loc of
             LOC_CREGISTER,
@@ -563,11 +563,11 @@ implementation
            in_x86_outportl:
              outport(NR_EAX,S_L,s32inttype);
            in_x86_cli:
-             CurrentAsmData.CurrAsmList.concat(taicpu.op_none(A_CLI));
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_CLI));
            in_x86_sti:
-             CurrentAsmData.CurrAsmList.concat(taicpu.op_none(A_STI));
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_STI));
            in_x86_pause:
-             CurrentAsmData.CurrAsmList.concat(taicpu.op_none(A_PAUSE));
+             CurrentAsmData.CurrAsmList.concat(TAICPU.op_none(A_PAUSE));
            in_x86_get_cs:
              get_segreg(NR_CS);
            in_x86_get_ss:
@@ -587,40 +587,40 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.second_AndOrXorShiftRot_assign;
+     procedure TX86InlineNode.second_AndOrXorShiftRot_assign;
 
        var
-         opsize : tcgsize;
+         opsize : TCgSize;
          valuenode, indexnode, loadnode: TNode;
          DestReg: TRegister;
 
        begin
 
-         if (cs_opt_level2 in CurrentSettings.optimizerswitches) then
+         if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) then
            begin
              { Saves on a lot of typecasting and potential coding mistakes }
-             valuenode := tcallparanode(left).left;
-             loadnode := tcallparanode(tcallparanode(left).right).left;
+             valuenode := TCallParaNode(left).left;
+             loadnode := TCallParaNode(TCallParaNode(left).right).left;
 
              opsize := def_cgsize(loadnode.resultdef);
 
              { BMI2 optimisations }
-             if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and (inlinenumber=in_and_assign_x_y) then
+             if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and (inlinenumber=in_and_assign_x_y) then
                begin
                  { If the second operand is "((1 shl y) - 1)", we can turn it
                    into a BZHI operator instead }
                  if (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) and
                    (valuenode.nodetype = subn) and
-                   (taddnode(valuenode).right.nodetype = ordconstn) and
-                   (tordconstnode(taddnode(valuenode).right).value = 1) and
-                   (taddnode(valuenode).left.nodetype = shln) and
-                   (tshlshrnode(taddnode(valuenode).left).left.nodetype = ordconstn) and
-                   (tordconstnode(tshlshrnode(taddnode(valuenode).left).left).value = 1) then
+                   (TAddNode(valuenode).right.nodetype = ordconstn) and
+                   (TOrdConstNode(TAddNode(valuenode).right).value = 1) and
+                   (TAddNode(valuenode).left.nodetype = shln) and
+                   (TShlShrNode(TAddNode(valuenode).left).left.nodetype = ordconstn) and
+                   (TOrdConstNode(TShlShrNode(TAddNode(valuenode).left).left).value = 1) then
                    begin
                      { Skip the subtract and shift nodes completely }
 
                      { Helps avoid all the awkward typecasts }
-                     indexnode := tshlshrnode(taddnode(valuenode).left).right;
+                     indexnode := TShlShrNode(TAddNode(valuenode).left).right;
 {$ifdef x86_64}
                      { The code generator sometimes extends the shift result to 64-bit unnecessarily }
                      if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
@@ -635,7 +635,7 @@ implementation
                            InternalError(2022110202);
 
                          { Keep things internally consistent in case indexnode changed }
-                         tshlshrnode(taddnode(valuenode).left).right:=indexnode;
+                         TShlShrNode(TAddNode(valuenode).left).right:=indexnode;
                        end;
 {$endif x86_64}
                      SecondPass(indexnode);
@@ -675,17 +675,17 @@ implementation
          inherited second_AndOrXorShiftRot_assign;
        end;
 
-     procedure tx86inlinenode.second_pi;
+     procedure TX86InlineNode.second_pi;
        begin
          location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
          emit_none(A_FLDPI,S_NO);
-         tcgx86(cg).inc_fpu_stack;
+         TCGX86(cg).inc_fpu_stack;
          location.register:=NR_FPU_RESULT_REG;
        end;
 
 
      { load the FPU into the an fpu register }
-     procedure tx86inlinenode.load_fpu_location(lnode: TNode);
+     procedure TX86InlineNode.load_fpu_location(lnode: TNode);
        begin
          location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
          location.register:=NR_FPU_RESULT_REG;
@@ -710,12 +710,12 @@ implementation
                hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,location,lnode.resultdef,false);
              end;
            else
-             internalerror(309991);
+             InternalError(309991);
          end;
        end;
 
 
-     procedure tx86inlinenode.second_arctan_real;
+     procedure TX86InlineNode.second_arctan_real;
        begin
          load_fpu_location(left);
          emit_none(A_FLD1,S_NO);
@@ -723,20 +723,20 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.second_abs_real;
+     procedure TX86InlineNode.second_abs_real;
 
        function needs_indirect:boolean; inline;
          begin
             { System owns these masks; its local indirect aliases are pointer
               cells, not mask data. Only consumers import them indirectly. }
            result:=(tf_supports_packages in TargetInfo.flags) and
-                     not(cs_compilesystem in CurrentSettings.moduleswitches) and
+                     not(cs_compilesystem in CurrentSettings.ModuleSwitches) and
                      (TargetInfo.system in systems_indirect_var_imports);
          end;
 
        var
-         href : treference;
-         sym : tasmsymbol;
+         href : TReference;
+         sym : TAsmSymbol;
        begin
          if use_vectorfpu(resultdef) then
            begin
@@ -751,32 +751,32 @@ implementation
              else
                location:=left.location;
              case TFloatDef(resultdef).floattype of
-               s32real:
+               S32Real:
                  begin
                    sym:=CurrentAsmData.RefAsmSymbol(TargetInfo.cprefix+'FPC_ABSMASK_SINGLE',AT_DATA,needs_indirect);
                    reference_reset_symbol(href,sym,0,4,[]);
                    CurrentModule.add_extern_asmsym(sym);
-                   tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
+                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
                    if UseAVX then
-                     CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg_reg(
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg_reg(
                        A_VANDPS,S_XMM,href,left.location.register,location.register))
                    else
-                     CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ANDPS,S_XMM,href,location.register));
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPS,S_XMM,href,location.register));
                  end;
-               s64real:
+               S64Real:
                  begin
                    sym:=CurrentAsmData.RefAsmSymbol(TargetInfo.cprefix+'FPC_ABSMASK_DOUBLE',AT_DATA,needs_indirect);
                    reference_reset_symbol(href,sym,0,4,[]);
                    CurrentModule.add_extern_asmsym(sym);
-                   tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
+                   TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList, href);
                    if UseAVX then
-                     CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg_reg(
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg_reg(
                        A_VANDPD,S_XMM,href,left.location.register,location.register))
                    else
-                     CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ANDPD,S_XMM,href,location.register))
+                     CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_ANDPD,S_XMM,href,location.register))
                  end;
                else
-                 internalerror(200506081);
+                 InternalError(200506081);
              end;
            end
          else
@@ -787,7 +787,7 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.second_round_real;
+     procedure TX86InlineNode.second_round_real;
        begin
 {$ifdef x86_64}
          if use_vectorfpu(left.resultdef) then
@@ -799,20 +799,20 @@ implementation
              if UseAVX then
                case left.location.size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_VCVTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSS2SI,S_NO,left.location.register,location.register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_VCVTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTSD2SI,S_NO,left.location.register,location.register));
                  else
-                   internalerror(2007031402);
+                   InternalError(2007031402);
                end
              else
                case left.location.size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CVTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSS2SI,S_NO,left.location.register,location.register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CVTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTSD2SI,S_NO,left.location.register,location.register));
                  else
-                   internalerror(2007031404);
+                   InternalError(2007031404);
                end;
            end
          else
@@ -822,19 +822,19 @@ implementation
             location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
             tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
             emit_ref(A_FISTP,S_IQ,location.reference);
-            tcgx86(cg).dec_fpu_stack;
+            TCGX86(cg).dec_fpu_stack;
             emit_none(A_FWAIT,S_NO);
            end;
        end;
 
 
-     procedure tx86inlinenode.second_trunc_real;
+     procedure TX86InlineNode.second_trunc_real;
        var
-         oldcw,newcw : treference;
+         oldcw,newcw : TReference;
        begin
 {$ifdef x86_64}
          if use_vectorfpu(left.resultdef) and
-           not((left.location.loc=LOC_FPUREGISTER) and (CurrentSettings.fputype>=fpu_sse3)) then
+           not((left.location.loc=LOC_FPUREGISTER) and (CurrentSettings.FPUType>=fpu_sse3)) then
            begin
              SecondPass(left);
              hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
@@ -843,32 +843,32 @@ implementation
              if UseAVX then
                case left.location.size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_VCVTTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSS2SI,S_NO,left.location.register,location.register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_VCVTTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_VCVTTSD2SI,S_NO,left.location.register,location.register));
                  else
-                   internalerror(2007031401);
+                   InternalError(2007031401);
                end
              else
                case left.location.size of
                  OS_F32:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CVTTSS2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSS2SI,S_NO,left.location.register,location.register));
                  OS_F64:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CVTTSD2SI,S_NO,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CVTTSD2SI,S_NO,left.location.register,location.register));
                  else
-                   internalerror(2007031403);
+                   InternalError(2007031403);
                end;
            end
          else
 {$endif x86_64}
           begin
-            if (CurrentSettings.fputype>=fpu_sse3) then
+            if (CurrentSettings.FPUType>=fpu_sse3) then
               begin
                 load_fpu_location(left);
                 location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
                 tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
                 emit_ref(A_FISTTP,S_IQ,location.reference);
-                tcgx86(cg).dec_fpu_stack;
+                TCGX86(cg).dec_fpu_stack;
               end
             else
               begin
@@ -885,7 +885,7 @@ implementation
                 location_reset_ref(location,LOC_REFERENCE,OS_S64,0,[]);
                 tg.GetTemp(CurrentAsmData.CurrAsmList,resultdef.size,resultdef.alignment,tt_normal,location.reference);
                 emit_ref(A_FISTP,S_IQ,location.reference);
-                tcgx86(cg).dec_fpu_stack;
+                TCGX86(cg).dec_fpu_stack;
                 emit_ref(A_FLDCW,S_NO,oldcw);
                 emit_none(A_FWAIT,S_NO);
                 tg.UnGetTemp(CurrentAsmData.CurrAsmList,oldcw);
@@ -895,7 +895,7 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.second_sqr_real;
+     procedure TX86InlineNode.second_sqr_real;
 
        begin
          if use_vectorfpu(resultdef) then
@@ -924,7 +924,7 @@ implementation
        end;
 
 
-     procedure tx86inlinenode.second_sqrt_real;
+     procedure TX86InlineNode.second_sqrt_real;
        begin
          if use_vectorfpu(resultdef) then
            begin
@@ -934,25 +934,25 @@ implementation
              location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
              if UseAVX then
                case TFloatDef(resultdef).floattype of
-                 s32real:
+                 S32Real:
                    { we use S_NO instead of S_XMM here, regardless of the register size, as the size of the memory location is 32/64 bit }
                    { using left.location.register here as 2nd parameter is crucial to break dependency chains }
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_VSQRTSS,S_NO,left.location.register,left.location.register,location.register));
-                 s64real:
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSS,S_NO,left.location.register,left.location.register,location.register));
+                 S64Real:
                    { we use S_NO instead of S_XMM here, regardless of the register size, as the size of the memory location is 32/64 bit }
                    { using left.location.register here as 2nd parameter is crucial to break dependency chains }
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_VSQRTSD,S_NO,left.location.register,left.location.register,location.register));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSQRTSD,S_NO,left.location.register,left.location.register,location.register));
                  else
-                   internalerror(200510031);
+                   InternalError(200510031);
                end
              else
                case TFloatDef(resultdef).floattype of
-                 s32real:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_SQRTSS,S_NO,left.location.register,location.register));
-                 s64real:
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_SQRTSD,S_NO,left.location.register,location.register));
+                 S32Real:
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSS,S_NO,left.location.register,location.register));
+                 S64Real:
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SQRTSD,S_NO,left.location.register,location.register));
                  else
-                   internalerror(2005100303);
+                   InternalError(2005100303);
                end;
            end
          else
@@ -964,7 +964,7 @@ implementation
            end;
        end;
 
-     procedure tx86inlinenode.second_ln_real;
+     procedure TX86InlineNode.second_ln_real;
        begin
          load_fpu_location(left);
          emit_none(A_FLDLN2,S_NO);
@@ -972,32 +972,32 @@ implementation
          emit_none(A_FYL2X,S_NO);
        end;
 
-     procedure tx86inlinenode.second_cos_real;
+     procedure TX86InlineNode.second_cos_real;
        begin
 
          load_fpu_location(left);
          emit_none(A_FCOS,S_NO);
        end;
 
-     procedure tx86inlinenode.second_sin_real;
+     procedure TX86InlineNode.second_sin_real;
        begin
 
          load_fpu_location(left);
          emit_none(A_FSIN,S_NO)
        end;
 
-     procedure tx86inlinenode.second_prefetch;
+     procedure TX86InlineNode.second_prefetch;
        var
-         ref : treference;
-         r : tregister;
+         ref : TReference;
+         r : TRegister;
          checkpointer_used : boolean;
        begin
 {$if defined(i386)}
-         if CurrentSettings.cputype>=cpu_Pentium3 then
+         if CurrentSettings.CPUType>=cpu_Pentium3 then
 {$endif i386}
            begin
              { do not call Checkpointer for left node }
-             checkpointer_used:=(cs_checkpointer in CurrentSettings.localswitches);
+             checkpointer_used:=(cs_checkpointer in CurrentSettings.LocalSwitches);
              if checkpointer_used then
                node_change_local_switch(left,cs_checkpointer,false);
              SecondPass(left);
@@ -1010,7 +1010,7 @@ implementation
                    r:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_ADDR);
                    cg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.location.reference,r);
                    reference_reset_base(ref,r,0,left.location.reference.temppos,left.location.reference.alignment,left.location.reference.volatility);
-                   CurrentAsmData.CurrAsmList.concat(taicpu.op_ref(A_PREFETCHNTA,S_NO,ref));
+                   CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref(A_PREFETCHNTA,S_NO,ref));
                  end;
                else
                  { nothing to prefetch };
@@ -1019,17 +1019,17 @@ implementation
        end;
 
 
-    procedure tx86inlinenode.second_abs_long;
+    procedure TX86InlineNode.second_abs_long;
       var
-        hregister : tregister;
-        opsize : tcgsize;
-        hp : taicpu;
+        hregister : TRegister;
+        opsize : TCgSize;
+        hp : TAICPU;
         hl: TAsmLabel;
       begin
 {$if defined(i386)}
         if is_64bitint(resultdef) then
           inherited
-        else if not(CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.cputype]) then
+        else if not(CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) then
           begin
             opsize:=def_cgsize(left.resultdef);
             SecondPass(left);
@@ -1040,7 +1040,7 @@ implementation
             cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SAR,opsize,tcgsize2size[opsize]*8-1,left.location.register);
             cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,opsize,left.location.register,location.register);
             cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_SUB,opsize,left.location.register,location.register);
-            if cs_check_overflow in CurrentSettings.localswitches then
+            if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
                 CurrentAsmData.getjumplabel(hl);
                 cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl);
@@ -1062,14 +1062,14 @@ implementation
 
             cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             emit_reg(A_NEG,tcgsize2opsize[opsize],hregister);
-            if cs_check_overflow in CurrentSettings.localswitches then
+            if cs_check_overflow in CurrentSettings.LocalSwitches then
               begin
                 CurrentAsmData.getjumplabel(hl);
                 cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl);
                 cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
                 cg.a_label(CurrentAsmData.CurrAsmList,hl);
               end;
-            hp:=taicpu.op_reg_reg(A_CMOVcc,tcgsize2opsize[opsize],hregister,location.register);
+            hp:=TAICPU.op_reg_reg(A_CMOVcc,tcgsize2opsize[opsize],hregister,location.register);
             hp.condition:=C_NS;
             cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             CurrentAsmData.CurrAsmList.concat(hp);
@@ -1080,31 +1080,31 @@ implementation
                      INCLUDE/EXCLUDE GENERIC HANDLING
 *****************************************************************************}
 
-      procedure tx86inlinenode.second_IncludeExclude;
+      procedure TX86InlineNode.second_IncludeExclude;
         var
          hregister,
-         hregister2: tregister;
+         hregister2: TRegister;
          setbase   : aint;
-         bitsperop,l : longint;
-         cgop : topcg;
-         asmop : tasmop;
+         bitsperop,l : LongInt;
+         cgop : TOpCG;
+         asmop : TAsmOp;
          opdef : TDef;
          opsize,
-         orgsize: tcgsize;
+         orgsize: TCgSize;
         begin
 
           { bts on memory locations is very slow, so even the default code is faster }
-          if not(cs_opt_size in CurrentSettings.optimizerswitches) and (tcallparanode(tcallparanode(left).right).left.expectloc<>LOC_CONSTANT) and
-            (tcallparanode(left).left.expectloc=LOC_REFERENCE) then
+          if not(cs_opt_size in CurrentSettings.OptimizerSwitches) and (TCallParaNode(TCallParaNode(left).right).left.expectloc<>LOC_CONSTANT) and
+            (TCallParaNode(left).left.expectloc=LOC_REFERENCE) then
 
             begin
               inherited;
               exit;
             end;
 
-          if is_smallset(tcallparanode(left).resultdef) then
+          if is_smallset(TCallParaNode(left).resultdef) then
             begin
-              opdef:=tcallparanode(left).resultdef;
+              opdef:=TCallParaNode(left).resultdef;
               opsize:=int_cgsize(opdef.size)
             end
           else
@@ -1113,13 +1113,13 @@ implementation
               opsize:=OS_32;
             end;
           bitsperop:=(8*tcgsize2size[opsize]);
-          SecondPass(tcallparanode(left).left);
-          SecondPass(tcallparanode(tcallparanode(left).right).left);
-          setbase:=TSetDef(tcallparanode(left).left.resultdef).setbase;
-          if tcallparanode(tcallparanode(left).right).left.location.loc=LOC_CONSTANT then
+          SecondPass(TCallParaNode(left).left);
+          SecondPass(TCallParaNode(TCallParaNode(left).right).left);
+          setbase:=TSetDef(TCallParaNode(left).left.resultdef).setbase;
+          if TCallParaNode(TCallParaNode(left).right).left.location.loc=LOC_CONSTANT then
             begin
               { calculate bit position }
-              l:=1 shl ((tcallparanode(tcallparanode(left).right).left.location.value-setbase) mod bitsperop);
+              l:=1 shl ((TCallParaNode(TCallParaNode(left).right).left.location.value-setbase) mod bitsperop);
 
               { determine operator }
               if inlinenumber=in_include_x_y then
@@ -1129,18 +1129,18 @@ implementation
                   cgop:=OP_AND;
                   l:=not(l);
                 end;
-              case tcallparanode(left).left.location.loc of
+              case TCallParaNode(left).left.location.loc of
                 LOC_REFERENCE :
                   begin
-                    inc(tcallparanode(left).left.location.reference.offset,
-                      ((tcallparanode(tcallparanode(left).right).left.location.value-setbase) div bitsperop)*tcgsize2size[opsize]);
-                    cg.a_op_const_ref(CurrentAsmData.CurrAsmList,cgop,opsize,l,tcallparanode(left).left.location.reference);
+                    inc(TCallParaNode(left).left.location.reference.offset,
+                      ((TCallParaNode(TCallParaNode(left).right).left.location.value-setbase) div bitsperop)*tcgsize2size[opsize]);
+                    cg.a_op_const_ref(CurrentAsmData.CurrAsmList,cgop,opsize,l,TCallParaNode(left).left.location.reference);
                   end;
                 LOC_CSUBSETREG,
                 LOC_CREGISTER :
-                  hlcg.a_op_const_loc(CurrentAsmData.CurrAsmList,cgop,tcallparanode(left).left.resultdef,l,tcallparanode(left).left.location);
+                  hlcg.a_op_const_loc(CurrentAsmData.CurrAsmList,cgop,TCallParaNode(left).left.resultdef,l,TCallParaNode(left).left.location);
                 else
-                  internalerror(200405022);
+                  InternalError(200405022);
               end;
             end
           else
@@ -1157,15 +1157,15 @@ implementation
               else
                  asmop:=A_BTR;
 
-              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,tcallparanode(tcallparanode(left).right).left.location,tcallparanode(tcallparanode(left).right).left.resultdef,opdef,true);
-              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,tcallparanode(tcallparanode(left).right).left.resultdef,tcallparanode(tcallparanode(left).right).left.location,setbase);
-              hregister:=tcallparanode(tcallparanode(left).right).left.location.register;
-              if tcallparanode(left).left.location.loc=LOC_REFERENCE then
-                emit_reg_ref(asmop,tcgsize2opsize[opsize],hregister,tcallparanode(left).left.location.reference)
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.location,TCallParaNode(TCallParaNode(left).right).left.resultdef,opdef,true);
+              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,TCallParaNode(TCallParaNode(left).right).left.resultdef,TCallParaNode(TCallParaNode(left).right).left.location,setbase);
+              hregister:=TCallParaNode(TCallParaNode(left).right).left.location.register;
+              if TCallParaNode(left).left.location.loc=LOC_REFERENCE then
+                emit_reg_ref(asmop,tcgsize2opsize[opsize],hregister,TCallParaNode(left).left.location.reference)
               else
                 begin
                   { second argument can't be an 8 bit register either }
-                  hregister2:=tcallparanode(left).left.location.register;
+                  hregister2:=TCallParaNode(left).left.location.register;
                   if (orgsize in [OS_8,OS_S8]) then
                     hregister2:=cg.makeregsize(CurrentAsmData.CurrAsmList,hregister2,opsize);
                   emit_reg_reg(asmop,tcgsize2opsize[opsize],hregister,hregister2);
@@ -1174,9 +1174,9 @@ implementation
         end;
 
 
-    procedure tx86inlinenode.second_popcnt;
+    procedure TX86InlineNode.second_popcnt;
       var
-        opsize: tcgsize;
+        opsize: TCgSize;
       begin
         SecondPass(left);
 
@@ -1205,10 +1205,10 @@ implementation
       end;
 
 
-    procedure tx86inlinenode.second_fma;
+    procedure TX86InlineNode.second_fma;
 
       const
-        op : array[false..true,false..true,s32real..s64real,0..3] of TAsmOp =
+        op : array[false..true,false..true,S32Real..S64Real,0..3] of TAsmOp =
           (
            { positive product }
            (
@@ -1244,13 +1244,13 @@ implementation
 
       begin
 
-         if (fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
+         if (fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
            begin
              negop3:=false;
              negproduct:=false;
-             paraarray[1]:=tcallparanode(tcallparanode(tcallparanode(parameters).nextpara).nextpara).paravalue;
-             paraarray[2]:=tcallparanode(tcallparanode(parameters).nextpara).paravalue;
-             paraarray[3]:=tcallparanode(parameters).paravalue;
+             paraarray[1]:=TCallParaNode(TCallParaNode(TCallParaNode(parameters).nextpara).nextpara).paravalue;
+             paraarray[2]:=TCallParaNode(TCallParaNode(parameters).nextpara).paravalue;
+             paraarray[3]:=TCallParaNode(parameters).paravalue;
 
              { check if a neg. node can be removed
                this is possible because changing the sign of
@@ -1331,7 +1331,7 @@ implementation
                          paraarray[3].location.reference,paraarray[2].location.register,location.register);
                      end
                    else
-                     internalerror(2014041301);
+                     InternalError(2014041301);
                  end;
                end
              else
@@ -1363,11 +1363,11 @@ implementation
            end
          else
 
-           internalerror(2014032301);
+           InternalError(2014032301);
       end;
 
 
-    procedure tx86inlinenode.second_frac_real;
+    procedure TX86InlineNode.second_frac_real;
       var
         extrareg : TRegister;
       begin
@@ -1379,63 +1379,63 @@ implementation
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             if UseAVX then
               case TFloatDef(left.resultdef).floattype of
-                s32real:
+                S32Real:
                   begin
 
-                    if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.fputype]) then
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VREDUCESS,S_NO,3,left.location.register,left.location.register,location.register))
+                    if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.FPUType]) then
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESS,S_NO,3,left.location.register,left.location.register,location.register))
                     else
 
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_VSUBSS,S_NO,location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSS,S_NO,location.register,left.location.register,location.register));
                       end;
                   end;
-                s64real:
+                S64Real:
                   begin
 
-                    if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.fputype]) then
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VREDUCESD,S_NO,3,left.location.register,left.location.register,location.register))
+                    if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[CurrentSettings.FPUType]) then
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VREDUCESD,S_NO,3,left.location.register,left.location.register,location.register))
                     else
 
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_VSUBSD,S_NO,location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_VSUBSD,S_NO,location.register,left.location.register,location.register));
                       end;
                   end;
                 else
-                  internalerror(2017052102);
+                  InternalError(2017052102);
               end
             else
               begin
                 extrareg:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
                 cg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
                 case TFloatDef(left.resultdef).floattype of
-                  s32real:
+                  S32Real:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,extrareg));
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_SUBSS,S_NO,extrareg,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,extrareg));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSS,S_NO,extrareg,location.register));
                     end;
-                  s64real:
+                  S64Real:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,extrareg));
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_SUBSD,S_NO,extrareg,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,extrareg));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_SUBSD,S_NO,extrareg,location.register));
                     end;
                   else
-                    internalerror(2017052103);
+                    InternalError(2017052103);
                 end;
               end;
             if TFloatDef(left.resultdef).floattype<>TFloatDef(resultdef).floattype then
               hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,location.register,location.register,mms_movescalar);
           end
         else
-          internalerror(2017052101);
+          InternalError(2017052101);
       end;
 
 
-    procedure tx86inlinenode.second_int_real;
+    procedure TX86InlineNode.second_int_real;
       begin
         if use_vectorfpu(resultdef) then
           begin
@@ -1445,41 +1445,41 @@ implementation
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             if UseAVX then
               case TFloatDef(resultdef).floattype of
-                s32real:
+                S32Real:
                   { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
-                s64real:
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
+                S64Real:
                   { using left.location.register here as 3rd parameter is crucial to break dependency chains }
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
                 else
-                  internalerror(2017052105);
+                  InternalError(2017052105);
               end
             else
               begin
                 case TFloatDef(resultdef).floattype of
-                  s32real:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,location.register));
-                  s64real:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,location.register));
+                  S32Real:
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,location.register));
+                  S64Real:
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_ROUNDSD,S_NO,3,left.location.register,location.register));
                   else
-                    internalerror(2017052106);
+                    InternalError(2017052106);
                 end;
               end;
           end
         else
-          internalerror(2017052107);
+          InternalError(2017052107);
       end;
 
 
-    procedure tx86inlinenode.second_high;
+    procedure TX86InlineNode.second_high;
       var
-        donelab: tasmlabel;
-        hregister : tregister;
-        href : treference;
+        donelab: TAsmLabel;
+        hregister : TRegister;
+        href : TReference;
       begin
         SecondPass(left);
         if not(is_dynamic_array(left.resultdef)) then
-          Internalerror(2019122809);
+          InternalError(2019122809);
         { length in dynamic arrays is at offset -sizeof(pint) }
         hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
         CurrentAsmData.getjumplabel(donelab);
@@ -1490,7 +1490,7 @@ implementation
 
           do not use the cgs, as they might emit dec instead of a sub instruction, however with dec the trick
           we are using is not working as dec does not touch the carry flag }
-        CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_SUB,TCGSize2OpSize[def_cgsize(left.resultdef)],1,left.location.register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_SUB,TCGSize2OpSize[def_cgsize(left.resultdef)],1,left.location.register));
         { volatility of the dyn. array refers to the volatility of the
           string pointer, not of the string data }
         cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_C,donelab);
@@ -1507,10 +1507,10 @@ implementation
       end;
 
 
-    procedure tx86inlinenode.second_minmax;
+    procedure TX86InlineNode.second_minmax;
 
       const
-        oparray : array[false..true,false..true,s32real..s64real] of TAsmOp =
+        oparray : array[false..true,false..true,S32Real..S64Real] of TAsmOp =
           (
            (
             (A_MINSS,A_MINSD),
@@ -1531,23 +1531,23 @@ implementation
 
         i : integer;
         paraarray : array[1..2] of TNode;
-        instr: TAiCpu;
-        opsize: topsize;
-        finalval: TCgInt;
+        instr: TAICPU;
+        opsize: TOpSize;
+        finalval: TCGInt;
         tmpreg: TRegister;
       begin
 
          if
 {$ifdef i386}
-           ((CurrentSettings.fputype>=fpu_sse) and is_single(resultdef)) or
-           ((CurrentSettings.fputype>=fpu_sse2) and is_double(resultdef))
+           ((CurrentSettings.FPUType>=fpu_sse) and is_single(resultdef)) or
+           ((CurrentSettings.FPUType>=fpu_sse2) and is_double(resultdef))
 {$else i386}
            is_single(resultdef) or is_double(resultdef)
 {$endif i386}
            then
            begin
-             paraarray[1]:=tcallparanode(tcallparanode(parameters).nextpara).paravalue;
-             paraarray[2]:=tcallparanode(parameters).paravalue;
+             paraarray[1]:=TCallParaNode(TCallParaNode(parameters).nextpara).paravalue;
+             paraarray[2]:=TCallParaNode(parameters).paravalue;
 
              for i:=low(paraarray) to high(paraarray) do
                SecondPass(paraarray[i]);
@@ -1571,7 +1571,7 @@ implementation
 
              { due to min/max behaviour that it loads always the second operand (must be the else assignment) into destination if
                one of the operands is a NaN, we cannot swap operands to omit a mova operation in case fastmath is off }
-             if not(cs_opt_fastmath in CurrentSettings.optimizerswitches) and gotmem and (memop=1) then
+             if not(cs_opt_fastmath in CurrentSettings.OptimizerSwitches) and gotmem and (memop=1) then
                begin
                  hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,paraarray[1].location,paraarray[1].resultdef,true);
                  gotmem:=false;
@@ -1593,7 +1593,7 @@ implementation
                        emit_ref_reg_reg(op,S_NO,
                          paraarray[2].location.reference,paraarray[1].location.register,location.register);
                      else
-                       internalerror(2020120504);
+                       InternalError(2020120504);
                    end
                  else
                    case memop of
@@ -1612,7 +1612,7 @@ implementation
                            paraarray[2].location.reference,location.register);
                        end;
                      else
-                       internalerror(2020120601);
+                       InternalError(2020120601);
                    end;
                end
              else
@@ -1633,7 +1633,7 @@ implementation
 
          if
 {$ifndef x86_64}
-           (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.cputype]) and
+           (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.CPUType]) and
 {$endif x86_64}
            (
 {$ifdef x86_64}
@@ -1643,8 +1643,8 @@ implementation
            ) then
            begin
              { paraarray[1] is the right-hand side }
-             paraarray[1]:=tcallparanode(tcallparanode(parameters).nextpara).paravalue;
-             paraarray[2]:=tcallparanode(parameters).paravalue;
+             paraarray[1]:=TCallParaNode(TCallParaNode(parameters).nextpara).paravalue;
+             paraarray[2]:=TCallParaNode(parameters).paravalue;
 
              for i:=low(paraarray) to high(paraarray) do
                SecondPass(paraarray[i]);
@@ -1653,7 +1653,7 @@ implementation
                begin
                  { Swap the parameters so the constant is on the right }
                  paraarray[2]:=paraarray[1];
-                 paraarray[1]:=tcallparanode(parameters).paravalue;
+                 paraarray[1]:=TCallParaNode(parameters).paravalue;
                end;
 
              if not(paraarray[1].location.loc in [LOC_CONSTANT,LOC_REFERENCE,LOC_CREFERENCE,LOC_REGISTER,LOC_CREGISTER]) then
@@ -1680,7 +1680,7 @@ implementation
 
              { Try to use references as is, unless they would trigger internal
                error 200502052 }
-             if (cs_create_pic in CurrentSettings.moduleswitches) and
+             if (cs_create_pic in CurrentSettings.ModuleSwitches) and
                (paraarray[1].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
                Assigned(paraarray[1].location.reference.symbol) then
                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[1].location,
@@ -1688,7 +1688,7 @@ implementation
 
              { Try to use references as is, unless they would trigger internal
                error 200502052 }
-             if (cs_create_pic in CurrentSettings.moduleswitches) and
+             if (cs_create_pic in CurrentSettings.ModuleSwitches) and
                (paraarray[2].location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
                Assigned(paraarray[2].location.reference.symbol) then
                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,paraarray[2].location,
@@ -1702,7 +1702,7 @@ implementation
 {$ifdef x86_64}
                        { x86_64 only supports signed 32 bits constants directly }
                        if (opsize=S_Q) and
-                           ((paraarray[1].location.value<low(longint)) or (paraarray[1].location.value>high(longint))) then
+                           ((paraarray[1].location.value<low(LongInt)) or (paraarray[1].location.value>high(LongInt))) then
                          begin
                            tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
                            hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].location.value,tmpreg);
@@ -1713,26 +1713,26 @@ implementation
                          emit_const_ref(A_CMP,opsize,paraarray[1].location.value,paraarray[2].location.reference);
 
                        emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
-                       instr:=TAiCpu(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
+                       instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
                      begin
 {$ifdef x86_64}
                        { x86_64 only supports signed 32 bits constants directly }
                        if (opsize=S_Q) and
-                           ((paraarray[1].location.value<low(longint)) or (paraarray[1].location.value>high(longint))) then
+                           ((paraarray[1].location.value<low(LongInt)) or (paraarray[1].location.value>high(LongInt))) then
                          begin
                            tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
                            hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,paraarray[1].location.value,tmpreg);
-                           CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,opsize,
+                           CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,opsize,
                              tmpreg,paraarray[2].location.register));
                          end
                        else
 {$endif x86_64}
-                         CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_CMP,opsize,
+                         CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(A_CMP,opsize,
                            paraarray[1].location.value,paraarray[2].location.register));
 
-                       instr:=TAiCpu.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1746,12 +1746,12 @@ implementation
                        { The reference has already been stored at location.register, so use that }
                        emit_reg_ref(A_CMP,opsize,location.register,paraarray[2].location.reference);
                        emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
-                       instr:=TAiCpu(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
+                       instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
                      begin
                        emit_ref_reg(A_CMP,opsize,paraarray[1].location.reference,paraarray[2].location.register);
-                       instr:=TAiCpu.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1765,14 +1765,14 @@ implementation
                        emit_reg_ref(A_CMP,opsize,paraarray[1].location.register,paraarray[2].location.reference);
 
                        emit_ref_reg(A_CMOVcc,opsize,paraarray[2].location.reference,location.register);
-                       instr:=TAiCpu(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
+                       instr:=TAICPU(CurrentAsmData.CurrAsmList.Last); { The instruction just inserted; we need to modify its condition below }
                      end;
                    LOC_REGISTER,LOC_CREGISTER:
                      begin
-                       CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_CMP,opsize,
+                       CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_CMP,opsize,
                          paraarray[1].location.register,paraarray[2].location.register));
 
-                       instr:=TAiCpu.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
+                       instr:=TAICPU.op_reg_reg(A_CMOVcc,opsize,paraarray[2].location.register,location.register);
                        CurrentAsmData.CurrAsmList.concat(instr); { We need to modify the instruction's condition below }
                      end;
                    else
@@ -1797,13 +1797,13 @@ implementation
                in_max_qword:
                  instr.condition := C_A;
                else
-                 Internalerror(2021121903);
+                 InternalError(2021121903);
              end;
 
              cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
            end
          else
-           internalerror(2020120503);
+           InternalError(2020120503);
       end;
 
 

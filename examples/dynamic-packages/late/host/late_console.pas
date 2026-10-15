@@ -1,4 +1,4 @@
-program late_console;
+program LateConsole;
 {$mode objfpc}{$H+}
 uses LateHost;
-begin RunLateDemo(true); end.
+begin RunLateDemo(True); end.

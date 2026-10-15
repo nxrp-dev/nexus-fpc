@@ -20,10 +20,10 @@ const Version = '1.01';
       max_regcount = 511;
 
 var s : string;
-    i : longint;
-    line : longint;
-    regcount:longint;
-    regcount_bsstart:longint;
+    i : LongInt;
+    line : LongInt;
+    regcount:LongInt;
+    regcount_bsstart:LongInt;
     names,numbers,stdnames,intnames,nasmnames,attnames,stabs,dwarf16,dwarf32,dwarf64,ots,ops:
         array[0..max_regcount-1] of string[63];
     regnumber_index,std_regname_index,int_regname_index,att_regname_index,
@@ -32,10 +32,10 @@ var s : string;
     x86_64 : boolean;
     fileprefix : string;
 
-function tostr(l : longint) : string;
+function ToStr(l : LongInt) : string;
 
 begin
-  str(l,tostr);
+  str(l,ToStr);
 end;
 
 function readstr : string;
@@ -54,8 +54,8 @@ procedure readcomma;
   begin
      if s[i]<>',' then
        begin
-         writeln('Missing "," at line ',line);
-         writeln('Line: "',s,'"');
+         WriteLn('Missing "," at line ',line);
+         WriteLn('Line: "',s,'"');
          halt(1);
        end;
      inc(i);
@@ -71,16 +71,16 @@ procedure skipspace;
 
 procedure openinc(out f:text;const fn:string);
 begin
-  writeln('creating ',fn);
+  WriteLn('creating ',fn);
   assign(f,fn);
   rewrite(f);
-  writeln(f,'{ don''t edit, this file is generated from x86reg.dat }');
+  WriteLn(f,'{ don''t edit, this file is generated from x86reg.dat }');
 end;
 
 
 procedure closeinc(var f:text);
 begin
-  writeln(f);
+  WriteLn(f);
   close(f);
 end;
 
@@ -291,8 +291,8 @@ begin
           cpustr:='';
         if i<length(s) then
           begin
-            writeln('Extra chars at end of line, at line ',line);
-            writeln('Line: "',s,'"');
+            WriteLn('Extra chars at end of line, at line ',line);
+            WriteLn('Line: "',s,'"');
             halt(1);
           end;
         if (cpustr<>'64') or x86_64 then
@@ -300,7 +300,7 @@ begin
             inc(regcount);
             if regcount>max_regcount then
               begin
-                writeln('Error: Too much registers, please increase maxregcount in source');
+                WriteLn('Error: Too much registers, please increase maxregcount in source');
                 halt(2);
               end;
           end;
@@ -339,24 +339,24 @@ begin
     begin
       if not first then
         begin
-          writeln(numfile,',');
-          writeln(stdfile,',');
-          writeln(attfile,',');
-          writeln(intfile,',');
-          writeln(nasmfile,',');
-          writeln(stabfile,',');
-          writeln(dwrffile,',');
-          writeln(otfile,',');
-          writeln(rnifile,',');
-          writeln(srifile,',');
-          writeln(arifile,',');
-          writeln(irifile,',');
-          writeln(nrifile,',');
+          WriteLn(numfile,',');
+          WriteLn(stdfile,',');
+          WriteLn(attfile,',');
+          WriteLn(intfile,',');
+          WriteLn(nasmfile,',');
+          WriteLn(stabfile,',');
+          WriteLn(dwrffile,',');
+          WriteLn(otfile,',');
+          WriteLn(rnifile,',');
+          WriteLn(srifile,',');
+          WriteLn(arifile,',');
+          WriteLn(irifile,',');
+          WriteLn(nrifile,',');
         end
       else
         first:=false;
-      writeln(confile,names[i],' = ','tregister(',numbers[i],')',';');
-      write(numfile,'tregister(',numbers[i],')');
+      WriteLn(confile,names[i],' = ','TRegister(',numbers[i],')',';');
+      write(numfile,'TRegister(',numbers[i],')');
       write(stdfile,'''',stdnames[i],'''');
       write(attfile,'''',attnames[i],'''');
       write(intfile,'''',intnames[i],'''');
@@ -396,13 +396,13 @@ begin
   closeinc(arifile);
   closeinc(irifile);
   closeinc(nrifile);
-  writeln('Done!');
-  writeln(regcount,' registers processed');
+  WriteLn('Done!');
+  WriteLn(regcount,' registers processed');
 end;
 
 
 begin
-   writeln('Register Table Converter Version ',Version);
+   WriteLn('Register Table Converter Version ',Version);
    if paramcount=0 then
      begin
        i8086:=false;
@@ -410,30 +410,30 @@ begin
      end
    else
      begin
-       i8086:=paramstr(1)='i8086';
-       x86_64:=paramstr(1)='x86_64';
+       i8086:=ParamStr(1)='i8086';
+       x86_64:=ParamStr(1)='x86_64';
        if (paramcount<>1) or
-          ((paramstr(1)<>'i8086') and (paramstr(1)<>'i386') and (paramstr(1)<>'x86_64')) then
+          ((ParamStr(1)<>'i8086') and (ParamStr(1)<>'i386') and (ParamStr(1)<>'x86_64')) then
          begin
-           writeln('Usage: ',paramstr(0));
-           writeln('Only one optional parameter is allowed: i8086, i386 or x86_64');
+           WriteLn('Usage: ',ParamStr(0));
+           WriteLn('Only one optional parameter is allowed: i8086, i386 or x86_64');
            halt(1);
          end;
      end;
    if x86_64 then
      begin
        fileprefix:='r8664';
-       writeln('Processing for CPU x86_64');
+       WriteLn('Processing for CPU x86_64');
      end
    else if i8086 then
      begin
        fileprefix:='r8086';
-       writeln('Processing for CPU i8086');
+       WriteLn('Processing for CPU i8086');
      end
    else
      begin
        fileprefix:='r386';
-       writeln('Processing for CPU i386');
+       WriteLn('Processing for CPU i386');
      end;
    line:=0;
    regcount:=0;

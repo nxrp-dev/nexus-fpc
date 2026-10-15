@@ -7,7 +7,7 @@ program tcpstr17;
 {$endif}
 
 uses
-  unicodeducet, fpwidestring, cp866;
+  unicodeducet, fpwidestring, CP866;
 
 procedure TestRawByte(const Source: RawByteString; cp: word; const reason: integer);
 begin

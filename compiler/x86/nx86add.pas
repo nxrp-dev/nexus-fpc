@@ -26,18 +26,18 @@ unit nx86add;
   interface
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
       symtype,
       cgbase,
       cpubase,
       node,nadd,ncgadd;
 
     type
-      tx86addnode = class(tcgaddnode)
+      TX86AddNode = class(TCGAddNode)
       protected
-        function  getresflags(unsigned : boolean) : tresflags;
-        function  getfpuresflags : tresflags;
-        procedure left_must_be_reg(opdef: TDef; opsize:TCGSize;noswap:boolean);
+        function  getresflags(unsigned : boolean) : TResFlags;
+        function  getfpuresflags : TResFlags;
+        procedure left_must_be_reg(opdef: TDef; opsize:TCgSize;noswap:boolean);
         procedure force_left_and_right_fpureg;
         procedure prepare_x87_locations(out refnode: TNode);
         procedure emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
@@ -74,15 +74,15 @@ unit nx86add;
   implementation
 
     uses
-      globtype,globals,
-      verbose,cutils,compinnr,
-      cpuinfo,
-      aasmbase,aasmdata,aasmcpu,
+      GlobType,Globals,
+      Verbose,CUtils,compinnr,
+      CPUInfo,
+      aasmbase,AAsmData,aasmcpu,
       symconst,symdef,
       cgobj,hlcgobj,cgx86,cga,cgutils,
       tgobj,ncgutil,nutils,
       ncon,nset,ninl,ncnv,ncal,nmat,
-      defutil,defcmp,constexp,
+      defutil,defcmp,ConstExp,
       pass_1,pass_2,htypechk;
 
 { Range check must be disabled explicitly as the code serves
@@ -93,12 +93,12 @@ unit nx86add;
                                   Helpers
 *****************************************************************************}
 
-    procedure tx86addnode.emit_generic_code(op:TAsmOp;opsize:TCGSize;unsigned,extra_not,mboverflow:boolean);
+    procedure TX86AddNode.emit_generic_code(op:TAsmOp;opsize:TCgSize;unsigned,extra_not,mboverflow:boolean);
       var
-        power : longint;
-        hl4   : tasmlabel;
-        r     : Tregister;
-        href  : treference;
+        power : LongInt;
+        hl4   : TAsmLabel;
+        r     : TRegister;
+        href  : TReference;
         overflowcheck: boolean;
         comparison: boolean;
       begin
@@ -189,14 +189,14 @@ unit nx86add;
                else
                  if (op=A_IMUL) and
                     (right.location.loc=LOC_CONSTANT) and
-                    (ispowerof2(int64(right.location.value),power)) and
+                    (IsPowerOf2(int64(right.location.value),power)) and
                     overflowcheck then
                   begin
                     emit_const_reg(A_SHL,TCGSize2Opsize[opsize],power,left.location.register);
                   end
                 else if (op=A_IMUL) and
                     (right.location.loc=LOC_CONSTANT) and
-                    (right.location.value>1) and (ispowerof2(int64(right.location.value)-1,power)) and
+                    (right.location.value>1) and (IsPowerOf2(int64(right.location.value)-1,power)) and
                     (power in [1..3]) and
                     not overflowcheck then
                   begin
@@ -204,7 +204,7 @@ unit nx86add;
                     href.index:=left.location.register;
                     href.scalefactor:=int64(right.location.value)-1;
                     left.location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[opsize],href,left.location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(A_LEA,TCgSize2OpSize[opsize],href,left.location.register));
                   end
                else
                  begin
@@ -248,7 +248,7 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.left_must_be_reg(opdef: TDef; opsize:TCGSize;noswap:boolean);
+    procedure TX86AddNode.left_must_be_reg(opdef: TDef; opsize:TCgSize;noswap:boolean);
       begin
         { left location is not a register? }
         if (left.location.loc<>LOC_REGISTER) then
@@ -288,7 +288,7 @@ unit nx86add;
        end;
 
 
-    procedure tx86addnode.force_left_and_right_fpureg;
+    procedure TX86AddNode.force_left_and_right_fpureg;
       begin
         if (right.location.loc<>LOC_FPUREGISTER) then
           begin
@@ -315,7 +315,7 @@ unit nx86add;
     { Makes sides suitable for executing an x87 instruction:
       if either side is OS_F32/OS_F64-sized LOC_REFERENCE, it is returned in 'refnode'
       everything else is loaded to FPU stack. }
-    procedure tx86addnode.prepare_x87_locations(out refnode: TNode);
+    procedure TX86AddNode.prepare_x87_locations(out refnode: TNode);
       begin
         refnode:=nil;
 
@@ -370,10 +370,10 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.emit_op_right_left(op:TAsmOp;opsize:TCgsize;AllocFlags:boolean);
+    procedure TX86AddNode.emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
 {$ifdef x86_64}
       var
-        tmpreg : tregister;
+        tmpreg : TRegister;
 {$endif x86_64}
       begin
         if (right.location.loc in [LOC_CSUBSETREG,LOC_SUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF]) then
@@ -386,28 +386,28 @@ unit nx86add;
               if AllocFlags then
                 cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],right.location.register,left.location.register));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,TCGSize2Opsize[opsize],right.location.register,left.location.register));
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
-              tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+              TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
               if AllocFlags then
                 cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-              CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,TCGSize2Opsize[opsize],right.location.reference,left.location.register));
+              CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,TCGSize2Opsize[opsize],right.location.reference,left.location.register));
             end;
           LOC_CONSTANT :
             begin
 {$ifdef x86_64}
               { x86_64 only supports signed 32 bits constants directly }
               if (opsize in [OS_S64,OS_64]) and
-                 ((right.location.value<low(longint)) or (right.location.value>high(longint))) then
+                 ((right.location.value<low(LongInt)) or (right.location.value>high(LongInt))) then
                 begin
                   tmpreg:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
                   cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,right.location.value,tmpreg);
                   if AllocFlags then
                     cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],tmpreg,left.location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,TCGSize2Opsize[opsize],tmpreg,left.location.register));
                 end
               else
 {$endif x86_64}
@@ -415,16 +415,16 @@ unit nx86add;
                   if AllocFlags then
                     cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(op,TCGSize2Opsize[opsize],right.location.value,left.location.register));
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(op,TCGSize2Opsize[opsize],right.location.value,left.location.register));
                 end;
             end;
           else
-            internalerror(200203232);
+            InternalError(200203232);
         end;
       end;
 
 
-    function tx86addnode.getresflags(unsigned : boolean) : tresflags;
+    function TX86AddNode.getresflags(unsigned : boolean) : TResFlags;
       begin
          case nodetype of
            equaln : getresflags:=F_E;
@@ -439,7 +439,7 @@ unit nx86add;
                      gtn : getresflags:=F_L;
                      gten : getresflags:=F_LE;
                      else
-                       internalerror(2013120105);
+                       InternalError(2013120105);
                   end
                 else
                   case nodetype of
@@ -448,7 +448,7 @@ unit nx86add;
                      gtn : getresflags:=F_G;
                      gten : getresflags:=F_GE;
                      else
-                       internalerror(2013120106);
+                       InternalError(2013120106);
                   end;
              end
            else
@@ -460,7 +460,7 @@ unit nx86add;
                      gtn : getresflags:=F_B;
                      gten : getresflags:=F_BE;
                      else
-                       internalerror(2013120107);
+                       InternalError(2013120107);
                   end
                 else
                   case nodetype of
@@ -469,14 +469,14 @@ unit nx86add;
                      gtn : getresflags:=F_A;
                      gten : getresflags:=F_AE;
                      else
-                       internalerror(2013120108);
+                       InternalError(2013120108);
                   end;
              end;
          end;
       end;
 
 
-    function tx86addnode.getfpuresflags : tresflags;
+    function TX86AddNode.getfpuresflags : TResFlags;
       begin
         if (nodetype=equaln) then
           result:=F_FE
@@ -489,7 +489,7 @@ unit nx86add;
             gtn : result:=F_FB;
             gten : result:=F_FBE;
           else
-            internalerror(2014031402);
+            InternalError(2014031402);
           end
         else
           case nodetype of
@@ -498,7 +498,7 @@ unit nx86add;
             gtn : result:=F_FA;
             gten : result:=F_FAE;
           else
-            internalerror(2014031403);
+            InternalError(2014031403);
           end;
       end;
 
@@ -507,11 +507,11 @@ unit nx86add;
 *****************************************************************************}
 
 
-    procedure tx86addnode.second_addsmallset;
+    procedure TX86AddNode.second_addsmallset;
       var
         setbase : aint;
         opdef  : TDef;
-        opsize : TCGSize;
+        opsize : TCgSize;
         op     : TAsmOp;
         extra_not,
         noswap : boolean;
@@ -539,8 +539,8 @@ unit nx86add;
               if right.nodetype=setelementn then
                begin
                  { no range support for smallsets! }
-                 if assigned(tsetelementnode(right).right) then
-                   internalerror(43244);
+                 if Assigned(TSetElementNode(right).right) then
+                   InternalError(43244);
                  { btsb isn't supported }
                  if opsize=OS_8 then
                    begin
@@ -584,7 +584,7 @@ unit nx86add;
           andn :
             op:=A_AND;
           else
-            internalerror(2003042215);
+            InternalError(2003042215);
         end;
         if all_member_optimization then
           begin
@@ -602,7 +602,7 @@ unit nx86add;
         else
           begin
             { can we use the BMI1 instruction andn? }
-            if (op=A_AND) and extra_not and (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.cputype]) and
+            if (op=A_AND) and extra_not and (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.CPUType]) and
               (resultdef.size in [4{$ifdef x86_64},8{$endif x86_64}]) then
               begin
                 location_reset(location,LOC_REGISTER,left.location.size);
@@ -621,7 +621,7 @@ unit nx86add;
                   LOC_CREFERENCE,LOC_REFERENCE:
                     emit_ref_reg_reg(A_ANDN,TCGSize2Opsize[opsize],left.location.reference,right.location.register,location.register);
                   else
-                    Internalerror(2018040201);
+                    InternalError(2018040201);
                 end;
               end
             else
@@ -642,7 +642,7 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.second_addsmallsetelement;
+    procedure TX86AddNode.second_addsmallsetelement;
       var
         setbase, mask: aint;
       begin
@@ -651,10 +651,10 @@ unit nx86add;
         else
           begin
             if nodetype<>addn then
-              internalerror(2022090502);
+              InternalError(2022090502);
             { no range support for smallsets }
-            if assigned(tsetelementnode(right).right) then
-              internalerror(2022090501);
+            if Assigned(TSetElementNode(right).right) then
+              InternalError(2022090501);
             pass_left_right;
             { setelementn is a special case, it must be on right }
             if (nf_swapped in flags) and
@@ -686,10 +686,10 @@ unit nx86add;
 
 
 
-    procedure tx86addnode.second_cmpsmallset;
+    procedure TX86AddNode.second_cmpsmallset;
       var
         opdef  : TDef;
-        opsize : TCGSize;
+        opsize : TCgSize;
         op     : TAsmOp;
       begin
         pass_left_right;
@@ -711,7 +711,7 @@ unit nx86add;
               nodetype:=equaln;
             end;
           else
-            internalerror(2003042204);
+            InternalError(2003042204);
         end;
         { left must be a register }
         left_must_be_reg(opdef,opsize,false);
@@ -729,13 +729,13 @@ unit nx86add;
 *****************************************************************************}
 
 {$ifdef SUPPORT_MMX}
-    procedure tx86addnode.second_opmmx;
+    procedure TX86AddNode.second_opmmx;
       var
         op         : TAsmOp;
         cmpop      : boolean;
-        mmxbase    : tmmxtype;
+        mmxbase    : TMMXType;
         hreg,
-        hregister  : tregister;
+        hregister  : TRegister;
       begin
         pass_left_right;
 
@@ -747,7 +747,7 @@ unit nx86add;
         case nodetype of
           addn :
             begin
-              if (cs_mmx_saturation in CurrentSettings.localswitches) then
+              if (cs_mmx_saturation in CurrentSettings.LocalSwitches) then
                 begin
                    case mmxbase of
                       mmxs8bit:
@@ -789,7 +789,7 @@ unit nx86add;
             end;
           subn :
             begin
-              if (cs_mmx_saturation in CurrentSettings.localswitches) then
+              if (cs_mmx_saturation in CurrentSettings.LocalSwitches) then
                 begin
                    case mmxbase of
                       mmxs8bit:
@@ -825,11 +825,11 @@ unit nx86add;
           andn:
             op:=A_PAND;
           else
-            internalerror(2003042214);
+            InternalError(2003042214);
         end;
 
         if op = A_NOP then
-          internalerror(201408201);
+          InternalError(201408201);
 
         { left and right no register?  }
         { then one must be demanded    }
@@ -845,16 +845,16 @@ unit nx86add;
               { register variable ? }
               if (left.location.loc=LOC_CMMXREGISTER) then
                begin
-                 hregister:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+                 hregister:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
                  emit_reg_reg(A_MOVQ,S_NO,left.location.register,hregister);
                end
               else
                begin
                  if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                  internalerror(200203245);
+                  InternalError(200203245);
 
-                 hregister:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
+                 hregister:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+                 TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
                  emit_ref_reg(A_MOVQ,S_NO,left.location.reference,hregister);
                end;
 
@@ -868,7 +868,7 @@ unit nx86add;
          begin
            if (nodetype=subn) and (nf_swapped in flags) then
             begin
-              hreg:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+              hreg:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
               if right.location.loc=LOC_CMMXREGISTER then
                begin
                  emit_reg_reg(A_MOVQ,S_NO,right.location.register,hreg);
@@ -877,8 +877,8 @@ unit nx86add;
               else
                begin
                  if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                  internalerror(2002032412);
-                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+                  InternalError(2002032412);
+                 TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
                  emit_ref_reg(A_MOVQ,S_NO,right.location.reference,hreg);
                  emit_reg_reg(op,S_NO,left.location.register,hreg);
                end;
@@ -891,8 +891,8 @@ unit nx86add;
               else
                begin
                  if not(right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                  internalerror(200203246);
-                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+                  InternalError(200203246);
+                 TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
                  emit_ref_reg(op,S_NO,right.location.reference,left.location.register);
                end;
               location.register:=left.location.register;
@@ -925,27 +925,27 @@ unit nx86add;
                                 AddFloat
 *****************************************************************************}
 
-    procedure tx86addnode.second_addfloatsse;
+    procedure TX86AddNode.second_addfloatsse;
       var
-        op : topcg;
+        op : TOpCG;
         sqr_sum : boolean;
         tmp : TNode;
       begin
         sqr_sum:=false;
-        if (CurrentSettings.fputype>=fpu_sse3) and
+        if (CurrentSettings.FPUType>=fpu_sse3) and
            use_vectorfpu(resultdef) and
            (nodetype in [addn,subn]) and
-          (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_sqr_real) and
-          (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_sqr_real) then
+          (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
+          (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
           begin
             sqr_sum:=true;
-            tmp:=tinlinenode(left).left;
-            tinlinenode(left).left:=nil;
+            tmp:=TInlineNode(left).left;
+            TInlineNode(left).left:=nil;
             left.free;
             left:=tmp;
 
-            tmp:=tinlinenode(right).left;
-            tinlinenode(right).left:=nil;
+            tmp:=TInlineNode(right).left;
+            TInlineNode(right).left:=nil;
             right.free;
             right:=tmp;
           end;
@@ -974,7 +974,7 @@ unit nx86add;
           slashn :
             op:=OP_DIV;
           else
-            internalerror(200312231);
+            InternalError(200312231);
         end;
 
         location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
@@ -989,35 +989,35 @@ unit nx86add;
             location:=left.location;
             if is_double(resultdef) then
               begin
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
                   subn:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
                   else
-                    internalerror(201108162);
+                    InternalError(201108162);
                 end;
               end
             else
               begin
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
                 { ensure that bits 64..127 contain valid values }
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
                 { the data is now in bits 0..32 and 64..95 }
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
                     end;
                   subn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
                     end;
                   else
-                    internalerror(201108163);
+                    InternalError(201108163);
                 end;
               end
           end
@@ -1073,9 +1073,9 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.second_addfloatavx;
+    procedure TX86AddNode.second_addfloatavx;
       var
-        op : topcg;
+        op : TOpCG;
         sqr_sum : boolean;
         {$ifdef dummy}
         tmp : TNode;
@@ -1083,20 +1083,20 @@ unit nx86add;
       begin
         sqr_sum:=false;
 {$ifdef dummy}
-        if (CurrentSettings.fputype>=fpu_sse3) and
+        if (CurrentSettings.FPUType>=fpu_sse3) and
            use_vectorfpu(resultdef) and
            (nodetype in [addn,subn]) and
-          (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_sqr_real) and
-          (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_sqr_real) then
+          (left.nodetype=inlinen) and (TInlineNode(left).inlinenumber=in_sqr_real) and
+          (right.nodetype=inlinen) and (TInlineNode(right).inlinenumber=in_sqr_real) then
           begin
             sqr_sum:=true;
-            tmp:=tinlinenode(left).left;
-            tinlinenode(left).left:=nil;
+            tmp:=TInlineNode(left).left;
+            TInlineNode(left).left:=nil;
             left.free;
             left:=tmp;
 
-            tmp:=tinlinenode(right).left;
-            tinlinenode(right).left:=nil;
+            tmp:=TInlineNode(right).left;
+            TInlineNode(right).left:=nil;
             right.free;
             right:=tmp;
           end;
@@ -1126,7 +1126,7 @@ unit nx86add;
           slashn :
             op:=OP_DIV;
           else
-            internalerror(2003122303);
+            InternalError(2003122303);
         end;
 
         location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
@@ -1141,40 +1141,40 @@ unit nx86add;
             location:=left.location;
             if is_double(resultdef) then
               begin
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
                   subn:
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
                   else
-                    internalerror(2011081601);
+                    InternalError(2011081601);
                 end;
               end
             else
               begin
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
                 { ensure that bits 64..127 contain valid values }
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
                 { the data is now in bits 0..32 and 64..95 }
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
                     end;
                   subn:
                     begin
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
                     end;
                   else
-                    internalerror(2011081604);
+                    InternalError(2011081604);
                 end;
               end
           end
         { left*2 ? }
-        else if (nodetype=muln) and is_constrealnode(right) and is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real=2) then
+        else if (nodetype=muln) and is_constrealnode(right) and Is_Number_Float(TRealConstNode(right).value_real) and (TRealConstNode(right).value_real=2) then
           begin
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,left.location.size);
             hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
@@ -1185,7 +1185,7 @@ unit nx86add;
               mms_movescalar);
           end
         { right*2 ? }
-        else if (nodetype=muln) and is_constrealnode(left) and is_number_float(trealconstnode(left).value_real) and (trealconstnode(left).value_real=2) then
+        else if (nodetype=muln) and is_constrealnode(left) and Is_Number_Float(TRealConstNode(left).value_real) and (TRealConstNode(left).value_real=2) then
           begin
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,right.location.size);
             hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,right.location,right.resultdef,true);
@@ -1235,14 +1235,14 @@ unit nx86add;
       end;
 
 
-    function tx86addnode.pass_1: TNode;
+    function TX86AddNode.pass_1: TNode;
       begin
         { only pass_1 might set the resultdef as it could be set to nil by some previous
           code transformation. As we need a valid left/right.resultdef later on, ensure
           a valid result def is set, see also issue #40727 }
-        if not(assigned(left.resultdef)) then
+        if not(Assigned(left.resultdef)) then
           TypeCheckPass(left);
-        if not(assigned(right.resultdef)) then
+        if not(Assigned(right.resultdef)) then
           TypeCheckPass(right);
 
         { on x86, we do not support fpu registers, so in case of operations using the x87, it
@@ -1264,7 +1264,7 @@ unit nx86add;
       end;
 
 
-    function tx86addnode.simplify(forinline : boolean) : TNode;
+    function TX86AddNode.simplify(forinline : boolean) : TNode;
       var
         t, m, ThisNode, ConstNode: TNode;
         lt,rt, ThisType: TNodeType;
@@ -1281,9 +1281,9 @@ unit nx86add;
         DoOptimisation:=False;
 
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
-        if (cs_opt_level1 in CurrentSettings.optimizerswitches) and
+        if (cs_opt_level1 in CurrentSettings.OptimizerSwitches) and
           { The presence of overflow checks tends to cause internal errors with the multiplication nodes }
-          not (cs_check_overflow in CurrentSettings.localswitches) and
+          not (cs_check_overflow in CurrentSettings.LocalSwitches) and
           (nodetype in [equaln,unequaln]) then
           begin
             if (lt=modn) and (rt=ordconstn) and (TOrdConstNode(right).value.uvalue=0) then
@@ -1414,17 +1414,17 @@ unit nx86add;
                                   <comparison constant shr (b - 1)>
                             }
 
-                            ThisNode:=ctypeconvnode.create_internal(TModDivNode(t).left, ThisDef);
+                            ThisNode:=CTypeConvNode.create_internal(TModDivNode(t).left, ThisDef);
                             TTypeConvNode(ThisNode).convtype:=tc_int_2_int;
                             ThisDef:=get_unsigned_inttype(ThisDef);
                             ThisNode.resultdef:=ThisDef;
 
                             TModDivNode(t).left:=nil;
 
-                            ConstNode:=cordconstnode.create(reciprocal, ThisDef, False);
+                            ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=caddnode.create_internal(muln, ThisNode, ConstNode);
+                            ThisNode:=CAddNode.create_internal(muln, ThisNode, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
 {$push}
@@ -1434,26 +1434,26 @@ unit nx86add;
                             else
                               comparison:=(aWord(1) shl ((N-1) and (SizeOf(aWord)*8-1))) div divisor;
 {$pop}
-                            ConstNode:=cordconstnode.create(comparison, ThisDef, False);
+                            ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=caddnode.create_internal(addn, ThisNode, ConstNode);
+                            ThisNode:=CAddNode.create_internal(addn, ThisNode, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
                             if shift>0 then
                               begin
-                                ConstNode:=cordconstnode.create(shift, u8inttype, False);
+                                ConstNode:=COrdConstNode.create(shift, u8inttype, False);
                                 ConstNode.resultdef:=u8inttype;
-                                ThisNode:=cinlinenode.createintern(in_ror_x_y,false,
-                                  ccallparanode.create(ConstNode,
-                                  ccallparanode.create(ThisNode, nil)));
+                                ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
+                                  CCallParaNode.create(ConstNode,
+                                  CCallParaNode.create(ThisNode, nil)));
 
                                 ThisNode.resultdef:=ThisDef;
 
-                                ConstNode:=cordconstnode.create(comparison shr (shift - 1), ThisDef, False);
+                                ConstNode:=COrdConstNode.create(comparison shr (shift - 1), ThisDef, False);
                               end
                             else
-                              ConstNode:=cordconstnode.create(comparison*2, ThisDef, False);
+                              ConstNode:=COrdConstNode.create(comparison*2, ThisDef, False);
 
                             ConstNode.resultdef:=ThisDef;
 
@@ -1543,21 +1543,21 @@ unit nx86add;
                             N:=ThisDef.size*8;
                             calc_mul_inverse(N, TOrdConstNode(TModDivNode(t).right).value.uvalue, reciprocal, shift);
 
-                            ConstNode:=cordconstnode.create(reciprocal, ThisDef, False);
+                            ConstNode:=COrdConstNode.create(reciprocal, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
-                            ThisNode:=caddnode.create_internal(muln, TModDivNode(t).left, ConstNode);
+                            ThisNode:=CAddNode.create_internal(muln, TModDivNode(t).left, ConstNode);
                             ThisNode.resultdef:=ThisDef;
 
                             TModDivNode(t).left:=nil;
 
                             if shift>0 then
                               begin
-                                ConstNode:=cordconstnode.create(shift, u8inttype, False);
+                                ConstNode:=COrdConstNode.create(shift, u8inttype, False);
                                 ConstNode.resultdef:=u8inttype;
-                                ThisNode:=cinlinenode.createintern(in_ror_x_y,false,
-                                  ccallparanode.create(ConstNode,
-                                  ccallparanode.create(ThisNode, nil)));
+                                ThisNode:=CInlineNode.createintern(in_ror_x_y,false,
+                                  CCallParaNode.create(ConstNode,
+                                  CCallParaNode.create(ThisNode, nil)));
 
                                 ThisNode.resultdef:=ThisDef;
 
@@ -1573,7 +1573,7 @@ unit nx86add;
 {$pop}
                               end;
 
-                            ConstNode:=cordconstnode.create(comparison, ThisDef, False);
+                            ConstNode:=COrdConstNode.create(comparison, ThisDef, False);
                             ConstNode.resultdef:=ThisDef;
 
                             Result:=CAddNode.create_internal(ThisType, ThisNode, ConstNode);
@@ -1589,29 +1589,29 @@ unit nx86add;
       end;
 
 
-    function tx86addnode.use_fma : boolean;
+    function TX86AddNode.use_fma : boolean;
       begin
 
         { test if the result stays in an xmm register, fiddeling with fpu registers and fma makes no sense }
         Result:=use_vectorfpu(resultdef) and
-          ((fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
+          ((fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
 
       end;
 
 
-    procedure tx86addnode.second_cmpfloatvector;
+    procedure TX86AddNode.second_cmpfloatvector;
       var
-        op : tasmop;
+        op : TAsmOp;
       const
-        ops_single: array[boolean] of tasmop = (A_COMISS,A_VCOMISS);
-        ops_double: array[boolean] of tasmop = (A_COMISD,A_VCOMISD);
+        ops_single: array[boolean] of TAsmOp = (A_COMISS,A_VCOMISS);
+        ops_double: array[boolean] of TAsmOp = (A_COMISD,A_VCOMISD);
       begin
         if is_single(left.resultdef) then
           op:=ops_single[UseAVX]
         else if is_double(left.resultdef) then
           op:=ops_double[UseAVX]
         else
-          internalerror(200402222);
+          InternalError(200402222);
         pass_left_right;
 
         { fpu operands are always in reversed order on the stack }
@@ -1633,13 +1633,13 @@ unit nx86add;
             case left.location.loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,left.location.reference,right.location.register));
+                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,left.location.reference,right.location.register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,left.location.register,right.location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,left.location.register,right.location.register));
               else
-                internalerror(200402221);
+                InternalError(200402221);
             end;
             toggleflag(nf_swapped);
           end
@@ -1649,13 +1649,13 @@ unit nx86add;
             case right.location.loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,right.location.reference,left.location.register));
+                  TCGX86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,right.location.reference,left.location.register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,right.location.register,left.location.register));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,right.location.register,left.location.register));
               else
-                internalerror(200402223);
+                InternalError(200402223);
             end;
           end;
         location.resflags:=getfpuresflags;
@@ -1664,9 +1664,9 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.second_opvector;
+    procedure TX86AddNode.second_opvector;
       var
-        op : topcg;
+        op : TOpCG;
       begin
         pass_left_right;
         if (nf_swapped in flags) then
@@ -1682,7 +1682,7 @@ unit nx86add;
           slashn :
             op:=OP_DIV;
           else
-            internalerror(200610071);
+            InternalError(200610071);
         end;
 
         if fits_in_mm_register(left.resultdef) then
@@ -1722,12 +1722,12 @@ unit nx86add;
         else
           begin
             { not yet supported }
-            internalerror(200610072);
+            InternalError(200610072);
           end
       end;
 
 
-    procedure tx86addnode.second_addfloat;
+    procedure TX86AddNode.second_addfloat;
       const
         ops_add:  array[boolean] of TAsmOp = (A_FADDP,A_FADD);
         ops_mul:  array[boolean] of TAsmOp = (A_FMULP,A_FMUL);
@@ -1756,24 +1756,24 @@ unit nx86add;
           end;
 
         { can the operation do the conversion? }
-        if (left.nodetype=typeconvn) and (is_double(ttypeconvnode(left).left.resultdef) or is_single(ttypeconvnode(left).left.resultdef)) then
+        if (left.nodetype=typeconvn) and (is_double(TTypeConvNode(left).left.resultdef) or is_single(TTypeConvNode(left).left.resultdef)) then
           begin
             hp:=left;
-            left:=ttypeconvnode(left).left;
-            ttypeconvnode(hp).left:=nil;
+            left:=TTypeConvNode(left).left;
+            TTypeConvNode(hp).left:=nil;
             hp.Free;
           end;
-        if (right.nodetype=typeconvn) and (is_double(ttypeconvnode(right).left.resultdef) or is_single(ttypeconvnode(right).left.resultdef)) then
+        if (right.nodetype=typeconvn) and (is_double(TTypeConvNode(right).left.resultdef) or is_single(TTypeConvNode(right).left.resultdef)) then
           begin
             hp:=right;
-            right:=ttypeconvnode(right).left;
-            ttypeconvnode(hp).left:=nil;
+            right:=TTypeConvNode(right).left;
+            TTypeConvNode(hp).left:=nil;
             hp.Free;
           end;
 
         pass_left_right;
         prepare_x87_locations(refnode);
-        hasref:=assigned(refnode);
+        hasref:=Assigned(refnode);
 
         case nodetype of
           addn :
@@ -1791,7 +1791,7 @@ unit nx86add;
             else
               op:=ops_div[hasref];
           else
-            internalerror(2003042203);
+            InternalError(2003042203);
         end;
 
         if hasref then
@@ -1799,7 +1799,7 @@ unit nx86add;
         else
           begin
             emit_reg_reg(op,S_NO,NR_ST,NR_ST1);
-            tcgx86(cg).dec_fpu_stack;
+            TCGX86(cg).dec_fpu_stack;
           end;
 
         location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
@@ -1807,7 +1807,7 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.second_cmpfloat;
+    procedure TX86AddNode.second_cmpfloat;
 
       begin
         if use_vectorfpu(left.resultdef) or use_vectorfpu(right.resultdef) then
@@ -1820,11 +1820,11 @@ unit nx86add;
         force_left_and_right_fpureg;
 
 {$ifndef x86_64}
-        if CurrentSettings.cputype<cpu_Pentium2 then
+        if CurrentSettings.CPUType<cpu_Pentium2 then
           begin
             emit_none(A_FCOMPP,S_NO);
-            tcgx86(cg).dec_fpu_stack;
-            tcgx86(cg).dec_fpu_stack;
+            TCGX86(cg).dec_fpu_stack;
+            TCGX86(cg).dec_fpu_stack;
 
             { load fpu flags }
 
@@ -1834,17 +1834,17 @@ unit nx86add;
                 emit_none(A_SAHF,S_NO);
                 cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_AX);
               end;
-            if cs_fpu_fwait in CurrentSettings.localswitches then
-              CurrentAsmData.CurrAsmList.concat(Taicpu.Op_none(A_FWAIT,S_NO));
+            if cs_fpu_fwait in CurrentSettings.LocalSwitches then
+              CurrentAsmData.CurrAsmList.concat(TAICPU.Op_none(A_FWAIT,S_NO));
           end
         else
 {$endif x86_64}
           begin
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_FCOMIP,S_NO,NR_ST1,NR_ST0));
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FCOMIP,S_NO,NR_ST1,NR_ST0));
             { fcomip pops only one fpu register }
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_FSTP,S_NO,NR_ST0));
-            tcgx86(cg).dec_fpu_stack;
-            tcgx86(cg).dec_fpu_stack;
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_FSTP,S_NO,NR_ST0));
+            TCGX86(cg).dec_fpu_stack;
+            TCGX86(cg).dec_fpu_stack;
           end;
 
         location_reset(location,LOC_FLAGS,OS_NO);
@@ -1856,24 +1856,24 @@ unit nx86add;
                                   Add64bit
 *****************************************************************************}
 
-    procedure tx86addnode.second_add64bit;
+    procedure TX86AddNode.second_add64bit;
       begin
 {$ifdef cpu64bitalu}
         second_addordinal;
 {$else cpu64bitalu}
         { must be implemented separate }
-        internalerror(200402042);
+        InternalError(200402042);
 {$endif cpu64bitalu}
       end;
 
 
-    procedure tx86addnode.second_cmp64bit;
+    procedure TX86AddNode.second_cmp64bit;
       begin
 {$ifdef cpu64bitalu}
         second_cmpordinal;
 {$else cpu64bitalu}
         { must be implemented separate }
-        internalerror(200402043);
+        InternalError(200402043);
 {$endif cpu64bitalu}
       end;
 
@@ -1882,13 +1882,13 @@ unit nx86add;
                                   AddOrdinal
 *****************************************************************************}
 
-    procedure tx86addnode.second_addordinal;
+    procedure TX86AddNode.second_addordinal;
       var
-         opsize : tcgsize;
+         opsize : TCgSize;
          unsigned : boolean;
-         cgop : topcg;
+         cgop : TOpCG;
          checkoverflow : Boolean;
-         ovloc : tlocation;
+         ovloc : TLocation;
          tmpreg : TRegister;
          indexnode : TNode;
 
@@ -1963,7 +1963,7 @@ unit nx86add;
               cgop:=OP_SUB;
             end;
           else
-            internalerror(2015022501);
+            InternalError(2015022501);
         end;
 
        checkoverflow:=
@@ -1973,10 +1973,10 @@ unit nx86add;
        opsize:=def_cgsize(left.resultdef);
 
 
-       if (cs_opt_level2 in CurrentSettings.optimizerswitches) then
+       if (cs_opt_level2 in CurrentSettings.OptimizerSwitches) then
          begin
            { BMI1 optimisations }
-           if (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.cputype]) then
+           if (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.CPUType]) then
              begin
                { Can we turn "x and (not y)" into an ANDN instruction instead? }
                if (nodetype = andn) and
@@ -1987,7 +1987,7 @@ unit nx86add;
                      code once everything is moved into registers (as a side-note,
                      "const and (not const)" and "variable and (not const)" will
                      have been simplified earlier to remove the NOT operation). }
-                   not (cs_opt_size in CurrentSettings.optimizerswitches) or
+                   not (cs_opt_size in CurrentSettings.OptimizerSwitches) or
                    (
                      (left.location.loc <> LOC_CONSTANT) and
                      (right.location.loc <> LOC_CONSTANT)
@@ -2005,14 +2005,14 @@ unit nx86add;
 
                    { Skip the not node completely }
                    Include(right.transientflags, tnf_do_not_execute);
-                   SecondPass(tnotnode(right).left);
+                   SecondPass(TNotNode(right).left);
 
                    { allocate registers }
                    hlcg.location_force_reg(
                      CurrentAsmData.CurrAsmList,
-                     tnotnode(right).left.location,
-                     tnotnode(right).left.resultdef,
-                     tnotnode(right).left.resultdef,
+                     TNotNode(right).left.location,
+                     TNotNode(right).left.resultdef,
+                     TNotNode(right).left.resultdef,
                      false
                    );
 
@@ -2033,10 +2033,10 @@ unit nx86add;
                    case left.location.loc of
                      LOC_REFERENCE,
                      LOC_CREFERENCE:
-                       emit_ref_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.location.reference, tnotnode(right).left.location.register, location.register);
+                       emit_ref_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.location.reference, TNotNode(right).left.location.register, location.register);
                      LOC_REGISTER,
                      LOC_CREGISTER:
-                       emit_reg_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.location.register, tnotnode(right).left.location.register, location.register);
+                       emit_reg_reg_reg(A_ANDN, TCGSize2OpSize[opsize], left.location.register, TNotNode(right).left.location.register, location.register);
                      else
                        InternalError(2022102110);
                    end;
@@ -2047,7 +2047,7 @@ unit nx86add;
              end;
 
            { BMI2 optimisations }
-           if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and
+           if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and
              (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) then
              begin
                case nodetype of
@@ -2056,19 +2056,19 @@ unit nx86add;
                    if (
                      (
                        (right.nodetype = subn) and
-                       (taddnode(right).right.nodetype = ordconstn) and
-                       (tordconstnode(taddnode(right).right).value = 1) and
-                       (taddnode(right).left.nodetype = shln) and
-                       (tshlshrnode(taddnode(right).left).left.nodetype = ordconstn) and
-                       (tordconstnode(tshlshrnode(taddnode(right).left).left).value = 1)
+                       (TAddNode(right).right.nodetype = ordconstn) and
+                       (TOrdConstNode(TAddNode(right).right).value = 1) and
+                       (TAddNode(right).left.nodetype = shln) and
+                       (TShlShrNode(TAddNode(right).left).left.nodetype = ordconstn) and
+                       (TOrdConstNode(TShlShrNode(TAddNode(right).left).left).value = 1)
                      ) or
                      (
                        (left.nodetype = subn) and
-                       (taddnode(left).right.nodetype = ordconstn) and
-                       (tordconstnode(taddnode(left).right).value = 1) and
-                       (taddnode(left).left.nodetype = shln) and
-                       (tshlshrnode(taddnode(left).left).left.nodetype = ordconstn) and
-                       (tordconstnode(tshlshrnode(taddnode(left).left).left).value = 1)
+                       (TAddNode(left).right.nodetype = ordconstn) and
+                       (TOrdConstNode(TAddNode(left).right).value = 1) and
+                       (TAddNode(left).left.nodetype = shln) and
+                       (TShlShrNode(TAddNode(left).left).left.nodetype = ordconstn) and
+                       (TOrdConstNode(TShlShrNode(TAddNode(left).left).left).value = 1)
                      )
                    ) then
                      begin
@@ -2081,10 +2081,10 @@ unit nx86add;
 
                        { Skip the subtract and shift nodes completely }
                        Include(right.transientflags, tnf_do_not_execute);
-                       Include(taddnode(right).left.transientflags, tnf_do_not_execute);
+                       Include(TAddNode(right).left.transientflags, tnf_do_not_execute);
 
                        { Helps avoid all the awkward typecasts }
-                       indexnode := tshlshrnode(taddnode(right).left).right;
+                       indexnode := TShlShrNode(TAddNode(right).left).right;
 {$ifdef x86_64}
                        { The code generator sometimes extends the shift result to 64-bit unnecessarily }
                        if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
@@ -2099,7 +2099,7 @@ unit nx86add;
                              InternalError(2022110201);
 
                            { Keep things internally consistent in case indexnode changed }
-                           tshlshrnode(taddnode(right).left).right := indexnode;
+                           TShlShrNode(TAddNode(right).left).right := indexnode;
                          end;
 {$endif x86_64}
                        SecondPass(indexnode);
@@ -2111,21 +2111,21 @@ unit nx86add;
                  subn:
                    { Turns an isolated "(1 shl y) - 1" into "mov $-1,%reg1; bzhi %idxreg,%reg1,%reg2" pair}
                    if (right.nodetype = ordconstn) and
-                     (tordconstnode(right).value = 1) and
+                     (TOrdConstNode(right).value = 1) and
                      (left.nodetype = shln) and
-                     (tshlshrnode(left).left.nodetype = ordconstn) and
-                     (tordconstnode(tshlshrnode(left).left).value = 1) then
+                     (TShlShrNode(left).left.nodetype = ordconstn) and
+                     (TOrdConstNode(TShlShrNode(left).left).value = 1) then
                      begin
                        { Skip the shift node completely }
                        Include(left.transientflags, tnf_do_not_execute);
 
                        { Helps avoid all the awkward typecasts }
-                       indexnode := tshlshrnode(left).right;
+                       indexnode := TShlShrNode(left).right;
 
 {$ifdef x86_64}
                        { The code generator sometimes extends the shift result to 64-bit unnecessarily }
                        if (indexnode.nodetype = typeconvn) and (opsize in [OS_32, OS_S32]) and
-                         (def_cgsize(ttypeconvnode(indexnode).resultdef) in [OS_64, OS_S64]) then
+                         (def_cgsize(TTypeConvNode(indexnode).resultdef) in [OS_64, OS_S64]) then
                          begin
                            { Convert to the 32-bit type }
                            indexnode.resultdef := resultdef;
@@ -2136,7 +2136,7 @@ unit nx86add;
                              InternalError(2022110202);
 
                            { Keep things internally consistent in case indexnode changed }
-                           tshlshrnode(left).right := indexnode;
+                           TShlShrNode(left).right := indexnode;
                          end;
 {$endif x86_64}
                        SecondPass(indexnode);
@@ -2163,7 +2163,7 @@ unit nx86add;
            { 3 op mul makes only sense if a constant is involved }
            ((nodetype<>muln) or (left.location.loc=LOC_CONSTANT) or (right.location.loc=LOC_CONSTANT)
 
-            or ((CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and (not(needoverflowcheck))
+            or ((CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.CPUType]) and (not(needoverflowcheck))
                )
 
            ) and
@@ -2287,10 +2287,10 @@ unit nx86add;
      end;
 
 
-    procedure tx86addnode.second_addboolean;
+    procedure TX86AddNode.second_addboolean;
       begin
         if (nodetype in [orn,andn]) and
-           (not(cs_full_boolean_eval in CurrentSettings.localswitches) or
+           (not(cs_full_boolean_eval in CurrentSettings.LocalSwitches) or
           (anf_short_bool in addnodeflags)) then
           inherited second_addboolean
         else if is_64bit(left.resultdef) then
@@ -2300,10 +2300,10 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.second_cmpordinal;
+    procedure TX86AddNode.second_cmpordinal;
       var
          opdef  : TDef;
-         opsize : tcgsize;
+         opsize : TCgSize;
          unsigned : boolean;
       begin
          unsigned:=not(is_signed(left.resultdef)) or
@@ -2317,7 +2317,7 @@ unit nx86add;
             (left.location.loc in [LOC_REFERENCE, LOC_CREFERENCE])
 {$ifdef x86_64}
               and ((not (opsize in [OS_64,OS_S64])) or (
-              (right.location.value>=low(longint)) and (right.location.value<=high(longint))
+              (right.location.value>=low(LongInt)) and (right.location.value<=high(LongInt))
             ))
 {$endif x86_64}
          then
@@ -2338,5 +2338,5 @@ unit nx86add;
       end;
 
 begin
-   caddnode:=tx86addnode;
+   CAddNode:=TX86AddNode;
 end.

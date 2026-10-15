@@ -29,20 +29,20 @@ unit rgcpu;
 
     uses
       cpubase,
-      cpuinfo,
-      aasmbase,aasmtai,aasmdata,
-      cclasses,globtype,cgbase,rgobj,rgx86;
+      CPUInfo,
+      aasmbase,aasmtai,AAsmData,
+      CClasses,GlobType,cgbase,rgobj,rgx86;
 
     type
-       trgcpu = class(trgx86)
-          procedure add_constraints(reg:Tregister);override;
+       TRGCPU = class(TRGX86)
+          procedure add_constraints(reg:TRegister);override;
        end;
 
 implementation
 
     uses
-       systems,
-       verbose;
+       Systems,
+       Verbose;
 
     const
        { This value is used in tsaved. If the array value is equal
@@ -53,9 +53,9 @@ implementation
                                  trgcpu
 *************************************************************************}
 
-    procedure trgcpu.add_constraints(reg:Tregister);
+    procedure TRGCPU.add_constraints(reg:TRegister);
       var
-        supreg : tsuperregister;
+        supreg : TSuperRegister;
       begin
         if (getregtype(reg)=R_INTREGISTER) and (getsubreg(reg) in [R_SUBL,R_SUBH]) then
           begin

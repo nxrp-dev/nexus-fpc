@@ -25,11 +25,11 @@ unit ncgnstmm;
 interface
 
     uses
-      globtype,cgbase,cpuinfo,cpubase,
+      GlobType,cgbase,CPUInfo,cpubase,
       node,ncgmem;
 
     type
-       tcgnestloadparentfpnode = class(tcgloadparentfpnode)
+       TCGNestLoadParentFPNode = class(TCGLoadParentFPNode)
           function pass_typecheck: TNode; override;
           function pass_1: TNode; override;
           procedure pass_generate_code;override;
@@ -38,11 +38,11 @@ interface
 implementation
 
     uses
-      systems,
-      cutils,cclasses,verbose,globals,constexp,
-      symconst,symdef,symsym,symtable,defutil,procdefutil,pparautl,symcreat,
-      aasmbase,aasmtai,aasmdata,
-      procinfo,pass_2,parabase,paramgr,
+      Systems,
+      CUtils,CClasses,Verbose,Globals,ConstExp,
+      symconst,symdef,SymSym,SymTable,defutil,procdefutil,pparautl,symcreat,
+      aasmbase,aasmtai,AAsmData,
+      ProcInfo,pass_2,parabase,paramgr,
       pass_1,ncnv,nmem,nld,ncon,nadd,nutils,
       cgutils,cgobj,hlcgobj,
       tgobj,ncgutil,objcgutl
@@ -53,34 +53,34 @@ implementation
                         TCGLOADPARENTFPNODE
 *****************************************************************************}
 
-    function tcgnestloadparentfpnode.pass_typecheck: TNode;
+    function TCGNestLoadParentFPNode.pass_typecheck: TNode;
       var
         hsym        : TParaVarSym;
         currpi,
-        nextpi      : tprocinfo;
+        nextpi      : TProcInfo;
       begin
         result:=inherited;
-        if assigned(result) or
-           (assigned(CurrentProcInfo) and
+        if Assigned(result) or
+           (Assigned(CurrentProcInfo) and
             (df_generic in CurrentProcInfo.procdef.defoptions)) then
           exit;
         currpi:=CurrentProcInfo.parent;
         { current_procinfo.parent is not assigned for specialised generic routines in the
           top-level scope }
-        while assigned(currpi) and
+        while Assigned(currpi) and
               (currpi.procdef.parast.symtablelevel>=parentpd.parast.symtablelevel) do
           begin
-            if not assigned(currpi.procdef.parentfpstruct) then
+            if not Assigned(currpi.procdef.parentfpstruct) then
               build_parentfpstruct(currpi.procdef);
             currpi:=currpi.parent;
           end;
         { mark all parent parentfp parameters for inclusion in the struct that
           holds all locals accessed from nested routines }
         currpi:=CurrentProcInfo.parent;
-        if assigned(currpi) then
+        if Assigned(currpi) then
           begin
             nextpi:=currpi.parent;
-            while assigned(currpi) and
+            while Assigned(currpi) and
                   (currpi.procdef.parast.symtablelevel>parentpd.parast.symtablelevel) do
               begin
                 hsym:=TParaVarSym(currpi.procdef.parentfpsym);
@@ -92,11 +92,11 @@ implementation
       end;
 
 
-    function tcgnestloadparentfpnode.pass_1: TNode;
+    function TCGNestLoadParentFPNode.pass_1: TNode;
       var
         fsym        : TFieldVarSym;
         hsym        : TParaVarSym;
-        currpi      : tprocinfo;
+        currpi      : TProcInfo;
         useparentfppara :  boolean;
       begin
         result:=nil;
@@ -104,7 +104,7 @@ implementation
           nested routine does nothing for which it needs the nestedfp pointer
           of the current routine (and hence it has not been moved into the
           nestedfp struct), get the original nestedfp parameter }
-        useparentfppara:=not assigned(CurrentProcInfo.procdef.parentfpstruct);
+        useparentfppara:=not Assigned(CurrentProcInfo.procdef.parentfpstruct);
         hsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('parentfp'));
         if CurrentProcInfo.procdef.parast.symtablelevel>parentpd.parast.symtablelevel then
           useparentfppara:=
@@ -112,13 +112,13 @@ implementation
             (find_sym_in_parentfpstruct(CurrentProcInfo.procdef,hsym)=nil);
         if useparentfppara then
           begin
-            result:=cloadnode.create(hsym,hsym.owner);
+            result:=CLoadNode.create(hsym,hsym.owner);
             currpi:=CurrentProcInfo.parent;
           end
         else
           begin
-            result:=caddrnode.create_internal(cloadnode.create(CurrentProcInfo.procdef.parentfpstruct,CurrentProcInfo.procdef.parentfpstruct.owner));
-            include(taddrnode(result).addrnodeflags,anf_typedaddr);
+            result:=CAddrNode.create_internal(CLoadNode.create(CurrentProcInfo.procdef.parentfpstruct,CurrentProcInfo.procdef.parentfpstruct.owner));
+            include(TAddrNode(result).addrnodeflags,anf_typedaddr);
             currpi:=CurrentProcInfo;
           end;
         { follow the chain of parentfpstructs until we arrive at the one we
@@ -127,21 +127,21 @@ implementation
           begin
             hsym:=TParaVarSym(currpi.procdef.parentfpsym);
             fsym:=TFieldVarSym(find_sym_in_parentfpstruct(currpi.procdef,hsym));
-            if not assigned(fsym) then
-              internalerror(2011060405);
-            result:=csubscriptnode.create(fsym,cderefnode.create(result));
+            if not Assigned(fsym) then
+              InternalError(2011060405);
+            result:=CSubscriptNode.create(fsym,CDerefNode.create(result));
             currpi:=currpi.parent;
           end;
       end;
 
 
-    procedure tcgnestloadparentfpnode.pass_generate_code;
+    procedure TCGNestLoadParentFPNode.pass_generate_code;
       begin
         { should be handled in pass 1 }
-        internalerror(2011060202);
+        InternalError(2011060202);
       end;
 
 
 begin
-   cloadparentfpnode:=tcgnestloadparentfpnode;
+   CLoadParentFPNode:=TCGNestLoadParentFPNode;
 end.

@@ -35,7 +35,7 @@ Unit racpugas;
 
       { taarch64attreader }
 
-      taarch64attreader = class(tattreader)
+      TAArch64ATTReader = class(TATTReader)
         actoppostfix : TOpPostfix;
         actinsmmsubreg : TSubRegister;
         actsehdirective : TAsmSehDirective;
@@ -45,13 +45,13 @@ Unit racpugas;
         procedure handleopcode;override;
         procedure handletargetdirective; override;
        protected
-        procedure BuildReference(oper: taarch64operand; is64bit: boolean);
-        procedure BuildOperand(oper: taarch64operand; is64bit: boolean);
-        function TryBuildShifterOp(instr: taarch64instruction; opnr: longint) : boolean;
-        procedure BuildOpCode(instr: taarch64instruction);
-        procedure ReadSym(oper: taarch64operand; is64bit: boolean);
-        procedure ConvertCalljmp(instr: taarch64instruction);
-        function ToConditionCode(const hs: string; is_operand: boolean): tasmcond;
+        procedure BuildReference(oper: TAArch64Operand; is64bit: boolean);
+        procedure BuildOperand(oper: TAArch64Operand; is64bit: boolean);
+        function TryBuildShifterOp(instr: TAArch64Instruction; opnr: LongInt) : boolean;
+        procedure BuildOpCode(instr: TAArch64Instruction);
+        procedure ReadSym(oper: TAArch64Operand; is64bit: boolean);
+        procedure ConvertCalljmp(instr: TAArch64Instruction);
+        function ToConditionCode(const hs: string; is_operand: boolean): TAsmCond;
         function ParseArrangementSpecifier(const hs: string): TSubRegister;
         function ParseRegIndex(const hs: string): byte;
       end;
@@ -61,26 +61,26 @@ Unit racpugas;
 
     uses
       { helpers }
-      cutils,
+      CUtils,
       { global }
-      globtype,verbose,
-      systems,aasmbase,aasmdata,aasmcpu,
+      GlobType,Verbose,
+      Systems,aasmbase,AAsmData,aasmcpu,
       { symtable }
-      symconst,symsym,symdef,
-      procinfo,
+      symconst,SymSym,symdef,
+      ProcInfo,
       rabase,rautils,
       cgutils,paramgr;
 
 
-    function taarch64attreader.is_register(const s:string):boolean;
+    function TAArch64ATTReader.is_register(const s:string):boolean;
       type
-        treg2str = record
+        TReg2Str = record
           name : string[3];
-          reg : tregister;
+          reg : TRegister;
         end;
 
       const
-        extraregs : array[0..4] of treg2str = (
+        extraregs : array[0..4] of TReg2Str = (
           (name: 'FP' ; reg: NR_FP),
           (name: 'LR' ; reg: NR_LR),
           (name: 'XR' ; reg: NR_XR),
@@ -88,7 +88,7 @@ Unit racpugas;
           (name: 'IP1'; reg: NR_IP1));
 
       var
-        i : longint;
+        i : LongInt;
 
       begin
         result:=inherited is_register(s);
@@ -122,7 +122,7 @@ Unit racpugas;
       ];
 
 
-    function taarch64attreader.is_targetdirective(const s: string): boolean;
+    function TAArch64ATTReader.is_targetdirective(const s: string): boolean;
       var
         i: TAsmSehDirective;
       begin
@@ -150,7 +150,7 @@ Unit racpugas;
       end;
 
 
-    procedure taarch64attreader.ReadSym(oper: taarch64operand; is64bit: boolean);
+    procedure TAArch64ATTReader.ReadSym(oper: TAArch64Operand; is64bit: boolean);
       var
          tempstr, mangledname : string;
          typesize,l,k: aint;
@@ -182,7 +182,7 @@ Unit racpugas;
       end;
 
 
-    Procedure taarch64attreader.BuildReference(oper: taarch64operand; is64bit: boolean);
+    Procedure TAArch64ATTReader.BuildReference(oper: TAArch64Operand; is64bit: boolean);
 
       procedure do_error;
         begin
@@ -215,7 +215,7 @@ Unit racpugas;
         end;
 
 
-      function is_shifter_ref_operation(var a : tshiftmode) : boolean;
+      function is_shifter_ref_operation(var a : TShiftMode) : boolean;
         begin
           a:=SM_NONE;
           if (actasmpattern='LSL') then
@@ -485,9 +485,9 @@ Unit racpugas;
       end;
 
 
-    function taarch64attreader.TryBuildShifterOp(instr: taarch64instruction; opnr: longint): boolean;
+    function TAArch64ATTReader.TryBuildShifterOp(instr: TAArch64Instruction; opnr: LongInt): boolean;
 
-      procedure handlepara(sm : tshiftmode);
+      procedure handlepara(sm : TShiftMode);
         begin
           consume(AS_ID);
           fillchar(instr.operands[opnr].opr,sizeof(instr.operands[opnr].opr),0);
@@ -507,8 +507,8 @@ Unit racpugas;
            'UXTB','UXTH','UXTW','UXTX',
            'SXTB','SXTH','SXTW','SXTX');
       var
-        sm: tshiftmode;
-        i: longint;
+        sm: TShiftMode;
+        i: LongInt;
         usessp,
         useszr: boolean;
       begin
@@ -545,7 +545,7 @@ Unit racpugas;
       end;
 
 
-    function taarch64attreader.ToConditionCode(const hs: string; is_operand: boolean): tasmcond;
+    function TAArch64ATTReader.ToConditionCode(const hs: string; is_operand: boolean): TAsmCond;
 {$push}{$j-}
       const
         extracond2str: array[C_HS..C_LO] of string[2] = ('CS','CC');
@@ -562,7 +562,7 @@ Unit racpugas;
                  (length(hs)>1) then
                 begin
                   { workaround for DFA bug }
-                  result:=low(tasmcond);
+                  result:=low(TAsmCond);
                   for result:=low(uppercond2str) to high(uppercond2str) do
                     begin
                       if hs=uppercond2str[result] then
@@ -582,7 +582,7 @@ Unit racpugas;
       end;
 
 
-    function taarch64attreader.ParseArrangementSpecifier(const hs: string): TSubRegister;
+    function TAArch64ATTReader.ParseArrangementSpecifier(const hs: string): TSubRegister;
 {$push}{$j-}
       const
         arrangements: array[R_SUBMM8B..R_SUBMM2D] of string[4] =
@@ -608,10 +608,10 @@ Unit racpugas;
       end;
 
 
-    function taarch64attreader.ParseRegIndex(const hs: string): byte;
+    function TAArch64ATTReader.ParseRegIndex(const hs: string): byte;
       var
         b: cardinal;
-        error: longint;
+        error: LongInt;
       begin
         b:=0;
         val(hs,b,error);
@@ -626,7 +626,7 @@ Unit racpugas;
       end;
 
 
-    Procedure taarch64attreader.BuildOperand(oper: taarch64operand; is64bit: boolean);
+    Procedure TAArch64ATTReader.BuildOperand(oper: TAArch64Operand; is64bit: boolean);
       var
         expr: string;
         typesize, l: aint;
@@ -652,7 +652,7 @@ Unit racpugas;
               oper.opr.ref.refaddr:=addr_pic;
           end;
 
-        procedure AddLabelOperand(hl:tasmlabel);
+        procedure AddLabelOperand(hl:TAsmLabel);
           begin
             if not(actasmtoken in [AS_PLUS,AS_MINUS,AS_LPAREN]) and
                is_calljmp(actopcode) then
@@ -728,7 +728,7 @@ Unit racpugas;
               OPR_SYMBOL:
                 Message(asmr_e_invalid_symbol_ref);
               else
-                internalerror(200309221);
+                InternalError(200309221);
             end;
           end;
 
@@ -772,9 +772,9 @@ Unit racpugas;
             end; { end case }
           end;
 
-      function parsereg: tregister;
+      function parsereg: TRegister;
          var
-           subreg: tsubregister;
+           subreg: TSubRegister;
         begin
           result:=actasmregister;
           Consume(AS_REGISTER);
@@ -821,9 +821,9 @@ Unit racpugas;
         end;
 
       var
-        tempreg: tregister;
-        hl: tasmlabel;
-        icond: tasmcond;
+        tempreg: TRegister;
+        hl: TAsmLabel;
+        icond: TAsmCond;
         regindex: byte;
       Begin
         expr:='';
@@ -1003,7 +1003,7 @@ Unit racpugas;
                        OPR_REFERENCE :
                          inc(oper.opr.ref.offset,l);
                        else
-                         internalerror(2003092005);
+                         InternalError(2003092005);
                      end;
                    end
                end;
@@ -1061,9 +1061,9 @@ Unit racpugas;
                                 taarch64attreader
 *****************************************************************************}
 
-    procedure taarch64attreader.BuildOpCode(instr: taarch64instruction);
+    procedure TAArch64ATTReader.BuildOpCode(instr: TAArch64Instruction);
       var
-        operandnum : longint;
+        operandnum : LongInt;
       Begin
         { opcode }
         if (actasmtoken<>AS_OPCODE) then
@@ -1120,7 +1120,7 @@ Unit racpugas;
               end;
           else
             begin
-              BuildOperand(taarch64operand(instr.operands[operandnum]),instr.Is64bit);
+              BuildOperand(TAArch64Operand(instr.operands[operandnum]),instr.Is64bit);
               instr.Ops:=operandnum;
               if instr.operands[operandnum].opr.typ=OPR_REFERENCE then
                 if simple_ref_type(instr.opcode,instr.cgsize,instr.oppostfix,instr.operands[operandnum].opr.ref)<>sr_simple then
@@ -1132,7 +1132,7 @@ Unit racpugas;
       end;
 
 
-    function taarch64attreader.is_asmopcode(const s: string):boolean;
+    function TAArch64ATTReader.is_asmopcode(const s: string):boolean;
 
       const
         { sorted by length so longer postfixes will match first }
@@ -1147,16 +1147,16 @@ Unit racpugas;
           PF_S);
 
                       { store replicate }
-        ldst14: array[boolean,boolean,'1'..'4'] of tasmop =
+        ldst14: array[boolean,boolean,'1'..'4'] of TAsmOp =
           (((A_LD1,A_LD2,A_LD3,A_LD4),
             (A_LD1R,A_LD2R,A_LD3R,A_LD4R)),
            ((A_ST1,A_ST2,A_ST3,A_ST4),
             (A_NONE,A_NONE,A_NONE,A_NONE)));
 
       var
-        j  : longint;
+        j  : LongInt;
         hs : string;
-        maxlen : longint;
+        maxlen : LongInt;
       Begin
         { making s a value parameter would break other assembler readers }
         hs:=s;
@@ -1206,7 +1206,7 @@ Unit racpugas;
         actopcode:=A_NONE;
         for j:=maxlen downto 1 do
           begin
-            actopcode:=tasmop(PtrUInt(iasmops.Find(copy(hs,1,j))));
+            actopcode:=TAsmOp(PtrUInt(iasmops.Find(copy(hs,1,j))));
             if actopcode<>A_NONE then
               begin
                 actasmtoken:=AS_OPCODE;
@@ -1237,9 +1237,9 @@ Unit racpugas;
       end;
 
 
-    procedure taarch64attreader.ConvertCalljmp(instr: taarch64instruction);
+    procedure TAArch64ATTReader.ConvertCalljmp(instr: TAArch64Instruction);
       var
-        newopr : toprrec;
+        newopr : TOprRec;
       begin
         if instr.Operands[1].opr.typ=OPR_REFERENCE then
           begin
@@ -1254,11 +1254,11 @@ Unit racpugas;
           end;
       end;
 
-    procedure taarch64attreader.handleopcode;
+    procedure TAArch64ATTReader.handleopcode;
       var
-        instr: taarch64instruction;
+        instr: TAArch64Instruction;
       begin
-        instr:=taarch64instruction.Create(taarch64operand);
+        instr:=TAArch64Instruction.Create(TAArch64Operand);
         BuildOpcode(instr);
         if is_calljmp(instr.opcode) then
           ConvertCalljmp(instr);
@@ -1273,7 +1273,7 @@ Unit racpugas;
       end;
 
 
-    procedure taarch64attreader.handletargetdirective;
+    procedure TAArch64ATTReader.handletargetdirective;
 
       function maxoffset(ash:TAsmSehDirective):aint;
         begin
@@ -1294,11 +1294,11 @@ Unit racpugas;
             ash_addfp:
               result:=2040;
             else
-              internalerror(2020041204);
+              InternalError(2020041204);
           end;
         end;
 
-      procedure add_reg_with_offset(ash:TAsmSehDirective;hreg:tregister;hnum:aint;neg:boolean);
+      procedure add_reg_with_offset(ash:TAsmSehDirective;hreg:TRegister;hnum:aint;neg:boolean);
         begin
           if (neg and ((hnum>0) or (hnum<maxoffset(ash)) or (((-hnum) and $7)<>0))) or
               (not neg and ((hnum<0) or (hnum>maxoffset(ash)) or ((hnum and $7)<>0))) then
@@ -1308,9 +1308,9 @@ Unit racpugas;
               if neg then
                 hnum:=-hnum;
               if hreg=NR_NO then
-                curlist.concat(cai_seh_directive.create_offset(actsehdirective,hnum))
+                curlist.concat(CAISEHDirective.create_offset(actsehdirective,hnum))
               else
-                curlist.concat(cai_seh_directive.create_reg_offset(actsehdirective,hreg,hnum));
+                curlist.concat(CAISEHDirective.create_reg_offset(actsehdirective,hreg,hnum));
             end;
         end;
 
@@ -1319,7 +1319,7 @@ Unit racpugas;
         hreg2 : TRegister;
         hnum : aint;
         flags : integer;
-        ai : tai_seh_directive;
+        ai : TAISEHDirective;
         hs : string;
         err : boolean;
       begin
@@ -1333,7 +1333,7 @@ Unit racpugas;
           ash_setfp,
           ash_endprologue,
           ash_handlerdata:
-            curlist.concat(cai_seh_directive.create(actsehdirective));
+            curlist.concat(CAISEHDirective.create(actsehdirective));
 
           ash_handler:
             begin
@@ -1349,7 +1349,7 @@ Unit racpugas;
                       Consume(AS_AT);
                       if actasmtoken=AS_ID then
                         begin
-                          uppervar(actasmpattern);
+                          UpperVar(actasmpattern);
                           if actasmpattern='EXCEPT' then
                             flags:=flags or 1
                           else if actasmpattern='UNWIND' then
@@ -1371,7 +1371,7 @@ Unit racpugas;
                     end;
                 end;
 
-              ai:=cai_seh_directive.create_name(ash_handler,hs);
+              ai:=CAISEHDirective.create_name(ash_handler,hs);
               ai.data.flags:=flags;
               curlist.concat(ai);
             end;
@@ -1441,7 +1441,7 @@ Unit racpugas;
               if (hnum<0) or (hnum>$FFFFFF) or ((hnum and 7)<>0) then
                 Message1(asmr_e_bad_seh_directive_offset,sehdirectivestr[ash_stackalloc])
               else
-                curlist.concat(cai_seh_directive.create_offset(ash_stackalloc,hnum));
+                curlist.concat(CAISEHDirective.create_offset(ash_stackalloc,hnum));
             end;
           else
             InternalError(2020033103);
@@ -1456,18 +1456,18 @@ Unit racpugas;
 *****************************************************************************}
 
 const
-  asmmode_arm_att_info : tasmmodeinfo =
+  asmmode_arm_att_info : TAsmModeInfo =
           (
             id    : asmmode_arm_gas;
             idtxt : 'GAS';
-            casmreader : taarch64attreader;
+            CAsmReader : TAArch64ATTReader;
           );
 
-  asmmode_arm_standard_info : tasmmodeinfo =
+  asmmode_arm_standard_info : TAsmModeInfo =
           (
             id    : asmmode_standard;
             idtxt : 'STANDARD';
-            casmreader : taarch64attreader;
+            CAsmReader : TAArch64ATTReader;
           );
 
 initialization

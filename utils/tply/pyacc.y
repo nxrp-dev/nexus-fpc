@@ -148,19 +148,19 @@ uses
 
 %token
   ID		/* identifiers: {letter}{letter_or_digit}* */
-  C_ID		/* identifier which forms left side of rule, i.e. is
+  CID		/* identifier which forms left side of rule, i.e. is
 		   followed by a colon */
-  LITERAL       /* single character literal */
-  LITID         /* multiple character literal */
-  NUMBER	/* nonnegative integers: {digit}+ */
-  PTOKEN PLEFT PRIGHT PNONASSOC PTYPE PSTART PPREC
+  Literal       /* single character literal */
+  LitID         /* multiple character literal */
+  Number	/* nonnegative integers: {digit}+ */
+  PToken PLeft PRight PNonAssoc PType PStart PPrec
   		/* reserved words: PTOKEN=%token, etc. */
   PP		/* source sections separator %% */
-  LCURL		/* curly braces: %{ and %} */
-  RCURL
+  LCurl		/* curly braces: %{ and %} */
+  RCurl
   ',' ':' ';' '|' '{' '}' '<' '>' '='
 		/* literals */
-  ILLEGAL	/* illegal input character */
+  Illegal	/* illegal input character */
 
 %start grammar
 
@@ -170,78 +170,78 @@ uses
    with error productions, and important symbols call yyerrok. */
 
 id		: ID
-c_id		: C_ID
-literal         : LITERAL
-litid           : LITID
-number		: NUMBER
-ptoken		: PTOKEN        { yyerrok; }
-pleft		: PLEFT	        { yyerrok; }
-pright		: PRIGHT        { yyerrok; }
-pnonassoc	: PNONASSOC	{ yyerrok; }
-ptype		: PTYPE	        { yyerrok; }
-pstart		: PSTART        { yyerrok; }
-pprec		: PPREC
-pp		: PP	        { yyerrok; }
-lcurl		: LCURL
-rcurl		: RCURL
-		| error	        { error(rcurl_expected); }
+c_id		: CID
+literal         : Literal
+litid           : LitID
+number		: Number
+ptoken		: PToken        { YYErrOK; }
+pleft		: PLeft	        { YYErrOK; }
+pright		: PRight        { YYErrOK; }
+pnonassoc	: PNonAssoc	{ YYErrOK; }
+ptype		: PType	        { YYErrOK; }
+pstart		: PStart        { YYErrOK; }
+pprec		: PPrec
+pp		: PP	        { YYErrOK; }
+lcurl		: LCurl
+rcurl		: RCurl
+		| error	        { Error(RCurlExpected); }
 comma		: ','
-colon		: ':'	        { yyerrok; }
-semicolon	: ';'	        { yyerrok; }
-bar		: '|'	        { yyerrok; }
+colon		: ':'	        { YYErrOK; }
+semicolon	: ';'	        { YYErrOK; }
+bar		: '|'	        { YYErrOK; }
 lbrace		: '{'
 rbrace		: '}'
-		| error	        { error(rbrace_expected); }
+		| error	        { Error(RBraceExpected); }
 langle		: '<'
 rangle		: '>'
-		| error         { error(rangle_expected); }
+		| error         { Error(RAngleExpected); }
 eq		: '='
 
 /* Syntax and semantic routines: */
 
 grammar		: defs pp
-		  		{ sort_types;
-                                  definitions;
-                                  next_section; }
+		  		{ SortTypes;
+                                  Definitions;
+                                  NextSection; }
 		  rules
-		  		{ next_section;
-                                  generate_parser;
-                                  next_section; }
+		  		{ NextSection;
+                                  GenerateParser;
+                                  NextSection; }
 		  aux_procs
 		;
 
 aux_procs	: /* empty: aux_procs is optional */
 
-		| pp { copy_rest_of_file; }
+		| pp { CopyRestOfFile; }
 
 		;
 
 
 defs		: /* empty */
-		| defs def	{ yyerrok; }
-		| defs error	{ error(error_in_def); }
+		| defs def	{ YYErrOK; }
+		| defs error	{ Error(ErrorInDef); }
 		;
 
 def		: pstart id
-			 	{ startnt := ntsym($2); }
+			 	{ StartNT := NTSym($2); }
 		| pstart error
-				{ error(ident_expected); }
-		| lcurl { copy_code; } rcurl
+				{ Error(IdentExpected); }
+		| lcurl { CopyCode; } rcurl
 
 		| ptoken
-				{ act_prec := 0; }
+				{ ActPrec := 0; }
 		  tag token_list
 
 		| pleft
-				{ act_prec := new_prec_level(left); }
+				{ ActPrec := NewPrecLevel(Left); }
 		  tag token_list
 
 		| pright
-				{ act_prec := new_prec_level(right); }
+				{ ActPrec := NewPrecLevel(Right); }
 		  tag token_list
 
 		| pnonassoc
-				{ act_prec := new_prec_level(nonassoc); }
+				{ ActPrec := NewPrecLevel(NonAssoc); }
 		  tag token_list
 
 		| ptype tag nonterm_list
@@ -251,125 +251,125 @@ def		: pstart id
 		;
 
 tag		: /* empty: type tag is optional */
-				{ act_type := 0; }
+				{ ActType := 0; }
 		| langle id rangle
-				{ act_type := $2; add_type($2); }
+				{ ActType := $2; AddType($2); }
 		;
 
 token_list	: token_num
 
 		| token_list token_num
-				{ yyerrok; }
+				{ YYErrOK; }
 		| token_list comma token_num
-				{ yyerrok; }
+				{ YYErrOK; }
 		| error
-				{ error(ident_expected); }
+				{ Error(IdentExpected); }
 		| token_list error
-				{ error(error_in_def); }
+				{ Error(ErrorInDef); }
 		| token_list comma error
-				{ error(ident_expected); }
+				{ Error(IdentExpected); }
 		;
 
 token_num	: literal
-				{ if act_type<>0 then
-                                    sym_type^[$1] := act_type;
-                                  if act_prec<>0 then
-                                    sym_prec^[$1] := act_prec; }
+				{ if ActType<>0 then
+                                    SymType^[$1] := ActType;
+                                  if ActPrec<>0 then
+                                    SymPrec^[$1] := ActPrec; }
                	| litid
-				{ litsym($1, 0);
-                                  if act_type<>0 then
-                                    sym_type^[litsym($1, 0)] := act_type;
-                                  if act_prec<>0 then
-                                    sym_prec^[litsym($1, 0)] := act_prec; }
+				{ LitSym($1, 0);
+                                  if ActType<>0 then
+                                    SymType^[LitSym($1, 0)] := ActType;
+                                  if ActPrec<>0 then
+                                    SymPrec^[LitSym($1, 0)] := ActPrec; }
                	| id
-				{ litsym($1, 0);
-                                  if act_type<>0 then
-                                    sym_type^[litsym($1, 0)] := act_type;
-                                  if act_prec<>0 then
-                                    sym_prec^[litsym($1, 0)] := act_prec; }
+				{ LitSym($1, 0);
+                                  if ActType<>0 then
+                                    SymType^[LitSym($1, 0)] := ActType;
+                                  if ActPrec<>0 then
+                                    SymPrec^[LitSym($1, 0)] := ActPrec; }
                	| litid number
-				{ litsym($1, 0);
-                                  if act_type<>0 then
-                                    sym_type^[litsym($1, $2)] := act_type;
-                                  if act_prec<>0 then
-                                    sym_prec^[litsym($1, 0)]  := act_prec; }
+				{ LitSym($1, 0);
+                                  if ActType<>0 then
+                                    SymType^[LitSym($1, $2)] := ActType;
+                                  if ActPrec<>0 then
+                                    SymPrec^[LitSym($1, 0)]  := ActPrec; }
                	| id number
-				{ litsym($1, 0);
-                                  if act_type<>0 then
-                                    sym_type^[litsym($1, $2)] := act_type;
-                                  if act_prec<>0 then
-                                    sym_prec^[litsym($1, 0)]  := act_prec; }
+				{ LitSym($1, 0);
+                                  if ActType<>0 then
+                                    SymType^[LitSym($1, $2)] := ActType;
+                                  if ActPrec<>0 then
+                                    SymPrec^[LitSym($1, 0)]  := ActPrec; }
 		;
 
 nonterm_list	: nonterm
 		| nonterm_list nonterm
-				{ yyerrok; }
+				{ YYErrOK; }
 		| nonterm_list comma nonterm
-				{ yyerrok; }
+				{ YYErrOK; }
 		| error
-				{ error(ident_expected); }
+				{ Error(IdentExpected); }
 		| nonterm_list error
-				{ error(error_in_def); }
+				{ Error(ErrorInDef); }
 		| nonterm_list comma error
-				{ error(ident_expected); }
+				{ Error(IdentExpected); }
 		;
 
 nonterm		: id
-				{ if act_type<>0 then
-                                    sym_type^[ntsym($1)] := act_type; }
+				{ if ActType<>0 then
+                                    SymType^[NTSym($1)] := ActType; }
 		;
 
 
-rules		: 		{ next_section; }
+rules		: 		{ NextSection; }
 		  rule1
 
-		| lcurl { copy_code; } rcurl
-				{ next_section; }
+		| lcurl { CopyCode; } rcurl
+				{ NextSection; }
 		  rule1
 					/* rules section may be prefixed
 					   with `local' Turbo Pascal
 					   declarations */
 		| rules rule
-				{ yyerrok; }
+				{ YYErrOK; }
 		| error
-				{ error(error_in_rule); }
+				{ Error(ErrorInRule); }
 		| rules error
-				{ error(error_in_rule); }
+				{ Error(ErrorInRule); }
 		;
 
 rule1		: c_id
-				{ start_rule(ntsym($1)); }
+				{ StartRule(NTSym($1)); }
 		  colon
-		  		{ start_body; }
+		  		{ StartBody; }
 		  body prec
-				{ end_body; }
+				{ EndBody; }
 		;
 
 rule		: rule1
 
 		| bar
-				{ start_body; }
+				{ StartBody; }
 		  body prec
-				{ end_body; }
+				{ EndBody; }
 		;
 
 body		: /* empty */
 
 		| body literal
-				{ add_symbol($2); yyerrok; }
+				{ AddSymbol($2); YYErrOK; }
 		| body litid
-				{ add_symbol(sym($2)); yyerrok; }
+				{ AddSymbol(Sym($2)); YYErrOK; }
 		| body id
-				{ add_symbol(sym($2)); yyerrok; }
+				{ AddSymbol(Sym($2)); YYErrOK; }
                 | body action
-				{ add_action; yyerrok; }
+				{ AddAction; YYErrOK; }
 		| body error
-				{ error(error_in_rule); }
+				{ Error(ErrorInRule); }
 		;
 
-action		: lbrace { copy_action; } rbrace
+action		: lbrace { CopyAction; } rbrace
 
-		| eq { copy_single_action; }
+		| eq { CopySingleAction; }
                 		/* old language feature; code must be
 				   single statement ending with `;' */
 		;
@@ -377,15 +377,15 @@ action		: lbrace { copy_action; } rbrace
 prec		: /* empty */
 
 		| pprec literal
-				{ add_rule_prec($2); }
+				{ AddRulePrec($2); }
 		  opt_action
 
 		| pprec litid
-				{ add_rule_prec(litsym($2, 0)); }
+				{ AddRulePrec(LitSym($2, 0)); }
 		  opt_action
 
 		| pprec id
-				{ add_rule_prec(litsym($2, 0)); }
+				{ AddRulePrec(LitSym($2, 0)); }
 		  opt_action
 
 		| prec semicolon
@@ -395,7 +395,7 @@ prec		: /* empty */
 opt_action	: /* empty */
 
 		| action
-				{ add_action; }
+				{ AddAction; }
 		;
 
 
@@ -403,464 +403,464 @@ opt_action	: /* empty */
 
 (* Lexical analyzer (implemented in Turbo Pascal for maximum efficiency): *)
 
-function yylex : integer;
-  function end_of_input : boolean;
+function yylex : Integer;
+  function EndOfInput : Boolean;
     begin
-      end_of_input := (cno>length(line)) and eof(yyin)
+      EndOfInput := (CNo>Length(Line)) and EOF(YYIn)
     end(*end_of_input*);
-  procedure scan;
+  procedure Scan;
     (* scan for nonempty character, skip comments *)
-    procedure scan_comment;
-      var p : integer;
+    procedure ScanComment;
+      var P : Integer;
       begin
-        p := pos('*/', copy(line, cno, length(line)));
-        if p>0 then
-          cno := cno+succ(p)
+        P := POS('*/', Copy(Line, CNo, Length(Line)));
+        if P>0 then
+          CNo := CNo+Succ(P)
         else
           begin
-            while (p=0) and not eof(yyin) do
+            while (P=0) and not EOF(YYIn) do
               begin
-                readln(yyin, line);
-                inc(lno);
-                p := pos('*/', line)
+                ReadLn(YYIn, Line);
+                Inc(LNo);
+                P := POS('*/', Line)
               end;
-            if p=0 then
+            if P=0 then
               begin
-                cno := succ(length(line));
-                error(open_comment_at_eof);
+                CNo := Succ(Length(Line));
+                Error(OpenCommentAtEOF);
               end
             else
-              cno := succ(succ(p))
+              CNo := Succ(Succ(P))
           end
       end(*scan_comment*);
     begin
-      while not end_of_input do
-        if cno<=length(line) then
-          case line[cno] of
-            ' ', tab : inc(cno);
+      while not EndOfInput do
+        if CNo<=Length(Line) then
+          case Line[CNo] of
+            ' ', Tab : Inc(CNo);
             '/' :
-              if (cno<length(line)) and (line[succ(cno)]='*') then
+              if (CNo<Length(Line)) and (Line[Succ(CNo)]='*') then
                 begin
-                  inc(cno, 2);
-                  scan_comment
+                  Inc(CNo, 2);
+                  ScanComment
                 end
               else
-                exit
+                Exit
             else
-              exit
+              Exit
           end
         else
           begin
-            readln(yyin, line);
-            inc(lno); cno := 1;
+            ReadLn(YYIn, Line);
+            Inc(LNo); CNo := 1;
           end
     end(*scan*);
-  function scan_ident : integer;
+  function ScanIdent : Integer;
     (* scan an identifier *)
     var
-      idstr : String;
+      IDStr : String;
     begin
-      idstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and (
-            ('A'<=upCase(line[cno])) and (upCase(line[cno])<='Z') or
-            ('0'<=line[cno]) and (line[cno]<='9') or
-            (line[cno]='_') or
-            (line[cno]='.') ) do
+      IDStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and (
+            ('A'<=UpCase(Line[CNo])) and (UpCase(Line[CNo])<='Z') or
+            ('0'<=Line[CNo]) and (Line[CNo]<='9') or
+            (Line[CNo]='_') or
+            (Line[CNo]='.') ) do
 	begin
-	  idstr := idstr+line[cno];
-	  inc(cno)
+	  IDStr := IDStr+Line[CNo];
+	  Inc(CNo)
 	end;
-      yylval := get_key(idstr);
-      scan;
-      if not end_of_input and (line[cno]=':') then
-        scan_ident := C_ID
+      yylval := GetKey(IDStr);
+      Scan;
+      if not EndOfInput and (Line[CNo]=':') then
+        ScanIdent := CID
       else
-        scan_ident := ID
+        ScanIdent := ID
     end(*scan_ident*);
-  function scan_literal: integer;
+  function ScanLiteral: Integer;
     (* scan a literal, i.e. string *)
     var
-      idstr : String;
-      oct_val : Byte;
+      IDStr : String;
+      OctVal : Byte;
     begin
-      idstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and (line[cno]<>idstr[1]) do
-        if line[cno]='\' then
-          if cno<length(line) then
+      IDStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and (Line[CNo]<>IDStr[1]) do
+        if Line[CNo]='\' then
+          if CNo<Length(Line) then
             begin
-              inc(cno);
-              case line[cno] of
+              Inc(CNo);
+              case Line[CNo] of
                 'n' :
                   begin
-                    idstr := idstr+nl;
-                    inc(cno)
+                    IDStr := IDStr+NL;
+                    Inc(CNo)
                   end;
                 'r' :
                   begin
-                    idstr := idstr+cr;
-                    inc(cno)
+                    IDStr := IDStr+CR;
+                    Inc(CNo)
                   end;
                 't' :
                   begin
-                    idstr := idstr+tab;
-                    inc(cno)
+                    IDStr := IDStr+Tab;
+                    Inc(CNo)
                   end;
                 'b' :
                   begin
-                    idstr := idstr+bs;
-                    inc(cno)
+                    IDStr := IDStr+BS;
+                    Inc(CNo)
                   end;
                 'f' :
                   begin
-                    idstr := idstr+ff;
-                    inc(cno)
+                    IDStr := IDStr+FF;
+                    Inc(CNo)
                   end;
                 '0'..'7' :
                   begin
-                    oct_val := ord(line[cno])-ord('0');
-                    inc(cno);
-                    while (cno<=length(line)) and
-                          ('0'<=line[cno]) and
-                          (line[cno]<='7') do
+                    OctVal := Ord(Line[CNo])-Ord('0');
+                    Inc(CNo);
+                    while (CNo<=Length(Line)) and
+                          ('0'<=Line[CNo]) and
+                          (Line[CNo]<='7') do
                       begin
-                        oct_val := oct_val*8+ord(line[cno])-ord('0');
-                        inc(cno)
+                        OctVal := OctVal*8+Ord(Line[CNo])-Ord('0');
+                        Inc(CNo)
                       end;
-                    idstr := idstr+chr(oct_val)
+                    IDStr := IDStr+Chr(OctVal)
                   end
                 else
                   begin
-                    idstr := idstr+line[cno];
-                    inc(cno)
+                    IDStr := IDStr+Line[CNo];
+                    Inc(CNo)
                   end
               end
             end
           else
-            inc(cno)
+            Inc(CNo)
         else
           begin
-            idstr := idstr+line[cno];
-            inc(cno)
+            IDStr := IDStr+Line[CNo];
+            Inc(CNo)
           end;
-      if cno>length(line) then
-        error(missing_string_terminator)
+      if CNo>Length(Line) then
+        Error(MissingStringTerminator)
       else
-        inc(cno);
-      if length(idstr)=2 then
+        Inc(CNo);
+      if Length(IDStr)=2 then
         begin
-          yylval := ord(idstr[2]);
-          scan_literal := LITERAL;
+          yylval := Ord(IDStr[2]);
+          ScanLiteral := Literal;
         end
-      else if length(idstr)>1 then
+      else if Length(IDStr)>1 then
         begin
-          yylval := get_key(''''+copy(idstr, 2, pred(length(idstr)))+'''');
-          scan_literal := LITID;
+          yylval := GetKey(''''+Copy(IDStr, 2, Pred(Length(IDStr)))+'''');
+          ScanLiteral := LitID;
         end
       else
-        scan_literal := ILLEGAL;
+        ScanLiteral := Illegal;
     end(*scan_literal*);
-  function scan_num : integer;
+  function ScanNum : Integer;
     (* scan an unsigned integer *)
     var
-      numstr : String;
-      code : integer;
+      NumStr : String;
+      Code : Integer;
     begin
-      numstr := line[cno];
-      inc(cno);
-      while (cno<=length(line)) and
-            ('0'<=line[cno]) and (line[cno]<='9') do
+      NumStr := Line[CNo];
+      Inc(CNo);
+      while (CNo<=Length(Line)) and
+            ('0'<=Line[CNo]) and (Line[CNo]<='9') do
         begin
-          numstr := numstr+line[cno];
-          inc(cno)
+          NumStr := NumStr+Line[CNo];
+          Inc(CNo)
         end;
-      val(numstr, yylval, code);
-      if code=0 then
-        scan_num := NUMBER
+      Val(NumStr, yylval, Code);
+      if Code=0 then
+        ScanNum := Number
       else
-        scan_num := ILLEGAL;
+        ScanNum := Illegal;
     end(*scan_num*);
-  function scan_keyword : integer;
+  function ScanKeyword : Integer;
     (* scan %xy *)
-    function lookup(key : String; var tok : integer) : boolean;
+    function Lookup(Key : String; var Tok : Integer) : Boolean;
       (* table of Yacc keywords (unstropped): *)
       const
-        no_of_entries = 11;
-        max_entry_length = 8;
-        keys : array [1..no_of_entries] of String[max_entry_length] = (
+        NoOfEntries = 11;
+        MaxEntryLength = 8;
+        Keys : array [1..NoOfEntries] of String[MaxEntryLength] = (
           '0', '2', 'binary', 'left', 'nonassoc', 'prec', 'right',
           'start', 'term', 'token', 'type');
-        toks : array [1..no_of_entries] of integer = (
-          PTOKEN, PNONASSOC, PNONASSOC, PLEFT, PNONASSOC, PPREC, PRIGHT,
-          PSTART, PTOKEN, PTOKEN, PTYPE);
-      var m, n, k : integer;
+        Toks : array [1..NoOfEntries] of Integer = (
+          PToken, PNonAssoc, PNonAssoc, PLeft, PNonAssoc, PPrec, PRight,
+          PStart, PToken, PToken, PType);
+      var M, N, K : Integer;
       begin
         (* binary search: *)
-        m := 1; n := no_of_entries;
-        lookup := true;
-        while m<=n do
+        M := 1; N := NoOfEntries;
+        Lookup := True;
+        while M<=N do
           begin
-            k := m+(n-m) div 2;
-            if key=keys[k] then
+            K := M+(N-M) div 2;
+            if Key=Keys[K] then
               begin
-                tok := toks[k];
-                exit
+                Tok := Toks[K];
+                Exit
               end
-            else if key>keys[k] then
-              m := k+1
+            else if Key>Keys[K] then
+              M := K+1
             else
-              n := k-1
+              N := K-1
           end;
-        lookup := false
+        Lookup := False
       end(*lookup*);
     var
-      keywstr : String;
-      tok : integer;
+      KeywStr : String;
+      Tok : Integer;
     begin
-      inc(cno);
-      if cno<=length(line) then
-        case line[cno] of
+      Inc(CNo);
+      if CNo<=Length(Line) then
+        case Line[CNo] of
           '<' :
             begin
-              scan_keyword := PLEFT;
-              inc(cno)
+              ScanKeyword := PLeft;
+              Inc(CNo)
             end;
           '>' :
             begin
-              scan_keyword := PRIGHT;
-              inc(cno)
+              ScanKeyword := PRight;
+              Inc(CNo)
             end;
           '=' :
             begin
-              scan_keyword := PPREC;
-              inc(cno)
+              ScanKeyword := PPrec;
+              Inc(CNo)
             end;
           '%', '\' :
             begin
-              scan_keyword := PP;
-              inc(cno)
+              ScanKeyword := PP;
+              Inc(CNo)
             end;
           '{' :
             begin
-              scan_keyword := LCURL;
-              inc(cno)
+              ScanKeyword := LCurl;
+              Inc(CNo)
             end;
           '}' :
             begin
-              scan_keyword := RCURL;
-              inc(cno)
+              ScanKeyword := RCurl;
+              Inc(CNo)
             end;
           'A'..'Z', 'a'..'z', '0'..'9' :
             begin
-              keywstr := line[cno];
-              inc(cno);
-              while (cno<=length(line)) and (
-                    ('A'<=upCase(line[cno])) and (upCase(line[cno])<='Z') or
-                    ('0'<=line[cno]) and (line[cno]<='Z') ) do
+              KeywStr := Line[CNo];
+              Inc(CNo);
+              while (CNo<=Length(Line)) and (
+                    ('A'<=UpCase(Line[CNo])) and (UpCase(Line[CNo])<='Z') or
+                    ('0'<=Line[CNo]) and (Line[CNo]<='Z') ) do
                 begin
-                  keywstr := keywstr+line[cno];
-                  inc(cno)
+                  KeywStr := KeywStr+Line[CNo];
+                  Inc(CNo)
                 end;
-              if lookup(keywstr, tok) then
-                scan_keyword := tok
+              if Lookup(KeywStr, Tok) then
+                ScanKeyword := Tok
               else
-                scan_keyword := ILLEGAL
+                ScanKeyword := Illegal
             end;
-          else scan_keyword := ILLEGAL
+          else ScanKeyword := Illegal
         end
       else
-        scan_keyword := ILLEGAL;
+        ScanKeyword := Illegal;
     end(*scan_keyword*);
-  function scan_char : integer;
+  function ScanChar : Integer;
     (* scan any single character *)
     begin
-      scan_char := ord(line[cno]);
-      inc(cno)
+      ScanChar := Ord(Line[CNo]);
+      Inc(CNo)
     end(*scan_char*);
-  var lno0, cno0 : integer;
+  var LNo0, CNo0 : Integer;
   begin
-    tokleng := 0;
-    scan;
-    lno0 := lno; cno0 := cno;
-    if end_of_input then
+    TokLeng := 0;
+    Scan;
+    LNo0 := LNo; CNo0 := CNo;
+    if EndOfInput then
       yylex := 0
     else
-      case line[cno] of
-        'A'..'Z', 'a'..'z', '_' : yylex := scan_ident;
-	'''', '"' : yylex := scan_literal;
-	'0'..'9' : yylex := scan_num;
-	'%', '\' : yylex := scan_keyword;
+      case Line[CNo] of
+        'A'..'Z', 'a'..'z', '_' : yylex := ScanIdent;
+	'''', '"' : yylex := ScanLiteral;
+	'0'..'9' : yylex := ScanNum;
+	'%', '\' : yylex := ScanKeyword;
         '=' :
-          if (cno<length(line)) and (line[succ(cno)]='{') then
+          if (CNo<Length(Line)) and (Line[Succ(CNo)]='{') then
             begin
-              inc(cno);
-              yylex := scan_char
+              Inc(CNo);
+              yylex := ScanChar
             end
           else
-            yylex := scan_char;
-	else yylex := scan_char;
+            yylex := ScanChar;
+	else yylex := ScanChar;
       end;
-    if lno=lno0 then
-      tokleng := cno-cno0
+    if LNo=LNo0 then
+      TokLeng := CNo-CNo0
   end(*yylex*);
 
 (* Main program: *)
 
-var i : Integer;
+var I : Integer;
 
 begin
 {$ifdef Unix}
-  codfilepath1:=path(paramstr(0));
-  if (codfilepath1<>'') then
-    codfilepath1:=codfilepath1+'../lib/fpc/lexyacc/'
+  CodFilePath1:=Path(ParamStr(0));
+  if (CodFilePath1<>'') then
+    CodFilePath1:=CodFilePath1+'../lib/fpc/lexyacc/'
   else
-    codfilepath1:='/usr/local/lib/fpc/lexyacc/';
-  codfilepath2:='/usr/lib/fpc/lexyacc/';
+    CodFilePath1:='/usr/local/lib/fpc/lexyacc/';
+  CodFilePath2:='/usr/lib/fpc/lexyacc/';
 {$else}
-  codfilepath1:=path(paramstr(0));
-  codfilepath2:='';
+  CodFilePath1:=Path(ParamStr(0));
+  CodFilePath2:='';
 {$endif}
 
   (* sign-on: *)
 
-  writeln(sign_on);
+  WriteLn(SignOn);
 
   (* parse command line: *)
 
-  if paramCount=0 then
+  if ParamCount=0 then
     begin
-      writeln(usage);
-      writeln(options);
-      halt(0);
+      WriteLn(Usage);
+      WriteLn(Options);
+      Halt(0);
     end;
 
-  yfilename := '';
-  pasfilename := '';
+  YFileName := '';
+  PasFileName := '';
 
-  for i := 1 to paramCount do
-    if copy(paramStr(i), 1, 1)='-' then
-      if upper(paramStr(i))='-V' then
-        verbose := true
-      else if upper(paramStr(i))='-D' then
-        debug := true
+  for I := 1 to ParamCount do
+    if Copy(ParamStr(I), 1, 1)='-' then
+      if Upper(ParamStr(I))='-V' then
+        Verbose := True
+      else if Upper(ParamStr(I))='-D' then
+        Debug := True
       else
         begin
-          writeln(invalid_option, paramStr(i));
-          halt(1);
+          WriteLn(InvalidOption, ParamStr(I));
+          Halt(1);
         end
-    else if yfilename='' then
-      yfilename := addExt(paramStr(i), 'y')
-    else if pasfilename='' then
-      pasfilename := addExt(paramStr(i), 'pas')
+    else if YFileName='' then
+      YFileName := AddExt(ParamStr(I), 'y')
+    else if PasFileName='' then
+      PasFileName := AddExt(ParamStr(I), 'pas')
     else
       begin
-        writeln(illegal_no_args);
-        halt(1);
+        WriteLn(IllegalNoArgs);
+        Halt(1);
       end;
 
-  if yfilename='' then
+  if YFileName='' then
     begin
-      writeln(illegal_no_args);
-      halt(1);
+      WriteLn(IllegalNoArgs);
+      Halt(1);
     end;
 
-  if pasfilename='' then pasfilename := root(yfilename)+'.pas';
-  lstfilename := root(yfilename)+'.lst';
+  if PasFileName='' then PasFileName := Root(YFileName)+'.pas';
+  LstFileName := Root(YFileName)+'.lst';
 
   (* open files: *)
 
-  assign(yyin, yfilename);
-  assign(yyout, pasfilename);
-  assign(yylst, lstfilename);
+  Assign(YYIn, YFileName);
+  Assign(YYOut, PasFileName);
+  Assign(YYLst, LstFileName);
 
-  reset(yyin);    if ioresult<>0 then fatal(cannot_open_file+yfilename);
-  rewrite(yyout); if ioresult<>0 then fatal(cannot_open_file+pasfilename);
-  rewrite(yylst); if ioresult<>0 then fatal(cannot_open_file+lstfilename);
+  Reset(YYIn);    if IOResult<>0 then Fatal(CannotOpenFile+YFileName);
+  Rewrite(YYOut); if IOResult<>0 then Fatal(CannotOpenFile+PasFileName);
+  Rewrite(YYLst); if IOResult<>0 then Fatal(CannotOpenFile+LstFileName);
 
   (* search code template *)
-  codfilename := 'yyparse.cod';
-  assign(yycod, codfilename);
-  reset(yycod);
-  if ioresult<>0 then
+  CodFileName := 'yyparse.cod';
+  Assign(YYCod, CodFileName);
+  Reset(YYCod);
+  if IOResult<>0 then
     begin
-      codfilename := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yyparse.cod';
-      assign(yycod, codfilename);
-      reset(yycod);
-      if ioresult<>0 then
+      CodFileName := IncludeTrailingPathDelimiter(GetEnvironmentVariable('FPCDIR'))+'lexyacc'+DirectorySeparator+'yyparse.cod';
+      Assign(YYCod, CodFileName);
+      Reset(YYCod);
+      if IOResult<>0 then
         begin
-          codfilename := codfilepath1+'yyparse.cod';
-          assign(yycod, codfilename);
-          reset(yycod);
-          if (codfilepath2<>'') and (ioresult<>0) then 
+          CodFileName := CodFilePath1+'yyparse.cod';
+          Assign(YYCod, CodFileName);
+          Reset(YYCod);
+          if (CodFilePath2<>'') and (IOResult<>0) then 
             begin
-              codfilename := codfilepath2+'yyparse.cod';
-              assign(yycod, codfilename);
-              reset(yycod);
-              if ioresult<>0 then 
-                fatal(cannot_open_file+codfilename);
+              CodFileName := CodFilePath2+'yyparse.cod';
+              Assign(YYCod, CodFileName);
+              Reset(YYCod);
+              if IOResult<>0 then 
+                Fatal(CannotOpenFile+CodFileName);
             end;
         end;
     end;
 
   (* parse source grammar: *)
 
-  write('parse ... ');
+  Write('parse ... ');
 
-  lno := 0; cno := 1; line := '';
+  LNo := 0; CNo := 1; Line := '';
 
-  next_section;
-  if debug then writeln(yyout, '{$define yydebug}');
+  NextSection;
+  if Debug then WriteLn(YYOut, '{$define yydebug}');
 
   if yyparse=0 then
     { done }
-  else if yychar=0 then
-    error(unexpected_eof)
+  else if YYChar=0 then
+    Error(UnexpectedEOF)
   else
-    error(syntax_error);
+    Error(SyntaxError);
 
-  if errors=0 then writeln('DONE');
+  if Errors=0 then WriteLn('DONE');
 
   (* close files: *)
 
-  close(yyin); close(yyout); close(yylst); close(yycod);
+  Close(YYIn); Close(YYOut); Close(YYLst); Close(YYCod);
 
   (* print statistics: *)
 
-  if errors>0 then
-    writeln( lno, ' lines, ',
-             errors, ' errors found.' )
+  if Errors>0 then
+    WriteLn( LNo, ' lines, ',
+             Errors, ' errors found.' )
   else
     begin
-      writeln( lno, ' lines, ',
-               n_rules-1, '/', max_rules-1, ' rules, ',
-               n_states, '/', max_states, ' s, ',
-               n_items, '/', max_items, ' i, ',
-               n_trans, '/', max_trans, ' t, ',
-               n_redns, '/', max_redns, ' r.');
-      if shift_reduce>0 then
-        writeln(shift_reduce, ' shift/reduce conflicts.');
-      if reduce_reduce>0 then
-        writeln(reduce_reduce, ' reduce/reduce conflicts.');
-      if never_reduced>0 then
-        writeln(never_reduced, ' rules never reduced.');
+      WriteLn( LNo, ' lines, ',
+               NRules-1, '/', MaxRules-1, ' rules, ',
+               NStates, '/', MaxStates, ' s, ',
+               NItems, '/', MaxItems, ' i, ',
+               NTrans, '/', MaxTrans, ' t, ',
+               NRedns, '/', MaxRedns, ' r.');
+      if ShiftReduce>0 then
+        WriteLn(ShiftReduce, ' shift/reduce conflicts.');
+      if ReduceReduce>0 then
+        WriteLn(ReduceReduce, ' reduce/reduce conflicts.');
+      if NeverReduced>0 then
+        WriteLn(NeverReduced, ' rules never reduced.');
     end;
 
-  if warnings>0 then writeln(warnings, ' warnings.');
+  if Warnings>0 then WriteLn(Warnings, ' warnings.');
 
   (* terminate: *)
 
-  if errors>0 then
+  if Errors>0 then
     begin
-      erase(yyout);
-      if ioresult<>0 then ;
+      Erase(YYOut);
+      if IOResult<>0 then ;
     end;
 
-  if file_size(lstfilename)=0 then
-    erase(yylst)
+  if GetFileSize(LstFileName)=0 then
+    Erase(YYLst)
   else
-    writeln('(see ', lstfilename, ' for more information)');
+    WriteLn('(see ', LstFileName, ' for more information)');
 
-  halt(errors);
+  Halt(Errors);
 
 end(*Yacc*).

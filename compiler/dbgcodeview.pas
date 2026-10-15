@@ -37,8 +37,8 @@ unit dbgcodeview;
 interface
 
     uses
-      aasmdata,
-      dbgbase;
+      AAsmData,
+      DbgBase;
 
     type
       TSymbolIndex = (
@@ -193,30 +193,30 @@ interface
 implementation
 
     uses
-      globtype,
-      cutils,
+      GlobType,
+      CUtils,
       aasmtai,
-      fmodule,
-      systems;
+      FModule,
+      Systems;
 
     procedure InsertLineInfo_OMF_LINNUM_MsLink(list: TAsmList);
       var
         currfileinfo,
         lastfileinfo : TFilePosInfo;
         nolineinfolevel : Integer;
-        currfuncname : pshortstring;
-        hp : tai;
+        currfuncname : PShortString;
+        hp : TAI;
       begin
         FillChar(lastfileinfo,sizeof(lastfileinfo),0);
-        hp:=Tai(list.first);
+        hp:=TAI(list.first);
         nolineinfolevel:=0;
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             case hp.typ of
               ait_function_name :
                 begin
-                  currfuncname:=tai_function_name(hp).funcname;
-                  list.concat(tai_comment.Create(strpnew('function: '+currfuncname^)));
+                  currfuncname:=TAIFunctionName(hp).funcname;
+                  list.concat(TAIComment.Create(StrPNew('function: '+currfuncname^)));
                 end;
               ait_force_line :
                 begin
@@ -224,7 +224,7 @@ implementation
                 end;
               ait_marker :
                 begin
-                  case tai_marker(hp).kind of
+                  case TAIMarker(hp).kind of
                     mark_NoLineInfoStart:
                       inc(nolineinfolevel);
                     mark_NoLineInfoEnd:
@@ -240,20 +240,20 @@ implementation
             { OMF LINNUM records do not support multiple source files }
             if (hp.typ=ait_instruction) and
                (nolineinfolevel=0) and
-               (tailineinfo(hp).fileinfo.fileindex=main_module.moduleid) then
+               (TAILineInfo(hp).fileinfo.fileindex=main_module.ModuleID) then
               begin
-                currfileinfo:=tailineinfo(hp).fileinfo;
+                currfileinfo:=TAILineInfo(hp).fileinfo;
 
                 { line changed ? }
                 if (lastfileinfo.line<>currfileinfo.line) and (currfileinfo.line<>0) then
                   begin
                     { line directive }
-                    list.insertbefore(tai_directive.Create(asd_omf_linnum_line,tostr(currfileinfo.line)),hp);
+                    list.insertbefore(TAIDirective.Create(asd_omf_linnum_line,ToStr(currfileinfo.line)),hp);
                   end;
                 lastfileinfo:=currfileinfo;
               end;
 
-            hp:=tai(hp.next);
+            hp:=TAI(hp.next);
           end;
       end;
 

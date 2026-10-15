@@ -29,22 +29,22 @@ interface
       node,nmat,nx86mat;
 
     type
-      tx8664shlshrnode = class(tx86shlshrnode)
+      TX8664ShlShrNode = class(TX86ShlShrNode)
          procedure pass_generate_code;override;
       end;
 
-      tx8664unaryminusnode = class(tx86unaryminusnode)
+      TX8664UnaryMinusNode = class(TX86UnaryMinusNode)
       end;
 
-      tx8664notnode = class(tx86notnode)
+      TX8664NotNode = class(TX86NotNode)
       end;
 
 implementation
 
     uses
-      globtype,constexp,
-      cutils,
-      aasmdata,defutil,
+      GlobType,ConstExp,
+      CUtils,
+      AAsmData,defutil,
       pass_2,
       ncon,
       cgbase,cgutils,cgobj,hlcgobj;
@@ -55,10 +55,10 @@ implementation
 *****************************************************************************}
 
 
-    procedure tx8664shlshrnode.pass_generate_code;
+    procedure TX8664ShlShrNode.pass_generate_code;
       var
-        op : topcg;
-        opsize : tcgsize;
+        op : TOpCG;
+        opsize : TCgSize;
         mask : aint;
       begin
         SecondPass(left);
@@ -84,7 +84,7 @@ implementation
         { shifting by a constant directly coded: }
         if (right.nodetype=ordconstn) then
           cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
-            tordconstnode(right).value.uvalue and mask,left.location.register,location.register)
+            TOrdConstNode(right).value.uvalue and mask,left.location.register,location.register)
         else
           begin
             { load right operators in a register - this
@@ -102,8 +102,8 @@ implementation
 
 
 begin
-   cunaryminusnode:=tx8664unaryminusnode;
-   cmoddivnode:=tx86moddivnode;
-   cshlshrnode:=tx8664shlshrnode;
-   cnotnode:=tx8664notnode;
+   CUnaryMinusNode:=TX8664UnaryMinusNode;
+   CModDivNode:=TX86ModDivNode;
+   CShlShrNode:=TX8664ShlShrNode;
+   CNotNode:=TX8664NotNode;
 end.

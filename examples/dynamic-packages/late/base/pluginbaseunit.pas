@@ -29,7 +29,7 @@ begin Result:=Value=1; if Result then Ident:='plugin-green'; end;
 function PluginFindComponent(const Name: string): TComponent;
 begin Inc(FindComponentCalls); Result:=nil; end;
 function PluginInitComponent(Instance: TComponent; RootAncestor: TClass): Boolean;
-begin Inc(InitComponentCalls); Result:=true; end;
+begin Inc(InitComponentCalls); Result:=True; end;
 initialization
   Inc(BaseInitializations);
   Trace:=Trace+'B';

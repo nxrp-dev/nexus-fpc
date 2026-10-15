@@ -248,18 +248,18 @@ interface
     DF_1_CONFALT   = $2000;
 
   type
-    TElfIdent = array[0..15] of byte;
+    TELFIdent = array[0..15] of byte;
 
     { Structures which are written directly to the output file }
-    TElf32header=record
-      e_ident           : TElfIdent;
+    TELF32Header=record
+      e_ident           : TELFIdent;
       e_type            : word;
       e_machine         : word;
-      e_version         : longword;
-      e_entry           : longword;         { entrypoint }
-      e_phoff           : longword;         { program header offset }
-      e_shoff           : longword;         { sections header offset }
-      e_flags           : longword;
+      e_version         : LongWord;
+      e_entry           : LongWord;         { entrypoint }
+      e_phoff           : LongWord;         { program header offset }
+      e_shoff           : LongWord;         { sections header offset }
+      e_flags           : LongWord;
       e_ehsize          : word;             { elf header size in bytes }
       e_phentsize       : word;             { size of an entry in the program header array }
       e_phnum           : word;             { 0..e_phnum-1 of entrys }
@@ -268,61 +268,61 @@ interface
       e_shstrndx        : word;             { index of string section header }
     end;
 
-    TElf32sechdr=record
-      sh_name           : longword;
-      sh_type           : longword;
-      sh_flags          : longword;
-      sh_addr           : longword;
-      sh_offset         : longword;
-      sh_size           : longword;
-      sh_link           : longword;
-      sh_info           : longword;
-      sh_addralign      : longword;
-      sh_entsize        : longword;
+    TELF32SecHdr=record
+      sh_name           : LongWord;
+      sh_type           : LongWord;
+      sh_flags          : LongWord;
+      sh_addr           : LongWord;
+      sh_offset         : LongWord;
+      sh_size           : LongWord;
+      sh_link           : LongWord;
+      sh_info           : LongWord;
+      sh_addralign      : LongWord;
+      sh_entsize        : LongWord;
     end;
 
-    TElf32proghdr=record
-      p_type            : longword;
-      p_offset          : longword;
-      p_vaddr           : longword;
-      p_paddr           : longword;
-      p_filesz          : longword;
-      p_memsz           : longword;
-      p_flags           : longword;
-      p_align           : longword;
+    TELF32ProgHdr=record
+      p_type            : LongWord;
+      p_offset          : LongWord;
+      p_vaddr           : LongWord;
+      p_paddr           : LongWord;
+      p_filesz          : LongWord;
+      p_memsz           : LongWord;
+      p_flags           : LongWord;
+      p_align           : LongWord;
     end;
 
-    TElf32reloc=record
-      address : longword;
-      info    : longword; { bit 0-7: type, 8-31: symbol }
-      addend  : longint;
+    TELF32Reloc=record
+      address : LongWord;
+      info    : LongWord; { bit 0-7: type, 8-31: symbol }
+      addend  : LongInt;
     end;
 
-    TElf32symbol=record
-      st_name  : longword;
-      st_value : longword;
-      st_size  : longword;
+    TELF32Symbol=record
+      st_name  : LongWord;
+      st_value : LongWord;
+      st_size  : LongWord;
       st_info  : byte; { bit 0-3: type, 4-7: bind }
       st_other : byte;
       st_shndx : word;
     end;
 
-    TElf32Dyn=record
-      d_tag: longword;
+    TELF32Dyn=record
+      d_tag: LongWord;
       case integer of
-        0: (d_val: longword);
-        1: (d_ptr: longword);
+        0: (d_val: LongWord);
+        1: (d_ptr: LongWord);
     end;
 
-    telf64header=record
-      e_ident           : TElfIdent;
+    TELF64Header=record
+      e_ident           : TELFIdent;
       e_type            : word;
       e_machine         : word;
-      e_version         : longword;
+      e_version         : LongWord;
       e_entry           : qword;            { entrypoint }
       e_phoff           : qword;            { program header offset }
       e_shoff           : qword;            { sections header offset }
-      e_flags           : longword;
+      e_flags           : LongWord;
       e_ehsize          : word;             { elf header size in bytes }
       e_phentsize       : word;             { size of an entry in the program header array }
       e_phnum           : word;             { 0..e_phnum-1 of entrys }
@@ -331,22 +331,22 @@ interface
       e_shstrndx        : word;             { index of string section header }
     end;
 
-    TElf64sechdr=record
-      sh_name           : longword;
-      sh_type           : longword;
+    TELF64SecHdr=record
+      sh_name           : LongWord;
+      sh_type           : LongWord;
       sh_flags          : qword;
       sh_addr           : qword;
       sh_offset         : qword;
       sh_size           : qword;
-      sh_link           : longword;
-      sh_info           : longword;
+      sh_link           : LongWord;
+      sh_info           : LongWord;
       sh_addralign      : qword;
       sh_entsize        : qword;
     end;
 
-    telf64proghdr=record
-      p_type            : longword;
-      p_flags           : longword;
+    TELF64ProgHdr=record
+      p_type            : LongWord;
+      p_flags           : LongWord;
       p_offset          : qword;
       p_vaddr           : qword;
       p_paddr           : qword;
@@ -355,14 +355,14 @@ interface
       p_align           : qword;
     end;
 
-    telf64reloc=record
+    TELF64Reloc=record
       address : qword;
       info    : qword; { bit 0-31: type, 32-63: symbol }
       addend  : int64; { signed! }
     end;
 
-    telf64symbol=record
-      st_name  : longword;
+    TELF64Symbol=record
+      st_name  : LongWord;
       st_info  : byte; { bit 0-3: type, 4-7: bind }
       st_other : byte;
       st_shndx : word;
@@ -370,7 +370,7 @@ interface
       st_size  : qword;
     end;
 
-    TElf64Dyn=record
+    TELF64Dyn=record
       d_tag: qword;
       case integer of
         0: (d_val: qword);
@@ -378,35 +378,35 @@ interface
     end;
 
     { The following records are same for 32 and 64 bit ELF files }
-    TElfVerdef=record
+    TELFVerDef=record
       vd_version: word;      { =VER_DEF_CURRENT }
       vd_flags:   word;
       vd_ndx:     word;
       vd_cnt:     word;      { number of verdaux records }
-      vd_hash:    longword;  { ELF hash of version name }
-      vd_aux:     longword;  { offset to verdaux records }
-      vd_next:    longword;  { offset to next verdef record }
+      vd_hash:    LongWord;  { ELF hash of version name }
+      vd_aux:     LongWord;  { offset to verdaux records }
+      vd_next:    LongWord;  { offset to next verdef record }
     end;
 
-    TElfVerdaux=record
-      vda_name: longword;
-      vda_next: longword;
+    TELFVerDAux=record
+      vda_name: LongWord;
+      vda_next: LongWord;
     end;
 
-    TElfVerneed=record
+    TELFVerNeed=record
       vn_version: word;      { =VER_NEED_CURRENT }
       vn_cnt:     word;
-      vn_file:    longword;
-      vn_aux:     longword;
-      vn_next:    longword;
+      vn_file:    LongWord;
+      vn_aux:     LongWord;
+      vn_next:    LongWord;
     end;
 
-    TElfVernaux=record
-      vna_hash:  longword;
+    TELFVerNAux=record
+      vna_hash:  LongWord;
       vna_flags: word;
       vna_other: word;
-      vna_name:  longword;
-      vna_next:  longword;
+      vna_name:  LongWord;
+      vna_next:  LongWord;
     end;
 
   const
@@ -424,22 +424,22 @@ interface
     VER_FLG_WEAK = 2;
     VER_FLG_INFO = 4;
 
-    procedure MayBeSwapHeader(var h : telf32header);
-    procedure MayBeSwapHeader(var h : telf64header);
-    procedure MayBeSwapHeader(var h : telf32proghdr);
-    procedure MayBeSwapHeader(var h : telf64proghdr);
-    procedure MaybeSwapSecHeader(var h : telf32sechdr);
-    procedure MaybeSwapSecHeader(var h : telf64sechdr);
-    procedure MaybeSwapElfSymbol(var h : telf32symbol);
-    procedure MaybeSwapElfSymbol(var h : telf64symbol);
-    procedure MaybeSwapElfReloc(var h : telf32reloc);
-    procedure MaybeSwapElfReloc(var h : telf64reloc);
-    procedure MaybeSwapElfDyn(var h : telf32dyn);
-    procedure MaybeSwapElfDyn(var h : telf64dyn);
-    procedure MaybeSwapElfverdef(var h: TElfverdef);
-    procedure MaybeSwapElfverdaux(var h: TElfverdaux);
-    procedure MaybeSwapElfverneed(var h: TElfverneed);
-    procedure MaybeSwapElfvernaux(var h: TElfvernaux);
+    procedure MayBeSwapHeader(var h : TELF32Header);
+    procedure MayBeSwapHeader(var h : TELF64Header);
+    procedure MayBeSwapHeader(var h : TELF32ProgHdr);
+    procedure MayBeSwapHeader(var h : TELF64ProgHdr);
+    procedure MaybeSwapSecHeader(var h : TELF32SecHdr);
+    procedure MaybeSwapSecHeader(var h : TELF64SecHdr);
+    procedure MaybeSwapElfSymbol(var h : TELF32Symbol);
+    procedure MaybeSwapElfSymbol(var h : TELF64Symbol);
+    procedure MaybeSwapElfReloc(var h : TELF32Reloc);
+    procedure MaybeSwapElfReloc(var h : TELF64Reloc);
+    procedure MaybeSwapElfDyn(var h : TELF32Dyn);
+    procedure MaybeSwapElfDyn(var h : TELF64Dyn);
+    procedure MaybeSwapElfverdef(var h: TELFVerDef);
+    procedure MaybeSwapElfverdaux(var h: TELFVerDAux);
+    procedure MaybeSwapElfverneed(var h: TELFVerNeed);
+    procedure MaybeSwapElfvernaux(var h: TELFVerNAux);
 
     function GetElfSymbolVisibility(other: byte): byte; inline;
     procedure SetElfSymbolVisibility(var other: byte; vis: byte); inline;
@@ -447,9 +447,9 @@ interface
 implementation
 
     uses
-      systems;
+      Systems;
 
-    procedure MayBeSwapHeader(var h : telf32header);
+    procedure MayBeSwapHeader(var h : TELF32Header);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -471,7 +471,7 @@ implementation
       end;
 
 
-    procedure MayBeSwapHeader(var h : telf64header);
+    procedure MayBeSwapHeader(var h : TELF64Header);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -493,7 +493,7 @@ implementation
       end;
 
 
-    procedure MayBeSwapHeader(var h : telf32proghdr);
+    procedure MayBeSwapHeader(var h : TELF32ProgHdr);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -510,7 +510,7 @@ implementation
       end;
 
 
-    procedure MayBeSwapHeader(var h : telf64proghdr);
+    procedure MayBeSwapHeader(var h : TELF64ProgHdr);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -527,7 +527,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapSecHeader(var h : telf32sechdr);
+    procedure MaybeSwapSecHeader(var h : TELF32SecHdr);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -546,7 +546,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapSecHeader(var h : telf64sechdr);
+    procedure MaybeSwapSecHeader(var h : TELF64SecHdr);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -565,7 +565,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfSymbol(var h : telf32symbol);
+    procedure MaybeSwapElfSymbol(var h : TELF32Symbol);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -578,7 +578,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfSymbol(var h : telf64symbol);
+    procedure MaybeSwapElfSymbol(var h : TELF64Symbol);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -591,7 +591,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfReloc(var h : telf32reloc);
+    procedure MaybeSwapElfReloc(var h : TELF32Reloc);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -603,7 +603,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfReloc(var h : telf64reloc);
+    procedure MaybeSwapElfReloc(var h : TELF64Reloc);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -615,7 +615,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfDyn(var h : telf32dyn);
+    procedure MaybeSwapElfDyn(var h : TELF32Dyn);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -626,7 +626,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfDyn(var h : telf64dyn);
+    procedure MaybeSwapElfDyn(var h : TELF64Dyn);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -637,7 +637,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfverdef(var h: TElfverdef);
+    procedure MaybeSwapElfverdef(var h: TELFVerDef);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -653,7 +653,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfverdaux(var h: TElfverdaux);
+    procedure MaybeSwapElfverdaux(var h: TELFVerDAux);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -664,7 +664,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfverneed(var h: TElfverneed);
+    procedure MaybeSwapElfverneed(var h: TELFVerNeed);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do
@@ -678,7 +678,7 @@ implementation
       end;
 
 
-    procedure MaybeSwapElfvernaux(var h: TElfvernaux);
+    procedure MaybeSwapElfvernaux(var h: TELFVerNAux);
       begin
         if SourceInfo.endian<>TargetInfo.endian then
           with h do

@@ -52,88 +52,88 @@ const
 
 (* symbolic character constants: *)
 
-bs   = #8;      (* backspace character *)
-tab  = #9;      (* tab character *)
-nl   = #10;     (* newline character *)
-cr   = #13;     (* carriage return *)
-ff   = #12;     (* form feed character *)
+BS   = #8;      (* backspace character *)
+Tab  = #9;      (* tab character *)
+NL   = #10;     (* newline character *)
+CR   = #13;     (* carriage return *)
+FF   = #12;     (* form feed character *)
 
 var
 
 (* Filenames: *)
 
-yfilename     : String;
-pasfilename   : String;
-lstfilename   : String;
-codfilename   : String;
-codfilepath1,
-codfilepath2  : String; { Under Linux,
+YFileName     : String;
+PasFileName   : String;
+LstFileName   : String;
+CodFileName   : String;
+CodFilePath1,
+CodFilePath2  : String; { Under Linux,
                           binary and conf file are never in 1 directory.}
 
 (* Yacc input, output, list and code template file: *)
 
-yyin, yyout, yylst, yycod : Text;
+YYIn, YYOut, YYLst, YYCod : Text;
 
 (* the following values are initialized and updated by the parser: *)
 
-line      : String;  (* current input line *)
-lno, cno  : Integer; (* current input position (line/column) *)
-tokleng   : Integer; (* length of current token *)
+Line      : String;  (* current input line *)
+LNo, CNo  : Integer; (* current input position (line/column) *)
+TokLeng   : Integer; (* length of current token *)
 
 const
 
-max_elems  = 150; (* maximum size of integer sets *)
+MaxElems  = 150; (* maximum size of integer sets *)
 
 type
 
 (* String pointers: *)
 
-StrPtr    = ^String;
+PStr    = ^String;
 
 (* Sorted integer sets: *)
 
-IntSet    = array [0..max_elems] of Integer;
+TIntSet    = array [0..MaxElems] of Integer;
               (* word 0 is size *)
-IntSetPtr = ^IntSet;
+PIntSet = ^TIntSet;
 
 (* Operations: *)
 
 (* Strings pointers: *)
 
-function newStr(str : String) : StrPtr;
+function NewStr(Str : String) : PStr;
   (* creates a string pointer (only the space actually needed for the given
      string is allocated) *)
 
 (* Integer sets (set arguments are passed by reference even if they are not
    modified, for greater efficiency): *)
 
-procedure empty(var M : IntSet);
+procedure Empty(var M : TIntSet);
   (* initializes M as empty *)
-procedure singleton(var M : IntSet; i : Integer);
+procedure Singleton(var M : TIntSet; I : Integer);
   (* initializes M as a singleton set containing the element i *)
-procedure include(var M : IntSet; i : Integer);
+procedure Include(var M : TIntSet; I : Integer);
   (* include i in M *)
-procedure exclude(var M : IntSet; i : Integer);
+procedure Exclude(var M : TIntSet; I : Integer);
   (* exclude i from M *)
-procedure setunion(var M, N : IntSet);
+procedure SetUnion(var M, N : TIntSet);
   (* adds N to M *)
-procedure setminus(var M, N : IntSet);
+procedure SetMinus(var M, N : TIntSet);
   (* removes N from M *)
-procedure intersect(var M, N : IntSet);
+procedure Intersect(var M, N : TIntSet);
   (* removes from M all elements NOT in N *)
-function size(var M : IntSet) : Integer;
+function Size(var M : TIntSet) : Integer;
   (* cardinality of set M *)
-function member(i : Integer; var M : IntSet) : Boolean;
+function Member(I : Integer; var M : TIntSet) : Boolean;
   (* tests for membership of i in M *)
-function isempty(var M : IntSet) : Boolean;
+function Isempty(var M : TIntSet) : Boolean;
   (* checks whether M is an empty set *)
-function equal(var M, N : IntSet) : Boolean;
+function Equal(var M, N : TIntSet) : Boolean;
   (* checks whether M and N are equal *)
-function subseteq(var M, N : IntSet) : Boolean;
+function SubsetEq(var M, N : TIntSet) : Boolean;
   (* checks whether M is a subset of N *)
-function newEmptyIntSet : IntSetPtr;
+function NewEmptyIntSet : PIntSet;
   (* creates a pointer to an empty integer set *)
-function newIntSet ( var M : IntSet ) : IntSetPtr;
+function NewIntSet ( var M : TIntSet ) : PIntSet;
   (* creates a dynamic copy of M (only the space actually needed
      is allocated) *)
 
@@ -141,12 +141,12 @@ function newIntSet ( var M : IntSet ) : IntSetPtr;
 
 type
 
-OrderPredicate = function (i, j : Integer) : Boolean;
-SwapProc = procedure (i, j : Integer);
+TOrderPredicate = function (I, J : Integer) : Boolean;
+TSwapProc = procedure (I, J : Integer);
 
-procedure quicksort(lo, hi: Integer;
-                    less : OrderPredicate;
-                    swap : SwapProc);
+procedure QuickSort(Lo, Hi: Integer;
+                    Less : TOrderPredicate;
+                    Swap : TSwapProc);
   (* General inplace sorting procedure based on the quicksort algorithm.
      This procedure can be applied to any sequential data structure;
      only the corresponding routines less which compares, and swap which
@@ -165,13 +165,13 @@ procedure quicksort(lo, hi: Integer;
 
 type
 
-TableLookupProc = function(k : Integer) : String;
-TableEntryProc  = procedure(k : Integer; symbol : String);
+TTableLookupProc = function(K : Integer) : String;
+TTableEntryProc  = procedure(K : Integer; Symbol : String);
 
-function key(symbol : String;
-             table_size : Integer;
-             lookup : TableLookupProc;
-             entry  : TableEntryProc) : Integer;
+function Key(Symbol : String;
+             TableSize : Integer;
+             Lookup : TTableLookupProc;
+             Entry  : TTableEntryProc) : Integer;
   (* returns a hash table key for symbol; inserts the symbol into the
      table if necessary
      - table_size is the symbol table size and must be a fixed prime number
@@ -180,51 +180,51 @@ function key(symbol : String;
      - entry is the table entry procedure which is assumed to store the
        given symbol at the given location *)
 
-function definedKey(symbol : String;
-                    table_size : Integer;
-                    lookup : TableLookupProc) : Boolean;
+function DefinedKey(Symbol : String;
+                    TableSize : Integer;
+                    Lookup : TTableLookupProc) : Boolean;
   (* checks the table to see if symbol is in the table *)
 
 (* Utility routines: *)
 
-function min(i, j : Integer) : Integer;
-function max(i, j : Integer) : Integer;
+function Min(I, J : Integer) : Integer;
+function Max(I, J : Integer) : Integer;
   (* minimum and maximum of two integers *)
-function upper(str : String) : String;
+function Upper(Str : String) : String;
   (* returns str converted to uppercase *)
-function strip(str : String) : String;
+function Strip(Str : String) : String;
   (* returns str with leading and trailing blanks stripped off *)
-function blankStr(str : String) : String;
+function BlankStr(Str : String) : String;
   (* returns string of same length as str, with all non-whitespace characters
      replaced by blanks *)
-function intStr(i : Integer) : String;
+function IntStr(I : Integer) : String;
   (* returns the string representation of i *)
-function isInt(str : String; var i : Integer) : Boolean;
+function IsInt(Str : String; var I : Integer) : Boolean;
   (* checks whether str represents an integer; if so, returns the
      value of it in i *)
-function path(filename : String) : String;
+function Path(FileName : String) : String;
   (* returns the path in filename *)
-function root(filename : String) : String;
+function Root(FileName : String) : String;
   (* returns root (i.e. extension stripped from filename) of
      filename *)
-function addExt(filename, ext : String) : String;
+function AddExt(FileName, Ext : String) : String;
   (* if filename has no extension and last filename character is not '.',
      add extension ext to filename *)
-function file_size(filename : String) : LongInt;
+function GetFileSize(FileName : String) : LongInt;
   (* determines file size in bytes *)
 
 (* Utility functions for list generating routines: *)
 
-type CharSet = set of Char;
+type TCharSet = set of Char;
 
-function charStr(c : char; reserved : CharSet) : String;
+function CharStr(C : Char; Reserved : TCharSet) : String;
   (* returns a print name for character c, using the standard escape
      conventions; reserved is the class of `reserved' special characters
      which should be quoted with \ (\ itself is always quoted) *)
-function singleQuoteStr(str : String) : String;
+function SingleQuoteStr(Str : String) : String;
   (* returns print name of str enclosed in single quotes, using the
      standard escape conventions *)
-function doubleQuoteStr(str : String) : String;
+function DoubleQuoteStr(Str : String) : String;
   (* returns print name of str enclosed in double quotes, using the
      standard escape conventions *)
 
@@ -234,287 +234,287 @@ uses YaccMsgs;
 
 (* String pointers: *)
 
-function newStr(str : String) : StrPtr;
-  var strp : StrPtr;
+function NewStr(Str : String) : PStr;
+  var StrP : PStr;
   begin
-    new(strp);
-    strp^ := str;
-    newStr := strp;
+    New(StrP);
+    StrP^ := Str;
+    NewStr := StrP;
   end(*newStr*);
 
 (* Integer sets: *)
 
-procedure empty(var M : IntSet);
+procedure Empty(var M : TIntSet);
   begin
     M[0] := 0;
   end(*empty*);
 
-procedure singleton(var M : IntSet; i : Integer);
+procedure Singleton(var M : TIntSet; I : Integer);
   begin
-    M[0] := 1; M[1] := i;
+    M[0] := 1; M[1] := I;
   end(*singleton*);
 
-procedure include(var M : IntSet; i : Integer);
-  var l, r, k : Integer;
+procedure Include(var M : TIntSet; I : Integer);
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    if (k>M[0]) or (M[k]<>i) then
+    if (K>M[0]) or (M[K]<>I) then
       begin
-        if M[0]>=max_elems then fatal(intset_overflow);
-        if (k<=M[0]) and (M[k]<i) then
+        if M[0]>=MaxElems then Fatal(IntsetOverflow);
+        if (K<=M[0]) and (M[K]<I) then
           begin
-            move(M[k+1], M[k+2], (M[0]-k)*sizeOf(Integer));
-            M[k+1] := i;
+            Move(M[K+1], M[K+2], (M[0]-K)*SizeOf(Integer));
+            M[K+1] := I;
           end
         else
           begin
-            move(M[k], M[k+1], (M[0]-k+1)*sizeOf(Integer));
-            M[k] := i;
+            Move(M[K], M[K+1], (M[0]-K+1)*SizeOf(Integer));
+            M[K] := I;
           end;
-        inc(M[0]);
+        Inc(M[0]);
       end;
   end(*include*);
 
-procedure exclude(var M : IntSet; i : Integer);
-  var l, r, k : Integer;
+procedure Exclude(var M : TIntSet; I : Integer);
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    if (k<=M[0]) and (M[k]=i) then
+    if (K<=M[0]) and (M[K]=I) then
       begin
-        move(M[k+1], M[k], (M[0]-k)*sizeOf(Integer));
-        dec(M[0]);
+        Move(M[K+1], M[K], (M[0]-K)*SizeOf(Integer));
+        Dec(M[0]);
       end;
   end(*exclude*);
 
-procedure setunion(var M, N : IntSet);
+procedure SetUnion(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, j, i_M, i_N : Integer;
+    K : TIntSet;
+    I, J, IndexM, IndexN : Integer;
   begin
     (* merge sort: *)
-    i := 0; i_M := 1; i_N := 1;
-    while (i_M<=M[0]) and (i_N<=N[0]) do
+    I := 0; IndexM := 1; IndexN := 1;
+    while (IndexM<=M[0]) and (IndexN<=N[0]) do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        if M[i_M]<N[i_N] then
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        if M[IndexM]<N[IndexN] then
           begin
-            K[i] := M[i_M]; inc(i_M);
+            K[I] := M[IndexM]; Inc(IndexM);
           end
-        else if N[i_N]<M[i_M] then
+        else if N[IndexN]<M[IndexM] then
           begin
-            K[i] := N[i_N]; inc(i_N);
+            K[I] := N[IndexN]; Inc(IndexN);
           end
         else
           begin
-            K[i] := M[i_M]; inc(i_M); inc(i_N);
+            K[I] := M[IndexM]; Inc(IndexM); Inc(IndexN);
           end
       end;
-    for j := i_M to M[0] do
+    for J := IndexM to M[0] do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        K[i] := M[j];
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        K[I] := M[J];
       end;
-    for j := i_N to N[0] do
+    for J := IndexN to N[0] do
       begin
-        inc(i);
-        if i>max_elems then fatal(intset_overflow);
-        K[i] := N[j];
+        Inc(I);
+        if I>MaxElems then Fatal(IntsetOverflow);
+        K[I] := N[J];
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*setunion*);
 
-procedure setminus(var M, N : IntSet);
+procedure SetMinus(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, i_M, i_N : Integer;
+    K : TIntSet;
+    I, IndexM, IndexN : Integer;
   begin
-    i := 0; i_N := 1;
-    for i_M := 1 to M[0] do
+    I := 0; IndexN := 1;
+    for IndexM := 1 to M[0] do
       begin
-        while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-        if (i_N>N[0]) or (N[i_N]>M[i_M]) then
+        while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+        if (IndexN>N[0]) or (N[IndexN]>M[IndexM]) then
           begin
-            inc(i);
-            K[i] := M[i_M];
+            Inc(I);
+            K[I] := M[IndexM];
           end
         else
-          inc(i_N);
+          Inc(IndexN);
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*setminus*);
 
-procedure intersect(var M, N : IntSet);
+procedure Intersect(var M, N : TIntSet);
   var
-    K : IntSet;
-    i, i_M, i_N : Integer;
+    K : TIntSet;
+    I, IndexM, IndexN : Integer;
   begin
-    i := 0; i_N := 1;
-    for i_M := 1 to M[0] do
+    I := 0; IndexN := 1;
+    for IndexM := 1 to M[0] do
       begin
-        while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-        if (i_N<=N[0]) and (N[i_N]=M[i_M]) then
+        while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+        if (IndexN<=N[0]) and (N[IndexN]=M[IndexM]) then
           begin
-            inc(i);
-            K[i] := M[i_M];
-            inc(i_N);
+            Inc(I);
+            K[I] := M[IndexM];
+            Inc(IndexN);
           end
       end;
-    K[0] := i;
-    move(K, M, succ(i)*sizeOf(Integer));
+    K[0] := I;
+    Move(K, M, Succ(I)*SizeOf(Integer));
   end(*intersect*);
 
-function size(var M : IntSet) : Integer;
+function Size(var M : TIntSet) : Integer;
   begin
-    size := M[0]
+    Size := M[0]
   end(*size*);
 
-function member(i : Integer; var M : IntSet) : Boolean;
-  var l, r, k : Integer;
+function Member(I : Integer; var M : TIntSet) : Boolean;
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := M[0];
-    k := l + (r-l) div 2;
-    while (l<r) and (M[k]<>i) do
+    L := 1; R := M[0];
+    K := L + (R-L) div 2;
+    while (L<R) and (M[K]<>I) do
       begin
-        if M[k]<i then
-          l := succ(k)
+        if M[K]<I then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    member := (k<=M[0]) and (M[k]=i);
+    Member := (K<=M[0]) and (M[K]=I);
   end(*member*);
 
-function isempty(var M : IntSet) : Boolean;
+function Isempty(var M : TIntSet) : Boolean;
   begin
-    isempty := M[0]=0
+    Isempty := M[0]=0
   end(*isempty*);
 
-function equal(var M, N : IntSet) : Boolean;
-  var i : Integer;
+function Equal(var M, N : TIntSet) : Boolean;
+  var I : Integer;
   begin
     if M[0]<>N[0] then
-      equal := false
+      Equal := False
     else
       begin
-        for i := 1 to M[0] do
-          if M[i]<>N[i] then
+        for I := 1 to M[0] do
+          if M[I]<>N[I] then
             begin
-              equal := false;
-              exit
+              Equal := False;
+              Exit
             end;
-        equal := true
+        Equal := True
       end
   end(*equal*);
 
-function subseteq(var M, N : IntSet) : Boolean;
+function SubsetEq(var M, N : TIntSet) : Boolean;
   var
-    i_M, i_N : Integer;
+    IndexM, IndexN : Integer;
   begin
     if M[0]>N[0] then
-      subseteq := false
+      SubsetEq := False
     else
       begin
-        i_N := 1;
-        for i_M := 1 to M[0] do
+        IndexN := 1;
+        for IndexM := 1 to M[0] do
           begin
-            while (i_N<=N[0]) and (N[i_N]<M[i_M]) do inc(i_N);
-            if (i_N>N[0]) or (N[i_N]>M[i_M]) then
+            while (IndexN<=N[0]) and (N[IndexN]<M[IndexM]) do Inc(IndexN);
+            if (IndexN>N[0]) or (N[IndexN]>M[IndexM]) then
               begin
-                subseteq := false;
-                exit
+                SubsetEq := False;
+                Exit
               end
             else
-              inc(i_N);
+              Inc(IndexN);
           end;
-        subseteq := true
+        SubsetEq := True
       end;
   end(*subseteq*);
 
-function newIntSet ( var M : IntSet ) : IntSetPtr;
+function NewIntSet ( var M : TIntSet ) : PIntSet;
   var
-    MP : IntSetPtr;
+    MP : PIntSet;
   begin
-    getmem(MP, (size(M)+1)*sizeOf(Integer));
-    move(M, MP^, (size(M)+1)*sizeOf(Integer));
-    newIntSet := MP;
+    GetMem(MP, (Size(M)+1)*SizeOf(Integer));
+    Move(M, MP^, (Size(M)+1)*SizeOf(Integer));
+    NewIntSet := MP;
   end(*newIntSet*);
 
-function newEmptyIntSet : IntSetPtr;
+function NewEmptyIntSet : PIntSet;
   var
-    MP : IntSetPtr;
+    MP : PIntSet;
   begin
-    getmem(MP, (max_elems+1)*sizeOf(Integer));
+    GetMem(MP, (MaxElems+1)*SizeOf(Integer));
     MP^[0] := 0;
-    newEmptyIntSet := MP
+    NewEmptyIntSet := MP
   end(*newEmptyIntSet*);
 
 (* Quicksort: *)
 
-procedure quicksort(lo, hi: Integer;
-                    less : OrderPredicate;
-                    swap : SwapProc);
+procedure QuickSort(Lo, Hi: Integer;
+                    Less : TOrderPredicate;
+                    Swap : TSwapProc);
   (* derived from the quicksort routine in QSORT.PAS in the Turbo Pascal
      distribution *)
-  procedure sort(l, r: Integer);
-    var i, j, k : Integer;
+  procedure Sort(L, R: Integer);
+    var I, J, K : Integer;
     begin
-      i := l; j := r; k := (l+r) DIV 2;
+      I := L; J := R; K := (L+R) DIV 2;
       repeat
-        while less(i, k) do inc(i);
-        while less(k, j) do dec(j);
-        if i<=j then
+        while Less(I, K) do Inc(I);
+        while Less(K, J) do Dec(J);
+        if I<=J then
           begin
-            swap(i, j);
-            if k=i then k := j (* pivot element swapped! *)
-            else if k=j then k := i;
-            inc(i); dec(j);
+            Swap(I, J);
+            if K=I then K := J (* pivot element swapped! *)
+            else if K=J then K := I;
+            Inc(I); Dec(J);
           end;
-      until i>j;
-      if l<j then sort(l,j);
-      if i<r then sort(i,r);
+      until I>J;
+      if L<J then Sort(L,J);
+      if I<R then Sort(I,R);
     end(*sort*);
   begin
-    if lo<hi then sort(lo,hi);
+    if Lo<Hi then Sort(Lo,Hi);
   end(*quicksort*);
 
 (* Generic hash table routines: *)
 
-function hash(str : String; table_size : Integer) : Integer;
+function Hash(Str : String; TableSize : Integer) : Integer;
   (* computes a hash key for str *)
-  var i, key : Integer;
+  var I, Key : Integer;
   begin
-    key := 0;
-    for i := 1 to length(str) do
-      inc(key, ord(str[i]));
-    hash := key mod table_size + 1;
+    Key := 0;
+    for I := 1 to Length(Str) do
+      Inc(Key, Ord(Str[I]));
+    Hash := Key mod TableSize + 1;
   end(*hash*);
 
-procedure newPos(var pos, incr, count : Integer; table_size : Integer);
+procedure NewPos(var POS, Incr, Count : Integer; TableSize : Integer);
   (* computes a new position in the table (quadratic collision strategy)
      - pos: current position (+inc)
      - incr: current increment (+2)
@@ -524,212 +524,212 @@ procedure newPos(var pos, incr, count : Integer; table_size : Integer);
      note that n^2-(n-1)^2 = 2n-1 <=> n^2 = (n-1)^2 + (2n-1) for n>0,
      i.e. the increment inc=2n-1 increments by two in each collision *)
   begin
-    inc(count);
-    inc(pos, incr);
-    if pos>table_size then pos := pos mod table_size + 1;
-    inc(incr, 2)
+    Inc(Count);
+    Inc(POS, Incr);
+    if POS>TableSize then POS := POS mod TableSize + 1;
+    Inc(Incr, 2)
   end(*newPos*);
 
-function key(symbol : String;
-             table_size : Integer;
-             lookup : TableLookupProc;
-             entry  : TableEntryProc) : Integer;
-  var pos, incr, count : Integer;
+function Key(Symbol : String;
+             TableSize : Integer;
+             Lookup : TTableLookupProc;
+             Entry  : TTableEntryProc) : Integer;
+  var POS, Incr, Count : Integer;
   begin
-    pos := hash(symbol, table_size);
-    incr := 1;
-    count := 0;
-    while count<=table_size do
-      if lookup(pos)='' then
+    POS := Hash(Symbol, TableSize);
+    Incr := 1;
+    Count := 0;
+    while Count<=TableSize do
+      if Lookup(POS)='' then
         begin
-          entry(pos, symbol);
-          key := pos;
-          exit
+          Entry(POS, Symbol);
+          Key := POS;
+          Exit
         end
-      else if lookup(pos)=symbol then
+      else if Lookup(POS)=Symbol then
         begin
-          key := pos;
-          exit
+          Key := POS;
+          Exit
         end
       else
-        newPos(pos, incr, count, table_size);
-    fatal(sym_table_overflow)
+        NewPos(POS, Incr, Count, TableSize);
+    Fatal(SymTableOverflow)
   end(*key*);
 
-function definedKey(symbol : String;
-                    table_size : Integer;
-                    lookup : TableLookupProc) : Boolean;
-  var pos, incr, count : Integer;
+function DefinedKey(Symbol : String;
+                    TableSize : Integer;
+                    Lookup : TTableLookupProc) : Boolean;
+  var POS, Incr, Count : Integer;
   begin
-    pos := hash(symbol, table_size);
-    incr := 1;
-    count := 0;
-    while count<=table_size do
-      if lookup(pos)='' then
+    POS := Hash(Symbol, TableSize);
+    Incr := 1;
+    Count := 0;
+    while Count<=TableSize do
+      if Lookup(POS)='' then
         begin
-          definedKey := false;
-          exit
+          DefinedKey := False;
+          Exit
         end
-      else if lookup(pos)=symbol then
+      else if Lookup(POS)=Symbol then
         begin
-          definedKey := true;
-          exit
+          DefinedKey := True;
+          Exit
         end
       else
-        newPos(pos, incr, count, table_size);
-    definedKey := false
+        NewPos(POS, Incr, Count, TableSize);
+    DefinedKey := False
   end(*definedKey*);
 
 (* Utility routines: *)
 
-function min(i, j : Integer) : Integer;
+function Min(I, J : Integer) : Integer;
   begin
-    if i<j then
-      min := i
+    if I<J then
+      Min := I
     else
-      min := j
+      Min := J
   end(*min*);
-function max(i, j : Integer) : Integer;
+function Max(I, J : Integer) : Integer;
   begin
-    if i>j then
-      max := i
+    if I>J then
+      Max := I
     else
-      max := j
+      Max := J
   end(*max*);
-function upper(str : String) : String;
-  var i : Integer;
+function Upper(Str : String) : String;
+  var I : Integer;
   begin
-    for i := 1 to length(str) do
-      str[i] := upCase(str[i]);
-    upper := str
+    for I := 1 to Length(Str) do
+      Str[I] := UpCase(Str[I]);
+    Upper := Str
   end(*upper*);
-function strip(str : String) : String;
+function Strip(Str : String) : String;
   begin
-    while (length(str)>0) and ((str[1]=' ') or (str[1]=tab)) do
-      delete(str, 1, 1);
-    while (length(str)>0) and
-          ((str[length(str)]= ' ') or
-           (str[length(str)]=tab)) do
-      delete(str, length(str), 1);
-    strip := str;
+    while (Length(Str)>0) and ((Str[1]=' ') or (Str[1]=Tab)) do
+      Delete(Str, 1, 1);
+    while (Length(Str)>0) and
+          ((Str[Length(Str)]= ' ') or
+           (Str[Length(Str)]=Tab)) do
+      Delete(Str, Length(Str), 1);
+    Strip := Str;
   end(*strip*);
-function blankStr(str : String) : String;
-  var i : Integer;
+function BlankStr(Str : String) : String;
+  var I : Integer;
   begin
-    for i := 1 to length(str) do
-      if str[i]<>tab then str[i] := ' ';
-    blankStr := str;
+    for I := 1 to Length(Str) do
+      if Str[I]<>Tab then Str[I] := ' ';
+    BlankStr := Str;
   end(*blankStr*);
-function intStr(i : Integer) : String;
-  var s : String;
+function IntStr(I : Integer) : String;
+  var S : String;
   begin
-    str(i, s);
-    intStr := s
+    Str(I, S);
+    IntStr := S
   end(*intStr*);
-function isInt(str : String; var i : Integer) : Boolean;
-  var res : Integer;
+function IsInt(Str : String; var I : Integer) : Boolean;
+  var Res : Integer;
   begin
-    val(str, i, res);
-    isInt := res = 0;
+    Val(Str, I, Res);
+    IsInt := Res = 0;
   end(*isInt*);
-function path(filename : String) : String;
-  var i : Integer;
+function Path(FileName : String) : String;
+  var I : Integer;
   begin
-    i := length(filename);
-    while (i>0) and (filename[i]<>DirectorySeparator) and (filename[i]<>':') do
-      dec(i);
-    path := copy(filename, 1, i);
+    I := Length(FileName);
+    while (I>0) and (FileName[I]<>DirectorySeparator) and (FileName[I]<>':') do
+      Dec(I);
+    Path := Copy(FileName, 1, I);
   end(*path*);
-function root(filename : String) : String;
+function Root(FileName : String) : String;
   var
-    i : Integer;
+    I : Integer;
   begin
-    root := filename;
-    for i := length(filename) downto 1 do
-      case filename[i] of
+    Root := FileName;
+    for I := Length(FileName) downto 1 do
+      case FileName[I] of
         '.' :
           begin
-            root := copy(filename, 1, i-1);
-            exit
+            Root := Copy(FileName, 1, I-1);
+            Exit
           end;
-        DirectorySeparator: exit;
+        DirectorySeparator: Exit;
         else
       end;
   end(*root*);
-function addExt(filename, ext : String) : String;
+function AddExt(FileName, Ext : String) : String;
   (* implemented with goto for maximum efficiency *)
-  label x;
+  label X;
   var
-    i : Integer;
+    I : Integer;
   begin
-    addExt := filename;
-    for i := length(filename) downto 1 do
-      case filename[i] of
-        '.' : exit;
-        DirectorySeparator : goto x;
+    AddExt := FileName;
+    for I := Length(FileName) downto 1 do
+      case FileName[I] of
+        '.' : Exit;
+        DirectorySeparator : goto X;
         else
       end;
-    x : addExt := filename+'.'+ext
+    X : AddExt := FileName+'.'+Ext
   end(*addExt*);
-function file_size(filename : String) : LongInt;
-  var f : File;
+function GetFileSize(FileName : String) : LongInt;
+  var F : File;
   begin
-    assign(f, filename);
-    reset(f, 1);
-    if ioresult=0 then
-      file_size := fileSize(f)
+    Assign(F, FileName);
+    Reset(F, 1);
+    if IOResult=0 then
+      GetFileSize := FileSize(F)
     else
-      file_size := 0;
-    close(f);
+      GetFileSize := 0;
+    Close(F);
   end(*file_size*);
 
 (* Utility functions for list generating routines: *)
 
-function charStr(c : char; reserved : CharSet) : String;
-  function octStr(c : char) : String;
+function CharStr(C : Char; Reserved : TCharSet) : String;
+  function OctStr(C : Char) : String;
     (* return octal string representation of character c *)
     begin
-      octStr := intStr(ord(c) div 64)+intStr((ord(c) mod 64) div 8)+
-                intStr(ord(c) mod 8);
+      OctStr := IntStr(Ord(C) div 64)+IntStr((Ord(C) mod 64) div 8)+
+                IntStr(Ord(C) mod 8);
     end(*octStr*);
   begin
-    case c of
-      bs         : charStr := '\b';
-      tab        : charStr := '\t';
-      nl         : charStr := '\n';
-      cr         : charStr := '\c';
-      ff         : charStr := '\f';
-      '\'        : charStr := '\\';
+    case C of
+      BS         : CharStr := '\b';
+      Tab        : CharStr := '\t';
+      NL         : CharStr := '\n';
+      CR         : CharStr := '\c';
+      FF         : CharStr := '\f';
+      '\'        : CharStr := '\\';
       #0..#7,      (* nonprintable characters *)
       #11,#14..#31,
-      #127..#255 : charStr := '\'+octStr(c);
-      else if c in reserved then
-        charStr := '\'+c
+      #127..#255 : CharStr := '\'+OctStr(C);
+      else if C in Reserved then
+        CharStr := '\'+C
       else
-        charStr := c
+        CharStr := C
     end
   end(*charStr*);
 
-function singleQuoteStr(str : String) : String;
+function SingleQuoteStr(Str : String) : String;
   var
-    i : Integer;
-    str1 : String;
+    I : Integer;
+    Str1 : String;
   begin
-    str1 := '';
-    for i := 1 to length(str) do
-      str1 := str1+charStr(str[i], ['''']);
-    singleQuoteStr := ''''+str1+''''
+    Str1 := '';
+    for I := 1 to Length(Str) do
+      Str1 := Str1+CharStr(Str[I], ['''']);
+    SingleQuoteStr := ''''+Str1+''''
   end(*singleQuoteStr*);
 
-function doubleQuoteStr(str : String) : String;
+function DoubleQuoteStr(Str : String) : String;
   var
-    i : Integer;
-    str1 : String;
+    I : Integer;
+    Str1 : String;
   begin
-    str1 := '';
-    for i := 1 to length(str) do
-      str1 := str1+charStr(str[i], ['"']);
-    doubleQuoteStr := '"'+str1+'"'
+    Str1 := '';
+    for I := 1 to Length(Str) do
+      Str1 := Str1+CharStr(Str[I], ['"']);
+    DoubleQuoteStr := '"'+Str1+'"'
   end(*doubleQuoteStr*);
 
 end(*YaccBase*).

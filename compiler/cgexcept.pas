@@ -27,8 +27,8 @@ unit cgexcept;
   interface
 
     uses
-      globtype,
-      aasmbase, aasmdata,
+      GlobType,
+      aasmbase, AAsmData,
       symtype,symdef,
       cgbase,cgutils,pass_2;
 
@@ -38,39 +38,39 @@ unit cgexcept;
         be shared and overridden)
 
         Never instantiated. }
-      tcgexceptionstatehandler = class
+      TCGExceptionStateHandler = class
        type
-        texceptiontemps=record
+        TExceptionTemps=record
           jmpbuf,
           envbuf,
-          reasonbuf  : treference;
+          reasonbuf  : TReference;
           { when using dwarf based eh handling, the landing pads get the unwind info passed, it is
             stored in the given register so it can be passed to unwind_resume }
           unwind_info : TRegister;
         end;
 
-        texceptionstate = record
+        TExceptionState = record
           exceptionlabel: TAsmLabel;
           oldflowcontrol,
           newflowcontrol: TFlowControl;
           finallycodelabel  : TAsmLabel;
         end;
 
-        texceptframekind = (tek_except, tek_implicitfinally, tek_normalfinally);
+        TExceptFrameKind = (tek_except, tek_implicitfinally, tek_normalfinally);
 
-        class procedure get_exception_temps(list:TAsmList;var t:texceptiontemps); virtual;
-        class procedure unget_exception_temps(list:TAsmList;const t:texceptiontemps); virtual;
-        class procedure new_exception(list:TAsmList;const t:texceptiontemps; const exceptframekind: texceptframekind; out exceptstate: texceptionstate); virtual;
+        class procedure get_exception_temps(list:TAsmList;var t:TExceptionTemps); virtual;
+        class procedure unget_exception_temps(list:TAsmList;const t:TExceptionTemps); virtual;
+        class procedure new_exception(list:TAsmList;const t:TExceptionTemps; const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState); virtual;
         { start of "except/finally" block }
-        class procedure emit_except_label(list: TAsmList; exceptframekind: texceptframekind; var exceptstate: texceptionstate;var exceptiontemps:texceptiontemps); virtual;
+        class procedure emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptstate: TExceptionState;var exceptiontemps:TExceptionTemps); virtual;
         { end of a try-block, label comes after the end of try/except or
           try/finally }
-        class procedure end_try_block(list: TAsmList; exceptframekind: texceptframekind; const t: texceptiontemps; var exceptionstate: texceptionstate; endlabel: TAsmLabel); virtual;
-        class procedure free_exception(list: TAsmList; const t: texceptiontemps; const s: texceptionstate; a: aint; endexceptlabel: tasmlabel; onlyfree:boolean); virtual;
-        class procedure handle_nested_exception(list:TAsmList;var t:texceptiontemps;var entrystate: texceptionstate); virtual;
-        class procedure handle_reraise(list:TAsmList;const t:texceptiontemps;const entrystate: texceptionstate; const exceptframekind: texceptframekind); virtual;
+        class procedure end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps; var exceptionstate: TExceptionState; endlabel: TAsmLabel); virtual;
+        class procedure free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint; endexceptlabel: TAsmLabel; onlyfree:boolean); virtual;
+        class procedure handle_nested_exception(list:TAsmList;var t:TExceptionTemps;var entrystate: TExceptionState); virtual;
+        class procedure handle_reraise(list:TAsmList;const t:TExceptionTemps;const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind); virtual;
         { start of an "on" (catch) block }
-        class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out exceptlocreg: tregister); virtual;
+        class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out exceptlocreg: TRegister); virtual;
         { end of an "on" (catch) block }
         class procedure end_catch(list: TAsmList); virtual;
         { called for a catch all exception }
@@ -80,23 +80,23 @@ unit cgexcept;
         class procedure catch_all_end(list: TAsmList); virtual;
         class procedure cleanupobjectstack(list: TAsmList); virtual;
         class procedure popaddrstack(list: TAsmList); virtual;
-        class function use_cleanup(const exceptframekind: texceptframekind): boolean;
+        class function use_cleanup(const exceptframekind: TExceptFrameKind): boolean;
       end;
-      tcgexceptionstatehandlerclass = class of tcgexceptionstatehandler;
+      TCGExceptionStateHandlerClass = class of TCGExceptionStateHandler;
 
     var
-      cexceptionstatehandler: tcgexceptionstatehandlerclass = tcgexceptionstatehandler;
+      cexceptionstatehandler: TCGExceptionStateHandlerClass = TCGExceptionStateHandler;
 
   implementation
 
     uses
-      globals,
-      systems,
-      fmodule,
+      Globals,
+      Systems,
+      FModule,
       aasmtai,
-      symconst,symtable,defutil,
+      symconst,SymTable,defutil,
       parabase,paramgr,
-      procinfo,
+      ProcInfo,
       tgobj,
       hlcgobj;
 
@@ -104,7 +104,7 @@ unit cgexcept;
                      tcgexceptionstatehandler
 *****************************************************************************}
 
-    class function tcgexceptionstatehandler.use_cleanup(const exceptframekind: texceptframekind): boolean;
+    class function TCGExceptionStateHandler.use_cleanup(const exceptframekind: TExceptFrameKind): boolean;
       begin
         { in case of an exception caught by the implicit exception frame of
           a safecall routine, this is not a cleanup frame but one that
@@ -129,9 +129,9 @@ unit cgexcept;
        be modified, all temps should be allocated on the heap instead of the
        stack. }
 
-    class procedure tcgexceptionstatehandler.get_exception_temps(list:TAsmList;var t:texceptiontemps);
+    class procedure TCGExceptionStateHandler.get_exception_temps(list:TAsmList;var t:TExceptionTemps);
       begin
-        if not assigned(exceptionreasontype) then
+        if not Assigned(exceptionreasontype) then
           exceptionreasontype:=search_system_proc('fpc_setjmp').returndef;
         tg.gethltemp(list,rec_exceptaddr,rec_exceptaddr.size,tt_persistent,t.envbuf);
         tg.gethltemp(list,rec_jmp_buf,rec_jmp_buf.size,tt_persistent,t.jmpbuf);
@@ -139,7 +139,7 @@ unit cgexcept;
       end;
 
 
-    class procedure tcgexceptionstatehandler.unget_exception_temps(list:TAsmList;const t:texceptiontemps);
+    class procedure TCGExceptionStateHandler.unget_exception_temps(list:TAsmList;const t:TExceptionTemps);
       begin
         tg.Ungettemp(list,t.jmpbuf);
         tg.ungettemp(list,t.envbuf);
@@ -147,11 +147,11 @@ unit cgexcept;
       end;
 
 
-    class procedure tcgexceptionstatehandler.new_exception(list:TAsmList;const t:texceptiontemps; const exceptframekind: texceptframekind; out exceptstate: texceptionstate);
+    class procedure TCGExceptionStateHandler.new_exception(list:TAsmList;const t:TExceptionTemps; const exceptframekind: TExceptFrameKind; out exceptstate: TExceptionState);
       var
-        paraloc1, paraloc2, paraloc3, pushexceptres, setjmpres: tcgpara;
+        paraloc1, paraloc2, paraloc3, pushexceptres, setjmpres: TCGPara;
         pd: TProcDef;
-        tmpresloc: tlocation;
+        tmpresloc: TLocation;
       begin
         CurrentAsmData.getjumplabel(exceptstate.exceptionlabel);
         exceptstate.oldflowcontrol:=flowcontrol;
@@ -218,22 +218,22 @@ unit cgexcept;
      end;
 
 
-    class procedure tcgexceptionstatehandler.emit_except_label(list: TAsmList; exceptframekind: texceptframekind; var exceptstate: texceptionstate;var exceptiontemps:texceptiontemps);
+    class procedure TCGExceptionStateHandler.emit_except_label(list: TAsmList; exceptframekind: TExceptFrameKind; var exceptstate: TExceptionState;var exceptiontemps:TExceptionTemps);
       begin
         hlcg.a_label(list,exceptstate.exceptionlabel);
       end;
 
 
-    class procedure tcgexceptionstatehandler.end_try_block(list: TAsmList; exceptframekind: texceptframekind; const t: texceptiontemps; var exceptionstate: texceptionstate; endlabel: TAsmLabel);
+    class procedure TCGExceptionStateHandler.end_try_block(list: TAsmList; exceptframekind: TExceptFrameKind; const t: TExceptionTemps; var exceptionstate: TExceptionState; endlabel: TAsmLabel);
       begin
          exceptionstate.newflowcontrol:=flowcontrol;
          flowcontrol:=exceptionstate.oldflowcontrol;
       end;
 
 
-    class procedure tcgexceptionstatehandler.free_exception(list: TAsmList; const t: texceptiontemps; const s: texceptionstate; a: aint; endexceptlabel: tasmlabel; onlyfree: boolean);
+    class procedure TCGExceptionStateHandler.free_exception(list: TAsmList; const t: TExceptionTemps; const s: TExceptionState; a: aint; endexceptlabel: TAsmLabel; onlyfree: boolean);
       var
-        reasonreg: tregister;
+        reasonreg: TRegister;
       begin
          popaddrstack(list);
          if not onlyfree then
@@ -247,7 +247,7 @@ unit cgexcept;
 
     { does the necessary things to clean up the object stack }
     { in the except block                                    }
-    class procedure tcgexceptionstatehandler.cleanupobjectstack(list: TAsmList);
+    class procedure TCGExceptionStateHandler.cleanupobjectstack(list: TAsmList);
       begin
          hlcg.g_call_system_proc(list,'fpc_doneexception',[],nil).resetiftemp;
       end;
@@ -255,9 +255,9 @@ unit cgexcept;
 
     { generates code to be executed when another exeception is raised while
       control is inside except block }
-    class procedure tcgexceptionstatehandler.handle_nested_exception(list:TAsmList;var t:texceptiontemps;var entrystate: texceptionstate);
+    class procedure TCGExceptionStateHandler.handle_nested_exception(list:TAsmList;var t:TExceptionTemps;var entrystate: TExceptionState);
       var
-         exitlabel: tasmlabel;
+         exitlabel: TAsmLabel;
       begin
          CurrentAsmData.getjumplabel(exitlabel);
          { add an catch all action clause, at least psabieh needs this }
@@ -265,7 +265,7 @@ unit cgexcept;
          end_try_block(list,tek_except,t,entrystate,exitlabel);
          emit_except_label(list,tek_except,entrystate,t);
          { don't generate line info for internal cleanup }
-         list.concat(tai_marker.create(mark_NoLineInfoStart));
+         list.concat(TAIMarker.create(mark_NoLineInfoStart));
          free_exception(list,t,entrystate,0,exitlabel,false);
          { we don't need to save/restore registers here because reraise never }
          { returns                                                            }
@@ -275,31 +275,31 @@ unit cgexcept;
       end;
 
 
-    class procedure tcgexceptionstatehandler.handle_reraise(list: TAsmList; const t: texceptiontemps; const entrystate: texceptionstate; const exceptframekind: texceptframekind);
+    class procedure TCGExceptionStateHandler.handle_reraise(list: TAsmList; const t: TExceptionTemps; const entrystate: TExceptionState; const exceptframekind: TExceptFrameKind);
       begin
         hlcg.g_call_system_proc(list,'fpc_reraise',[],nil).resetiftemp;
       end;
 
 
-    class procedure tcgexceptionstatehandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out exceptlocreg: tregister);
+    class procedure TCGExceptionStateHandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: TAsmLabel; out exceptlocdef: TDef; out exceptlocreg: TRegister);
       var
         pd: TProcDef;
-        href2: treference;
+        href2: TReference;
         fpc_catches_res,
-        paraloc1: tcgpara;
-        exceptloc: tlocation;
+        paraloc1: TCGPara;
+        exceptloc: TLocation;
         indirect: boolean;
         otherunit: boolean;
       begin
         paraloc1.init;
-        otherunit:=findunitsymtable(excepttype.owner).moduleid<>findunitsymtable(CurrentProcInfo.procdef.owner).moduleid;
+        otherunit:=findunitsymtable(excepttype.owner).ModuleID<>findunitsymtable(CurrentProcInfo.procdef.owner).ModuleID;
         indirect:=(tf_supports_packages in TargetInfo.flags) and
                     (TargetInfo.system in systems_indirect_var_imports) and
                     otherunit;
 
         { send the vmt parameter }
         pd:=search_system_proc('fpc_catches');
-        reference_reset_symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.vmt_mangledname, AT_DATA, indirect), 0, sizeof(pint), []);
+        reference_reset_symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.vmt_mangledname, AT_DATA, indirect), 0, sizeof(PInt), []);
         if otherunit then
           CurrentModule.add_extern_asmsym(excepttype.vmt_mangledname, AB_EXTERNAL, AT_DATA);
         paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
@@ -320,30 +320,30 @@ unit cgexcept;
       end;
 
 
-    class procedure tcgexceptionstatehandler.end_catch(list: TAsmList);
+    class procedure TCGExceptionStateHandler.end_catch(list: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure tcgexceptionstatehandler.catch_all_start(list: TAsmList);
+    class procedure TCGExceptionStateHandler.catch_all_start(list: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure tcgexceptionstatehandler.catch_all_add(list: TAsmList);
+    class procedure TCGExceptionStateHandler.catch_all_add(list: TAsmList);
       begin
         { nothing to do by default }
       end;
 
 
-    class procedure tcgexceptionstatehandler.catch_all_end(list: TAsmList);
+    class procedure TCGExceptionStateHandler.catch_all_end(list: TAsmList);
       begin
         { nothing to do by default }
       end;
 
-    class procedure tcgexceptionstatehandler.popaddrstack(list: TAsmList);
+    class procedure TCGExceptionStateHandler.popaddrstack(list: TAsmList);
       begin
         hlcg.g_call_system_proc(list,'fpc_popaddrstack',[],nil).resetiftemp;
       end;

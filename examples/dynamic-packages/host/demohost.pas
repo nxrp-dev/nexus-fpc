@@ -13,12 +13,12 @@ var
   Obj: TPackageValue;
   Value: TManaged;
   Caught: Boolean;
-  Kind, Filename: string;
+  Kind, FileName: string;
 begin
   if Console then Kind:='console' else Kind:='gui';
-  Filename:=ParamStr(1);
-  if Filename='' then Filename:=ExtractFileName(ParamStr(0))+'.log';
-  BeginLog(Filename);
+  FileName:=ParamStr(1);
+  if FileName='' then FileName:=ExtractFileName(ParamStr(0))+'.log';
+  BeginLog(FileName);
   Check(IsConsole=Console,'subsystem startup');
   Check((InitCount=1) and (Trace='BLRH'),'initialization order: '+Trace);
   Check(ClassAddress=Pointer(TPackageValue),'class identity');
@@ -38,7 +38,7 @@ begin
   Value.Text:=StringOfChar('h',80);
   SetLength(Value.Values,7);
   ClearManaged(Value);
-  Caught:=false;
+  Caught:=False;
   try RaiseProbe; except on E: EPackageDemo do Caught:=E.Message='typed package exception'; end;
   Check(Caught,'typed exception');
   Check(MessageText='package resource','resource string');

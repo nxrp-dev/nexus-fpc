@@ -26,21 +26,21 @@ unit cscript;
 interface
 {$H+}
 uses
-  sysutils,
-  globtype,
-  cclasses;
+  SysUtils,
+  GlobType,
+  CClasses;
 
 type
   TScript=class
-    fn   : TCmdStr;
-    data : TCmdStrList;
-    executable : boolean;
-    constructor Create(const s:TCmdStr);
-    constructor CreateExec(const s:TCmdStr);
+    FN   : TCmdStr;
+    Data : TCmdStrList;
+    Executable : Boolean;
+    constructor Create(const S:TCmdStr);
+    constructor CreateExec(const S:TCmdStr);
     destructor Destroy;override;
-    procedure AddStart(const s:TCmdStr);
-    procedure Add(const s:TCmdStr);
-    Function  Empty:boolean;
+    procedure AddStart(const S:TCmdStr);
+    procedure Add(const S:TCmdStr);
+    Function  Empty:Boolean;
     procedure WriteToDisk;virtual;
   end;
 
@@ -71,22 +71,22 @@ type
   end;
 
   TLinkRes = Class (TScript)
-    section: string[30];
-    fRealResponseFile: Boolean;
-    fForceUseForwardSlash: Boolean;
+    Section: string[30];
+    FRealResponseFile: Boolean;
+    FForceUseForwardSlash: Boolean;
     constructor Create(const ScriptName : TCmdStr; RealResponseFile: Boolean);
-    procedure Add(const s:TCmdStr);
-    procedure AddFileName(const s:TCmdStr);
-    procedure EndSection(const s:TCmdStr);
-    procedure StartSection(const s:TCmdStr);
+    procedure Add(const S:TCmdStr);
+    procedure AddFileName(const S:TCmdStr);
+    procedure EndSection(const S:TCmdStr);
+    procedure StartSection(const S:TCmdStr);
   end;
 
 var
   AsmRes : TAsmScript;
 
-Function ScriptFixFileName(const s:TCmdStr):TCmdStr;
-Procedure GenerateAsmRes(const st : TCmdStr);
-Function GenerateScript(const st : TCmdStr): TAsmScript;
+Function ScriptFixFileName(const S:TCmdStr):TCmdStr;
+Procedure GenerateAsmRes(const ST : TCmdStr);
+Function GenerateScript(const ST : TCmdStr): TAsmScript;
 
 
 implementation
@@ -95,100 +95,100 @@ uses
 {$ifdef hasUnix}
   BaseUnix,
 {$endif}
-  cutils,cfileutl,
-  globals,systems,verbose;
+  CUtils,CFileUtl,
+  Globals,Systems,Verbose;
 
 
 {****************************************************************************
                                    Helpers
 ****************************************************************************}
 
-    Function ScriptFixFileName(const s:TCmdStr):TCmdStr;
+    Function ScriptFixFileName(const S:TCmdStr):TCmdStr;
      begin
-       if cs_link_on_target in CurrentSettings.globalswitches then
-         ScriptFixFileName:=TargetFixFileName(s)
+       if cs_link_on_target in CurrentSettings.GlobalSwitches then
+         ScriptFixFileName:=TargetFixFileName(S)
        else
-         ScriptFixFileName:=FixFileName(s);
+         ScriptFixFileName:=FixFileName(S);
      end;
 
 {****************************************************************************
                                   TScript
 ****************************************************************************}
 
-constructor TScript.Create(const s: TCmdStr);
+constructor TScript.Create(const S: TCmdStr);
 begin
-  fn:=FixFileName(s);
-  executable:=false;
-  data:=TCmdStrList.Create;
+  FN:=FixFileName(S);
+  Executable:=False;
+  Data:=TCmdStrList.Create;
 end;
 
 
-constructor TScript.CreateExec(const s:TCmdStr);
+constructor TScript.CreateExec(const S:TCmdStr);
 begin
-  fn:=FixFileName(s);
-  if cs_link_on_target in CurrentSettings.globalswitches then
-    fn:=ChangeFileExt(fn,TargetInfo.scriptext)
+  FN:=FixFileName(S);
+  if cs_link_on_target in CurrentSettings.GlobalSwitches then
+    FN:=ChangeFileExt(FN,TargetInfo.ScriptExt)
   else
-    fn:=ChangeFileExt(fn,SourceInfo.scriptext);
-  executable:=true;
-  data:=TCmdStrList.Create;
+    FN:=ChangeFileExt(FN,SourceInfo.ScriptExt);
+  Executable:=True;
+  Data:=TCmdStrList.Create;
 end;
 
 
 destructor TScript.Destroy;
 begin
-  data.Free;
-  data := nil;
+  Data.Free;
+  Data := nil;
 end;
 
 
-procedure TScript.AddStart(const s:TCmdStr);
+procedure TScript.AddStart(const S:TCmdStr);
 begin
-  data.Insert(s);
+  Data.Insert(S);
 end;
 
 
-procedure TScript.Add(const s:TCmdStr);
+procedure TScript.Add(const S:TCmdStr);
 begin
-   data.Concat(s);
+   Data.Concat(S);
 end;
 
 
-Function TScript.Empty:boolean;
+Function TScript.Empty:Boolean;
 begin
   Empty:=Data.Empty;
 end;
 
 procedure TScript.WriteToDisk;
 var
-  t : file;
-  i : longint;
-  s : TCmdStr;
-  le: string[2];
+  T : file;
+  I : LongInt;
+  S : TCmdStr;
+  LE: string[2];
 
 begin
-  Assign(t,fn);
-  if cs_link_on_target in CurrentSettings.globalswitches then
-    le:= TargetInfo.newline
+  Assign(T,FN);
+  if cs_link_on_target in CurrentSettings.GlobalSwitches then
+    LE:= TargetInfo.NewLine
   else
-    le:= SourceInfo.newline;
+    LE:= SourceInfo.NewLine;
 
   {$push}{$I-}
-  Rewrite(t,1);
-  if ioresult<>0 then
-    exit;
-  while not data.Empty do
+  Rewrite(T,1);
+  if IOResult<>0 then
+    Exit;
+  while not Data.Empty do
     begin
-      s:=data.GetFirst;
-      Blockwrite(t,s[1],length(s),i);
-      Blockwrite(t,le[1],length(le),i);
+      S:=Data.GetFirst;
+      BlockWrite(T,S[1],Length(S),I);
+      BlockWrite(T,LE[1],Length(LE),I);
     end;
-  Close(t);
+  Close(T);
   {$pop}
-  i:=ioresult;
+  I:=IOResult;
 {$ifdef hasUnix}
-  if executable then
-   fpchmod(fn,493);
+  if Executable then
+   FpChmod(FN,493);
 {$endif}
 end;
 
@@ -219,7 +219,7 @@ begin
      Add('SET THEFILE='+ScriptFixFileName(FileName));
      Add('echo Assembling %THEFILE%');
    end;
-  Add(maybequoted(command)+' '+Options);
+  Add(MaybeQuoted(Command)+' '+Options);
   Add('if errorlevel 1 goto asmend');
 end;
 
@@ -231,7 +231,7 @@ begin
      Add('SET THEFILE='+ScriptFixFileName(FileName));
      Add('echo Linking %THEFILE%');
    end;
-  Add(maybequoted(command)+' '+Options);
+  Add(MaybeQuoted(Command)+' '+Options);
   Add('if errorlevel 1 goto linkend');
 end;
 
@@ -274,9 +274,9 @@ end;
 Procedure TAsmScriptUnix.AddAsmCommand (Const Command, Options,FileName : TCmdStr);
 begin
   if FileName<>'' then
-   Add('echo Assembling '+maybequoted(ScriptFixFileName(FileName)));
-  Add(maybequoted(command)+' '+Options);
-  Add('if [ $? != 0 ]; then DoExitAsm '+maybequoted(ScriptFixFileName(FileName))+'; fi');
+   Add('echo Assembling '+MaybeQuoted(ScriptFixFileName(FileName)));
+  Add(MaybeQuoted(Command)+' '+Options);
+  Add('if [ $? != 0 ]; then DoExitAsm '+MaybeQuoted(ScriptFixFileName(FileName))+'; fi');
 end;
 
 
@@ -287,7 +287,7 @@ begin
   Add('OFS=$IFS');
   Add('IFS="');
   Add('"');
-  Add(maybequoted(command)+' '+Options);
+  Add(MaybeQuoted(Command)+' '+Options);
   Add('if [ $? != 0 ]; then DoExitLink '+ScriptFixFileName(FileName)+'; fi');
   Add('IFS=$OFS');
 end;
@@ -316,26 +316,26 @@ Begin
 end;
 
 
-Procedure GenerateAsmRes(const st : TCmdStr);
+Procedure GenerateAsmRes(const ST : TCmdStr);
 begin
-  AsmRes:=GenerateScript(st);
+  AsmRes:=GenerateScript(ST);
 end;
 
-function GenerateScript(const st: TCmdStr): TAsmScript;
+function GenerateScript(const ST: TCmdStr): TAsmScript;
   var
-    scripttyp : tscripttype;
+    ScriptTyp : TScriptType;
   begin
-    if cs_link_on_target in CurrentSettings.globalswitches then
-      scripttyp := TargetInfo.script
+    if cs_link_on_target in CurrentSettings.GlobalSwitches then
+      ScriptTyp := TargetInfo.Script
     else
-      scripttyp := SourceInfo.script;
-    case scripttyp of
+      ScriptTyp := SourceInfo.Script;
+    case ScriptTyp of
       script_unix :
-        Result:=TAsmScriptUnix.Create(st);
+        Result:=TAsmScriptUnix.Create(ST);
       script_dos :
-        Result:=TAsmScriptDos.Create(st);
+        Result:=TAsmScriptDos.Create(ST);
       else
-        internalerror(2013112805);
+        InternalError(2013112805);
     end;
   end;
 
@@ -347,67 +347,67 @@ function GenerateScript(const st: TCmdStr): TAsmScript;
 constructor TLinkRes.Create(const ScriptName: TCmdStr; RealResponseFile: Boolean);
 begin
   inherited Create(ScriptName);
-  fRealResponseFile:=RealResponseFile;
-  fForceUseForwardSlash:=false;
+  FRealResponseFile:=RealResponseFile;
+  FForceUseForwardSlash:=False;
 end;
 
-procedure TLinkRes.Add(const s:TCmdStr);
+procedure TLinkRes.Add(const S:TCmdStr);
 begin
-  if s<>'' then
-   inherited Add(s);
+  if S<>'' then
+   inherited Add(S);
 end;
 
-procedure TLinkRes.AddFileName(const s:TCmdStr);
+procedure TLinkRes.AddFileName(const S:TCmdStr);
 var
-  ls: TCmdStr;
-  i: longint;
+  LS: TCmdStr;
+  I: LongInt;
 begin
-  if section<>'' then
+  if Section<>'' then
    begin
-    inherited Add(section);
-    section:='';
+    inherited Add(Section);
+    Section:='';
    end;
-  if s<>'' then
+  if S<>'' then
    begin
-     ls:=s;
-     if fForceUseForwardSlash then
+     LS:=S;
+     if FForceUseForwardSlash then
        { Fix separator }
-       for i:=1 to length(ls) do
-         if (ls[i]=SourceInfo.dirsep) then
-           ls[i]:='/';
+       for I:=1 to Length(LS) do
+         if (LS[I]=SourceInfo.DirSep) then
+           LS[I]:='/';
      { GNU ld only supports double quotes in the response file. }
-     if fRealResponseFile and
-        (ls[1]='''') and
-        (((cs_link_on_target in CurrentSettings.globalswitches) and
-          (TargetInfo.script=script_unix)) or
-         (not(cs_link_on_target in CurrentSettings.globalswitches) and
-          (SourceInfo.script=script_unix))) then
-       inherited add(UnixRequoteWithDoubleQuotes(s))
-     else if not(ls[1] in ['a'..'z','A'..'Z','/','\','.','"']) then
+     if FRealResponseFile and
+        (LS[1]='''') and
+        (((cs_link_on_target in CurrentSettings.GlobalSwitches) and
+          (TargetInfo.Script=script_unix)) or
+         (not(cs_link_on_target in CurrentSettings.GlobalSwitches) and
+          (SourceInfo.Script=script_unix))) then
+       inherited Add(UnixRequoteWithDoubleQuotes(S))
+     else if not(LS[1] in ['a'..'z','A'..'Z','/','\','.','"']) then
       begin
-        if fForceUseForwardSlash then
-          inherited Add('./'+ls)
-        else if (cs_link_on_target in CurrentSettings.globalswitches) then
-          inherited Add('.'+TargetInfo.DirSep+ls)
+        if FForceUseForwardSlash then
+          inherited Add('./'+LS)
+        else if (cs_link_on_target in CurrentSettings.GlobalSwitches) then
+          inherited Add('.'+TargetInfo.DirSep+LS)
         else
-          inherited Add('.'+SourceInfo.DirSep+ls);
+          inherited Add('.'+SourceInfo.DirSep+LS);
       end
      else
-      inherited Add(ls);
+      inherited Add(LS);
    end;
 end;
 
-procedure TLinkRes.EndSection(const s:TCmdStr);
+procedure TLinkRes.EndSection(const S:TCmdStr);
 begin
   { only terminate if we started the section }
-  if section='' then
-    inherited Add(s);
-  section:='';
+  if Section='' then
+    inherited Add(S);
+  Section:='';
 end;
 
-procedure TLinkRes.StartSection(const s:TCmdStr);
+procedure TLinkRes.StartSection(const S:TCmdStr);
 begin
-  section:=s;
+  Section:=S;
 end;
 
 end.

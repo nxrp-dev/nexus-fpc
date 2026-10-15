@@ -27,15 +27,15 @@ interface
 
     uses
       { common }
-      cutils,
-      cclasses,
+      CUtils,
+      CClasses,
       { targets }
-      systems,globtype,
+      Systems,GlobType,
       { outputwriters }
       owbase,
       { assembler }
       aasmbase,
-      cpuinfo;
+      CPUInfo;
 
     type
       TObjSection = class;
@@ -197,7 +197,7 @@ interface
      );
 
 
-     TObjSectionOfs = PUInt;
+     TObjSectionOfs = PUint;
 
 
      TObjSectionGroup = class;
@@ -210,7 +210,7 @@ interface
        pass       : byte;
        { how the symbol is referenced (target-specific bitfield) }
        refs       : byte;
-       symidx     : longint;
+       symidx     : LongInt;
        objsection : TObjSection;
        offset,
        size       : TObjSectionOfs;
@@ -224,9 +224,9 @@ interface
        group: TObjSectionGroup;
 
        constructor create(AList:TFPHashObjectList;const AName:string);virtual;
-       function  ToString:ansistring;override;
+       function  ToString:AnsiString;override;
        function  address:qword;
-       procedure SetAddress(apass:byte;aobjsec:TObjSection;abind:TAsmsymbind;atyp:Tasmsymtype);
+       procedure SetAddress(apass:byte;aobjsec:TObjSection;abind:TAsmsymbind;atyp:TAsmsymtype);
        function  ObjData: TObjData;
        { string representation for the linker map file }
        function  AddressStr(AImageBase: qword): string;virtual;
@@ -235,11 +235,11 @@ interface
 
      { Stabs is common for all targets }
      TObjStabEntry=packed record
-        strpos  : longint;
+        strpos  : LongInt;
         ntype   : byte;
         nother  : byte;
         ndesc   : word;
-        nvalue  : longint;
+        nvalue  : LongInt;
      end;
      PObjStabEntry=^TObjStabEntry;
 
@@ -262,7 +262,7 @@ interface
         constructor CreateGroup(ADataOffset:TObjSectionOfs;grp:TObjSectionGroup;Atyp:TObjRelocationType);
         constructor CreateRaw(ADataOffset:TObjSectionOfs;s:TObjSymbol;ARawType:byte);
         function TargetName:TSymStr;
-        function ToString: ansistring; override;
+        function ToString: AnsiString; override;
         property typ: TObjRelocationType read GetType write SetType;
      end;
 
@@ -270,7 +270,7 @@ interface
      private
        FData       : TDynamicArray;
        FSecOptions : TObjSectionOptions;
-       FCachedFullName : pshortstring;
+       FCachedFullName : PShortString;
        FSizeLimit : TObjSectionOfs;
        procedure SetSecOptions(Aoptions:TObjSectionOptions);
        procedure SectionTooLargeError;
@@ -278,9 +278,9 @@ interface
        function GetAltName: string; virtual;
      public
        ObjData    : TObjData;
-       index      : longword;  { index of section in section headers }
-       SecSymIdx  : longint;   { index for the section in symtab }
-       SecAlign   : longint;   { alignment of the section }
+       index      : LongWord;  { index of section in section headers }
+       SecSymIdx  : LongInt;   { index for the section in symtab }
+       SecAlign   : LongInt;   { alignment of the section }
        { section Data }
        Size,
        DataPos    : TObjSectionOfs;
@@ -295,9 +295,9 @@ interface
        ExeSection  : TExeSection;
        USed        : Boolean;
        VTRefList : TFPObjectList;
-       constructor create(AList:TFPHashObjectList;const Aname:string;Aalign:longint;Aoptions:TObjSectionOptions);virtual;
-       destructor  destroy;override;
-       function  ToString:ansistring;override;
+       constructor create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);virtual;
+       destructor  Destroy;override;
+       function  ToString:AnsiString;override;
        function  write(const d;l:TObjSectionOfs):TObjSectionOfs;
        procedure writeInt8(v: int8);
        procedure writeInt16LE(v: int16);
@@ -314,8 +314,8 @@ interface
        procedure writeUInt64LE(v: uint64);
        procedure writeUInt64BE(v: uint64);
        { writes string plus zero byte }
-       function  writestr(const s:string):TObjSectionOfs;
-       function  WriteZeros(l:longword):TObjSectionOfs;
+       function  WriteStr(const s:string):TObjSectionOfs;
+       function  WriteZeros(l:LongWord):TObjSectionOfs;
        { writes content of s without null termination }
        function  WriteBytes(const s:string):TObjSectionOfs;
        procedure writeReloc_internal(aTarget:TObjSection;offset:aword;len:byte;reltype:TObjRelocationType);virtual;
@@ -337,7 +337,7 @@ interface
 
      TObjSectionGroup = class(TFPHashObject)
      public
-       index: longword;  { index of group in group headers }
+       index: LongWord;  { index of group in group headers }
        members: array of TObjSection;
        iscomdat: boolean;
      end;
@@ -368,7 +368,7 @@ interface
        FStabsObjSec,
        FStabStrObjSec : TObjSection;
        FGroupsList : TFPHashObjectList;
-       FCPUType : tcputype;
+       FCPUType : TCPUType;
        procedure section_reset(p:TObject;arg:pointer);
        procedure section_afteralloc(p:TObject;arg:pointer);
        procedure section_afterwrite(p:TObject;arg:pointer);
@@ -380,15 +380,15 @@ interface
        CurrPass  : byte;
        ExecStack : boolean;
        constructor create(const n:string);virtual;
-       destructor  destroy;override;
+       destructor  Destroy;override;
        { Sections }
        function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;virtual;abstract;
        class function sectiontype2options(atype:TAsmSectiontype):TObjSectionOptions;
-       function  sectiontype2align(atype:TAsmSectiontype):longint;virtual;
+       function  sectiontype2align(atype:TAsmSectiontype):LongInt;virtual;
        class procedure sectiontype2progbitsandflags(atype:TAsmSectiontype;out progbits:TSectionProgbits;out flags:TSectionFlags);virtual;
-       function  createsection(atype:TAsmSectionType;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;virtual;
-       function  createsection(atype:TAsmSectionType;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;virtual;
-       function  createsection(const aname:string;aalign:longint;aoptions:TObjSectionOptions;DiscardDuplicate:boolean=true):TObjSection;virtual;
+       function  createsection(atype:TAsmSectiontype;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;virtual;
+       function  createsection(atype:TAsmSectiontype;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;virtual;
+       function  createsection(const aname:string;aalign:LongInt;aoptions:TObjSectionOptions;DiscardDuplicate:boolean=true):TObjSection;virtual;
        function  createsectiongroup(const aname:string):TObjSectionGroup;
        procedure CreateDebugSections;virtual;
        function  findsection(const aname:string):TObjSection;
@@ -396,14 +396,14 @@ interface
        { Symbols }
        function  createsymbol(const aname:string):TObjSymbol;
        function  symboldefine(asmsym:TAsmSymbol):TObjSymbol;
-       function  symboldefine(const aname:string;abind:TAsmsymbind;atyp:Tasmsymtype):TObjSymbol;
+       function  symboldefine(const aname:string;abind:TAsmsymbind;atyp:TAsmsymtype):TObjSymbol;
        function  symbolref(asmsym:TAsmSymbol):TObjSymbol;
        function  symbolref(const aname:string):TObjSymbol;
        procedure symbolpairdefine(akind: TSymbolPairKind;const asym, avalue: string);virtual;
        procedure ResetCachedAsmSymbols;
        { Allocation }
        procedure alloc(len:TObjSectionOfs);
-       procedure allocalign(len:longint);
+       procedure allocalign(len:LongInt);
        procedure writebytes(const Data;len:TObjSectionOfs);
        procedure writebytes(const Data : TByteDynArray;len:TObjSectionOfs);
        procedure writebytes(const Data : TAnsiCharDynArray;len:TObjSectionOfs);
@@ -439,7 +439,7 @@ interface
        { Current CPU type for the internal asm writer.
          Instructions, not supported by the given CPU should produce an error.
          A value of 'cpu_none' means no restrictions (all instructions should be accepted) }
-       property CPUType : tcputype read FCPUType write FCPUType;
+       property CPUType : TCPUType read FCPUType write FCPUType;
      end;
      TObjDataClass = class of TObjData;
 
@@ -448,13 +448,13 @@ interface
         FCObjData : TObjDataClass;
       protected
         { writer }
-        FWriter    : TObjectwriter;
+        FWriter    : TObjectWriter;
         function  writeData(Data:TObjData):boolean;virtual;abstract;
         property CObjData : TObjDataClass read FCObjData write FCObjData;
         procedure WriteSectionContent(Data:TObjData);
       public
         constructor create(AWriter:TObjectWriter);virtual;
-        destructor  destroy;override;
+        destructor  Destroy;override;
         function  newObjData(const n:string):TObjData;
         function  startObjectfile(const fn:string):boolean;
         function  writeobjectfile(Data:TObjData):boolean;
@@ -474,8 +474,8 @@ interface
         procedure ReadSectionContent(Data:TObjData);
       public
         constructor create;virtual;
-        function  ReadObjData(AReader:TObjectreader;out Data:TObjData):boolean;virtual;abstract;
-        class function CanReadObjData(AReader:TObjectreader):boolean;virtual;
+        function  ReadObjData(AReader:TObjectReader;out Data:TObjData):boolean;virtual;abstract;
+        class function CanReadObjData(AReader:TObjectReader):boolean;virtual;
         procedure inputerror(const s : string);
       end;
       TObjInputClass=class of TObjInput;
@@ -491,19 +491,19 @@ interface
 
       TExeVTable = class
       private
-        procedure CheckIdx(VTableIdx:longint);
+        procedure CheckIdx(VTableIdx:LongInt);
       public
         ExeSymbol    : TExeSymbol;
-        EntryCnt     : Longint;
+        EntryCnt     : LongInt;
         EntryArray   : PVTableEntry;
         Consolidated : Boolean;
         ChildList    : TFPObjectList;
         constructor Create(AExeSymbol:TExeSymbol);
         destructor Destroy;override;
         procedure AddChild(vt:TExeVTable);
-        procedure AddEntry(VTableIdx:Longint);
-        procedure SetVTableSize(ASize:longint);
-        function  VTableRef(VTableIdx:Longint):TObjRelocation;
+        procedure AddEntry(VTableIdx:LongInt);
+        procedure SetVTableSize(ASize:LongInt);
+        function  VTableRef(VTableIdx:LongInt):TObjRelocation;
       end;
 
       TSymbolState = (
@@ -532,22 +532,22 @@ interface
 
       TExeSection = class(TFPHashObject)
       private
-        FSecSymIdx : longint;
+        FSecSymIdx : LongInt;
         FObjSectionList : TFPObjectList;
       public
         Size,
         DataPos,
         MemPos     : qword;
-        SecAlign   : longint;
+        SecAlign   : LongInt;
         Disabled   : boolean;
         SecOptions : TObjSectionOptions;
         constructor create(AList:TFPHashObjectList;const AName:string);virtual;
-        destructor  destroy;override;
+        destructor  Destroy;override;
         procedure AddObjSection(objsec:TObjSection;ignoreprops:boolean=false);virtual;
         { string representation for the linker map file }
         function MemPosStr(AImageBase: qword): string;virtual;
         property ObjSectionList:TFPObjectList read FObjSectionList;
-        property SecSymIdx:longint read FSecSymIdx write FSecSymIdx;
+        property SecSymIdx:LongInt read FSecSymIdx write FSecSymIdx;
       end;
       TExeSectionClass=class of TExeSection;
 
@@ -569,7 +569,7 @@ interface
         constructor create(const AName:TCmdStr;AReader:TObjectReader;AObjInputClass:TObjInputClass);
         constructor create_object(AObjData:TObjData);
         constructor create_group;
-        destructor  destroy;override;
+        destructor  Destroy;override;
         property ArReader:TObjectReader read GetArReader;
         property ObjInputClass:TObjInputClass read FObjInputClass;
         property GroupMembers:TFPObjectList read GetGroupMembers;
@@ -583,19 +583,19 @@ interface
         FImportSymbolList : TFPHashObjectList;
       public
         constructor create(AList:TFPHashObjectList;const AName:string);
-        destructor  destroy;override;
+        destructor  Destroy;override;
         property ImportSymbolList:TFPHashObjectList read FImportSymbolList;
       end;
 
       TImportSymbol = class(TFPHashObject)
       private
-        FOrdNr  : longint;
+        FOrdNr  : LongInt;
         FIsVar  : boolean;
         FMangledName : string;
         FCachedExeSymbol: TExeSymbol;
       public
-        constructor create(AList:TFPHashObjectList;const AName,AMangledName:string;AOrdNr:longint;AIsVar:boolean);
-        property OrdNr: longint read FOrdNr;
+        constructor create(AList:TFPHashObjectList;const AName,AMangledName:string;AOrdNr:LongInt;AIsVar:boolean);
+        property OrdNr: LongInt read FOrdNr;
         property MangledName: string read FMangledName;
         property IsVar: boolean read FIsVar;
         property CachedExeSymbol: TExeSymbol read FCachedExeSymbol write FCachedExeSymbol;
@@ -611,8 +611,8 @@ interface
         FCExeSection      : TExeSectionClass;
         FCurrExeSec       : TExeSection;
         FExeSectionList   : TFPHashObjectList;
-        Fzeronr           : longint;
-        Fvaluesnr         : longint;
+        Fzeronr           : LongInt;
+        Fvaluesnr         : LongInt;
         { Symbols }
         FExeSymbolList    : TFPHashObjectList;
         FUnresolvedExeSymbols : TFPObjectList;
@@ -631,7 +631,7 @@ interface
       protected
         { writer }
         FExeWriteMode : TExeWriteMode;
-        FWriter : TObjectwriter;
+        FWriter : TObjectWriter;
         commonObjSection : TObjSection;
         internalObjData : TObjData;
         EntrySym  : TObjSymbol;
@@ -647,8 +647,8 @@ interface
         procedure Order_ObjSectionList(ObjSectionList : TFPObjectList; const aPattern:string);virtual;
         procedure WriteExeSectionContent;
         procedure DoRelocationFixup(objsec:TObjSection);virtual;abstract;
-        function MemAlign(exesec: TExeSection): longword;
-        function DataAlign(exesec: TExeSection): longword;
+        function MemAlign(exesec: TExeSection): LongWord;
+        function DataAlign(exesec: TExeSection): LongWord;
         procedure ReplaceExeSectionList(newlist: TFPList);
       public
         CurrDataPos  : aword;
@@ -656,7 +656,7 @@ interface
         IsSharedLibrary : boolean;
         ExecStack    : boolean;
         constructor create;virtual;
-        destructor  destroy;override;
+        destructor  Destroy;override;
         function  FindExeSection(const aname:string):TExeSection;
         procedure AddObjData(ObjData:TObjData);
         procedure Load_Start;virtual;
@@ -728,16 +728,16 @@ interface
     var
       exeoutput : TExeOutput;
 
-    function align_aword(v:aword;a:longword):aword;
-    function align_qword(v:qword;a:longword):qword;
-    function align_objsecofs(v:TObjSectionOfs;a:longword):TObjSectionOfs;
+    function align_aword(v:aword;a:LongWord):aword;
+    function align_qword(v:qword;a:LongWord):qword;
+    function align_objsecofs(v:TObjSectionOfs;a:LongWord):TObjSectionOfs;
     procedure MaybeSwapStab(var v:TObjStabEntry);
 
 implementation
 
     uses
       SysUtils,
-      globals,verbose,
+      Globals,Verbose,
 {$ifdef OMFOBJSUPPORT}
       omfbase,
 {$endif OMFOBJSUPPORT}
@@ -753,7 +753,7 @@ implementation
                                  Helpers
 *****************************************************************************}
 
-    function align_aword(v:aword;a:longword):aword;
+    function align_aword(v:aword;a:LongWord):aword;
       begin
         if a>0 then
           a:=a-1;
@@ -761,7 +761,7 @@ implementation
       end;
 
 
-    function align_qword(v:qword;a:longword):qword;
+    function align_qword(v:qword;a:LongWord):qword;
       begin
         if a>0 then
           a:=a-1;
@@ -769,7 +769,7 @@ implementation
       end;
 
 
-    function align_objsecofs(v:TObjSectionOfs;a:longword):TObjSectionOfs;
+    function align_objsecofs(v:TObjSectionOfs;a:LongWord):TObjSectionOfs;
       begin
         if a>0 then
           a:=a-1;
@@ -803,9 +803,9 @@ implementation
       end;
 
 
-    function TObjSymbol.ToString: ansistring;
+    function TObjSymbol.ToString: AnsiString;
       var
-        objsectionstr: ansistring;
+        objsectionstr: AnsiString;
       begin
         if Assigned(objsection) then
           objsectionstr:=objsection.ToString
@@ -819,19 +819,19 @@ implementation
 
     function TObjSymbol.address:qword;
       begin
-        if assigned(objsection) then
+        if Assigned(objsection) then
           result:=offset+objsection.mempos
         else
           result:=0;
       end;
 
 
-    procedure TObjSymbol.SetAddress(apass:byte;aobjsec:TObjSection;abind:TAsmsymbind;atyp:Tasmsymtype);
+    procedure TObjSymbol.SetAddress(apass:byte;aobjsec:TObjSection;abind:TAsmsymbind;atyp:TAsmsymtype);
       begin
         if not(abind in [AB_GLOBAL,AB_PRIVATE_EXTERN,AB_LOCAL,AB_COMMON,AB_IMPORT,AB_WEAK]) then
-          internalerror(200603016);
-        if not assigned(aobjsec) then
-          internalerror(200603017);
+          InternalError(200603016);
+        if not Assigned(aobjsec) then
+          InternalError(200603017);
         if (bind in [AB_EXTERNAL,AB_LAZY]) or
           { Put all COMMON to GLOBAL in step 3 of
             TExeOutput.ResolveSymbols }
@@ -853,10 +853,10 @@ implementation
           end;
         pass:=apass;
         { Code can never grow after a pass }
-        if assigned(objsection) and
+        if Assigned(objsection) and
            (objsection=aobjsec) and
            (aobjsec.size>offset) then
-          internalerror(200603014);
+          InternalError(200603014);
         objsection:=aobjsec;
         offset:=aobjsec.size;
       end;
@@ -870,7 +870,7 @@ implementation
 
     function TObjSymbol.AddressStr(AImageBase: qword): string;
       begin
-        Result:='0x'+HexStr(address+Aimagebase,sizeof(pint)*2);
+        Result:='0x'+HexStr(address+Aimagebase,sizeof(PInt)*2);
       end;
 
 {****************************************************************************
@@ -879,8 +879,8 @@ implementation
 
     constructor TObjRelocation.CreateSymbol(ADataOffset:TObjSectionOfs;s:TObjSymbol;Atyp:TObjRelocationType);
       begin
-        if not assigned(s) then
-          internalerror(200603034);
+        if not Assigned(s) then
+          InternalError(200603034);
         DataOffset:=ADataOffset;
         Symbol:=s;
         OrgSize:=0;
@@ -892,8 +892,8 @@ implementation
 
     constructor TObjRelocation.CreateSection(ADataOffset:TObjSectionOfs;aobjsec:TObjSection;Atyp:TObjRelocationType);
       begin
-        if not assigned(aobjsec) then
-          internalerror(200603036);
+        if not Assigned(aobjsec) then
+          InternalError(200603036);
         DataOffset:=ADataOffset;
         Symbol:=nil;
         OrgSize:=0;
@@ -905,8 +905,8 @@ implementation
 
     constructor TObjRelocation.CreateGroup(ADataOffset:TObjSectionOfs;grp:TObjSectionGroup;Atyp:TObjRelocationType);
       begin
-        if not assigned(grp) then
-          internalerror(2015111201);
+        if not Assigned(grp) then
+          InternalError(2015111201);
         DataOffset:=ADataOffset;
         Symbol:=nil;
         ObjSection:=nil;
@@ -947,7 +947,7 @@ implementation
 
     function TObjRelocation.TargetName:TSymStr;
       begin
-        if assigned(symbol) then
+        if Assigned(symbol) then
           if symbol.typ=AT_SECTION then
             result:=symbol.objsection.name
           else
@@ -957,12 +957,12 @@ implementation
       end;
 
 
-    function TObjRelocation.ToString: ansistring;
+    function TObjRelocation.ToString: AnsiString;
       var
         typstr,
         symbolstr,
         objsectionstr,
-        groupstr: ansistring;
+        groupstr: AnsiString;
       begin
         Str(typ,typstr);
         if Assigned(symbol) then
@@ -977,18 +977,18 @@ implementation
           groupstr:=group.ToString
         else
           groupstr:='nil';
-        Result:='(typ:'+typstr+';DataOffset:'+tostr(DataOffset)+
-          ';orgsize:'+tostr(orgsize)+';symbol:'+symbolstr+
+        Result:='(typ:'+typstr+';DataOffset:'+ToStr(DataOffset)+
+          ';orgsize:'+ToStr(orgsize)+';symbol:'+symbolstr+
           ';objsection:'+objsectionstr+';group:'+groupstr+
-          ';ftype:'+tostr(ftype)+';size:'+tostr(size)+
-          ';flags:'+tostr(flags)+')';
+          ';ftype:'+ToStr(ftype)+';size:'+ToStr(size)+
+          ';flags:'+ToStr(flags)+')';
       end;
 
 {****************************************************************************
                               TObjSection
 ****************************************************************************}
 
-    constructor TObjSection.create(AList:TFPHashObjectList;const Aname:string;Aalign:longint;Aoptions:TObjSectionOptions);
+    constructor TObjSection.create(AList:TFPHashObjectList;const Aname:string;Aalign:LongInt;Aoptions:TObjSectionOptions);
       begin
         inherited Create(AList,Aname);
         { Data }
@@ -1002,7 +1002,7 @@ implementation
         { Setting the secoptions allocates Data if needed }
         secoptions:=Aoptions;
         if (Aalign and (Aalign-1))<>0 then
-          internalerror(2022010401); { alignment is not a power of two }
+          InternalError(2022010401); { alignment is not a power of two }
         secalign:=Aalign;
         secsymidx:=0;
         { relocation }
@@ -1011,23 +1011,23 @@ implementation
       end;
 
 
-    destructor TObjSection.destroy;
+    destructor TObjSection.Destroy;
       begin
-        if assigned(Data) then
+        if Assigned(Data) then
           begin
             FData.Free;
             FData := nil;
           end;
-        stringdispose(FCachedFullName);
+        StringDispose(FCachedFullName);
         ObjRelocations.Free;
         ObjRelocations := nil;
         VTRefList.Free;
         VTRefList := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    function TObjSection.ToString: ansistring;
+    function TObjSection.ToString: AnsiString;
       begin
         System.WriteStr(Result,'(Name:',Name,';index',index,';SecSymIdx:',SecSymIdx,
           ';SecAlign:',SecAlign,';Size:',Size,';DataPos:',DataPos,';MemPos:',
@@ -1039,7 +1039,7 @@ implementation
       begin
         FSecOptions:=FSecOptions+AOptions;
         if (oso_Data in secoptions) and
-           not assigned(FData) then
+           not Assigned(FData) then
           FData:=TDynamicArray.Create(SectionDataMaxGrow);
       end;
 
@@ -1062,10 +1062,10 @@ implementation
     function TObjSection.write(const d;l:TObjSectionOfs):TObjSectionOfs;
       begin
         result:=size;
-        if assigned(Data) then
+        if Assigned(Data) then
           begin
             if Size<>Data.size then
-              internalerror(200602281);
+              InternalError(200602281);
 {$ifndef cpu64bitaddr}
             if (qword(size)+l)>SizeLimit then
               SectionTooLargeError;
@@ -1074,7 +1074,7 @@ implementation
             inc(Size,l);
           end
         else
-          internalerror(200602289);
+          InternalError(200602289);
       end;
 
 
@@ -1198,7 +1198,7 @@ implementation
       end;
 
 
-    function TObjSection.writestr(const s:string):TObjSectionOfs;
+    function TObjSection.WriteStr(const s:string):TObjSectionOfs;
       var
         b: byte;
       begin
@@ -1214,7 +1214,7 @@ implementation
       end;
 
 
-    function TObjSection.WriteZeros(l:longword):TObjSectionOfs;
+    function TObjSection.WriteZeros(l:LongWord):TObjSectionOfs;
       var
         empty : array[0..1023] of byte;
       begin
@@ -1302,16 +1302,16 @@ implementation
 
     procedure TObjSection.ReleaseData;
       begin
-        if assigned(FData) then
+        if Assigned(FData) then
           begin
             FData.free;
             FData:=nil;
           end;
         ObjRelocations.free;
         ObjRelocations:=nil;
-        if assigned(FCachedFullName) then
+        if Assigned(FCachedFullName) then
           begin
-            stringdispose(FCachedFullName);
+            StringDispose(FCachedFullName);
             FCachedFullName:=nil;
           end;
       end;
@@ -1321,17 +1321,17 @@ implementation
       var
         s: string;
       begin
-        if not assigned(FCachedFullName) then
+        if not Assigned(FCachedFullName) then
           begin
             s:=GetAltName;
             if s<>'' then
               s:=Name+s
             else
               s:=Name;
-            if assigned(ObjData) then
-              FCachedFullName:=stringdup(ObjData.Name+'('+s+')')
+            if Assigned(ObjData) then
+              FCachedFullName:=StringDup(ObjData.Name+'('+s+')')
             else
-              FCachedFullName:=stringdup(s);
+              FCachedFullName:=StringDup(s);
           end;
         result:=FCachedFullName^;
       end;
@@ -1339,7 +1339,7 @@ implementation
 
     function  TObjSection.MemPosStr(AImageBase: qword): string;
       begin
-        result:='0x'+HexStr(mempos+AImageBase,sizeof(pint)*2);
+        result:='0x'+HexStr(mempos+AImageBase,sizeof(PInt)*2);
       end;
 
 
@@ -1365,7 +1365,7 @@ implementation
       end;
 
 
-    destructor TObjData.destroy;
+    destructor TObjData.Destroy;
       begin
         { Symbols }
 {$ifdef MEMDEBUG}
@@ -1391,7 +1391,7 @@ implementation
 {$ifdef MEMDEBUG}
         MemObjSections.Stop;
 {$endif}
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -1493,7 +1493,7 @@ implementation
         result:=secoptions[atype];
         if (atype=sec_rodata) and (TargetInfo.system=system_x86_64_linux) and
            (tf_supports_packages in TargetInfo.flags) and
-           (cs_create_pic in CurrentSettings.moduleswitches) then
+           (cs_create_pic in CurrentSettings.ModuleSwitches) then
           include(result,oso_write);
 {$ifdef OMFOBJSUPPORT}
         { in the huge memory model, BSS data is actually written in the regular
@@ -1504,7 +1504,7 @@ implementation
       end;
 
 
-    function TObjData.sectiontype2align(atype:TAsmSectiontype):longint;
+    function TObjData.sectiontype2align(atype:TAsmSectiontype):LongInt;
       begin
         case atype of
           sec_stabstr,sec_debug_info,sec_debug_line,sec_debug_abbrev,sec_debug_aranges,sec_debug_ranges,
@@ -1523,7 +1523,7 @@ implementation
           sec_idata2,sec_idata4,sec_idata5,sec_idata6,sec_idata7,sec_pdata:
             result:=4;
           else
-            result:=sizeof(pint);
+            result:=sizeof(PInt);
         end;
       end;
 
@@ -1552,13 +1552,13 @@ implementation
       end;
 
 
-    function TObjData.createsection(atype:TAsmSectionType;const aname:string;aorder:TAsmSectionOrder):TObjSection;
+    function TObjData.createsection(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):TObjSection;
       begin
         result:=createsection(sectionname(atype,aname,aorder),sectiontype2align(atype),sectiontype2options(atype));
       end;
 
 
-    function TObjData.createsection(atype: TAsmSectionType; secflags: TSectionFlags; aprogbits: TSectionProgbits; const aname: string; aorder: TAsmSectionOrder): TObjSection;
+    function TObjData.createsection(atype: TAsmSectiontype; secflags: TSectionFlags; aprogbits: TSectionProgbits; const aname: string; aorder: TAsmSectionOrder): TObjSection;
       var
         flags : TObjSectionOptions;
       begin
@@ -1579,13 +1579,13 @@ implementation
       end;
 
 
-    function TObjData.createsection(const aname:string;aalign:longint;aoptions:TObjSectionOptions;DiscardDuplicate:boolean):TObjSection;
+    function TObjData.createsection(const aname:string;aalign:LongInt;aoptions:TObjSectionOptions;DiscardDuplicate:boolean):TObjSection;
       begin
         if DiscardDuplicate then
           result:=TObjSection(FObjSectionList.Find(aname))
         else
           result:=nil;
-        if not assigned(result) then
+        if not Assigned(result) then
           begin
             result:=CObjSection.create(FObjSectionList,aname,aalign,aoptions);
             result.ObjData:=self;
@@ -1616,7 +1616,7 @@ implementation
     procedure TObjData.setsection(asec:TObjSection);
       begin
         if asec.ObjData<>self then
-          internalerror(200403041);
+          InternalError(200403041);
         FCurrObjSec:=asec;
       end;
 
@@ -1624,7 +1624,7 @@ implementation
     function TObjData.createsymbol(const aname:string):TObjSymbol;
       begin
         result:=TObjSymbol(FObjSymbolList.Find(aname));
-        if not assigned(result) then
+        if not Assigned(result) then
           result:=CObjSymbol.Create(FObjSymbolList,aname);
 
       end;
@@ -1632,12 +1632,12 @@ implementation
 
     function TObjData.symboldefine(asmsym:TAsmSymbol):TObjSymbol;
       begin
-        if assigned(asmsym) then
+        if Assigned(asmsym) then
           begin
             if asmsym.typ = AT_NONE then
               InternalError(2018062800);
 
-            if not assigned(asmsym.cachedObjSymbol) then
+            if not Assigned(asmsym.cachedObjSymbol) then
               begin
                 result:=symboldefine(asmsym.name,asmsym.bind,asmsym.typ);
                 asmsym.cachedObjSymbol:=result;
@@ -1654,10 +1654,10 @@ implementation
       end;
 
 
-    function TObjData.symboldefine(const aname:string;abind:TAsmsymbind;atyp:Tasmsymtype):TObjSymbol;
+    function TObjData.symboldefine(const aname:string;abind:TAsmsymbind;atyp:TAsmsymtype):TObjSymbol;
       begin
-        if not assigned(CurrObjSec) then
-          internalerror(2006030504);
+        if not Assigned(CurrObjSec) then
+          InternalError(2006030504);
         result:=CreateSymbol(aname);
         result.SetAddress(CurrPass,CurrObjSec,abind,atyp);
       end;
@@ -1667,9 +1667,9 @@ implementation
       var
         s:string;
       begin
-        if assigned(asmsym) then
+        if Assigned(asmsym) then
           begin
-            if not assigned(asmsym.cachedObjSymbol) then
+            if not Assigned(asmsym.cachedObjSymbol) then
               begin
                 s:=asmsym.name;
                 result:=TObjSymbol(FObjSymbolList.Find(s));
@@ -1698,8 +1698,8 @@ implementation
 
     function TObjData.symbolref(const aname:string):TObjSymbol;
       begin
-        if not assigned(CurrObjSec) then
-          internalerror(200603052);
+        if not Assigned(CurrObjSec) then
+          InternalError(200603052);
         result:=CreateSymbol(aname);
       end;
 
@@ -1711,18 +1711,18 @@ implementation
 
     procedure TObjData.ResetCachedAsmSymbols;
       var
-        i  : longint;
+        i  : LongInt;
       begin
         for i:=0 to FCachedAsmSymbolList.Count-1 do
-          tasmsymbol(FCachedAsmSymbolList[i]).cachedObjSymbol:=nil;
+          TAsmSymbol(FCachedAsmSymbolList[i]).cachedObjSymbol:=nil;
         FCachedAsmSymbolList.Clear;
       end;
 
 
     procedure TObjData.writebytes(const Data;len:TObjSectionOfs);
       begin
-        if not assigned(CurrObjSec) then
-          internalerror(200402251);
+        if not Assigned(CurrObjSec) then
+          InternalError(200402251);
         CurrObjSec.write(Data,len);
       end;
 
@@ -1861,16 +1861,16 @@ implementation
 
     procedure TObjData.alloc(len:TObjSectionOfs);
       begin
-        if not assigned(CurrObjSec) then
-          internalerror(200402252);
+        if not Assigned(CurrObjSec) then
+          InternalError(200402252);
         CurrObjSec.alloc(len);
       end;
 
 
-    procedure TObjData.allocalign(len:longint);
+    procedure TObjData.allocalign(len:LongInt);
       begin
-        if not assigned(CurrObjSec) then
-          internalerror(200402253);
+        if not Assigned(CurrObjSec) then
+          InternalError(200402253);
         CurrObjSec.alloc(align_objsecofs(CurrObjSec.size,len)-CurrObjSec.size);
       end;
 
@@ -1886,7 +1886,7 @@ implementation
       begin
         with TObjSection(p) do
           begin
-            if assigned(Data) then
+            if Assigned(Data) then
               writezeros(align_objsecofs(size,secalign)-size);
           end;
       end;
@@ -1899,7 +1899,7 @@ implementation
             Size:=0;
             Datapos:=0;
             mempos:=0;
-            if assigned(Data) then
+            if Assigned(Data) then
               Data.reset;
           end;
       end;
@@ -1907,9 +1907,9 @@ implementation
 
     procedure TObjData.beforealloc;
       begin
-        FCPUType:=CurrentSettings.cputype;
+        FCPUType:=CurrentSettings.CPUType;
         { create stabs sections if debugging }
-        if assigned(StabsSec) then
+        if Assigned(StabsSec) then
           begin
             StabsSec.Alloc(sizeof(TObjStabEntry));
             StabStrSec.Alloc(1);
@@ -1919,9 +1919,9 @@ implementation
 
     procedure TObjData.beforewrite;
       begin
-        FCPUType:=CurrentSettings.cputype;
+        FCPUType:=CurrentSettings.CPUType;
         { create stabs sections if debugging }
-        if assigned(StabsSec) then
+        if Assigned(StabsSec) then
          begin
            { Create dummy HdrSym stab, it will be overwritten in AfterWrite }
            StabsSec.WriteZeros(sizeof(TObjStabEntry));
@@ -1944,7 +1944,7 @@ implementation
         FObjSectionList.ForEachCall(@section_afterwrite,nil);
         { For the stab section we need an HdrSym which can now be
           calculated more easily }
-        if assigned(StabsSec) then
+        if Assigned(StabsSec) then
           begin
             { end of stabstr }
             StabStrSec.writeZeros(1);
@@ -1972,7 +1972,7 @@ implementation
 
         procedure TObjData.layoutsections(var datapos: TObjSectionOfs);
       var
-        i: longint;
+        i: LongInt;
       begin
         for i:=0 to FObjSectionList.Count-1 do
           TObjSection(FObjSectionList[i]).setDatapos(DataPos);
@@ -1990,17 +1990,17 @@ implementation
       end;
 
 
-    destructor TObjOutput.destroy;
+    destructor TObjOutput.Destroy;
       begin
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
     function TObjOutput.newObjData(const n:string):TObjData;
       begin
         result:=CObjData.create(n);
-        if (cs_use_lineinfo in CurrentSettings.globalswitches) or
-           (cs_debuginfo in CurrentSettings.moduleswitches) then
+        if (cs_use_lineinfo in CurrentSettings.GlobalSwitches) or
+           (cs_debuginfo in CurrentSettings.ModuleSwitches) then
           result.CreateDebugSections;
       end;
 
@@ -2011,14 +2011,14 @@ implementation
         { start the writer already, so the .a generation can initialize
           the position of the current objectfile }
         if not FWriter.createfile(fn) then
-         Comment(V_Fatal,'Can''t create object '+fn);
+         Comment(VFatal,'Can''t create object '+fn);
         result:=true;
       end;
 
 
     function TObjOutput.writeobjectfile(Data:TObjData):boolean;
       begin
-        if errorcount=0 then
+        if ErrorCount=0 then
          result:=writeData(Data)
         else
          result:=true;
@@ -2037,7 +2037,7 @@ implementation
 
     procedure TObjOutput.WriteSectionContent(Data:TObjData);
       var
-        i:longint;
+        i:LongInt;
         sec:TObjSection;
       begin
         for i:=0 to Data.ObjSectionList.Count-1 do
@@ -2046,10 +2046,10 @@ implementation
             if (oso_data in sec.SecOptions) then
               begin
                 if sec.Data=nil then
-                  internalerror(2004030707);
+                  InternalError(2004030707);
                 FWriter.writezeros(sec.dataalignbytes);
                 if sec.Datapos<>FWriter.ObjSize then
-                  internalerror(200604031);
+                  InternalError(200604031);
                 FWriter.writearray(sec.data);
               end;
           end;
@@ -2063,7 +2063,7 @@ implementation
       begin
         ExeSymbol:=AExeSymbol;
         if ExeSymbol.State=symstate_undefined then
-          internalerror(200604012);
+          InternalError(200604012);
         ChildList:=TFPObjectList.Create(false);
       end;
 
@@ -2072,14 +2072,14 @@ implementation
       begin
         ChildList.Free;
         ChildList := nil;
-        if assigned(EntryArray) then
-          Freemem(EntryArray);
+        if Assigned(EntryArray) then
+          FreeMem(EntryArray);
       end;
 
 
-    procedure TExeVTable.CheckIdx(VTableIdx:longint);
+    procedure TExeVTable.CheckIdx(VTableIdx:LongInt);
       var
-        OldEntryCnt : longint;
+        OldEntryCnt : LongInt;
       begin
         if VTableIdx>=EntryCnt then
           begin
@@ -2097,14 +2097,14 @@ implementation
       end;
 
 
-    procedure TExeVTable.AddEntry(VTableIdx:Longint);
+    procedure TExeVTable.AddEntry(VTableIdx:LongInt);
       var
-        i : longint;
+        i : LongInt;
         objreloc : TObjRelocation;
         vtblentryoffset : aword;
       begin
         CheckIdx(VTableIdx);
-        vtblentryoffset:=ExeSymbol.ObjSymbol.Offset+longword(VTableIdx)*sizeof(pint);
+        vtblentryoffset:=ExeSymbol.ObjSymbol.Offset+LongWord(VTableIdx)*sizeof(PInt);
         { Find and disable relocation }
         for i:=0 to ExeSymbol.ObjSymbol.ObjSection.ObjRelocations.Count-1 do
           begin
@@ -2119,28 +2119,28 @@ implementation
                 break;
               end;
           end;
-        if not assigned(EntryArray[VTableIdx].ObjRelocation) then
-          internalerror(200604011);
+        if not Assigned(EntryArray[VTableIdx].ObjRelocation) then
+          InternalError(200604011);
       end;
 
 
-    procedure TExeVTable.SetVTableSize(ASize:longint);
+    procedure TExeVTable.SetVTableSize(ASize:LongInt);
       begin
         if EntryCnt<>0 then
-          internalerror(200603313);
-        EntryCnt:=ASize div sizeof(pint);
+          InternalError(200603313);
+        EntryCnt:=ASize div sizeof(PInt);
         EntryArray:=AllocMem(EntryCnt*sizeof(TVTableEntry));
       end;
 
 
-    function TExeVTable.VTableRef(VTableIdx:Longint):TObjRelocation;
+    function TExeVTable.VTableRef(VTableIdx:LongInt):TObjRelocation;
       begin
         result:=nil;
         CheckIdx(VTableIdx);
         if EntryArray[VTableIdx].Used then
           exit;
         { Restore relocation if available }
-        if assigned(EntryArray[VTableIdx].ObjRelocation) then
+        if Assigned(EntryArray[VTableIdx].ObjRelocation) then
           begin
             EntryArray[VTableIdx].ObjRelocation.ftype:=EntryArray[VTableIdx].OrgRelocType;
             EntryArray[VTableIdx].ObjRelocation.flags:=EntryArray[VTableIdx].OrgRelocFlags;
@@ -2165,11 +2165,11 @@ implementation
       end;
 
 
-    destructor TExeSection.destroy;
+    destructor TExeSection.Destroy;
       begin
         FObjSectionList.Free;
         FObjSectionList := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -2186,7 +2186,7 @@ implementation
             { Only if the section contains (un)initialized data the
               data flag must match. }
             if ((oso_Data in SecOptions)<>(oso_Data in objsec.SecOptions)) then
-              Comment(V_Error,'Incompatible section options');
+              Comment(VError,'Incompatible section options');
           end
         else
           begin
@@ -2199,7 +2199,7 @@ implementation
 
     function TExeSection.MemPosStr(AImageBase: qword): string;
       begin
-        result:='0x'+HexStr(mempos+AImageBase,sizeof(pint)*2);
+        result:='0x'+HexStr(mempos+AImageBase,sizeof(PInt)*2);
       end;
 
 
@@ -2230,11 +2230,11 @@ implementation
       end;
 
 
-    destructor TStaticLibrary.destroy;
+    destructor TStaticLibrary.Destroy;
       begin
         FPayload.Free;
         FPayload := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -2272,11 +2272,11 @@ implementation
       end;
 
 
-    destructor TImportLibrary.destroy;
+    destructor TImportLibrary.Destroy;
       begin
         FImportSymbolList.Free;
         FImportSymbolList := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
@@ -2285,7 +2285,7 @@ implementation
 ****************************************************************************}
 
     constructor TImportSymbol.create(AList:TFPHashObjectList;
-            const AName,AMangledName:string;AOrdNr:longint;AIsVar:boolean);
+            const AName,AMangledName:string;AOrdNr:LongInt;AIsVar:boolean);
       begin
         inherited Create(AList, AName);
         FOrdNr:=AOrdNr;
@@ -2307,7 +2307,7 @@ implementation
     constructor TExeOutput.create;
       begin
         { init writer }
-        FWriter:=TObjectwriter.create;
+        FWriter:=TObjectWriter.create;
         FExeWriteMode:=ewm_exefull;
         { object files }
         FObjDataList:=TFPObjectList.Create(true);
@@ -2334,7 +2334,7 @@ implementation
       end;
 
 
-    destructor TExeOutput.destroy;
+    destructor TExeOutput.Destroy;
       begin
         FExeSymbolList.free;
         FExeSymbolList := nil;
@@ -2358,11 +2358,11 @@ implementation
         FObjDatalist := nil;
         FWriter.free;
         FWriter := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    function TExeOutput.MemAlign(exesec:TExeSection):longword;
+    function TExeOutput.MemAlign(exesec:TExeSection):LongWord;
       begin
         if FixedSectionAlign then
           result:=SectionMemAlign
@@ -2371,7 +2371,7 @@ implementation
       end;
 
 
-    function TExeOutput.DataAlign(exesec:TExeSection):longword;
+    function TExeOutput.DataAlign(exesec:TExeSection):LongWord;
       begin
         if FixedSectionAlign then
           result:=SectionDataAlign
@@ -2386,7 +2386,7 @@ implementation
         if FWriter.createfile(fn) then
          begin
            { Only write the .o if there are no errors }
-           if errorcount=0 then
+           if ErrorCount=0 then
              result:=writedata
            else
              result:=true;
@@ -2394,7 +2394,7 @@ implementation
            FWriter.closefile;
          end
         else
-         Comment(V_Fatal,'Can''t create executable '+fn);
+         Comment(VFatal,'Can''t create executable '+fn);
       end;
 
 
@@ -2412,7 +2412,7 @@ implementation
     procedure TExeOutput.AddObjData(ObjData:TObjData);
       begin
         if ObjData.classtype<>FCObjData then
-          Comment(V_Error,'Invalid input object format for '+ObjData.name+' got '+ObjData.classname+' expected '+FCObjData.classname);
+          Comment(VError,'Invalid input object format for '+ObjData.name+' got '+ObjData.classname+' expected '+FCObjData.classname);
         ObjDataList.Add(ObjData);
         ExecStack:=ExecStack or ObjData.ExecStack;
       end;
@@ -2422,7 +2422,7 @@ implementation
       begin
         ObjDataList.Clear;
         { Globals defined in the linker script }
-        if not assigned(internalObjData) then
+        if not Assigned(internalObjData) then
           internalObjData:=CObjData.create('*Internal*');
         AddObjData(internalObjData);
         { Common Data section }
@@ -2451,13 +2451,13 @@ implementation
       begin
         val(avalue,FImageBase,code);
         if code<>0 then
-          Comment(V_Error,'Invalid number '+avalue);
+          Comment(VError,'Invalid number '+avalue);
         { Create __image_base__ symbol, create the symbol
           in a section with adress 0 and at offset 0 }
         objsec:=internalObjData.createsection('*__image_base__',0,[]);
         internalObjData.setsection(objsec);
         objsym:=internalObjData.SymbolDefine('__image_base__',AB_GLOBAL,AT_DATA);
-        exesym:=texesymbol.Create(FExeSymbolList,objsym.name);
+        exesym:=TExeSymbol.Create(FExeSymbolList,objsym.name);
         exesym.ObjSymbol:=objsym;
       end;
 
@@ -2470,7 +2470,7 @@ implementation
 
     procedure TExeOutput.Load_ProvideSymbol(const aname:string);
       begin
-        if assigned(ExeSymbolList.Find(aname)) then
+        if Assigned(ExeSymbolList.Find(aname)) then
           exit;
         internalObjData.createsection('*'+aname,0,[]);
         // Use AB_COMMON to avoid multiple defined complaints
@@ -2499,7 +2499,7 @@ implementation
         sec : TExeSection;
       begin
         sec:=FindExeSection(aname);
-        if not assigned(sec) then
+        if not Assigned(sec) then
           sec:=CExeSection.create(ExeSectionList,aname);
         { Clear ExeSection contents }
         FCurrExeSec:=sec;
@@ -2508,21 +2508,21 @@ implementation
 
     procedure TExeOutput.Order_EndExeSection;
       begin
-        if not assigned(CurrExeSec) then
-          internalerror(200602184);
+        if not Assigned(CurrExeSec) then
+          InternalError(200602184);
         FCurrExeSec:=nil;
       end;
 
 
     procedure TExeOutput.Order_ObjSection(const aname:string);
       var
-        i,j     : longint;
+        i,j     : LongInt;
         ObjData : TObjData;
         objsec  : TObjSection;
         TmpObjSectionList : TFPObjectList;
       begin
-        if not assigned(CurrExeSec) then
-          internalerror(200602181);
+        if not Assigned(CurrExeSec) then
+          InternalError(200602181);
         TmpObjSectionList:=TFPObjectList.Create(false);
         for i:=0 to ObjDataList.Count-1 do
           begin
@@ -2559,7 +2559,7 @@ implementation
       begin
         objsym:=TObjSymbol(internalObjData.ObjSymbolList.Find(aname));
         if (objsym=nil) or (objsym.ObjSection.ObjData<>internalObjData) then
-          internalerror(200603041);
+          InternalError(200603041);
         CurrExeSec.AddObjSection(objsym.ObjSection,True);
       end;
 
@@ -2570,10 +2570,10 @@ implementation
       begin
         objsym:=TObjSymbol(internalObjData.ObjSymbolList.Find(aname));
         if (objsym=nil) or (objsym.ObjSection.ObjData<>internalObjData) then
-          internalerror(2006030403);
+          InternalError(2006030403);
         exesym:=TExeSymbol(ExeSymbolList.Find(aname));
-        if not assigned(exesym) then
-          internalerror(201206301);
+        if not Assigned(exesym) then
+          InternalError(201206301);
         { Only include this section if it actually resolves
           the symbol }
         if exesym.objsymbol=objsym then
@@ -2589,12 +2589,12 @@ implementation
       begin
         val(avalue,alignval,code);
         if code<>0 then
-          Comment(V_Error,'Invalid number '+avalue);
+          Comment(VError,'Invalid number '+avalue);
         if alignval<=0 then
           exit;
         { Create an empty section with the required aligning }
         inc(Fzeronr);
-        objsec:=internalObjData.createsection('*align'+tostr(Fzeronr),alignval,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
+        objsec:=internalObjData.createsection('*align'+ToStr(Fzeronr),alignval,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
         CurrExeSec.AddObjSection(objsec);
       end;
 
@@ -2603,19 +2603,19 @@ implementation
       var
         zeros : array[0..1023] of byte;
         code  : integer;
-        len   : longint;
+        len   : LongInt;
         objsec : TObjSection;
       begin
         val(avalue,len,code);
         if code<>0 then
-          Comment(V_Error,'Invalid number '+avalue);
+          Comment(VError,'Invalid number '+avalue);
         if len<=0 then
           exit;
         if len>sizeof(zeros) then
-          internalerror(200602254);
+          InternalError(200602254);
         fillchar(zeros,len,0);
         inc(Fzeronr);
-        objsec:=internalObjData.createsection('*zeros'+tostr(Fzeronr),0,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
+        objsec:=internalObjData.createsection('*zeros'+ToStr(Fzeronr),0,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
         internalObjData.writebytes(zeros,len);
         CurrExeSec.AddObjSection(objsec);
       end;
@@ -2629,7 +2629,7 @@ implementation
         fourbytevalues : array[0..MAXVAL-1] of dword;
         eightbytevalues : array[0..MAXVAL-1] of qword;
         allvals, oneval : string;
-        len, commapos : longint;
+        len, commapos : LongInt;
         indexpos, code  : integer;
         anumval : qword;
         signedval : int64;
@@ -2664,7 +2664,7 @@ implementation
               else
                 val(oneval,anumval,code);
               if code<>0 then
-                Comment(V_Error,'Invalid number '+avalue)
+                Comment(VError,'Invalid number '+avalue)
               else
                 begin
                   if (indexpos<MAXVAL) then
@@ -2684,23 +2684,23 @@ implementation
                       inc(indexpos);
                     end
                   else
-                    Comment(V_Error,'Buffer overrun in Order_values');
+                    Comment(VError,'Buffer overrun in Order_values');
                 end;
             end;
         until allvals='';
         if indexpos=0 then
           begin
-            Comment(V_Error,'Invalid number '+avalue);
+            Comment(VError,'Invalid number '+avalue);
             exit;
           end;
         if indexpos=MAXVAL then
           begin
-            Comment(V_Error,'Too many values '+avalue);
-            internalerror(2006022505);
+            Comment(VError,'Too many values '+avalue);
+            InternalError(2006022505);
           end;
         len:=bytesize*indexpos;
         inc(Fvaluesnr);
-        objsec:=internalObjData.createsection('*values'+tostr(Fvaluesnr),0,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
+        objsec:=internalObjData.createsection('*values'+ToStr(Fvaluesnr),0,CurrExeSec.SecOptions+[oso_Data,oso_keep]);
         if bytesize=1 then
           internalObjData.writebytes(bytevalues,len)
         else if bytesize=2 then
@@ -2727,7 +2727,7 @@ implementation
 
     procedure TExeOutput.MemPos_ExeSection(exesec:TExeSection);
       var
-        i      : longint;
+        i      : LongInt;
         objsec : TObjSection;
       begin
         { Alignment of ExeSection }
@@ -2750,7 +2750,7 @@ implementation
       begin
         { Section can be removed }
         FCurrExeSec:=FindExeSection(aname);
-        if not assigned(CurrExeSec) then
+        if not Assigned(CurrExeSec) then
           exit;
 
         MemPos_ExeSection(CurrExeSec);
@@ -2759,7 +2759,7 @@ implementation
 
     procedure TExeOutput.MemPos_EndExeSection;
       begin
-        if not assigned(CurrExeSec) then
+        if not Assigned(CurrExeSec) then
           exit;
         FCurrExeSec:=nil;
       end;
@@ -2795,7 +2795,7 @@ implementation
       begin
         { Section can be removed }
         FCurrExeSec:=FindExeSection(aname);
-        if not assigned(CurrExeSec) then
+        if not Assigned(CurrExeSec) then
           exit;
         DataPos_ExeSection(CurrExeSec);
       end;
@@ -2803,7 +2803,7 @@ implementation
 
     procedure TExeOutput.DataPos_EndExeSection;
       begin
-        if not assigned(CurrExeSec) then
+        if not Assigned(CurrExeSec) then
           exit;
         FCurrExeSec:=nil;
       end;
@@ -2819,7 +2819,7 @@ implementation
         hs : string;
         code : integer;
         i,k,
-        vtableidx : longint;
+        vtableidx : LongInt;
         vtableexesym,
         childexesym,
         parentexesym : TExeSymbol;
@@ -2834,18 +2834,18 @@ implementation
             Delete(hs,1,Pos('_',hs));
             k:=Pos('$$',hs);
             if k=0 then
-              internalerror(200603311);
-            childexesym:=texesymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
-            parentexesym:=texesymbol(FExeSymbolList.Find(Copy(hs,k+2,length(hs)-k-1)));
-            if not assigned(childexesym) or
-               not assigned(parentexesym)then
-              internalerror(200603312);
-            if not assigned(childexesym.vtable) then
+              InternalError(200603311);
+            childexesym:=TExeSymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
+            parentexesym:=TExeSymbol(FExeSymbolList.Find(Copy(hs,k+2,length(hs)-k-1)));
+            if not Assigned(childexesym) or
+               not Assigned(parentexesym)then
+              InternalError(200603312);
+            if not Assigned(childexesym.vtable) then
               begin
                 childexesym.vtable:=TExeVTable.Create(childexesym);
                 ExeVTableList.Add(childexesym.vtable);
               end;
-            if not assigned(parentexesym.vtable) then
+            if not Assigned(parentexesym.vtable) then
               begin
                 parentexesym.vtable:=TExeVTable.Create(parentexesym);
                 ExeVTableList.Add(parentexesym.vtable);
@@ -2864,13 +2864,13 @@ implementation
             Delete(hs,1,Pos('_',hs));
             k:=Pos('$$',hs);
             if k=0 then
-              internalerror(200603319);
-            vtableexesym:=texesymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
+              InternalError(200603319);
+            vtableexesym:=TExeSymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
             val(Copy(hs,k+2,length(hs)-k-1),vtableidx,code);
             if (code<>0) then
-              internalerror(200603318);
-            if not assigned(vtableexesym) then
-              internalerror(2006033110);
+              InternalError(200603318);
+            if not Assigned(vtableexesym) then
+              InternalError(2006033110);
             vtableexesym.vtable.AddEntry(vtableidx);
           end;
       end;
@@ -2878,7 +2878,7 @@ implementation
 
     procedure TExeOutput.PackUnresolvedExeSymbols(const s:string);
       var
-        i : longint;
+        i : LongInt;
         exesym : TExeSymbol;
       begin
         { Generate a list of Unresolved External symbols }
@@ -2889,7 +2889,7 @@ implementation
               UnresolvedExeSymbols[i]:=nil;
           end;
         UnresolvedExeSymbols.Pack;
-        Comment(V_Debug,'Number of unresolved externals '+s+' '+tostr(UnresolvedExeSymbols.Count));
+        Comment(VDebug,'Number of unresolved externals '+s+' '+ToStr(UnresolvedExeSymbols.Count));
       end;
 
 
@@ -2901,13 +2901,13 @@ implementation
         commonsym : TObjSymbol;
         firstarchive,
         firstcommon : boolean;
-        i         : longint;
+        i         : LongInt;
         VTEntryList,
         VTInheritList : TFPObjectList;
 
         procedure LoadObjDataSymbols(ObjData:TObjData);
         var
-          j      : longint;
+          j      : LongInt;
           hs     : string;
           exesym : TExeSymbol;
           tmpsym,
@@ -2922,14 +2922,14 @@ implementation
                 VTENTRY and VTINHERIT symbols }
               if objsym.bind=AB_LOCAL then
                 begin
-                  if cs_link_opt_vtable in CurrentSettings.globalswitches then
+                  if cs_link_opt_vtable in CurrentSettings.GlobalSwitches then
                     begin
                       hs:=objsym.name;
                       if (hs[1]='V') then
                         begin
                           if Copy(hs,1,5)='VTREF' then
                             begin
-                              if not assigned(objsym.ObjSection.VTRefList) then
+                              if not Assigned(objsym.ObjSection.VTRefList) then
                                 objsym.ObjSection.VTRefList:=TFPObjectList.Create(false);
                               objsym.ObjSection.VTRefList.Add(objsym);
                             end
@@ -2944,8 +2944,8 @@ implementation
 
               { If this symbol comes from COMDAT group, see if a group with
                 matching signature is already included. }
-              if assigned(objsym.objsection) and
-                 assigned(objsym.objsection.group) then
+              if Assigned(objsym.objsection) and
+                 Assigned(objsym.objsection.group) then
                 begin
                   grp:=objsym.objsection.group;
                   if grp.IsComdat then
@@ -2966,15 +2966,15 @@ implementation
                 end;
 
               { Search for existing exesymbol }
-              exesym:=texesymbol(FExeSymbolList.Find(objsym.name));
-              if not assigned(exesym) then
+              exesym:=TExeSymbol(FExeSymbolList.Find(objsym.name));
+              if not Assigned(exesym) then
                 begin
-                  exesym:=texesymbol.Create(FExeSymbolList,objsym.name);
+                  exesym:=TExeSymbol.Create(FExeSymbolList,objsym.name);
                   exesym.ObjSymbol:=objsym;
                 end
               else
                 begin
-                  if assigned(objsym.objsection) and assigned(exesym.objsymbol.objsection) then
+                  if Assigned(objsym.objsection) and Assigned(exesym.objsymbol.objsection) then
                     begin
                       if (oso_comdat in exesym.ObjSymbol.objsection.SecOptions) and
                          (oso_comdat in objsym.objsection.SecOptions) then
@@ -3070,7 +3070,7 @@ implementation
                         exesym.ObjSymbol:=objsym;
                         exesym.State:=symstate_common;
                       end;
-                    if assigned(objsym.objsection) and
+                    if Assigned(objsym.objsection) and
                       (objsym.objsection.objdata=internalObjData) then
                       FProvidedObjSymbols.add(objsym)
                     else
@@ -3097,14 +3097,14 @@ implementation
                       end;
                   end;
                 else
-                  internalerror(2019050510);
+                  InternalError(2019050510);
               end;
             end;
         end;
 
         procedure LoadLibrary(lib:TStaticLibrary);
           var
-            j,k,oldcount: longint;
+            j,k,oldcount: LongInt;
             members: TFPObjectList;
             exesym: TExeSymbol;
             objinput: TObjInput;
@@ -3124,7 +3124,7 @@ implementation
                         begin
                           if lib.ArReader.OpenFile(exesym.name) then
                             begin
-                              if assigned(exemap) then
+                              if Assigned(exemap) then
                                 begin
                                   if firstarchive then
                                     begin
@@ -3220,7 +3220,7 @@ implementation
             if objsym.exesymbol.State=symstate_defined then
               begin
                 if objsym.exesymbol.ObjSymbol.size<>objsym.size then
-                  Comment(V_Debug,'Size of common symbol '+objsym.name+' is different, expected '+tostr(objsym.size)+' got '+tostr(objsym.exesymbol.ObjSymbol.size));
+                  Comment(VDebug,'Size of common symbol '+objsym.name+' is different, expected '+ToStr(objsym.size)+' got '+ToStr(objsym.exesymbol.ObjSymbol.size));
               end
             else
               begin
@@ -3228,18 +3228,18 @@ implementation
                   it to the exesymbol }
                 if firstcommon then
                   begin
-                    if assigned(exemap) then
+                    if Assigned(exemap) then
                       exemap.AddCommonSymbolsHeader;
                     firstcommon:=false;
                   end;
                 internalObjData.setsection(commonObjSection);
                 { TODO: support alignment of common symbols (ELF targets at least),
                   increase commonObjSection.SecAlign if necessary here. }
-                internalObjData.allocalign(used_align(size_2_align(objsym.size),0,commonObjSection.SecAlign));
+                internalObjData.allocalign(Used_Align(Size_2_Align(objsym.size),0,commonObjSection.SecAlign));
                 commonsym:=internalObjData.symboldefine(objsym.name,AB_GLOBAL,AT_DATA);
                 commonsym.size:=objsym.size;
                 internalObjData.alloc(objsym.size);
-                if assigned(exemap) then
+                if Assigned(exemap) then
                   exemap.AddCommonSymbol(objsym);
                 { Assign to the exesymbol }
                 objsym.exesymbol.objsymbol:=commonsym;
@@ -3251,22 +3251,22 @@ implementation
         { Find entry symbol and print in map }
         if (EntryName<>'') then
           begin
-            exesym:=texesymbol(ExeSymbolList.Find(EntryName));
-            if assigned(exesym) then
+            exesym:=TExeSymbol(ExeSymbolList.Find(EntryName));
+            if Assigned(exesym) then
               begin
                 EntrySym:=exesym.ObjSymbol;
-                if assigned(exemap) then
+                if Assigned(exemap) then
                   begin
                     exemap.Add('');
                     exemap.Add('Entry symbol '+EntryName);
                   end;
               end
             else
-              Comment(V_Error,'Entrypoint '+EntryName+' not defined');
+              Comment(VError,'Entrypoint '+EntryName+' not defined');
           end;
 
         { Generate VTable tree }
-        if cs_link_opt_vtable in CurrentSettings.globalswitches then
+        if cs_link_opt_vtable in CurrentSettings.GlobalSwitches then
           BuildVTableTree(VTInheritList,VTEntryList);
         VTInheritList.Free;
         VTInheritList := nil;
@@ -3278,7 +3278,7 @@ implementation
     procedure TExeOutput.GenerateDebugLink(const dbgname:string;dbgcrc:cardinal);
       var
         debuglink : array[0..1023] of byte;
-        len   : longint;
+        len   : LongInt;
         objsec : TObjSection;
         exesec : TExeSection;
       begin
@@ -3300,7 +3300,7 @@ implementation
         inc(len,4);
         { Add section }
         exesec:=FindExeSection(debuglinkname);
-        if not assigned(exesec) then
+        if not Assigned(exesec) then
           exesec:=CExeSection.create(ExeSectionList,debuglinkname);
         exesec.SecOptions:=[oso_data,oso_keep];
         exesec.SecAlign:=4;
@@ -3325,7 +3325,7 @@ implementation
       end;
 
 
-    function ByAddress(item1,item2:pointer):longint;
+    function ByAddress(item1,item2:pointer):LongInt;
       var
         sym1:TObjSymbol absolute item1;
         sym2:TObjSymbol absolute item2;
@@ -3344,11 +3344,11 @@ implementation
         exesec : TExeSection;
         objsec : TObjSection;
         objsym : TObjSymbol;
-        i,j,k,m: longint;
+        i,j,k,m: LongInt;
         list   : TFPList;
         flag   : boolean;
       begin
-        if not assigned(exemap) then
+        if not Assigned(exemap) then
           exit;
         { create a list of symbols sorted by address }
         list:=TFPList.Create;
@@ -3421,7 +3421,7 @@ implementation
         end;
 
       var
-        i      : longint;
+        i      : LongInt;
         objsym : TObjSymbol;
         exesym : TExeSymbol;
       begin
@@ -3432,7 +3432,7 @@ implementation
               exesym:=TExeSymbol(UnresolvedExeSymbols[i]);
               if (exesym.State=symstate_undefined) then
                 begin
-                  if assigned(exesym.ObjSymbol) and assigned(exesym.ObjSymbol.ObjData) then
+                  if Assigned(exesym.ObjSymbol) and Assigned(exesym.ObjSymbol.ObjData) then
                     Message2(link_e_undefined_symbol_in_obj,exesym.name,exesym.objsymbol.ObjData.Name)
                   else
                     Message1(link_e_undefined_symbol,exesym.name);
@@ -3454,7 +3454,7 @@ implementation
           begin
             objsym:=TObjSymbol(CommonObjSymbols[i]);
             if objsym.bind<>AB_COMMON then
-              internalerror(200606241);
+              InternalError(200606241);
 
             objsym.ObjSection:=objsym.ExeSymbol.ObjSymbol.ObjSection;
             objsym.offset:=objsym.ExeSymbol.ObjSymbol.offset;
@@ -3466,13 +3466,13 @@ implementation
           begin
             objsym:=TObjSymbol(ExternalObjSymbols[i]);
             if not (objsym.bind in [AB_EXTERNAL,AB_WEAK_EXTERNAL]) then
-              internalerror(200606242);
+              InternalError(200606242);
             UpdateSymbol(objsym);
             { Collect symbols that resolve to indirect functions,
               they will need additional target-specific processing. }
             if objsym.typ=AT_GNU_IFUNC then
               IndirectObjSymbols.Add(objsym)
-            else if assigned(objsym.objsection) then
+            else if Assigned(objsym.objsection) then
               ExternalObjSymbols[i]:=nil;
           end;
         CommonObjSymbols.Clear;
@@ -3491,17 +3491,17 @@ implementation
         mergedstabstrsec : TObjSection;
         hstabreloc,
         currstabreloc : TObjRelocation;
-        i,j : longint;
+        i,j : LongInt;
         currstabrelocidx,
         mergestabcnt,
-        stabcnt : longword;
+        stabcnt : LongWord;
         skipstab : boolean;
         skipfun : boolean;
         hstab   : TObjStabEntry;
-        stabrelocofs : longword;
+        stabrelocofs : LongWord;
         buf     : array[0..1023] of byte;
         bufend,
-        bufsize  : longint;
+        BufSize  : LongInt;
       begin
         stabexesec:=FindExeSection('.stab');
         stabstrexesec:=FindExeSection('.stabstr');
@@ -3510,7 +3510,7 @@ implementation
            (stabexesec.ObjSectionlist.count=0) then
           exit;
         { Create new stabsection }
-        stabRelocofs:=pbyte(@hstab.nvalue)-pbyte(@hstab);
+        stabRelocofs:=PByte(@hstab.nvalue)-PByte(@hstab);
         mergedstabsec:=internalObjData.CreateSection(sec_stab,'');
         mergedstabstrsec:=internalObjData.CreateSection(sec_stabstr,'');
 
@@ -3528,7 +3528,7 @@ implementation
           begin
             currstabsec:=TObjSection(stabexesec.ObjSectionList[i]);
             currstabstrsec:=currstabsec.ObjData.findsection('.stabstr');
-            if assigned(currstabstrsec) then
+            if Assigned(currstabstrsec) then
               begin
                 stabcnt:=currstabsec.Data.size div sizeof(TObjStabEntry);
                 currstabsec.Data.seek(0);
@@ -3552,39 +3552,39 @@ implementation
                       begin
                         { Find corresponding Relocation }
                         currstabreloc:=nil;
-                        while (currstabrelocidx<longword(currstabsec.ObjRelocations.Count)) do
+                        while (currstabrelocidx<LongWord(currstabsec.ObjRelocations.Count)) do
                           begin
                             currstabreloc:=TObjRelocation(currstabsec.ObjRelocations[currstabrelocidx]);
-                            if assigned(currstabreloc) and
-                               (currstabreloc.dataoffset>=longword(j)*sizeof(TObjStabEntry)+stabrelocofs) then
+                            if Assigned(currstabreloc) and
+                               (currstabreloc.dataoffset>=LongWord(j)*sizeof(TObjStabEntry)+stabrelocofs) then
                               break;
                             inc(currstabrelocidx);
                           end;
-                        if assigned(currstabreloc) and
-                           (currstabreloc.dataoffset=longword(j)*sizeof(TObjStabEntry)+stabrelocofs) then
+                        if Assigned(currstabreloc) and
+                           (currstabreloc.dataoffset=LongWord(j)*sizeof(TObjStabEntry)+stabrelocofs) then
                           begin
                             hstabReloc:=currstabReloc;
                             inc(currstabrelocidx);
                           end;
 
                         { Check if the stab is referring to a removed section }
-                        if assigned(hstabreloc) then
+                        if Assigned(hstabreloc) then
                           begin
-                            if assigned(hstabreloc.Symbol) then
+                            if Assigned(hstabreloc.Symbol) then
                               relocsec:=hstabreloc.Symbol.ObjSection
                             else
                               relocsec:=hstabreloc.ObjSection;
-                            if not assigned(relocsec) then
-                              internalerror(200603302);
+                            if not Assigned(relocsec) then
+                              InternalError(200603302);
                             if not relocsec.Used then
                               begin
                                 skipstab:=true;
                                 if (hstab.ntype=N_Function) and (hstab.strpos<>0) then
                                   begin
                                     currstabstrsec.Data.seek(hstab.strpos);
-                                    bufsize:=currstabstrsec.Data.read(buf,sizeof(buf));
-                                    bufend:=indexbyte(buf,bufsize,Ord(':'));
-                                    if (bufend<>-1) and (bufend<bufsize-1) and (buf[bufend+1]=Ord('F')) then
+                                    BufSize:=currstabstrsec.Data.read(buf,sizeof(buf));
+                                    bufend:=indexbyte(buf,BufSize,Ord(':'));
+                                    if (bufend<>-1) and (bufend<BufSize-1) and (buf[bufend+1]=Ord('F')) then
                                       skipfun:=true;
                                   end;
                               end;
@@ -3598,20 +3598,20 @@ implementation
                             currstabstrsec.Data.seek(hstab.strpos);
                             hstab.strpos:=mergedstabstrsec.Size;
                             repeat
-                              bufsize:=currstabstrsec.Data.read(buf,sizeof(buf));
-                              bufend:=indexbyte(buf,bufsize,0);
+                              BufSize:=currstabstrsec.Data.read(buf,sizeof(buf));
+                              bufend:=indexbyte(buf,BufSize,0);
                               if bufend=-1 then
-                                bufend:=bufsize
+                                bufend:=BufSize
                               else
                                 begin
                                   { include the #0 }
                                   inc(bufend);
                                 end;
                               mergedstabstrsec.write(buf,bufend);
-                            until (buf[bufend-1]=0) or (bufsize<sizeof(buf));
+                            until (buf[bufend-1]=0) or (BufSize<sizeof(buf));
                           end;
                         { Copy and Update the relocation }
-                        if assigned(hstabreloc) then
+                        if Assigned(hstabreloc) then
                           begin
                             hstabreloc.Dataoffset:=mergestabcnt*sizeof(TObjStabEntry)+stabRelocofs;
                             { Remove from List without freeing the object }
@@ -3627,7 +3627,7 @@ implementation
               end;
 
             { Unload stabs }
-            if assigned(currstabstrsec) then
+            if Assigned(currstabstrsec) then
               begin
                 currstabstrsec.Used:=False;
                 currstabstrsec.ReleaseData;
@@ -3659,7 +3659,7 @@ implementation
 
     procedure TExeOutput.MarkEmptySections;
       var
-        i, j   : longint;
+        i, j   : LongInt;
         exesec : TExeSection;
         doremove : boolean;
       begin
@@ -3671,8 +3671,8 @@ implementation
                 (
                  (exesec.ObjSectionlist.count=0) or
                  (
-                  (cs_link_strip in CurrentSettings.globalswitches) and
-                  not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) and
+                  (cs_link_strip in CurrentSettings.GlobalSwitches) and
+                  not(cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) and
                   (oso_debug in exesec.SecOptions)
                  )
                 );
@@ -3689,7 +3689,7 @@ implementation
               end;
             if doremove then
               begin
-                Comment(V_Debug,'Disabling empty section '+exesec.name);
+                Comment(VDebug,'Disabling empty section '+exesec.name);
                 exesec.Disabled:=true;
               end;
           end;
@@ -3698,7 +3698,7 @@ implementation
 
     procedure TExeOutput.RemoveDisabledSections;
       var
-        i: longint;
+        i: LongInt;
         exesec: TExeSection;
       begin
         for i:=0 to ExeSectionList.Count-1 do
@@ -3713,7 +3713,7 @@ implementation
 
     procedure TExeOutput.RemoveDebugInfo;
       var
-        i      : longint;
+        i      : LongInt;
         exesec : TExeSection;
       begin
         for i:=0 to ExeSectionList.Count-1 do
@@ -3750,51 +3750,51 @@ implementation
             exit;
           refobjsec:=nil;
           refgrp:=nil;
-          if assigned(objreloc.symbol) then
+          if Assigned(objreloc.symbol) then
             begin
               objsym:=objreloc.symbol;
               if objsym.bind<>AB_LOCAL then
                 begin
-                  if not assigned(objsym.exesymbol) then
-                    internalerror(200603063);
+                  if not Assigned(objsym.exesymbol) then
+                    InternalError(200603063);
                   objsym.exesymbol.used:=true;
                   objsym:=objsym.exesymbol.objsymbol;
                 end;
-              if not assigned(objsym.objsection) then
+              if not Assigned(objsym.objsection) then
                 exit
               else
                 refobjsec:=objsym.objsection;
             end
-          else if assigned(objreloc.objsection) then
+          else if Assigned(objreloc.objsection) then
             refobjsec:=objreloc.objsection
-          else if assigned(objreloc.group) then
+          else if Assigned(objreloc.group) then
             refgrp:=objreloc.group
           else
-            internalerror(200603316);
-          if assigned(exemap) then
+            InternalError(200603316);
+          if Assigned(exemap) then
             begin
               objsym:=objreloc.symbol;
-              if assigned(objsym) and (objsym.typ<>AT_SECTION) then
+              if Assigned(objsym) and (objsym.typ<>AT_SECTION) then
                 exemap.Add('  References  '+objsym.name+' in '
                   +refobjsec.fullname)
-              else if assigned(refobjsec) then
+              else if Assigned(refobjsec) then
                 exemap.Add('  References '+refobjsec.fullname)
-              else if assigned(refgrp) then
+              else if Assigned(refgrp) then
                 exemap.Add('  References '+refgrp.Name)
               else
-                internalerror(2006033111);
+                InternalError(2006033111);
             end;
-          if assigned(refobjsec) then
+          if Assigned(refobjsec) then
             AddToObjSectionWorkList(refobjsec);
         end;
 
-        procedure DoVTableRef(vtable:TExeVTable;VTableIdx:longint);
+        procedure DoVTableRef(vtable:TExeVTable;VTableIdx:LongInt);
         var
-          i : longint;
+          i : LongInt;
           objreloc : TObjRelocation;
         begin
           objreloc:=vtable.VTableRef(VTableIdx);
-          if assigned(objreloc) then
+          if Assigned(objreloc) then
             begin
               { Process the relocation now if the ObjSection is
                 already processed and marked as used. Otherwise we leave it
@@ -3813,20 +3813,20 @@ implementation
         procedure ProcessWorkList;
         var
           hs        : string;
-          i,k       : longint;
+          i,k       : LongInt;
           objsec    : TObjSection;
           objsym    : TObjSymbol;
           code      : integer;
-          vtableidx : longint;
+          vtableidx : LongInt;
           vtableexesym : TExeSymbol;
         begin
           while ObjSectionWorkList.Count>0 do
             begin
               objsec:=TObjSection(ObjSectionWorkList.Last);
-              if not assigned(objsec.exesection) then
+              if not Assigned(objsec.exesection) then
 
-                internalerror(202102001);
-              if assigned(exemap) then
+                InternalError(202102001);
+              if Assigned(exemap) then
                 exemap.Add('Keeping '+objsec.FullName+' '+ToStr(objsec.ObjRelocations.Count)+' references');
               ObjSectionWorkList.Delete(ObjSectionWorkList.Count-1);
 
@@ -3835,7 +3835,7 @@ implementation
                 DoReloc(TObjRelocation(objsec.ObjRelocations[i]));
 
               { Process Virtual Entry calls }
-              if cs_link_opt_vtable in CurrentSettings.globalswitches then
+              if cs_link_opt_vtable in CurrentSettings.GlobalSwitches then
                 begin
                   for i:=0 to objsec.VTRefList.count-1 do
                     begin
@@ -3844,15 +3844,15 @@ implementation
                       Delete(hs,1,Pos('_',hs));
                       k:=Pos('$$',hs);
                       if k=0 then
-                        internalerror(200603314);
-                      vtableexesym:=texesymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
+                        InternalError(200603314);
+                      vtableexesym:=TExeSymbol(FExeSymbolList.Find(Copy(hs,1,k-1)));
                       val(Copy(hs,k+2,length(hs)-k-1),vtableidx,code);
                       if (code<>0) then
-                        internalerror(200603317);
-                      if not assigned(vtableexesym) then
-                        internalerror(200603315);
-                      if not assigned(vtableexesym.vtable) then
-                        internalerror(2006033112);
+                        InternalError(200603317);
+                      if not Assigned(vtableexesym) then
+                        InternalError(200603315);
+                      if not Assigned(vtableexesym.vtable) then
+                        InternalError(2006033112);
                       DoVTableRef(vtableexesym.vtable,vtableidx);
                     end;
                 end;
@@ -3861,14 +3861,14 @@ implementation
         end;
 
       var
-        i,j       : longint;
+        i,j       : LongInt;
         exesec    : TExeSection;
         objdata   : TObjData;
         objsec    : TObjSection;
       begin
         ObjSectionWorkList:=TFPObjectList.Create(false);
 
-        if assigned(exemap) then
+        if Assigned(exemap) then
           exemap.AddHeader('Removing unreferenced sections');
 
         { Initialize by marking all sections unused and
@@ -3891,7 +3891,7 @@ implementation
                   end;
               end;
           end;
-        if assigned(entrysym) then
+        if Assigned(entrysym) then
           AddToObjSectionWorkList(entrysym.exesymbol.objsymbol.objsection);
 
         { Process all sections, add new sections to process based
@@ -3921,7 +3921,7 @@ implementation
                 objsec:=TObjSection(exesec.ObjSectionlist[j]);
                 if not objsec.used then
                   begin
-                    if assigned(exemap) then
+                    if Assigned(exemap) then
                       exemap.Add('Removing '+objsec.FullName);
                     exesec.ObjSectionlist[j]:=nil;
                     objsec.ReleaseData;
@@ -3934,14 +3934,14 @@ implementation
 
     procedure TExeOutput.FixupRelocations;
       var
-        i,j     : longint;
+        i,j     : LongInt;
         exesec  : TExeSection;
         objsec  : TObjSection;
       begin
         for i:=0 to ExeSectionList.Count-1 do
           begin
             exesec:=TExeSection(ExeSectionList[i]);
-            if not assigned(exesec) then
+            if not Assigned(exesec) then
               continue;
             { Disabled sections (e.g. debug sections when stripping) are not
               removed from ExeSectionList until RemoveDisabledSections runs, and
@@ -3952,14 +3952,14 @@ implementation
               begin
                 objsec:=TObjSection(exesec.ObjSectionlist[j]);
                 if not objsec.Used then
-                  internalerror(200603301);
+                  InternalError(200603301);
                 if (objsec.ObjRelocations.Count>0) and
-                   not assigned(objsec.data) then
-                  internalerror(2002051801);
+                   not Assigned(objsec.data) then
+                  InternalError(2002051801);
                 DoRelocationFixup(objsec);
                 {for size = 0 data is not valid PM }
-                if assigned(objsec.data) and (objsec.data.size<>objsec.size) then
-                  internalerror(2010092801,'wrong data size for '+objsec.FullName);
+                if Assigned(objsec.data) and (objsec.data.size<>objsec.size) then
+                  InternalError(2010092801,'wrong data size for '+objsec.FullName);
               end;
           end;
       end;
@@ -3967,7 +3967,7 @@ implementation
 
     procedure TExeOutput.RemoveUnusedExeSymbols;
       var
-        i : longint;
+        i : LongInt;
         sym : TExeSymbol;
       begin
         { Removing unused symbols }
@@ -3975,7 +3975,7 @@ implementation
           begin
             sym:=TExeSymbol(ExeSymbolList[i]);
             { an unresolved weak symbol has objsection=nil }
-            if assigned(sym.ObjSymbol.objsection) and
+            if Assigned(sym.ObjSymbol.objsection) and
               (not sym.ObjSymbol.objsection.Used) then
               ExeSymbolList[i]:=nil;
           end;
@@ -3995,7 +3995,7 @@ implementation
       var
         exesec : TExeSection;
         objsec : TObjSection;
-        i,j    : longint;
+        i,j    : LongInt;
         dpos,pad: aword;
       begin
         for j:=0 to ExeSectionList.Count-1 do
@@ -4016,14 +4016,14 @@ implementation
                     objsec:=TObjSection(exesec.ObjSectionList[i]);
                     if oso_data in objsec.secoptions then
                       begin
-                        if not assigned(objsec.data) then
-                          internalerror(2006030404);
+                        if not Assigned(objsec.data) then
+                          InternalError(2006030404);
                         dpos:=objsec.MemPos-exesec.MemPos+exesec.DataPos;
                         pad:=dpos-FWriter.Size;
                         { objsection must be within SecAlign bytes from the previous one }
                         if (dpos<FWriter.Size) or
                           (pad>=max(objsec.SecAlign,1)) then
-                          internalerror(2006022503);
+                          InternalError(2006022503);
                         FWriter.writeZeros(pad);
                         FWriter.writearray(objsec.data);
                       end;
@@ -4036,7 +4036,7 @@ implementation
     procedure TExeOutput.ReplaceExeSectionList(newlist: TFPList);
       var
         tmp: TFPHashObjectList;
-        i: longint;
+        i: LongInt;
       begin
         tmp:=TFPHashObjectList.Create(true);
         for i:=0 to newlist.count-1 do
@@ -4060,7 +4060,7 @@ implementation
 
     procedure TObjInput.inputerror(const s : string);
       begin
-        Comment(V_Error,s+' while reading '+InputFileName);
+        Comment(VError,s+' while reading '+InputFileName);
       end;
 
 
@@ -4072,7 +4072,7 @@ implementation
 
     procedure TObjInput.ReadSectionContent(Data:TObjData);
       var
-        i: longint;
+        i: LongInt;
         sec: TObjSection;
       begin
         for i:=0 to Data.ObjSectionList.Count-1 do
@@ -4080,11 +4080,11 @@ implementation
             sec:=TObjSection(Data.ObjSectionList[i]);
             { Skip debug sections }
             if (oso_debug in sec.SecOptions) and
-               (cs_link_strip in CurrentSettings.globalswitches) and
-               not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
+               (cs_link_strip in CurrentSettings.GlobalSwitches) and
+               not(cs_link_separate_dbg_file in CurrentSettings.GlobalSwitches) then
               continue;
 
-            if assigned(sec.Data) then
+            if Assigned(sec.Data) then
               begin
                 FReader.Seek(sec.datapos);
                 if not FReader.ReadArray(sec.data,sec.Size) then

@@ -29,7 +29,7 @@ unit optcse;
   interface
 
     uses
-      sysutils,node;
+      SysUtils,node;
 
     {
       the function  creates non optimal code so far:
@@ -47,16 +47,16 @@ unit optcse;
   implementation
 
     uses
-      globtype,cdynset,globals,
-      systems,
-      cutils,cclasses,
+      GlobType,CDynSet,Globals,
+      Systems,
+      CUtils,CClasses,
       nutils,compinnr,
       nbas,nld,ninl,ncal,nadd,nmem,ncnv,
       pass_1,
-      procinfo,
+      ProcInfo,
       paramgr,
       cpubase,
-      symconst,symdef,symsym,symtable,symtype,
+      symconst,symdef,SymSym,SymTable,symtype,
       defutil,
       optbase;
 
@@ -67,11 +67,11 @@ unit optcse;
         setelementn,{arrayconstructorn,arrayconstructorrangen,}
         isn,asn,starstarn,nothingn,temprefn,loadparentfpn {,callparan},assignn,addrn];
 
-    function searchsubdomain(var n:TNode; arg: pointer) : foreachnoderesult;
+    function searchsubdomain(var n:TNode; arg: pointer) : TForEachNodeResult;
       begin
         if (n.nodetype in cseinvariant) or
           ((n.nodetype=inlinen) and
-           (tinlinenode(n).inlinenumber in [in_length_x,in_assigned_x,in_sqr_real,in_sqrt_real,in_sin_real,in_cos_real,in_abs_long,
+           (TInlineNode(n).inlinenumber in [in_length_x,in_assigned_x,in_sqr_real,in_sqrt_real,in_sin_real,in_cos_real,in_abs_long,
              in_abs_real,in_exp_real,in_ln_real,in_pi_real,in_popcnt_x,in_arctan_real,in_round_real,in_trunc_real,
              { cse on fma will still not work because it would require proper handling of call nodes
                with more than one parameter }
@@ -81,42 +81,42 @@ unit optcse;
              in_max_int64,in_max_qword,in_min_int64,in_min_qword
              ])
           ) or
-          ((n.nodetype=callparan) and not(assigned(tcallparanode(n).right))) or
+          ((n.nodetype=callparan) and not(Assigned(TCallParaNode(n).right))) or
           ((n.nodetype=loadn) and
-            not((tloadnode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) and
-                (vo_volatile in TAbstractVarSym(tloadnode(n).symtableentry).varoptions))
+            not((TLoadNode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) and
+                (vo_volatile in TAbstractVarSym(TLoadNode(n).symtableentry).varoptions))
           ) then
           result:=fen_true
         else
           begin
-            pboolean(arg)^:=false;
+            PBoolean(arg)^:=false;
             result:=fen_norecurse_true;
           end;
       end;
 
     type
-      tlists = record
-        nodelist : tfplist;
-        locationlist : tfplist;
-        equalto : tfplist;
-        refs : tfplist;
+      TLists = record
+        nodelist : TFPList;
+        locationlist : TFPList;
+        equalto : TFPList;
+        refs : TFPList;
         avail : TDFASet;
       end;
 
-      plists = ^tlists;
+      PLists = ^TLists;
 
     { collectnodes needs the address of itself to call foreachnodestatic,
       so we need a wrapper because @<func> inside <func doesn't work }
 
-    function collectnodes(var n:TNode; arg: pointer) : foreachnoderesult;forward;
+    function collectnodes(var n:TNode; arg: pointer) : TForEachNodeResult;forward;
 
-    function collectnodes2(var n:TNode; arg: pointer) : foreachnoderesult;
+    function collectnodes2(var n:TNode; arg: pointer) : TForEachNodeResult;
       begin
         result:=collectnodes(n,arg);
       end;
 
 
-    function collectnodes(var n:TNode; arg: pointer) : foreachnoderesult;
+    function collectnodes(var n:TNode; arg: pointer) : TForEachNodeResult;
 
       { when compiling a tree like
             and
@@ -134,19 +134,19 @@ unit optcse;
         in the CSE table after handling A
       }
       var
-        firstleftend : longint;
+        firstleftend : LongInt;
         maybeskipped : TDFASet; { Only valid for the current "collectnodes" invocation }
 
       procedure recurseintobooleanchain(t : TNodeType;n : TNode);
         var
-          i, rightstart : longint;
+          i, rightstart : LongInt;
         begin
           if (TBinaryNode(n).left.nodetype=t) and is_boolean(TBinaryNode(n).left.resultdef) then
             recurseintobooleanchain(t,TBinaryNode(n).left)
           else
             foreachnodestatic(pm_postprocess,TBinaryNode(n).left,@collectnodes2,arg);
 
-          rightstart:=plists(arg)^.nodelist.count;
+          rightstart:=PLists(arg)^.nodelist.count;
           firstleftend:=min(rightstart,firstleftend);
 
           if doshortbooleval(n) then
@@ -154,7 +154,7 @@ unit optcse;
               foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
 
               { short boolean evaluation might skip the right side of n in nested nodes }
-              for i:=rightstart to plists(arg)^.nodelist.count-1 do
+              for i:=rightstart to PLists(arg)^.nodelist.count-1 do
                 DynSetInclude(maybeskipped,i);
             end
           else
@@ -166,7 +166,7 @@ unit optcse;
                 available while collecting the right side of n }
               for i:=firstleftend to rightstart-1 do
                 if DynSetIn(maybeskipped,i) then
-                  DynSetExclude(plists(arg)^.avail,i);
+                  DynSetExclude(PLists(arg)^.avail,i);
 
               { We can only collect the right nodes after excluding the left
                 side so newer entries don't reference them }
@@ -175,7 +175,7 @@ unit optcse;
         end;
 
       var
-        i : longint;
+        i : LongInt;
         tempdef : TDef;
       begin
         result:=fen_false;
@@ -187,8 +187,8 @@ unit optcse;
           may have special requirements (no regability, must be in memory, ...)
         }
         if (((n.nodetype=callparan) and
-             (tcallparanode(n).left.resultdef.typ=formaldef) and
-             (tcallparanode(n).parasym.varspez=vs_const)) or
+             (TCallParaNode(n).left.resultdef.typ=formaldef) and
+             (TCallParaNode(n).parasym.varspez=vs_const)) or
             ((n.nodetype=typeconvn) and
              (nf_absolute in n.flags))
            ) then
@@ -198,7 +198,7 @@ unit optcse;
           end;
         if
           { node possible to add? }
-          assigned(n.resultdef) and
+          Assigned(n.resultdef) and
           ((
             { regable expressions }
             (actualtargetnode(@n)^.flags*[nf_write,nf_modify,nf_address_taken]=[]) and
@@ -213,7 +213,7 @@ unit optcse;
               (
                 (
                   (n.resultdef.typ = recorddef) and
-                  TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).symtable).has_single_field(tempdef)
+                  TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).SymTable).has_single_field(tempdef)
                 ) or
                 is_dynamic_array(n.resultdef) or
                 (
@@ -247,11 +247,11 @@ unit optcse;
               current stack frame, those are in registers anyways if possible
             }
             (not(actualtargetnode(@n)^.nodetype=loadn) or
-             not(tloadnode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) or
+             not(TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) or
              { apply cse on non-regable variables }
-             ((tloadnode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
-               not(TAbstractVarSym(tloadnode(actualtargetnode(@n)^).symtableentry).is_regvar(true)) and
-               not(vo_volatile in TAbstractVarSym(tloadnode(actualtargetnode(@n)^).symtableentry).varoptions)) or
+             ((TLoadNode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
+               not(TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).is_regvar(true)) and
+               not(vo_volatile in TAbstractVarSym(TLoadNode(actualtargetnode(@n)^).symtableentry).varoptions)) or
              (node_complexity(n)>1)
             ) and
 
@@ -271,28 +271,28 @@ unit optcse;
             }
             (((n.resultdef.typ in [arraydef,recorddef]) or is_object(n.resultdef)) and not(is_dynamic_array(n.resultdef)) and
              (n.nodetype=loadn) and
-             (tloadnode(n).symtableentry.typ=staticvarsym)
+             (TLoadNode(n).symtableentry.typ=staticvarsym)
             )
 {$endif not(defined(i386))}
           ) then
           begin
-            plists(arg)^.nodelist.Add(n);
-            plists(arg)^.locationlist.Add(@n);
-            plists(arg)^.refs.Add(nil);
-            plists(arg)^.equalto.Add(pointer(-1));
+            PLists(arg)^.nodelist.Add(n);
+            PLists(arg)^.locationlist.Add(@n);
+            PLists(arg)^.refs.Add(nil);
+            PLists(arg)^.equalto.Add(pointer(-1));
 
-            DynSetInclude(plists(arg)^.avail,plists(arg)^.nodelist.count-1);
+            DynSetInclude(PLists(arg)^.avail,PLists(arg)^.nodelist.count-1);
 
-            for i:=0 to plists(arg)^.nodelist.count-2 do
+            for i:=0 to PLists(arg)^.nodelist.count-2 do
               begin
-                if TNode(plists(arg)^.nodelist[i]).isequal(n) and DynSetIn(plists(arg)^.avail,i) then
+                if TNode(PLists(arg)^.nodelist[i]).isequal(n) and DynSetIn(PLists(arg)^.avail,i) then
                   begin
                     { use always the first occurrence }
-                    if plists(arg)^.equalto[i]<>pointer(-1) then
-                      plists(arg)^.equalto[plists(arg)^.nodelist.count-1]:=plists(arg)^.equalto[i]
+                    if PLists(arg)^.equalto[i]<>pointer(-1) then
+                      PLists(arg)^.equalto[PLists(arg)^.nodelist.count-1]:=PLists(arg)^.equalto[i]
                     else
-                      plists(arg)^.equalto[plists(arg)^.nodelist.count-1]:=pointer(ptrint(i));
-                    plists(arg)^.refs[i]:=pointer(plists(arg)^.refs[i])+1;
+                      PLists(arg)^.equalto[PLists(arg)^.nodelist.count-1]:=pointer(ptrint(i));
+                    PLists(arg)^.refs[i]:=pointer(PLists(arg)^.refs[i])+1;
                     { tree has been found, no need to search further,
                       sub-trees have been added by the first occurrence of
                       the tree already }
@@ -306,16 +306,16 @@ unit optcse;
           the expressions of the right side might not be available due to short boolean
           evaluation, so after handling the right side, mark those expressions
           as unavailable }
-        if doshortbooleval(n) and is_boolean(taddnode(n).left.resultdef) then
+        if doshortbooleval(n) and is_boolean(TAddNode(n).left.resultdef) then
           begin
             SetLength(maybeskipped,0);
-            firstleftend:=high(longint);
+            firstleftend:=high(LongInt);
             recurseintobooleanchain(n.nodetype,n);
 
             { Exclude tge nodes from the chain if there's a chance they'll be skipped }
-            for i:=firstleftend to plists(arg)^.nodelist.count-1 do
+            for i:=firstleftend to PLists(arg)^.nodelist.count-1 do
               if DynSetIn(maybeskipped,i) then
-                DynSetExclude(plists(arg)^.avail,i);
+                DynSetExclude(PLists(arg)^.avail,i);
 
             result:=fen_norecurse_false;
           end;
@@ -327,24 +327,24 @@ unit optcse;
             CSE in case the nested variable is used as an lvalue, so disable
             CSE in that case
           }
-          if (n.nodetype=loadn) and assigned(tloadnode(n).left) then
+          if (n.nodetype=loadn) and Assigned(TLoadNode(n).left) then
             result:=fen_norecurse_false;
 {$endif}
        end;
 
 
-    function searchcsedomain(var n: TNode; arg: pointer) : foreachnoderesult;
+    function searchcsedomain(var n: TNode; arg: pointer) : TForEachNodeResult;
       var
         csedomain : boolean;
-        lists : tlists;
-        templist : tfplist;
-        i : longint;
+        lists : TLists;
+        templist : TFPList;
+        i : LongInt;
         def : TStoredDef;
-        nodes : tblocknode;
+        nodes : TBlockNode;
         creates,
-        statements : tstatementnode;
-        deletetemp : ttempdeletenode;
-        hp : ttempcreatenode;
+        statements : TStatementNode;
+        deletetemp : TTempDeleteNode;
+        hp : TTempCreateNode;
         addrstored : boolean;
         hp2 : TNode;
       begin
@@ -380,13 +380,13 @@ unit optcse;
                   (is_integer(n.resultdef) or is_real(n.resultdef) or is_vector(n.resultdef) or is_set(n.resultdef) or
                    is_boolean(n.resultdef)) and
                   { either if fastmath is on }
-                  ((cs_opt_fastmath in CurrentSettings.optimizerswitches) or
+                  ((cs_opt_fastmath in CurrentSettings.OptimizerSwitches) or
                    { or for the logical operators, they cannot overflow }
                    (n.nodetype in [andn,orn]) or
                    { or for integers if range checking is off }
                    ((is_integer(n.resultdef) and
-                    (n.localswitches*[cs_check_range,cs_check_overflow]=[]) and
-                    (TBinaryNode(n).left.localswitches*[cs_check_range,cs_check_overflow]=[]))) or
+                    (n.LocalSwitches*[cs_check_range,cs_check_overflow]=[]) and
+                    (TBinaryNode(n).left.LocalSwitches*[cs_check_range,cs_check_overflow]=[]))) or
                    { for sets, we can do this always }
                    (is_set(n.resultdef))
                    ) then
@@ -417,15 +417,15 @@ unit optcse;
                               if not(doshortbooleval(tbinarynode(n).left)) and
                                  doshortbooleval(n) then }
                                 begin
-                                  n.localswitches:=n.localswitches+(TBinaryNode(n).left.localswitches*[cs_full_boolean_eval]);
-                                  exclude(TBinaryNode(n).left.localswitches,cs_full_boolean_eval);
+                                  n.LocalSwitches:=n.LocalSwitches+(TBinaryNode(n).left.LocalSwitches*[cs_full_boolean_eval]);
+                                  exclude(TBinaryNode(n).left.LocalSwitches,cs_full_boolean_eval);
                                   if (n.nodetype in [orn,andn]) then
                                     begin
                                       if (TBinaryNode(n).left.nodetype in [orn,andn]) then
-                                        taddnode(TBinaryNode(n).left).addnodeflags:=taddnode(TBinaryNode(n).left).addnodeflags+
-                                          (taddnode(n).addnodeflags*[anf_short_bool]);
+                                        TAddNode(TBinaryNode(n).left).addnodeflags:=TAddNode(TBinaryNode(n).left).addnodeflags+
+                                          (TAddNode(n).addnodeflags*[anf_short_bool]);
 
-                                      exclude(taddnode(n).addnodeflags,anf_short_bool);
+                                      exclude(TAddNode(n).addnodeflags,anf_short_bool);
                                     end;
                                 end;
 
@@ -452,26 +452,26 @@ unit optcse;
                 statements:=nil;
                 result:=fen_norecurse_true;
 {$ifdef csedebug}
-                writeln('============ cse domain ==================');
-                printnode(output,n);
-                writeln('Complexity: ',node_complexity(n));
+                WriteLn('============ cse domain ==================');
+                printnode(Output,n);
+                WriteLn('Complexity: ',node_complexity(n));
 {$endif csedebug}
-                lists.nodelist:=tfplist.create;
-                lists.locationlist:=tfplist.create;
-                lists.equalto:=tfplist.create;
-                lists.refs:=tfplist.create;
+                lists.nodelist:=TFPList.create;
+                lists.locationlist:=TFPList.create;
+                lists.equalto:=TFPList.create;
+                lists.refs:=TFPList.create;
                 foreachnodestatic(pm_postprocess,n,@collectnodes,@lists);
 
-                templist:=tfplist.create;
+                templist:=TFPList.create;
                 templist.count:=lists.nodelist.count;
 
                 { check all nodes if one is used more than once }
                 for i:=0 to lists.nodelist.count-1 do
                   begin
                     { current node used more than once? }
-                    if assigned(lists.refs[i]) then
+                    if Assigned(lists.refs[i]) then
                       begin
-                        if not(assigned(statements)) then
+                        if not(Assigned(statements)) then
                           begin
                             nodes:=internalstatements(statements);
                             addstatement(statements,internalstatements(creates));
@@ -483,18 +483,18 @@ unit optcse;
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
 
                         if addrstored then
-                          templist[i]:=ctempcreatenode.create_value(cpointerdef.getreusable(def),voidpointertype.size,tt_persistent,
-                            true,caddrnode.create_internal(TNode(lists.nodelist[i])))
+                          templist[i]:=CTempCreateNode.create_value(CPointerDef.getreusable(def),voidpointertype.size,tt_persistent,
+                            true,CAddrNode.create_internal(TNode(lists.nodelist[i])))
                         else
-                          templist[i]:=ctempcreatenode.create_value(def,def.size,tt_persistent,
+                          templist[i]:=CTempCreateNode.create_value(def,def.size,tt_persistent,
                             def.is_intregable or def.is_fpuregable or def.is_const_intregable,TNode(lists.nodelist[i]));
 
                         { the value described by the temp. is immutable and the temp. can be always in register
 
                           ttempcreatenode.create normally takes care of the register location but it does not
                           know about immutability so it cannot take care of managed types }
-                        ttempcreatenode(templist[i]).includetempflag(ti_const);
-                        ttempcreatenode(templist[i]).includetempflag(ti_may_be_in_reg);
+                        TTempCreateNode(templist[i]).includetempflag(ti_const);
+                        TTempCreateNode(templist[i]).includetempflag(ti_may_be_in_reg);
 
                         { make debugging easier and set temp. location to the original location }
                         TNode(templist[i]).fileinfo:=TNode(lists.nodelist[i]).fileinfo;
@@ -502,27 +502,27 @@ unit optcse;
                         addstatement(creates,TNode(templist[i]));
 
                         { the delete node has no semantic use yet, it is just used to clean up memory }
-                        deletetemp:=ctempdeletenode.create(ttempcreatenode(templist[i]));
+                        deletetemp:=CTempDeleteNode.create(TTempCreateNode(templist[i]));
                         deletetemp.includetempflag(ti_cleanup_only);
-                        addstatement(tstatementnode(arg^),deletetemp);
+                        addstatement(TStatementNode(arg^),deletetemp);
 
                         { make debugging easier and set temp. location to the original location }
                         creates.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        hp:=ttempcreatenode(templist[i]);
+                        hp:=TTempCreateNode(templist[i]);
                         DoFirstPass(TNode(hp));
                         templist[i]:=hp;
 
                         if addrstored then
-                          PNode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[i])))
+                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.create(TTempCreateNode(templist[i])))
                         else
-                          PNode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[i]));
+                          PNode(lists.locationlist[i])^:=CTempRefNode.create(TTempCreateNode(templist[i]));
                         { make debugging easier and set temp. location to the original location }
                         PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
                         DoFirstPass(PNode(lists.locationlist[i])^);
 {$ifdef csedebug}
-                        printnode(output,statements);
+                        printnode(Output,statements);
 {$endif csedebug}
                       end
                     { current node reference to another node? }
@@ -534,19 +534,19 @@ unit optcse;
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
 
 {$if defined(csedebug) or defined(csestats)}
-                        writeln;
-                        writeln('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                        writeln('Complexity: ',node_complexity(TNode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
-                        printnode(output,TNode(lists.nodelist[i]));
-                        printnode(output,TNode(lists.nodelist[ptrint(lists.equalto[i])]));
-                        writeln('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                        writeln;
+                        WriteLn;
+                        WriteLn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                        WriteLn('Complexity: ',node_complexity(TNode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
+                        printnode(Output,TNode(lists.nodelist[i]));
+                        printnode(Output,TNode(lists.nodelist[ptrint(lists.equalto[i])]));
+                        WriteLn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                        WriteLn;
 {$endif defined(csedebug) or defined(csestats)}
                         templist[i]:=templist[ptrint(lists.equalto[i])];
                         if addrstored then
-                          PNode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])])))
+                          PNode(lists.locationlist[i])^:=CDerefNode.Create(CTempRefNode.create(TTempCreateNode(templist[ptrint(lists.equalto[i])])))
                         else
-                          PNode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])]));
+                          PNode(lists.locationlist[i])^:=CTempRefNode.create(TTempCreateNode(templist[ptrint(lists.equalto[i])]));
 
                         { make debugging easier and set temp. location to the original location }
                         PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
@@ -559,8 +559,8 @@ unit optcse;
                   if lists.equalto[i]<>pointer(-1) then
                     TNode(lists.nodelist[i]).free; // no nil needed
 {$ifdef csedebug}
-                writeln('nodes: ',lists.nodelist.count);
-                writeln('==========================================');
+                WriteLn('nodes: ',lists.nodelist.count);
+                WriteLn('==========================================');
 {$endif csedebug}
                 FreeAndNil(lists.nodelist);
                 FreeAndNil(lists.locationlist);
@@ -569,7 +569,7 @@ unit optcse;
                 templist.free;
                 templist := nil;
 
-                if assigned(statements) then
+                if Assigned(statements) then
                   begin
                     { call para nodes need a special handling because
                       they can be only children nodes of call nodes
@@ -578,9 +578,9 @@ unit optcse;
                     }
                     if n.nodetype=callparan then
                       begin
-                        addstatement(statements,tcallparanode(n).left);
-                        tcallparanode(n).left:=nodes;
-                        DoFirstPass(tcallparanode(n).left);
+                        addstatement(statements,TCallParaNode(n).left);
+                        TCallParaNode(n).left:=nodes;
+                        DoFirstPass(TCallParaNode(n).left);
                       end
                     else
                       begin
@@ -589,7 +589,7 @@ unit optcse;
                         DoFirstPass(n);
                       end;
 {$ifdef csedebug}
-                    printnode(output,nodes);
+                    printnode(Output,nodes);
 {$endif csedebug}
                   end;
               end
@@ -600,17 +600,17 @@ unit optcse;
     function do_optcse(var rootnode : TNode) : TNode;
       var
         deletes,
-        statements : tstatementnode;
+        statements : TStatementNode;
         deleteblock,
-        rootblock : tblocknode;
+        rootblock : TBlockNode;
       begin
 {$ifdef csedebug}
-        writeln('====================================================================================');
-        writeln('CSE optimization pass started');
-        writeln('====================================================================================');
-        printnode(output,rootnode);
-        writeln('====================================================================================');
-        writeln;
+        WriteLn('====================================================================================');
+        WriteLn('CSE optimization pass started');
+        WriteLn('====================================================================================');
+        printnode(Output,rootnode);
+        WriteLn('====================================================================================');
+        WriteLn;
 {$endif csedebug}
         deleteblock:=internalstatements(deletes);
         foreachnodestatic(pm_postprocess,rootnode,@searchcsedomain,@deletes);
@@ -620,48 +620,48 @@ unit optcse;
         rootnode:=rootblock;
         DoFirstPass(rootnode);
 {$ifdef csedebug}
-        writeln('====================================================================================');
-        writeln('CSE optimization result');
-        writeln('====================================================================================');
-        printnode(output,rootnode);
-        writeln('====================================================================================');
-        writeln;
+        WriteLn('====================================================================================');
+        WriteLn('CSE optimization result');
+        WriteLn('====================================================================================');
+        printnode(Output,rootnode);
+        WriteLn('====================================================================================');
+        WriteLn;
 {$endif csedebug}
         result:=nil;
       end;
 
     type
-      tconstentry = record
+      TConstEntry = record
         valuenode : TNode;
         weight : TCGInt;
-        temp : ttempcreatenode;
+        temp : TTempCreateNode;
       end;
 
-      pconstentry = ^tconstentry;
+      PConstEntry = ^TConstEntry;
 
-      tconstentries = array of tconstentry;
-      pconstentries = ^tconstentries;
+      TConstEntries = array of TConstEntry;
+      PConstEntries = ^TConstEntries;
 
     function CSEOnReference(n : TNode) : Boolean;
       begin
-        Result:=(n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym)
-          and ((vo_is_thread_var in TStaticVarSym(tloadnode(n).symtableentry).varoptions) or
-            (cs_create_pic in CurrentSettings.moduleswitches)
+        Result:=(n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym)
+          and ((vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).varoptions) or
+            (cs_create_pic in CurrentSettings.ModuleSwitches)
 {$if defined(aarch64)}
-            or (not(TAbstractVarSym(tloadnode(n).symtableentry).is_regvar(false)))
+            or (not(TAbstractVarSym(TLoadNode(n).symtableentry).is_regvar(false)))
 {$endif defined(aarch64) or defined(sparc) or defined(sparc64)}
            );
       end;
 
 
-    function collectconsts(var n:TNode; arg: pointer) : foreachnoderesult;
+    function collectconsts(var n:TNode; arg: pointer) : TForEachNodeResult;
       var
-        consts: pconstentries;
+        consts: PConstEntries;
         found: Boolean;
         i: Integer;
       begin
         result:=fen_true;
-        consts:=pconstentries(arg);
+        consts:=PConstEntries(arg);
         if ((n.nodetype=realconstn)
 {$ifdef x86}
           { x87 consts would end up in memory, so loading them in temps. makes no sense }
@@ -685,7 +685,7 @@ unit optcse;
                 inc(consts^[i].weight);
 
                 { non-sectioned threadvars really hurt so do more aggressive cse on them }
-                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(tloadnode(n).symtableentry).varoptions) then
+                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (TLoadNode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(TLoadNode(n).symtableentry).varoptions) then
                   inc(consts^[i].weight);
               end
             else
@@ -702,21 +702,21 @@ unit optcse;
       end;
 
 
-    function replaceconsts(var n:TNode; arg: pointer) : foreachnoderesult;
+    function replaceconsts(var n:TNode; arg: pointer) : TForEachNodeResult;
       var
         hp: TNode;
       begin
         result:=fen_true;
-        if TNode(pconstentry(arg)^.valuenode).isequal(n) then
+        if TNode(PConstEntry(arg)^.valuenode).isequal(n) then
           begin
             { shall we take the address? }
-            if CSEOnReference(pconstentry(arg)^.valuenode) then
+            if CSEOnReference(PConstEntry(arg)^.valuenode) then
               begin
-                hp:=ctypeconvnode.create_internal(cderefnode.create(ctemprefnode.create(pconstentry(arg)^.temp)),pconstentry(arg)^.valuenode.resultdef);
-                ttypeconvnode(hp).left.fileinfo:=n.fileinfo;
+                hp:=CTypeConvNode.create_internal(CDerefNode.create(CTempRefNode.create(PConstEntry(arg)^.temp)),PConstEntry(arg)^.valuenode.resultdef);
+                TTypeConvNode(hp).left.fileinfo:=n.fileinfo;
               end
             else
-              hp:=ctemprefnode.create(pconstentry(arg)^.temp);
+              hp:=CTempRefNode.create(PConstEntry(arg)^.temp);
 
             hp.fileinfo:=n.fileinfo;
             n.Free;
@@ -728,11 +728,11 @@ unit optcse;
 
     function do_consttovar(var rootnode : TNode) : TNode;
       var
-        constentries : tconstentries;
-      Procedure QuickSort(L, R : Longint);
+        constentries : TConstEntries;
+      Procedure QuickSort(L, R : LongInt);
         var
-          I, J, P: Longint;
-          Item, Q : tconstentry;
+          I, J, P: LongInt;
+          Item, Q : TConstEntry;
         begin
          repeat
            I := L;
@@ -766,21 +766,21 @@ unit optcse;
       var
         creates,
         deletes,
-        statements : tstatementnode;
+        statements : TStatementNode;
         createblock,
         deleteblock,
-        rootblock : tblocknode;
+        rootblock : TBlockNode;
         i, max_fpu_regs_assigned, fpu_regs_assigned,
         max_int_regs_assigned, int_regs_assigned: Integer;
         old_current_filepos: TFilePosInfo;
       begin
   {$ifdef csedebug}
-        writeln('====================================================================================');
-        writeln('Const optimization pass started');
-        writeln('====================================================================================');
-        printnode(output,rootnode);
-        writeln('====================================================================================');
-        writeln;
+        WriteLn('====================================================================================');
+        WriteLn('Const optimization pass started');
+        WriteLn('====================================================================================');
+        printnode(Output,rootnode);
+        WriteLn('====================================================================================');
+        WriteLn;
   {$endif csedebug}
         foreachnodestatic(pm_postprocess,rootnode,@collectconsts,@constentries);
         createblock:=nil;
@@ -828,16 +828,16 @@ unit optcse;
                       break;
                     old_current_filepos:=CurrentFilePos;
                     CurrentFilePos:=CurrentProcInfo.entrypos;
-                    if not(assigned(createblock)) then
+                    if not(Assigned(createblock)) then
                       begin
                         rootblock:=internalstatements(statements);
                         createblock:=internalstatements(creates);
                         deleteblock:=internalstatements(deletes);
                       end;
-                     constentries[i].temp:=ctempcreatenode.create(constentries[i].valuenode.resultdef,
+                     constentries[i].temp:=CTempCreateNode.create(constentries[i].valuenode.resultdef,
                        constentries[i].valuenode.resultdef.size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
-                     addstatement(creates,cassignmentnode.create_internal(ctemprefnode.create(constentries[i].temp),constentries[i].valuenode));
+                     addstatement(creates,CAssignmentNode.create_internal(CTempRefNode.create(constentries[i].temp),constentries[i].valuenode));
                      CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(fpu_regs_assigned);
@@ -852,24 +852,24 @@ unit optcse;
                       break;
                     old_current_filepos:=CurrentFilePos;
                     CurrentFilePos:=CurrentProcInfo.entrypos;
-                    if not(assigned(createblock)) then
+                    if not(Assigned(createblock)) then
                       begin
                         rootblock:=internalstatements(statements);
                         createblock:=internalstatements(creates);
                         deleteblock:=internalstatements(deletes);
                       end;
-                     constentries[i].temp:=ctempcreatenode.create(cpointerdef.getreusable(constentries[i].valuenode.resultdef),
+                     constentries[i].temp:=CTempCreateNode.create(CPointerDef.getreusable(constentries[i].valuenode.resultdef),
                        voidpointertype.size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
-                     addstatement(creates,cassignmentnode.create_internal(ctemprefnode.create(constentries[i].temp),
-                       caddrnode.create_internal(constentries[i].valuenode)));
+                     addstatement(creates,CAssignmentNode.create_internal(CTempRefNode.create(constentries[i].temp),
+                       CAddrNode.create_internal(constentries[i].valuenode)));
                      CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(int_regs_assigned);
                   end;
               end;
           end;
-        if assigned(createblock) then
+        if Assigned(createblock) then
           begin
             addstatement(statements,createblock);
             addstatement(statements,rootnode);
@@ -878,12 +878,12 @@ unit optcse;
             DoFirstPass(rootnode);
           end;
   {$ifdef csedebug}
-        writeln('====================================================================================');
-        writeln('Const optimization result');
-        writeln('====================================================================================');
-        printnode(output,rootnode);
-        writeln('====================================================================================');
-        writeln;
+        WriteLn('====================================================================================');
+        WriteLn('Const optimization result');
+        WriteLn('====================================================================================');
+        printnode(Output,rootnode);
+        WriteLn('====================================================================================');
+        WriteLn;
   {$endif csedebug}
         result:=nil;
       end;

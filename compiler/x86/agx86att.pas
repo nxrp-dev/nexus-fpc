@@ -28,37 +28,37 @@ unit agx86att;
 interface
 
     uses
-      cpubase,systems,
-      globtype,cgutils,
+      cpubase,Systems,
+      GlobType,cgutils,
       aasmbase,aasmtai,assemble,aggas;
 
     type
-      Tx86ATTAssembler=class(TGNUassembler)
+      Tx86ATTAssembler=class(TGNUAssembler)
         function sectionflags(secflags:TSectionFlags):string;override;
         constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
 
-      Tx86AppleGNUAssembler=class(TAppleGNUassembler)
+      Tx86AppleGNUAssembler=class(TAppleGNUAssembler)
         constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
       end;
 
-      Tx86AoutGNUAssembler=class(TAoutGNUassembler)
+      Tx86AoutGNUAssembler=class(TAoutGNUAssembler)
         constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
       end;
 
 
      Tx86InstrWriter=class(TCPUInstrWriter)
        private
-        procedure WriteReference(var ref : treference);
-        procedure WriteOper(const o:toper);
-        procedure WriteOper_jmp(const o:toper);
+        procedure WriteReference(var ref : TReference);
+        procedure WriteOper(const o:TOper);
+        procedure WriteOper_jmp(const o:TOper);
        protected
         fskipPopcountSuffix: boolean;
         { http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56656 }
         fNoInterUnitMovQ: boolean;
        public
-        procedure WriteInstruction(hp: tai);override;
+        procedure WriteInstruction(hp: TAI);override;
      end;
 
 
@@ -66,8 +66,8 @@ interface
   implementation
 
     uses
-      cutils,
-      verbose,
+      CUtils,
+      Verbose,
       itcpugas,
       cgbase,
       aasmcpu;
@@ -152,7 +152,7 @@ interface
                             Tx86InstrWriter
  ****************************************************************************}
 
-    procedure Tx86InstrWriter.WriteReference(var ref : treference);
+    procedure Tx86InstrWriter.WriteReference(var ref : TReference);
       begin
         with ref do
          begin
@@ -162,16 +162,16 @@ interface
            { directly! - DJGPP FAQ                              }
            if segment<>NR_NO then
              owner.writer.AsmWrite(gas_regname(segment)+':');
-           if assigned(symbol) then
+           if Assigned(symbol) then
              owner.writer.AsmWrite(symbol.name);
-           if assigned(relsymbol) then
+           if Assigned(relsymbol) then
              owner.writer.AsmWrite('-'+relsymbol.name);
            case ref.refaddr of
              addr_pic:
                begin
                  { @GOT and @GOTPCREL references are only allowed for symbol alone,
                    indexing, relsymbol or offset cannot be present. }
-                 if assigned(relsymbol) or (offset<>0) or (index<>NR_NO) then
+                 if Assigned(relsymbol) or (offset<>0) or (index<>NR_NO) then
                    InternalError(2015011801);
 {$ifdef x86_64}
                  if (base<>NR_RIP) then
@@ -198,22 +198,22 @@ interface
            end;
 
            if offset<0 then
-             owner.writer.AsmWrite(tostr(offset))
+             owner.writer.AsmWrite(ToStr(offset))
            else
             if (offset>0) then
              begin
-               if assigned(symbol) then
-                owner.writer.AsmWrite('+'+tostr(offset))
+               if Assigned(symbol) then
+                owner.writer.AsmWrite('+'+ToStr(offset))
                else
-                owner.writer.AsmWrite(tostr(offset));
+                owner.writer.AsmWrite(ToStr(offset));
              end
-           else if (index=NR_NO) and (base=NR_NO) and (not assigned(symbol)) then
+           else if (index=NR_NO) and (base=NR_NO) and (not Assigned(symbol)) then
              owner.writer.AsmWrite('0');
            if (index<>NR_NO) and (base=NR_NO) then
             begin
               owner.writer.AsmWrite('(,'+gas_regname(index));
               if scalefactor<>0 then
-                owner.writer.AsmWrite(','+tostr(scalefactor));
+                owner.writer.AsmWrite(','+ToStr(scalefactor));
               owner.writer.AsmWrite(')');
             end
            else
@@ -224,14 +224,14 @@ interface
               begin
                 owner.writer.AsmWrite('('+gas_regname(base)+','+gas_regname(index));
                 if scalefactor<>0 then
-                 owner.writer.AsmWrite(','+tostr(scalefactor));
+                 owner.writer.AsmWrite(','+ToStr(scalefactor));
                 owner.writer.AsmWrite(')');
               end;
          end;
       end;
 
 
-    procedure Tx86InstrWriter.WriteOper(const o:toper);
+    procedure Tx86InstrWriter.WriteOper(const o:TOper);
       begin
         if o.vopext and OTVE_VECTOR_SAE = OTVE_VECTOR_SAE then
          owner.writer.AsmWrite('{sae},');
@@ -260,26 +260,26 @@ interface
             else
               begin
                 owner.writer.AsmWrite('$');
-                if assigned(o.ref^.symbol) then
+                if Assigned(o.ref^.symbol) then
                  owner.writer.AsmWrite(o.ref^.symbol.name);
                 if o.ref^.offset>0 then
-                 owner.writer.AsmWrite('+'+tostr(o.ref^.offset))
+                 owner.writer.AsmWrite('+'+ToStr(o.ref^.offset))
                 else
                  if o.ref^.offset<0 then
-                  owner.writer.AsmWrite(tostr(o.ref^.offset))
+                  owner.writer.AsmWrite(ToStr(o.ref^.offset))
                 else
-                 if not(assigned(o.ref^.symbol)) then
+                 if not(Assigned(o.ref^.symbol)) then
                    owner.writer.AsmWrite('0');
               end;
           top_const :
-              owner.writer.AsmWrite('$'+tostr(o.val));
+              owner.writer.AsmWrite('$'+ToStr(o.val));
           else
-            internalerror(2020100810);
+            InternalError(2020100810);
         end;
 
            if o.vopext and OTVE_VECTOR_WRITEMASK = OTVE_VECTOR_WRITEMASK then
             begin
-              owner.writer.AsmWrite('{%k' + tostr(o.vopext and $07) + '} ');
+              owner.writer.AsmWrite('{%k' + ToStr(o.vopext and $07) + '} ');
               if o.vopext and OTVE_VECTOR_ZERO = OTVE_VECTOR_ZERO then
                owner.writer.AsmWrite('{z}');
             end;
@@ -300,7 +300,7 @@ interface
       end;
 
 
-    procedure Tx86InstrWriter.WriteOper_jmp(const o:toper);
+    procedure Tx86InstrWriter.WriteOper_jmp(const o:TOper);
       begin
         case o.typ of
           top_reg :
@@ -318,30 +318,30 @@ interface
                   if o.ref^.refaddr=addr_pic then
                     owner.writer.AsmWrite('@PLT');
                   if o.ref^.offset>0 then
-                   owner.writer.AsmWrite('+'+tostr(o.ref^.offset))
+                   owner.writer.AsmWrite('+'+ToStr(o.ref^.offset))
                   else
                    if o.ref^.offset<0 then
-                    owner.writer.AsmWrite(tostr(o.ref^.offset));
+                    owner.writer.AsmWrite(ToStr(o.ref^.offset));
                 end;
             end;
           top_const :
-            owner.writer.AsmWrite(tostr(o.val));
+            owner.writer.AsmWrite(ToStr(o.val));
           else
-            internalerror(2020100811);
+            InternalError(2020100811);
         end;
       end;
 
 
-    procedure Tx86InstrWriter.WriteInstruction(hp: tai);
+    procedure Tx86InstrWriter.WriteInstruction(hp: TAI);
       var
-       op       : tasmop;
+       op       : TAsmOp;
        calljmp  : boolean;
        i        : integer;
       begin
         if hp.typ <> ait_instruction then
           exit;
-        taicpu(hp).SetOperandOrder(op_att);
-        op:=taicpu(hp).opcode;
+        TAICPU(hp).SetOperandOrder(op_att);
+        op:=TAICPU(hp).opcode;
         calljmp:=is_calljmp(op);
 
         { see fNoInterUnitMovQ declaration comment }
@@ -349,29 +349,29 @@ interface
           begin
             if ((op=A_MOVQ) or
                 (op=A_VMOVQ)) and
-               (((taicpu(hp).oper[0]^.typ=top_reg) and
-                 (getregtype(taicpu(hp).oper[0]^.reg)=R_INTREGISTER)) or
-                ((taicpu(hp).oper[1]^.typ=top_reg) and
-                 (getregtype(taicpu(hp).oper[1]^.reg)=R_INTREGISTER))) then
+               (((TAICPU(hp).oper[0]^.typ=top_reg) and
+                 (getregtype(TAICPU(hp).oper[0]^.reg)=R_INTREGISTER)) or
+                ((TAICPU(hp).oper[1]^.typ=top_reg) and
+                 (getregtype(TAICPU(hp).oper[1]^.reg)=R_INTREGISTER))) then
               begin
                 if op=A_MOVQ then
                   op:=A_MOVD
                 else
                   op:=A_VMOVD;
-                taicpu(hp).opcode:=op;
+                TAICPU(hp).opcode:=op;
               end;
           end;
         owner.writer.AsmWrite(#9);
         { movsd should not be translated to movsl when there
           are (xmm) arguments }
-        if (op=A_MOVSD) and (taicpu(hp).ops>0) then
+        if (op=A_MOVSD) and (TAICPU(hp).ops>0) then
           owner.writer.AsmWrite('movsd')
         { the same applies to cmpsd as well }
-        else if (op=A_CMPSD) and (taicpu(hp).ops>0) then
+        else if (op=A_CMPSD) and (TAICPU(hp).ops>0) then
           owner.writer.AsmWrite('cmpsd')
         else
           owner.writer.AsmWrite(gas_op2str[op]);
-        owner.writer.AsmWrite(cond2str[taicpu(hp).condition]);
+        owner.writer.AsmWrite(cond2str[TAICPU(hp).condition]);
         { suffix needed ?  fnstsw,fldcw don't support suffixes
           with binutils 2.9.5 under linux }
 {        if (Taicpu(hp).oper[0]^.typ=top_reg) and
@@ -388,33 +388,33 @@ interface
            (not fskipPopcountSuffix or
             (op<>A_POPCNT)) and
            not(
-               (taicpu(hp).ops<>0) and
-               (taicpu(hp).oper[0]^.typ=top_reg) and
-               (getregtype(taicpu(hp).oper[0]^.reg)=R_FPUREGISTER)
+               (TAICPU(hp).ops<>0) and
+               (TAICPU(hp).oper[0]^.typ=top_reg) and
+               (getregtype(TAICPU(hp).oper[0]^.reg)=R_FPUREGISTER)
               ) then
         begin
           if (gas_needsuffix[op]<>AttSufMMX) or
-	     (taicpu(hp).opsize in [S_XMM,S_YMM]) then
-          owner.writer.AsmWrite(gas_opsize2str[taicpu(hp).opsize]);
+	     (TAICPU(hp).opsize in [S_XMM,S_YMM]) then
+          owner.writer.AsmWrite(gas_opsize2str[TAICPU(hp).opsize]);
         end;
 
         { process operands }
-        if taicpu(hp).ops<>0 then
+        if TAICPU(hp).ops<>0 then
           begin
             if calljmp then
              begin
                owner.writer.AsmWrite(#9);
-               WriteOper_jmp(taicpu(hp).oper[0]^);
+               WriteOper_jmp(TAICPU(hp).oper[0]^);
              end
             else
              begin
-               for i:=0 to taicpu(hp).ops-1 do
+               for i:=0 to TAICPU(hp).ops-1 do
                  begin
                    if i=0 then
                      owner.writer.AsmWrite(#9)
                    else
                      owner.writer.AsmWrite(',');
-                   WriteOper(taicpu(hp).oper[i]^);
+                   WriteOper(TAICPU(hp).oper[i]^);
                  end;
              end;
           end;

@@ -25,7 +25,7 @@ unit symconst;
 interface
 
 uses
-  globtype;
+  GlobType;
 
 const
   def_alignment     = 4;
@@ -498,7 +498,7 @@ type
   { synthetic procdef supplementary information (tprocdef.skpara) }
   TSKParaInterfaceWrapper = record
     pd: pointer;
-    offset: longint;
+    offset: LongInt;
   end;
   PSKParaInterfaceWrapper = ^TSKParaInterfaceWrapper;
 
@@ -764,7 +764,7 @@ type
     objcinstancemethods,objcclassmethods,
     objcprotinstancemethodsopt,objcprotclassmethodsopt
   );
-  tobjcrttitype = objcmetartti..high(TRTTIType);
+  TObjCRTTIType = objcmetartti..high(TRTTIType);
 
   { prefixes for internally generated type names (centralised to avoid
     accidental collisions) }

@@ -41,14 +41,14 @@ unit LexMsgs;
 interface
 
 
-var errors, warnings : Integer;
+var Errors, Warnings : Integer;
   (* - current error and warning count *)
-procedure error(msg : String; pos : Integer);
+procedure Error(Msg : String; POS : Integer);
   (* - print current input line and error message (pos denotes position to
        mark in source file line) *)
-procedure warning(msg : String; pos : Integer);
+procedure Warning(Msg : String; POS : Integer);
   (* - print warning message *)
-procedure fatal(msg : String);
+procedure Fatal(Msg : String);
   (* - writes a fatal error message, erases Lex output file and terminates
        the program with errorlevel 1 *)
 
@@ -56,118 +56,118 @@ const
 
 (* sign-on and usage message: *)
 
-sign_on = 'TP Lex Version 4.1a [April 2000], Copyright (c) 1990-2000 Albert Graef';
+SignOn = 'TP Lex Version 4.1a [April 2000], Copyright (c) 1990-2000 Albert Graef';
 {$ifdef Unix}
-usage   = 'Usage: plex [options] lex-file[.l] [output-file[.pas]]';
+Usage   = 'Usage: plex [options] lex-file[.l] [output-file[.pas]]';
 {$else}
-usage   = 'Usage: lex [options] lex-file[.l] [output-file[.pas]]';
+Usage   = 'Usage: lex [options] lex-file[.l] [output-file[.pas]]';
 {$endif}
-options = 'Options: -v verbose, -o optimize';
+Options = 'Options: -v verbose, -o optimize';
 
 (* command line error messages: *)
 
-invalid_option                  = 'invalid option ';
-illegal_no_args                 = 'illegal number of parameters';
+InvalidOption                  = 'invalid option ';
+IllegalNoArgs                 = 'illegal number of parameters';
 
 (* syntax errors: *)
 
-unmatched_lbrace                = '101: unmatched %{';
-syntax_error                    = '102: syntax error';
-unexpected_eof                  = '103: unexpected end of file';
+UnmatchedLBrace                = '101: unmatched %{';
+SyntaxError                    = '102: syntax error';
+UnexpectedEOF                  = '103: unexpected end of file';
 
 (* semantic errors: *)
 
-symbol_already_defined          = '201: symbol already defined';
-undefined_symbol                = '202: undefined symbol';
-invalid_charnum                 = '203: invalid character number';
-empty_grammar                   = '204: empty grammar?';
+SymbolAlreadyDefined          = '201: symbol already defined';
+UndefinedSymbol                = '202: undefined symbol';
+InvalidCharNum                 = '203: invalid character number';
+EmptyGrammar                   = '204: empty grammar?';
 
 (* fatal errors: *)
 
-cannot_open_file                = 'FATAL: cannot open file ';
-write_error                     = 'FATAL: write error';
-mem_overflow                    = 'FATAL: memory overflow';
-intset_overflow                 = 'FATAL: integer set overflow';
-sym_table_overflow              = 'FATAL: symbol table overflow';
-pos_table_overflow              = 'FATAL: position table overflow';
-state_table_overflow            = 'FATAL: state table overflow';
-trans_table_overflow            = 'FATAL: transition table overflow';
-macro_stack_overflow            = 'FATAL: macro stack overflow';
+CannotOpenFile                = 'FATAL: cannot open file ';
+WriteError                     = 'FATAL: write error';
+MemOverflow                    = 'FATAL: memory overflow';
+IntsetOverflow                 = 'FATAL: integer set overflow';
+SymTableOverflow              = 'FATAL: symbol table overflow';
+PosTableOverflow              = 'FATAL: position table overflow';
+StateTableOverflow            = 'FATAL: state table overflow';
+TransTableOverflow            = 'FATAL: transition table overflow';
+MacroStackOverflow            = 'FATAL: macro stack overflow';
 
 implementation
 
 uses LexBase;
 
-procedure position(var f : Text;
-            lineNo : integer;
-            line : String;
-            pos : integer);
+procedure Position(var F : Text;
+            LineNo : Integer;
+            Line : String;
+            POS : Integer);
   (* writes a position mark of the form
      gfilename (lineno): line
                           ^
      on f with the caret ^ positioned at pos in line
      a subsequent write starts at the next line, indented with tab *)
   var
-    line1, line2 : String;
+    Line1, Line2 : String;
   begin
     (* this hack handles tab characters in line: *)
-    line1 := intStr(lineNo)+': '+line;
-    line2 := blankStr(intStr(lineNo)+': '+copy(line, 1, pos-1));
-    writeln(f, line1);
-    writeln(f, line2, '^');
-    write(f, tab)
+    Line1 := IntStr(LineNo)+': '+Line;
+    Line2 := BlankStr(IntStr(LineNo)+': '+Copy(Line, 1, POS-1));
+    WriteLn(F, Line1);
+    WriteLn(F, Line2, '^');
+    Write(F, Tab)
   end(*position*);
 
-procedure error(msg : String; pos : Integer);
+procedure Error(Msg : String; POS : Integer);
   begin
-    inc(errors);
-    writeln;
-    position(output, lno, line, pos);
-    writeln(msg);
-    writeln(yylst);
-    position(yylst, lno, line, pos);
-    writeln(yylst, msg);
-    if ioresult<>0 then ;
+    Inc(Errors);
+    WriteLn;
+    Position(Output, LNo, Line, POS);
+    WriteLn(Msg);
+    WriteLn(YYLst);
+    Position(YYLst, LNo, Line, POS);
+    WriteLn(YYLst, Msg);
+    if IOResult<>0 then ;
   end(*error*);
 
-procedure warning(msg : String; pos : Integer);
+procedure Warning(Msg : String; POS : Integer);
   begin
-    inc(warnings);
-    writeln;
-    position(output, lno, line, pos);
-    writeln(msg);
-    writeln(yylst);
-    position(yylst, lno, line, pos);
-    writeln(yylst, msg);
-    if ioresult<>0 then ;
+    Inc(Warnings);
+    WriteLn;
+    Position(Output, LNo, Line, POS);
+    WriteLn(Msg);
+    WriteLn(YYLst);
+    Position(YYLst, LNo, Line, POS);
+    WriteLn(YYLst, Msg);
+    if IOResult<>0 then ;
   end(*warning*);
 
-procedure fatal(msg : String);
+procedure Fatal(Msg : String);
   begin
-    writeln;
-    writeln(msg);
-    close(yyin); close(yyout); close(yylst); erase(yyout);
-    halt(1)
+    WriteLn;
+    WriteLn(Msg);
+    Close(YYIn); Close(YYOut); Close(YYLst); Erase(YYOut);
+    Halt(1)
   end(*fatal*);
 
 {$ifndef fpc}
 {$IFNDEF Win32}
-function heapErrorHandler ( size : Word ): Integer;
+function HeapErrorHandler ( Size : Word ): Integer;
   begin
-    if size>0 then
-      fatal(mem_overflow) (* never returns *)
+    if Size>0 then
+      Fatal(MemOverflow) (* never returns *)
     else
-      heapErrorHandler := 1
+      HeapErrorHandler := 1
   end(*heapErrorHandler*);
 {$ENDIF}
 {$endif}
 
 begin
-  errors := 0; warnings := 0;
+  Errors := 0; Warnings := 0;
 {$ifndef fpc}
 {$IFNDEF Win32}
   (* install heap error handler: *)
-  heapError := @heapErrorHandler;
+  HeapError := @HeapErrorHandler;
 {$ENDIF}
 {$endif}
 end(*LexMsgs*).

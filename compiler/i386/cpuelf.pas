@@ -28,9 +28,9 @@ interface
 implementation
 
   uses
-    globtype,cclasses,
-    verbose,elfbase,
-    systems,aasmbase,ogbase,ogelf,assemble;
+    GlobType,CClasses,
+    Verbose,elfbase,
+    Systems,aasmbase,ogbase,ogelf,assemble;
 
   type
     TElfExeOutput386=class(TElfExeOutput)
@@ -40,7 +40,7 @@ implementation
       procedure WriteFirstPLTEntry;override;
       procedure WritePLTEntry(exesym:TExeSymbol);override;
       procedure WriteIndirectPLTEntry(exesym:TExeSymbol);override;
-      procedure GOTRelocPass1(objsec:TObjSection;var idx:longint);override;
+      procedure GOTRelocPass1(objsec:TObjSection;var idx:LongInt);override;
       procedure DoRelocationFixup(objsec:TObjSection);override;
     end;
 
@@ -151,9 +151,9 @@ implementation
       else
         begin
           pltobjsec.writeBytes(#$FF#$35);         // push got+4
-          pltobjsec.writeReloc_internal(gotpltobjsec,sizeof(pint),4,RELOC_ABSOLUTE);
+          pltobjsec.writeReloc_internal(gotpltobjsec,sizeof(PInt),4,RELOC_ABSOLUTE);
           pltobjsec.writeBytes(#$FF#$25);         // jmp  *got+8
-          pltobjsec.writeReloc_internal(gotpltobjsec,2*sizeof(pint),4,RELOC_ABSOLUTE);
+          pltobjsec.writeReloc_internal(gotpltobjsec,2*sizeof(PInt),4,RELOC_ABSOLUTE);
         end;
       pltobjsec.writeBytes(#$90#$90#$90#$90);     // nop
     end;
@@ -162,7 +162,7 @@ implementation
   procedure TElfExeOutput386.WritePLTEntry(exesym:TExeSymbol);
     var
       got_offset: aword;
-      tmp:pint;
+      tmp:PInt;
     begin
       got_offset:=gotpltobjsec.size;
       if IsSharedLibrary then
@@ -184,14 +184,14 @@ implementation
       pltobjsec.write(tmp,4);
 
       { write a .got.plt slot pointing back to the 'push' instruction }
-      gotpltobjsec.writeReloc_internal(pltobjsec,pltobjsec.size-(16-6),sizeof(pint),RELOC_ABSOLUTE);
+      gotpltobjsec.writeReloc_internal(pltobjsec,pltobjsec.size-(16-6),sizeof(PInt),RELOC_ABSOLUTE);
 
       { write a .rel.plt entry }
-      pltrelocsec.writeReloc_internal(gotpltobjsec,got_offset,sizeof(pint),RELOC_ABSOLUTE);
+      pltrelocsec.writeReloc_internal(gotpltobjsec,got_offset,sizeof(PInt),RELOC_ABSOLUTE);
       got_offset:=(exesym.dynindex shl 8) or R_386_JUMP_SLOT;
-      pltrelocsec.write(got_offset,sizeof(pint));
+      pltrelocsec.write(got_offset,sizeof(PInt));
       if ElfTarget.relocs_use_addend then
-        pltrelocsec.writezeros(sizeof(pint));
+        pltrelocsec.writezeros(sizeof(PInt));
     end;
 
 
@@ -202,7 +202,7 @@ implementation
     end;
 
 
-  procedure TElfExeOutput386.GOTRelocPass1(objsec:TObjSection;var idx:longint);
+  procedure TElfExeOutput386.GOTRelocPass1(objsec:TObjSection;var idx:LongInt);
     var
       objsym:TObjSymbol;
       objreloc:TObjRelocation;
@@ -225,7 +225,7 @@ implementation
           if (oso_executable in objsec.SecOptions) or
             not (oso_write in objsec.SecOptions) then
             begin
-              if assigned(objreloc.symbol) and assigned(objreloc.symbol.exesymbol) then
+              if Assigned(objreloc.symbol) and Assigned(objreloc.symbol.exesymbol) then
                 begin
                   objsym:=objreloc.symbol.exesymbol.ObjSymbol;
                   objsym.refs:=objsym.refs or symref_from_text;
@@ -267,14 +267,14 @@ implementation
               exit;
             { In shared library PC32 reloc to external symbol cannot be redirected
               to PLT entry, because PIC PLT relies on ebx register set properly. }
-            if assigned(objreloc.symbol) and
+            if Assigned(objreloc.symbol) and
               (
                 (objreloc.symbol.objsection=nil) or
                 (oso_plt in objreloc.symbol.objsection.SecOptions)
               ) then
               begin
                 { Must be a dynamic symbol }
-                if not (assigned(objreloc.symbol.exesymbol) and
+                if not (Assigned(objreloc.symbol.exesymbol) and
                    (objreloc.symbol.exesymbol.dynindex<>0)) then
                   InternalError(2012101201);
                 if (oso_executable in objsec.SecOptions) or
@@ -298,11 +298,11 @@ implementation
 
       { the GOT slot itself, and a dynamic relocation for it }
       { TODO: only data symbols must get here }
-      if gotoff=gotobjsec.Data.size+sizeof(pint) then
+      if gotoff=gotobjsec.Data.size+sizeof(PInt) then
         begin
-          gotobjsec.write(relocval,sizeof(pint));
+          gotobjsec.write(relocval,sizeof(PInt));
 
-          tmp:=gotobjsec.mempos+gotoff-sizeof(pint);
+          tmp:=gotobjsec.mempos+gotoff-sizeof(PInt);
           if (objsym.exesymbol.dynindex>0) then
             begin
               if (reltyp=R_386_TLS_IE) then
@@ -320,7 +320,7 @@ implementation
 
   procedure TElfExeOutput386.DoRelocationFixup(objsec:TObjSection);
     var
-      i,zero:longint;
+      i,zero:LongInt;
       objreloc: TObjRelocation;
       address,
       relocval : aint;
@@ -359,25 +359,25 @@ implementation
               data.Seek(objreloc.dataoffset);
               data.Read(address,4);
             end;
-          if assigned(objreloc.symbol) then
+          if Assigned(objreloc.symbol) then
             begin
               relocsec:=objreloc.symbol.objsection;
               relocval:=objreloc.symbol.address;
             end
-          else if assigned(objreloc.objsection) then
+          else if Assigned(objreloc.objsection) then
             begin
               relocsec:=objreloc.objsection;
               relocval:=objreloc.objsection.mempos
             end
           else
-            internalerror(2012060702);
+            InternalError(2012060702);
 
           { Only debug sections are allowed to have relocs pointing to unused sections }
-          if assigned(relocsec) and not (relocsec.used and assigned(relocsec.exesection)) and
+          if Assigned(relocsec) and not (relocsec.used and Assigned(relocsec.exesection)) and
              not (oso_debug in objsec.secoptions) then
             begin
-              writeln(objsec.fullname,' references ',relocsec.fullname);
-              internalerror(2012060703);
+              WriteLn(objsec.fullname,' references ',relocsec.fullname);
+              InternalError(2012060703);
             end;
 
           PC:=objsec.mempos+objreloc.dataoffset;
@@ -426,7 +426,7 @@ implementation
                 begin
                   MaybeWriteGOTEntry(reltyp,relocval,objreloc.symbol);
 
-                  relocval:=gotobjsec.mempos+objreloc.symbol.exesymbol.gotoffset-sizeof(pint)-gotsymbol.address;
+                  relocval:=gotobjsec.mempos+objreloc.symbol.exesymbol.gotoffset-sizeof(PInt)-gotsymbol.address;
                   address:=address+relocval;
                 end;
 
@@ -442,7 +442,7 @@ implementation
                   MaybeWriteGOTEntry(reltyp,relocval,objreloc.symbol);
 
                   { Resolves to *absolute* offset of GOT slot }
-                  relocval:=gotobjsec.mempos+objreloc.symbol.exesymbol.gotoffset-sizeof(pint);
+                  relocval:=gotobjsec.mempos+objreloc.symbol.exesymbol.gotoffset-sizeof(PInt);
                   address:=address+relocval;
                 end;
 
@@ -472,8 +472,8 @@ implementation
 
               else
                 begin
-                  writeln(reltyp);
-                  internalerror(2006040108);
+                  WriteLn(reltyp);
+                  InternalError(2006040108);
                 end;
             end
           else           { not relocsec.Used }

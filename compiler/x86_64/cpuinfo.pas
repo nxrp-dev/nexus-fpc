@@ -26,13 +26,13 @@ Unit cpuinfo;
 Interface
 
   uses
-    globtype;
+    GlobType;
 
 Type
 
 
 
-   tcputype =
+   TCPUType =
       (cpu_none,
        cpu_x86_64,
        cpu_x86_64_v1,
@@ -58,7 +58,7 @@ Type
        cpu_zen5
       );
 
-   tfputype =
+   TFPUType =
      (fpu_none,
 //      fpu_soft,  { generic }
       fpu_sse64,
@@ -76,13 +76,13 @@ Type
       fpu_x86_64_v4
      );
 
-   tcontrollertype =
+   TControllerType =
      (ct_none
      );
 
-   tcontrollerdatatype = record
-      controllertypestr, controllerunitstr: string[20];
-      cputype: tcputype; fputype: tfputype;
+   TControllerDataType = record
+      ControllerTypeStr, controllerunitstr: string[20];
+      CPUType: TCPUType; FPUType: TFPUType;
       flashbase, flashsize, srambase, sramsize, eeprombase, eepromsize, bootbase, bootsize: dword;
    end;
 
@@ -100,9 +100,9 @@ Const
      but we don't care about this warning }
    {$PUSH}
     {$WARN 3177 OFF}
-   embedded_controllers : array [tcontrollertype] of tcontrollerdatatype =
+   embedded_controllers : array [TControllerType] of TControllerDataType =
    (
-      (controllertypestr:''; controllerunitstr:''; cputype:cpu_none; fputype:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
+      (ControllerTypeStr:''; controllerunitstr:''; CPUType:cpu_none; FPUType:fpu_none; flashbase:0; flashsize:0; srambase:0; sramsize:0));
    {$POP}
 
 var
@@ -125,7 +125,7 @@ var
    ];
 
 const
-   cputypestr : array[tcputype] of string[16] = ('',
+   CPUTypeStr : array[TCPUType] of string[16] = ('',
      'ATHLON64',
      'X86-64',
      'X86-64-V1',
@@ -150,7 +150,7 @@ const
      'ZEN5'
    );
 
-   fputypestr : array[tfputype] of string[9] = (
+   FPUTypeStr : array[TFPUType] of string[9] = (
      'NONE',
 //     'SOFT',
      'SSE64',
@@ -189,7 +189,7 @@ const
    level4optimizerswitches = genericlevel4optimizerswitches + level3optimizerswitches + [cs_userbp];
 
 type
-   tcpuflags =
+   TCPUFlags =
       (CPUX86_HAS_BTX,          { Bit-test instructions (BT, BTC, BTR and BTS) are available }
        CPUX86_HAS_CMOV,         { CMOVcc instructions are available }
        CPUX86_HAS_SSEUNIT,      { SSE instructions are available }
@@ -207,7 +207,7 @@ type
        CPUX86_HAS_OSXSAVE       { XGETBV is available }
       );
 
-   tfpuflags =
+   TFPUFlags =
       (FPUX86_HAS_SSE3,
        FPUX86_HAS_SSE4_1,
        FPUX86_HAS_SSE4_2,
@@ -249,7 +249,7 @@ type
    cpu_x86_64_v4_flags = cpu_x86_64_v3_flags; { everything is in the fpu flags here }
 
  var
-   cpu_capabilities : array[tcputype] of set of tcpuflags = (
+   cpu_capabilities : array[TCPUType] of set of TCPUFlags = (
      { cpu_none      } [],
      { Athlon64      } cpu_x86_64_v1_flags,
      { cpu_x86_64    } cpu_x86_64_v1_flags,
@@ -281,7 +281,7 @@ type
    fpu_x86_64_v3_flags = fpu_x86_64_v2_flags+[FPUX86_HAS_AVXUNIT,FPUX86_HAS_FMA,FPUX86_HAS_F16C,FPUX86_HAS_AVX2];
    fpu_x86_64_v4_flags = fpu_x86_64_v3_flags+[FPUX86_HAS_32MMREGS,FPUX86_HAS_AVX512F,FPUX86_HAS_AVX512BW,FPUX86_HAS_AVX512CD,FPUX86_HAS_AVX512DQ,FPUX86_HAS_AVX512VL];
 
-   fpu_capabilities : array[tfputype] of set of tfpuflags = (
+   fpu_capabilities : array[TFPUType] of set of TFPUFlags = (
       { fpu_none      }  [],
       { fpu_sse64     }  [],
       { fpu_x86_64_v1 }  fpu_x86_64_v1_flags,

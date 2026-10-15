@@ -27,8 +27,8 @@ unit cgutils;
   interface
 
     uses
-      globtype,
-      cclasses,
+      GlobType,
+      CClasses,
       aasmbase,
       cpubase,cgbase;
 
@@ -37,16 +37,16 @@ unit cgutils;
         evaluated as a constant expression by the compiler -- this is
         basically maxcpureg = max(max(first_int_imreg,first_fpu_imreg),first_mm_imreg)-1 }
       tmpmaxcpufpuintreg = first_int_imreg + ((first_fpu_imreg - first_int_imreg) * ord(first_int_imreg < first_fpu_imreg));
-      maxcpuregister = (tmpmaxcpufpuintreg + ((first_mm_imreg - tmpmaxcpufpuintreg) * ord(tmpmaxcpufpuintreg < first_mm_imreg)))-1;
+      MaxCPURegister = (tmpmaxcpufpuintreg + ((first_mm_imreg - tmpmaxcpufpuintreg) * ord(tmpmaxcpufpuintreg < first_mm_imreg)))-1;
 
     type
       { Set type definition for cpuregisters }
-      tcpuregisterset = set of 0..maxcpuregister;
-      tcpuregisterarray = array of tsuperregister;
+      TCPURegisterSet = set of 0..MaxCPURegister;
+      TCPURegisterArray = array of TSuperRegister;
 
       { use record for type-safety; should only be accessed directly by temp
         manager }
-      treftemppos = record
+      TRefTempPos = record
         val: asizeint;
       end;
 
@@ -57,97 +57,97 @@ unit cgutils;
         variable must have been performed), but not for reads (these variables' values
         won't be changed behind the back of the current code just because they're in a
         try-block) }
-      tvolatility = (vol_read,vol_write);
-      tvolatilityset = set of tvolatility;
+      TVolatility = (vol_read,vol_write);
+      TVolatilitySet = set of TVolatility;
 {$packset default}
 
       { reference record, reordered for best alignment }
-      preference = ^treference;
-      treference = record
+      PReference = ^TReference;
+      TReference = record
          offset      : asizeint;
          symbol,
-         relsymbol   : tasmsymbol;
-         temppos     : treftemppos;
+         relsymbol   : TAsmSymbol;
+         temppos     : TRefTempPos;
 {$if defined(x86)}
          segment,
 {$endif defined(x86)}
          base,
-         index       : tregister;
-         refaddr     : trefaddr;
+         index       : TRegister;
+         refaddr     : TRefAddr;
          scalefactor : byte;
 {$ifdef aarch64}
-         symboldata  : tlinkedlistitem;
+         symboldata  : TLinkedListItem;
          shiftimm    : byte;
-         addressmode : taddressmode;
-         shiftmode   : tshiftmode;
+         addressmode : TAddressMode;
+         shiftmode   : TShiftMode;
 {$endif aarch64}
-         volatility: tvolatilityset;
+         volatility: TVolatilitySet;
          alignment : byte;
       end;
 
    const
-     ctempposinvalid: treftemppos = (val: low(treftemppos.val));
+     ctempposinvalid: TRefTempPos = (val: low(TRefTempPos.val));
 
    type
-      tsubsetregister = record
-        subsetreg : tregister;
+      TSubsetRegister = record
+        subsetreg : TRegister;
         startbit, bitlen: byte;
-        subsetregsize: tcgsize;
+        subsetregsize: TCgSize;
       end;
 
-      tsubsetreference = record
-        ref: treference;
-        bitindexreg: tregister;
+      TSubsetReference = record
+        ref: TReference;
+        bitindexreg: TRegister;
         startbit, bitlen: byte;
       end;
 
-      tlocation = record
+      TLocation = record
          loc  : TCGLoc;
-         size : TCGSize;
+         size : TCgSize;
          case TCGLoc of
 {$ifdef cpuflags}
-            LOC_FLAGS : (resflags : tresflags);
+            LOC_FLAGS : (resflags : TResFlags);
 {$endif cpuflags}
             LOC_CONSTANT : (
-              case longint of
+              case LongInt of
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
                 1 : (value : Int64);
 {$else cpu64bitalu or cpuhighleveltarget}
     {$ifdef FPC_BIG_ENDIAN}
-                1 : (_valuedummy,value : longint);
+                1 : (_valuedummy,value : LongInt);
     {$else FPC_BIG_ENDIAN}
-                1 : (value : longint);
+                1 : (value : LongInt);
     {$endif FPC_BIG_ENDIAN}
 {$endif cpu64bitalu or cpuhighleveltarget}
                 2 : (value64 : Int64);
               );
             LOC_CREFERENCE,
-            LOC_REFERENCE : (reference : treference);
+            LOC_REFERENCE : (reference : TReference);
             { segment in reference at the same place as in loc_register }
             LOC_REGISTER,
             LOC_CREGISTER : (
-              case longint of
-                1 : (register : tregister;
+              case LongInt of
+                1 : (register : TRegister;
                      { some x86_64 targets require two function result registers }
-                     registerhi : tregister;
+                     registerhi : TRegister;
                     );
 {$ifdef cpu64bitalu}
                 { overlay a 128 Bit register type }
-                2 : (register128 : tregister128);
+                2 : (register128 : TRegister128);
 {$else if not defined(cpuhighleveltarget}
                 { overlay a 64 Bit register type }
-                2 : (register64 : tregister64);
+                2 : (register64 : TRegister64);
 {$endif cpu64bitalu and not cpuhighleveltarget}
               );
             LOC_SUBSETREG,
             LOC_CSUBSETREG : (
-              sreg: tsubsetregister;
+              sreg: TSubsetRegister;
             );
             LOC_SUBSETREF : (
-              sref: tsubsetreference;
+              sref: TSubsetReference;
             );
             LOC_JUMP : (
-              truelabel, falselabel: tasmlabel;
+              truelabel, falselabel: TAsmLabel;
             );
       end;
 
@@ -155,31 +155,31 @@ unit cgutils;
     { trerefence handling }
 
     {# Clear to zero a treference }
-    procedure reference_reset(var ref : treference; alignment: longint; volatility: tvolatilityset);
+    procedure reference_reset(var ref : TReference; alignment: LongInt; volatility: TVolatilitySet);
     {# Clear to zero a treference, and set is base address
        to base register.
     }
-    procedure reference_reset_base(var ref: treference; base: tregister; offset: asizeint; temppos: treftemppos; alignment: longint; volatility: tvolatilityset);
-    procedure reference_reset_symbol(var ref: treference;sym: tasmsymbol; offset: asizeint; alignment : longint; volatility: tvolatilityset);
+    procedure reference_reset_base(var ref: TReference; base: TRegister; offset: asizeint; temppos: TRefTempPos; alignment: LongInt; volatility: TVolatilitySet);
+    procedure reference_reset_symbol(var ref: TReference;sym: TAsmSymbol; offset: asizeint; alignment : LongInt; volatility: TVolatilitySet);
     { This routine verifies if two references are the same, and
        if so, returns TRUE, otherwise returns false.
     }
-    function references_equal(const sref,dref : treference) : boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function references_equal(const sref,dref : TReference) : boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
 
     { tlocation handling }
 
     { cannot be used for loc_(c)reference, because that one requires an alignment }
-    procedure location_reset(var l : tlocation;lt:TCGNonRefLoc;lsize:TCGSize);
+    procedure location_reset(var l : TLocation;lt:TCGNonRefLoc;lsize:TCgSize);
     { for loc_(c)reference }
-    procedure location_reset_ref(var l : tlocation;lt:TCGRefLoc;lsize:TCGSize; alignment: longint; volatility: tvolatilityset);
+    procedure location_reset_ref(var l : TLocation;lt:TCGRefLoc;lsize:TCgSize; alignment: LongInt; volatility: TVolatilitySet);
     { for loc_jump }
-    procedure location_reset_jump(out l: tlocation; truelab, falselab: tasmlabel);
-    procedure location_copy(var destloc:tlocation; const sourceloc : tlocation);
-    procedure location_swap(var destloc,sourceloc : tlocation);
-    function location_reg2string(const locreg: tlocation): string;
+    procedure location_reset_jump(out l: TLocation; truelab, falselab: TAsmLabel);
+    procedure location_copy(var destloc:TLocation; const sourceloc : TLocation);
+    procedure location_swap(var destloc,sourceloc : TLocation);
+    function location_reg2string(const locreg: TLocation): string;
 
     { returns r with the given alignment }
-    function setalignment(const r : treference;b : byte) : treference;
+    function setalignment(const r : TReference;b : byte) : TReference;
 
     { Helper function which calculate "magic" values for replacement of division
       by constant operation by multiplication. See the "PowerPC compiler developer
@@ -201,26 +201,26 @@ unit cgutils;
 implementation
 
 uses
-  systems,
-  verbose,
-  globals,
-  cpuinfo,
+  Systems,
+  Verbose,
+  Globals,
+  CPUInfo,
   cgobj;
 
 {****************************************************************************
                                   TReference
 ****************************************************************************}
 
-    procedure reference_reset(var ref: treference; alignment: longint; volatility: tvolatilityset);
+    procedure reference_reset(var ref: TReference; alignment: LongInt; volatility: TVolatilitySet);
       begin
-        FillChar(ref,sizeof(treference),0);
+        FillChar(ref,sizeof(TReference),0);
         ref.alignment:=alignment;
         ref.volatility:=volatility;
         ref.temppos:=ctempposinvalid;
       end;
 
 
-    procedure reference_reset_base(var ref: treference; base: tregister; offset: asizeint; temppos: treftemppos ; alignment: longint; volatility: tvolatilityset);
+    procedure reference_reset_base(var ref: TReference; base: TRegister; offset: asizeint; temppos: TRefTempPos ; alignment: LongInt; volatility: TVolatilitySet);
       begin
         reference_reset(ref,alignment,volatility);
         ref.base:=base;
@@ -229,7 +229,7 @@ uses
       end;
 
 
-    procedure reference_reset_symbol(var ref: treference; sym: tasmsymbol; offset: asizeint; alignment: longint; volatility: tvolatilityset);
+    procedure reference_reset_symbol(var ref: TReference; sym: TAsmSymbol; offset: asizeint; alignment: LongInt; volatility: TVolatilitySet);
       begin
         reference_reset(ref,alignment,volatility);
         ref.symbol:=sym;
@@ -238,14 +238,14 @@ uses
       end;
 
 
-    function references_equal(const sref,dref : treference):boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function references_equal(const sref,dref : TReference):boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        references_equal:=CompareByte(sref,dref,sizeof(treference))=0;
+        references_equal:=CompareByte(sref,dref,sizeof(TReference))=0;
       end;
 
 
     { returns r with the given alignment }
-    function setalignment(const r : treference;b : byte) : treference;
+    function setalignment(const r : TReference;b : byte) : TReference;
       begin
         result:=r;
         result.alignment:=b;
@@ -255,19 +255,19 @@ uses
                                   TLocation
 ****************************************************************************}
 
-    procedure location_reset(var l : tlocation;lt:TCGNonRefLoc;lsize:TCGSize);
+    procedure location_reset(var l : TLocation;lt:TCGNonRefLoc;lsize:TCgSize);
       begin
-        FillChar(l,sizeof(tlocation),0);
+        FillChar(l,sizeof(TLocation),0);
         l.loc:=lt;
         l.size:=lsize;
         if l.loc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_JUMP] then
           { call location_reset_ref/jump instead }
-          internalerror(2009020705);
+          InternalError(2009020705);
       end;
 
-  procedure location_reset_ref(var l: tlocation; lt: TCGRefLoc; lsize: TCGSize; alignment: longint; volatility: tvolatilityset);
+  procedure location_reset_ref(var l: TLocation; lt: TCGRefLoc; lsize: TCgSize; alignment: LongInt; volatility: TVolatilitySet);
     begin
-      FillChar(l,sizeof(tlocation),0);
+      FillChar(l,sizeof(TLocation),0);
       l.loc:=lt;
       l.size:=lsize;
       l.reference.alignment:=alignment;
@@ -276,9 +276,9 @@ uses
     end;
 
 
-    procedure location_reset_jump(out l: tlocation; truelab, falselab: tasmlabel);
+    procedure location_reset_jump(out l: TLocation; truelab, falselab: TAsmLabel);
       begin
-        FillChar(l,sizeof(tlocation),0);
+        FillChar(l,sizeof(TLocation),0);
         l.loc:=LOC_JUMP;
         l.size:=OS_NO;
         l.truelabel:=truelab;
@@ -286,15 +286,15 @@ uses
       end;
 
 
-    procedure location_copy(var destloc:tlocation; const sourceloc : tlocation);
+    procedure location_copy(var destloc:TLocation; const sourceloc : TLocation);
       begin
         destloc:=sourceloc;
       end;
 
 
-    procedure location_swap(var destloc,sourceloc : tlocation);
+    procedure location_swap(var destloc,sourceloc : TLocation);
       var
-        swapl : tlocation;
+        swapl : TLocation;
       begin
         swapl := destloc;
         destloc := sourceloc;
@@ -302,13 +302,13 @@ uses
       end;
 
 
-    function location_reg2string(const locreg: tlocation): string;
+    function location_reg2string(const locreg: TLocation): string;
       begin
         if not (locreg.loc in [LOC_REGISTER,LOC_CREGISTER,
             LOC_MMXREGISTER,LOC_CMMXREGISTER,
             LOC_MMREGISTER,LOC_CMMREGISTER,
             LOC_FPUREGISTER,LOC_CFPUREGISTER]) then
-          internalerror(2013122301);
+          InternalError(2013122301);
 
         if locreg.loc in [LOC_REGISTER,LOC_CREGISTER] then
           begin
@@ -501,7 +501,7 @@ uses
     function needs_check_for_fpu_exceptions: boolean;
       begin
 {$if defined(AARCH64)}
-        result:=cs_check_fpu_exceptions in CurrentSettings.localswitches;
+        result:=cs_check_fpu_exceptions in CurrentSettings.LocalSwitches;
 {$else}
         result:=false;
 {$endif}

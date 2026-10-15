@@ -35,65 +35,65 @@ unit optdeadstore;
   implementation
 
     uses
-      verbose,globtype,cdynset,globals,
-      procinfo,pass_1,
+      Verbose,GlobType,CDynSet,Globals,
+      ProcInfo,pass_1,
       nutils,
       nbas,nld,
       optbase,
-      symsym,symconst;
+      SymSym,symconst;
 
 
-    function deadstoreelim(var n: TNode; arg: pointer): foreachnoderesult;
+    function deadstoreelim(var n: TNode; arg: pointer): TForEachNodeResult;
       var
-        a: tassignmentnode;
+        a: TAssignmentNode;
         redundant: boolean;
       begin
         result:=fen_true;
         if (n.nodetype=statementn) and
-           assigned(tstatementnode(n).statement) then
+           Assigned(TStatementNode(n).statement) then
           begin
-            if tstatementnode(n).statement.nodetype=assignn then
+            if TStatementNode(n).statement.nodetype=assignn then
               begin
-                a:=tassignmentnode(tstatementnode(n).statement);
+                a:=TAssignmentNode(TStatementNode(n).statement);
 
                 { we need to have dfa for the node }
-                if assigned(a.left.optinfo) and
+                if Assigned(a.left.optinfo) and
                    { node must be either a local or parameter load node }
                    (a.left.nodetype=loadn) and
                    { its address cannot have escaped the current routine }
-                   not(TAbstractVarSym(tloadnode(a.left).symtableentry).addr_taken) and
+                   not(TAbstractVarSym(TLoadNode(a.left).symtableentry).addr_taken) and
                    ((
-                     (tloadnode(a.left).symtableentry.typ=localvarsym) and
-                     (tloadnode(a.left).symtable=CurrentProcInfo.procdef.localst)) or
-                    ((tloadnode(a.left).symtableentry.typ=paravarsym) and
-                     (tloadnode(a.left).symtable=CurrentProcInfo.procdef.parast) and
-                     (TParaVarSym(tloadnode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
-                    ((tloadnode(a.left).symtableentry.typ=staticvarsym) and
-                     (tloadnode(a.left).symtable.symtabletype=staticsymtable) and
+                     (TLoadNode(a.left).symtableentry.typ=localvarsym) and
+                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.localst)) or
+                    ((TLoadNode(a.left).symtableentry.typ=paravarsym) and
+                     (TLoadNode(a.left).SymTable=CurrentProcInfo.procdef.parast) and
+                     (TParaVarSym(TLoadNode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
+                    ((TLoadNode(a.left).symtableentry.typ=staticvarsym) and
+                     (TLoadNode(a.left).SymTable.symtabletype=staticsymtable) and
                      (CurrentProcInfo.procdef.proctypeoption<>potype_unitinit) and
-                     not(vsa_different_scope in TStaticVarSym(tloadnode(a.left).symtableentry).varsymaccess)
+                     not(vsa_different_scope in TStaticVarSym(TLoadNode(a.left).symtableentry).varsymaccess)
                     )
                    ) and
                     ((a.right.nodetype in [niln,stringconstn,pointerconstn,setconstn,guidconstn]) or
-                     ((a.right.nodetype=ordconstn) and not(cs_check_range in CurrentSettings.localswitches)) or
-                     ((a.right.nodetype=realconstn) and not(cs_ieee_errors in CurrentSettings.localswitches)) or
-                    ((cs_opt_dead_values in CurrentSettings.optimizerswitches) and not(might_have_sideeffects(a.right,[mhs_exceptions])))
+                     ((a.right.nodetype=ordconstn) and not(cs_check_range in CurrentSettings.LocalSwitches)) or
+                     ((a.right.nodetype=realconstn) and not(cs_ieee_errors in CurrentSettings.LocalSwitches)) or
+                    ((cs_opt_dead_values in CurrentSettings.OptimizerSwitches) and not(might_have_sideeffects(a.right,[mhs_exceptions])))
                    ) then
                   begin
-                    redundant:=not(assigned(a.successor)) or not(DynSetIn(a.successor.optinfo^.life,a.left.optinfo^.index));
+                    redundant:=not(Assigned(a.successor)) or not(DynSetIn(a.successor.optinfo^.life,a.left.optinfo^.index));
 
                     if redundant then
                       begin
 {$ifdef DEBUG_DEADSTORE}
-                        writeln('************************** Redundant write *********************************');
-                        printnode(output,a);
-                        writeln('****************************************************************************');
+                        WriteLn('************************** Redundant write *********************************');
+                        printnode(Output,a);
+                        WriteLn('****************************************************************************');
 {$endif DEBUG_DEADSTORE}
-                        pboolean(arg)^:=true;
+                        PBoolean(arg)^:=true;
 
-                        tstatementnode(n).statement.free;
+                        TStatementNode(n).statement.free;
 
-                        tstatementnode(n).statement:=cnothingnode.create;
+                        TStatementNode(n).statement:=CNothingNode.create;
                         { do not run firstpass on n here, as it will remove the statement node
                           and this will make foreachnodestatic process the wrong nodes as the current statement
                           node will disappear }
@@ -108,15 +108,15 @@ unit optdeadstore;
       begin
         changed:=false;
         if not(pi_dfaavailable in CurrentProcInfo.flags) then
-          internalerror(2013110201);
+          InternalError(2013110201);
         if not CurrentProcInfo.has_nestedprocs then
           foreachnodestatic(pm_postprocess, rootnode, @deadstoreelim, @changed);
 {$ifdef DEBUG_DEADSTORE}
         if changed then
           begin
-            writeln('******************** Tree after deadstore elimination **********************');
-            printnode(output,rootnode);
-            writeln('****************************************************************************');
+            WriteLn('******************** Tree after deadstore elimination **********************');
+            printnode(Output,rootnode);
+            WriteLn('****************************************************************************');
           end;
 {$endif DEBUG_DEADSTORE}
         result:=rootnode;

@@ -26,31 +26,31 @@ unit optbase;
   interface
 
     uses
-      globtype,cdynset;
+      GlobType,CDynSet;
 
     type
       { this should maybe replaced by a spare set,
         using a dyn. array makes assignments cheap }
-      tdfaset = TDynSet;
+      TDFASet = TDynSet;
       PDFASet = ^TDynSet;
 
-      toptinfo = record
+      TOptInfo = record
         { index of the current node inside the dfa sets }
         index : aword;
         { dfa }
-        def : tdfaset;
-        use : tdfaset;
-        life : tdfaset;
+        def : TDFASet;
+        use : TDFASet;
+        life : TDFASet;
         { all definitions made by this node and its children }
-        defsum : tdfaset;
+        defsum : TDFASet;
         { all used nodes by this node and its children }
-        usesum : tdfaset;
-        avail : tdfaset;
+        usesum : TDFASet;
+        avail : TDFASet;
         { estimation, how often the node is executed per subroutine call times 100, calculated by optutils.CalcExecutionWeight }
-        executionweight : longint;
+        executionweight : LongInt;
       end;
 
-      poptinfo = ^toptinfo;
+      POptInfo = ^TOptInfo;
 
   implementation
 

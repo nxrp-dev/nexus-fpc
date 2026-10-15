@@ -25,10 +25,10 @@ unit tokens;
 interface
 
 uses
-  globtype;
+  GlobType;
 
 type
-  ttoken=(NOTOKEN,
+  TToken=(NOTOKEN,
     { operators, which can also be overloaded }
     _PLUS,
     _MINUS,
@@ -324,7 +324,7 @@ type
 
   { sub_expr(opmultiply) is need to get -1 ** 4 to be
     read as - (1**4) and not (-1)**4 PM }
-  toperator_precedence=(
+  TOperatorPrecedence=(
     opcompare,
     opaddition,
     opmultiply,
@@ -348,7 +348,7 @@ const
   highest_precedence = oppower;
 
   { Warning these stay be ordered !! }
-  operator_levels:array[Toperator_precedence] of set of NOTOKEN..last_operator=
+  operator_levels:array[TOperatorPrecedence] of set of NOTOKEN..last_operator=
       ([_LT,_LTE,_GT,_GTE,_EQ,_NE,_OP_IN,_OP_IS],
        [_PLUS,_MINUS,_OP_OR,_PIPE,_OP_XOR],
        [_CARET,_SYMDIF,_STARSTAR,_STAR,_SLASH,
@@ -356,25 +356,25 @@ const
        [_STARSTAR] );
 
 type
-  tokenrec=record
+  TTokenRec=record
     str     : string[tokenlenmax];
     special : boolean;
     keyword : TModeSwitches;
-    op      : ttoken;
+    op      : TToken;
   end;
 
-  ttokenarray=array[ttoken] of tokenrec;
-  ptokenarray=^ttokenarray;
+  TTokenArray=array[TToken] of TTokenRec;
+  PTokenArray=^TTokenArray;
 
-  tokenidxrec=record
-    first,last : ttoken;
+  TTokenIdxRec=record
+    first,last : TToken;
   end;
 
-  ptokenidx=^ttokenidx;
-  ttokenidx=array[tokenlenmin..tokenlenmax,'A'..'Z'] of tokenidxrec;
+  PTokenIdx=^TTokenIdx;
+  TTokenIdx=array[tokenlenmin..tokenlenmax,'A'..'Z'] of TTokenIdxRec;
 
 var
-  arraytokeninfo : ttokenarray =(
+  arraytokeninfo : TTokenArray =(
       (str:''              ;special:true ;keyword:[m_none];op:NOTOKEN),
     { Operators which can be overloaded }
       (str:'+'             ;special:true ;keyword:[m_none];op:NOTOKEN),
@@ -672,8 +672,8 @@ var
 
 
 var
-  tokeninfo:ptokenarray;
-  tokenidx:ptokenidx;
+  tokeninfo:PTokenArray;
+  tokenidx:PTokenIdx;
 
 
 procedure inittokens;
@@ -687,12 +687,12 @@ procedure create_tokenidx;
 { create an index with the first and last token for every possible token
   length, so a search only will be done in that small part }
 var
-  t : ttoken;
-  i : longint;
+  t : TToken;
+  i : LongInt;
   c : char;
 begin
   fillchar(tokenidx^,sizeof(tokenidx^),0);
-  for t:=low(ttoken) to high(ttoken) do
+  for t:=low(TToken) to high(TToken) do
    begin
      if not arraytokeninfo[t].special then
       begin

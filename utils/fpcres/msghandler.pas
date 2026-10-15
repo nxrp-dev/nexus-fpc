@@ -14,7 +14,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 }
 
-unit msghandler;
+unit MsgHandler;
 
 {$MODE OBJFPC}
 
@@ -29,85 +29,85 @@ type
 
   TMessages = class
   private
-    fVerboseSet : boolean;
-    fVerbose : boolean;
-    fVerbCache : TStringList;
-    fStdOut : text;
-    fStdErr : text;
-    procedure SetVerbose(const aValue : boolean);
+    FVerboseSet : Boolean;
+    FVerbose : Boolean;
+    FVerbCache : TStringList;
+    FStdOut : Text;
+    FStdErr : Text;
+    procedure SetVerbose(const AValue : Boolean);
   protected
   public
     constructor Create;
     destructor Destroy; override;
-    procedure DoError(const aMsg : string);
-    procedure DoVerbose(const aMsg : string);
+    procedure DoError(const AMsg : string);
+    procedure DoVerbose(const AMsg : string);
     procedure Flush;
-    property Verbose : boolean read fVerbose write SetVerbose;
+    property Verbose : Boolean Read FVerbose Write SetVerbose;
   end;
 
 var Messages : TMessages;
 
-procedure Halt(errnum:Longint);
+procedure Halt(ErrNum:LongInt);
 
 implementation
 
-procedure Halt(errnum:Longint);
+procedure Halt(ErrNum:LongInt);
 begin
   Messages.Flush;
-  System.Halt(errnum);
+  System.Halt(ErrNum);
 end;
 
 { TMessages }
 
-procedure TMessages.SetVerbose(const aValue: boolean);
-var i : integer;
+procedure TMessages.SetVerbose(const AValue: Boolean);
+var I : Integer;
 begin
-  fVerbose:=aValue;
-  if fVerboseSet then exit;
+  FVerbose:=AValue;
+  if FVerboseSet then exit;
 
-  fVerboseSet:=true;
-  if fVerbose then //output all verbose messages we didn't output before
-    for i:=0 to fVerbCache.Count-1 do
-      writeln(fStdOut,'Debug: '+fVerbCache[i]);
+  FVerboseSet:=True;
+  if FVerbose then //output all verbose messages we didn't output before
+    for I:=0 to FVerbCache.Count-1 do
+      WriteLn(FStdOut,'Debug: '+FVerbCache[I]);
 
-  FreeAndNil(fVerbCache);
+  FreeAndNil(FVerbCache);
 end;
 
 constructor TMessages.Create;
 begin
-  fVerbose:=false;
-  fVerboseSet:=false;
-  fVerbCache:=TStringList.Create;
-  fStdOut:=stdout;
-  fStdErr:=stderr;
+  FVerbose:=False;
+  FVerboseSet:=False;
+  FVerbCache:=TStringList.Create;
+  FStdOut:=StdOut;
+  FStdErr:=StdErr;
 end;
 
 destructor TMessages.Destroy;
 begin
-  if fVerbCache<>nil then
-    fVerbCache.Free;
+  if FVerbCache<>nil then
+    FVerbCache.Free;
 end;
 
-procedure TMessages.DoError(const aMsg: string);
+procedure TMessages.DoError(const AMsg: string);
 begin
-  writeln(fStdErr,'Error: '+aMsg);
+  WriteLn(FStdErr,'Error: '+AMsg);
 end;
 
-procedure TMessages.DoVerbose(const aMsg: string);
+procedure TMessages.DoVerbose(const AMsg: string);
 begin
-  if not fVerboseSet then
+  if not FVerboseSet then
   begin
-    fVerbCache.Add(aMsg);
+    FVerbCache.Add(AMsg);
     exit;
   end;
-  if fVerbose then
-    writeln(fStdOut,'Debug: '+aMsg);
+  if FVerbose then
+    WriteLn(FStdOut,'Debug: '+AMsg);
 end;
 
 procedure TMessages.Flush;
 begin
-  System.Flush(fStdOut);
-  System.Flush(fStdErr);
+  System.Flush(FStdOut);
+  System.Flush(FStdErr);
 end;
 
 initialization

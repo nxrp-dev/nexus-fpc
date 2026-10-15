@@ -32,7 +32,7 @@ interface
 implementation
 
     uses
-      systems { prevent a syntax error when nothing is included }
+      Systems { prevent a syntax error when nothing is included }
 
 {**************************************
              Targets

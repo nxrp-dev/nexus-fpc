@@ -1,6 +1,6 @@
 ﻿{$apptype console}
 uses
-  unicodeducet, fpwidestring, cp866,
+  unicodeducet, fpwidestring, CP866,
   sysutils;
 
 type

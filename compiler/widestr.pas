@@ -28,45 +28,45 @@ unit widestr;
   interface
 
     uses
-      charset,globtype;
+      CharSet,GlobType;
 
 
     type
-       tcompilerwidechar = word;
-       tcompilerwidecharptr = ^tcompilerwidechar;
-       pcompilerwidechar = ^tcompilerwidechar;
-       tcompilerwidechararray = array of tcompilerwidechar;
+       TCompilerWideChar = Word;
+       TCompilerWideCharPtr = ^TCompilerWideChar;
+       PCompilerWideChar = ^TCompilerWideChar;
+       TCompilerWideCharArray = array of TCompilerWideChar;
 
-       tcompilerwidestring = class
-          data : tcompilerwidechararray;
-          maxlen,len : SizeInt;
-          function asconstpunicodechar : PUnicodeChar;
+       TCompilerWideString = class
+          Data : TCompilerWideCharArray;
+          MaxLen,Len : SizeInt;
+          function AsConstPUnicodeChar : PUnicodeChar;
        end;
 
-    procedure initwidestring(out r : tcompilerwidestring);
-    procedure donewidestring(var r : tcompilerwidestring);
-    procedure setlengthwidestring(r : tcompilerwidestring;l : SizeInt);
-    function getlengthwidestring(r : tcompilerwidestring) : SizeInt;
-    procedure concatwidestringchar(r : tcompilerwidestring;c : tcompilerwidechar);
-    procedure concatwidestrings(s1,s2 : tcompilerwidestring);
-    function comparewidestrings(s1,s2 : tcompilerwidestring) : SizeInt;
-    procedure copywidestring(s,d : tcompilerwidestring);
-    function asciichar2unicode(c : char) : tcompilerwidechar;
-    function unicode2asciichar(c : tcompilerwidechar) : char;
-    procedure ascii2unicode(p : pchar;l : SizeInt;cp : TStringEncoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
-    procedure unicode2ascii(r : tcompilerwidestring;p : pchar;cp : TStringEncoding);
-    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : TStringEncoding);
-    function hasnonasciichars(const p: tcompilerwidestring): boolean;
-    function getcharwidestring(r : tcompilerwidestring;l : SizeInt) : tcompilerwidechar;
-    function cpavailable(const s: string) : boolean;
-    function cpavailable(cp: word) : boolean;
-    procedure changecodepage(
-      s : pchar; l : SizeInt; scp : TStringEncoding;
-      d : pchar; dcp : TStringEncoding
+    procedure InitWideString(out R : TCompilerWideString);
+    procedure DoneWideString(var R : TCompilerWideString);
+    procedure SetLengthWideString(R : TCompilerWideString;L : SizeInt);
+    function GetLengthWideString(R : TCompilerWideString) : SizeInt;
+    procedure ConcatWideStringChar(R : TCompilerWideString;C : TCompilerWideChar);
+    procedure ConcatWideStrings(S1,S2 : TCompilerWideString);
+    function CompareWideStrings(S1,S2 : TCompilerWideString) : SizeInt;
+    procedure CopyWideString(S,D : TCompilerWideString);
+    function ASCIIChar2Unicode(C : Char) : TCompilerWideChar;
+    function Unicode2ASCIIChar(C : TCompilerWideChar) : Char;
+    procedure ASCII2Unicode(P : PChar;L : SizeInt;CP : TStringEncoding;R : TCompilerWideString;CodePageTranslation : Boolean = True);
+    procedure Unicode2ASCII(R : TCompilerWideString;P : PChar;CP : TStringEncoding);
+    procedure Unicode2ASCII(R : TCompilerWideString;Arr:TAnsiCharDynArray;CP : TStringEncoding);
+    function HasNonASCIIChars(const P: TCompilerWideString): Boolean;
+    function GetCharWideString(R : TCompilerWideString;L : SizeInt) : TCompilerWideChar;
+    function CPAvailable(const S: string) : Boolean;
+    function CPAvailable(CP: Word) : Boolean;
+    procedure ChangeCodePage(
+      S : PChar; L : SizeInt; SCP : TStringEncoding;
+      D : PChar; DCP : TStringEncoding
     );
-    function codepagebyname(const s : string) : TStringEncoding;
-    function charlength(p: pchar; len: sizeint): sizeint;
-    function charlength(const s: string): sizeint;
+    function CodePageByName(const S : string) : TStringEncoding;
+    function CharLength(P: PChar; Len: SizeInt): SizeInt;
+    function CharLength(const S: string): SizeInt;
 
   implementation
 
@@ -75,122 +75,122 @@ unit widestr;
       { loaded on demand from -FM path               }
 
       { cyrillic code pages }
-      cp1251,cp866,cp8859_5,
+      CP1251,CP866,CP8859_5,
       { greek code page }
-      cp1253,
+      CP1253,
       { other code pages }
-      cp8859_1,cp850,cp437,cp1252,cp646,
-      cp874, cp856,cp852,cp8859_2,
-      cp1250,cp1254,cp1255,cp1256,cp1257,cp1258,
-      globals,cutils;
+      CP8859_1,CP850,CP437,CP1252,CP646,
+      CP874, CP856,CP852,CP8859_2,
+      CP1250,CP1254,CP1255,CP1256,CP1257,CP1258,
+      Globals,CUtils;
 
 
-    procedure initwidestring(out r : tcompilerwidestring);
-
-      begin
-         R:=tcompilerwidestring.create;
-         r.data:=nil;
-         r.len:=0;
-         r.maxlen:=0;
-      end;
-
-    procedure donewidestring(var r : tcompilerwidestring);
+    procedure InitWideString(out R : TCompilerWideString);
 
       begin
-         r.Free;
-         r:=nil;
+         R:=TCompilerWideString.Create;
+         R.Data:=nil;
+         R.Len:=0;
+         R.MaxLen:=0;
       end;
 
-    function getcharwidestring(r : tcompilerwidestring;l : SizeInt) : tcompilerwidechar;
+    procedure DoneWideString(var R : TCompilerWideString);
 
       begin
-         getcharwidestring:=r.data[l];
+         R.Free;
+         R:=nil;
       end;
 
-    function getlengthwidestring(r : tcompilerwidestring) : SizeInt;
+    function GetCharWideString(R : TCompilerWideString;L : SizeInt) : TCompilerWideChar;
 
       begin
-         getlengthwidestring:=r.len;
+         GetCharWideString:=R.Data[L];
       end;
 
-    procedure growwidestring(r : tcompilerwidestring;l : SizeInt);
+    function GetLengthWideString(R : TCompilerWideString) : SizeInt;
 
       begin
-         if r.maxlen>=l then
-           exit;
-         setlength(r.data,l);
-         r.maxlen:=l;
+         GetLengthWideString:=R.Len;
       end;
 
-    procedure setlengthwidestring(r : tcompilerwidestring;l : SizeInt);
+    procedure GrowWideString(R : TCompilerWideString;L : SizeInt);
 
       begin
-         r.len:=l;
-         if l>r.maxlen then
-           growwidestring(r,l);
+         if R.MaxLen>=L then
+           Exit;
+         SetLength(R.Data,L);
+         R.MaxLen:=L;
       end;
 
-    procedure concatwidestringchar(r : tcompilerwidestring;c : tcompilerwidechar);
+    procedure SetLengthWideString(R : TCompilerWideString;L : SizeInt);
 
       begin
-         if r.len>=r.maxlen then
-           growwidestring(r,r.len+16);
-         r.data[r.len]:=c;
-         inc(r.len);
+         R.Len:=L;
+         if L>R.MaxLen then
+           GrowWideString(R,L);
       end;
 
-    procedure concatwidestrings(s1,s2 : tcompilerwidestring);
-      begin
-         growwidestring(s1,s1.len+s2.len);
-         if s2.len>0 then
-           move(s2.data[0],s1.data[s1.len],s2.len*sizeof(tcompilerwidechar));
-         inc(s1.len,s2.len);
-      end;
-
-    procedure copywidestring(s,d : tcompilerwidestring);
+    procedure ConcatWideStringChar(R : TCompilerWideString;C : TCompilerWideChar);
 
       begin
-         setlengthwidestring(d,s.len);
-         if s.len>0 then
-           move(s.data[0],d.data[0],s.len*sizeof(tcompilerwidechar));
+         if R.Len>=R.MaxLen then
+           GrowWideString(R,R.Len+16);
+         R.Data[R.Len]:=C;
+         Inc(R.Len);
       end;
 
-    function comparewidestrings(s1,s2 : tcompilerwidestring) : SizeInt;
+    procedure ConcatWideStrings(S1,S2 : TCompilerWideString);
+      begin
+         GrowWideString(S1,S1.Len+S2.Len);
+         if S2.Len>0 then
+           Move(S2.Data[0],S1.Data[S1.Len],S2.Len*SizeOf(TCompilerWideChar));
+         Inc(S1.Len,S2.Len);
+      end;
+
+    procedure CopyWideString(S,D : TCompilerWideString);
+
+      begin
+         SetLengthWideString(D,S.Len);
+         if S.Len>0 then
+           Move(S.Data[0],D.Data[0],S.Len*SizeOf(TCompilerWideChar));
+      end;
+
+    function CompareWideStrings(S1,S2 : TCompilerWideString) : SizeInt;
       var
-         maxi,temp : SizeInt;
+         Maxi,Temp : SizeInt;
       begin
-         if pointer(s1)=pointer(s2) then
+         if Pointer(S1)=Pointer(S2) then
            begin
-              comparewidestrings:=0;
-              exit;
+              CompareWideStrings:=0;
+              Exit;
            end;
-         maxi:=s1.len;
-         temp:=s2.len;
-         if maxi>temp then
-           maxi:=Temp;
-         if maxi>0 then
-           temp:=compareword(s1.data[0],s2.data[0],maxi)
+         Maxi:=S1.Len;
+         Temp:=S2.Len;
+         if Maxi>Temp then
+           Maxi:=Temp;
+         if Maxi>0 then
+           Temp:=CompareWord(S1.Data[0],S2.Data[0],Maxi)
          else
-           temp:=0;
-         if temp=0 then
-           temp:=s1.len-s2.len;
-         comparewidestrings:=temp;
+           Temp:=0;
+         if Temp=0 then
+           Temp:=S1.Len-S2.Len;
+         CompareWideStrings:=Temp;
       end;
 
-    function asciichar2unicode(c : char) : tcompilerwidechar;
+    function ASCIIChar2Unicode(C : Char) : TCompilerWideChar;
       var
-         m : punicodemap;
+         M : PUnicodeMap;
       begin
-         if (CurrentSettings.sourcecodepage <> CP_UTF8) then
+         if (CurrentSettings.SourceCodePage <> CP_UTF8) then
            begin
-             m:=getmap(CurrentSettings.sourcecodepage);
-             asciichar2unicode:=getunicode(c,m);
+             M:=GetMap(CurrentSettings.SourceCodePage);
+             ASCIIChar2Unicode:=GetUnicode(C,M);
            end
          else
-           result:=tcompilerwidechar(c);
+           Result:=TCompilerWideChar(C);
       end;
 
-    function unicode2asciichar(c : tcompilerwidechar) : char;
+    function Unicode2ASCIIChar(C : TCompilerWideChar) : Char;
       {begin
         if word(c)<128 then
           unicode2asciichar:=char(word(c))
@@ -198,204 +198,204 @@ unit widestr;
           unicode2asciichar:='?';
       end;}
       begin
-         Result := getascii(c,getmap(CurrentSettings.sourcecodepage))[1];
+         Result := GetASCII(C,GetMap(CurrentSettings.SourceCodePage))[1];
       end;
 
 
-    procedure ascii2unicode(p : pchar;l : SizeInt;cp : TStringEncoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
+    procedure ASCII2Unicode(P : PChar;L : SizeInt;CP : TStringEncoding;R : TCompilerWideString;CodePageTranslation : Boolean = True);
       var
-         source : pchar;
-         dest   : tcompilerwidecharptr;
-         i      : SizeInt;
-         m      : punicodemap;
+         Source : PChar;
+         Dest   : TCompilerWideCharPtr;
+         I      : SizeInt;
+         M      : PUnicodeMap;
       begin
-         m:=getmap(cp);
-         setlengthwidestring(r,l);
-         source:=p;
-         dest:=tcompilerwidecharptr(r.data);
-         if codepagetranslation then
+         M:=GetMap(CP);
+         SetLengthWideString(R,L);
+         Source:=P;
+         Dest:=TCompilerWideCharPtr(R.Data);
+         if CodePageTranslation then
            begin
-             if cp<>CP_UTF8 then
+             if CP<>CP_UTF8 then
                begin
-                 for i:=1 to l do
+                 for I:=1 to L do
                     begin
-                      dest^:=getunicode(source^,m);
-                      inc(dest);
-                      inc(source);
+                      Dest^:=GetUnicode(Source^,M);
+                      Inc(Dest);
+                      Inc(Source);
                     end;
                end
              else
                begin
-                 r.len:=Utf8ToUnicode(punicodechar(r.data),r.maxlen,p,l);
+                 R.Len:=UTF8ToUnicode(PUnicodeChar(R.Data),R.MaxLen,P,L);
                  { -1, because utf8tounicode includes room for a terminating 0 in
                    its result count }
-                 if r.len>0 then
-                   dec(r.len);
+                 if R.Len>0 then
+                   Dec(R.Len);
                end;
            end
          else
            begin
-             for i:=1 to l do
+             for I:=1 to L do
                 begin
-                  dest^:=tcompilerwidechar(source^);
-                  inc(dest);
-                  inc(source);
+                  Dest^:=TCompilerWideChar(Source^);
+                  Inc(Dest);
+                  Inc(Source);
                 end;
            end;
       end;
 
 
-    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : TStringEncoding);
+    procedure Unicode2ASCII(R : TCompilerWideString;Arr:TAnsiCharDynArray;CP : TStringEncoding);
     begin
-      if (r.len=0) or (length(arr)=0) then
-        exit;
-      unicode2ascii(r,Pchar(@arr[0]),cp);
+      if (R.Len=0) or (Length(Arr)=0) then
+        Exit;
+      Unicode2ASCII(R,PChar(@Arr[0]),CP);
     end;
 
-    procedure unicode2ascii(r : tcompilerwidestring;p:pchar;cp : TStringEncoding);
+    procedure Unicode2ASCII(R : TCompilerWideString;P:PChar;CP : TStringEncoding);
       var
-        m : punicodemap;
-        source : tcompilerwidecharptr;
-        dest   : pchar;
-        i      : longint;
+        M : PUnicodeMap;
+        Source : TCompilerWideCharPtr;
+        Dest   : PChar;
+        I      : LongInt;
       begin
         { can't implement that here, because the memory size for p() cannot
           be changed here, and we may need more bytes than have been allocated }
-        if cp=CP_UTF8 then
-          internalerrorproc(2015092701);
+        if CP=CP_UTF8 then
+          InternalErrorProc(2015092701);
 
-        if (cp = 0) or (cp=CP_NONE) then
-          m:=getmap(CurrentSettings.sourcecodepage)
+        if (CP = 0) or (CP=CP_NONE) then
+          M:=GetMap(CurrentSettings.SourceCodePage)
         else
-          m:=getmap(cp);
-        source:=tcompilerwidecharptr(r.data);
-        dest:=p;
-        for i:=1 to r.len do
+          M:=GetMap(CP);
+        Source:=TCompilerWideCharPtr(R.Data);
+        Dest:=P;
+        for I:=1 to R.Len do
          begin
-           dest^ := getascii(source^,m)[1];
-           inc(dest);
-           inc(source);
+           Dest^ := GetASCII(Source^,M)[1];
+           Inc(Dest);
+           Inc(Source);
          end;
       end;
 
 
-    function hasnonasciichars(const p: tcompilerwidestring): boolean;
+    function HasNonASCIIChars(const P: TCompilerWideString): Boolean;
       var
-        source : tcompilerwidecharptr;
-        i      : longint;
+        Source : TCompilerWideCharPtr;
+        I      : LongInt;
       begin
-        source:=tcompilerwidecharptr(p.data);
-        result:=true;
-        for i:=1 to p.len do
+        Source:=TCompilerWideCharPtr(P.Data);
+        Result:=True;
+        for I:=1 to P.Len do
           begin
-            if word(source^)>=128 then
-              exit;
-            inc(source);
+            if Word(Source^)>=128 then
+              Exit;
+            Inc(Source);
           end;
-        result:=false;
+        Result:=False;
       end;
 
 
-    function cpavailable(const s: string): boolean;
+    function CPAvailable(const S: string): Boolean;
       begin
-        result:=mappingavailable(lower(s));
-        if not result then
-          result:=(unicodepath<>'')and(registerbinarymapping(unicodepath+'charset',lower(s)));
+        Result:=MappingAvailable(Lower(S));
+        if not Result then
+          Result:=(UnicodePath<>'')and(RegisterBinaryMapping(UnicodePath+'charset',Lower(S)));
       end;
 
-    function cpavailable(cp: word): boolean;
+    function CPAvailable(CP: Word): Boolean;
       begin
-        result:=mappingavailable(cp);
-        if not result then
-          result:=(unicodepath<>'')and(registerbinarymapping(unicodepath+'charset','cp'+tostr(cp)));
+        Result:=MappingAvailable(CP);
+        if not Result then
+          Result:=(UnicodePath<>'')and(RegisterBinaryMapping(UnicodePath+'charset','cp'+ToStr(CP)));
       end;
 
-    procedure changecodepage(
-      s : pchar; l : SizeInt; scp : TStringEncoding;
-      d : pchar; dcp : TStringEncoding
+    procedure ChangeCodePage(
+      S : PChar; L : SizeInt; SCP : TStringEncoding;
+      D : PChar; DCP : TStringEncoding
     );
       var
-        ms, md : punicodemap;
-        source : pchar;
-        dest   : pchar;
-        i      : longint;
+        MS, MD : PUnicodeMap;
+        Source : PChar;
+        Dest   : PChar;
+        I      : LongInt;
       begin
-        ms:=getmap(scp);
-        md:=getmap(dcp);
-        source:=s;
-        dest:=d;
-        for i:=1 to l do
+        MS:=GetMap(SCP);
+        MD:=GetMap(DCP);
+        Source:=S;
+        Dest:=D;
+        for I:=1 to L do
          begin
-           dest^ := getascii(getunicode(source^,ms),md)[1];
-           inc(dest);
-           inc(source);
+           Dest^ := GetASCII(GetUnicode(Source^,MS),MD)[1];
+           Inc(Dest);
+           Inc(Source);
          end;
       end;
 
-    function codepagebyname(const s : string) : TStringEncoding;
+    function CodePageByName(const S : string) : TStringEncoding;
       var
-        p : punicodemap;
+        P : PUnicodeMap;
       begin
         Result:=0;
-        p:=getmap(lower(s));
-        if (p<>nil) then
-          Result:=p^.cp;
+        P:=GetMap(Lower(S));
+        if (P<>nil) then
+          Result:=P^.CP;
       end;
 
 
-    function charlength(p: pchar; len: sizeint): sizeint;
+    function CharLength(P: PChar; Len: SizeInt): SizeInt;
       var
-        p2: pchar;
-        i, chars, codepointlen: sizeint;
+        P2: PChar;
+        I, Chars, CodePointLen: SizeInt;
       begin
-        if len=0 then
+        if Len=0 then
           begin
-            result:=0;
-            exit;
+            Result:=0;
+            Exit;
           end;
 { Length of the string converted to a SBCS codepage (e.g. ISO 8859-1)
   should be equal to the amount of characters in the source string. }
-        if defaultsystemcodepage=cp_utf8 then
+        if DefaultSystemCodePage=CP_UTF8 then
 { ChangeCodePage does not work for UTF-8 apparently... :-( }
           begin
-            i:=1;
-            chars:=0;
-            while i<=len do
+            I:=1;
+            Chars:=0;
+            while I<=Len do
               begin
-                codepointlen:=utf8codepointlen(p,len-i+1,true);
-                inc(i,codepointlen);
-                inc(p,codepointlen);
-                inc(chars);
+                CodePointLen:=UTF8CodePointLen(P,Len-I+1,True);
+                Inc(I,CodePointLen);
+                Inc(P,CodePointLen);
+                Inc(Chars);
               end;
-            result:=chars;
+            Result:=Chars;
           end
-        else if cpavailable(defaultsystemcodepage) then
+        else if CPAvailable(DefaultSystemCodePage) then
           begin
-            getmem(p2,succ(len));
-            fillchar(p2^,succ(len),0);
-            changecodepage(p,len,defaultsystemcodepage,p2,28591);
-            result:=strlen(p2);
-            freemem(p2,succ(len));
+            GetMem(P2,Succ(Len));
+            FillChar(P2^,Succ(Len),0);
+            ChangeCodePage(P,Len,DefaultSystemCodePage,P2,28591);
+            Result:=StrLen(P2);
+            FreeMem(P2,Succ(Len));
           end
         else
-          result:=len;
+          Result:=Len;
       end;
 
-    function charlength(const s: string): sizeint;
+    function CharLength(const S: string): SizeInt;
       begin
-        result:=charlength(@s[1],length(s));
+        Result:=CharLength(@S[1],Length(S));
       end;
 
     { tcompilerwidestring }
     const
-      cEmptyUnicodeChar : UnicodeChar = #0;
+      CEmptyUnicodeChar : UnicodeChar = #0;
 
-    function tcompilerwidestring.asconstpunicodechar: PUnicodeChar;
+    function TCompilerWideString.AsConstPUnicodeChar: PUnicodeChar;
       begin
-        if length(data)>0 then
-          result:=@Data[0]
+        if Length(Data)>0 then
+          Result:=@Data[0]
         else
-          result:=@cEmptyUnicodeChar;
+          Result:=@CEmptyUnicodeChar;
       end;
 
 end.

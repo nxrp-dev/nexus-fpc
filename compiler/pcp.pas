@@ -28,7 +28,7 @@ unit pcp;
 interface
 
   uses
-    cstreams,entfile,nxartifactid;
+    CStreams,entfile,nxartifactid;
 
   const
     { Nexus-owned revision within the NXP family. }
@@ -45,34 +45,34 @@ interface
 
 
   type
-    tpcpheader=record
-      common   : tentryheader;
+    TPCPHeader=record
+      common   : TEntryHeader;
       checksum : cardinal; { checksum for this pcpfile }
       requiredlistsize, { number of entries for required packages }
-      ppulistsize : longint; { number of entries for contained PPUs }
+      ppulistsize : LongInt; { number of entries for contained PPUs }
     end;
 
-    tpcpfile=class(tentryfile)
+    TPCPFile=class(TEntryFile)
     private
       headerread : boolean;
     public
-      header : tpcpheader;
+      header : TPCPHeader;
       { crc for the entire package }
       crc : cardinal;
       do_crc : boolean;
     protected
-      function getheadersize:longint;override;
-      function getheaderaddr:pentryheader;override;
+      function getheadersize:LongInt;override;
+      function getheaderaddr:PEntryHeader;override;
       procedure newheader;override;
-      function readheader:longint;override;
+      function readheader:LongInt;override;
       procedure resetfile;override;
-      procedure RaiseAssertion(Code: Longint); override;
+      procedure RaiseAssertion(Code: LongInt); override;
     public
       procedure writeheader;override;
       function checkpcpid:boolean;
       function readpackageentry(expected:byte):boolean;
       function packageentrydone:boolean;
-      function metadataend:longint;
+      function metadataend:LongInt;
       function metadatadone:boolean;
       procedure putdata(const b;len:integer);override;
     end;
@@ -80,31 +80,31 @@ interface
 implementation
 
 uses
-  fpchash;
+  FPCHash;
 
   { tpcpfile }
 
-  function tpcpfile.getheadersize: longint;
+  function TPCPFile.getheadersize: LongInt;
     begin
-      result:=sizeof(tpcpheader);
+      result:=sizeof(TPCPHeader);
     end;
 
-  function tpcpfile.getheaderaddr: pentryheader;
+  function TPCPFile.getheaderaddr: PEntryHeader;
     begin
       result:=@header;
     end;
 
-  procedure tpcpfile.RaiseAssertion(Code: Longint);
+  procedure TPCPFile.RaiseAssertion(Code: LongInt);
     begin
       // InternalError(nb);
       inherited RaiseAssertion(Code);
     end;
 
-  procedure tpcpfile.newheader;
+  procedure TPCPFile.newheader;
     var
       s : string;
     begin
-      fillchar(header,sizeof(tpcpheader),0);
+      fillchar(header,sizeof(TPCPHeader),0);
       str(CurrentPCPVersion,s);
       while length(s)<3 do
         s:='0'+s;
@@ -119,14 +119,14 @@ uses
         end;
     end;
 
-  function tpcpfile.readheader: longint;
+  function TPCPFile.readheader: LongInt;
     begin
       headerread:=false;
       crc:=0;
-      if fsize<sizeof(tpcpheader) then
+      if fsize<sizeof(TPCPHeader) then
         exit(0);
-      result:=f.Read(header,sizeof(tpcpheader));
-      if result<>sizeof(tpcpheader) then
+      result:=f.Read(header,sizeof(TPCPHeader));
+      if result<>sizeof(TPCPHeader) then
         exit;
       headerread:=true;
       { The header is always stored in little endian order }
@@ -160,21 +160,21 @@ uses
        End;
     end;
 
-  procedure tpcpfile.resetfile;
+  procedure TPCPFile.resetfile;
     begin
       crc:=0;
       do_crc:=true;
     end;
 
 
-  procedure tpcpfile.writeheader;
+  procedure TPCPFile.writeheader;
     var
       opos : integer;
     begin
       { flush buffer }
       writebuf;
       { update size (w/o header!) in the header }
-      header.common.size:=bufstart-sizeof(tpcpheader);
+      header.common.size:=BufStart-sizeof(TPCPHeader);
       { set the endian flag }
 {$ifndef FPC_BIG_ENDIAN}
       header.common.flags:=header.common.flags or pf_little_endian;
@@ -193,15 +193,15 @@ uses
     { write header and restore filepos after it }
       opos:=f.Position;
       f.Position:=0;
-      f.Write(header,sizeof(tpcpheader));
+      f.Write(header,sizeof(TPCPHeader));
       f.Position:=opos;
   end;
 
 
-  function tpcpfile.checkpcpid:boolean;
+  function TPCPFile.checkpcpid:boolean;
     begin
       result:=headerread and
-               (header.common.size<=dword(fsize-sizeof(tpcpheader))) and
+               (header.common.size<=dword(fsize-sizeof(TPCPHeader))) and
                (header.requiredlistsize>=0) and (header.ppulistsize>=0) and
                (((header.common.flags and (pf_big_endian or pf_little_endian))=pf_big_endian) or
                 ((header.common.flags and (pf_big_endian or pf_little_endian))=pf_little_endian)) and
@@ -211,29 +211,29 @@ uses
     end;
 
 
-  function tpcpfile.metadataend:longint;
+  function TPCPFile.metadataend:LongInt;
     begin
       { Version 3 stores the metadata size, excluding embedded PPU data. }
-      result:=sizeof(tpcpheader)+longint(header.common.size);
+      result:=sizeof(TPCPHeader)+LongInt(header.common.size);
     end;
 
 
-  function tpcpfile.packageentrydone:boolean;
+  function TPCPFile.packageentrydone:boolean;
     begin
       result:=not error and (entryleft=0);
     end;
 
 
-  function tpcpfile.readpackageentry(expected:byte):boolean;
+  function TPCPFile.readpackageentry(expected:byte):boolean;
     var
-      savedpos,left,count : longint;
+      savedpos,left,count : LongInt;
       buffer : array[0..4095] of byte;
     begin
       result:=false;
       { Do not allow readentry to skip unread fields or read a partial header.
         Keep these stricter checks local to PCP consumers. }
       if not packageentrydone or
-         (BufferedPosition>metadataend-sizeof(tentry)) then
+         (BufferedPosition>metadataend-sizeof(TEntry)) then
         exit;
       if (readentry<>expected) or (entry.id<>mainentryid) or
          (entry.size<0) or (entry.size>metadataend-BufferedPosition) then
@@ -253,7 +253,7 @@ uses
                   count:=sizeof(buffer);
                 if f.Read(buffer,count)<>count then
                   exit;
-                crc:=UpdateCrc32(crc,buffer,count);
+                crc:=UpdateCRC32(crc,buffer,count);
                 dec(left,count);
               end;
           finally
@@ -264,18 +264,18 @@ uses
     end;
 
 
-  function tpcpfile.metadatadone:boolean;
+  function TPCPFile.metadatadone:boolean;
     begin
       result:=packageentrydone and (entry.nr=ibend) and
         (BufferedPosition=metadataend) and (crc=header.checksum);
     end;
 
 
-  procedure tpcpfile.putdata(const b;len:integer);
+  procedure TPCPFile.putdata(const b;len:integer);
     begin
       if do_crc then
         begin
-          crc:=UpdateCrc32(crc,b,len);
+          crc:=UpdateCRC32(crc,b,len);
         end;
       inherited putdata(b, len);
     end;

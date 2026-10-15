@@ -21,55 +21,55 @@
   This program creates a jar file (= zip file) containing all specified files.
 }
 
-program fpcjres;
+program FPCJRes;
 
 {$MODE OBJFPC} {$H+}
 
 uses
-  SysUtils, Classes, paramparser, msghandler, jarsourcehandler,
-  zipper
+  SysUtils, Classes, ParamParser, MsgHandler, JarSourceHandler,
+  Zipper
   ;
 
 const
-  halt_no_err = 0;
-  halt_param_err = 1;
-  halt_read_err = 2;
-  halt_write_err = 3;
+  HaltNoErr = 0;
+  HaltParamErr = 1;
+  HaltReadErr = 2;
+  HaltWriteErr = 3;
 
-  progname = 'fpcjres';
-  progversion = '1.0'; //to distinguish from the old fpcres
+  ProgName = 'fpcjres';
+  ProgVersion = '1.0'; //to distinguish from the old fpcres
 
-  fpcversion = {$INCLUDE %FPCVERSION%};
-  host_arch = {$INCLUDE %FPCTARGETCPU%};
-  host_os = {$INCLUDE %FPCTARGETOS%};
-  build_date = {$INCLUDE %DATE%};
+  FPCVersion = {$INCLUDE %FPCVERSION%};
+  HostArch = {$INCLUDE %FPCTARGETCPU%};
+  HostOS = {$INCLUDE %FPCTARGETOS%};
+  BuildDate = {$INCLUDE %DATE%};
 
 
 var
-  params : TParameters = nil;
-  resources : TZipper = nil;
-  sourcefiles : TJarSourceFiles = nil;
+  Params : TParameters = nil;
+  Resources : TZipper = nil;
+  SourceFiles : TJarSourceFiles = nil;
 
 procedure ShowVersion;
 begin
-  writeln(progname+' - resource file converter, version '+progversion+' ['+build_date+'], FPC '+fpcversion);
-  writeln('Host platform: '+host_os+' - '+host_arch);
-  writeln('Copyright (c) 2008 by Giulio Bernardi.');
-  writeln('Copyright (c) 2011 by Jonas Maebe.');
+  WriteLn(ProgName+' - resource file converter, version '+ProgVersion+' ['+BuildDate+'], FPC '+FPCVersion);
+  WriteLn('Host platform: '+HostOS+' - '+HostArch);
+  WriteLn('Copyright (c) 2008 by Giulio Bernardi.');
+  WriteLn('Copyright (c) 2011 by Jonas Maebe.');
 end;
 
 procedure ShowHelp;
 begin
   ShowVersion;
-  writeln('Syntax: '+progname+' [options] <inputfile> [<inputfile>...] [-o <outputfile>]');
-  writeln;
-  writeln('Options:');
-  writeln('  --help, -h, -?       Show this screen.');
-  writeln('  --version, -V        Show program version.');
-  writeln('  --verbose, -v        Be verbose.');
-  writeln('  --input, -i <x>      Ignored for compatibility.');
-  writeln('  --output, -o <x>     Set the output file name.');
-  writeln('  @<file>              Read more options from file <file>');
+  WriteLn('Syntax: '+ProgName+' [options] <inputfile> [<inputfile>...] [-o <outputfile>]');
+  WriteLn;
+  WriteLn('Options:');
+  WriteLn('  --help, -h, -?       Show this screen.');
+  WriteLn('  --version, -V        Show program version.');
+  WriteLn('  --verbose, -v        Be verbose.');
+  WriteLn('  --input, -i <x>      Ignored for compatibility.');
+  WriteLn('  --output, -o <x>     Set the output file name.');
+  WriteLn('  @<file>              Read more options from file <file>');
 end;
 
 const
@@ -89,74 +89,74 @@ const
   SCantCreateDirHier = 'Can''t create directory hierarchy ''%s''';
   SCantCreateFile = 'Can''t create file ''%s''';
 
-function GetCurrentTimeMsec : longint;
-var h,m,s,ms : word;
+function GetCurrentTimeMsec : LongInt;
+var H,M,S,MS : Word;
 begin
-  DecodeTime(Time,h,m,s,ms);
-  Result:=h*3600*1000 + m*60*1000 + s*1000 + ms;
+  DecodeTime(Time,H,M,S,MS);
+  Result:=H*3600*1000 + M*60*1000 + S*1000 + MS;
 end;
 
 procedure CheckInputFiles;
 begin
-  if params.InputFiles.Count=0 then
+  if Params.InputFiles.Count=0 then
   begin
     Messages.DoError(SNoInputFiles);
-    halt(halt_param_err);
+    Halt(HaltParamErr);
   end;
 end;
 
 procedure CheckOutputFile;
-var tmp : string;
+var Tmp : string;
 begin
-  if params.OutputFile<>'' then exit;
-  if params.InputFiles.Count>1 then
+  if Params.OutputFile<>'' then exit;
+  if Params.InputFiles.Count>1 then
   begin
     Messages.DoError(SNoOutputFile);
-    halt(halt_param_err);
+    Halt(HaltParamErr);
   end;
-  tmp:=ChangeFileExt(ExtractFileName(params.InputFiles[0]),
+  Tmp:=ChangeFileExt(ExtractFileName(Params.InputFiles[0]),
     '.jar');
-  if sametext(tmp,params.InputFiles[0]) then
-    tmp:=tmp+'.jar';
-  params.OutputFile:=tmp;
+  if SameText(Tmp,Params.InputFiles[0]) then
+    Tmp:=Tmp+'.jar';
+  Params.OutputFile:=Tmp;
 end;
 
 procedure ParseParams;
-var msg : string;
+var Msg : string;
 begin
   Messages.DoVerbose('parsing command line parameters');
-  msg:='';
+  Msg:='';
   if ParamCount = 0 then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  params:=TParameters.Create;
+  Params:=TParameters.Create;
   try
-    params.Parse;
+    Params.Parse;
   except
-    on e : EOutputFileAlreadySetException do msg:=SOutputFileAlreadySet;
-    on e : EUnknownParameterException do msg:=Format(SUnknownParameter,[e.Message]);
-    on e : EArgumentMissingException do msg:=Format(SArgumentMissing,[e.Message]);
-    on e : EUnknownObjFormatException do msg:=Format(SUnknownObjFormat,[e.Message]);
-    on e : EUnknownMachineException do msg:=Format(SUnknownMachine,[e.Message]);
-    on e : ECannotReadConfFile do msg:=Format(SCannotReadConfFile,[e.Message]);
+    on E : EOutputFileAlreadySetException do Msg:=SOutputFileAlreadySet;
+    on E : EUnknownParameterException do Msg:=Format(SUnknownParameter,[E.Message]);
+    on E : EArgumentMissingException do Msg:=Format(SArgumentMissing,[E.Message]);
+    on E : EUnknownObjFormatException do Msg:=Format(SUnknownObjFormat,[E.Message]);
+    on E : EUnknownMachineException do Msg:=Format(SUnknownMachine,[E.Message]);
+    on E : ECannotReadConfFile do Msg:=Format(SCannotReadConfFile,[E.Message]);
   end;
-  Messages.Verbose:=params.Verbose;
-  if msg<>'' then
+  Messages.Verbose:=Params.Verbose;
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_param_err);
+    Messages.DoError(Msg);
+    Halt(HaltParamErr);
   end;
-  if params.Version then
+  if Params.Version then
   begin
     ShowVersion;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
-  if params.Help then
+  if Params.Help then
   begin
     ShowHelp;
-    halt(halt_no_err);
+    Halt(HaltNoErr);
   end;
 
   CheckInputFiles;
@@ -166,87 +166,87 @@ begin
 end;
 
 procedure LoadSourceFiles;
-var msg : string;
+var Msg : string;
 begin
-  msg:='';
-  resources:=TZipper.Create;
-  sourcefiles:=TJarSourceFiles.Create;
-  sourcefiles.FileList.AddStrings(params.InputFiles);
+  Msg:='';
+  Resources:=TZipper.Create;
+  SourceFiles:=TJarSourceFiles.Create;
+  SourceFiles.FileList.AddStrings(Params.InputFiles);
   try
-    sourcefiles.Load(resources);
+    SourceFiles.Load(Resources);
   except
-    on e : ECantOpenFileException do msg:=Format(SCantOpenFile,[e.Message]);
-    on e : EUnknownInputFormatException do msg:=Format(SUnknownInputFormat,[e.Message]);
-    on e : Exception do
+    on E : ECantOpenFileException do Msg:=Format(SCantOpenFile,[E.Message]);
+    on E : EUnknownInputFormatException do Msg:=Format(SUnknownInputFormat,[E.Message]);
+    on E : Exception do
     begin
-      if e.Message='' then msg:=e.ClassName
-      else msg:=e.Message;
+      if E.Message='' then Msg:=E.ClassName
+      else Msg:=E.Message;
     end;
   end;
-  if msg<>'' then
+  if Msg<>'' then
   begin
-    Messages.DoError(msg);
-    halt(halt_read_err);
+    Messages.DoError(Msg);
+    Halt(HaltReadErr);
   end;
 end;
 
 
 procedure WriteOutputFile;
 var
-  msg : string;
-  outfile: THandle;
-  removedirlevel: longint;
+  Msg : string;
+  OutFile: THandle;
+  RemoveDirLevel: LongInt;
 begin
   { create the "resbasedir" hierarchy, since that directory has to exist for
     TZipper to be able to add it. If it already exists, make sure we don't
     remove it }
   if DirectoryExists('org') then
     if DirectoryExists('org'+DirectorySeparator+'freepascal') then
-      if DirectoryExists(resbasedir) then
-        removedirlevel:=0
+      if DirectoryExists(ResBaseDir) then
+        RemoveDirLevel:=0
       else
-        removedirlevel:=1
+        RemoveDirLevel:=1
     else
-      removedirlevel:=2
+      RemoveDirLevel:=2
   else
-    removedirlevel:=3;
+    RemoveDirLevel:=3;
   try
-    ForceDirectories(resbasedir);
+    ForceDirectories(ResBaseDir);
   except
-    Messages.DoError(Format(SCantCreateDirHier,[resbasedir]));
-    halt(halt_write_err);
+    Messages.DoError(Format(SCantCreateDirHier,[ResBaseDir]));
+    Halt(HaltWriteErr);
   end;
   try
-    Messages.DoVerbose(Format('Trying to write output file %s...',[params.OutputFile]));
+    Messages.DoVerbose(Format('Trying to write output file %s...',[Params.OutputFile]));
     try
       { will be overwritten by the tzipper }
-      outfile:=FileCreate(params.OutputFile,fmCreate or fmShareDenyWrite,438);
-      FileClose(outfile);
+      OutFile:=FileCreate(Params.OutputFile,fmCreate or fmShareDenyWrite,438);
+      FileClose(OutFile);
     except
-      Messages.DoError(Format(SCantCreateFile,[params.OutputFile]));
-      halt(halt_write_err);
+      Messages.DoError(Format(SCantCreateFile,[Params.OutputFile]));
+      Halt(HaltWriteErr);
     end;
     try
-      Messages.DoVerbose(Format('Writing output file %s...',[params.OutputFile]));
-      resources.FileName:=params.OutputFile;
-      resources.ZipAllFiles;
+      Messages.DoVerbose(Format('Writing output file %s...',[Params.OutputFile]));
+      Resources.FileName:=Params.OutputFile;
+      Resources.ZipAllFiles;
     except
-      on e : Exception do
+      on E : Exception do
       begin
-        if e.Message='' then msg:=e.ClassName
-        else msg:=e.Message;
-        Messages.DoError(msg);
-        halt(halt_write_err);
+        if E.Message='' then Msg:=E.ClassName
+        else Msg:=E.Message;
+        Messages.DoError(Msg);
+        Halt(HaltWriteErr);
       end;
     end;
-    Messages.DoVerbose(Format('Output file %s written',[params.OutputFile]));
+    Messages.DoVerbose(Format('Output file %s written',[Params.OutputFile]));
   finally
-    if removedirlevel>0 then
+    if RemoveDirLevel>0 then
       begin
-        if removedirlevel>1 then
+        if RemoveDirLevel>1 then
           begin
-            if removedirlevel>2 then
-              RemoveDir(resbasedir);
+            if RemoveDirLevel>2 then
+              RemoveDir(ResBaseDir);
             RemoveDir('org'+DirectorySeparator+'freepascal');
           end;
         RemoveDir('org');
@@ -262,17 +262,17 @@ begin
   if Params<>nil then Params.Free;
 end;
 
-var before, elapsed : longint;
+var Before, Elapsed : LongInt;
 
 begin
   try
-    before:=GetCurrentTimeMsec;
+    Before:=GetCurrentTimeMsec;
     ParseParams;
     LoadSourceFiles;
     WriteOutputFile;
-    elapsed:=GetCurrentTimeMsec-before;
-    if elapsed<0 then elapsed:=24*3600*1000 + elapsed;
-    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[elapsed div 1000,(elapsed mod 1000) div 10]));
+    Elapsed:=GetCurrentTimeMsec-Before;
+    if Elapsed<0 then Elapsed:=24*3600*1000 + Elapsed;
+    Messages.DoVerbose(Format('Time elapsed: %d.%d seconds',[Elapsed div 1000,(Elapsed mod 1000) div 10]));
   finally
     Cleanup;
   end;

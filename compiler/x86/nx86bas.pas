@@ -34,7 +34,7 @@ interface
       procedure XMLPrintNodeData(var T: Text); override;
     protected
       function XMLFormatOp(const Oper: POper): string; override;
-      procedure XMLProcessInstruction(var T: Text; p: tai); override;
+      procedure XMLProcessInstruction(var T: Text; p: TAI); override;
 {$endif DEBUG_NODE_XML}
     end;
 
@@ -42,13 +42,13 @@ implementation
 
 {$ifdef DEBUG_NODE_XML}
   uses
-    cutils,
+    CUtils,
     cgutils,
     cgbase,
     cpubase,
     itcpugas,
     aasmcpu,
-    verbose;
+    Verbose;
 {$endif DEBUG_NODE_XML}
 
 {$ifdef DEBUG_NODE_XML}
@@ -59,19 +59,19 @@ implementation
           begin
             case Oper^.val of
               -15..15:
-                Result := '$' + tostr(Oper^.val);
+                Result := '$' + ToStr(Oper^.val);
               $10..$FF:
-                Result := '$0x' + hexstr(Oper^.val, 2);
+                Result := '$0x' + HexStr(Oper^.val, 2);
               $100..$FFFF:
-                Result := '$0x' + hexstr(Oper^.val, 4);
+                Result := '$0x' + HexStr(Oper^.val, 4);
   {$ifdef CPU64}
               $10000..$FFFFFFFF:
-                Result := '$0x' + hexstr(Oper^.val, 8);
+                Result := '$0x' + HexStr(Oper^.val, 8);
               else
-                Result := '$0x' + hexstr(Oper^.val, 16);
+                Result := '$0x' + HexStr(Oper^.val, 16);
   {$else CPU64}
               else
-                Result := '$0x' + hexstr(Oper^.val, 8);
+                Result := '$0x' + HexStr(Oper^.val, 8);
   {$endif CPU64}
             end;
           end;
@@ -92,7 +92,7 @@ implementation
                 end;
 
               if offset <> 0 then
-                Result := Result + tostr(offset)
+                Result := Result + ToStr(offset)
               else
                 Result := Result;
 
@@ -111,7 +111,7 @@ implementation
                     Result := Result + gas_regname(index);
 
                   if scalefactor <> 0 then
-                    Result := Result + ',' + tostr(scalefactor) + ')'
+                    Result := Result + ',' + ToStr(scalefactor) + ')'
                   else
                     Result := Result + ')';
                 end;
@@ -122,27 +122,27 @@ implementation
     end;
 
 
-  procedure Tx86AsmNode.XMLProcessInstruction(var T: Text; p: tai);
+  procedure Tx86AsmNode.XMLProcessInstruction(var T: Text; p: TAI);
     var
       ThisOp, ThisOper: string;
       X: Integer;
     begin
       if p.typ = ait_instruction then
         begin
-          ThisOp := gas_op2str[taicpu(p).opcode] + cond2str[taicpu(p).condition];
-          if gas_needsuffix[taicpu(p).opcode] <> AttSufNONE then
-            ThisOp := ThisOp + gas_opsize2str[taicpu(p).opsize];
+          ThisOp := gas_op2str[TAICPU(p).opcode] + cond2str[TAICPU(p).condition];
+          if gas_needsuffix[TAICPU(p).opcode] <> AttSufNONE then
+            ThisOp := ThisOp + gas_opsize2str[TAICPU(p).opsize];
 
           { Pad the opcode with spaces so the succeeding operands are aligned }
           XMLPadString(ThisOp, 7);
 
           Write(T, PrintNodeIndention, '  ', ThisOp); { Extra indentation to account for label formatting }
-          for X := 0 to taicpu(p).ops - 1 do
+          for X := 0 to TAICPU(p).ops - 1 do
             begin
               Write(T, ' ');
 
-              ThisOper := XMLFormatOp(taicpu(p).oper[X]);
-              if X < taicpu(p).ops - 1 then
+              ThisOper := XMLFormatOp(TAICPU(p).oper[X]);
+              if X < TAICPU(p).ops - 1 then
                 begin
                   ThisOper := ThisOper + ',';
 
@@ -160,22 +160,22 @@ implementation
 
   procedure Tx86AsmNode.XMLPrintNodeData(var T: Text);
     var
-      hp: tai;
+      hp: TAI;
     begin
       if not Assigned(p_asm) then
         Exit;
 
-      hp := tai(p_asm.First);
+      hp := TAI(p_asm.First);
       while Assigned(hp) do
         begin
           XMLProcessInstruction(T, hp);
-          hp := tai(hp.Next);
+          hp := TAI(hp.Next);
         end;
     end;
 {$endif DEBUG_NODE_XML}
 
 initialization
-  casmnode := Tx86AsmNode;
+  CAsmNode := Tx86AsmNode;
 
 end.
 

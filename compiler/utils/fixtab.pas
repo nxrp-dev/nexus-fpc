@@ -14,7 +14,7 @@ var
   ParaFile  : word;
 {Specific}
 const
-  TabSize   : longint=8;
+  TabSize   : LongInt=8;
   DosEol    : boolean=false;
   Verbose   : boolean=false;
 
@@ -159,18 +159,18 @@ end;
 
 procedure Convert(fn,nfn:string);
 type
-  inbuftype=array[0..31999] of char;
-  outbuftype=array[0..63999] of char;
+  TInBufType=array[0..31999] of char;
+  TOutBufType=array[0..63999] of char;
 var
   f,g    : file;
-  inbuf  : ^inbuftype;
-  outbuf : ^outbuftype;
+  inbuf  : ^TInBufType;
+  outbuf : ^TOutBufType;
   Curr,
   TabCol,
   col,
   i,last,
   innum,
-  outnum : longint;
+  outnum : LongInt;
 
   procedure WriteBuf;
   begin
@@ -211,12 +211,12 @@ begin
   {$push}{$I-}
    reset(f,1);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    exit;
   {$push}{$I-}
    rewrite(g,1);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
      close(f);
      exit;
@@ -225,7 +225,7 @@ begin
   col:=1;
   last:=0;
   repeat
-    blockread(f,InBuf^,sizeof(InBufType),innum);
+    blockread(f,InBuf^,sizeof(TInBufType),innum);
     outnum:=0;
     if innum>0 then
      begin
@@ -302,19 +302,19 @@ var
 
   procedure helpscreen;
   begin
-    writeln('Usage : '+SplitName(ParamStr(0))+' [Options] <InFile(s)>'#10);
-    writeln('<Options> can be : -O<OutFile>  Specify OutFile Mask');
+    WriteLn('Usage : '+SplitName(ParamStr(0))+' [Options] <InFile(s)>'#10);
+    WriteLn('<Options> can be : -O<OutFile>  Specify OutFile Mask');
     WriteLn('                   -D           Use MsDos #13#10 Eols');
-    writeln('                   -T<size>     Set Size of Tabs');
-    writeln('                   -V           be more verbose');
-    writeln('             -? or -H           This HelpScreen');
+    WriteLn('                   -T<size>     Set Size of Tabs');
+    WriteLn('                   -V           be more verbose');
+    WriteLn('             -? or -H           This HelpScreen');
     halt(1);
   end;
 
 begin
   for i:=1to paramcount do
    begin
-     para:=ucase(paramstr(i));
+     para:=ucase(ParamStr(i));
      if (para[1]='-') then
       begin
         ch:=para[2];
@@ -323,7 +323,7 @@ begin
          'O' : OutFile:=ChangeFileExt(Para,OutputExt);
          'D' : DosEol:=true;
          'T' : Val(Para,TabSize,j);
-         'V' : verbose:=true;
+         'V' : Verbose:=true;
      '?','H' : helpscreen;
         end;
      end
@@ -349,8 +349,8 @@ begin
 {Main}
   if Verbose then
    begin
-     Writeln('fixtab v1.01 (C) 1999-2002 Peter Vreman');
-     Writeln('TabSize ',TabSize);
+     WriteLn('fixtab v1.01 (C) 1999-2002 Peter Vreman');
+     WriteLn('TabSize ',TabSize);
      if DosEol then
       WriteLn('Using MsDos Eols');
    end;

@@ -26,15 +26,15 @@ unit fpcp;
 interface
 
   uses
-    cclasses,cstreams,
-    globtype,
-    pcp,finput,fpkg,nxartifactid;
+    CClasses,CStreams,
+    GlobType,
+    pcp,FinPut,fpkg,nxartifactid;
 
   type
-    tpcppackage=class(tpackage)
+    TPCPPackage=class(TPackage)
     private
       loaded : boolean;
-      pcpfile : tpcpfile;
+      pcpfile : TPCPFile;
       metadatastream : TCMemoryStream;
     private
       function openpcp:boolean;
@@ -50,53 +50,53 @@ interface
       procedure readcontainedunits;
       procedure readrequiredpackages;
       procedure readpputable;
-      procedure invalidpcp(const reason:ansistring);
+      procedure invalidpcp(const reason:AnsiString);
       procedure readentry(expected:byte);
       procedure endentry;
       procedure checkppudata;
     public
       constructor create(const pn:string);
-      destructor destroy; override;
+      destructor Destroy; override;
       procedure loadpcp;
       procedure savepcp;
-      function getmodulestream(module:tmodulebase):tcstream;
-      procedure initmoduleinfo(module:tmodulebase);
-      procedure addunit(module:tmodulebase);
-      procedure add_required_package(pkg:tpackage);
+      function getmodulestream(module:TModuleBase):TCStream;
+      procedure initmoduleinfo(module:TModuleBase);
+      procedure addunit(module:TModuleBase);
+      procedure add_required_package(pkg:TPackage);
     end;
 
 implementation
 
   uses
-    sysutils,
-    cfileutl,cutils,
-    systems,globals,version,
-    verbose,
+    SysUtils,
+    CFileUtl,CUtils,
+    Systems,Globals,version,
+    Verbose,
     entfile,ppu,pkgutil,nxpackagefile,
-    aasmbase,aasmtai,aasmdata;
+    aasmbase,aasmtai,AAsmData;
 
 { tpcppackage }
 
-  procedure tpcppackage.invalidpcp(const reason:ansistring);
+  procedure TPCPPackage.invalidpcp(const reason:AnsiString);
     begin
-      Comment(V_Fatal,'Invalid PCP file '+pcpfilename+': '+reason);
+      Comment(VFatal,'Invalid PCP file '+pcpfilename+': '+reason);
     end;
 
-  procedure tpcppackage.readentry(expected:byte);
+  procedure TPCPPackage.readentry(expected:byte);
     begin
       if not pcpfile.readpackageentry(expected) then
-        invalidpcp('invalid or truncated metadata entry '+tostr(expected));
+        invalidpcp('invalid or truncated metadata entry '+ToStr(expected));
     end;
 
-  procedure tpcppackage.endentry;
+  procedure TPCPPackage.endentry;
     begin
       if not pcpfile.packageentrydone then
         invalidpcp('invalid metadata entry length');
     end;
 
-  function tpcppackage.openpcp: boolean;
+  function TPCPPackage.openpcp: boolean;
     var
-      pcpfiletime : longint;
+      pcpfiletime : LongInt;
       lData: TBytes;
     begin
       result:=false;
@@ -109,7 +109,7 @@ implementation
       Message1(package_u_pcp_name,pcpfilename);
       metadatastream.Free;
       metadatastream:=nil;
-      pcpfile:=tpcpfile.create(pcpfilename);
+      pcpfile:=TPCPFile.create(pcpfilename);
       try
         lData:=ReadPackageMetadata(pcpfilename);
       except
@@ -130,14 +130,14 @@ implementation
        begin
          pcpfile.free;
          pcpfile:=nil;
-         Comment(V_Normal,'Invalid NexusFPC package header in '+pcpfilename+
+         Comment(VNormal,'Invalid NexusFPC package header in '+pcpfilename+
            ' (expected NXP signature and current header layout); rebuild with NexusFPC');
          exit;
        end;
     { check for allowed PCP versions }
       if not (pcpfile.getversion=CurrentPCPVersion) then
        begin
-         Message1(package_u_pcp_invalid_version,tostr(pcpfile.getversion));
+         Message1(package_u_pcp_invalid_version,ToStr(pcpfile.getversion));
          pcpfile.free;
          pcpfile:=nil;
          exit;
@@ -159,9 +159,9 @@ implementation
          exit;
        end;
     { Show Debug info }
-      Message1(package_u_pcp_time,filetimestring(pcpfiletime));
-      Message1(package_u_pcp_flags,tostr(pcpfile.header.common.flags{flags}));
-      Message1(package_u_pcp_crc,hexstr(pcpfile.header.checksum,8));
+      Message1(package_u_pcp_time,FileTimeString(pcpfiletime));
+      Message1(package_u_pcp_flags,ToStr(pcpfile.header.common.flags{flags}));
+      Message1(package_u_pcp_crc,HexStr(pcpfile.header.checksum,8));
       (*Message1(package_u_pcp_crc,hexstr(ppufile.header.interface_checksum,8)+' (intfc)');
       Message1(package_u_pcp_crc,hexstr(ppufile.header.indirect_checksum,8)+' (indc)');
       Comment(V_used,'Number of definitions: '+tostr(ppufile.header.deflistsize));
@@ -170,16 +170,16 @@ implementation
       result:=true;
     end;
 
-  function tpcppackage.search_package(ashortname:boolean):boolean;
+  function TPCPPackage.search_package(ashortname:boolean):boolean;
     var
       singlepathstring,
-      filename : TCmdStr;
+      FileName : TCmdStr;
 
     function package_exists(const ext:string;var foundfile:TCmdStr):boolean;
       begin
-        if CheckVerbosity(V_Tried) then
-          Message1(package_t_packagesearch,Singlepathstring+filename+ext);
-        result:=FindFile(filename+ext,singlepathstring,true,foundfile);
+        if CheckVerbosity(VTried) then
+          Message1(package_t_packagesearch,Singlepathstring+FileName+ext);
+        result:=FindFile(FileName+ext,singlepathstring,true,foundfile);
       end;
 
     function package_search_path(const s:TCmdStr):boolean;
@@ -206,7 +206,7 @@ implementation
       begin
         found:=false;
         hp:=TCmdStrListItem(list.First);
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
            found:=package_search_path(hp.Str);
            if found then
@@ -217,11 +217,11 @@ implementation
       end;
 
     begin
-      filename:=realpackagename^;
-      result:=search_path_list(packagesearchpath);
+      FileName:=realpackagename^;
+      result:=search_path_list(PackageSearchPath);
     end;
 
-  function tpcppackage.search_package_file: boolean;
+  function TPCPPackage.search_package_file: boolean;
     var
       found : boolean;
     begin
@@ -235,9 +235,9 @@ implementation
       result:=found;
     end;
 
-  procedure tpcppackage.setfilename(const fn:string;allowoutput:boolean);
+  procedure TPCPPackage.setfilename(const fn:string;allowoutput:boolean);
     var
-      p,n : tpathstr;
+      p,n : TPathStr;
     begin
       p:=FixPath(ExtractFilePath(fn),false);
       n:=FixFileName(ChangeFileExt(ExtractFileName(fn),''));
@@ -253,7 +253,7 @@ implementation
         pcpfilename:=fn;
     end;
 
-  procedure tpcppackage.writecontainernames;
+  procedure TPCPPackage.writecontainernames;
     begin
       pcpfile.putstring(pplfilename);
       pcpfile.putstring(sdkidentity);
@@ -262,67 +262,67 @@ implementation
       pcpfile.writeentry(ibpackagefiles);
     end;
 
-  procedure tpcppackage.writecontainedunits;
+  procedure TPCPPackage.writecontainedunits;
     var
-      p : pcontainedunit;
-      i : longint;
+      p : PContainedUnit;
+      i : LongInt;
     begin
       pcpfile.putlongint(containedmodules.count);
       pcpfile.writeentry(ibstartcontained);
       { for now we write the unit name and the ppu file name }
       for i:=0 to containedmodules.count-1 do
         begin
-          p:=pcontainedunit(containedmodules.items[i]);
-          pcpfile.putstring(p^.module.modulename^);
+          p:=PContainedUnit(containedmodules.items[i]);
+          pcpfile.putstring(p^.module.ModuleName^);
           pcpfile.putstring(p^.ppufile);
         end;
       pcpfile.writeentry(ibendcontained);
     end;
 
-  procedure tpcppackage.writerequiredpackages;
+  procedure TPCPPackage.writerequiredpackages;
     var
-      i : longint;
+      i : LongInt;
     begin
       pcpfile.putlongint(requiredpackages.count);
       pcpfile.writeentry(ibstartrequireds);
       for i:=0 to requiredpackages.count-1 do
         begin
           pcpfile.putstring(requiredpackages.NameOfIndex(i));
-          pcpfile.putstring(tpackage(requiredpackages[i]).buildidentity);
+          pcpfile.putstring(TPackage(requiredpackages[i]).buildidentity);
         end;
       pcpfile.writeentry(ibendrequireds);
     end;
 
-  procedure tpcppackage.writepputable;
+  procedure TPCPPackage.writepputable;
     var
-      module : pcontainedunit;
-      i : longint;
+      module : PContainedUnit;
+      i : LongInt;
     begin
       { no need to write the count again; it's the same as for the contained units }
       for i:=0 to containedmodules.count-1 do
         begin
-          module:=pcontainedunit(containedmodules[i]);
+          module:=PContainedUnit(containedmodules[i]);
           pcpfile.putlongint(module^.offset);
           pcpfile.putlongint(module^.size);
         end;
       pcpfile.writeentry(ibpputable);
     end;
 
-  procedure tpcppackage.writeppudata;
+  procedure TPCPPackage.writeppudata;
     const
       align: array[0..15] of byte = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
     var
       i,
       pos,
-      rem : longint;
-      module : pcontainedunit;
+      rem : LongInt;
+      module : PContainedUnit;
       stream : TCMemoryStream;
     begin
       pcpfile.flush;
 
       for i:=0 to containedmodules.count-1 do
         begin
-          module:=pcontainedunit(containedmodules[i]);
+          module:=PContainedUnit(containedmodules[i]);
 
           pos:=pcpfile.position;
           { align to 16 byte so that it can be nicely viewed in hex editors;
@@ -336,8 +336,8 @@ implementation
             share buffered state with direct writes to the PCP stream. }
           stream:=TCMemoryStream.Create;
           try
-            if not rewriteppu(module^.module.ppufilename,stream) then
-              Comment(V_Fatal,'Failed to package unit '+module^.module.modulename^);
+            if not rewriteppu(module^.module.PPUFileName,stream) then
+              Comment(VFatal,'Failed to package unit '+module^.module.ModuleName^);
             module^.size:=stream.Size;
             stream.Position:=0;
             if pcpfile.stream.CopyFrom(stream,stream.Size)<>stream.Size then
@@ -354,7 +354,7 @@ implementation
       pcpfile.stream.write(align[0],rem+1);
     end;
 
-  procedure tpcppackage.readcontainernames;
+  procedure TPCPPackage.readcontainernames;
     begin
       readentry(ibpackagefiles);
       pplfilename:=pcpfile.getstring;
@@ -365,17 +365,17 @@ implementation
         invalidpcp('empty library filename');
       if (length(sdkidentity)>64) or (length(buildidentity)>64) then
         invalidpcp('invalid build identity');
-      if sdkidentity<>package_sdk_identity then
+      if sdkidentity<>Package_SDK_Identity then
         invalidpcp('package SDK identity differs from compiler invocation');
 
       message1(package_u_ppl_filename,pplfilename);
     end;
 
-  procedure tpcppackage.readcontainedunits;
+  procedure TPCPPackage.readcontainedunits;
     var
-      cnt,i : longint;
+      cnt,i : LongInt;
       name,path : string;
-      p : pcontainedunit;
+      p : PContainedUnit;
     begin
       readentry(ibstartcontained);
       cnt:=pcpfile.getlongint;
@@ -405,9 +405,9 @@ implementation
       endentry;
     end;
 
-  procedure tpcppackage.readrequiredpackages;
+  procedure TPCPPackage.readrequiredpackages;
     var
-      cnt,i : longint;
+      cnt,i : LongInt;
       name : string;
       names : TFPHashList;
     begin
@@ -432,7 +432,7 @@ implementation
             { Hash lookup ignores entries with nil data. }
             names.Add(upper(name),self);
             requiredpackages.add(name,nil);
-            requiredidentities.Add(upper(name),stringdup(pcpfile.getstring));
+            requiredidentities.Add(upper(name),StringDup(pcpfile.getstring));
             message1(package_u_required_package,name);
           end;
       finally
@@ -441,41 +441,41 @@ implementation
       endentry;
     end;
 
-  procedure tpcppackage.readpputable;
+  procedure TPCPPackage.readpputable;
     var
-      module : pcontainedunit;
-      i : longint;
+      module : PContainedUnit;
+      i : LongInt;
     begin
       readentry(ibpputable);
-      if (pcpfile.entrysize mod (2*sizeof(longint))<>0) or
-         (pcpfile.entrysize div (2*sizeof(longint))<>containedmodules.count) then
+      if (pcpfile.entrysize mod (2*sizeof(LongInt))<>0) or
+         (pcpfile.entrysize div (2*sizeof(LongInt))<>containedmodules.count) then
         invalidpcp('invalid PPU table size');
       for i:=0 to containedmodules.count-1 do
         begin
-          module:=pcontainedunit(containedmodules[i]);
+          module:=PContainedUnit(containedmodules[i]);
           module^.offset:=pcpfile.getlongint;
           module^.size:=pcpfile.getlongint;
         end;
       endentry;
     end;
 
-  function compareppuoffsets(p1,p2:pointer):longint;
+  function compareppuoffsets(p1,p2:pointer):LongInt;
     begin
-      if pcontainedunit(p1)^.offset<pcontainedunit(p2)^.offset then
+      if PContainedUnit(p1)^.offset<PContainedUnit(p2)^.offset then
         result:=-1
-      else if pcontainedunit(p1)^.offset>pcontainedunit(p2)^.offset then
+      else if PContainedUnit(p1)^.offset>PContainedUnit(p2)^.offset then
         result:=1
       else
         result:=0;
     end;
 
-  procedure tpcppackage.checkppudata;
+  procedure TPCPPackage.checkppudata;
     var
       ranges : TFPList;
-      i,lastend,filesize : longint;
-      module : pcontainedunit;
+      i,lastend,filesize : LongInt;
+      module : PContainedUnit;
       data : TCMemoryStream;
-      ppufile : tppufile;
+      ppufile : TPPUFile;
     begin
       ranges:=TFPList.Create;
       try
@@ -486,17 +486,17 @@ implementation
         lastend:=pcpfile.metadataend;
         for i:=0 to ranges.count-1 do
           begin
-            module:=pcontainedunit(ranges[i]);
+            module:=PContainedUnit(ranges[i]);
             if (module^.offset<lastend) or (module^.offset>filesize) or
-               (module^.size<sizeof(tppuheader)) or
+               (module^.size<sizeof(TPPUHeader)) or
                (module^.size>filesize-module^.offset) then
               invalidpcp('overlapping or out-of-bounds embedded PPU');
             lastend:=module^.offset+module^.size;
             data:=TCMemoryStream.Create;
-            ppufile:=tppufile.Create('');
+            ppufile:=TPPUFile.Create('');
             try
               pcpfile.stream.Position:=module^.offset;
-              if data.CopyFrom(pcpfile.stream,sizeof(tppuheader))<>sizeof(tppuheader) then
+              if data.CopyFrom(pcpfile.stream,sizeof(TPPUHeader))<>sizeof(TPPUHeader) then
                 invalidpcp('truncated embedded PPU header');
               data.Position:=0;
               if not ppufile.openstream(data) then
@@ -506,7 +506,7 @@ implementation
               if (ppufile.getversion<>CurrentPPUVersion) or
                  (ppufile.header.common.cpu<>pcpfile.header.common.cpu) or
                  (ppufile.header.common.target<>pcpfile.header.common.target) or
-                 (ppufile.header.common.size<>dword(module^.size-sizeof(tppuheader))) then
+                 (ppufile.header.common.size<>dword(module^.size-sizeof(TPPUHeader))) then
                 invalidpcp('incompatible or inconsistent embedded PPU header');
             finally
               ppufile.Free;
@@ -518,22 +518,22 @@ implementation
       end;
     end;
 
-    constructor tpcppackage.create(const pn: string);
+    constructor TPCPPackage.create(const pn: string);
     begin
       inherited create(pn);
 
       setfilename(pn+'.nxpk',true);
     end;
 
-  destructor tpcppackage.destroy;
+  destructor TPCPPackage.Destroy;
     begin
       pcpfile.free;
       pcpfile := nil;
       metadatastream.Free;
-      inherited destroy;
+      inherited Destroy;
     end;
 
-  procedure tpcppackage.loadpcp;
+  procedure TPCPPackage.loadpcp;
     var
       newpackagename : string;
     begin
@@ -548,8 +548,8 @@ implementation
       else
         Message1(package_u_pcp_found,realpackagename^);
 
-      if not assigned(pcpfile) then
-        internalerror(2013053101);
+      if not Assigned(pcpfile) then
+        InternalError(2013053101);
 
       readentry(ibpackagename);
       newpackagename:=pcpfile.getstring;
@@ -571,20 +571,20 @@ implementation
       loaded:=true;
     end;
 
-  procedure tpcppackage.savepcp;
+  procedure TPCPPackage.savepcp;
     var
       tablepos,
-      oldpos,i : longint;
-      module : pcontainedunit;
+      oldpos,i : LongInt;
+      module : PContainedUnit;
       lRaw, lEncoded: TBytes;
-      lSection: tai_section;
+      lSection: TAISection;
     begin
       { create new ppufile }
-      sdkidentity:=package_sdk_identity;
+      sdkidentity:=Package_SDK_Identity;
       buildidentity:=current_package_build_identity;
       metadatastream.Free;
       metadatastream:=nil;
-      pcpfile:=tpcpfile.create(pcpfilename);
+      pcpfile:=TPCPFile.create(pcpfilename);
       metadatastream:=TCMemoryStream.Create;
       if not pcpfile.createstream(metadatastream) then
         Message2(package_f_cant_create_pcp,realpackagename^,pcpfilename);
@@ -616,7 +616,7 @@ implementation
         { create and write header }
         pcpfile.header.common.size:=pcpfile.size;
         pcpfile.header.checksum:=pcpfile.crc;
-        pcpfile.header.common.compiler:=wordversion;
+        pcpfile.header.common.compiler:=WordVersion;
         pcpfile.header.common.cpu:=word(TargetCPU);
         pcpfile.header.common.target:=word(TargetInfo.system);
         //pcpfile.header.flags:=flags;
@@ -635,9 +635,9 @@ implementation
         pcpfile.stream.Position:=tablepos;
         for i:=0 to containedmodules.count-1 do
           begin
-            module:=pcontainedunit(containedmodules[i]);
-            if (pcpfile.stream.Write(module^.offset,sizeof(longint))<>sizeof(longint)) or
-               (pcpfile.stream.Write(module^.size,sizeof(longint))<>sizeof(longint)) then
+            module:=PContainedUnit(containedmodules[i]);
+            if (pcpfile.stream.Write(module^.offset,sizeof(LongInt))<>sizeof(LongInt)) or
+               (pcpfile.stream.Write(module^.size,sizeof(LongInt))<>sizeof(LongInt)) then
               Message(package_f_pcp_cannot_write);
           end;
 
@@ -646,19 +646,19 @@ implementation
         SetLength(lRaw,metadatastream.Size);
         Move(metadatastream.Memory^,lRaw[0],Length(lRaw));
         lEncoded:=EncodePackageMetadata(lRaw);
-        if not embed_package_metadata then
+        if not Embed_Package_Metadata then
           begin
             WritePackageBytes(pcpfilename,lEncoded);
             lEncoded:=PackageMetadataReference(lEncoded);
           end
         else if SysUtils.FileExists(pcpfilename) and not SysUtils.DeleteFile(pcpfilename) then
-          Comment(V_Fatal,'Cannot remove stale package sidecar '+pcpfilename);
+          Comment(VFatal,'Cannot remove stale package sidecar '+pcpfilename);
         lSection:=new_section(CurrentAsmData.asmlists[al_rotypedconsts],
           sec_user,NexusPackageMetadataSection,1);
         lSection.secprogbits:=SPB_PROGBITS;
         lSection.secflags:=[];
         CurrentAsmData.asmlists[al_rotypedconsts].concat(
-          tai_string.Create_Data(PChar(@lEncoded[0]),Length(lEncoded),false));
+          TAIString.Create_Data(PChar(@lEncoded[0]),Length(lEncoded),false));
 
         { save crc in current module also }
         //crc:=pcpfile.crc;
@@ -669,15 +669,15 @@ implementation
       end;
     end;
 
-  function tpcppackage.getmodulestream(module:tmodulebase):tcstream;
+  function TPCPPackage.getmodulestream(module:TModuleBase):TCStream;
     var
-      i : longint;
-      contained : pcontainedunit;
+      i : LongInt;
+      contained : PContainedUnit;
       data : TCMemoryStream;
     begin
       for i:=0 to containedmodules.count-1 do
         begin
-          contained:=pcontainedunit(containedmodules[i]);
+          contained:=PContainedUnit(containedmodules[i]);
           if contained^.module=module then
             begin
               { An independent bounded stream cannot read into the next PPU,
@@ -699,35 +699,35 @@ implementation
       result:=nil;
     end;
 
-  procedure tpcppackage.initmoduleinfo(module: tmodulebase);
+  procedure TPCPPackage.initmoduleinfo(module: TModuleBase);
     begin
-      pplfilename:=extractfilename(module.sharedlibfilename);
-      pcpfilename:=ChangeFileExt(module.sharedlibfilename,NexusPackageExtension);
+      pplfilename:=extractfilename(module.SharedLibFileName);
+      pcpfilename:=ChangeFileExt(module.SharedLibFileName,NexusPackageExtension);
     end;
 
-  procedure tpcppackage.addunit(module: tmodulebase);
+  procedure TPCPPackage.addunit(module: TModuleBase);
     var
-      containedunit : pcontainedunit;
+      containedunit : PContainedUnit;
     begin
       new(containedunit);
       containedunit^.module:=module;
-      containedunit^.ppufile:=extractfilename(module.ppufilename);
+      containedunit^.ppufile:=extractfilename(module.PPUFileName);
       containedunit^.offset:=0;
       containedunit^.size:=0;
-      containedmodules.add(module.modulename^,containedunit);
+      containedmodules.add(module.ModuleName^,containedunit);
     end;
 
 
-  procedure tpcppackage.add_required_package(pkg:tpackage);
+  procedure TPCPPackage.add_required_package(pkg:TPackage);
     var
-      p : tpackage;
+      p : TPackage;
     begin
-      p:=tpackage(requiredpackages.find(pkg.packagename^));
-      if not assigned(p) then
+      p:=TPackage(requiredpackages.find(pkg.packagename^));
+      if not Assigned(p) then
         requiredpackages.Add(pkg.packagename^,pkg)
       else
         if p<>pkg then
-          internalerror(2015112302);
+          InternalError(2015112302);
     end;
 
 

@@ -26,7 +26,7 @@ unit i_android;
   interface
 
     uses
-       systems,nxartifactid, rescmn;
+       Systems,nxartifactid, rescmn;
 
     const
 
@@ -42,7 +42,7 @@ unit i_android;
              cpu          : cpu_aarch64;
              unit_env     : 'ANDROIDUNITS';
              extradefines : 'UNIX;HASUNIX';
-             exeext       : '';
+             ExeExt       : '';
              defext       : '.def';
              scriptext    : '.sh';
              smartext     : '.sl';
@@ -76,24 +76,24 @@ unit i_android;
              endian       : endian_little;
              alignment    :
                (
-                 procalign       : 8;
-                 loopalign       : 4;
-                 jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                 constalignmin   : 0;
-                 constalignmax   : 16;
-                 varalignmin     : 0;
-                 varalignmax     : 16;
-                 localalignmin   : 4;
-                 localalignmax   : 16;
-                 recordalignmin  : 0;
-                 recordalignmax  : 16;
-                 maxCrecordalign : 16
+                 ProcAlign       : 8;
+                 LoopAlign       : 4;
+                 JumpAlign       : 0;
+                JumpAlignSkipMax    : 0;
+                CoalesceAlign   : 0;
+                CoalesceAlignSkipMax: 0;
+                 ConstAlignMin   : 0;
+                 ConstAlignMax   : 16;
+                 VarAlignMin     : 0;
+                 VarAlignMax     : 16;
+                 LocalAlignMin   : 4;
+                 LocalAlignMax   : 16;
+                 RecordAlignMin  : 0;
+                 RecordAlignMax  : 16;
+                 MaxCRecordAlign : 16
                );
              first_parm_offset : 16;
-             stacksize    : 8*1024*1024;
+             StackSize    : 8*1024*1024;
              stackalign   : 16;
              abi : abi_default;
            );
@@ -110,7 +110,7 @@ unit i_android;
              cpu          : cpu_x86_64;
              unit_env     : 'ANDROIDUNITS';
              extradefines : 'UNIX;HASUNIX';
-             exeext       : '';
+             ExeExt       : '';
              defext       : '.def';
              scriptext    : '.sh';
              smartext     : '.sl';
@@ -144,24 +144,24 @@ unit i_android;
              endian       : endian_little;
              alignment    :
                (
-                 procalign       : 16;
-                 loopalign       : 8;
-                 jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                 constalignmin   : 0;
-                 constalignmax   : 16;
-                 varalignmin     : 0;
-                 varalignmax     : 16;
-                 localalignmin   : 4;
-                 localalignmax   : 16;
-                 recordalignmin  : 0;
-                 recordalignmax  : 16;
-                 maxCrecordalign : 16
+                 ProcAlign       : 16;
+                 LoopAlign       : 8;
+                 JumpAlign       : 0;
+                JumpAlignSkipMax    : 0;
+                CoalesceAlign   : 0;
+                CoalesceAlignSkipMax: 0;
+                 ConstAlignMin   : 0;
+                 ConstAlignMax   : 16;
+                 VarAlignMin     : 0;
+                 VarAlignMax     : 16;
+                 LocalAlignMin   : 4;
+                 LocalAlignMax   : 16;
+                 RecordAlignMin  : 0;
+                 RecordAlignMax  : 16;
+                 MaxCRecordAlign : 16
                );
              first_parm_offset : 16;
-             stacksize    : 8*1024*1024;
+             StackSize    : 8*1024*1024;
              stackalign   : 16;
              abi : abi_default;
            );

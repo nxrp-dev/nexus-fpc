@@ -27,25 +27,25 @@ unit optdead;
   interface
 
     uses
-      globtype,
-      cclasses,
+      GlobType,
+      CClasses,
       wpobase;
 
     type
 
       { twpodeadcodeinfo }
 
-      twpodeadcodeinfo = class(twpodeadcodehandler)
+      TWPODeadCodeInfo = class(TWPODeadCodeHandler)
        private
         { hashtable of symbols which are live }
-        fsymbols     : tfphashlist;
+        fsymbols     : TFPHashList;
 
-        procedure documentformat(writer: twposectionwriterintf);
+        procedure documentformat(writer: TWPOSectionWriterIntf);
        public
         constructor create; override;
-        destructor destroy; override;
+        destructor Destroy; override;
 
-        class function  getwpotype: twpotype; override;
+        class function  getwpotype: TWPOType; override;
         class function  generatesinfoforwposwitches: TWPOptimizerSwitches; override;
         class function  performswpoforswitches: TWPOptimizerSwitches; override;
         class function  sectionname: shortstring; override;
@@ -53,43 +53,43 @@ unit optdead;
         class procedure checkoptions; override;
 
         { information collection }
-        procedure storewpofilesection(writer: twposectionwriterintf); override;
+        procedure storewpofilesection(writer: TWPOSectionWriterIntf); override;
 
         { information providing }
-        procedure loadfromwpofilesection(reader: twposectionreaderintf); override;
+        procedure loadfromwpofilesection(reader: TWPOSectionReaderIntf); override;
         function  symbolinfinalbinary(const s: shortstring): boolean;override;
 
       end;
 
       { tdeadcodeinfofromexternallinker }
 
-      twpodeadcodeinfofromexternallinker = class(twpodeadcodeinfo)
+      TWPODeadCodeInfoFromExternalLinker = class(TWPODeadCodeInfo)
        private
 
         fsymtypepos,
-        fsymnamepos  : longint;
+        fsymnamepos  : LongInt;
         fsymfile     : text;
-        fsymfilename : tcmdstr;
+        fsymfilename : TCmdStr;
         aixstrings   : TDynStringArray;
         fuseaixextractstrings : boolean;
-        function parselinenm(const line: ansistring): boolean;
-        function parselineobjdump(const line: ansistring): boolean;
+        function parselinenm(const line: AnsiString): boolean;
+        function parselineobjdump(const line: AnsiString): boolean;
        public
         class procedure checkoptions; override;
 
         { information collection }
         procedure constructfromcompilerstate; override;
-        destructor destroy; override;
+        destructor Destroy; override;
       end;
 
 
   implementation
 
   uses
-    cutils,cfileutl,
-    sysutils,
-    globals,systems,fmodule,
-    verbose;
+    CUtils,CFileUtl,
+    SysUtils,
+    Globals,Systems,FModule,
+    Verbose;
 
 
   const
@@ -97,66 +97,66 @@ unit optdead;
 
   { twpodeadcodeinfo }
 
-  constructor twpodeadcodeinfo.create;
+  constructor TWPODeadCodeInfo.create;
     begin
       inherited create;
-      fsymbols:=tfphashlist.create;
+      fsymbols:=TFPHashList.create;
     end;
 
 
-  destructor twpodeadcodeinfo.destroy;
+  destructor TWPODeadCodeInfo.Destroy;
     begin
       fsymbols.free;
       fsymbols:=nil;
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
-  class function twpodeadcodeinfo.getwpotype: twpotype;
+  class function TWPODeadCodeInfo.getwpotype: TWPOType;
     begin
       result:=wpo_live_symbol_information;
     end;
 
 
-  class function twpodeadcodeinfo.generatesinfoforwposwitches: TWPOptimizerSwitches;
+  class function TWPODeadCodeInfo.generatesinfoforwposwitches: TWPOptimizerSwitches;
     begin
       result:=[cs_wpo_symbol_liveness];
     end;
 
 
-  class function twpodeadcodeinfo.performswpoforswitches: TWPOptimizerSwitches;
+  class function TWPODeadCodeInfo.performswpoforswitches: TWPOptimizerSwitches;
     begin
       result:=[cs_wpo_symbol_liveness];
     end;
 
 
-  class function twpodeadcodeinfo.sectionname: shortstring;
+  class function TWPODeadCodeInfo.sectionname: shortstring;
     begin
       result:=SYMBOL_SECTION_NAME;
     end;
 
 
-  class procedure twpodeadcodeinfo.checkoptions;
+  class procedure TWPODeadCodeInfo.checkoptions;
     begin
       { we don't have access to the symbol info if the linking
         hasn't happened
       }
-      if (([cs_link_on_target,cs_link_nolink] * InitSettings.globalswitches) <> []) then
+      if (([cs_link_on_target,cs_link_nolink] * InitSettings.GlobalSwitches) <> []) then
         begin
-          cgmessage(wpo_cannot_extract_live_symbol_info_no_link);
+          CGMessage(wpo_cannot_extract_live_symbol_info_no_link);
           exit;
         end;
 
       { without dead code stripping/smart linking, this doesn't make sense }
-      if not(cs_link_smart in InitSettings.globalswitches) then
+      if not(cs_link_smart in InitSettings.GlobalSwitches) then
         begin
-          cgmessage(wpo_symbol_live_info_needs_smart_linking);
+          CGMessage(wpo_symbol_live_info_needs_smart_linking);
           exit;
         end;
     end;
 
 
-  procedure twpodeadcodeinfo.documentformat(writer: twposectionwriterintf);
+  procedure TWPODeadCodeInfo.documentformat(writer: TWPOSectionWriterIntf);
     begin
       writer.sectionputline('# section format:');
       writer.sectionputline('# symbol1_that_is_live');
@@ -166,9 +166,9 @@ unit optdead;
     end;
 
 
-  procedure twpodeadcodeinfo.storewpofilesection(writer: twposectionwriterintf);
+  procedure TWPODeadCodeInfo.storewpofilesection(writer: TWPOSectionWriterIntf);
     var
-      i: longint;
+      i: LongInt;
     begin
       writer.startsection(SYMBOL_SECTION_NAME);
       documentformat(writer);
@@ -177,7 +177,7 @@ unit optdead;
     end;
 
 
-  procedure twpodeadcodeinfo.loadfromwpofilesection(reader: twposectionreaderintf);
+  procedure TWPODeadCodeInfo.loadfromwpofilesection(reader: TWPOSectionReaderIntf);
     var
       symname: shortstring;
     begin
@@ -186,7 +186,7 @@ unit optdead;
     end;
 
 
-  function twpodeadcodeinfo.symbolinfinalbinary(const s: shortstring): boolean;
+  function TWPODeadCodeInfo.symbolinfinalbinary(const s: shortstring): boolean;
     begin
       result:=fsymbols.find(s)<>nil;
     end;
@@ -203,20 +203,20 @@ const
 {$endif}
   objdumpsearchstr=' '+objdumpcheckstr;
 
-  class procedure twpodeadcodeinfofromexternallinker.checkoptions;
+  class procedure TWPODeadCodeInfoFromExternalLinker.checkoptions;
     begin
       inherited checkoptions;
 
       { we need symbol information }
-      if (cs_link_strip in InitSettings.globalswitches) then
+      if (cs_link_strip in InitSettings.GlobalSwitches) then
         begin
-          cgmessage(wpo_cannot_extract_live_symbol_info_strip);
+          CGMessage(wpo_cannot_extract_live_symbol_info_strip);
           exit;
         end;
     end;
 
 
-  function twpodeadcodeinfofromexternallinker.parselinenm(const line: ansistring): boolean;
+  function TWPODeadCodeInfoFromExternalLinker.parselinenm(const line: AnsiString): boolean;
     begin
       if fuseaixextractstrings then
         begin
@@ -228,13 +228,13 @@ const
                  (aixstrings[0][1]='.') then
                 fsymbols.add(copy(aixstrings[0],2,length(aixstrings[0])),pointer(1));
             end;
-          setlength(aixstrings,0);
+          SetLength(aixstrings,0);
         end
       else
         begin
           if (length(line) < fsymnamepos) then
             begin
-              cgmessage1(wpo_error_reading_symbol_file,'nm');
+              CGMessage1(wpo_error_reading_symbol_file,'nm');
               close(fsymfile);
               deletefile(fsymfilename);
               result:=false;
@@ -247,7 +247,7 @@ const
     end;
 
 
-  function twpodeadcodeinfofromexternallinker.parselineobjdump(const line: ansistring): boolean;
+  function TWPODeadCodeInfoFromExternalLinker.parselineobjdump(const line: AnsiString): boolean;
     begin
       { there are a couple of empty lines at the end }
       if (line='') then
@@ -257,7 +257,7 @@ const
         end;
       if (length(line) < fsymtypepos) then
         begin
-          cgmessage1(wpo_error_reading_symbol_file,'objdump');
+          CGMessage1(wpo_error_reading_symbol_file,'objdump');
           close(fsymfile);
           deletefile(fsymfilename);
           result:=false;
@@ -269,28 +269,28 @@ const
     end;
 
 
-  procedure twpodeadcodeinfofromexternallinker.constructfromcompilerstate;
+  procedure TWPODeadCodeInfoFromExternalLinker.constructfromcompilerstate;
 
     type
-      tparselineproc = function(const line: ansistring): boolean of object;
+      TParseLineProc = function(const line: AnsiString): boolean of object;
 
     var
       nmfullname,
       objdumpfullname,
-      symbolprogfullpath  : tcmdstr;
-      line                : ansistring;
-      parseline           : tparselineproc;
-      exitcode            : longint;
+      symbolprogfullpath  : TCmdStr;
+      line                : AnsiString;
+      parseline           : TParseLineProc;
+      exitcode            : LongInt;
       symbolprogfound     : boolean;
       symbolprogisnm      : boolean;
 
 
-    function findutil(const utilname: string; out fullutilname, fullutilpath: tcmdstr): boolean;
+    function findutil(const utilname: string; out fullutilname, fullutilpath: TCmdStr): boolean;
       begin
         result:=false;
-        fullutilname:=utilsprefix+changefileext(utilname,SourceInfo.exeext);
-        if utilsdirectory<>'' then
-          result:=findfile(fullutilname,utilsdirectory,false,fullutilpath);
+        fullutilname:=UtilsPrefix+changefileext(utilname,SourceInfo.ExeExt);
+        if UtilsDirectory<>'' then
+          result:=findfile(fullutilname,UtilsDirectory,false,fullutilpath);
         if not result then
           result:=findexe(fullutilname,false,fullutilpath);
       end;
@@ -301,7 +301,7 @@ const
         result:=error;
         if not result then
           exit;
-        cgmessage1(wpo_error_reading_symbol_file,symbolprogfullpath);
+        CGMessage1(wpo_error_reading_symbol_file,symbolprogfullpath);
 {$push}{$i-}
         close(fsymfile);
 {$pop}
@@ -385,21 +385,21 @@ const
         end;
       if not symbolprogfound then
         begin
-          cgmessage2(wpo_cannot_find_symbol_progs,nmfullname,objdumpfullname);
+          CGMessage2(wpo_cannot_find_symbol_progs,nmfullname,objdumpfullname);
           exit;
         end;
 
       { upper case to have the least chance of tripping some long file name
         conversion stuff
       }
-      fsymfilename:=outputexedir+'FPCWPO.SYM';
+      fsymfilename:=OutputExeDir+'FPCWPO.SYM';
       { -p gives the same kind of output with Solaris nm as
         with GNU nm, and for GNU nm it simply means "unsorted"
       }
-      exitcode:=shell(symbolprogfullpath+maybequoted(CurrentModule.exefilename)+' > '+fsymfilename);
+      exitcode:=shell(symbolprogfullpath+MaybeQuoted(CurrentModule.ExeFileName)+' > '+fsymfilename);
       if (exitcode<>0) then
         begin
-          cgmessage2(wpo_error_executing_symbol_prog,symbolprogfullpath,tostr(exitcode));
+          CGMessage2(wpo_error_executing_symbol_prog,symbolprogfullpath,ToStr(exitcode));
           if fileexists(fsymfilename) then
             deletefile(fsymfilename);
           exit;
@@ -409,7 +409,7 @@ const
 {$push}{$i-}
       reset(fsymfile);
 {$pop}
-      if failiferror((ioresult<>0) or eof(fsymfile)) then
+      if failiferror((IOResult<>0) or eof(fsymfile)) then
         exit;
       readln(fsymfile, line);
       if (symbolprogisnm) then
@@ -437,9 +437,9 @@ const
     end;
 
 
-  destructor twpodeadcodeinfofromexternallinker.destroy;
+  destructor TWPODeadCodeInfoFromExternalLinker.Destroy;
     begin
-      inherited destroy;
+      inherited Destroy;
     end;
 
 

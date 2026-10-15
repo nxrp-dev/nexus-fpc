@@ -29,7 +29,7 @@ Unit rax64att;
       raatt,rax86att,aasmtai;
 
     type
-      tx8664attreader = class(tx86attreader)
+      TX8664ATTReader = class(TX86ATTReader)
         actsehdirective: TAsmSehDirective;
         procedure handleopcode;override;
         function is_targetdirective(const s:string):boolean;override;
@@ -40,9 +40,9 @@ Unit rax64att;
   implementation
 
     uses
-      cutils,globtype,rabase,systems,rax86,aasmcpu,cgbase,procinfo,symconst,verbose;
+      CUtils,GlobType,rabase,Systems,rax86,aasmcpu,cgbase,ProcInfo,symconst,Verbose;
 
-    procedure tx8664attreader.handleopcode;
+    procedure TX8664ATTReader.handleopcode;
       var
         instr : Tx86Instruction;
       begin
@@ -69,7 +69,7 @@ Unit rax64att;
       maxoffset: array[boolean] of aint=(high(dword), 240);
       modulo: array[boolean] of integer=(7, 15);
 
-    function tx8664attreader.is_targetdirective(const s:string):boolean;
+    function TX8664ATTReader.is_targetdirective(const s:string):boolean;
       var
         i: TAsmSehDirective;
       begin
@@ -96,12 +96,12 @@ Unit rax64att;
           end;
       end;
 
-    procedure tx8664attreader.handletargetdirective;
+    procedure TX8664ATTReader.handletargetdirective;
       var
         hreg: TRegister;
         hnum: aint;
         flags: integer;
-        ai: tai_seh_directive;
+        ai: TAISEHDirective;
         hs: string;
         err: boolean;
       begin
@@ -116,7 +116,7 @@ Unit rax64att;
           ash_endprologue,
           ash_pushframe,
           ash_handlerdata:
-            curlist.concat(cai_seh_directive.create(actsehdirective));
+            curlist.concat(CAISEHDirective.create(actsehdirective));
 
           ash_handler:
             begin
@@ -132,7 +132,7 @@ Unit rax64att;
                       Consume(AS_AT);
                       if actasmtoken=AS_ID then
                         begin
-                          uppervar(actasmpattern);
+                          UpperVar(actasmpattern);
                           if actasmpattern='EXCEPT' then
                             flags:=flags or 1
                           else if actasmpattern='UNWIND' then
@@ -154,7 +154,7 @@ Unit rax64att;
                     end;
                 end;
 
-              ai:=cai_seh_directive.create_name(ash_handler,hs);
+              ai:=CAISEHDirective.create_name(ash_handler,hs);
               ai.data.flags:=flags;
               curlist.concat(ai);
             end;
@@ -164,7 +164,7 @@ Unit rax64att;
               if (hnum<0) or (hnum>high(dword)) or ((hnum and 7)<>0) then
                 Message1(asmr_e_bad_seh_directive_offset,sehdirectivestr[ash_stackalloc])
               else
-                curlist.concat(cai_seh_directive.create_offset(ash_stackalloc,hnum));
+                curlist.concat(CAISEHDirective.create_offset(ash_stackalloc,hnum));
             end;
           ash_pushreg:
             begin
@@ -173,7 +173,7 @@ Unit rax64att;
               if (getregtype(hreg)<>R_INTREGISTER) or (getsubreg(hreg)<>R_SUBQ) then
                 Message1(asmr_e_bad_seh_directive_register,sehdirectivestr[ash_pushreg])
               else
-                curlist.concat(cai_seh_directive.create_reg(ash_pushreg,hreg));
+                curlist.concat(CAISEHDirective.create_reg(ash_pushreg,hreg));
             end;
           ash_setframe,
           ash_savereg:
@@ -188,7 +188,7 @@ Unit rax64att;
                 ((hnum and modulo[actsehdirective=ash_setframe])<>0) then
                 Message1(asmr_e_bad_seh_directive_offset,sehdirectivestr[actsehdirective])
               else
-                curlist.concat(cai_seh_directive.create_reg_offset(actsehdirective,hreg,hnum));
+                curlist.concat(CAISEHDirective.create_reg_offset(actsehdirective,hreg,hnum));
             end;
           ash_savexmm:
             begin
@@ -201,7 +201,7 @@ Unit rax64att;
               if (hnum<0) or (hnum>high(dword)) or ((hnum and 15)<>0) then
                 Message1(asmr_e_bad_seh_directive_offset,sehdirectivestr[ash_savexmm])
               else
-                curlist.concat(cai_seh_directive.create_reg_offset(actsehdirective,hreg,hnum));
+                curlist.concat(CAISEHDirective.create_reg_offset(actsehdirective,hreg,hnum));
             end;
 
         else
@@ -213,26 +213,26 @@ Unit rax64att;
 
 
 const
-  asmmode_x86_64_gas_info : tasmmodeinfo =
+  asmmode_x86_64_gas_info : TAsmModeInfo =
           (
             id    : asmmode_x86_64_gas;
             idtxt : 'GAS';
-            casmreader : tx8664attreader;
+            CAsmReader : TX8664ATTReader;
           );
 
   { Added to be compatible with i386 }
-  asmmode_x86_64_att_info : tasmmodeinfo =
+  asmmode_x86_64_att_info : TAsmModeInfo =
           (
             id    : asmmode_x86_64_att;
             idtxt : 'ATT';
-            casmreader : tx8664attreader;
+            CAsmReader : TX8664ATTReader;
           );
 
-  asmmode_x86_64_standard_info : tasmmodeinfo =
+  asmmode_x86_64_standard_info : TAsmModeInfo =
           (
             id    : asmmode_standard;
             idtxt : 'STANDARD';
-            casmreader : tx8664attreader;
+            CAsmReader : TX8664ATTReader;
           );
 
 initialization

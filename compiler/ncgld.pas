@@ -27,13 +27,13 @@ unit ncgld;
 interface
 
     uses
-      globtype,
-      symtype,symsym,
-      aasmdata,
+      GlobType,
+      symtype,SymSym,
+      AAsmData,
       node,nld,cgutils;
 
     type
-       tcgloadnode = class(tloadnode)
+       TCGLoadNode = class(TLoadNode)
          protected
           procedure generate_nested_access(vs: TSym);virtual;
           procedure generate_absaddr_access(vs: TAbsoluteVarSym); virtual;
@@ -41,25 +41,25 @@ interface
           function use_indirect_symbol(gvs: TStaticVarSym): boolean;
          public
           procedure pass_generate_code;override;
-          procedure changereflocation(const ref: treference);
+          procedure changereflocation(const ref: TReference);
        end;
 
-       tcgassignmentnode = class(tassignmentnode)
+       TCGAssignmentNode = class(TAssignmentNode)
         protected
-          function maybechangetemp(list: TAsmList; var n: TNode; const newref: treference): boolean;virtual;
+          function maybechangetemp(list: TAsmList; var n: TNode; const newref: TReference): boolean;virtual;
         public
           procedure pass_generate_code;override;
        end;
 
-       tcgarrayconstructornode = class(tarrayconstructornode)
+       TCGArrayConstructorNode = class(TArrayConstructorNode)
          protected
-          procedure makearrayref(var ref: treference; eledef: TDef);virtual;
-          procedure advancearrayoffset(var ref: treference; elesize: asizeint);virtual;
+          procedure makearrayref(var ref: TReference; eledef: TDef);virtual;
+          procedure advancearrayoffset(var ref: TReference; elesize: asizeint);virtual;
          public
           procedure pass_generate_code;override;
        end;
 
-       tcgrttinode = class(trttinode)
+       TCGRTTINode = class(TRTTINode)
           procedure pass_generate_code;override;
        end;
 
@@ -67,15 +67,15 @@ interface
 implementation
 
     uses
-      cutils,
-      systems,
-      verbose,globals,constexp,fmodule,
+      CUtils,
+      Systems,
+      Verbose,Globals,ConstExp,FModule,
       nutils,
-      symtable,symconst,symdef,defutil,paramgr,ncon,nbas,ncgrtti,
+      SymTable,symconst,symdef,defutil,paramgr,ncon,nbas,ncgrtti,
       aasmbase,
       cgbase,pass_2,
-      procinfo,
-      cpuinfo,
+      ProcInfo,
+      CPUInfo,
       cpubase,parabase,
       tgobj,
       cgobj,hlcgobj,
@@ -87,53 +87,53 @@ implementation
 *****************************************************************************}
 
     type
-      preplacerefrec = ^treplacerefrec;
-      treplacerefrec = record
-        old, new: preference;
+      PReplaceRefRec = ^TReplaceRefRec;
+      TReplaceRefRec = record
+        old, new: PReference;
         ressym: TSym;
       end;
 
-    function doreplaceref(var n: TNode; para: pointer): foreachnoderesult;
+    function doreplaceref(var n: TNode; para: pointer): TForEachNodeResult;
       var
-        rr: preplacerefrec absolute para;
+        rr: PReplaceRefRec absolute para;
       begin
         result := fen_false;
         case n.nodetype of
           loadn:
             begin
                  { regular variable }
-              if (TAbstractVarSym(tloadnode(n).symtableentry).varoptions * [vo_is_dll_var, vo_is_thread_var] = []) and
-                 not assigned(tloadnode(n).left) and
+              if (TAbstractVarSym(TLoadNode(n).symtableentry).varoptions * [vo_is_dll_var, vo_is_thread_var] = []) and
+                 not Assigned(TLoadNode(n).left) and
                  { not function result, or no exit in function }
-                 (((tloadnode(n).symtableentry <> rr^.ressym) and
-                   not(vo_is_funcret in TAbstractVarSym(tloadnode(n).symtableentry).varoptions)) or
+                 (((TLoadNode(n).symtableentry <> rr^.ressym) and
+                   not(vo_is_funcret in TAbstractVarSym(TLoadNode(n).symtableentry).varoptions)) or
                   not(fc_exit in flowcontrol)) and
                  { stored in memory... }
-                 (TAbstractNormalVarSym(tloadnode(n).symtableentry).localloc.loc in [LOC_REFERENCE]) and
+                 (TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.loc in [LOC_REFERENCE]) and
                  { ... at the place we are looking for }
-                 references_equal(TAbstractNormalVarSym(tloadnode(n).symtableentry).localloc.reference,rr^.old^) and
+                 references_equal(TAbstractNormalVarSym(TLoadNode(n).symtableentry).localloc.reference,rr^.old^) and
                  { its address cannot have escaped the current routine }
-                 not(TAbstractVarSym(tloadnode(n).symtableentry).addr_taken) and
+                 not(TAbstractVarSym(TLoadNode(n).symtableentry).addr_taken) and
                  { it is not accessed in nested procedures }
-                 not(TAbstractVarSym(tloadnode(n).symtableentry).different_scope) then
+                 not(TAbstractVarSym(TLoadNode(n).symtableentry).different_scope) then
                 begin
                   { relocate variable }
-                  tcgloadnode(n).changereflocation(rr^.new^);
+                  TCGLoadNode(n).changereflocation(rr^.new^);
                   result := fen_norecurse_true;
                 end;
             end;
           temprefn:
             begin
-              if (ti_valid in ttemprefnode(n).tempflags) and
+              if (ti_valid in TTempRefNode(n).tempflags) and
                  { memory temp... }
-                 (ttemprefnode(n).tempinfo^.location.loc in [LOC_REFERENCE]) and
+                 (TTempRefNode(n).tempinfo^.location.loc in [LOC_REFERENCE]) and
                  { ... at the place we are looking for }
-                 references_equal(ttemprefnode(n).tempinfo^.location.reference,rr^.old^) and
+                 references_equal(TTempRefNode(n).tempinfo^.location.reference,rr^.old^) and
                  { its address cannot have escaped the current routine }
-                 not(ti_addr_taken in ttemprefnode(n).tempflags) then
+                 not(ti_addr_taken in TTempRefNode(n).tempflags) then
                 begin
                   { relocate the temp }
-                  tcgtemprefnode(n).changelocation(rr^.new^);
+                  TCGTempRefNode(n).changelocation(rr^.new^);
                   result := fen_norecurse_true;
                 end;
             end;
@@ -168,15 +168,15 @@ implementation
       end;
 
 
-    function tcgassignmentnode.maybechangetemp(list: TAsmList; var n: TNode; const newref: treference): boolean;
+    function TCGAssignmentNode.maybechangetemp(list: TAsmList; var n: TNode; const newref: TReference): boolean;
       var
-        rr: treplacerefrec;
+        rr: TReplaceRefRec;
       begin
         result := false;
 
         { only do for -O2 or higher (breaks debugging since }
         { variables move to different memory locations)     }
-        if not(cs_opt_level2 in CurrentSettings.optimizerswitches) or
+        if not(cs_opt_level2 in CurrentSettings.OptimizerSwitches) or
            { must be a copy to a memory location ... }
            (n.location.loc <> LOC_REFERENCE) or
            { not inside a control flow statement and no goto's in sight }
@@ -202,7 +202,7 @@ implementation
         rr.new := @newref;
         rr.ressym := nil;
 
-        if assigned(CurrentProcInfo.procdef.funcretsym) and
+        if Assigned(CurrentProcInfo.procdef.funcretsym) and
            (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs <> 0) then
           if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) then
             rr.ressym:=TSym(CurrentProcInfo.procdef.parast.Find('self'))
@@ -221,14 +221,14 @@ implementation
                              SecondLoad
 *****************************************************************************}
 
-    procedure tcgloadnode.changereflocation(const ref: treference);
+    procedure TCGLoadNode.changereflocation(const ref: TReference);
       var
         oldtemptype: TTempType;
       begin
         if (location.loc<>LOC_REFERENCE) then
-          internalerror(2007020812);
+          InternalError(2007020812);
         if not tg.istemp(location.reference) then
-          internalerror(2007020813);
+          InternalError(2007020813);
         oldtemptype:=tg.gettypeoftemp(location.reference);
         if (oldtemptype = tt_persistent) then
           tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.reference,tt_normal);
@@ -240,34 +240,34 @@ implementation
       end;
 
 
-    procedure tcgloadnode.generate_nested_access(vs: TSym);
+    procedure TCGLoadNode.generate_nested_access(vs: TSym);
       var
         { parameter declared as tsym to reduce interface unit dependencies }
         lvs: TAbstractNormalVarSym absolute vs;
       begin
         SecondPass(left);
         if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-          internalerror(200309286);
+          InternalError(200309286);
         if lvs.localloc.loc<>LOC_REFERENCE then
-          internalerror(200409241);
+          InternalError(200409241);
         hlcg.reference_reset_base(location.reference,left.resultdef,left.location.register,lvs.localloc.reference.offset,ctempposinvalid,lvs.localloc.reference.alignment,lvs.localloc.reference.volatility);
       end;
 
 
-    procedure tcgloadnode.generate_absaddr_access(vs: TAbsoluteVarSym);
+    procedure TCGLoadNode.generate_absaddr_access(vs: TAbsoluteVarSym);
       begin
         location.reference.offset:=asizeint(vs.addroffset);
         location.reference.volatility:=[vol_read,vol_write];
       end;
 
 
-    procedure tcgloadnode.generate_threadvar_access(gvs: TStaticVarSym);
+    procedure TCGLoadNode.generate_threadvar_access(gvs: TStaticVarSym);
       var
         pd: TProcDef;
-        para, respara: tcgpara;
-        ref: treference;
-        reg: tregister;
-        tmp: tlocation;
+        para, respara: TCGPara;
+        ref: TReference;
+        reg: TRegister;
+        tmp: TLocation;
       begin
         if tf_section_threadvars in TargetInfo.flags then
           begin
@@ -283,9 +283,9 @@ implementation
         para.init;
         paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,para);
         if vo_is_weak_external in gvs.varoptions then
-          reference_reset_symbol(ref,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(pint),[])
+          reference_reset_symbol(ref,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(PInt),[])
         else
-          reference_reset_symbol(ref,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(pint),[]);
+          reference_reset_symbol(ref,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(PInt),[]);
         hlcg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,voidpointertype,ref,para);
         paramanager.freecgpara(CurrentAsmData.CurrAsmList,para);
         respara:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@para],voidpointertype);
@@ -299,7 +299,7 @@ implementation
       end;
 
 
-    function tcgloadnode.use_indirect_symbol(gvs:TStaticVarSym):boolean;
+    function TCGLoadNode.use_indirect_symbol(gvs:TStaticVarSym):boolean;
       begin
         { we are using a direct reference if any of the following is true:
           - the target does not support packages
@@ -309,26 +309,26 @@ implementation
         result:=(tf_supports_packages in TargetInfo.flags) and
                 (TargetInfo.system in systems_indirect_var_imports) and
                 (gvs.varoptions*[vo_is_external,vo_is_weak_external]=[]) and
-                (gvs.owner.symtabletype in [globalsymtable,staticsymtable]) and
-                not sym_is_owned_by(gvs,CurrentModule.globalsymtable) and
+                (gvs.owner.symtabletype in [GlobalSymTable,staticsymtable]) and
+                not sym_is_owned_by(gvs,CurrentModule.GlobalSymTable) and
                 (
-                  (CurrentModule.globalsymtable=CurrentModule.localsymtable) or
+                  (CurrentModule.GlobalSymTable=CurrentModule.localsymtable) or
                   not sym_is_owned_by(gvs,CurrentModule.localsymtable)
                 );
       end;
 
-    procedure tcgloadnode.pass_generate_code;
+    procedure TCGLoadNode.pass_generate_code;
       var
-        hregister : tregister;
+        hregister : TRegister;
         vs   : TAbstractNormalVarSym;
         gvs  : TStaticVarSym;
         vmtdef : TPointerDef;
         vmtentry: TFieldVarSym;
         pd   : TProcDef;
-        href : treference;
-        newsize : tcgsize;
+        href : TReference;
+        newsize : TCgSize;
         vd : TDef;
-        alignment: longint;
+        alignment: LongInt;
         indirect : boolean;
         name : TSymStr;
       begin
@@ -346,7 +346,7 @@ implementation
                    toasm :
                      location.reference.symbol:=CurrentAsmData.RefAsmSymbol(TAbsoluteVarSym(symtableentry).mangledname,AT_DATA);
                    else
-                     internalerror(200310283);
+                     InternalError(200310283);
                  end;
               end;
            constsym:
@@ -356,10 +356,10 @@ implementation
                      location_reset_ref(location,LOC_CREFERENCE,def_cgsize(cansistringtype),cansistringtype.size,[]);
                      indirect:=(tf_supports_packages in TargetInfo.flags) and
                                  (TargetInfo.system in systems_indirect_var_imports) and
-                                 (symtableentry.owner.moduleid<>CurrentModule.moduleid);
+                                 (symtableentry.owner.ModuleID<>CurrentModule.ModuleID);
                      name:=make_mangledname('RESSTR',symtableentry.owner,symtableentry.name);
                      location.reference.symbol:=CurrentAsmData.RefAsmSymbol(name,AT_DATA,indirect);
-                     if symtableentry.owner.moduleid<>CurrentModule.moduleid then
+                     if symtableentry.owner.ModuleID<>CurrentModule.ModuleID then
                        CurrentModule.addimportedsym(symtableentry);
                      vd:=search_system_type('TRESOURCESTRINGRECORD').typedef;
                      hlcg.g_set_addr_nonbitpacked_field_ref(
@@ -369,7 +369,7 @@ implementation
                        location.reference);
                   end
                 else
-                  internalerror(22798);
+                  InternalError(22798);
              end;
            staticvarsym :
              begin
@@ -414,7 +414,7 @@ implementation
               begin
                 vs:=TAbstractNormalVarSym(symtableentry);
                 { Nested variable }
-                if assigned(left) then
+                if Assigned(left) then
                   generate_nested_access(vs)
                 else
                   location:=vs.localloc;
@@ -428,7 +428,7 @@ implementation
                       hregister:=location.register
                     else
                       begin
-                        vd:=cpointerdef.getreusable(resultdef);
+                        vd:=CPointerDef.getreusable(resultdef);
                         hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vd);
                         { we need to load only an address }
                         location.size:=int_cgsize(vd.size);
@@ -436,9 +436,9 @@ implementation
                       end;
                     { assume packed records may always be unaligned }
                     if not(resultdef.typ in [recorddef,objectdef]) or
-                       (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).symtable).usefieldalignment<>1) then
+                       (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).SymTable).usefieldalignment<>1) then
                       begin
-                        alignment:=min(min(min(resultdef.alignment,CurrentSettings.alignment.localalignmax),CurrentSettings.alignment.constalignmax),CurrentSettings.alignment.varalignmax);
+                        alignment:=min(min(min(resultdef.alignment,CurrentSettings.alignment.LocalAlignMax),CurrentSettings.alignment.ConstAlignMax),CurrentSettings.alignment.VarAlignMax);
                         location_reset_ref(location,LOC_REFERENCE,newsize,alignment,[]);
                       end
                     else
@@ -453,9 +453,9 @@ implementation
              end;
            procsym:
               begin
-                 if not assigned(procdef) then
-                   internalerror(200312011);
-                 if assigned(left) and
+                 if not Assigned(procdef) then
+                   InternalError(200312011);
+                 if Assigned(left) and
                    (resultdef.typ in [symconst.procdef,procvardef]) and
                     not TAbstractProcDef(resultdef).is_addressonly then
                    begin
@@ -477,7 +477,7 @@ implementation
                           begin
                              { this is not possible for objects }
                              if is_object(left.resultdef) then
-                               internalerror(200304234);
+                               InternalError(200304234);
 
                              location.registerhi:=left.location.register;
 
@@ -498,7 +498,7 @@ implementation
                                end
                              else
                                begin
-                                 vd:=cpointerdef.getreusable(left.resultdef);
+                                 vd:=CPointerDef.getreusable(left.resultdef);
 
                                  location.registerhi:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vd);
                                  hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.resultdef,vd,left.location.reference,location.registerhi);
@@ -507,7 +507,7 @@ implementation
                              location_freetemp(CurrentAsmData.CurrAsmList,left.location);
                           end;
                         else
-                          internalerror(200610311);
+                          InternalError(200610311);
                      end;
 
                      { virtual method ? }
@@ -515,29 +515,29 @@ implementation
                         not(loadnf_inherited in loadnodeflags) and
                         not is_objectpascal_helper(procdef.struct) then
                        begin
-                         if (not assigned(CurrentProcInfo) or
+                         if (not Assigned(CurrentProcInfo) or
                              wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
                            TObjectDef(procdef.struct).register_vmt_call(procdef.extnumber);
             {$ifdef vtentry}
                          if not is_interface(procdef.struct) then
                            begin
                              inc(CurrentAsmData.NextVTEntryNr);
-                             CurrentAsmData.CurrAsmList.Concat(tai_symbol.CreateName('VTREF'+tostr(CurrentAsmData.NextVTEntryNr)+'_'+procdef._class.vmt_mangledname+'$$'+tostr(vmtoffset div sizeof(pint)),AT_FUNCTION,0,voidpointerdef));
+                             CurrentAsmData.CurrAsmList.Concat(TAISymbol.CreateName('VTREF'+ToStr(CurrentAsmData.NextVTEntryNr)+'_'+procdef._class.vmt_mangledname+'$$'+ToStr(vmtoffset div sizeof(PInt)),AT_FUNCTION,0,voidpointerdef));
                            end;
             {$endif vtentry}
                          if (left.resultdef.typ=objectdef) and
-                            assigned(TObjectDef(left.resultdef).vmt_field) then
+                            Assigned(TObjectDef(left.resultdef).vmt_field) then
                            begin
                              { vmt pointer is a pointer to the vmt record }
                              hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
-                             vmtdef:=cpointerdef.getreusable(TObjectDef(left.resultdef).vmt_def);
+                             vmtdef:=CPointerDef.getreusable(TObjectDef(left.resultdef).vmt_def);
                              hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TObjectDef(left.resultdef),TFieldVarSym(TObjectDef(left.resultdef).vmt_field),href);
                              hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
                              hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,TFieldVarSym(TObjectDef(left.resultdef).vmt_field).vardef,vmtdef,href,hregister);
                            end
                          else if left.resultdef.typ=classrefdef then
                            begin
-                             vmtdef:=cpointerdef.getreusable(TObjectDef(TClassRefDef(left.resultdef).pointeddef).vmt_def);
+                             vmtdef:=CPointerDef.getreusable(TObjectDef(TClassRefDef(left.resultdef).pointeddef).vmt_def);
                              { classrefdef is a pointer to the vmt already }
 
                              { targets with 32 bit method pointers got already a register assigned }
@@ -549,14 +549,14 @@ implementation
                            begin
                              { an interface is a pointer to a pointer to a vmt }
                              hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
-                             vmtdef:=cpointerdef.getreusable(TObjectDef(left.resultdef).vmt_def);
+                             vmtdef:=CPointerDef.getreusable(TObjectDef(left.resultdef).vmt_def);
                              hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
                              hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,vmtdef,vmtdef,href,hregister);
                            end
                          else
-                           internalerror(2015112501);
+                           InternalError(2015112501);
                          { load method address }
-                         vmtentry:=TAbstractRecordSymTable(TRecordDef(vmtdef.pointeddef).symtable).findfieldbyoffset(
+                         vmtentry:=TAbstractRecordSymTable(TRecordDef(vmtdef.pointeddef).SymTable).findfieldbyoffset(
                            TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber));
                          hlcg.reference_reset_base(href,vmtdef,hregister,0,ctempposinvalid,vmtdef.alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
@@ -572,9 +572,9 @@ implementation
                          reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(procdef.mangledname,AT_FUNCTION),0,procdef.address_type.alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
 
-                         location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,cprocvardef.getreusableprocaddr(procdef,pc_address_only));
+                         location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,CProcVarDef.getreusableprocaddr(procdef,pc_address_only));
 
-                         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,procdef,cprocvardef.getreusableprocaddr(procdef,pc_address_only),href,location.register);
+                         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,procdef,CProcVarDef.getreusableprocaddr(procdef,pc_address_only),href,location.register);
                        end;
 
                      { to get methodpointers stored correctly, code and self register must be swapped on
@@ -600,11 +600,11 @@ implementation
                    end;
               end;
            labelsym :
-             if assigned(TLabelSym(symtableentry).asmblocklabel) then
+             if Assigned(TLabelSym(symtableentry).asmblocklabel) then
                location.reference.symbol:=TLabelSym(symtableentry).asmblocklabel
              else
-               location.reference.symbol:=tcglabelnode((TLabelSym(symtableentry).code)).getasmlabel;
-           else internalerror(200510032);
+               location.reference.symbol:=TCGLabelNode((TLabelSym(symtableentry).code)).getasmlabel;
+           else InternalError(200510032);
         end;
       end;
 
@@ -613,17 +613,17 @@ implementation
                              SecondAssignment
 *****************************************************************************}
 
-    procedure tcgassignmentnode.pass_generate_code;
+    procedure TCGAssignmentNode.pass_generate_code;
       var
-         shuffle : pmmshuffle;
-         hlabel : tasmlabel;
-         href : treference;
+         shuffle : PMMShuffle;
+         hlabel : TAsmLabel;
+         href : TReference;
          releaseright : boolean;
          alignmentrequirement,
-         len : tcgint;
-         r : tregister;
+         len : TCGInt;
+         r : TRegister;
          {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-         r64 : tregister64;
+         r64 : TRegister64;
          {$endif}
          oldflowcontrol : TFlowControl;
       begin
@@ -684,7 +684,7 @@ implementation
 
         releaseright:=
           (left.nodetype<>temprefn) or
-          not(ti_const in ttemprefnode(left).tempflags);
+          not(ti_const in TTempRefNode(left).tempflags);
 
         { shortstring assignments are handled separately }
         if is_shortstring(left.resultdef) then
@@ -703,13 +703,13 @@ implementation
               begin
                 { verify that we indeed have nothing to do }
                 if not(anf_assign_done_in_right in assignmentnodeflags) then
-                  internalerror(2015042201);
+                  InternalError(2015042201);
               end
             { empty constant string }
             else if (right.nodetype=stringconstn) and
-               (tstringconstnode(right).len=0) then
+               (TStringConstNode(right).len=0) then
               begin
-                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),TPointerDef(charpointertype),left.location.reference);
+                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(charpointertype),left.location.reference);
                 hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,cansichartype,0,left.location.reference);
               end
             { char loading }
@@ -717,18 +717,18 @@ implementation
               begin
                 if right.nodetype=ordconstn then
                   begin
-                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),cpointerdef.getreusable(u16inttype),left.location.reference);
+                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),CPointerDef.getreusable(u16inttype),left.location.reference);
                     if (TargetInfo.endian = endian_little) then
-                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,u16inttype,(tordconstnode(right).value.svalue shl 8) or 1,
+                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,u16inttype,(TOrdConstNode(right).value.svalue shl 8) or 1,
                           setalignment(left.location.reference,1))
                     else
-                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,u16inttype,tordconstnode(right).value.svalue or (1 shl 8),
+                      hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,u16inttype,TOrdConstNode(right).value.svalue or (1 shl 8),
                           setalignment(left.location.reference,1));
                   end
                 else
                   begin
                     href:=left.location.reference;
-                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),TPointerDef(charpointertype),href);
+                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),TPointerDef(charpointertype),href);
                     hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,cansichartype,1,href);
                     inc(href.offset,1);
                     href.alignment:=1;
@@ -748,12 +748,12 @@ implementation
                       LOC_CREFERENCE :
                         hlcg.a_load_ref_ref(CurrentAsmData.CurrAsmList,cansichartype,cansichartype,right.location.reference,href);
                       else
-                        internalerror(200205111);
+                        InternalError(200205111);
                     end;
                   end;
               end
             else
-              internalerror(2002042410);
+              InternalError(2002042410);
           end
        { try to reuse memory locations instead of copying }
        { copy to a memory location ... }
@@ -813,7 +813,7 @@ implementation
                            ((left.location.size<>right.location.size)
                            { on newer (1993+ :)) x86 cpus, use the fpu to copy extended values }
 {$ifdef x86}
-                            or ({$ifndef x86_64}(CurrentSettings.cputype>=cpu_Pentium) and{$endif x86_64}
+                            or ({$ifndef x86_64}(CurrentSettings.CPUType>=cpu_Pentium) and{$endif x86_64}
                             (is_extended(right.resultdef) {$ifdef i386} or is_double(right.resultdef){$endif i386} ))
 {$endif x86}
                            )then
@@ -837,7 +837,7 @@ implementation
                             len:=left.resultdef.size;
                             { can be 0 in case of formaldef on JVM target }
                             if len=0 then
-                              len:=sizeof(pint);
+                              len:=sizeof(PInt);
 
                             { data smaller than an aint has less alignment requirements }
                             { max(1,...) avoids div by zero in case of an empty record  }
@@ -895,7 +895,7 @@ implementation
 {$endif not cpu64bitalu and not cpuhighleveltarget}
                        hlcg.a_load_ref_subsetref(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.reference,left.location.sref);
                     else
-                      internalerror(200203284);
+                      InternalError(200203284);
                   end;
                 end;
 {$ifdef SUPPORT_MMX}
@@ -924,7 +924,7 @@ implementation
                     LOC_CREFERENCE:
                       hlcg.a_loadmm_reg_ref(CurrentAsmData.CurrAsmList,right.resultdef,left.resultdef,right.location.register,left.location.reference, shuffle);
                     else
-                      internalerror(2009112601);
+                      InternalError(2009112601);
                   end;
                 end;
               LOC_REGISTER,
@@ -1098,7 +1098,7 @@ implementation
                             hlcg.a_load_reg_loc(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,r,left.location);
                           end;
                         else
-                          internalerror(200203273);
+                          InternalError(200203273);
                       end;
                     end;
                 end;
@@ -1106,7 +1106,7 @@ implementation
               LOC_VOID:
                 ;
               else
-                internalerror(2019050706);
+                InternalError(2019050706);
             end;
          end;
 
@@ -1143,38 +1143,38 @@ implementation
         vtAnsiString64  = 20;
 
 
-    procedure tcgarrayconstructornode.makearrayref(var ref: treference; eledef: TDef);
+    procedure TCGArrayConstructorNode.makearrayref(var ref: TReference; eledef: TDef);
       begin
         { do nothing by default }
       end;
 
 
-    procedure tcgarrayconstructornode.advancearrayoffset(var ref: treference; elesize: asizeint);
+    procedure TCGArrayConstructorNode.advancearrayoffset(var ref: TReference; elesize: asizeint);
       begin
-        ref.alignment:=newalignment(ref.alignment,elesize);
+        ref.alignment:=NewAlignment(ref.alignment,elesize);
         inc(ref.offset,elesize);
       end;
 
 
-    procedure tcgarrayconstructornode.pass_generate_code;
+    procedure TCGArrayConstructorNode.pass_generate_code;
       var
-        hp    : tarrayconstructornode;
+        hp    : TArrayConstructorNode;
         href,
-        fref  : treference;
+        fref  : TReference;
         lt    : TDef;
-        paraloc : tcgparalocation;
+        paraloc : TCGParaLocation;
         varvtypefield,
         varfield : TFieldVarSym;
-        vtype : longint;
+        vtype : LongInt;
         eledef: TDef;
-        elesize : longint;
-        tmpreg  : tregister;
+        elesize : LongInt;
+        tmpreg  : TRegister;
         vaddr : boolean;
         freetemp,
         dovariant: boolean;
       begin
         if is_packed_array(resultdef) then
-          internalerror(200608042);
+          InternalError(200608042);
         dovariant:=
           (acnf_forcevaria in arrayconstructornodeflags) or is_variant_array(resultdef);
         eledef:=TArrayDef(resultdef).elementdef;
@@ -1198,15 +1198,15 @@ implementation
         makearrayref(href,eledef);
         { Process nodes in array constructor }
         hp:=self;
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
-           if assigned(hp.left) then
+           if Assigned(hp.left) then
             begin
               freetemp:=true;
               SecondPass(hp.left);
               if (hp.left.location.loc=LOC_JUMP)<>
                  (hp.left.expectloc=LOC_JUMP) then
-                internalerror(2007103101);
+                InternalError(2007103101);
               { Move flags and jump in register }
               if hp.left.location.loc in [LOC_FLAGS,LOC_JUMP] then
                 hlcg.location_force_reg(CurrentAsmData.CurrAsmList,hp.left.location,hp.left.resultdef,hp.left.resultdef,false);
@@ -1336,7 +1336,7 @@ implementation
                          varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VOBJECT'));
                        end
                      else
-                       internalerror(200505171);
+                       InternalError(200505171);
                    stringdef :
                      begin
                        if is_shortstring(lt) then
@@ -1372,18 +1372,18 @@ implementation
                      ;
                  end;
                  if vtype=$ff then
-                   internalerror(14357);
-                 if not assigned(varfield) then
-                   internalerror(2015102901);
+                   InternalError(14357);
+                 if not Assigned(varfield) then
+                   InternalError(2015102901);
                  { write changing field update href to the next element }
                  fref:=href;
                  hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varfield,fref);
                  if vaddr then
                    begin
                      hlcg.location_force_mem(CurrentAsmData.CurrAsmList,hp.left.location,lt);
-                     tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(lt));
-                     hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,hp.left.resultdef,cpointerdef.getreusable(lt),hp.left.location.reference,tmpreg);
-                     hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(lt),varfield.vardef,tmpreg,fref);
+                     tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt));
+                     hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,hp.left.resultdef,CPointerDef.getreusable(lt),hp.left.location.reference,tmpreg);
+                     hlcg.a_load_reg_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(lt),varfield.vardef,tmpreg,fref);
                    end
                  else
                    hlcg.a_load_loc_ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,varfield.vardef,hp.left.location,fref);
@@ -1438,7 +1438,7 @@ implementation
                 location_freetemp(CurrentAsmData.CurrAsmList,hp.left.location);
             end;
            { load next entry }
-           hp:=tarrayconstructornode(hp.right);
+           hp:=TArrayConstructorNode(hp.right);
          end;
       end;
 
@@ -1447,15 +1447,15 @@ implementation
                            SecondRTTI
 *****************************************************************************}
 
-    procedure tcgrttinode.pass_generate_code;
+    procedure TCGRTTINode.pass_generate_code;
       var
         indirect : boolean;
       begin
         indirect := (tf_supports_packages in TargetInfo.flags) and
                       (TargetInfo.system in systems_indirect_var_imports) and
-                      (rttidef.owner.moduleid<>CurrentModule.moduleid);
+                      (rttidef.owner.ModuleID<>CurrentModule.ModuleID);
 
-        location_reset_ref(location,LOC_CREFERENCE,OS_NO,sizeof(pint),[]);
+        location_reset_ref(location,LOC_CREFERENCE,OS_NO,sizeof(PInt),[]);
         case rttidatatype of
           rdt_normal:
             location.reference.symbol:=RTTIWriter.get_rtti_label(rttidef,rttitype,indirect);
@@ -1469,8 +1469,8 @@ implementation
 
 
 begin
-   cloadnode:=tcgloadnode;
-   cassignmentnode:=tcgassignmentnode;
-   carrayconstructornode:=tcgarrayconstructornode;
-   crttinode:=tcgrttinode;
+   CLoadNode:=TCGLoadNode;
+   CAssignmentNode:=TCGAssignmentNode;
+   CArrayConstructorNode:=TCGArrayConstructorNode;
+   CRTTINode:=TCGRTTINode;
 end.

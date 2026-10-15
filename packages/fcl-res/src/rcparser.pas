@@ -7912,7 +7912,7 @@ end(*yyparse*);
 {$I rclex.inc}
 begin
   bufptr:= 0;
-  {$ifdef FPC_DOTTEDUNITS}Pascal.{$ENDIF}lexlib.get_char:= @rc_get_char;
-  {$ifdef FPC_DOTTEDUNITS}Pascal.{$ENDIF}lexlib.unget_char:= @rc_unget_char;
+  {$ifdef FPC_DOTTEDUNITS}Pascal.{$ENDIF}LexLib.get_char:= @rc_get_char;
+  {$ifdef FPC_DOTTEDUNITS}Pascal.{$ENDIF}LexLib.unget_char:= @rc_unget_char;
 end.
 

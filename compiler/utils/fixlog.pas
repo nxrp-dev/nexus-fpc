@@ -18,10 +18,10 @@ program fixlog;
 {$H+}
 
 uses
-  sysutils;
+  SysUtils;
 
 const
-  bufsize = 32*1024;
+  BufSize = 32*1024;
 
 var
   maxrevs,myear,mmonth,mday : integer;
@@ -33,7 +33,7 @@ begin
   day:=StrToInt(Copy(date,9,2));
   if (year=0) or (month=0) or (day=0) then
    begin
-     writeln('wrong date "',date,'", use yyyy/mm/dd');
+     WriteLn('wrong date "',date,'", use yyyy/mm/dd');
      halt(2);
    end;
 end;
@@ -48,22 +48,22 @@ var
   found,revs,i : integer;
   fbuf,tbuf : pointer;
 begin
-  getmem(fbuf,bufsize);
-  getmem(tbuf,bufsize);
+  GetMem(fbuf,BufSize);
+  GetMem(tbuf,BufSize);
   write('processing ',fn,': ');
   assign(t,fn);
   assign(f,'fixlog.tmp');
   {$push}{$I-}
    reset(t);
   {$pop}
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
-     writeln('error!');
+     WriteLn('error!');
      exit;
    end;
   rewrite(f);
-  settextbuf(t,tbuf^,bufsize);
-  settextbuf(f,fbuf^,bufsize);
+  settextbuf(t,tbuf^,BufSize);
+  settextbuf(f,fbuf^,BufSize);
   found:=0;
   revs:=0;
   skip:=false;
@@ -77,7 +77,7 @@ begin
           if pos('$Log: ',s)>0 then
            found:=1;
           skip:=false;
-          writeln(f,s);
+          WriteLn(f,s);
         end;
       1 :
         begin
@@ -120,7 +120,7 @@ begin
               found:=0;
             end;
           if not skip then
-           writeln(f,s);
+           WriteLn(f,s);
         end;
       2 :
         begin
@@ -130,23 +130,23 @@ begin
              found:=0;
            end;
           if not skip then
-           writeln(f,s);
+           WriteLn(f,s);
         end;
      end;
    end;
   close(t);
   close(f);
   if revs=0 then
-   writeln(' no log found')
+   WriteLn(' no log found')
   else
    if truncated then
-     writeln(revs-1,' revisions')
+     WriteLn(revs-1,' revisions')
   else
-     writeln(revs,' revisions');
+     WriteLn(revs,' revisions');
   erase(t);
   rename(f,fn);
-  freemem(tbuf);
-  freemem(fbuf);
+  FreeMem(tbuf);
+  FreeMem(fbuf);
 end;
 
 var
@@ -154,18 +154,18 @@ var
   i   : integer;
   path : string;
 begin
-  writeln('fixlog v1.01 (C) 1999-2002 Peter Vreman');
+  WriteLn('fixlog v1.01 (C) 1999-2002 Peter Vreman');
   if paramcount<3 then
    begin
-     writeln('usage: fixlog <revisions> <yyyy-mm-dd> <files> [files]');
+     WriteLn('usage: fixlog <revisions> <yyyy-mm-dd> <files> [files]');
      halt(1);
    end;
   MaxRevs:=StrToInt(ParamStr(1));
   Date2Int(ParamStr(2),MYear,MMonth,MDay);
   for i:=3 to paramcount do
    begin
-     path:=ExtractFilePath(paramstr(i));
-     if findfirst(paramstr(i),faAnyFile,dir)=0 then
+     path:=ExtractFilePath(ParamStr(i));
+     if findfirst(ParamStr(i),faAnyFile,dir)=0 then
       repeat
         dofile(path+dir.name);
       until findnext(dir)<>0;

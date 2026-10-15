@@ -31,11 +31,11 @@ Unit aopt;
   Interface
 
     Uses
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       aoptobj;
 
     Type
-      TAsmOptimizer = class(TAoptObj)
+      TAsmOptimizer = class(TAOptObj)
         { Pooled object that can be used by optimisation procedures to evaluate
           future register usage without upsetting the current state. }
         TmpUsedRegs: TAllUsedRegs;
@@ -45,7 +45,7 @@ Unit aopt;
 
         { call the necessary optimizer procedures }
         Procedure Optimize;virtual;
-        Destructor destroy;override;
+        Destructor Destroy;override;
 
       private
         procedure FindLoHiLabels;
@@ -59,11 +59,11 @@ Unit aopt;
       End;
       TAsmOptimizerClass = class of TAsmOptimizer;
 
-      TAsmScheduler = class(TAoptObj)
+      TAsmScheduler = class(TAOptObj)
         { _AsmL is the PAasmOutput list that has to be re-scheduled }
         Constructor Create(_AsmL: TAsmList); virtual; reintroduce;
         Procedure Optimize;
-        function SchedulerPass1Cpu(var p: tai): boolean; virtual; abstract;
+        function SchedulerPass1Cpu(var p: TAI): boolean; virtual; abstract;
         procedure SchedulerPass1;
       end;
       TAsmSchedulerClass = class of TAsmScheduler;
@@ -78,10 +78,10 @@ Unit aopt;
   Implementation
 
     uses
-      cutils,
+      CUtils,
       cprofile,
-      globtype, globals,
-      verbose,
+      GlobType, Globals,
+      Verbose,
       cpubase,
       cgbase,
       aoptcpu;
@@ -98,9 +98,9 @@ Unit aopt;
       { Walks through the paasmlist to find the lowest and highest label number.  }
       { Returns the last Pai object of the current block                          }
       Var LabelFound: Boolean;
-          p: tai;
+          p: TAI;
       Begin
-        LabelInfo^.LowLabel := High(longint);
+        LabelInfo^.LowLabel := High(LongInt);
         LabelInfo^.HighLabel := 0;
         LabelInfo^.LabelDif := 0;
         LabelInfo^.LabelTable:=nil;
@@ -110,17 +110,17 @@ Unit aopt;
           Begin
             While Assigned(P) And
                   ((P.typ <> Ait_Marker) Or
-                   (tai_Marker(P).Kind <> mark_AsmBlockStart)) Do
+                   (TAIMarker(P).Kind <> mark_AsmBlockStart)) Do
               Begin
                 If (p.typ = ait_label) and
-                   (tai_Label(p).labsym.labeltype=alt_jump) and
-                   (tai_Label(p).labsym.is_used) Then
+                   (TAILabel(p).labsym.labeltype=alt_jump) and
+                   (TAILabel(p).labsym.is_used) Then
                   Begin
                     LabelFound := True;
-                    If (tai_Label(p).labsym.labelnr < LowLabel) Then
-                      LowLabel := tai_Label(p).labsym.labelnr;
-                    If (tai_Label(p).labsym.labelnr > HighLabel) Then
-                      HighLabel := tai_Label(p).labsym.labelnr
+                    If (TAILabel(p).labsym.labelnr < LowLabel) Then
+                      LowLabel := TAILabel(p).labsym.labelnr;
+                    If (TAILabel(p).labsym.labelnr > HighLabel) Then
+                      HighLabel := TAILabel(p).labsym.labelnr
                   End;
                 GetNextInstruction(p, p)
               End;
@@ -133,9 +133,9 @@ Unit aopt;
 
 
     Procedure TAsmOptimizer.BuildLabelTableAndFixRegAlloc;
-    Var p,hp1, hp2: tai;
+    Var p,hp1, hp2: TAI;
         Regs: TAllUsedRegs;
-        LabelIdx : longint;
+        LabelIdx : LongInt;
     Begin
       CreateUsedRegs(Regs);
       With LabelInfo^ Do
@@ -149,26 +149,26 @@ Unit aopt;
               Case p.typ Of
                 ait_Label:
                   begin
-                    If tai_label(p).labsym.is_used and
-                       (tai_Label(p).labsym.labeltype=alt_jump) then
+                    If TAILabel(p).labsym.is_used and
+                       (TAILabel(p).labsym.labeltype=alt_jump) then
                       begin
-                        LabelIdx:=tai_label(p).labsym.labelnr-LowLabel;
+                        LabelIdx:=TAILabel(p).labsym.labelnr-LowLabel;
                         if LabelIdx>int64(LabelDif) then
-                          internalerror(200604202);
+                          InternalError(200604202);
                         LabelTable[LabelIdx].PaiObj := p;
                       end;
                   end;
                 ait_regAlloc:
                   begin
-                    if tai_regalloc(p).ratype=ra_alloc then
+                    if TAIRegAlloc(p).ratype=ra_alloc then
                       Begin
-                        If Not(RegInUsedRegs(tai_regalloc(p).Reg,Regs)) Then
-                          IncludeRegInUsedRegs(tai_regalloc(p).Reg,Regs)
+                        If Not(RegInUsedRegs(TAIRegAlloc(p).Reg,Regs)) Then
+                          IncludeRegInUsedRegs(TAIRegAlloc(p).Reg,Regs)
                         Else
                           Begin
-                            hp1 := tai(p.previous);
+                            hp1 := TAI(p.previous);
 {$ifdef DEBUG_OPTALLOC}
-                            AsmL.InsertAfter(tai_comment.Create(strpnew('Removed allocation of '+std_regname(tai_regalloc(p).Reg))),p);
+                            AsmL.InsertAfter(TAIComment.Create(StrPNew('Removed allocation of '+std_regname(TAIRegAlloc(p).Reg))),p);
 {$endif DEBUG_OPTALLOC}
                             AsmL.remove(p);
                             p.free;
@@ -187,77 +187,77 @@ Unit aopt;
                             }
                           End;
                       End
-                    else if tai_regalloc(p).ratype=ra_dealloc then
+                    else if TAIRegAlloc(p).ratype=ra_dealloc then
                       Begin
                         hp1 := p;
                         hp2 := nil;
-                        While Not(assigned(FindRegAlloc(tai_regalloc(p).Reg, tai(hp1.Next)))) And
+                        While Not(Assigned(FindRegAlloc(TAIRegAlloc(p).Reg, TAI(hp1.Next)))) And
                               GetNextInstruction(hp1, hp1) And
-                              InstructionLoadsFromReg(tai_regalloc(p).Reg, hp1) Do
+                              InstructionLoadsFromReg(TAIRegAlloc(p).Reg, hp1) Do
                           hp2 := hp1;
                         { move deallocations }
                         If hp2 <> nil Then
                           Begin
-                            hp1 := tai(p.previous);
+                            hp1 := TAI(p.previous);
 {$ifdef DEBUG_OPTALLOC}
-                            AsmL.InsertAfter(tai_comment.Create(strpnew('Moved deallocation of '+std_regname(tai_regalloc(p).Reg))),p);
+                            AsmL.InsertAfter(TAIComment.Create(StrPNew('Moved deallocation of '+std_regname(TAIRegAlloc(p).Reg))),p);
 {$endif DEBUG_OPTALLOC}
                             AsmL.Remove(p);
-                            InsertLLItem(hp2, tai(hp2.Next), p);
+                            InsertLLItem(hp2, TAI(hp2.Next), p);
                             { don't remove this deallocation later on when merging dealloc/alloc pairs because
                               it marks independent use of a register
 
                               This could be also achieved by a separate passes for merging first and then later
                               moving but I did not choose this solution because it takes more time and code (FK) }
-                            tai_regalloc(p).keep:=true;
+                            TAIRegAlloc(p).keep:=true;
 {$ifdef DEBUG_OPTALLOC}
-                            AsmL.InsertAfter(tai_comment.Create(strpnew('Moved deallocation of '+std_regname(tai_regalloc(p).Reg)+' here')),hp2);
+                            AsmL.InsertAfter(TAIComment.Create(StrPNew('Moved deallocation of '+std_regname(TAIRegAlloc(p).Reg)+' here')),hp2);
 {$endif DEBUG_OPTALLOC}
                             p := hp1;
                           End
                         { merge allocations/deallocations }
-                        else if assigned(findregalloc(tai_regalloc(p).reg, tai(p.next))) and
+                        else if Assigned(findregalloc(TAIRegAlloc(p).reg, TAI(p.next))) and
                           getnextinstruction(p,hp1) and
-                          (not(RegLoadedWithNewValue(tai_regalloc(p).Reg, hp1)) or InstructionLoadsFromReg(tai_regalloc(p).Reg, hp1)) and
+                          (not(RegLoadedWithNewValue(TAIRegAlloc(p).Reg, hp1)) or InstructionLoadsFromReg(TAIRegAlloc(p).Reg, hp1)) and
                           { don't merge deallocations/allocation which mark a new use of register, this
                             enables more possibilities for the peephole optimizer }
-                          not(tai_regalloc(p).keep) then
+                          not(TAIRegAlloc(p).keep) then
                           begin
-                            hp1 := tai(p.previous);
+                            hp1 := TAI(p.previous);
 {$ifdef DEBUG_OPTALLOC}
-                            AsmL.InsertAfter(tai_comment.Create(strpnew('Removed deallocation of '+std_regname(tai_regalloc(p).Reg))),p);
+                            AsmL.InsertAfter(TAIComment.Create(StrPNew('Removed deallocation of '+std_regname(TAIRegAlloc(p).Reg))),p);
 {$endif DEBUG_OPTALLOC}
                             AsmL.remove(p);
                             p.free;
                             p := hp1;
                           end
                         else
-                          ExcludeRegFromUsedRegs(tai_regalloc(p).Reg,Regs);
+                          ExcludeRegFromUsedRegs(TAIRegAlloc(p).Reg,Regs);
                       End
                   End
                 else
                   ;
               End;
-              P := tai(p.Next);
+              P := TAI(p.Next);
               While Assigned(p) and
                     (p <> blockend) and
                     (p.typ in (SkipInstr - [ait_regalloc])) Do
-                P := tai(P.Next)
+                P := TAI(P.Next)
             End;
         end;
       ReleaseUsedRegs(Regs);
     End;
 
-    procedure tasmoptimizer.clear;
+    procedure TAsmOptimizer.clear;
       begin
         LabelInfo^.labeltable:=Nil;
         LabelInfo^.labeldif:=0;
-        LabelInfo^.lowlabel:=high(longint);
+        LabelInfo^.lowlabel:=high(LongInt);
         LabelInfo^.highlabel:=0;
       end;
 
 
-    procedure tasmoptimizer.pass_1;
+    procedure TAsmOptimizer.pass_1;
       begin
         findlohilabels;
         BuildLabelTableAndFixRegAlloc;
@@ -266,13 +266,13 @@ Unit aopt;
 
     Procedure TAsmOptimizer.Optimize;
       Var
-        HP: tai;
+        HP: TAI;
       Begin
-        BlockStart := tai(AsmL.First);
+        BlockStart := TAI(AsmL.First);
         pass_1;
         While Assigned(BlockStart) Do
           Begin
-            if (cs_opt_peephole in CurrentSettings.optimizerswitches) then
+            if (cs_opt_peephole in CurrentSettings.OptimizerSwitches) then
               begin
                 PrePeepHoleOpts;
                 PeepHoleOptPass1;
@@ -286,16 +286,16 @@ Unit aopt;
             BlockStart := BlockEnd;
             While Assigned(BlockStart) And
                   (BlockStart.typ = ait_Marker) And
-                  (tai_Marker(BlockStart).Kind = mark_AsmBlockStart) Do
+                  (TAIMarker(BlockStart).Kind = mark_AsmBlockStart) Do
               Begin
                { we stopped at an assembler block, so skip it    }
                While GetNextInstruction(BlockStart, BlockStart) And
                      ((BlockStart.Typ <> Ait_Marker) Or
-                      (tai_Marker(Blockstart).Kind <> mark_AsmBlockEnd)) Do;
+                      (TAIMarker(Blockstart).Kind <> mark_AsmBlockEnd)) Do;
                { blockstart now contains a tai_marker(mark_AsmBlockEnd) }
                If GetNextInstruction(BlockStart, HP) And
                   ((HP.typ <> ait_Marker) Or
-                   (Tai_Marker(HP).Kind <> mark_AsmBlockStart)) Then
+                   (TAIMarker(HP).Kind <> mark_AsmBlockStart)) Then
                { There is no assembler block anymore after the current one, so }
                { optimize the next block of "normal" instructions              }
                  pass_1
@@ -324,7 +324,7 @@ Unit aopt;
 
     procedure TAsmScheduler.SchedulerPass1;
       var
-        p : tai;
+        p : TAI;
       begin
         p:=BlockStart;
         while p<>BlockEnd Do
@@ -332,16 +332,16 @@ Unit aopt;
             prefetch(pointer(p.Next)^);
             if SchedulerPass1Cpu(p) then
               continue;
-            p:=tai(p.next);
+            p:=TAI(p.next);
           end;
       end;
 
 
     procedure TAsmScheduler.Optimize;
       Var
-        HP: tai;
+        HP: TAI;
       Begin
-        BlockStart := tai(AsmL.First);
+        BlockStart := TAI(AsmL.First);
         While Assigned(BlockStart) Do
           Begin
             { Peephole optimizations }
@@ -351,16 +351,16 @@ Unit aopt;
             BlockStart:=BlockEnd;
             While Assigned(BlockStart) And
                   (BlockStart.typ = ait_Marker) And
-                  (tai_Marker(BlockStart).Kind = mark_AsmBlockStart) Do
+                  (TAIMarker(BlockStart).Kind = mark_AsmBlockStart) Do
               Begin
                 { we stopped at an assembler block, so skip it    }
                 While GetNextInstruction(BlockStart, BlockStart) And
                       ((BlockStart.Typ <> Ait_Marker) Or
-                       (tai_Marker(Blockstart).Kind <> mark_AsmBlockEnd)) Do;
+                       (TAIMarker(Blockstart).Kind <> mark_AsmBlockEnd)) Do;
                 { blockstart now contains a tai_marker(mark_AsmBlockEnd) }
                 If not(GetNextInstruction(BlockStart, HP) And
                    ((HP.typ <> ait_Marker) Or
-                    (Tai_Marker(HP).Kind <> mark_AsmBlockStart))) Then
+                    (TAIMarker(HP).Kind <> mark_AsmBlockStart))) Then
                   { skip the next assembler block }
                   blockStart := hp;
               End

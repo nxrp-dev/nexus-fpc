@@ -41,7 +41,7 @@ interface
 
 
 
-procedure optimizeDFATable;
+procedure OptimizeDFATable;
   (* optimize the state table *)
 
 implementation
@@ -60,102 +60,102 @@ max_parts = max_states;*)  (* number of partitions of equivalent states; at
 
 type
 
-PartTable      = array [0..max_states-1] of IntSetPtr;
+TPartTable      = array [0..MaxStates-1] of PIntSet;
                    (* state partitions (DFA optimization) *)
 
-StatePartTable = array [0..max_states-1] of Integer;
+TStatePartTable = array [0..MaxStates-1] of Integer;
                    (* partition number of states *)
 
 var
 
 (* partition table: *)
 
-n_parts           : Integer;
-part_table        : ^PartTable;
-state_part        : ^StatePartTable;
+NParts           : Integer;
+PartTable        : ^TPartTable;
+StatePart        : ^TStatePartTable;
 
 (* optimized state and transition table: *)
 
-n_opt_states      : Integer;
-n_opt_trans       : Integer;
-opt_state_table   : ^StateTable;
-opt_trans_table   : ^TransTable;
+NOptStates      : Integer;
+NOptTrans       : Integer;
+OptStateTable   : ^TStateTable;
+OptTransTable   : ^TTransTable;
 
 
-function equivStates(i, j : Integer) : Boolean;
+function EquivStates(I, J : Integer) : Boolean;
   (* checks whether states i and j are equivalent; two states are considered
      equivalent iff:
      - they cover the same marker positions (/ and endmarkers of rules)
      - they have transitions on the same symbols/characters, and corresponding
        transitions go to states in the same partition
      two different start states are never considered equivalent *)
-  var ii, jj, k : Integer;
-      mark_pos_i, mark_pos_j : IntSet;
+  var Ii, Jj, K : Integer;
+      MarkPosI, MarkPosJ : TIntSet;
   begin
     (* check for start states: *)
-    if (i<=2*n_start_states+1) and (j<=2*n_start_states+1) and
-       (i<>j) then
+    if (I<=2*NStartStates+1) and (J<=2*NStartStates+1) and
+       (I<>J) then
       begin
-        equivStates := false;
-        exit;
+        EquivStates := False;
+        Exit;
       end;
     (* check end positions: *)
-    empty(mark_pos_i);
-    with state_table^[i] do
-      for k := 1 to size(state_pos^) do
-        if pos_table^[state_pos^[k]].pos_type=mark_pos then
-          include(mark_pos_i, state_pos^[k]);
-    empty(mark_pos_j);
-    with state_table^[j] do
-      for k := 1 to size(state_pos^) do
-        if pos_table^[state_pos^[k]].pos_type=mark_pos then
-          include(mark_pos_j, state_pos^[k]);
-    if not equal(mark_pos_i, mark_pos_j) then
+    Empty(MarkPosI);
+    with StateTable^[I] do
+      for K := 1 to Size(StatePos^) do
+        if PosTable^[StatePos^[K]].PosType=MarkPos then
+          Include(MarkPosI, StatePos^[K]);
+    Empty(MarkPosJ);
+    with StateTable^[J] do
+      for K := 1 to Size(StatePos^) do
+        if PosTable^[StatePos^[K]].PosType=MarkPos then
+          Include(MarkPosJ, StatePos^[K]);
+    if not Equal(MarkPosI, MarkPosJ) then
       begin
-        equivStates := false;
-        exit
+        EquivStates := False;
+        Exit
       end;
     (* check transitions: *)
-    if n_state_trans(i)<>n_state_trans(j) then
-      equivStates := false
+    if NStateTrans(I)<>NStateTrans(J) then
+      EquivStates := False
     else
       begin
-        ii := state_table^[i].trans_lo;
-        jj := state_table^[j].trans_lo;
-        for k := 0 to pred(n_state_trans(i)) do
-          if (trans_table^[ii+k].cc^<>trans_table^[jj+k].cc^) then
+        Ii := StateTable^[I].TransLo;
+        Jj := StateTable^[J].TransLo;
+        for K := 0 to Pred(NStateTrans(I)) do
+          if (TransTable^[Ii+K].CC^<>TransTable^[Jj+K].CC^) then
             begin
-              equivStates := false;
-              exit
+              EquivStates := False;
+              Exit
             end
-          else if state_part^[trans_table^[ii+k].next_state]<>
-                  state_part^[trans_table^[jj+k].next_state] then
+          else if StatePart^[TransTable^[Ii+K].NextState]<>
+                  StatePart^[TransTable^[Jj+K].NextState] then
             begin
-              equivStates := false;
-              exit
+              EquivStates := False;
+              Exit
             end;
-        equivStates := true;
+        EquivStates := True;
       end
   end(*equivStates*);
 
-procedure optimizeDFATable;
+procedure OptimizeDFATable;
 
   var
-    i, ii, j : Integer;
-    act_part, new_part, n_new_parts : Integer;
+    I, Ii, J : Integer;
+    ActPart, NewPart, NNewParts : Integer;
 
   begin
 
-    n_parts := 0;
+    NParts := 0;
 
     (* Initially, create one partition containing ALL states: *)
 
-    n_parts := 1;
-    part_table^[0] := newIntSet;
-    for i := 0 to n_states-1 do
+    NParts := 1;
+    PartTable^[0] := NewIntSet;
+    for I := 0 to NStates-1 do
       begin
-        include(part_table^[0]^, i);
-        state_part^[i] := 0;
+        Include(PartTable^[0]^, I);
+        StatePart^[I] := 0;
       end;
 
     (* Now, repeatedly pass over the created partitions, breaking up
@@ -163,70 +163,70 @@ procedure optimizeDFATable;
        partitions have been added during the last pass: *)
 
     repeat
-      n_new_parts := 0; act_part := 0;
-      new_part := n_parts;
-      part_table^[new_part] := newIntSet;
-      while (n_parts<n_states) and (act_part<n_parts) do
+      NNewParts := 0; ActPart := 0;
+      NewPart := NParts;
+      PartTable^[NewPart] := NewIntSet;
+      while (NParts<NStates) and (ActPart<NParts) do
         begin
-          for i := 2 to size(part_table^[act_part]^) do
-            if not equivStates(part_table^[act_part]^[1],
-                               part_table^[act_part]^[i]) then
+          for I := 2 to Size(PartTable^[ActPart]^) do
+            if not EquivStates(PartTable^[ActPart]^[1],
+                               PartTable^[ActPart]^[I]) then
               (* add to new partition: *)
-              include(part_table^[new_part]^, part_table^[act_part]^[i]);
-          if size(part_table^[new_part]^)<>0 then
+              Include(PartTable^[NewPart]^, PartTable^[ActPart]^[I]);
+          if Size(PartTable^[NewPart]^)<>0 then
             begin
               (* add new partition: *)
-              inc(n_parts); inc(n_new_parts);
+              Inc(NParts); Inc(NNewParts);
               (* remove new partition from old one: *)
-              setminus(part_table^[act_part]^, part_table^[new_part]^);
+              SetMinus(PartTable^[ActPart]^, PartTable^[NewPart]^);
               (* update partition assignments: *)
-              for i := 1 to size(part_table^[new_part]^) do
-                state_part^[part_table^[new_part]^[i]] := new_part;
-              inc(new_part);
-              part_table^[new_part] := newIntSet;
+              for I := 1 to Size(PartTable^[NewPart]^) do
+                StatePart^[PartTable^[NewPart]^[I]] := NewPart;
+              Inc(NewPart);
+              PartTable^[NewPart] := NewIntSet;
             end;
-          inc(act_part);
+          Inc(ActPart);
         end;
-    until n_new_parts=0;
+    until NNewParts=0;
 
     (* build the optimized state table: *)
 
-    n_opt_states := n_parts;
-    n_opt_trans := 0;
-    for i := 0 to n_parts-1 do
+    NOptStates := NParts;
+    NOptTrans := 0;
+    for I := 0 to NParts-1 do
       begin
-        ii := part_table^[i]^[1];
-        opt_state_table^[i] := state_table^[ii];
-        with opt_state_table^[i] do
+        Ii := PartTable^[I]^[1];
+        OptStateTable^[I] := StateTable^[Ii];
+        with OptStateTable^[I] do
           begin
-            trans_lo := n_opt_trans+1;
-            trans_hi := n_opt_trans+1+state_table^[ii].trans_hi-
-                        state_table^[ii].trans_lo;
-            for j := 2 to size(part_table^[i]^) do
-              setunion(state_pos^, state_table^[
-                                     part_table^[i]^[j]].state_pos^);
+            TransLo := NOptTrans+1;
+            TransHi := NOptTrans+1+StateTable^[Ii].TransHi-
+                        StateTable^[Ii].TransLo;
+            for J := 2 to Size(PartTable^[I]^) do
+              SetUnion(StatePos^, StateTable^[
+                                     PartTable^[I]^[J]].StatePos^);
           end;
-        for j := state_table^[ii].trans_lo to state_table^[ii].trans_hi do
+        for J := StateTable^[Ii].TransLo to StateTable^[Ii].TransHi do
           begin
-            inc(n_opt_trans);
-            opt_trans_table^[n_opt_trans] := trans_table^[j];
-            with opt_trans_table^[n_opt_trans] do
-              next_state := state_part^[next_state];
+            Inc(NOptTrans);
+            OptTransTable^[NOptTrans] := TransTable^[J];
+            with OptTransTable^[NOptTrans] do
+              NextState := StatePart^[NextState];
           end;
       end;
 
       (* update state table: *)
 
-      n_states     := n_opt_states;
-      n_trans      := n_opt_trans;
-      state_table^ := opt_state_table^;
-      trans_table^ := opt_trans_table^;
+      NStates     := NOptStates;
+      NTrans      := NOptTrans;
+      StateTable^ := OptStateTable^;
+      TransTable^ := OptTransTable^;
 
   end(*optimizeDFATable*);
 
 begin
-  new(part_table);
-  new(state_part);
-  new(opt_state_table);
-  new(opt_trans_table);
+  New(PartTable);
+  New(StatePart);
+  New(OptStateTable);
+  New(OptTransTable);
 end(*LexOpt*).

@@ -61,10 +61,10 @@ procedure SecondPass(p : TNode);
 implementation
 
    uses
-     cutils,
-     globtype,verbose,
-     globals,
-     aasmdata,
+     CUtils,
+     GlobType,Verbose,
+     Globals,
+     AAsmData,
      cgobj
 {$ifdef EXTDEBUG}
      ,cgbase
@@ -167,14 +167,14 @@ implementation
         if entry then
           begin
             secondprefix:=secondprefix+' ';
-            p := strpnew(secondprefix+'second '+secondnames[ht]+' (entry)')
+            p := StrPNew(secondprefix+'second '+secondnames[ht]+' (entry)')
           end
         else
           begin
-            p := strpnew(secondprefix+'second '+secondnames[ht]+' (exit)');
+            p := StrPNew(secondprefix+'second '+secondnames[ht]+' (exit)');
             delete(secondprefix,length(secondprefix),1);
           end;
-        CurrentAsmData.CurrAsmList.concat(tai_comment.create(p));
+        CurrentAsmData.CurrAsmList.concat(TAIComment.create(p));
       end;
 {$endif EXTDEBUG}
 
@@ -183,10 +183,10 @@ implementation
          oldcodegenerror  : boolean;
          oldlocalswitches : TLocalSwitches;
          oldpos    : TFilePosInfo;
-         oldexecutionweight : longint;
+         oldexecutionweight : LongInt;
       begin
-         if not assigned(p) then
-          internalerror(200208221);
+         if not Assigned(p) then
+          InternalError(200208221);
          if not(tnf_error in p.transientflags) then
           begin
             { The error flag takes precedence over the 'do not execute' flag,
@@ -195,27 +195,27 @@ implementation
               InternalError(2022112402);
 
             oldcodegenerror:=CodeGenError;
-            oldlocalswitches:=CurrentSettings.localswitches;
+            oldlocalswitches:=CurrentSettings.LocalSwitches;
             oldpos:=CurrentFilePos;
             CurrentFilePos:=p.fileinfo;
-            CurrentSettings.localswitches:=p.localswitches;
+            CurrentSettings.LocalSwitches:=p.LocalSwitches;
             CodeGenError:=false;
             oldexecutionweight:=cg.executionweight;
-            if assigned(p.optinfo) then
+            if Assigned(p.optinfo) then
               cg.executionweight:=min(p.optinfo^.executionweight,high(cg.executionweight))
             else
               cg.executionweight:=100;
 {$ifdef EXTDEBUG}
             if (p.expectloc=LOC_INVALID) then
-              Comment(V_Warning,'ExpectLoc is not set before secondpass: '+nodetype2str[p.nodetype]);
+              Comment(VWarning,'ExpectLoc is not set before secondpass: '+nodetype2str[p.nodetype]);
             if (p.location.loc<>LOC_INVALID) then
-              Comment(V_Warning,'Location.Loc is already set before secondpass: '+nodetype2str[p.nodetype]);
-            if (cs_asm_nodes in CurrentSettings.globalswitches) then
+              Comment(VWarning,'Location.Loc is already set before secondpass: '+nodetype2str[p.nodetype]);
+            if (cs_asm_nodes in CurrentSettings.GlobalSwitches) then
               logsecond(p.nodetype,true);
 {$endif EXTDEBUG}
             p.pass_generate_code;
 {$ifdef EXTDEBUG}
-            if (cs_asm_nodes in CurrentSettings.globalswitches) then
+            if (cs_asm_nodes in CurrentSettings.GlobalSwitches) then
               logsecond(p.nodetype,false);
             if (not CodeGenError) then
              begin
@@ -228,18 +228,18 @@ implementation
 {$endif SUPPORT_MMX}
                       or ((p.location.loc=loc_reference) and (p.expectloc=loc_creference))
                       or ((p.location.loc=loc_void) and (p.nodetype = calln)) then
-                     Comment(V_Note,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype])
+                     Comment(VNote,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype])
                    else
-                     Comment(V_Warning,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype]);
+                     Comment(VWarning,'Location ('+tcgloc2str[p.location.loc]+') not equal to expectloc ('+tcgloc2str[p.expectloc]+'): '+nodetype2str[p.nodetype]);
                  end;
                if (p.location.loc=LOC_INVALID) then
-                 Comment(V_Warning,'Location not set in secondpass: '+nodetype2str[p.nodetype]);
+                 Comment(VWarning,'Location not set in secondpass: '+nodetype2str[p.nodetype]);
              end;
 {$endif EXTDEBUG}
             if CodeGenError then
               include(p.transientflags,tnf_error);
             CodeGenError:=CodeGenError or oldcodegenerror;
-            CurrentSettings.localswitches:=oldlocalswitches;
+            CurrentSettings.LocalSwitches:=oldlocalswitches;
             CurrentFilePos:=oldpos;
             cg.executionweight:=oldexecutionweight;
           end
@@ -252,7 +252,7 @@ implementation
       begin
          { current_asmdata.CurrAsmList must be empty }
          if not CurrentAsmData.CurrAsmList.empty then
-           internalerror(200405201);
+           InternalError(200405201);
 
          { clear errors before starting }
          CodeGenError:=false;

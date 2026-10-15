@@ -42,7 +42,7 @@ program fpc_with_valgrind;
 }
 
 uses
-  sysutils,
+  SysUtils,
   dos;
 
 const
@@ -66,13 +66,13 @@ const
   FpcValgrindIniName  : string = 'valgrind.fpc';
 
 { Dos/Windows Valgrind still need forward slashes }
-procedure AdaptToValgrind(var filename : string);
+procedure AdaptToValgrind(var FileName : string);
 var
-  i : longint;
+  i : LongInt;
 begin
-  for i:=1 to length(filename) do
-    if filename[i]='\' then
-      filename[i]:='/';
+  for i:=1 to length(FileName) do
+    if FileName[i]='\' then
+      FileName[i]:='/';
 end;
 
 var
@@ -86,7 +86,7 @@ var
    argv0 : pchar;
 {$endif}
    Dir,Name,Ext,Param : ShortString;
-   ValgrindExitCode,i : longint;
+   ValgrindExitCode,i : LongInt;
    line : string;
    f : text;
 
@@ -108,7 +108,7 @@ begin
   if env_value<>'' then
     valgrind_args:=valgrind_args+' '+env_value;
 
-  fsplit(paramstr(0),Dir,Name,Ext);
+  fsplit(ParamStr(0),Dir,Name,Ext);
 {$ifdef linux}
   argv0:=argv[0];
   if (argv0 <> '') then
@@ -121,7 +121,7 @@ begin
     begin
       if (Name+ext = DefaultCompilerName) then
         begin
-          writeln(stderr,'Avoiding infinite recursion with ',Name+Ext,' binary');
+          WriteLn(stderr,'Avoiding infinite recursion with ',Name+Ext,' binary');
           halt(1);
         end;
       CompilerName:=DefaultCompilerName;
@@ -134,26 +134,26 @@ begin
 
   if FullCompilerName='' then
     begin
-      writeln(stderr,'Unable to find ',CompilerName,' binary');
+      WriteLn(stderr,'Unable to find ',CompilerName,' binary');
       halt(2);
     end;
 
 
   { support for info functions directly : used in makefiles }
-  if (paramcount=1) and (pos('-i',Paramstr(1))=1) then
+  if (paramcount=1) and (pos('-i',ParamStr(1))=1) then
     begin
-      Exec(FullCompilerName,Paramstr(1));
+      Exec(FullCompilerName,ParamStr(1));
       exit;
     end;
 
   {$ifdef EXTDEBUG}
-  writeln(stderr,'Using compiler "',FullCompilerName,'"');
+  WriteLn(stderr,'Using compiler "',FullCompilerName,'"');
   flush(stderr);
   {$endif}
   { this will not work correctly if there are " or '' inside the command line :( }
   for i:=1 to Paramcount do
     begin
-      Param:=Paramstr(i);
+      Param:=ParamStr(i);
       if pos(' ',Param)>0 then
         all_args:=all_args+' "'+Param+'"'
       else
@@ -166,19 +166,19 @@ begin
 
   if ValgrindExeName='' then
     begin
-      writeln('Unable to find ',ValgrindDefaultExeName,' and ',ValgrindPasExeName);
+      WriteLn('Unable to find ',ValgrindDefaultExeName,' and ',ValgrindPasExeName);
       halt(3);
     end;
   AdaptToValgrind(FullCompilerName);
   {$ifdef EXTDEBUG}
-  Writeln(stderr,'Starting ',ValgrindExeName+' '+valgrind_args+' '+FullCompilerName+all_args);
+  WriteLn(stderr,'Starting ',ValgrindExeName+' '+valgrind_args+' '+FullCompilerName+all_args);
   flush(stderr);
   {$endif}
   ValgrindExitCode:=ExecuteProcess(ValgrindExeName,valgrind_args+' '+FullCompilerName+all_args);
   if (ValgrindExitCode<>0) then
     begin
-      Writeln('Error running Valgrind');
-      Writeln('ExecuteProcess return value = ',ValgrindExitCode);
+      WriteLn('Error running Valgrind');
+      WriteLn('ExecuteProcess return value = ',ValgrindExitCode);
       RunError(ValgrindExitCode);
     end;
 end.

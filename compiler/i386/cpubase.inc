@@ -27,7 +27,7 @@
 *****************************************************************************}
 
     type
-      topsize = (S_NO,
+      TOpSize = (S_NO,
         S_B,S_W,S_L,S_Q,S_BW,S_BL,S_WL,
         S_IS,S_IL,S_IQ,
         S_FS,S_FL,S_FX,S_FV,S_FXX,
@@ -39,7 +39,7 @@
         S_ZMM
       );
 
-      TOpSizes = set of topsize;
+      TOpSizes = set of TOpSize;
 
 {*****************************************************************************
                                 Registers
@@ -49,7 +49,7 @@
          opcode strings should conform to the names as defined by the
          processor manufacturer.
       }
-      std_op2str:op2strtable={$i i386int.inc}
+      std_op2str:TOp2StrTable={$i i386int.inc}
 
 {*****************************************************************************
                                GDB Information
@@ -62,7 +62,7 @@
           (FIXED_REGISTERS) from GCC 3.x source code
 
       }
-      reg_stab_table : array[tregisterindex] of shortint = (
+      reg_stab_table : array[TRegisterIndex] of shortint = (
         {$i r386stab.inc}
       );
 

@@ -19,7 +19,7 @@ procedure RunLateDemo(Console: Boolean);
 var Left,Again,Right,Base,RTL: HMODULE;
     Factory: TCreatePlugin; Obj: TPluginValue;
     ResourceProbe: TResourceProbe; EnumProbe: TEnumProbe; RaiseProbe: TRaiseProbe;
-    EnumInfo: PTypeInfo; Caught: Boolean; Log: Text; Filename,Kind: string;
+    EnumInfo: PTypeInfo; Caught: Boolean; Log: Text; FileName,Kind: string;
     Component: TComponent; FindCalls,InitCalls: LongInt;
 begin
   Check(IsConsole=Console,'subsystem');
@@ -61,7 +61,7 @@ begin
     Check(InitInheritedComponent(Component,TComponent) and (InitComponentCalls=InitCalls+1),
       'component initialization override');
   finally Component.Free; end;
-  Caught:=false;
+  Caught:=False;
   try RaiseProbe(); except on E: EPluginCall do Caught:=E.Message='typed late package exception'; end;
   Check(Caught,'typed exception');
   { Application releases all executable references before the matching unload. }
@@ -99,13 +99,13 @@ begin
   RTL:=LoadPackage(PackageFileName('nxrtl'));
   UnloadPackage(RTL);
   Check(NativePackageHandle(PackageFileName('nxrtl'))=RTL,'startup owner was unpinned');
-  Caught:=false;
-  try UnloadPackage(RTL); except on E: EPackageError do Caught:=true; end;
+  Caught:=False;
+  try UnloadPackage(RTL); except on E: EPackageError do Caught:=True; end;
   Check(Caught,'unbalanced startup unload accepted');
   if Console then Kind:='console' else Kind:='gui';
-  Filename:=ParamStr(1);
-  if Filename='' then Filename:=ExtractFileName(ParamStr(0))+'.log';
-  Assign(Log,Filename); Rewrite(Log);
+  FileName:=ParamStr(1);
+  if FileName='' then FileName:=ExtractFileName(ParamStr(0))+'.log';
+  Assign(Log,FileName); Rewrite(Log);
   WriteLn(Log,'PASS late '+Kind); WriteLn(Log,Trace); Close(Log);
   if Console then WriteLn('PASS late package loading, unloading and cleanup');
 end;

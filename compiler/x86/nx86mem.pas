@@ -25,25 +25,25 @@ unit nx86mem;
 
 interface
     uses
-      globtype,
+      GlobType,
       cgbase,cpubase,
       symtype,
       nmem,ncgmem;
 
     type
-      tx86derefnode = class(tcgderefnode)
+      TX86DerefNode = class(TCGDerefNode)
         procedure pass_generate_code;override;
       end;
 
-      tx86vecnode = class(tcgvecnode)
-        procedure update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint);override;
+      TX86VecNode = class(TCGVecNode)
+        procedure update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);override;
       end;
 
 implementation
 
     uses
-      cutils,verbose,
-      aasmdata,
+      CUtils,Verbose,
+      AAsmData,
       cgutils,cgobj,
       symconst,symcpu;
 
@@ -51,10 +51,10 @@ implementation
                            TX86DEREFNODE
 *****************************************************************************}
 
-     procedure tx86derefnode.pass_generate_code;
+     procedure TX86DerefNode.pass_generate_code;
        begin
          inherited pass_generate_code;
-         case tcpupointerdef(left.resultdef).x86pointertyp of
+         case TCPUPointerDef(left.resultdef).x86pointertyp of
            x86pt_near: ;
            x86pt_near_cs: location.reference.segment:=NR_CS;
            x86pt_near_ds: location.reference.segment:=NR_DS;
@@ -63,8 +63,8 @@ implementation
            x86pt_near_fs: location.reference.segment:=NR_FS;
            x86pt_near_gs: location.reference.segment:=NR_GS;
 
-           x86pt_far: internalerror(2013050401);
-           x86pt_huge: internalerror(2013050402);
+           x86pt_far: InternalError(2013050401);
+           x86pt_huge: InternalError(2013050402);
 
          end;
        end;
@@ -82,10 +82,10 @@ implementation
      { the live range of the LOC_CREGISTER will most likely overlap the   }
      { the live range of the target LOC_(C)REGISTER)                      }
      { The passed register may be a LOC_CREGISTER as well.                }
-     procedure tx86vecnode.update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint);
+     procedure TX86VecNode.update_reference_reg_mul(maybe_const_reg: TRegister; regsize: TDef; l: aint);
        var
          l2 : integer;
-         hreg : tregister;
+         hreg : TRegister;
          saveseg: TRegister;
        begin
          { Optimized for x86 to use the index register and scalefactor }
@@ -105,7 +105,7 @@ implementation
              4 : cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,2,location.reference.index,hreg);
              8 : cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,3,location.reference.index,hreg);
              else
-               internalerror(2008091401);
+               InternalError(2008091401);
             end;
             location.reference.base:=hreg;
           end
@@ -129,17 +129,17 @@ implementation
          else
            begin
               hreg:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
-              if ispowerof2(l,l2) then
+              if IsPowerOf2(l,l2) then
                 cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHL,OS_ADDR,l2,maybe_const_reg,hreg)
               else
                 cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_IMUL,OS_ADDR,l,maybe_const_reg,hreg);
            end;
          end;
          location.reference.index:=hreg;
-         location.reference.alignment:=newalignment(location.reference.alignment,l);
+         location.reference.alignment:=NewAlignment(location.reference.alignment,l);
        end;
 
 begin
-   cderefnode:=tx86derefnode;
-   cvecnode:=tx86vecnode;
+   CDerefNode:=TX86DerefNode;
+   CVecNode:=TX86VecNode;
 end.

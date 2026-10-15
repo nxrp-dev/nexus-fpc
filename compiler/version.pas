@@ -27,45 +27,45 @@ interface
 
     const
        { version string }
-       version_nr = '3';
-       release_nr = '3';
-       patch_nr   = '1';
-       minorpatch = '';
+       VersionNr = '3';
+       ReleaseNr = '3';
+       PatchNr   = '1';
+       MinorPatch = '';
 
        { word version for ppu file }
-       wordversion = ((ord(version_nr)-ord('0')) shl 14)+
-                     ((ord(release_nr)-ord('0')) shl 7)+
-                     (ord(patch_nr)-ord('0'));
+       WordVersion = ((Ord(VersionNr)-Ord('0')) shl 14)+
+                     ((Ord(ReleaseNr)-Ord('0')) shl 7)+
+                     (Ord(PatchNr)-Ord('0'));
 
        { date string }
-       date_string = {$I %DATE%};
+       DateString = {$I %DATE%};
 
        { source cpu string }
 {$ifdef cpui386}
-        source_cpu_string = 'i386';
+        SourceCPUString = 'i386';
 {$endif cpui386}
 {$ifdef cpux86_64}
-        source_cpu_string = 'x86_64';
+        SourceCPUString = 'x86_64';
 {$endif cpux86_64}
 {$ifdef cpuaarch64}
-        source_cpu_string = 'aarch64';
+        SourceCPUString = 'aarch64';
 {$endif cpuaarch64}
 
-function version_string:string;
-function full_version_string:string;
+function Version_String:string;
+function Full_Version_String:string;
 
 
 implementation
 
-function version_string:string;
+function Version_String:string;
 begin
-  version_string := version_nr+'.'+release_nr+'.'+patch_nr;
+  Version_String := VersionNr+'.'+ReleaseNr+'.'+PatchNr;
 end;
 
 
-function full_version_string:string;
+function Full_Version_String:string;
 begin
-  full_version_string := version_nr+'.'+release_nr+'.'+patch_nr+minorpatch
+  Full_Version_String := VersionNr+'.'+ReleaseNr+'.'+PatchNr+MinorPatch
 {$ifdef REVINC}
   +'-'+{$i revision.inc}
 {$endif REVINC}

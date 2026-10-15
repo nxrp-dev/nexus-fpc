@@ -52,37 +52,37 @@ const
 
 (* Maximum table sizes: *)
 
-max_keys           =  997;  (* size of hash symbol table (prime number!)   *)
-max_nts            =  900;  (* maximum number of nonterminals              *)
-max_lits           =  max_nts+256;  (* number of literals (300+256)                *)
-max_rules          =  max_nts+1;  (* number of rules (300+1)                     *)
-max_types          =  100;  (* number of type tags                         *)
-max_prec           =   50;  (* maximum precedence level                    *)
+MaxKeys           =  997;  (* size of hash symbol table (prime number!)   *)
+MaxNTs            =  900;  (* maximum number of nonterminals              *)
+MaxLits           =  MaxNTs+256;  (* number of literals (300+256)                *)
+MaxRules          =  MaxNTs+1;  (* number of rules (300+1)                     *)
+MaxTypes          =  100;  (* number of type tags                         *)
+MaxPrec           =   50;  (* maximum precedence level                    *)
 {$IFDEF Windows}
-max_states         = 3000;  (* number of LR(0) states                      *)
+MaxStates         = 3000;  (* number of LR(0) states                      *)
 {$ELSE}
-max_states         = 3000;  (* number of LR(0) states                      *)
+MaxStates         = 3000;  (* number of LR(0) states                      *)
 {$ENDIF}
-max_items          = 40000;  (* number of items                             *)
-max_trans          = 40000;  (* number of transitions                       *)
-max_redns          =  9600;  (* number of reductions                        *)
+MaxItems          = 40000;  (* number of items                             *)
+MaxTrans          = 40000;  (* number of transitions                       *)
+MaxRedns          =  9600;  (* number of reductions                        *)
 
-max_rule_len       =   64;  (* maximum length of rules                     *)
-max_set_items      = 9600;  (* maximum number of items in an item set      *)
+MaxRuleLen       =   64;  (* maximum length of rules                     *)
+MaxSetItems      = 9600;  (* maximum number of items in an item set      *)
 
 var
 
 (* Actual table sizes: *)
 
-n_nts            : Integer;
-n_lits           : Integer;
-n_rules          : Integer;
-n_types          : Integer;
-n_prec           : Integer;
-n_states         : Integer;
-n_items          : Integer;
-n_trans          : Integer;
-n_redns          : Integer;
+NNTs            : Integer;
+NLits           : Integer;
+NRules          : Integer;
+NTypes          : Integer;
+NPrec           : Integer;
+NStates         : Integer;
+NItems          : Integer;
+NTrans          : Integer;
+NRedns          : Integer;
 
 type
 
@@ -92,12 +92,12 @@ type
    print names and internal symbol numbers, and a key table which stores,
    for each internal symbol number, the corresponding hash key. *)
 
-SymRec = record
-           pname  : StrPtr;
+TSymRec = record
+           Pname  : PStr;
              (* print name; empty entries are denoted by pname=nil *)
-           deff   : Boolean;
+           Deff   : Boolean;
              (* flag denoting whether symbol is already defined *)
-           sym    : Integer;
+           Sym    : Integer;
              (* internal symbol number (0 or positive: literal symbols
                 (literal characters have symbol numbers 1 thru 255);
                 negative: nonterminal symbols; 0 denotes endmarker,
@@ -108,9 +108,9 @@ SymRec = record
                 s.t. it always has number 256) *)
          end;
 
-SymTable = array [1..max_keys] of SymRec;
+TSymTable = array [1..MaxKeys] of TSymRec;
 
-SymKeyTable = array [-max_nts..max_lits-1] of Integer;
+TSymKeyTable = array [-MaxNTs..MaxLits-1] of Integer;
   (* hash keys for nonterminal and literal symbols *)
 
 (* Rule table: the rule table consists of an array storing the rules
@@ -122,32 +122,32 @@ SymKeyTable = array [-max_nts..max_lits-1] of Integer;
    which stores, for each nonterminal, the corresponding first and last
    index in the rule no.s table. *)
 
-RuleRec = record
-            lhs_sym : Integer; (* lhs nonterminal *)
-            rhs_len : Integer; (* length of rhs *)
-            rhs_sym : array [1..max_rule_len] of Integer;
+TRuleRec = record
+            LHSSym : Integer; (* lhs nonterminal *)
+            RHSLen : Integer; (* length of rhs *)
+            RHSSym : array [1..MaxRuleLen] of Integer;
               (* rhs symbols *)
           end;
 
-RuleRecPtr = ^RuleRec;
+PRuleRec = ^TRuleRec;
 
-RuleTable = array [1..max_rules] of RuleRecPtr;
+TRuleTable = array [1..MaxRules] of PRuleRec;
 
-RuleNoTable = array [1..max_rules] of Integer;
+TRuleNoTable = array [1..MaxRules] of Integer;
 
-RuleOffsRec = record
-                rule_lo, rule_hi : Integer;
+TRuleOffsRec = record
+                RuleLo, RuleHi : Integer;
               end;
 
-RuleOffsTable = array [1..max_nts] of RuleOffsRec;
+TRuleOffsTable = array [1..MaxNTs] of TRuleOffsRec;
 
 (* Symbol type table: The symbol type table stores the types associated
    with the nonterminal and terminal grammar symbols (0 if none). *)
 
-TypeTable    = array [1..max_types] of Integer;
+TTypeTable    = array [1..MaxTypes] of Integer;
   (* types declared in the definitions section *)
 
-SymTypeTable = array [-max_nts..max_lits-1] of Integer;
+TSymTypeTable = array [-MaxNTs..MaxLits-1] of Integer;
   (* symbol types *)
 
 (* Precedence table: The precedence table stores the type of each
@@ -155,13 +155,13 @@ SymTypeTable = array [-max_nts..max_lits-1] of Integer;
    symbol and grammar rule, the assigned precedence level (precedence
    level 0 if none). *)
 
-PrecType = ( left, right, nonassoc );
+TPrecType = ( Left, Right, NonAssoc );
 
-PrecTable = array [1..max_prec] of PrecType;
+TPrecTable = array [1..MaxPrec] of TPrecType;
 
-SymPrecTable = array [0..max_lits-1] of Integer;
+TSymPrecTable = array [0..MaxLits-1] of Integer;
 
-RulePrecTable = array [1..max_rules] of Integer;
+TRulePrecTable = array [1..MaxRules] of Integer;
 
 (* Closure and first symbols table: The closure table stores, for each
    nonterminal X, the set of those nonterminals Y for which there is a
@@ -176,9 +176,9 @@ RulePrecTable = array [1..max_rules] of Integer;
    and are used by the LALR parser construction algorithms in YaccLR0 and
    YaccLookaheads. *)
 
-SymSetTable = array [1..max_nts] of IntSetPtr;
+TSymSetTable = array [1..MaxNTs] of PIntSet;
 
-NullableTable = array [1..max_nts] of Boolean;
+TNullableTable = array [1..MaxNTs] of Boolean;
 
 (* State table:
 
@@ -198,207 +198,207 @@ NullableTable = array [1..max_nts] of Boolean;
    the reductions table stores the reductions in each state, where each
    action is denoted by a (symbolset, ruleno) pair. *)
 
-StateRec = record
-             item_lo, item_hi : Integer;
-             trans_lo, trans_hi : Integer;
-             redns_lo, redns_hi : Integer;
-             key : Integer;
+TStateRec = record
+             ItemLo, ItemHi : Integer;
+             TransLo, TransHi : Integer;
+             RednsLo, RednsHi : Integer;
+             Key : Integer;
            end;
 
-StateTable = array [0..max_states-1] of StateRec;
+TStateTable = array [0..MaxStates-1] of TStateRec;
 
-ItemRec = record
-            rule_no, pos_no : Integer;
-            next : Integer;
+TItemRec = record
+            RuleNo, PosNo : Integer;
+            Next : Integer;
           end;
 
-ItemSet = record
-            n_items : Integer;
-            item    : array [1..max_set_items] of ItemRec;
+TItemSet = record
+            NItems : Integer;
+            Item    : array [1..MaxSetItems] of TItemRec;
           end;
 
-ItemTable = array [1..max_items] of ItemRec;
+TItemTable = array [1..MaxItems] of TItemRec;
 
-TransRec = record
-             sym, next_state : Integer;
+TTransRec = record
+             Sym, NextState : Integer;
            end;
 
-TransTable = array [1..max_trans] of TransRec;
+TTransTable = array [1..MaxTrans] of TTransRec;
 
-RednRec = record
-            symset : IntSetPtr;
-            rule_no : Integer;
+TRednRec = record
+            SymSet : PIntSet;
+            RuleNo : Integer;
           end;
 
-RednTable = array [1..max_redns] of RednRec;
+TRednTable = array [1..MaxRedns] of TRednRec;
 
 (* Lookaheads table: This table stores, for each kernel item, the
    corresponding LALR(1) lookahead symbol sets. *)
 
-LookaheadTable = array [1..max_items] of IntSetPtr;
+TLookaheadTable = array [1..MaxItems] of PIntSet;
 
 (* The propagation table is used to keep track of how lookaheads are
    propagated from kernel items to other lookahead sets. *)
 
-PropList = ^PropEntry;
+PPropList = ^TPropEntry;
 
-PropEntry = record
-              symset : IntSetPtr;
-              next : PropList;
+TPropEntry = record
+              SymSet : PIntSet;
+              Next : PPropList;
             end;
 
-PropTable = array [1..max_items] of PropList;
+TPropTable = array [1..MaxItems] of PPropList;
 
 
 var
 
-verbose           : Boolean;          (* status of the verbose option *)
-debug             : Boolean;          (* status of the debug option *)
-startnt           : Integer;          (* start nonterminal of grammar
+Verbose           : Boolean;          (* status of the verbose option *)
+Debug             : Boolean;          (* status of the debug option *)
+StartNT           : Integer;          (* start nonterminal of grammar
                                          (0 if undefined) *)
-sym_table         : ^SymTable;        (* symbol table *)
-sym_key           : ^SymKeyTable;     (* symbol keys *)
-rule_table        : ^RuleTable;       (* rule table *)
-type_table        : ^TypeTable;       (* type table *)
-sym_type          : ^SymTypeTable;    (* symbol types *)
-prec_table        : ^PrecTable;       (* precedence table *)
-sym_prec          : ^SymPrecTable;    (* literal symbols precedence *)
-rule_prec         : ^RulePrecTable;   (* rules precedence *)
-rule_no           : ^RuleNoTable;     (* rule no table *)
-rule_offs         : ^RuleOffsTable;   (* rule offset table *)
-closure_table     : ^SymSetTable;     (* closure table *)
-first_set_table   : ^SymSetTable;     (* first set table *)
-nullable          : ^NullableTable;   (* nullable flags table *)
-state_table       : ^StateTable;      (* LR(0) state table *)
-item_table        : ^ItemTable;       (* LR(0) kernel item table *)
-trans_table       : ^TransTable;      (* transition table *)
-redn_table        : ^RednTable;       (* reduction table *)
-lookahead_table   : ^LookaheadTable;  (* LALR lookaheads table *)
-prop_table        : ^PropTable;       (* lookahead propagation table *)
+SymTable         : ^TSymTable;        (* symbol table *)
+SymKey           : ^TSymKeyTable;     (* symbol keys *)
+RuleTable        : ^TRuleTable;       (* rule table *)
+TypeTable        : ^TTypeTable;       (* type table *)
+SymType          : ^TSymTypeTable;    (* symbol types *)
+PrecTable        : ^TPrecTable;       (* precedence table *)
+SymPrec          : ^TSymPrecTable;    (* literal symbols precedence *)
+RulePrec         : ^TRulePrecTable;   (* rules precedence *)
+RuleNo           : ^TRuleNoTable;     (* rule no table *)
+RuleOffs         : ^TRuleOffsTable;   (* rule offset table *)
+ClosureTable     : ^TSymSetTable;     (* closure table *)
+FirstSetTable   : ^TSymSetTable;     (* first set table *)
+Nullable          : ^TNullableTable;   (* nullable flags table *)
+StateTable       : ^TStateTable;      (* LR(0) state table *)
+ItemTable        : ^TItemTable;       (* LR(0) kernel item table *)
+TransTable       : ^TTransTable;      (* transition table *)
+RednTable        : ^TRednTable;       (* reduction table *)
+LookaheadTable   : ^TLookaheadTable;  (* LALR lookaheads table *)
+PropTable        : ^TPropTable;       (* lookahead propagation table *)
 
 
 (* Operations: *)
 
 (* Symbol table routines: *)
 
-function new_nt : Integer;
+function NewNT : Integer;
   (* returns a new nonterminal number (<-1) *)
 
-function new_lit : Integer;
+function NewLit : Integer;
   (* returns a new literal number above 256 *)
 
-procedure add_lit ( sym : Integer );
+procedure AddLit ( Sym : Integer );
   (* this routine allows to add a user-defined literal symbol;
      the current literal symbols count is adjusted accordingly *)
 
-function get_key ( symbol : String ) : Integer;
+function GetKey ( Symbol : String ) : Integer;
   (* returns a hash key for symbol *)
 
-procedure def_key ( k : Integer; sym : Integer );
+procedure DefKey ( K : Integer; Sym : Integer );
   (* defines k to be a new symbol with internal symbol number sym *)
 
-function is_def_key ( k : Integer; var sym : Integer ) : Boolean;
+function IsDefKey ( K : Integer; var Sym : Integer ) : Boolean;
   (* checks whether symbol denoted by symbol table key k is already
      defined; if so, returns the corresponding symbol number *)
 
-function pname ( sym : Integer ) : String;
+function Pname ( Sym : Integer ) : String;
   (* returns the print name of an internal symbol (`$end' for
      symbol 0, `$accept' for nonterminal -1, and a single quoted
      character for literals 1..255) *)
 
 (* Rule table routines: *)
 
-function newRuleRec ( r : RuleRec ) : RuleRecPtr;
+function NewRuleRec ( R : TRuleRec ) : PRuleRec;
   (* obtains a dynamic copy of r (only the number of bytes actually
      needed is allocated) *)
 
-procedure add_rule ( r : RuleRecPtr );
+procedure AddRule ( R : PRuleRec );
   (* add a rule to the rule table *)
 
-procedure sort_rules;
+procedure SortRules;
   (* sorts rules w.r.t. left-hand sides into the rule no table *)
 
-procedure rule_offsets;
+procedure RuleOffsets;
   (* computes rule offsets after rules have been sorted *)
 
-function n_nt_rules ( sym : Integer ) : Integer;
+function NNTRules ( Sym : Integer ) : Integer;
   (* returns number of rules for nonterminal sym *)
 
 (* Type Table routines: *)
 
-procedure add_type ( k : Integer );
+procedure AddType ( K : Integer );
   (* add a type identifier to the table *)
 
-procedure sort_types;
+procedure SortTypes;
   (* sort the type table alphabetically, eliminate dups *)
 
-function search_type ( symbol : String ) : Boolean;
+function SearchType ( Symbol : String ) : Boolean;
   (* search the sorted types table for the given type symbol *)
 
 (* Precedence table routines: *)
 
-function new_prec_level ( prec_type : PrecType ) : Integer;
+function NewPrecLevel ( PrecType : TPrecType ) : Integer;
   (* adds a new precedence level of the denoted type; returns: the new
      level *)
 
 (* State table routines: *)
 
-var act_state : Integer; (* state currently considered *)
+var ActState : Integer; (* state currently considered *)
 
-procedure new_state;
+procedure NewState;
   (* build a new state *)
 
-procedure add_item ( rule_no, pos_no : Integer );
+procedure AddItem ( RuleNo, PosNo : Integer );
   (* add an item to the new state (initialize its next field to 0) *)
 
-function add_state : Integer;
+function AddState : Integer;
   (* add the new state to the state table; if an equivalent state is already
      in the table, dispose the new state, and return the existing state
      number, otherwise return the new state number *)
 
-procedure start_trans;
+procedure StartTrans;
   (* starts building transitions of the active state *)
 
-procedure add_trans ( sym, next_state : Integer );
+procedure AddTrans ( Sym, NextState : Integer );
   (* adds a transition to the active state *)
 
-procedure end_trans;
+procedure EndTrans;
   (* ends transitions of the active state *)
 
-procedure start_redns;
+procedure StartRedns;
   (* starts building reduction actions of the active state *)
 
-procedure add_redn ( symset : IntSetPtr; rule_no : Integer );
+procedure AddRedn ( SymSet : PIntSet; RuleNo : Integer );
   (* adds a reduction to the active state *)
 
-procedure end_redns;
+procedure EndRedns;
   (* ends reduction actions of the active state *)
 
-function n_state_items ( s : Integer ) : Integer;
-function n_state_trans ( s : Integer ) : Integer;
-function n_state_redns ( s : Integer ) : Integer;
+function NStateItems ( S : Integer ) : Integer;
+function NStateTrans ( S : Integer ) : Integer;
+function NStateRedns ( S : Integer ) : Integer;
   (* return the number of kernel items, transitions and reductions in state
      s, respectively *)
 
-function find_item( s : Integer; rule_no, pos_no : Integer ) : Integer;
+function FindItem( S : Integer; RuleNo, PosNo : Integer ) : Integer;
   (* find item (rule_no, pos_no) in state s; returns: the item number *)
 
 (* Item set routines: *)
 
-procedure empty_item_set ( var item_set : ItemSet );
+procedure EmptyItemSet ( var ItemSet : TItemSet );
   (* initializes an empty item set *)
 
-procedure include_item_set ( var item_set : ItemSet;
-                             rule_no, pos_no : Integer);
+procedure IncludeItemSet ( var ItemSet : TItemSet;
+                             RuleNo, PosNo : Integer);
   (* add the denoted item to the given item set *)
 
-procedure get_item_set ( s : Integer; var item_set : ItemSet);
+procedure GetItemSet ( S : Integer; var ItemSet : TItemSet);
   (* obtain the item set of state s from the item table *)
 
-procedure closure ( var item_set : ItemSet );
+procedure Closure ( var ItemSet : TItemSet );
   (* compute the closure of item_set (using the closure table) *)
 
-procedure sort_item_set ( var item_set : ItemSet );
+procedure SortItemSet ( var ItemSet : TItemSet );
   (* sorts an item set w.r.t. position and rule numbers (higher positions,
      lower rules first) *)
 
@@ -408,88 +408,88 @@ uses YaccMsgs;
 
 (* Symbol table routines: *)
 
-function new_nt : Integer;
+function NewNT : Integer;
   begin
-    inc(n_nts);
-    if n_nts>max_nts then fatal(nt_table_overflow);
-    sym_type^[-n_nts] := 0;
-    new_nt := -n_nts;
+    Inc(NNTs);
+    if NNTs>MaxNTs then Fatal(NTTableOverflow);
+    SymType^[-NNTs] := 0;
+    NewNT := -NNTs;
   end(*new_nt*);
 
-function new_lit : Integer;
+function NewLit : Integer;
   begin
-    inc(n_lits);
-    if n_lits>max_lits then fatal(lit_table_overflow);
-    sym_type^[n_lits-1] := 0;
-    sym_prec^[n_lits-1] := 0;
-    new_lit := n_lits-1;
+    Inc(NLits);
+    if NLits>MaxLits then Fatal(LitTableOverflow);
+    SymType^[NLits-1] := 0;
+    SymPrec^[NLits-1] := 0;
+    NewLit := NLits-1;
   end(*new_lit*);
 
-procedure add_lit ( sym : Integer );
+procedure AddLit ( Sym : Integer );
   begin
-    if sym>n_lits then n_lits := sym;
-    if n_lits>max_lits then fatal(lit_table_overflow);
-    sym_type^[sym] := 0;
-    sym_prec^[sym] := 0;
+    if Sym>NLits then NLits := Sym;
+    if NLits>MaxLits then Fatal(LitTableOverflow);
+    SymType^[Sym] := 0;
+    SymPrec^[Sym] := 0;
   end(*add_lit*);
 
-function lookup(k : Integer) : String;
+function Lookup(K : Integer) : String;
   (* print name of symbol no. k *)
   begin
-    with sym_table^[k] do
-      if pname=nil then
-        lookup := ''
+    with SymTable^[K] do
+      if Pname=nil then
+        Lookup := ''
       else
-        lookup := pname^
+        Lookup := Pname^
   end(*lookup*);
 
-procedure entry(k : Integer; symbol : String);
+procedure Entry(K : Integer; Symbol : String);
   (* enter symbol into table *)
   begin
-    sym_table^[k].pname := newStr(symbol);
+    SymTable^[K].Pname := NewStr(Symbol);
   end(*entry*);
 
-function get_key ( symbol : String ) : Integer;
+function GetKey ( Symbol : String ) : Integer;
   begin
-    get_key := key(symbol, max_keys, {$ifdef fpc}@{$endif}lookup,
-                   {$ifdef fpc}@{$endif}entry);
+    GetKey := Key(Symbol, MaxKeys, {$ifdef fpc}@{$endif}Lookup,
+                   {$ifdef fpc}@{$endif}Entry);
   end(*get_key*);
 
-procedure def_key ( k : Integer; sym : Integer );
+procedure DefKey ( K : Integer; Sym : Integer );
   begin
-    sym_key^[sym] := k;
-    sym_table^[k].deff := true;
-    sym_table^[k].sym  := sym;
+    SymKey^[Sym] := K;
+    SymTable^[K].Deff := True;
+    SymTable^[K].Sym  := Sym;
   end(*def_key*);
 
-function is_def_key ( k : Integer; var sym : Integer ) : Boolean;
+function IsDefKey ( K : Integer; var Sym : Integer ) : Boolean;
   begin
-    if sym_table^[k].deff then
+    if SymTable^[K].Deff then
       begin
-        sym := sym_table^[k].sym;
-        is_def_key := true;
+        Sym := SymTable^[K].Sym;
+        IsDefKey := True;
       end
     else
-      is_def_key := false
+      IsDefKey := False
   end(*is_def_key*);
 
-function pname ( sym : Integer ) : String;
+function Pname ( Sym : Integer ) : String;
 begin
-  case sym of
-    1..255 : pname := singleQuoteStr(chr(sym));
-    0      : pname := '$end';
-    -1     : pname := '$accept';
+  case Sym of
+    1..255 : Pname := SingleQuoteStr(Chr(Sym));
+    0      : Pname := '$end';
+    -1     : Pname := '$accept';
   else  begin
-    if sym_table^[sym_key^[sym]].pname^[1]=''''
+    if SymTable^[SymKey^[Sym]].Pname^[1]=''''
       then  begin
-        pname := singleQuoteStr(
-                   copy( sym_table^[sym_key^[sym]].pname^,
+        Pname := SingleQuoteStr(
+                   Copy( SymTable^[SymKey^[Sym]].Pname^,
                          2,
-                         length(sym_table^[sym_key^[sym]].pname^)-2)
+                         Length(SymTable^[SymKey^[Sym]].Pname^)-2)
                  )
       end
       else  begin
-        pname := sym_table^[sym_key^[sym]].pname^;
+        Pname := SymTable^[SymKey^[Sym]].Pname^;
       end;
   end;
   end;
@@ -497,439 +497,439 @@ end(*pname*);
 
 (* Rule table: *)
 
-function newRuleRec ( r : RuleRec ) : RuleRecPtr;
-  var rp : RuleRecPtr;
+function NewRuleRec ( R : TRuleRec ) : PRuleRec;
+  var RP : PRuleRec;
   begin
-    getmem(rp, 2*sizeOf(Integer)+r.rhs_len*sizeOf(Integer));
-    move(r, rp^, 2*sizeOf(Integer)+r.rhs_len*sizeOf(Integer));
-    newRuleRec := rp;
+    GetMem(RP, 2*SizeOf(Integer)+R.RHSLen*SizeOf(Integer));
+    Move(R, RP^, 2*SizeOf(Integer)+R.RHSLen*SizeOf(Integer));
+    NewRuleRec := RP;
   end(*newRuleRec*);
 
-procedure add_rule ( r : RuleRecPtr );
+procedure AddRule ( R : PRuleRec );
   begin
-    inc(n_rules);
-    if n_rules>max_rules then fatal(rule_table_overflow);
-    rule_table^[n_rules] := r;
+    Inc(NRules);
+    if NRules>MaxRules then Fatal(RuleTableOverflow);
+    RuleTable^[NRules] := R;
   end(*add_rule*);
 
-function rule_less ( i, j : Integer ) : Boolean;
+function RuleLess ( I, J : Integer ) : Boolean;
   begin
-    if rule_table^[rule_no^[i]]^.lhs_sym =
-       rule_table^[rule_no^[j]]^.lhs_sym then
-      rule_less := rule_no^[i] < rule_no^[j]
+    if RuleTable^[RuleNo^[I]]^.LHSSym =
+       RuleTable^[RuleNo^[J]]^.LHSSym then
+      RuleLess := RuleNo^[I] < RuleNo^[J]
     else
-      rule_less := rule_table^[rule_no^[i]]^.lhs_sym >
-                   rule_table^[rule_no^[j]]^.lhs_sym
+      RuleLess := RuleTable^[RuleNo^[I]]^.LHSSym >
+                   RuleTable^[RuleNo^[J]]^.LHSSym
   end(*rule_less*);
 
-procedure rule_swap ( i, j : Integer );
-  var x : Integer;
+procedure RuleSwap ( I, J : Integer );
+  var X : Integer;
   begin
-    x := rule_no^[i]; rule_no^[i] := rule_no^[j]; rule_no^[j] := x;
+    X := RuleNo^[I]; RuleNo^[I] := RuleNo^[J]; RuleNo^[J] := X;
   end(*rule_swap*);
 
-procedure sort_rules;
-  var i : Integer;
+procedure SortRules;
+  var I : Integer;
   begin
-    for i := 1 to n_rules do rule_no^[i] := i;
-    quicksort ( 1, n_rules, {$ifdef fpc}@{$endif}rule_less,
-               {$ifdef fpc}@{$endif}rule_swap );
+    for I := 1 to NRules do RuleNo^[I] := I;
+    QuickSort ( 1, NRules, {$ifdef fpc}@{$endif}RuleLess,
+               {$ifdef fpc}@{$endif}RuleSwap );
   end(*sort_rules*);
 
-procedure rule_offsets;
-  var i, sym : Integer;
+procedure RuleOffsets;
+  var I, Sym : Integer;
   begin
-    for sym := 1 to n_nts do with rule_offs^[sym] do
+    for Sym := 1 to NNTs do with RuleOffs^[Sym] do
       begin
-        rule_lo := 1; rule_hi := 0;
+        RuleLo := 1; RuleHi := 0;
       end;
-    i := 1;
-    while (i<=n_rules) do
+    I := 1;
+    while (I<=NRules) do
       begin
-        sym := rule_table^[rule_no^[i]]^.lhs_sym;
-        rule_offs^[-sym].rule_lo := i;
-        inc(i);
-        while (i<=n_rules) and
-              (rule_table^[rule_no^[i]]^.lhs_sym=sym) do
-          inc(i);
-        rule_offs^[-sym].rule_hi := i-1;
+        Sym := RuleTable^[RuleNo^[I]]^.LHSSym;
+        RuleOffs^[-Sym].RuleLo := I;
+        Inc(I);
+        while (I<=NRules) and
+              (RuleTable^[RuleNo^[I]]^.LHSSym=Sym) do
+          Inc(I);
+        RuleOffs^[-Sym].RuleHi := I-1;
       end;
   end(*rule_offsets*);
 
-function n_nt_rules ( sym : Integer ) : Integer;
+function NNTRules ( Sym : Integer ) : Integer;
   begin
-    with rule_offs^[-sym] do
-      n_nt_rules := rule_hi-rule_lo+1
+    with RuleOffs^[-Sym] do
+      NNTRules := RuleHi-RuleLo+1
   end(*n_nt_rules*);
 
 (* Type Table routines: *)
 
-procedure add_type ( k : Integer );
+procedure AddType ( K : Integer );
   begin
-    inc(n_types);
-    if n_types>max_types then fatal(type_table_overflow);
-    type_table^[n_types] := k;
+    Inc(NTypes);
+    if NTypes>MaxTypes then Fatal(TypeTableOverflow);
+    TypeTable^[NTypes] := K;
   end(*add_type*);
 
 (* Routines to sort type identifiers alphabetically: *)
 
-function type_less ( i, j : Integer ) : Boolean;
+function TypeLess ( I, J : Integer ) : Boolean;
   begin
-    type_less := sym_table^[type_table^[i]].pname^<
-                 sym_table^[type_table^[j]].pname^
+    TypeLess := SymTable^[TypeTable^[I]].Pname^<
+                 SymTable^[TypeTable^[J]].Pname^
   end(*type_less*);
 
-procedure type_swap ( i, j : Integer );
-  var x : Integer;
+procedure TypeSwap ( I, J : Integer );
+  var X : Integer;
   begin
-    x := type_table^[i];
-    type_table^[i] := type_table^[j];
-    type_table^[j] := x;
+    X := TypeTable^[I];
+    TypeTable^[I] := TypeTable^[J];
+    TypeTable^[J] := X;
   end(*type_swap*);
 
-procedure sort_types;
-  var i, j, count : Integer;
+procedure SortTypes;
+  var I, J, Count : Integer;
   begin
     (* sort: *)
-    quicksort(1, n_types, {$ifdef fpc}@{$endif}type_less,
-              {$ifdef fpc}@{$endif}type_swap);
+    QuickSort(1, NTypes, {$ifdef fpc}@{$endif}TypeLess,
+              {$ifdef fpc}@{$endif}TypeSwap);
     (* eliminate dups: *)
-    i := 1; j := 1; count := 0;
-    while i<=n_types do
+    I := 1; J := 1; Count := 0;
+    while I<=NTypes do
       begin
-        if i<>j then type_table^[j] := type_table^[i];
-        while (i<n_types) and (type_table^[i+1]=type_table^[i]) do
+        if I<>J then TypeTable^[J] := TypeTable^[I];
+        while (I<NTypes) and (TypeTable^[I+1]=TypeTable^[I]) do
           begin
-            inc(i); inc(count);
+            Inc(I); Inc(Count);
           end;
-        inc(i); inc(j);
+        Inc(I); Inc(J);
       end;
-    dec(n_types, count);
+    Dec(NTypes, Count);
   end(*sort_types*);
 
-function search_type ( symbol : String ) : Boolean;
-  var l, r, k : Integer;
+function SearchType ( Symbol : String ) : Boolean;
+  var L, R, K : Integer;
   begin
     (* binary search: *)
-    l := 1; r := n_types;
-    k := l + (r-l) div 2;
-    while (l<r) and (sym_table^[type_table^[k]].pname^<>symbol) do
+    L := 1; R := NTypes;
+    K := L + (R-L) div 2;
+    while (L<R) and (SymTable^[TypeTable^[K]].Pname^<>Symbol) do
       begin
-        if sym_table^[type_table^[k]].pname^<symbol then
-          l := succ(k)
+        if SymTable^[TypeTable^[K]].Pname^<Symbol then
+          L := Succ(K)
         else
-          r := pred(k);
-        k := l + (r-l) div 2;
+          R := Pred(K);
+        K := L + (R-L) div 2;
       end;
-    search_type := (k<=n_types) and (sym_table^[type_table^[k]].pname^=symbol);
+    SearchType := (K<=NTypes) and (SymTable^[TypeTable^[K]].Pname^=Symbol);
   end(*search_type*);
 
 (* Precedence table routines: *)
 
-function new_prec_level ( prec_type : PrecType ) : Integer;
+function NewPrecLevel ( PrecType : TPrecType ) : Integer;
   begin
-    inc(n_prec);
-    if n_prec>max_prec then fatal(prec_table_overflow);
-    prec_table^[n_prec] := prec_type;
-    new_prec_level := n_prec;
+    Inc(NPrec);
+    if NPrec>MaxPrec then Fatal(PrecTableOverflow);
+    PrecTable^[NPrec] := PrecType;
+    NewPrecLevel := NPrec;
   end(*new_prec_level*);
 
 (* State table: *)
 
-procedure new_state;
+procedure NewState;
   begin
-    inc(n_states);
-    if n_states>max_states then fatal(state_table_overflow);
-    state_table^[n_states-1].item_lo := n_items+1;
+    Inc(NStates);
+    if NStates>MaxStates then Fatal(StateTableOverflow);
+    StateTable^[NStates-1].ItemLo := NItems+1;
   end(*new_state*);
 
-procedure add_item ( rule_no, pos_no : Integer );
+procedure AddItem ( RuleNo, PosNo : Integer );
   begin
-    inc(n_items);
-    if n_items>max_items then fatal(item_table_overflow);
-    item_table^[n_items].rule_no := rule_no;
-    item_table^[n_items].pos_no  := pos_no;
-    item_table^[n_items].next    := 0;
+    Inc(NItems);
+    if NItems>MaxItems then Fatal(ItemTableOverflow);
+    ItemTable^[NItems].RuleNo := RuleNo;
+    ItemTable^[NItems].PosNo  := PosNo;
+    ItemTable^[NItems].Next    := 0;
   end(*add_item*);
 
-function add_state : Integer;
-  function state_key ( s : Integer ) : Integer;
+function AddState : Integer;
+  function StateKey ( S : Integer ) : Integer;
     (* determines a hash key for state s *)
-    const max_key = 4001;
+    const MaxKey = 4001;
       (* should be prime number s.t. hash keys are distributed
          evenly *)
-    var i, k : Integer;
+    var I, K : Integer;
     begin
-      with state_table^[s] do
+      with StateTable^[S] do
         begin
-          k := 0;
-          for i := item_lo to item_hi do
-            with item_table^[i] do
-              inc(k, rule_no+pos_no);
-          state_key := k mod max_key;
+          K := 0;
+          for I := ItemLo to ItemHi do
+            with ItemTable^[I] do
+              Inc(K, RuleNo+PosNo);
+          StateKey := K mod MaxKey;
         end;
     end(*state_key*);
-  function search_state ( s, lo, hi : Integer; var t : Integer ) : Boolean;
+  function SearchState ( S, Lo, Hi : Integer; var T : Integer ) : Boolean;
     (* searches the range lo..hi in the state table for a state with the
        same kernel items as s; returns true if found, and then the
        corresponding state number in t *)
-    function eq_items(s, t : Integer) : Boolean;
+    function EqItems(S, T : Integer) : Boolean;
       (* compares kernel item sets of states s and t *)
-      var i, i_s, i_t : Integer;
+      var I, IndexS, IndexT : Integer;
       begin
-        if n_state_items(s)<>n_state_items(t) then
-          eq_items := false
+        if NStateItems(S)<>NStateItems(T) then
+          EqItems := False
         else
           begin
-            i_s := state_table^[s].item_lo;
-            i_t := state_table^[t].item_lo;
-            for i := 0 to n_state_items(s)-1 do
-              if (item_table^[i_s+i].rule_no<>item_table^[i_t+i].rule_no) or
-                 (item_table^[i_s+i].pos_no<>item_table^[i_t+i].pos_no) then
+            IndexS := StateTable^[S].ItemLo;
+            IndexT := StateTable^[T].ItemLo;
+            for I := 0 to NStateItems(S)-1 do
+              if (ItemTable^[IndexS+I].RuleNo<>ItemTable^[IndexT+I].RuleNo) or
+                 (ItemTable^[IndexS+I].PosNo<>ItemTable^[IndexT+I].PosNo) then
                 begin
-                  eq_items := false;
-                  exit;
+                  EqItems := False;
+                  Exit;
                 end;
-            eq_items := true;
+            EqItems := True;
           end
       end(*eq_items*);
-    var t1 : Integer;
+    var T1 : Integer;
     begin
-      with state_table^[s] do
-        for t1 := lo to hi do
-          if (key=state_table^[t1].key) and
-             eq_items(s, t1) then
+      with StateTable^[S] do
+        for T1 := Lo to Hi do
+          if (Key=StateTable^[T1].Key) and
+             EqItems(S, T1) then
             begin
-              search_state := true;
-              t := t1;
-              exit;
+              SearchState := True;
+              T := T1;
+              Exit;
             end;
-      search_state := false;
+      SearchState := False;
     end(*search_state*);
-  var s : Integer;
+  var S : Integer;
   begin
-    with state_table^[n_states-1] do
+    with StateTable^[NStates-1] do
       begin
-        item_hi := n_items;
-        key := state_key(n_states-1);
-        if search_state(n_states-1, 0, n_states-2, s) then
+        ItemHi := NItems;
+        Key := StateKey(NStates-1);
+        if SearchState(NStates-1, 0, NStates-2, S) then
           begin
-            n_items := item_lo;
-            dec(n_states);
-            add_state := s;
+            NItems := ItemLo;
+            Dec(NStates);
+            AddState := S;
           end
         else
-          add_state := n_states-1;
+          AddState := NStates-1;
       end;
   end(*add_state*);
 
-procedure start_trans;
+procedure StartTrans;
   begin
-    state_table^[act_state].trans_lo := n_trans+1;
+    StateTable^[ActState].TransLo := NTrans+1;
   end(*start_trans*);
 
-procedure add_trans ( sym, next_state : Integer );
+procedure AddTrans ( Sym, NextState : Integer );
   begin
-    inc(n_trans);
-    if n_trans>max_trans then fatal(trans_table_overflow);
-    trans_table^[n_trans].sym        := sym;
-    trans_table^[n_trans].next_state := next_state;
+    Inc(NTrans);
+    if NTrans>MaxTrans then Fatal(TransTableOverflow);
+    TransTable^[NTrans].Sym        := Sym;
+    TransTable^[NTrans].NextState := NextState;
   end(*add_trans*);
 
-procedure end_trans;
+procedure EndTrans;
   begin
-    state_table^[act_state].trans_hi := n_trans;
+    StateTable^[ActState].TransHi := NTrans;
   end(*end_trans*);
 
-procedure start_redns;
+procedure StartRedns;
   begin
-    state_table^[act_state].redns_lo := n_redns+1;
+    StateTable^[ActState].RednsLo := NRedns+1;
   end(*start_redns*);
 
-procedure add_redn ( symset : IntSetPtr; rule_no : Integer );
+procedure AddRedn ( SymSet : PIntSet; RuleNo : Integer );
   begin
-    inc(n_redns);
-    if n_redns>max_redns then fatal(redn_table_overflow);
-    redn_table^[n_redns].symset  := symset;
-    redn_table^[n_redns].rule_no := rule_no;
+    Inc(NRedns);
+    if NRedns>MaxRedns then Fatal(RednTableOverflow);
+    RednTable^[NRedns].SymSet  := SymSet;
+    RednTable^[NRedns].RuleNo := RuleNo;
   end(*add_redn*);
 
-procedure end_redns;
+procedure EndRedns;
   begin
-    state_table^[act_state].redns_hi := n_redns;
+    StateTable^[ActState].RednsHi := NRedns;
   end(*end_redns*);
 
-function n_state_items ( s : Integer ) : Integer;
+function NStateItems ( S : Integer ) : Integer;
   begin
-    with state_table^[s] do
-      n_state_items := item_hi-item_lo+1
+    with StateTable^[S] do
+      NStateItems := ItemHi-ItemLo+1
   end(*n_state_items*);
 
-function n_state_trans ( s : Integer ) : Integer;
+function NStateTrans ( S : Integer ) : Integer;
   begin
-    with state_table^[s] do
-      n_state_trans := trans_hi-trans_lo+1
+    with StateTable^[S] do
+      NStateTrans := TransHi-TransLo+1
   end(*n_state_trans*);
 
-function n_state_redns ( s : Integer ) : Integer;
+function NStateRedns ( S : Integer ) : Integer;
   begin
-    with state_table^[s] do
-      n_state_redns := redns_hi-redns_lo+1
+    with StateTable^[S] do
+      NStateRedns := RednsHi-RednsLo+1
   end(*n_state_redns*);
 
-function find_item( s : Integer; rule_no, pos_no : Integer ) : Integer;
-  var i : Integer;
+function FindItem( S : Integer; RuleNo, PosNo : Integer ) : Integer;
+  var I : Integer;
   begin
-    with state_table^[s] do
-      for i := item_lo to item_hi do
-        if (item_table^[i].rule_no=rule_no) and
-           (item_table^[i].pos_no=pos_no) then
+    with StateTable^[S] do
+      for I := ItemLo to ItemHi do
+        if (ItemTable^[I].RuleNo=RuleNo) and
+           (ItemTable^[I].PosNo=PosNo) then
           begin
-            find_item := i;
-            exit;
+            FindItem := I;
+            Exit;
           end;
-    find_item := 0;
+    FindItem := 0;
   end(*find_item*);
 
 (* Item set routines: *)
 
-procedure empty_item_set ( var item_set : ItemSet );
+procedure EmptyItemSet ( var ItemSet : TItemSet );
   begin
-    item_set.n_items := 0;
+    ItemSet.NItems := 0;
   end(*empty_item_set*);
 
-procedure include_item_set ( var item_set : ItemSet;
-                             rule_no, pos_no : Integer);
+procedure IncludeItemSet ( var ItemSet : TItemSet;
+                             RuleNo, PosNo : Integer);
   begin
-    with item_set do
+    with ItemSet do
       begin
-        inc(n_items);
-        if n_items>max_set_items then fatal(item_table_overflow);
-        item[n_items].rule_no := rule_no;
-        item[n_items].pos_no  := pos_no;
+        Inc(NItems);
+        if NItems>MaxSetItems then Fatal(ItemTableOverflow);
+        Item[NItems].RuleNo := RuleNo;
+        Item[NItems].PosNo  := PosNo;
       end;
   end(*include_item_set*);
 
-procedure get_item_set ( s : Integer; var item_set : ItemSet);
+procedure GetItemSet ( S : Integer; var ItemSet : TItemSet);
   begin
-    with state_table^[s], item_set do
+    with StateTable^[S], ItemSet do
       begin
-        n_items := n_state_items(s);
-        move(item_table^[item_lo], item, n_items*sizeOf(ItemRec));
+        NItems := NStateItems(S);
+        Move(ItemTable^[ItemLo], Item, NItems*SizeOf(TItemRec));
       end
   end(*get_item_set*);
 
-procedure closure ( var item_set : ItemSet );
-  var i, j : Integer;
-      nt_syms0, nt_syms : IntSet;
+procedure Closure ( var ItemSet : TItemSet );
+  var I, J : Integer;
+      NTSyms0, NTSyms : TIntSet;
   begin
-    with item_set do
+    with ItemSet do
       begin
         (* get the nonterminals at current positions in items: *)
-        empty(nt_syms0);
-        for i := 1 to n_items do
-          with item[i], rule_table^[rule_no]^ do
-            if (pos_no<=rhs_len) and (rhs_sym[pos_no]<0) then
-              include(nt_syms0, rhs_sym[pos_no]);
-        nt_syms := nt_syms0;
+        Empty(NTSyms0);
+        for I := 1 to NItems do
+          with Item[I], RuleTable^[RuleNo]^ do
+            if (PosNo<=RHSLen) and (RHSSym[PosNo]<0) then
+              Include(NTSyms0, RHSSym[PosNo]);
+        NTSyms := NTSyms0;
         (* add closure symbols: *)
-        for i := 1 to size(nt_syms0) do
-          setunion(nt_syms, closure_table^[-nt_syms0[i]]^);
+        for I := 1 to Size(NTSyms0) do
+          SetUnion(NTSyms, ClosureTable^[-NTSyms0[I]]^);
         (* add the nonkernel items for the nonterminal symbols: *)
-        for i := 1 to size(nt_syms) do
-          with rule_offs^[-nt_syms[i]] do
-            for j := rule_lo to rule_hi do
-              include_item_set(item_set, rule_no^[j], 1);
+        for I := 1 to Size(NTSyms) do
+          with RuleOffs^[-NTSyms[I]] do
+            for J := RuleLo to RuleHi do
+              IncludeItemSet(ItemSet, RuleNo^[J], 1);
       end;
   end(*closure*);
 
-var sort_items : ItemSet;
+var SortItems : TItemSet;
 
 (* comparison and swap routines for sort_item_set: *)
 
-function items_less ( i, j : Integer ) : Boolean;
+function ItemsLess ( I, J : Integer ) : Boolean;
   begin
-    with sort_items do
-      if item[i].pos_no=item[j].pos_no then
-        items_less := item[i].rule_no<item[j].rule_no
+    with SortItems do
+      if Item[I].PosNo=Item[J].PosNo then
+        ItemsLess := Item[I].RuleNo<Item[J].RuleNo
       else
-        items_less := item[i].pos_no>item[j].pos_no
+        ItemsLess := Item[I].PosNo>Item[J].PosNo
   end(*items_less*);
 
-procedure items_swap ( i, j : Integer );
-  var x : ItemRec;
+procedure ItemsSwap ( I, J : Integer );
+  var X : TItemRec;
   begin
-    with sort_items do
+    with SortItems do
       begin
-        x := item[i]; item[i] := item[j]; item[j] := x;
+        X := Item[I]; Item[I] := Item[J]; Item[J] := X;
       end
   end(*items_swap*);
 
-procedure sort_item_set ( var item_set : ItemSet );
+procedure SortItemSet ( var ItemSet : TItemSet );
   begin
-    sort_items := item_set;
-    quicksort(1, sort_items.n_items, {$ifdef fpc}@{$endif}items_less,
-              {$ifdef fpc}@{$endif}items_swap);
-    item_set := sort_items;
+    SortItems := ItemSet;
+    QuickSort(1, SortItems.NItems, {$ifdef fpc}@{$endif}ItemsLess,
+              {$ifdef fpc}@{$endif}ItemsSwap);
+    ItemSet := SortItems;
   end(*sort_item_set*);
 
-var i : Integer;
+var I : Integer;
 
 begin
 
-  verbose          := false;
-  debug            := false;
-  startnt          := 0;
+  Verbose          := False;
+  Debug            := False;
+  StartNT          := 0;
 
-  n_nts            := 1;
-  n_lits           := 257;
-  n_rules          := 0;
-  n_types          := 0;
-  n_prec           := 0;
-  n_states         := 0;
-  n_items          := 0;
-  n_trans          := 0;
-  n_redns          := 0;
+  NNTs            := 1;
+  NLits           := 257;
+  NRules          := 0;
+  NTypes          := 0;
+  NPrec           := 0;
+  NStates         := 0;
+  NItems          := 0;
+  NTrans          := 0;
+  NRedns          := 0;
 
   (* allocate tables: *)
 
-  new(sym_table);
-  new(sym_key);
-  new(rule_table);
-  new(rule_no);
-  new(rule_offs);
-  new(type_table);
-  new(sym_type);
-  new(prec_table);
-  new(sym_prec);
-  new(rule_prec);
-  new(closure_table);
-  new(first_set_table);
-  new(nullable);
-  new(state_table);
-  new(item_table);
-  new(trans_table);
-  new(redn_table);
-  new(lookahead_table);
-  new(prop_table);
+  New(SymTable);
+  New(SymKey);
+  New(RuleTable);
+  New(RuleNo);
+  New(RuleOffs);
+  New(TypeTable);
+  New(SymType);
+  New(PrecTable);
+  New(SymPrec);
+  New(RulePrec);
+  New(ClosureTable);
+  New(FirstSetTable);
+  New(Nullable);
+  New(StateTable);
+  New(ItemTable);
+  New(TransTable);
+  New(RednTable);
+  New(LookaheadTable);
+  New(PropTable);
 
   (* initialize symbol table: *)
 
-  for i := 1 to max_keys do
-    with sym_table^[i] do
+  for I := 1 to MaxKeys do
+    with SymTable^[I] do
       begin
-        pname := nil;
-        deff  := false;
+        Pname := nil;
+        Deff  := False;
       end;
 
   (* enter predefined error symbol into symbol table: *)
 
-  def_key(get_key('error'), 256);
+  DefKey(GetKey('error'), 256);
 
   (* initialize type and precedence tables: *)
 
-  for i := -max_nts to max_lits-1 do sym_type^[i] := 0;
-  for i := 0 to max_lits-1 do sym_prec^[i] := 0;
-  for i := 1 to max_rules do rule_prec^[i] := 0;
+  for I := -MaxNTs to MaxLits-1 do SymType^[I] := 0;
+  for I := 0 to MaxLits-1 do SymPrec^[I] := 0;
+  for I := 1 to MaxRules do RulePrec^[I] := 0;
 
 end(*YaccTables*).

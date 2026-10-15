@@ -12,167 +12,167 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
  **********************************************************************}
-program creumap;
+program CreUMap;
 
   uses
-     charset;
+     CharSet;
 
-  procedure doerror;
+  procedure DoError;
 
     begin
-       writeln('Usage: creumap <cpname> <cpnumber>');
-       writeln('cpname : A mapping file called <cpname>.txt must be present');
-       writeln('cpnumber : the code page number');
-       halt(1);
+       WriteLn('Usage: creumap <cpname> <cpnumber>');
+       WriteLn('cpname : A mapping file called <cpname>.txt must be present');
+       WriteLn('cpnumber : the code page number');
+       Halt(1);
     end;
 
 type
   TEndianKind = (Little, Big);
 const
-  ENDIAN_SUFFIX : array[TEndianKind] of string[2] = ('le','be');
+  EndianSuffix : array[TEndianKind] of string[2] = ('le','be');
 {$IFDEF ENDIAN_LITTLE}
-  ENDIAN_NATIVE     = TEndianKind.Little;
-  ENDIAN_NON_NATIVE = TEndianKind.Big;
+  EndianNative     = TEndianKind.Little;
+  EndianNonNative = TEndianKind.Big;
 {$ENDIF ENDIAN_LITTLE}
 {$IFDEF ENDIAN_BIG}
-  ENDIAN_NATIVE = TEndianKind.Big;
-  ENDIAN_NON_NATIVE = TEndianKind.Little;
+  EndianNative = TEndianKind.Big;
+  EndianNonNative = TEndianKind.Little;
 {$ENDIF ENDIAN_BIG}
 
-  procedure CreateBinaryFile(AMap : punicodemap; const ABaseFile : string);
+  procedure CreateBinaryFile(AMap : PUnicodeMap; const ABaseFile : string);
 
     var
-       nef, oef : File of Byte;
-       h, th : TSerializedMapHeader;
-       k : Longint;
-       um : tunicodecharmapping;
-       pum : punicodecharmapping;
-       rm : treversecharmapping;
-       prm : preversecharmapping;
+       Nef, Oef : File of Byte;
+       H, TH : TSerializedMapHeader;
+       K : LongInt;
+       UM : TUnicodeCharMapping;
+       PUM : PUnicodeCharMapping;
+       RM : TReverseCharMapping;
+       PRM : PReverseCharMapping;
     begin
-       FillChar(h,SizeOf(h),0);
-       h.cpName := AMap^.cpname;
-       h.cp := AMap^.cp;
-       h.lastChar := AMap^.lastchar;
-       h.mapLength := (AMap^.lastchar+1)*SizeOf(tunicodecharmapping);
-       h.reverseMapLength := AMap^.reversemaplength*SizeOf(treversecharmapping);
-       Assign(nef,(ABaseFile+'_'+ENDIAN_SUFFIX[ENDIAN_NATIVE]+'.bcm'));
-       Rewrite(nef);
-       BlockWrite(nef,h,SizeOf(h));
-       BlockWrite(nef,AMap^.map^,h.mapLength);
-       BlockWrite(nef,AMap^.reversemap^,h.reverseMapLength);
-       Close(nef);
+       FillChar(H,SizeOf(H),0);
+       H.CPName := AMap^.CPName;
+       H.CP := AMap^.CP;
+       H.LastChar := AMap^.LastChar;
+       H.MapLength := (AMap^.LastChar+1)*SizeOf(TUnicodeCharMapping);
+       H.ReverseMapLength := AMap^.ReverseMapLength*SizeOf(TReverseCharMapping);
+       Assign(Nef,(ABaseFile+'_'+EndianSuffix[EndianNative]+'.bcm'));
+       Rewrite(Nef);
+       BlockWrite(Nef,H,SizeOf(H));
+       BlockWrite(Nef,AMap^.Map^,H.MapLength);
+       BlockWrite(Nef,AMap^.ReverseMap^,H.ReverseMapLength);
+       Close(Nef);
 
-       FillChar(th,SizeOf(th),0);
-       th.cpName := h.cpName;
-       th.cp := SwapEndian(h.cp);
-       th.mapLength := SwapEndian(h.mapLength);
-       th.lastChar := SwapEndian(h.lastChar);
-       th.reverseMapLength := SwapEndian(h.reverseMapLength);
-       Assign(oef,(ABaseFile+'_'+ENDIAN_SUFFIX[ENDIAN_NON_NATIVE]+'.bcm'));
-       Rewrite(oef);
-       BlockWrite(oef,th,SizeOf(th));
-       pum := AMap^.map;
-       FillChar(um,SizeOf(um),0);
-       for k := 0 to AMap^.lastchar do begin
-          um.flag := pum^.flag;
-          um.reserved := pum^.reserved;
-          um.unicode := SwapEndian(pum^.unicode);
-          BlockWrite(oef,um,SizeOf(um));
-          Inc(pum);
+       FillChar(TH,SizeOf(TH),0);
+       TH.CPName := H.CPName;
+       TH.CP := SwapEndian(H.CP);
+       TH.MapLength := SwapEndian(H.MapLength);
+       TH.LastChar := SwapEndian(H.LastChar);
+       TH.ReverseMapLength := SwapEndian(H.ReverseMapLength);
+       Assign(Oef,(ABaseFile+'_'+EndianSuffix[EndianNonNative]+'.bcm'));
+       Rewrite(Oef);
+       BlockWrite(Oef,TH,SizeOf(TH));
+       PUM := AMap^.Map;
+       FillChar(UM,SizeOf(UM),0);
+       for K := 0 to AMap^.LastChar do begin
+          UM.Flag := PUM^.Flag;
+          UM.Reserved := PUM^.Reserved;
+          UM.Unicode := SwapEndian(PUM^.Unicode);
+          BlockWrite(Oef,UM,SizeOf(UM));
+          Inc(PUM);
        end;
-       prm := AMap^.reversemap;
-       FillChar(rm,SizeOf(rm),0);
-       for k := 0 to AMap^.reversemaplength - 1 do begin
-         rm.unicode := SwapEndian(prm^.unicode);
-         rm.char1 := prm^.char1;
-         rm.char2 := prm^.char2;
-         BlockWrite(oef,rm,SizeOf(rm));
-         Inc(prm);
+       PRM := AMap^.ReverseMap;
+       FillChar(RM,SizeOf(RM),0);
+       for K := 0 to AMap^.ReverseMapLength - 1 do begin
+         RM.Unicode := SwapEndian(PRM^.Unicode);
+         RM.Char1 := PRM^.Char1;
+         RM.Char2 := PRM^.Char2;
+         BlockWrite(Oef,RM,SizeOf(RM));
+         Inc(PRM);
        end;
-       Close(oef);
+       Close(Oef);
     end;
 
   var
-     p : punicodemap;
-     i : longint;
-     t : text;
-     e : word;
-     c : longint;
+     P : PUnicodeMap;
+     I : LongInt;
+     T : Text;
+     E : Word;
+     C : LongInt;
 
 begin
-   if paramcount<>2 then
-     doerror;
-   Val(paramstr(2),i,e);
-   if e<>0 then
-     doerror;
+   if ParamCount<>2 then
+     DoError;
+   Val(ParamStr(2),I,E);
+   if E<>0 then
+     DoError;
 
-   p:=loadunicodemapping(paramstr(1),paramstr(1)+'.txt',i);
-   if p=nil then
-     doerror;
-   assign(t,paramstr(1)+'.pas');
-   rewrite(t);
-   writeln(t,'{ This is an automatically created file, so don''t edit it }');
-   writeln(t,'unit ',p^.cpname,';');
-   writeln(t);
-   writeln(t,'  interface');
-   writeln(t);
-   writeln(t,'  implementation');
-   writeln(t);
-   writeln(t,'  uses');
-   writeln(t,'     charset;');
-   writeln(t);
-   writeln(t,'  const');
-   writeln(t,'     map : array[0..',p^.lastchar,'] of tunicodecharmapping = (');
-   for i:=0 to p^.lastchar do
+   P:=LoadUnicodeMapping(ParamStr(1),ParamStr(1)+'.txt',I);
+   if P=nil then
+     DoError;
+   Assign(T,ParamStr(1)+'.pas');
+   Rewrite(T);
+   WriteLn(T,'{ This is an automatically created file, so don''t edit it }');
+   WriteLn(T,'unit ',P^.CPName,';');
+   WriteLn(T);
+   WriteLn(T,'  interface');
+   WriteLn(T);
+   WriteLn(T,'  implementation');
+   WriteLn(T);
+   WriteLn(T,'  uses');
+   WriteLn(T,'     CharSet;');
+   WriteLn(T);
+   WriteLn(T,'  const');
+   WriteLn(T,'     Map : array[0..',P^.LastChar,'] of TUnicodeCharMapping = (');
+   for I:=0 to P^.LastChar do
      begin
-        write(t,'       (unicode : ',p^.map[i].unicode,'; flag : ');
-        case p^.map[i].flag of
-           umf_noinfo : write(t,'umf_noinfo');
-           umf_leadbyte : write(t,'umf_leadbyte');
-           umf_undefined : write(t,'umf_undefined');
-           umf_unused : write(t,'umf_unused');
+        Write(T,'       (Unicode : ',P^.Map[I].Unicode,'; Flag : ');
+        case P^.Map[I].Flag of
+           umf_noinfo : Write(T,'umf_noinfo');
+           umf_leadbyte : Write(T,'umf_leadbyte');
+           umf_undefined : Write(T,'umf_undefined');
+           umf_unused : Write(T,'umf_unused');
         end;
-        write(t,'; reserved: 0)');
-        if i<>p^.lastchar then
-          writeln(t,',')
+        Write(T,'; Reserved: 0)');
+        if I<>P^.LastChar then
+          WriteLn(T,',')
         else
-          writeln(t);
+          WriteLn(T);
      end;
-   writeln(t,'     );');
-   writeln(t);
-   c:=p^.reversemaplength-1;
-   writeln(t,'     reversemap : array[0..',c,'] of treversecharmapping = (');
-   for i:=0 to c do
+   WriteLn(T,'     );');
+   WriteLn(T);
+   C:=P^.ReverseMapLength-1;
+   WriteLn(T,'     ReverseMap : array[0..',C,'] of TReverseCharMapping = (');
+   for I:=0 to C do
      begin
-        write(t,'       (',
-                'unicode : ',p^.reversemap[i].unicode,
-                '; char1 : ',p^.reversemap[i].char1,
-                '; char2 : ',p^.reversemap[i].char2,
+        Write(T,'       (',
+                'Unicode : ',P^.ReverseMap[I].Unicode,
+                '; Char1 : ',P^.ReverseMap[I].Char1,
+                '; Char2 : ',P^.ReverseMap[I].Char2,
                 ')'
         );
-        if i<>c then
-          writeln(t,',')
+        if I<>C then
+          WriteLn(T,',')
         else
-          writeln(t);
+          WriteLn(T);
      end;
-   writeln(t,'     );');
-   writeln(t);
-   writeln(t,'     unicodemap : tunicodemap = (');
-   writeln(t,'       cpname : ''',p^.cpname,''';');
-   writeln(t,'       cp : ',p^.cp,';');
-   writeln(t,'       map : @map;');
-   writeln(t,'       lastchar : ',p^.lastchar,';');
-   writeln(t,'       reversemap : @reversemap;');
-   writeln(t,'       reversemaplength : ',p^.reversemaplength,';');
-   writeln(t,'       next : nil;');
-   writeln(t,'       internalmap : true');
-   writeln(t,'     );');
-   writeln(t);
-   writeln(t,'  begin');
-   writeln(t,'     registermapping(@unicodemap)');
-   writeln(t,'  end.');
-   close(t);
+   WriteLn(T,'     );');
+   WriteLn(T);
+   WriteLn(T,'     UnicodeMap : TUnicodeMap = (');
+   WriteLn(T,'       CPName : ''',P^.CPName,''';');
+   WriteLn(T,'       CP : ',P^.CP,';');
+   WriteLn(T,'       Map : @Map;');
+   WriteLn(T,'       LastChar : ',P^.LastChar,';');
+   WriteLn(T,'       ReverseMap : @ReverseMap;');
+   WriteLn(T,'       ReverseMapLength : ',P^.ReverseMapLength,';');
+   WriteLn(T,'       Next : nil;');
+   WriteLn(T,'       InternalMap : True');
+   WriteLn(T,'     );');
+   WriteLn(T);
+   WriteLn(T,'  begin');
+   WriteLn(T,'     RegisterMapping(@UnicodeMap)');
+   WriteLn(T,'  end.');
+   Close(T);
 
-   CreateBinaryFile(p,paramstr(1));
+   CreateBinaryFile(P,ParamStr(1));
 end.

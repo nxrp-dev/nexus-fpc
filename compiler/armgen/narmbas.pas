@@ -34,7 +34,7 @@ interface
       procedure XMLPrintNodeData(var T: Text); override;
     protected
       function XMLFormatOp(const Oper: POper): string; override;
-      procedure XMLProcessInstruction(var T: Text; p: tai); override;
+      procedure XMLProcessInstruction(var T: Text; p: TAI); override;
 {$endif DEBUG_NODE_XML}
     end;
 
@@ -42,14 +42,14 @@ implementation
 
 {$ifdef DEBUG_NODE_XML}
   uses
-    cutils,
+    CUtils,
     cgutils,
     cgbase,
     cpubase,
     itcpugas,
     aasmcpu,
     agcpugas, { Needed for gas_shiftmode2str }
-    verbose;
+    Verbose;
 {$endif DEBUG_NODE_XML}
 
 {$ifdef DEBUG_NODE_XML}
@@ -60,19 +60,19 @@ implementation
           begin
             case Oper^.val of
               -15..15:
-                Result := '#' + tostr(Oper^.val);
+                Result := '#' + ToStr(Oper^.val);
               $10..$FF:
-                Result := '#0x' + hexstr(Oper^.val, 2);
+                Result := '#0x' + HexStr(Oper^.val, 2);
               $100..$FFFF:
-                Result := '#0x' + hexstr(Oper^.val, 4);
+                Result := '#0x' + HexStr(Oper^.val, 4);
   {$ifdef CPU32}
               else
-                Result := '#0x' + hexstr(Oper^.val, 8);
+                Result := '#0x' + HexStr(Oper^.val, 8);
   {$else CPU32}
               $10000..$FFFFFFFF:
-                Result := '#0x' + hexstr(Oper^.val, 8);
+                Result := '#0x' + HexStr(Oper^.val, 8);
               else
-                Result := '#0x' + hexstr(Oper^.val, 16);
+                Result := '#0x' + HexStr(Oper^.val, 16);
   {$endif CPU32}
             end;
           end;
@@ -86,9 +86,9 @@ implementation
                   if (offset <> 0) then
                     begin
                       if (offset < 0) then
-                        Result := Result + ' - ' + tostr(-offset)
+                        Result := Result + ' - ' + ToStr(-offset)
                       else
-                        Result := Result + ' + ' + tostr(offset);
+                        Result := Result + ' + ' + ToStr(offset);
                     end;
                 end
               else
@@ -107,9 +107,9 @@ implementation
                   if index <> NR_NO then
                     Result := Result + gas_regname(index)
                   else if (offset <> 0) or (shiftmode <> SM_None) or (addressmode = AM_POSTINDEXED) then
-                    Result := Result + '#' + tostr(offset);
+                    Result := Result + '#' + ToStr(offset);
                   if shiftmode <> SM_None then
-                    Result := Result + ', ' + gas_shiftmode2str[shiftmode] + ' #' + tostr(shiftimm);
+                    Result := Result + ', ' + gas_shiftmode2str[shiftmode] + ' #' + ToStr(shiftimm);
 
                   if addressmode <> AM_POSTINDEXED then
                     begin
@@ -123,17 +123,17 @@ implementation
             end;
         top_indexedreg:
           with Oper^ do
-            Result := gas_regname(indexedreg)+'['+tostr(regindex)+']';
+            Result := gas_regname(indexedreg)+'['+ToStr(regindex)+']';
         top_conditioncode:
           Result := cond2str[Oper^.cc];
 
         top_realconst:
-          Result := '#' + realtostr(Oper^.val_real);
+          Result := '#' + RealToStr(Oper^.val_real);
 
         top_shifterop:
           with Oper^.shifterop^ do
             begin
-              Result := gas_shiftmode2str[shiftmode] + ' #' + tostr(shiftimm);
+              Result := gas_shiftmode2str[shiftmode] + ' #' + ToStr(shiftimm);
             end;
         else
           Result := inherited XMLFormatOp(Oper);
@@ -141,25 +141,25 @@ implementation
     end;
 
 
-  procedure TArmGenAsmNode.XMLProcessInstruction(var T: Text; p: tai);
+  procedure TArmGenAsmNode.XMLProcessInstruction(var T: Text; p: TAI);
     var
       ThisOp, ThisOper: string;
       X: Integer;
     begin
       if p.typ = ait_instruction then
         begin
-          ThisOp := gas_op2str[taicpu(p).opcode] + cond2str[taicpu(p).condition] + oppostfix2str[taicpu(p).oppostfix];
+          ThisOp := gas_op2str[TAICPU(p).opcode] + cond2str[TAICPU(p).condition] + oppostfix2str[TAICPU(p).oppostfix];
 
           { Pad the opcode with spaces so the succeeding operands are aligned }
           XMLPadString(ThisOp, 7);
 
           Write(T, PrintNodeIndention, '  ', ThisOp); { Extra indentation to account for label formatting }
-          for X := 0 to taicpu(p).ops - 1 do
+          for X := 0 to TAICPU(p).ops - 1 do
             begin
               Write(T, ' ');
 
-              ThisOper := XMLFormatOp(taicpu(p).oper[X]);
-              if X < taicpu(p).ops - 1 then
+              ThisOper := XMLFormatOp(TAICPU(p).oper[X]);
+              if X < TAICPU(p).ops - 1 then
                 begin
                   ThisOper := ThisOper + ',';
 
@@ -177,22 +177,22 @@ implementation
 
   procedure TArmGenAsmNode.XMLPrintNodeData(var T: Text);
     var
-      hp: tai;
+      hp: TAI;
     begin
       if not Assigned(p_asm) then
         Exit;
 
-      hp := tai(p_asm.First);
+      hp := TAI(p_asm.First);
       while Assigned(hp) do
         begin
           XMLProcessInstruction(T, hp);
-          hp := tai(hp.Next);
+          hp := TAI(hp.Next);
         end;
     end;
 {$endif DEBUG_NODE_XML}
 
 initialization
-  casmnode := TArmGenAsmNode;
+  CAsmNode := TArmGenAsmNode;
 
 end.
 

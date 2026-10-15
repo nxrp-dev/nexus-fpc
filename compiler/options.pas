@@ -26,8 +26,8 @@ unit options;
 interface
 
 uses
-  cfileutl,cclasses,versioncmp,
-  globtype,globals,verbose,systems,cpuinfo,comprsrc;
+  CFileUtl,CClasses,VersionCmp,
+  GlobType,Globals,Verbose,Systems,CPUInfo,comprsrc;
 
 Type
   TOption=class
@@ -41,7 +41,7 @@ Type
     LinkInternSetExplicitly,
     CPUSetExplicitly,
     OptCPUSetExplicitly: boolean;
-    FileLevel : longint;
+    FileLevel : LongInt;
     QuickInfo : string;
     FPCBinaryPath: string;
     ParaIncludeCfgPath,
@@ -53,10 +53,10 @@ Type
     parapackagepath : TSearchPathList;
     paranamespaces : TCmdStrList;
     ParaAlignment   : TAlignmentInfo;
-    parapackages : tfphashobjectlist;
+    parapackages : TFPHashObjectList;
     paratarget        : TSystem;
-    paratargetasm     : tasm;
-    paratargetdbg     : tdbg;
+    paratargetasm     : TAsm;
+    paratargetdbg     : TDbg;
     parasubtarget    : string;
     LinkTypeSetExplicitly : boolean;
     LinkerSetExplicitly : boolean;
@@ -70,10 +70,10 @@ Type
     procedure IllegalPara(const opt:TCmdStr);
     procedure UnsupportedPara(const opt:TCmdStr);
     procedure IgnoredPara(const opt:TCmdStr);
-    function  Unsetbool(var Opts:TCmdStr; Pos: Longint; const FullPara: TCmdStr; RequireBoolPara: Boolean):boolean;
+    function  Unsetbool(var Opts:TCmdStr; Pos: LongInt; const FullPara: TCmdStr; RequireBoolPara: Boolean):boolean;
     procedure interpret_option(const opt :TCmdStr;ispara:boolean);
-    procedure Interpret_envvar(const envname : TCmdStr);
-    procedure Interpret_file(const filename : TPathStr);
+    procedure Interpret_envvar(const EnvName : TCmdStr);
+    procedure Interpret_file(const FileName : TPathStr);
     procedure Read_Parameters;
     procedure parsecmd(cmd:TCmdStr);
     procedure TargetOptions(def:boolean);
@@ -122,13 +122,13 @@ Type
     MacVersionSet: boolean;
     IdfVersionSet: boolean;
     processorstr: TCmdStr;
-    function ParseMacVersionMin(out minversion, invalidateversion: tversion; const compvarname, value: string; ios: boolean): boolean;
+    function ParseMacVersionMin(out minversion, invalidateversion: TVersion; const compvarname, value: string; ios: boolean): boolean;
     procedure MaybeSetDefaultMacVersionMacro;
 
     procedure VerifyTargetProcessor;
   end;
 
-  TOptionClass=class of toption;
+  TOptionClass=class of TOption;
 
 var
   coption : TOptionClass;
@@ -138,13 +138,13 @@ procedure read_arguments(cmd:TCmdStr);
 implementation
 
 uses
-  widestr,
-  charset,
+  WideStr,
+  CharSet,
   SysUtils,
   version,
-  cutils,cmsgs,
-  comphook,
-  symtable,scanner,rabase,
+  CUtils,CMsgs,
+  CompHook,
+  SymTable,Scanner,rabase,
   symconst,
 
   dirparse,
@@ -155,7 +155,7 @@ const
   page_width = 80;
 
 var
-  option     : toption;
+  option     : TOption;
   read_subfile,         { read subtarget config file, set when a cfgfile is found }
   read_configfile,        { read config file, set when a cfgfile is found }
   disable_configfile : boolean;
@@ -181,8 +181,8 @@ begin
   undef_system_macro('FPC_LINK_SMART');
   def_system_macro('FPC_LINK_STATIC');
   undef_system_macro('FPC_LINK_DYNAMIC');
-  InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_static];
-  InitSettings.globalswitches:=InitSettings.globalswitches-[cs_link_shared,cs_link_smart];
+  InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_link_static];
+  InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches-[cs_link_shared,cs_link_smart];
 end;
 
 procedure set_endianess_macros;
@@ -211,9 +211,9 @@ procedure set_endianess_macros;
                                  Toption
 ****************************************************************************}
 
-procedure StopOptions(err:longint);
+procedure StopOptions(err:LongInt);
 begin
-  if assigned(Option) then
+  if Assigned(Option) then
    begin
      Option.free;
      Option:=nil;
@@ -224,7 +224,7 @@ end;
 
 function is_identifier(const s: TCmdStr): boolean;
 var
-  i: longint;
+  i: LongInt;
 begin
   result:=false;
   if (s='') or not (s[1] in ['A'..'Z','a'..'z','_']) then
@@ -245,8 +245,8 @@ begin
     begin
       msg:=MessageStr(option_logo);
       p:=pchar(msg);
-      while assigned(p) do
-        Comment(V_Normal,GetMsgLine(p));
+      while Assigned(p) do
+        Comment(VNormal,GetMsgLine(p));
       LogoWritten:= true;
     end;
 end;
@@ -257,7 +257,7 @@ var
   msg_str: TMsgStr;
   p : pchar;
   hs,hs1,hs3,s : TCmdStr;
-  J: longint;
+  J: LongInt;
   xmloutput: Text;
 const
   NewLineStr = '$\n';
@@ -276,7 +276,7 @@ const
   procedure SplitLine (var OrigString: TCmdStr; const Placeholder: TCmdStr;
                                                  out RemainderString: TCmdStr);
   var
-    I: longint;
+    I: LongInt;
     HS2: TCmdStr;
   begin
     RemainderString := '';
@@ -298,12 +298,12 @@ const
          OrigString := HS2;
          Exit;
         end;
-       Comment (V_Normal, HS2);
+       Comment (VNormal, HS2);
        Delete (OrigString, 1, Pred (I) + Length (NewLineStr));
       end;
     until I = 0;
     if (OrigString <> '') and (Pos (Placeholder, OrigString) = 0) then
-     Comment (V_Normal, OrigString);
+     Comment (VNormal, OrigString);
   end;
 
   procedure ListOSTargets (OrigString: TCmdStr);
@@ -312,11 +312,11 @@ const
   begin
     SplitLine (OrigString, OSTargetsPlaceholder, HS3);
     for target:=low(TSystem) to high(TSystem) do
-    if assigned(targetinfos[Ord(target)]) then
+    if Assigned(targetinfos[Ord(target)]) then
      begin
       hs1:=targetinfos[Ord(target)]^.shortname;
       if OrigString = '' then
-       Comment (V_Normal, hs1)
+       Comment (VNormal, hs1)
       else
        begin
         hs := OrigString;
@@ -324,7 +324,7 @@ const
         if tf_under_development in targetinfos[Ord(target)]^.flags then
          hs1:=hs1+' {*}';
         Replace(hs,OSTargetsPlaceholder,hs1);
-        Comment(V_Normal,hs);
+        Comment(VNormal,hs);
        end;
      end;
   end;
@@ -335,7 +335,7 @@ const
   begin
     WriteLn(xmloutput,'    <ostargets>');
     for target:=low(TSystem) to high(TSystem) do
-    if assigned(targetinfos[Ord(target)]) then
+    if Assigned(targetinfos[Ord(target)]) then
       begin
         Write(xmloutput,'      <ostarget shortname="',targetinfos[Ord(target)]^.shortname,'" name="',targetinfos[Ord(target)]^.name,'"');
         if tf_under_development in targetinfos[Ord(target)]^.flags then
@@ -347,48 +347,48 @@ const
 
   procedure ListCPUInstructionSets (OrigString: TCmdStr);
   var
-    cpu : tcputype;
+    cpu : TCPUType;
   begin
     SplitLine (OrigString, CPUListPlaceholder, HS3);
     hs1:='';
-    for cpu:=low(tcputype) to high(tcputype) do
+    for cpu:=low(TCPUType) to high(TCPUType) do
      begin
       if (OrigString = '') then
        begin
         if CPUTypeStr [CPU] <> '' then
-         Comment (V_Normal, CPUTypeStr [CPU]);
+         Comment (VNormal, CPUTypeStr [CPU]);
        end
       else
        begin
-        if length(hs1+cputypestr[cpu])>70 then
+        if length(hs1+CPUTypeStr[cpu])>70 then
          begin
           hs:=OrigString;
           HS1 := HS1 + ',';
           Replace(hs,CPUListPlaceholder,hs1);
-          Comment(V_Normal,hs);
+          Comment(VNormal,hs);
           hs1:=''
          end
         else if hs1<>'' then
          hs1:=hs1+',';
-        if cputypestr[cpu]<>'' then
-         hs1:=hs1+cputypestr[cpu];
+        if CPUTypeStr[cpu]<>'' then
+         hs1:=hs1+CPUTypeStr[cpu];
        end;
      end;
     if (OrigString <> '') and (hs1 <> '') then
      begin
       hs:=OrigString;
       Replace(hs,CPUListPlaceholder,hs1);
-      Comment(V_Normal,hs);
+      Comment(VNormal,hs);
       hs1:=''
      end;
   end;
 
   procedure ListCPUInstructionSetsXML;
   var
-    cpu : tcputype;
+    cpu : TCPUType;
   begin
     WriteLn(xmloutput,'    <cpuinstructionsets>');
-    for cpu:=low(tcputype) to high(tcputype) do
+    for cpu:=low(TCPUType) to high(TCPUType) do
       if CPUTypeStr [CPU] <> '' then
         WriteLn(xmloutput,'      <cpuinstructionset name="',CPUTypeStr [CPU], '"/>');
     WriteLn(xmloutput,'    </cpuinstructionsets>');
@@ -396,48 +396,48 @@ const
 
   procedure ListFPUInstructionSets (OrigString: TCmdStr);
   var
-    fpu : tfputype;
+    fpu : TFPUType;
   begin
     SplitLine (OrigString, FPUListPlaceholder, HS3);
     hs1:='';
-    for fpu:=low(tfputype) to high(tfputype) do
+    for fpu:=low(TFPUType) to high(TFPUType) do
      begin
       if (OrigString = '') then
        begin
         if FPUTypeStr [FPU] <> '' then
-         Comment (V_Normal, FPUTypeStr [FPU]);
+         Comment (VNormal, FPUTypeStr [FPU]);
        end
       else
        begin
-        if length(hs1+fputypestr[fpu])>70 then
+        if length(hs1+FPUTypeStr[fpu])>70 then
          begin
           hs:=OrigString;
           HS1 := HS1 + ',';
           Replace(hs,FPUListPlaceholder,hs1);
-          Comment(V_Normal,hs);
+          Comment(VNormal,hs);
           hs1:=''
          end
         else if hs1<>'' then
          hs1:=hs1+',';
-        if fputypestr[fpu]<>'' then
-         hs1:=hs1+fputypestr[fpu];
+        if FPUTypeStr[fpu]<>'' then
+         hs1:=hs1+FPUTypeStr[fpu];
        end;
      end;
     if (OrigString <> '') and (hs1 <> '') then
      begin
       hs:=OrigString;
       Replace(hs,FPUListPlaceholder,hs1);
-      Comment(V_Normal,hs);
+      Comment(VNormal,hs);
       hs1:=''
      end;
   end;
 
   procedure ListFPUInstructionSetsXML;
   var
-    fpu : tfputype;
+    fpu : TFPUType;
   begin
     WriteLn(xmloutput,'    <fpuinstructionsets>');
-    for fpu:=low(tfputype) to high(tfputype) do
+    for fpu:=low(TFPUType) to high(TFPUType) do
       if FPUTypeStr [fpu] <> '' then
         WriteLn(xmloutput,'      <cpuinstructionset name="',FPUTypeStr [fpu], '"/>');
     WriteLn(xmloutput,'    </fpuinstructionsets>');
@@ -445,23 +445,23 @@ const
 
   procedure ListABITargets (OrigString: TCmdStr);
   var
-    abi : tabi;
+    abi : TABI;
   begin
     SplitLine (OrigString, ABIListPlaceholder, HS3);
     for abi:=low(abi) to high(abi) do
      begin
-      if not abiinfo[abi].supported then
+      if not ABIInfo[abi].supported then
        continue;
-      hs1:=abiinfo[abi].name;
+      hs1:=ABIInfo[abi].name;
       if hs1<>'' then
        begin
         if OrigString = '' then
-         Comment (V_Normal, HS1)
+         Comment (VNormal, HS1)
         else
          begin
           hs:=OrigString;
           Replace(hs,ABIListPlaceholder,hs1);
-          Comment(V_Normal,hs);
+          Comment(VNormal,hs);
          end;
        end;
      end;
@@ -469,15 +469,15 @@ const
 
   procedure ListABITargetsXML;
   var
-    abi : tabi;
+    abi : TABI;
   begin
     WriteLn(xmloutput,'    <abis>');
     for abi:=low(abi) to high(abi) do
      begin
-      if not abiinfo[abi].supported then
+      if not ABIInfo[abi].supported then
         continue;
-      if abiinfo[abi].name<>'' then
-        WriteLn(xmloutput,'      <abi name="',abiinfo[abi].name, '"/>');
+      if ABIInfo[abi].name<>'' then
+        WriteLn(xmloutput,'      <abi name="',ABIInfo[abi].name, '"/>');
      end;
     WriteLn(xmloutput,'    </abis>');
   end;
@@ -495,12 +495,12 @@ const
         if hs1<>'' then
          begin
           if OrigString = '' then
-           Comment (V_Normal, hs1)
+           Comment (VNormal, hs1)
           else
            begin
             hs:=OrigString;
             Replace(hs,OptListPlaceholder,hs1);
-            Comment(V_Normal,hs);
+            Comment(VNormal,hs);
            end;
          end;
        end;
@@ -533,12 +533,12 @@ const
         if hs1<>'' then
          begin
           if OrigString = '' then
-           Comment (V_Normal, hs1)
+           Comment (VNormal, hs1)
           else
            begin
             hs:=OrigString;
             Replace(hs,WPOListPlaceholder,hs1);
-            Comment(V_Normal,hs);
+            Comment(VNormal,hs);
            end;
          end;
        end;
@@ -558,22 +558,22 @@ const
 
   procedure ListAsmModes (OrigString: TCmdStr);
   var
-    asmmode : tasmmode;
+    AsmMode : TAsmMode;
   begin
     SplitLine (OrigString, AsmModeListPlaceholder, HS3);
-    for asmmode:=low(tasmmode) to high(tasmmode) do
-    if assigned(asmmodeinfos[asmmode]) then
+    for AsmMode:=low(TAsmMode) to high(TAsmMode) do
+    if Assigned(asmmodeinfos[AsmMode]) then
      begin
-      hs1:=asmmodeinfos[asmmode]^.idtxt;
+      hs1:=asmmodeinfos[AsmMode]^.idtxt;
       if hs1<>'' then
        begin
         if OrigString = '' then
-         Comment (V_Normal, hs1)
+         Comment (VNormal, hs1)
         else
          begin
           hs:=OrigString;
           Replace(hs,AsmModeListPlaceholder,hs1);
-          Comment(V_Normal,hs);
+          Comment(VNormal,hs);
          end;
        end;
      end;
@@ -581,18 +581,18 @@ const
 
   procedure ListAsmModesXML;
   var
-    asmmode : tasmmode;
+    AsmMode : TAsmMode;
   begin
     WriteLn(xmloutput,'    <asmmodes>');
-    for asmmode:=low(tasmmode) to high(tasmmode) do
-      if assigned(asmmodeinfos[asmmode]) then
-        WriteLn(xmloutput,'        <asmmode name="',asmmodeinfos[asmmode]^.idtxt,'"/>');
+    for AsmMode:=low(TAsmMode) to high(TAsmMode) do
+      if Assigned(asmmodeinfos[AsmMode]) then
+        WriteLn(xmloutput,'        <asmmode name="',asmmodeinfos[AsmMode]^.idtxt,'"/>');
     WriteLn(xmloutput,'    </asmmodes>');
   end;
 
   procedure ListControllerTypes (OrigString: TCmdStr);
   var
-    controllertype : tcontrollertype;
+    ControllerType : TControllerType;
   begin
 {$PUSH}
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
@@ -600,35 +600,35 @@ const
      begin
       SplitLine (OrigString, ControllerListPlaceholder, HS3);
       hs1:='';
-      for controllertype:=low(tcontrollertype) to high(tcontrollertype) do
+      for ControllerType:=low(TControllerType) to high(TControllerType) do
        begin
         if (OrigString = '') then
          begin
           if Embedded_Controllers [ControllerType].ControllerTypeStr <> '' then
-           Comment (V_Normal, Embedded_Controllers [ControllerType].ControllerTypeStr);
+           Comment (VNormal, Embedded_Controllers [ControllerType].ControllerTypeStr);
          end
         else
          begin
-          if length(hs1+embedded_controllers[controllertype].ControllerTypeStr)
+          if length(hs1+embedded_controllers[ControllerType].ControllerTypeStr)
                                                                        >70 then
            begin
             hs:=OrigString;
             HS1 := HS1 + ',';
             Replace(hs,ControllerListPlaceholder,hs1);
-            Comment(V_Normal,hs);
+            Comment(VNormal,hs);
             hs1:=''
            end
           else if hs1<>'' then
            hs1:=hs1+',';
-          if embedded_controllers[controllertype].ControllerTypeStr<>'' then
-           hs1:=hs1+embedded_controllers[controllertype].ControllerTypeStr;
+          if embedded_controllers[ControllerType].ControllerTypeStr<>'' then
+           hs1:=hs1+embedded_controllers[ControllerType].ControllerTypeStr;
          end;
        end;
       if (OrigString <> '') and (hs1<>'') then
        begin
         hs:=OrigString;
         Replace(hs,ControllerListPlaceholder,hs1);
-        Comment(V_Normal,hs);
+        Comment(VNormal,hs);
         hs1:=''
        end;
      end;
@@ -637,17 +637,17 @@ const
 
   procedure ListControllerTypesXML;
   var
-    controllertype : tcontrollertype;
+    ControllerType : TControllerType;
   begin
 {$PUSH}
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
     if (ControllerSupport) then
      begin
       WriteLn(xmloutput,'    <controllertypes>');
-      for controllertype:=low(tcontrollertype) to high(tcontrollertype) do
-        if embedded_controllers[controllertype].ControllerTypeStr<>'' then
-          WriteLn(xmloutput,'      <controllertype name="',embedded_controllers[controllertype].ControllerTypeStr,
-            '" controllerunit="',embedded_controllers[controllertype].controllerunitstr, '"/>');
+      for ControllerType:=low(TControllerType) to high(TControllerType) do
+        if embedded_controllers[ControllerType].ControllerTypeStr<>'' then
+          WriteLn(xmloutput,'      <controllertype name="',embedded_controllers[ControllerType].ControllerTypeStr,
+            '" controllerunit="',embedded_controllers[ControllerType].controllerunitstr, '"/>');
       WriteLn(xmloutput,'    </controllertypes>');
      end;
 {$POP}
@@ -664,7 +664,7 @@ const
       if (OrigString = '') then
        begin
         if FeatureStr [Feature] <> '' then
-         Comment (V_Normal, FeatureStr [Feature]);
+         Comment (VNormal, FeatureStr [Feature]);
        end
       else
        begin
@@ -673,7 +673,7 @@ const
           HS := OrigString;
           HS1 := HS1 + ',';
           Replace (HS, FeatureListPlaceholder, HS1);
-          Comment (V_Normal, HS);
+          Comment (VNormal, HS);
           HS1 := ''
          end
         else if HS1 <> '' then
@@ -686,7 +686,7 @@ const
      begin
       HS := OrigString;
       Replace (HS, FeatureListPlaceholder, HS1);
-      Comment (V_Normal, HS);
+      Comment (VNormal, HS);
       HS1 := ''
      end;
   end;
@@ -713,7 +713,7 @@ const
       if (OrigString = '') then
        begin
          if ModeswitchStr [ord(Modeswitch)] <> '' then
-          Comment (V_Normal, ModeswitchStr [ord(Modeswitch)]);
+          Comment (VNormal, ModeswitchStr [ord(Modeswitch)]);
        end
       else
        begin
@@ -722,7 +722,7 @@ const
           HS := OrigString;
           HS1 := HS1 + ',';
           Replace (HS, ModeswitchListPlaceholder, HS1);
-          Comment (V_Normal, HS);
+          Comment (VNormal, HS);
           HS1 := ''
          end
         else if HS1 <> '' then
@@ -735,7 +735,7 @@ const
      begin
       HS := OrigString;
       Replace (HS, ModeswitchListPlaceholder, HS1);
-      Comment (V_Normal, HS);
+      Comment (VNormal, HS);
       HS1 := ''
      end;
   end;
@@ -754,20 +754,20 @@ const
   procedure ListCodeGenerationBackend (OrigString: TCmdStr);
     begin
       SplitLine (OrigString, CodeGenerationBackendPlaceholder, HS3);
-      hs1:=cgbackend2str[cgbackend];
+      hs1:=cgbackend2str[CGBackend];
       if OrigString = '' then
-        Comment (V_Normal, hs1)
+        Comment (VNormal, hs1)
       else
         begin
           hs:=OrigString;
           Replace(hs,CodeGenerationBackendPlaceholder,hs1);
-          Comment(V_Normal,hs);
+          Comment(VNormal,hs);
         end;
     end;
 
   procedure ListCodeGenerationBackendXML;
     begin
-      WriteLn(xmloutput,'    <codegeneratorbackend>',cgbackend2str[cgbackend],'</codegeneratorbackend>');
+      WriteLn(xmloutput,'    <codegeneratorbackend>',cgbackend2str[CGBackend],'</codegeneratorbackend>');
     end;
 
 
@@ -776,7 +776,7 @@ begin
    begin
     msg_str:=MessageStr(option_info);
     p:=pchar(msg_str);
-    while assigned(p) do
+    while Assigned(p) do
      begin
       s:=GetMsgLine(p);
       { list permitted values for certain options }
@@ -803,7 +803,7 @@ begin
       else if pos(CodeGenerationBackendPlaceholder,s)>0 then
        ListCodeGenerationBackend (S)
       else
-       Comment(V_Normal,s);
+       Comment(VNormal,s);
      end;
    end
   else if Copy(More,1,1) = 'x' then
@@ -834,10 +834,10 @@ begin
      while J <= Length (More) do
       begin
        if J > 1 then
-        Comment(V_Normal,'');  (* Put empty line between multiple sections *)
+        Comment(VNormal,'');  (* Put empty line between multiple sections *)
        case More [J] of
         'a': ListABITargets ('');
-        'b': Comment(V_Normal, cgbackend2str[cgbackend]);
+        'b': Comment(VNormal, cgbackend2str[CGBackend]);
         'c': ListCPUInstructionSets ('');
         'f': ListFPUInstructionSets ('');
         'i': ListAsmModes ('');
@@ -860,7 +860,7 @@ end;
 
 procedure TOption.WriteHelpPages;
 
-  function PadEnd(s:string;i:longint):string;
+  function PadEnd(s:string;i:LongInt):string;
   begin
     if length(s) >= i then
      S := S + ' '
@@ -875,7 +875,7 @@ var
   j,outline,
   ident,
   HelpLineHeight,
-  lines : longint;
+  lines : LongInt;
   show  : boolean;
   opt   : string[32];
   input,
@@ -889,11 +889,11 @@ begin
   if FPCHelpLines then
    Message1(option_usage,FixFileName(FPCBinaryPath))
   else
-   Message1(option_usage,FixFileName(system.paramstr(0)));
+   Message1(option_usage,FixFileName(system.ParamStr(0)));
   lastident:=0;
   msg_str:=MessageStr(option_help_pages);
   p:=pchar(msg_str);
-  while assigned(p) do
+  while Assigned(p) do
    begin
    { get a line and reset }
      s:=GetMsgLine(p);
@@ -954,7 +954,7 @@ begin
                  outline:=11;
                end;
          else
-           internalerror(2013112906);
+           InternalError(2013112906);
         end;
         j:=pos('_',s);
         opt:=Copy(s,4,j-4);
@@ -967,7 +967,7 @@ begin
          opt:=PadEnd('-'+opt,outline);
         if (ident=0) and (lastident<>0) then
          begin
-           Comment(V_Normal,'');
+           Comment(VNormal,'');
            inc(Lines);
          end;
         HelpLine := PadEnd('',ident)+opt+Copy(s,j+1,255);
@@ -987,7 +987,7 @@ begin
             end;
            lines:=0;
          end;
-        Comment(V_Normal,HelpLine);
+        Comment(VNormal,HelpLine);
         LastIdent:=Ident;
         Inc (Lines, HelpLineHeight);
       end;
@@ -1022,20 +1022,20 @@ begin
   def_system_macro('FPC_LINK_STATIC');
   undef_system_macro('FPC_LINK_SMART');
   undef_system_macro('FPC_LINK_DYNAMIC');
-  include(InitSettings.globalswitches,cs_link_static);
-  exclude(InitSettings.globalswitches,cs_link_smart);
-  exclude(InitSettings.globalswitches,cs_link_shared);
+  include(InitSettings.GlobalSwitches,cs_link_static);
+  exclude(InitSettings.GlobalSwitches,cs_link_smart);
+  exclude(InitSettings.GlobalSwitches,cs_link_shared);
   LinkTypeSetExplicitly:=true;
 end;
 
 
 function TOption.ParseMacVersionMin(out minversion,
-  invalidateversion: tversion; const compvarname, value: string; ios: boolean
+  invalidateversion: TVersion; const compvarname, value: string; ios: boolean
   ): boolean;
 
-  function subval(start,maxlen: longint; out stop: longint): string;
+  function subval(start,maxlen: LongInt; out stop: LongInt): string;
     var
-      i: longint;
+      i: LongInt;
     begin
       result:='';
       i:=start;
@@ -1055,7 +1055,7 @@ function TOption.ParseMacVersionMin(out minversion,
     compvarvalue,
     versionstr: string[15];
     major, minor, patch: cardinal;
-    i, err: longint;
+    i, err: LongInt;
     osx_minor_two_digits: boolean;
   begin
     invalidateversion.invalidate;
@@ -1158,7 +1158,7 @@ function TOption.ParseMacVersionMin(out minversion,
 
 procedure TOption.MaybeSetDefaultMacVersionMacro;
 var
-  envstr: ansistring;
+  EnvStr: AnsiString;
 begin
   if not(TargetInfo.system in systems_darwin) then
     exit;
@@ -1167,10 +1167,10 @@ begin
   { check for deployment target set via environment variable }
   if not(TargetInfo.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
     begin
-      envstr:=GetEnvironmentVariable('MACOSX_DEPLOYMENT_TARGET');
-      if envstr<>'' then
-        if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',envstr,false) then
-          Message1(option_invalid_macosx_deployment_target,envstr)
+      EnvStr:=GetEnvironmentVariable('MACOSX_DEPLOYMENT_TARGET');
+      if EnvStr<>'' then
+        if not ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',EnvStr,false) then
+          Message1(option_invalid_macosx_deployment_target,EnvStr)
         else
           begin
 
@@ -1179,10 +1179,10 @@ begin
     end
   else
     begin
-      envstr:=GetEnvironmentVariable('IPHONEOS_DEPLOYMENT_TARGET');
-      if envstr<>'' then
-        if not ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',envstr,true) then
-          Message1(option_invalid_iphoneos_deployment_target,envstr)
+      EnvStr:=GetEnvironmentVariable('IPHONEOS_DEPLOYMENT_TARGET');
+      if EnvStr<>'' then
+        if not ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',EnvStr,true) then
+          Message1(option_invalid_iphoneos_deployment_target,EnvStr)
         else
           exit;
     end;
@@ -1191,32 +1191,32 @@ begin
     system_i386_darwin,
     system_x86_64_darwin:
       begin
-        if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.8.0',false) then
-          internalerror(2022090912);
+        if not ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.8.0',false) then
+          InternalError(2022090912);
       end;
     system_i386_iphonesim:
       begin
-        if not ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
-          internalerror(2022090913);
+        if not ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
+          InternalError(2022090913);
       end;
     system_aarch64_ios,
     system_x86_64_iphonesim:
       begin
-        if not ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
-          internalerror(2022090914);
+        if not ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
+          InternalError(2022090914);
       end;
     system_aarch64_iphonesim:
       begin
-        if not ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','14.0.0',false) then
-          internalerror(2023032201);
+        if not ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','14.0.0',false) then
+          InternalError(2023032201);
       end;
     system_aarch64_darwin:
       begin
-        if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','11.0.0',false) then
-          internalerror(2022090915);
+        if not ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','11.0.0',false) then
+          InternalError(2022090915);
       end
     else
-      internalerror(2012031001);
+      InternalError(2012031001);
   end;
 end;
 
@@ -1234,7 +1234,7 @@ procedure TOption.VerifyTargetProcessor;
   end;
 
 
-function TOption.Unsetbool(var Opts: TCmdStr; Pos: Longint;
+function TOption.Unsetbool(var Opts: TCmdStr; Pos: LongInt;
   const FullPara: TCmdStr; RequireBoolPara: Boolean): boolean;
 { checks if the character after pos in Opts is a + or a - and returns resp.
   false or true. If it is another character (or none), it also returns false }
@@ -1263,8 +1263,8 @@ begin
     the normal first-pass filter so PPUs are evaluated with the correct state. }
   if CompareText(opt,'-profile')=0 then
    begin
-    include(InitSettings.moduleswitches,cs_nexus_profile);
-    include(CurrentSettings.moduleswitches,cs_nexus_profile);
+    include(InitSettings.ModuleSwitches,cs_nexus_profile);
+    include(CurrentSettings.ModuleSwitches,cs_nexus_profile);
     exit;
    end;
 
@@ -1351,11 +1351,11 @@ begin
 end;
 
 
-procedure TOption.Interpret_file(const filename: TPathStr);
+procedure TOption.Interpret_file(const FileName: TPathStr);
 
   procedure RemoveSep(var fn:TPathStr);
   var
-    i : longint;
+    i : LongInt;
   begin
     i:=0;
     while (i<length(fn)) and (fn[i+1] in [',',' ',#9]) do
@@ -1369,7 +1369,7 @@ procedure TOption.Interpret_file(const filename: TPathStr);
 
   function GetName(var fn:TPathStr):TPathStr;
   var
-    i : longint;
+    i : LongInt;
   begin
     i:=0;
     while (i<length(fn)) and (fn[i+1] in ['a'..'z','A'..'Z','0'..'9','_','-']) do
@@ -1386,7 +1386,7 @@ var
   opts  : TCmdStr;
   skip  : array[0..maxlevel] of boolean;
   line,
-  level : longint;
+  level : LongInt;
   option_read : boolean;
   oldfilemode : byte;
   ConfigFile: TPathStr;
@@ -1396,16 +1396,16 @@ begin
   Option_read:=false;
   If FileLevel>MaxLevel then
    Message(option_too_many_cfg_files);
-  if not ParaIncludeCfgPath.FindFile(fileName,true,ConfigFile) then
-    ConfigFile := ExpandFileName(filename);
+  if not ParaIncludeCfgPath.FindFile(FileName,true,ConfigFile) then
+    ConfigFile := ExpandFileName(FileName);
 { Maybe It's Directory ?}   //Jaro Change:
   if PathExists(ConfigFile,false) then
     begin
-       Message1(option_config_is_dir,filename);
+       Message1(option_config_is_dir,FileName);
        exit;
     end;
 { open file }
-  Message1(option_using_file,filename);
+  Message1(option_using_file,FileName);
   oldfilemode:=filemode;
   filemode:=0;
   assign(f,ConfigFile);
@@ -1413,12 +1413,12 @@ begin
    reset(f);
   {$pop}
   filemode:=oldfilemode;
-  if ioresult<>0 then
+  if IOResult<>0 then
    begin
-     Message1(option_unable_open_file,filename);
+     Message1(option_unable_open_file,FileName);
      exit;
    end;
-  Message1(option_start_reading_configfile,filename);
+  Message1(option_start_reading_configfile,FileName);
   fillchar(skip,sizeof(skip),0);
   level:=0;
   line:=0;
@@ -1447,7 +1447,7 @@ begin
                RemoveSep(opts);
                if Level>=maxlevel then
                 begin
-                  Message2(option_too_many_ifdef,filename,tostr(line));
+                  Message2(option_too_many_ifdef,FileName,ToStr(line));
                   stopOptions(1);
                 end;
                inc(Level);
@@ -1463,7 +1463,7 @@ begin
                RemoveSep(opts);
                if Level>=maxlevel then
                 begin
-                  Message2(option_too_many_ifdef,filename,tostr(line));
+                  Message2(option_too_many_ifdef,FileName,ToStr(line));
                   stopOptions(1);
                 end;
                inc(Level);
@@ -1478,7 +1478,7 @@ begin
               begin
                 if Level=0 then
                   begin
-                    Message2(option_else_without_if,filename,tostr(line));
+                    Message2(option_else_without_if,FileName,ToStr(line));
                     stopOptions(1);
                   end
                 else
@@ -1490,7 +1490,7 @@ begin
                skip[level]:=false;
                if Level=0 then
                 begin
-                  Message2(option_too_many_endif,filename,tostr(line));
+                  Message2(option_too_many_endif,FileName,ToStr(line));
                   stopOptions(1);
                 end;
                dec(level);
@@ -1569,28 +1569,28 @@ begin
   if Level>0 then
    Message(option_too_less_endif);
   if Not Option_read then
-    Message1(option_no_option_found,filename)
+    Message1(option_no_option_found,FileName)
   else
-    Message1(option_end_reading_configfile,filename);
+    Message1(option_end_reading_configfile,FileName);
   Close(f);
   Dec(FileLevel);
 end;
 
 
-procedure TOption.Interpret_envvar(const envname: TCmdStr);
+procedure TOption.Interpret_envvar(const EnvName: TCmdStr);
 var
   argstart,
   env,
   pc     : pchar;
-  arglen : longint;
+  arglen : LongInt;
   quote  : set of char;
   hs     : TCmdStr;
 begin
-  Message1(option_using_env,envname);
-  env:=GetEnvPChar(envname);
+  Message1(option_using_env,EnvName);
+  env:=GetEnvPChar(EnvName);
   pc:=env;
   hs:='';
-  if assigned(pc) then
+  if Assigned(pc) then
    begin
      repeat
        { skip leading spaces }
@@ -1621,7 +1621,7 @@ begin
 { TODO: FIXME: silent truncation of environment parameters }
        if (arglen > 255) then
          arglen := 255;
-       setlength(hs,arglen);
+       SetLength(hs,arglen);
        move(argstart^,hs[1],arglen);
        interpret_option(hs,true);
      { skip quote }
@@ -1630,7 +1630,7 @@ begin
      until false;
    end
   else
-   Message1(option_no_option_found,'(env) '+envname);
+   Message1(option_no_option_found,'(env) '+EnvName);
   FreeEnvPChar(env);
 end;
 
@@ -1638,13 +1638,13 @@ end;
 procedure TOption.Read_Parameters;
 var
   opts       : TCmdStr;
-  paramindex : longint;
+  paramindex : LongInt;
 begin
   paramindex:=0;
   while paramindex<paramcount do
    begin
      inc(paramindex);
-     opts:=objpas.paramstr(paramindex);
+     opts:=objpas.ParamStr(paramindex);
      if length(opts)>0 then
        case opts[1] of
          '@' :
@@ -1670,7 +1670,7 @@ end;
 
 procedure TOption.parsecmd(cmd: TCmdStr);
 var
-  i,ps  : longint;
+  i,ps  : LongInt;
   opts  : TCmdStr;
 begin
   while (cmd<>'') do
@@ -1718,7 +1718,7 @@ end;
 procedure TOption.WriteQuickInfo;
 var
   s : string;
-  i : longint;
+  i : LongInt;
   emptyOK : Boolean;
 
   procedure addinfo(const hs:string);
@@ -1744,7 +1744,7 @@ begin
            'O' :
              addinfo(lower(SourceInfo.shortname));
            'P' :
-             addinfo(source_cpu_string);
+             addinfo(SourceCPUString);
            else
              IllegalPara('-i'+QuickInfo);
           end;
@@ -1767,11 +1767,11 @@ begin
           end;
         end;
       'V' :
-        AddInfo(version_string);
+        AddInfo(Version_String);
       'W' :
-        AddInfo(full_version_string);
+        AddInfo(Full_Version_String);
       'D' :
-        AddInfo(date_string);
+        AddInfo(DateString);
       '_' :
         ;
       else
@@ -1780,7 +1780,7 @@ begin
   end;
   if (s<>'') or EmptyOK then
    begin
-     writeln(s);
+     WriteLn(s);
      stopoptions(0);
    end;
 end;
@@ -1861,9 +1861,9 @@ begin
   { Code generation flags }
   if (tf_pic_default in TargetInfo.flags) then
     if def then
-      include(InitSettings.moduleswitches,cs_create_pic)
+      include(InitSettings.ModuleSwitches,cs_create_pic)
     else
-      exclude(InitSettings.moduleswitches,cs_create_pic);
+      exclude(InitSettings.ModuleSwitches,cs_create_pic);
 
   { Resources support }
   if (tf_has_winlike_resources in TargetInfo.flags) then
@@ -1875,9 +1875,9 @@ begin
   target_unsup_features:=[];
 
   if def then
-    features:=features-target_unsup_features
+    Features:=Features-target_unsup_features
   else
-    features:=features+target_unsup_features;
+    Features:=Features+target_unsup_features;
 
 end;
 
@@ -1892,7 +1892,7 @@ begin
 
   requestedwin64clang:=false;
   if (paratargetasm=as_clang_gas) and
-     assigned(asminfos[as_clang_gas]) then
+     Assigned(asminfos[as_clang_gas]) then
     requestedwin64clang:=
       ((TargetInfo.system in asminfos[as_clang_gas]^.supported_targets) or
        (system_any in asminfos[as_clang_gas]^.supported_targets)) and
@@ -1902,9 +1902,9 @@ begin
     (((TargetAsm.id=as_clang_gas) and
       (af_llvm in TargetAsm.flags)) or
      requestedwin64clang) and
-    (((cs_link_extern in InitSettings.globalswitches) and
+    (((cs_link_extern in InitSettings.GlobalSwitches) and
       (TargetInfo.linkextern=ld_lld_windows)) or
-     (not(cs_link_extern in InitSettings.globalswitches) and
+     (not(cs_link_extern in InitSettings.GlobalSwitches) and
       (TargetInfo.link=ld_lld_windows)));
 
 
@@ -1917,15 +1917,15 @@ begin
     begin
       { smartlink creation does not yet work with DWARF
         debug info on most targets, but it works in internal assembler }
-      if (cs_create_smart in InitSettings.moduleswitches) and
+      if (cs_create_smart in InitSettings.ModuleSwitches) and
          not (af_outputbinary in TargetAsm.flags) then
         begin
           Message(option_dwarf_smartlink_creation);
-          exclude(InitSettings.moduleswitches,cs_create_smart);
+          exclude(InitSettings.ModuleSwitches,cs_create_smart);
         end;
 
       { smart linking does not yet work with DWARF debug info on most targets }
-      if (cs_link_smart in InitSettings.globalswitches) then
+      if (cs_link_smart in InitSettings.GlobalSwitches) then
         begin
           Message(option_dwarf_smart_linking);
           ForceStaticLinking;
@@ -1934,25 +1934,25 @@ begin
 
   { external debug info is only supported for DWARF on darwin }
   if (TargetInfo.system in systems_darwin) and
-     (cs_link_separate_dbg_file in InitSettings.globalswitches) and
+     (cs_link_separate_dbg_file in InitSettings.GlobalSwitches) and
      not(paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) then
     begin
       Message(option_debug_external_unsupported);
-      exclude(InitSettings.globalswitches,cs_link_separate_dbg_file);
+      exclude(InitSettings.GlobalSwitches,cs_link_separate_dbg_file);
     end;
   { Also create a smartlinked version, on an assembler that
     does not support smartlink sections like nasm?
     This is not compatible with using internal linker. }
-  if ((cs_link_smart in InitSettings.globalswitches) or
-      (cs_create_smart in InitSettings.moduleswitches)) and
+  if ((cs_link_smart in InitSettings.GlobalSwitches) or
+      (cs_create_smart in InitSettings.ModuleSwitches)) and
      (af_needar in TargetAsm.flags) and
      not (af_smartlink_sections in TargetAsm.flags) and
-     not (cs_link_extern in InitSettings.globalswitches) and
+     not (cs_link_extern in InitSettings.GlobalSwitches) and
      (TargetInfo.link<>ld_none) and
-      not (cs_link_nolink in InitSettings.globalswitches) then
+      not (cs_link_nolink in InitSettings.GlobalSwitches) then
     begin
       Message(option_smart_link_requires_external_linker);
-      include(InitSettings.globalswitches,cs_link_extern);
+      include(InitSettings.GlobalSwitches,cs_link_extern);
     end;
 end;
 
@@ -2016,38 +2016,38 @@ var
   j : integer;
 
 begin
-  include(InitSettings.globalswitches,cs_asm_leave);
+  include(InitSettings.GlobalSwitches,cs_asm_leave);
   j:=1;
   while j<=length(more) do
    begin
      case more[j] of
        'l' :
-         include(InitSettings.globalswitches,cs_asm_source);
+         include(InitSettings.GlobalSwitches,cs_asm_source);
        'r' :
-         include(InitSettings.globalswitches,cs_asm_regalloc);
+         include(InitSettings.GlobalSwitches,cs_asm_regalloc);
        'R' :
-         include(InitSettings.globalswitches,cs_asm_rtti_source);
+         include(InitSettings.GlobalSwitches,cs_asm_rtti_source);
        't' :
-         include(InitSettings.globalswitches,cs_asm_tempalloc);
+         include(InitSettings.GlobalSwitches,cs_asm_tempalloc);
        'n' :
-         include(InitSettings.globalswitches,cs_asm_nodes);
+         include(InitSettings.GlobalSwitches,cs_asm_nodes);
        { -ao option must be the last, everything behind it is passed directly to
          external assembler, it is ignored if internal assembler is used. }
        'o' :
          begin
-           asmextraopt:=copy(more,j+1);
+           AsmExtraOpt:=copy(more,j+1);
            break;
          end;
        'p' :
          begin
-           exclude(InitSettings.globalswitches,cs_asm_leave);
+           exclude(InitSettings.GlobalSwitches,cs_asm_leave);
            if UnsetBool(More, 0, opt, false) then
-             exclude(InitSettings.globalswitches,cs_asm_pipe)
+             exclude(InitSettings.GlobalSwitches,cs_asm_pipe)
            else
-             include(InitSettings.globalswitches,cs_asm_pipe);
+             include(InitSettings.GlobalSwitches,cs_asm_pipe);
          end;
        '-' :
-         InitSettings.globalswitches:=InitSettings.globalswitches -
+         InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches -
              [cs_asm_leave, cs_asm_source,cs_asm_regalloc, cs_asm_tempalloc,
               cs_asm_nodes, cs_asm_pipe];
        else
@@ -2074,9 +2074,9 @@ procedure TOption.Interpret_B_l(opt, more: TCmdStr);
 
 begin
   if UnsetBool(More,0,opt,false) then
-    InitSettings.moduleswitches:=InitSettings.moduleswitches-[cs_browser]
+    InitSettings.ModuleSwitches:=InitSettings.ModuleSwitches-[cs_browser]
   else
-    InitSettings.moduleswitches:=InitSettings.moduleswitches+[cs_browser];
+    InitSettings.ModuleSwitches:=InitSettings.ModuleSwitches+[cs_browser];
   if More<>'' then
     IllegalPara(opt);
 end;
@@ -2085,7 +2085,7 @@ end;
 procedure TOption.Interpret_B_U(opt, more: TCmdStr);
 
 begin
-  do_build:=not UnSetBool(more,0,opt,true);
+  Do_Build:=not UnSetBool(more,0,opt,true);
 end;
 
 
@@ -2097,7 +2097,7 @@ var
   includecapability : Boolean;
 
   {$ifdef cpucapabilities}
-  cf   : tcpuflags;
+  cf   : TCPUFlags;
   cpuflagsstr,
   extrasettings : string;
   {$endif cpucapabilities}
@@ -2109,13 +2109,13 @@ begin
      case more[j] of
        '3' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_ieee_errors)
+           exclude(InitSettings.LocalSwitches,cs_ieee_errors)
          Else
-           include(InitSettings.localswitches,cs_ieee_errors);
+           include(InitSettings.LocalSwitches,cs_ieee_errors);
        'a' :
          begin
            s:=upper(copy(more,j+1));
-           if not(SetAbiType(s,TargetInfo.abi)) then
+           if not(SetABIType(s,TargetInfo.abi)) then
              IllegalPara(opt);
            ABISetExplicitly:=true;
            break;
@@ -2132,26 +2132,26 @@ begin
 
        'c' :
           begin
-            if not SetAktProcCall(upper(copy(more,j+1)),InitSettings.defproccall) then
+            if not SetAktProcCall(upper(copy(more,j+1)),InitSettings.DefProcCall) then
              IllegalPara(opt);
             break;
           end;
        'E' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_check_fpu_exceptions)
+           exclude(InitSettings.LocalSwitches,cs_check_fpu_exceptions)
          Else
-           include(InitSettings.localswitches,cs_check_fpu_exceptions);
+           include(InitSettings.LocalSwitches,cs_check_fpu_exceptions);
        'f' :
          begin
            s:=upper(copy(more,j+1));
-           if not(SetFpuType(s,InitSettings.fputype)) then
+           if not(SetFPUType(s,InitSettings.FPUType)) then
              IllegalPara(opt);
            FPUSetExplicitly:=True;
            break;
          end;
        'F' :
           begin
-            if not SetMinFPConstPrec(copy(more,j+1),InitSettings.minfpconstprec) then
+            if not SetMinFPConstPrec(copy(more,j+1),InitSettings.MinFPConstPrec) then
               IllegalPara(opt);
             break;
           end;
@@ -2164,54 +2164,54 @@ begin
                 message(scan_w_pic_ignored);
               end
             else if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.moduleswitches,cs_create_pic)
+              exclude(InitSettings.ModuleSwitches,cs_create_pic)
             else
-              include(InitSettings.moduleswitches,cs_create_pic);
+              include(InitSettings.ModuleSwitches,cs_create_pic);
          end;
        'h' :
          begin
             l:=pos(',',copy(more,j+1));
             if l=0 then
               l:=length(more)-j+1;
-            val(copy(more,j+1,l-1),heapsize,code);
+            val(copy(more,j+1,l-1),HeapSize,code);
             if (code<>0)
-            or (heapsize<1024)
+            or (HeapSize<1024)
             then
               IllegalPara(opt)
             else if l<=length(more)-j then
               begin
-                val(copy(more,j+l+1),maxheapsize,code);
+                val(copy(more,j+l+1),MaxHeapSize,code);
                 if code<>0 then
                   IllegalPara(opt)
-                else if (maxheapsize<heapsize) then
+                else if (MaxHeapSize<HeapSize) then
                   begin
                     message(scan_w_heapmax_lessthan_heapmin);
-                    maxheapsize:=heapsize;
+                    MaxHeapSize:=HeapSize;
                   end;
               end;
             break;
          end;
        'i' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_check_io)
+           exclude(InitSettings.LocalSwitches,cs_check_io)
          else
-           include(InitSettings.localswitches,cs_check_io);
+           include(InitSettings.LocalSwitches,cs_check_io);
 
        'n' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.globalswitches,cs_link_nolink)
+           exclude(InitSettings.GlobalSwitches,cs_link_nolink)
          Else
-           include(InitSettings.globalswitches,cs_link_nolink);
+           include(InitSettings.GlobalSwitches,cs_link_nolink);
        'o' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_check_overflow)
+           exclude(InitSettings.LocalSwitches,cs_check_overflow)
          Else
-           include(InitSettings.localswitches,cs_check_overflow);
+           include(InitSettings.LocalSwitches,cs_check_overflow);
        'O' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_check_ordinal_size)
+           exclude(InitSettings.LocalSwitches,cs_check_ordinal_size)
          Else
-           include(InitSettings.localswitches,cs_check_ordinal_size);
+           include(InitSettings.LocalSwitches,cs_check_ordinal_size);
        'p' :
          begin
            s:=upper(copy(more,j+1));
@@ -2253,7 +2253,7 @@ begin
            else
              extrasettings:='';
 {$endif cpucapabilities}
-           if not(Setcputype(s,InitSettings)) then
+           if not(SetCPUType(s,InitSettings)) then
              IllegalPara(opt);
 {$ifdef cpucapabilities}
            while extrasettings<>'' do
@@ -2272,7 +2272,7 @@ begin
                    s:=extrasettings;
                    extrasettings:='';
                  end;
-               for cf in tcpuflags do
+               for cf in TCPUFlags do
                  begin
                    Str(cf,cpuflagsstr);
                    { expect that the cpuflagsstr i.e. the enum as well contains _HAS_ }
@@ -2280,13 +2280,13 @@ begin
                    { get rid of prefix including _HAS_ }
                      Delete(cpuflagsstr,1,Pos('_HAS_',cpuflagsstr)+4)
                    else
-                     Internalerror(2021110601);
+                     InternalError(2021110601);
                    if s=cpuflagsstr then
                      begin
                        if includecapability then
-                         Include(cpu_capabilities[InitSettings.cputype],cf)
+                         Include(cpu_capabilities[InitSettings.CPUType],cf)
                        else
-                         Exclude(cpu_capabilities[InitSettings.cputype],cf);
+                         Exclude(cpu_capabilities[InitSettings.CPUType],cf);
                        s:='';
                        break;
                      end;
@@ -2307,9 +2307,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     InitSettings.setalloc:=0;
+                     InitSettings.SetAlloc:=0;
                    '1','2','4','8':
-                     InitSettings.setalloc:=StrToInt(more);
+                     InitSettings.SetAlloc:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end
@@ -2319,9 +2319,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     InitSettings.packenum:=4;
+                     InitSettings.PackEnum:=4;
                    '1','2','4':
-                     InitSettings.packenum:=StrToInt(more);
+                     InitSettings.PackEnum:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end;
@@ -2331,9 +2331,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     InitSettings.packrecords:=default_settings.packrecords;
+                     InitSettings.PackRecords:=Default_Settings.PackRecords;
                    '1','2','4','8','16','32':
-                     InitSettings.packrecords:=StrToInt(more);
+                     InitSettings.PackRecords:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end;
@@ -2344,44 +2344,44 @@ begin
          end;
        'r' :
          If UnsetBool(More, j, opt, false) then
-           exclude(InitSettings.localswitches,cs_check_range)
+           exclude(InitSettings.LocalSwitches,cs_check_range)
          Else
-           include(InitSettings.localswitches,cs_check_range);
+           include(InitSettings.LocalSwitches,cs_check_range);
        'R' :
          If UnsetBool(More, j, opt, false) then
            begin
-             exclude(InitSettings.localswitches,cs_check_range);
-             exclude(InitSettings.localswitches,cs_check_object);
+             exclude(InitSettings.LocalSwitches,cs_check_range);
+             exclude(InitSettings.LocalSwitches,cs_check_object);
            end
          Else
            begin
-             include(InitSettings.localswitches,cs_check_range);
-             include(InitSettings.localswitches,cs_check_object);
+             include(InitSettings.LocalSwitches,cs_check_range);
+             include(InitSettings.LocalSwitches,cs_check_object);
            end;
        's' :
          begin
-            val(copy(more,j+1),stacksize,code);
+            val(copy(more,j+1),StackSize,code);
             if (code<>0)
 
-               or (stacksize>=67107840)
+               or (StackSize>=67107840)
 
-               or (stacksize<1024) then
+               or (StackSize<1024) then
              IllegalPara(opt);
             break;
          end;
        't' :
           If UnsetBool(More, j, opt, false) then
-            exclude(InitSettings.localswitches,cs_check_stack)
+            exclude(InitSettings.LocalSwitches,cs_check_stack)
           Else
-            include(InitSettings.localswitches,cs_check_stack);
+            include(InitSettings.LocalSwitches,cs_check_stack);
        'X' :
           If UnsetBool(More, j, opt, false) then
-            exclude(InitSettings.moduleswitches,cs_create_smart)
+            exclude(InitSettings.ModuleSwitches,cs_create_smart)
           Else
-            include(InitSettings.moduleswitches,cs_create_smart);
+            include(InitSettings.ModuleSwitches,cs_create_smart);
        'T' :
          begin
-           if not UpdateTargetSwitchStr(copy(more,j+1),InitSettings.targetswitches,true) then
+           if not UpdateTargetSwitchStr(copy(more,j+1),InitSettings.TargetSwitches,true) then
              IllegalPara(opt);
            break;
          end;
@@ -2391,9 +2391,9 @@ begin
          begin
            s:=upper(copy(more,j+1));
            if s='GLOBAL-DYNAMIC' then
-             InitSettings.tlsmodel:=tlsm_global_dynamic
+             InitSettings.TLSModel:=tlsm_global_dynamic
            else if s='LOCAL-EXEC' then
-             InitSettings.tlsmodel:=tlsm_local_exec
+             InitSettings.TLSModel:=tlsm_local_exec
            else
              IllegalPara(opt);
            break;
@@ -2435,7 +2435,7 @@ begin
       end;
     if l>0 then
       begin
-        if cs_support_macro in InitSettings.moduleswitches then
+        if cs_support_macro in InitSettings.ModuleSwitches then
           set_system_macro(hs,Copy(more,l+2))
         else
           set_system_compvar(hs,Copy(more,l+2));
@@ -2447,73 +2447,73 @@ end;
 
 procedure TOption.Interpret_D_U(opt, more: TCmdStr);
 var
-  major,minor : longint;
+  major,minor : LongInt;
   l,j,error : integer;
 
 begin
   j:=1;
   if length(more)=0 then
-    include(InitSettings.globalswitches,cs_link_deffile);
+    include(InitSettings.GlobalSwitches,cs_link_deffile);
   while j<=length(more) do
     begin
       case more[j] of
        'd' :
          begin
-           include(InitSettings.globalswitches,cs_link_deffile);
-           description:=Copy(more,j+1);
+           include(InitSettings.GlobalSwitches,cs_link_deffile);
+           Description:=Copy(more,j+1);
            break;
          end;
        'D' :
          begin
-           datestr:=Copy(more,j+1);
+           DateStr:=Copy(more,j+1);
            break;
          end;
        'T' :
          begin
-           timestr:=Copy(more,j+1);
+           TimeStr:=Copy(more,j+1);
            break;
          end;
        'v' :
          begin
-           include(InitSettings.globalswitches,cs_link_deffile);
-           dllversion:=Copy(more,j+1);
-           l:=pos('.',dllversion);
-           dllminor:=0;
+           include(InitSettings.GlobalSwitches,cs_link_deffile);
+           DLLVersion:=Copy(more,j+1);
+           l:=pos('.',DLLVersion);
+           DLLMinor:=0;
            error:=0;
            if l>0 then
             begin
-              val(copy(dllversion,l+1,255),minor,error);
+              val(copy(DLLVersion,l+1,255),minor,error);
               if (error=0) and
                  (minor>=0) and (minor<=$ffff) then
-                dllminor:=minor
+                DLLMinor:=minor
               else
                 if error=0 then
                   error:=1;
             end;
            if l=0 then
              l:=256;
-           dllmajor:=1;
+           DLLMajor:=1;
            major:=0;
            if error=0 then
-             val(copy(dllversion,1,l-1),major,error);
+             val(copy(DLLVersion,1,l-1),major,error);
            if (error=0) and (major>=0) and (major<=$ffff) then
-             dllmajor:=major
+             DLLMajor:=major
            else
              if error=0 then
                error:=1;
            if error<>0 then
-             Message1(scan_w_wrong_version_ignored,dllversion);
+             Message1(scan_w_wrong_version_ignored,DLLVersion);
            break;
          end;
        'w' :
          begin
-           include(InitSettings.globalswitches,cs_link_deffile);
-           usewindowapi:=true;
+           include(InitSettings.GlobalSwitches,cs_link_deffile);
+           UseWindowAPI:=true;
           end;
        '-' :
          begin
-           exclude(InitSettings.globalswitches,cs_link_deffile);
-           usewindowapi:=false;
+           exclude(InitSettings.GlobalSwitches,cs_link_deffile);
+           UseWindowAPI:=false;
          end;
        else
          IllegalPara(opt);
@@ -2526,7 +2526,7 @@ end;
 procedure TOption.Interpret_E_l(opt, more: TCmdStr);
 
 begin
-  exepath:=FixPath(More,true);
+  ExePath:=FixPath(More,true);
 end;
 
 
@@ -2534,9 +2534,9 @@ procedure TOption.Interpret_E_U(opt, more: TCmdStr);
 
 begin
   if UnsetBool(More, 0, opt, true) then
-    exclude(InitSettings.globalswitches,cs_link_nolink)
+    exclude(InitSettings.GlobalSwitches,cs_link_nolink)
   else
-    include(InitSettings.globalswitches,cs_link_nolink);
+    include(InitSettings.GlobalSwitches,cs_link_nolink);
 end;
 
 
@@ -2548,7 +2548,7 @@ begin
       if tf_no_pic_supported in TargetInfo.flags then
         message(scan_w_pic_ignored)
       else
-        include(InitSettings.moduleswitches,cs_create_pic)
+        include(InitSettings.ModuleSwitches,cs_create_pic)
     end
   else
     IllegalPara(opt);
@@ -2561,7 +2561,7 @@ var
   c : char;
   d : string;
   j : integer;
-  unicodemapping : punicodemap;
+  unicodemapping : PUnicodeMap;
 
 begin
   if more='' then
@@ -2571,7 +2571,7 @@ begin
   DefaultReplacements(More);
   case c of
     'a' :
-      autoloadunits:=more;
+      AutoloadUnits:=more;
     'c' :
       begin
         { if we first specify that the system code page should be
@@ -2579,22 +2579,22 @@ begin
           flag that we're using the system code page again }
         SetCompileModeSwitch('SYSTEMCODEPAGE-',true);
         if (upper(more)='UTF8') or (upper(more)='UTF-8') then
-          InitSettings.sourcecodepage:=CP_UTF8
-        else if not(cpavailable(more)) then
+          InitSettings.SourceCodePage:=CP_UTF8
+        else if not(CPAvailable(more)) then
           Message1(option_code_page_not_available,more)
         else
-          InitSettings.sourcecodepage:=codepagebyname(more);
-        include(InitSettings.moduleswitches,cs_explicit_codepage);
+          InitSettings.SourceCodePage:=CodePageByName(more);
+        include(InitSettings.ModuleSwitches,cs_explicit_codepage);
       end;
     'C' :
       RCCompiler:=More;
     'd' :
       if UnsetBool(more, 0, opt, true) then
-        InitSettings.disabledircache:=false
+        InitSettings.DisableDirCache:=false
       else
-        InitSettings.disabledircache:=true;
+        InitSettings.DisableDirCache:=true;
     'D' :
-      utilsdirectory:=FixPath(More,true);
+      UtilsDirectory:=FixPath(More,true);
     'e' :
       SetRedirectFile(More);
     'E' :
@@ -2604,7 +2604,7 @@ begin
           if ispara then
             ParaFrameworkPath.AddPath(More,false)
           else
-            frameworksearchpath.AddPath(More,true)
+            FrameworkSearchPath.AddPath(More,true)
         else
           IllegalPara(opt);
     'F' :
@@ -2614,12 +2614,12 @@ begin
         if ispara then
           ParaIncludePath.AddPath(More,false)
         else
-          includesearchpath.AddPath(More,true);
+          IncludeSearchPath.AddPath(More,true);
       end;
     'J' :
       begin
-        if (more='') or (more='+') or (upper(more)='ENABLED') then embed_package_metadata:=true
-        else if (more='-') or (upper(more)='DISABLED') then embed_package_metadata:=false
+        if (more='') or (more='+') or (upper(more)='ENABLED') then Embed_Package_Metadata:=true
+        else if (more='-') or (upper(more)='DISABLED') then Embed_Package_Metadata:=false
         else IllegalPara(opt);
       end;
     'j','k' :
@@ -2628,16 +2628,16 @@ begin
         if (length(more)<1) or (length(more)>64) then IllegalPara(opt);
         for j:=1 to length(more) do
           if not (more[j] in ['0'..'9','a'..'f','A'..'F']) then IllegalPara(opt);
-        if c='j' then package_sdk_identity:=upper(more)
-        else package_build_identity:=upper(more);
+        if c='j' then Package_SDK_Identity:=upper(more)
+        else Package_Build_Identity:=upper(more);
       end;
     'm' :
       begin
         if TryStrToInt(ExtractFileName(more),j) then
           begin
-            unicodemapping:=loadunicodemapping(More,More+'.txt',j);
-            if assigned(unicodemapping) then
-              registermapping(unicodemapping)
+            unicodemapping:=LoadUnicodeMapping(More,More+'.txt',j);
+            if Assigned(unicodemapping) then
+              RegisterMapping(unicodemapping)
             else
               IllegalPara(opt);
           end
@@ -2645,13 +2645,13 @@ begin
           IllegalPara(opt);
       end;
     'M' :
-      unicodepath:=FixPath(More,true);
+      UnicodePath:=FixPath(More,true);
     'l' :
       begin
         if ispara then
-          ParaLibraryPath.AddLibraryPath(sysrootpath,More,false)
+          ParaLibraryPath.AddLibraryPath(SysRootPath,More,false)
         else
-          LibrarySearchPath.AddLibraryPath(sysrootpath,More,true)
+          LibrarySearchPath.AddLibraryPath(SysRootPath,More,true)
       end;
     'L' :
       begin
@@ -2686,10 +2686,10 @@ begin
         if ispara then
           parapackagepath.AddPath(More,false)
         else
-          packagesearchpath.AddPath(More,true);
+          PackageSearchPath.AddPath(More,true);
       end;
     'r' :
-      Msgfilename:=More;
+      MsgFileName:=More;
     'R' :
       ResCompiler:=More;
     't' :
@@ -2702,7 +2702,7 @@ begin
         if ispara then
           ParaUnitPath.AddPath(More,false)
         else
-          unitsearchpath.AddPath(More,true);
+          UnitSearchPath.AddPath(More,true);
       end;
     'U' :
       OutputUnitDir:=FixPath(More,true);
@@ -2717,9 +2717,9 @@ begin
               D:=FixPath(D,True);
             D:=D+ExtractFileName(More);
             if (c='W') then
-              WpoFeedbackOutput:=D
+              WPOFeedbackOutput:=D
             else
-              WpoFeedbackInput:=D;
+              WPOFeedbackInput:=D;
           end
         else
           IllegalPara(opt);
@@ -2738,16 +2738,16 @@ var
 begin
   if UnsetBool(More, 0, opt, false) then
    begin
-     exclude(InitSettings.moduleswitches,cs_debuginfo);
-     exclude(InitSettings.globalswitches,cs_use_heaptrc);
-     exclude(InitSettings.globalswitches,cs_use_lineinfo);
-     exclude(InitSettings.localswitches,cs_checkpointer);
+     exclude(InitSettings.ModuleSwitches,cs_debuginfo);
+     exclude(InitSettings.GlobalSwitches,cs_use_heaptrc);
+     exclude(InitSettings.GlobalSwitches,cs_use_lineinfo);
+     exclude(InitSettings.LocalSwitches,cs_checkpointer);
      paratargetdbg:=dbg_none;
-     localvartrashing := -1;
+     LocalVarTrashing := -1;
    end
   else
    begin
-     include(InitSettings.moduleswitches,cs_debuginfo);
+     include(InitSettings.ModuleSwitches,cs_debuginfo);
      if paratargetdbg=dbg_none then
        paratargetdbg:=TargetInfo.dbg;
    end;
@@ -2760,13 +2760,13 @@ begin
         'c' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_checkpointer)
+              exclude(InitSettings.LocalSwitches,cs_checkpointer)
             else if (TargetInfo.system in systems_support_checkpointer) then
               begin
-                if do_release then
+                if Do_Release then
                   Message(option_gc_incompatible_with_release_flag)
                 else
-                  include(InitSettings.localswitches,cs_checkpointer);
+                  include(InitSettings.LocalSwitches,cs_checkpointer);
               end
             else
               UnsupportedPara('-gc');
@@ -2774,21 +2774,21 @@ begin
         'h' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_use_heaptrc)
+              exclude(InitSettings.GlobalSwitches,cs_use_heaptrc)
             else
               begin
-                if cs_gdb_valgrind in InitSettings.globalswitches then
+                if cs_gdb_valgrind in InitSettings.GlobalSwitches then
                   Message2(option_valgrind_heaptrc_mismatch,'-gh', '-gv');
-                include(InitSettings.globalswitches,cs_use_heaptrc);
+                include(InitSettings.GlobalSwitches,cs_use_heaptrc);
               end;
           end;
         'l' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_use_lineinfo)
+              exclude(InitSettings.GlobalSwitches,cs_use_lineinfo)
             else
               begin
-                include(InitSettings.globalswitches,cs_use_lineinfo);
+                include(InitSettings.GlobalSwitches,cs_use_lineinfo);
               end;
           end;
         'm' :
@@ -2797,16 +2797,16 @@ begin
           end;
         'o' :
           begin
-            if not UpdateDebugStr(copy(more,j+1),InitSettings.debugswitches) then
+            if not UpdateDebugStr(copy(more,j+1),InitSettings.DebugSwitches) then
               IllegalPara(opt);
             break;
           end;
         'p' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_stabs_preservecase)
+              exclude(InitSettings.GlobalSwitches,cs_stabs_preservecase)
             else
-              include(InitSettings.globalswitches,cs_stabs_preservecase);
+              include(InitSettings.GlobalSwitches,cs_stabs_preservecase);
           end;
         's' :
           begin
@@ -2815,19 +2815,19 @@ begin
         't' :
           begin
             if UnsetBool(More, j, opt, false) then
-               localvartrashing := -1
+               LocalVarTrashing := -1
             else
-              localvartrashing := (localvartrashing + 1) mod nroftrashvalues;
+              LocalVarTrashing := (LocalVarTrashing + 1) mod NrOfTrashValues;
           end;
         'v' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_gdb_valgrind)
+              exclude(InitSettings.GlobalSwitches,cs_gdb_valgrind)
             else
               begin
-                if cs_use_heaptrc in InitSettings.globalswitches then
+                if cs_use_heaptrc in InitSettings.GlobalSwitches then
                   Message2(option_valgrind_heaptrc_mismatch,'-gh', '-gv');
-                include(InitSettings.globalswitches,cs_gdb_valgrind);
+                include(InitSettings.GlobalSwitches,cs_gdb_valgrind);
               end;
           end;
         'w' :
@@ -2899,7 +2899,7 @@ begin
   if ispara then
     ParaIncludePath.AddPath(More,false)
   else
-   includesearchpath.AddPath(More,false);
+   IncludeSearchPath.AddPath(More,false);
 end;
 
 
@@ -2924,7 +2924,7 @@ procedure TOption.Interpret_M_l(opt, more: TCmdStr);
 
 begin
 {$ifdef PREPROCWRITE}
-  parapreprocess:=not UnSetBool(more,0,opt,true);
+  ParaPreprocess:=not UnSetBool(more,0,opt,true);
 {$endif PREPROCWRITE}
 end;
 
@@ -2979,13 +2979,13 @@ begin
    begin
      case more[j] of
        '1' :
-         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level1optimizerswitches;
+         InitSettings.OptimizerSwitches:=InitSettings.OptimizerSwitches+level1optimizerswitches;
        '2' :
-         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level2optimizerswitches;
+         InitSettings.OptimizerSwitches:=InitSettings.OptimizerSwitches+level2optimizerswitches;
        '3' :
-         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level3optimizerswitches;
+         InitSettings.OptimizerSwitches:=InitSettings.OptimizerSwitches+level3optimizerswitches;
        '4' :
-         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level4optimizerswitches;
+         InitSettings.OptimizerSwitches:=InitSettings.OptimizerSwitches+level4optimizerswitches;
        'a' :
          begin
            if not(UpdateAlignmentStr(Copy(Opt,j+3,255),ParaAlignment)) then
@@ -2993,10 +2993,10 @@ begin
            break;
          end;
        's' :
-         include(InitSettings.optimizerswitches,cs_opt_size);
+         include(InitSettings.OptimizerSwitches,cs_opt_size);
        'p' :
          begin
-           if not Setoptimizecputype(copy(more,j+1),InitSettings.optimizecputype) then
+           if not SetOptimizeCPUType(copy(more,j+1),InitSettings.OptimizeCPUType) then
              begin
                OptCPUSetExplicitly:=true;
                 { Give warning for old i386 switches }
@@ -3010,24 +3010,24 @@ begin
          end;
        'o' :
          begin
-           if not UpdateOptimizerStr(copy(more,j+1),InitSettings.optimizerswitches) then
+           if not UpdateOptimizerStr(copy(more,j+1),InitSettings.OptimizerSwitches) then
             IllegalPara(opt);
            break;
          end;
        '-' :
          begin
-           InitSettings.optimizerswitches:=[];
+           InitSettings.OptimizerSwitches:=[];
            FillChar(ParaAlignment,sizeof(ParaAlignment),0);
          end;
        'w' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),InitSettings.dowpoptimizerswitches) then
+           if not UpdateWpoStr(copy(more,j+1),InitSettings.DoWPOptimizerSwitches) then
              IllegalPara(opt);
            break;
          end;
        'W' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),InitSettings.genwpoptimizerswitches) then
+           if not UpdateWpoStr(copy(more,j+1),InitSettings.GenWPOptimizerSwitches) then
              IllegalPara(opt);
            break;
          end;
@@ -3053,7 +3053,7 @@ end;
 procedure TOption.Interpret_R_U(opt, more: TCmdStr);
 
 begin
-  if not SetAsmReadMode(More,InitSettings.asmmode) then
+  if not SetAsmReadMode(More,InitSettings.AsmMode) then
     IllegalPara(opt);
 end;
 
@@ -3063,21 +3063,21 @@ procedure TOption.Interpret_S_l(opt, more: TCmdStr);
 begin
   if UnsetBool(More, 0, opt, false) then
     begin
-      InitSettings.globalswitches:=InitSettings.globalswitches-[cs_asm_extern,cs_link_extern,cs_link_nolink];
+      InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches-[cs_asm_extern,cs_link_extern,cs_link_nolink];
       if more<>'' then
         IllegalPara(opt);
     end
   else
     begin
-      InitSettings.globalswitches:=InitSettings.globalswitches+[cs_asm_extern,cs_link_extern,cs_link_nolink];
+      InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_asm_extern,cs_link_extern,cs_link_nolink];
       if more='h' then
-        InitSettings.globalswitches:=InitSettings.globalswitches-[cs_link_on_target,cs_assemble_on_target]
+        InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches-[cs_link_on_target,cs_assemble_on_target]
       else if more='t' then
-        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_on_target,cs_assemble_on_target]
+        InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_link_on_target,cs_assemble_on_target]
       else if more='T' then
-        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_on_target]-[cs_asm_extern]
+        InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_link_on_target]-[cs_asm_extern]
       else if more='r' then
-        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_asm_leave,cs_no_regalloc]
+        InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches+[cs_asm_leave,cs_no_regalloc]
       else if more<>'' then
         IllegalPara(opt);
     end;
@@ -3095,9 +3095,9 @@ begin
   if more[1]='I' then
     begin
       if upper(more)='ICOM' then
-        InitSettings.interfacetype:=it_interfacecom
+        InitSettings.InterfaceType:=it_interfacecom
       else if upper(more)='ICORBA' then
-        InitSettings.interfacetype:=it_interfacecorba
+        InitSettings.InterfaceType:=it_interfacecorba
       else
         IllegalPara(opt);
     end
@@ -3111,19 +3111,19 @@ begin
             SetCompileMode('OBJFPC',true);
           'a' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_do_assertion)
+              exclude(InitSettings.LocalSwitches,cs_do_assertion)
             else
-              include(InitSettings.localswitches,cs_do_assertion);
+              include(InitSettings.LocalSwitches,cs_do_assertion);
           'c' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.moduleswitches,cs_support_c_operators)
+              exclude(InitSettings.ModuleSwitches,cs_support_c_operators)
             else
-              include(InitSettings.moduleswitches,cs_support_c_operators);
+              include(InitSettings.ModuleSwitches,cs_support_c_operators);
           'C':
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_check_all_case_coverage)
+              exclude(InitSettings.LocalSwitches,cs_check_all_case_coverage)
             else
-              include(InitSettings.localswitches,cs_check_all_case_coverage);
+              include(InitSettings.LocalSwitches,cs_check_all_case_coverage);
           'd' : //an alternative to -Mdelphi
             SetCompileMode('DELPHI',true);
           'e' :
@@ -3133,7 +3133,7 @@ begin
             end;
           'f' :
             begin
-              if not(cs_compilesystem in InitSettings.moduleswitches) then
+              if not(cs_compilesystem in InitSettings.ModuleSwitches) then
                 Message(option_features_only_for_system_unit);
               inc(j);
               if more[j]='-' then
@@ -3141,7 +3141,7 @@ begin
                   if length(more)>j then
                     IllegalPara(opt)
                   else
-                    features:=[];
+                    Features:=[];
                 end
               else
                 begin
@@ -3153,9 +3153,9 @@ begin
             end;
           'g' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.moduleswitches,cs_support_goto)
+              exclude(InitSettings.ModuleSwitches,cs_support_goto)
             else
-              include(InitSettings.moduleswitches,cs_support_goto);
+              include(InitSettings.ModuleSwitches,cs_support_goto);
           'h' :
             begin
               { Accepted for seed-era command lines, but the compiler-wide
@@ -3165,33 +3165,33 @@ begin
             end;
           'i' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_do_inline)
+              exclude(InitSettings.LocalSwitches,cs_do_inline)
             else
-              include(InitSettings.localswitches,cs_do_inline);
+              include(InitSettings.LocalSwitches,cs_do_inline);
           'j' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_typed_const_writable)
+              exclude(InitSettings.LocalSwitches,cs_typed_const_writable)
             else
-              include(InitSettings.localswitches,cs_typed_const_writable);
+              include(InitSettings.LocalSwitches,cs_typed_const_writable);
           'm' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.moduleswitches,cs_support_macro)
+              exclude(InitSettings.ModuleSwitches,cs_support_macro)
             else
-              include(InitSettings.moduleswitches,cs_support_macro);
+              include(InitSettings.ModuleSwitches,cs_support_macro);
           'r' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_transparent_file_names)
+              exclude(InitSettings.GlobalSwitches,cs_transparent_file_names)
             else
-              include(InitSettings.globalswitches,cs_transparent_file_names);
+              include(InitSettings.GlobalSwitches,cs_transparent_file_names);
           {$ifdef gpc_mode}
           'p' : //an alternative to -Mgpc
             SetCompileMode('GPC',true);
           {$endif}
           'v' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.globalswitches,cs_support_vectors)
+              exclude(InitSettings.GlobalSwitches,cs_support_vectors)
             else
-              include(InitSettings.globalswitches,cs_support_vectors);
+              include(InitSettings.GlobalSwitches,cs_support_vectors);
           'x' :
             If UnsetBool(More, j, opt, false) then
               SetCompileModeSwitch('EXCEPTIONS-',true)
@@ -3199,18 +3199,18 @@ begin
               SetCompileModeSwitch('EXCEPTIONS',true);
           'y' :
             If UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.localswitches,cs_typed_addresses)
+              exclude(InitSettings.LocalSwitches,cs_typed_addresses)
             else
-              include(InitSettings.localswitches,cs_typed_addresses);
+              include(InitSettings.LocalSwitches,cs_typed_addresses);
           '-' :
             begin
-              InitSettings.globalswitches:=InitSettings.globalswitches - [cs_support_exceptions,
+              InitSettings.GlobalSwitches:=InitSettings.GlobalSwitches - [cs_support_exceptions,
                                                                             cs_support_vectors];
 
-              InitSettings.localswitches:=InitSettings.localswitches - [cs_do_assertion,cs_do_inline,
+              InitSettings.LocalSwitches:=InitSettings.LocalSwitches - [cs_do_assertion,cs_do_inline,
                                                                           cs_typed_addresses];
 
-              InitSettings.moduleswitches:=InitSettings.moduleswitches - [cs_support_c_operators, cs_support_goto,
+              InitSettings.ModuleSwitches:=InitSettings.ModuleSwitches - [cs_support_c_operators, cs_support_goto,
                                                                             cs_support_macro];
             end;
           else
@@ -3303,22 +3303,22 @@ begin
           end;
 {$endif UNITALIASES}
        'n' :
-         exclude(InitSettings.globalswitches,cs_check_unit_name);
+         exclude(InitSettings.GlobalSwitches,cs_check_unit_name);
        'r' :
          begin
-           do_release:=true;
-           if (cs_checkpointer in InitSettings.localswitches) then
+           Do_Release:=true;
+           if (cs_checkpointer in InitSettings.LocalSwitches) then
              begin
                Message(option_gc_incompatible_with_release_flag);
-               exclude(InitSettings.localswitches,cs_checkpointer);
+               exclude(InitSettings.LocalSwitches,cs_checkpointer);
              end;
          end;
        's' :
-         include(InitSettings.moduleswitches,cs_compilesystem);
+         include(InitSettings.ModuleSwitches,cs_compilesystem);
        '-' :
          begin
-           exclude(InitSettings.moduleswitches,cs_compilesystem);
-           exclude(InitSettings.globalswitches,cs_check_unit_name);
+           exclude(InitSettings.ModuleSwitches,cs_compilesystem);
+           exclude(InitSettings.GlobalSwitches,cs_check_unit_name);
          end;
        else
          IllegalPara(opt);
@@ -3388,7 +3388,7 @@ begin
                  non relocatable DLL at a specific base address PM }
                if (length(More)>j) then
                  begin
-                   val('$'+Copy(More,j+1),imagebase,code);
+                   val('$'+Copy(More,j+1),ImageBase,code);
                    if code<>0 then
                      IllegalPara(opt);
                    ImageBaseSetExplicity:=true;
@@ -3419,8 +3419,8 @@ begin
          begin
            if TargetInfo.system in systems_all_windows then
              begin
-               UseDeffileForExports:=not UnsetBool(More, j, opt, false);
-               UseDeffileForExportsSetExplicitly:=true;
+               UseDefFileForExports:=not UnsetBool(More, j, opt, false);
+               UseDefFileForExportsSetExplicitly:=true;
              end
            else
              IllegalPara(opt);
@@ -3481,7 +3481,7 @@ begin
        'M':
          begin
            if (TargetInfo.system in (systems_darwin-[system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
-              ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',copy(More,2),false) then
+              ParseMacVersionMin(MacOSXVersionMin,IPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',copy(More,2),false) then
              begin
                break;
              end
@@ -3505,7 +3505,7 @@ begin
        'P':
          begin
            if (TargetInfo.system in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) and
-              ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',copy(More,2),true) then
+              ParseMacVersionMin(IPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',copy(More,2),true) then
              begin
                break;
              end
@@ -3533,9 +3533,9 @@ begin
            if (TargetInfo.system in systems_linux) then
              begin
                if UnsetBool(More, j, opt, false) then
-                 exclude(InitSettings.moduleswitches,cs_executable_stack)
+                 exclude(InitSettings.ModuleSwitches,cs_executable_stack)
                else
-                 include(InitSettings.moduleswitches,cs_executable_stack)
+                 include(InitSettings.ModuleSwitches,cs_executable_stack)
              end
            else
              IllegalPara(opt);
@@ -3563,9 +3563,9 @@ begin
            if TargetInfo.system in systems_linux then
              begin
                if UnsetBool(More, j, opt, false) then
-                 exclude(InitSettings.globalswitches,cs_link_pre_binutils_2_19)
+                 exclude(InitSettings.GlobalSwitches,cs_link_pre_binutils_2_19)
                else
-                 include(InitSettings.globalswitches,cs_link_pre_binutils_2_19);
+                 include(InitSettings.GlobalSwitches,cs_link_pre_binutils_2_19);
              end
            else
              IllegalPara(opt);
@@ -3573,53 +3573,53 @@ begin
        'a' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_large)
+             exclude(InitSettings.GlobalSwitches,cs_large)
            else
-             include(InitSettings.globalswitches,cs_large);
+             include(InitSettings.GlobalSwitches,cs_large);
          end;
-       'c' : Cshared:=TRUE;
-       'd' : Dontlinkstdlibpath:=TRUE;
+       'c' : CShared:=TRUE;
+       'd' : DontLinkStdlibPath:=TRUE;
        'e' :
          begin
            If UnsetBool(More, j, opt, false) then
              begin
-               exclude(InitSettings.globalswitches,cs_link_extern);
+               exclude(InitSettings.GlobalSwitches,cs_link_extern);
                LinkInternSetExplicitly:=true;
              end
            else
-             include(InitSettings.globalswitches,cs_link_extern);
+             include(InitSettings.GlobalSwitches,cs_link_extern);
          end;
        'g' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_link_separate_dbg_file)
+             exclude(InitSettings.GlobalSwitches,cs_link_separate_dbg_file)
            else
-             include(InitSettings.globalswitches,cs_link_separate_dbg_file);
+             include(InitSettings.GlobalSwitches,cs_link_separate_dbg_file);
          end;
        'i' :
          begin
            If UnsetBool(More, j, opt, false) then
-             include(InitSettings.globalswitches,cs_link_extern)
+             include(InitSettings.GlobalSwitches,cs_link_extern)
            else
              begin
-               exclude(InitSettings.globalswitches,cs_link_extern);
+               exclude(InitSettings.GlobalSwitches,cs_link_extern);
                LinkInternSetExplicitly:=true;
              end;
          end;
        'm' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_link_map)
+             exclude(InitSettings.GlobalSwitches,cs_link_map)
            else
-             include(InitSettings.globalswitches,cs_link_map);
+             include(InitSettings.GlobalSwitches,cs_link_map);
          end;
        'p' : ; { Ignore used by fpc.pas }
        'r' :
          begin
            if (TargetInfo.system in suppported_targets_x_smallr) then
              begin
-               rlinkpath:=Copy(more,2);
-               DefaultReplacements(rlinkpath);
+               RLinkPath:=Copy(more,2);
+               DefaultReplacements(RLinkPath);
              end
            else
              IgnoredPara('-Xr');
@@ -3627,45 +3627,45 @@ begin
          end;
        'R' :
          begin
-           sysrootpath:=copy(more,2);
-           defaultreplacements(sysrootpath);
+           SysRootPath:=copy(more,2);
+           defaultreplacements(SysRootPath);
            more:='';
          end;
        's' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_link_strip)
+             exclude(InitSettings.GlobalSwitches,cs_link_strip)
            else
-             include(InitSettings.globalswitches,cs_link_strip);
+             include(InitSettings.GlobalSwitches,cs_link_strip);
          end;
        't' :
-         include(InitSettings.globalswitches,cs_link_staticflag);
+         include(InitSettings.GlobalSwitches,cs_link_staticflag);
        'v' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_link_opt_vtable)
+             exclude(InitSettings.GlobalSwitches,cs_link_opt_vtable)
            else
-             include(InitSettings.globalswitches,cs_link_opt_vtable);
+             include(InitSettings.GlobalSwitches,cs_link_opt_vtable);
          end;
        'D' :
          begin
            def_system_macro('FPC_LINK_DYNAMIC');
            undef_system_macro('FPC_LINK_SMART');
            undef_system_macro('FPC_LINK_STATIC');
-           exclude(InitSettings.globalswitches,cs_link_static);
-           exclude(InitSettings.globalswitches,cs_link_smart);
-           include(InitSettings.globalswitches,cs_link_shared);
+           exclude(InitSettings.GlobalSwitches,cs_link_static);
+           exclude(InitSettings.GlobalSwitches,cs_link_smart);
+           include(InitSettings.GlobalSwitches,cs_link_shared);
            LinkTypeSetExplicitly:=true;
          end;
        'M' :
          begin
-           mainaliasname:=Copy(more,2);
+           MainAliasName:=Copy(more,2);
            More:='';
          end;
        'P' :
          begin
-           utilsprefix:=Copy(more,2);
-           DefaultReplacements(utilsprefix);
+           UtilsPrefix:=Copy(more,2);
+           DefaultReplacements(UtilsPrefix);
            More:='';
          end;
        'L' : begin  // -XLO is link order -XLA is link alias. -XLD avoids load defaults.
@@ -3685,15 +3685,15 @@ begin
                            if not LinkLibraryOrder.AddWeight(s) Then
                               IllegalPara(opt);
                           end;
-                    'D' : include(InitSettings.globalswitches,cs_link_no_default_lib_order);
+                    'D' : include(InitSettings.GlobalSwitches,cs_link_no_default_lib_order);
                     'L' :
                       begin
                         if UnsetBool(More, j, opt, false) then
-                          exclude(InitSettings.globalswitches,cs_link_lld)
+                          exclude(InitSettings.GlobalSwitches,cs_link_lld)
                         else
                           begin
-                            include(InitSettings.globalswitches,cs_link_lld);
-                            include(InitSettings.globalswitches,cs_link_extern);
+                            include(InitSettings.GlobalSwitches,cs_link_lld);
+                            include(InitSettings.GlobalSwitches,cs_link_extern);
                           end;
                        LinkerSetExplicitly:=true;
                      end
@@ -3710,11 +3710,11 @@ begin
        'V' :
          begin
            if UnsetBool(More, j, opt, false) then
-             exclude(InitSettings.globalswitches,cs_link_vlink)
+             exclude(InitSettings.GlobalSwitches,cs_link_vlink)
            else
              begin
-               include(InitSettings.globalswitches,cs_link_vlink);
-               include(InitSettings.globalswitches,cs_link_extern);
+               include(InitSettings.GlobalSwitches,cs_link_vlink);
+               include(InitSettings.GlobalSwitches,cs_link_extern);
              end;
            LinkerSetExplicitly:=true;
          end;
@@ -3723,16 +3723,16 @@ begin
            def_system_macro('FPC_LINK_SMART');
            undef_system_macro('FPC_LINK_STATIC');
            undef_system_macro('FPC_LINK_DYNAMIC');
-           exclude(InitSettings.globalswitches,cs_link_static);
-           include(InitSettings.globalswitches,cs_link_smart);
-           exclude(InitSettings.globalswitches,cs_link_shared);
+           exclude(InitSettings.GlobalSwitches,cs_link_static);
+           include(InitSettings.GlobalSwitches,cs_link_smart);
+           exclude(InitSettings.GlobalSwitches,cs_link_shared);
            LinkTypeSetExplicitly:=true;
          end;
        '-' :
          begin
-           exclude(InitSettings.globalswitches,cs_link_staticflag);
-           exclude(InitSettings.globalswitches,cs_link_strip);
-           exclude(InitSettings.globalswitches,cs_link_map);
+           exclude(InitSettings.GlobalSwitches,cs_link_staticflag);
+           exclude(InitSettings.GlobalSwitches,cs_link_strip);
+           exclude(InitSettings.GlobalSwitches,cs_link_map);
            set_default_link_type;
          end;
        else
@@ -3751,7 +3751,7 @@ function check_configfile(fn:string; var foundfn:string):boolean;
 
   function CfgFileExists(const fn:string):boolean;
   begin
-    Comment(V_Tried,'Configfile search: '+fn);
+    Comment(VTried,'Configfile search: '+fn);
     CfgFileExists:=FileExists(fn);
   end;
 
@@ -3767,7 +3767,7 @@ begin
   configpath:=FixPath(GetEnvironmentVariable('PPC_CONFIG_PATH'),false);
 {$ifdef Unix}
   if configpath='' then
-   configpath:=ExpandFileName(FixPath(exepath+'../etc/',false));
+   configpath:=ExpandFileName(FixPath(ExePath+'../etc/',false));
 {$endif}
   {
     Order to read configuration file :
@@ -3796,8 +3796,8 @@ begin
      else
 {$endif WINDOWS}
 {$ifndef Unix}
-      if CfgFileExists(exepath+fn) then
-       foundfn:=exepath+fn
+      if CfgFileExists(ExePath+fn) then
+       foundfn:=ExePath+fn
      else
 {$else}
       if CfgFileExists('/etc/'+fn) then
@@ -3814,41 +3814,41 @@ procedure read_arguments(cmd:TCmdStr);
 
   procedure def_cpu_macros;
     var
-      abi : tabi;
-      fputype : tfputype;
-      cputype : tcputype;
-      controller: tcontrollertype;
+      abi : TABI;
+      FPUType : TFPUType;
+      CPUType : TCPUType;
+      controller: TControllerType;
       s: string;
     begin
 
-      for cputype:=low(tcputype) to high(tcputype) do
-        undef_system_macro('CPU'+Cputypestr[cputype]);
-      def_system_macro('CPU'+Cputypestr[InitSettings.cputype]);
+      for CPUType:=low(TCPUType) to high(TCPUType) do
+        undef_system_macro('CPU'+CPUTypeStr[CPUType]);
+      def_system_macro('CPU'+CPUTypeStr[InitSettings.CPUType]);
 
-      for fputype:=low(tfputype) to high(tfputype) do
-        undef_system_macro('FPU'+fputypestr[fputype]);
-      def_system_macro('FPU'+fputypestr[InitSettings.fputype]);
+      for FPUType:=low(TFPUType) to high(TFPUType) do
+        undef_system_macro('FPU'+FPUTypeStr[FPUType]);
+      def_system_macro('FPU'+FPUTypeStr[InitSettings.FPUType]);
 
 {$PUSH}
 {$WARN 6018 OFF} { Unreachable code due to compile time evaluation }
       if ControllerSupport then
         begin
-          for controller:=low(tcontrollertype) to high(tcontrollertype) do
+          for controller:=low(TControllerType) to high(TControllerType) do
             begin
-              s:=embedded_controllers[controller].controllertypestr;
+              s:=embedded_controllers[controller].ControllerTypeStr;
               if s<>'' then
                 undef_system_macro('FPC_MCU_'+s);
             end;
-          s:=embedded_controllers[InitSettings.controllertype].controllertypestr;
+          s:=embedded_controllers[InitSettings.ControllerType].ControllerTypeStr;
           if s<>'' then
             def_system_macro('FPC_MCU_'+s);
         end;
 {$POP}
 
       { define abi }
-      for abi:=low(tabi) to high(tabi) do
-        undef_system_macro('FPC_ABI_'+abiinfo[abi].name);
-      def_system_macro('FPC_ABI_'+abiinfo[TargetInfo.abi].name);
+      for abi:=low(TABI) to high(TABI) do
+        undef_system_macro('FPC_ABI_'+ABIInfo[abi].name);
+      def_system_macro('FPC_ABI_'+ABIInfo[TargetInfo.abi].name);
 
       { this is not a switchable ABI in the sense of tabi, but it's an ABI
         nevertheless }
@@ -3961,18 +3961,18 @@ procedure read_arguments(cmd:TCmdStr);
     end;
 
 var
-  env: ansistring;
+  env: AnsiString;
   i : TFeature;
-  j : longint;
+  j : LongInt;
   tmplist : TCmdStrList;
   cmditem,
   tmpcmditem : TCmdStrListItem;
   cmdstr : TCmdStr;
 {$if defined(cpucapabilities)}
-  cpuflag : tcpuflags;
+  cpuflag : TCPUFlags;
 {$endif defined(cpucapabilities)}
 {$if defined(fpucapabilities)}
-  fpuflag : tfpuflags;
+  fpuflag : TFPUFlags;
 {$endif defined(fpucapabilities)}
 {$if defined(cpucapabilities) or defined(fpucapabilities)}
   hs : string;
@@ -3985,7 +3985,7 @@ begin
   Option.TargetOptions(true);
 
 { get default messagefile }
-  msgfilename:=GetEnvironmentVariable('PPC_ERROR_FILE');
+  MsgFileName:=GetEnvironmentVariable('PPC_ERROR_FILE');
 
 { default configfile can be specified on the commandline,
    remove it first }
@@ -4013,14 +4013,14 @@ begin
   { redefine target options so all defines are written even if no -Txxx is passed on the command line }
   Option.TargetOptions(true);
 
-  SetApptype(apptype);
+  SetApptype(AppType);
 
 { default defines }
   def_system_macro(TargetInfo.shortname);
   def_system_macro('FPC');
-  def_system_macro('VER'+version_nr);
-  def_system_macro('VER'+version_nr+'_'+release_nr);
-  def_system_macro('VER'+version_nr+'_'+release_nr+'_'+patch_nr);
+  def_system_macro('VER'+VersionNr);
+  def_system_macro('VER'+VersionNr+'_'+ReleaseNr);
+  def_system_macro('VER'+VersionNr+'_'+ReleaseNr+'_'+PatchNr);
 
 { Temporary defines, until things settle down }
   def_system_macro('FPC_HAS_OPERATOR_ENUMERATOR');
@@ -4037,12 +4037,12 @@ begin
   if (Option.parasubtarget<>'') then
     begin
     def_system_macro('FPC_SUBTARGET_'+Option.parasubtarget);
-    if cs_support_macro in InitSettings.moduleswitches then
+    if cs_support_macro in InitSettings.ModuleSwitches then
       set_system_macro('FPC_SUBTARGET',Option.parasubtarget)
     else
       set_system_compvar('FPC_SUBTARGET',Option.parasubtarget);
     // So it can be used in macro substitution.
-    globals.subtarget:=Option.parasubtarget;
+    Globals.SubTarget:=Option.parasubtarget;
     end;
 
   { make cpu makros available when reading the config files the second time }
@@ -4050,7 +4050,7 @@ begin
   set_endianess_macros;
 
   if tf_cld in TargetInfo.flags then
-    if not UpdateTargetSwitchStr('CLD', InitSettings.targetswitches, true) then
+    if not UpdateTargetSwitchStr('CLD', InitSettings.TargetSwitches, true) then
       InternalError(2013092801);
 
   { Android uses the NDK's unprefixed Clang with an explicit target triple.
@@ -4120,16 +4120,16 @@ begin
 {$ifndef Unix}
   param_file:=FixFileName(param_file);
 {$endif not unix}
-  inputfilepath:=ExtractFilePath(param_file);
-  inputfilename:=ExtractFileName(param_file);
-  if ExtractFileExt(inputfilename)='' then
+  InputFilePath:=ExtractFilePath(param_file);
+  InputFileName:=ExtractFileName(param_file);
+  if ExtractFileExt(InputFileName)='' then
     begin
-      if FileExists(inputfilepath+ChangeFileExt(inputfilename,sourceext)) then
-        inputfilename:=ChangeFileExt(inputfilename,sourceext)
-      else if ((m_mac in CurrentSettings.modeswitches) or
+      if FileExists(InputFilePath+ChangeFileExt(InputFileName,SourceExt)) then
+        InputFileName:=ChangeFileExt(InputFileName,SourceExt)
+      else if ((m_mac in CurrentSettings.ModeSwitches) or
               (tf_p_ext_support in TargetInfo.flags))
-             and FileExists(inputfilepath+ChangeFileExt(inputfilename,pext)) then
-        inputfilename:=ChangeFileExt(inputfilename,pext);
+             and FileExists(InputFilePath+ChangeFileExt(InputFileName,pext)) then
+        InputFileName:=ChangeFileExt(InputFileName,pext);
     end;
 
   { Check output dir }
@@ -4146,14 +4146,14 @@ begin
   IncludeSearchPath.AddList(option.ParaIncludePath,true);
   LibrarySearchPath.AddList(option.ParaLibraryPath,true);
   FrameworkSearchPath.AddList(option.ParaFrameworkPath,true);
-  packagesearchpath.addlist(option.parapackagepath,true);
+  PackageSearchPath.addlist(option.parapackagepath,true);
   for j:=0 to option.parapackages.count-1 do
     add_package(option.parapackages.NameOfIndex(j),true,true);
 
   { add default namespaces }
   tmplist:=TCmdStrList.Create;
   cmditem:=TCmdStrListItem(option.paranamespaces.First);
-  while assigned(cmditem) do
+  while Assigned(cmditem) do
     begin
       { use a temporary list cause if ";" are involved we need to reverse the
         order due to how TCmdStrList behaves }
@@ -4169,9 +4169,9 @@ begin
           tmplist.insert(cmdstr);
       until j=0;
       tmpcmditem:=TCmdStrListItem(tmplist.First);
-      while assigned(tmpcmditem) do
+      while Assigned(tmpcmditem) do
         begin
-          namespacelist.insert(tmpcmditem.Str);
+          NamespaceList.insert(tmpcmditem.Str);
           tmpcmditem:=TCmdStrListItem(tmpcmditem.Next);
         end;
       tmplist.clear;
@@ -4181,8 +4181,8 @@ begin
   tmplist := nil;
 
   { add unit environment and exepath to the unit search path }
-  if inputfilepath<>'' then
-   Unitsearchpath.AddPath(inputfilepath,true);
+  if InputFilePath<>'' then
+   UnitSearchPath.AddPath(InputFilePath,true);
   if not disable_configfile then
     begin
       env:=GetEnvironmentVariable(TargetInfo.unit_env);
@@ -4194,10 +4194,10 @@ begin
   fpcdir:=FixPath(GetEnvironmentVariable('FPCDIR'),false);
   if fpcdir='' then
     begin
-      if PathExists('/usr/local/lib/fpc/'+version_string,true) then
-        fpcdir:='/usr/local/lib/fpc/'+version_string+'/'
+      if PathExists('/usr/local/lib/fpc/'+Version_String,true) then
+        fpcdir:='/usr/local/lib/fpc/'+Version_String+'/'
       else
-        fpcdir:='/usr/lib/fpc/'+version_string+'/';
+        fpcdir:='/usr/lib/fpc/'+Version_String+'/';
     end;
 {$else unix}
   fpcdir:=FixPath(GetEnvironmentVariable('FPCDIR'),false);
@@ -4228,12 +4228,12 @@ begin
   { Add exepath if the exe is not in the current dir, because that is always searched already.
     Do not add it when linking on the target because then we can maybe already find
     .o files that are not for the target }
-  if (ExePath<>cfileutl.GetCurrentDir) and
-     not(cs_link_on_target in InitSettings.globalswitches) then
+  if (ExePath<>CFileUtl.GetCurrentDir) and
+     not(cs_link_on_target in InitSettings.GlobalSwitches) then
    UnitSearchPath.AddPath(ExePath,false);
   { Add unit dir to the object and library path }
-  objectsearchpath.AddList(unitsearchpath,false);
-  librarysearchpath.AddList(unitsearchpath,false);
+  ObjectSearchPath.AddList(UnitSearchPath,false);
+  LibrarySearchPath.AddList(UnitSearchPath,false);
 
 
   { maybe override assembler }
@@ -4248,7 +4248,7 @@ begin
         end;
       if not SetTargetAsm(option.paratargetasm) then
         begin
-          if assigned(asminfos[option.paratargetasm]) then
+          if Assigned(asminfos[option.paratargetasm]) then
             Message2(option_incompatible_asm,asminfos[option.paratargetasm]^.idtxt,TargetInfo.name)
           else
             Message2(option_incompatible_asm,'<invalid assembler>',TargetInfo.name);
@@ -4261,7 +4261,7 @@ begin
           Message1(option_confict_asm_debug,
             asminfos[option.paratargetasm]^.idtxt);
           option.paratargetdbg:=dbg_none;
-          exclude(InitSettings.moduleswitches,cs_debuginfo);
+          exclude(InitSettings.ModuleSwitches,cs_debuginfo);
         end;
       { Some assemblers, like clang, do not support
         stabs debugging format, switch to DWARF 3 in that case }
@@ -4282,9 +4282,9 @@ begin
 
   { switch assembler if it's binary and we got -a on the cmdline }
   if (af_outputbinary in TargetAsm.flags) and
-     ((cs_asm_leave in InitSettings.globalswitches) or
+     ((cs_asm_leave in InitSettings.GlobalSwitches) or
       { if -s is passed, we shouldn't call the internal assembler }
-      (cs_asm_extern in InitSettings.globalswitches)) or
+      (cs_asm_extern in InitSettings.GlobalSwitches)) or
       ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
    begin
      if ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
@@ -4304,25 +4304,25 @@ begin
 
   { Force use of external linker if there is no
     internal linker or the linking is skipped }
-  if not(cs_link_extern in InitSettings.globalswitches) and
+  if not(cs_link_extern in InitSettings.GlobalSwitches) and
      ((TargetInfo.link=ld_none) or
-      (cs_link_nolink in InitSettings.globalswitches)) then
+      (cs_link_nolink in InitSettings.GlobalSwitches)) then
     begin
-      include(InitSettings.globalswitches,cs_link_extern);
+      include(InitSettings.GlobalSwitches,cs_link_extern);
     end;
 
   { turn off stripping if compiling with debuginfo }
-  if (cs_debuginfo in InitSettings.moduleswitches) and
-     not(cs_link_separate_dbg_file in InitSettings.globalswitches) then
-    exclude(InitSettings.globalswitches,cs_link_strip);
+  if (cs_debuginfo in InitSettings.ModuleSwitches) and
+     not(cs_link_separate_dbg_file in InitSettings.GlobalSwitches) then
+    exclude(InitSettings.GlobalSwitches,cs_link_strip);
 
   { choose a reasonable tls model }
-  if (tf_section_threadvars in TargetInfo.flags) and (InitSettings.tlsmodel=tlsm_none) then
+  if (tf_section_threadvars in TargetInfo.flags) and (InitSettings.TLSModel=tlsm_none) then
     begin
-      if cs_create_pic in InitSettings.moduleswitches then
-        InitSettings.tlsmodel:=tlsm_global_dynamic
+      if cs_create_pic in InitSettings.ModuleSwitches then
+        InitSettings.TLSModel:=tlsm_global_dynamic
       else
-        InitSettings.tlsmodel:=tlsm_local_exec;
+        InitSettings.TLSModel:=tlsm_local_exec;
     end;
 
   { set Mac OS X version default macros if not specified explicitly }
@@ -4334,12 +4334,12 @@ begin
       begin
         { set default cpu type to PentiumM for Android unless specified otherwise }
         if not option.CPUSetExplicitly then
-          InitSettings.cputype:=cpu_PentiumM;
+          InitSettings.CPUType:=cpu_PentiumM;
         if not option.OptCPUSetExplicitly then
-          InitSettings.optimizecputype:=cpu_PentiumM;
+          InitSettings.OptimizeCPUType:=cpu_PentiumM;
         { set default fpu type to SSSE3 for Android unless specified otherwise }
         if not option.FPUSetExplicitly then
-          InitSettings.fputype:=fpu_ssse3;
+          InitSettings.FPUType:=fpu_ssse3;
       end;
     else
       ;
@@ -4352,9 +4352,9 @@ begin
     system_aarch64_darwin:
       begin
         if not option.CPUSetExplicitly then
-          InitSettings.cputype:=cpu_armv84a;
+          InitSettings.CPUType:=cpu_armv84a;
         if not option.OptCPUSetExplicitly then
-          InitSettings.optimizecputype:=cpu_armv84a;
+          InitSettings.OptimizeCPUType:=cpu_armv84a;
       end;
     else
       ;
@@ -4373,14 +4373,14 @@ begin
     if asmcputype is cpu_none,
     at least as long as there is no explicit
     option to set it on command line PM }
-  if InitSettings.asmcputype = cpu_none then
-    InitSettings.asmcputype:=InitSettings.cputype;
+  if InitSettings.AsmCPUType = cpu_none then
+    InitSettings.AsmCPUType:=InitSettings.CPUType;
 
 {$if defined(cpucapabilities)}
   for cpuflag:=low(cpuflag) to high(cpuflag) do
     begin
       str(cpuflag,hs);
-      if cpuflag in cpu_capabilities[InitSettings.cputype] then
+      if cpuflag in cpu_capabilities[InitSettings.CPUType] then
         def_system_macro(hs)
       else
         undef_system_macro(hs);
@@ -4390,14 +4390,14 @@ begin
   for fpuflag:=low(fpuflag) to high(fpuflag) do
     begin
       str(fpuflag,hs);
-      if fpuflag in fpu_capabilities[InitSettings.fputype] then
+      if fpuflag in fpu_capabilities[InitSettings.FPUType] then
         def_system_macro(hs)
       else
         undef_system_macro(hs);
     end;
 {$endif defined(fpucapabilities)}
 
-  if InitSettings.fputype<>fpu_none then
+  if InitSettings.FPUType<>fpu_none then
     begin
 {$if defined(i386)}
       def_system_macro('FPC_HAS_TYPE_EXTENDED');
@@ -4436,7 +4436,7 @@ begin
 
 { hardware FMA support }
 {$if defined(i386) or defined(x86_64)}
-  if (fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
+  if (fpu_capabilities[CurrentSettings.FPUType]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
     begin
       def_system_macro('FPC_HAS_FAST_FMA_SINGLE');
       def_system_macro('FPC_HAS_FAST_FMA_DOUBLE');
@@ -4459,7 +4459,7 @@ begin
       if option.LinkInternSetExplicitly then
         Message(link_w_unsupported_cross_endian_internal_linker)
       else
-        include(InitSettings.globalswitches,cs_link_extern);
+        include(InitSettings.GlobalSwitches,cs_link_extern);
     end;
 
   { Default alignment settings,
@@ -4470,29 +4470,29 @@ begin
   UpdateAlignment(InitSettings.alignment,TargetInfo.alignment);
 
 
-  if (cs_opt_size in InitSettings.optimizerswitches) then
+  if (cs_opt_size in InitSettings.OptimizerSwitches) then
    begin
-     InitSettings.alignment.procalign:=1;
-     InitSettings.alignment.jumpalign:=1;
-     InitSettings.alignment.coalescealign:=1;
-     InitSettings.alignment.loopalign:=1;
+     InitSettings.alignment.ProcAlign:=1;
+     InitSettings.alignment.JumpAlign:=1;
+     InitSettings.alignment.CoalesceAlign:=1;
+     InitSettings.alignment.LoopAlign:=1;
 {$ifdef x86}
      { constalignmax=1 keeps the executable and thus the memory foot print small but
        all processors except x86 are really hurt by this or might even crash ... }
 {$ifndef x86_64}
      { ... and will segfault if not aligned for SSE instructions }
-     if not (CPUX86_HAS_SSEUNIT in cpu_capabilities[InitSettings.cputype]) then
-       InitSettings.alignment.constalignmax:=1;
+     if not (CPUX86_HAS_SSEUNIT in cpu_capabilities[InitSettings.CPUType]) then
+       InitSettings.alignment.ConstAlignMax:=1;
 {$endif not x86_64}
 {$endif x86}
    end;
 
   UpdateAlignment(InitSettings.alignment,option.paraalignment);
 
-  set_system_macro('FPC_VERSION',version_nr);
-  set_system_macro('FPC_RELEASE',release_nr);
-  set_system_macro('FPC_PATCH',patch_nr);
-  set_system_macro('FPC_FULLVERSION',Format('%d%.02d%.02d',[StrToInt(version_nr),StrToInt(release_nr),StrToInt(patch_nr)]));
+  set_system_macro('FPC_VERSION',VersionNr);
+  set_system_macro('FPC_RELEASE',ReleaseNr);
+  set_system_macro('FPC_PATCH',PatchNr);
+  set_system_macro('FPC_FULLVERSION',Format('%d%.02d%.02d',[StrToInt(VersionNr),StrToInt(ReleaseNr),StrToInt(PatchNr)]));
 
   if TargetInfo.system in systems_indirect_entry_information then
     def_system_macro('FPC_HAS_INDIRECT_ENTRY_INFORMATION');
@@ -4506,13 +4506,13 @@ begin
   if TargetInfo.system in systems_indirect_var_imports then
     def_system_macro('FPC_HAS_INDIRECT_VAR_ACCESS');
 
-  if cs_compilesystem in InitSettings.moduleswitches then
+  if cs_compilesystem in InitSettings.ModuleSwitches then
     for i:=low(TFeature) to high(TFeature) do
-      if i in features then
-        def_system_macro('FPC_HAS_FEATURE_'+featurestr[i]);
+      if i in Features then
+        def_system_macro('FPC_HAS_FEATURE_'+FeatureStr[i]);
 
   { as stackalign is not part of the alignment record, we do not need to define the others alignments for symmetry yet }
-  set_system_macro('FPC_STACKALIGNMENT',tostr(TargetInfo.stackalign));
+  set_system_macro('FPC_STACKALIGNMENT',ToStr(TargetInfo.stackalign));
 
   option.free;
   Option:=nil;
@@ -4528,9 +4528,9 @@ end;
 
 
 initialization
-  coption:=toption;
+  coption:=TOption;
 finalization
-  if assigned(option) then
+  if Assigned(option) then
    option.free;
    option := nil;
 end.

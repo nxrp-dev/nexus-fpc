@@ -35,23 +35,23 @@ uses
   type
     TRawWriter=class(TObject)
       public
-        procedure WriteRaw(const data; datasize: Integer); virtual; abstract;
+        procedure WriteRaw(const data; DataSize: Integer); virtual; abstract;
       end;
 
     TRawReader=class(TObject)
       public
-        function ReadRaw(var data; datasize: Integer): Integer; virtual; abstract;
+        function ReadRaw(var data; DataSize: Integer): Integer; virtual; abstract;
         function Seek(pos: qword): Boolean; virtual; abstract;
         function ReadPos: qword; virtual; abstract;
       end;
 
     TMachHeader=record
-      cputype     : cpu_type_t;
-      cpusubtype  : cpu_subtype_t;
-      filetype    : longword;
-      ncmds       : longword;
-      sizeofcmds  : longword;
-      flags       : longword;
+      CPUType     : TMachCPUType;
+      cpusubtype  : TMachCPUSubType;
+      filetype    : LongWord;
+      ncmds       : LongWord;
+      sizeofcmds  : LongWord;
+      flags       : LongWord;
     end;
 
     TSegmentName=string[16];
@@ -63,30 +63,30 @@ uses
       vmsize     : qword;
       fileoff    : qword;
       filesize   : qword;
-      maxprot    : vm_prot_t;
-      initprot   : vm_prot_t;
-      nsects     : longword;
-      flags      : longword;
+      maxprot    : TMachVMProt;
+      initprot   : TMachVMProt;
+      nsects     : LongWord;
+      flags      : LongWord;
     end;
 
     TMachoSection=record
       sectname  : TSectionName;
       segname   : TSegmentName;
-      addr      : uint64_t;
-      size      : uint64_t;
-      offset    : uint32_t;
-      align     : uint32_t;
-      reloff    : uint32_t;
-      nreloc    : uint32_t;
-      flags     : uint32_t;
+      addr      : TMachUInt64;
+      size      : TMachUInt64;
+      offset    : TMachUInt32;
+      align     : TMachUInt32;
+      reloff    : TMachUInt32;
+      nreloc    : TMachUInt32;
+      flags     : TMachUInt32;
 
       indirectIndex  : Integer; // reserved1 for LAZY and NON_LAZY pointers
       stubSize       : Integer; // reserved2 for S_SYMBOL_STUBS
     end;
 
     TMachoRoutine=record
-      init_address : uint64_t;    { address of initialization routine  }
-      init_module  : uint64_t;    { index into the module table that  }
+      init_address : TMachUInt64;    { address of initialization routine  }
+      init_module  : TMachUInt64;    { index into the module table that  }
     end;
 
     { TMachoWriter }
@@ -101,13 +101,13 @@ uses
         destructor Destroy; override;
 
         { non platform specific writer }
-        procedure WriteData(const data; dataSize: Integer);
-        procedure WriteUint8(i: uint8_t);
+        procedure WriteData(const data; DataSize: Integer);
+        procedure WriteUint8(i: TMachUInt8);
 
         { endian specific writer }
-        procedure WriteUint16(i: uint16_t); virtual; abstract;
-        procedure WriteUint32(i: uint32_t); virtual; abstract;
-        procedure WriteUint64(i: uint64_t); virtual; abstract;
+        procedure WriteUint16(i: TMachUInt16); virtual; abstract;
+        procedure WriteUint32(i: TMachUInt32); virtual; abstract;
+        procedure WriteUint64(i: TMachUInt64); virtual; abstract;
 
         { endian and ptr-size specific writer }
         procedure WritePtr(ofs: QWord); virtual; abstract; // ptr is 32 bit for 32-bit platforms
@@ -118,30 +118,30 @@ uses
         procedure WriteSegmentCmd(const seg: TMachoSegment; cmdSize: LongWord); virtual; abstract;
         procedure WriteSection(const sec: TMachoSection); virtual; abstract;
         procedure WriteRoutineCmd(const rt: TMachoRoutine); virtual; abstract;
-        procedure WriteLoadCommand(const cmd: load_command); virtual; abstract; overload;
+        procedure WriteLoadCommand(const cmd: TMachRawLoadCommand); virtual; abstract; overload;
         procedure WriteLoadCommand(cmd, cmdsize: Integer); overload;
-        procedure WriteRelocation(const ri: relocation_info); virtual; abstract;
-        procedure WriteScatterReloc(const ri: scattered_relocation_info); virtual; abstract;
-        procedure WriteNList(const list: nlist_64); virtual; abstract;
+        procedure WriteRelocation(const ri: TMachRawRelocationInfo); virtual; abstract;
+        procedure WriteScatterReloc(const ri: TMachRawScatteredRelocationInfo); virtual; abstract;
+        procedure WriteNList(const list: TMachRawNList64); virtual; abstract;
       end;
 
     { TLE32MachoWriter }
 
     TLE32MachoWriter=class(TMachoWriter)
       public
-        procedure WriteUint16(i: uint16_t); override;
-        procedure WriteUint32(i: uint32_t); override;
-        procedure WriteUint64(i: uint64_t); override;
+        procedure WriteUint16(i: TMachUInt16); override;
+        procedure WriteUint32(i: TMachUInt32); override;
+        procedure WriteUint64(i: TMachUInt64); override;
         procedure WritePtr(ofs: QWord); override;
 
         procedure WriteHeader(const hdr: TMachHeader); override;
         procedure WriteSegmentCmd(const seg: TMachoSegment; ACmdSize: LongWord); override;
         procedure WriteSection(const sec: TMachoSection); override;
         procedure WriteRoutineCmd(const rt: TMachoRoutine); override;
-        procedure WriteLoadCommand(const cmd: load_command); override;
-        procedure WriteRelocation(const ri: relocation_info); override;
-        procedure WriteScatterReloc(const ri: scattered_relocation_info); override;
-        procedure WriteNList(const list: nlist_64); override;
+        procedure WriteLoadCommand(const cmd: TMachRawLoadCommand); override;
+        procedure WriteRelocation(const ri: TMachRawRelocationInfo); override;
+        procedure WriteScatterReloc(const ri: TMachRawScatteredRelocationInfo); override;
+        procedure WriteNList(const list: TMachRawNList64); override;
       end;
 
     { TLE64MachoWriter }
@@ -154,26 +154,26 @@ uses
         procedure WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord); override;
         procedure WriteSection(const sec: TMachoSection); override;
         procedure WriteRoutineCmd(const rt: TMachoRoutine); override;
-        procedure WriteNList(const list: nlist_64); override;
+        procedure WriteNList(const list: TMachRawNList64); override;
       end;
 
     { TBE32MachoWriter }
 
     TBE32MachoWriter=class(TMachoWriter)
       public
-        procedure WriteUint16(i: uint16_t); override;
-        procedure WriteUint32(i: uint32_t); override;
-        procedure WriteUint64(i: uint64_t); override;
+        procedure WriteUint16(i: TMachUInt16); override;
+        procedure WriteUint32(i: TMachUInt32); override;
+        procedure WriteUint64(i: TMachUInt64); override;
         procedure WritePtr(ofs: QWord); override;
 
         procedure WriteHeader(const hdr: TMachHeader); override;
         procedure WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord); override;
         procedure WriteSection(const sec: TMachoSection); override;
         procedure WriteRoutineCmd(const rt: TMachoRoutine); override;
-        procedure WriteLoadCommand(const cmd: load_command); override;
-        procedure WriteRelocation(const ri: relocation_info); override;
-        procedure WriteScatterReloc(const ri: scattered_relocation_info); override;
-        procedure WriteNList(const list: nlist_64); override;
+        procedure WriteLoadCommand(const cmd: TMachRawLoadCommand); override;
+        procedure WriteRelocation(const ri: TMachRawRelocationInfo); override;
+        procedure WriteScatterReloc(const ri: TMachRawScatteredRelocationInfo); override;
+        procedure WriteNList(const list: TMachRawNList64); override;
       end;
 
       { TBE64MachoWriter }
@@ -186,7 +186,7 @@ uses
         procedure WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord); override;
         procedure WriteSection(const sec: TMachoSection); override;
         procedure WriteRoutineCmd(const rt: TMachoRoutine); override;
-        procedure WriteNList(const list: nlist_64); override;
+        procedure WriteNList(const list: TMachRawNList64); override;
       end;
 
 
@@ -195,13 +195,13 @@ uses
     { converter for Little-endian structures to Host }
     TLEMachoStructConverter = class(TObject)
       public
-        procedure ConvertMachoHeader(const mh: mach_header; var hdr: TMachHeader); virtual;
-        procedure ConvertMachoHeader64(const mh: mach_header_64; var hdr: TMachHeader); virtual;
-        procedure ConvertLoadCommand(var cmd: load_command); virtual;
-        procedure ConvertSegment(const segcmd: segment_command; var segment: TMachoSegment); virtual;
-        procedure ConvertSegment64(const segcmd: segment_command_64; var segment: TMachoSegment); virtual;
-        procedure ConvertSection(const sec: section; var section: TMachoSection); virtual;
-        procedure ConvertSection64(const sec: section_64; var section: TMachoSection); virtual;
+        procedure ConvertMachoHeader(const mh: TMachRawHeader; var hdr: TMachHeader); virtual;
+        procedure ConvertMachoHeader64(const mh: TMachRawHeader64; var hdr: TMachHeader); virtual;
+        procedure ConvertLoadCommand(var cmd: TMachRawLoadCommand); virtual;
+        procedure ConvertSegment(const segcmd: TMachRawSegmentCommand; var segment: TMachoSegment); virtual;
+        procedure ConvertSegment64(const segcmd: TMachRawSegmentCommand64; var segment: TMachoSegment); virtual;
+        procedure ConvertSection(const sec: TMachRawSection; var section: TMachoSection); virtual;
+        procedure ConvertSection64(const sec: TMachRawSection64; var section: TMachoSection); virtual;
 
         procedure ConvertUInt16(var v: Word); virtual;
         procedure ConvertUInt32(var v: LongWord); virtual;
@@ -224,26 +224,26 @@ uses
         fHdr    : TMachHeader;
         is64    : Boolean;
         cmdofs  : array of qword;
-        cmds    : array of load_command;
+        cmds    : array of TMachRawLoadCommand;
       protected
         function IntReadStruct: Boolean;
       public
         constructor Create(ARawReader: TRawReader; StartOfs: QWord=0);
         function ReadHeader(var hdr: TMachHeader): Boolean;
-        function ReadCommandID(index: LongWord; var cmd: load_command): Boolean;
+        function ReadCommandID(index: LongWord; var cmd: TMachRawLoadCommand): Boolean;
         function GetCmdOfs(index: LongWord): qword;
 
         function ReadSegmentCommand(cmdindex: LongWord; var segment: TMachoSegment): Boolean;
         function ReadSection(segindex, secindex: LongWord; var machsection: TMachoSection): Boolean;
 
-        function ReadSymTabCmd(var symcmd: symtab_command): Boolean;
+        function ReadSymTabCmd(var symcmd: TMachRawSymtabCommand): Boolean;
 
         function ReadUInt32(var v: LongWord): Boolean;
-        function ReadData(var data; dataSize: Integer): Integer;
+        function ReadData(var data; DataSize: Integer): Integer;
 
         {todo: ReadNList - using index of symbol, instead of file offset?}
         function GetNListSize: Integer;
-        function ReadNList(fileofs: qword; var nsym: nlist_64): Boolean;
+        function ReadNList(fileofs: qword; var nsym: TMachRawNList64): Boolean;
 
         procedure Seek(apos: qword);
       end;
@@ -255,14 +255,14 @@ uses
       seg_IMPORT : TSegmentName = '__IMPORT';
       seg_DWARF  : TSegmentName = '__DWARF';
 
-    function AllocMachoWriter(cputarget: cpu_type_t; ARawWriter: TRawWriter; AllowFreeWriter: Boolean): TMachoWriter;
+    function AllocMachoWriter(cputarget: TMachCPUType; ARawWriter: TRawWriter; AllowFreeWriter: Boolean): TMachoWriter;
 
-    function sizeMachHeader(cputarget: cpu_type_t): integer;
-    function sizeSegment(cputarget: cpu_type_t): integer;
-    function sizeSection(cputarget: cpu_type_t): integer;
-    function sizeNList(cputarget: cpu_type_t): integer;
+    function sizeMachHeader(cputarget: TMachCPUType): integer;
+    function sizeSegment(cputarget: TMachCPUType): integer;
+    function sizeSection(cputarget: TMachCPUType): integer;
+    function sizeNList(cputarget: TMachCPUType): integer;
 
-    function AlignAddr(cputarget: cpu_type_t; addr: qword): qword;
+    function AlignAddr(cputarget: TMachCPUType; addr: qword): qword;
 
     procedure InitSegment(var seg: TMachoSegment);
 
@@ -274,8 +274,8 @@ uses
     type
       TRelocInfoLength = (ril_byte = 0, ril_word = 1, ril_long = 2, ril_quad = 3);
 
-    procedure RelocInfo(addr, symnum, reltype: integer; len: TRelocInfoLength; pcrel, extern: Boolean; var info: relocation_info);
-    procedure ScatterRelocInfo(value, addr, reltype: integer; len: TRelocInfoLength; pcrel: Boolean; var info: scattered_relocation_info);
+    procedure RelocInfo(addr, symnum, reltype: integer; len: TRelocInfoLength; pcrel, extern: Boolean; var info: TMachRawRelocationInfo);
+    procedure ScatterRelocInfo(value, addr, reltype: integer; len: TRelocInfoLength; pcrel: Boolean; var info: TMachRawScatteredRelocationInfo);
 
     function GetReserved1(const macho: TMachoSection): integer;
     function GetReserved2(const macho: TMachoSection): integer;
@@ -357,7 +357,7 @@ implementation
     end;
 
 
-  procedure RelocInfo(addr, symnum, reltype: integer; len: TRelocInfoLength; pcrel, extern: Boolean; var info: relocation_info);
+  procedure RelocInfo(addr, symnum, reltype: integer; len: TRelocInfoLength; pcrel, extern: Boolean; var info: TMachRawRelocationInfo);
     {$ifdef ENDIAN_BIG}
     const
       relbit : array [Boolean] of Integer = (0, 1 shl 7);
@@ -395,7 +395,7 @@ const
     si_addr_ofs    = 0;
 
 
-  procedure ScatterRelocInfo(value, addr, reltype: integer; len: TRelocInfoLength; pcrel: Boolean; var info: scattered_relocation_info);
+  procedure ScatterRelocInfo(value, addr, reltype: integer; len: TRelocInfoLength; pcrel: Boolean; var info: TMachRawScatteredRelocationInfo);
     const
       relbit : array [Boolean] of Integer = (0, si_pcrel_bit);
     begin
@@ -491,12 +491,12 @@ const
 
 
   const
-    is64MachHeaderSize : array [Boolean] of Integer = ( sizeof(mach_header),  sizeof(mach_header_64));
-    is64SectionSize : array [Boolean] of Integer = ( sizeof(section),  sizeof(section_64));
-    is64SegmentSize : array [Boolean] of Integer = ( sizeof(segment_command),  sizeof(segment_command_64));
-    is64NListSize : array [Boolean] of Integer = (sizeof(nlist), sizeof(nlist_64));
+    is64MachHeaderSize : array [Boolean] of Integer = ( sizeof(TMachRawHeader),  sizeof(TMachRawHeader64));
+    is64SectionSize : array [Boolean] of Integer = ( sizeof(TMachRawSection),  sizeof(TMachRawSection64));
+    is64SegmentSize : array [Boolean] of Integer = ( sizeof(TMachRawSegmentCommand),  sizeof(TMachRawSegmentCommand64));
+    is64NListSize : array [Boolean] of Integer = (sizeof(TMachRawNList), sizeof(TMachRawNList64));
 
-  function AlignAddr(cputarget: cpu_type_t; addr: qword): qword;
+  function AlignAddr(cputarget: TMachCPUType; addr: qword): qword;
     var
       md  : array [Boolean] of integer = (4, 8);
       p   : PtrUInt;
@@ -507,31 +507,31 @@ const
     end;
 
 
-  function sizeMachHeader(cputarget: cpu_type_t): integer;
+  function sizeMachHeader(cputarget: TMachCPUType): integer;
     begin
       Result:=is64MachHeaderSize[ cputarget and CPU_ARCH_ABI64 > 0];
     end;
 
 
-  function sizeSegment(cputarget: cpu_type_t): integer;
+  function sizeSegment(cputarget: TMachCPUType): integer;
     begin
       Result:=is64SegmentSize[ cputarget and CPU_ARCH_ABI64 > 0];
     end;
 
 
-  function sizeSection(cputarget: cpu_type_t): integer;
+  function sizeSection(cputarget: TMachCPUType): integer;
     begin
       Result:=is64SectionSize[ cputarget and CPU_ARCH_ABI64 > 0];
     end;
 
 
-  function sizeNList(cputarget: cpu_type_t): integer;
+  function sizeNList(cputarget: TMachCPUType): integer;
     begin
       Result:=is64NlistSize[ cputarget and CPU_ARCH_ABI64 > 0];
     end;
 
 
-  function AllocMachoWriter(cputarget: cpu_type_t; ARawWriter: TRawWriter; AllowFreeWriter: Boolean): TMachoWriter;
+  function AllocMachoWriter(cputarget: TMachCPUType; ARawWriter: TRawWriter; AllowFreeWriter: Boolean): TMachoWriter;
     begin
       case cputarget of
         CPU_TYPE_I386,
@@ -552,15 +552,15 @@ const
 
   { TMachoWriter }
 
-  procedure TMachoWriter.WriteData(const data; dataSize: Integer);
+  procedure TMachoWriter.WriteData(const data; DataSize: Integer);
     begin
-      if not assigned(fwriter) then
+      if not Assigned(fwriter) then
         Exit;
-      fwriter.WriteRaw(data, dataSize);
+      fwriter.WriteRaw(data, DataSize);
     end;
 
 
-  procedure TMachoWriter.WriteUint8(i: uint8_t);
+  procedure TMachoWriter.WriteUint8(i: TMachUInt8);
     begin
       WriteData(i, sizeof(i));
     end;
@@ -568,7 +568,7 @@ const
 
   procedure TMachoWriter.WriteLoadCommand(cmd, cmdsize: Integer);
     var
-      m : load_command;
+      m : TMachRawLoadCommand;
     begin
       m.cmd:=cmd;
       m.cmdsize:=cmdsize;
@@ -597,12 +597,12 @@ const
 
   procedure TLE32MachoWriter.WriteHeader(const hdr: TMachHeader);
     var
-      m : mach_header;
+      m : TMachRawHeader;
     begin
       with m do
         begin
           magic:=NtoLE(MH_MAGIC);
-          cputype:=NtoLE(hdr.cputype);
+          CPUType:=NtoLE(hdr.CPUType);
           cpusubtype:=NtoLE(hdr.cpusubtype);
           filetype:=NtoLE(hdr.filetype);
           ncmds:=NtoLE(hdr.ncmds);
@@ -615,17 +615,17 @@ const
 
   procedure TLE32MachoWriter.WriteSegmentCmd(const seg: TMachoSegment; ACmdSize: LongWord);
     var
-      m : segment_command;
+      m : TMachRawSegmentCommand;
     begin
       with m do
         begin
           cmd:=NtoLE(LC_SEGMENT);
           cmdsize:=NtoLE(ACmdSize);
           segname:=seg.segname;
-          vmaddr:=NtoLE(uint32_t(seg.vmaddr));
-          vmsize:=NtoLE(uint32_t(seg.vmsize));
-          fileoff:=NtoLE(uint32_t(seg.fileoff));
-          filesize:=NtoLE(uint32_t(seg.filesize));
+          vmaddr:=NtoLE(TMachUInt32(seg.vmaddr));
+          vmsize:=NtoLE(TMachUInt32(seg.vmsize));
+          fileoff:=NtoLE(TMachUInt32(seg.fileoff));
+          filesize:=NtoLE(TMachUInt32(seg.filesize));
           maxprot:=NtoLE(seg.maxprot);
           initprot:=NtoLE(seg.initprot);
           nsects:=NtoLE(seg.nsects);
@@ -637,7 +637,7 @@ const
 
   procedure TLE32MachoWriter.WriteSection(const sec: TMachoSection);
     var
-      m : section;
+      m : TMachRawSection;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -660,7 +660,7 @@ const
 
   procedure TLE32MachoWriter.WriteRoutineCmd(const rt: TMachoRoutine);
     var
-      m : routines_command;
+      m : TMachRawRoutinesCommand;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -674,9 +674,9 @@ const
     end;
 
 
-  procedure TLE32MachoWriter.WriteLoadCommand(const cmd: load_command);
+  procedure TLE32MachoWriter.WriteLoadCommand(const cmd: TMachRawLoadCommand);
     var
-      m : load_command;
+      m : TMachRawLoadCommand;
     begin
       m.cmd:=NtoLE(cmd.cmd);
       m.cmdsize:=NtoLE(cmd.cmdsize);
@@ -684,9 +684,9 @@ const
     end;
 
 
-  procedure TLE32MachoWriter.WriteRelocation(const ri: relocation_info);
+  procedure TLE32MachoWriter.WriteRelocation(const ri: TMachRawRelocationInfo);
     var
-      m : relocation_info;
+      m : TMachRawRelocationInfo;
     begin
       m.r_address:=NtoLE(ri.r_address);
       m.r_info:=NtoLE(ri.r_info);
@@ -694,7 +694,7 @@ const
     end;
 
 
-  procedure TLE32MachoWriter.WriteScatterReloc(const ri: scattered_relocation_info);
+  procedure TLE32MachoWriter.WriteScatterReloc(const ri: TMachRawScatteredRelocationInfo);
     var
       m : LongWord;
     begin
@@ -706,9 +706,9 @@ const
     end;
 
 
-  procedure TLE32MachoWriter.WriteNList(const list: nlist_64);
+  procedure TLE32MachoWriter.WriteNList(const list: TMachRawNList64);
     var
-      m : nlist;
+      m : TMachRawNList;
     begin
       m.n_un.n_strx:=NtoLe(list.n_un.n_strx);
       m.n_type:=NtoLe(list.n_type);
@@ -719,27 +719,27 @@ const
     end;
 
 
-  procedure TLE32MachoWriter.WriteUint16(i: uint16_t);
+  procedure TLE32MachoWriter.WriteUint16(i: TMachUInt16);
     var
-      m: uint16_t;
+      m: TMachUInt16;
     begin
       m:=NtoLE(i);
       WriteData(m, sizeof(m));
     end;
 
 
-  procedure TLE32MachoWriter.WriteUint32(i: uint32_t);
+  procedure TLE32MachoWriter.WriteUint32(i: TMachUInt32);
     var
-      m: uint32_t;
+      m: TMachUInt32;
     begin
       m:=NtoLE(i);
       WriteData(m, sizeof(m));
     end;
 
 
-  procedure TLE32MachoWriter.WriteUint64(i: uint64_t);
+  procedure TLE32MachoWriter.WriteUint64(i: TMachUInt64);
     var
-      m: uint64_t;
+      m: TMachUInt64;
     begin
       m:=NtoLE(i);
       WriteData(m, sizeof(m));
@@ -748,7 +748,7 @@ const
 
   procedure TLE32MachoWriter.WritePtr(ofs: QWord);
     var
-      m: uint32_t;
+      m: TMachUInt32;
     begin
       m:=NtoLE(ofs);
       WriteData(m, sizeof(m));
@@ -759,7 +759,7 @@ const
 
   procedure TLE64MachoWriter.WritePtr(ofs: QWord);
     var
-      m : uint64_t;
+      m : TMachUInt64;
     begin
       m:=NtoLE(ofs);
       Writedata(m, sizeof(m));
@@ -768,12 +768,12 @@ const
 
   procedure TLE64MachoWriter.WriteHeader(const hdr: TMachHeader);
     var
-      m : mach_header_64;
+      m : TMachRawHeader64;
     begin
       with m do
         begin
           magic:=NtoLE(MH_MAGIC_64);
-          cputype:=NtoLE(hdr.cputype);
+          CPUType:=NtoLE(hdr.CPUType);
           cpusubtype:=NtoLE(hdr.cpusubtype);
           filetype:=NtoLE(hdr.filetype);
           ncmds:=NtoLE(hdr.ncmds);
@@ -787,7 +787,7 @@ const
 
   procedure TLE64MachoWriter.WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord);
     var
-      m : segment_command_64;
+      m : TMachRawSegmentCommand64;
     begin
       with m do
         begin
@@ -809,7 +809,7 @@ const
 
   procedure TLE64MachoWriter.WriteSection(const sec: TMachoSection);
     var
-      m : section_64;
+      m : TMachRawSection64;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -832,7 +832,7 @@ const
 
   procedure TLE64MachoWriter.WriteRoutineCmd(const rt: TMachoRoutine);
     var
-      m : routines_command_64;
+      m : TMachRawRoutinesCommand64;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -846,9 +846,9 @@ const
     end;
 
 
-  procedure TLE64MachoWriter.WriteNList(const list: nlist_64);
+  procedure TLE64MachoWriter.WriteNList(const list: TMachRawNList64);
     var
-      m : nlist_64;
+      m : TMachRawNList64;
     begin
       m.n_un.n_strx:=NtoLe(list.n_un.n_strx);
       m.n_type:=NtoLe(list.n_type);
@@ -863,12 +863,12 @@ const
 
   procedure TBE32MachoWriter.WriteHeader(const hdr: TMachHeader);
     var
-      m : mach_header;
+      m : TMachRawHeader;
     begin
       with m do
         begin
           magic:=NtoBE(MH_MAGIC);
-          cputype:=NtoBE(hdr.cputype);
+          CPUType:=NtoBE(hdr.CPUType);
           cpusubtype:=NtoBE(hdr.cpusubtype);
           filetype:=NtoBE(hdr.filetype);
           ncmds:=NtoBE(hdr.ncmds);
@@ -881,17 +881,17 @@ const
 
   procedure TBE32MachoWriter.WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord);
     var
-      m : segment_command;
+      m : TMachRawSegmentCommand;
     begin
       with m do
         begin
           cmd:=NtoBE(LC_SEGMENT);
           cmdsize:=NtoBE(acmdSize);
           segname:=seg.segname;
-          vmaddr:=NtoBE(uint32_t(seg.vmaddr));
-          vmsize:=NtoBE(uint32_t(seg.vmsize));
-          fileoff:=NtoBE(uint32_t(seg.fileoff));
-          filesize:=NtoBE(uint32_t(seg.filesize));
+          vmaddr:=NtoBE(TMachUInt32(seg.vmaddr));
+          vmsize:=NtoBE(TMachUInt32(seg.vmsize));
+          fileoff:=NtoBE(TMachUInt32(seg.fileoff));
+          filesize:=NtoBE(TMachUInt32(seg.filesize));
           maxprot:=NtoBE(seg.maxprot);
           initprot:=NtoBE(seg.initprot);
           nsects:=NtoBE(seg.nsects);
@@ -903,7 +903,7 @@ const
 
   procedure TBE32MachoWriter.WriteSection(const sec: TMachoSection);
     var
-      m : section;
+      m : TMachRawSection;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -926,7 +926,7 @@ const
 
   procedure TBE32MachoWriter.WriteRoutineCmd(const rt: TMachoRoutine);
     var
-      m : routines_command;
+      m : TMachRawRoutinesCommand;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -940,9 +940,9 @@ const
     end;
 
 
-  procedure TBE32MachoWriter.WriteLoadCommand(const cmd: load_command);
+  procedure TBE32MachoWriter.WriteLoadCommand(const cmd: TMachRawLoadCommand);
     var
-      m : load_command;
+      m : TMachRawLoadCommand;
     begin
       m.cmd:=NtoBE(cmd.cmd);
       m.cmdsize:=NtoBE(cmd.cmdsize);
@@ -950,9 +950,9 @@ const
     end;
 
 
-  procedure TBE32MachoWriter.WriteRelocation(const ri: relocation_info);
+  procedure TBE32MachoWriter.WriteRelocation(const ri: TMachRawRelocationInfo);
     var
-      m : relocation_info;
+      m : TMachRawRelocationInfo;
     begin
       m.r_address:=NtoBE(ri.r_address);
       m.r_info:=NtoBE(ri.r_info);
@@ -960,7 +960,7 @@ const
     end;
 
 
-  procedure TBE32MachoWriter.WriteScatterReloc(const ri: scattered_relocation_info);
+  procedure TBE32MachoWriter.WriteScatterReloc(const ri: TMachRawScatteredRelocationInfo);
     var
       m : LongWord;
     begin
@@ -972,9 +972,9 @@ const
     end;
 
 
-  procedure TBE32MachoWriter.WriteNList(const list: nlist_64);
+  procedure TBE32MachoWriter.WriteNList(const list: TMachRawNList64);
     var
-      m : nlist;
+      m : TMachRawNList;
     begin
       m.n_un.n_strx:=NtoBe(list.n_un.n_strx);
       m.n_type:=NtoBe(list.n_type);
@@ -985,27 +985,27 @@ const
     end;
 
 
-  procedure TBE32MachoWriter.WriteUint16(i: uint16_t);
+  procedure TBE32MachoWriter.WriteUint16(i: TMachUInt16);
     var
-      m: uint16_t;
+      m: TMachUInt16;
     begin
       m:=NtoBE(i);
       WriteData(m, sizeof(m));
     end;
 
 
-  procedure TBE32MachoWriter.WriteUint32(i: uint32_t);
+  procedure TBE32MachoWriter.WriteUint32(i: TMachUInt32);
     var
-      m: uint32_t;
+      m: TMachUInt32;
     begin
       m:=NtoBE(i);
       WriteData(m, sizeof(m));
     end;
 
 
-  procedure TBE32MachoWriter.WriteUint64(i: uint64_t);
+  procedure TBE32MachoWriter.WriteUint64(i: TMachUInt64);
     var
-      m: uint64_t;
+      m: TMachUInt64;
     begin
       m:=NtoBE(i);
       WriteData(m, sizeof(m));
@@ -1014,7 +1014,7 @@ const
 
   procedure TBE32MachoWriter.WritePtr(ofs: QWord);
     var
-      m: uint32_t;
+      m: TMachUInt32;
     begin
       m:=NtoBE(ofs);
       WriteData(m, sizeof(m));
@@ -1025,7 +1025,7 @@ const
 
   procedure TBE64MachoWriter.WritePtr(ofs: QWord);
     var
-      m : uint64_t;
+      m : TMachUInt64;
     begin
       m:=NtoBE(ofs);
       Writedata(m, sizeof(m));
@@ -1034,12 +1034,12 @@ const
 
   procedure TBE64MachoWriter.WriteHeader(const hdr: TMachHeader);
     var
-      m : mach_header_64;
+      m : TMachRawHeader64;
     begin
       with m do
         begin
           magic:=NtoBE(MH_MAGIC_64);
-          cputype:=NtoBE(hdr.cputype);
+          CPUType:=NtoBE(hdr.CPUType);
           cpusubtype:=NtoBE(hdr.cpusubtype);
           filetype:=NtoBE(hdr.filetype);
           ncmds:=NtoBE(hdr.ncmds);
@@ -1053,7 +1053,7 @@ const
 
   procedure TBE64MachoWriter.WriteSegmentCmd(const seg: TMachoSegment; acmdSize: LongWord);
     var
-      m : segment_command_64;
+      m : TMachRawSegmentCommand64;
     begin
       with m do
         begin
@@ -1075,7 +1075,7 @@ const
 
   procedure TBE64MachoWriter.WriteSection(const sec: TMachoSection);
     var
-      m : section_64;
+      m : TMachRawSection64;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -1098,7 +1098,7 @@ const
 
   procedure TBE64MachoWriter.WriteRoutineCmd(const rt: TMachoRoutine);
     var
-      m : routines_command_64;
+      m : TMachRawRoutinesCommand64;
     begin
       FillChar(m, sizeof(m), 0);
       with m do
@@ -1112,9 +1112,9 @@ const
     end;
 
 
-  procedure TBE64MachoWriter.WriteNList(const list: nlist_64);
+  procedure TBE64MachoWriter.WriteNList(const list: TMachRawNList64);
     var
-      m : nlist_64;
+      m : TMachRawNList64;
     begin
       m.n_un.n_strx:=NtoBe(list.n_un.n_strx);
       m.n_type:=NtoBe(list.n_type);
@@ -1137,7 +1137,7 @@ const
 
   function TMachoReader.IntReadStruct: Boolean;
     var
-      m   : mach_header_64;
+      m   : TMachRawHeader64;
       i   : Integer;
       p   : qword;
     begin
@@ -1145,19 +1145,19 @@ const
       if not fReader.Seek(hdrofs) then
         Exit;
       //todo:
-      fReader.ReadRaw(m, sizeof(mach_header_64));
+      fReader.ReadRaw(m, sizeof(TMachRawHeader64));
       fCnv:=AllocConverter(m.magic);
-      fCnv.ConvertMachoHeader(pmach_header(@m)^, fhdr);
-      is64:=fhdr.cputype and CPU_ARCH_ABI64>0;
+      fCnv.ConvertMachoHeader(PMachRawHeader(@m)^, fhdr);
+      is64:=fhdr.CPUType and CPU_ARCH_ABI64>0;
       Result:=true;
 
       SetLength(cmds, fHdr.ncmds);
       if fHdr.ncmds>0 then
         begin
           if is64 then
-            p:=sizeof(mach_header_64)
+            p:=sizeof(TMachRawHeader64)
           else
-            p:=sizeof(mach_header);
+            p:=sizeof(TMachRawHeader);
 
           SetLength(cmdofs, fHdr.ncmds);
           for i:=0 to fHdr.ncmds - 1 do
@@ -1182,7 +1182,7 @@ const
     end;
 
 
-  function TMachoReader.ReadCommandID(index: LongWord; var cmd: load_command): Boolean;
+  function TMachoReader.ReadCommandID(index: LongWord; var cmd: TMachRawLoadCommand): Boolean;
     begin
       if not Assigned(fCnv) then
         IntReadStruct;
@@ -1196,8 +1196,8 @@ const
 
   function TMachoReader.ReadSegmentCommand(cmdindex: LongWord; var segment: TMachoSegment): Boolean;
     var
-      seg64 : segment_command_64;
-      seg32 : segment_command;
+      seg64 : TMachRawSegmentCommand64;
+      seg32 : TMachRawSegmentCommand;
     begin
       if not Assigned(fCnv) then
         IntReadStruct;
@@ -1231,7 +1231,7 @@ const
         IntReadStruct;
 
       if {(index<0) or}
-         (index>=longword(length(cmdofs))) then
+         (index>=LongWord(length(cmdofs))) then
         Result:=0
       else
         Result:=cmdofs[index];
@@ -1242,10 +1242,10 @@ const
     var
       ofs       : qword;
       is64bit   : Boolean;
-      buf       : array [0..sizeof(section_64)-1] of byte;
+      buf       : array [0..sizeof(TMachRawSection64)-1] of byte;
     const
-      sectsize : array[Boolean] of LongWord = ( sizeof(macho.section), sizeof(macho.section_64));
-      segsize  : array[Boolean] of LongWord = ( sizeof(macho.segment_command), sizeof(macho.segment_command_64));
+      sectsize : array[Boolean] of LongWord = ( sizeof(macho.TMachRawSection), sizeof(macho.TMachRawSection64));
+      segsize  : array[Boolean] of LongWord = ( sizeof(macho.TMachRawSegmentCommand), sizeof(macho.TMachRawSegmentCommand64));
     begin
       if not Assigned(fCnv) then
         IntReadStruct;
@@ -1262,9 +1262,9 @@ const
       fReader.Seek(ofs);
       fReader.ReadRaw(buf, segsize[is64bit]);
       if is64bit then
-        fCnv.ConvertSection64( psection_64(@buf)^, machsection)
+        fCnv.ConvertSection64( PMachRawSection64(@buf)^, machsection)
       else
-        fCnv.ConvertSection( psection(@buf)^, machsection);
+        fCnv.ConvertSection( PMachRawSection(@buf)^, machsection);
     end;
 
 
@@ -1278,31 +1278,31 @@ const
     end;
 
 
-  function TMachoReader.ReadData(var data; dataSize: Integer): Integer;
+  function TMachoReader.ReadData(var data; DataSize: Integer): Integer;
     begin
-      Result:=fReader.ReadRaw(data, dataSize);
+      Result:=fReader.ReadRaw(data, DataSize);
     end;
 
 
   function TMachoReader.GetNListSize: Integer;
     begin
       if is64 then
-        Result:=sizeof(nlist_64)
+        Result:=sizeof(TMachRawNList64)
       else
-        Result:=sizeof(nlist);
+        Result:=sizeof(TMachRawNList);
     end;
 
 
-  function TMachoReader.ReadNList(fileofs: qword; var nsym: nlist_64): Boolean;
+  function TMachoReader.ReadNList(fileofs: qword; var nsym: TMachRawNList64): Boolean;
     var
-      n32 : nlist;
+      n32 : TMachRawNList;
     begin
       fReader.Seek(fileofs);
       if is64 then
-        Result:=fReader.ReadRaw(nsym, sizeof(nlist_64))=sizeof(nlist_64)
+        Result:=fReader.ReadRaw(nsym, sizeof(TMachRawNList64))=sizeof(TMachRawNList64)
       else
         begin
-          Result:=fReader.ReadRaw(n32, sizeof(nlist))=sizeof(nlist);
+          Result:=fReader.ReadRaw(n32, sizeof(TMachRawNList))=sizeof(TMachRawNList);
           nsym.n_un.n_strx:=n32.n_un.n_strx;
           nsym.n_desc:=n32.n_desc;
           nsym.n_sect:=n32.n_sect;
@@ -1315,7 +1315,7 @@ const
     end;
 
 
-  function TMachoReader.ReadSymTabCmd(var symcmd: symtab_command): Boolean;
+  function TMachoReader.ReadSymTabCmd(var symcmd: TMachRawSymtabCommand): Boolean;
     var
       i   : Integer;
       p   : qword;
@@ -1351,9 +1351,9 @@ const
 
   { TLEMachoStructConverter }
 
-  procedure TLEMachoStructConverter.ConvertMachoHeader(const mh: mach_header; var hdr: TMachHeader);
+  procedure TLEMachoStructConverter.ConvertMachoHeader(const mh: TMachRawHeader; var hdr: TMachHeader);
     begin
-      hdr.cputype:=LEToN(mh.cputype);
+      hdr.CPUType:=LEToN(mh.CPUType);
       hdr.cpusubtype:=LEtoN(mh.cpusubtype);
       hdr.filetype:=LEToN(mh.filetype);
       hdr.ncmds:=LEToN(mh.ncmds);
@@ -1362,9 +1362,9 @@ const
     end;
 
 
-  procedure TLEMachoStructConverter.ConvertMachoHeader64(const mh: mach_header_64; var hdr: TMachHeader);
+  procedure TLEMachoStructConverter.ConvertMachoHeader64(const mh: TMachRawHeader64; var hdr: TMachHeader);
     begin
-      hdr.cputype:=LEToN(mh.cputype);
+      hdr.CPUType:=LEToN(mh.CPUType);
       hdr.cpusubtype:=LEtoN(mh.cpusubtype);
       hdr.filetype:=LEToN(mh.filetype);
       hdr.ncmds:=LEToN(mh.ncmds);
@@ -1373,14 +1373,14 @@ const
     end;
 
 
-  procedure TLEMachoStructConverter.ConvertLoadCommand(var cmd: load_command);
+  procedure TLEMachoStructConverter.ConvertLoadCommand(var cmd: TMachRawLoadCommand);
     begin
       cmd.cmd:=LEToN(cmd.cmd);
       cmd.cmdsize:=LEToN(cmd.cmdsize);
     end;
 
 
-  procedure TLEMachoStructConverter.ConvertSegment(const segcmd: segment_command; var segment: TMachoSegment);
+  procedure TLEMachoStructConverter.ConvertSegment(const segcmd: TMachRawSegmentCommand; var segment: TMachoSegment);
     begin
       FillChar(segment, sizeof(segment), 0);
       segment.segname:=segcmd.segname;
@@ -1390,14 +1390,14 @@ const
       segment.filesize:=LEToN(segcmd.filesize);
       segment.maxprot:=LEToN(segcmd.maxprot);
       segment.initprot:=LEToN(segcmd.initprot);
-      writelN('segcmd.nsects = ', segcmd.nsects);
+      WriteLn('segcmd.nsects = ', segcmd.nsects);
       segment.nsects:=LEToN(segcmd.nsects);
       segment.flags:=LEToN(segcmd.flags);
       //todo: reserved!?
     end;
 
 
-  procedure TMachoStructConverter.ConvertSegment64(const segcmd: segment_command_64; var segment: TMachoSegment);
+  procedure TMachoStructConverter.ConvertSegment64(const segcmd: TMachRawSegmentCommand64; var segment: TMachoSegment);
     begin
       FillChar(segment, sizeof(segment), 0);
       segment.segname:=segcmd.segname;
@@ -1413,7 +1413,7 @@ const
     end;
 
 
-  procedure TMachoStructConverter.ConvertSection(const sec: section; var section: TMachoSection);
+  procedure TMachoStructConverter.ConvertSection(const sec: TMachRawSection; var section: TMachoSection);
     begin
       FillChar(section, sizeof(section), 0);
       section.sectname:=sec.sectname;
@@ -1431,7 +1431,7 @@ const
     end;
 
 
-  procedure TMachoStructConverter.ConvertSection64(const sec: section_64; var section: TMachoSection);
+  procedure TMachoStructConverter.ConvertSection64(const sec: TMachRawSection64; var section: TMachoSection);
     begin
       FillChar(section, sizeof(section), 0);
       section.sectname:=sec.sectname;

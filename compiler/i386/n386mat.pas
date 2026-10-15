@@ -29,31 +29,31 @@ interface
       node,nmat,ncgmat,nx86mat;
 
     type
-      ti386moddivnode = class(tx86moddivnode)
+      TI386ModDivNode = class(TX86ModDivNode)
          procedure pass_generate_code;override;
       end;
 
-      ti386shlshrnode = class(tx86shlshrnode)
+      TI386ShlShrNode = class(TX86ShlShrNode)
          procedure second_64bit;override;
          function first_shlshr64bitint: TNode; override;
       end;
 
-      ti386unaryminusnode = class(tx86unaryminusnode)
+      TI386UnaryMinusNode = class(TX86UnaryMinusNode)
       end;
 
-      ti386notnode = class(tx86notnode)
+      TI386NotNode = class(TX86NotNode)
       end;
 
 
 implementation
 
     uses
-      globtype,systems,constexp,
-      cutils,verbose,globals,
-      symconst,symdef,aasmbase,aasmtai,aasmdata,defutil,
+      GlobType,Systems,ConstExp,
+      CUtils,Verbose,Globals,
+      symconst,symdef,aasmbase,aasmtai,AAsmData,defutil,
       cgbase,pass_2,
       ncon,
-      cpubase,cpuinfo,
+      cpubase,CPUInfo,
       cga,ncgutil,cgobj,cgutils,
       hlcgobj;
 
@@ -63,21 +63,21 @@ implementation
 
 
 
-   procedure ti386moddivnode.pass_generate_code;
+   procedure TI386ModDivNode.pass_generate_code;
       var
-        hreg1:Tregister;
-        power:longint;
-        hl:Tasmlabel;
+        hreg1:TRegister;
+        power:LongInt;
+        hl:TAsmLabel;
       begin
         if is_64bitint(resultdef) then
           { should be handled in pass_1 (JM) }
-          internalerror(2001090507);
+          InternalError(2001090507);
 
         if (nodetype=divn) and (right.nodetype=ordconstn) and
           is_signed(left.resultdef) and
-          ispowerof2(tordconstnode(right).value.svalue,power) and
-          ((CurrentSettings.optimizecputype = cpu_386) or
-           (cs_opt_size in CurrentSettings.optimizerswitches)) then
+          IsPowerOf2(TOrdConstNode(right).value.svalue,power) and
+          ((CurrentSettings.OptimizeCPUType = cpu_386) or
+           (cs_opt_size in CurrentSettings.OptimizerSwitches)) then
           begin
             { signed divide-by-power-of-two optimized for size }
             SecondPass(left);
@@ -96,7 +96,7 @@ implementation
             if power=1 then
               emit_reg(A_INC,S_L,hreg1)
             else
-              emit_const_reg(A_ADD,S_L,tordconstnode(right).value.svalue-1,hreg1);
+              emit_const_reg(A_ADD,S_L,TOrdConstNode(right).value.svalue-1,hreg1);
             cg.a_label(CurrentAsmData.CurrAsmList,hl);
             emit_const_reg(A_SAR,S_L,power,hreg1);
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
@@ -112,21 +112,21 @@ implementation
 *****************************************************************************}
 
 
-    function ti386shlshrnode.first_shlshr64bitint: TNode;
+    function TI386ShlShrNode.first_shlshr64bitint: TNode;
       begin
         result := nil;
       end;
 
-    procedure ti386shlshrnode.second_64bit;
+    procedure TI386ShlShrNode.second_64bit;
       var
-        hreg64hi,hreg64lo:Tregister;
+        hreg64hi,hreg64lo:TRegister;
         v : TConstExprInt;
-        l2,l3:Tasmlabel;
+        l2,l3:TAsmLabel;
       begin
         { shifting by a constant directly coded: }
         if (right.nodetype=ordconstn) then
           begin
-            v:=Tordconstnode(right).value and 63;
+            v:=TOrdConstNode(right).value and 63;
 
             { load left operator in a register }
             if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
@@ -230,8 +230,8 @@ implementation
 
 
 begin
-   cunaryminusnode:=ti386unaryminusnode;
-   cmoddivnode:=ti386moddivnode;
-   cshlshrnode:=ti386shlshrnode;
-   cnotnode:=ti386notnode;
+   CUnaryMinusNode:=TI386UnaryMinusNode;
+   CModDivNode:=TI386ModDivNode;
+   CShlShrNode:=TI386ShlShrNode;
+   CNotNode:=TI386NotNode;
 end.

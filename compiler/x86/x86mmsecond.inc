@@ -24,7 +24,7 @@ in_x86_movss
       in_x86_movapd: begin op:=A_movapd end;
       in_x86_movss: begin op:=A_movss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -34,7 +34,7 @@ in_x86_movss
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_movaps
 ,in_x86_movups
@@ -64,7 +64,7 @@ in_x86_movaps
       in_x86_movups: begin op:=A_movups end;
       in_x86_movaps: begin op:=A_movaps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -74,7 +74,7 @@ in_x86_movaps
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_movss_to_mem
 ,in_x86_movapd_to_mem
@@ -96,7 +96,7 @@ in_x86_movss_to_mem
       in_x86_movapd_to_mem: begin op:=A_movapd end;
       in_x86_movss_to_mem: begin op:=A_movss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -105,7 +105,7 @@ in_x86_movss_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
   end;
 in_x86_movaps_to_mem
 ,in_x86_movups_to_mem
@@ -121,7 +121,7 @@ in_x86_movaps_to_mem
       in_x86_movups_to_mem: begin op:=A_movups end;
       in_x86_movaps_to_mem: begin op:=A_movaps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -130,7 +130,7 @@ in_x86_movaps_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
   end;
 in_x86_movss_to_val
 : //out r0:f32;r1:xmm;
@@ -138,7 +138,7 @@ in_x86_movss_to_val
     case inlinenumber of
       in_x86_movss_to_val: begin op:=A_movss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -148,7 +148,7 @@ in_x86_movss_to_val
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_movss_from_val
 : //out r0:xmm;r1:f32;
@@ -156,7 +156,7 @@ in_x86_movss_from_val
     case inlinenumber of
       in_x86_movss_from_val: begin op:=A_movss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -166,7 +166,7 @@ in_x86_movss_from_val
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_movlps
 ,in_x86_movhps
@@ -188,7 +188,7 @@ in_x86_movlps
       in_x86_movhps: begin op:=A_movhps end;
       in_x86_movlps: begin op:=A_movlps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -198,7 +198,7 @@ in_x86_movlps
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_movlps_to_mem
 ,in_x86_movhps_to_mem
@@ -210,7 +210,7 @@ in_x86_movlps_to_mem
       in_x86_movhps_to_mem: begin op:=A_movhps end;
       in_x86_movlps_to_mem: begin op:=A_movlps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -219,7 +219,7 @@ in_x86_movlps_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_ref(op,S_NO,paraarray[2].location.register,paraarray[1].location.reference));
   end;
 in_x86_movlhps
 ,in_x86_movhlps
@@ -481,7 +481,7 @@ in_x86_movlhps
       in_x86_movhlps: begin op:=A_movhlps end;
       in_x86_movlhps: begin op:=A_movlhps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -491,7 +491,7 @@ in_x86_movlhps
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_addss
 ,in_x86_subss
@@ -515,7 +515,7 @@ in_x86_addss
       in_x86_subss: begin op:=A_subss end;
       in_x86_addss: begin op:=A_addss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -525,7 +525,7 @@ in_x86_addss
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_addss_from_mem
 ,in_x86_subss_from_mem
@@ -551,7 +551,7 @@ in_x86_addss_from_mem
       in_x86_subss_from_mem: begin op:=A_subss end;
       in_x86_addss_from_mem: begin op:=A_addss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -561,7 +561,7 @@ in_x86_addss_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_addps_from_mem
 ,in_x86_subps_from_mem
@@ -813,7 +813,7 @@ in_x86_addps_from_mem
       in_x86_subps_from_mem: begin op:=A_subps end;
       in_x86_addps_from_mem: begin op:=A_addps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -823,7 +823,7 @@ in_x86_addps_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cmpss
 : //var r0:f32;r1:f32;imm:i32;
@@ -831,7 +831,7 @@ in_x86_cmpss
     case inlinenumber of
       in_x86_cmpss: begin op:=A_cmpss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -841,7 +841,7 @@ in_x86_cmpss
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cmpss_from_mem
 : //var r0:f32;r1:ptr32;imm:i32;
@@ -849,7 +849,7 @@ in_x86_cmpss_from_mem
     case inlinenumber of
       in_x86_cmpss_from_mem: begin op:=A_cmpss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -859,7 +859,7 @@ in_x86_cmpss_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cmpps
 ,in_x86_shufps
@@ -897,7 +897,7 @@ in_x86_cmpps
       in_x86_shufps: begin op:=A_shufps end;
       in_x86_cmpps: begin op:=A_cmpps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -907,7 +907,7 @@ in_x86_cmpps
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cmpps_from_mem
 ,in_x86_shufps_from_mem
@@ -943,7 +943,7 @@ in_x86_cmpps_from_mem
       in_x86_shufps_from_mem: begin op:=A_shufps end;
       in_x86_cmpps_from_mem: begin op:=A_cmpps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -953,7 +953,7 @@ in_x86_cmpps_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cvtsi2ss
 : //var r0:f32;r1:reg;
@@ -961,7 +961,7 @@ in_x86_cvtsi2ss
     case inlinenumber of
       in_x86_cvtsi2ss: begin op:=A_cvtsi2ss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -971,7 +971,7 @@ in_x86_cvtsi2ss
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,uinttype,true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cvtss2si
 ,in_x86_cvttss2si
@@ -981,7 +981,7 @@ in_x86_cvtss2si
       in_x86_cvttss2si: begin op:=A_cvttss2si end;
       in_x86_cvtss2si: begin op:=A_cvtss2si; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -991,7 +991,7 @@ in_x86_cvtss2si
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_INT);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_cvtss2si_from_mem
 ,in_x86_cvttss2si_from_mem
@@ -1001,7 +1001,7 @@ in_x86_cvtss2si_from_mem
       in_x86_cvttss2si_from_mem: begin op:=A_cvttss2si end;
       in_x86_cvtss2si_from_mem: begin op:=A_cvtss2si; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1011,7 +1011,7 @@ in_x86_cvtss2si_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_REGISTER,OS_INT);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_cvtpi2ps
 ,in_x86_cvtpi2pd
@@ -1021,7 +1021,7 @@ in_x86_cvtpi2ps
       in_x86_cvtpi2pd: begin op:=A_cvtpi2pd end;
       in_x86_cvtpi2ps: begin op:=A_cvtpi2ps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1031,7 +1031,7 @@ in_x86_cvtpi2ps
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cvtps2pi
 ,in_x86_cvttps2pi
@@ -1043,7 +1043,7 @@ in_x86_cvtps2pi
       in_x86_cvttps2pi: begin op:=A_cvttps2pi end;
       in_x86_cvtps2pi: begin op:=A_cvtps2pi; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1052,8 +1052,8 @@ in_x86_cvtps2pi
 
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_cvtps2pi_from_mem
 ,in_x86_cvttps2pi_from_mem
@@ -1063,7 +1063,7 @@ in_x86_cvtps2pi_from_mem
       in_x86_cvttps2pi_from_mem: begin op:=A_cvttps2pi end;
       in_x86_cvtps2pi_from_mem: begin op:=A_cvtps2pi; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1072,8 +1072,8 @@ in_x86_cvtps2pi_from_mem
 
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_pmulhuw_mmx
 ,in_x86_psadbw_mmx
@@ -1095,7 +1095,7 @@ in_x86_pmulhuw_mmx
       in_x86_psadbw_mmx: begin op:=A_psadbw end;
       in_x86_pmulhuw_mmx: begin op:=A_pmulhuw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1105,7 +1105,7 @@ in_x86_pmulhuw_mmx
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_pmulhuw_mmx_from_mem
 ,in_x86_psadbw_mmx_from_mem
@@ -1127,7 +1127,7 @@ in_x86_pmulhuw_mmx_from_mem
       in_x86_psadbw_mmx_from_mem: begin op:=A_psadbw end;
       in_x86_pmulhuw_mmx_from_mem: begin op:=A_pmulhuw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1137,7 +1137,7 @@ in_x86_pmulhuw_mmx_from_mem
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_pextrw_mmx
 : //out r0:reg;r1:mm;imm:i32;
@@ -1145,7 +1145,7 @@ in_x86_pextrw_mmx
     case inlinenumber of
       in_x86_pextrw_mmx: begin op:=A_pextrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1155,7 +1155,7 @@ in_x86_pextrw_mmx
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_INT);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_pinsrw_mmx
 : //var r0:mm;r1:reg;imm:i32;
@@ -1163,7 +1163,7 @@ in_x86_pinsrw_mmx
     case inlinenumber of
       in_x86_pinsrw_mmx: begin op:=A_pinsrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1173,7 +1173,7 @@ in_x86_pinsrw_mmx
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,uinttype,true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_pmovmskb_mmx
 : //out r0:reg;r1:mm;
@@ -1181,7 +1181,7 @@ in_x86_pmovmskb_mmx
     case inlinenumber of
       in_x86_pmovmskb_mmx: begin op:=A_pmovmskb; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1191,7 +1191,7 @@ in_x86_pmovmskb_mmx
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_INT);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_pshufw
 : //out r0:mm;r1:mm;imm:i32;
@@ -1199,7 +1199,7 @@ in_x86_pshufw
     case inlinenumber of
       in_x86_pshufw: begin op:=A_pshufw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1208,8 +1208,8 @@ in_x86_pshufw
 
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_pshufw_from_mem
 : //out r0:mm;r1:ptr64;imm:i32;
@@ -1217,7 +1217,7 @@ in_x86_pshufw_from_mem
     case inlinenumber of
       in_x86_pshufw_from_mem: begin op:=A_pshufw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1226,8 +1226,8 @@ in_x86_pshufw_from_mem
 
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMXREGISTER,OS_M64);
-    location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    location.register:=TCGX86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
   end;
 in_x86_movmskpd
 ,in_x86_movd_to_reg
@@ -1237,7 +1237,7 @@ in_x86_movmskpd
       in_x86_movd_to_reg: begin op:=A_movd end;
       in_x86_movmskpd: begin op:=A_movmskpd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1247,7 +1247,7 @@ in_x86_movmskpd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_32);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_movsd_to_val
 : //out r0:f64;r1:xmm;
@@ -1255,7 +1255,7 @@ in_x86_movsd_to_val
     case inlinenumber of
       in_x86_movsd_to_val: begin op:=A_movsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1265,7 +1265,7 @@ in_x86_movsd_to_val
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_movsd_from_val
 : //out r0:xmm;r1:f64;
@@ -1273,7 +1273,7 @@ in_x86_movsd_from_val
     case inlinenumber of
       in_x86_movsd_from_val: begin op:=A_movsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1283,7 +1283,7 @@ in_x86_movsd_from_val
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_addsd
 ,in_x86_divsd
@@ -1303,7 +1303,7 @@ in_x86_addsd
       in_x86_divsd: begin op:=A_divsd end;
       in_x86_addsd: begin op:=A_addsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1313,7 +1313,7 @@ in_x86_addsd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_addsd_from_mem
 ,in_x86_divsd_from_mem
@@ -1333,7 +1333,7 @@ in_x86_addsd_from_mem
       in_x86_divsd_from_mem: begin op:=A_divsd end;
       in_x86_addsd_from_mem: begin op:=A_addsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1343,7 +1343,7 @@ in_x86_addsd_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_maxsd
 ,in_x86_mulsd
@@ -1353,7 +1353,7 @@ in_x86_maxsd
       in_x86_mulsd: begin op:=A_mulsd end;
       in_x86_maxsd: begin op:=A_maxsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1363,7 +1363,7 @@ in_x86_maxsd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_sqrtpd
 ,in_x86_movddup
@@ -1407,7 +1407,7 @@ in_x86_sqrtpd
       in_x86_movddup: begin op:=A_movddup end;
       in_x86_sqrtpd: begin op:=A_sqrtpd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1417,7 +1417,7 @@ in_x86_sqrtpd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_sqrtsd
 : //out r0:f64;r1:f64;
@@ -1425,7 +1425,7 @@ in_x86_sqrtsd
     case inlinenumber of
       in_x86_sqrtsd: begin op:=A_sqrtsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1435,7 +1435,7 @@ in_x86_sqrtsd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_sqrtsd_from_mem
 : //out r0:f64;r1:ptr64;
@@ -1443,7 +1443,7 @@ in_x86_sqrtsd_from_mem
     case inlinenumber of
       in_x86_sqrtsd_from_mem: begin op:=A_sqrtsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1453,7 +1453,7 @@ in_x86_sqrtsd_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_cmpsd
 : //var r0:f64;r1:f64;imm:i32;
@@ -1461,7 +1461,7 @@ in_x86_cmpsd
     case inlinenumber of
       in_x86_cmpsd: begin op:=A_cmpsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1471,7 +1471,7 @@ in_x86_cmpsd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cmpsd_from_mem
 : //var r0:f64;r1:ptr64;imm:i32;
@@ -1479,7 +1479,7 @@ in_x86_cmpsd_from_mem
     case inlinenumber of
       in_x86_cmpsd_from_mem: begin op:=A_cmpsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1489,7 +1489,7 @@ in_x86_cmpsd_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cvtpd2pi
 ,in_x86_cvttpd2pi
@@ -1499,7 +1499,7 @@ in_x86_cvtpd2pi
       in_x86_cvttpd2pi: begin op:=A_cvttpd2pi end;
       in_x86_cvtpd2pi: begin op:=A_cvtpd2pi; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1509,7 +1509,7 @@ in_x86_cvtpd2pi
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cvtpd2pi_from_mem
 ,in_x86_cvttpd2pi_from_mem
@@ -1519,7 +1519,7 @@ in_x86_cvtpd2pi_from_mem
       in_x86_cvttpd2pi_from_mem: begin op:=A_cvttpd2pi end;
       in_x86_cvtpd2pi_from_mem: begin op:=A_cvtpd2pi; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1529,7 +1529,7 @@ in_x86_cvtpd2pi_from_mem
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cvtsd2si
 ,in_x86_cvttsd2si
@@ -1539,7 +1539,7 @@ in_x86_cvtsd2si
       in_x86_cvttsd2si: begin op:=A_cvttsd2si end;
       in_x86_cvtsd2si: begin op:=A_cvtsd2si; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1549,7 +1549,7 @@ in_x86_cvtsd2si
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,sinttype,false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cvtsd2si_from_mem
 ,in_x86_cvttsd2si_from_mem
@@ -1559,7 +1559,7 @@ in_x86_cvtsd2si_from_mem
       in_x86_cvttsd2si_from_mem: begin op:=A_cvttsd2si end;
       in_x86_cvtsd2si_from_mem: begin op:=A_cvtsd2si; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1569,7 +1569,7 @@ in_x86_cvtsd2si_from_mem
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,sinttype,false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_cvtsi2sd
 : //var r0:f64;r1:r32;
@@ -1577,7 +1577,7 @@ in_x86_cvtsi2sd
     case inlinenumber of
       in_x86_cvtsi2sd: begin op:=A_cvtsi2sd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1587,7 +1587,7 @@ in_x86_cvtsi2sd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,u32inttype,true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_cvtsi2sd_from_mem
 ,in_x86_cvtss2sd_from_mem
@@ -1597,7 +1597,7 @@ in_x86_cvtsi2sd_from_mem
       in_x86_cvtss2sd_from_mem: begin op:=A_cvtss2sd end;
       in_x86_cvtsi2sd_from_mem: begin op:=A_cvtsi2sd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1607,7 +1607,7 @@ in_x86_cvtsi2sd_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_movd_from_reg
 : //out r0:xmm;r1:r32;
@@ -1615,7 +1615,7 @@ in_x86_movd_from_reg
     case inlinenumber of
       in_x86_movd_from_reg: begin op:=A_movd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1625,7 +1625,7 @@ in_x86_movd_from_reg
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,u32inttype,true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_movq_from_mem
 ,in_x86_movddup_from_mem
@@ -1647,7 +1647,7 @@ in_x86_movq_from_mem
       in_x86_movddup_from_mem: begin op:=A_movddup end;
       in_x86_movq_from_mem: begin op:=A_movq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1657,7 +1657,7 @@ in_x86_movq_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;
 in_x86_pmovmskb
 : //var r0:r32;r1:xmm;
@@ -1665,7 +1665,7 @@ in_x86_pmovmskb
     case inlinenumber of
       in_x86_pmovmskb: begin op:=A_pmovmskb; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1675,7 +1675,7 @@ in_x86_pmovmskb
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[1].location, paraarray[1].resultdef,u32inttype,false);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_pextrw_sse2
 : //out r0:r16;r1:xmm;imm:i32;
@@ -1683,7 +1683,7 @@ in_x86_pextrw_sse2
     case inlinenumber of
       in_x86_pextrw_sse2: begin op:=A_pextrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1693,7 +1693,7 @@ in_x86_pextrw_sse2
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_16);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_pinsrw_sse2
 ,in_x86_pinsrb
@@ -1705,7 +1705,7 @@ in_x86_pinsrw_sse2
       in_x86_pinsrb: begin op:=A_pinsrb end;
       in_x86_pinsrw_sse2: begin op:=A_pinsrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1715,7 +1715,7 @@ in_x86_pinsrw_sse2
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,u32inttype,true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 in_x86_pinsrw_from_mem
 : //var r0:xmm;r1:ptr16;imm:i32;
@@ -1723,7 +1723,7 @@ in_x86_pinsrw_from_mem
     case inlinenumber of
       in_x86_pinsrw_from_mem: begin op:=A_pinsrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1733,7 +1733,7 @@ in_x86_pinsrw_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_psllw_sse2_imm
 ,in_x86_pslld_sse2_imm
@@ -1759,7 +1759,7 @@ in_x86_psllw_sse2_imm
       in_x86_pslld_sse2_imm: begin op:=A_pslld end;
       in_x86_psllw_sse2_imm: begin op:=A_psllw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1768,7 +1768,7 @@ in_x86_psllw_sse2_imm
 
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register));
   end;
 in_x86_maskmovdqu
 : //addr:edi_ptr;r0:xmm;r1:xmm;
@@ -1776,7 +1776,7 @@ in_x86_maskmovdqu
     case inlinenumber of
       in_x86_maskmovdqu: begin op:=A_maskmovdqu; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1787,7 +1787,7 @@ in_x86_maskmovdqu
     hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,voidpointertype,paraarray[1].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[3].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[3].location.register,paraarray[2].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[3].location.register,paraarray[2].location.register));
     hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});
   end;
 in_x86_movq2dq
@@ -1796,7 +1796,7 @@ in_x86_movq2dq
     case inlinenumber of
       in_x86_movq2dq: begin op:=A_movq2dq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -1806,7 +1806,7 @@ in_x86_movq2dq
     location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[1].location.register,location.register));
   end;
 in_x86_pshufhw
 ,in_x86_pshuflw
@@ -1824,7 +1824,7 @@ in_x86_pshufhw
       in_x86_pshuflw: begin op:=A_pshuflw end;
       in_x86_pshufhw: begin op:=A_pshufhw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1834,7 +1834,7 @@ in_x86_pshufhw
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_pshufhw_from_mem
 ,in_x86_pshuflw_from_mem
@@ -1850,7 +1850,7 @@ in_x86_pshufhw_from_mem
       in_x86_pshuflw_from_mem: begin op:=A_pshuflw end;
       in_x86_pshufhw_from_mem: begin op:=A_pshufhw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1860,7 +1860,7 @@ in_x86_pshufhw_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
   end;
 in_x86_blendvps
 ,in_x86_blendvpd
@@ -1872,7 +1872,7 @@ in_x86_blendvps
       in_x86_blendvpd: begin op:=A_blendvpd end;
       in_x86_blendvps: begin op:=A_blendvps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1885,7 +1885,7 @@ in_x86_blendvps
     hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
     hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,x86_m128type,paraarray[3].location,NR_XMM0,nil);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(op,S_NO,paraarray[2].location.register,paraarray[1].location.register));
     hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
   end;
 in_x86_blendvps_from_mem
@@ -1898,7 +1898,7 @@ in_x86_blendvps_from_mem
       in_x86_blendvpd_from_mem: begin op:=A_blendvpd end;
       in_x86_blendvps_from_mem: begin op:=A_blendvps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1911,7 +1911,7 @@ in_x86_blendvps_from_mem
     hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
     hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,x86_m128type,paraarray[3].location,NR_XMM0,nil);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[2].location.reference,paraarray[1].location.register));
     hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);
   end;
 in_x86_roundss_from_mem
@@ -1920,7 +1920,7 @@ in_x86_roundss_from_mem
     case inlinenumber of
       in_x86_roundss_from_mem: begin op:=A_roundss; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1930,7 +1930,7 @@ in_x86_roundss_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
   end;
 in_x86_roundsd
 : //out r0:f64;r1:f64;imm:i32;
@@ -1938,7 +1938,7 @@ in_x86_roundsd
     case inlinenumber of
       in_x86_roundsd: begin op:=A_roundsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1948,7 +1948,7 @@ in_x86_roundsd
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_roundsd_from_mem
 : //out r0:f64;r1:ptr64;imm:i32;
@@ -1956,7 +1956,7 @@ in_x86_roundsd_from_mem
     case inlinenumber of
       in_x86_roundsd_from_mem: begin op:=A_roundsd; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -1966,7 +1966,7 @@ in_x86_roundsd_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.reference,location.register));
   end;
 in_x86_insertps_from_mem
 ,in_x86_pinsrd_from_mem
@@ -1976,7 +1976,7 @@ in_x86_insertps_from_mem
       in_x86_pinsrd_from_mem: begin op:=A_pinsrd end;
       in_x86_insertps_from_mem: begin op:=A_insertps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -1986,7 +1986,7 @@ in_x86_insertps_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 in_x86_extractps
 ,in_x86_pextrd
@@ -1996,7 +1996,7 @@ in_x86_extractps
       in_x86_pextrd: begin op:=A_pextrd end;
       in_x86_extractps: begin op:=A_extractps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -2006,7 +2006,7 @@ in_x86_extractps
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_32);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_extractps_from_mem
 ,in_x86_pextrd_to_mem
@@ -2016,7 +2016,7 @@ in_x86_extractps_from_mem
       in_x86_pextrd_to_mem: begin op:=A_pextrd end;
       in_x86_extractps_from_mem: begin op:=A_extractps; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2025,7 +2025,7 @@ in_x86_extractps_from_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
   end;
 in_x86_pinsrb_from_mem
 : //var r0:xmm;r1:ptr8;imm:i32;
@@ -2033,7 +2033,7 @@ in_x86_pinsrb_from_mem
     case inlinenumber of
       in_x86_pinsrb_from_mem: begin op:=A_pinsrb; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2043,7 +2043,7 @@ in_x86_pinsrb_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 {$ifdef X86_64}
 in_x86_pinsrq
@@ -2052,7 +2052,7 @@ in_x86_pinsrq
     case inlinenumber of
       in_x86_pinsrq: begin op:=A_pinsrq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2062,7 +2062,7 @@ in_x86_pinsrq
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[2].location, paraarray[2].resultdef,uinttype,true);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.register));
   end;
 {$endif}
 {$ifdef X86_64}
@@ -2072,7 +2072,7 @@ in_x86_pinsrq_from_mem
     case inlinenumber of
       in_x86_pinsrq_from_mem: begin op:=A_pinsrq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2082,7 +2082,7 @@ in_x86_pinsrq_from_mem
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, false);
     location_make_ref(paraarray[2].location);
     location:=paraarray[1].location;
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_ref_reg(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.reference,paraarray[1].location.register));
   end;
 {$endif}
 in_x86_pextrb
@@ -2091,7 +2091,7 @@ in_x86_pextrb
     case inlinenumber of
       in_x86_pextrb: begin op:=A_pextrb; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -2101,7 +2101,7 @@ in_x86_pextrb
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_8);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 in_x86_pextrb_to_mem
 : //r0:ptr8;r1:xmm;imm:i32;
@@ -2109,7 +2109,7 @@ in_x86_pextrb_to_mem
     case inlinenumber of
       in_x86_pextrb_to_mem: begin op:=A_pextrb; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2118,7 +2118,7 @@ in_x86_pextrb_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
   end;
 in_x86_pextrw_sse41_to_mem
 : //r0:ptr16;r1:xmm;imm:i32;
@@ -2126,7 +2126,7 @@ in_x86_pextrw_sse41_to_mem
     case inlinenumber of
       in_x86_pextrw_sse41_to_mem: begin op:=A_pextrw; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2135,7 +2135,7 @@ in_x86_pextrw_sse41_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
   end;
 {$ifdef X86_64}
 in_x86_pextrq
@@ -2144,7 +2144,7 @@ in_x86_pextrq
     case inlinenumber of
       in_x86_pextrq: begin op:=A_pextrq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(2);
@@ -2154,7 +2154,7 @@ in_x86_pextrq
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[1].location, true);
     location_reset(location,LOC_REGISTER,OS_32);
     location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_reg(op,S_NO,GetConstInt(paraarray[2]),paraarray[1].location.register,location.register));
   end;
 {$endif}
 {$ifdef X86_64}
@@ -2164,7 +2164,7 @@ in_x86_pextrq_to_mem
     case inlinenumber of
       in_x86_pextrq_to_mem: begin op:=A_pextrq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(3);
@@ -2173,7 +2173,7 @@ in_x86_pextrq_to_mem
 
     location_make_ref(paraarray[1].location);
     location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[2].location, true);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_const_reg_ref(op,S_NO,GetConstInt(paraarray[3]),paraarray[2].location.register,paraarray[1].location.reference));
   end;
 {$endif}
 in_x86_pmovsxbq_from_mem
@@ -2184,7 +2184,7 @@ in_x86_pmovsxbq_from_mem
       in_x86_pmovzxbq_from_mem: begin op:=A_pmovzxbq end;
       in_x86_pmovsxbq_from_mem: begin op:=A_pmovsxbq; end;
       else
-        Internalerror(2020010201);
+        InternalError(2020010201);
     end;
 
     GetParameters(1);
@@ -2194,5 +2194,5 @@ in_x86_pmovsxbq_from_mem
     location_make_ref(paraarray[1].location);
     location_reset(location,LOC_MMREGISTER,OS_M128);
     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);
-    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
+    CurrentAsmData.CurrAsmList.concat(TAICPU.op_ref_reg(op,S_NO,paraarray[1].location.reference,location.register));
   end;

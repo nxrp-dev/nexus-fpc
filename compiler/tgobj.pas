@@ -34,14 +34,14 @@ unit tgobj;
   interface
 
     uses
-      globals,globtype,
-      symconst,symdef,symtype,symtable,
+      Globals,GlobType,
+      symconst,symdef,symtype,SymTable,
       cpubase,cgbase,cgutils,
-      aasmtai,aasmdata;
+      aasmtai,AAsmData;
 
     type
-      ptemprecord = ^ttemprecord;
-      ttemprecord = record
+      PTempRecord = ^TTempRecord;
+      TTempRecord = record
          temptype   : TTempType;
          { finalize this temp if it's a managed type }
          fini       : boolean;
@@ -49,8 +49,8 @@ unit tgobj;
          pos        : asizeint;
          size       : asizeint;
          def        : TDef;
-         next       : ptemprecord;
-         nextfree   : ptemprecord; { for faster freeblock checking }
+         next       : PTempRecord;
+         nextfree   : PTempRecord; { for faster freeblock checking }
 {$ifdef EXTDEBUG}
          posinfo,
          releaseposinfo : TFilePosInfo;
@@ -59,24 +59,24 @@ unit tgobj;
 
 
        {# Generates temporary variables }
-       ttgobj = class
+       TTGObj = class
        protected
           { contains all free temps using nextfree links }
-          tempfreelist  : ptemprecord;
-          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref: treference); virtual;
-          procedure freetemp(list: TAsmList; pos: treftemppos; temptypes: TTempTypeSet);virtual;
-          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : treference);
-          procedure freetemphook(list: TAsmList; temp: ptemprecord); virtual;
+          tempfreelist  : PTempRecord;
+          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref: TReference); virtual;
+          procedure freetemp(list: TAsmList; pos: TRefTempPos; temptypes: TTempTypeSet);virtual;
+          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : TReference);
+          procedure freetemphook(list: TAsmList; temp: PTempRecord); virtual;
        public
           { contains all temps }
-          templist      : ptemprecord;
+          templist      : PTempRecord;
           { Offsets of the first/last temp }
           firsttemp,
           lasttemp,
           { Offset of temp base register relative to guaranteed stack alignment
             (note: currently only behaves as expected if it's a power of 2,
                and if all requested alignments are also a power of 2) }
-          alignmismatch: longint;
+          alignmismatch: LongInt;
           direction : shortint;
           constructor create;virtual;reintroduce;
           {# Clear and free the complete linked list of temporary memory
@@ -97,18 +97,18 @@ unit tgobj;
 
             the forcesize parameter is so that it can be used for defs that
             don't have an inherent size (e.g., array of const) }
-          procedure gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: treference); virtual;
-          procedure gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: treference); virtual;
-          procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : treference);
-          procedure gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : treference);
-          procedure ungettemp(list: TAsmList; const ref : treference); virtual;
+          procedure gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference); virtual;
+          procedure gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: TReference); virtual;
+          procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : TReference);
+          procedure gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : TReference);
+          procedure ungettemp(list: TAsmList; const ref : TReference); virtual;
 
-          function sizeoftemp(list: TAsmList; const ref: treference): asizeint;
-          function changetemptype(list: TAsmList; const ref:treference;temptype:TTempType):boolean;
-          function gettypeoftemp(const ref:treference): TTempType;
-          function isstartoftemp(const ref: treference): boolean;
+          function sizeoftemp(list: TAsmList; const ref: TReference): asizeint;
+          function changetemptype(list: TAsmList; const ref:TReference;temptype:TTempType):boolean;
+          function gettypeoftemp(const ref:TReference): TTempType;
+          function isstartoftemp(const ref: TReference): boolean;
           {# Returns a reference corresponding to a temp }
-          procedure temp_to_ref(p: ptemprecord; out ref: treference); virtual;
+          procedure temp_to_ref(p: PTempRecord; out ref: TReference); virtual;
 
 
           {# Returns TRUE if the reference ref is allocated in temporary volatile memory space,
@@ -116,38 +116,38 @@ unit tgobj;
 
              @param(ref reference to verify)
           }
-          function istemp(const ref : treference) : boolean; virtual;
+          function istemp(const ref : TReference) : boolean; virtual;
           {# Frees a reference @var(ref) which was allocated in the volatile temporary memory space.
              The freed space can later be reallocated and reused. If this reference
              is not in the temporary memory, it is simply not freed.
           }
-          procedure ungetiftemp(list: TAsmList; const ref : treference); virtual;
+          procedure ungetiftemp(list: TAsmList; const ref : TReference); virtual;
 
           { Allocate space for a local }
-          procedure getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : treference);
-          procedure getlocal(list: TAsmList; size: asizeint; alignment,explicitalignment: shortint; def: TDef; sym : TSym; var ref : treference); virtual;
-          procedure UnGetLocal(list: TAsmList; const ref : treference);
+          procedure getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : TReference);
+          procedure getlocal(list: TAsmList; size: asizeint; alignment,explicitalignment: shortint; def: TDef; sym : TSym; var ref : TReference); virtual;
+          procedure UnGetLocal(list: TAsmList; const ref : TReference);
           { Discard the free list so that previously freed temp slots cannot be
             reused by subsequent allocations. Used on AArch64-Win64 before
             generating exceptfilter code to prevent handler temps from reusing
             freed parent slots. }
           procedure discard_freelist;
        end;
-       ttgobjclass = class of ttgobj;
+       TTGObjClass = class of TTGObj;
 
      var
-       tg: ttgobj;
-       tgobjclass: ttgobjclass = ttgobj;
+       tg: TTGObj;
+       tgobjclass: TTGObjClass = TTGObj;
 
-    procedure location_freetemp(list:TAsmList; const l : tlocation);
+    procedure location_freetemp(list:TAsmList; const l : TLocation);
 
 
 implementation
 
     uses
-       cutils,
-       verbose,
-       procinfo;
+       CUtils,
+       Verbose,
+       ProcInfo;
 
 
     const
@@ -174,7 +174,7 @@ implementation
                                     Helpers
 *****************************************************************************}
 
-    procedure location_freetemp(list:TAsmList; const l : tlocation);
+    procedure location_freetemp(list:TAsmList; const l : TLocation);
       begin
         if (l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
          tg.ungetiftemp(list,l.reference);
@@ -185,7 +185,7 @@ implementation
                                     TTGOBJ
 *****************************************************************************}
 
-    constructor ttgobj.create;
+    constructor TTGObj.create;
 
      begin
        tempfreelist:=nil;
@@ -199,19 +199,19 @@ implementation
      end;
 
 
-    procedure ttgobj.resettempgen;
+    procedure TTGObj.resettempgen;
       var
-         hp : ptemprecord;
+         hp : PTempRecord;
       begin
         { Clear the old templist }
-        while assigned(templist) do
+        while Assigned(templist) do
          begin
 {$ifdef EXTDEBUG}
            if not(templist^.temptype in FreeTempTypes) then
              begin
-               Comment(V_Warning,'tgobj: (ResetTempgen) temp at pos '+tostr(templist^.pos)+
-                       ' with size '+tostr(templist^.size)+' and type '+TempTypeStr[templist^.temptype]+
-                       ' from pos '+tostr(templist^.posinfo.line)+':'+tostr(templist^.posinfo.column)+
+               Comment(VWarning,'tgobj: (ResetTempgen) temp at pos '+ToStr(templist^.pos)+
+                       ' with size '+ToStr(templist^.size)+' and type '+TempTypeStr[templist^.temptype]+
+                       ' from pos '+ToStr(templist^.posinfo.line)+':'+ToStr(templist^.posinfo.column)+
                        ' not freed at the end of the procedure');
              end;
 {$endif EXTDEBUG}
@@ -225,12 +225,12 @@ implementation
         lasttemp:=0;
         alignmismatch:=0;
 {$ifdef EXTDEBUG}
-         Comment(V_Note,'tgobj: (ResetTempGen) all temps freed');
+         Comment(VNote,'tgobj: (ResetTempGen) all temps freed');
 {$endif}
       end;
 
 
-    procedure ttgobj.setfirsttemp(l: asizeint);
+    procedure TTGObj.setfirsttemp(l: asizeint);
       begin
          { this is a negative value normally }
          if l*direction>=0 then
@@ -239,28 +239,28 @@ implementation
              inc(l,direction);
           end
          else
-           internalerror(200204221);
+           InternalError(200204221);
          firsttemp:=l;
          lasttemp:=l;
 {$ifdef EXTDEBUG}
-         Comment(V_Note,'tgobj: (SetFirstTempGen) set to '+tostr(l));
+         Comment(VNote,'tgobj: (SetFirstTempGen) set to '+ToStr(l));
 {$endif}
       end;
 
 
-    procedure ttgobj.setalignmentmismatch(l: shortint);
+    procedure TTGObj.setalignmentmismatch(l: shortint);
       begin
         alignmismatch:=l*direction;
       end;
 
 
-    procedure ttgobj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def :TDef; fini: boolean; out ref: treference);
+    procedure TTGObj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def :TDef; fini: boolean; out ref: TReference);
       var
          tl,htl,
          bestslot,bestprev,
-         hprev,hp : ptemprecord;
+         hprev,hp : PTempRecord;
          freetype : TTempType;
-         adjustedpos : longint;
+         adjustedpos : LongInt;
          bestatend,
          fitatbegin,
          fitatend : boolean;
@@ -274,14 +274,14 @@ implementation
          if size=0 then
           begin
 {$ifdef EXTDEBUG}
-            Comment(V_Note,'tgobj: (AllocTemp) temp of size 0 requested, allocating 4 bytes');
+            Comment(VNote,'tgobj: (AllocTemp) temp of size 0 requested, allocating 4 bytes');
 {$endif}
             size:=4;
           end;
 
          freetype:=Used2Free[temptype];
          if freetype=tt_none then
-           internalerror(200208201);
+           InternalError(200208201);
          if size>MaxLocalsSize then
             begin
               CGMessage(cg_e_localsize_too_big);
@@ -290,16 +290,16 @@ implementation
          size:=align(size,alignment);
          { First check the tmpfreelist, but not when
            we don't want to reuse an already allocated block }
-         if assigned(tempfreelist) and
+         if Assigned(tempfreelist) and
             (temptype<>tt_noreuse) then
           begin
             hprev:=nil;
             hp:=tempfreelist;
-            while assigned(hp) do
+            while Assigned(hp) do
              begin
 {$ifdef EXTDEBUG}
                if not(hp^.temptype in FreeTempTypes) then
-                 Comment(V_Warning,'tgobj: (AllocTemp) temp at pos '+tostr(hp^.pos)+ ' in freelist is not set to  a free temp type !');
+                 Comment(VWarning,'tgobj: (AllocTemp) temp at pos '+ToStr(hp^.pos)+ ' in freelist is not set to  a free temp type !');
 {$endif}
                { Check only slots that are
                   - free
@@ -334,23 +334,23 @@ implementation
                      { subtracted from it.                                  }
                      fitatend:=(adjustedpos+hp^.size-size)=align(adjustedpos+hp^.size-size,alignment);
                      fitatbegin:=adjustedpos=align(adjustedpos,alignment);
-                     if assigned(bestslot) then
+                     if Assigned(bestslot) then
                        begin
                          fitatend:=fitatend and
                            ((not bestatend and
                              (direction=-1)) or
                             (bestatend and
-                             isbetteralignedthan(abs(bestslot^.pos+hp^.size-size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.localalignmax)));
+                             IsBetterAlignedThan(abs(bestslot^.pos+hp^.size-size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.LocalAlignMax)));
                          fitatbegin:=fitatbegin and
                            (not bestatend or
                             (direction=1)) and
-                           isbetteralignedthan(abs(adjustedpos+size),abs(bestslot^.pos+size),CurrentSettings.alignment.localalignmax);
+                           IsBetterAlignedThan(abs(adjustedpos+size),abs(bestslot^.pos+size),CurrentSettings.alignment.LocalAlignMax);
                        end;
                      if fitatend and
                         fitatbegin then
-                       if isbetteralignedthan(abs(adjustedpos+hp^.size-size),abs(adjustedpos+size),CurrentSettings.alignment.localalignmax) then
+                       if IsBetterAlignedThan(abs(adjustedpos+hp^.size-size),abs(adjustedpos+size),CurrentSettings.alignment.LocalAlignMax) then
                          fitatbegin:=false
-                       else if isbetteralignedthan(abs(adjustedpos+size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.localalignmax) then
+                       else if IsBetterAlignedThan(abs(adjustedpos+size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.LocalAlignMax) then
                          fitatend:=false
                        else if (direction=1) then
                          fitatend:=false
@@ -370,13 +370,13 @@ implementation
              end;
           end;
          { Reuse an old temp ? }
-         if assigned(bestslot) then
+         if Assigned(bestslot) then
           begin
             if bestslot^.size=size then
              begin
                tl:=bestslot;
                { Remove from the tempfreelist }
-               if assigned(bestprev) then
+               if Assigned(bestprev) then
                  bestprev^.nextfree:=tl^.nextfree
                else
                  tempfreelist:=tl^.nextfree;
@@ -385,7 +385,7 @@ implementation
              begin
                { Duplicate bestlost and the block in the list }
                new(tl);
-               move(bestslot^,tl^,sizeof(ttemprecord));
+               move(bestslot^,tl^,sizeof(TTempRecord));
                tl^.next:=bestslot^.next;
                bestslot^.next:=tl;
                { Now we split the block in 2 parts. Depending on the direction
@@ -400,7 +400,7 @@ implementation
                    tl:=bestslot;
                    bestslot:=htl;
                    { Update the tempfreelist to point to the new block }
-                   if assigned(bestprev) then
+                   if Assigned(bestprev) then
                      bestprev^.nextfree:=bestslot
                    else
                      tempfreelist:=bestslot;
@@ -452,7 +452,7 @@ implementation
                 lasttemp:=tl^.pos+size;
               end;
 {$ifdef EXTDEBUG}
-         Comment(V_Note,'tgobj: (AllocTemp) lasttemp set to '+tostr(lasttemp));
+         Comment(VNote,'tgobj: (AllocTemp) lasttemp set to '+ToStr(lasttemp));
 {$endif}
             tl^.fini:=fini;
             tl^.alignment:=alignment;
@@ -463,29 +463,29 @@ implementation
           end;
 {$ifdef EXTDEBUG}
          tl^.posinfo:=CurrentFilePos;
-         if assigned(tl^.def) then
-           list.concat(tai_tempalloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.typename))
+         if Assigned(tl^.def) then
+           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.typename))
          else
-           list.concat(tai_tempalloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]));
-         Comment(V_Note,'tgobj: (AllocTemp) temp of size '+tostr(size)+' type '+TempTypeStr[tl^.temptype]+' requested, allocated at offset '+tostr(tl^.pos));
+           list.concat(TAITempAlloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]));
+         Comment(VNote,'tgobj: (AllocTemp) temp of size '+ToStr(size)+' type '+TempTypeStr[tl^.temptype]+' requested, allocated at offset '+ToStr(tl^.pos));
 {$else}
-         list.concat(tai_tempalloc.alloc(tl^.pos,tl^.size));
+         list.concat(TAITempAlloc.alloc(tl^.pos,tl^.size));
 {$endif}
          temp_to_ref(tl,ref);
       end;
 
 
-    procedure ttgobj.FreeTemp(list: TAsmList; pos: treftemppos; temptypes: TTempTypeSet);
+    procedure TTGObj.FreeTemp(list: TAsmList; pos: TRefTempPos; temptypes: TTempTypeSet);
       var
-         hp,hnext,hprev,hprevfree : ptemprecord;
+         hp,hnext,hprev,hprevfree : PTempRecord;
       begin
          hp:=templist;
          hprev:=nil;
          hprevfree:=nil;
 {$ifdef EXTDEBUG}
-         Comment(V_Note,'tgobj: (FreeTemp) freeing of temp at pos '+tostr(pos.val)+' requested');
+         Comment(VNote,'tgobj: (FreeTemp) freeing of temp at pos '+ToStr(pos.val)+' requested');
 {$endif}
-         while assigned(hp) do
+         while Assigned(hp) do
           begin
             if (hp^.pos=pos.val) then
              begin
@@ -493,8 +493,8 @@ implementation
                if hp^.temptype in FreeTempTypes then
                 begin
 {$ifdef EXTDEBUG}
-                  Comment(V_Warning,'tgobj: (FreeTemp) temp at pos '+tostr(pos.val)+ ' is already free !');
-                  list.concat(tai_tempalloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
+                  Comment(VWarning,'tgobj: (FreeTemp) temp at pos '+ToStr(pos.val)+ ' is already free !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
 {$endif}
                   exit;
                 end;
@@ -503,10 +503,10 @@ implementation
                 begin
 {$ifdef DEBUG_FREETEMP}
                   if hp^.temptype = tt_persistent then
-                    Comment(V_Note,'tgobj: (Freetemp) temp at pos '+tostr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing')
+                    Comment(VNote,'tgobj: (Freetemp) temp at pos '+ToStr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing')
                   else
-                    Comment(V_Warning,'tgobj: (Freetemp) temp at pos '+tostr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing');
-                  list.concat(tai_tempalloc.allocinfo(hp^.pos,hp^.size,'temp has wrong type ('+TempTypeStr[hp^.temptype]+') not releasing'));
+                    Comment(VWarning,'tgobj: (Freetemp) temp at pos '+ToStr(pos.val)+ ' has different type ('+TempTypeStr[hp^.temptype]+'), not releasing');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp has wrong type ('+TempTypeStr[hp^.temptype]+') not releasing'));
 {$endif}
                   exit;
                 end;
@@ -514,15 +514,15 @@ implementation
                { set this block to free }
                hp^.temptype:=Used2Free[hp^.temptype];
                { Update tempfreelist }
-               if assigned(hprevfree) then
+               if Assigned(hprevfree) then
                 begin
                   { Concat blocks when the previous block is free and
                     there is no block assigned for a tdef }
-                  if assigned(hprev) and
+                  if Assigned(hprev) and
                      (hp^.temptype=tt_free) and
-                     not assigned(hp^.def) and
+                     not Assigned(hp^.def) and
                      (hprev^.temptype=tt_free) and
-                     not assigned(hprev^.def) then
+                     not Assigned(hprev^.def) then
                    begin
                      inc(hprev^.size,hp^.size);
                      if direction=1 then
@@ -545,11 +545,11 @@ implementation
                { Concat blocks when the next block is free and
                  there is no block assigned for a tdef }
                hnext:=hp^.next;
-               if assigned(hnext) and
+               if Assigned(hnext) and
                   (hp^.temptype=tt_free) and
-                  not assigned(hp^.def) and
+                  not Assigned(hp^.def) and
                   (hnext^.temptype=tt_free) and
-                  not assigned(hnext^.def) then
+                  not Assigned(hnext^.def) then
                 begin
                   inc(hp^.size,hnext^.size);
                   if direction=1 then
@@ -569,58 +569,58 @@ implementation
       end;
 
 
-    procedure ttgobj.gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: treference);
+    procedure TTGObj.gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: TReference);
       begin
         gettemp(list,forcesize,def.alignment,temptype,ref);
       end;
 
 
-    procedure ttgobj.gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: treference);
+    procedure TTGObj.gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: TReference);
       begin
         gettempmanaged(list,def,temptype,ref);
       end;
 
 
-    procedure ttgobj.gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : treference);
+    procedure TTGObj.gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : TReference);
       begin
         gettempinternal(list,size,alignment,temptype,nil,false,ref);
       end;
 
 
-    procedure ttgobj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : treference);
+    procedure TTGObj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : TReference);
       var
         varalign : shortint;
       begin
-        varalign:=used_align(alignment,CurrentSettings.alignment.localalignmin,CurrentSettings.alignment.localalignmax);
+        varalign:=Used_Align(alignment,CurrentSettings.alignment.LocalAlignMin,CurrentSettings.alignment.LocalAlignMax);
         alloctemp(list,size,varalign,temptype,def,fini,ref);
       end;
 
 
-    procedure ttgobj.freetemphook(list: TAsmList; temp: ptemprecord);
+    procedure TTGObj.freetemphook(list: TAsmList; temp: PTempRecord);
       begin
-        list.concat(tai_tempalloc.dealloc(temp^.pos,temp^.size));
+        list.concat(TAITempAlloc.dealloc(temp^.pos,temp^.size));
       end;
 
 
-    procedure ttgobj.gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : treference);
+    procedure TTGObj.gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : TReference);
       begin
         gettempinternal(list,def.size,def.alignment,temptype,def,true,ref);
       end;
 
 
-    function ttgobj.istemp(const ref : treference) : boolean;
+    function TTGObj.istemp(const ref : TReference) : boolean;
       begin
          istemp:=ref.temppos.val<>ctempposinvalid.val;
       end;
 
 
-    function ttgobj.sizeoftemp(list: TAsmList; const ref: treference): asizeint;
+    function TTGObj.sizeoftemp(list: TAsmList; const ref: TReference): asizeint;
       var
-         hp : ptemprecord;
+         hp : PTempRecord;
       begin
          SizeOfTemp := -1;
          hp:=templist;
-         while assigned(hp) do
+         while Assigned(hp) do
            begin
              if (hp^.pos=ref.temppos.val) then
                begin
@@ -630,19 +630,19 @@ implementation
              hp := hp^.next;
            end;
 {$ifdef EXTDEBUG}
-         comment(v_debug,'tgobj: (SizeOfTemp) temp at pos '+tostr(ref.temppos.val)+' not found !');
-         list.concat(tai_tempalloc.allocinfo(ref.temppos.val,0,'temp not found'));
+         comment(VDebug,'tgobj: (SizeOfTemp) temp at pos '+ToStr(ref.temppos.val)+' not found !');
+         list.concat(TAITempAlloc.allocinfo(ref.temppos.val,0,'temp not found'));
 {$endif}
       end;
 
 
-    function ttgobj.changetemptype(list: tasmList; const ref:treference; temptype:TTempType):boolean;
+    function TTGObj.changetemptype(list: TAsmList; const ref:TReference; temptype:TTempType):boolean;
       var
-        hp : ptemprecord;
+        hp : PTempRecord;
       begin
          ChangeTempType:=false;
          hp:=templist;
-         while assigned(hp) do
+         while Assigned(hp) do
           begin
             if (hp^.pos=ref.temppos.val) then
              begin
@@ -650,9 +650,9 @@ implementation
                 begin
 {$ifdef EXTDEBUG}
                   if hp^.temptype=temptype then
-                    Comment(V_Warning,'tgobj: (ChangeTempType) temp'+
-                       ' at pos '+tostr(ref.temppos.val)+ ' is already of the correct type !');
-                  list.concat(tai_tempalloc.allocinfo(hp^.pos,hp^.size,'type changed to '+TempTypeStr[temptype]));
+                    Comment(VWarning,'tgobj: (ChangeTempType) temp'+
+                       ' at pos '+ToStr(ref.temppos.val)+ ' is already of the correct type !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'type changed to '+TempTypeStr[temptype]));
 {$endif}
                   ChangeTempType:=true;
                   hp^.temptype:=temptype;
@@ -660,9 +660,9 @@ implementation
                else
                 begin
 {$ifdef EXTDEBUG}
-                   Comment(V_Warning,'tgobj: (ChangeTempType) temp'+
-                      ' at pos '+tostr(ref.temppos.val)+ ' is already freed !');
-                  list.concat(tai_tempalloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
+                   Comment(VWarning,'tgobj: (ChangeTempType) temp'+
+                      ' at pos '+ToStr(ref.temppos.val)+ ' is already freed !');
+                  list.concat(TAITempAlloc.allocinfo(hp^.pos,hp^.size,'temp is already freed'));
 {$endif}
                 end;
                exit;
@@ -670,26 +670,26 @@ implementation
             hp:=hp^.next;
           end;
 {$ifdef EXTDEBUG}
-         Comment(V_Warning,'tgobj: (ChangeTempType) temp'+
-            ' at pos '+tostr(ref.temppos.val)+ ' not found !');
-         list.concat(tai_tempalloc.allocinfo(ref.temppos.val,0,'temp not found'));
+         Comment(VWarning,'tgobj: (ChangeTempType) temp'+
+            ' at pos '+ToStr(ref.temppos.val)+ ' not found !');
+         list.concat(TAITempAlloc.allocinfo(ref.temppos.val,0,'temp not found'));
 {$endif}
       end;
 
 
-    function ttgobj.gettypeoftemp(const ref:treference): TTempType;
+    function TTGObj.gettypeoftemp(const ref:TReference): TTempType;
       var
-        hp : ptemprecord;
+        hp : PTempRecord;
       begin
          hp:=templist;
-         while assigned(hp) do
+         while Assigned(hp) do
           begin
             if (hp^.pos=ref.temppos.val) then
              begin
                if hp^.temptype<>tt_free then
                  result:=hp^.temptype
                else
-                 internalerror(2007020810);
+                 InternalError(2007020810);
                exit;
              end;
             hp:=hp^.next;
@@ -698,10 +698,10 @@ implementation
       end;
 
 
-    function ttgobj.isstartoftemp(const ref: treference): boolean;
+    function TTGObj.isstartoftemp(const ref: TReference): boolean;
       var
-        hp: ptemprecord;
-        tmpref: treference;
+        hp: PTempRecord;
+        tmpref: TReference;
       begin
         hp:=templist;
         if ref.temppos.val=ctempposinvalid.val then
@@ -709,7 +709,7 @@ implementation
             result:=false;
             exit;
           end;
-        while assigned(hp) do
+        while Assigned(hp) do
          begin
            if (hp^.pos=ref.temppos.val) then
             begin
@@ -728,52 +728,52 @@ implementation
       end;
 
 
-    procedure ttgobj.temp_to_ref(p: ptemprecord; out ref: treference);
+    procedure TTGObj.temp_to_ref(p: PTempRecord; out ref: TReference);
       var
-        t: treftemppos;
+        t: TRefTempPos;
       begin
         t.val:=p^.pos;
         reference_reset_base(ref,CurrentProcInfo.framepointer,p^.pos,t,p^.alignment,[]);
       end;
 
 
-    procedure ttgobj.UnGetTemp(list: TAsmList; const ref : treference);
+    procedure TTGObj.UnGetTemp(list: TAsmList; const ref : TReference);
       begin
         FreeTemp(list,ref.temppos,[tt_normal,tt_noreuse,tt_persistent,tt_regallocator]);
       end;
 
 
-    procedure ttgobj.UnGetIfTemp(list: TAsmList; const ref : treference);
+    procedure TTGObj.UnGetIfTemp(list: TAsmList; const ref : TReference);
       begin
         if istemp(ref) then
           FreeTemp(list,ref.temppos,[tt_normal]);
       end;
 
 
-    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : treference);
+    procedure TTGObj.getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : TReference);
       begin
         if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef])  then
-          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).symtable).explicitrecordalignment, def, nil, ref)
+          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).SymTable).explicitrecordalignment, def, nil, ref)
         else
           getlocal(list, size, def.alignment, 0, def, nil, ref);
       end;
 
 
-    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; alignment, explicitalignment: shortint; def: TDef; sym : TSym; var ref : treference);
+    procedure TTGObj.getlocal(list: TAsmList; size: asizeint; alignment, explicitalignment: shortint; def: TDef; sym : TSym; var ref : TReference);
       var
         lalign : shortint;
       begin
-        lalign:=used_align(alignment,CurrentSettings.alignment.localalignmin,CurrentSettings.alignment.localalignmax);
+        lalign:=Used_Align(alignment,CurrentSettings.alignment.LocalAlignMin,CurrentSettings.alignment.LocalAlignMax);
         if (explicitalignment>lalign) then
           begin
-            if assigned(sym) then
+            if Assigned(sym) then
               CGMessage1(scanner_w_local_alignment_larger_than_max,sym.name)
             else
               CGMessage1(scanner_w_local_alignment_larger_than_max,def.typename);
           end
-        else if (alignment>lalign) and (CurrentSettings.alignment.localalignmax>1) then
+        else if (alignment>lalign) and (CurrentSettings.alignment.LocalAlignMax>1) then
           begin
-            if assigned(sym) then
+            if Assigned(sym) then
               CGMessage1(scanner_n_local_alignment_larger_than_max,sym.name)
             else
               CGMessage1(scanner_n_local_alignment_larger_than_max,def.typename);
@@ -782,13 +782,13 @@ implementation
       end;
 
 
-    procedure ttgobj.UnGetLocal(list: TAsmList; const ref : treference);
+    procedure TTGObj.UnGetLocal(list: TAsmList; const ref : TReference);
       begin
         FreeTemp(list,ref.temppos,[tt_persistent]);
       end;
 
 
-    procedure ttgobj.discard_freelist;
+    procedure TTGObj.discard_freelist;
       begin
         tempfreelist:=nil;
       end;

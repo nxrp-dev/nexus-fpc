@@ -26,111 +26,111 @@ unit symcpu;
 interface
 
 uses
-  symtype,symdef,symsym;
+  symtype,symdef,SymSym;
 
 type
   { defs }
-  tcpufiledef = class(TFileDef)
+  TCPUFileDef = class(TFileDef)
   end;
 
-  tcpuvariantdef = class(TVariantDef)
+  TCPUVariantDef = class(TVariantDef)
   end;
 
-  tcpuformaldef = class(TFormalDef)
+  TCPUFormalDef = class(TFormalDef)
   end;
 
-  tcpuforwarddef = class(TForwardDef)
+  TCPUForwardDef = class(TForwardDef)
   end;
 
-  tcpuundefineddef = class(TUndefinedDef)
+  TCPUUndefinedDef = class(TUndefinedDef)
   end;
 
-  tcpuerrordef = class(TErrorDef)
+  TCPUErrorDef = class(TErrorDef)
   end;
 
-  tcpupointerdef = class(TPointerDef)
+  TCPUPointerDef = class(TPointerDef)
   end;
 
-  tcpurecorddef = class(TRecordDef)
+  TCPURecordDef = class(TRecordDef)
   end;
 
-  tcpuimplementedinterface = class(timplementedinterface)
+  TCPUImplementedInterface = class(TImplementedInterface)
   end;
 
-  tcpuobjectdef = class(TObjectDef)
+  TCPUObjectDef = class(TObjectDef)
   end;
 
-  tcpuclassrefdef = class(TClassRefDef)
+  TCPUClassRefDef = class(TClassRefDef)
   end;
 
-  tcpuarraydef = class(TArrayDef)
+  TCPUArrayDef = class(TArrayDef)
   end;
 
-  tcpuorddef = class(TOrdDef)
+  TCPUOrdDef = class(TOrdDef)
   end;
 
-  tcpufloatdef = class(TFloatDef)
+  TCPUFloatDef = class(TFloatDef)
   end;
 
-  tcpuprocvardef = class(TProcVarDef)
+  TCPUProcVarDef = class(TProcVarDef)
   end;
 
-  tcpuprocdef = class(TProcDef)
+  TCPUProcDef = class(TProcDef)
   end;
 
-  tcpustringdef = class(TStringDef)
+  TCPUStringDef = class(TStringDef)
   end;
 
-  tcpuenumdef = class(TEnumDef)
+  TCPUEnumDef = class(TEnumDef)
   end;
 
-  tcpusetdef = class(TSetDef)
+  TCPUSetDef = class(TSetDef)
   end;
 
   { syms }
-  tcpulabelsym = class(TLabelSym)
+  TCPULabelSym = class(TLabelSym)
   end;
 
-  tcpuunitsym = class(TUnitSym)
+  TCPUUnitSym = class(TUnitSym)
   end;
 
-  tcpuprogramparasym = class(TProgramParaSym)
+  TCPUProgramParaSym = class(TProgramParaSym)
   end;
 
-  tcpunamespacesym = class(TNamespaceSym)
+  TCPUNamespaceSym = class(TNamespaceSym)
   end;
 
-  tcpuprocsym = class(TProcSym)
+  TCPUProcSym = class(TProcSym)
   end;
 
-  tcputypesym = class(TTypeSym)
+  TCPUTypeSym = class(TTypeSym)
   end;
 
-  tcpufieldvarsym = class(TFieldVarSym)
+  TCPUFieldVarSym = class(TFieldVarSym)
   end;
 
-  tcpulocalvarsym = class(TLocalVarSym)
+  TCPULocalVarSym = class(TLocalVarSym)
   end;
 
-  tcpuparavarsym = class(TParaVarSym)
+  TCPUParaVarSym = class(TParaVarSym)
   end;
 
-  tcpustaticvarsym = class(TStaticVarSym)
+  TCPUStaticVarSym = class(TStaticVarSym)
   end;
 
-  tcpuabsolutevarsym = class(TAbsoluteVarSym)
+  TCPUAbsoluteVarSym = class(TAbsoluteVarSym)
   end;
 
-  tcpupropertysym = class(TPropertySym)
+  TCPUPropertySym = class(TPropertySym)
   end;
 
-  tcpuconstsym = class(TConstSym)
+  TCPUConstSym = class(TConstSym)
   end;
 
-  tcpuenumsym = class(TEnumSym)
+  TCPUEnumSym = class(TEnumSym)
   end;
 
-  tcpusyssym = class(TSysSym)
+  TCPUSysSym = class(TSysSym)
   end;
 
 
@@ -142,41 +142,41 @@ implementation
 
 begin
   { used tdef classes }
-  cfiledef:=tcpufiledef;
-  cvariantdef:=tcpuvariantdef;
-  cformaldef:=tcpuformaldef;
-  cforwarddef:=tcpuforwarddef;
-  cundefineddef:=tcpuundefineddef;
-  cerrordef:=tcpuerrordef;
-  cpointerdef:=tcpupointerdef;
-  crecorddef:=tcpurecorddef;
-  cimplementedinterface:=tcpuimplementedinterface;
-  cobjectdef:=tcpuobjectdef;
-  cclassrefdef:=tcpuclassrefdef;
-  carraydef:=tcpuarraydef;
-  corddef:=tcpuorddef;
-  cfloatdef:=tcpufloatdef;
-  cprocvardef:=tcpuprocvardef;
-  cprocdef:=tcpuprocdef;
-  cstringdef:=tcpustringdef;
-  cenumdef:=tcpuenumdef;
-  csetdef:=tcpusetdef;
+  CFileDef:=TCPUFileDef;
+  CVariantDef:=TCPUVariantDef;
+  CFormalDef:=TCPUFormalDef;
+  CForwardDef:=TCPUForwardDef;
+  CUndefinedDef:=TCPUUndefinedDef;
+  CErrorDef:=TCPUErrorDef;
+  CPointerDef:=TCPUPointerDef;
+  CRecordDef:=TCPURecordDef;
+  cimplementedinterface:=TCPUImplementedInterface;
+  CObjectDef:=TCPUObjectDef;
+  CClassRefDef:=TCPUClassRefDef;
+  CArrayDef:=TCPUArrayDef;
+  COrdDef:=TCPUOrdDef;
+  CFloatDef:=TCPUFloatDef;
+  CProcVarDef:=TCPUProcVarDef;
+  CProcDef:=TCPUProcDef;
+  CStringDef:=TCPUStringDef;
+  CEnumDef:=TCPUEnumDef;
+  CSetDef:=TCPUSetDef;
 
   { used tsym classes }
-  clabelsym:=tcpulabelsym;
-  cunitsym:=tcpuunitsym;
-  cprogramparasym:=tcpuprogramparasym;
-  cnamespacesym:=tcpunamespacesym;
-  cprocsym:=tcpuprocsym;
-  ctypesym:=tcputypesym;
-  cfieldvarsym:=tcpufieldvarsym;
-  clocalvarsym:=tcpulocalvarsym;
-  cparavarsym:=tcpuparavarsym;
-  cstaticvarsym:=tcpustaticvarsym;
-  cabsolutevarsym:=tcpuabsolutevarsym;
-  cpropertysym:=tcpupropertysym;
-  cconstsym:=tcpuconstsym;
-  cenumsym:=tcpuenumsym;
-  csyssym:=tcpusyssym;
+  CLabelSym:=TCPULabelSym;
+  CUnitSym:=TCPUUnitSym;
+  CProgramParaSym:=TCPUProgramParaSym;
+  CNamespaceSym:=TCPUNamespaceSym;
+  CProcSym:=TCPUProcSym;
+  CTypeSym:=TCPUTypeSym;
+  CFieldVarSym:=TCPUFieldVarSym;
+  CLocalVarSym:=TCPULocalVarSym;
+  CParaVarSym:=TCPUParaVarSym;
+  CStaticVarSym:=TCPUStaticVarSym;
+  CAbsoluteVarSym:=TCPUAbsoluteVarSym;
+  CPropertySym:=TCPUPropertySym;
+  CConstSym:=TCPUConstSym;
+  CEnumSym:=TCPUEnumSym;
+  CSysSym:=TCPUSysSym;
 end.
 

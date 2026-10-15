@@ -29,16 +29,16 @@ interface
       node,nmat,ncgmat;
 
     type
-      taarch64moddivnode = class(tmoddivnode)
+      TAArch64ModDivNode = class(TModDivNode)
          function pass_1: TNode; override;
          procedure pass_generate_code;override;
       end;
 
-      taarch64notnode = class(tcgnotnode)
+      TAArch64NotNode = class(TCGNotNode)
          procedure second_boolean;override;
       end;
 
-      taarch64unaryminusnode = class(tcgunaryminusnode)
+      TAArch64UnaryMinusNode = class(TCGUnaryMinusNode)
          function pass_1: TNode; override;
          procedure second_float; override;
       end;
@@ -46,12 +46,12 @@ interface
 implementation
 
     uses
-      globtype,systems,constexp,
-      cutils,verbose,globals,
+      GlobType,Systems,ConstExp,
+      CUtils,Verbose,Globals,
       symconst,symdef,
-      aasmbase,aasmcpu,aasmtai,aasmdata,
+      aasmbase,aasmcpu,aasmtai,AAsmData,
       defutil,
-      cgbase,cgobj,hlcgobj,pass_2,procinfo,
+      cgbase,cgobj,hlcgobj,pass_2,ProcInfo,
       ncon,nutils,
       cpubase,
       ncgutil,cgcpu,cgutils;
@@ -60,28 +60,28 @@ implementation
                              taarch64moddivnode
 *****************************************************************************}
 
-    function taarch64moddivnode.pass_1: TNode;
+    function TAArch64ModDivNode.pass_1: TNode;
       begin
         result:=inherited pass_1;
-        if not assigned(result) and not(node_not_zero(right)) then
+        if not Assigned(result) and not(node_not_zero(right)) then
           include(CurrentProcInfo.flags,pi_do_call);
       end;
 
 
-    procedure taarch64moddivnode.pass_generate_code;
+    procedure TAArch64ModDivNode.pass_generate_code;
       var
-         op         : tasmop;
+         op         : TAsmOp;
          tmpreg,
          zeroreg,
          numerator,
          divider,
          largernumreg,
          largerresreg,
-         resultreg  : tregister;
-         hl         : tasmlabel;
-         overflowloc: tlocation;
-         power      : longint;
-         opsize     : tcgsize;
+         resultreg  : TRegister;
+         hl         : TAsmLabel;
+         overflowloc: TLocation;
+         power      : LongInt;
+         opsize     : TCgSize;
 
          dividend   : Int64;
          high_bit,
@@ -93,28 +93,28 @@ implementation
          magic_add  : Boolean;
          shift      : byte;
 
-         shifterop  : tshifterop;
-         hp         : taicpu;
+         shifterop  : TShifterOp;
+         hp         : TAICPU;
 
        procedure genOrdConstNodeDiv;
          var
            helper1, helper2: TRegister;
-           so: tshifterop;
+           so: TShifterOp;
          begin
-           if tordconstnode(right).value=0 then
-             internalerror(2020021601)
-           else if tordconstnode(right).value=1 then
+           if TOrdConstNode(right).value=0 then
+             InternalError(2020021601)
+           else if TOrdConstNode(right).value=1 then
              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList, opsize, opsize, numerator, resultreg)
-           else if (tordconstnode(right).value = int64(-1)) then
+           else if (TOrdConstNode(right).value = int64(-1)) then
              begin
                // note: only in the signed case possible..., may overflow
-               if cs_check_overflow in CurrentSettings.localswitches then
+               if cs_check_overflow in CurrentSettings.LocalSwitches then
                  cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 
-               CurrentAsmData.CurrAsmList.concat(setoppostfix(taicpu.op_reg_reg(A_NEG,
-                 resultreg,numerator),toppostfix(ord(cs_check_overflow in CurrentSettings.localswitches)*ord(PF_S))));
+               CurrentAsmData.CurrAsmList.concat(setoppostfix(TAICPU.op_reg_reg(A_NEG,
+                 resultreg,numerator),TOpPostfix(ord(cs_check_overflow in CurrentSettings.LocalSwitches)*ord(PF_S))));
              end
-           else if isabspowerof2(tordconstnode(right).value,power) then
+           else if IsAbsPowerOf2(TOrdConstNode(right).value,power) then
              begin
                if (is_signed(right.resultdef)) then
                  begin
@@ -129,12 +129,12 @@ implementation
                     shifterop_reset(so);
                     so.shiftmode:=SM_LSR;
                     so.shiftimm:=resultdef.size*8-power;
-                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_ADD,helper2,numerator,helper1,so));
+                    CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_ADD,helper2,numerator,helper1,so));
                     cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SAR,def_cgsize(resultdef),power,helper2,resultreg);
 
-                    if (tordconstnode(right).value < 0) then
+                    if (TOrdConstNode(right).value < 0) then
                       { Invert the result }
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_NEG,resultreg,resultreg));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_NEG,resultreg,resultreg));
                   end
                 else
                   cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_SHR,opsize,power,numerator,resultreg)
@@ -151,10 +151,10 @@ implementation
                if divider = NR_NO then
                  begin
                    divider:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                   cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,tordconstnode(right).value.svalue,divider);
+                   cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,TOrdConstNode(right).value.svalue,divider);
                  end;
 
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(op,resultreg,numerator,divider));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(op,resultreg,numerator,divider));
              end;
          end;
 
@@ -162,19 +162,19 @@ implementation
          begin
            { in case of overflow checking, also check for low(int64) div (-1)
              (no hardware support for this either) }
-           if (cs_check_overflow in CurrentSettings.localswitches) and
+           if (cs_check_overflow in CurrentSettings.LocalSwitches) and
               is_signed(left.resultdef) and
               ((right.nodetype<>ordconstn) or
-               (tordconstnode(right).value=-1)) then
+               (TOrdConstNode(right).value=-1)) then
              begin
                { num=ffff... and div=8000... <=>
                  num xor not(div xor 8000...) = 0
                  (and we have the "eon" operation, which performs "xor not(...)" }
                tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,left.resultdef);
                hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_XOR,left.resultdef,low(int64),numerator,tmpreg);
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_EON,
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_EON,
                  tmpreg,numerator,tmpreg));
-               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,tmpreg,0));
+               CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,tmpreg,0));
                { now the zero/equal flag is set in case we divided low(int64) by
                  (-1) }
                location_reset(overflowloc,LOC_FLAGS,OS_NO);
@@ -205,27 +205,27 @@ implementation
         if (right.nodetype=ordconstn) then
           begin
             { If optimising for size, just use regular division operations }
-            if (cs_opt_size in CurrentSettings.optimizerswitches) or
-              ((tordconstnode(right).value=1) or
-              (tordconstnode(right).value=int64(-1)) or
-              isabspowerof2(tordconstnode(right).value,power)) then
+            if (cs_opt_size in CurrentSettings.OptimizerSwitches) or
+              ((TOrdConstNode(right).value=1) or
+              (TOrdConstNode(right).value=int64(-1)) or
+              IsAbsPowerOf2(TOrdConstNode(right).value,power)) then
               begin
 
                 { Store divisor for later (and executed at the same time as the multiplication) }
                 if (nodetype=modn) then
                   begin
-                    if (tordconstnode(right).value = 1) or (tordconstnode(right).value = int64(-1)) then
+                    if (TOrdConstNode(right).value = 1) or (TOrdConstNode(right).value = int64(-1)) then
                       begin
                         { Just evaluates to zero }
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_MOVZ,resultreg, 0));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_MOVZ,resultreg, 0));
                         Exit;
                       end
                     { "not cs_opt_size" saves from checking the value of the divisor again
                       (if cs_opt_size is not set, then the divisor is a power of 2) }
-                    else if not (cs_opt_size in CurrentSettings.optimizerswitches) then
+                    else if not (cs_opt_size in CurrentSettings.OptimizerSwitches) then
                       begin
                         divider:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,tordconstnode(right).value.svalue,divider);
+                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,TOrdConstNode(right).value.svalue,divider);
                       end
                   end;
 
@@ -236,15 +236,15 @@ implementation
                   from the numerator }
                 if (nodetype=modn) then
                   begin
-                    if ispowerof2(tordconstnode(right).value,power) then
+                    if IsPowerOf2(TOrdConstNode(right).value,power) then
                       begin
                         shifterop.shiftmode := SM_LSL;
                         shifterop.shiftimm := power;
 
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_SUB,resultreg,numerator,resultreg,shifterop));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_SUB,resultreg,numerator,resultreg,shifterop));
                       end
                     else
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_reg(A_MSUB,resultreg,
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_reg(A_MSUB,resultreg,
                         resultreg,divider,numerator));
                   end;
 
@@ -257,13 +257,13 @@ implementation
                     if (nodetype=modn) then { Signed mod doesn't work properly }
                       begin
                         divider:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,tordconstnode(right).value.svalue,divider);
+                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,TOrdConstNode(right).value.svalue,divider);
                         genOrdConstNodeDiv;
                       end
                     else
                       begin
                         { Read signed value to avoid Internal Error 200706094 }
-                        dividend := tordconstnode(right).value.svalue;
+                        dividend := TOrdConstNode(right).value.svalue;
 
                         calc_divconst_magic_signed(resultdef.size * 8, dividend, reciprocal_signed, shift);
                         cg.a_load_const_reg(CurrentAsmData.CurrAsmList, opsize, reciprocal_signed, resultreg);
@@ -271,14 +271,14 @@ implementation
                         { SMULH is only available for the full 64-bit registers }
                         if opsize in [OS_64, OS_S64] then
                           begin
-                            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_SMULH,resultreg,resultreg,numerator));
+                            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_SMULH,resultreg,resultreg,numerator));
                             largerresreg := resultreg;
                           end
                         else
                           begin
                             largerresreg := newreg(getregtype(resultreg), getsupreg(resultreg), R_SUBWHOLE);
                             largernumreg := newreg(getregtype(numerator), getsupreg(numerator), R_SUBWHOLE);
-                            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_MUL,largerresreg,largerresreg,largernumreg));
+                            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_MUL,largerresreg,largerresreg,largernumreg));
                             expandword := True; { Merge the shift operation with something below }
                           end;
 
@@ -297,10 +297,10 @@ implementation
                                 shifterop.shiftmode := SM_ASR;
                                 shifterop.shiftimm := 32;
                                 expandword := False;
-                                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_ADD,largerresreg,largernumreg,largerresreg,shifterop));
+                                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_ADD,largerresreg,largernumreg,largerresreg,shifterop));
                               end
                             else
-                              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_ADD,resultreg,resultreg,numerator));
+                              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_ADD,resultreg,resultreg,numerator));
                           end
                         else if (dividend < 0) and (reciprocal_signed > 0) then
                           begin
@@ -308,10 +308,10 @@ implementation
                               begin
                                 { We can't append LSR to the SUB below because it's on the wrong operand }
                                 expandword := False;
-                                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_ASR,largerresreg,largerresreg,32));
+                                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_ASR,largerresreg,largerresreg,32));
                               end;
 
-                            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_SUB,resultreg,resultreg,numerator));
+                            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_SUB,resultreg,resultreg,numerator));
                           end
                         else if expandword then
                           Inc(shift,32);
@@ -320,9 +320,9 @@ implementation
                         if (shift <> 0) then
                           begin
                             if expandword then
-                              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_ASR,largerresreg,largerresreg,shift))
+                              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_ASR,largerresreg,largerresreg,shift))
                             else
-                              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_ASR,resultreg,resultreg,shift));
+                              CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_ASR,resultreg,resultreg,shift));
                           end;
 
                         { extract and add the sign bit }
@@ -330,27 +330,27 @@ implementation
                         shifterop.shiftimm := left.resultdef.size*8 - 1;
 
                         if (dividend < 0) then
-                          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_ADD,resultreg,resultreg,resultreg,shifterop))
+                          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_ADD,resultreg,resultreg,resultreg,shifterop))
                         else
-                          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_ADD,resultreg,resultreg,numerator,shifterop));
+                          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_ADD,resultreg,resultreg,numerator,shifterop));
                       end;
                   end
                 else
                   begin
-                    calc_divconst_magic_unsigned(resultdef.size * 8, tordconstnode(right).value, reciprocal, magic_add, shift);
+                    calc_divconst_magic_unsigned(resultdef.size * 8, TOrdConstNode(right).value, reciprocal, magic_add, shift);
                     { Add explicit typecast to tcgint type, to avoid range or overflow check }
-                    cg.a_load_const_reg(CurrentAsmData.CurrAsmList, opsize, tcgint(reciprocal), resultreg);
+                    cg.a_load_const_reg(CurrentAsmData.CurrAsmList, opsize, TCGInt(reciprocal), resultreg);
                     { UMULH is only available for the full 64-bit registers }
                     if opsize in [OS_64, OS_S64] then
                       begin
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_UMULH,resultreg,resultreg,numerator));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_UMULH,resultreg,resultreg,numerator));
                         largerresreg := resultreg;
                       end
                     else
                       begin
                         largerresreg := newreg(getregtype(resultreg), getsupreg(resultreg), R_SUBWHOLE);
                         largernumreg := newreg(getregtype(numerator), getsupreg(numerator), R_SUBWHOLE);
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_MUL,largerresreg,largerresreg,largernumreg));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_MUL,largerresreg,largerresreg,largernumreg));
                         expandword := True; { Try to merge the shift operation with something below }
                       end;
 
@@ -358,7 +358,7 @@ implementation
                     if (nodetype=modn) then
                       begin
                         divider:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,tordconstnode(right).value.svalue,divider);
+                        cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,TOrdConstNode(right).value.svalue,divider);
                       end;
 
                     if magic_add then
@@ -366,7 +366,7 @@ implementation
                         { We can't append LSR to the ADD below because it would require extending the registers
                           and interfere with the carry bit }
                         if expandword then
-                          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_LSR,largerresreg,largerresreg,32));
+                          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_LSR,largerresreg,largerresreg,32));
 
                         { Add the reciprocal to the high-order word, tracking the carry bit, shift, then
                           insert the carry bit via CSEL and ORR }
@@ -382,27 +382,27 @@ implementation
                         cg.a_load_const_reg(CurrentAsmData.CurrAsmList, opsize, high_bit, tmpreg);
 
                         { Generate ADDS instruction }
-                        hp := taicpu.op_reg_reg_reg(A_ADD,resultreg,resultreg,numerator);
+                        hp := TAICPU.op_reg_reg_reg(A_ADD,resultreg,resultreg,numerator);
                         hp.oppostfix := PF_S;
                         CurrentAsmData.CurrAsmList.concat(hp);
 
-                        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_cond(A_CSEL,tmpreg,tmpreg,zeroreg, C_CS));
+                        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_cond(A_CSEL,tmpreg,tmpreg,zeroreg, C_CS));
 
                         if shift>=tcgsize2size[opsize]*8 then
-                          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MOV,resultreg,tmpreg))
+                          CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_MOV,resultreg,tmpreg))
                         else
                           begin
                             shifterop.shiftmode := SM_LSR;
                             shifterop.shiftimm := shift;
 
-                            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_shifterop(A_ORR,resultreg,tmpreg,resultreg,shifterop));
+                            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_shifterop(A_ORR,resultreg,tmpreg,resultreg,shifterop));
                           end;
                       end
                     else if expandword then
                       { Include the right-shift by 32 to get the high-order DWord }
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_LSR,largerresreg,largerresreg,shift + 32))
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_LSR,largerresreg,largerresreg,shift + 32))
                     else
-                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_const(A_LSR,resultreg,resultreg,shift));
+                      CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_const(A_LSR,resultreg,resultreg,shift));
                   end;
 
               end;
@@ -423,13 +423,13 @@ implementation
             else
               op:=A_UDIV;
 
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(op,resultreg,numerator,divider));
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(op,resultreg,numerator,divider));
 
             if not(node_not_zero(right)) then
               begin
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,divider,0));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,divider,0));
                 CurrentAsmData.getjumplabel(hl);
-                CurrentAsmData.CurrAsmList.concat(taicpu.op_cond_sym(A_B,C_NE,hl));
+                CurrentAsmData.CurrAsmList.concat(TAICPU.op_cond_sym(A_B,C_NE,hl));
                 cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_DIVBYZERO',false);
                 cg.a_label(CurrentAsmData.CurrAsmList,hl);
               end;
@@ -445,10 +445,10 @@ implementation
             if divider = NR_NO then
               begin
                 divider:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
-                cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,tordconstnode(right).value.svalue,divider);
+                cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,TOrdConstNode(right).value.svalue,divider);
               end;
 
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg_reg(A_MSUB,resultreg,
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg_reg(A_MSUB,resultreg,
               resultreg,divider,numerator));
           end;
     end;
@@ -458,7 +458,7 @@ implementation
                                taarch64notnode
 *****************************************************************************}
 
-    procedure taarch64notnode.second_boolean;
+    procedure TAArch64NotNode.second_boolean;
       begin
         SecondPass(left);
         if not handle_locjump then
@@ -475,13 +475,13 @@ implementation
               LOC_SUBSETREF, LOC_CSUBSETREF:
                 begin
                   hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,
+                  CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_const(A_CMP,
                     left.location.register,0));
                   location_reset(location,LOC_FLAGS,OS_NO);
                   location.resflags:=F_EQ;
                end;
               else
-                internalerror(2003042401);
+                InternalError(2003042401);
             end;
           end;
       end;
@@ -491,7 +491,7 @@ implementation
                                    taarch64unaryminusnode
 *****************************************************************************}
 
-    function taarch64unaryminusnode.pass_1: TNode;
+    function TAArch64UnaryMinusNode.pass_1: TNode;
       begin
         Result:=inherited pass_1;
         if Result=nil then
@@ -500,18 +500,18 @@ implementation
       end;
 
 
-    procedure taarch64unaryminusnode.second_float;
+    procedure TAArch64UnaryMinusNode.second_float;
       begin
         SecondPass(left);
         hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
         location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
         location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
-        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_FNEG,location.register,left.location.register));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg(A_FNEG,location.register,left.location.register));
         cg.maybe_check_for_fpu_exception(CurrentAsmData.CurrAsmList);
       end;
 
 begin
-   cmoddivnode:=taarch64moddivnode;
-   cnotnode:=taarch64notnode;
-   cunaryminusnode:=taarch64unaryminusnode;
+   CModDivNode:=TAArch64ModDivNode;
+   CNotNode:=TAArch64NotNode;
+   CUnaryMinusNode:=TAArch64UnaryMinusNode;
 end.

@@ -26,87 +26,87 @@ unit finput;
 interface
 
     uses
-      cutils,globtype,cclasses,cstreams;
+      CUtils,GlobType,CClasses,CStreams;
 
     const
        InputFileBufSize=32*1024+1;
-       linebufincrease=512;
+       LineBufIncrease=512;
 
     type
-       tlongintarr = array of longint;
+       TLongIntArr = array of LongInt;
 
-       tinputfile = class
-         path,name : TPathStr;       { path and filename }
-         inc_path  : TPathStr;       { path if file was included with $I directive }
-         next      : tinputfile;    { next file for reading }
+       TInputFile = class
+         Path,Name : TPathStr;       { path and filename }
+         IncPath  : TPathStr;       { path if file was included with $I directive }
+         Next      : TInputFile;    { next file for reading }
 
-         buf          : TAnsiCharDynArray;      { buffer }
-         bufstart,                  { buffer start position in the file }
-         bufsize,                   { amount of bytes in the buffer }
-         maxbufsize   : longint;    { size in memory for the buffer }
+         Buf          : TAnsiCharDynArray;      { buffer }
+         BufStart,                  { buffer start position in the file }
+         BufSize,                   { amount of bytes in the buffer }
+         MaxBufSize   : LongInt;    { size in memory for the buffer }
 
-         saveinputpointer : pchar;  { save fields for scanner variables }
-         savelastlinepos,
-         saveline_no      : longint;
+         SaveInputPointer : PChar;  { save fields for scanner variables }
+         SaveLastLinePos,
+         SaveLineNo      : LongInt;
 
-         linebuf    : tlongintarr;  { line buffer to retrieve lines }
-         maxlinebuf : longint;
+         LineBuf    : TLongIntArr;  { line buffer to retrieve lines }
+         MaxLineBuf : LongInt;
 
-         ref_index  : longint;
+         RefIndex  : LongInt;
 
-         is_macro,
-         endoffile,                 { still bytes left to read }
-         closed       : boolean;    { is the file closed }
+         IsMacro,
+         EndOfFile,                 { still bytes left to read }
+         Closed       : Boolean;    { is the file closed }
 
          { this file represents an internally generated macro. Enables
            certain escape sequences }
-         internally_generated_macro: boolean;
+         InternallyGeneratedMacro: Boolean;
 
-         constructor create(const fn:TPathStr);
-         destructor  destroy;override;
-         procedure setpos(l:longint);
-         procedure seekbuf(fpos:longint);
-         procedure readbuf;
-         function  open:boolean;
-         procedure close;
-         procedure tempclose;
-         function  tempopen:boolean;
-         procedure setmacro(p:pchar;len:longint);
-         procedure setline(line,linepos:longint);
-         function  getlinestr(l:longint):ShortString;
-         function  getfiletime:longint;
+         constructor Create(const FN:TPathStr);
+         destructor  Destroy;override;
+         procedure SetPos(L:LongInt);
+         procedure SeekBuf(FPos:LongInt);
+         procedure ReadBuf;
+         function  Open:Boolean;
+         procedure Close;
+         procedure TempClose;
+         function  TempOpen:Boolean;
+         procedure SetMacro(P:PChar;Len:LongInt);
+         procedure SetLine(Line,LinePos:LongInt);
+         function  GetLineStr(L:LongInt):ShortString;
+         function  GetFileTime:LongInt;
        protected
-         filetime  : longint;
-         function fileopen(const filename: TPathStr): boolean; virtual; abstract;
-         function fileseek(pos: longint): boolean; virtual; abstract;
-         function fileread(var databuf; maxsize: longint): longint; virtual; abstract;
-         function fileeof: boolean; virtual; abstract;
-         function fileclose: boolean; virtual; abstract;
-         procedure filegettime; virtual; abstract;
+         FileTime  : LongInt;
+         function FileOpen(const FileName: TPathStr): Boolean; virtual; abstract;
+         function FileSeek(Pos: LongInt): Boolean; virtual; abstract;
+         function FileRead(var DataBuf; MaxSize: LongInt): LongInt; virtual; abstract;
+         function FileEOF: Boolean; virtual; abstract;
+         function FileClose: Boolean; virtual; abstract;
+         procedure FileGetTime; virtual; abstract;
        end;
-       ptinputfile = ^tinputfile;
+       PInputFile = ^TInputFile;
 
-       tdosinputfile = class(tinputfile)
+       TDOSInputFile = class(TInputFile)
        protected
-         function fileopen(const filename: TPathStr): boolean; override;
-         function fileseek(pos: longint): boolean; override;
-         function fileread(var databuf; maxsize: longint): longint; override;
-         function fileeof: boolean; override;
-         function fileclose: boolean; override;
-         procedure filegettime; override;
+         function FileOpen(const FileName: TPathStr): Boolean; override;
+         function FileSeek(Pos: LongInt): Boolean; override;
+         function FileRead(var DataBuf; MaxSize: LongInt): LongInt; override;
+         function FileEOF: Boolean; override;
+         function FileClose: Boolean; override;
+         procedure FileGetTime; override;
        private
-         f            : TCCustomFileStream;       { current file handle }
+         F            : TCCustomFileStream;       { current file handle }
        end;
 
-       tinputfilemanager = class
-          files : ptinputfile;
-          nfiles,afiles : sizeint;
-          constructor create;
-          destructor destroy;override;
-          procedure register_file(f : tinputfile);
-          function  get_file(l:longint) : tinputfile;
-          function  get_file_name(l :longint):TPathStr;
-          function  get_file_path(l :longint):TPathStr;
+       TInputFileManager = class
+          Files : PInputFile;
+          NFiles,AFiles : SizeInt;
+          constructor Create;
+          destructor Destroy;override;
+          procedure Register_File(F : TInputFile);
+          function  Get_File(L:LongInt) : TInputFile;
+          function  Get_File_Name(L :LongInt):TPathStr;
+          function  Get_File_Path(L :LongInt):TPathStr;
        end;
 
 {****************************************************************************
@@ -114,7 +114,7 @@ interface
  ****************************************************************************}
 
      type
-        tmodulestate = (ms_unknown,
+        TModuleState = (ms_unknown,
           ms_registered, { tmodule created }
           ms_load,
           ms_compile,    { parsing and compiling }
@@ -127,7 +127,7 @@ interface
           ms_processed,   { task complete }
           ms_moduleerror
         );
-        tmodulestates = set of tmodulestate;
+        TModuleStates = set of TModuleState;
 
      const
         ModuleStateStr : array[TModuleState] of string[32] = (
@@ -146,59 +146,59 @@ interface
         );
 
      type
-        tmodulebase = class(TLinkedListItem)
+        TModuleBase = class(TLinkedListItem)
           { index }
-          moduleid      : longint;  { global counter for browser }
+          ModuleID      : LongInt;  { global counter for browser }
           { status }
-          state            : tmodulestate;
+          State            : TModuleState;
           { sources }
-          sourcefiles      : tinputfilemanager;
+          SourceFiles      : TInputFileManager;
           { paths and filenames }
-          paramallowoutput : boolean;  { original allowoutput parameter }
-          modulename,               { name of the module in uppercase }
-          realmodulename: pshortstring; { name of the module in the original case }
-          paramfn,                  { original filename }
-          mainsource,               { name of the main sourcefile }
-          objfilename,              { fullname of the objectfile }
-          asmfilename,              { fullname of the assemblerfile }
-          ppufilename,              { fullname of the ppufile }
+          ParamAllowOutput : Boolean;  { original allowoutput parameter }
+          ModuleName,               { name of the module in uppercase }
+          RealModuleName: PShortString; { name of the module in the original case }
+          ParamFN,                  { original filename }
+          MainSource,               { name of the main sourcefile }
+          ObjFileName,              { fullname of the objectfile }
+          AsmFileName,              { fullname of the assemblerfile }
+          PPUFileName,              { fullname of the ppufile }
 {$ifdef DEBUG_NODE_XML}
-          ppxfilename,              { fullname of the intermediate node XML file }
+          PPXFileName,              { fullname of the intermediate node XML file }
 {$endif DEBUG_NODE_XML}
-          importlibfilename,        { fullname of the import libraryfile }
-          staticlibfilename,        { fullname of the static libraryfile }
-          sharedlibfilename,        { fullname of the shared libraryfile }
-          exportfilename,           { fullname of the export file }
-          mapfilename,              { fullname of the mapfile }
-          exefilename,              { fullname of the exefile }
-          dbgfilename,              { fullname of the debug info file }
-          path,                     { path where the module is find/created }
-          outputpath   : TPathStr;  { path where the .s / .o / exe are created }
+          ImportLibFileName,        { fullname of the import libraryfile }
+          StaticLibFileName,        { fullname of the static libraryfile }
+          SharedLibFileName,        { fullname of the shared libraryfile }
+          ExportFileName,           { fullname of the export file }
+          MapFileName,              { fullname of the mapfile }
+          ExeFileName,              { fullname of the exefile }
+          DbgFileName,              { fullname of the debug info file }
+          Path,                     { path where the module is find/created }
+          OutputPath   : TPathStr;  { path where the .s / .o / exe are created }
 {$ifdef DEBUG_NODE_XML}
-          ppxfilefail: Boolean;     { If the ppxfile could not be accessed, flag it }
+          PPXFileFail: Boolean;     { If the ppxfile could not be accessed, flag it }
 {$endif DEBUG_NODE_XML}
-          is_initial : boolean;     { is this the initial module, i.e. the one specified on the command-line ?}
-          constructor create(const s:string);
-          destructor destroy;override;
-          procedure setfilename(const fn:TPathStr;allowoutput:boolean);
+          IsInitial : Boolean;     { is this the initial module, i.e. the one specified on the command-line ?}
+          constructor Create(const S:string);
+          destructor Destroy;override;
+          procedure SetFileName(const FN:TPathStr;AllowOutput:Boolean);
        end;
 
 
-     Function GetNamedFileTime (Const F : TPathStr) : Longint;
+     Function GetNamedFileTime (Const F : TPathStr) : LongInt;
 
 
 implementation
 
 uses
   SysUtils,
-  Comphook,
+  CompHook,
 {$ifndef GENERIC_CPU}
 {$ifdef heaptrc}
-  fmodule,
-  ppheap,
+  FModule,
+  PPHeap,
 {$endif heaptrc}
 {$endif not GENERIC_CPU}
-  cfileutl,
+  CFileUtl,
   Globals,Systems
   ;
 
@@ -207,9 +207,9 @@ uses
                                   Utils
  ****************************************************************************}
 
-   Function GetNamedFileTime (Const F : TPathStr) : Longint;
+   Function GetNamedFileTime (Const F : TPathStr) : LongInt;
      begin
-       GetNamedFileTime:=do_getnamedfiletime(F);
+       GetNamedFileTime:=Do_GetNamedFileTime(F);
      end;
 
 
@@ -217,235 +217,235 @@ uses
                                   TINPUTFILE
  ****************************************************************************}
 
-    constructor tinputfile.create(const fn:TPathStr);
+    constructor TInputFile.Create(const FN:TPathStr);
       begin
-        name:=ExtractFileName(fn);
-        path:=ExtractFilePath(fn);
-        inc_path:='';
-        next:=nil;
-        filetime:=-1;
-        buf:=nil;
-        bufstart:=0;
-        bufsize:=0;
-        maxbufsize:=InputFileBufSize;
+        Name:=ExtractFileName(FN);
+        Path:=ExtractFilePath(FN);
+        IncPath:='';
+        Next:=nil;
+        FileTime:=-1;
+        Buf:=nil;
+        BufStart:=0;
+        BufSize:=0;
+        MaxBufSize:=InputFileBufSize;
       { save fields }
-        saveinputpointer:=nil;
-        saveline_no:=0;
-        savelastlinepos:=0;
+        SaveInputPointer:=nil;
+        SaveLineNo:=0;
+        SaveLastLinePos:=0;
       { indexing refs }
-        ref_index:=0;
+        RefIndex:=0;
       { line buffer }
-        linebuf:=nil;
-        maxlinebuf:=0;
+        LineBuf:=nil;
+        MaxLineBuf:=0;
       { file info }
-        is_macro:=false;
-        endoffile:=false;
-        closed:=true;
-        internally_generated_macro:=false;
+        IsMacro:=False;
+        EndOfFile:=False;
+        Closed:=True;
+        InternallyGeneratedMacro:=False;
       end;
 
 
-    destructor tinputfile.destroy;
+    destructor TInputFile.Destroy;
       begin
-        if not closed then
-         close;
-        linebuf:=Nil;
-      end;
-
-
-    procedure tinputfile.setpos(l:longint);
-      begin
-        bufstart:=l;
-      end;
-
-
-    procedure tinputfile.seekbuf(fpos:longint);
-      begin
-        if closed then
-         exit;
-        fileseek(fpos);
-        bufstart:=fpos;
-        bufsize:=0;
-      end;
-
-
-    procedure tinputfile.readbuf;
-      begin
-        if is_macro then
-         endoffile:=true;
-        if closed then
-         exit;
-        inc(bufstart,bufsize);
-        bufsize:=fileread(buf[0],maxbufsize-1);
-        buf[bufsize]:=#0;
-        endoffile:=fileeof;
-      end;
-
-
-    function tinputfile.open:boolean;
-      begin
-        open:=false;
-        if not closed then
+        if not Closed then
          Close;
-        if not fileopen(path+name) then
-         exit;
+        LineBuf:=Nil;
+      end;
+
+
+    procedure TInputFile.SetPos(L:LongInt);
+      begin
+        BufStart:=L;
+      end;
+
+
+    procedure TInputFile.SeekBuf(FPos:LongInt);
+      begin
+        if Closed then
+         Exit;
+        FileSeek(FPos);
+        BufStart:=FPos;
+        BufSize:=0;
+      end;
+
+
+    procedure TInputFile.ReadBuf;
+      begin
+        if IsMacro then
+         EndOfFile:=True;
+        if Closed then
+         Exit;
+        Inc(BufStart,BufSize);
+        BufSize:=FileRead(Buf[0],MaxBufSize-1);
+        Buf[BufSize]:=#0;
+        EndOfFile:=FileEOF;
+      end;
+
+
+    function TInputFile.Open:Boolean;
+      begin
+        Open:=False;
+        if not Closed then
+         Close;
+        if not FileOpen(Path+Name) then
+         Exit;
       { file }
-        endoffile:=false;
-        closed:=false;
-        SetLength(buf,MaxBufsize);
-        buf[0]:=#0;
-        bufstart:=0;
-        bufsize:=0;
-        open:=true;
+        EndOfFile:=False;
+        Closed:=False;
+        SetLength(Buf,MaxBufSize);
+        Buf[0]:=#0;
+        BufStart:=0;
+        BufSize:=0;
+        Open:=True;
       end;
 
 
-    procedure tinputfile.close;
+    procedure TInputFile.Close;
       begin
-        if is_macro then
+        if IsMacro then
          begin
-           buf:=nil;
-           name:='';
-           path:='';
-           closed:=true;
-           exit;
+           Buf:=nil;
+           Name:='';
+           Path:='';
+           Closed:=True;
+           Exit;
          end;
-        if not closed then
+        if not Closed then
          begin
-           fileclose;
-           closed:=true;
+           FileClose;
+           Closed:=True;
          end;
-        if assigned(buf) then
-          buf:=nil;
-        bufstart:=0;
+        if Assigned(Buf) then
+          Buf:=nil;
+        BufStart:=0;
       end;
 
 
-    procedure tinputfile.tempclose;
+    procedure TInputFile.TempClose;
       begin
-        if is_macro then
-         exit;
-        if not closed then
+        if IsMacro then
+         Exit;
+        if not Closed then
          begin
-           fileclose;
-           buf:=nil;
-           closed:=true;
+           FileClose;
+           Buf:=nil;
+           Closed:=True;
          end;
       end;
 
 
-    function tinputfile.tempopen:boolean;
+    function TInputFile.TempOpen:Boolean;
       begin
-        tempopen:=false;
-        if is_macro then
+        TempOpen:=False;
+        if IsMacro then
          begin
            { seek buffer position to bufstart }
-           if bufstart>0 then
+           if BufStart>0 then
             begin
-              move(buf[bufstart],buf[0],bufsize-bufstart+1);
-              bufstart:=0;
+              Move(Buf[BufStart],Buf[0],BufSize-BufStart+1);
+              BufStart:=0;
             end;
-           tempopen:=true;
-           exit;
+           TempOpen:=True;
+           Exit;
          end;
-        if not closed then
-         exit;
-        if not fileopen(path+name) then
-         exit;
-        closed:=false;
+        if not Closed then
+         Exit;
+        if not FileOpen(Path+Name) then
+         Exit;
+        Closed:=False;
       { get new mem }
-        SetLength(buf,maxbufsize);
+        SetLength(Buf,MaxBufSize);
       { restore state }
-        fileseek(BufStart);
-        bufsize:=0;
-        readbuf;
-        tempopen:=true;
+        FileSeek(BufStart);
+        BufSize:=0;
+        ReadBuf;
+        TempOpen:=True;
       end;
 
 
-    procedure tinputfile.setmacro(p:pchar;len:longint);
+    procedure TInputFile.SetMacro(P:PChar;Len:LongInt);
       begin
       { create new buffer }
-        SetLength(buf,len+1);
-        if len>0 then
-          move(p^,buf[0],len);
-        buf[len]:=#0;
+        SetLength(Buf,Len+1);
+        if Len>0 then
+          Move(P^,Buf[0],Len);
+        Buf[Len]:=#0;
       { reset }
-        bufstart:=0;
-        bufsize:=len;
-        maxbufsize:=len+1;
-        is_macro:=true;
-        endoffile:=true;
-        closed:=true;
+        BufStart:=0;
+        BufSize:=Len;
+        MaxBufSize:=Len+1;
+        IsMacro:=True;
+        EndOfFile:=True;
+        Closed:=True;
       end;
 
 
-    procedure tinputfile.setline(line,linepos:longint);
+    procedure TInputFile.SetLine(Line,LinePos:LongInt);
       begin
-        if line<1 then
-         exit;
-        while (line>=maxlinebuf) do
+        if Line<1 then
+         Exit;
+        while (Line>=MaxLineBuf) do
           begin
             { create new linebuf and move old info }
-            SetLength(linebuf,(maxlinebuf+linebufincrease));
-            inc(maxlinebuf,linebufincrease);
+            SetLength(LineBuf,(MaxLineBuf+LineBufIncrease));
+            Inc(MaxLineBuf,LineBufIncrease);
           end;
-        linebuf[line]:=linepos;
+        LineBuf[Line]:=LinePos;
       end;
 
 
-    function tinputfile.getlinestr(l:longint):ShortString;
+    function TInputFile.GetLineStr(L:LongInt):ShortString;
       var
-        c    : char;
-        i,
-        fpos : longint;
-        p    : pchar;
+        C    : Char;
+        I,
+        FPos : LongInt;
+        P    : PChar;
       begin
-        getlinestr:='';
-        if l<maxlinebuf then
+        GetLineStr:='';
+        if L<MaxLineBuf then
          begin
-           fpos:=linebuf[l];
+           FPos:=LineBuf[L];
            { fpos is set negativ if the line was already written }
            { but we still know the correct value                 }
-           if fpos<0 then
-             fpos:=-fpos+1;
-           if closed then
-            open;
+           if FPos<0 then
+             FPos:=-FPos+1;
+           if Closed then
+            Open;
          { in current buf ? }
-           if (fpos<bufstart) or (fpos>bufstart+bufsize) then
+           if (FPos<BufStart) or (FPos>BufStart+BufSize) then
             begin
-              seekbuf(fpos);
-              readbuf;
+              SeekBuf(FPos);
+              ReadBuf;
             end;
          { the begin is in the buf now simply read until #13,#10 }
-           i:=0;
-           p:=@buf[fpos-bufstart];
+           I:=0;
+           P:=@Buf[FPos-BufStart];
            repeat
-             c:=p^;
-             if c=#0 then
+             C:=P^;
+             if C=#0 then
               begin
-                if endoffile then
-                 break;
-                readbuf;
-                p:=@buf[0];
-                c:=p^;
+                if EndOfFile then
+                 Break;
+                ReadBuf;
+                P:=@Buf[0];
+                C:=P^;
               end;
-             if c in [#10,#13] then
-              break;
-             inc(i);
-             getlinestr[i]:=c;
-             inc(p);
-           until (i=255);
-           getlinestr[0]:=chr(i);
+             if C in [#10,#13] then
+              Break;
+             Inc(I);
+             GetLineStr[I]:=C;
+             Inc(P);
+           until (I=255);
+           GetLineStr[0]:=Chr(I);
          end;
       end;
 
 
-    function tinputfile.getfiletime:longint;
+    function TInputFile.GetFileTime:LongInt;
       begin
-        if filetime=-1 then
-         filegettime;
-        getfiletime:=filetime;
+        if FileTime=-1 then
+         FileGetTime;
+        GetFileTime:=FileTime;
       end;
 
 
@@ -453,63 +453,63 @@ uses
                                 TDOSINPUTFILE
  ****************************************************************************}
 
-    function tdosinputfile.fileopen(const filename: TPathStr): boolean;
+    function TDOSInputFile.FileOpen(const FileName: TPathStr): Boolean;
       begin
         { Check if file exists, this will also check if it is
           a real file and not a directory }
-        if not fileexists(filename,false) then
+        if not FileExists(FileName,False) then
           begin
-            result:=false;
-            exit;
+            Result:=False;
+            Exit;
           end;
         { Open file }
-        fileopen:=false;
+        FileOpen:=False;
         try
-          f:=CFileStreamClass.Create(filename,fmOpenRead);
-          fileopen:=CStreamError=0;
+          F:=CFileStreamClass.Create(FileName,fmOpenRead);
+          FileOpen:=CStreamError=0;
         except
         end;
       end;
 
 
-    function tdosinputfile.fileseek(pos: longint): boolean;
+    function TDOSInputFile.FileSeek(Pos: LongInt): Boolean;
       begin
-        fileseek:=false;
+        FileSeek:=False;
         try
-          f.position:=Pos;
-          fileseek:=true;
+          F.Position:=Pos;
+          FileSeek:=True;
         except
         end;
       end;
 
 
-    function tdosinputfile.fileread(var databuf; maxsize: longint): longint;
+    function TDOSInputFile.FileRead(var DataBuf; MaxSize: LongInt): LongInt;
       begin
-        fileread:=f.Read(databuf,maxsize);
+        FileRead:=F.Read(DataBuf,MaxSize);
       end;
 
 
-    function tdosinputfile.fileeof: boolean;
+    function TDOSInputFile.FileEOF: Boolean;
       begin
-        fileeof:=f.eof();
+        FileEOF:=F.EOF();
       end;
 
 
-    function tdosinputfile.fileclose: boolean;
+    function TDOSInputFile.FileClose: Boolean;
       begin
-        fileclose:=false;
+        FileClose:=False;
         try
-          f.Free;
-          f := nil;
-          fileclose:=true;
+          F.Free;
+          F := nil;
+          FileClose:=True;
         except
         end;
       end;
 
 
-    procedure tdosinputfile.filegettime;
+    procedure TDOSInputFile.FileGetTime;
       begin
-        filetime:=getnamedfiletime(path+name);
+        FileTime:=GetNamedFileTime(Path+Name);
       end;
 
 
@@ -517,73 +517,73 @@ uses
                                 Tinputfilemanager
  ****************************************************************************}
 
-    constructor tinputfilemanager.create;
+    constructor TInputFileManager.Create;
       begin
       end;
 
 
-    destructor tinputfilemanager.destroy;
+    destructor TInputFileManager.Destroy;
       var
-         ifile : SizeInt;
+         IFile : SizeInt;
       begin
-         for ifile:=0 to nfiles-1 do
-          FreeAndNil(files[ifile]);
-         FreeMem(files);
+         for IFile:=0 to NFiles-1 do
+          FreeAndNil(Files[IFile]);
+         FreeMem(Files);
       end;
 
 
-    procedure tinputfilemanager.register_file(f : tinputfile);
+    procedure TInputFileManager.Register_File(F : TInputFile);
       begin
          { don't register macro's }
-         if f.is_macro then
-          exit;
+         if F.IsMacro then
+          Exit;
 
-         if nfiles=afiles then
+         if NFiles=AFiles then
           begin
-            afiles:=afiles+4+SizeUint(afiles) div 4+SizeUint(afiles) div 8;
-            ReallocMem(files,afiles*sizeof(files[0]));
+            AFiles:=AFiles+4+SizeUInt(AFiles) div 4+SizeUInt(AFiles) div 8;
+            ReallocMem(Files,AFiles*SizeOf(Files[0]));
           end;
-         f.ref_index:=1+nfiles;
-         files[nfiles]:=f;
-         inc(nfiles);
+         F.RefIndex:=1+NFiles;
+         Files[NFiles]:=F;
+         Inc(NFiles);
 
 {$ifndef GENERIC_CPU}
 {$ifdef heaptrc}
-         ppheap_register_file(f.path+f.name,CurrentModule.moduleid*100000+f.ref_index);
+         ppheap_register_file(F.Path+F.Name,CurrentModule.ModuleID*100000+F.RefIndex);
 {$endif heaptrc}
 {$endif not GENERIC_CPU}
       end;
 
 
-   function tinputfilemanager.get_file(l :longint) : tinputfile;
+   function TInputFileManager.Get_File(L :LongInt) : TInputFile;
      begin
-       if not ((l>=1) and (l<=nfiles)) then
-         exit(nil);
-       result:=files[l-1];
+       if not ((L>=1) and (L<=NFiles)) then
+         Exit(nil);
+       Result:=Files[L-1];
      end;
 
 
-   function tinputfilemanager.get_file_name(l :longint):TPathStr;
+   function TInputFileManager.Get_File_Name(L :LongInt):TPathStr;
      var
-       hp : tinputfile;
+       HP : TInputFile;
      begin
-       hp:=get_file(l);
-       if assigned(hp) then
-        get_file_name:=hp.name
+       HP:=Get_File(L);
+       if Assigned(HP) then
+        Get_File_Name:=HP.Name
        else
-        get_file_name:='';
+        Get_File_Name:='';
      end;
 
 
-   function tinputfilemanager.get_file_path(l :longint):TPathStr;
+   function TInputFileManager.Get_File_Path(L :LongInt):TPathStr;
      var
-       hp : tinputfile;
+       HP : TInputFile;
      begin
-       hp:=get_file(l);
-       if assigned(hp) then
-        get_file_path:=hp.path
+       HP:=Get_File(L);
+       if Assigned(HP) then
+        Get_File_Path:=HP.Path
        else
-        get_file_path:='';
+        Get_File_Path:='';
      end;
 
 
@@ -591,115 +591,115 @@ uses
                                 TModuleBase
  ****************************************************************************}
 
-    procedure tmodulebase.setfilename(const fn:TPathStr;allowoutput:boolean);
+    procedure TModuleBase.SetFileName(const FN:TPathStr;AllowOutput:Boolean);
       var
-        p, n,
-        prefix,
-        suffix : TPathStr;
+        P, N,
+        Prefix,
+        Suffix : TPathStr;
       begin
          { Create names }
-         paramfn := fn;
-         paramallowoutput := allowoutput;
-         p := FixPath(ExtractFilePath(fn),false);
-         n := FixFileName(ChangeFileExt(ExtractFileName(fn),''));
+         ParamFN := FN;
+         ParamAllowOutput := AllowOutput;
+         P := FixPath(ExtractFilePath(FN),False);
+         N := FixFileName(ChangeFileExt(ExtractFileName(FN),''));
          { set path }
-         path:=p;
+         Path:=P;
          { obj,asm,ppu names }
          if AllowOutput then
            begin
              if (OutputUnitDir<>'') then
-               p:=OutputUnitDir
+               P:=OutputUnitDir
              else
                if (OutputExeDir<>'') then
-                 p:=OutputExeDir;
+                 P:=OutputExeDir;
            end;
-         outputpath:=p;
-         asmfilename:=p+n+TargetInfo.asmext;
-         objfilename:=p+n+TargetInfo.objext;
-         ppufilename:=p+n+TargetInfo.unitext;
+         OutputPath:=P;
+         AsmFileName:=P+N+TargetInfo.ASMExt;
+         ObjFileName:=P+N+TargetInfo.ObjExt;
+         PPUFileName:=P+N+TargetInfo.UnitExt;
 {$ifdef DEBUG_NODE_XML}
-         ppxfilename:=p+n+'-node-dump.xml';
+         PPXFileName:=P+N+'-node-dump.xml';
 {$endif DEBUG_NODE_XML}
-         importlibfilename:=p+TargetInfo.importlibprefix+n+TargetInfo.importlibext;
-         staticlibfilename:=p+TargetInfo.staticlibprefix+n+TargetInfo.staticlibext;
-         exportfilename:=p+'exp'+n+TargetInfo.objext;
+         ImportLibFileName:=P+TargetInfo.ImportLibPrefix+N+TargetInfo.ImportLibExt;
+         StaticLibFileName:=P+TargetInfo.StaticLibPrefix+N+TargetInfo.StaticLibExt;
+         ExportFileName:=P+'exp'+N+TargetInfo.ObjExt;
 
          { output dir of exe can be specified separately }
          if AllowOutput and (OutputExeDir<>'') then
-           p:=OutputExeDir
+           P:=OutputExeDir
          else
-           p:=path;
+           P:=Path;
 
          { lib and exe could be loaded with a file specified with -o }
-         if AllowOutput and is_initial and
+         if AllowOutput and IsInitial and
             (OutputFileName<>'')then
            begin
-             exefilename:=p+OutputFileName;
-             sharedlibfilename:=p+OutputFileName;
-             n:=ChangeFileExt(OutputFileName,''); { for mapfilename and dbgfilename }
+             ExeFileName:=P+OutputFileName;
+             SharedLibFileName:=P+OutputFileName;
+             N:=ChangeFileExt(OutputFileName,''); { for mapfilename and dbgfilename }
            end
          else
            begin
-             exefilename:=p+n+TargetInfo.exeext;
+             ExeFileName:=P+N+TargetInfo.ExeExt;
              if Assigned(OutputPrefix) then
-               prefix := OutputPrefix^
+               Prefix := OutputPrefix^
              else
-               prefix := TargetInfo.sharedlibprefix;
+               Prefix := TargetInfo.SharedLibPrefix;
              if Assigned(OutputSuffix) then
-               suffix := OutputSuffix^
+               Suffix := OutputSuffix^
              else
-               suffix := '';
-             sharedlibfilename:=p+prefix+n+suffix+TargetInfo.sharedlibext;
+               Suffix := '';
+             SharedLibFileName:=P+Prefix+N+Suffix+TargetInfo.SharedLibExt;
            end;
-         mapfilename:=p+n+'.map';
-         dbgfilename:=p+n+'.dbg';
+         MapFileName:=P+N+'.map';
+         DbgFileName:=P+N+'.dbg';
       end;
 
 
-    constructor tmodulebase.create(const s:string);
+    constructor TModuleBase.Create(const S:string);
       begin
-        modulename:=stringdup(Upper(s));
-        realmodulename:=stringdup(s);
-        mainsource:='';
-        ppufilename:='';
+        ModuleName:=StringDup(Upper(S));
+        RealModuleName:=StringDup(S);
+        MainSource:='';
+        PPUFileName:='';
 {$ifdef DEBUG_NODE_XML}
-        ppxfilename:='';
+        PPXFileName:='';
 {$endif DEBUG_NODE_XML}
-        objfilename:='';
-        asmfilename:='';
-        importlibfilename:='';
-        staticlibfilename:='';
-        sharedlibfilename:='';
-        exefilename:='';
-        dbgfilename:='';
-        mapfilename:='';
-        outputpath:='';
-        paramfn:='';
-        path:='';
+        ObjFileName:='';
+        AsmFileName:='';
+        ImportLibFileName:='';
+        StaticLibFileName:='';
+        SharedLibFileName:='';
+        ExeFileName:='';
+        DbgFileName:='';
+        MapFileName:='';
+        OutputPath:='';
+        ParamFN:='';
+        Path:='';
 {$ifdef DEBUG_NODE_XML}
         { Setting ppxfilefail to true will stop it from being written to if it
           was never initialised, which happens if a module doesn't need
           recompiling. }
-        ppxfilefail := True;
+        PPXFileFail := True;
 {$endif DEBUG_NODE_XML}
         { status }
-        state:=ms_registered;
+        State:=ms_registered;
         { unit index }
-        inc(global_unit_count);
-        moduleid:=global_unit_count;
+        Inc(Global_Unit_Count);
+        ModuleID:=Global_Unit_Count;
         { sources }
-        sourcefiles:=TInputFileManager.Create;
+        SourceFiles:=TInputFileManager.Create;
       end;
 
 
-    destructor tmodulebase.destroy;
+    destructor TModuleBase.Destroy;
       begin
-        if assigned(sourcefiles) then
-         sourcefiles.free;
-        sourcefiles:=nil;
-        stringdispose(modulename);
-        stringdispose(realmodulename);
-        inherited destroy;
+        if Assigned(SourceFiles) then
+         SourceFiles.Free;
+        SourceFiles:=nil;
+        StringDispose(ModuleName);
+        StringDispose(RealModuleName);
+        inherited Destroy;
       end;
 
 end.

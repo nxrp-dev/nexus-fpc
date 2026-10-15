@@ -42,7 +42,7 @@ program fpc_with_gdb;
 }
 
 uses
-  sysutils,
+  SysUtils,
   dos;
 
 const
@@ -70,13 +70,13 @@ const
 
 
 { Dos/Windows GDB still need forward slashes }
-procedure AdaptToGDB(var filename : string);
+procedure AdaptToGDB(var FileName : string);
 var
-  i : longint;
+  i : LongInt;
 begin
-  for i:=1 to length(filename) do
-    if filename[i]='\' then
-      filename[i]:='/';
+  for i:=1 to length(FileName) do
+    if FileName[i]='\' then
+      FileName[i]:='/';
 end;
 
 var
@@ -87,7 +87,7 @@ var
    argv0 : pchar;
 {$endif}
    Dir,Name,Ext,PIDSuffix,Param : ShortString;
-   GDBError,GDBExitCode,i : longint;
+   GDBError,GDBExitCode,i : LongInt;
    PidSpecificNamesRequired : Boolean;
 
 begin
@@ -97,7 +97,7 @@ begin
     so use PID specific file names in that case  }
   for i:=1 to Paramcount do
     begin
-      Param:=Paramstr(i);
+      Param:=ParamStr(i);
       if (Copy(Param,1,2)='-v') and ((pos('j',Param)>0) or (pos('J',Param)>0)) then
         PidSpecificNamesRequired:=True;
     end;
@@ -107,7 +107,7 @@ begin
       FPCGDBIniName:=FPCGDBIniName+PIDSuffix;
       GDBIniTempName:=GDBIniTempName+PIDSuffix;
     end;
-  fsplit(paramstr(0),Dir,Name,Ext);
+  fsplit(ParamStr(0),Dir,Name,Ext);
 {$ifdef linux}
   argv0:=argv[0];
   if (argv0 <> '') then
@@ -119,7 +119,7 @@ begin
     begin
       if (Name+ext = DefaultCompilerName) then
         begin
-          writeln(stderr,'Avoiding infinite recursion with ',Name+Ext,' binary');
+          WriteLn(stderr,'Avoiding infinite recursion with ',Name+Ext,' binary');
           halt(1);
         end;
       CompilerName:=DefaultCompilerName;
@@ -129,27 +129,27 @@ begin
 
   if FullCompilerName='' then
     begin
-      writeln(stderr,'Unable to find ',CompilerName,' binary');
+      WriteLn(stderr,'Unable to find ',CompilerName,' binary');
       halt(2);
     end;
 
 
   { support for info functions directly : used in makefiles }
-  if (paramcount=1) and (pos('-i',Paramstr(1))=1) then
+  if (paramcount=1) and (pos('-i',ParamStr(1))=1) then
     begin
-      Exec(FullCompilerName,Paramstr(1));
+      Exec(FullCompilerName,ParamStr(1));
       exit;
     end;
 
   {$ifdef EXTDEBUG}
-  writeln(stderr,'Using compiler "',FullCompilerName,'"');
+  WriteLn(stderr,'Using compiler "',FullCompilerName,'"');
   flush(stderr);
   {$endif}
   if fsearch(GDBIniTempName,'.')<>'' then
     begin
       Assign(fpcgdbini,GDBIniTempName);
       {$ifdef EXTDEBUG}
-      writeln(stderr,'Erasing file "',GDBIniTempName,'"');
+      WriteLn(stderr,'Erasing file "',GDBIniTempName,'"');
       flush(stderr);
       {$endif}
       erase(fpcgdbini);
@@ -157,48 +157,48 @@ begin
   GDBIniTempName:=fexpand('.'+DirSep+GDBIniTempName);
   Assign(fpcgdbini,GdbIniTempName);
   {$ifdef EXTDEBUG}
-  writeln(stderr,'Creating file "',GDBIniTempName,'"');
+  WriteLn(stderr,'Creating file "',GDBIniTempName,'"');
   flush(stderr);
   {$endif}
   Rewrite(fpcgdbini);
 
-  Writeln(fpcgdbini,'set language pascal');
+  WriteLn(fpcgdbini,'set language pascal');
   Write(fpcgdbini,'set args');
 
   { this will not work correctly if there are " or '' inside the command line :( }
   for i:=1 to Paramcount do
     begin
-      Param:=Paramstr(i);
+      Param:=ParamStr(i);
       if pos(' ',Param)>0 then
         Write(fpcgdbini,' "'+Param+'"')
       else
         Write(fpcgdbini,' '+Param);
     end;
-  Writeln(fpcgdbini);
-  Writeln(fpcgdbini,'b SYSTEM_EXIT');
-  Writeln(fpcgdbini,'cond 1 EXITCODE <> 0');
-  Writeln(fpcgdbini,'set $_exitcode := -1');
+  WriteLn(fpcgdbini);
+  WriteLn(fpcgdbini,'b SYSTEM_EXIT');
+  WriteLn(fpcgdbini,'cond 1 EXITCODE <> 0');
+  WriteLn(fpcgdbini,'set $_exitcode := -1');
   { b INTERNALERROR sometimes fails ... Don't know why. PM 2010-08-28 }
-  Writeln(fpcgdbini,'info fun INTERNALERROR');
-  Writeln(fpcgdbini,'b INTERNALERROR');
-  Writeln(fpcgdbini,'b GENERATEERROR');
-  Writeln(fpcgdbini,'b HANDLEERRORADDRFRAME');
+  WriteLn(fpcgdbini,'info fun INTERNALERROR');
+  WriteLn(fpcgdbini,'b INTERNALERROR');
+  WriteLn(fpcgdbini,'b GENERATEERROR');
+  WriteLn(fpcgdbini,'b HANDLEERRORADDRFRAME');
   { This one will fail unless sysutils unit is also loaded }
-  Writeln(fpcgdbini,'b RUNERRORTOEXCEPT');
+  WriteLn(fpcgdbini,'b RUNERRORTOEXCEPT');
   if fsearch(FpcGDBIniName,'./')<>'' then
     begin
-      Writeln(fpcgdbini,'source '+FpcGDBIniName);
+      WriteLn(fpcgdbini,'source '+FpcGDBIniName);
     end
   else
-    Writeln(fpcgdbini,'run');
-  Writeln(fpcgdbini,'if ($_exitcode = -1)');
-  Writeln(fpcgdbini,'  echo Program not completed');
-  Writeln(fpcgdbini,'else');
-  Writeln(fpcgdbini,'  quit');
-  Writeln(fpcgdbini,'end');
+    WriteLn(fpcgdbini,'run');
+  WriteLn(fpcgdbini,'if ($_exitcode = -1)');
+  WriteLn(fpcgdbini,'  echo Program not completed');
+  WriteLn(fpcgdbini,'else');
+  WriteLn(fpcgdbini,'  quit');
+  WriteLn(fpcgdbini,'end');
   Close(fpcgdbini);
   {$ifdef EXTDEBUG}
-  writeln(stderr,'Closing file "',GDBIniTempName,'"');
+  WriteLn(stderr,'Closing file "',GDBIniTempName,'"');
   flush(stderr);
   {$endif}
 
@@ -208,13 +208,13 @@ begin
 
   if GDBExeName='' then
     begin
-      writeln('Unable to find ',GDBExeName,' and ',GDBAltExeName);
+      WriteLn('Unable to find ',GDBExeName,' and ',GDBAltExeName);
       halt(3);
     end;
   AdaptToGDB(CompilerName);
   AdaptToGDB(GDBIniTempName);
   {$ifdef EXTDEBUG}
-  Writeln(stderr,'Starting ',GDBExeName,
+  WriteLn(stderr,'Starting ',GDBExeName,
 {$ifdef win32}
     '--nw '+
 {$endif win32}
@@ -231,11 +231,11 @@ begin
   GDBExitCode:=DosExitCode;
   if (GDBError<>0) or (GDBExitCode<>0) then
     begin
-      Writeln('Error running GDB');
+      WriteLn('Error running GDB');
       if (GDBError<>0) then
-        Writeln('DosError = ',GDBError);
+        WriteLn('DosError = ',GDBError);
       if (GDBExitCode<>0) then
-        Writeln('DosExitCode = ',GDBExitCode);
+        WriteLn('DosExitCode = ',GDBExitCode);
       if GDBExitCode<>0 then
         RunError(GDBExitCode)
       else

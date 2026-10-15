@@ -27,92 +27,92 @@ unit pgenutil;
 interface
 
 uses
-  tpcompilerreal,
+  TPCompilerReal,
     { common }
-  cclasses,
+  CClasses,
   { global }
-  globtype,
+  GlobType,
   { parser }
   pgentype,
   { node }
   node,
   { symtable }
-  symtype,symdef,symbase;
+  symtype,symdef,SymBase;
 
     procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;parsedtype:TDef;const symname:string;parsedpos:TFilePosInfo);inline;
-    procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;const symname:string;symtable:TSymTable);inline;
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean):TDef;inline;
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean;const symname:string;symtable:TSymTable):TDef;inline;
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean;parsedtype:TDef;const symname:string;symtable:TSymTable;parsedpos:TFilePosInfo):TDef;
-    function generate_specialization_phase2(context:tspecializationcontext;genericdef:TStoredDef;parse_class_parent:boolean;const _prettyname:ansistring):TDef;
-    function check_generic_constraints(genericdef:TStoredDef;paramlist:tfpobjectlist;poslist:tfplist):boolean;
-    function parse_generic_parameters(allowconstraints:boolean):tfphashobjectlist;
-    function parse_generic_specialization_types(paramlist:tfpobjectlist;poslist:tfplist;out prettyname,specializename:ansistring):boolean;
-    procedure insert_generic_parameter_types(def:TStoredDef;genericdef:TStoredDef;genericlist:tfphashobjectlist;isfwd:boolean);
-    procedure maybe_insert_generic_rename_symbol(const name:tidstring;genericlist:tfphashobjectlist);
-    function generate_generic_name(const name:tidstring;const specializename:ansistring;const owner_hierarchy:ansistring):tidstring;
-    procedure split_generic_name(const name:tidstring;out nongeneric:string;out count:longint);
-    procedure add_generic_dummysym(sym:TSym;const name:tidstring);
-    function resolve_generic_dummysym(const name:tidstring):TSym;
-    function could_be_generic(const name:tidstring):boolean;inline;
-    function try_implicit_specialization(sym:TSym;para:TNode;pdoverloadlist:tfpobjectlist;var unnamed_syms:tfplist;var first_procsym:TSym;var hasoverload:boolean):boolean;
-    function finalize_specialization(var pd:TProcDef;spezcontext:tspecializationcontext):boolean;
+    procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;const symname:string;SymTable:TSymTable);inline;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean):TDef;inline;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean;const symname:string;SymTable:TSymTable):TDef;inline;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean;parsedtype:TDef;const symname:string;SymTable:TSymTable;parsedpos:TFilePosInfo):TDef;
+    function generate_specialization_phase2(context:TSpecializationContext;genericdef:TStoredDef;parse_class_parent:boolean;const _prettyname:AnsiString):TDef;
+    function check_generic_constraints(genericdef:TStoredDef;paramlist:TFPObjectList;poslist:TFPList):boolean;
+    function parse_generic_parameters(allowconstraints:boolean):TFPHashObjectList;
+    function parse_generic_specialization_types(paramlist:TFPObjectList;poslist:TFPList;out prettyname,specializename:AnsiString):boolean;
+    procedure insert_generic_parameter_types(def:TStoredDef;genericdef:TStoredDef;genericlist:TFPHashObjectList;isfwd:boolean);
+    procedure maybe_insert_generic_rename_symbol(const name:TIDString;genericlist:TFPHashObjectList);
+    function generate_generic_name(const name:TIDString;const specializename:AnsiString;const owner_hierarchy:AnsiString):TIDString;
+    procedure split_generic_name(const name:TIDString;out nongeneric:string;out count:LongInt);
+    procedure add_generic_dummysym(sym:TSym;const name:TIDString);
+    function resolve_generic_dummysym(const name:TIDString):TSym;
+    function could_be_generic(const name:TIDString):boolean;inline;
+    function try_implicit_specialization(sym:TSym;para:TNode;pdoverloadlist:TFPObjectList;var unnamed_syms:TFPList;var first_procsym:TSym;var hasoverload:boolean):boolean;
+    function finalize_specialization(var pd:TProcDef;spezcontext:TSpecializationContext):boolean;
 
     procedure generate_specialization_procs;
     procedure generate_specializations_for_forwarddef(def:TDef);
-    procedure maybe_add_pending_specialization(def:TDef;unnamed_syms:tfplist);
-    function determine_generic_def(const name:tidstring):TStoredDef;
+    procedure maybe_add_pending_specialization(def:TDef;unnamed_syms:TFPList);
+    function determine_generic_def(const name:TIDString):TStoredDef;
 
     function is_or_belongs_to_current_genericdef(def:TDef):boolean;
 
-    procedure specialization_init(genericdef:TDef;var state:tspecializationstate);
-    procedure specialization_done(var state:tspecializationstate);
+    procedure specialization_init(genericdef:TDef;var state:TSpecializationState);
+    procedure specialization_done(var state:TSpecializationState);
 
 implementation
 
 uses
   { common }
-  cutils,fpchash,
+  CUtils,FPCHash,
   { global }
-  globals,tokens,verbose,finput,constexp,
+  Globals,tokens,Verbose,FinPut,ConstExp,
   { symtable }
-  symconst,symsym,symtable,defcmp,defutil,procinfo,
+  symconst,SymSym,SymTable,defcmp,defutil,ProcInfo,
   { modules }
-  fmodule,
+  FModule,
   { node }
   nobj,ncon,ncal,
   { parser }
-  scanner,
+  Scanner,
   pbase,pexpr,pdecsub,ptype,psub,pparautl,pdecl,procdefutil;
 
   type
-    tdeftypeset = set of TDefTyp;
+    TDefTypeSet = set of TDefTyp;
   const
-    tgeneric_param_const_types : tdeftypeset = [orddef,stringdef,floatdef,setdef,pointerdef,enumdef];
+    tgeneric_param_const_types : TDefTypeSet = [orddef,stringdef,floatdef,setdef,pointerdef,enumdef];
     tgeneric_param_nodes : TNodeTypeSet = [typen,ordconstn,stringconstn,realconstn,setconstn,niln];
 
-    procedure make_prettystring(paramtype:TDef;first:boolean;constprettyname:ansistring;var prettyname,specializename:ansistring);
+    procedure make_prettystring(paramtype:TDef;first:boolean;constprettyname:AnsiString;var prettyname,specializename:AnsiString);
       var
         namepart : string;
-        prettynamepart : ansistring;
-        module : tmodule;
+        prettynamepart : AnsiString;
+        module : TModule;
       begin
-        if assigned(paramtype.owner) then
+        if Assigned(paramtype.owner) then
           module:=find_module_from_symtable(paramtype.owner)
         else
           module:=CurrentModule;
-        if not assigned(module) then
-          internalerror(2016112802);
-        namepart:='_$'+hexstr(module.moduleid,8)+'$$'+paramtype.UniqueIDStr;
+        if not Assigned(module) then
+          InternalError(2016112802);
+        namepart:='_$'+HexStr(module.ModuleID,8)+'$$'+paramtype.UniqueIDStr;
         if constprettyname<>'' then
           namepart:=namepart+'$$'+constprettyname;
         { we use the full name of the type to uniquely identify it }
-        if (symtablestack.top.symtabletype=parasymtable) and
-            (symtablestack.top.defowner.typ=procdef) and
-            (paramtype.owner=symtablestack.top) then
+        if (SymTableStack.top.symtabletype=parasymtable) and
+            (SymTableStack.top.defowner.typ=procdef) and
+            (paramtype.owner=SymTableStack.top) then
           begin
             { special handling for specializations inside generic function declarations }
-            prettynamepart:=TDef(symtablestack.top.defowner).fullownerhierarchyname(true,true)+TProcDef(symtablestack.top.defowner).procsym.prettyname;
+            prettynamepart:=TDef(SymTableStack.top.defowner).fullownerhierarchyname(true,true)+TProcDef(SymTableStack.top.defowner).procsym.prettyname;
           end
         else
           begin
@@ -172,7 +172,7 @@ uses
         else if is_set(param2) then
           result:=equal_defs(param1,param2) or
             { constant could be empty set }
-            not(assigned(TSetDef(param1).elementdef))
+            not(Assigned(TSetDef(param1).elementdef))
         else
           result:=param1.typ=param2.typ;
       end;
@@ -187,68 +187,68 @@ uses
         enumname : string;
         sp : pchar;
         ps : ^TConstSet;
-        pd : ^bestreal;
+        pd : ^BestReal;
         i,l : integer;
       begin
         if node=nil then
-          internalerror(2020011401);
+          InternalError(2020011401);
         case node.nodetype of
           ordconstn:
             begin
-              sym:=cconstsym.create_ord(undefinedname,constord,tordconstnode(node).value,fromdef);
-              prettyname:=tostr(tordconstnode(node).value.svalue);
+              sym:=CConstSym.create_ord(undefinedname,constord,TOrdConstNode(node).value,fromdef);
+              prettyname:=ToStr(TOrdConstNode(node).value.svalue);
             end;
           stringconstn:
             begin
               // unicode, convert to utf8
-              if tstringconstnode(node).cst_type in [cst_widestring,cst_unicodestring] then
+              if TStringConstNode(node).cst_type in [cst_widestring,cst_unicodestring] then
                 begin
-                l:=UnicodeToUtf8(nil,0,tstringconstnode(node).valuews.asconstpunicodechar,tstringconstnode(node).valuews.len);
-                getmem(sp,l);
-                UnicodeToUtf8(sp,l,tstringconstnode(node).valuews.asconstpunicodechar,tstringconstnode(node).valuews.len);
-                sym:=cconstsym.create_string(undefinedname,conststring,sp,l,fromdef);
+                l:=UnicodeToUtf8(nil,0,TStringConstNode(node).valuews.AsConstPUnicodeChar,TStringConstNode(node).valuews.len);
+                GetMem(sp,l);
+                UnicodeToUtf8(sp,l,TStringConstNode(node).valuews.AsConstPUnicodeChar,TStringConstNode(node).valuews.len);
+                sym:=CConstSym.create_string(undefinedname,conststring,sp,l,fromdef);
                 prettyname:=''''+sp+'''';
                 end
               else
                 begin
-                getmem(sp,tstringconstnode(node).len+1);
-                move(tstringconstnode(node).asconstpchar^,sp^,tstringconstnode(node).len+1);
-                sym:=cconstsym.create_string(undefinedname,conststring,sp,tstringconstnode(node).len,fromdef);
-                prettyname:=''''+tstringconstnode(node).asconstpchar+'''';
+                GetMem(sp,TStringConstNode(node).len+1);
+                move(TStringConstNode(node).asconstpchar^,sp^,TStringConstNode(node).len+1);
+                sym:=CConstSym.create_string(undefinedname,conststring,sp,TStringConstNode(node).len,fromdef);
+                prettyname:=''''+TStringConstNode(node).asconstpchar+'''';
                 end;
             end;
           realconstn:
             begin
               new(pd);
-              pd^:=trealconstnode(node).value_real;
-              sym:=cconstsym.create_ptr(undefinedname,constreal,pd,fromdef);
-              prettyname:=realtostr(trealconstnode(node).value_real);
+              pd^:=TRealConstNode(node).value_real;
+              sym:=CConstSym.create_ptr(undefinedname,constreal,pd,fromdef);
+              prettyname:=RealToStr(TRealConstNode(node).value_real);
             end;
           setconstn:
             begin
               new(ps);
-              ps^:=tsetconstnode(node).value_set^;
-              sym:=cconstsym.create_ptr(undefinedname,constset,ps,fromdef);
-              setdef:=TSetDef(tsetconstnode(node).resultdef);
+              ps^:=TSetConstNode(node).value_set^;
+              sym:=CConstSym.create_ptr(undefinedname,constset,ps,fromdef);
+              setdef:=TSetDef(TSetConstNode(node).resultdef);
               prettyname:='[';
               for i := setdef.setbase to setdef.setmax do
-                if i in tsetconstnode(node).value_set^ then
+                if i in TSetConstNode(node).value_set^ then
                   begin
                     if setdef.elementdef.typ=enumdef then
                       enumsym:=TEnumDef(setdef.elementdef).int2enumsym(i)
                     else
                       enumsym:=nil;
-                    if assigned(enumsym) then
+                    if Assigned(enumsym) then
                       enumname:=enumsym.realname
                     else if setdef.elementdef.typ=orddef then
                       begin
                         if TOrdDef(setdef.elementdef).ordtype=uchar then
                           enumname:=chr(i)
                         else
-                          enumname:=tostr(i);
+                          enumname:=ToStr(i);
                       end
                     else
-                      enumname:=tostr(i);
+                      enumname:=ToStr(i);
                     if length(prettyname) > 1 then
                       prettyname:=prettyname+','+enumname
                     else
@@ -259,11 +259,11 @@ uses
           niln:
             begin
               { only "nil" is available for pointer constants }
-              sym:=cconstsym.create_ord(undefinedname,constnil,0,fromdef);
+              sym:=CConstSym.create_ord(undefinedname,constnil,0,fromdef);
               prettyname:='nil';
             end;
           else
-            internalerror(2019021601);
+            InternalError(2019021601);
         end;
         { the sym needs an owner for later checks so use the typeparam owner }
         sym.owner:=fromdef.owner;
@@ -274,15 +274,15 @@ uses
     procedure maybe_add_waiting_unit(tt:TDef);
     { called only by a pas module when specializing or inlining, not by a ppu module }
       var
-        hmodule : tmodule;
+        hmodule : TModule;
       begin
-        if not assigned(tt) or
+        if not Assigned(tt) or
             not (df_generic in tt.defoptions) then
           exit;
 
         hmodule:=find_module_from_symtable(tt.owner);
-        if not assigned(hmodule) then
-          internalerror(2012092401);
+        if not Assigned(hmodule) then
+          InternalError(2012092401);
 
         if hmodule=CurrentModule then
           exit;
@@ -291,7 +291,7 @@ uses
 
         if hmodule.state<ms_compiling_waitfinish then
           begin
-            tmodule.ctask_fast_backtrack:=true;
+            TModule.ctask_fast_backtrack:=true;
             if CurrentModule.waitingforunit.indexof(hmodule)<0 then
               CurrentModule.waitingforunit.add(hmodule);
             if hmodule.waitingunits.indexof(CurrentModule)<0 then
@@ -300,21 +300,21 @@ uses
       end;
 
 
-    procedure add_forward_generic_def(def:TDef;context:tspecializationcontext);
+    procedure add_forward_generic_def(def:TDef;context:TSpecializationContext);
       var
-        list : tfpobjectlist;
-        fwdcontext : tspecializationcontext;
+        list : TFPObjectList;
+        fwdcontext : TSpecializationContext;
       begin
         if not is_implicit_pointer_object_type(def) then
-          internalerror(2020070301);
+          InternalError(2020070301);
         if not (oo_is_forward in TObjectDef(def).objectoptions) then
-          internalerror(2020070302);
-        if not assigned(TObjectDef(def).genericdef) then
-          internalerror(2020070303);
-        list:=tfpobjectlist(CurrentModule.forwardgenericdefs.find(TObjectDef(def).genericdef.fulltypename));
-        if not assigned(list) then
+          InternalError(2020070302);
+        if not Assigned(TObjectDef(def).genericdef) then
+          InternalError(2020070303);
+        list:=TFPObjectList(CurrentModule.forwardgenericdefs.find(TObjectDef(def).genericdef.fulltypename));
+        if not Assigned(list) then
           begin
-            list:=tfpobjectlist.create(true);
+            list:=TFPObjectList.create(true);
             CurrentModule.forwardgenericdefs.add(TObjectDef(def).genericdef.fulltypename,list);
           end;
         fwdcontext:=context.getcopy;
@@ -323,10 +323,10 @@ uses
       end;
 
 
-    function check_generic_constraints(genericdef:TStoredDef;paramlist:tfpobjectlist;poslist:tfplist):boolean;
+    function check_generic_constraints(genericdef:TStoredDef;paramlist:TFPObjectList;poslist:TFPList):boolean;
       var
         i,j,
-        intfcount : longint;
+        intfcount : LongInt;
         formaldef,
         paradef : TStoredDef;
         genparadef : TDef;
@@ -339,12 +339,12 @@ uses
       begin
         { check whether the given specialization parameters fit to the eventual
           constraints of the generic }
-        if not assigned(genericdef.genericparas) or (genericdef.genericparas.count=0) then
-          internalerror(2012101001);
+        if not Assigned(genericdef.genericparas) or (genericdef.genericparas.count=0) then
+          InternalError(2012101001);
         if genericdef.genericparas.count<>paramlist.count then
-          internalerror(2012101002);
+          InternalError(2012101002);
         if paramlist.count<>poslist.count then
-          internalerror(2012120801);
+          InternalError(2012120801);
         result:=true;
         for i:=0 to genericdef.genericparas.count-1 do
           begin
@@ -381,8 +381,8 @@ uses
                   { the parameter is of unspecified type, so no need to check }
                   continue;
                 if not (df_genconstraint in formaldef.defoptions) or
-                    not assigned(formaldef.genconstraintdata) then
-                  internalerror(2013021602);
+                    not Assigned(formaldef.genconstraintdata) then
+                  InternalError(2013021602);
                 { undefineddef is compatible with anything }
                 if formaldef.typ=undefineddef then
                   continue;
@@ -392,7 +392,7 @@ uses
                       recorddef:
                         { delphi has own fantasy about record constraint
                           (almost non-nullable/non-nil-able value type) }
-                        if m_delphi in CurrentSettings.modeswitches then
+                        if m_delphi in CurrentSettings.ModeSwitches then
                           case paradef.typ of
                             floatdef,enumdef,orddef:
                               continue;
@@ -417,13 +417,13 @@ uses
                           odt_interfacejava:
                             MessagePos1(filepos,type_e_interface_type_expected,paradef.typename);
                           else
-                            internalerror(2012101003);
+                            InternalError(2012101003);
                         end;
                       errordef:
                         { ignore }
                         ;
                       else
-                        internalerror(2012101004);
+                        InternalError(2012101004);
                     end;
                     result:=false;
                   end
@@ -436,7 +436,7 @@ uses
                         paraobjdef:=TObjectDef(paradef);
                         formalobjdef:=TObjectDef(formaldef);
                         if not (formalobjdef.objecttype in [odt_class,odt_javaclass,odt_interfacecom,odt_interfacecorba,odt_interfacejava,odt_dispinterface]) then
-                          internalerror(2012101102);
+                          InternalError(2012101102);
                         if formalobjdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_interfacejava,odt_dispinterface] then
                           begin
                             { this is either a concrete interface or class type (the
@@ -471,10 +471,10 @@ uses
                                 begin
                                   objdef:=paraobjdef;
                                   intffound:=false;
-                                  while assigned(objdef) do
+                                  while Assigned(objdef) do
                                     begin
                                       for j:=0 to objdef.implementedinterfaces.count-1 do
-                                        if timplementedinterface(objdef.implementedinterfaces[j]).intfdef=formalobjdef.childof then
+                                        if TImplementedInterface(objdef.implementedinterfaces[j]).intfdef=formalobjdef.childof then
                                           begin
                                             intffound:=true;
                                             break;
@@ -512,7 +512,7 @@ uses
                                     not formalobjdef.implements_any_interfaces then
                                   continue;
                               end;
-                            if assigned(formalobjdef.childof) and
+                            if Assigned(formalobjdef.childof) and
                                 not def_is_related(paradef,formalobjdef.childof) then
                               begin
                                 MessagePos2(filepos,type_e_incompatible_types,paraobjdef.typename,formalobjdef.childof.typename);
@@ -523,11 +523,11 @@ uses
                               begin
                                 objdef:=paraobjdef;
                                 intffound:=false;
-                                while assigned(objdef) do
+                                while Assigned(objdef) do
                                   begin
-                                    intffound:=assigned(
+                                    intffound:=Assigned(
                                                  find_implemented_interface(objdef,
-                                                   timplementedinterface(formalobjdef.implementedinterfaces[j]).intfdef
+                                                   TImplementedInterface(formalobjdef.implementedinterfaces[j]).intfdef
                                                  )
                                                );
                                     if intffound then
@@ -537,7 +537,7 @@ uses
                                 if intffound then
                                   inc(intfcount)
                                 else
-                                  MessagePos2(filepos,parser_e_class_doesnt_implement_interface,paraobjdef.typename,timplementedinterface(formalobjdef.implementedinterfaces[j]).intfdef.typename);
+                                  MessagePos2(filepos,parser_e_class_doesnt_implement_interface,paraobjdef.typename,TImplementedInterface(formalobjdef.implementedinterfaces[j]).intfdef.typename);
                               end;
                             if intfcount<>formalobjdef.implementedinterfaces.count then
                               result:=false;
@@ -548,7 +548,7 @@ uses
           end;
       end;
 
-    function parse_generic_specialization_types_internal(paramlist:tfpobjectlist;poslist:tfplist;out prettyname,specializename:ansistring;parsedtype:TDef;parsedpos:TFilePosInfo):boolean;
+    function parse_generic_specialization_types_internal(paramlist:TFPObjectList;poslist:TFPList;out prettyname,specializename:AnsiString;parsedtype:TDef;parsedpos:TFilePosInfo):boolean;
       var
         old_block_type : TBlockType;
         first : boolean;
@@ -556,7 +556,7 @@ uses
         parampos : PFilePosInfo;
         tmpparampos : TFilePosInfo;
         namepart : string;
-        module : tmodule;
+        module : TModule;
         constprettyname : string;
         validparam : boolean;
       begin
@@ -564,25 +564,25 @@ uses
         prettyname:='';
         constprettyname:='';
         if paramlist=nil then
-          internalerror(2012061401);
+          InternalError(2012061401);
         { set the block type to type, so that the parsed type are returned as
           ttypenode (e.g. classes are in non type-compatible blocks returned as
           tloadvmtaddrnode) }
-        old_block_type:=block_type;
+        old_block_type:=Block_Type;
         { if parsedtype is set, then the first type identifer was already parsed
           (happens in inline specializations) and thus we only need to parse
           the remaining types and do as if the first one was already given }
-        first:=not assigned(parsedtype);
-        if assigned(parsedtype) then
+        first:=not Assigned(parsedtype);
+        if Assigned(parsedtype) then
           begin
             paramlist.Add(parsedtype.typesym);
             module:=find_module_from_symtable(parsedtype.owner);
-            if not assigned(module) then
-              internalerror(2016112801);
-            namepart:='_$'+hexstr(module.moduleid,8)+'$$'+parsedtype.UniqueIDStr;
+            if not Assigned(module) then
+              InternalError(2016112801);
+            namepart:='_$'+HexStr(module.ModuleID,8)+'$$'+parsedtype.UniqueIDStr;
             specializename:='$'+namepart;
             prettyname:=parsedtype.fullownerhierarchyname(true,true)+parsedtype.typesym.prettyname;
-            if assigned(poslist) then
+            if Assigned(poslist) then
               begin
                 New(parampos);
                 parampos^:=parsedpos;
@@ -596,7 +596,7 @@ uses
             { "first" is set to false at the end of the loop! }
             if not first then
               consume(_COMMA);
-            block_type:=bt_type;
+            Block_Type:=bt_type;
             tmpparampos:=CurrentFilePos;
             typeparam:=factor(false,[ef_accept_equal]);
             { determine if the typeparam node is a valid type or const }
@@ -610,7 +610,7 @@ uses
                       not defs_belong_to_same_generic(typeparam.resultdef,CurrentGenericDef)
                     ) then
                   Message(parser_e_no_generics_as_params);
-                if assigned(poslist) then
+                if Assigned(poslist) then
                   begin
                     New(parampos);
                     parampos^:=tmpparampos;
@@ -618,7 +618,7 @@ uses
                   end;
                 if typeparam.resultdef.typ<>errordef then
                   begin
-                    if (typeparam.nodetype=typen) and not assigned(typeparam.resultdef.typesym) then
+                    if (typeparam.nodetype=typen) and not Assigned(typeparam.resultdef.typesym) then
                       message(type_e_generics_cannot_reference_itself)
                     else if (typeparam.resultdef.typ<>errordef) then
                       begin
@@ -647,11 +647,11 @@ uses
             typeparam := nil;
             first:=false;
           end;
-        block_type:=old_block_type;
+        Block_Type:=old_block_type;
       end;
 
 
-    function parse_generic_specialization_types(paramlist:tfpobjectlist;poslist:tfplist;out prettyname,specializename:ansistring):boolean;
+    function parse_generic_specialization_types(paramlist:TFPObjectList;poslist:TFPList;out prettyname,specializename:AnsiString):boolean;
       var
         dummypos : TFilePosInfo;
       begin
@@ -660,31 +660,31 @@ uses
       end;
 
 
-    procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;const symname:string;symtable:TSymTable);
+    procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;const symname:string;SymTable:TSymTable);
       var
-        context : tspecializationcontext;
+        context : TSpecializationContext;
         genericdef : TStoredDef;
         dummypos : TFilePosInfo;
       begin
         FillChar(dummypos, SizeOf(TFilePosInfo), 0);
-        genericdef:=TStoredDef(generate_specialization_phase1(context,tt,enforce_unit,nil,symname,symtable,dummypos));
+        genericdef:=TStoredDef(generate_specialization_phase1(context,tt,enforce_unit,nil,symname,SymTable,dummypos));
         if genericdef<>generrordef then
           genericdef:=TStoredDef(generate_specialization_phase2(context,genericdef,parse_class_parent,_prettyname));
         tt:=genericdef;
-        if assigned(context) then
+        if Assigned(context) then
           context.free; // no nil needed
       end;
 
 
-    function finalize_specialization(var pd:TProcDef;spezcontext:tspecializationcontext):boolean;
+    function finalize_specialization(var pd:TProcDef;spezcontext:TSpecializationContext):boolean;
       var
         def : TDef;
       begin
         result:=false;
-        if assigned(spezcontext) then
+        if Assigned(spezcontext) then
           begin
             if not (df_generic in pd.defoptions) then
-              internalerror(2015060301);
+              InternalError(2015060301);
             { check whether the given parameters are compatible
               to the def's constraints }
             if not check_generic_constraints(pd,spezcontext.paramlist,spezcontext.poslist) then
@@ -697,14 +697,14 @@ uses
               procdef:
                 pd:=TProcDef(def);
               else
-                internalerror(2015070303);
+                InternalError(2015070303);
             end;
           end;
         result:=true;
       end;
 
 
-    procedure transfer_unnamed_symbols(owner:TSymTable;unnamed_syms:tfplist);
+    procedure transfer_unnamed_symbols(owner:TSymTable;unnamed_syms:TFPList);
       var
         i : integer;
         sym : TSym;
@@ -718,7 +718,7 @@ uses
       end;
 
 
-    function try_implicit_specialization(sym:TSym;para:TNode;pdoverloadlist:tfpobjectlist;var unnamed_syms:tfplist;var first_procsym:TSym;var hasoverload:boolean):boolean;
+    function try_implicit_specialization(sym:TSym;para:TNode;pdoverloadlist:TFPObjectList;var unnamed_syms:TFPList;var first_procsym:TSym;var hasoverload:boolean):boolean;
 
       { hash key for generic parameter lookups }
       function generic_param_hash(def:TDef):string;inline;
@@ -733,30 +733,30 @@ uses
         end;
 
       { makes the specialization context from the generic proc def and generic params }
-      procedure generate_implicit_specialization(out context:tspecializationcontext;genericdef:TProcDef;genericparams:tfphashlist);
+      procedure generate_implicit_specialization(out context:TSpecializationContext;genericdef:TProcDef;genericparams:TFPHashList);
         var
           parsedpos:TFilePosInfo;
-          poslist:tfplist;
-          i: longint;
+          poslist:TFPList;
+          i: LongInt;
           paramtype: TTypeSym;
           parampos : PFilePosInfo;
           tmpparampos : TFilePosInfo;
           paramname: string;
         begin
-          context:=tspecializationcontext.create;
+          context:=TSpecializationContext.create;
           fillchar(parsedpos,sizeof(parsedpos),0);
           poslist:=context.poslist;
           tmpparampos:=CurrentFilePos;
           if genericparams.count<>genericdef.genericparas.count then
-            internalerror(2021020901);
+            InternalError(2021020901);
           poslist.capacity:=poslist.count+genericparams.count;
           context.paramlist.capacity:=context.paramlist.count+genericparams.count;
           for i:=0 to genericparams.count-1 do
             begin
               paramname:=generic_param_hash(TTypeSym(genericdef.genericparas[i]).typedef);
               paramtype:=TTypeSym(genericparams.find(paramname));
-              if not assigned(paramtype) then
-                internalerror(2021020902);
+              if not Assigned(paramtype) then
+                InternalError(2021020902);
               new(parampos);
               parampos^:=tmpparampos;
               poslist.add(parampos);
@@ -777,9 +777,9 @@ uses
           if is_conststring_array(def) then
             begin
               { for constant strings we need to respect various modeswitches }
-              if (cs_refcountedstrings in CurrentSettings.localswitches) then
+              if (cs_refcountedstrings in CurrentSettings.LocalSwitches) then
                 begin
-                  if m_default_unicodestring in CurrentSettings.modeswitches then
+                  if m_default_unicodestring in CurrentSettings.ModeSwitches then
                     newtype:=cunicodestringtype.typesym
                   else
                     newtype:=cansistringtype.typesym;
@@ -796,16 +796,16 @@ uses
                   { array constructor is not a valid parameter type; getreusable
                     avoids creating multiple implementations for calls with the
                     same number of array elements of a particular type }
-                  def:=carraydef.getreusable(TArrayDef(def).elementdef,TArrayDef(def).highrange-TArrayDef(def).lowrange+1);
+                  def:=CArrayDef.getreusable(TArrayDef(def).elementdef,TArrayDef(def).highrange-TArrayDef(def).lowrange+1);
                 end;
-              newtype:=ctypesym.create(def.fullownerhierarchyname(false,true)+typName[def.typ]+'$'+def.UniqueIDStr,def);
+              newtype:=CTypeSym.create(def.fullownerhierarchyname(false,true)+typName[def.typ]+'$'+def.UniqueIDStr,def);
               include(newtype.symoptions,sp_generic_unnamed_type);
               newtype.owner:=def.owner;
               { ensure that there's no warning }
               newtype.refs:=1;
             end;
-          if not assigned(newtype) then
-            internalerror(2021020904);
+          if not Assigned(newtype) then
+            InternalError(2021020904);
           result:=newtype;
         end;
 
@@ -820,8 +820,8 @@ uses
             begin
               parasym:=TTypeSym(def.genericparas[i]);
               { the generic param must have a named typesym }
-              if not assigned(parasym.typedef.typesym) then
-                internalerror(2021020907);
+              if not Assigned(parasym.typedef.typesym) then
+                InternalError(2021020907);
               { recurse into inline specialization }
               if TStoredDef(parasym.typedef).is_specialization then
                 begin
@@ -849,14 +849,14 @@ uses
           else
             begin
               { the element must have a named typesym }
-              if not assigned(elementdef.typesym) then
-                internalerror(2021020906);
+              if not Assigned(elementdef.typesym) then
+                InternalError(2021020906);
               result:=(genericparam=elementdef.typesym) and owner.is_generic_param(elementdef);
             end;
         end;
 
       { tests if the generic param is used in the parameter list }
-      function is_generic_param_used(owner:TProcDef;genericparam:TTypeSym;paras:tfplist):boolean;
+      function is_generic_param_used(owner:TProcDef;genericparam:TTypeSym;paras:TFPList):boolean;
         var
           paravar:TParaVarSym;
           i: integer;
@@ -877,8 +877,8 @@ uses
                 exit(false)
               else
                 begin
-                  if not assigned(paravar.vardef.typesym) then
-                    internalerror(2021020905);
+                  if not Assigned(paravar.vardef.typesym) then
+                    InternalError(2021020905);
                   result:=(genericparam=paravar.vardef.typesym) and owner.is_generic_param(paravar.vardef)
                 end;
 
@@ -891,7 +891,7 @@ uses
       { handle generic specializations by using generic params from caller
         to specialize the target. for example "TRec<Integer>" can use "Integer"
         to specialize "TRec<T>" with "Integer" for "T". }
-      procedure handle_specializations(genericparams:tfphashlist;target_def,caller_def:TStoredDef);
+      procedure handle_specializations(genericparams:TFPHashList;target_def,caller_def:TStoredDef);
         var
           i,
           index : integer;
@@ -902,7 +902,7 @@ uses
           { the target and the caller must the same generic def
             with the same set of generic parameters }
           if target_def.genericdef<>caller_def.genericdef then
-            internalerror(2021020909);
+            InternalError(2021020909);
 
           for i:=0 to target_def.genericparas.count-1 do
             begin
@@ -966,17 +966,17 @@ uses
         with "integer", as they are both parameter #1
       }
 
-      function handle_procvars(genericparams:tfphashlist;callerparams:tfplist;target_def:TDef;caller_def:TDef):boolean;
+      function handle_procvars(genericparams:TFPHashList;callerparams:TFPList;target_def:TDef;caller_def:TDef):boolean;
         var
-          newparams : tfphashlist;
+          newparams : TFPHashList;
 
         procedure handle_generic_param(targetparadef,callerparadef:TDef);
           var
             key : string;
             index : integer;
           begin
-            if not assigned(callerparadef.typesym) then
-              internalerror(2021020908);
+            if not Assigned(callerparadef.typesym) then
+              InternalError(2021020908);
 
             key:=generic_param_hash(targetparadef);
 
@@ -1011,8 +1011,8 @@ uses
             exit;
 
           { a mixture of functions and procedures is not allowed }
-          if (not assigned(target_proc.returndef) or is_void(target_proc.returndef)) xor
-              (not assigned(caller_proc.returndef) or is_void(caller_proc.returndef)) then
+          if (not Assigned(target_proc.returndef) or is_void(target_proc.returndef)) xor
+              (not Assigned(caller_proc.returndef) or is_void(caller_proc.returndef)) then
             exit;
 
           { reject generics with constants }
@@ -1020,7 +1020,7 @@ uses
             if TSym(target_proc.genericdef.genericparas[i]).typ=constsym then
               exit;
 
-          newparams:=tfphashlist.create;
+          newparams:=TFPHashList.create;
           valid_params:=0;
 
           for i:=0 to target_proc.paras.count-1 do
@@ -1049,7 +1049,7 @@ uses
               inc(valid_params);
             end;
 
-          if assigned(target_proc.returndef) and not is_void(target_proc.returndef) then
+          if Assigned(target_proc.returndef) and not is_void(target_proc.returndef) then
             begin
               { or check for exact? }
               if compare_defs(caller_proc.returndef,target_proc.returndef,nothingn)<te_equal then
@@ -1088,7 +1088,7 @@ uses
             end
           else
             begin
-              while assigned(givendef) do
+              while Assigned(givendef) do
                 begin
                   if givendef.is_specialization and (givendef.genericdef=desireddef.genericdef) then
                     begin
@@ -1103,7 +1103,7 @@ uses
         end;
 
       { compare generic parameters <T> with call node parameters. }
-      function is_possible_specialization(callerparams:tfplist;genericdef:TProcDef;out unnamed_syms:tfplist;out genericparams:tfphashlist):boolean;
+      function is_possible_specialization(callerparams:TFPList;genericdef:TProcDef;out unnamed_syms:TFPList;out genericparams:TFPHashList):boolean;
         var
           i,
           count : integer;
@@ -1113,7 +1113,7 @@ uses
           caller_def : TDef;
           target_key : string;
           index : integer;
-          paras : tfplist;
+          paras : TFPList;
           target_element,
           caller_element : TDef;
           required_param_count : integer;
@@ -1130,7 +1130,7 @@ uses
               exit;
 
           { build list of visible target function parameters }
-          paras:=tfplist.create;
+          paras:=TFPList.create;
           for i:=0 to genericdef.paras.count-1 do
             begin
               paravar:=TParaVarSym(genericdef.paras[i]);
@@ -1140,7 +1140,7 @@ uses
               paras.add(paravar);
 
               { const non-default parameters are required }
-              if not assigned(paravar.defaultconstsym) then
+              if not Assigned(paravar.defaultconstsym) then
                 inc(required_param_count);
             end;
 
@@ -1166,7 +1166,7 @@ uses
               exit;
             end;
 
-          genericparams:=tfphashlist.create;
+          genericparams:=TFPHashList.create;
           for i:=0 to callerparams.count-1 do
             begin
               caller_def:=TTypeSym(callerparams[i]).typedef;
@@ -1249,7 +1249,7 @@ uses
                 continue;
 
               { the caller type may not have a typesym so we need to create an unnamed one }
-              if not assigned(caller_def.typesym) then
+              if not Assigned(caller_def.typesym) then
                 begin
                   sym:=create_unnamed_typesym(caller_def);
                   { add the unnamed sym to the list but only it was allocated manually }
@@ -1274,19 +1274,19 @@ uses
         end;
 
       { make an ordered list of parameters from the caller }
-      function make_param_list(dummysym:TSym;para:TNode;var unnamed_syms:tfplist):tfplist;
+      function make_param_list(dummysym:TSym;para:TNode;var unnamed_syms:TFPList):TFPList;
         var
-          pt : tcallparanode;
+          pt : TCallParaNode;
           paradef : TDef;
           sym : TSym;
         begin
-          result:=tfplist.create;
-          pt:=tcallparanode(para);
-          while assigned(pt) do
+          result:=TFPList.create;
+          pt:=TCallParaNode(para);
+          while Assigned(pt) do
             begin
               paradef:=pt.paravalue.resultdef;
               { unnamed parameter types can not be specialized }
-              if not assigned(paradef.typesym) then
+              if not Assigned(paradef.typesym) then
                 begin
                   sym:=create_unnamed_typesym(paradef);
                   result.insert(0,sym);
@@ -1296,19 +1296,19 @@ uses
                 end
               else
                 result.insert(0,paradef.typesym);
-              pt:=tcallparanode(pt.nextpara);
+              pt:=TCallParaNode(pt.nextpara);
             end;
         end;
 
       var
         i,j,k : integer;
         srsym : TProcSym;
-        callerparams : tfplist;
+        callerparams : TFPList;
         pd : TProcDef;
         dummysym : TProcSym;
-        genericparams : tfphashlist;
-        spezcontext : tspecializationcontext;
-        pd_unnamed_syms : tfplist;
+        genericparams : TFPHashList;
+        spezcontext : TSpecializationContext;
+        pd_unnamed_syms : TFPList;
       begin
         result:=false;
         spezcontext:=nil;
@@ -1317,7 +1317,7 @@ uses
         callerparams:=make_param_list(dummysym,para,unnamed_syms);
 
         { failed to build the parameter list }
-        if not assigned(callerparams) then
+        if not Assigned(callerparams) then
           exit;
 
         for i:=0 to dummysym.genprocsymovlds.count-1 do
@@ -1351,7 +1351,7 @@ uses
                     if po_overload in pd.procoptions then
                       hasoverload:=true;
                     { store first procsym found }
-                    if not assigned(first_procsym) then
+                    if not Assigned(first_procsym) then
                       first_procsym:=srsym;
                     result:=true;
                   end
@@ -1364,7 +1364,7 @@ uses
           end;
 
         { unlink unused defs }
-        if not(result) and assigned(callerparams) then
+        if not(result) and Assigned(callerparams) then
           begin
             for k:=0 to callerparams.count-1 do
               begin
@@ -1377,7 +1377,7 @@ uses
         callerparams := nil;
       end;
 
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean):TDef;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean):TDef;
       var
         dummypos : TFilePosInfo;
 {$push}
@@ -1388,38 +1388,38 @@ uses
 {$pop}
 
 
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean;const symname:string;symtable:TSymTable):TDef;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean;const symname:string;SymTable:TSymTable):TDef;
       var
         dummypos : TFilePosInfo;
 {$push}
 {$warn 5036 off}
       begin
-        result:=generate_specialization_phase1(context,genericdef,enforce_unit,nil,symname,symtable,dummypos);
+        result:=generate_specialization_phase1(context,genericdef,enforce_unit,nil,symname,SymTable,dummypos);
       end;
 {$pop}
 
 
-    function generate_specialization_phase1(out context:tspecializationcontext;genericdef:TDef;enforce_unit:boolean;parsedtype:TDef;const symname:string;symtable:TSymTable;parsedpos:TFilePosInfo):TDef;
+    function generate_specialization_phase1(out context:TSpecializationContext;genericdef:TDef;enforce_unit:boolean;parsedtype:TDef;const symname:string;SymTable:TSymTable;parsedpos:TFilePosInfo):TDef;
       var
         found,
         err : boolean;
         i,
-        gencount : longint;
+        gencount : LongInt;
         countstr,genname,ugenname,prettygenname: string;
-        tmpstack : tfpobjectlist;
+        tmpstack : TFPObjectList;
         symowner : TSymTable;
-        hmodule : tmodule;
+        hmodule : TModule;
       begin
         context:=nil;
         result:=nil;
 
         { either symname must be given or genericdef needs to be valid }
         if (symname='') and
-            (not assigned(genericdef) or
+            (not Assigned(genericdef) or
               (
                 (genericdef.typ<>procdef) and
                 (
-                  not assigned(genericdef.typesym) or
+                  not Assigned(genericdef.typesym) or
                   (genericdef.typesym.typ<>typesym)
                 ) and
                 (
@@ -1430,16 +1430,16 @@ uses
               (
                 (genericdef.typ=procdef) and
                 (
-                  not assigned(TProcDef(genericdef).procsym) or
+                  not Assigned(TProcDef(genericdef).procsym) or
                   (TProcDef(genericdef).procsym.typ<>procsym)
                 )
               )
             ) then
           begin
-            internalerror(2019112401);
+            InternalError(2019112401);
           end;
 
-        if not assigned(parsedtype) and not try_to_consume(_LT) then
+        if not Assigned(parsedtype) and not try_to_consume(_LT) then
           begin
             consume(_LSHARPBRACKET);
             { handle "<>" }
@@ -1453,7 +1453,7 @@ uses
               end;
           end;
 
-        context:=tspecializationcontext.create;
+        context:=TSpecializationContext.create;
 
         { Parse type parameters }
         err:=not parse_generic_specialization_types_internal(context.paramlist,context.poslist,context.prettyname,context.specializename,parsedtype,parsedpos);
@@ -1473,19 +1473,19 @@ uses
           begin
             if genericdef.typ=procdef then
               genname:=TProcDef(genericdef).procsym.realname
-            else if assigned(genericdef.typesym) then
+            else if Assigned(genericdef.typesym) then
               genname:=TTypeSym(genericdef.typesym).realname
             else if (genericdef.typ=objectdef) and (oo_is_forward in TObjectDef(genericdef).objectoptions) then
               genname:=TObjectDef(genericdef).objrealname^
             else
-              internalerror(2020071201);
+              InternalError(2020071201);
           end
         else
           genname:=symname;
 
         { in case of non-Delphi mode the type name could already be a generic
           def (but maybe the wrong one) }
-        if assigned(genericdef) and
+        if Assigned(genericdef) and
             ([df_generic,df_specialization]*genericdef.defoptions<>[]) then
           begin
             { remove the type count suffix from the generic's name }
@@ -1522,33 +1522,33 @@ uses
 
         context.genname:=genname;
 
-        if assigned(genericdef) then
+        if Assigned(genericdef) then
           symowner:=genericdef.owner
         else
-          symowner:=symtable;
+          symowner:=SymTable;
 
-        if assigned(symowner) and (symowner.symtabletype in [objectsymtable,recordsymtable]) then
+        if Assigned(symowner) and (symowner.symtabletype in [objectsymtable,recordsymtable]) then
           begin
             if symowner.symtabletype = objectsymtable then
-              found:=searchsym_in_class(TObjectDef(symowner.defowner),TObjectDef(symowner.defowner),ugenname,context.sym,context.symtable,[])
+              found:=searchsym_in_class(TObjectDef(symowner.defowner),TObjectDef(symowner.defowner),ugenname,context.sym,context.SymTable,[])
             else
-              found:=searchsym_in_record(TAbstractRecordDef(symowner.defowner),ugenname,context.sym,context.symtable);
+              found:=searchsym_in_record(TAbstractRecordDef(symowner.defowner),ugenname,context.sym,context.SymTable);
             if not found then
-              found:=searchsym(ugenname,context.sym,context.symtable);
+              found:=searchsym(ugenname,context.sym,context.SymTable);
           end
         else if enforce_unit then
           begin
-            if not assigned(symowner) then
-              internalerror(2022102101);
-            if not (symowner.symtabletype in [globalsymtable,staticsymtable]) then
-              internalerror(2022102102);
+            if not Assigned(symowner) then
+              InternalError(2022102101);
+            if not (symowner.symtabletype in [GlobalSymTable,staticsymtable]) then
+              InternalError(2022102102);
             hmodule:=find_module_from_symtable(symowner);
-            if not assigned(hmodule) then
-              internalerror(2022102103);
-            found:=searchsym_in_module(hmodule,ugenname,context.sym,context.symtable);
+            if not Assigned(hmodule) then
+              InternalError(2022102103);
+            found:=searchsym_in_module(hmodule,ugenname,context.sym,context.SymTable);
           end
         else
-          found:=searchsym(ugenname,context.sym,context.symtable);
+          found:=searchsym(ugenname,context.sym,context.SymTable);
 
         if found and (context.sym.typ=absolutevarsym) and
             (vo_is_funcret in TAbstractVarSym(context.sym).varoptions) then
@@ -1556,19 +1556,19 @@ uses
             { we found the function result alias of a generic function; go up the
               symbol stack *before* this alias was inserted, so that we can
               (hopefully) find the correct generic symbol }
-            tmpstack:=tfpobjectlist.create(false);
-            while assigned(symtablestack.top) do
+            tmpstack:=TFPObjectList.create(false);
+            while Assigned(SymTableStack.top) do
               begin
-                tmpstack.Add(symtablestack.top);
-                symtablestack.pop(symtablestack.top);
-                if tmpstack.Last=context.symtable then
+                tmpstack.Add(SymTableStack.top);
+                SymTableStack.pop(SymTableStack.top);
+                if tmpstack.Last=context.SymTable then
                   break;
               end;
-            if not assigned(symtablestack.top) then
-              internalerror(2019123001);
-            found:=searchsym(ugenname,context.sym,context.symtable);
+            if not Assigned(SymTableStack.top) then
+              InternalError(2019123001);
+            found:=searchsym(ugenname,context.sym,context.SymTable);
             for i:=tmpstack.count-1 downto 0 do
-              symtablestack.push(TSymTable(tmpstack[i]));
+              SymTableStack.push(TSymTable(tmpstack[i]));
             tmpstack.free;
             tmpstack := nil;
           end;
@@ -1590,7 +1590,7 @@ uses
         else
           begin
             if TProcSym(context.sym).procdeflist.count=0 then
-              internalerror(2015061203);
+              InternalError(2015061203);
             result:=TStoredDef(TProcSym(context.sym).procdefList[0]);
           end;
 
@@ -1598,12 +1598,12 @@ uses
           consume(_RSHARPBRACKET);
       end;
 
-    function generate_specialization_phase2(context:tspecializationcontext;genericdef:TStoredDef;parse_class_parent:boolean;const _prettyname:ansistring):TDef;
+    function generate_specialization_phase2(context:TSpecializationContext;genericdef:TStoredDef;parse_class_parent:boolean;const _prettyname:AnsiString):TDef;
 
         procedure unset_forwarddef(def: TDef);
           var
             st : TSymTable;
-            i : longint;
+            i : LongInt;
           begin
             case def.typ of
               procdef:
@@ -1622,7 +1622,7 @@ uses
 
         procedure retrieve_genericdef_or_procsym(sym:TSym;out gendef:TDef;out psym:TSym);
           var
-            i : longint;
+            i : LongInt;
           begin
             gendef:=nil;
             psym:=nil;
@@ -1642,19 +1642,19 @@ uses
                   psym:=sym;
                 end
               else
-                internalerror(200710171);
+                InternalError(200710171);
             end;
           end;
 
-        function find_in_hierarchy(def:TDef;generictypelist:tfphashobjectlist):TDef;
+        function find_in_hierarchy(def:TDef;generictypelist:TFPHashObjectList):TDef;
           var
             paramdef1,
             paramdef2 : TDef;
             allequal : boolean;
-            i : longint;
+            i : LongInt;
           begin
             result:=nil;
-            while assigned(def) do
+            while Assigned(def) do
               begin
                 if (df_generic in def.defoptions) and (def=genericdef) then
                   begin
@@ -1706,7 +1706,7 @@ uses
                           end;
                       end;
                   end;
-                if assigned(def.owner) then
+                if Assigned(def.owner) then
                   def:=TStoredDef(def.owner.defowner)
                 else
                   def:=nil;
@@ -1727,41 +1727,41 @@ uses
 
       var
         finalspecializename,
-        ufinalspecializename : tidstring;
+        ufinalspecializename : TIDString;
         hierarchy,
-        prettyname : ansistring;
-        generictypelist : tfphashobjectlist;
+        prettyname : AnsiString;
+        generictypelist : TFPHashObjectList;
         srsymtable,
         specializest : TSymTable;
-        hashedid : thashedidstring;
+        hashedid : THashedIDString;
         tempst : TGlobalSymTable;
         tsrsym : TTypeSym;
         psym,
         srsym : TSym;
-        flags : thccflags;
+        flags : THCCFlags;
         def : TDef;
         old_block_type : TBlockType;
-        state : tspecializationstate;
+        state : TSpecializationState;
         old_current_structdef : TAbstractRecordDef;
         old_current_specializedef,
         old_current_genericdef : TStoredDef;
-        old_current_procinfo : tprocinfo;
+        old_current_procinfo : TProcInfo;
         old_module_procinfo : tobject;
-        hmodule : tmodule;
+        hmodule : TModule;
         oldcurrent_filepos : TFilePosInfo;
-        recordbuf : tdynamicarray;
+        recordbuf : TDynamicArray;
         hadtypetoken : boolean;
         i,
-        replaydepth : longint;
+        replaydepth : LongInt;
         hdef : TDef;
         item : tobject;
         hintsprocessed : boolean;
         pd : TProcDef;
-        pdflags : tpdflags;
-        ppflags : tparse_proc_flags;
+        pdflags : TPDFlags;
+        ppflags : TParseProcFlags;
       begin
-        if not assigned(context) then
-          internalerror(2015052203);
+        if not Assigned(context) then
+          InternalError(2015052203);
 
         result:=nil;
 
@@ -1778,14 +1778,14 @@ uses
 
         { build the new type's name }
         hierarchy:=genericdef.ownerhierarchyname;
-        if assigned(genericdef.owner) then
+        if Assigned(genericdef.owner) then
           begin
             hmodule:=find_module_from_symtable(genericdef.owner);
-            if not assigned(hmodule) then
-              internalerror(2022102801);
+            if not Assigned(hmodule) then
+              InternalError(2022102801);
             if hierarchy<>'' then
               hierarchy:='.'+hierarchy;
-            hierarchy:=hmodule.modulename^+hierarchy;
+            hierarchy:=hmodule.ModuleName^+hierarchy;
           end;
         finalspecializename:=generate_generic_name(context.genname,context.specializename,hierarchy);
         ufinalspecializename:=upper(finalspecializename);
@@ -1794,23 +1794,23 @@ uses
         else
           prettyname:=genericdef.typesym.prettyname;
         prettyname:=prettyname+'<'+context.prettyname+'>';
-        generictypelist:=tfphashobjectlist.create(false);
+        generictypelist:=TFPHashObjectList.create(false);
 
         { build the list containing the types for the generic params }
-        if not assigned(genericdef.genericparas) then
-          internalerror(2013092601);
+        if not Assigned(genericdef.genericparas) then
+          InternalError(2013092601);
         if context.paramlist.count<>genericdef.genericparas.count then
-          internalerror(2013092603);
+          InternalError(2013092603);
         for i:=0 to genericdef.genericparas.Count-1 do
           begin
             srsym:=TSym(genericdef.genericparas[i]);
             if not (sp_generic_para in srsym.symoptions) then
-              internalerror(2013092602);
+              InternalError(2013092602);
             generictypelist.add(srsym.realname,context.paramlist[i]);
           end;
 
         { Special case if we are referencing the current defined object }
-        if assigned(CurrentStructDef) and
+        if Assigned(CurrentStructDef) and
            (CurrentStructDef.objname^=ufinalspecializename) then
           result:=CurrentStructDef;
 
@@ -1820,7 +1820,7 @@ uses
           type of the current (main) specialization (this is necessary, because
           during that time the symbol of the main specialization will still
           contain a reference to an errordef) }
-        if not assigned(result) and assigned(CurrentSpecializeDef) then
+        if not Assigned(result) and Assigned(CurrentSpecializeDef) then
           begin
             def:=CurrentSpecializeDef;
             repeat
@@ -1829,50 +1829,50 @@ uses
                   result:=def;
                   break;
                 end;
-              if assigned(def.owner) then
+              if Assigned(def.owner) then
                 def:=TStoredDef(def.owner.defowner)
               else
                 { this can happen when specializing a generic function }
                 def:=nil;
-            until not assigned(def) or not (df_specialization in def.defoptions);
+            until not Assigned(def) or not (df_specialization in def.defoptions);
           end;
 
         { if the genericdef is the def we are currently parsing (or one of its parents) then we can
           not use it for specializing as the tokenbuffer is not yet set (and we aren't done with
           parsing anyway), so for now we treat those still as generic defs without doing a partial
           specialization }
-        if not assigned(result) then
+        if not Assigned(result) then
           begin
             def:=CurrentGenericDef;
             if def=genericdef then
               result:=def
-            else if assigned(CurrentGenericDef) then
+            else if Assigned(CurrentGenericDef) then
               result:=find_in_hierarchy(CurrentGenericDef,generictypelist);
-            if not assigned(result) and assigned(CurrentSpecializeDef) then
+            if not Assigned(result) and Assigned(CurrentSpecializeDef) then
               result:=find_in_hierarchy(CurrentSpecializeDef,generictypelist);
           end;
 
         { decide in which symtable to put the specialization }
-        if assigned(context.forwarddef) then
+        if Assigned(context.forwarddef) then
           begin
             specializest:=context.forwarddef.owner;
           end
-        else if parse_generic and not assigned(result) then
+        else if parse_generic and not Assigned(result) then
           begin
-            srsymtable:=symtablestack.top;
+            srsymtable:=SymTableStack.top;
             if (srsymtable.symtabletype in [localsymtable,parasymtable]) and TStoredDef(srsymtable.defowner).is_specialization then
               { if we are currently specializing a routine we need to specialize into
                 the routine's local- or parasymtable so that they are correctly
                 registered should the specialization be finalized }
               specializest:=srsymtable
-            else if assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.defoptions) then
+            else if Assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.defoptions) then
               { if we are parsing the definition of a method we specialize into
                 the local symtable of it }
               specializest:=CurrentProcInfo.procdef.getsymtable(gs_local)
             else
               begin
-                if not assigned(CurrentGenericDef) then
-                  internalerror(2014050901);
+                if not Assigned(CurrentGenericDef) then
+                  InternalError(2014050901);
                 { we specialize the partial specialization into the symtable of the currently parsed
                   generic }
                 case CurrentGenericDef.typ of
@@ -1884,9 +1884,9 @@ uses
                   recorddef:
                     specializest:=CurrentGenericDef.getsymtable(gs_record);
                   arraydef:
-                    specializest:=TArrayDef(CurrentGenericDef).symtable;
+                    specializest:=TArrayDef(CurrentGenericDef).SymTable;
                   else
-                    internalerror(2014050902);
+                    InternalError(2014050902);
                 end;
               end;
           end
@@ -1907,13 +1907,13 @@ uses
                   hdef:=TTypeSym(psym).typedef
                 else
                   hdef:=nil;
-                while assigned(hdef) do
+                while Assigned(hdef) do
                   begin
-                    if assigned(hdef.owner) and
+                    if Assigned(hdef.owner) and
                        (hdef.owner.symtabletype in [localsymtable,parasymtable]) then
                       begin
                         if (hdef.owner.symtabletype=parasymtable) and
-                           assigned(hdef.owner.defowner) and
+                           Assigned(hdef.owner.defowner) and
                            (hdef.owner.defowner.typ=procdef) then
                           specializest:=TProcDef(hdef.owner.defowner).getsymtable(gs_local)
                         else
@@ -1935,7 +1935,7 @@ uses
                         hdef:=nil;
                     end;
                   end;
-                if assigned(specializest) then
+                if Assigned(specializest) then
                   break;
                 { also accept the param's immediate sym owner being a local
                   scope — covers the case where the type-arg is a const-sym
@@ -1943,7 +1943,7 @@ uses
                 if psym.owner.symtabletype in [localsymtable,parasymtable] then
                   begin
                     if (psym.owner.symtabletype=parasymtable) and
-                       assigned(psym.owner.defowner) and
+                       Assigned(psym.owner.defowner) and
                        (psym.owner.defowner.typ=procdef) then
                       specializest:=TProcDef(psym.owner.defowner).getsymtable(gs_local)
                     else
@@ -1952,58 +1952,58 @@ uses
                   end;
               end;
 
-            if not assigned(specializest) then
+            if not Assigned(specializest) then
               if CurrentModule.is_unit and CurrentModule.in_interface then
-                specializest:=CurrentModule.globalsymtable
+                specializest:=CurrentModule.GlobalSymTable
               else
                 specializest:=CurrentModule.localsymtable;
           end;
-        if not assigned(specializest) then
-          internalerror(2014050910);
+        if not Assigned(specializest) then
+          InternalError(2014050910);
 
         { now check whether there is a specialization somewhere else }
         psym:=nil;
-        if not assigned(result) then
+        if not Assigned(result) then
           begin
             hashedid.id:=ufinalspecializename;
 
-            if (specializest.symtabletype=objectsymtable) and not assigned(context.forwarddef) then
+            if (specializest.symtabletype=objectsymtable) and not Assigned(context.forwarddef) then
               begin
                 { search also in parent classes }
-                if not assigned(CurrentGenericDef) or (CurrentGenericDef.typ<>objectdef) then
-                  internalerror(2016112901);
+                if not Assigned(CurrentGenericDef) or (CurrentGenericDef.typ<>objectdef) then
+                  InternalError(2016112901);
                 if not searchsym_in_class(TObjectDef(CurrentGenericDef),TObjectDef(CurrentGenericDef),ufinalspecializename,srsym,srsymtable,[]) then
                   srsym:=nil;
               end
             else
               srsym:=TSym(specializest.findwithhash(hashedid));
 
-            if assigned(context.forwarddef) then
+            if Assigned(context.forwarddef) then
               begin
                 { just do a few sanity checks }
-                if not assigned(srsym) or not (srsym.typ=typesym) then
-                  internalerror(2020070306);
+                if not Assigned(srsym) or not (srsym.typ=typesym) then
+                  InternalError(2020070306);
                 if TTypeSym(srsym).typedef<>context.forwarddef then
-                  internalerror(2020070307);
+                  InternalError(2020070307);
               end
-            else if assigned(srsym) then
+            else if Assigned(srsym) then
               begin
                 retrieve_genericdef_or_procsym(srsym,result,psym);
               end
             else
               { the generic could have been specialized in the globalsymtable
                 already, so search there as well }
-              if (specializest<>CurrentModule.globalsymtable) and assigned(CurrentModule.globalsymtable) then
+              if (specializest<>CurrentModule.GlobalSymTable) and Assigned(CurrentModule.GlobalSymTable) then
                 begin
-                  srsym:=TSym(CurrentModule.globalsymtable.findwithhash(hashedid));
-                  if assigned(srsym) then
+                  srsym:=TSym(CurrentModule.GlobalSymTable.findwithhash(hashedid));
+                  if Assigned(srsym) then
                     begin
                       retrieve_genericdef_or_procsym(srsym,result,psym);
                     end;
                 end;
           end;
 
-        if not assigned(result) then
+        if not Assigned(result) then
           begin
             specialization_init(genericdef,state);
 
@@ -2011,8 +2011,8 @@ uses
               added to the correct symtable; this symtable does not contain
               any other symbols, so that the type resolution can not be
               influenced by symbols in the current unit }
-            tempst:=TSpecializeSymTable.create(CurrentModule.modulename^,CurrentModule.moduleid);
-            symtablestack.push(tempst);
+            tempst:=TSpecializeSymTable.create(CurrentModule.ModuleName^,CurrentModule.ModuleID);
+            SymTableStack.push(tempst);
 
             { Reparse the original type definition }
               begin
@@ -2020,10 +2020,10 @@ uses
                 old_current_genericdef:=nil;
                 old_current_structdef:=nil;
                 old_current_procinfo:=CurrentProcInfo;
-                old_module_procinfo:=CurrentModule.procinfo;
+                old_module_procinfo:=CurrentModule.ProcInfo;
 
                 CurrentProcInfo:=nil;
-                CurrentModule.procinfo:=nil;
+                CurrentModule.ProcInfo:=nil;
 
                 if parse_class_parent then
                   begin
@@ -2044,15 +2044,15 @@ uses
                 { First a new sym so we can reuse this specialization and
                   references to this specialization can be handled }
                 if genericdef.typ=procdef then
-                  if assigned(psym) then
+                  if Assigned(psym) then
                     srsym:=psym
                   else
-                    srsym:=cprocsym.create(finalspecializename)
+                    srsym:=CProcSym.create(finalspecializename)
                 else
-                  srsym:=ctypesym.create(finalspecializename,generrordef);
+                  srsym:=CTypeSym.create(finalspecializename,generrordef);
                 { insert the symbol only if we don't know already that we have
                   a procsym to add it to and we aren't dealing with a forwarddef }
-                if not assigned(psym) and not assigned(context.forwarddef) then
+                if not Assigned(psym) and not Assigned(context.forwarddef) then
                   specializest.insertsym(srsym);
 
                 { specializations are declarations as such it is the wisest to
@@ -2060,22 +2060,22 @@ uses
                   experience unexpected side effects like the addition of
                   classrefdefs if we have a generic that's derived from another
                   generic }
-                old_block_type:=block_type;
-                block_type:=bt_type;
+                old_block_type:=Block_Type;
+                Block_Type:=bt_type;
 
                 if (
                      (genericdef.typ=procdef) and
-                     not assigned(TProcDef(genericdef).genericdecltokenbuf)
+                     not Assigned(TProcDef(genericdef).genericdecltokenbuf)
                    ) or (
                      (genericdef.typ<>procdef) and
-                     not assigned(genericdef.generictokenbuf)
+                     not Assigned(genericdef.generictokenbuf)
                    ) then
-                  internalerror(200511171);
+                  InternalError(200511171);
                 if hmodule=nil then
-                  internalerror(2012051202);
+                  InternalError(2012051202);
                 oldcurrent_filepos:=CurrentFilePos;
                 { use the index the module got from the current compilation process }
-                CurrentFilePos.moduleindex:=hmodule.moduleid;
+                CurrentFilePos.moduleindex:=hmodule.ModuleID;
                 CurrentTokenPos:=CurrentFilePos;
                 if parse_generic then
                   begin
@@ -2089,9 +2089,9 @@ uses
                   begin
                     CurrentScanner.startreplaytokens(TProcDef(genericdef).genericdecltokenbuf,hmodule.change_endian);
                     parse_proc_head(TProcDef(genericdef).struct,TProcDef(genericdef).proctypeoption,[],genericdef,generictypelist,pd);
-                    if assigned(pd) then
+                    if Assigned(pd) then
                       begin
-                        if assigned(psym) then
+                        if Assigned(psym) then
                           pd.procsym:=psym
                         else
                           pd.procsym:=srsym;
@@ -2105,7 +2105,7 @@ uses
                 else
                   begin
                     CurrentScanner.startreplaytokens(genericdef.generictokenbuf,hmodule.change_endian);
-                    if assigned(context.forwarddef) then
+                    if Assigned(context.forwarddef) then
                       begin
                         tsrsym:=nil;
                         result:=parse_forward_declaration(context.forwarddef.typesym,ufinalspecializename,finalspecializename,genericdef,generictypelist,tsrsym);
@@ -2224,16 +2224,16 @@ uses
                 while CurrentScanner.replay_stack_depth>replaydepth do
                   consume(CurrentScanner.token);
 
-                if assigned(recordbuf) then
+                if Assigned(recordbuf) then
                   begin
-                    if assigned(CurrentScanner.recordtokenbuf) then
-                      internalerror(2014050909);
+                    if Assigned(CurrentScanner.recordtokenbuf) then
+                      InternalError(2014050909);
                     CurrentScanner.recordtokenbuf:=recordbuf;
                   end;
 
-                block_type:=old_block_type;
+                Block_Type:=old_block_type;
                 CurrentProcInfo:=old_current_procinfo;
-                CurrentModule.procinfo:=old_module_procinfo;
+                CurrentModule.ProcInfo:=old_module_procinfo;
                 if parse_class_parent then
                   begin
                     CurrentStructDef:=old_current_structdef;
@@ -2282,7 +2282,7 @@ uses
 
         generictypelist.free;
         generictypelist := nil;
-        if assigned(genericdef) then
+        if Assigned(genericdef) then
           begin
             { check the hints of the found generic symbol }
             if genericdef.typ=procdef then
@@ -2296,25 +2296,25 @@ uses
 
     procedure generate_specialization(var tt:TDef;enforce_unit:boolean;parse_class_parent:boolean;const _prettyname:string;parsedtype:TDef;const symname:string;parsedpos:TFilePosInfo);
       var
-        context : tspecializationcontext;
+        context : TSpecializationContext;
         genericdef : TStoredDef;
       begin
         genericdef:=TStoredDef(generate_specialization_phase1(context,tt,enforce_unit,parsedtype,symname,nil,parsedpos));
         if genericdef<>generrordef then
           genericdef:=TStoredDef(generate_specialization_phase2(context,genericdef,parse_class_parent,_prettyname));
         tt:=genericdef;
-        if assigned(context) then
+        if Assigned(context) then
           context.free; // no nil needed
       end;
 
 
-    function parse_generic_parameters(allowconstraints:boolean):tfphashobjectlist;
+    function parse_generic_parameters(allowconstraints:boolean):TFPHashObjectList;
       var
         generictype : TStoredSym;
-        i,firstidx,const_list_index : longint;
+        i,firstidx,const_list_index : LongInt;
         srsymtable : TSymTable;
         basedef,def : TDef;
-        defname : tidstring;
+        defname : TIDString;
         allowconst,
         allowconstructor,
         is_const,
@@ -2323,11 +2323,11 @@ uses
         old_block_type : TBlockType;
         fileinfo : TFilePosInfo;
       begin
-        result:=tfphashobjectlist.create(false);
+        result:=TFPHashObjectList.create(false);
         firstidx:=0;
         const_list_index:=0;
-        old_block_type:=block_type;
-        block_type:=bt_type;
+        old_block_type:=Block_Type;
+        Block_Type:=bt_type;
         allowconst:=true;
         is_const:=false;
         repeat
@@ -2340,9 +2340,9 @@ uses
           if CurrentScanner.token=_ID then
             begin
               if is_const then
-                generictype:=cconstsym.create_undefined(CurrentScanner.orgpattern,cundefinedtype)
+                generictype:=CConstSym.create_undefined(CurrentScanner.orgpattern,cundefinedtype)
               else
-                generictype:=ctypesym.create(CurrentScanner.orgpattern,cundefinedtype);
+                generictype:=CTypeSym.create(CurrentScanner.orgpattern,cundefinedtype);
               { type parameters need to be added as strict private }
               generictype.visibility:=vis_strictprivate;
               include(generictype.symoptions,sp_generic_para);
@@ -2359,7 +2359,7 @@ uses
               for i:=const_list_index to result.count-1 do
                 begin
                   { finalize constant information once type is known }
-                  if assigned(def) and (def.typ in tgeneric_param_const_types) then
+                  if Assigned(def) and (def.typ in tgeneric_param_const_types) then
                     begin
                       case def.typ of
                         orddef,
@@ -2375,7 +2375,7 @@ uses
                         pointerdef:
                           TConstSym(result[i]).consttyp:=constnil;
                         else
-                          internalerror(2020011402);
+                          InternalError(2020011402);
                       end;
                       TConstSym(result[i]).constdef:=def;
                     end
@@ -2397,7 +2397,7 @@ uses
               str(CurrentModule.deflist.count,defname);
               defname:='$gendef'+defname;
 
-              allowconstructor:=m_delphi in CurrentSettings.modeswitches;
+              allowconstructor:=m_delphi in CurrentSettings.ModeSwitches;
 
               basedef:=generrordef;
               repeat
@@ -2428,7 +2428,7 @@ uses
                       else
                         begin
                           srsymtable:=TRecordSymTable.create(defname,0,1);
-                          basedef:=crecorddef.create(defname,srsymtable);
+                          basedef:=CRecordDef.create(defname,srsymtable);
                           include(constraintdata.flags,gcf_record);
                           allowconstructor:=false;
                         end;
@@ -2488,8 +2488,8 @@ uses
                   else
                     if (basedef.typ<>objectdef) or
                         not (TObjectDef(basedef).objecttype in [odt_javaclass,odt_class]) then
-                      internalerror(2012101101);
-                  basedef:=cobjectdef.create(TObjectDef(basedef).objecttype,defname,TObjectDef(basedef),false);
+                      InternalError(2012101101);
+                  basedef:=CObjectDef.create(TObjectDef(basedef).objecttype,defname,TObjectDef(basedef),false);
                   for i:=0 to constraintdata.interfaces.count-1 do
                     TObjectDef(basedef).register_implemented_interface(TObjectDef(constraintdata.interfaces[i]),false);
                 end
@@ -2497,9 +2497,9 @@ uses
                 if constraintdata.interfaces.count=1 then
                   begin
                     if basedef.typ<>errordef then
-                      internalerror(2013021601);
+                      InternalError(2013021601);
                     def:=TDef(constraintdata.interfaces[0]);
-                    basedef:=cobjectdef.create(TObjectDef(def).objecttype,defname,TObjectDef(def),false);
+                    basedef:=CObjectDef.create(TObjectDef(def).objecttype,defname,TObjectDef(def),false);
                     constraintdata.interfaces.delete(0);
                   end;
 
@@ -2516,13 +2516,13 @@ uses
                 { the constraint was rejected: recover as an unconstrained
                   parameter; keeping the shared errordef would corrupt its
                   typesym below and IE in check_generic_constraints later }
-                basedef:=cundefineddef.create(false);
+                basedef:=CUndefinedDef.create(false);
 
               for i:=firstidx to result.count-1 do
                 TTypeSym(result[i]).typedef:=basedef;
               { we need a typesym in case we do a Delphi-mode inline
                 specialization with this parameter; so just use the first sym }
-              if not assigned(basedef.typesym) then
+              if not Assigned(basedef.typesym) then
                 basedef.typesym:=TTypeSym(result[firstidx]);
               firstidx:=result.count;
 
@@ -2537,7 +2537,7 @@ uses
                   for i:=firstidx to result.count-1 do
                     if TSym(result[i]).typ<>constsym then
                       begin
-                        TTypeSym(result[i]).typedef:=cundefineddef.create(false);
+                        TTypeSym(result[i]).typedef:=CUndefinedDef.create(false);
                         TTypeSym(result[i]).typedef.typesym:=TTypeSym(result[i]);
                       end;
                   { a semicolon terminates a type parameter group }
@@ -2558,41 +2558,41 @@ uses
         for i:=firstidx to result.count-1 do
           if TSym(result[i]).typ<>constsym then
             begin
-              TTypeSym(result[i]).typedef:=cundefineddef.create(false);
+              TTypeSym(result[i]).typedef:=CUndefinedDef.create(false);
               TTypeSym(result[i]).typedef.typesym:=TTypeSym(result[i]);
             end;
-        block_type:=old_block_type;
+        Block_Type:=old_block_type;
       end;
 
 
-    procedure insert_generic_parameter_types(def:TStoredDef;genericdef:TStoredDef;genericlist:tfphashobjectlist;isfwd:boolean);
+    procedure insert_generic_parameter_types(def:TStoredDef;genericdef:TStoredDef;genericlist:TFPHashObjectList;isfwd:boolean);
       var
-        i : longint;
+        i : LongInt;
         generictype,
         fwdparam : TStoredSym;
         generictypedef : TDef;
         sym : TSym;
         st : TSymTable;
         fwdok : boolean;
-        conv : tconverttype;
+        conv : TConvertType;
         op : TProcDef;
       begin
         def.genericdef:=genericdef;
-        if not assigned(genericlist) then
+        if not Assigned(genericlist) then
           exit;
 
-        if assigned(genericdef) then
+        if Assigned(genericdef) then
           include(def.defoptions,df_specialization)
         else
           if genericlist.count>0 then
             include(def.defoptions,df_generic);
 
         case def.typ of
-          recorddef,objectdef: st:=TAbstractRecordDef(def).symtable;
-          arraydef: st:=TArrayDef(def).symtable;
+          recorddef,objectdef: st:=TAbstractRecordDef(def).SymTable;
+          arraydef: st:=TArrayDef(def).SymTable;
           procvardef,procdef: st:=TAbstractProcDef(def).parast;
           else
-            internalerror(201101020);
+            InternalError(201101020);
         end;
 
         { if we have a forwarddef we check whether the generic parameters are
@@ -2602,7 +2602,7 @@ uses
             fwdok:=true;
             if (genericlist.count>0) and
                 (
-                  not assigned(def.genericparas)
+                  not Assigned(def.genericparas)
                   or (def.genericparas.count<>genericlist.count)
                 ) then
               fwdok:=false
@@ -2633,7 +2633,7 @@ uses
                           fwdok:=false;
                       end
                     else
-                      internalerror(2020070101);
+                      InternalError(2020070101);
 
                     if not fwdok then
                       break;
@@ -2646,15 +2646,15 @@ uses
             exit;
           end;
 
-        if (genericlist.count>0) and not assigned(def.genericparas) then
-          def.genericparas:=tfphashobjectlist.create(false);
+        if (genericlist.count>0) and not Assigned(def.genericparas) then
+          def.genericparas:=TFPHashObjectList.create(false);
         for i:=0 to genericlist.count-1 do
           begin
             generictype:=TStoredSym(genericlist[i]);
-            if assigned(generictype.owner) then
+            if Assigned(generictype.owner) then
               begin
                 if generictype.typ=typesym then
-                  sym:=ctypesym.create(genericlist.nameofindex(i),TTypeSym(generictype).typedef)
+                  sym:=CTypeSym.create(genericlist.nameofindex(i),TTypeSym(generictype).typedef)
                 else if generictype.typ=constsym then
                   { generictype is a constsym that was created in create_generic_constsym
                     during phase 1 so we pass this directly without copying }
@@ -2666,7 +2666,7 @@ uses
                     include(sym.symoptions,sp_generic_const);
                   end
                 else
-                  internalerror(2019021602);
+                  InternalError(2019021602);
                 { type parameters need to be added as strict private }
                 sym.visibility:=vis_strictprivate;
                 st.insertsym(sym);
@@ -2681,7 +2681,7 @@ uses
                       begin
                         { the generic parameters were parsed before the genericdef existed thus the
                           undefineddefs were added as part of the parent symtable }
-                        if assigned(generictypedef.owner) then
+                        if Assigned(generictypedef.owner) then
                           generictypedef.owner.DefList.Extract(generictypedef);
                         generictypedef.changeowner(st);
                       end;
@@ -2693,23 +2693,23 @@ uses
           end;
        end;
 
-    procedure maybe_insert_generic_rename_symbol(const name:tidstring;genericlist:tfphashobjectlist);
+    procedure maybe_insert_generic_rename_symbol(const name:TIDString;genericlist:TFPHashObjectList);
       var
         gensym : TTypeSym;
       begin
         { for generics in non-Delphi modes we insert a private type symbol
           that has the same base name as the currently parsed generic and
           that references this defs }
-        if not (m_delphi in CurrentSettings.modeswitches) and
+        if not (m_delphi in CurrentSettings.ModeSwitches) and
             (
               (
                 parse_generic and
-                assigned(genericlist) and
+                Assigned(genericlist) and
                 (genericlist.count>0)
               ) or
               (
-                assigned(CurrentSpecializeDef) and
-                assigned(CurrentStructDef.genericdef) and
+                Assigned(CurrentSpecializeDef) and
+                Assigned(CurrentStructDef.genericdef) and
                 (CurrentStructDef.genericdef.typ in [objectdef,recorddef]) and
                 (pos('$',name)>0)
               )
@@ -2717,35 +2717,35 @@ uses
           begin
             { we need to pass nil as def here, because the constructor wants
               to set the typesym of the def which is not what we want }
-            gensym:=ctypesym.create(copy(name,1,pos('$',name)-1),nil);
+            gensym:=CTypeSym.create(copy(name,1,pos('$',name)-1),nil);
             gensym.typedef:=CurrentStructDef;
             include(gensym.symoptions,sp_internal);
             { the symbol should be only visible to the generic class
               itself }
             gensym.visibility:=vis_strictprivate;
-            symtablestack.top.insertsym(gensym);
+            SymTableStack.top.insertsym(gensym);
           end;
       end;
 
-    function generate_generic_name(const name:tidstring;const specializename:ansistring;const owner_hierarchy:ansistring):tidstring;
+    function generate_generic_name(const name:TIDString;const specializename:AnsiString;const owner_hierarchy:AnsiString):TIDString;
     var
       crc : cardinal;
     begin
       if specializename='' then
-        internalerror(2012061901);
+        InternalError(2012061901);
       { build the new type's name }
-      crc:=UpdateCrc32(0,specializename[1],length(specializename));
-      result:=name+'$crc'+hexstr(crc,8);
+      crc:=UpdateCRC32(0,specializename[1],length(specializename));
+      result:=name+'$crc'+HexStr(crc,8);
       if owner_hierarchy<>'' then
         begin
-          crc:=UpdateCrc32(0,owner_hierarchy[1],length(owner_hierarchy));
-          result:=result+'_crc'+hexstr(crc,8);
+          crc:=UpdateCRC32(0,owner_hierarchy[1],length(owner_hierarchy));
+          result:=result+'_crc'+HexStr(crc,8);
         end;
     end;
 
-    procedure split_generic_name(const name:tidstring;out nongeneric:string;out count:longint);
+    procedure split_generic_name(const name:TIDString;out nongeneric:string;out count:LongInt);
       var
-        i,code : longint;
+        i,code : LongInt;
         countstr : string;
       begin
         for i:=length(name) downto 1 do
@@ -2763,13 +2763,13 @@ uses
       end;
 
 
-    procedure add_generic_dummysym(sym:TSym;const name:tidstring);
+    procedure add_generic_dummysym(sym:TSym;const name:TIDString);
       var
         list: TFPObjectList;
         srsym : TSym;
         srsymtable : TSymTable;
         entry : TGenericDummyEntry;
-        n : tidstring;
+        n : TIDString;
       begin
         if sp_generic_dummy in sym.symoptions then
           begin
@@ -2777,10 +2777,10 @@ uses
             if n='' then
               n:=name;
             { did we already search for a generic with that name? }
-            list:=tfpobjectlist(CurrentModule.genericdummysyms.find(n));
-            if not assigned(list) then
+            list:=TFPObjectList(CurrentModule.genericdummysyms.find(n));
+            if not Assigned(list) then
               begin
-                list:=tfpobjectlist.create(true);
+                list:=TFPObjectList.create(true);
                 CurrentModule.genericdummysyms.add(n,list);
               end;
             { is the dummy sym still "dummy"? }
@@ -2802,7 +2802,7 @@ uses
             else
               { dummy symbol is already not so dummy anymore }
               srsym:=nil;
-            if assigned(srsym) then
+            if Assigned(srsym) then
               begin
                 entry:=TGenericDummyEntry.create;
                 entry.resolvedsym:=srsym;
@@ -2813,19 +2813,19 @@ uses
       end;
 
 
-    function resolve_generic_dummysym(const name:tidstring):TSym;
+    function resolve_generic_dummysym(const name:TIDString):TSym;
       var
-        list : tfpobjectlist;
+        list : TFPObjectList;
       begin
-        list:=tfpobjectlist(CurrentModule.genericdummysyms.find(name));
-        if assigned(list) and (list.count>0) then
+        list:=TFPObjectList(CurrentModule.genericdummysyms.find(name));
+        if Assigned(list) and (list.count>0) then
           result:=TGenericDummyEntry(list.last).resolvedsym
         else
           result:=nil;
       end;
 
 
-    function could_be_generic(const name:tidstring):boolean;
+    function could_be_generic(const name:TIDString):boolean;
       begin
         result:=(name<>'') and
                   (CurrentModule.genericdummysyms.findindexof(name)>=0);
@@ -2834,14 +2834,14 @@ uses
 
     function is_or_belongs_to_current_genericdef(def:TDef):boolean;
       var
-        state : pspecializationstate;
+        state : PSpecializationState;
       begin
         result:=true;
         if (def=CurrentGenericDef) or
             defs_belong_to_same_generic(def,CurrentGenericDef) then
           exit;
-        state:=pspecializationstate(CurrentModule.specializestate);
-        while assigned(state) do
+        state:=PSpecializationState(CurrentModule.specializestate);
+        while Assigned(state) do
           begin
             if (state^.oldcurrent_genericdef=def) or
                 defs_belong_to_same_generic(state^.oldcurrent_genericdef,def) then
@@ -2852,46 +2852,46 @@ uses
       end;
 
 
-    procedure specialization_init(genericdef:TDef;var state: tspecializationstate);
+    procedure specialization_init(genericdef:TDef;var state: TSpecializationState);
     var
-      pu : tused_unit;
-      hmodule : tmodule;
+      pu : TUsedUnit;
+      hmodule : TModule;
       unitsyms : TFPHashObjectList;
       sym : TSym;
-      symtable : TSymTable;
+      SymTable : TSymTable;
       i : Integer;
       n : string;
 
     begin
-      if not assigned(genericdef) then
-        internalerror(200705151);
+      if not Assigned(genericdef) then
+        InternalError(200705151);
       { Setup symtablestack at definition time
         to get types right, however this is not perfect, we should probably record
         the resolved symbols }
-      state.oldsymtablestack:=symtablestack;
+      state.OldSymTableStack:=SymTableStack;
       state.oldextendeddefs:=CurrentModule.extendeddefs;
       state.oldgenericdummysyms:=CurrentModule.genericdummysyms;
       state.oldcurrent_genericdef:=CurrentGenericDef;
-      state.oldspecializestate:=pspecializationstate(CurrentModule.specializestate);
+      state.oldspecializestate:=PSpecializationState(CurrentModule.specializestate);
       state.oldoptoken:=optoken;
       optoken:=NOTOKEN;
       CurrentModule.specializestate:=@state;
       CurrentModule.extendeddefs:=TFPHashObjectList.create(true);
-      CurrentModule.genericdummysyms:=tfphashobjectlist.create(true);
-      symtablestack:=TDefAwareSymTableStack.create;
-      if not assigned(genericdef.owner) then
+      CurrentModule.genericdummysyms:=TFPHashObjectList.create(true);
+      SymTableStack:=TDefAwareSymTableStack.create;
+      if not Assigned(genericdef.owner) then
         hmodule:=CurrentModule
       else
         hmodule:=find_module_from_symtable(genericdef.owner);
       if hmodule=nil then
-        internalerror(200705152);
+        InternalError(200705152);
       { collect all unit syms in the generic's unit as we need to establish
         their unitsym.module link again so that unit identifiers can be used }
-      unitsyms:=tfphashobjectlist.create(false);
-      if (hmodule<>CurrentModule) and assigned(hmodule.globalsymtable) then
-        for i:=0 to hmodule.globalsymtable.symlist.count-1 do
+      unitsyms:=TFPHashObjectList.create(false);
+      if (hmodule<>CurrentModule) and Assigned(hmodule.GlobalSymTable) then
+        for i:=0 to hmodule.GlobalSymTable.symlist.count-1 do
           begin
-            sym:=TSym(hmodule.globalsymtable.symlist[i]);
+            sym:=TSym(hmodule.GlobalSymTable.symlist[i]);
             if sym.typ=unitsym then
               begin
               n:=sym.realname;
@@ -2904,10 +2904,10 @@ uses
         generic could have been declared in the implementation part), but load
         only interface units, if we are in a different unit as then the generic
         needs to be in the interface section }
-      pu:=tused_unit(hmodule.used_units.first);
-      while assigned(pu) do
+      pu:=TUsedUnit(hmodule.used_units.first);
+      while Assigned(pu) do
         begin
-          if not assigned(pu.u.globalsymtable) then
+          if not Assigned(pu.u.GlobalSymTable) then
             { in certain circular, but valid unit constellations it can happen
               that we specialize a generic in a different unit that was used
               in the implementation section of the generic's unit and were the
@@ -2922,39 +2922,39 @@ uses
               specialized everything needed should be in place however). }
             if pu.u.in_interface then
               begin
-                if assigned(pu.u.localsymtable) then
-                  symtablestack.push(pu.u.localsymtable)
+                if Assigned(pu.u.localsymtable) then
+                  SymTableStack.push(pu.u.localsymtable)
               end
             else
-              internalerror(200705153)
+              InternalError(200705153)
           else
-            symtablestack.push(pu.u.globalsymtable);
-          sym:=TSym(unitsyms.find(pu.u.modulename^));
-          if assigned(sym) and not assigned(TUnitSym(sym).module) then
+            SymTableStack.push(pu.u.GlobalSymTable);
+          sym:=TSym(unitsyms.find(pu.u.ModuleName^));
+          if Assigned(sym) and not Assigned(TUnitSym(sym).module) then
             TUnitSym(sym).module:=pu.u;
-          pu:=tused_unit(pu.next);
+          pu:=TUsedUnit(pu.next);
         end;
       unitsyms.free;
       unitsyms := nil;
-      if assigned(hmodule.globalsymtable) then
-        symtablestack.push(hmodule.globalsymtable);
-      symtable:=genericdef.owner;
+      if Assigned(hmodule.GlobalSymTable) then
+        SymTableStack.push(hmodule.GlobalSymTable);
+      SymTable:=genericdef.owner;
       { push the localsymtable if needed }
       if ((hmodule<>CurrentModule) or not CurrentModule.in_interface)
-          and assigned(hmodule.localsymtable) then
-        symtablestack.push(hmodule.localsymtable);
+          and Assigned(hmodule.localsymtable) then
+        SymTableStack.push(hmodule.localsymtable);
       { also push the symtables of all owning types }
-      while assigned(symtable) and (symtable.symtabletype in [objectsymtable,recordsymtable]) do
+      while Assigned(SymTable) and (SymTable.symtabletype in [objectsymtable,recordsymtable]) do
         begin
-          symtablestack.push(symtable);
-          if assigned(symtable.defowner) then
-            symtable:=symtable.defowner.owner
+          SymTableStack.push(SymTable);
+          if Assigned(SymTable.defowner) then
+            SymTable:=SymTable.defowner.owner
           else
-            symtable:=nil;
+            SymTable:=nil;
         end;
     end;
 
-    procedure specialization_done(var state: tspecializationstate);
+    procedure specialization_done(var state: TSpecializationState);
     begin
       { Restore symtablestack }
       CurrentModule.extendeddefs.free;
@@ -2963,8 +2963,8 @@ uses
       CurrentModule.genericdummysyms:=state.oldgenericdummysyms;
       CurrentModule.specializestate:=state.oldspecializestate;
       optoken:=state.oldoptoken;
-      symtablestack.free;
-      symtablestack:=state.oldsymtablestack;
+      SymTableStack.free;
+      SymTableStack:=state.OldSymTableStack;
       { clear the state record to be on the safe side }
       fillchar(state, sizeof(state), 0);
     end;
@@ -2975,20 +2975,20 @@ uses
 ****************************************************************************}
 
 
-    procedure process_procdef(def:TProcDef;hmodule:tmodule);
+    procedure process_procdef(def:TProcDef;hmodule:TModule);
       var
         oldcurrent_filepos : TFilePosInfo;
       begin
-        if assigned(def.genericdef) and
+        if Assigned(def.genericdef) and
             (def.genericdef.typ=procdef) and
-            assigned(TProcDef(def.genericdef).generictokenbuf) then
+            Assigned(TProcDef(def.genericdef).generictokenbuf) then
           begin
-            if not assigned(TProcDef(def.genericdef).generictokenbuf) then
-              internalerror(2015061902);
+            if not Assigned(TProcDef(def.genericdef).generictokenbuf) then
+              InternalError(2015061902);
             oldcurrent_filepos:=CurrentFilePos;
             CurrentFilePos:=TProcDef(def.genericdef).fileinfo;
             { use the index the module got from the current compilation process }
-            CurrentFilePos.moduleindex:=hmodule.moduleid;
+            CurrentFilePos.moduleindex:=hmodule.ModuleID;
             CurrentTokenPos:=CurrentFilePos;
             CurrentScanner.startreplaytokens(TProcDef(def.genericdef).generictokenbuf,hmodule.change_endian);
             read_proc_body(def);
@@ -3002,37 +3002,37 @@ uses
 
     function process_abstractrecorddef(def:TAbstractRecordDef):boolean;
       var
-        i  : longint;
+        i  : LongInt;
         hp : TDef;
-        hmodule : tmodule;
+        hmodule : TModule;
       begin
         result:=true;
         hmodule:=nil;
-        if assigned(def.genericdef) then
+        if Assigned(def.genericdef) then
           hmodule:=find_module_from_symtable(def.genericdef.owner)
         else if not (df_internal in def.defoptions) then
-          internalerror(201202041);
-        for i:=0 to def.symtable.DefList.Count-1 do
+          InternalError(201202041);
+        for i:=0 to def.SymTable.DefList.Count-1 do
           begin
-            hp:=TDef(def.symtable.DefList[i]);
+            hp:=TDef(def.SymTable.DefList[i]);
             if hp.typ=procdef then
              begin
                { only generate the code if we need a body }
-               if assigned(TProcDef(hp).struct) and not TProcDef(hp).forwarddef then
+               if Assigned(TProcDef(hp).struct) and not TProcDef(hp).forwarddef then
                  continue;
                { and the body is available already (which is implicitly the
                  case if the generic routine is part of another unit) }
                if (
-                    not assigned(hmodule) or
+                    not Assigned(hmodule) or
                     (hmodule=CurrentModule) or
                     (hmodule.state=ms_compile)
                   ) and
                   { may not be assigned in case it's a synthetic procdef that
                     still needs to be generated }
-                  (assigned(TProcDef(hp).genericdef) and
+                  (Assigned(TProcDef(hp).genericdef) and
                   TProcDef(TProcDef(hp).genericdef).forwarddef)
                   { when the implementation of the module was not yet parsed, it will not yet have a generictokenbuf }
-                  or not assigned(TProcDef(TProcDef(hp).genericdef).generictokenbuf) then
+                  or not Assigned(TProcDef(TProcDef(hp).genericdef).generictokenbuf) then
 
                  begin
                    result:=false;
@@ -3050,18 +3050,18 @@ uses
 
     procedure generate_specialization_procs;
       var
-        i : longint;
+        i : LongInt;
         list,
-        readdlist : tfpobjectlist;
+        readdlist : TFPObjectList;
         def : TStoredDef;
-        state : tspecializationstate;
-        hmodule : tmodule;
+        state : TSpecializationState;
+        hmodule : TModule;
 
       begin
         { first copy all entries and then work with that list to ensure that
           we don't get an infinite recursion }
-        list:=tfpobjectlist.create(false);
-        readdlist:=tfpobjectlist.create(false);
+        list:=TFPObjectList.create(false);
+        readdlist:=TFPObjectList.create(false);
 
         list.Capacity:=CurrentModule.pendingspecializations.Count;
         for i:=0 to CurrentModule.pendingspecializations.Count-1 do
@@ -3081,11 +3081,11 @@ uses
                     specialization always belongs to the current module }
                   if not TProcDef(def).forwarddef then
                     continue;
-                  if not assigned(def.genericdef) then
-                    internalerror(2015061903);
+                  if not Assigned(def.genericdef) then
+                    InternalError(2015061903);
                   hmodule:=find_module_from_symtable(def.genericdef.owner);
                   if hmodule=nil then
-                    internalerror(2015061904);
+                    InternalError(2015061904);
                   { we need to check for a forward declaration only if the
                     generic was declared in the same unit (otherwise there
                     should be one) }
@@ -3131,30 +3131,30 @@ uses
 
     procedure generate_specializations_for_forwarddef(def:TDef);
       var
-        list : tfpobjectlist;
+        list : TFPObjectList;
         idx,
-        i : longint;
-        context : tspecializationcontext;
+        i : LongInt;
+        context : TSpecializationContext;
       begin
         if not TStoredDef(def).is_generic then
-          internalerror(2020070304);
+          InternalError(2020070304);
         idx:=CurrentModule.forwardgenericdefs.findindexof(def.fulltypename);
         if idx<0 then
           exit;
-        list:=tfpobjectlist(CurrentModule.forwardgenericdefs.items[idx]);
-        if not assigned(list) then
-          internalerror(2020070305);
+        list:=TFPObjectList(CurrentModule.forwardgenericdefs.items[idx]);
+        if not Assigned(list) then
+          InternalError(2020070305);
         for i:=0 to list.count-1 do begin
-          context:=tspecializationcontext(list[i]);
+          context:=TSpecializationContext(list[i]);
           generate_specialization_phase2(context,TStoredDef(def),false,'');
         end;
         CurrentModule.forwardgenericdefs.delete(idx);
       end;
 
 
-    procedure maybe_add_pending_specialization(def:TDef;unnamed_syms: tfplist);
+    procedure maybe_add_pending_specialization(def:TDef;unnamed_syms: TFPList);
       var
-        hmodule : tmodule;
+        hmodule : TModule;
         st : TSymTable;
       begin
         if parse_generic then
@@ -3171,7 +3171,7 @@ uses
       end;
 
 
-    function determine_generic_def(const name:tidstring):TStoredDef;
+    function determine_generic_def(const name:TIDString):TStoredDef;
       var
         hashedid : THashedIDString;
         pd : TProcDef;
@@ -3180,36 +3180,36 @@ uses
         result:=nil;
         { check whether this is a declaration of a type inside a
           specialization }
-        if assigned(CurrentStructDef) and
+        if Assigned(CurrentStructDef) and
             (df_specialization in CurrentStructDef.defoptions) then
           begin
-            if not assigned(CurrentStructDef.genericdef) or
+            if not Assigned(CurrentStructDef.genericdef) or
                 not (CurrentStructDef.genericdef.typ in [recorddef,objectdef]) then
-              internalerror(2011052301);
+              InternalError(2011052301);
             hashedid.id:=name;
             { we could be inside a method of the specialization
               instead of its declaration, so check that first (as
               local nested types aren't allowed we don't need to
               walk the symtablestack to find the localsymtable) }
-            if symtablestack.top.symtabletype=localsymtable then
+            if SymTableStack.top.symtabletype=localsymtable then
               begin
                 { we are in a method }
-                if not assigned(symtablestack.top.defowner) or
-                    (symtablestack.top.defowner.typ<>procdef) then
-                  internalerror(2011120701);
-                pd:=TProcDef(symtablestack.top.defowner);
-                if not assigned(pd.genericdef) or (pd.genericdef.typ<>procdef) then
-                  internalerror(2011120702);
+                if not Assigned(SymTableStack.top.defowner) or
+                    (SymTableStack.top.defowner.typ<>procdef) then
+                  InternalError(2011120701);
+                pd:=TProcDef(SymTableStack.top.defowner);
+                if not Assigned(pd.genericdef) or (pd.genericdef.typ<>procdef) then
+                  InternalError(2011120702);
                 sym:=TSym(TProcDef(pd.genericdef).localst.findwithhash(hashedid));
               end
             else
               sym:=nil;
-            if not assigned(sym) or not (sym.typ=typesym) then
+            if not Assigned(sym) or not (sym.typ=typesym) then
               begin
                 { now search in the declaration of the generic }
-                sym:=TSym(TAbstractRecordDef(CurrentStructDef.genericdef).symtable.findwithhash(hashedid));
-                if not assigned(sym) or not (sym.typ=typesym) then
-                  internalerror(2011052302);
+                sym:=TSym(TAbstractRecordDef(CurrentStructDef.genericdef).SymTable.findwithhash(hashedid));
+                if not Assigned(sym) or not (sym.typ=typesym) then
+                  InternalError(2011052302);
               end;
             { use the corresponding type in the generic's symtable as
               genericdef for the specialized type }

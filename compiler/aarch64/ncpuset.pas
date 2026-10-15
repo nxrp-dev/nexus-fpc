@@ -26,30 +26,30 @@ unit ncpuset;
 interface
 
     uses
-       node,nset,ncgset,cpubase,cgbase,cgobj,aasmbase,aasmtai,aasmdata,globtype;
+       node,nset,ncgset,cpubase,cgbase,cgobj,aasmbase,aasmtai,AAsmData,GlobType;
 
     type
-       taarch64casenode = class(tcgcasenode)
+       TAArch64CaseNode = class(TCGCaseNode)
          protected
            procedure optimizevalues(var max_linear_list: int64; var max_dist: qword);override;
            function  has_jumptable: boolean;override;
-           procedure genjumptable(hp: pcaselabel ;min_, max_: int64);override;
-           procedure genlinearlist(hp: pcaselabel);override;
+           procedure genjumptable(hp: PCaseLabel ;min_, max_: int64);override;
+           procedure genlinearlist(hp: PCaseLabel);override;
        end;
 
 
 implementation
 
     uses
-      systems,
-      verbose,globals,constexp,cutils,
+      Systems,
+      Verbose,Globals,ConstExp,CUtils,
       symconst,symdef,defutil,
       paramgr,
-      cpuinfo,
+      CPUInfo,
       pass_2,cgcpu,
       ncon,
       tgobj,ncgutil,rgobj,aasmcpu,
-      procinfo,
+      ProcInfo,
       cgutils;
 
 {*****************************************************************************
@@ -57,31 +57,31 @@ implementation
 *****************************************************************************}
 
 
-    procedure taarch64casenode.optimizevalues(var max_linear_list: int64; var max_dist: qword);
+    procedure TAArch64CaseNode.optimizevalues(var max_linear_list: int64; var max_dist: qword);
       begin
         max_linear_list:=10;
       end;
 
 
-    function taarch64casenode.has_jumptable: boolean;
+    function TAArch64CaseNode.has_jumptable: boolean;
       begin
         has_jumptable:=true;
       end;
 
 
-    procedure taarch64casenode.genlinearlist(hp : pcaselabel);
+    procedure TAArch64CaseNode.genlinearlist(hp : PCaseLabel);
       var
         first : boolean;
         lastrange : boolean;
         last : TConstExprInt;
-        cond_lt,cond_le : tresflags;
-        opcgsize, unsigned_opcgsize: tcgsize;
+        cond_lt,cond_le : TResFlags;
+        opcgsize, unsigned_opcgsize: TCgSize;
 
-        procedure genitem(t : pcaselabel);
+        procedure genitem(t : PCaseLabel);
           var
-           ovloc: tlocation;
+           ovloc: TLocation;
           begin
-            if assigned(t^.less) then
+            if Assigned(t^.less) then
               genitem(t^.less);
             { need we to test the first value }
             if first and (t^._low>get_min_value(left.resultdef)) then
@@ -145,7 +145,7 @@ implementation
                  lastrange:=true;
               end;
             first:=false;
-            if assigned(t^.greater) then
+            if Assigned(t^.greater) then
               genitem(t^.greater);
           end;
 
@@ -157,7 +157,7 @@ implementation
              OS_64,OS_S64:
                unsigned_opcgsize:=OS_64;
              else
-               Internalerror(2019090902);
+               InternalError(2019090902);
            end;
            if with_sign then
              begin
@@ -185,43 +185,43 @@ implementation
         end;
 
 
-    procedure taarch64casenode.genjumptable(hp: pcaselabel; min_, max_: int64);
+    procedure TAArch64CaseNode.genjumptable(hp: PCaseLabel; min_, max_: int64);
       var
         last: TConstExprInt;
         tablelabel: TAsmLabel;
         basereg,indexreg,jumpreg: TRegister;
         href: TReference;
-        opcgsize: tcgsize;
+        opcgsize: TCgSize;
         sectype: TAsmSectiontype;
-        jtitemconsttype: taiconst_type;
+        jtitemconsttype: TAIConstType;
 
-      procedure genitem(list:TAsmList;t : pcaselabel);
+      procedure genitem(list:TAsmList;t : PCaseLabel);
         var
           i : int64;
         begin
-          if assigned(t^.less) then
+          if Assigned(t^.less) then
             genitem(list,t^.less);
           { fill possible hole }
           i:=last.svalue+1;
           while i<=t^._low.svalue-1 do
             begin
               if TargetInfo.system=system_aarch64_win64 then
-                list.concat(Tai_const.Create_sym(elselabel))
+                list.concat(TAIConst.Create_sym(elselabel))
               else
-                list.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
+                list.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
               inc(i);
             end;
           i:=t^._low.svalue;
           while i<=t^._high.svalue do
             begin
               if TargetInfo.system=system_aarch64_win64 then
-                list.concat(Tai_const.Create_sym(blocklabel(t^.blockid)))
+                list.concat(TAIConst.Create_sym(blocklabel(t^.blockid)))
               else
-                list.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
+                list.concat(TAIConst.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
               inc(i);
             end;
           last:=t^._high;
-          if assigned(t^.greater) then
+          if Assigned(t^.greater) then
             genitem(list,t^.greater);
         end;
 
@@ -276,7 +276,7 @@ implementation
             cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_ADDR,basereg,jumpreg);
           end;
         { and finally jump }
-        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_BR,jumpreg));
+        CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg(A_BR,jumpreg));
         { generate jump table }
         if TargetInfo.system=system_aarch64_win64 then
           begin
@@ -311,15 +311,15 @@ implementation
           begin
             { additionally, these tables are now marked via ".data_region jt32"
               and ".end_data_region" }
-            CurrentProcInfo.aktlocaldata.concat(tai_directive.Create(asd_data_region,'jt32'));
+            CurrentProcInfo.aktlocaldata.concat(TAIDirective.Create(asd_data_region,'jt32'));
           end;
-        CurrentProcInfo.aktlocaldata.concat(Tai_label.Create(tablelabel));
+        CurrentProcInfo.aktlocaldata.concat(TAILabel.Create(tablelabel));
         genitem(CurrentProcInfo.aktlocaldata,hp);
         if TargetInfo.system in systems_darwin then
-          CurrentProcInfo.aktlocaldata.concat(tai_directive.Create(asd_end_data_region,''));
+          CurrentProcInfo.aktlocaldata.concat(TAIDirective.Create(asd_end_data_region,''));
       end;
 
 
 begin
-   ccasenode:=taarch64casenode;
+   CCaseNode:=TAArch64CaseNode;
 end.

@@ -22,7 +22,7 @@
  ****************************************************************************
 }
    type
-       tendian = (endian_little,endian_big);
+       TEndian = (endian_little,endian_big);
 
      (*
        IMPORTANT NOTE:
@@ -47,7 +47,7 @@
 
    type
 
-       tasmmode= (asmmode_none
+       TAsmMode= (asmmode_none
             { standard assembler (cpu dependant) with full parsing }
             ,asmmode_standard
             ,asmmode_i386_att
@@ -102,7 +102,7 @@
        MaxStoredSystemId = 126;
 
      type
-       tasm = (as_none
+       TAsm = (as_none
              ,as_default
              ,as_gas                   { standard gnu assembler }
              ,as_i386_pecoff
@@ -122,14 +122,14 @@
              ,as_win64_gas
        );
 
-       tlink = (ld_none,
+       TLink = (ld_none,
              ld_android,
              ld_darwin,
              ld_linux,
              ld_lld_windows
         );
 
-       tar = (ar_none
+       TAr = (ar_none
             ,ar_gnu_ar
             ,ar_mpw_ar
             ,ar_gnu_ar_scripted
@@ -140,28 +140,28 @@
             ,ar_sdcc_sdar_scripted
        );
 
-       tres = (res_none
+       TRes = (res_none
             ,res_gnu_windres,res_watcom_wrc_os2
             ,res_m68k_palmos,res_m68k_mpw
             ,res_powerpc_mpw,res_elf,res_xcoff
             ,res_win64_gorc, res_macho, res_ext
        );
 
-       tresinfoflags = (res_external_file,res_arch_in_file_name
+       TResInfoFlags = (res_external_file,res_arch_in_file_name
             ,res_single_file,res_no_compile);
 
-       tdbg = (dbg_none
+       TDbg = (dbg_none
             ,dbg_stabs,dbg_stabx,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
             ,dbg_codeview
        );
 
-       tscripttype = (script_none
+       TScriptType = (script_none
             ,script_dos,script_unix,
             script_mpw,
             script_fpcres
        );
 
-       tabi = (abi_default
+       TABI = (abi_default
             ,abi_powerpc_sysv,abi_powerpc_aix,abi_powerpc_darwin,abi_powerpc_elfv2
             ,abi_eabi,abi_armeb,abi_eabihf
             ,abi_old_win32_gnu
@@ -193,7 +193,7 @@
             ,abi_loongarch_lp32d
        );
 
-       tcgbackend = (
+       TCGBackend = (
            { default FPC code generator }
              cg_fpc
        );

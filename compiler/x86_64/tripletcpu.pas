@@ -26,16 +26,16 @@ unit tripletcpu;
 interface
 
 uses
-  globtype;
+  GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
-  globals, cpuinfo;
+  Globals, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
   begin
     result:='x86_64';
   end;

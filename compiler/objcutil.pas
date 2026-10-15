@@ -32,7 +32,7 @@ interface
       symtype,symdef;
 
     { Check whether a string contains a syntactically valid selector name.  }
-    function objcvalidselectorname(value_str: pchar; len: longint): boolean;
+    function objcvalidselectorname(value_str: pchar; len: LongInt): boolean;
 
     { Generate a node loading the superclass structure necessary to call
       an inherited Objective-C method.  }
@@ -40,7 +40,7 @@ interface
 
     { Encode a method's parameters and result type into the format used by the
       run time (for generating protocol and class rtti).  }
-    function objcencodemethod(pd: TAbstractProcDef): ansistring;
+    function objcencodemethod(pd: TAbstractProcDef): AnsiString;
 
     { Exports all assembler symbols related to the obj-c class }
     procedure exportobjcclass(def: TObjectDef);
@@ -52,11 +52,11 @@ interface
 implementation
 
     uses
-      globtype,globals,versioncmp,
-      cutils,
+      GlobType,Globals,VersionCmp,
+      CUtils,
       pass_1,
-      verbose,systems,
-      symconst,symsym,
+      Verbose,Systems,
+      symconst,SymSym,
       objcdef,
       defutil,paramgr,
       nmem,ncal,nld,ncon,ncnv,
@@ -67,9 +67,9 @@ implementation
                        validselectorname
 *******************************************************************}
 
-function objcvalidselectorname(value_str: pchar; len: longint): boolean;
+function objcvalidselectorname(value_str: pchar; len: LongInt): boolean;
   var
-    i         : longint;
+    i         : LongInt;
     gotcolon  : boolean;
 begin
   result:=false;
@@ -116,34 +116,34 @@ end;
       var
         vs         : TSym;
       begin
-        vs:=TSym(TAbstractRecordDef(objc_objecttype).symtable.Find(fieldname));
-        if not assigned(vs) or
+        vs:=TSym(TAbstractRecordDef(objc_objecttype).SymTable.Find(fieldname));
+        if not Assigned(vs) or
            (vs.typ<>fieldvarsym) then
-          internalerror(200911301);
+          InternalError(200911301);
         if fieldname='ISA' then
-          result:=ctypeconvnode.create_internal(
-            cderefnode.create(
-              ctypeconvnode.create_internal(n,
-                cpointerdef.getreusable(cpointerdef.getreusable(voidpointertype))
+          result:=CTypeConvNode.create_internal(
+            CDerefNode.create(
+              CTypeConvNode.create_internal(n,
+                CPointerDef.getreusable(CPointerDef.getreusable(voidpointertype))
               )
             ),TFieldVarSym(vs).vardef
           )
         else
           begin
-            result:=cderefnode.create(ctypeconvnode.create_internal(n,objc_idtype));
-            result:=csubscriptnode.create(vs,result);
+            result:=CDerefNode.create(CTypeConvNode.create_internal(n,objc_idtype));
+            result:=CSubscriptNode.create(vs,result);
           end;
       end;
 
 
     function objcsuperclassnode(def: TDef): TNode;
       var
-        para       : tcallparanode;
+        para       : TCallParaNode;
       begin
         { only valid for Objective-C classes and classrefs }
         if not is_objcclass(def) and
            not is_objcclassref(def) then
-          internalerror(2009090901);
+          InternalError(2009090901);
         { Can be done a lot more efficiently with direct symbol accesses, but
           requires extra node types. Maybe later. }
         if is_objcclassref(def) then
@@ -156,13 +156,13 @@ end;
                 { NOTE: those send2 methods are only available on Mac OS X 10.6 and later!
                     (but also on all iPhone SDK revisions we support) }
                 if (TargetInfo.system in systems_objc_nfabi) and
-                   (not MacOSXVersionMin.isvalid or
-                    (MacOSXVersionMin.relationto(10,6,0)>=0)) then
-                  result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(TClassRefDef(def).pointeddef).childof))
+                   (not MacOSXVersionMin.IsValid or
+                    (MacOSXVersionMin.RelationTo(10,6,0)>=0)) then
+                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).pointeddef).childof))
                 else
-                  result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(TClassRefDef(def).pointeddef).childof.childof));
-                tloadvmtaddrnode(result).forcall:=true;
-                result:=cloadvmtaddrnode.create(result);
+                  result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(TClassRefDef(def).pointeddef).childof.childof));
+                TLoadVMTAddrNode(result).forcall:=true;
+                result:=CLoadVMTAddrNode.create(result);
                 TypeCheckPass(result);
                 { we're done }
                 exit;
@@ -170,17 +170,17 @@ end;
             else
               begin
                 { otherwise we need the superclass of the metaclass }
-                para:=ccallparanode.create(cstringconstnode.createstr(TObjectDef(TClassRefDef(def).pointeddef).objextname^),nil);
-                result:=ccallnode.createinternfromunit('OBJC','OBJC_GETMETACLASS',para);
+                para:=CCallParaNode.create(CStringConstNode.createstr(TObjectDef(TClassRefDef(def).pointeddef).objextname^),nil);
+                result:=CCallNode.createinternfromunit('OBJC','OBJC_GETMETACLASS',para);
               end
           end
         else
           begin
             if not(oo_is_classhelper in TObjectDef(def).objectoptions) then
-              result:=cloadvmtaddrnode.create(ctypenode.create(def))
+              result:=CLoadVMTAddrNode.create(CTypeNode.create(def))
             else
-              result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(def).childof));
-            tloadvmtaddrnode(result).forcall:=true;
+              result:=CLoadVMTAddrNode.create(CTypeNode.create(TObjectDef(def).childof));
+            TLoadVMTAddrNode(result).forcall:=true;
           end;
 
         { For the non-fragile ABI, the superclass send2 method itself loads the
@@ -189,8 +189,8 @@ end;
           NOTE: those send2 methods are only available on Mac OS X 10.6 and later!
             (but also on all iPhone SDK revisions we support) }
         if not(TargetInfo.system in systems_objc_nfabi) or
-           (MacOSXVersionMin.isvalid and
-            (MacOSXVersionMin.relationto(10,6,0)<0)) then
+           (MacOSXVersionMin.IsValid and
+            (MacOSXVersionMin.RelationTo(10,6,0)<0)) then
           result:=objcloadbasefield(result,'SUPERCLASS');
         TypeCheckPass(result);
       end;
@@ -211,13 +211,13 @@ end;
       end;
 
 
-    function objcencodemethod(pd: TAbstractProcDef): ansistring;
+    function objcencodemethod(pd: TAbstractProcDef): AnsiString;
       var
         parasize,
         totalsize: aint;
         vs: TParaVarSym;
-        i: longint;
-        temp: ansistring;
+        i: LongInt;
+        temp: AnsiString;
         founderror: TDef;
       begin
         result:='';
@@ -240,20 +240,20 @@ end;
               result:=result+'@?'
             else if not objcaddencodedtype(vs.vardef,ris_initial,false,result,founderror) then
               { should be checked earlier on }
-              internalerror(2009081701);
+              InternalError(2009081701);
             { And the total size of the parameters coming before this one
               (i.e., the "offset" of this parameter).  }
-            result:=result+tostr(totalsize);
+            result:=result+ToStr(totalsize);
             { Update the total parameter size }
             parasize:=objcparasize(vs);
             inc(totalsize,parasize);
           end;
         { Prepend the total parameter size.  }
-        result:=tostr(totalsize)+result;
+        result:=ToStr(totalsize)+result;
         { And the type of the function result (void in case of a procedure).  }
         temp:='';
         if not objcaddencodedtype(pd.returndef,ris_initial,false,temp,founderror) then
-          internalerror(2009081801);
+          InternalError(2009081801);
         result:=temp+result;
       end;
 
@@ -264,15 +264,15 @@ end;
 
     procedure exportobjcclassfields(objccls: TObjectDef);
     var
-      i: longint;
+      i: LongInt;
       vf: TFieldVarSym;
       prefix: string;
     begin
       prefix:=TargetInfo.cprefix+'OBJC_IVAR_$_'+objccls.objextname^+'.';
-      for i:=0 to objccls.symtable.SymList.Count-1 do
-        if TSym(objccls.symtable.SymList[i]).typ=fieldvarsym then
+      for i:=0 to objccls.SymTable.SymList.Count-1 do
+        if TSym(objccls.SymTable.SymList[i]).typ=fieldvarsym then
           begin
-            vf:=TFieldVarSym(objccls.symtable.SymList[i]);
+            vf:=TFieldVarSym(objccls.SymTable.SymList[i]);
             { TODO: package visibility (private_extern) -- must not be exported
                either}
             if not(vf.visibility in [vis_private,vis_strictprivate]) then

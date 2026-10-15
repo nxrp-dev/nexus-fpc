@@ -29,24 +29,24 @@ unit rgx86;
 
     uses
       cpubase,cgbase,cgutils,
-      aasmtai,aasmdata,aasmsym,aasmcpu,
+      aasmtai,AAsmData,aasmsym,aasmcpu,
       rgobj;
 
     type
-       trgx86 = class(trgobj)
-         function  get_spill_subreg(r : tregister) : tsubregister;override;
-         function  do_spill_replace(list:TAsmList;instr:tai_cpu_abstract_sym;orgreg:tsuperregister;const spilltemp:treference):boolean;override;
+       TRGX86 = class(TRGObj)
+         function  get_spill_subreg(r : TRegister) : TSubRegister;override;
+         function  do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;override;
        end;
 
-       tpushedsavedloc = record
+       TPushedSavedLoc = record
          case byte of
            0: (pushed: boolean);
-           1: (ofs: longint);
+           1: (ofs: LongInt);
        end;
 
-       tpushedsavedfpu = array[tsuperregister] of tpushedsavedloc;
+       TPushedSavedFPU = array[TSuperRegister] of TPushedSavedLoc;
 
-       trgx86fpu = class
+       TRGX86FPU = class
           { these counters contain the number of elements in the }
           { unusedregsxxx/usableregsxxx sets                     }
           countunusedregsfpu : byte;
@@ -54,7 +54,7 @@ unit rgx86;
           { Contains the registers which are really used by the proc itself.
             It doesn't take care of registers used by called procedures
           }
-          used_in_proc : tcpuregisterset;
+          used_in_proc : TCPURegisterSet;
 
           {reg_pushes_other : regvarother_longintarray;
           is_reg_var_other : regvarother_booleanarray;
@@ -64,25 +64,25 @@ unit rgx86;
 
           constructor create;
 
-          function getregisterfpu(list: TAsmList) : tregister;
-          procedure ungetregisterfpu(list: TAsmList; r : tregister);
+          function getregisterfpu(list: TAsmList) : TRegister;
+          procedure ungetregisterfpu(list: TAsmList; r : TRegister);
 
           { pushes and restores registers }
           procedure saveusedfpuregisters(list:TAsmList;
-                                         var saved:Tpushedsavedfpu;
-                                         const s:Tcpuregisterset);
+                                         var saved:TPushedSavedFPU;
+                                         const s:TCPURegisterSet);
           procedure restoreusedfpuregisters(list:TAsmList;
-                                            const saved:Tpushedsavedfpu);
+                                            const saved:TPushedSavedFPU);
 
           { corrects the fpu stack register by ofs }
-          function correct_fpuregister(r : tregister;ofs : byte) : tregister;
+          function correct_fpuregister(r : TRegister;ofs : byte) : TRegister;
        end;
 
 
 implementation
 
     uses
-       verbose;
+       Verbose;
 
     const
        { This value is used in tsaved. If the array value is equal
@@ -94,7 +94,7 @@ implementation
                                     Trgcpu
 ******************************************************************************}
 
-    function trgx86.get_spill_subreg(r : tregister) : tsubregister;
+    function TRGX86.get_spill_subreg(r : TRegister) : TSubRegister;
       begin
         result:=getsubreg(r);
       end;
@@ -103,7 +103,7 @@ implementation
     { Decide wether a "replace" spill is possible, i.e. wether we can replace a register
       in an instruction by a memory reference. For example, in "mov ireg26d,0", the imaginary
       register ireg26d can be replaced by a memory reference.}
-    function trgx86.do_spill_replace(list:TAsmList;instr:tai_cpu_abstract_sym;orgreg:tsuperregister;const spilltemp:treference):boolean;
+    function TRGX86.do_spill_replace(list:TAsmList;instr:TAICPUAbstractSym;orgreg:TSuperRegister;const spilltemp:TReference):boolean;
 
        { returns true if opcode is an avx opcode which allows only the first (zero) operand might be a memory reference }
        function avx_opcode_only_op0_may_be_memref(opcode : TAsmOp) : boolean;
@@ -166,11 +166,11 @@ implementation
 
 
       var
-        n,replaceoper : longint;
+        n,replaceoper : LongInt;
         is_subh: Boolean;
       begin
         result:=false;
-        with taicpu(instr) do
+        with TAICPU(instr) do
           begin
             replaceoper:=-1;
             case ops of
@@ -180,7 +180,7 @@ implementation
                      (getregtype(oper[0]^.reg)=regtype) then
                     begin
                       if get_alias(getsupreg(oper[0]^.reg))<>orgreg then
-                        internalerror(200410101);
+                        InternalError(200410101);
                       replaceoper:=0;
                     end;
                 end;
@@ -260,7 +260,7 @@ implementation
                              (get_alias(getsupreg(oper[0+n]^.reg))=orgreg) then
                             replaceoper:=0+n
                           else
-                            internalerror(200704282);
+                            InternalError(200704282);
                         end
                       else if (oper[n+0]^.typ=top_const) and
                          (oper[n+1]^.typ=top_reg) then
@@ -269,7 +269,7 @@ implementation
                              (get_alias(getsupreg(oper[1+n]^.reg))=orgreg) then
                             replaceoper:=1+n
                           else
-                            internalerror(200704283);
+                            InternalError(200704283);
                         end;
                       case replaceoper of
                         0 :
@@ -378,8 +378,8 @@ implementation
                                  { 64 bit constants can only be moved into registers }
                                  if (oper[0]^.typ=top_const) and
                                     (oper[1]^.typ=top_reg) and
-                                    ((oper[0]^.val<low(longint)) or
-                                     (oper[0]^.val>high(longint))) then
+                                    ((oper[0]^.val<low(LongInt)) or
+                                     (oper[0]^.val>high(LongInt))) then
                                    replaceoper:=-1;
 {$endif x86_64}
                               else
@@ -474,13 +474,13 @@ implementation
                                   Trgx86fpu
 ******************************************************************************}
 
-    constructor Trgx86fpu.create;
+    constructor TRGX86FPU.create;
       begin
         used_in_proc:=[];
       end;
 
 
-    function trgx86fpu.getregisterfpu(list: TAsmList) : tregister;
+    function TRGX86FPU.getregisterfpu(list: TAsmList) : TRegister;
       begin
         { note: don't return R_ST0, see comments above implementation of }
         { a_loadfpu_* methods in cgcpu (JM)                              }
@@ -488,7 +488,7 @@ implementation
       end;
 
 
-    procedure trgx86fpu.ungetregisterfpu(list : TAsmList; r : tregister);
+    procedure TRGX86FPU.ungetregisterfpu(list : TAsmList; r : TRegister);
       begin
         { nothing to do, fpu stack management is handled by the load/ }
         { store operations in cgcpu (JM)                              }
@@ -496,16 +496,16 @@ implementation
 
 
 
-    function trgx86fpu.correct_fpuregister(r : tregister;ofs : byte) : tregister;
+    function TRGX86FPU.correct_fpuregister(r : TRegister;ofs : byte) : TRegister;
       begin
         correct_fpuregister:=r;
         setsupreg(correct_fpuregister,ofs);
       end;
 
 
-    procedure trgx86fpu.saveusedfpuregisters(list: TAsmList;
-                                             var saved : tpushedsavedfpu;
-                                             const s: tcpuregisterset);
+    procedure TRGX86FPU.saveusedfpuregisters(list: TAsmList;
+                                             var saved : TPushedSavedFPU;
+                                             const s: TCPURegisterSet);
      { var
          r : tregister;
          hr : treference; }
@@ -540,8 +540,8 @@ implementation
       end;
 
 
-    procedure trgx86fpu.restoreusedfpuregisters(list : TAsmList;
-                                                const saved : tpushedsavedfpu);
+    procedure TRGX86FPU.restoreusedfpuregisters(list : TAsmList;
+                                                const saved : TPushedSavedFPU);
 {
       var
          r,r2 : tregister;

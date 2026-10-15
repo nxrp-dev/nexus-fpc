@@ -32,13 +32,13 @@ interface
 
     procedure pp_heap_init;
 
-    procedure ppheap_register_file(name : string;index : longint);
+    procedure ppheap_register_file(name : string;index : LongInt);
 
 
 implementation
 
     uses
-       cutils,globtype,globals,fmodule;
+       CUtils,GlobType,Globals,FModule;
 
 {*****************************************************************************
                             Filename registration
@@ -52,21 +52,21 @@ implementation
       MaxNameLength = 39;
 
     type
-      theapfileinfo = record
+      THeapFileInfo = record
         name : string[MaxNameLength];
-        index : longint;
+        index : LongInt;
       end;
 
-      tfileinfoarray = array [1..MaxFiles] of theapfileinfo;
+      TFileInfoArray = array [1..MaxFiles] of THeapFileInfo;
 
     var
-      fileinfoarray : tfileinfoarray;
-      last_index : longint;
+      fileinfoarray : TFileInfoArray;
+      last_index : LongInt;
 
 
-    procedure ppheap_register_file(name : string;index : longint);
+    procedure ppheap_register_file(name : string;index : LongInt);
       var
-        len,pos : longint;
+        len,pos : LongInt;
       begin
         inc(last_index);
         if last_index <= MaxFiles then
@@ -86,13 +86,13 @@ implementation
             fileinfoarray[last_index].index:=index;
           end
         else
-          writeln(stderr,'file',name,' has index ',index);
+          WriteLn(stderr,'file',name,' has index ',index);
       end;
 
 
-    function getfilename(index : longint) : string;
+    function getfilename(index : LongInt) : string;
       var
-        i : longint;
+        i : LongInt;
       begin
         for i:=1 to last_index do
           begin
@@ -102,7 +102,7 @@ implementation
                 exit;
               end;
           end;
-        getfilename:=tostr(index);
+        getfilename:=ToStr(index);
       end;
 
 
@@ -111,21 +111,21 @@ implementation
 *****************************************************************************}
 
     type
-      pextra_info = ^textra_info;
-      textra_info = record
+      PExtraInfo = ^TExtraInfo;
+      TExtraInfo = record
         line,
         col,
-        fileindex : longint;
+        fileindex : LongInt;
       end;
 
     procedure set_extra_info(p : pointer);
       begin
-        with pextra_info(p)^ do
+        with PExtraInfo(p)^ do
          begin
            line:=CurrentFilePos.line;
            col:=CurrentFilePos.column;
-           if assigned(CurrentModule) then
-            fileindex:=CurrentModule.moduleid*100000+CurrentFilePos.fileindex
+           if Assigned(CurrentModule) then
+            fileindex:=CurrentModule.ModuleID*100000+CurrentFilePos.fileindex
            else
             fileindex:=CurrentFilePos.fileindex;
          end;
@@ -134,9 +134,9 @@ implementation
 
     procedure show_extra_info(var t : text;p : pointer);
       begin
-        with pextra_info(p)^ do
+        with PExtraInfo(p)^ do
          begin
-           writeln(t,'Memory allocated at '+getfilename(fileindex)+'('+tostr(line)+','+tostr(col)+') ');
+           WriteLn(t,'Memory allocated at '+getfilename(fileindex)+'('+ToStr(line)+','+ToStr(col)+') ');
          end;
       end;
 
@@ -152,7 +152,7 @@ implementation
             keepreleased:=true;
 {$endif extheaptrc}
             SetHeapTraceOutput('heap.log');
-            SetHeapExtraInfo(sizeof(textra_info),
+            SetHeapExtraInfo(sizeof(TExtraInfo),
                              @set_extra_info,
                              @show_extra_info);
          end;

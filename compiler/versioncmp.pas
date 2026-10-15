@@ -26,72 +26,72 @@ unit versioncmp;
 interface
 
   type
-    tversion = object
+    TVersion = object
      private
-      fstr: string;
-      fnum: cardinal;
+      FStr: string;
+      FNum: Cardinal;
      public
       { initialise with string and numerical representation of the version }
-      constructor init(const str: string; major: byte; minor: word; patch: byte);
-      constructor invalidate;
-      function relationto(const other: tversion): shortint;
-      function relationto(major: byte; minor: word; patch: byte): shortint;
-      function isvalid: boolean;
-      property str: string read fstr;
+      constructor Init(const Str: string; Major: Byte; Minor: Word; Patch: Byte);
+      constructor Invalidate;
+      function RelationTo(const Other: TVersion): ShortInt;
+      function RelationTo(Major: Byte; Minor: Word; Patch: Byte): ShortInt;
+      function IsValid: Boolean;
+      property Str: string read FStr;
      private
-      function tonum(major: byte; minor: word; patch: byte): cardinal; inline;
+      function ToNum(Major: Byte; Minor: Word; Patch: Byte): Cardinal; inline;
     end;
 
 implementation
 
-  function tversion.tonum(major: byte; minor: word; patch: byte): cardinal;
+  function TVersion.ToNum(Major: Byte; Minor: Word; Patch: Byte): Cardinal;
     begin
-      result:=(major shl 24) or (minor shl 8) or patch;
+      Result:=(Major shl 24) or (Minor shl 8) or Patch;
     end;
 
 
-  constructor tversion.init(const str: string; major: byte; minor: word; patch: byte);
+  constructor TVersion.Init(const Str: string; Major: Byte; Minor: Word; Patch: Byte);
     begin
-      fstr:=str;
-      fnum:=tonum(major,minor,patch);
+      FStr:=Str;
+      FNum:=ToNum(Major,Minor,Patch);
     end;
 
 
-  constructor tversion.invalidate;
+  constructor TVersion.Invalidate;
     begin
-      fstr:='';
-      fnum:=0;
+      FStr:='';
+      FNum:=0;
     end;
 
 
-  function tversion.relationto(const other: tversion): shortint;
+  function TVersion.RelationTo(const Other: TVersion): ShortInt;
     begin
-      if fnum>other.fnum then
-        result:=1
-      else if fnum<other.fnum then
-        result:=-1
+      if FNum>Other.FNum then
+        Result:=1
+      else if FNum<Other.FNum then
+        Result:=-1
       else
-        result:=0;
+        Result:=0;
     end;
 
 
-  function tversion.relationto(major: byte; minor: word; patch: byte): shortint;
+  function TVersion.RelationTo(Major: Byte; Minor: Word; Patch: Byte): ShortInt;
     var
-      othernum: cardinal;
+      OtherNum: Cardinal;
     begin
-      othernum:=tonum(major,minor,patch);
-      if fnum>othernum then
-        result:=1
-      else if fnum<othernum then
-        result:=-1
+      OtherNum:=ToNum(Major,Minor,Patch);
+      if FNum>OtherNum then
+        Result:=1
+      else if FNum<OtherNum then
+        Result:=-1
       else
-        result:=0;
+        Result:=0;
     end;
 
 
-  function tversion.isvalid: boolean;
+  function TVersion.IsValid: Boolean;
     begin
-      result:=fstr<>'';
+      Result:=FStr<>'';
     end;
 
 

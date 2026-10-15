@@ -25,28 +25,28 @@ unit ptconst;
 
 interface
 
-   uses symtype,symsym,aasmdata;
+   uses symtype,SymSym,AAsmData;
 
-    procedure read_typed_const(list:tasmlist;sym:TStaticVarSym;in_structure:boolean);
+    procedure read_typed_const(list:TAsmList;sym:TStaticVarSym;in_structure:boolean);
 
 
 implementation
 
     uses
-       globtype,systems,globals,verbose,cutils,tokens,
+       GlobType,Systems,Globals,Verbose,CUtils,tokens,
        aasmbase,aasmtai,
-       fmodule,
-       scanner,pbase,pdecvar,
+       FModule,
+       Scanner,pbase,pdecvar,
        node,ngtcon,
-       symconst,symbase,symdef
+       symconst,SymBase,symdef
        ;
 
-    procedure read_typed_const(list:tasmlist;sym:TStaticVarSym;in_structure:boolean);
+    procedure read_typed_const(list:TAsmList;sym:TStaticVarSym;in_structure:boolean);
       var
         storefilepos : TFilePosInfo;
-        tcbuilder    : ttypedconstbuilder;
+        tcbuilder    : TTypedConstBuilder;
         reslist,
-        datalist     : tasmlist;
+        datalist     : TAsmList;
       begin
         { mark the staticvarsym as typedconst }
         include(sym.varoptions,vo_is_typed_const);
@@ -60,8 +60,8 @@ implementation
         CurrentFilePos:=sym.fileinfo;
 
         maybe_new_object_file(list);
-        tcbuilder:=tasmlisttypedconstbuilderclass(ctypedconstbuilder).create(sym);
-        tasmlisttypedconstbuilder(tcbuilder).parse_into_asmlist;
+        tcbuilder:=TAsmListTypedConstBuilderClass(CTypedConstBuilder).create(sym);
+        TAsmListTypedConstBuilder(tcbuilder).parse_into_asmlist;
 
         { Parse hints }
         try_consume_hintdirective(sym.symoptions,sym.deprecatedmsg);
@@ -74,13 +74,13 @@ implementation
             (
              (CurrentScanner.token = _ID) and
              ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
-             (m_cvar_support in CurrentSettings.modeswitches)
+             (m_cvar_support in CurrentSettings.ModeSwitches)
             ) or
             (
-             (m_mac in CurrentSettings.modeswitches) and
+             (m_mac in CurrentSettings.ModeSwitches) and
              (
-              (cs_external_var in CurrentSettings.localswitches) or
-              (cs_externally_visible in CurrentSettings.localswitches)
+              (cs_external_var in CurrentSettings.LocalSwitches) or
+              (cs_externally_visible in CurrentSettings.LocalSwitches)
              )
             )
            ) then
@@ -94,11 +94,11 @@ implementation
 
             { only now get the final asmlist, because inserting the symbol
               information depends on potential section information set above }
-            tasmlisttypedconstbuilder(tcbuilder).get_final_asmlists(reslist,datalist);
+            TAsmListTypedConstBuilder(tcbuilder).get_final_asmlists(reslist,datalist);
             { add the parsed value }
-            list.concatlist(reslist);
+            list.ConcatList(reslist);
             { and pointed data, if any }
-            CurrentAsmData.asmlists[al_const].concatlist(datalist);
+            CurrentAsmData.asmlists[al_const].ConcatList(datalist);
             { the (empty) lists themselves are freed by tcbuilder }
           end;
 

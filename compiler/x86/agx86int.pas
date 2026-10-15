@@ -29,16 +29,16 @@ unit agx86int;
 interface
 
     uses
-      tpcompilerreal,
-      cpubase,constexp,
-      aasmbase,aasmtai,aasmdata,aasmcpu,assemble,cgutils;
+      TPCompilerReal,
+      cpubase,ConstExp,
+      aasmbase,aasmtai,AAsmData,aasmcpu,assemble,cgutils;
 
     type
       Tx86IntelAssembler = class(TExternalAssembler)
       private
-        procedure WriteReference(var ref : treference);
-        procedure WriteOper(const o:toper;s : topsize; opcode: tasmop;dest : boolean);
-        procedure WriteOper_jmp(const o:toper;s : topsize);
+        procedure WriteReference(var ref : TReference);
+        procedure WriteOper(const o:TOper;s : TOpSize; opcode: TAsmOp;dest : boolean);
+        procedure WriteOper_jmp(const o:TOper;s : TOpSize);
       public
         function single2str(d : single) : string; override;
         function double2str(d : double) : string; override;
@@ -52,18 +52,18 @@ implementation
 
     uses
       SysUtils,
-      cutils,globtype,globals,systems,cclasses,
-      verbose,cscript,
+      CUtils,GlobType,Globals,Systems,CClasses,
+      Verbose,CScript,
       itx86int,
       cgbase
 {$ifdef EXTDEBUG}
-      ,fmodule
+      ,FModule
 {$endif EXTDEBUG}
       ;
 
     const
       line_length = 70;
-      max_tokens : longint = 25;
+      max_tokens : LongInt = 25;
       secnames : array[TAsmSectiontype] of string[4] = ('','',
         'CODE','DATA','DATA','DATA','BSS','TLS',
         '','','','','','',
@@ -214,7 +214,7 @@ implementation
 
 
     { MASM supports aligns up to 8192 }
-    function alignstr(b : longint) : string;
+    function alignstr(b : LongInt) : string;
       begin
         case b of
           1: result:='BYTE';
@@ -224,7 +224,7 @@ implementation
           16: result:='PARA';
           256: result:='PAGE';
         else
-          result:='ALIGN('+tostr(b)+')';
+          result:='ALIGN('+ToStr(b)+')';
         end;
       end;
 
@@ -232,7 +232,7 @@ implementation
                                tx86IntelAssembler
  ****************************************************************************}
 
-    procedure tx86IntelAssembler.WriteReference(var ref : treference);
+    procedure tx86IntelAssembler.WriteReference(var ref : TReference);
       var
         first : boolean;
       begin
@@ -243,7 +243,7 @@ implementation
             writer.AsmWrite(masm_regname(segment)+':[')
            else
             writer.AsmWrite('[');
-           if assigned(symbol) then
+           if Assigned(symbol) then
             begin
               writer.AsmWrite(ApplyAsmSymbolRestrictions(symbol.name));
               first:=false;
@@ -270,16 +270,16 @@ implementation
                first:=false;
               writer.AsmWrite(masm_regname(index));
               if scalefactor<>0 then
-               writer.AsmWrite('*'+tostr(scalefactor));
+               writer.AsmWrite('*'+ToStr(scalefactor));
             end;
                if offset<0 then
                 begin
-                  writer.AsmWrite(tostr(offset));
+                  writer.AsmWrite(ToStr(offset));
                   first:=false;
                 end
                else if (offset>0) then
                 begin
-                  writer.AsmWrite('+'+tostr(offset));
+                  writer.AsmWrite('+'+ToStr(offset));
                   first:=false;
                 end;
            if first then
@@ -289,13 +289,13 @@ implementation
       end;
 
 
-    procedure tx86IntelAssembler.WriteOper(const o:toper;s : topsize; opcode: tasmop;dest : boolean);
+    procedure tx86IntelAssembler.WriteOper(const o:TOper;s : TOpSize; opcode: TAsmOp;dest : boolean);
       begin
         case o.typ of
           top_reg :
             writer.AsmWrite(masm_regname(o.reg));
           top_const :
-            writer.AsmWrite(tostr(o.val));
+            writer.AsmWrite(ToStr(o.val));
           top_ref :
             begin
               if o.ref^.refaddr in [addr_no,addr_pic,addr_pic_no_got] then
@@ -358,31 +358,31 @@ implementation
               else
                 begin
                   writer.AsmWrite('offset ');
-                  if assigned(o.ref^.symbol) then
+                  if Assigned(o.ref^.symbol) then
                     writer.AsmWrite(ApplyAsmSymbolRestrictions(o.ref^.symbol.name));
                   if o.ref^.offset>0 then
-                   writer.AsmWrite('+'+tostr(o.ref^.offset))
+                   writer.AsmWrite('+'+ToStr(o.ref^.offset))
                   else
                    if o.ref^.offset<0 then
-                    writer.AsmWrite(tostr(o.ref^.offset))
+                    writer.AsmWrite(ToStr(o.ref^.offset))
                   else
-                   if not(assigned(o.ref^.symbol)) then
+                   if not(Assigned(o.ref^.symbol)) then
                      writer.AsmWrite('0');
                 end;
             end;
           else
-            internalerror(2005060510);
+            InternalError(2005060510);
         end;
       end;
 
 
-    procedure tx86IntelAssembler.WriteOper_jmp(const o:toper;s : topsize);
+    procedure tx86IntelAssembler.WriteOper_jmp(const o:TOper;s : TOpSize);
     begin
       case o.typ of
         top_reg :
           writer.AsmWrite(masm_regname(o.reg));
         top_const :
-          writer.AsmWrite(tostr(o.val));
+          writer.AsmWrite(ToStr(o.val));
         top_ref :
           { what about lcall or ljmp ??? }
           begin
@@ -402,14 +402,14 @@ implementation
               begin
                 writer.AsmWrite(ApplyAsmSymbolRestrictions(o.ref^.symbol.name));
                 if o.ref^.offset>0 then
-                 writer.AsmWrite('+'+tostr(o.ref^.offset))
+                 writer.AsmWrite('+'+ToStr(o.ref^.offset))
                 else
                  if o.ref^.offset<0 then
-                  writer.AsmWrite(tostr(o.ref^.offset));
+                  writer.AsmWrite(ToStr(o.ref^.offset));
               end;
           end;
         else
-          internalerror(2005060511);
+          InternalError(2005060511);
       end;
     end;
 
@@ -425,7 +425,7 @@ implementation
     Function PadTabs(const p:string;addch:char):string;
     var
       s : string;
-      i : longint;
+      i : LongInt;
     begin
       i:=length(p);
       if addch<>#0 then
@@ -446,34 +446,34 @@ implementation
       s,
       prefix,
       suffix   : string;
-      hp   : tai;
+      hp   : TAI;
       counter,
       lines, tokens,
-      InlineLevel : longint;
-      i,j,l    : longint;
-      consttype : taiconst_type;
+      InlineLevel : LongInt;
+      i,j,l    : LongInt;
+      consttype : TAIConstType;
       do_line,DoNotSplitLine,
       quoted   : boolean;
       fixed_opcode: TAsmOp;
     begin
-      if not assigned(p) then
+      if not Assigned(p) then
        exit;
       { lineinfo is only needed for al_procedures (PFV) }
-      do_line:=((cs_asm_source in CurrentSettings.globalswitches) or
-                (cs_lineinfo in CurrentSettings.moduleswitches))
+      do_line:=((cs_asm_source in CurrentSettings.GlobalSwitches) or
+                (cs_lineinfo in CurrentSettings.ModuleSwitches))
                  and (p=CurrentAsmData.asmlists[al_procedures]);
       InlineLevel:=0;
       DoNotSplitLine:=false;
-      hp:=tai(p.first);
-      while assigned(hp) do
+      hp:=TAI(p.first);
+      while Assigned(hp) do
        begin
          prefetch(pointer(hp.next)^);
          if not(hp.typ in SkipLineInfo) then
           begin
-            CurrentFilePos:=tailineinfo(hp).fileinfo;
+            CurrentFilePos:=TAILineInfo(hp).fileinfo;
             { no line info for inlined code }
             if do_line and (inlinelevel=0) and not DoNotSplitLine then
-              WriteSourceLine(hp as tailineinfo);
+              WriteSourceLine(hp as TAILineInfo);
           end;
          DoNotSplitLine:=false;
 
@@ -482,45 +482,45 @@ implementation
              begin
                ResetSourceLines;
 
-               if tai_section(hp).sectype<>sec_none then
+               if TAISection(hp).sectype<>sec_none then
                 begin
                   if asminfo^.id=as_x86_64_masm then
                     begin
                       if LasTSecType<>sec_none then
                         writer.AsmWriteLn(secnamesml64[LasTSecType]+#9#9'ENDS');
                       writer.AsmLn;
-                      writer.AsmWriteLn(secnamesml64[tai_section(hp).sectype]+#9+'SEGMENT')
+                      writer.AsmWriteLn(secnamesml64[TAISection(hp).sectype]+#9+'SEGMENT')
                     end
                   else
                     begin
                       if LasTSecType<>sec_none then
                         writer.AsmWriteLn('_'+secnames[LasTSecType]+#9#9'ENDS');
                       writer.AsmLn;
-                      s:=alignstr(tai_section(hp).secalign);
-                      writer.AsmWriteLn('_'+secnames[tai_section(hp).sectype]+#9#9+
+                      s:=alignstr(TAISection(hp).secalign);
+                      writer.AsmWriteLn('_'+secnames[TAISection(hp).sectype]+#9#9+
                                  'SEGMENT'#9+s+' PUBLIC USE32 '''+
-                                 secnames[tai_section(hp).sectype]+'''');
+                                 secnames[TAISection(hp).sectype]+'''');
                     end;
                 end;
-               LasTSecType:=tai_section(hp).sectype;
+               LasTSecType:=TAISection(hp).sectype;
              end;
            ait_align :
              begin
                { CAUSES PROBLEMS WITH THE SEGMENT DEFINITION   }
                { SEGMENT DEFINITION SHOULD MATCH TYPE OF ALIGN }
                { HERE UNDER TASM!                              }
-                 if tai_align_abstract(hp).aligntype>1 then
-                   writer.AsmWriteLn(#9'ALIGN '+tostr(tai_align_abstract(hp).aligntype));
+                 if TAIAlignAbstract(hp).aligntype>1 then
+                   writer.AsmWriteLn(#9'ALIGN '+ToStr(TAIAlignAbstract(hp).aligntype));
                end;
            ait_datablock :
              begin
-               if tai_datablock(hp).is_global then
-                 writer.AsmWriteLn(#9'PUBLIC'#9+ApplyAsmSymbolRestrictions(tai_datablock(hp).sym.name));
-               writer.AsmWriteLn(PadTabs(ApplyAsmSymbolRestrictions(tai_datablock(hp).sym.name),#0)+'DB'#9+tostr(tai_datablock(hp).size)+' DUP(?)');
+               if TAIDataBlock(hp).is_global then
+                 writer.AsmWriteLn(#9'PUBLIC'#9+ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name));
+               writer.AsmWriteLn(PadTabs(ApplyAsmSymbolRestrictions(TAIDataBlock(hp).sym.name),#0)+'DB'#9+ToStr(TAIDataBlock(hp).size)+' DUP(?)');
              end;
            ait_const:
              begin
-               consttype:=tai_const(hp).consttype;
+               consttype:=TAIConst(hp).consttype;
                case consttype of
                  aitconst_uleb128bit,
                  aitconst_sleb128bit,
@@ -539,27 +539,27 @@ implementation
                      l:=0;
 		     tokens:=1;
                      repeat
-                       if assigned(tai_const(hp).sym) then
+                       if Assigned(TAIConst(hp).sym) then
                          begin
-                           if assigned(tai_const(hp).endsym) then
-                             s:=ApplyAsmSymbolRestrictions(tai_const(hp).endsym.name)+'-'+ApplyAsmSymbolRestrictions(tai_const(hp).sym.name)
+                           if Assigned(TAIConst(hp).endsym) then
+                             s:=ApplyAsmSymbolRestrictions(TAIConst(hp).endsym.name)+'-'+ApplyAsmSymbolRestrictions(TAIConst(hp).sym.name)
                            else
-                             s:=ApplyAsmSymbolRestrictions(tai_const(hp).sym.name);
-                           if tai_const(hp).value<>0 then
-                             s:=s+tostr_with_plus(tai_const(hp).value);
+                             s:=ApplyAsmSymbolRestrictions(TAIConst(hp).sym.name);
+                           if TAIConst(hp).value<>0 then
+                             s:=s+ToStr_With_Plus(TAIConst(hp).value);
                          end
                        else
-                         s:=tostr(tai_const(hp).value);
+                         s:=ToStr(TAIConst(hp).value);
                        writer.AsmWrite(s);
                        inc(l,length(s));
 		       inc(tokens);
                        if (l>line_length) or
                           (tokens>max_tokens) or
                           (hp.next=nil) or
-                          (tai(hp.next).typ<>ait_const) or
-                          (tai_const(hp.next).consttype<>consttype) then
+                          (TAI(hp.next).typ<>ait_const) or
+                          (TAIConst(hp.next).consttype<>consttype) then
                          break;
-                       hp:=tai(hp.next);
+                       hp:=TAI(hp.next);
                        writer.AsmWrite(',');
                      until false;
                      { Subtract section start for secrel32 type }
@@ -568,27 +568,27 @@ implementation
                      writer.AsmLn;
                    end;
                  else
-                   internalerror(200704253);
+                   InternalError(200704253);
                end;
              end;
 
            ait_realconst:
              begin
-               case tai_realconst(hp).realtyp of
+               case TAIRealConst(hp).realtyp of
                  aitrealconst_s32bit:
-                   writer.AsmWriteLn(#9#9'DD'#9+single2str(tai_realconst(hp).value.s32val));
+                   writer.AsmWriteLn(#9#9'DD'#9+single2str(TAIRealConst(hp).value.s32val));
                  aitrealconst_s64bit:
-                   writer.AsmWriteLn(#9#9'DQ'#9+double2str(tai_realconst(hp).value.s64val));
+                   writer.AsmWriteLn(#9#9'DQ'#9+double2str(TAIRealConst(hp).value.s64val));
                  aitrealconst_s80bit,aitrealconst_s64comp:
-                   WriteRealConstAsBytes(tai_realconst(hp),#9#9'DB'#9,false);
+                   WriteRealConstAsBytes(TAIRealConst(hp),#9#9'DB'#9,false);
                end;
              end;
            ait_string :
              begin
                counter := 0;
-               lines := tai_string(hp).len div line_length;
+               lines := TAIString(hp).len div line_length;
              { separate lines in different parts }
-               if tai_string(hp).len > 0 then
+               if TAIString(hp).len > 0 then
                 Begin
                   for j := 0 to lines-1 do
                    begin
@@ -597,9 +597,9 @@ implementation
                      for i:=counter to counter+line_length-1 do
                         begin
                           { it is an ascii character. }
-                          if (ord(tai_string(hp).str[i])>31) and
-                             (ord(tai_string(hp).str[i])<128) and
-                             (tai_string(hp).str[i]<>'"') then
+                          if (ord(TAIString(hp).str[i])>31) and
+                             (ord(TAIString(hp).str[i])<128) and
+                             (TAIString(hp).str[i]<>'"') then
                               begin
                                 if not(quoted) then
                                     begin
@@ -607,7 +607,7 @@ implementation
                                         writer.AsmWrite(',');
                                       writer.AsmWrite('"');
                                     end;
-                                writer.AsmWrite(tai_string(hp).str[i]);
+                                writer.AsmWrite(TAIString(hp).str[i]);
                                 quoted:=true;
                               end { if > 31 and < 128 and ord('"') }
                           else
@@ -617,7 +617,7 @@ implementation
                                   if i>counter then
                                       writer.AsmWrite(',');
                                   quoted:=false;
-                                  writer.AsmWrite(tostr(ord(tai_string(hp).str[i])));
+                                  writer.AsmWrite(ToStr(ord(TAIString(hp).str[i])));
                               end;
                        end; { end for i:=0 to... }
                      if quoted then writer.AsmWrite('"');
@@ -625,15 +625,15 @@ implementation
                      counter := counter+line_length;
                   end; { end for j:=0 ... }
                 { do last line of lines }
-                if counter<tai_string(hp).len then
+                if counter<TAIString(hp).len then
                   writer.AsmWrite(#9#9'DB'#9);
                 quoted:=false;
-                for i:=counter to tai_string(hp).len-1 do
+                for i:=counter to TAIString(hp).len-1 do
                   begin
                     { it is an ascii character. }
-                    if (ord(tai_string(hp).str[i])>31) and
-                       (ord(tai_string(hp).str[i])<128) and
-                       (tai_string(hp).str[i]<>'"') then
+                    if (ord(TAIString(hp).str[i])>31) and
+                       (ord(TAIString(hp).str[i])<128) and
+                       (TAIString(hp).str[i]<>'"') then
                         begin
                           if not(quoted) then
                               begin
@@ -641,7 +641,7 @@ implementation
                                   writer.AsmWrite(',');
                                 writer.AsmWrite('"');
                               end;
-                          writer.AsmWrite(tai_string(hp).str[i]);
+                          writer.AsmWrite(TAIString(hp).str[i]);
                           quoted:=true;
                         end { if > 31 and < 128 and " }
                     else
@@ -651,7 +651,7 @@ implementation
                           if i>counter then
                               writer.AsmWrite(',');
                           quoted:=false;
-                          writer.AsmWrite(tostr(ord(tai_string(hp).str[i])));
+                          writer.AsmWrite(ToStr(ord(TAIString(hp).str[i])));
                         end;
                   end; { end for i:=0 to... }
                 if quoted then
@@ -661,10 +661,10 @@ implementation
              end;
            ait_label :
              begin
-               if tai_label(hp).labsym.is_used then
+               if TAILabel(hp).labsym.is_used then
                 begin
-                  writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_label(hp).labsym.name));
-                  if not assigned(hp.next) or not(tai(hp.next).typ in
+                  writer.AsmWrite(ApplyAsmSymbolRestrictions(TAILabel(hp).labsym.name));
+                  if not Assigned(hp.next) or not(TAI(hp.next).typ in
                      [ait_const,ait_realconst,ait_string]) then
                    writer.AsmWriteLn(':')
                   else
@@ -673,12 +673,12 @@ implementation
              end;
            ait_symbol :
              begin
-               if tai_symbol(hp).has_value then
-                 internalerror(2009090802);
-               if tai_symbol(hp).is_global then
-                 writer.AsmWriteLn(#9'PUBLIC'#9+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name));
-               writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name));
-               if not assigned(hp.next) or not(tai(hp.next).typ in
+               if TAISymbol(hp).has_value then
+                 InternalError(2009090802);
+               if TAISymbol(hp).is_global then
+                 writer.AsmWriteLn(#9'PUBLIC'#9+ApplyAsmSymbolRestrictions(TAISymbol(hp).sym.name));
+               writer.AsmWrite(ApplyAsmSymbolRestrictions(TAISymbol(hp).sym.name));
+               if not Assigned(hp.next) or not(TAI(hp.next).typ in
                   [ait_const,ait_realconst,ait_string]) then
                  writer.AsmWriteLn(':');
              end;
@@ -687,27 +687,27 @@ implementation
              end;
            ait_instruction :
              begin
-               fixed_opcode:=taicpu(hp).FixNonCommutativeOpcodes;
-               taicpu(hp).SetOperandOrder(op_intel);
+               fixed_opcode:=TAICPU(hp).FixNonCommutativeOpcodes;
+               TAICPU(hp).SetOperandOrder(op_intel);
                { Reset }
                suffix:='';
                prefix:= '';
                { We need to explicitely set
                  word prefix to get selectors
                  to be pushed in 2 bytes  PM }
-               if (taicpu(hp).opsize=S_W) and
+               if (TAICPU(hp).opsize=S_W) and
                    (
                     (
                      (fixed_opcode=A_PUSH) or
                      (fixed_opcode=A_POP)
                     ) and
-                    (taicpu(hp).oper[0]^.typ=top_reg) and
-                    is_segment_reg(taicpu(hp).oper[0]^.reg)
+                    (TAICPU(hp).oper[0]^.typ=top_reg) and
+                    is_segment_reg(TAICPU(hp).oper[0]^.reg)
                    ) then
                  writer.AsmWriteln(#9#9'DB'#9'066h');
 
                { added prefix instructions, must be on same line as opcode }
-               if (taicpu(hp).ops = 0) and
+               if (TAICPU(hp).ops = 0) and
                   ((fixed_opcode = A_REP) or
                    (fixed_opcode = A_LOCK) or
                    (fixed_opcode =  A_REPE) or
@@ -719,12 +719,12 @@ implementation
                   { there can be a stab in between when the opcode was on
                     a different line in the source code }
                   repeat
-                    hp:=tai(hp.next);
+                    hp:=TAI(hp.next);
                   until (hp=nil) or (hp.typ=ait_instruction);
 
                   { next instruction ... }
-                  fixed_opcode:=taicpu(hp).FixNonCommutativeOpcodes;
-                  taicpu(hp).SetOperandOrder(op_intel);
+                  fixed_opcode:=TAICPU(hp).FixNonCommutativeOpcodes;
+                  TAICPU(hp).SetOperandOrder(op_intel);
 
                   { this is theoretically impossible... }
                   if hp=nil then
@@ -739,23 +739,23 @@ implementation
                  (fixed_opcode=A_MOVQ) then
                  writer.AsmWrite(#9#9'mov')
                else
-                 writer.AsmWrite(#9#9+prefix+std_op2str[fixed_opcode]+cond2str[taicpu(hp).condition]+suffix);
-               if taicpu(hp).ops<>0 then
+                 writer.AsmWrite(#9#9+prefix+std_op2str[fixed_opcode]+cond2str[TAICPU(hp).condition]+suffix);
+               if TAICPU(hp).ops<>0 then
                 begin
                   if is_calljmp(fixed_opcode) then
                    begin
                      writer.AsmWrite(#9);
-                     WriteOper_jmp(taicpu(hp).oper[0]^,taicpu(hp).opsize);
+                     WriteOper_jmp(TAICPU(hp).oper[0]^,TAICPU(hp).opsize);
                    end
                   else
                    begin
-                     for i:=0to taicpu(hp).ops-1 do
+                     for i:=0to TAICPU(hp).ops-1 do
                       begin
                         if i=0 then
                          writer.AsmWrite(#9)
                         else
                          writer.AsmWrite(',');
-                        WriteOper(taicpu(hp).oper[i]^,taicpu(hp).opsize,fixed_opcode,(i=2));
+                        WriteOper(TAICPU(hp).oper[i]^,TAICPU(hp).opsize,fixed_opcode,(i=2));
                       end;
                    end;
                 end;
@@ -777,14 +777,14 @@ implementation
                     writer.AsmWriteLn(#9'END');
                     writer.AsmClose;
                     DoAssemble;
-                    writer.AsmCreate(tai_cutobject(hp).place);
+                    writer.AsmCreate(TAICutObject(hp).place);
                   end;
                { avoid empty files }
-                 while assigned(hp.next) and (tai(hp.next).typ in [ait_cutobject,ait_section,ait_comment]) do
+                 while Assigned(hp.next) and (TAI(hp.next).typ in [ait_cutobject,ait_section,ait_comment]) do
                   begin
-                    if tai(hp.next).typ=ait_section then
-                      lasTSecType:=tai_section(hp.next).sectype;
-                    hp:=tai(hp.next);
+                    if TAI(hp.next).typ=ait_section then
+                      lasTSecType:=TAISection(hp.next).sectype;
+                    hp:=TAI(hp.next);
                   end;
                  writer.AsmWriteLn(#9'.386p');
 
@@ -800,44 +800,44 @@ implementation
                end;
            ait_marker :
              begin
-               if tai_marker(hp).kind=mark_NoLineInfoStart then
+               if TAIMarker(hp).kind=mark_NoLineInfoStart then
                  inc(InlineLevel)
-               else if tai_marker(hp).kind=mark_NoLineInfoEnd then
+               else if TAIMarker(hp).kind=mark_NoLineInfoEnd then
                  dec(InlineLevel);
              end;
 
            ait_directive :
              begin
-               case tai_directive(hp).directive of
+               case TAIDirective(hp).directive of
                  asd_nasm_import :
                    begin
                      writer.AsmWrite('import ');
-                     writer.AsmWrite(tai_directive(hp).name);
+                     writer.AsmWrite(TAIDirective(hp).name);
                      writer.AsmLn;
                    end;
                  asd_extern :
                    begin
                      writer.AsmWrite('EXTRN ');
-                     writer.AsmWrite(tai_directive(hp).name);
+                     writer.AsmWrite(TAIDirective(hp).name);
                      writer.AsmLn;
                    end;
                  asd_cpu :
                    begin
                      writer.AsmWrite(asminfo^.comment+' CPU ');
-                     writer.AsmWrite(tai_directive(hp).name);
+                     writer.AsmWrite(TAIDirective(hp).name);
                      writer.AsmLn;
                    end
                  else
-                   internalerror(200509192);
+                   InternalError(200509192);
                end;
              end;
            ait_seh_directive :
              { Ignore for now };
            else
              if not WriteComments(hp) then
-               internalerror(2020100802);
+               InternalError(2020100802);
          end;
-         hp:=tai(hp.next);
+         hp:=TAI(hp.next);
        end;
     end;
 
@@ -845,7 +845,7 @@ implementation
     procedure tx86intelassembler.WriteExternals;
       var
         sym : TAsmSymbol;
-        i   : longint;
+        i   : LongInt;
       begin
         for i:=0 to CurrentAsmData.AsmSymbolDict.Count-1 do
           begin
@@ -863,15 +863,15 @@ implementation
 
     procedure tx86IntelAssembler.WriteAsmList;
     var
-      hal : tasmlisttype;
+      hal : TAsmListType;
     begin
 {$ifdef EXTDEBUG}
-      if CurrentModule.mainsource<>'' then
-       comment(v_info,'Start writing intel-styled assembler output for '+CurrentModule.mainsource);
+      if CurrentModule.MainSource<>'' then
+       comment(VInfo,'Start writing intel-styled assembler output for '+CurrentModule.MainSource);
 {$endif}
       WriteExternals;
 
-      for hal:=low(TasmlistType) to high(TasmlistType) do
+      for hal:=low(TAsmListType) to high(TAsmListType) do
         begin
           writer.AsmWriteLn(asminfo^.comment+'Begin asmlist '+AsmListTypeStr[hal]);
           writetree(CurrentAsmData.asmlists[hal]);
@@ -894,8 +894,8 @@ implementation
       writer.AsmLn;
 
 {$ifdef EXTDEBUG}
-      if CurrentModule.mainsource<>'' then
-       comment(v_info,'Done writing intel-styled assembler output for '+CurrentModule.mainsource);
+      if CurrentModule.MainSource<>'' then
+       comment(VInfo,'Done writing intel-styled assembler output for '+CurrentModule.MainSource);
 {$endif EXTDEBUG}
    end;
 

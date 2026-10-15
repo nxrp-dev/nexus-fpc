@@ -37,25 +37,25 @@ uses
 implementation
 
   uses
-    globals,
-    comphook,
+    Globals,
+    CompHook,
     wpobase, wpoinfo;
 
   { called after command line parameters have been parsed }
   procedure InitWpo;
     begin
       { always create so we don't have to litter the source with if-tests }
-      wpoinfomanager:=twpoinfomanager.create;
+      wpoinfomanager:=TWPOInfoManager.create;
 
       { register the classes we can/should potentially use }
-      wpoinfomanager.registerwpocomponentclass(tprogdevirtinfo);
-      wpoinfomanager.registerwpocomponentclass(twpodeadcodeinfofromexternallinker);
+      wpoinfomanager.registerwpocomponentclass(TProgDevirtInfo);
+      wpoinfomanager.registerwpocomponentclass(TWPODeadCodeInfoFromExternalLinker);
 
       { assign input/output feedback files }
-      if (wpofeedbackinput<>'') then
-        wpoinfomanager.setwpoinputfile(wpofeedbackinput);
-      if (wpofeedbackoutput<>'') then
-        wpoinfomanager.setwpooutputfile(wpofeedbackoutput);
+      if (WPOFeedbackInput<>'') then
+        wpoinfomanager.setwpoinputfile(WPOFeedbackInput);
+      if (WPOFeedbackOutput<>'') then
+        wpoinfomanager.setwpooutputfile(WPOFeedbackOutput);
 
       { parse input }
       wpoinfomanager.parseandcheckwpoinfo;
@@ -70,8 +70,8 @@ implementation
     begin
       wpoinfomanager.free;
       wpoinfomanager:=nil;
-      wpofeedbackinput:='';
-      wpofeedbackoutput:='';
+      WPOFeedbackInput:='';
+      WPOFeedbackOutput:='';
     end;
 
 

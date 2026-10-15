@@ -26,29 +26,29 @@ unit rasm;
   interface
 
     uses
-      cclasses,
-      symsym,
+      CClasses,
+      SymSym,
       rabase,
       aasmbase,
-      aasmdata,
+      AAsmData,
       cpubase,
       cgbase;
 
     type
-       tasmreader = class(tbaseasmreader)
+       TAsmReader = class(TBaseAsmReader)
          firsttoken     : boolean;
          _asmsorted     : boolean;
          curlist        : TAsmList;
          c              : char;
          actasmpattern  : ShortString;
-         actopcode      : tasmop;
-         actasmregister : tregister;
-         actcondition   : tasmcond;
+         actopcode      : TAsmOp;
+         actasmregister : TRegister;
+         actcondition   : TAsmCond;
          iasmops        : TFPHashList;
          locallabels    : TFPHashObjectList;
          constructor create;override;
-         destructor destroy;override;
-         function createlocallabel(const s: string; var hl: tasmlabel; emit: boolean): boolean;
+         destructor Destroy;override;
+         function createlocallabel(const s: string; var hl: TAsmLabel; emit: boolean): boolean;
          procedure checklocallabels;
        protected
          { allow subscripting a local if it is a:
@@ -61,22 +61,22 @@ unit rasm;
   implementation
 
     uses
-      verbose,
-      procinfo,
+      Verbose,
+      ProcInfo,
       symconst,symdef,
       paramgr;
 
     type
       TLocalLabel = class(TFPHashObject)
         emitted: boolean;
-        lab: tasmlabel;
-        function Gettasmlabel: tasmlabel;
+        lab: TAsmLabel;
+        function Gettasmlabel: TAsmLabel;
       end;
 
 
-    function TLocalLabel.Gettasmlabel:tasmlabel;
+    function TLocalLabel.Gettasmlabel:TAsmLabel;
       begin
-        if not assigned(lab) then
+        if not Assigned(lab) then
          begin
            CurrentAsmData.getjumplabel(lab);
            { this label is forced to be used so it's always written }
@@ -86,7 +86,7 @@ unit rasm;
       end;
 
 
-    constructor tasmreader.create;
+    constructor TAsmReader.create;
       begin
         inherited create;
         firsttoken:=true;
@@ -94,24 +94,24 @@ unit rasm;
       end;
 
 
-    destructor tasmreader.destroy;
+    destructor TAsmReader.Destroy;
       begin
         locallabels.Free;
         locallabels := nil;
         iasmops.Free;
         iasmops := nil;
-        inherited destroy;
+        inherited Destroy;
       end;
 
 
-    function tasmreader.createlocallabel(const s: string; var hl: tasmlabel; emit:boolean):boolean;
+    function TAsmReader.createlocallabel(const s: string; var hl: TAsmLabel; emit:boolean):boolean;
       var
         lab: TLocalLabel;
       begin
         result:=true;
         { Check if it already is defined }
         lab:=TLocalLabel(locallabels.Find(s));
-        if not assigned(lab) then
+        if not Assigned(lab) then
           lab:=TLocalLabel.Create(locallabels,s);
         { set emitted flag and check for dup syms }
         if emit then
@@ -127,9 +127,9 @@ unit rasm;
       end;
 
 
-    procedure tasmreader.checklocallabels;
+    procedure TAsmReader.checklocallabels;
       var
-        i: longint;
+        i: LongInt;
         lab: TLocalLabel;
       begin
         for i:=0 to locallabels.Count-1 do
@@ -142,7 +142,7 @@ unit rasm;
       end;
 
 
-    procedure tasmreader.checklocalsubscript(sym: TAbstractNormalVarSym);
+    procedure TAsmReader.checklocalsubscript(sym: TAbstractNormalVarSym);
       var
         isimplicitpointer: boolean;
       begin
@@ -158,7 +158,7 @@ unit rasm;
            (sym.typ=paravarsym) and
            (TParaVarSym(sym).paraloc[calleeside].location^.loc=LOC_REGISTER) and
            { ... however this is only possible if the pointer takes only one register location }
-           not assigned(TParaVarSym(sym).paraloc[calleeside].location^.Next) and
+           not Assigned(TParaVarSym(sym).paraloc[calleeside].location^.Next) and
            isimplicitpointer then
           exit;
 

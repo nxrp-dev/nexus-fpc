@@ -26,12 +26,12 @@ unit defutil;
 interface
 
     uses
-       globtype,globals,constexp,
+       GlobType,Globals,ConstExp,
        symconst,symtype,symdef,
        cgbase,cpubase;
 
     type
-       tmmxtype = (mmxno,mmxu8bit,mmxs8bit,mmxu16bit,mmxs16bit,
+       TMMXType = (mmxno,mmxu8bit,mmxs8bit,mmxu16bit,mmxs16bit,
                    mmxu32bit,mmxs32bit,mmxfixed16,mmxsingle,mmxs64bit,mmxu64bit);
 
 
@@ -324,7 +324,7 @@ interface
     function is_systemunit_unicode : boolean;
 
   type
-    tperformrangecheck = (
+    TPerformRangeCheck = (
       rc_internal,  { nothing, internal conversion }
       rc_explicit,  { no, but this is an explicit user conversion and hence can still give warnings in some cases (or errors in case of enums) }
       rc_implicit,  { no, but this is an implicit conversion and hence can still give warnings/errors in some cases }
@@ -333,15 +333,15 @@ interface
     {# If @var(l) isn't in the range of todef a range check error (if not explicit) is generated and
       the value is placed within the range
     }
-    procedure adaptrange(todef : TDef;var l : tconstexprint; rangecheck: tperformrangecheck);
+    procedure adaptrange(todef : TDef;var l : TConstExprInt; rangecheck: TPerformRangeCheck);
     { for when used with nf_explicit/nf_internal/cs_check_range nodeflags }
-    procedure adaptrange(todef : TDef;var l : tconstexprint; internal, explicit, rangecheckstate: boolean);
+    procedure adaptrange(todef : TDef;var l : TConstExprInt; internal, explicit, rangecheckstate: boolean);
 
     {# Returns the range of def, where @var(l) is the low-range and @var(h) is
       the high-range.
     }
     procedure getrange(def : TDef;out l, h : TConstExprInt);
-    procedure getrangedefmasksize(def: TDef; out rangedef: TDef; out mask: TConstExprInt; out size: longint);
+    procedure getrangedefmasksize(def: TDef; out rangedef: TDef; out mask: TConstExprInt; out size: LongInt);
 
     { Returns the range type of an ordinal type in the sense of ISO-10206 }
     function get_iso_range_type(def: TDef): TDef;
@@ -356,21 +356,21 @@ interface
     function is_mmx_able_array(p : TDef) : boolean;
 
     {# returns the mmx type }
-    function mmx_type(p : TDef) : tmmxtype;
+    function mmx_type(p : TDef) : TMMXType;
 
     { returns if the passed type (array) fits into an mm register }
     function fits_in_mm_register(p : TDef) : boolean;
 
     {# From a definition return the abstract code generator size enum. It is
        to note that the value returned can be @var(OS_NO) }
-    function def_cgsize(def: TDef): tcgsize;
+    function def_cgsize(def: TDef): TCgSize;
 
     { #Return an orddef (integer) corresponding to a tcgsize }
-    function cgsize_orddef(size: tcgsize): TOrdDef;
+    function cgsize_orddef(size: TCgSize): TOrdDef;
 
     {# Same as def_cgsize, except that it will interpret certain arrays as
        vectors and return OS_M* sizes for them }
-    function def_cgmmsize(def: TDef): tcgsize;
+    function def_cgmmsize(def: TDef): TCgSize;
 
     {# returns true, if the type passed is can be used with windows automation }
     function is_automatable(p : TDef) : boolean;
@@ -388,7 +388,7 @@ interface
 
     { # calculates "not v" based on the provided def; returns true if the def
         was negligible, false otherwise }
-    function calc_not_ordvalue(var v:Tconstexprint; var def:TDef):boolean;
+    function calc_not_ordvalue(var v:TConstExprInt; var def:TDef):boolean;
 
     { # returns whether the type is potentially a valid type of/for an "univ" parameter
         (basically: it must have a compile-time size) }
@@ -426,10 +426,10 @@ interface
 implementation
 
     uses
-       verbose,cutils,
-       symtable, // search_system_type
-       symsym,
-       cpuinfo;
+       Verbose,CUtils,
+       SymTable, // search_system_type
+       SymSym,
+       CPUInfo;
 
     { returns true, if def uses FPU }
     function is_fpu(def : TDef) : boolean;
@@ -455,7 +455,7 @@ implementation
              result:=(def.typ=floatdef) and
                      (TFloatDef(s64currencytype).floattype=TFloatDef(def).floattype);
            else
-             internalerror(200304222);
+             InternalError(200304222);
          end;
       end;
 
@@ -470,7 +470,7 @@ implementation
     function is_single(def : TDef) : boolean;
       begin
         result:=(def.typ=floatdef) and
-          (TFloatDef(def).floattype=s32real);
+          (TFloatDef(def).floattype=S32Real);
       end;
 
 
@@ -478,7 +478,7 @@ implementation
     function is_double(def : TDef) : boolean;
       begin
         result:=(def.typ=floatdef) and
-          (TFloatDef(def).floattype=s64real);
+          (TFloatDef(def).floattype=S64Real);
       end;
 
 
@@ -494,14 +494,14 @@ implementation
     function is_real(def : TDef) : boolean;
       begin
         result:=(def.typ=floatdef) and
-          (TFloatDef(def).floattype in [s32real,s64real,s80real]);
+          (TFloatDef(def).floattype in [S32Real,S64Real,s80real]);
       end;
 
 
     function is_real_or_cextended(def: TDef): boolean;
       begin
         result:=(def.typ=floatdef) and
-          (TFloatDef(def).floattype in [s32real,s64real,s80real,sc80real]);
+          (TFloatDef(def).floattype in [S32Real,S64Real,s80real,sc80real]);
       end;
 
 
@@ -516,7 +516,7 @@ implementation
          range_to_basetype:=s16bit
         else if (l>=0) and (h<=65535) then
          range_to_basetype:=u16bit
-        else if (l>=int64(low(longint))) and (h<=high(longint)) then
+        else if (l>=int64(low(LongInt))) and (h<=high(LongInt)) then
          range_to_basetype:=s32bit
         else if (l>=low(cardinal)) and (h<=high(cardinal)) then
          range_to_basetype:=u32bit
@@ -538,7 +538,7 @@ implementation
          def:=s16inttype
         else if (l>=0) and (h<=65535) then
          def:=u16inttype
-        else if (l>=int64(low(longint))) and (h<=high(longint)) then
+        else if (l>=int64(low(LongInt))) and (h<=high(LongInt)) then
          def:=s32inttype
         else if (l>=low(cardinal)) and (h<=high(cardinal)) then
          def:=u32inttype
@@ -580,7 +580,7 @@ implementation
     { true if p is a string }
     function is_string(def : TDef) : boolean;
       begin
-        is_string := (assigned(def) and (def.typ = stringdef));
+        is_string := (Assigned(def) and (def.typ = stringdef));
       end;
 
     function is_stringlike(def : TDef) : boolean;
@@ -609,7 +609,7 @@ implementation
         else if def=java_jlstring then
           result:=cwidechartype
         else
-          internalerror(2023012501);
+          InternalError(2023012501);
       end;
 
     function is_enum(def : TDef) : boolean;
@@ -652,16 +652,16 @@ implementation
 
     function spans_entire_range(def: TDef): boolean;
       var
-         lv, hv: Tconstexprint;
+         lv, hv: TConstExprInt;
          mask: qword;
-         size: longint;
+         size: LongInt;
       begin
         case def.typ of
           orddef,
           enumdef:
             getrange(def,lv,hv);
           else
-            internalerror(2019062203);
+            InternalError(2019062203);
         end;
         size:=def.size;
         case size of
@@ -670,7 +670,7 @@ implementation
           4: mask:=$ffffffff;
           8: mask:=qword(-1);
           else
-            internalerror(2019062204);
+            InternalError(2019062204);
         end;
         result:=false;
         if is_signed(def) then
@@ -778,7 +778,7 @@ implementation
           enumdef:
             result:=cgsize_orddef(tcgsize2unsigned[def_cgsize(def)]);
           else
-            internalerror(2016062001);
+            InternalError(2016062001);
         end;
       end;
 
@@ -790,7 +790,7 @@ implementation
           enumdef:
             result:=cgsize_orddef(tcgsize2signed[def_cgsize(def)]);
           else
-            internalerror(2022093007);
+            InternalError(2022093007);
         end;
       end;
 
@@ -935,7 +935,7 @@ implementation
       begin
         is_rawbytestring:=(p.typ=stringdef) and
                        (TStringDef(p).stringtype=st_ansistring) and
-                       (TStringDef(p).encoding=globals.CP_NONE);
+                       (TStringDef(p).encoding=Globals.CP_NONE);
       end;
 
     { true if p is an long string def }
@@ -1099,7 +1099,7 @@ implementation
           Exit(False);
 
         curitem := first;
-        while assigned(curitem) do
+        while Assigned(curitem) do
           begin
             if curitem^.Def = def then
               Exit(True);
@@ -1290,11 +1290,11 @@ implementation
 
     { if l isn't in the range of todef a range check error (if not explicit) is generated and
       the value is placed within the range }
-    procedure adaptrange(todef : TDef;var l : tconstexprint; rangecheck: tperformrangecheck);
+    procedure adaptrange(todef : TDef;var l : TConstExprInt; rangecheck: TPerformRangeCheck);
       var
          lv,hv,oldval,sextval,mask: TConstExprInt;
          rangedef: TDef;
-         rangedefsize: longint;
+         rangedefsize: LongInt;
          warned: boolean;
       begin
          getrange(todef,lv,hv);
@@ -1305,9 +1305,9 @@ implementation
                begin
                  if (rangecheck=rc_yes) or
                     (todef.typ=enumdef) then
-                   Message3(type_e_range_check_error_bounds,tostr(l),tostr(lv),tostr(hv))
+                   Message3(type_e_range_check_error_bounds,ToStr(l),ToStr(lv),ToStr(hv))
                  else
-                   Message3(type_w_range_check_error_bounds,tostr(l),tostr(lv),tostr(hv));
+                   Message3(type_w_range_check_error_bounds,ToStr(l),ToStr(lv),ToStr(hv));
                  warned:=true;
                end
              { give warnings about range errors with explicit typeconversions if the target
@@ -1317,7 +1317,7 @@ implementation
                      (not is_pasbool(todef) and
                       not spans_entire_range(todef)) then
                begin
-                 Message3(type_w_range_check_error_bounds,tostr(l),tostr(lv),tostr(hv));
+                 Message3(type_w_range_check_error_bounds,ToStr(l),ToStr(lv),ToStr(hv));
                  warned:=true;
                end;
 
@@ -1332,10 +1332,10 @@ implementation
              case rangedefsize of
                1: sextval.svalue:=shortint(l.svalue);
                2: sextval.svalue:=smallint(l.svalue);
-               4: sextval.svalue:=longint(l.svalue);
+               4: sextval.svalue:=LongInt(l.svalue);
                8: sextval.svalue:=l.svalue;
                else
-                 internalerror(201906230);
+                 InternalError(201906230);
               end;
               sextval.signed:=true;
               { Detect if the type spans the entire range, but more bits were specified than
@@ -1350,7 +1350,7 @@ implementation
                 (oldval.uvalue<>l.uvalue) and
                 (oldval.uvalue<>sextval.uvalue) then
                begin
-                 Message3(type_w_range_check_error_bounds,tostr(oldval),tostr(lv),tostr(hv));
+                 Message3(type_w_range_check_error_bounds,ToStr(oldval),ToStr(lv),ToStr(hv));
                end;
               if is_signed(rangedef) then
                 l:=sextval;
@@ -1358,7 +1358,7 @@ implementation
       end;
 
 
-    procedure adaptrange(todef: TDef; var l: tconstexprint; internal, explicit, rangecheckstate: boolean);
+    procedure adaptrange(todef: TDef; var l: TConstExprInt; internal, explicit, rangecheckstate: boolean);
       begin
         if internal then
           adaptrange(todef, l, rc_internal)
@@ -1396,12 +1396,12 @@ implementation
               h:=TOrdDef(sizesinttype).high;
             end;
           else
-            internalerror(200611054);
+            InternalError(200611054);
         end;
       end;
 
 
-    procedure getrangedefmasksize(def: TDef; out rangedef: TDef; out mask: TConstExprInt; out size: longint);
+    procedure getrangedefmasksize(def: TDef; out rangedef: TDef; out mask: TConstExprInt; out size: LongInt);
       begin
         case def.typ of
           orddef, enumdef:
@@ -1414,7 +1414,7 @@ implementation
                 4: mask:=$ffffffff;
                 8: mask:=$ffffffffffffffff;
                 else
-                  internalerror(2019062305);
+                  InternalError(2019062305);
                 end;
             end;
           arraydef:
@@ -1429,19 +1429,19 @@ implementation
               mask:=-1;
             end;
           else
-            internalerror(2019062306);
+            InternalError(2019062306);
         end;
       end;
 
 
-    function mmx_type(p : TDef) : tmmxtype;
+    function mmx_type(p : TDef) : TMMXType;
       begin
          mmx_type:=mmxno;
          if is_mmx_able_array(p) then
            begin
               if TArrayDef(p).elementdef.typ=floatdef then
                 case TFloatDef(TArrayDef(p).elementdef).floattype of
-                  s32real:
+                  S32Real:
                     mmx_type:=mmxsingle;
                   else
                     ;
@@ -1512,17 +1512,17 @@ implementation
                  scurrency:
                    result:=s64currencytype;
                  else
-                   internalerror(2018010901);
+                   InternalError(2018010901);
                end;
              end;
            enumdef:
              begin
-               while assigned(TEnumDef(def).basedef) do
+               while Assigned(TEnumDef(def).basedef) do
                  def:=TEnumDef(def).basedef;
                result:=def;
              end
            else
-             internalerror(2018010701);
+             InternalError(2018010701);
         end;
       end;
 
@@ -1554,7 +1554,7 @@ implementation
                      (UseAVX and (TArrayDef(p).highrange=7)) or
                      (UseAVX512 and (TArrayDef(p).highrange=15))
                     ) and
-                    (TFloatDef(TArrayDef(p).elementdef).floattype=s32real)
+                    (TFloatDef(TArrayDef(p).elementdef).floattype=S32Real)
                    )
                   ) or
 
@@ -1566,7 +1566,7 @@ implementation
                      (UseAVX and (TArrayDef(p).highrange=3)) or
                      (UseAVX512 and (TArrayDef(p).highrange=7))
                     )and
-                    (TFloatDef(TArrayDef(p).elementdef).floattype=s64real)
+                    (TFloatDef(TArrayDef(p).elementdef).floattype=S64Real)
                    )
                   ) {or
 
@@ -1621,19 +1621,19 @@ implementation
             if TArrayDef(p).is_hwvector then
               result:=p
             else if fits_in_mm_register(p) then
-              result:=carraydef.getreusable_vector(TArrayDef(p).elementdef,TArrayDef(p).elecount)
+              result:=CArrayDef.getreusable_vector(TArrayDef(p).elementdef,TArrayDef(p).elecount)
             else if not nil_on_error then
-              internalerror(2022090811);
+              InternalError(2022090811);
           end
         else if not nil_on_error then
-          internalerror(2022090810);
+          InternalError(2022090810);
       end;
 
 
     function is_mmx_able_array(p : TDef) : boolean;
       begin
 {$ifdef SUPPORT_MMX}
-         if (cs_mmx_saturation in CurrentSettings.localswitches) then
+         if (cs_mmx_saturation in CurrentSettings.LocalSwitches) then
            begin
               is_mmx_able_array:=(p.typ=arraydef) and
                 not(is_special_array(p)) and
@@ -1661,7 +1661,7 @@ implementation
                   (
                    (TArrayDef(p).lowrange=0) and
                    (TArrayDef(p).highrange=1) and
-                   (TFloatDef(TArrayDef(p).elementdef).floattype=s32real)
+                   (TFloatDef(TArrayDef(p).elementdef).floattype=S32Real)
                   )
                  )
                 )
@@ -1699,7 +1699,7 @@ implementation
                   (
                    (TArrayDef(p).lowrange=0) and
                    (TArrayDef(p).highrange=1) and
-                   (TFloatDef(TArrayDef(p).elementdef).floattype=s32real)
+                   (TFloatDef(TArrayDef(p).elementdef).floattype=S32Real)
                   )
                  )
                 );
@@ -1710,7 +1710,7 @@ implementation
       end;
 
 
-    function def_cgsize(def: TDef): tcgsize;
+    function def_cgsize(def: TDef): TCgSize;
       begin
         case def.typ of
           orddef,
@@ -1719,7 +1719,7 @@ implementation
             begin
               result:=int_cgsize(def.size);
               if is_signed(def) then
-                result:=tcgsize(ord(result)+(ord(OS_S8)-ord(OS_8)));
+                result:=TCgSize(ord(result)+(ord(OS_S8)-ord(OS_8)));
             end;
           classrefdef,
           pointerdef:
@@ -1727,7 +1727,7 @@ implementation
               result:=int_cgsize(def.size);
               { can happen for far/huge pointers on non-i8086 }
               if result=OS_NO then
-                internalerror(2013052201);
+                InternalError(2013052201);
             end;
           formaldef:
             result := int_cgsize(voidpointertype.size);
@@ -1750,9 +1750,9 @@ implementation
                       { Determine if, based on the floating-point type and the size
                         of the array, if it can be made into a vector }
                       case TFloatDef(TArrayDef(def).elementdef).floattype of
-                        s32real:
+                        S32Real:
                           result := float_array_cgsize(def.size);
-                        s64real:
+                        S64Real:
                           result := double_array_cgsize(def.size);
                         else
                           { If not, fall back }
@@ -1773,7 +1773,7 @@ implementation
         end;
       end;
 
-    function cgsize_orddef(size: tcgsize): TOrdDef;
+    function cgsize_orddef(size: TCgSize): TOrdDef;
       begin
         case size of
           OS_8:
@@ -1793,11 +1793,11 @@ implementation
           OS_S64:
             result:=TOrdDef(s64inttype);
           else
-            internalerror(2012050401);
+            InternalError(2012050401);
         end;
       end;
 
-    function def_cgmmsize(def: TDef): tcgsize;
+    function def_cgmmsize(def: TDef): TCgSize;
       begin
         case def.typ of
           arraydef:
@@ -1818,32 +1818,32 @@ implementation
                       32: result:=OS_M256;
                       64: result:=OS_M512;
                       else
-                        internalerror(2013060103);
+                        InternalError(2013060103);
                     end;
                   end;
                 floatdef:
                   begin
                     case TFloatDef(TArrayDef(def).elementdef).floattype of
-                      s32real:
+                      S32Real:
                         case def.size of
                           4:  result:=OS_M32;
                           16: result:=OS_M128;
                           32: result:=OS_M256;
                           64: result:=OS_M512;
                           else
-                            internalerror(2017121400);
+                            InternalError(2017121400);
                         end;
-                      s64real:
+                      S64Real:
                         case def.size of
                           8:  result:=OS_M64;
                           16: result:=OS_M128;
                           32: result:=OS_M256;
                           64: result:=OS_M512;
                           else
-                            internalerror(2017121401);
+                            InternalError(2017121401);
                         end;
                       else
-                        internalerror(2017121402);
+                        InternalError(2017121402);
                     end;
                   end;
                 else
@@ -1864,7 +1864,7 @@ implementation
             result:=TOrdDef(p).ordtype in [u8bit,s8bit,u16bit,s16bit,u32bit,s32bit,
               u64bit,s64bit,bool16bit,scurrency];
           floatdef:
-            result:=TFloatDef(p).floattype in [s64currency,s64real,s32real];
+            result:=TFloatDef(p).floattype in [s64currency,S64Real,S32Real];
           stringdef:
             result:=TStringDef(p).stringtype in [st_ansistring,st_widestring,st_unicodestring];
           variantdef:
@@ -1902,7 +1902,7 @@ implementation
 
     function get_common_intdef(ld, rd: TOrdDef; keep_sign_if_equal: boolean): TOrdDef;
       var
-        llow, lhigh: tconstexprint;
+        llow, lhigh: TConstExprInt;
       begin
         llow:=min(ld.low,rd.low);
         lhigh:=max(ld.high,rd.high);
@@ -1927,7 +1927,7 @@ implementation
             begin
               { avoid warning }
               result:=nil;
-              internalerror(200802291);
+              InternalError(200802291);
             end;
         end;
         if keep_sign_if_equal and
@@ -1954,9 +1954,9 @@ implementation
       end;
 
 
-    function calc_not_ordvalue(var v:Tconstexprint;var def:TDef):boolean;
+    function calc_not_ordvalue(var v:TConstExprInt;var def:TDef):boolean;
       begin
-        if not assigned(def) or (def.typ<>orddef) then
+        if not Assigned(def) or (def.typ<>orddef) then
           exit(false);
         result:=true;
         case TOrdDef(def).ordtype of
@@ -2157,25 +2157,25 @@ implementation
       begin
         repeat
           if not is_invokable(def) then
-            internalerror(2022011701);
-          sym:=TSym(def.symtable.find(method_name_funcref_invoke_find));
-          if assigned(sym) and (sym.typ<>procsym) then
+            InternalError(2022011701);
+          sym:=TSym(def.SymTable.find(method_name_funcref_invoke_find));
+          if Assigned(sym) and (sym.typ<>procsym) then
             sym:=nil;
           def:=def.childof;
-        until assigned(sym) or not assigned(def);
-        if not assigned(sym) then
-          internalerror(2021041001);
+        until Assigned(sym) or not Assigned(def);
+        if not Assigned(sym) then
+          InternalError(2021041001);
         if sym.typ<>procsym then
-          internalerror(2021041002);
+          InternalError(2021041002);
         if TProcSym(sym).procdeflist.count=0 then
-          internalerror(2021041003);
+          InternalError(2021041003);
         result:=TProcDef(TProcSym(sym).procdeflist[0]);
       end;
 
 
     function invokable_has_argless_invoke(def:TObjectDef):boolean;
       var
-        i,j : longint;
+        i,j : LongInt;
         sym : TSym;
         pd : TProcDef;
         para : TParaVarSym;
@@ -2184,9 +2184,9 @@ implementation
         result:=false;
         repeat
           if not is_invokable(def) then
-            internalerror(2022020701);
-          sym:=TSym(def.symtable.find(method_name_funcref_invoke_find));
-          if assigned(sym) and (sym.typ=procsym) then
+            InternalError(2022020701);
+          sym:=TSym(def.SymTable.find(method_name_funcref_invoke_find));
+          if Assigned(sym) and (sym.typ=procsym) then
             begin
               for i:=0 to TProcSym(sym).procdeflist.count-1 do
                 begin
@@ -2203,7 +2203,7 @@ implementation
                       para:=TParaVarSym(pd.paras[j]);
                       if vo_is_hidden_para in para.varoptions then
                         continue;
-                      if assigned(para.defaultconstsym) then
+                      if Assigned(para.defaultconstsym) then
                         continue;
                       allok:=false;
                       break;
@@ -2215,7 +2215,7 @@ implementation
                 break;
             end;
           def:=def.childof;
-        until not assigned(def);
+        until not Assigned(def);
       end;
 
 end.

@@ -45,7 +45,7 @@ Uses
 Type
 
 { type of a normal instruction }
-  TInstr = Taicpu;
+  TInstr = TAICPU;
   PInstr = ^TInstr;
 
 { ************************************************************************* }
@@ -62,7 +62,7 @@ Type
 { ************************************************************************* }
 
   TAoptBaseCpu = class(TAoptBase)
-    function RegModifiedByInstruction(Reg: TRegister; p1: tai): boolean; override;
+    function RegModifiedByInstruction(Reg: TRegister; p1: TAI): boolean; override;
   End;
 
 
@@ -114,20 +114,20 @@ Implementation
     End;
 
 
-  function TAoptBaseCpu.RegModifiedByInstruction(reg: tregister; p1: tai): boolean;
+  function TAoptBaseCpu.RegModifiedByInstruction(reg: TRegister; p1: TAI): boolean;
     var
-      i: longint;
-      preg: tregister;
+      i: LongInt;
+      preg: TRegister;
     begin
       result:=false;
-      for i:=0 to taicpu(p1).ops-1 do
-        case taicpu(p1).oper[i]^.typ of
+      for i:=0 to TAICPU(p1).ops-1 do
+        case TAICPU(p1).oper[i]^.typ of
           top_reg:
             begin
-              preg:=taicpu(p1).oper[i]^.reg;
+              preg:=TAICPU(p1).oper[i]^.reg;
               if (getregtype(preg)=getregtype(reg)) and
                  (getsupreg(preg)=getsupreg(reg)) and
-                 (taicpu(p1).spilling_get_operation_type(i) in [operand_write,operand_readwrite]) then
+                 (TAICPU(p1).spilling_get_operation_type(i) in [operand_write,operand_readwrite]) then
                 begin
                   result:=true;
                   exit;
@@ -135,8 +135,8 @@ Implementation
             end;
           top_ref:
             begin
-              if (taicpu(p1).oper[i]^.ref^.addressmode<>am_offset) and
-                 (reg=taicpu(p1).oper[i]^.ref^.base) then
+              if (TAICPU(p1).oper[i]^.ref^.addressmode<>am_offset) and
+                 (reg=TAICPU(p1).oper[i]^.ref^.base) then
                 begin
                   result:=true;
                   exit

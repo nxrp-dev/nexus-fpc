@@ -26,11 +26,11 @@ unit ncpucon;
 interface
 
     uses
-      tpcompilerreal,
+      TPCompilerReal,
       node,ncgcon,cpubase;
 
     type
-      taarch64realconstnode = class(tcgrealconstnode)
+      TAArch64RealConstNode = class(TCGRealConstNode)
         function pass_1 : TNode;override;
         procedure pass_generate_code;override;
       end;
@@ -38,21 +38,21 @@ interface
   implementation
 
     uses
-      verbose,
-      globtype,globals,
-      cpuinfo,
-      aasmbase,aasmtai,aasmdata,aasmcpu,
+      Verbose,
+      GlobType,Globals,
+      CPUInfo,
+      aasmbase,aasmtai,AAsmData,aasmcpu,
       symdef,
       defutil,
       cgbase,cgutils,cgobj,
-      procinfo,
+      ProcInfo,
       ncon;
 
 {*****************************************************************************
                            TARMREALCONSTNODE
 *****************************************************************************}
 
-    function taarch64realconstnode.pass_1 : TNode;
+    function TAArch64RealConstNode.pass_1 : TNode;
       begin
         result:=nil;
         if IsFloatImmediate(TFloatDef(resultdef).floattype,value_real) then
@@ -62,7 +62,7 @@ interface
       end;
 
 
-    procedure taarch64realconstnode.pass_generate_code;
+    procedure TAArch64RealConstNode.pass_generate_code;
       var
         hreg : TRegister;
       begin
@@ -70,7 +70,7 @@ interface
           begin
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_realconst(A_FMOV,
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_realconst(A_FMOV,
               location.register,value_real));
           end
         { cast and compare the bit pattern as we cannot handle -0.0 }
@@ -79,7 +79,7 @@ interface
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             hreg:=newreg(R_MMREGISTER,getsupreg(location.register),R_SUBMM16B);
-            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_EOR,
+            CurrentAsmData.CurrAsmList.concat(TAICPU.op_reg_reg_reg(A_EOR,
               hreg,hreg,hreg));
           end
         else
@@ -87,5 +87,5 @@ interface
       end;
 
 begin
-  crealconstnode:=taarch64realconstnode;
+  CRealConstNode:=TAArch64RealConstNode;
 end.

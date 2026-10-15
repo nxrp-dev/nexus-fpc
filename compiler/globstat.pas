@@ -27,13 +27,13 @@ unit globstat;
 interface
 
 uses
-  globtype,globals,
-  aasmdata,
-  dbgbase,
-  symbase,symsym,
-  fmodule,
-  scanner,scandir,
-  procinfo;
+  GlobType,Globals,
+  AAsmData,
+  DbgBase,
+  SymBase,SymSym,
+  FModule,
+  Scanner,ScanDir,
+  ProcInfo;
 
 
 type
@@ -46,140 +46,140 @@ type
   { Note: this is only needed for pas modules, ppu modules simply skip save and restore
     Especially a ppu does not create its own symtablestack }
 
-  tglobalstate = class
-    reload: boolean;
+  TGlobalState = class
+    Reload: Boolean;
   { scanner }
-    oldtokenpos    : TFilePosInfo;
-    old_block_type : TBlockType;
+    OldTokenPos    : TFilePosInfo;
+    OldBlockType : TBlockType;
   { symtable }
-    oldsymtablestack,
-    oldmacrosymtablestack : TSymTableStack;
-    oldaktprocsym    : TProcSym;
+    OldSymTableStack,
+    OldMacroSymTableStack : TSymTableStack;
+    OldAktProcSym    : TProcSym;
   { cg }
-    oldparse_only  : boolean;
+    OldParseOnly  : Boolean;
   { akt.. things }
-    oldcurrent_filepos      : TFilePosInfo;
-    old_current_module : tmodule;
-    oldcurrent_procinfo : tprocinfo;
-    old_settings : TSettings;
-    old_switchesstatestack : tswitchesstatestack;
-    old_switchesstatestackpos : Integer;
-    old_verbosity : longint;
+    OldCurrentFilePos      : TFilePosInfo;
+    OldCurrentModule : TModule;
+    OldCurrentProcInfo : TProcInfo;
+    OldSettings : TSettings;
+    OldSwitchesStateStack : TSwitchesStateStack;
+    OldSwitchesStateStackPos : Integer;
+    OldVerbosity : LongInt;
 
   { only saved/restored if "full" is true }
-    old_asmdata : tasmdata;
-    old_debuginfo : tdebuginfo;
-    old_scanner : tscannerfile;
-    old_parser_file : string;
-    constructor create(for_module_switch: boolean);
-    destructor destroy; override;
-    procedure clearscanner;
-    class procedure remove_scanner_from_states(scanner : tscannerfile); static;
-    procedure save(for_module_switch: boolean = false);
-    procedure save_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
-    procedure restore;
-    procedure reload_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
-    class procedure clear_state;
+    OldAsmData : TAsmData;
+    OldDebugInfo : TDebugInfo;
+    OldScanner : TScannerFile;
+    OldParserFile : string;
+    constructor Create(ForModuleSwitch: Boolean);
+    destructor Destroy; override;
+    procedure ClearScanner;
+    class procedure Remove_Scanner_From_States(Scanner : TScannerFile); static;
+    procedure Save(ForModuleSwitch: Boolean = False);
+    procedure Save_SymTable_Stack(Stack: TSymTableStack; Kind: TSymTableStackKind);
+    procedure Restore;
+    procedure Reload_SymTable_Stack(Stack: TSymTableStack; Kind: TSymTableStackKind);
+    class procedure Clear_State;
   end;
 
-procedure save_global_state(state:tglobalstate);
-procedure restore_global_state(state:tglobalstate);
+procedure Save_Global_State(State:TGlobalState);
+procedure Restore_Global_State(State:TGlobalState);
 
 implementation
 
 uses
-  switches, verbose, pbase,comphook;
+  Switches, Verbose, PBase,CompHook;
 
 var
-  states : array of tglobalstate;
-  statecount : integer = 0;
+  States : array of TGlobalState;
+  StateCount : Integer = 0;
 
 
 
-  class procedure tglobalstate.remove_scanner_from_states(scanner : tscannerfile);
-
-  var
-    i : integer;
-
-  begin
-    for I:=0 to statecount-1 do
-      if (states[i].old_scanner=scanner) then
-        states[i].clearscanner;
-  end;
-
-  procedure addstate(astate : tglobalstate);
+  class procedure TGlobalState.Remove_Scanner_From_States(Scanner : TScannerFile);
 
   var
-    l : integer;
+    I : Integer;
 
   begin
-    l:=length(states);
-    if l=statecount then
-      setlength(states,l+10);
-    states[statecount]:=astate;
-    inc(statecount);
+    for I:=0 to StateCount-1 do
+      if (States[I].OldScanner=Scanner) then
+        States[I].ClearScanner;
   end;
 
-  procedure removestate(astate : tglobalstate);
+  procedure AddState(AState : TGlobalState);
 
   var
-    l : integer;
+    L : Integer;
 
   begin
-    l:=statecount-1;
-    While (l>=0) and (states[l]<>astate) do
-      dec(l);
-    if l<0 then
-      exit;
-    if l<>statecount-1 then
-      states[l]:=states[statecount-1];
-    states[statecount-1]:=Nil;
-    Dec(Statecount);
+    L:=Length(States);
+    if L=StateCount then
+      SetLength(States,L+10);
+    States[StateCount]:=AState;
+    Inc(StateCount);
   end;
 
-  procedure save_global_state(state:tglobalstate);
+  procedure RemoveState(AState : TGlobalState);
+
+  var
+    L : Integer;
+
+  begin
+    L:=StateCount-1;
+    While (L>=0) and (States[L]<>AState) do
+      Dec(L);
+    if L<0 then
+      Exit;
+    if L<>StateCount-1 then
+      States[L]:=States[StateCount-1];
+    States[StateCount-1]:=Nil;
+    Dec(StateCount);
+  end;
+
+  procedure Save_Global_State(State:TGlobalState);
     begin
-      state.save;
+      State.Save;
     end;
 
-  procedure restore_global_state(state:tglobalstate);
+  procedure Restore_Global_State(State:TGlobalState);
 
     begin
-      state.restore;
+      State.Restore;
     end;
 
-  procedure tglobalstate.save(for_module_switch: boolean);
+  procedure TGlobalState.Save(ForModuleSwitch: Boolean);
 
     begin
-      reload:=for_module_switch;
-      old_current_module:=CurrentModule;
+      Reload:=ForModuleSwitch;
+      OldCurrentModule:=CurrentModule;
 
       { save symtable state }
-      if CurrentModule.fromppu then
+      if CurrentModule.FromPPU then
         begin
           { a ppu does not use the symbolstacks
             they might have been set by a pas module loading this ppu
             => do not store them in the the ppu state }
-          oldsymtablestack:=nil;
-          oldmacrosymtablestack:=nil;
+          OldSymTableStack:=nil;
+          OldMacroSymTableStack:=nil;
         end
       else
         begin
           { a pas module has symbolstacks, which contain references to other modules
             when switching between modules, the references must be updated as the
             used module might have been recompiled }
-          oldsymtablestack:=symtablestack;
-          if for_module_switch then
-            save_symtable_stack(oldsymtablestack,stsk_global);
-          oldmacrosymtablestack:=macrosymtablestack;
-          if for_module_switch then
-            save_symtable_stack(oldmacrosymtablestack,stsk_macro);
+          OldSymTableStack:=SymTableStack;
+          if ForModuleSwitch then
+            Save_SymTable_Stack(OldSymTableStack,stsk_global);
+          OldMacroSymTableStack:=MacroSymTableStack;
+          if ForModuleSwitch then
+            Save_SymTable_Stack(OldMacroSymTableStack,stsk_macro);
         end;
-      oldcurrent_procinfo:=CurrentProcInfo;
+      OldCurrentProcInfo:=CurrentProcInfo;
 
       { save scanner state }
-      old_block_type:=block_type;
-      oldtokenpos:=CurrentTokenPos;
+      OldBlockType:=Block_Type;
+      OldTokenPos:=CurrentTokenPos;
       {
         consuming the semicolon after a uses clause can add to the
         pending state if the first directives change warning state.
@@ -187,174 +187,174 @@ var
         ppcgen/cgppc.pas
         line 144 has a WARN 6018 OFF...
       }
-      flushpendingswitchesstate; { flushpendingswitchesstate before storing current_settings.pmessage, switchesstatestack etc }
-      old_switchesstatestack:=switchesstatestack;
-      old_switchesstatestackpos:=switchesstatestackpos;
+      FlushPendingSwitchesState; { flushpendingswitchesstate before storing current_settings.pmessage, switchesstatestack etc }
+      OldSwitchesStateStack:=SwitchesStateStack;
+      OldSwitchesStateStackPos:=SwitchesStateStackPos;
 
       { save cg }
-      oldparse_only:=parse_only;
+      OldParseOnly:=parse_only;
 
       { save akt... state }
       { handle the postponed case first }
-      oldcurrent_filepos:=CurrentFilePos;
-      old_settings:=CurrentSettings;
-      old_verbosity:=status.verbosity;
+      OldCurrentFilePos:=CurrentFilePos;
+      OldSettings:=CurrentSettings;
+      OldVerbosity:=Status.Verbosity;
 
-      old_asmdata:=CurrentAsmData;
-      old_debuginfo:=CurrentDebugInfo;
-      old_parser_file:=parser_current_file;
-      old_scanner:=CurrentScanner;
+      OldAsmData:=CurrentAsmData;
+      OldDebugInfo:=CurrentDebugInfo;
+      OldParserFile:=Parser_Current_File;
+      OldScanner:=CurrentScanner;
     end;
 
-  procedure tglobalstate.save_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
+  procedure TGlobalState.Save_SymTable_Stack(Stack: TSymTableStack; Kind: TSymTableStackKind);
     var
-      item: PSymTableStackItem;
-      m: tmodule;
-      id: LongInt;
+      Item: PSymTableStackItem;
+      M: TModule;
+      Id: LongInt;
     begin
-      if stack=nil then exit;
+      if Stack=nil then Exit;
 
-      item:=stack.stack;
-      while item<>nil do
+      Item:=Stack.Stack;
+      while Item<>nil do
         begin
-          id:=item^.symtable.moduleid;
-          item^.saved_moduleid:=id;
-          if (id<>CurrentModule.moduleid) and (id>0) then
+          Id:=Item^.SymTable.ModuleID;
+          Item^.Saved_ModuleID:=Id;
+          if (Id<>CurrentModule.ModuleID) and (Id>0) then
             begin
-              m:=get_module(id);
-              if m=nil then
+              M:=Get_Module(Id);
+              if M=nil then
                 begin
-                  writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' ',kind,' unknown moduleid: ',id);
-                  Internalerror(2026030103);
+                  WriteLn('tglobalstate.save_symtable_stack ',CurrentModule.ModuleName^,' ',CurrentModule.StateStr,' ',Kind,' unknown moduleid: ',Id);
+                  InternalError(2026030103);
                 end;
-              case kind of
+              case Kind of
                 stsk_global:
-                  if m.globalsymtable<>item^.symtable then
+                  if M.GlobalSymTable<>Item^.SymTable then
                     begin
-                      writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' globalsymstack: item is not globalsymtable of ', m.modulename^,' ',m.statestr);
-                      Internalerror(2026030101);
+                      WriteLn('tglobalstate.save_symtable_stack ',CurrentModule.ModuleName^,' ',CurrentModule.StateStr,' globalsymstack: item is not globalsymtable of ', M.ModuleName^,' ',M.StateStr);
+                      InternalError(2026030101);
                     end;
                 stsk_macro:
-                  if m.globalmacrosymtable<>item^.symtable then
+                  if M.GlobalMacroSymTable<>Item^.SymTable then
                     begin
-                      writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' globalmacrosymstack: item is not globalmacrosymtable of ', m.modulename^,' ',m.statestr);
-                      Internalerror(2026030102);
+                      WriteLn('tglobalstate.save_symtable_stack ',CurrentModule.ModuleName^,' ',CurrentModule.StateStr,' globalmacrosymstack: item is not globalmacrosymtable of ', M.ModuleName^,' ',M.StateStr);
+                      InternalError(2026030102);
                     end;
               end;
             end;
-          item:=item^.next;
+          Item:=Item^.Next;
         end;
     end;
 
-  procedure tglobalstate.restore;
+  procedure TGlobalState.Restore;
 
     begin
-      SetCurrentModule(old_current_module);
+      SetCurrentModule(OldCurrentModule);
 
       { restore scanner }
-      CurrentTokenPos:=oldtokenpos;
-      block_type:=old_block_type;
-      switchesstatestack:=old_switchesstatestack;
-      switchesstatestackpos:=old_switchesstatestackpos;
+      CurrentTokenPos:=OldTokenPos;
+      Block_Type:=OldBlockType;
+      SwitchesStateStack:=OldSwitchesStateStack;
+      SwitchesStateStackPos:=OldSwitchesStateStackPos;
 
       { restore cg }
-      parse_only:=oldparse_only;
+      parse_only:=OldParseOnly;
 
       { restore symtable state }
-      symtablestack:=oldsymtablestack;
-      if reload then
-        reload_symtable_stack(symtablestack,stsk_global);
-      macrosymtablestack:=oldmacrosymtablestack;
-      if reload then
-        reload_symtable_stack(macrosymtablestack,stsk_macro);
-      CurrentProcInfo:=oldcurrent_procinfo;
-      CurrentFilePos:=oldcurrent_filepos;
-      CurrentSettings:=old_settings;
-      status.verbosity:=old_verbosity;
+      SymTableStack:=OldSymTableStack;
+      if Reload then
+        Reload_SymTable_Stack(SymTableStack,stsk_global);
+      MacroSymTableStack:=OldMacroSymTableStack;
+      if Reload then
+        Reload_SymTable_Stack(MacroSymTableStack,stsk_macro);
+      CurrentProcInfo:=OldCurrentProcInfo;
+      CurrentFilePos:=OldCurrentFilePos;
+      CurrentSettings:=OldSettings;
+      Status.Verbosity:=OldVerbosity;
 
       { restore message settings which were recorded prior to unit switch }
-      RestoreLocalVerbosity(CurrentSettings.pmessage);
+      RestoreLocalVerbosity(CurrentSettings.PMessage);
 
       // These can be different
-      CurrentAsmData:=old_asmdata;
-      CurrentDebugInfo:=old_debuginfo;
+      CurrentAsmData:=OldAsmData;
+      CurrentDebugInfo:=OldDebugInfo;
     end;
 
-  procedure tglobalstate.reload_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
+  procedure TGlobalState.Reload_SymTable_Stack(Stack: TSymTableStack; Kind: TSymTableStackKind);
     var
-      item: PSymTableStackItem;
-      m: tmodule;
-      id: LongInt;
+      Item: PSymTableStackItem;
+      M: TModule;
+      Id: LongInt;
     begin
-      if stack=nil then exit;
-      if old_current_module.fromppu then
+      if Stack=nil then Exit;
+      if OldCurrentModule.FromPPU then
         begin
           { ppu does not have its own symtablestack }
-          writeln('tglobalstate.reload_symtable_stack ',old_current_module.modulename^,' ',old_current_module.statestr);
-          Internalerror(2026030106);
+          WriteLn('tglobalstate.reload_symtable_stack ',OldCurrentModule.ModuleName^,' ',OldCurrentModule.StateStr);
+          InternalError(2026030106);
         end;
-      item:=stack.stack;
-      while item<>nil do
+      Item:=Stack.Stack;
+      while Item<>nil do
         begin
-          id:=item^.saved_moduleid;
-          if (id<>old_current_module.moduleid) and (id>0) then
+          Id:=Item^.Saved_ModuleID;
+          if (Id<>OldCurrentModule.ModuleID) and (Id>0) then
             begin
-              m:=get_module(id);
-              case kind of
-                stsk_global: item^.symtable:=m.globalsymtable;
-                stsk_macro:  item^.symtable:=m.globalmacrosymtable;
+              M:=Get_Module(Id);
+              case Kind of
+                stsk_global: Item^.SymTable:=M.GlobalSymTable;
+                stsk_macro:  Item^.SymTable:=M.GlobalMacroSymTable;
               end;
             end;
-          item:=item^.next;
+          Item:=Item^.Next;
         end;
     end;
 
-  class procedure tglobalstate.clear_state;
+  class procedure TGlobalState.Clear_State;
     begin
-      symtablestack:=nil;
-      macrosymtablestack:=nil;
+      SymTableStack:=nil;
+      MacroSymTableStack:=nil;
       CurrentProcInfo:=nil;
 
-      block_type:=bt_none;
-      flushpendingswitchesstate;
-      switchesstatestack:=default(tswitchesstatestack);
-      switchesstatestackpos:=0;
+      Block_Type:=bt_none;
+      FlushPendingSwitchesState;
+      SwitchesStateStack:=default(TSwitchesStateStack);
+      SwitchesStateStackPos:=0;
 
       // keep "current_settings"
 
-      parse_only:=false;
+      parse_only:=False;
       CurrentAsmData:=nil;
       CurrentDebugInfo:=nil;
 
-      parser_current_file:='';
-      set_current_scanner(nil);
+      Parser_Current_File:='';
+      Set_Current_Scanner(nil);
     end;
 
-  constructor tglobalstate.create(for_module_switch: boolean);
+  constructor TGlobalState.Create(ForModuleSwitch: Boolean);
 
     begin
-      addstate(self);
-      save(for_module_switch);
+      AddState(Self);
+      Save(ForModuleSwitch);
     end;
 
-  destructor tglobalstate.destroy;
+  destructor TGlobalState.Destroy;
 
     begin
-      removestate(self);
-      inherited destroy;
+      RemoveState(Self);
+      inherited Destroy;
     end;
 
-  procedure tglobalstate.clearscanner;
+  procedure TGlobalState.ClearScanner;
 
   begin
-    old_scanner:=nil;
-    oldtokenpos:=Default(TFilePosInfo);
-    old_block_type:=bt_none;
+    OldScanner:=nil;
+    OldTokenPos:=Default(TFilePosInfo);
+    OldBlockType:=bt_none;
   end;
 
 initialization
-  onfreescanner:=@tglobalstate.remove_scanner_from_states;
+  OnFreeScanner:=@TGlobalState.Remove_Scanner_From_States;
 finalization
-  onfreescanner:=Nil;
+  OnFreeScanner:=Nil;
 end.
 

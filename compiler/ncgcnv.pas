@@ -33,7 +33,7 @@ interface
 
        { tcgtypeconvnode }
 
-       tcgtypeconvnode = class(ttypeconvnode)
+       TCGTypeConvNode = class(TTypeConvNode)
        private
          function needs_indirect:boolean;
        protected
@@ -63,42 +63,42 @@ interface
          procedure pass_generate_code;override;
        end;
 
-       tcgasnode = class(tasnode)
+       TCGAsNode = class(TAsNode)
          procedure pass_generate_code;override;
        end;
 
   implementation
 
     uses
-      cutils,verbose,globtype,globals,
-      aasmbase,aasmdata,symconst,symdef,symtable,
+      CUtils,Verbose,GlobType,Globals,
+      aasmbase,AAsmData,symconst,symdef,SymTable,
       nutils,ncon,
-      cpubase,systems,
+      cpubase,Systems,
       pass_2,
       cgbase,
       cgutils,cgobj,hlcgobj,
-      fmodule,
+      FModule,
       tgobj
       ;
 
 
-    function tcgtypeconvnode.needs_indirect:boolean;
+    function TCGTypeConvNode.needs_indirect:boolean;
       begin
         result:=(tf_supports_packages in TargetInfo.flags) and
                   (TargetInfo.system in systems_indirect_var_imports) and
                   (
-                    not assigned(CurrentModule) or
-                    (CurrentModule.globalsymtable<>systemunit)
+                    not Assigned(CurrentModule) or
+                    (CurrentModule.GlobalSymTable<>systemunit)
                   );
       end;
 
 
-    procedure tcgtypeconvnode.second_int_to_int;
+    procedure TCGTypeConvNode.second_int_to_int;
       var
         orgsize,
-        newsize : tcgsize;
+        newsize : TCgSize;
         ressize,
-        leftsize : longint;
+        leftsize : LongInt;
       begin
         newsize:=def_cgsize(resultdef);
 
@@ -121,12 +121,12 @@ interface
             if (location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
                (ressize<leftsize) then
               begin
-                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),cpointerdef.getreusable(resultdef),location.reference);
+                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),CPointerDef.getreusable(resultdef),location.reference);
                 location.size:=newsize;
                 if (TargetInfo.endian = ENDIAN_BIG) then
                   begin
                     inc(location.reference.offset,leftsize-ressize);
-                    location.reference.alignment:=newalignment(location.reference.alignment,leftsize-ressize);
+                    location.reference.alignment:=NewAlignment(location.reference.alignment,leftsize-ressize);
                   end;
               end
 {$if not defined(cpuhighleveltarget)}
@@ -164,7 +164,7 @@ interface
                 hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.register,location.register);
               end
             else if location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-              hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),cpointerdef.getreusable(resultdef),location.reference)
+              hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(left.resultdef),CPointerDef.getreusable(resultdef),location.reference)
 {$ifdef cpuhighleveltarget}
             { high level targets require the types to be correct in all cases }
             else if left.resultdef<>resultdef then
@@ -175,13 +175,13 @@ interface
 
 
 {$ifdef cpuflags}
-    procedure tcgtypeconvnode.second_int_to_bool;
+    procedure TCGTypeConvNode.second_int_to_bool;
       var
-        hregister : tregister;
-        href      : treference;
-        resflags  : tresflags;
-        hlabel    : tasmlabel;
-        newsize   : tcgsize;
+        hregister : TRegister;
+        href      : TReference;
+        resflags  : TResFlags;
+        hlabel    : TAsmLabel;
+        newsize   : TCgSize;
       begin
         SecondPass(left);
         if CodeGenError then
@@ -196,7 +196,7 @@ interface
                code path will be taken by checking expectloc, so they can call
                the inherited method in that case }
              if left.expectloc in [LOC_FLAGS,LOC_JUMP] then
-               internalerror(2014122901);
+               InternalError(2014122901);
              location_copy(location,left.location);
              newsize:=def_cgsize(resultdef);
              { change of size? change sign only if location is LOC_(C)REGISTER? Then we have to sign/zero-extend }
@@ -264,7 +264,7 @@ interface
               cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_OR,OS_INT,hregister,hregister);
             end;
           else
-            internalerror(200311301);
+            InternalError(200311301);
         end;
         { load flags to register }
         location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
@@ -277,18 +277,18 @@ interface
 {$endif cpuflags}
 
 
-    procedure tcgtypeconvnode.second_cstring_to_pchar;
+    procedure TCGTypeConvNode.second_cstring_to_pchar;
 
       var
-        hr : treference;
+        hr : TReference;
 
       begin
          if left.nodetype<>stringconstn then
-           internalerror(200601131);
+           InternalError(200601131);
          if not is_pchar(resultdef) and not is_pwidechar(resultdef) then
-           internalerror(2014032802);
+           InternalError(2014032802);
          location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-         case tstringconstnode(left).cst_type of
+         case TStringConstNode(left).cst_type of
            cst_conststring :
              begin
                location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,resultdef);
@@ -305,7 +305,7 @@ interface
            cst_unicodestring,
            cst_ansistring :
              begin
-               if tstringconstnode(left).len=0 then
+               if TStringConstNode(left).len=0 then
                 begin
                   { FPC_EMPTYCHAR is a widechar -> 2 bytes }
                   reference_reset(hr,2,[]);
@@ -322,21 +322,21 @@ interface
            cst_longstring:
              begin
                {!!!!!!!}
-               internalerror(8888);
+               InternalError(8888);
              end;
          end;
       end;
 
 
-    procedure tcgtypeconvnode.second_cstring_to_int;
+    procedure TCGTypeConvNode.second_cstring_to_int;
       begin
         { this can't happen because constants are already processed in
           pass 1 }
-        internalerror(200510013);
+        InternalError(200510013);
       end;
 
 
-    procedure tcgtypeconvnode.second_string_to_chararray;
+    procedure TCGTypeConvNode.second_string_to_chararray;
       begin
         if is_chararray(left.resultdef) then
           begin
@@ -344,11 +344,11 @@ interface
             exit;
           end;
         { should be handled already in resultdef pass (JM) }
-        internalerror(200108292);
+        InternalError(200108292);
       end;
 
 
-    procedure tcgtypeconvnode.second_array_to_pointer;
+    procedure TCGTypeConvNode.second_array_to_pointer;
 
       begin
          location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
@@ -357,7 +357,7 @@ interface
       end;
 
 
-    procedure tcgtypeconvnode.second_pointer_to_array;
+    procedure TCGTypeConvNode.second_pointer_to_array;
 
       begin
         { assume natural alignment, volatility of pointer has no effect on the volatility
@@ -398,14 +398,14 @@ interface
               location.reference.offset:=left.location.value;
             end
           else
-            internalerror(2002032216);
+            InternalError(2002032216);
         end;
       end;
 
 
-    procedure tcgtypeconvnode.second_char_to_string;
+    procedure TCGTypeConvNode.second_char_to_string;
       var
-        tmpref: treference;
+        tmpref: TReference;
       begin
          location_reset_ref(location,LOC_REFERENCE,OS_NO,2,[]);
          case TStringDef(resultdef).stringtype of
@@ -414,23 +414,23 @@ interface
                tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,resultdef.size,tt_normal,location.reference);
                tmpref:=location.reference;
                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,
-                 cpointerdef.getreusable(resultdef),
-                 cpointerdef.getreusable(left.resultdef),tmpref);
+                 CPointerDef.getreusable(resultdef),
+                 CPointerDef.getreusable(left.resultdef),tmpref);
                hlcg.a_load_loc_ref(CurrentAsmData.CurrAsmList,left.resultdef,left.resultdef,left.location,
                  tmpref);
                location_freetemp(CurrentAsmData.CurrAsmList,left.location);
              end;
            { the rest is removed in the resultdef pass and converted to compilerprocs }
            else
-            internalerror(4179);
+            InternalError(4179);
         end;
       end;
 
 
-    procedure tcgtypeconvnode.second_real_to_real;
+    procedure TCGTypeConvNode.second_real_to_real;
 {$ifdef x86}
       var
-        tr: treference;
+        tr: TReference;
 {$endif x86}
       begin
          location_reset(location,expectloc,def_cgsize(resultdef));
@@ -474,7 +474,7 @@ interface
                       hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.register,location.register,mms_movescalar);
                     end
                   else
-                    internalerror(2003012262);
+                    InternalError(2003012262);
                 end;
                 exit
               end;
@@ -510,27 +510,27 @@ interface
                       hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.register,location.register,mms_movescalar);
                     end;
                   else
-                    internalerror(2003012261);
+                    InternalError(2003012261);
                 end;
               end;
             else
-              internalerror(2002032215);
+              InternalError(2002032215);
          end;
       end;
 
 
-    procedure tcgtypeconvnode.second_cord_to_pointer;
+    procedure TCGTypeConvNode.second_cord_to_pointer;
       begin
         { this can't happen because constants are already processed in
           pass 1 }
-        internalerror(47423985);
+        InternalError(47423985);
       end;
 
 
-    procedure tcgtypeconvnode.second_proc_to_procvar;
+    procedure TCGTypeConvNode.second_proc_to_procvar;
       var
-        href: treference;
-        tmpreg: tregister;
+        href: TReference;
+        tmpreg: TRegister;
         procvarrectype: TRecordDef;
         procvarselfname: TIDString;
       begin
@@ -551,7 +551,7 @@ interface
                       hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,left.location.reference,location.register);
                     end;
                   else
-                    internalerror(2013031501)
+                    InternalError(2013031501)
                 end;
               end
             else
@@ -562,7 +562,7 @@ interface
                     begin
                       location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,resultdef);
                       { code field is the first one }
-                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(cprocvardef.getreusableprocaddr(TProcDef(left.resultdef),pc_normal)),cpointerdef.getreusable(resultdef),left.location.reference);
+                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(CProcVarDef.getreusableprocaddr(TProcDef(left.resultdef),pc_normal)),CPointerDef.getreusable(resultdef),left.location.reference);
                       hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,left.location.reference,location.register);
                     end;
                   LOC_REGISTER,LOC_CREGISTER:
@@ -573,7 +573,7 @@ interface
                         location.register:=left.location.registerhi;
                     end;
                   else
-                    internalerror(2013031502)
+                    InternalError(2013031502)
                 end;
               end;
           end
@@ -586,8 +586,8 @@ interface
                 { assigning a global function to a nested procvar -> create
                   tmethodpointer record and set the "frame pointer" to nil }
                 if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
-                  internalerror(2013031503);
-                location_reset_ref(location,LOC_REFERENCE,int_cgsize(resultdef.size),sizeof(pint),[]);
+                  InternalError(2013031503);
+                location_reset_ref(location,LOC_REFERENCE,int_cgsize(resultdef.size),sizeof(PInt),[]);
                 tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,resultdef.size,tt_normal,location.reference);
                 href:=location.reference;
                 if is_nested_pd(TAbstractProcDef(resultdef)) then
@@ -600,7 +600,7 @@ interface
                     procvarrectype:=TRecordDef(methodpointertype);
                     procvarselfname:='self';
                   end;
-                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(resultdef),cpointerdef.getreusable(procvarrectype),href);
+                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,CPointerDef.getreusable(resultdef),CPointerDef.getreusable(procvarrectype),href);
                 tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,voidcodepointertype);
                 hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,TProcDef(left.resultdef),voidcodepointertype,left.location.reference,tmpreg);
                 hlcg.g_load_reg_field_by_name(CurrentAsmData.CurrAsmList,voidcodepointertype,TRecordDef(procvarrectype),tmpreg,'proc',href);
@@ -612,7 +612,7 @@ interface
           end;
       end;
 
-    procedure Tcgtypeconvnode.second_nil_to_methodprocvar;
+    procedure TCGTypeConvNode.second_nil_to_methodprocvar;
     begin
       location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
       location.registerhi:=hlcg.getaddressregister(CurrentAsmData.currasmlist,voidpointertype);
@@ -621,9 +621,9 @@ interface
       hlcg.a_load_const_reg(CurrentAsmData.currasmlist,voidcodepointertype,0,location.register);
     end;
 
-    procedure tcgtypeconvnode.second_bool_to_int;
+    procedure TCGTypeConvNode.second_bool_to_int;
       var
-         newsize: tcgsize;
+         newsize: TCgSize;
       begin
          SecondPass(left);
          location_copy(location,left.location);
@@ -650,7 +650,7 @@ interface
       end;
 
 
-    procedure tcgtypeconvnode.second_bool_to_bool;
+    procedure TCGTypeConvNode.second_bool_to_bool;
       begin
         { we can reuse the conversion already available
           in bool_to_int to resize the value. But when the
@@ -665,7 +665,7 @@ interface
           begin
             SecondPass(left);
             if (left.location.loc <> left.expectloc) then
-              internalerror(2010081601);
+              InternalError(2010081601);
             location_copy(location,left.location);
           end
         else if (resultdef.size=left.resultdef.size) and
@@ -681,10 +681,10 @@ interface
       end;
 
 
-    procedure tcgtypeconvnode.second_ansistring_to_pchar;
+    procedure TCGTypeConvNode.second_ansistring_to_pchar;
       var
-         l1 : tasmlabel;
-         hr : treference;
+         l1 : TAsmLabel;
+         hr : TReference;
       begin
          location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
          CurrentAsmData.getjumplabel(l1);
@@ -701,9 +701,9 @@ interface
       end;
 
 
-    procedure tcgtypeconvnode.second_class_to_intf;
+    procedure TCGTypeConvNode.second_class_to_intf;
       var
-         l1 : tasmlabel;
+         l1 : TAsmLabel;
          hd : TObjectDef;
          ImplIntf : TImplementedInterface;
       begin
@@ -733,13 +733,13 @@ interface
                  hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,left.location.value,location.register);
               end
             else
-              internalerror(121120001);
+              InternalError(121120001);
          end;
          hd:=TObjectDef(left.resultdef);
-         while assigned(hd) do
+         while Assigned(hd) do
            begin
              ImplIntf:=find_implemented_interface(hd,TObjectDef(resultdef));
-             if assigned(ImplIntf) then
+             if Assigned(ImplIntf) then
                begin
                  case ImplIntf.IType of
                    etStandard:
@@ -750,34 +750,34 @@ interface
                        break;
                      end;
                    else
-                     internalerror(200802163);
+                     InternalError(200802163);
                  end;
                end;
              hd:=hd.childof;
            end;
          if hd=nil then
-           internalerror(2002081301);
+           InternalError(2002081301);
          if l1=nil then
-           internalerror(2013120101);
+           InternalError(2013120101);
          cg.a_label(CurrentAsmData.CurrAsmList,l1);
       end;
 
 
-    procedure tcgtypeconvnode.second_char_to_char;
+    procedure TCGTypeConvNode.second_char_to_char;
       begin
-        internalerror(2007081202);
+        InternalError(2007081202);
       end;
 
-    procedure tcgtypeconvnode.second_elem_to_openarray;
+    procedure TCGTypeConvNode.second_elem_to_openarray;
       begin
         { nothing special to do by default }
         second_nothing;
       end;
 
 
-    procedure tcgtypeconvnode.second_nothing;
+    procedure TCGTypeConvNode.second_nothing;
       var
-        newsize : tcgsize;
+        newsize : TCgSize;
       begin
         { we reuse the old value }
         location_copy(location,left.location);
@@ -831,14 +831,14 @@ interface
 
 
 {$ifdef TESTOBJEXT2}
-    procedure tcgtypeconvnode.checkobject;
+    procedure TCGTypeConvNode.checkobject;
       begin
         { no checking by default }
       end;
 {$endif TESTOBJEXT2}
 
 
-    procedure tcgtypeconvnode.pass_generate_code;
+    procedure TCGTypeConvNode.pass_generate_code;
       begin
         { the boolean routines can be called with LOC_JUMP and
           call secondpass themselves in the helper }
@@ -858,13 +858,13 @@ interface
             (TPointerDef(p^.resultdef).definition.typ=objectdef) and not
             (TObjectDef(TPointerDef(p^.resultdef).definition).isclass) and
             ((TObjectDef(TPointerDef(p^.resultdef).definition).options and oo_hasvmt)<>0) and
-            (cs_check_range in CurrentSettings.localswitches) then
+            (cs_check_range in CurrentSettings.LocalSwitches) then
            checkobject;
 {$endif TESTOBJEXT2}
       end;
 
 
-    procedure tcgasnode.pass_generate_code;
+    procedure TCGAsNode.pass_generate_code;
       begin
         SecondPass(call);
         location_copy(location,call.location);
@@ -872,6 +872,6 @@ interface
 
 
 begin
-  ctypeconvnode := tcgtypeconvnode;
-  casnode := tcgasnode;
+  CTypeConvNode := TCGTypeConvNode;
+  CAsNode := TCGAsNode;
 end.

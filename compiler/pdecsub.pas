@@ -27,14 +27,14 @@ interface
 
     uses
       { common }
-      cclasses,
+      CClasses,
       { scanner }
       tokens,
       { symtable }
-      symconst,symtype,symdef,symsym;
+      symconst,symtype,symdef,SymSym;
 
     type
-      tpdflag=(
+      TPDFlag=(
         pd_body,         { directive needs a body }
         pd_implemen,     { directive can be used in implementation section }
         pd_interface,    { directive can be used in interface section }
@@ -53,14 +53,14 @@ interface
         pd_javaclass,    { directive can be used with Java class }
         pd_intfjava      { directive can be used with Java interface }
       );
-      tpdflags=set of tpdflag;
+      TPDFlags=set of TPDFlag;
 
-      tparse_proc_flag=(
+      TParseProcFlag=(
         ppf_classmethod,
         ppf_generic,
         ppf_anonymous
       );
-      tparse_proc_flags=set of tparse_proc_flag;
+      TParseProcFlags=set of TParseProcFlag;
 
     function  check_proc_directive(isprocvar:boolean):boolean;
 
@@ -68,13 +68,13 @@ interface
     procedure proc_set_mangledname(pd:TProcDef);
 
     procedure parse_parameter_dec(pd:TAbstractProcDef);
-    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:tpdflags);
+    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:TPDFlags);
     procedure parse_proctype_directives(pd_or_invkdef:TDef);
     procedure parse_object_proc_directives(pd:TProcDef);
     procedure parse_record_proc_directives(pd:TProcDef);
-    function  parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:tparse_proc_flags;genericdef:TDef;generictypelist:tfphashobjectlist;out pd:TProcDef):boolean;
-    function  parse_proc_dec(flags:tparse_proc_flags;astruct:TAbstractRecordDef):TProcDef;
-    procedure parse_proc_dec_finish(pd:TProcDef;flags:tparse_proc_flags;astruct:TAbstractRecordDef);
+    function  parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:TParseProcFlags;genericdef:TDef;generictypelist:TFPHashObjectList;out pd:TProcDef):boolean;
+    function  parse_proc_dec(flags:TParseProcFlags;astruct:TAbstractRecordDef):TProcDef;
+    procedure parse_proc_dec_finish(pd:TProcDef;flags:TParseProcFlags;astruct:TAbstractRecordDef);
 
     { parse a record method declaration (not a (class) constructor/destructor) }
     function parse_record_method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
@@ -92,22 +92,22 @@ implementation
     uses
        SysUtils,
        { common }
-       cutils,
+       CUtils,
        { global }
-       globtype,globals,verbose,constexp,
-       systems,
-       cpuinfo,
+       GlobType,Globals,Verbose,ConstExp,
+       Systems,
+       CPUInfo,
        { assembler }
        aasmbase,
        { symtable }
-       symbase,symcpu,symtable,symutil,defutil,defcmp,
+       SymBase,symcpu,SymTable,symutil,defutil,defcmp,
        { parameter handling }
        paramgr,cpupara,
        { pass 1 }
-       fmodule,node,htypechk,ncon,nld,
+       FModule,node,htypechk,ncon,nld,
        objcutil,
        { parser }
-       scanner,
+       Scanner,
        syscinfo,
        pbase,pexpr,ptype,pdecl,pparautl,pgenutil
        ;
@@ -124,7 +124,7 @@ implementation
       begin
         if obj.typ=recorddef then
           begin
-            symtablestack.push(obj.symtable);
+            SymTableStack.push(obj.SymTable);
             result:=1;
             exit;
           end;
@@ -136,7 +136,7 @@ implementation
           while _class.childof<>hp do
             _class:=_class.childof;
           hp:=_class;
-          symtablestack.push(_class.symtable);
+          SymTableStack.push(_class.SymTable);
           inc(result);
         until hp=obj;
       end;
@@ -155,15 +155,15 @@ implementation
       begin
         if obj.typ=recorddef then
           begin
-            symtablestack.pop(obj.symtable);
+            SymTableStack.pop(obj.SymTable);
             result:=1;
             exit;
           end;
         result:=0;
         _class:=TObjectDef(obj);
-        while assigned(_class) do
+        while Assigned(_class) do
           begin
-            symtablestack.pop(_class.symtable);
+            SymTableStack.pop(_class.SymTable);
             _class:=_class.childof;
             inc(result);
           end;
@@ -185,7 +185,7 @@ implementation
           begin
             { Count parameters }
             if (paranr>=10) then
-              inc(plongint(arg)^);
+              inc(PLongInt(arg)^);
             { First parameter must be var }
             if (paranr=10) and
                (varspez<>vs_var) then
@@ -199,13 +199,13 @@ implementation
         handle_procvar needs the same changes
       }
       type
-        tppv = (pv_none,pv_proc,pv_func);
+        TPPV = (pv_none,pv_proc,pv_func);
       var
         sc      : TFPObjectList;
         hdef    : TDef;
         arrayelementdef : TDef;
         vs      : TParaVarSym;
-        i       : longint;
+        i       : LongInt;
         srsym   : TSym;
         pv      : TProcVarDef;
         varspez : TVarSpez;
@@ -213,7 +213,7 @@ implementation
         defaultrequired : boolean;
         old_block_type : TBlockType;
         currparast : TParaSymTable;
-        parseprocvar : tppv;
+        parseprocvar : TPPV;
         locationstr : string;
         paranr : integer;
         explicit_paraloc,
@@ -224,7 +224,7 @@ implementation
         procedure handle_default_para_value;
           var
             convpd : TProcDef;
-            doconv : tconverttype;
+            doconv : TConvertType;
             nodetype : TNodeType;
             bt : TBlockType;
           begin
@@ -242,12 +242,12 @@ implementation
                  Message(parser_e_default_value_only_one_para);
                if not(vs.varspez in [vs_value,vs_const,vs_constref]) then
                  Message(parser_e_default_value_val_const);
-               bt:=block_type;
-               block_type:=bt_const;
+               bt:=Block_Type;
+               Block_Type:=bt_const;
                { prefix 'def' to the parameter name }
                defaultvalue:=ReadConstant('$def'+vs.name,vs.fileinfo,nodetype);
-               block_type:=bt;
-               if assigned(defaultvalue) then
+               Block_Type:=bt;
+               if Assigned(defaultvalue) then
                  begin
                    include(defaultvalue.symoptions,sp_internal);
                    pd.parast.insertsym(defaultvalue);
@@ -267,7 +267,7 @@ implementation
 
 
       begin
-        old_block_type:=block_type;
+        old_block_type:=Block_Type;
         explicit_paraloc:=false;
         consume(_LKLAMMER);
         { Delphi/Kylix supports nonsense like }
@@ -280,7 +280,7 @@ implementation
         sc:=TFPObjectList.create(false);
         defaultrequired:=false;
         paranr:=0;
-        block_type:=bt_var;
+        Block_Type:=bt_var;
         is_univ:=false;
         repeat
           parseprocvar:=pv_none;
@@ -290,28 +290,28 @@ implementation
             if try_to_consume(_CONST) then
               varspez:=vs_const
           else
-            if (m_out in CurrentSettings.modeswitches) and
+            if (m_out in CurrentSettings.ModeSwitches) and
                try_to_consume(_OUT) then
               varspez:=vs_out
           else
            if try_to_consume(_CONSTREF) then
              varspez:=vs_constref
           else
-            if (m_mac in CurrentSettings.modeswitches) and
+            if (m_mac in CurrentSettings.ModeSwitches) and
                try_to_consume(_POINTPOINTPOINT) then
               begin
                 include(pd.procoptions,po_varargs);
                 break;
               end
           else
-            if (m_nested_procvars in CurrentSettings.modeswitches) and
+            if (m_nested_procvars in CurrentSettings.ModeSwitches) and
                try_to_consume(_PROCEDURE) then
               begin
                 parseprocvar:=pv_proc;
                 varspez:=vs_const;
               end
           else
-            if (m_nested_procvars in CurrentSettings.modeswitches) and
+            if (m_nested_procvars in CurrentSettings.ModeSwitches) and
                try_to_consume(_FUNCTION) then
               begin
                 parseprocvar:=pv_func;
@@ -325,9 +325,9 @@ implementation
           sc.clear;
           repeat
             inc(paranr);
-            vs:=cparavarsym.create(CurrentScanner.orgpattern,paranr*10,varspez,generrordef,[]);
+            vs:=CParaVarSym.create(CurrentScanner.orgpattern,paranr*10,varspez,generrordef,[]);
             currparast.insertsym(vs);
-            if assigned(vs.owner) then
+            if Assigned(vs.owner) then
              sc.add(vs)
             else
              vs.free; // no nil needed
@@ -338,15 +338,15 @@ implementation
           if parseprocvar<>pv_none then
            begin
              { inline procvar definitions are always nested procvars }
-             pv:=cprocvardef.create(normal_function_level+1,true);
+             pv:=CProcVarDef.create(normal_function_level+1,true);
              if CurrentScanner.token=_LKLAMMER then
                parse_parameter_dec(pv);
              if parseprocvar=pv_func then
               begin
-                block_type:=bt_var_type;
+                Block_Type:=bt_var_type;
                 consume(_COLON);
                 single_type(pv.returndef,[]);
-                block_type:=bt_var;
+                Block_Type:=bt_var;
               end;
              { possible proc directives }
              if check_proc_directive(true) then
@@ -364,7 +364,7 @@ implementation
              need_array:=false;
              { bitpacked open array are not yet supported }
              if (CurrentScanner.token=_PACKED) and
-                not(cs_bitpacking in CurrentSettings.localswitches) then
+                not(cs_bitpacking in CurrentSettings.LocalSwitches) then
                begin
                  consume(_PACKED);
                  need_array:=true;
@@ -375,9 +375,9 @@ implementation
                 consume(_ARRAY);
                 consume(_OF);
                 { define range and type of range }
-                hdef:=carraydef.create_openarray;
+                hdef:=CArrayDef.create_openarray;
                 { array of const ? }
-                if (CurrentScanner.token=_CONST) and (m_objpas in CurrentSettings.modeswitches) then
+                if (CurrentScanner.token=_CONST) and (m_objpas in CurrentSettings.ModeSwitches) then
                  begin
                    consume(_CONST);
                    srsym:=search_system_type('TVARREC');
@@ -387,19 +387,19 @@ implementation
                 else
                  begin
                    { define field type }
-                   if m_delphi in CurrentSettings.modeswitches then
+                   if m_delphi in CurrentSettings.ModeSwitches then
                      stoptions:=[stoAllowSpecialization]
                    else
                      stoptions:=[];
                    single_type(arrayelementdef,stoptions);
-                   if assigned(arrayelementdef.typesym) then
+                   if Assigned(arrayelementdef.typesym) then
                      check_hints(arrayelementdef.typesym,arrayelementdef.typesym.symoptions,arrayelementdef.typesym.deprecatedmsg);
                    TArrayDef(hdef).elementdef:=arrayelementdef;
                  end;
               end
              else
               begin
-                if (m_mac in CurrentSettings.modeswitches) then
+                if (m_mac in CurrentSettings.ModeSwitches) then
                   is_univ:=try_to_consume(_UNIV);
 
                 { this is not really working and generates internal errors
@@ -407,9 +407,9 @@ implementation
                   hdef:=ctypedformaltype
                 else }
                   begin
-                    block_type:=bt_var_type;
+                    Block_Type:=bt_var_type;
                     single_type(hdef,[stoAllowSpecialization]);
-                    block_type:=bt_var;
+                    Block_Type:=bt_var;
                   end;
 
                 { open string ? }
@@ -420,7 +420,7 @@ implementation
                         begin
                           { not 100% Delphi-compatible: type xstr=string[255] cannot
                             become an openstring there, while here it can }
-                          if (cs_openstring in CurrentSettings.localswitches) and
+                          if (cs_openstring in CurrentSettings.LocalSwitches) and
                              (TStringDef(hdef).len=255) then
                             hdef:=openshortstringtype
                         end;
@@ -441,14 +441,14 @@ implementation
                 locationstr:='';
 
                 { default parameter }
-                if (m_default_para in CurrentSettings.modeswitches) then
+                if (m_default_para in CurrentSettings.ModeSwitches) then
                   handle_default_para_value;
               end;
            end
           else
            hdef:=cformaltype;
 
-          if assigned(hdef.typesym) then
+          if Assigned(hdef.typesym) then
             check_hints(hdef.typesym,hdef.typesym.symoptions,hdef.typesym.deprecatedmsg);
 
           { File types are only allowed for var and out parameters }
@@ -485,12 +485,12 @@ implementation
         sc.free;
         sc := nil;
         { reset object options }
-        block_type:=old_block_type;
+        Block_Type:=old_block_type;
         consume(_RKLAMMER);
       end;
 
 
-    function parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:tparse_proc_flags;genericdef:TDef;generictypelist:tfphashobjectlist;out pd:TProcDef):boolean;
+    function parse_proc_head(astruct:TAbstractRecordDef;potype:TProcTypeOption;flags:TParseProcFlags;genericdef:TDef;generictypelist:TFPHashObjectList;out pd:TProcDef):boolean;
       var
         hs       : string;
         orgsp,sp,orgspnongen,spnongen : TIDString;
@@ -500,7 +500,7 @@ implementation
         classstartfilepos,
         procstartfilepos : TFilePosInfo;
         i,
-        index : longint;
+        index : LongInt;
         addgendummy,
         hadspecialize,
         firstpart,
@@ -517,8 +517,8 @@ implementation
         old_current_structdef: TAbstractRecordDef;
         old_current_genericdef,
         old_current_specializedef: TStoredDef;
-        lasttoken,lastidtoken: ttoken;
-        genericparams : tfphashobjectlist;
+        lasttoken,lastidtoken: TToken;
+        genericparams : TFPHashObjectList;
 
         procedure parse_operator_name;
          begin
@@ -542,7 +542,7 @@ implementation
                     _ADDREF:optoken:=_OP_ADDREF;
                     _COPY:optoken:=_OP_COPY;
                     else
-                    if (m_delphi in CurrentSettings.modeswitches) then
+                    if (m_delphi in CurrentSettings.ModeSwitches) then
                       case lastidtoken of
                         _IMPLICIT:optoken:=_ASSIGNMENT;
                         _NEGATIVE:optoken:=_MINUS;
@@ -588,12 +588,12 @@ implementation
         procedure consume_proc_name;
           var
             s : string;
-            i : longint;
+            i : LongInt;
             sym : TTypeSym;
           begin
             lasttoken:=CurrentScanner.token;
             lastidtoken:=CurrentScanner.idtoken;
-            if assigned(genericparams) then
+            if Assigned(genericparams) then
               for i:=0 to genericparams.count-1 do
                 begin
                   sym:=TTypeSym(genericparams[i]);
@@ -622,11 +622,11 @@ implementation
                 spnongen:=sp;
                 orgspnongen:=orgsp;
                 if firstpart and
-                    not (m_delphi in CurrentSettings.modeswitches) and
+                    not (m_delphi in CurrentSettings.ModeSwitches) and
                     (CurrentScanner.idtoken=_SPECIALIZE) then
                   hadspecialize:=true;
                 consume(_ID);
-                if ((ppf_generic in flags) or (m_delphi in CurrentSettings.modeswitches)) and
+                if ((ppf_generic in flags) or (m_delphi in CurrentSettings.ModeSwitches)) and
                     (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                   begin
                     consume(CurrentScanner.token);
@@ -635,10 +635,10 @@ implementation
                     else
                       begin
                         genericparams:=parse_generic_parameters(true);
-                        if not assigned(genericparams) then
-                          internalerror(2015061201);
+                        if not Assigned(genericparams) then
+                          InternalError(2015061201);
                         if genericparams.count=0 then
-                          internalerror(2015061202);
+                          InternalError(2015061202);
                         s:='';
                         str(genericparams.count,s);
                         spnongen:=sp;
@@ -661,7 +661,7 @@ implementation
             storepos:=CurrentTokenPos;
             CurrentTokenPos:=procstartfilepos;
             searchsym(sp,result,srsymtable);
-            if not assigned(result) then
+            if not Assigned(result) then
               begin
                 if gen_error then
                   identifier_not_found(orgsp);
@@ -672,20 +672,20 @@ implementation
 
         function handle_generic_interface:boolean;
           var
-            i : longint;
+            i : LongInt;
             sym : TTypeSym;
             typesrsym : TSym;
             typesrsymtable : TSymTable;
             hierarchy,
             specializename,
-            prettyname: ansistring;
+            prettyname: AnsiString;
             error : boolean;
             genname,
-            ugenname : tidstring;
-            module : tmodule;
+            ugenname : TIDString;
+            module : TModule;
           begin
             result:=false;
-            if not assigned(genericparams) then
+            if not Assigned(genericparams) then
               exit;
             specializename:='$';
             prettyname:='';
@@ -707,9 +707,9 @@ implementation
                     continue;
                   end;
                 module:=find_module_from_symtable(TTypeSym(typesrsym).typedef.owner);
-                if not assigned(module) then
-                  internalerror(2016112803);
-                specializename:=specializename+'_$'+hexstr(module.moduleid,8)+'$$'+TTypeSym(typesrsym).typedef.UniqueIDStr;
+                if not Assigned(module) then
+                  InternalError(2016112803);
+                specializename:=specializename+'_$'+HexStr(module.ModuleID,8)+'$$'+TTypeSym(typesrsym).typedef.UniqueIDStr;
                 if i>0 then
                   prettyname:=prettyname+',';
                 prettyname:=prettyname+TTypeSym(typesrsym).prettyname;
@@ -729,18 +729,18 @@ implementation
               end;
 
             module:=find_module_from_symtable(TTypeSym(typesrsym).owner);
-            if not assigned(module) then
-              internalerror(2022102105);
+            if not Assigned(module) then
+              InternalError(2022102105);
 
             hierarchy:=TTypeSym(typesrsym).typedef.ownerhierarchyname;
             if hierarchy<>'' then
               hierarchy:='.'+hierarchy;
 
-            genname:=generate_generic_name(sp,specializename,module.modulename^+hierarchy);
+            genname:=generate_generic_name(sp,specializename,module.ModuleName^+hierarchy);
             ugenname:=upper(genname);
 
             srsym:=search_object_name(ugenname,false);
-            if not assigned(srsym) then
+            if not Assigned(srsym) then
               begin
                 Message1(type_e_generic_declaration_does_not_match,sp+'<'+prettyname+'>');
                 srsym:=generrorsym;
@@ -754,7 +754,7 @@ implementation
             node:=factor(false,[ef_type_only,ef_had_specialize]);
             if node.nodetype=typen then
               begin
-                sp:=ttypenode(node).typedef.typesym.name;
+                sp:=TTypeNode(node).typedef.typesym.name;
               end
             else
               sp:='';
@@ -762,20 +762,20 @@ implementation
 
         function check_generic_parameters(def:TStoredDef):boolean;
           var
-            i : longint;
+            i : LongInt;
             declsym,
             implsym : TSym;
             impltype : TTypeSym absolute implsym;
-            implname : tsymstr;
+            implname : TSymStr;
             fileinfo : TFilePosInfo;
           begin
             result:=true;
-            if not assigned(def.genericparas) then
-              internalerror(2018090102);
-            if not assigned(genericparams) then
-              internalerror(2018090103);
+            if not Assigned(def.genericparas) then
+              InternalError(2018090102);
+            if not Assigned(genericparams) then
+              InternalError(2018090103);
             if def.genericparas.count<>genericparams.count then
-              internalerror(2018090104);
+              InternalError(2018090104);
             for i:=0 to def.genericparas.count-1 do
               begin
                 declsym:=TSym(def.genericparas[i]);
@@ -821,17 +821,17 @@ implementation
 
         { ensure that we don't insert into a withsymtable (can happen with
           anonymous functions) }
-        checkstack:=symtablestack.stack;
-        while checkstack^.symtable.symtabletype in [withsymtable] do
+        checkstack:=SymTableStack.stack;
+        while checkstack^.SymTable.symtabletype in [withsymtable] do
           checkstack:=checkstack^.next;
-        insertst:=checkstack^.symtable;
+        insertst:=checkstack^.SymTable;
 
-        if not assigned(genericdef) then
+        if not Assigned(genericdef) then
           begin
             if ppf_anonymous in flags then
               begin
                 if not (insertst.symtabletype in [localsymtable,staticsymtable]) then
-                  internalerror(2021050101);
+                  InternalError(2021050101);
                 { generate a unique name for the anonymous function; don't use
                   something like file position however as this might be inside
                   an include file that's included multiple times }
@@ -845,9 +845,9 @@ implementation
               consume_proc_name;
 
             { examine interface map: function/procedure iname.functionname=locfuncname }
-            if assigned(astruct) and
+            if Assigned(astruct) and
                (astruct.typ=objectdef) and
-               assigned(TObjectDef(astruct).ImplementedInterfaces) and
+               Assigned(TObjectDef(astruct).ImplementedInterfaces) and
                (TObjectDef(astruct).ImplementedInterfaces.count>0) and
                (
                  (CurrentScanner.token=_POINT) or
@@ -864,7 +864,7 @@ implementation
                  srsym:=search_object_name(sp,true);
                { qualifier is interface? }
                ImplIntf:=nil;
-               if assigned(srsym) and
+               if Assigned(srsym) and
                   (srsym.typ=typesym) and
                   (TTypeSym(srsym).typedef.typ=objectdef) then
                  ImplIntf:=find_implemented_interface(TObjectDef(astruct),TObjectDef(TTypeSym(srsym).typedef));
@@ -890,7 +890,7 @@ implementation
                { Create unique name <interface>.<method> }
                hs:=sp+'.'+CurrentScanner.pattern;
                consume(_EQ);
-               if assigned(ImplIntf) and
+               if Assigned(ImplIntf) and
                   (CurrentScanner.token=_ID) then
                  ImplIntf.AddMapping(hs,CurrentScanner.pattern);
                consume(_ID);
@@ -898,13 +898,13 @@ implementation
                exit;
              end;
 
-            if assigned(genericparams) and assigned(CurrentGenericDef) then
+            if Assigned(genericparams) and Assigned(CurrentGenericDef) then
               Message(parser_f_no_generic_inside_generic);
 
             { method  ? }
             srsym:=nil;
-            if not assigned(astruct) and
-               (symtablestack.top.symtablelevel=main_program_level) and
+            if not Assigned(astruct) and
+               (SymTableStack.top.symtablelevel=main_program_level) and
                try_to_consume(_POINT) then
              begin
                repeat
@@ -914,7 +914,7 @@ implementation
                  { throw the error at the right location }
                  oldfilepos:=CurrentFilePos;
                  CurrentFilePos:=procstartfilepos;
-                 if not assigned(astruct) and not assigned(srsym) then
+                 if not Assigned(astruct) and not Assigned(srsym) then
                    srsym:=search_object_name(sp,true);
                  CurrentFilePos:=oldfilepos;
 
@@ -925,7 +925,7 @@ implementation
                  if (srsym.typ=typesym) and
                      (TTypeSym(srsym).typedef.typ in [objectdef,recorddef]) and
                      TStoredDef(TTypeSym(srsym).typedef).is_generic and
-                     assigned(genericparams) then
+                     Assigned(genericparams) then
                    { this is recoverable, so no further action necessary }
                    check_generic_parameters(TStoredDef(TTypeSym(srsym).typedef));
 
@@ -943,8 +943,8 @@ implementation
                       else
                       if (potype=potype_operator) and (optoken=NOTOKEN) then
                         parse_operator_name;
-                    srsym:=TSym(astruct.symtable.Find(sp));
-                    if assigned(srsym) then
+                    srsym:=TSym(astruct.SymTable.Find(sp));
+                    if Assigned(srsym) then
                      begin
                        if srsym.typ=procsym then
                          aprocsym:=TProcSym(srsym)
@@ -958,13 +958,13 @@ implementation
                        else
                          begin
                            {  we use a different error message for tp7 so it looks more compatible }
-                           if (m_fpc in CurrentSettings.modeswitches) then
+                           if (m_fpc in CurrentSettings.ModeSwitches) then
                              Message1(parser_e_overloaded_no_procedure,srsym.realname)
                            else
                              Message(parser_e_methode_id_expected);
                            { rename the name to an unique name to avoid an
                              error when inserting the symbol in the symtable }
-                           orgsp:=orgsp+'$'+tostr(CurrentFilePos.line);
+                           orgsp:=orgsp+'$'+ToStr(CurrentFilePos.line);
                          end;
                      end
                     else
@@ -984,7 +984,7 @@ implementation
                if (not parse_only) and
                   ((potype in [potype_constructor,potype_destructor,
                                potype_class_constructor,potype_class_destructor]) or
-                   ((potype=potype_operator) and (m_delphi in CurrentSettings.modeswitches))) then
+                   ((potype=potype_operator) and (m_delphi in CurrentSettings.ModeSwitches))) then
                  Message(parser_e_only_methods_allowed);
 
                repeat
@@ -1005,24 +1005,24 @@ implementation
 
                  { Also look in the globalsymtable if we didn't found
                    the symbol in the localsymtable }
-                 if not assigned(srsym) and
+                 if not Assigned(srsym) and
                     not(parse_only) and
-                    (symtablestack.top=CurrentModule.localsymtable) and
-                    assigned(CurrentModule.globalsymtable) then
-                   srsym:=TSym(CurrentModule.globalsymtable.Find(sp));
+                    (SymTableStack.top=CurrentModule.localsymtable) and
+                    Assigned(CurrentModule.GlobalSymTable) then
+                   srsym:=TSym(CurrentModule.GlobalSymTable.Find(sp));
 
                  { if the symbol isn't assigned, but we're parsing a class or
                    object then check in the parent types for symbols of the same
                    name that are generics and declare the new symbol as a generic
                    dummy symbol }
 
-                 if not assigned(srsym) and is_class_or_object(astruct) then
+                 if not Assigned(srsym) and is_class_or_object(astruct) then
                    begin
                      parentdef:=TObjectDef(astruct).childof;
-                     while assigned(parentdef) do
+                     while Assigned(parentdef) do
                        begin
-                         srsym:=TSym(parentdef.symtable.Find(sp));
-                         if assigned(srsym) and (sp_generic_dummy in srsym.symoptions) then
+                         srsym:=TSym(parentdef.SymTable.Find(sp));
+                         if Assigned(srsym) and (sp_generic_dummy in srsym.symoptions) then
                            begin
                              addgendummy:=true;
                              break;
@@ -1033,7 +1033,7 @@ implementation
                    end;
 
                  { Check if overloaded is a procsym }
-                 if assigned(srsym) then
+                 if Assigned(srsym) then
                    begin
                      if srsym.typ=procsym then
                        aprocsym:=TProcSym(srsym)
@@ -1046,7 +1046,7 @@ implementation
                             searchagain:=true;
                           end
                          else
-                         if (m_delphi in CurrentSettings.modeswitches) and
+                         if (m_delphi in CurrentSettings.ModeSwitches) and
                             (srsym.typ=absolutevarsym) and
                             ([vo_is_funcret,vo_is_result]*TAbstractVarSym(srsym).varoptions=[vo_is_funcret]) then
                            begin
@@ -1056,7 +1056,7 @@ implementation
                          else if (srsym.typ=typesym) and
                              (sp_generic_dummy in srsym.symoptions) and
                              (TTypeSym(srsym).typedef.typ=undefineddef) and
-                             not assigned(genericparams) then
+                             not Assigned(genericparams) then
                            begin
                              { this is a generic dummy symbol that has not yet
                                been used; so we rename the dummy symbol and continue
@@ -1068,13 +1068,13 @@ implementation
                          else
                           begin
                             {  we use a different error message for tp7 so it looks more compatible }
-                            if (m_fpc in CurrentSettings.modeswitches) then
+                            if (m_fpc in CurrentSettings.ModeSwitches) then
                               Message1(parser_e_overloaded_no_procedure,srsym.realname)
                             else
                               Message1(sym_e_duplicate_id,srsym.realname);
                             { rename the name to an unique name to avoid an
                               error when inserting the symbol in the symtable }
-                            orgsp:=orgsp+'$'+tostr(CurrentFilePos.line);
+                            orgsp:=orgsp+'$'+ToStr(CurrentFilePos.line);
                           end;
                        end;
                   end;
@@ -1082,7 +1082,7 @@ implementation
              end;
 
             { test again if assigned, it can be reset to recover }
-            if not assigned(aprocsym) then
+            if not Assigned(aprocsym) then
               begin
                 { create a new procsym and set the real filepos }
                 CurrentTokenPos:=procstartfilepos;
@@ -1092,13 +1092,13 @@ implementation
                   begin
                     aprocsym:=TProcSym(insertst.Find(sp));
                     if aprocsym=nil then
-                      aprocsym:=cprocsym.create('$'+sp);
+                      aprocsym:=CProcSym.create('$'+sp);
                   end
                 else
                 if (potype in [potype_class_constructor,potype_class_destructor]) then
-                  aprocsym:=cprocsym.create('$'+lower(sp))
+                  aprocsym:=CProcSym.create('$'+lower(sp))
                 else
-                  aprocsym:=cprocsym.create(orgsp);
+                  aprocsym:=CProcSym.create(orgsp);
                 if ppf_anonymous in flags then
                   include(aprocsym.symoptions,sp_internal);
                 if addgendummy then
@@ -1109,15 +1109,15 @@ implementation
 
         { to get the correct symtablelevel we must ignore ObjectSymtables }
         st:=nil;
-        checkstack:=symtablestack.stack;
-        while assigned(checkstack) do
+        checkstack:=SymTableStack.stack;
+        while Assigned(checkstack) do
           begin
-            st:=checkstack^.symtable;
-            if st.symtabletype in [staticsymtable,globalsymtable,localsymtable] then
+            st:=checkstack^.SymTable;
+            if st.symtabletype in [staticsymtable,GlobalSymTable,localsymtable] then
               break;
             checkstack:=checkstack^.next;
           end;
-        pd:=cprocdef.create(st.symtablelevel+1,not assigned(genericdef));
+        pd:=CProcDef.create(st.symtablelevel+1,not Assigned(genericdef));
         pd.struct:=astruct;
         pd.procsym:=aprocsym;
         pd.proctypeoption:=potype;
@@ -1132,7 +1132,7 @@ implementation
               pd.procoptions:=pd.procoptions+([po_staticmethod,po_classmethod]*TProcDef(st.defowner).procoptions);
           end;
 
-        if assigned(genericparams) then
+        if Assigned(genericparams) then
           begin
             if potype=potype_constructor then
               begin
@@ -1145,7 +1145,7 @@ implementation
                 include(pd.defoptions,df_generic);
                 { push the parameter symtable so that constraint definitions are added
                   there and not in the owner symtable }
-                symtablestack.push(pd.parast);
+                SymTableStack.push(pd.parast);
                 { register the parameters }
                 for i:=0 to genericparams.count-1 do
                   begin
@@ -1157,34 +1157,34 @@ implementation
                 { the list is no longer required }
                 genericparams.free;
                 genericparams:=nil;
-                symtablestack.pop(pd.parast);
+                SymTableStack.pop(pd.parast);
                 parse_generic:=true;
                 { also generate a dummy symbol if none exists already }
-                if assigned(astruct) then
-                  dummysym:=TSym(astruct.symtable.find(spnongen))
+                if Assigned(astruct) then
+                  dummysym:=TSym(astruct.SymTable.find(spnongen))
                 else
                   begin
                     dummysym:=TSym(insertst.find(spnongen));
-                    if not assigned(dummysym) and
-                        (symtablestack.top=CurrentModule.localsymtable) and
-                        assigned(CurrentModule.globalsymtable) then
-                      dummysym:=TSym(CurrentModule.globalsymtable.find(spnongen));
+                    if not Assigned(dummysym) and
+                        (SymTableStack.top=CurrentModule.localsymtable) and
+                        Assigned(CurrentModule.GlobalSymTable) then
+                      dummysym:=TSym(CurrentModule.GlobalSymTable.find(spnongen));
                   end;
-                if not assigned(dummysym) then
+                if not Assigned(dummysym) then
                   begin
                     { overloading generic routines with non-generic types is not
                       allowed, so we create a procsym as dummy }
-                    dummysym:=cprocsym.create(orgspnongen);
-                    if assigned(astruct) then
-                      astruct.symtable.insertsym(dummysym)
+                    dummysym:=CProcSym.create(orgspnongen);
+                    if Assigned(astruct) then
+                      astruct.SymTable.insertsym(dummysym)
                     else
                       insertst.insertsym(dummysym);
                   end
                 else if (dummysym.typ<>procsym) and
                     (
                       { show error only for the declaration, not also the implementation }
-                      not assigned(astruct) or
-                      (symtablestack.top.symtablelevel<>main_program_level)
+                      not Assigned(astruct) or
+                      (SymTableStack.top.symtablelevel<>main_program_level)
                     ) then
                   Message1(sym_e_duplicate_id,dummysym.realname);
                 if not (sp_generic_dummy in dummysym.symoptions) then
@@ -1199,11 +1199,11 @@ implementation
                 CurrentScanner.startrecordtokens(pd.genericdecltokenbuf);
               end;
           end
-        else if assigned(genericdef) then
+        else if Assigned(genericdef) then
           insert_generic_parameter_types(pd,TStoredDef(genericdef),generictypelist,false);
 
         { methods inherit df_generic or df_specialization from the objectdef }
-        if assigned(pd.struct) and
+        if Assigned(pd.struct) and
            (pd.parast.symtablelevel=normal_function_level) then
           begin
             if (df_generic in pd.struct.defoptions) then
@@ -1213,16 +1213,16 @@ implementation
               end;
             if (df_specialization in pd.struct.defoptions) then
               begin
-                if assigned(CurrentSpecializeDef) then
+                if Assigned(CurrentSpecializeDef) then
                   begin
                     include(pd.defoptions,df_specialization);
                     { Find corresponding genericdef, we need it later to
                       replay the tokens to generate the body }
-                    if not assigned(pd.struct.genericdef) then
-                      internalerror(200512113);
+                    if not Assigned(pd.struct.genericdef) then
+                      InternalError(200512113);
                     genericst:=pd.struct.genericdef.GetSymtable(gs_record);
-                    if not assigned(genericst) then
-                      internalerror(200512114);
+                    if not Assigned(genericst) then
+                      InternalError(200512114);
 
                     { when searching for the correct procdef to use as genericdef we need to ignore
                       everything except procdefs so that we can find the correct indices }
@@ -1240,7 +1240,7 @@ implementation
                         inc(index);
                       end;
                     if not found then
-                      internalerror(2014052301);
+                      InternalError(2014052301);
 
                     for i:=0 to genericst.deflist.count-1 do
                       begin
@@ -1251,9 +1251,9 @@ implementation
                         dec(index);
                       end;
 
-                    if not assigned(pd.genericdef) or
+                    if not Assigned(pd.genericdef) or
                        (pd.genericdef.typ<>procdef) then
-                      internalerror(200512115);
+                      InternalError(200512115);
                   end
                 else
                   Message(parser_e_explicit_method_implementation_for_specializations_not_allowed);
@@ -1261,10 +1261,10 @@ implementation
           end;
 
         { methods need to be exported }
-        if assigned(astruct) and
+        if Assigned(astruct) and
            (
-            (symtablestack.top.symtabletype in [ObjectSymtable,recordsymtable]) or
-            (symtablestack.top.symtablelevel=main_program_level)
+            (SymTableStack.top.symtabletype in [ObjectSymtable,recordsymtable]) or
+            (SymTableStack.top.symtablelevel=main_program_level)
            ) then
           include(pd.procoptions,po_global);
 
@@ -1282,27 +1282,27 @@ implementation
             old_current_specializedef:=nil;
             { Add ObjectSymtable to be able to find nested type definitions }
             popclass:=0;
-            if assigned(pd.struct) and
+            if Assigned(pd.struct) and
                (pd.parast.symtablelevel>=normal_function_level) and
-               not(symtablestack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
+               not(SymTableStack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
               begin
                 popclass:=push_nested_hierarchy(pd.struct);
                 old_current_structdef:=CurrentStructDef;
                 old_current_specializedef:=CurrentSpecializeDef;
                 CurrentStructDef:=pd.struct;
-                if assigned(CurrentStructDef) and (df_generic in CurrentStructDef.defoptions) then
+                if Assigned(CurrentStructDef) and (df_generic in CurrentStructDef.defoptions) then
                   CurrentGenericDef:=CurrentStructDef;
-                if assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.defoptions) then
+                if Assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.defoptions) then
                   CurrentSpecializeDef:=CurrentStructDef;
               end;
             if pd.is_generic then
               CurrentGenericDef:=pd;
             { Add parameter symtable }
             if pd.parast.symtabletype<>staticsymtable then
-              symtablestack.push(pd.parast);
+              SymTableStack.push(pd.parast);
             parse_parameter_dec(pd);
             if pd.parast.symtabletype<>staticsymtable then
-              symtablestack.pop(pd.parast);
+              SymTableStack.pop(pd.parast);
             CurrentGenericDef:=old_current_genericdef;
             if popclass>0 then
               begin
@@ -1310,7 +1310,7 @@ implementation
                 CurrentSpecializeDef:=old_current_specializedef;
                 dec(popclass,pop_nested_hierarchy(pd.struct));
                 if popclass<>0 then
-                  internalerror(201011260); // 11 nov 2010 index 0
+                  InternalError(201011260); // 11 nov 2010 index 0
               end;
           end;
 
@@ -1319,7 +1319,7 @@ implementation
       end;
 
 
-    procedure parse_proc_dec_finish(pd:TProcDef;flags:tparse_proc_flags;astruct:TAbstractRecordDef);
+    procedure parse_proc_dec_finish(pd:TProcDef;flags:TParseProcFlags;astruct:TAbstractRecordDef);
       var
         locationstr: string;
         i: integer;
@@ -1341,9 +1341,9 @@ implementation
             old_current_specializedef:=CurrentSpecializeDef;
             CurrentGenericDef:=nil;
             CurrentSpecializeDef:=nil;
-            if assigned(pd.struct) and
+            if Assigned(pd.struct) and
                (pd.parast.symtablelevel>=normal_function_level) and
-               not (symtablestack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
+               not (SymTableStack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
               begin
                 popclass:=push_nested_hierarchy(pd.struct);
                 old_current_structdef:=CurrentStructDef;
@@ -1353,23 +1353,23 @@ implementation
               begin
                 if pd.is_generic then
                   CurrentGenericDef:=pd
-                else if assigned(pd.struct) then
+                else if Assigned(pd.struct) then
                   CurrentGenericDef:=pd.struct
                 else
-                  internalerror(2016090202);
+                  InternalError(2016090202);
               end;
             if df_specialization in pd.defoptions then
               begin
                 if pd.is_specialization then
                   CurrentSpecializeDef:=pd
-                else if assigned(pd.struct) then
+                else if Assigned(pd.struct) then
                   CurrentSpecializeDef:=pd.struct
                 else
-                  internalerror(2016090203);
+                  InternalError(2016090203);
               end;
             parse_generic:=(df_generic in pd.defoptions);
             if pd.is_generic or pd.is_specialization then
-              symtablestack.push(pd.parast);
+              SymTableStack.push(pd.parast);
             pd.returndef:=result_type([stoAllowSpecialization]);
 
             // Issue #24863, enabled only for the main progra commented out for now because it breaks building of RTL and needs extensive
@@ -1382,17 +1382,17 @@ implementation
             if is_dispinterface(pd.struct) and not is_automatable(pd.returndef) then
               Message1(type_e_not_automatable,pd.returndef.typename);
 
-            if assigned(pd.returndef.typesym) then
+            if Assigned(pd.returndef.typesym) then
               check_hints(pd.returndef.typesym,pd.returndef.typesym.symoptions,pd.returndef.typesym.deprecatedmsg);
 
             if pd.is_generic or pd.is_specialization then
-              symtablestack.pop(pd.parast);
+              SymTableStack.pop(pd.parast);
             if popclass>0 then
               begin
                 CurrentStructDef:=old_current_structdef;
                 dec(popclass,pop_nested_hierarchy(pd.struct));
                 if popclass<>0 then
-                  internalerror(201012020);
+                  InternalError(201012020);
               end;
             CurrentGenericDef:=old_current_genericdef;
             CurrentSpecializeDef:=old_current_specializedef;
@@ -1417,12 +1417,12 @@ implementation
                     operators we allow this in other modes as well }
                   if CurrentScanner.token<>_ID then
                     begin
-                       if not(m_result in CurrentSettings.modeswitches) then
+                       if not(m_result in CurrentSettings.ModeSwitches) then
                          consume(_ID);
                     end
                   else
                     begin
-                      pd.resultname:=stringdup(CurrentScanner.orgpattern);
+                      pd.resultname:=StringDup(CurrentScanner.orgpattern);
                       consume(_ID);
                     end;
                 end;
@@ -1436,7 +1436,7 @@ implementation
                       parse_only and
                       not(is_interface(pd.struct))
                      ) or
-                     (m_repeat_forward in CurrentSettings.modeswitches) then
+                     (m_repeat_forward in CurrentSettings.ModeSwitches) then
                   begin
                     consume(_COLON);
                     consume_all_until(_SEMICOLON);
@@ -1449,8 +1449,8 @@ implementation
           potype_class_constructor:
             begin
               if not (ppf_classmethod in flags) and
-                 assigned(pd) and
-                 assigned(pd.struct) then
+                 Assigned(pd) and
+                 Assigned(pd.struct) then
                 begin
                   { Set return type, class constructors return the
                     created instance, object constructors return boolean }
@@ -1474,7 +1474,7 @@ implementation
           potype_class_destructor,
           potype_destructor:
             begin
-              if assigned(pd) then
+              if Assigned(pd) then
                 pd.returndef:=voidtype;
             end;
           potype_operator:
@@ -1493,12 +1493,12 @@ implementation
                 end;
               if CurrentScanner.token<>_ID then
                 begin
-                   if not(m_result in CurrentSettings.modeswitches) then
+                   if not(m_result in CurrentSettings.ModeSwitches) then
                      consume(_ID);
                 end
               else
                 begin
-                  pd.resultname:=stringdup(CurrentScanner.orgpattern);
+                  pd.resultname:=StringDup(CurrentScanner.orgpattern);
                   consume(_ID);
                 end;
               { operators without result (management operators) }
@@ -1550,12 +1550,12 @@ implementation
                              break;
                            end;
                        if not found then
-                         if assigned(pd.struct) then
+                         if Assigned(pd.struct) then
                            Message1(parser_e_at_least_one_argument_must_be_of_type,pd.struct.RttiName)
                          else
                            MessagePos(pd.fileinfo,type_e_type_id_expected);
                      end;
-                   if not assigned(pd.struct) or assigned(astruct) then
+                   if not Assigned(pd.struct) or Assigned(astruct) then
                      begin
                        if (optoken in [_ASSIGNMENT,_OP_EXPLICIT]) and
                           equal_defs(pd.returndef,TParaVarSym(pd.parast.SymList[0]).vardef) and
@@ -1567,7 +1567,7 @@ implementation
                  end;
             end;
           else
-            internalerror(2015052202);
+            InternalError(2015052202);
         end;
 
         if (pd.proccalloption in cdecl_pocalls) and
@@ -1597,7 +1597,7 @@ implementation
          end;
       end;
 
-    function parse_proc_dec(flags:tparse_proc_flags;astruct:TAbstractRecordDef):TProcDef;
+    function parse_proc_dec(flags:TParseProcFlags;astruct:TAbstractRecordDef):TProcDef;
       var
         pd : TProcDef;
         old_block_type : TBlockType;
@@ -1623,7 +1623,7 @@ implementation
               if parse_proc_head(astruct,potype_function,flags,nil,nil,pd) then
                 begin
                   { pd=nil when it is a interface mapping }
-                  if assigned(pd) then
+                  if Assigned(pd) then
                     parse_proc_dec_finish(pd,flags,astruct)
                   else
                     finish_intf_mapping;
@@ -1643,7 +1643,7 @@ implementation
               if parse_proc_head(astruct,potype_procedure,flags,nil,nil,pd) then
                 begin
                   { pd=nil when it is an interface mapping }
-                  if assigned(pd) then
+                  if Assigned(pd) then
                     parse_proc_dec_finish(pd,flags,astruct)
                   else
                     finish_intf_mapping;
@@ -1680,12 +1680,12 @@ implementation
               { we need to set the block type to bt_body, so that operator names
                 like ">", "=>" or "<>" are parsed correctly instead of e.g.
                 _LSHARPBRACKET and _RSHARPBRACKET for "<>" }
-              old_block_type:=block_type;
-              block_type:=bt_body;
+              old_block_type:=Block_Type;
+              Block_Type:=bt_body;
               consume(_OPERATOR);
               parse_proc_head(astruct,potype_operator,[],nil,nil,pd);
-              block_type:=old_block_type;
-              if assigned(pd) then
+              Block_Type:=old_block_type;
+              if Assigned(pd) then
                 parse_proc_dec_finish(pd,flags,astruct)
               else
                 begin
@@ -1710,9 +1710,9 @@ implementation
           end;
 
         { we've parsed the final semicolon, so stop recording tokens }
-        if assigned(pd) and
+        if Assigned(pd) and
             (df_generic in pd.defoptions) and
-            assigned(pd.genericdecltokenbuf) then
+            Assigned(pd.genericdecltokenbuf) then
           CurrentScanner.stoprecordtokens;
 
         result:=pd;
@@ -1722,7 +1722,7 @@ implementation
     function parse_record_method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
       var
         oldparse_only: boolean;
-        flags : tparse_proc_flags;
+        flags : TParseProcFlags;
       begin
         oldparse_only:=parse_only;
         parse_only:=true;
@@ -1736,7 +1736,7 @@ implementation
         { this is for error recovery as well as forward }
         { interface mappings, i.e. mapping to a method  }
         { which isn't declared yet                      }
-        if assigned(result) then
+        if Assigned(result) then
           begin
             parse_record_proc_directives(result);
 
@@ -1756,7 +1756,7 @@ implementation
             proc_add_definition(result);
 
             if result.is_generic then
-              astruct.symtable.includeoption(sto_has_generic);
+              astruct.SymTable.includeoption(sto_has_generic);
           end;
 
         maybe_parse_hint_directives(result);
@@ -1771,26 +1771,26 @@ implementation
 
 procedure pd_compilerproc(pd:TAbstractProcDef);
 var
-  v : Tconstexprint;
+  v : TConstExprInt;
 begin
   { check for optional syssym index }
   if try_to_consume(_COLON) then
     begin
       v:=get_intconst;
-      if (v<int64(low(longint))) or (v>int64(high(longint))) then
-        message3(type_e_range_check_error_bounds,tostr(v),tostr(low(longint)),tostr(high(longint)))
-      else if not assigned(TSysSym.find_by_number(longint(v.svalue))) then
-        message1(parser_e_invalid_internal_function_index,tostr(v))
+      if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
+        message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
+      else if not Assigned(TSysSym.find_by_number(LongInt(v.svalue))) then
+        message1(parser_e_invalid_internal_function_index,ToStr(v))
       else
-        TProcDef(pd).extnumber:=longint(v.svalue);
+        TProcDef(pd).extnumber:=LongInt(v.svalue);
     end;
 end;
 
 procedure pd_export(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200304264);
-  if assigned(TProcDef(pd).struct) then
+    InternalError(200304264);
+  if Assigned(TProcDef(pd).struct) then
     Message(parser_e_methods_dont_be_export);
   if pd.parast.symtablelevel>normal_function_level then
     Message(parser_e_dont_nest_export);
@@ -1799,7 +1799,7 @@ end;
 procedure pd_forward(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200304265);
+    InternalError(200304265);
   TProcDef(pd).forwarddef:=true;
 end;
 
@@ -1807,7 +1807,7 @@ end;
 procedure pd_alias(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200304266);
+    InternalError(200304266);
   consume(_COLON);
   TProcDef(pd).aliasnames.insert(get_stringconst);
   include(pd.procoptions,po_has_public_name);
@@ -1817,7 +1817,7 @@ end;
 procedure pd_public(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(2003042601);
+    InternalError(2003042601);
   if try_to_consume(_NAME) then
     begin
       TProcDef(pd).aliasnames.insert(get_stringconst);
@@ -1829,7 +1829,7 @@ end;
 procedure pd_asmname(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200304267);
+    InternalError(200304267);
   if CurrentScanner.token=_CCHAR then
     begin
       TProcDef(pd).aliasnames.insert(TargetInfo.Cprefix+CurrentScanner.pattern);
@@ -1847,33 +1847,33 @@ end;
 
 procedure pd_internconst(pd:TAbstractProcDef);
 
-var v:Tconstexprint;
+var v:TConstExprInt;
 
 begin
   if pd.typ<>procdef then
-    internalerror(200304268);
+    InternalError(200304268);
   consume(_COLON);
   v:=get_intconst;
-  if (v<int64(low(longint))) or (v>int64(high(longint))) then
-    message3(type_e_range_check_error_bounds,tostr(v),tostr(low(longint)),tostr(high(longint)))
+  if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
+    message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
   else
-    TProcDef(pd).extnumber:=longint(v.svalue);
+    TProcDef(pd).extnumber:=LongInt(v.svalue);
 end;
 
 
 procedure pd_internproc(pd:TAbstractProcDef);
 
-var v:Tconstexprint;
+var v:TConstExprInt;
 
 begin
   if pd.typ<>procdef then
-    internalerror(2003042602);
+    InternalError(2003042602);
   consume(_COLON);
   v:=get_intconst;
-  if (v<int64(low(longint))) or (v>int64(high(longint))) then
-    message3(type_e_range_check_error_bounds,tostr(v),tostr(low(longint)),tostr(high(longint)))
+  if (v<int64(low(LongInt))) or (v>int64(high(LongInt))) then
+    message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(LongInt)),ToStr(high(LongInt)))
   else
-    TProcDef(pd).extnumber:=longint(v.svalue);
+    TProcDef(pd).extnumber:=LongInt(v.svalue);
   { the proc is defined }
   TProcDef(pd).forwarddef:=false;
 end;
@@ -1887,10 +1887,10 @@ end;
 procedure pd_abstract(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200304269);
+    InternalError(200304269);
   if is_objectpascal_helper(TProcDef(pd).struct) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_ABSTRACT].str);
-  if assigned(TProcDef(pd).struct) and
+  if Assigned(TProcDef(pd).struct) and
     (oo_is_sealed in TProcDef(pd).struct.objectoptions) then
     Message(parser_e_sealed_class_cannot_have_abstract_methods)
   else if (po_virtualmethod in pd.procoptions) then
@@ -1908,9 +1908,9 @@ end;
 procedure pd_final(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200910170);
+    InternalError(200910170);
   if is_objectpascal_helper(TProcDef(pd).struct) and
-      (m_objfpc in CurrentSettings.modeswitches) then
+      (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_FINAL].str);
   if (po_virtualmethod in pd.procoptions) or
      (is_javaclass(TProcDef(pd).struct) and
@@ -1923,7 +1923,7 @@ end;
 procedure pd_enumerator(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200910250);
+    InternalError(200910250);
   if (CurrentScanner.token = _ID) then
   begin
     if CurrentScanner.pattern='MOVENEXT' then
@@ -1954,21 +1954,21 @@ var
   pt : TNode;
 {$endif WITHDMT}
 begin
-  if assigned(pd.owner) and
-     (not assigned(pd.owner.defowner) or
+  if Assigned(pd.owner) and
+     (not Assigned(pd.owner.defowner) or
       not is_java_class_or_interface(TDef(pd.owner.defowner))) and
      (po_external in pd.procoptions) then
     Message2(parser_e_proc_dir_conflict,'EXTERNAL','"VIRTUAL"');
 
   if pd.typ<>procdef then
-    internalerror(2003042610);
+    InternalError(2003042610);
   if (pd.proctypeoption=potype_constructor) and
      is_object(TProcDef(pd).struct) then
     Message(parser_e_constructor_cannot_be_not_virtual);
   if pd.is_generic then
     message(parser_e_genfuncs_cannot_be_virtual);
   if is_objectpascal_helper(TProcDef(pd).struct) and
-      (m_objfpc in CurrentSettings.modeswitches) then
+      (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_VIRTUAL].str);
 {$ifdef WITHDMT}
   if is_object(TProcDef(pd).struct) and
@@ -1995,13 +1995,13 @@ var pt:TNode;
 
 begin
   if pd.typ<>procdef then
-    internalerror(200604301);
+    InternalError(200604301);
   pt:=comp_expr([ef_accept_equal]);
   if is_constintnode(pt) then
-    if (Tordconstnode(pt).value<int64(low(longint))) or (Tordconstnode(pt).value>int64(high(longint))) then
-      message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(longint)),tostr(high(longint)))
+    if (TOrdConstNode(pt).value<int64(low(LongInt))) or (TOrdConstNode(pt).value>int64(high(LongInt))) then
+      message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(LongInt)),ToStr(high(LongInt)))
     else
-      TProcDef(pd).dispid:=Tordconstnode(pt).value.svalue
+      TProcDef(pd).dispid:=TOrdConstNode(pt).value.svalue
   else
     message(parser_e_dispid_must_be_ord_const);
   pt.free;
@@ -2012,9 +2012,9 @@ end;
 procedure pd_static(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(2013032001);
-  if not assigned(TProcDef(pd).struct) then
-    internalerror(2013032002);
+    InternalError(2013032001);
+  if not Assigned(TProcDef(pd).struct) then
+    InternalError(2013032002);
   include(TProcDef(pd).procsym.symoptions,sp_static);
   { "static" is not allowed for operators or normal methods (except in objects) }
   if (pd.proctypeoption=potype_operator) or
@@ -2030,10 +2030,10 @@ end;
 procedure pd_override(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(2003042611);
+    InternalError(2003042611);
   if is_objectpascal_helper(TProcDef(pd).struct) then
     begin
-      if m_objfpc in CurrentSettings.modeswitches then
+      if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_OVERRIDE].str)
     end
   else if not(is_class_or_interface_or_objc_or_java(TProcDef(pd).struct)) then
@@ -2050,20 +2050,20 @@ end;
 procedure pd_overload(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(2003042612);
+    InternalError(2003042612);
   include(TProcDef(pd).procsym.symoptions,sp_has_overloaded);
 end;
 
 procedure pd_message(pd:TAbstractProcDef);
 var
   pt : TNode;
-  paracnt : longint;
+  paracnt : LongInt;
 begin
   if pd.typ<>procdef then
-    internalerror(2003042613);
+    InternalError(2003042613);
   if is_objectpascal_helper(TProcDef(pd).struct) then
     begin
-      if m_objfpc in CurrentSettings.modeswitches then
+      if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_MESSAGE].str);
     end
   else
@@ -2087,14 +2087,14 @@ begin
   if is_constcharnode(pt) then
     begin
       include(pd.procoptions,po_msgstr);
-      TProcDef(pd).messageinf.str:=stringdup(chr(byte(tordconstnode(pt).value.uvalue and $FF)));
+      TProcDef(pd).messageinf.str:=StringDup(chr(byte(TOrdConstNode(pt).value.uvalue and $FF)));
     end
   else if pt.nodetype=stringconstn then
     begin
       include(pd.procoptions,po_msgstr);
-      if (tstringconstnode(pt).len>255) then
+      if (TStringConstNode(pt).len>255) then
         Message(parser_e_message_string_too_long);
-      TProcDef(pd).messageinf.str:=stringdup(tstringconstnode(pt).asconstpchar);
+      TProcDef(pd).messageinf.str:=StringDup(TStringConstNode(pt).asconstpchar);
     end
   else
    if is_constintnode(pt) and
@@ -2102,11 +2102,11 @@ begin
       is_objectpascal_helper(TProcDef(pd).struct)) then
     begin
       include(pd.procoptions,po_msgint);
-      if (Tordconstnode(pt).value<int64(low(TProcDef(pd).messageinf.i))) or
-         (Tordconstnode(pt).value>int64(high(TProcDef(pd).messageinf.i))) then
-        message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(TProcDef(pd).messageinf.i)),tostr(high(TProcDef(pd).messageinf.i)))
+      if (TOrdConstNode(pt).value<int64(low(TProcDef(pd).messageinf.i))) or
+         (TOrdConstNode(pt).value>int64(high(TProcDef(pd).messageinf.i))) then
+        message3(type_e_range_check_error_bounds,ToStr(TOrdConstNode(pt).value),ToStr(low(TProcDef(pd).messageinf.i)),ToStr(high(TProcDef(pd).messageinf.i)))
       else
-        TProcDef(pd).messageinf.i:=tordconstnode(pt).value.svalue;
+        TProcDef(pd).messageinf.i:=TOrdConstNode(pt).value.svalue;
     end
   else
     Message(parser_e_ill_msg_expr);
@@ -2123,10 +2123,10 @@ end;
 procedure pd_reintroduce(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(200401211);
+    InternalError(200401211);
   if is_objectpascal_helper(TProcDef(pd).struct) then
     begin
-      if m_objfpc in CurrentSettings.modeswitches then
+      if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_REINTRODUCE].str);
     end
   else
@@ -2149,7 +2149,7 @@ procedure pd_syscall(pd:TAbstractProcDef);
       function po_syscall_to_regname: string;
         begin
           result:='';
-          internalerror(2016090101);
+          InternalError(2016090101);
         end;
 
 {$if defined(i386) or defined(x86_64)}
@@ -2159,33 +2159,33 @@ const
 var
   vs  : TParaVarSym;
   sym : TSym;
-  symtable : TSymTable;
-  v: Tconstexprint;
+  SymTable : TSymTable;
+  v: TConstExprInt;
   vo: TVarOptions;
   paranr: aint;
 {$endif}
 begin
   if pd.typ<>procdef then
-    internalerror(2003042614);
+    InternalError(2003042614);
   TProcDef(pd).forwarddef:=false;
 {$if defined(i386) or defined(x86_64)}
   Message(parser_e_syscall_format_not_support);
 
-  if consume_sym(sym,symtable) then
+  if consume_sym(sym,SymTable) then
     if ((sym.typ=staticvarsym) or
         (sym.typ=absolutevarsym) and (TAbsoluteVarSym(sym).abstyp=toaddr)) and
        ((TAbstractVarSym(sym).vardef.typ=pointerdef) or
         is_32bitint(TAbstractVarSym(sym).vardef)) then
       begin
         include(pd.procoptions,po_syscall_has_libsym);
-        tcpuprocdef(pd).libsym:=sym;
+        TCPUProcDef(pd).libsym:=sym;
 
         vo:=po_syscall_to_varoptions;
         paranr:=syscall_paranr[po_syscall_basefirst in TProcDef(pd).procoptions];
-        vs:=cparavarsym.create('$syscalllib',paranr,vs_value,TAbstractVarSym(sym).vardef,vo);
+        vs:=CParaVarSym.create('$syscalllib',paranr,vs_value,TAbstractVarSym(sym).vardef,vo);
         if vo_has_explicit_paraloc in vo then
           if not paramanager.parseparaloc(vs,po_syscall_to_regname) then
-            internalerror(2016120301);
+            InternalError(2016120301);
         pd.parast.insertsym(vs);
       end
     else
@@ -2196,7 +2196,7 @@ begin
 
   v:=get_intconst;
   if (v<low(TProcDef(pd).extnumber)) or (v>high(TProcDef(pd).extnumber)) then
-    message3(type_e_range_check_error_bounds,tostr(v),tostr(low(TProcDef(pd).extnumber)),tostr(high(TProcDef(pd).extnumber)))
+    message3(type_e_range_check_error_bounds,ToStr(v),ToStr(low(TProcDef(pd).extnumber)),ToStr(high(TProcDef(pd).extnumber)))
   else
     TProcDef(pd).extnumber:=v.uvalue;
 {$endif}
@@ -2214,11 +2214,11 @@ procedure pd_external(pd:TAbstractProcDef);
 }
 var
   hs : string;
-  v:Tconstexprint;
+  v:TConstExprInt;
   is_java_external: boolean;
 begin
   if pd.typ<>procdef then
-    internalerror(2003042615);
+    InternalError(2003042615);
   { Allow specifying a separate external name for methods in external Java
     because its identifier naming constraints are laxer than FPC's
     (e.g., case sensitive).
@@ -2226,7 +2226,7 @@ begin
     and only for external classes/interfaces }
   is_java_external:=
     (pd.typ=procdef) and
-    assigned(pd.owner) and
+    Assigned(pd.owner) and
     is_java_class_or_interface(TDef(pd.owner.defowner)) and
     (oo_is_external in TObjectDef(pd.owner.defowner).objectoptions);
   with TProcDef(pd) do
@@ -2248,12 +2248,12 @@ begin
             hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
           if Copy(hs,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
             hs:=TargetInfo.sharedlibprefix+hs;
-          import_dll:=stringdup(hs);
+          import_dll:=StringDup(hs);
           include(procoptions,po_has_importdll);
           if (CurrentScanner.idtoken=_NAME) then
            begin
              consume(_NAME);
-             import_name:=stringdup(get_stringconst);
+             import_name:=StringDup(get_stringconst);
              include(procoptions,po_has_importname);
              if import_name^='' then
                message(parser_e_empty_import_name);
@@ -2266,7 +2266,7 @@ begin
              if (v<int64(low(import_nr))) or (v>int64(high(import_nr))) then
                message(parser_e_range_check_error)
              else
-               import_nr:=longint(v.svalue);
+               import_nr:=LongInt(v.svalue);
            end;
           if (CurrentScanner.idtoken=_SUSPENDING) then
            begin
@@ -2278,9 +2278,9 @@ begin
                consume(_LAST);
            end;
           { default is to used the realname of the procedure }
-          if (import_nr=0) and not assigned(import_name) then
+          if (import_nr=0) and not Assigned(import_name) then
             begin
-              import_name:=stringdup(procsym.realname);
+              import_name:=StringDup(procsym.realname);
               include(procoptions,po_has_importname);
             end;
         end
@@ -2290,7 +2290,7 @@ begin
              is_java_external then
            begin
              consume(_NAME);
-             import_name:=stringdup(get_stringconst);
+             import_name:=StringDup(get_stringconst);
              include(procoptions,po_has_importname);
              if import_name^='' then
                message(parser_e_empty_import_name);
@@ -2326,21 +2326,21 @@ end;
 procedure pd_section(pd:TAbstractProcDef);
 begin
   if pd.typ<>procdef then
-    internalerror(2021032801);
+    InternalError(2021032801);
   Message(parser_e_section_directive_not_allowed_for_target);
 {$ifdef symansistr}
   TProcDef(pd).section:=get_stringconst;
 {$else symansistr}
-  TProcDef(pd).section:=stringdup(get_stringconst);
+  TProcDef(pd).section:=StringDup(get_stringconst);
 {$endif}
 end;
 
 type
-   pd_handler=procedure(pd:TAbstractProcDef);
-   proc_dir_rec=record
-     idtok     : ttoken;
-     pd_flags  : tpdflags;
-     handler   : pd_handler;
+   TPDHandler=procedure(pd:TAbstractProcDef);
+   TProcDirRec=record
+     idtok     : TToken;
+     pd_flags  : TPDFlags;
+     handler   : TPDHandler;
      pocall    : TProcCallOption;
      pooption  : TProcOptions;
      mutexclpocall : TProcCallOptions;
@@ -2351,7 +2351,7 @@ const
   {Should contain the number of procedure directives we support.}
   num_proc_directives=53;
 var
-  proc_direcdata:array[1..num_proc_directives] of proc_dir_rec=
+  proc_direcdata:array[1..num_proc_directives] of TProcDirRec=
    (
     (
       idtok:_ABSTRACT;
@@ -2854,7 +2854,7 @@ var
 
     function check_proc_directive(isprocvar:boolean):boolean;
       var
-        i : longint;
+        i : LongInt;
       begin
         result:=false;
         for i:=1 to num_proc_directives do
@@ -2863,14 +2863,14 @@ var
             if ((not isprocvar) or
                (pd_procvar in proc_direcdata[i].pd_flags)) and
                { don't eat a public directive in classes }
-               not((CurrentScanner.idtoken=_PUBLIC) and (symtablestack.top.symtabletype=ObjectSymtable)) then
+               not((CurrentScanner.idtoken=_PUBLIC) and (SymTableStack.top.symtabletype=ObjectSymtable)) then
               result:=true;
             exit;
           end;
       end;
 
 
-    function find_proc_directive_index(tok: ttoken): longint; inline;
+    function find_proc_directive_index(tok: TToken): LongInt; inline;
       begin
         result:=-1;
         for result:=1 to num_proc_directives do
@@ -2880,12 +2880,12 @@ var
       end;
 
 
-    function parse_proc_direc(pd:TAbstractProcDef;var pdflags:tpdflags):boolean;
+    function parse_proc_direc(pd:TAbstractProcDef;var pdflags:TPDFlags):boolean;
       {
         Parse the procedure directive, returns true if a correct directive is found
       }
       var
-        p     : longint;
+        p     : LongInt;
         name : TIDString;
         po_comp : TProcOptions;
         tokenloc : TFilePosInfo;
@@ -2894,7 +2894,7 @@ var
         name:=tokeninfo^[CurrentScanner.idtoken].str;
 
       { Hint directive? Then exit immediately }
-        if (m_hintdirective in CurrentSettings.modeswitches) then
+        if (m_hintdirective in CurrentSettings.ModeSwitches) then
          begin
            case CurrentScanner.idtoken of
              _LIBRARY,
@@ -2902,7 +2902,7 @@ var
              _UNIMPLEMENTED,
              _EXPERIMENTAL,
              _DEPRECATED :
-               if (m_delphi in CurrentSettings.modeswitches) and (pd.typ=procdef) then
+               if (m_delphi in CurrentSettings.ModeSwitches) and (pd.typ=procdef) then
                  begin
                    maybe_parse_hint_directives(TProcDef(pd));
                    { could the new token still be a directive? }
@@ -2919,7 +2919,7 @@ var
         { C directive is MacPas only, because it breaks too much existing code
           on other platforms (PFV) }
         if (CurrentScanner.idtoken=_C) and
-           not(m_mac in CurrentSettings.modeswitches) then
+           not(m_mac in CurrentSettings.ModeSwitches) then
           exit;
 
       { retrieve data for directive if found }
@@ -2939,25 +2939,25 @@ var
         { check if method and directive not for object, like public.
           This needs to be checked also for procvars }
         if (pd_notobject in proc_direcdata[p].pd_flags) and
-           (symtablestack.top.symtabletype=ObjectSymtable) and
+           (SymTableStack.top.symtabletype=ObjectSymtable) and
            { directive allowed for cpp classes? }
-           not((pd_cppobject in proc_direcdata[p].pd_flags) and is_cppclass(TDef(symtablestack.top.defowner))) and
-           not((pd_javaclass in proc_direcdata[p].pd_flags) and is_javaclass(TDef(symtablestack.top.defowner))) and
-           not((pd_intfjava in proc_direcdata[p].pd_flags) and is_javainterface(TDef(symtablestack.top.defowner))) then
+           not((pd_cppobject in proc_direcdata[p].pd_flags) and is_cppclass(TDef(SymTableStack.top.defowner))) and
+           not((pd_javaclass in proc_direcdata[p].pd_flags) and is_javaclass(TDef(SymTableStack.top.defowner))) and
+           not((pd_intfjava in proc_direcdata[p].pd_flags) and is_javainterface(TDef(SymTableStack.top.defowner))) then
            exit;
 
         if (pd_notrecord in proc_direcdata[p].pd_flags) and
-           (symtablestack.top.symtabletype=recordsymtable) then
+           (SymTableStack.top.symtabletype=recordsymtable) then
            exit;
 
         { check if method and directive not for java class }
         if not(pd_javaclass in proc_direcdata[p].pd_flags) and
-           is_javaclass(TDef(symtablestack.top.defowner)) then
+           is_javaclass(TDef(SymTableStack.top.defowner)) then
           exit;
 
         { check if method and directive not for java interface }
         if not(pd_intfjava in proc_direcdata[p].pd_flags) and
-           is_javainterface(TDef(symtablestack.top.defowner)) then
+           is_javainterface(TDef(SymTableStack.top.defowner)) then
           exit;
 
         { Keep track of the token's position in the file so it's correctly indicated if an error occurs. }
@@ -3011,12 +3011,12 @@ var
          begin
            { Check if the directive is only for objects }
            if (pd_object in proc_direcdata[p].pd_flags) and
-              not assigned(TProcDef(pd).struct) then
+              not Assigned(TProcDef(pd).struct) then
             exit;
 
            { Check if the directive is only for records }
            if (pd_record in proc_direcdata[p].pd_flags) and
-              not assigned(TProcDef(pd).struct) then
+              not Assigned(TProcDef(pd).struct) then
             exit;
 
            { check if method and directive not for interface }
@@ -3089,15 +3089,15 @@ var
       begin
         result:='';
         if not(po_external in pd.procoptions) then
-          internalerror(200412151);
+          InternalError(200412151);
         { external name or number is specified }
-        if assigned(pd.import_name) or (pd.import_nr<>0) then
+        if Assigned(pd.import_name) or (pd.import_nr<>0) then
           begin
-            if assigned(pd.import_dll) then
+            if Assigned(pd.import_dll) then
               dllname:=pd.import_dll^
             else
               dllname:='';
-            if assigned(pd.import_name) then
+            if Assigned(pd.import_name) then
               importname:=pd.import_name^
             else
               importname:='';
@@ -3112,7 +3112,7 @@ var
               pocall_sysv_abi_cdecl,
               pocall_ms_abi_cdecl:
                 begin
-                  if assigned(pd.struct) then
+                  if Assigned(pd.struct) then
                     result:=TargetInfo.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname
                   else
                     result:=TargetInfo.Cprefix+pd.procsym.realname;
@@ -3126,7 +3126,7 @@ var
                   {In MacPas a single "external" has the same effect as "external name 'xxx'" }
                   { but according to MacPas mode description
                     Cprefix should still be used PM }
-                  if (m_mac in CurrentSettings.modeswitches) then
+                  if (m_mac in CurrentSettings.ModeSwitches) then
                     result:=TargetInfo.Cprefix+TProcDef(pd).procsym.realname
                   else
                     result:=pd.procsym.realname;
@@ -3182,7 +3182,7 @@ var
               pocall_sysv_abi_cdecl,
               pocall_ms_abi_cdecl:
                 begin
-                  if assigned(pd.struct) then
+                  if Assigned(pd.struct) then
                    pd.aliasnames.insert(TargetInfo.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname)
                   else
                     begin
@@ -3207,7 +3207,7 @@ var
       end;
 
 
-    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:tpdflags);
+    procedure parse_proc_directives(pd:TAbstractProcDef;var pdflags:TPDFlags);
       {
         Parse the procedure directives. It does not matter if procedure directives
         are written using ;procdir; or ['procdir'] syntax.
@@ -3216,7 +3216,7 @@ var
         stoprecording,
         res : boolean;
       begin
-        if (m_mac in CurrentSettings.modeswitches) and (cs_externally_visible in CurrentSettings.localswitches) then
+        if (m_mac in CurrentSettings.ModeSwitches) and (cs_externally_visible in CurrentSettings.LocalSwitches) then
           begin
             TProcDef(pd).aliasnames.insert(TargetInfo.Cprefix+TProcDef(pd).procsym.realname);
             include(pd.procoptions,po_public);
@@ -3226,7 +3226,7 @@ var
 
         { methods from external class definitions are all external themselves }
         if (pd.typ=procdef) and
-           assigned(TProcDef(pd).struct) and
+           Assigned(TProcDef(pd).struct) and
            (TProcDef(pd).struct.typ=objectdef) and
            (oo_is_external in TObjectDef(TProcDef(pd).struct).objectoptions) then
           TProcDef(pd).make_external;
@@ -3255,11 +3255,11 @@ var
 
         while (CurrentScanner.token=_ID) or
             (
-              not (m_prefixed_attributes in CurrentSettings.modeswitches) and
+              not (m_prefixed_attributes in CurrentSettings.ModeSwitches) and
               (CurrentScanner.token=_LECKKLAMMER)
             ) do
          begin
-           if not (m_prefixed_attributes in CurrentSettings.modeswitches) and
+           if not (m_prefixed_attributes in CurrentSettings.ModeSwitches) and
               try_to_consume(_LECKKLAMMER) then
             begin
               repeat
@@ -3278,7 +3278,7 @@ var
              because a constant/default value follows }
            if res then
             begin
-              if (block_type=bt_const_type) and
+              if (Block_Type=bt_const_type) and
                  (CurrentScanner.token=_EQ) then
                break;
               { support procedure proc;stdcall export; }
@@ -3328,7 +3328,7 @@ var
 
     procedure parse_proctype_directives(pd_or_invkdef:TDef);
       var
-        pdflags : tpdflags;
+        pdflags : TPDFlags;
         pd : TAbstractProcDef;
       begin
         if is_funcref(pd_or_invkdef) then
@@ -3336,7 +3336,7 @@ var
         else if pd_or_invkdef.typ=procvardef then
           pd:=TProcVarDef(pd_or_invkdef)
         else
-          internalerror(2022012501);
+          InternalError(2022012501);
         pdflags:=[pd_procvar];
         parse_proc_directives(pd,pdflags);
       end;
@@ -3344,7 +3344,7 @@ var
 
     procedure parse_object_proc_directives(pd:TProcDef);
       var
-        pdflags : tpdflags;
+        pdflags : TPDFlags;
       begin
         pdflags:=[pd_object];
         parse_proc_directives(pd,pdflags);
@@ -3352,7 +3352,7 @@ var
 
     procedure parse_record_proc_directives(pd:TProcDef);
       var
-        pdflags : tpdflags;
+        pdflags : TPDFlags;
       begin
         pdflags:=[pd_record];
         parse_proc_directives(pd,pdflags);

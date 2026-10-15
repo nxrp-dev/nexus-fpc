@@ -29,7 +29,7 @@ Unit aoptda;
 
     uses
       cpubase,cgbase,
-      aasmtai,aasmdata,aasmcpu,
+      aasmtai,AAsmData,aasmcpu,
       aoptcpub, aoptbase;
 
     Type
@@ -50,13 +50,13 @@ Unit aoptda;
         { convert a TInsChange value into the corresponding register }
         //!!!!!!!!!! Function TCh2Reg(Ch: TInsChange): TRegister; Virtual;
         { returns whether the instruction P reads from register Reg }
-        Function RegReadByInstr(Reg: TRegister; p: tai): Boolean; Virtual; Abstract;
+        Function RegReadByInstr(Reg: TRegister; p: TAI): Boolean; Virtual; Abstract;
       End;
 
   Implementation
 
     uses
-      globals;
+      Globals;
 
     Procedure TAOptDFA.DoDFA;
     { Analyzes the Data Flow of an assembler list. Analyses the reg contents     }

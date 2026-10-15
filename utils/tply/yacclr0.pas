@@ -51,83 +51,83 @@ uses YaccBase, YaccTabl;
 (* This implementation is based on the algorithm given in Aho/Sethi/Ullman,
    1986, Section 4.7. *)
 
-procedure get_syms ( var item_set : ItemSet; var sym_set : IntSet );
+procedure GetSyms ( var ItemSet : TItemSet; var SymbolSet : TIntSet );
   (* get the symbols for which there are transitions in item_set *)
-  var i : Integer;
+  var I : Integer;
   begin
-    with item_set do
+    with ItemSet do
       begin
-        empty(sym_set);
-        for i := 1 to n_items do
-          with item[i], rule_table^[rule_no]^ do
-            if pos_no<=rhs_len then
-              include(sym_set, rhs_sym[pos_no]);
+        Empty(SymbolSet);
+        for I := 1 to NItems do
+          with Item[I], RuleTable^[RuleNo]^ do
+            if PosNo<=RHSLen then
+              Include(SymbolSet, RHSSym[PosNo]);
       end;
   end(*get_syms*);
 
-function make_state ( var item_set : ItemSet; sym : Integer ) : Integer;
+function MakeState ( var ItemSet : TItemSet; Sym : Integer ) : Integer;
   (* construct a new state for the transitions in item_set on symbol sym;
      returns: the new state number *)
-  var i : Integer;
+  var I : Integer;
   begin
-    with item_set do
+    with ItemSet do
       begin
         (* add the new state: *)
-        new_state;
-        for i := 1 to n_items do
-          with item[i], rule_table^[rule_no]^ do
-            if (pos_no<=rhs_len) and (rhs_sym[pos_no]=sym) then
-              add_item(rule_no, pos_no+1);
-        make_state := add_state;
+        NewState;
+        for I := 1 to NItems do
+          with Item[I], RuleTable^[RuleNo]^ do
+            if (PosNo<=RHSLen) and (RHSSym[PosNo]=Sym) then
+              AddItem(RuleNo, PosNo+1);
+        MakeState := AddState;
       end;
   end(*make_state*);
 
-procedure add_next_links;
+procedure AddNextLinks;
   (* add links to successor items for kernel items in the active state *)
-  var k, i : Integer;
+  var K, I : Integer;
   begin
-    with state_table^[act_state] do
-      for k := trans_lo to trans_hi do
-        with trans_table^[k] do
-          for i := item_lo to item_hi do
-            with item_table^[i], rule_table^[rule_no]^ do
-              if (pos_no<=rhs_len) and (rhs_sym[pos_no]=sym) then
-                next := find_item(next_state, rule_no, pos_no+1 );
+    with StateTable^[ActState] do
+      for K := TransLo to TransHi do
+        with TransTable^[K] do
+          for I := ItemLo to ItemHi do
+            with ItemTable^[I], RuleTable^[RuleNo]^ do
+              if (PosNo<=RHSLen) and (RHSSym[PosNo]=Sym) then
+                Next := FindItem(NextState, RuleNo, PosNo+1 );
   end(*add_next_links*);
 
 procedure LR0Set;
-  var act_items : ItemSet;
-      act_syms  : IntSet;
-      i         : Integer;
+  var ActItems : TItemSet;
+      ActSyms  : TIntSet;
+      I         : Integer;
   begin
     (* initialize state 0: *)
-    new_state;
-    add_item(1, 1);  (* augmented start production *)
-    act_state := add_state;
+    NewState;
+    AddItem(1, 1);  (* augmented start production *)
+    ActState := AddState;
     (* build the state table: *)
     repeat
       (* compute the closure of the current state: *)
-      get_item_set(act_state, act_items);
-      closure(act_items);
+      GetItemSet(ActState, ActItems);
+      Closure(ActItems);
       (* sort items: *)
-      sort_item_set(act_items);
+      SortItemSet(ActItems);
       (* determine symbols used in shift and goto transitions: *)
-      get_syms(act_items, act_syms);
+      GetSyms(ActItems, ActSyms);
       (* add transitions: *)
-      start_trans;
-      for i := 1 to size(act_syms) do
-        if act_syms[i]=0 then
+      StartTrans;
+      for I := 1 to Size(ActSyms) do
+        if ActSyms[I]=0 then
           (* accept action *)
-          add_trans(0, 0)
+          AddTrans(0, 0)
         else
           (* shift/goto action *)
-          add_trans(act_syms[i], make_state(act_items, act_syms[i]));
-      end_trans;
+          AddTrans(ActSyms[I], MakeState(ActItems, ActSyms[I]));
+      EndTrans;
       (* add next links to kernel items: *)
-      add_next_links;
+      AddNextLinks;
       (* switch to next state: *)
-      inc(act_state);
-    until act_state=n_states;
+      Inc(ActState);
+    until ActState=NStates;
   end(*LR0Set*);
 
 end(*YaccLR0*).

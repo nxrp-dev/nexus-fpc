@@ -28,37 +28,37 @@ unit cfidwarf;
 interface
 
     uses
-      cclasses,
-      globtype,
+      CClasses,
+      GlobType,
       cgbase,cpubase,
-      aasmbase,aasmcfi,aasmtai,aasmdata;
+      aasmbase,aasmcfi,aasmtai,AAsmData;
 
     const
       maxdwarfops = 2;
 
     type
-      tdwarfoperenc=(doe_uleb,doe_sleb,doe_ptr,doe_32bit,doe_16bit,doe_8bit);
-      tdwarfopertype=(dop_reg,dop_const,dop_sym,dop_reloffset);
+      TDwarfOperEnc=(doe_uleb,doe_sleb,doe_ptr,doe_32bit,doe_16bit,doe_8bit);
+      TDwarfOperType=(dop_reg,dop_const,dop_sym,dop_reloffset);
 
-      tdwarfoper=record
-        enc : tdwarfoperenc;
-        case typ:tdwarfopertype of
-          dop_reg : (register:tregister);
+      TDwarfOper=record
+        enc : TDwarfOperEnc;
+        case typ:TDwarfOperType of
+          dop_reg : (register:TRegister);
           dop_const : (value:int64);
-          dop_sym : (sym:tasmsymbol);
-          dop_reloffset : (beginsym,endsym:tasmsymbol);
+          dop_sym : (sym:TAsmSymbol);
+          dop_reloffset : (beginsym,endsym:TAsmSymbol);
       end;
 
-      tdwarfitem=class(TLinkedListItem)
+      TDwarfItem=class(TLinkedListItem)
         op   : byte;
         ops  : byte;
-        oper : array[0..maxdwarfops-1] of tdwarfoper;
+        oper : array[0..maxdwarfops-1] of TDwarfOper;
         constructor create(aop:byte);
-        constructor create_reg(aop:byte;enc1:tdwarfoperenc;reg:tregister);
-        constructor create_const(aop:byte;enc1:tdwarfoperenc;val:int64);
-        constructor create_sym(aop: byte; enc1: tdwarfoperenc; sym: TAsmSymbol);
-        constructor create_reloffset(aop:byte;enc1:tdwarfoperenc;beginlab,endlab:tasmsymbol);
-        constructor create_reg_const(aop:byte;enc1:tdwarfoperenc;reg:tregister;enc2:tdwarfoperenc;val:longint);
+        constructor create_reg(aop:byte;enc1:TDwarfOperEnc;reg:TRegister);
+        constructor create_const(aop:byte;enc1:TDwarfOperEnc;val:int64);
+        constructor create_sym(aop: byte; enc1: TDwarfOperEnc; sym: TAsmSymbol);
+        constructor create_reloffset(aop:byte;enc1:TDwarfOperEnc;beginlab,endlab:TAsmSymbol);
+        constructor create_reg_const(aop:byte;enc1:TDwarfOperEnc;reg:TRegister;enc2:TDwarfOperEnc;val:LongInt);
         procedure generate_code(list:TAsmList);
       end;
 
@@ -79,16 +79,16 @@ interface
         FDwarfList : TLinkedList;
         FFrameStartLabel,
         FFrameEndLabel,
-        FLastloclabel : tasmlabel;
+        FLastloclabel : TAsmLabel;
         procedure cfa_advance_loc(list:TAsmList);
         procedure generate_initial_instructions(list:TAsmList);virtual;
       protected
         code_alignment_factor,
         data_alignment_factor : shortint;
-        property DwarfList:TlinkedList read FDwarfList;
+        property DwarfList:TLinkedList read FDwarfList;
       public
         constructor create;override;
-        destructor destroy;override;
+        destructor Destroy;override;
         procedure generate_code(list:TAsmList);override;
 
         function get_frame_start: TAsmLabel;override;
@@ -98,11 +98,11 @@ interface
         procedure start_frame(list:TAsmList);override;
         procedure end_frame(list:TAsmList);override;
         procedure outmost_frame(list: TAsmList);override;
-        procedure cfa_offset(list:TAsmList;reg:tregister;ofs:longint);override;
-        procedure cfa_restore(list:TAsmList;reg:tregister);override;
-        procedure cfa_def_cfa(list:TAsmList;reg:tregister;ofs:longint);override;
-        procedure cfa_def_cfa_register(list:TAsmList;reg:tregister);override;
-        procedure cfa_def_cfa_offset(list:TAsmList;ofs:longint);override;
+        procedure cfa_offset(list:TAsmList;reg:TRegister;ofs:LongInt);override;
+        procedure cfa_restore(list:TAsmList;reg:TRegister);override;
+        procedure cfa_def_cfa(list:TAsmList;reg:TRegister;ofs:LongInt);override;
+        procedure cfa_def_cfa_register(list:TAsmList;reg:TRegister);override;
+        procedure cfa_def_cfa_offset(list:TAsmList;ofs:LongInt);override;
       end;
 
 
@@ -114,26 +114,26 @@ interface
         procedure start_frame(list:TAsmList);override;
         procedure end_frame(list:TAsmList);override;
         procedure outmost_frame(list: TAsmList);override;
-        procedure cfa_offset(list:TAsmList;reg:tregister;ofs:longint);override;
-        procedure cfa_restore(list:TAsmList;reg:tregister);override;
-        procedure cfa_def_cfa(list:TAsmList;reg:tregister;ofs:longint);override;
-        procedure cfa_def_cfa_register(list:TAsmList;reg:tregister);override;
-        procedure cfa_def_cfa_offset(list:TAsmList;ofs:longint);override;
+        procedure cfa_offset(list:TAsmList;reg:TRegister;ofs:LongInt);override;
+        procedure cfa_restore(list:TAsmList;reg:TRegister);override;
+        procedure cfa_def_cfa(list:TAsmList;reg:TRegister;ofs:LongInt);override;
+        procedure cfa_def_cfa_register(list:TAsmList;reg:TRegister);override;
+        procedure cfa_def_cfa_offset(list:TAsmList;ofs:LongInt);override;
       end;
 
 implementation
 
     uses
-      systems,globals,
-      cutils,
-      verbose,
+      Systems,Globals,
+      CUtils,
+      Verbose,
       dwarfbase;
 
 {****************************************************************************
                                 TDWARFITEM
 ****************************************************************************}
 
-    constructor tdwarfitem.create(aop:byte);
+    constructor TDwarfItem.create(aop:byte);
       begin
         inherited create;
         op:=aop;
@@ -141,7 +141,7 @@ implementation
       end;
 
 
-    constructor tdwarfitem.create_reg(aop:byte;enc1:tdwarfoperenc;reg:tregister);
+    constructor TDwarfItem.create_reg(aop:byte;enc1:TDwarfOperEnc;reg:TRegister);
       begin
         inherited create;
         op:=aop;
@@ -152,7 +152,7 @@ implementation
       end;
 
 
-    constructor tdwarfitem.create_const(aop:byte;enc1:tdwarfoperenc;val:int64);
+    constructor TDwarfItem.create_const(aop:byte;enc1:TDwarfOperEnc;val:int64);
       begin
         inherited create;
         op:=aop;
@@ -163,7 +163,7 @@ implementation
       end;
 
 
-    constructor tdwarfitem.create_sym(aop:byte;enc1:tdwarfoperenc;sym:TAsmSymbol);
+    constructor TDwarfItem.create_sym(aop:byte;enc1:TDwarfOperEnc;sym:TAsmSymbol);
       begin
         inherited create;
         op:=aop;
@@ -174,7 +174,7 @@ implementation
       end;
 
 
-    constructor tdwarfitem.create_reloffset(aop:byte;enc1:tdwarfoperenc;beginlab,endlab:tasmsymbol);
+    constructor TDwarfItem.create_reloffset(aop:byte;enc1:TDwarfOperEnc;beginlab,endlab:TAsmSymbol);
       begin
         inherited create;
         op:=aop;
@@ -187,7 +187,7 @@ implementation
       end;
 
 
-    constructor tdwarfitem.create_reg_const(aop:byte;enc1:tdwarfoperenc;reg:tregister;enc2:tdwarfoperenc;val:longint);
+    constructor TDwarfItem.create_reg_const(aop:byte;enc1:TDwarfOperEnc;reg:TRegister;enc2:TDwarfOperEnc;val:LongInt);
       begin
         inherited create;
         op:=aop;
@@ -201,31 +201,31 @@ implementation
       end;
 
 
-    procedure tdwarfitem.generate_code(list:TAsmList);
+    procedure TDwarfItem.generate_code(list:TAsmList);
       const
-        enc2ait_const : array[tdwarfoperenc] of taiconst_type = (
+        enc2ait_const : array[TDwarfOperEnc] of TAIConstType = (
           aitconst_uleb128bit,aitconst_sleb128bit,aitconst_ptr,
           aitconst_32bit,aitconst_16bit,aitconst_8bit
         );
       var
         i : integer;
       begin
-        list.concat(tai_const.create_8bit(op));
+        list.concat(TAIConst.create_8bit(op));
         for i:=0 to ops-1 do
           begin
             case oper[i].typ of
               dop_const :
-                list.concat(tai_const.create(enc2ait_const[oper[i].enc],oper[i].value));
+                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],oper[i].value));
               dop_sym :
                 begin
                   if oper[i].enc<>doe_ptr then
-                    internalerror(200404127);
-                  list.concat(tai_const.create_sym(oper[i].sym));
+                    InternalError(200404127);
+                  list.concat(TAIConst.create_sym(oper[i].sym));
                 end;
               dop_reloffset :
-                list.concat(tai_const.create_rel_sym(enc2ait_const[oper[i].enc],oper[i].beginsym,oper[i].endsym));
+                list.concat(TAIConst.create_rel_sym(enc2ait_const[oper[i].enc],oper[i].beginsym,oper[i].endsym));
               dop_reg :
-                list.concat(tai_const.create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].register)));
+                list.concat(TAIConst.create(enc2ait_const[oper[i].enc],dwarf_reg(oper[i].register)));
             end;
           end;
       end;
@@ -264,7 +264,7 @@ implementation
       end;
 
 
-    destructor TDwarfAsmCFILowLevel.destroy;
+    destructor TDwarfAsmCFILowLevel.Destroy;
       begin
         FDwarfList.Free;
         FDwarfList := nil;
@@ -275,44 +275,44 @@ implementation
     { if more cpu dependent stuff is implemented, this needs more refactoring }
     procedure TDwarfAsmCFILowLevel.generate_initial_instructions(list:TAsmList);
       begin
-        list.concat(tai_const.create_8bit(DW_CFA_def_cfa));
-        list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
-        list.concat(tai_const.create_uleb128bit(sizeof(aint)));
-        list.concat(tai_const.create_8bit(DW_CFA_offset_extended));
-        list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
-        list.concat(tai_const.create_uleb128bit((-sizeof(aint)) div data_alignment_factor));
+        list.concat(TAIConst.create_8bit(DW_CFA_def_cfa));
+        list.concat(TAIConst.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
+        list.concat(TAIConst.create_uleb128bit(sizeof(aint)));
+        list.concat(TAIConst.create_8bit(DW_CFA_offset_extended));
+        list.concat(TAIConst.create_uleb128bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
+        list.concat(TAIConst.create_uleb128bit((-sizeof(aint)) div data_alignment_factor));
       end;
 {$elseif defined(aarch64)}
     procedure TDwarfAsmCFILowLevel.generate_initial_instructions(list:TAsmList);
       begin
-        list.concat(tai_const.create_8bit(DW_CFA_def_cfa));
-        list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
-        list.concat(tai_const.create_uleb128bit(0));
+        list.concat(TAIConst.create_8bit(DW_CFA_def_cfa));
+        list.concat(TAIConst.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
+        list.concat(TAIConst.create_uleb128bit(0));
       end;
 {$else}
     { if more cpu dependent stuff is implemented, this needs more refactoring }
     procedure TDwarfAsmCFILowLevel.generate_initial_instructions(list:TAsmList);
       begin
-        list.concat(tai_const.create_8bit(DW_CFA_def_cfa));
-        list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
-        list.concat(tai_const.create_uleb128bit(sizeof(aint)));
-        list.concat(tai_const.create_8bit(DW_CFA_offset_extended));
-        list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
-        list.concat(tai_const.create_uleb128bit((-sizeof(aint)) div data_alignment_factor));
+        list.concat(TAIConst.create_8bit(DW_CFA_def_cfa));
+        list.concat(TAIConst.create_uleb128bit(dwarf_reg(NR_STACK_POINTER_REG)));
+        list.concat(TAIConst.create_uleb128bit(sizeof(aint)));
+        list.concat(TAIConst.create_8bit(DW_CFA_offset_extended));
+        list.concat(TAIConst.create_uleb128bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
+        list.concat(TAIConst.create_uleb128bit((-sizeof(aint)) div data_alignment_factor));
       end;
 {$endif}
 
     procedure TDwarfAsmCFILowLevel.generate_code(list:TAsmList);
       var
-        hp : tdwarfitem;
+        hp : TDwarfItem;
         CurrentLSDALabel,
         cielabel,
         lenstartlabel,
         lenendlabel,
         augendlabel,
         augstartlabel,
-        fdeofslabel, curpos: tasmlabel;
-        tc             : tai_const;
+        fdeofslabel, curpos: TAsmLabel;
+        tc             : TAIConst;
       begin
         if DwarfList.Empty then
           exit;
@@ -350,50 +350,50 @@ implementation
 
         }
         CurrentAsmData.getlabel(cielabel,alt_dbgframe);
-        list.concat(tai_label.create(cielabel));
+        list.concat(TAILabel.create(cielabel));
         CurrentAsmData.getlabel(lenstartlabel,alt_dbgframe);
         CurrentAsmData.getlabel(lenendlabel,alt_dbgframe);
-        list.concat(tai_const.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
-        list.concat(tai_label.create(lenstartlabel));
+        list.concat(TAIConst.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
+        list.concat(TAILabel.create(lenstartlabel));
         if datatype=dt_eh_frame then
           begin
-            list.concat(tai_const.create_32bit(0));
-            list.concat(tai_const.create_8bit(1));
-            list.concat(tai_const.create_8bit(ord('z')));
-            list.concat(tai_const.create_8bit(ord('P')));
-            list.concat(tai_const.create_8bit(ord('L')));
-            list.concat(tai_const.create_8bit(ord('R')));
-            list.concat(tai_const.create_8bit(0));
+            list.concat(TAIConst.create_32bit(0));
+            list.concat(TAIConst.create_8bit(1));
+            list.concat(TAIConst.create_8bit(ord('z')));
+            list.concat(TAIConst.create_8bit(ord('P')));
+            list.concat(TAIConst.create_8bit(ord('L')));
+            list.concat(TAIConst.create_8bit(ord('R')));
+            list.concat(TAIConst.create_8bit(0));
           end
         else
           begin
-            list.concat(tai_const.create_32bit(longint($ffffffff)));
-            list.concat(tai_const.create_8bit(1));
-            list.concat(tai_const.create_8bit(0)); { empty string }
+            list.concat(TAIConst.create_32bit(LongInt($ffffffff)));
+            list.concat(TAIConst.create_8bit(1));
+            list.concat(TAIConst.create_8bit(0)); { empty string }
           end;
-        list.concat(tai_const.create_uleb128bit(code_alignment_factor));
-        list.concat(tai_const.create_sleb128bit(data_alignment_factor));
-        list.concat(tai_const.create_8bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
+        list.concat(TAIConst.create_uleb128bit(code_alignment_factor));
+        list.concat(TAIConst.create_sleb128bit(data_alignment_factor));
+        list.concat(TAIConst.create_8bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
         { augmentation data }
         if datatype=dt_eh_frame then
           begin
             CurrentAsmData.getlabel(augstartlabel,alt_dbgframe);
             CurrentAsmData.getlabel(augendlabel,alt_dbgframe);
             { size of augmentation data ('z') }
-            list.concat(tai_const.create_rel_sym(aitconst_uleb128bit,augstartlabel,augendlabel));
-            list.concat(tai_label.create(augstartlabel));
+            list.concat(TAIConst.create_rel_sym(aitconst_uleb128bit,augstartlabel,augendlabel));
+            list.concat(TAILabel.create(augstartlabel));
             { personality function ('P') }
             { encoding }
-            list.concat(tai_const.create_8bit({DW_EH_PE_indirect or DW_EH_PE_pcrel or} DW_EH_PE_sdata4));
+            list.concat(TAIConst.create_8bit({DW_EH_PE_indirect or DW_EH_PE_pcrel or} DW_EH_PE_sdata4));
             { address of personality function }
-            list.concat(tai_const.Createname('_FPC_psabieh_personality_v0',AT_FUNCTION,0));
+            list.concat(TAIConst.Createname('_FPC_psabieh_personality_v0',AT_FUNCTION,0));
 
             { LSDA encoding  ('L')}
-            list.concat(tai_const.create_8bit({DW_EH_PE_pcrel or }DW_EH_PE_sdata4));
+            list.concat(TAIConst.create_8bit({DW_EH_PE_pcrel or }DW_EH_PE_sdata4));
 
             { FDE encoding ('R') }
-            list.concat(tai_const.create_8bit({DW_EH_PE_pcrel or }DW_EH_PE_sdata4));
-            list.concat(tai_label.create(augendlabel));
+            list.concat(TAIConst.create_8bit({DW_EH_PE_pcrel or }DW_EH_PE_sdata4));
+            list.concat(TAILabel.create(augendlabel));
           end;
 
         { Generate standard code
@@ -402,22 +402,22 @@ implementation
         }
         generate_initial_instructions(list);
 
-        list.concat(cai_align.create_zeros(sizeof(pint)));
-        list.concat(tai_label.create(lenendlabel));
+        list.concat(CAIAlign.create_zeros(sizeof(PInt)));
+        list.concat(TAILabel.create(lenendlabel));
         lenstartlabel:=nil;
         lenendlabel:=nil;
 
         hp:=TDwarfItem(DwarfList.first);
-        while assigned(hp) do
+        while Assigned(hp) do
           begin
             case hp.op of
               DW_CFA_Start_Frame :
                 begin
-                  if assigned(lenstartlabel) then
-                    internalerror(200404125);
+                  if Assigned(lenstartlabel) then
+                    InternalError(200404125);
                   if (hp.ops<>1) or
                      (hp.oper[0].typ<>dop_reloffset) then
-                    internalerror(200404126);
+                    InternalError(200404126);
                   CurrentAsmData.getlabel(lenstartlabel,alt_dbgframe);
                   CurrentAsmData.getlabel(lenendlabel,alt_dbgframe);
                   { FDE
@@ -426,19 +426,19 @@ implementation
                      PTRSIZE initial location = oper[0]
                      PTRSIZE function size = oper[1]
                   }
-                  list.concat(tai_const.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
-                  list.concat(tai_label.create(lenstartlabel));
+                  list.concat(TAIConst.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
+                  list.concat(TAILabel.create(lenstartlabel));
                   if datatype=dt_eh_frame then
                     begin
                       { relative offset to the CIE }
                       CurrentAsmData.getlabel(fdeofslabel,alt_dbgframe);
-                      list.concat(tai_label.create(fdeofslabel));
-                      list.concat(tai_const.create_rel_sym(aitconst_32bit,cielabel,fdeofslabel));
+                      list.concat(TAILabel.create(fdeofslabel));
+                      list.concat(TAIConst.create_rel_sym(aitconst_32bit,cielabel,fdeofslabel));
                     end
                   else
                     begin
                       { according to the dwarf (2 to 4) standard, this is an uword being always 32 bit unsigned }
-                      tc:=tai_const.create_type_sym(aitconst_32bit,cielabel);
+                      tc:=TAIConst.create_type_sym(aitconst_32bit,cielabel);
                       { force label offset to secrel32 for windows systems }
                       if (TargetInfo.system in systems_windows) then
                         tc.consttype:=aitconst_secrel32_symbol;
@@ -446,28 +446,28 @@ implementation
                     end;
 
                   CurrentAsmData.getlabel(curpos,alt_dbgframe);
-                  list.concat(tai_label.create(curpos));
-                  list.concat(tai_const.Create_sym(hp.oper[0].beginsym));
-                  list.concat(tai_const.create_rel_sym(aitconst_ptr,hp.oper[0].beginsym,hp.oper[0].endsym));
+                  list.concat(TAILabel.create(curpos));
+                  list.concat(TAIConst.Create_sym(hp.oper[0].beginsym));
+                  list.concat(TAIConst.create_rel_sym(aitconst_ptr,hp.oper[0].beginsym,hp.oper[0].endsym));
 
                   { we wrote a 'z' into the CIE augmentation data }
                   if datatype=dt_eh_frame then
                     begin
                       { size of augmentation }
-                      list.concat(tai_const.create_8bit(sizeof(pint)));
+                      list.concat(TAIConst.create_8bit(sizeof(PInt)));
 {$ifdef debug_eh}
-                      list.concat(tai_comment.Create(strpnew('LSDA')));
+                      list.concat(TAIComment.Create(StrPNew('LSDA')));
 {$endif debug_eh}
                       { address of LSDA}
-                      list.concat(tai_const.Create_sym(CurrentLSDALabel));
+                      list.concat(TAIConst.Create_sym(CurrentLSDALabel));
                       { do not reuse LSDA label }
                       CurrentLSDALabel:=nil;
                     end;
                 end;
               DW_CFA_End_Frame :
                 begin
-                  list.concat(cai_align.create_zeros(sizeof(pint)));
-                  list.concat(tai_label.create(lenendlabel));
+                  list.concat(CAIAlign.create_zeros(sizeof(PInt)));
+                  list.concat(TAILabel.create(lenendlabel));
                   lenstartlabel:=nil;
                   lenendlabel:=nil;
                 end;
@@ -479,8 +479,8 @@ implementation
             hp:=TDwarfItem(hp.next);
           end;
         { Check for open frames }
-        if assigned(lenstartlabel) then
-          internalerror(2004041210);
+        if Assigned(lenstartlabel) then
+          InternalError(2004041210);
         { DwarfList is processed, remove items }
         DwarfList.Clear;
       end;
@@ -492,14 +492,14 @@ implementation
           exit;
         CurrentAsmData.getlabel(FFrameEndLabel,alt_dbgframe);
         FLastloclabel:=get_frame_start;
-        list.concat(tai_label.create(get_frame_start));
-        DwarfList.concat(tdwarfitem.create_reloffset(DW_CFA_start_frame,doe_32bit,get_frame_start,FFrameEndLabel));
+        list.concat(TAILabel.create(get_frame_start));
+        DwarfList.concat(TDwarfItem.create_reloffset(DW_CFA_start_frame,doe_32bit,get_frame_start,FFrameEndLabel));
       end;
 
 
     function TDwarfAsmCFILowLevel.get_frame_start : TAsmLabel;
       begin
-        if not(assigned(FFrameStartLabel)) then
+        if not(Assigned(FFrameStartLabel)) then
           CurrentAsmData.getlabel(FFrameStartLabel,alt_dbgframe);
         Result:=FFrameStartLabel;
       end;
@@ -516,7 +516,7 @@ implementation
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
-        DwarfList.concat(tdwarfitem.create_reg(DW_CFA_undefined,doe_uleb,NR_RETURN_ADDRESS_REG));
+        DwarfList.concat(TDwarfItem.create_reg(DW_CFA_undefined,doe_uleb,NR_RETURN_ADDRESS_REG));
       end;
 
 
@@ -524,10 +524,10 @@ implementation
       begin
         if datatype=dt_none then
           exit;
-        if not assigned(FFrameStartLabel) then
-          internalerror(2004041213);
-        DwarfList.concat(tdwarfitem.create(DW_CFA_end_frame));
-        list.concat(tai_label.create(FFrameEndLabel));
+        if not Assigned(FFrameStartLabel) then
+          InternalError(2004041213);
+        DwarfList.concat(TDwarfItem.create(DW_CFA_end_frame));
+        list.concat(TAILabel.create(FFrameEndLabel));
         FFrameStartLabel:=nil;
         FFrameEndLabel:=nil;
         FLastLocLabel:=nil;
@@ -536,28 +536,28 @@ implementation
 
     procedure TDwarfAsmCFILowLevel.cfa_advance_loc(list:TAsmList);
       var
-        currloclabel : tasmlabel;
-        hp : tai;
-        instrcount : longint;
+        currloclabel : TAsmLabel;
+        hp : TAI;
+        instrcount : LongInt;
         dwarfloc: Integer;
       begin
         if FLastloclabel=nil then
-          internalerror(200404082);
+          InternalError(200404082);
         { search the list backwards and check if we really need an advance loc,
           i.e. if real code/data has been generated since the last cfa_advance_loc
           call
         }
-        hp:=tai(list.Last);
-        while assigned(hp) do
+        hp:=TAI(list.Last);
+        while Assigned(hp) do
           begin
             { if we encounter FLastloclabel without encountering code/data, see check below,
               we do not need insert an advance_loc entry }
-            if (hp.typ=ait_label) and (tai_label(hp).labsym=FLastloclabel) then
+            if (hp.typ=ait_label) and (TAILabel(hp).labsym=FLastloclabel) then
               exit;
             { stop if we find any tai which results in code or data }
             if not(hp.typ in ([ait_label]+SkipInstr)) then
               break;
-            hp:=tai(hp.Previous);
+            hp:=TAI(hp.Previous);
           end;
 
         { check if the last advance entry is less then 8 instructions away:
@@ -565,78 +565,78 @@ implementation
           CPUs use only 4 byte instructions or smaller, this is safe
           we could search even more but this takes more time and 8 instructions should be normally enough
         }
-        hp:=tai(list.Last);
+        hp:=TAI(list.Last);
         instrcount:=0;
         dwarfloc:=DW_CFA_advance_loc4;
-        while assigned(hp) and (instrcount<8) do
+        while Assigned(hp) and (instrcount<8) do
           begin
             { stop if we find any tai which results in code or data }
             if not(hp.typ in ([ait_label,ait_instruction]+SkipInstr)) then
               break;
-            if (hp.typ=ait_label) and (tai_label(hp).labsym=FLastloclabel) then
+            if (hp.typ=ait_label) and (TAILabel(hp).labsym=FLastloclabel) then
               begin
                 dwarfloc:=DW_CFA_advance_loc1;
                 break;
               end;
             if hp.typ=ait_instruction then
               inc(instrcount);
-            hp:=tai(hp.Previous);
+            hp:=TAI(hp.Previous);
           end;
 
         CurrentAsmData.getlabel(currloclabel,alt_dbgframe);
-        list.concat(tai_label.create(currloclabel));
+        list.concat(TAILabel.create(currloclabel));
         if dwarfloc=DW_CFA_advance_loc1 then
-          DwarfList.concat(tdwarfitem.create_reloffset(DW_CFA_advance_loc1,doe_8bit,FLastloclabel,currloclabel))
+          DwarfList.concat(TDwarfItem.create_reloffset(DW_CFA_advance_loc1,doe_8bit,FLastloclabel,currloclabel))
         else
-          DwarfList.concat(tdwarfitem.create_reloffset(DW_CFA_advance_loc4,doe_32bit,FLastloclabel,currloclabel));
+          DwarfList.concat(TDwarfItem.create_reloffset(DW_CFA_advance_loc4,doe_32bit,FLastloclabel,currloclabel));
         FLastloclabel:=currloclabel;
       end;
 
 
-    procedure TDwarfAsmCFILowLevel.cfa_offset(list:TAsmList;reg:tregister;ofs:longint);
+    procedure TDwarfAsmCFILowLevel.cfa_offset(list:TAsmList;reg:TRegister;ofs:LongInt);
       begin
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
 { TODO: check if ref is a temp}
         { offset must be positive }
-        DwarfList.concat(tdwarfitem.create_reg_const(DW_CFA_offset_extended,doe_uleb,reg,doe_uleb,ofs div data_alignment_factor));
+        DwarfList.concat(TDwarfItem.create_reg_const(DW_CFA_offset_extended,doe_uleb,reg,doe_uleb,ofs div data_alignment_factor));
       end;
 
 
-    procedure TDwarfAsmCFILowLevel.cfa_restore(list:TAsmList;reg:tregister);
+    procedure TDwarfAsmCFILowLevel.cfa_restore(list:TAsmList;reg:TRegister);
       begin
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
-        DwarfList.concat(tdwarfitem.create_reg(DW_CFA_restore_extended,doe_uleb,reg));
+        DwarfList.concat(TDwarfItem.create_reg(DW_CFA_restore_extended,doe_uleb,reg));
       end;
 
 
-    procedure TDwarfAsmCFILowLevel.cfa_def_cfa(list:TAsmList;reg:tregister;ofs:longint);
+    procedure TDwarfAsmCFILowLevel.cfa_def_cfa(list:TAsmList;reg:TRegister;ofs:LongInt);
       begin
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
-        DwarfList.concat(tdwarfitem.create_reg_const(DW_CFA_def_cfa,doe_uleb,reg,doe_uleb,ofs));
+        DwarfList.concat(TDwarfItem.create_reg_const(DW_CFA_def_cfa,doe_uleb,reg,doe_uleb,ofs));
       end;
 
 
-    procedure TDwarfAsmCFILowLevel.cfa_def_cfa_register(list:TAsmList;reg:tregister);
+    procedure TDwarfAsmCFILowLevel.cfa_def_cfa_register(list:TAsmList;reg:TRegister);
       begin
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
-        DwarfList.concat(tdwarfitem.create_reg(DW_CFA_def_cfa_register,doe_uleb,reg));
+        DwarfList.concat(TDwarfItem.create_reg(DW_CFA_def_cfa_register,doe_uleb,reg));
       end;
 
 
-    procedure TDwarfAsmCFILowLevel.cfa_def_cfa_offset(list:TAsmList;ofs:longint);
+    procedure TDwarfAsmCFILowLevel.cfa_def_cfa_offset(list:TAsmList;ofs:LongInt);
       begin
         if datatype=dt_none then
           exit;
         cfa_advance_loc(list);
-        DwarfList.concat(tdwarfitem.create_const(DW_CFA_def_cfa_offset,doe_uleb,ofs));
+        DwarfList.concat(TDwarfItem.create_const(DW_CFA_def_cfa_offset,doe_uleb,ofs));
       end;
 
 
@@ -664,7 +664,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_none.create(cfi_startproc));
+        list.concat(TAICFIOpNone.create(cfi_startproc));
       end;
 
 
@@ -677,7 +677,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_none.create(cfi_endproc));
+        list.concat(TAICFIOpNone.create(cfi_endproc));
       end;
 
 
@@ -690,11 +690,11 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_reg.create(cfi_undefined,NR_RETURN_ADDRESS_REG));
+        list.concat(TAICFIOpReg.create(cfi_undefined,NR_RETURN_ADDRESS_REG));
       end;
 
 
-    procedure TDwarfAsmCFIHighLevel.cfa_offset(list: TAsmList; reg: tregister; ofs: longint);
+    procedure TDwarfAsmCFIHighLevel.cfa_offset(list: TAsmList; reg: TRegister; ofs: LongInt);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -703,11 +703,11 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_reg_val.create(cfi_offset,reg,ofs));
+        list.concat(TAICFIOpRegVal.create(cfi_offset,reg,ofs));
       end;
 
 
-    procedure TDwarfAsmCFIHighLevel.cfa_restore(list: TAsmList; reg: tregister);
+    procedure TDwarfAsmCFIHighLevel.cfa_restore(list: TAsmList; reg: TRegister);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -716,11 +716,11 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_reg.create(cfi_restore,reg));
+        list.concat(TAICFIOpReg.create(cfi_restore,reg));
       end;
 
 
-    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa(list: TAsmList; reg: tregister; ofs: longint);
+    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa(list: TAsmList; reg: TRegister; ofs: LongInt);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -729,11 +729,11 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_reg_val.create(cfi_def_cfa,reg,ofs));
+        list.concat(TAICFIOpRegVal.create(cfi_def_cfa,reg,ofs));
       end;
 
 
-    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_register(list: TAsmList; reg: tregister);
+    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_register(list: TAsmList; reg: TRegister);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -742,11 +742,11 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_reg.create(cfi_def_cfa_register,reg));
+        list.concat(TAICFIOpReg.create(cfi_def_cfa_register,reg));
       end;
 
 
-    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_offset(list: TAsmList; ofs: longint);
+    procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_offset(list: TAsmList; ofs: LongInt);
       begin
         if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
@@ -755,7 +755,7 @@ implementation
           end;
         if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
-        list.concat(tai_cfi_op_val.create(cfi_def_cfa_offset,ofs));
+        list.concat(TAICFIOpVal.create(cfi_def_cfa_offset,ofs));
       end;
 
 

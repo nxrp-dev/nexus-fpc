@@ -27,7 +27,7 @@ unit aoptbase;
   interface
 
     uses
-      aasmbase,aasmcpu,aasmtai,aasmdata,
+      aasmbase,aasmcpu,aasmtai,AAsmData,
       cpubase,
       cgbase,
       cgutils;
@@ -36,7 +36,7 @@ unit aoptbase;
       { the number of tai objects processed by an optimizer object since the last
         time a register was modified                                              }
       { size at each dimension depends on the registers of this type }
-      TInstrSinceLastMod = Array[tregistertype] of pbyte;
+      TInstrSinceLastMod = Array[TRegisterType] of PByte;
 
     { the TAopBase object implements the basic methods that most other }
     { assembler optimizer objects require                              }
@@ -45,15 +45,15 @@ unit aoptbase;
         { processor independent methods }
 
         constructor create; virtual;
-        destructor destroy;override;
+        destructor Destroy;override;
         { returns true if register Reg is used by instruction p1 }
-        Function RegInInstruction(Reg: TRegister; p1: tai): Boolean;virtual;
+        Function RegInInstruction(Reg: TRegister; p1: TAI): Boolean;virtual;
         { returns true if register Reg occurs in operand op }
-        class function RegInOp(Reg: TRegister; const op: toper): Boolean; static;
+        class function RegInOp(Reg: TRegister; const op: TOper): Boolean; static;
         { returns true if register Reg is used in the reference Ref }
         class function RegInRef(Reg: TRegister; Const Ref: TReference): Boolean; static;
 
-        function RegModifiedByInstruction(Reg: TRegister; p1: tai): boolean;virtual;
+        function RegModifiedByInstruction(Reg: TRegister; p1: TAI): boolean;virtual;
 
         { returns true if the references are completely equal }
         {Function RefsEqual(Const R1, R2: TReference): Boolean;}
@@ -62,15 +62,15 @@ unit aoptbase;
         { to the optimizer in p1. If there is none, it returns false and     }
         { sets p1 to nil.  If AlsoStopOn is set, it will also stop on these  }
         { object types that are normally skipped over.                       }
-        class function GetNextInstruction(Current: tai; out Next: tai; AlsoStopOn: taitypes = []): Boolean; static;
+        class function GetNextInstruction(Current: TAI; out Next: TAI; AlsoStopOn: TAITypes = []): Boolean; static;
 
         { gets the previous tai object after current that contains info   }
         { relevant to the optimizer in last. If there is none, it returns }
         { false and sets last to nil.  If AlsoStopOn is set, it will also }
         { stop on these object types that are normally skipped over.      }
-        class function GetLastInstruction(Current: tai; out Last: tai; AlsoStopOn: taitypes = []): Boolean; static;
+        class function GetLastInstruction(Current: TAI; out Last: TAI; AlsoStopOn: TAITypes = []): Boolean; static;
 
-        class function SkipEntryExitMarker(current: tai; out next: tai): boolean; static;
+        class function SkipEntryExitMarker(current: TAI; out next: TAI): boolean; static;
 
         { processor dependent methods }
 
@@ -82,28 +82,28 @@ unit aoptbase;
         Function RegsSameSize(Reg1, Reg2: TRegister): Boolean; Virtual;
         { returns whether P is a load instruction (load contents from a }
         { memory location or (register) variable into a register)       }
-        Function IsLoadMemReg(p: tai): Boolean; Virtual; Abstract;
+        Function IsLoadMemReg(p: TAI): Boolean; Virtual; Abstract;
         { returns whether P is a load constant instruction (load a constant }
         { into a register)                                                  }
-        Function IsLoadConstReg(p: tai): Boolean; Virtual; Abstract;
+        Function IsLoadConstReg(p: TAI): Boolean; Virtual; Abstract;
         { returns whether P is a store instruction (store contents from a
           register to a memory location or to a (register) variable)      }
-        Function IsStoreRegMem(p: tai): Boolean; Virtual; Abstract;
+        Function IsStoreRegMem(p: TAI): Boolean; Virtual; Abstract;
 
         { create a paicpu Object that loads the contents of reg1 into reg2 }
-        Function a_load_reg_reg(reg1, reg2: TRegister): taicpu; Virtual; Abstract;
+        Function a_load_reg_reg(reg1, reg2: TRegister): TAICPU; Virtual; Abstract;
 
         { returns true if reg is used by any instruction between p1 and p2 }
-        Function RegUsedBetween(reg: TRegister; p1, p2: tai): Boolean;
+        Function RegUsedBetween(reg: TRegister; p1, p2: TAI): Boolean;
 
         { returns true if reg is modified by any instruction between p1 and p2 }
-        function RegModifiedBetween(reg: TRegister; p1, p2: tai): Boolean;
+        function RegModifiedBetween(reg: TRegister; p1, p2: TAI): Boolean;
 
         { returns true if reg is loaded with a new value by hp }
-        function RegLoadedWithNewValue(reg: tregister; hp: tai): boolean; Virtual;
+        function RegLoadedWithNewValue(reg: TRegister; hp: TAI): boolean; Virtual;
 
         { returns true if hp loads a value from reg }
-        function InstructionLoadsFromReg(const reg : TRegister; const hp : tai) : boolean; Virtual;
+        function InstructionLoadsFromReg(const reg : TRegister; const hp : TAI) : boolean; Virtual;
 
         { compares reg1 and reg2 having the same type and being the same super registers
           so the register size is neglected }
@@ -113,28 +113,28 @@ unit aoptbase;
         class function RegistersInterfere(reg1,reg2 : TRegister) : Boolean; static; {$ifdef USEINLINE}inline;{$endif}
     end;
 
-    function labelCanBeSkipped(p: tai_label): boolean; {$ifdef USEINLINE}inline;{$endif}
+    function labelCanBeSkipped(p: TAILabel): boolean; {$ifdef USEINLINE}inline;{$endif}
 
   implementation
 
     uses
-      verbose,globals,aoptcpub;
+      Verbose,Globals,aoptcpub;
 
-  constructor taoptbase.create;
+  constructor TAoptBase.create;
     begin
       inherited create;
     end;
 
 
-  destructor taoptbase.destroy;
+  destructor TAoptBase.Destroy;
     begin
-      inherited destroy;
+      inherited Destroy;
     end;
 
 
-  Function TAOptBase.RegInInstruction(Reg: TRegister; p1: tai): Boolean;
+  Function TAoptBase.RegInInstruction(Reg: TRegister; p1: TAI): Boolean;
     Var
-      Count: longint;
+      Count: LongInt;
     Begin
       result:=false;
       if p1.typ<>ait_instruction then
@@ -145,7 +145,7 @@ unit aoptbase;
     End;
 
 
-  class function TAOptBase.RegInOp(Reg: TRegister; const op: toper): Boolean;
+  class function TAoptBase.RegInOp(Reg: TRegister; const op: TOper): Boolean;
     Begin
       Case op.typ Of
         Top_Reg: RegInOp := RegistersInterfere(Reg,op.reg);
@@ -155,7 +155,7 @@ unit aoptbase;
     End;
 
 
-  class function TAOptBase.RegInRef(Reg: TRegister; Const Ref: TReference): Boolean;
+  class function TAoptBase.RegInRef(Reg: TRegister; Const Ref: TReference): Boolean;
   Begin
     RegInRef := RegistersInterfere(Ref.Base,Reg)
 {$ifdef cpurefshaveindexreg}
@@ -171,59 +171,59 @@ unit aoptbase;
 {$endif x86}
   End;
 
-  Function TAOptBase.RegModifiedByInstruction(Reg: TRegister; p1: tai): Boolean;
+  Function TAoptBase.RegModifiedByInstruction(Reg: TRegister; p1: TAI): Boolean;
   Begin
     Result:=true;
   End;
 
 
-  function labelCanBeSkipped(p: tai_label): boolean; {$ifdef USEINLINE}inline;{$endif}
+  function labelCanBeSkipped(p: TAILabel): boolean; {$ifdef USEINLINE}inline;{$endif}
   begin
     labelCanBeSkipped := not(p.labsym.is_used) or (p.labsym.labeltype<>alt_jump);
   end;
 
 
-  class function TAOptBase.GetNextInstruction(Current: tai; out Next: tai; AlsoStopOn: taitypes): Boolean;
+  class function TAoptBase.GetNextInstruction(Current: TAI; out Next: TAI; AlsoStopOn: TAITypes): Boolean;
   Begin
     Repeat
-      Current := tai(Current.Next);
+      Current := TAI(Current.Next);
       While Assigned(Current) And
             ((Current.typ In SkipInstr - AlsoStopOn) or
 {$ifdef cpudelayslot}
              ((Current.typ=ait_instruction) and
-              (taicpu(Current).opcode=A_NOP)
+              (TAICPU(Current).opcode=A_NOP)
              ) or
 {$endif cpudelayslot}
              ((Current.typ = ait_label) And
-              labelCanBeSkipped(Tai_Label(Current)))) Do
+              labelCanBeSkipped(TAILabel(Current)))) Do
         begin
           { this won't help the current loop, but it helps when returning from GetNextInstruction
             as the next entry is probably already in the cache }
           prefetch(pointer(Current.Next)^);
-          Current := Tai(Current.Next);
+          Current := TAI(Current.Next);
         end;
       If Assigned(Current) And
          (Current.typ = ait_Marker) And
-         (Tai_Marker(Current).Kind = mark_NoPropInfoStart) Then
+         (TAIMarker(Current).Kind = mark_NoPropInfoStart) Then
         Begin
           While Assigned(Current) And
                 ((Current.typ <> ait_Marker) Or
-                 (Tai_Marker(Current).Kind <> mark_NoPropInfoEnd)) Do
+                 (TAIMarker(Current).Kind <> mark_NoPropInfoEnd)) Do
             begin
               { this won't help the current loop, but it helps when returning from GetNextInstruction
                 as the next entry is probably already in the cache }
               prefetch(pointer(Current.Next)^);
-              Current := Tai(Current.Next);
+              Current := TAI(Current.Next);
             end;
         End;
     Until Not(Assigned(Current)) Or
           (Current.typ <> ait_Marker) Or
-          (Tai_Marker(Current).Kind <> mark_NoPropInfoEnd);
+          (TAIMarker(Current).Kind <> mark_NoPropInfoEnd);
     Next := Current;
     If Assigned(Current) And
        Not((Current.typ In SkipInstr - AlsoStopOn) or
            ((Current.typ = ait_label) And
-            labelCanBeSkipped(Tai_Label(Current))))
+            labelCanBeSkipped(TAILabel(Current))))
       Then GetNextInstruction := True
       Else
         Begin
@@ -233,17 +233,17 @@ unit aoptbase;
   End;
 
 
-  class function TAOptBase.GetLastInstruction(Current: tai; out Last: tai; AlsoStopOn: taitypes): Boolean;
+  class function TAoptBase.GetLastInstruction(Current: TAI; out Last: TAI; AlsoStopOn: TAITypes): Boolean;
   Begin
     Repeat
-      Current := Tai(Current.previous);
+      Current := TAI(Current.previous);
       While Assigned(Current) And
             (((Current.typ = ait_Marker) And
-              Not(Tai_Marker(Current).Kind in [mark_AsmBlockEnd{,mark_NoPropInfoEnd}])) or
+              Not(TAIMarker(Current).Kind in [mark_AsmBlockEnd{,mark_NoPropInfoEnd}])) or
              (Current.typ In SkipInstr - AlsoStopOn) or
              ((Current.typ = ait_label) And
-              labelCanBeSkipped(Tai_Label(Current)))) Do
-        Current := Tai(Current.previous);
+              labelCanBeSkipped(TAILabel(Current)))) Do
+        Current := TAI(Current.previous);
 {      If Assigned(Current) And
          (Current.typ = ait_Marker) And
          (Tai_Marker(Current).Kind = mark_NoPropInfoEnd) Then
@@ -255,13 +255,13 @@ unit aoptbase;
         End; }
     Until Not(Assigned(Current)) Or
           (Current.typ <> ait_Marker) Or
-          not(tai_Marker(current).Kind in [mark_NoPropInfoStart,mark_NoPropInfoEnd]);
+          not(TAIMarker(current).Kind in [mark_NoPropInfoStart,mark_NoPropInfoEnd]);
     If Not(Assigned(Current)) or
        (Current.typ In SkipInstr - AlsoStopOn) or
        ((Current.typ = ait_label) And
-        labelCanBeSkipped(Tai_Label(Current))) or
+        labelCanBeSkipped(TAILabel(Current))) or
        ((Current.typ = ait_Marker) And
-        (Tai_Marker(Current).Kind = mark_AsmBlockEnd))
+        (TAIMarker(Current).Kind = mark_AsmBlockEnd))
       Then
         Begin
           Last := Nil;
@@ -275,7 +275,7 @@ unit aoptbase;
   End;
 
 
-  class function TAOptBase.SkipEntryExitMarker(current: tai; out next: tai): boolean;
+  class function TAoptBase.SkipEntryExitMarker(current: TAI; out next: TAI): boolean;
     begin
       result:=true;
       next:=current;
@@ -283,17 +283,17 @@ unit aoptbase;
         exit;
       while GetNextInstruction(next,next) do
         begin
-          if (next.typ<>ait_marker) or not(tai_marker(next).Kind in [mark_Position,mark_BlockStart]) then
+          if (next.typ<>ait_marker) or not(TAIMarker(next).Kind in [mark_Position,mark_BlockStart]) then
             exit;
         end;
       result:=false;
     end;
 
 
-  Function TAOptBase.RegUsedBetween(reg : TRegister;p1,p2 : tai) : Boolean;
+  Function TAoptBase.RegUsedBetween(reg : TRegister;p1,p2 : TAI) : Boolean;
   Begin
     Result:=false;
-    while assigned(p1) and assigned(p2) and GetNextInstruction(p1,p1) and (p1<>p2) do
+    while Assigned(p1) and Assigned(p2) and GetNextInstruction(p1,p1) and (p1<>p2) do
       if RegInInstruction(reg,p1) then
         begin
           Result:=true;
@@ -302,10 +302,10 @@ unit aoptbase;
   end;
 
 
-  Function TAOptBase.RegModifiedBetween(reg : TRegister;p1,p2 : tai) : Boolean;
+  Function TAoptBase.RegModifiedBetween(reg : TRegister;p1,p2 : TAI) : Boolean;
   Begin
     Result:=false;
-    while assigned(p1) and assigned(p2) and GetNextInstruction(p1,p1) and (p1<>p2) do
+    while Assigned(p1) and Assigned(p2) and GetNextInstruction(p1,p1) and (p1<>p2) do
       if RegModifiedByInstruction(reg,p1) then
         begin
           Result:=true;
@@ -314,21 +314,21 @@ unit aoptbase;
   end;
 
 
-  function TAoptBase.RegLoadedWithNewValue(reg : tregister; hp : tai) : boolean;
+  function TAoptBase.RegLoadedWithNewValue(reg : TRegister; hp : TAI) : boolean;
     begin
       result:=false;
-      internalerror(2016012401);
+      InternalError(2016012401);
     end;
 
 
-  function TAoptBase.InstructionLoadsFromReg(const reg : TRegister; const hp : tai) : boolean;
+  function TAoptBase.InstructionLoadsFromReg(const reg : TRegister; const hp : TAI) : boolean;
     begin
       { save approximation }
       Result:=true;
     end;
 
 
-  class function TAOptBase.SuperRegistersEqual(reg1,reg2 : TRegister) : Boolean;{$ifdef USEINLINE}inline;{$endif}
+  class function TAoptBase.SuperRegistersEqual(reg1,reg2 : TRegister) : Boolean;{$ifdef USEINLINE}inline;{$endif}
   Begin
     { Do an optimized version of
 
@@ -343,7 +343,7 @@ unit aoptbase;
   end;
 
 
-  class function TAOptBase.RegistersInterfere(reg1,reg2 : TRegister) : Boolean; static; {$ifdef USEINLINE}inline;{$endif}
+  class function TAoptBase.RegistersInterfere(reg1,reg2 : TRegister) : Boolean; static; {$ifdef USEINLINE}inline;{$endif}
     begin
 
       result:=SuperRegistersEqual(reg1,reg2);
@@ -352,12 +352,12 @@ unit aoptbase;
 
   { ******************* Processor dependent stuff *************************** }
 
-  Function TAOptBase.RegMaxSize(Reg: TRegister): TRegister;
+  Function TAoptBase.RegMaxSize(Reg: TRegister): TRegister;
   Begin
     RegMaxSize := Reg
   End;
 
-  Function TAOptBase.RegsSameSize(Reg1, Reg2: TRegister): Boolean;
+  Function TAoptBase.RegsSameSize(Reg1, Reg2: TRegister): Boolean;
   Begin
     RegsSameSize := True
   End;

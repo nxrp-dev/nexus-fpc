@@ -39,17 +39,17 @@ unit YaccClos;
 interface
 
 
-procedure closures;
+procedure Closures;
   (* compute the closure sets *)
 
-procedure first_sets;
+procedure FirstSets;
   (* compute first sets and nullable flags *)
 
 implementation
 
 uses YaccBase, YaccTabl;
 
-procedure closures;
+procedure Closures;
 
   (* The closure set of a nonterminal X is the set of all nonterminals Y
      s.t. Y appears as the first symbol in a rightmost derivation from the
@@ -64,40 +64,40 @@ procedure closures;
      The algorithm terminates as soon as no additional symbols have been
      added during the previous pass. *)
 
-  var sym, i, count, prev_count : Integer;
-      act_syms : IntSet;
+  var Sym, I, Count, PrevCount : Integer;
+      ActSyms : TIntSet;
 
   begin
     (* initialize closure sets: *)
-    prev_count := 0;
-    count := 0;
-    for sym := 1 to n_nts do
+    PrevCount := 0;
+    Count := 0;
+    for Sym := 1 to NNTs do
       begin
-        closure_table^[sym] := newEmptyIntSet;
-        with rule_offs^[sym] do
-          for i := rule_lo to rule_hi do
-            with rule_table^[rule_no^[i]]^ do
-              if (rhs_len>0) and (rhs_sym[1]<0) then
-                include(closure_table^[sym]^, rhs_sym[1]);
-        inc(count, size(closure_table^[sym]^));
+        ClosureTable^[Sym] := NewEmptyIntSet;
+        with RuleOffs^[Sym] do
+          for I := RuleLo to RuleHi do
+            with RuleTable^[RuleNo^[I]]^ do
+              if (RHSLen>0) and (RHSSym[1]<0) then
+                Include(ClosureTable^[Sym]^, RHSSym[1]);
+        Inc(Count, Size(ClosureTable^[Sym]^));
       end;
     (* repeated passes until no more symbols have been added during the last
        pass: *)
-    while prev_count<count do
+    while PrevCount<Count do
       begin
-        prev_count := count;
-        count := 0;
-        for sym := 1 to n_nts do
+        PrevCount := Count;
+        Count := 0;
+        for Sym := 1 to NNTs do
           begin
-            act_syms := closure_table^[sym]^;
-            for i := 1 to size(act_syms) do
-              setunion(closure_table^[sym]^, closure_table^[-act_syms[i]]^);
-            inc(count, size(closure_table^[sym]^));
+            ActSyms := ClosureTable^[Sym]^;
+            for I := 1 to Size(ActSyms) do
+              SetUnion(ClosureTable^[Sym]^, ClosureTable^[-ActSyms[I]]^);
+            Inc(Count, Size(ClosureTable^[Sym]^));
           end;
       end;
   end(*closures*);
 
-procedure first_sets;
+procedure FirstSets;
 
   (* The first set of a nonterminal X is the set of all literal symbols
      y s.t. X =>+ y ... in some derivation of the nonterminal X. In
@@ -117,49 +117,49 @@ procedure first_sets;
      first set and none of the nullable flags have been changed during the
      previous pass. *)
 
-  var i, j, l, sym : Integer;
-      n, null, done : Boolean;
+  var I, J, L, Sym : Integer;
+      N, Null, Done : Boolean;
 
   begin
     (* initialize tables: *)
-    for sym := 1 to n_nts do
+    for Sym := 1 to NNTs do
       begin
-        nullable^[sym] := false;
-        first_set_table^[sym] := newEmptyIntSet;
+        Nullable^[Sym] := False;
+        FirstSetTable^[Sym] := NewEmptyIntSet;
       end;
     (* repeated passes until no more symbols added and no nullable flags
        modified: *)
     repeat
-      done := true;
-      for i := 1 to n_rules do
-        with rule_table^[i]^ do
+      Done := True;
+      for I := 1 to NRules do
+        with RuleTable^[I]^ do
           begin
-            l := size(first_set_table^[-lhs_sym]^);
-            n := nullable^[-lhs_sym];
-            null := true;
-            j := 1;
-            while (j<=rhs_len) and null do
+            L := Size(FirstSetTable^[-LHSSym]^);
+            N := Nullable^[-LHSSym];
+            Null := True;
+            J := 1;
+            while (J<=RHSLen) and Null do
               begin
-                if rhs_sym[j]<0 then
+                if RHSSym[J]<0 then
                   begin
-                    setunion( first_set_table^[-lhs_sym]^,
-                              first_set_table^[-rhs_sym[j]]^ );
-                    null := nullable^[-rhs_sym[j]];
+                    SetUnion( FirstSetTable^[-LHSSym]^,
+                              FirstSetTable^[-RHSSym[J]]^ );
+                    Null := Nullable^[-RHSSym[J]];
                   end
                 else
                   begin
-                    include( first_set_table^[-lhs_sym]^,
-                             rhs_sym[j] );
-                    null := false;
+                    Include( FirstSetTable^[-LHSSym]^,
+                             RHSSym[J] );
+                    Null := False;
                   end;
-                inc(j);
+                Inc(J);
               end;
-            if null then nullable^[-lhs_sym] := true;
-            if (l<size(first_set_table^[-lhs_sym]^)) or
-               (n<>nullable^[-lhs_sym]) then
-              done := false;
+            if Null then Nullable^[-LHSSym] := True;
+            if (L<Size(FirstSetTable^[-LHSSym]^)) or
+               (N<>Nullable^[-LHSSym]) then
+              Done := False;
           end;
-    until done;
+    until Done;
   end(*first_sets*);
 
 end(*YaccClosure*).

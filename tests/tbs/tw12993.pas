@@ -27,7 +27,7 @@ uses
   fpwidestring,
  {$endif}
  {$ifdef USE_CPALL_UNIT}
-  cpall,
+  CPAll,
  {$endif}
   strings;
  {$endif ndef USE_INTERNAL_UNICODE}

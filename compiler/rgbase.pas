@@ -29,21 +29,21 @@ interface
       cpuBase,cgBase;
 
     type
-      TRegNameTable = array[tregisterindex] of string[19];
-      TRegisterIndexTable = array[tregisterindex] of tregisterindex;
+      TRegNameTable = array[TRegisterIndex] of string[19];
+      TRegisterIndexTable = array[TRegisterIndex] of TRegisterIndex;
 
-    function findreg_by_number_table(r:Tregister;const regnumber_index:TRegisterIndexTable):tregisterindex;
-    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):tregisterindex;
+    function findreg_by_number_table(r:TRegister;const regnumber_index:TRegisterIndexTable):TRegisterIndex;
+    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):TRegisterIndex;
 
 
 implementation
 
-    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):tregisterindex;
+    function findreg_by_name_table(const s:string;const regname_table:TRegNameTable;const regname_index:TRegisterIndexTable):TRegisterIndex;
       var
-        i,p,q : tregisterindex;
+        i,p,q : TRegisterIndex;
       begin
-        p:=Low(tregisterindex);
-        q:=high(tregisterindex);
+        p:=Low(TRegisterIndex);
+        q:=high(TRegisterIndex);
         repeat
           i:=(p+q) shr 1;
           if s>regname_table[regname_index[i]] then
@@ -58,12 +58,12 @@ implementation
       end;
 
 
-    function findreg_by_number_table(r:Tregister;const regnumber_index:TRegisterIndexTable):tregisterindex;
+    function findreg_by_number_table(r:TRegister;const regnumber_index:TRegisterIndexTable):TRegisterIndex;
       var
-        i,p,q : longint;
+        i,p,q : LongInt;
       begin
-        p:=Low(tregisterindex);
-        q:=high(tregisterindex);
+        p:=Low(TRegisterIndex);
+        q:=high(TRegisterIndex);
         repeat
           i:=(p+q) shr 1;
           if r>regnumber_table[regnumber_index[i]] then

@@ -46,22 +46,22 @@ interface
 uses LexBase, LexTable;
 
 
-procedure parse_rule ( rule_no : Integer );
+procedure ParseRule ( RuleNo : Integer );
   (* rule parser (rule_no=number of parsed rule) *)
 
 (* Return values of rule parser: *)
 
 var
 
-expr, stmt : String;
+Expr, Stmt : String;
   (* expression and statement part of rule *)
-cf   : Boolean;
+Cf   : Boolean;
   (* caret flag *)
-n_st : Integer;
+NSt : Integer;
   (* number of start states in prefix *)
-st   : array [1..max_states] of Integer;
+St   : array [1..MaxStates] of Integer;
   (* start states *)
-r    : RegExpr;
+R    : PRegExpr;
   (* parsed expression *)
 
 implementation
@@ -90,181 +90,181 @@ uses LexMsgs;
    act_pos will point to the position of the original macro call in the
    source line. This is needed to give proper error diagnostics. *)
 
-const max_chars = 2048;
+const MaxChars = 2048;
 
 var
 
-act_pos, bufptr : Integer;
+ActPos, BufPtr : Integer;
   (* current position in source line and input stack pointer *)
-buf : array [1..max_chars] of Char;
+Buf : array [1..MaxChars] of Char;
   (* input buffer *)
-str_state, cclass_state, quote_state : Boolean;
+StrState, CClassState, QuoteState : Boolean;
   (* state information *)
-n_macros : Integer;
+NMacros : Integer;
   (* number of macros currently on stack *)
 
-procedure mark_error ( msg : String; offset : Integer );
+procedure MarkError ( Msg : String; Offset : Integer );
   (* mark error position (offset=offset of error position (to the left of
      act_pos) *)
   begin
-    if n_macros=0 then
-      error(msg, act_pos-offset)
+    if NMacros=0 then
+      Error(Msg, ActPos-Offset)
     else
-      error(msg+' in regular definition', act_pos)
+      Error(Msg+' in regular definition', ActPos)
   end(*mark_error*);
 
-procedure put_str(str : String);
+procedure PutStr(Str : String);
   (* push str onto input stack *)
-  var i : Integer;
+  var I : Integer;
   begin
-    inc(bufptr, length(str));
-    if bufptr>max_chars then fatal(macro_stack_overflow);
-    for i := 1 to length(str) do
-      buf[bufptr-i+1] := str[i];
+    Inc(BufPtr, Length(Str));
+    if BufPtr>MaxChars then Fatal(MacroStackOverflow);
+    for I := 1 to Length(Str) do
+      Buf[BufPtr-I+1] := Str[I];
   end(*put_str*);
 
-procedure init_scanner;
+procedure InitScanner;
   (* initialize the scanner *)
   begin
-    act_pos := 1; bufptr := 0;
-    str_state := false; cclass_state := false; quote_state := false;
-    n_macros := 0;
-    put_str(line);
+    ActPos := 1; BufPtr := 0;
+    StrState := False; CClassState := False; QuoteState := False;
+    NMacros := 0;
+    PutStr(Line);
   end(*init_scanner*);
 
-function act_char : Char;
+function ActChar : Char;
   (* current character (#0 if none) *)
-  function push_macro : Boolean;
+  function PushMacro : Boolean;
     (* check for macro call at current position in input buffer *)
-    function scan_macro ( var name : String ) : Boolean;
-      var i : Integer;
+    function ScanMacro ( var Name : String ) : Boolean;
+      var I : Integer;
       begin
-        if (bufptr>1) and
-           (buf[bufptr]='{') and (buf[bufptr-1] in letters) then
+        if (BufPtr>1) and
+           (Buf[BufPtr]='{') and (Buf[BufPtr-1] in Letters) then
           begin
-            name := '{'; i := bufptr-1;
-            while (i>0) and (buf[i] in alphanums) do
+            Name := '{'; I := BufPtr-1;
+            while (I>0) and (Buf[I] in Alphanums) do
               begin
-                name := name+buf[i];
-                dec(i);
+                Name := Name+Buf[I];
+                Dec(I);
               end;
-            if (i>0) and (buf[i]='}') then
+            if (I>0) and (Buf[I]='}') then
               begin
-                scan_macro := true;
-                name := name+'}';
-                bufptr := i-1;
+                ScanMacro := True;
+                Name := Name+'}';
+                BufPtr := I-1;
               end
             else
               begin
-                scan_macro := false;
-                mark_error(syntax_error, -length(name));
-                bufptr := i;
+                ScanMacro := False;
+                MarkError(SyntaxError, -Length(Name));
+                BufPtr := I;
               end
           end
         else
-          scan_macro := false
+          ScanMacro := False
       end(*scan_macro*);
-    var name : String;
+    var Name : String;
     begin
-      if scan_macro(name) then
+      if ScanMacro(Name) then
         begin
-          push_macro := true;
+          PushMacro := True;
 {$ifdef fpc}
-          with sym_table^[key(name, max_keys, @lookup, @entry)] do
+          with SymTable^[Key(Name, MaxKeys, @Lookup, @Entry)] do
 {$else}
-          with sym_table^[key(name, max_keys, lookup, entry)] do
+          with SymTable^[Key(Name, MaxKeys, Lookup, Entry)] do
 {$endif}
-            if sym_type=macro_sym then
+            if SymType=MacroSym then
               begin
-                put_str(subst^+#0);
-                inc(n_macros);
+                PutStr(Subst^+#0);
+                Inc(NMacros);
               end
             else
-              mark_error(undefined_symbol, -1)
+              MarkError(UndefinedSymbol, -1)
         end
       else
-        push_macro := false
+        PushMacro := False
     end(*push_macro*);
-  function pop_macro : Boolean;
+  function PopMacro : Boolean;
     (* check for macro endmarker *)
     begin
-      if (bufptr>0) and (buf[bufptr]=#0) then
+      if (BufPtr>0) and (Buf[BufPtr]=#0) then
         begin
-          dec(bufptr);
-          dec(n_macros);
-          if n_macros=0 then act_pos := length(line)-bufptr+1;
-          pop_macro := true;
+          Dec(BufPtr);
+          Dec(NMacros);
+          if NMacros=0 then ActPos := Length(Line)-BufPtr+1;
+          PopMacro := True;
         end
       else
-        pop_macro := false
+        PopMacro := False
     end(*pop_macro*);
   begin
-    if not (str_state or cclass_state or quote_state) then
-      while push_macro do while pop_macro do ;
-    if bufptr=0 then
-      act_char := #0
+    if not (StrState or CClassState or QuoteState) then
+      while PushMacro do while PopMacro do ;
+    if BufPtr=0 then
+      ActChar := #0
     else
       begin
-        while pop_macro do ;
-        if (bufptr>0) then
-          act_char := buf[bufptr]
+        while PopMacro do ;
+        if (BufPtr>0) then
+          ActChar := Buf[BufPtr]
         else
-          act_char:=#0;
+          ActChar:=#0;
       end
   end(*act_char*);
 
-procedure get_char;
+procedure GetChar;
   (* get next character *)
   begin
-    if bufptr>0 then
+    if BufPtr>0 then
       begin
-        case buf[bufptr] of
-          '\' : quote_state := not quote_state;
-          '"' : if quote_state then
-                  quote_state := false
-                else if not cclass_state then
-                  str_state := not str_state;
-          '[' : if quote_state then
-                  quote_state := false
-                else if not str_state then
-                  cclass_state := true;
-          ']' : if quote_state then
-                  quote_state := false
-                else if not str_state then
-                  cclass_state := false;
-          else  quote_state := false;
+        case Buf[BufPtr] of
+          '\' : QuoteState := not QuoteState;
+          '"' : if QuoteState then
+                  QuoteState := False
+                else if not CClassState then
+                  StrState := not StrState;
+          '[' : if QuoteState then
+                  QuoteState := False
+                else if not StrState then
+                  CClassState := True;
+          ']' : if QuoteState then
+                  QuoteState := False
+                else if not StrState then
+                  CClassState := False;
+          else  QuoteState := False;
         end;
-        dec(bufptr);
-        if n_macros=0 then
-          act_pos := length(line)-bufptr+1;
+        Dec(BufPtr);
+        if NMacros=0 then
+          ActPos := Length(Line)-BufPtr+1;
       end
   end(*get_char*);
 
 (* Semantic routines: *)
 
-procedure add_start_state ( symbol : String );
+procedure AddStartState ( Symbol : String );
   (* add start state to st array *)
   begin
 {$ifdef fpc}
-    with sym_table^[key(symbol, max_keys, @lookup, @entry)] do
+    with SymTable^[Key(Symbol, MaxKeys, @Lookup, @Entry)] do
 {$else}
-    with sym_table^[key(symbol, max_keys, lookup, entry)] do
+    with SymTable^[Key(Symbol, MaxKeys, Lookup, Entry)] do
 {$endif}
-      if sym_type=start_state_sym then
+      if SymType=StartStateSym then
         begin
-          if n_st>=max_start_states then exit; { this shouldn't happen }
-          inc(n_st);
-          st[n_st] := start_state;
+          if NSt>=MaxStartStates then Exit; { this shouldn't happen }
+          Inc(NSt);
+          St[NSt] := StartState;
         end
       else
-        mark_error(undefined_symbol, length(symbol))
+        MarkError(UndefinedSymbol, Length(Symbol))
   end(*add_start_state*);
 
 (* Parser: *)
 
-procedure parse_rule ( rule_no : Integer );
+procedure ParseRule ( RuleNo : Integer );
 
-  procedure rule ( var done : Boolean );
+  procedure Rule ( var Done : Boolean );
 
     (* parse rule according to syntax:
 
@@ -301,329 +301,329 @@ procedure parse_rule ( rule_no : Integer );
                                 ;
     *)
 
-    procedure start_state_prefix ( var done : Boolean );
-      procedure start_state_list ( var done : Boolean );
-        procedure ident ( var done : Boolean );
-          var idstr : String;
+    procedure StartStatePrefix ( var Done : Boolean );
+      procedure StartStateList ( var Done : Boolean );
+        procedure Ident ( var Done : Boolean );
+          var IDStr : String;
           begin(*ident*)
-            done := act_char in letters;   if not done then exit;
-            idstr := act_char;
-            get_char;
-            while act_char in alphanums do
+            Done := ActChar in Letters;   if not Done then Exit;
+            IDStr := ActChar;
+            GetChar;
+            while ActChar in Alphanums do
               begin
-                idstr := idstr+act_char;
-                get_char;
+                IDStr := IDStr+ActChar;
+                GetChar;
               end;
-            add_start_state(idstr);
+            AddStartState(IDStr);
           end(*ident*);
         begin(*start_state_list*)
-          ident(done);                     if not done then exit;
-          while act_char=',' do
+          Ident(Done);                     if not Done then Exit;
+          while ActChar=',' do
             begin
-              get_char;
-              ident(done);                 if not done then exit;
+              GetChar;
+              Ident(Done);                 if not Done then Exit;
             end;
         end(*start_state_list*);
       begin(*start_state_prefix*)
-        n_st := 0;
-        if act_char='<' then
+        NSt := 0;
+        if ActChar='<' then
           begin
-            get_char;
-            start_state_list(done);        if not done then exit;
-            if act_char='>' then
+            GetChar;
+            StartStateList(Done);        if not Done then Exit;
+            if ActChar='>' then
               begin
-                done := true;
-                get_char;
+                Done := True;
+                GetChar;
               end
             else
-              done := false
+              Done := False
           end
         else
-          done := true
+          Done := True
       end(*start_state_prefix*);
-    procedure caret( var done : Boolean );
+    procedure Caret( var Done : Boolean );
       begin(*caret*)
-        done := true;
-        cf   := act_char='^';
-        if act_char='^' then get_char;
+        Done := True;
+        Cf   := ActChar='^';
+        if ActChar='^' then GetChar;
       end(*caret*);
 
-  procedure scan_char ( var done : Boolean; var c : Char );
+  procedure ScanChar ( var Done : Boolean; var C : Char );
     var
-      oct_val : Byte;
-      count : Integer;
+      OctVal : Byte;
+      Count : Integer;
     begin
-      done := true;
-      if act_char='\' then
+      Done := True;
+      if ActChar='\' then
         begin
-          get_char;
-          case act_char of
-            #0  : done := false;
+          GetChar;
+          case ActChar of
+            #0  : Done := False;
             'n' : begin
-                    c := nl;
-                    get_char
+                    C := NL;
+                    GetChar
                   end;
             'r' : begin
-                    c := cr;
-                    get_char
+                    C := CR;
+                    GetChar
                   end;
             't' : begin
-                    c := tab;
-                    get_char
+                    C := Tab;
+                    GetChar
                   end;
             'b' : begin
-                    c := bs;
-                    get_char
+                    C := BS;
+                    GetChar
                   end;
             'f' : begin
-                    c := ff;
-                    get_char
+                    C := FF;
+                    GetChar
                   end;
             '0'..'7' : begin
-                         oct_val := ord(act_char)-ord('0');
-                         get_char;
-                         count := 1;
-                         while ('0'<=act_char) and
-                           (act_char<='7') and
-                           (count<3) do
+                         OctVal := Ord(ActChar)-Ord('0');
+                         GetChar;
+                         Count := 1;
+                         while ('0'<=ActChar) and
+                           (ActChar<='7') and
+                           (Count<3) do
                            begin
-                             inc(count);
-                             oct_val := oct_val*8+ord(act_char)-ord('0');
-                             get_char
+                             Inc(Count);
+                             OctVal := OctVal*8+Ord(ActChar)-Ord('0');
+                             GetChar
                            end;
-                         c := chr(oct_val);
+                         C := Chr(OctVal);
                        end
             else  begin
-                    c := act_char;
-                    get_char
+                    C := ActChar;
+                    GetChar
                   end
           end
         end
       else
         begin
-          c := act_char;
-          get_char
+          C := ActChar;
+          GetChar
         end
     end(*scan_char*);
-  procedure scan_str ( var done : Boolean; var str : String );
-    var c : Char;
+  procedure ScanStr ( var Done : Boolean; var Str : String );
+    var C : Char;
     begin
-      str := '';
-      get_char;
-      while (act_char<>#0) and (act_char<>'"') do
+      Str := '';
+      GetChar;
+      while (ActChar<>#0) and (ActChar<>'"') do
         begin
-          scan_char(done, c);        if not done then exit;
-          str := str+c;
+          ScanChar(Done, C);        if not Done then Exit;
+          Str := Str+C;
         end;
-      if act_char=#0 then
-        done := false
+      if ActChar=#0 then
+        Done := False
       else
         begin
-          get_char;
-          done := true;
+          GetChar;
+          Done := True;
         end
     end(*scan_str*);
-  procedure scan_cclass( var done : Boolean; var cc : CClass );
+  procedure ScanCclass( var Done : Boolean; var CC : TCClass );
     (* scan a character class *)
     var
-      caret : boolean;
-      c, c1,cl : Char;
+      Caret : Boolean;
+      C, C1,Cl : Char;
     begin
-      cc := [];
-      get_char;
-      if act_char='^' then
+      CC := [];
+      GetChar;
+      if ActChar='^' then
         begin
-          caret := true;
-          get_char;
+          Caret := True;
+          GetChar;
         end
       else
-        caret := false;
-      while (act_char<>#0) and (act_char<>']') do
+        Caret := False;
+      while (ActChar<>#0) and (ActChar<>']') do
         begin
-          scan_char(done, c);              if not done then exit;
-          if act_char='-' then
+          ScanChar(Done, C);              if not Done then Exit;
+          if ActChar='-' then
             begin
-              get_char;
-              if (act_char<>#0) and (act_char<>']') then
+              GetChar;
+              if (ActChar<>#0) and (ActChar<>']') then
                 begin
-                  scan_char(done, c1);     if not done then exit;
-                  for cl:=c to c1 do
-                    cc:=cc+[cl];
+                  ScanChar(Done, C1);     if not Done then Exit;
+                  for Cl:=C to C1 do
+                    CC:=CC+[Cl];
                    {cc := cc+[c..c1];}
                 end
               else
-                cc := cc+[c,'-'];
+                CC := CC+[C,'-'];
             end
           else
-            cc := cc+[c];
+            CC := CC+[C];
         end;
-      if act_char=#0 then
-        done := false
+      if ActChar=#0 then
+        Done := False
       else
         begin
-          get_char;
-          done := true;
+          GetChar;
+          Done := True;
         end;
-      if caret then cc := [#1..#255]-cc;
+      if Caret then CC := [#1..#255]-CC;
     end(*scan_cclass*);
-  procedure scan_num( var done : Boolean; var n : Integer );
-    var str : String;
+  procedure ScanNum( var Done : Boolean; var N : Integer );
+    var Str : String;
     begin
-      if act_char in digits then
+      if ActChar in Digits then
         begin
-          str := act_char;
-          get_char;
-          while act_char in digits do
+          Str := ActChar;
+          GetChar;
+          while ActChar in Digits do
             begin
-              str := str+act_char;
-              get_char;
+              Str := Str+ActChar;
+              GetChar;
             end;
-          done := isInt(str, n);
+          Done := IsInt(Str, N);
         end
       else
-        done := false
+        Done := False
     end(*scan_num*);
 
-    procedure DoExpr ( var done : Boolean; var r : RegExpr );
-      procedure term ( var done : Boolean; var r : RegExpr );
-        procedure factor ( var done : Boolean; var r : RegExpr );
-          var str  : String;
-              cc   : CClass;
-              c    : Char;
-              n, m : Integer;
+    procedure DoExpr ( var Done : Boolean; var R : PRegExpr );
+      procedure Term ( var Done : Boolean; var R : PRegExpr );
+        procedure Factor ( var Done : Boolean; var R : PRegExpr );
+          var Str  : String;
+              CC   : TCClass;
+              C    : Char;
+              N, M : Integer;
           begin(*factor*)
-            case act_char of
+            case ActChar of
               '"' : begin
-                      scan_str(done, str);         if not done then exit;
-                      r := strExpr(newStr(str));
+                      ScanStr(Done, Str);         if not Done then Exit;
+                      R := StrExpr(NewStr(Str));
                     end;
               '[' : begin
-                      scan_cclass(done, cc);       if not done then exit;
-                      r := cclassExpr(newCClass(cc));
+                      ScanCclass(Done, CC);       if not Done then Exit;
+                      R := CClassExpr(NewCClass(CC));
                     end;
               '.' : begin
-                      get_char;
-                      r := cclassExpr(newCClass([#1..#255]-[nl]));
-                      done := true;
+                      GetChar;
+                      R := CClassExpr(NewCClass([#1..#255]-[NL]));
+                      Done := True;
                     end;
               '(' : begin
-                      get_char;
-                      DoExpr(done, r);               if not done then exit;
-                      if act_char=')' then
+                      GetChar;
+                      DoExpr(Done, R);               if not Done then Exit;
+                      if ActChar=')' then
                         begin
-                          get_char;
-                          done := true;
+                          GetChar;
+                          Done := True;
                         end
                       else
-                        done := false
+                        Done := False
                     end;
               else  begin
-                      scan_char(done, c);          if not done then exit;
-                      r := charExpr(c);
+                      ScanChar(Done, C);          if not Done then Exit;
+                      R := CharExpr(C);
                     end;
             end;
-            while done and (act_char in ['*','+','?','{']) do
-              case act_char of
+            while Done and (ActChar in ['*','+','?','{']) do
+              case ActChar of
                 '*' : begin
-                        get_char;
-                        r := starExpr(r);
+                        GetChar;
+                        R := StarExpr(R);
                       end;
                 '+' : begin
-                        get_char;
-                        r := plusExpr(r);
+                        GetChar;
+                        R := PlusExpr(R);
                       end;
                 '?' : begin
-                        get_char;
-                        r := optExpr(r);
+                        GetChar;
+                        R := OptExpr(R);
                       end;
                 '{' : begin
-                        get_char;
-                        scan_num(done, m);         if not done then exit;
-                        if act_char=',' then
+                        GetChar;
+                        ScanNum(Done, M);         if not Done then Exit;
+                        if ActChar=',' then
                           begin
-                            get_char;
-                            scan_num(done, n);     if not done then exit;
-                            r := mnExpr(r, m, n);
+                            GetChar;
+                            ScanNum(Done, N);     if not Done then Exit;
+                            R := MNExpr(R, M, N);
                           end
                         else
-                          r := mnExpr(r, m, m);
-                        if act_char='}' then
+                          R := MNExpr(R, M, M);
+                        if ActChar='}' then
                           begin
-                            get_char;
-                            done := true;
+                            GetChar;
+                            Done := True;
                           end
                         else
-                          done := false
+                          Done := False
                       end;
               end
           end(*factor*);
-        const term_delim : CClass = [#0,' ',tab,'$','|',')','/'];
-        var r1 : RegExpr;
+        const TermDelim : TCClass = [#0,' ',Tab,'$','|',')','/'];
+        var R1 : PRegExpr;
         begin(*term*)
-          if not (act_char in term_delim) then
+          if not (ActChar in TermDelim) then
             begin
-              factor(done, r);             if not done then exit;
-              while not (act_char in term_delim) do
+              Factor(Done, R);             if not Done then Exit;
+              while not (ActChar in TermDelim) do
                 begin
-                  factor(done, r1);        if not done then exit;
-                  r := catExpr(r, r1);
+                  Factor(Done, R1);        if not Done then Exit;
+                  R := CatExpr(R, R1);
                 end
             end
           else
             begin
-              r := epsExpr;
-              done := true;
+              R := EpsExpr;
+              Done := True;
             end
         end(*term*);
-      var r1 : RegExpr;
+      var R1 : PRegExpr;
       begin(*expr*)
-        term(done, r);                     if not done then exit;
-        while act_char='|' do
+        Term(Done, R);                     if not Done then Exit;
+        while ActChar='|' do
           begin
-            get_char;
-            term(done, r1);                if not done then exit;
-            r := altExpr(r, r1);
+            GetChar;
+            Term(Done, R1);                if not Done then Exit;
+            R := AltExpr(R, R1);
           end
       end(*expr*);
 
-    var r1, r2 : RegExpr;
+    var R1, R2 : PRegExpr;
 
     begin(*rule*)
-      start_state_prefix(done);            if not done then exit;
-      caret(done);                         if not done then exit;
-      DoExpr(done, r1);                      if not done then exit;
-      if act_char='$' then
+      StartStatePrefix(Done);            if not Done then Exit;
+      Caret(Done);                         if not Done then Exit;
+      DoExpr(Done, R1);                      if not Done then Exit;
+      if ActChar='$' then
         begin
-          r := catExpr(catExpr(r1,
-                 markExpr(rule_no, 1)),
-                 cclassExpr(newCClass([nl])));
-          get_char;
+          R := CatExpr(CatExpr(R1,
+                 MarkExpr(RuleNo, 1)),
+                 CClassExpr(NewCClass([NL])));
+          GetChar;
         end
-      else if act_char='/' then
+      else if ActChar='/' then
         begin
-          get_char;
-          DoExpr(done, r2);                  if not done then exit;
-          r := catExpr(catExpr(r1,
-                 markExpr(rule_no, 1)), r2);
+          GetChar;
+          DoExpr(Done, R2);                  if not Done then Exit;
+          R := CatExpr(CatExpr(R1,
+                 MarkExpr(RuleNo, 1)), R2);
         end
       else
-        r := catExpr(r1, markExpr(rule_no, 1));
-      r := catExpr(r, markExpr(rule_no, 0));
-      done := (act_char=#0) or (act_char=' ') or (act_char=tab);
+        R := CatExpr(R1, MarkExpr(RuleNo, 1));
+      R := CatExpr(R, MarkExpr(RuleNo, 0));
+      Done := (ActChar=#0) or (ActChar=' ') or (ActChar=Tab);
     end(*rule*);
 
-  var done : Boolean;
+  var Done : Boolean;
 
   begin(*parse_rule*)
-    init_scanner;
-    rule(done);
-    if done then
+    InitScanner;
+    Rule(Done);
+    if Done then
       begin
-        expr := copy(line, 1, act_pos-1);
-        stmt := copy(line, act_pos, length(line));
+        Expr := Copy(Line, 1, ActPos-1);
+        Stmt := Copy(Line, ActPos, Length(Line));
       end
     else
-      mark_error(syntax_error, 0)
+      MarkError(SyntaxError, 0)
   end(*parse_rule*);
 
 end(*LexRules*).
