@@ -7,8 +7,12 @@ and returns zero when its runtime checks pass. The exported
 `NexusAssemblerTest` function returns 42.
 
 `nxclangregistration.pas` checks the compiler's actual assembler registration,
-default selection, and target-triple construction for Android x86-64.
-It links against the built x86-64 cross compiler units and runs on Windows.
+normal and external defaults, LLVM flags, and target-triple construction across
+all 13 retained target combinations. Build it with the native compiler and the
+matching compiler-unit directory for each backend: x86-64 (no test define),
+i386 (`-dTEST_I386`), and AArch64 (`-dTEST_AARCH64`). The test executables run on
+the host; they inspect target registrations without requiring target SDKs.
+Linux x86-64 and AArch64 now default to Clang even without `-Aas-clang`.
 
 ## Build compilers and RTLs
 
