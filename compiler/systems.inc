@@ -149,7 +149,7 @@
             ,res_single_file,res_no_compile);
 
        TDbg = (dbg_none
-            ,dbg_stabs,dbg_stabx,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
+            ,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
        );
 
        TScriptType = (script_none

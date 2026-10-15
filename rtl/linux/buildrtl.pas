@@ -12,7 +12,7 @@ unit buildrtl;
       System.RtlConsts, System.SysConst, System.Math, System.Types,
 
 {$ifdef cpui386}
-      System.CPU, System.CPU.MMX, System.LineInfo,
+      System.CPU, System.CPU.MMX, System.LineInfo.Dwarf,
 {$endif}
 {$ifdef cpux86_64}
       System.CPU,
@@ -31,7 +31,7 @@ unit buildrtl;
 
       exeinfo,
 {$ifdef cpui386}
-      cpu, mmx, lineinfo,
+      cpu, mmx, lnfodwrf,
 {$endif}
 {$ifdef cpux86_64}
       cpu,

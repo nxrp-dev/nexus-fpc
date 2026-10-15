@@ -3396,7 +3396,7 @@ option_invalid_iphoneos_deployment_target=11051_E_Invalid value for IPHONEOS_DEP
 option_illegal_fpu_eabihf=11052_E_You must use one of the VFP FPU types when using the EABIHF ABI target
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_The selected debug format is not supported on the current target, not changing the current setting
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_malformed parameter: $1
@@ -3621,8 +3621,6 @@ S*2Aas_Rangkai menggunakan GNU AS
 *g2gl_Gunakan info baris unit (tampilkan info lebih lengkap dengan backtraces)
 *g2go<x>_Setel opsi informasi debug
 *g3godwarfsets_ Hidupkan informasi setelan debug Dwarf (pecahkan gdb < 6.5)
-*g2gp_Siapkan jenis huruf dalam nama simbol stabs
-*g2gs_Hasilkan informasi debug stabs
 *g2gt_Bersihkan variabel lokal (untuk mendeteksi uses tak terinisialisasi)
 *g2gv_Hasilkan program yang bisa dilacak oleh valgrind
 *g2gw3_Hasilkan informasi debug dwarf-3

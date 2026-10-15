@@ -88,9 +88,6 @@ implementation
   {$ifndef NoCFIDwarf}
       ,cfidwarf
   {$endif NoCFIDwarf}
-  {$ifndef NoDbgStabs}
-      ,dbgstabs
-  {$endif NoDbgStabs}
   {$ifndef NoDbgDwarf}
       ,dbgdwarf
   {$endif NoDbgDwarf}

@@ -204,13 +204,6 @@ uses
 {$endif}
       );
 
-      regstabs_table : array[TRegisterIndex] of shortint = (
-{$if defined(x86_64)}
-        {$i r8664stab.inc}
-{$elseif defined(i386)}
-        {$i r386stab.inc}
-{$endif}
-      );
 
       regdwarf_table : array[TRegisterIndex] of shortint = (
 {$if defined(x86_64)}

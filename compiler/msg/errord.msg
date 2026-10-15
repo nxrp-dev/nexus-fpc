@@ -3730,7 +3730,7 @@ option_invalid_iphoneos_deployment_target=11051_E_UngÅltiger Wert fÅr die Umgebu
 option_illegal_fpu_eabihf=11052_E_Sie mÅssen beim Ziel EABIHF ABI einen der VFP FPU-Typen verwenden
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_Das ausgewÑhlte Debugformat wird auf dem aktuellen Ziel nicht unterstÅtzt. Die aktuelle Einstellung wird beibehalten
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_Argument fÅr "$1" fehlt
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_UngÅltiges Argument fÅr Parameter: $1
@@ -4198,9 +4198,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 *g3godwarfcpp_ Simuliere C++ Debug-Informationen in DWARF
 *g3godwarfmethodclassprefix_ Stelle Methodennamen in DWARF den Namen der Klasse voran
 *g3godwarfsets_Schalte DWARF Debug-Informationen fÅr Mengen (sets) ein (verhindert debugging mit gdb < 6.5)
-*g3gostabsabsincludes_ Absolute/volle Include-Datei-Pfade in Stabs speichern
-*g2gp_Erhalte Gro·/Kleinschreibung in Stabs-Symbolnamen
-*g2gs_Erzeuge Stabs-Debug-Informationen
 *g2gt_Lîsche lokale Variablen (um eine Verwendung ohne Initialisierung zu finden; mehrere 't' Ñndern den Wert, mit dem Åberschrieben wird)
 *g2gv_Erzeuge ein mit Valgrind verfolgbares (traceable) Programm
 *g2gw3_Erzeuge DWARFv3-Debug-Informationen

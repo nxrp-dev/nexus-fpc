@@ -293,8 +293,6 @@ implementation
           '__DATA,__la_symbol_ptr',
           '__DATA,__mod_init_func',
           '__DATA,__mod_term_func',
-          '.stab',
-          '.stabstr',
           '.idata$2','.idata$4','.idata$5','.idata$6','.idata$7','.edata',
           '.eh_frame',
           '.debug_frame','.debug_info','.debug_line','.debug_abbrev','.debug_aranges','.debug_ranges','.debug_loc','.debug_loclists',
@@ -355,8 +353,6 @@ implementation
           '__DATA,__la_symbol_ptr',
           '__DATA,__mod_init_func',
           '__DATA,__mod_term_func',
-          '.stab',
-          '.stabstr',
           '.idata$2','.idata$4','.idata$5','.idata$6','.idata$7','.edata',
           '.eh_frame',
           '.debug_frame','.debug_info','.debug_line','.debug_abbrev','.debug_aranges','.debug_ranges','.debug_loc','.debug_loclists',
@@ -541,7 +537,6 @@ implementation
           sec_pdata, sec_edata, sec_eh_frame, sec_toc:
             result:='r';
 
-          sec_stab,sec_stabstr,
           sec_debug_frame,sec_debug_info,sec_debug_line,sec_debug_abbrev,
           sec_debug_aranges,sec_debug_ranges,sec_debug_loc,sec_debug_loclists:
             if UseWin64Comdat then
@@ -1377,15 +1372,6 @@ implementation
                WriteInstruction(hp);
              end;
 
-           ait_stab :
-             begin
-               if Assigned(TAIStab(hp).str) then
-                 begin
-                   writer.AsmWrite(#9'.'+stabtypestr[TAIStab(hp).stabtype]+' ');
-                   writer.AsmWritePChar(TAIStab(hp).str);
-                   writer.AsmLn;
-                 end;
-             end;
 
            ait_force_line,
            ait_function_name :
@@ -1923,8 +1909,6 @@ implementation
          sec_data,(* sec_data_lazy *)
          sec_data,(* sec_init_func *)
          sec_data,(* sec_term_func *)
-         { stabs }
-         sec_stab,sec_stabstr,
          { win32 }
          sec_data (* sec_idata2 *),
          sec_data (* sec_idata4 *),
@@ -1943,7 +1927,7 @@ implementation
          sec_debug_ranges,
          sec_debug_loc,
          sec_debug_loclists,
-         { ELF resources (+ references to stabs debug information sections) }
+         { ELF resources }
          sec_code (* sec_fpc *),
          { Table of contents section }
          sec_code (* sec_toc *),

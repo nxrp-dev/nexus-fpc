@@ -28,7 +28,7 @@ var s : string;
     supregs,
     numbers,
     stdnames,
-    stabs,dwarf : array[0..max_regcount-1] of string[63];
+    dwarf : array[0..max_regcount-1] of string[63];
     regnumber_index,
     std_regname_index : array[0..max_regcount-1] of byte;
 
@@ -174,7 +174,8 @@ begin
         readcomma;
         stdnames[regcount]:=readstr;
         readcomma;
-        stabs[regcount]:=readstr;
+        { Skip the legacy column in historical IA64 register data. }
+        readstr;
         readcomma;
         dwarf[regcount]:=readstr;
         { Create register number }
@@ -205,7 +206,7 @@ procedure write_inc_files;
 
 var
     norfile,stdfile,supfile,
-    numfile,stabfile,dwarffile,confile,
+    numfile,dwarffile,confile,
     rnifile,srifile:text;
     first:boolean;
 
@@ -215,7 +216,6 @@ begin
   openinc(supfile,'ria64sup.inc');
   openinc(numfile,'ria64num.inc');
   openinc(stdfile,'ria64std.inc');
-  openinc(stabfile,'ria64sta.inc');
   openinc(dwarffile,'ria64dwa.inc');
   openinc(norfile,'ria64nor.inc');
   openinc(rnifile,'ria64rni.inc');
@@ -227,7 +227,6 @@ begin
         begin
           WriteLn(numfile,',');
           WriteLn(stdfile,',');
-          WriteLn(stabfile,',');
           WriteLn(dwarffile,',');
           WriteLn(rnifile,',');
           WriteLn(srifile,',');
@@ -238,7 +237,6 @@ begin
       WriteLn(confile,'NR_'+names[i],' = ','TRegister(',numbers[i],')',';');
       write(numfile,'TRegister(',numbers[i],')');
       write(stdfile,'''',stdnames[i],'''');
-      write(stabfile,stabs[i]);
       write(dwarffile,dwarf[i]);
       write(rnifile,regnumber_index[i]);
       write(srifile,std_regname_index[i]);
@@ -248,7 +246,6 @@ begin
   close(supfile);
   closeinc(numfile);
   closeinc(stdfile);
-  closeinc(stabfile);
   closeinc(dwarffile);
   closeinc(norfile);
   closeinc(rnifile);

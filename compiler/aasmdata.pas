@@ -39,13 +39,9 @@ interface
        aasmbase;
 
     type
-      { Type of AsmLists. The order is important for the layout of the
-        information in the .o file. The stabs for the types must be defined
-        before they can be referenced and therefor they need to be written
-        first (PFV) }
+      { Assembly list order determines the layout of information in object files. }
       TAsmListType=(
         al_start,
-        al_stabs,
         { pure assembler routines }
         al_pure_assembler,
         al_procedures,
@@ -115,7 +111,6 @@ interface
     const
       AsmListTypeStr : array[TAsmListType] of string[24] =(
         'al_begin',
-        'al_stabs',
         'al_pure_assembler',
         'al_procedures',
         'al_globals',

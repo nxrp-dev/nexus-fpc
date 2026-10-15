@@ -3173,7 +3173,7 @@ option_invalid_iphoneos_deployment_target=11051_E_IPHONEOS_DEPLOYMENT_TARGET ort
 option_illegal_fpu_eabihf=11052_E_EABIHF ABI hedefini kullanırken FPU tipinde VFPV2, VFPV3 veya VFPV3_D16 kullanmalısınız
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_Seçilen hata ayıklama formatı, geçerli ayarda değiştirilmeyip, geçerli hedefte desteklenmiyor
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_"$1" argümanı eksik
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_Hatalı biçimlendirilmiş parametre: $1
@@ -3470,11 +3470,8 @@ J*2Cv_Var/out parameter copy-out checking
 *g2gl_Use line info unit (show more info with backtraces)
 *g2go<x>_Set debug information options
 *g3godwarfsets_ Enable DWARF 'set' type debug information (breaks gdb < 6.5)
-*g3gostabsabsincludes_ Store absolute/full include file paths in Stabs
 *g3godwarfmethodclassprefix_ Prefix method names in DWARF with class name
 *g3godwarfcpp_ Simulate C++ debug information in DWARF
-*g2gp_Preserve case in stabs symbol names
-*g2gs_Generate Stabs debug information
 *g2gt_Trash local variables (to detect uninitialized uses; multiple 't' changes the trashing value)
 *g2gv_Generates programs traceable with Valgrind
 *g2gw3_Generate DWARFv3 debug information

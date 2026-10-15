@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 40 |
+| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 41 |
 | Compiler package metadata | `.nxp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -44,6 +44,11 @@ OMF removal advances the compatibility revision from 39 to 40. The retired OMF
 assembler directive is removed from the serialized directive enum, and its
 debug-switch member is removed from saved compiler settings. Rebuild cached
 units and package SDKs. The `NXU208` header and `NXP004` container are unchanged.
+
+STABS removal advances the compatibility revision from 40 to 41. Serialized
+assembly item/section/list kinds and saved compiler settings no longer contain
+STABS members. Rebuild cached units and package SDKs; `NXU208` and `NXP004`
+remain unchanged. Debug information uses DWARF.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`

@@ -1201,17 +1201,11 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
     procedure TAsmListTypedConstBuilder.get_final_asmlists(out reslist, datalist: TAsmList);
       var
         asmsym: TAsmSymbol;
-        addstabx: boolean;
         sec: TAsmSectiontype;
         secname: AnsiString;
       begin
-        addstabx:=false;
         if fsym.globalasmsym then
           begin
-            if (TargetDbg.id=dbg_stabx) and
-               (cs_debuginfo in CurrentSettings.ModuleSwitches) and
-               not Assigned(CurrentAsmData.GetAsmSymbol(fsym.name)) then
-              addstabx:=true;
             asmsym:=CurrentAsmData.DefineAsmSymbol(fsym.mangledname,AB_GLOBAL,AT_DATA,tcsym.vardef)
           end
         else if tf_supports_hidden_symbols in TargetInfo.flags then
@@ -1235,12 +1229,6 @@ function get_next_varsym(def: TAbstractRecordDef; const SymList:TFPHashObjectLis
             secname:=asmsym.Name;
           end;
         reslist:=ftcb.get_final_asmlist(asmsym,fsym,fsym.vardef,sec,secname,fsym.vardef.alignment);
-        if addstabx then
-          begin
-            { see same code in ncgutil.insertbssdata }
-            reslist.insert(TAIDirective.Create(asd_reference,fsym.name));
-            reslist.insert(TAISymbol.Create(CurrentAsmData.DefineAsmSymbol(fsym.name,AB_LOCAL,AT_DATA,tcsym.vardef),0));
-          end;
         datalist:=fdatalist;
       end;
 

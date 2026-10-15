@@ -120,9 +120,6 @@ unit cpubase;
         {$i ra64num.inc}
       );
 
-      regstabs_table : array[TRegisterIndex] of shortint = (
-        {$i ra64sta.inc}
-      );
 
       regdwarf_table : array[TRegisterIndex] of shortint = (
         {$i ra64dwa.inc}

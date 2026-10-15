@@ -2779,17 +2779,6 @@ begin
               IllegalPara(opt);
             break;
           end;
-        'p' :
-          begin
-            if UnsetBool(More, j, opt, false) then
-              exclude(InitSettings.GlobalSwitches,cs_stabs_preservecase)
-            else
-              include(InitSettings.GlobalSwitches,cs_stabs_preservecase);
-          end;
-        's' :
-          begin
-            paratargetdbg:=dbg_stabs;
-          end;
         't' :
           begin
             if UnsetBool(More, j, opt, false) then
@@ -4234,13 +4223,6 @@ begin
             asminfos[option.paratargetasm]^.idtxt);
           option.paratargetdbg:=dbg_none;
           exclude(InitSettings.ModuleSwitches,cs_debuginfo);
-        end;
-      { Some assemblers, like clang, do not support
-        stabs debugging format, switch to DWARF 3 in that case }
-      if (af_no_stabs in asminfos[option.paratargetasm]^.flags) and
-         (option.paratargetdbg=dbg_stabs) then
-        begin
-          option.paratargetdbg:=dbg_dwarf3;
         end;
     end;
 

@@ -131,7 +131,6 @@ interface
          win32      : boolean;
         public
           constructor createcoff(const n:string;awin32:boolean;acObjSection:TObjSectionClass);
-          procedure CreateDebugSections;override;
           function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
           function  createsection(atype:TAsmSectiontype;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;override;overload;
           function  createsection(atype:TAsmSectiontype;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;override;overload;
@@ -868,7 +867,6 @@ implementation
           '.data',
           '.data',
           '.data',
-          '.stab','.stabstr',
           '.idata$2','.idata$4','.idata$5','.idata$6','.idata$7','.edata',
           '.eh_frame',
           '.debug_frame','.debug_info','.debug_line','.debug_abbrev','.debug_aranges','.debug_ranges','.debug_loc','.debug_loclists',
@@ -1355,16 +1353,6 @@ const pemagic : array[0..3] of byte = (
           begin
             result.SecOptions:=result.SecOptions+[oso_comdat];
             result.ComdatSelection:=oscs_none;
-          end;
-      end;
-
-
-    procedure TCoffObjData.CreateDebugSections;
-      begin
-        if TargetDbg.id=dbg_stabs then
-          begin
-            stabssec:=createsection(sec_stab);
-            stabstrsec:=createsection(sec_stabstr);
           end;
       end;
 

@@ -317,8 +317,7 @@ implementation
                     begin
                       { can happen in case an objectdef was used from another
                         unit that was compiled without debug info, and we are
-                        using Stabs (which means that parent types have to be
-                        written before child types). In this case, the child
+                        requiring parent types to be written before child types. In this case, the child
                         objectdef will be queued and never written, because its
                         definition is not inside the current unit and hence will
                         not be encountered }
@@ -611,7 +610,7 @@ implementation
                 pu.u.is_dbginfo_written:=true;
                 { write type info from used units, use a depth first
                   strategy to reduce the recursion in writing all
-                  dependent stabs }
+                  dependent debug entries }
                 write_used_unit_type_info(list,pu.u);
                 if Assigned(pu.u.GlobalSymTable) then
                   write_symtable_defs(list,pu.u.GlobalSymTable);

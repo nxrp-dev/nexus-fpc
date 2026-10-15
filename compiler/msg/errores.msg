@@ -3369,7 +3369,7 @@ option_invalid_iphoneos_deployment_target=11051_E_Invalid value for IPHONEOS_DEP
 option_illegal_fpu_eabihf=11052_E_You must use one of the VFP FPU types when using the EABIHF ABI target
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_The selected debug format is not supported on the current target, not changing the current setting
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_malformed parameter: $1

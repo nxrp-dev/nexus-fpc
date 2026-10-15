@@ -3281,7 +3281,7 @@ option_invalid_iphoneos_deployment_target=11051_E_Invalid value for IPHONEOS_DEP
 option_illegal_fpu_eabihf=11052_E_You must use one of the VFP FPU types when using the EABIHF ABI target
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_The selected debug format is not supported on the current target, not changing the current setting
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_malformed parameter: $1
@@ -3520,9 +3520,6 @@ S*2Aas_Ассемблер GNU AS
 *g2gl_Использовать модуль lineinfo (больше информации о стеке вызовов)
 *g2go<x>_Опции отладочной информации
 *g3godwarfsets_ Включить информацию о множествах DWARF (ломает gdb < 6.5)
-*g3gostabsabsincludes_ Сохранять абсолютные/полные пути включаемых файлов в Stabs
-*g2gp_Сохранять регистр в именах символов stabs
-*g2gs_Отладочная информация в формате Stabs
 *g2gt_Затирать локальные переменные (выявление использования без инициализации)
 *g2gv_Поддержка трассировки с помощью Valgrind
 *g2gw3_Отладочная информация в формате DWARFv3

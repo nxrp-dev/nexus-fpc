@@ -1324,9 +1324,8 @@ implementation
                       hlcg.g_intf_wrapper(tmplist,pd,tmps,ImplIntf.ioffset);
                       hlcg.done_register_allocators;
                       if ((cs_debuginfo in CurrentSettings.ModuleSwitches) or
-                         (cs_use_lineinfo in CurrentSettings.GlobalSwitches)) and
-                         (TargetDbg.id<>dbg_stabx) then
-                           CurrentDebugInfo.insertlineinfo(tmplist);
+                         (cs_use_lineinfo in CurrentSettings.GlobalSwitches)) then
+                        CurrentDebugInfo.insertlineinfo(tmplist);
                       list.ConcatList(tmplist);
                       tmplist.Free;
                       tmplist := nil;

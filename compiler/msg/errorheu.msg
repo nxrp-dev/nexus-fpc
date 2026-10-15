@@ -3388,7 +3388,7 @@ option_invalid_iphoneos_deployment_target=11051_E_Invalid value for IPHONEOS_DEP
 option_illegal_fpu_eabihf=11052_E_You must use one of the VFP FPU types when using the EABIHF ABI target
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_The selected debug format is not supported on the current target, not changing the current setting
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_malformed parameter: $1
@@ -3614,8 +3614,6 @@ S*2Aas_אסוף עם GNU AS
 *g2gl_השתמש ביחידת מידע של שורה להציג מידע נוסף לbacktraces
 *g2go<x>_צור אפשרויות לניפוי שגיאות
 *g3godwarfsets_אפשר מידע לניהול מידע עבור ניפוי שגיאות של Dwarf (שובר את gdb < 6.5)
-*g2gp_משמר גודל שמות סמלי הstabs
-*g2gs_מייצר מידע לניפוי שגיאות stub
 *g2gt_לכלך משתנים מקומיים (לזיהוי מידע לא מאותחל)
 *g2gv_מייצר תוכנות עם יכולת מעקב של valgrind
 *g2gw3_מיצר מידע לניפוי שגיאות dwarf-3

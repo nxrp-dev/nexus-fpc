@@ -67,7 +67,7 @@ implementation
       secnames : array[TAsmSectiontype] of string[4] = ('','',
         'CODE','DATA','DATA','DATA','BSS','TLS',
         '','','','','','',
-        '','','','',
+        '','',
         '',
         '',
         '',
@@ -124,17 +124,13 @@ implementation
       secnamesml64 : array[TAsmSectiontype] of string[7] = ('','',
         '_TEXT','_DATA','_DATA','_DATA','_BSS','_TLS',
         '','','','',
-        'idata$2','idata$4','idata$5','idata$6','idata$7','edata',
+        '','','idata$2','idata$4','idata$5','idata$6','idata$7','edata',
         '',
         '',
         '',
         '',
         '',
         '','','','','','',
-        '',
-        '',
-        '',
-        '',
         '',
         '',
         '',
@@ -716,7 +712,7 @@ implementation
                    (fixed_opcode = A_REPNE)) then
                 Begin
                   prefix:=std_op2str[fixed_opcode]+#9;
-                  { there can be a stab in between when the opcode was on
+                  { there can be debug information in between when the opcode was on
                     a different line in the source code }
                   repeat
                     hp:=TAI(hp.next);
@@ -762,7 +758,6 @@ implementation
                writer.AsmLn;
              end;
 
-           ait_stab,
            ait_force_line,
            ait_function_name : ;
 

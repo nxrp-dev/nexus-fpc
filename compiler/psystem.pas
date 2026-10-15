@@ -751,7 +751,6 @@ implementation
         aiclass[ait_label]:=TAILabel;
         aiclass[ait_const]:=TAIConst;
         aiclass[ait_realconst]:=TAIRealConst;
-        aiclass[ait_stab]:=TAIStab;
         aiclass[ait_force_line]:=TAIForceLine;
         aiclass[ait_function_name]:=TAIFunctionName;
         aiclass[ait_symbolpair]:=TAISymbolPair;

@@ -151,15 +151,6 @@
 
 
 
-{ Stabs is not officially supported on 64 bit targets by gdb, except on Mac OS X
-  (but there we don't support it)
-}
-{$ifdef cpu64bitaddr}
-{$ifndef USE_STABS_64}
-{$define NoDbgStabs}
-{$endif}
-{$endif}
-
 {$ifdef LLVM}
 {$fatal LLVM code generation has been removed}
 {$endif}

@@ -74,7 +74,6 @@ interface
          flags: LongWord;
          constructor create(const n:string);override;
          function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
-         procedure CreateDebugSections;override;
          procedure writereloc(data:aint;len:aword;p:TObjSymbol;reltype:TObjRelocationType);override;
        end;
 
@@ -292,8 +291,6 @@ implementation
         encodesechdrflags(aoptions,shtype,shflags);
         shlink:=0;
         shinfo:=0;
-        if name='.stab' then
-          shentsize:=sizeof(TObjStabEntry);
       end;
 
 
@@ -377,7 +374,6 @@ implementation
           '__DATA,__la_symbol_ptr',
           '__DATA,__mod_init_func',
           '__DATA,__mod_term_func',
-          '.stab','.stabstr',
           '.idata$2','.idata$4','.idata$5','.idata$6','.idata$7','.edata',
           '.eh_frame',
           '.debug_frame','.debug_info','.debug_line','.debug_abbrev','.debug_aranges','.debug_ranges','.debug_loc','.debug_loclists',
@@ -467,16 +463,6 @@ implementation
               end
             else
               result:=secname;
-          end;
-      end;
-
-
-    procedure TElfObjData.CreateDebugSections;
-      begin
-        if TargetDbg.id=dbg_stabs then
-          begin
-            stabssec:=createsection(sec_stab);
-            stabstrsec:=createsection(sec_stabstr);
           end;
       end;
 

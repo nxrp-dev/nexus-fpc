@@ -490,8 +490,6 @@ interface
           '.tbss',
           '.pdata',
           '.text','.data','.data','.data','.data',
-          '.stab',
-          '.stabstr',
           '.idata2','.idata4','.idata5','.idata6','.idata7','.edata',
           '.eh_frame',
           '.debug_frame','.debug_info','.debug_line','.debug_abbrev','.debug_aranges','.debug_ranges','.debug_loc','.debug_loclists',
@@ -1103,7 +1101,6 @@ interface
                 end;
              end;
 
-           ait_stab,
            ait_force_line,
            ait_function_name : ;
 

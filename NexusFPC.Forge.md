@@ -59,6 +59,14 @@ NXU long compatibility revision 40 replaces 39; rebuild cached units and SDKs.
 The OMF switch checks use the same three arguments as the linker checks below:
 `bash tests/switches/Run-NXRemovedOMFTests.sh <compiler> <rtl-units> <output>`.
 
+STABS/STABX generation, register tables, and runtime readers are removed.
+`-gs`, `-gp`, and `-gostabsabsincludes` are rejected. Use `-g` or
+`-gw3`/`-gw4`/`-gw5` for DWARF, and `-gl` for runtime source locations.
+The current NXU long compatibility revision is 41; rebuild cached units and SDKs.
+Validate with `bash tests/switches/Run-NXRemovedSTABSTests.sh <compiler> <rtl-units> <output>`.
+Mach-O debug-map constants and classification of foreign ELF debug sections
+remain for object-format interoperability; they do not enable STABS generation.
+
 On a Linux host, check the removed options and native LLVM linking with:
 
 ```bash

@@ -47,7 +47,6 @@ type
     { total size of all headers }
     loadcommandssize: ptruint;
 {$endif}
-    FunctionRelative: boolean;
     // Offset of the binary image forming permanent offset to all retrieved values
     ImgOffset: TExeOffset;
     filename  : shortstring;
@@ -814,25 +813,6 @@ type
   end;
   pmach_load_command=^tmach_load_command;
 
-  tmach_symtab_command=record
-    cmd    :      cuint32;
-    cmdsize:      cuint32;
-    symoff :      cuint32;
-    nsyms  :      cuint32;
-    stroff :      cuint32;
-    strsize:      cuint32;
-  end;
-  pmach_symtab_command = ^tmach_symtab_command;
-
-  tstab=record
-    strpos  : longword;
-    ntype   : byte;
-    nother  : byte;
-    ndesc   : word;
-    nvalue  : longword;
-  end;
-  pstab = ^tstab;
-
   tmach_vm_prot = cint;
 
   tmach_segment_command = record
@@ -946,7 +926,6 @@ var
   foundpagezero: boolean;
 begin
   OpenMachO:=false;
-  E.FunctionRelative:=false;
   if e.size<sizeof(mh) then
     exit;
   blockread (e.f, mh, sizeof(mh));
@@ -1004,7 +983,6 @@ function FindSectionMachO(var e:TExeFile;const asecname:shortstring;var secofs,s
 var
    i, j: cuint32;
    cmd: pmach_load_command;
-   symtabcmd: pmach_symtab_command;
    segmentcmd: pmach_segment_command;
    section: pmach_section;
    mappedexe: pointer;
@@ -1041,28 +1019,6 @@ begin
                       end;
                     inc(section);
                   end;
-              end;
-          end;
-        MACH_LC_SYMTAB:
-          begin
-            symtabcmd:=pmach_symtab_command(cmd);
-            if asecname='.stab' then
-              begin
-                secofs:=symtabcmd^.symoff;
-                { the caller will divide again by sizeof(tstab) }
-                seclen:=symtabcmd^.nsyms*sizeof(tstab);
-                FindSectionMachO:=true;
-              end
-            else if asecname='.stabstr' then
-              begin
-                secofs:=symtabcmd^.stroff;
-                seclen:=symtabcmd^.strsize;
-                FindSectionMachO:=true;
-              end;
-            if FindSectionMachO then
-              begin
-                UnmapMachO(mappedexe, mappedsize);
-                exit;
               end;
           end;
       end;
@@ -1171,7 +1127,6 @@ begin
   // cache filesize
   e.size:=filesize(e.f);
 
-  E.FunctionRelative := true;
   E.ImgOffset := 0;
   if ExeProcs.OpenProc<>nil then
     OpenExeFile:=ExeProcs.OpenProc(e);

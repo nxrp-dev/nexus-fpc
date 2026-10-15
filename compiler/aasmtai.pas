@@ -61,7 +61,6 @@ interface
           ait_const,
           ait_realconst,
           ait_typedconst,
-          ait_stab,
           ait_force_line,
           ait_function_name,
           ait_symbolpair,
@@ -188,7 +187,6 @@ interface
           'const',
           'realconst',
           'typedconst',
-          'stab',
           'force_line',
           'function_name',
           'symbolpair',
@@ -242,7 +240,7 @@ interface
         optimizer (= if it's sometimes added to the exprasm list). Update if you add
         a new ait type!                                                              }
       SkipInstr = [ait_comment, ait_symbol,ait_section,ait_align
-                   ,ait_stab, ait_function_name, ait_force_line
+                   ,ait_function_name, ait_force_line
                    ,ait_regalloc, ait_tempalloc, ait_symbol_end
                    ,ait_directive
                    ,ait_varloc,
@@ -252,7 +250,7 @@ interface
         tai, otherwise, they are of type tailineinfo }
       SkipLineInfo =[ait_label,
                      ait_regalloc,ait_tempalloc,
-                     ait_stab,ait_function_name,
+                     ait_function_name,
                      ait_cutobject,ait_marker,ait_varloc,ait_align,ait_section,ait_comment,
                      ait_const,ait_directive,
                      ait_symbolpair,
@@ -278,18 +276,6 @@ interface
       );
 
       TRegAllocType = (ra_alloc,ra_dealloc,ra_sync,ra_resize,ra_markused);
-
-      TStabType = (stab_stabs,stab_stabn,stab_stabd,
-                   { AIX/XCOFF stab types }
-                   stab_stabx,
-                   { begin/end include file }
-                   stabx_bi,stabx_ei,
-                   { begin/end function }
-                   stabx_bf, stabx_ef,
-                   { begin/end static data block }
-                   stabx_bs, stabx_es,
-                   { line spec, function start/end label }
-                   stabx_line, stabx_function);
 
       TAsmDirective=(
         asd_indirect_symbol,
@@ -329,13 +315,6 @@ interface
     const
       regallocstr : array[TRegAllocType] of string[10]=('allocated','released','sync','resized','used');
       tempallocstr : array[boolean] of string[10]=('released','allocated');
-      stabtypestr : array[TStabType] of string[8]=(
-        'stabs','stabn','stabd',
-        'stabx',
-        'bi','ei',
-        'bf','ef',
-        'bs','es',
-        'line','function');
       directivestr : array[TAsmDirective] of string[23]=(
         'indirect_symbol',
         'extern','nasm_import', 'tc', 'reference',
@@ -629,17 +608,6 @@ interface
           procedure ppuwrite(ppufile: TCompilerPPUFile); override;
           function getcopy:TLinkedListItem;override;
           function DataSize: word;
-       end;
-
-       { tai_stab }
-
-       TAIStab = class(TAI)
-          str : pchar;
-          stabtype : TStabType;
-          constructor Create(_stabtype:TStabType;_str : pchar);
-          constructor Create_str(_stabtype:TStabType;const s:string);
-          constructor create_ansistr(_stabtype: TStabType; const s: AnsiString);
-          destructor Destroy;override;
        end;
 
        TAIForceLine = class(TAILineInfo)
@@ -2205,42 +2173,6 @@ implementation
         GetMem(TAIComment(p).str,StrLen(str)+1);
         move(str^,TAIComment(p).str^,StrLen(str)+1);
         getcopy:=p;
-      end;
-
-
-{****************************************************************************
-                              TAI_STABS
- ****************************************************************************}
-
-    constructor TAIStab.create(_stabtype:TStabType;_str : pchar);
-      begin
-         inherited create;
-         typ:=ait_stab;
-         str:=_str;
-         stabtype:=_stabtype;
-      end;
-
-    constructor TAIStab.create_str(_stabtype:TStabType;const s:string);
-      begin
-         self.create(_stabtype,StrPNew(s));
-      end;
-
-    constructor TAIStab.create_ansistr(_stabtype:TStabType;const s:AnsiString);
-      begin
-         inherited create;
-         typ:=ait_stab;
-         stabtype:=_stabtype;
-         GetMem(str,length(s)+1);
-         if length(s)>0 then
-           move(s[1],str^,length(s)+1)
-         else
-           str^:=#0;
-      end;
-
-    destructor TAIStab.Destroy;
-      begin
-         FreeMem(str);
-         inherited Destroy;
       end;
 
 

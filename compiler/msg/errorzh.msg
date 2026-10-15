@@ -3557,9 +3557,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 *g3godwarfcpp_在 DWARF 中模拟 C++ 调试信息
 *g3godwarfmethodclassprefix_在 DWARF 中用类名作为方法名的前缀
 *g3godwarfsets_启用 DWARF 'set' 类型调试信息(破坏 gdb < 6.5)
-*g3gostabsabsincludes_在 Stabs 中存储绝对/完整包含文件路径
-*g2gp_在 stabs 符号名中保留大小写
-*g2gs_生成 Stabs 调试信息
 *g2gt_破坏局部变量(用于检测未初始化的使用；多个 't' 改变破坏值)
 *g2gv_生成可用 Valgrind 跟踪的程序
 *g2gw3_生成 DWARFv3 调试信息

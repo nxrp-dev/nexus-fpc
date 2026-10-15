@@ -109,25 +109,6 @@ interface
 {$endif}
 
     const
-      { stab types }
-      N_GSYM = $20;
-      N_STSYM = 38;     { initialized const }
-      N_LCSYM = 40;     { non initialized variable}
-      N_Function = $24; { function or const }
-      N_TextLine = $44;
-      N_DataLine = $46;
-      N_BssLine = $48;
-      N_RSYM = $40;     { register variable }
-      N_LSYM = $80;
-      N_tsym = 160;
-      N_SourceFile = $64;
-      N_IncludeFile = $84;
-      N_BINCL = $82;
-      N_EINCL = $A2;
-      N_LBRAC = $C0;
-      N_EXCL  = $C2;
-      N_RBRAC = $E0;
-
       { GNU extensions }
       debuglinkname='.gnu_debuglink';
 
@@ -216,16 +197,6 @@ interface
        function  ObjData: TObjData;
      end;
      TObjSymbolClass = class of TObjSymbol;
-
-     { Stabs is common for all targets }
-     TObjStabEntry=packed record
-        strpos  : LongInt;
-        ntype   : byte;
-        nother  : byte;
-        ndesc   : word;
-        nvalue  : LongInt;
-     end;
-     PObjStabEntry=^TObjStabEntry;
 
      TObjRelocation = class
      private
@@ -342,8 +313,6 @@ interface
        FObjSymbolList    : TObjSymbolList;
        FCachedAsmSymbolList : TFPObjectList;
        { Special info sections that are written to during object generation }
-       FStabsObjSec,
-       FStabStrObjSec : TObjSection;
        FGroupsList : TFPHashObjectList;
        FCPUType : TCPUType;
        procedure section_reset(p:TObject;arg:pointer);
@@ -410,8 +379,6 @@ interface
        property ObjSymbolList:TObjSymbolList read FObjSymbolList;
        property ObjSectionList:TFPHashObjectList read FObjSectionList;
        property GroupsList:TFPHashObjectList read FGroupsList;
-       property StabsSec:TObjSection read FStabsObjSec write FStabsObjSec;
-       property StabStrSec:TObjSection read FStabStrObjSec write FStabStrObjSec;
        property CObjSymbol: TObjSymbolClass read FCObjSymbol write FCObjSymbol;
        { Current CPU type for the internal asm writer.
          Instructions, not supported by the given CPU should produce an error.
@@ -484,7 +451,6 @@ interface
     function align_aword(v:aword;a:LongWord):aword;
     function align_qword(v:qword;a:LongWord):qword;
     function align_objsecofs(v:TObjSectionOfs;a:LongWord):TObjSectionOfs;
-    procedure MaybeSwapStab(var v:TObjStabEntry);
 
 implementation
 
@@ -526,16 +492,6 @@ implementation
         result:=(v+a) and TObjSectionOfs(not TObjSectionOfs(a));
       end;
 
-
-    procedure MaybeSwapStab(var v:TObjStabEntry);
-      begin
-        if SourceInfo.endian<>TargetInfo.endian then
-          begin
-            v.strpos:=SwapEndian(v.strpos);
-            v.nvalue:=SwapEndian(v.nvalue);
-            v.ndesc:=SwapEndian(v.ndesc);
-          end;
-      end;
 
 {*****************************************************************************
                                  TObjSymbol
@@ -1066,8 +1022,6 @@ implementation
         inherited create;
         FName:=ExtractFileName(n);
         FObjSectionList:=TFPHashObjectList.Create(true);
-        FStabsObjSec:=nil;
-        FStabStrObjSec:=nil;
         { symbols }
         FCObjSymbol:=TObjSymbol;
         FObjSymbolList:=TObjSymbolList.Create(true);
@@ -1132,8 +1086,6 @@ implementation
           {data_lazy} [oso_Data,oso_load,oso_write],
           {init_func} [oso_Data,oso_load],
           {term_func} [oso_Data,oso_load],
-          {stab} [oso_Data,oso_debug],
-          {stabstr} [oso_Data,oso_strings,oso_debug],
           {iData2} [oso_Data,oso_load,oso_write],
           {iData4} [oso_Data,oso_load,oso_write],
           {iData5} [oso_Data,oso_load,oso_write],
@@ -1215,7 +1167,7 @@ implementation
     function TObjData.sectiontype2align(atype:TAsmSectiontype):LongInt;
       begin
         case atype of
-          sec_stabstr,sec_debug_info,sec_debug_line,sec_debug_abbrev,sec_debug_aranges,sec_debug_ranges,
+          sec_debug_info,sec_debug_line,sec_debug_abbrev,sec_debug_aranges,sec_debug_ranges,
           sec_arm_attribute:
             result:=1;
           sec_code,
@@ -1616,26 +1568,12 @@ implementation
     procedure TObjData.beforealloc;
       begin
         FCPUType:=CurrentSettings.CPUType;
-        { create stabs sections if debugging }
-        if Assigned(StabsSec) then
-          begin
-            StabsSec.Alloc(sizeof(TObjStabEntry));
-            StabStrSec.Alloc(1);
-          end;
       end;
 
 
     procedure TObjData.beforewrite;
       begin
         FCPUType:=CurrentSettings.CPUType;
-        { create stabs sections if debugging }
-        if Assigned(StabsSec) then
-         begin
-           { Create dummy HdrSym stab, it will be overwritten in AfterWrite }
-           StabsSec.WriteZeros(sizeof(TObjStabEntry));
-           { start of stabstr }
-           StabStrSec.writeZeros(1);
-         end;
       end;
 
 
@@ -1646,29 +1584,8 @@ implementation
 
 
     procedure TObjData.afterwrite;
-      var
-        hstab : TObjStabEntry;
       begin
         FObjSectionList.ForEachCall(@section_afterwrite,nil);
-        { For the stab section we need an HdrSym which can now be
-          calculated more easily }
-        if Assigned(StabsSec) then
-          begin
-            { end of stabstr }
-            StabStrSec.writeZeros(1);
-            { header stab }
-            hstab.strpos:=1;
-            hstab.ntype:=0;
-            hstab.nother:=0;
-{$push}{$R-}
-            { for jwawindows.pas, this causes an range check error, it contains too much stab symbols }
-            hstab.ndesc:=(StabsSec.Size div sizeof(TObjStabEntry))-1;
-{$pop}
-            hstab.nvalue:=StabStrSec.Size;
-            MaybeSwapStab(hstab);
-            StabsSec.Data.seek(0);
-            StabsSec.Data.write(hstab,sizeof(hstab));
-          end;
       end;
 
 

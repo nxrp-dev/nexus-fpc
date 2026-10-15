@@ -30,7 +30,7 @@ var s : string;
     supregs,
     numbers,
     stdnames,
-    stabs,dwarf : array[0..max_regcount-1] of string[63];
+    dwarf : array[0..max_regcount-1] of string[63];
     regnumber_index,
     std_regname_index : array[0..max_regcount-1] of word;
 
@@ -178,8 +178,6 @@ begin
         readcomma;
         stdnames[regcount]:=readstr;
         readcomma;
-        stabs[regcount]:=readstr;
-        readcomma;
         dwarf[regcount]:=readstr;
         { Create register number }
         if supregs[regcount][1]<>'$' then
@@ -209,7 +207,7 @@ procedure write_inc_files;
 
 var
     norfile,stdfile,supfile,
-    numfile,stabfile,dwarffile,confile,
+    numfile,dwarffile,confile,
     rnifile,srifile:text;
     first:boolean;
 
@@ -219,7 +217,6 @@ begin
   openinc(supfile,'ra64sup.inc');
   openinc(numfile,'ra64num.inc');
   openinc(stdfile,'ra64std.inc');
-  openinc(stabfile,'ra64sta.inc');
   openinc(dwarffile,'ra64dwa.inc');
   openinc(norfile,'ra64nor.inc');
   openinc(rnifile,'ra64rni.inc');
@@ -231,7 +228,6 @@ begin
         begin
           WriteLn(numfile,',');
           WriteLn(stdfile,',');
-          WriteLn(stabfile,',');
           WriteLn(dwarffile,',');
           WriteLn(rnifile,',');
           WriteLn(srifile,',');
@@ -242,7 +238,6 @@ begin
       WriteLn(confile,'NR_'+names[i],' = ','TRegister(',numbers[i],')',';');
       write(numfile,'TRegister(',numbers[i],')');
       write(stdfile,'''',stdnames[i],'''');
-      write(stabfile,stabs[i]);
       write(dwarffile,dwarf[i]);
       write(rnifile,regnumber_index[i]);
       write(srifile,std_regname_index[i]);
@@ -252,7 +247,6 @@ begin
   close(supfile);
   closeinc(numfile);
   closeinc(stdfile);
-  closeinc(stabfile);
   closeinc(dwarffile);
   closeinc(norfile);
   closeinc(rnifile);

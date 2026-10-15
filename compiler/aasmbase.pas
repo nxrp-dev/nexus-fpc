@@ -108,8 +108,6 @@ interface
          sec_data_lazy,
          sec_init_func,
          sec_term_func,
-         { stabs }
-         sec_stab,sec_stabstr,
          { win32 }
          sec_idata2,sec_idata4,sec_idata5,sec_idata6,sec_idata7,sec_edata,
          { C++ exception handling unwinding (uses dwarf) }
@@ -125,7 +123,7 @@ interface
          sec_debug_loclists,
          { Yury: "sec_fpc is intended for storing fpc specific data
                   which must be recognized and processed specially by linker.
-                  Currently fpc version string, dummy links to stab sections
+                  Currently fpc version string
                   and elf resources are stored in .fpc sections."
                   "If special .fpc section cannot be used on some target,
                   .text can be used instead." }

@@ -201,7 +201,7 @@ interface
          cs_support_vectors = 9,
          { debuginfo }
          cs_use_heaptrc,cs_use_lineinfo,
-         cs_gdb_valgrind,cs_no_regalloc,cs_stabs_preservecase,
+         cs_gdb_valgrind,cs_no_regalloc,
          { assembling }
          cs_asm_leave,cs_asm_extern,cs_asm_pipe,cs_asm_source,cs_asm_rtti_source,
          cs_asm_regalloc,cs_asm_tempalloc,cs_asm_nodes,
@@ -234,14 +234,8 @@ interface
           { without support for that tag (they refuse to parse the rest }
           { of the debug information)                                   }
           ds_dwarf_sets,
-          { use absolute paths for include files in stabs. Pro: gdb     }
-          { always knows full path to file. Con: doesn't work anymore   }
-          { if the include file is moved (otherwise, things still work  }
-          { if your source hierarchy is the same, but has a different   }
-          { base path)                                                  }
-          ds_stabs_abs_include_files,
-          { prefix method names by "classname__" in DWARF (like is done }
-          { for Stabs); not enabled by default, because otherwise once  }
+          { prefix method names by "classname__" in DWARF. This is not   }
+          { enabled by default, because otherwise once                 }
           { support for calling methods has been added to gdb, you'd    }
           { always have to type classinstance.classname__methodname()   }
           ds_dwarf_method_class_prefix,
@@ -331,7 +325,6 @@ interface
          mf_has_resourcestrings,      { unit has resource string section }
          mf_release,                  { unit was compiled with -Ur option }
          mf_threadvars,               { unit has threadvars }
-         mf_has_stabs_debuginfo,      { this unit has stabs debuginfo generated }
          mf_local_symtable,           { this unit has a local symtable stored }
          mf_uses_variants,            { this unit uses variants }
          mf_has_resourcefiles,        { this unit has external resources (using $R directive)}
@@ -380,7 +373,7 @@ interface
        );
 
        DebugSwitchStr : array[TDebugSwitch] of string[22] = ('',
-         'DWARFSETS','STABSABSINCLUDES','DWARFMETHODCLASSPREFIX','DWARFCPP');
+         'DWARFSETS','DWARFMETHODCLASSPREFIX','DWARFCPP');
 
        TargetSwitchStr : array[TTargetSwitch] of TTargetSwitchInfo = (
          (name: '';                    hasvalue: false; isglobal: true ; define: ''),

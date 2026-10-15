@@ -2832,12 +2832,8 @@ S*2Aas_Assembla con GNU AS
 *g2go<x>_Imposta opzioni delle informazioni di debug
 *g3godwarfsets_Abilita debug info tipo DWARF 'set' 
 *g3*_        (attenzione: fa crashare gdb < 6.5)
-*g3gostabsabsincludes_Memorizza path assoluto per 
-*g3*_        gli include file in Stabs
 *g3godwarfmethodclassprefix_Prefissa i nomi dei metodi 
 **3*_        in DWARF con il nome di classe
-*g2gp_Conserva maiuscole nei nomi di simboli stabs
-*g2gs_Genera info di debug Stabs
 *g2gt_Scarta variabili locali 
 *g3*_        (rileva il loro uso non inizializzato)
 *g2gv_Genera programmi tracciabili con Valgrind

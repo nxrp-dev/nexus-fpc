@@ -22,10 +22,6 @@
 {
   This units contains support for DWARF debug info generation.
 
-  Currently a lot of code looks like being mergeable with dbgstabs. This might
-  change however when improved dwarf info is generated, so the stuff shouldn't be
-  merged yet. (FK)
-
   The easiest way to debug dwarf debug info generation is the usage of
   readelf --debug-dump <executable>
   This works only with elf targets though.
@@ -652,7 +648,7 @@ implementation
       begin
         { Keep track of used dwarf entries, this info is only useful for dwarf entries
           referenced by the symbols. Definitions will always include all
-          required stabs }
+          required debug entries }
         if def.dbg_state=dbg_state_unused then
           def.dbg_state:=dbg_state_used;
         { Need a new label? }
@@ -2325,9 +2321,7 @@ implementation
         blocksize:=0;
         dreghigh:=0;
         { external symbols can't be resolved at link time, so we
-          can't generate stabs for them
-
-          not sure if this applies to dwarf as well (FK)
+          omit their debug locations
         }
         if vo_is_external in sym.varoptions then
           exit;

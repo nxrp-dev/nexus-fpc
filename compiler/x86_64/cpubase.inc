@@ -56,16 +56,6 @@ const
                                GDB Information
 *****************************************************************************}
 
-      {# Register indexes for stabs information, when some
-         parameters or variables are stored in registers.
-
-         Taken from i386.c (dbx_register_map) and i386.h
-          (FIXED_REGISTERS) from GCC 3.x source code
-
-      }
-      stab_regindex : array[TRegisterIndex] of shortint = (
-        {$i r8664stab.inc}
-      );
 
 {*****************************************************************************
                           Default generic sizes

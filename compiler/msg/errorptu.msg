@@ -3406,7 +3406,7 @@ option_invalid_iphoneos_deployment_target=11051_E_Invalid value for IPHONEOS_DEP
 option_illegal_fpu_eabihf=11052_E_You must use one of the VFP FPU types when using the EABIHF ABI target
 % The EABIHF (VFP hardfloat) ABI target can only be used with VFP FPUs.
 option_w_unsupported_debug_format=11053_W_The selected debug format is not supported on the current target, not changing the current setting
-% Not all targets support all debug formats (in particular, Stabs is not supported on 64 bit targets).
+% Not all targets support all debug formats.
 option_missing_arg=11054_E_argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_malformed parameter: $1
@@ -3656,10 +3656,7 @@ S*2Aas_Monta usando o GNU AS
 *g2gl_Usa unidade informações linha (mostra mais info. com backtraces)
 *g2go<x>_Ajusta opções informações depuração
 *g3godwarfsets_ Habilita 'conjunto' info. depuração DWARF (falhas gdb < 6.5)
-*g3gostabsabsincludes_ Armazena caminhos absolutos/completos arquivos inclusões em 'Stabs'
 *g3godwarfmethodclassprefix_ Prefixa nomes métodos com nome classe em DWARF
-*g2gp_Preserva caixa nomes símbolos em 'stabs'
-*g2gs_Gera informações depuração 'Stabs'
 *g2gt_Inutiliza variáveis locais (para detetar utilização de não-inicilizadas)
 *g2gv_Gera programas rastreáveis com 'Valgrind'
 *g2gw3_Gera informações depuração DWARFv3

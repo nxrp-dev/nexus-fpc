@@ -69,8 +69,6 @@ interface
         public
          registered_in_module : TModuleBase;
          typesym    : TSym;  { which type the definition was generated this def }
-         { stabs debugging }
-         stab_number : word;
          dbg_state   : TDefDbgStatus;
          defoptions  : TDefOptions;
          defstates   : TDefStates;
@@ -382,7 +380,6 @@ implementation
          typesym := nil;
          defoptions:=[];
          dbg_state:=dbg_state_unused;
-         stab_number:=0;
          InitDefID;
       end;
 

@@ -37,7 +37,7 @@ Project Bootstrap Build[Bootstrap] {
         Recursive: True;
         CleanDestination: True;
         IncludeMasks: ["*.pas", "*.inc", "*.dat"];
-        ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64sta.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nasm.inc;r386nor.inc;r386nri.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386stab.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nasm.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664stab.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
+        ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nasm.inc;r386nor.inc;r386nri.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nasm.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
     }
     CopyFile StageMetadataCompression {
         Source: "packages/paszlib/src";
@@ -276,25 +276,6 @@ Project Bootstrap Build[Bootstrap] {
         IncludePaths: [
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
-        ];
-        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
-        GenerateReleaseUnitFiles: True;
-        OptimizationLevel: 2;
-        DisableDefaultConfigFiles: True;
-    }
-    FPC BuildSeedLineInfo {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
-        Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        UnitOutput: "build/forge-bootstrap/seed/rtl64";
-        UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
-        ];
-        IncludePaths: [
-            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
         GenerateReleaseUnitFiles: True;
@@ -544,25 +525,6 @@ Project Bootstrap Build[Bootstrap] {
         OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
-    FPC BuildCycle1LineInfo {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
-        Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
-        UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
-        ];
-        IncludePaths: [
-            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
-        ];
-        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
-        GenerateReleaseUnitFiles: True;
-        OptimizationLevel: 2;
-        DisableDefaultConfigFiles: True;
-    }
     FPC BuildCycle1Dwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
@@ -793,25 +755,6 @@ Project Bootstrap Build[Bootstrap] {
         IncludePaths: [
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
-        ];
-        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
-        GenerateReleaseUnitFiles: True;
-        OptimizationLevel: 2;
-        DisableDefaultConfigFiles: True;
-    }
-    FPC BuildCycle2LineInfo {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
-        Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
-        UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
-        ];
-        IncludePaths: [
-            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
         GenerateReleaseUnitFiles: True;
@@ -1054,25 +997,6 @@ Project Bootstrap Build[Bootstrap] {
         OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
-    FPC BuildCycle3LineInfo {
-        Template: "../../nexus/projects/forge/examples/FPC.mustache";
-        Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
-        UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
-        ];
-        IncludePaths: [
-            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
-            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
-        ];
-        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
-        GenerateReleaseUnitFiles: True;
-        OptimizationLevel: 2;
-        DisableDefaultConfigFiles: True;
-    }
     FPC BuildCycle3Dwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
@@ -1285,10 +1209,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pas";
         }
-        FPC Build_lineinfo (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        }
         FPC Build_lnfodwrf (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -1462,10 +1382,6 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         }
-        FPC BuildWindowsLineInfo (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        }
         FPC BuildWindowsDwarf (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
@@ -1553,10 +1469,6 @@ Project Cross Build[Cross] {
         FPC BuildAndroid_heaptrc (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pas";
-        }
-        FPC BuildAndroid_lineinfo (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
         }
         FPC BuildAndroid_lnfodwrf (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
@@ -1808,17 +1720,9 @@ Project Cross Build[Cross] {
             Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pas";
         }
-        FPC BuildApple_lineinfo (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pas";
-        }
         FPC BuildApple_lnfodwrf (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas"];
             EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pas";
-        }
-        FPC BuildApple_lnfogdb (CrossRTL) {
-            Source: ["build/forge-bootstrap/seed/rtl/unix/lnfogdb.pas"];
-            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/lnfogdb.pas";
         }
         FPC BuildApple_errors (CrossRTL) {
             Source: ["build/forge-bootstrap/seed/rtl/unix/errors.pas"];

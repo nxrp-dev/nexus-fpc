@@ -78,7 +78,7 @@ cleanup retains the image and storage. Bootstrap allocation failure terminates
 with code 226 because exception creation could re-enter threadvar resolution.
 
 DWARF describes values in the main context, preserving the earlier debugger
-scope. STABS omits threadvar locations instead of treating descriptors as values.
+scope.
 Thread-aware debugger support remains separate work.
 
 ## Validation and measured cost (2026-10-10)

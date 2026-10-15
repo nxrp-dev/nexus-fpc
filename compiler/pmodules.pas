@@ -106,8 +106,7 @@ implementation
           to insert type definitions }
         CNodeUtils.InsertObjectInfo;
 
-        { Start and end module debuginfo, at least required for stabs
-          to insert n_sourcefile lines }
+        { Emit module debug information. }
         if (cs_debuginfo in CurrentSettings.ModuleSwitches) or
            (cs_use_lineinfo in CurrentSettings.GlobalSwitches) then
           CurrentDebugInfo.insertmoduleinfo;
@@ -423,14 +422,7 @@ implementation
              CheckAddUnit('cmem');
            { Lineinfo unit }
            if (cs_use_lineinfo in CurrentSettings.GlobalSwitches) then begin
-             case TargetDbg.id of
-               dbg_stabs:
-                 CheckAddUnit('lineinfo');
-               dbg_stabx:
-                 CheckAddUnit('lnfogdb');
-               else
-                 CheckAddUnit('lnfodwrf');
-             end;
+             CheckAddUnit('lnfodwrf');
            end;
            { Which kind of resource support?
              Note: if resources aren't used this unit will be removed later,
@@ -1627,7 +1619,6 @@ type
          else
            begin
              module.headerflags:=module.headerflags or UfNoLink;
-             exclude(module.moduleflags,mf_has_stabs_debuginfo);
              exclude(module.moduleflags,mf_has_dwarf_debuginfo);
            end;
 

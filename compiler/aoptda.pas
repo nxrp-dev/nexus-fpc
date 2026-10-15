@@ -99,7 +99,7 @@ Unit aoptda;
             ait_label:
               If (Pai_label(p)^.l^.is_used) Then
                 CurProp^.DestroyAllRegs(InstrSinceLastMod);
-            ait_stab, ait_force_line, ait_function_name:;
+            ait_force_line, ait_function_name:;
             ait_instruction:
               if not(PInstr(p)^.is_jmp) then
                 begin

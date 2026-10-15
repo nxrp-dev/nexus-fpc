@@ -91,7 +91,6 @@ fpintres.pas     Internal resource support
 getopts.pas      Pascal implementation of the GNU Getops
 heaptrc.pas      Runtime memory leak tracer and tests for memory integrity
 iso7185.pas      Unit that is automatically added when mode ISO is selected
-lineinfo.pas     Provide lineinformation in tracebacks (STABS)
 lnfodwrf.pas     Provide lineinformation in tracebacks (DWARF)
 lstrings.pas     Longstring type (?)
 macpas.pas       Macpas (Classic MacOS) mode runtime parts

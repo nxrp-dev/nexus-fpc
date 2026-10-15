@@ -1220,7 +1220,7 @@ interface
        openchararraytype,         { pointer to type of an open array of char,
                                     needed for readln() }
        cfiletype,                 { get the same definition for all file }
-                                  { used for stabs }
+                                  { shared file type }
        methodpointertype,         { typecasting of methodpointers to extract self }
        nestedprocpointertype,     { typecasting of nestedprocpointers to extract parentfp }
        hresultdef,
@@ -1249,7 +1249,7 @@ interface
        { several types to simulate more or less C++ objects for GDB }
        vmttype,
        vmtarraytype,
-       { type of classrefs, used for stabs }
+       { type of classrefs used for debug information }
        pvmttype,
        { return type of the setjmp function }
        exceptionreasontype      : TDef;
@@ -9691,7 +9691,7 @@ implementation
        { several types to simulate more or less C++ objects for GDB }
        vmttype:=nil;
        vmtarraytype:=nil;
-       { type of classrefs, used for stabs }
+       { type of classrefs used for debug information }
        pvmttype:=nil;
        { return type of the setjmp function }
        exceptionreasontype:=nil;

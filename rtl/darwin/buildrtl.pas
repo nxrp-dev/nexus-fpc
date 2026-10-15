@@ -5,7 +5,7 @@ unit buildrtl;
 
     uses
       { those units are directly build using make:
-        system uuchar objpas macpas iso7185 cpall lineinfo lnfodwrf
+        system uuchar objpas macpas iso7185 cpall lnfodwrf
       }
       macpas, iso7185,
       fpintres, // $(SYSINIT_UNITS) \

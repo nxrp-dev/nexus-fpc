@@ -862,18 +862,6 @@ implementation
     begin
       if sym.globalasmsym then
         begin
-          { on AIX/stabx, we cannot generate debug information that encodes
-            the address of a global symbol, you need a symbol with the same
-            name as the identifier -> create an extra *local* symbol.
-            Moreover, such a local symbol will be removed if it's not
-            referenced anywhere, so also create a reference }
-          if (TargetDbg.id=dbg_stabx) and
-             (cs_debuginfo in CurrentSettings.ModuleSwitches) and
-             not Assigned(CurrentAsmData.GetAsmSymbol(sym.name)) then
-            begin
-              list.concat(TAISymbol.Create(CurrentAsmData.DefineAsmSymbol(sym.name,AB_LOCAL,AT_DATA,sym.vardef),0));
-              list.concat(TAIDirective.Create(asd_reference,sym.name));
-            end;
           list.concat(TAIDataBlock.create_global(sym.mangledname,size,sym.vardef,_typ));
         end
       else

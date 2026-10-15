@@ -24,7 +24,7 @@ var s : string;
     line : LongInt;
     regcount:LongInt;
     regcount_bsstart:LongInt;
-    names,numbers,stdnames,intnames,nasmnames,attnames,stabs,dwarf16,dwarf32,dwarf64,ots,ops:
+    names,numbers,stdnames,intnames,nasmnames,attnames,dwarf16,dwarf32,dwarf64,ots,ops:
         array[0..max_regcount-1] of string[63];
     regnumber_index,std_regname_index,int_regname_index,att_regname_index,
     nasm_regname_index:array[0..max_regcount-1] of byte;
@@ -271,8 +271,6 @@ begin
         readcomma;
         nasmnames[regcount]:=readstr;
         readcomma;
-        stabs[regcount]:=readstr;
-        readcomma;
         dwarf16[regcount]:=readstr;
         readcomma;
         dwarf32[regcount]:=readstr;
@@ -312,7 +310,7 @@ procedure write_inc_files;
 
 var attfile,intfile,otfile,
     norfile,nasmfile,stdfile,
-    numfile,stabfile,dwrffile,confile,
+    numfile,dwrffile,confile,
     rnifile,irifile,srifile,
     arifile,nrifile:text;
     first:boolean;
@@ -325,7 +323,6 @@ begin
   openinc(attfile,fileprefix+'att.inc');
   openinc(intfile,fileprefix+'int.inc');
   openinc(nasmfile,fileprefix+'nasm.inc');
-  openinc(stabfile,fileprefix+'stab.inc');
   openinc(dwrffile,fileprefix+'dwrf.inc');
   openinc(otfile,fileprefix+'ot.inc');
   openinc(norfile,fileprefix+'nor.inc');
@@ -344,7 +341,6 @@ begin
           WriteLn(attfile,',');
           WriteLn(intfile,',');
           WriteLn(nasmfile,',');
-          WriteLn(stabfile,',');
           WriteLn(dwrffile,',');
           WriteLn(otfile,',');
           WriteLn(rnifile,',');
@@ -361,12 +357,6 @@ begin
       write(attfile,'''',attnames[i],'''');
       write(intfile,'''',intnames[i],'''');
       write(nasmfile,'''',nasmnames[i],'''');
-      { stabs uses the same register numbering as dwarf
-        for x86_64 CPU }
-      if x86_64 then
-        write(stabfile,dwarf64[i])
-      else
-        write(stabfile,stabs[i]);
       if x86_64 then
         write(dwrffile,dwarf64[i])
       else if i8086 then
@@ -387,7 +377,6 @@ begin
   closeinc(stdfile);
   closeinc(intfile);
   closeinc(nasmfile);
-  closeinc(stabfile);
   closeinc(dwrffile);
   closeinc(otfile);
   closeinc(norfile);

@@ -3228,10 +3228,7 @@ S*2Aas_Monta usando o GNU AS
 *g2gl_Usa unidade informa‡äes linha (mostra mais info. com backtraces)
 *g2go<x>_Ajusta op‡äes informa‡äes depura‡Æo
 *g3godwarfsets_ Habilita 'conjunto' info. depura‡Æo DWARF (falhas gdb < 6.5)
-*g3gostabsabsincludes_ Armazena caminhos absolutos/completos arquivos inclusäes em 'Stabs'
 *g3godwarfmethodclassprefix_ Prefixa nomes m‚todos com nome classe em DWARF
-*g2gp_Preserva caixa nomes s¡mbolos em 'stabs'
-*g2gs_Gera informa‡äes depura‡Æo 'Stabs'
 *g2gt_Inutiliza vari veis locais (para detetar utiliza‡Æo de nÆo-inicilizadas)
 *g2gv_Gera programas rastre veis com 'Valgrind'
 *g2gw3_Gera informa‡äes depura‡Æo DWARFv3
