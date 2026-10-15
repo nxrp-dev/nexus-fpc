@@ -341,7 +341,7 @@ implementation
       SymBase,SymTable,symconst,defutil,defcmp,node,
       { This is needed for tcputype }
       CPUInfo,
-      FModule,fppu,
+      FModule,FPPU,
       { this is needed for $I %CURRENTROUTINE%}
       ProcInfo;
 

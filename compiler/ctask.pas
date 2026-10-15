@@ -64,7 +64,7 @@ type
     procedure freetask(t: TTask);
     procedure finishmodule(m: TModule);
     procedure queuemodule(m: TModule);
-    function restore_state(m: TModule): TTask;
+    function Restore_State(m: TModule): TTask;
     function reload_module(m: TModule): TTask;
     function recompile_module(m: TModule): TTask;
     procedure update_circular_unit_groups;
@@ -110,7 +110,7 @@ procedure DoneTaskHandler;
 implementation
 
 uses
-  Verbose, fppu, SysUtils,
+  Verbose, FPPU, SysUtils,
   Scanner, parser, pmodules, SymBase;
 
 procedure InitTaskHandler;
@@ -242,7 +242,7 @@ procedure TTaskHandler.finishmodule(m: TModule);
     if root.do_recompile then
       begin
         // e.g. system.nxu not found
-        TPPUModule(root).check_sources_for_recompile;
+        TPPUModule(root).Check_Sources_For_Recompile;
         WriteLn('ttask_handler.finishmodule ',root.ModuleName^,' ',root.StateStr);
         InternalError(2026032615);
       end
@@ -353,13 +353,13 @@ begin
     end;
 
   if m.do_reload then
-    cancontinue:=TPPUModule(m).canreload(firstwaiting,false)
+    cancontinue:=TPPUModule(m).CanReload(firstwaiting,false)
   else
   begin
     case m.state of
       ms_unknown : cancontinue:=true;
       ms_registered : cancontinue:=true;
-      ms_load: cancontinue:=TPPUModule(m).ppuloadcancontinue(firstwaiting);
+      ms_load: cancontinue:=TPPUModule(m).PPULoadCanContinue(firstwaiting);
       ms_compile : cancontinue:=true;
       ms_compiling_wait : cancontinue:=m.usedunitsloaded(true,firstwaiting);
       ms_compiling_waitintf : cancontinue:=m.usedunitsloaded(true,firstwaiting);
@@ -414,8 +414,8 @@ begin
   end;
   case m.state of
     ms_registered :
-      TPPUModule(m).loadppu(TPPUModule(m).loadedfrommodule);
-    ms_load: (m as TPPUModule).continueloadppu;
+      TPPUModule(m).LoadPPU(TPPUModule(m).loadedfrommodule);
+    ms_load: (m as TPPUModule).ContinueLoadPPU;
     ms_compile :
       begin
         if (m=main_module) and (MacroSymTableStack<>nil) then
@@ -456,7 +456,7 @@ begin
     if not m.FromPPU then
       parsing_done(m);
     if (m.state=ms_compiled) and m.is_unit then
-      TPPUModule(m).post_load_or_compile(m);
+      TPPUModule(m).Post_Load_Or_Compile(m);
     m.state:=ms_processed;
     end;
   Result:=m.state=ms_processed;
@@ -638,7 +638,7 @@ var
   check_impl_uses, check_crc: boolean;
 begin
   um:=uu.u;
-  TPPUModule(m).get_check_uses(check_impl_uses, check_crc);
+  TPPUModule(m).Get_Check_Uses(check_impl_uses, check_crc);
 
   if (uu.in_interface or check_impl_uses)
       and not um.interface_compiled then
@@ -664,7 +664,7 @@ begin
       if m.do_reload then
         begin
           HasDoReload:=true;
-          if not TPPUModule(m).canreload(firstwaiting,true) then
+          if not TPPUModule(m).CanReload(firstwaiting,true) then
             exit;
         end;
       m:=m.scc_next;
@@ -701,7 +701,7 @@ begin
   while Assigned(m) do
     begin
       next_m:=m.scc_next;
-      if TPPUModule(m).get_check_uses(check_impl_uses, check_crc) or check_crc then
+      if TPPUModule(m).Get_Check_Uses(check_impl_uses, check_crc) or check_crc then
         begin
           pu:=TUsedUnit(m.used_units.First);
           while Assigned(pu) do
@@ -709,8 +709,8 @@ begin
               if pu.in_interface or check_crc then
                 begin
                   if (pu.u.interface_compiled
-                      and ((pu.u.interface_crc<>pu.interface_checksum)
-                        or (pu.u.indirect_crc<>pu.indirect_checksum)))
+                      and ((pu.u.InterfaceCRC<>pu.InterfaceChecksum)
+                        or (pu.u.IndirectCRC<>pu.IndirectChecksum)))
                       or (pu.u.crc_final and check_crc and (pu.u.crc<>pu.checksum) ) then
                     begin
                       {$IFDEF DEBUG_CTASK}
@@ -964,7 +964,7 @@ begin
   search_compiled(main_module);
 end;
 
-function TTaskHandler.restore_state(m: TModule): TTask;
+function TTaskHandler.Restore_State(m: TModule): TTask;
 begin
   Result:=findtask(m);
   if Result=nil then
@@ -992,7 +992,7 @@ begin
     end;
 
 
-  Result:=restore_state(m);
+  Result:=Restore_State(m);
   TPPUModule(m).reload;
   Result.SaveState;
   TGlobalState.Clear_State;
@@ -1020,10 +1020,10 @@ begin
   {$ENDIF}
 
 
-  Result:=restore_state(m);
+  Result:=Restore_State(m);
   if m.recompile_reason=rr_unknown then
     m.recompile_reason:=rr_buildcycle;
-  TPPUModule(m).recompile_from_sources;
+  TPPUModule(m).Recompile_From_Sources;
   addmodule(m);
   TGlobalState.Clear_State;
 end;

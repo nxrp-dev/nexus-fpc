@@ -168,7 +168,7 @@ interface
         property Segments: TFPHashObjectList read FSegments;
         property Groups: TFPHashObjectList read FGroups;
       protected
-        function writeData(Data:TObjData):boolean;override;
+        function WriteData(Data:TObjData):boolean;override;
       public
         constructor create(AWriter:TObjectWriter);override;
         destructor Destroy;override;
@@ -340,7 +340,7 @@ interface
       protected
         procedure DoRelocationFixup(objsec:TObjSection);override;
         procedure Order_ObjSectionList(ObjSectionList : TFPObjectList;const aPattern:string);override;
-        function writeData:boolean;override;
+        function WriteData:boolean;override;
       public
         constructor create;override;
         destructor Destroy;override;
@@ -1099,7 +1099,7 @@ implementation
         RawRecord := nil;
       end;
 
-    function TOmfObjOutput.writeData(Data:TObjData):boolean;
+    function TOmfObjOutput.WriteData(Data:TObjData):boolean;
       var
         RawRecord: TOmfRawRecord;
         Header: TOMFRecordTHEADR;
@@ -3332,7 +3332,7 @@ cleanup:
         end;
       end;
 
-    function TMZExeOutput.writeData: boolean;
+    function TMZExeOutput.WriteData: boolean;
       begin
         Result:=False;
         if ExeWriteMode in [ewm_exefull,ewm_exeonly] then

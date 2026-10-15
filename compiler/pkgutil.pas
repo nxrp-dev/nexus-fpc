@@ -461,7 +461,7 @@ implementation
          Exit;
        end;
     { Already a lib? }
-      if (InPPU.Header.Common.Flags and uf_in_library)<>0 then
+      if (InPPU.Header.Common.Flags and UfInLibrary)<>0 then
        begin
          InPPU.Free;
          InPPU := nil;
@@ -469,7 +469,7 @@ implementation
          Exit;
        end;
     { We need a static linked unit, but we also accept those without .o file }
-      if (InPPU.Header.Common.Flags and (uf_static_linked or uf_no_link))=0 then
+      if (InPPU.Header.Common.Flags and (UfStaticLinked or UfNoLink))=0 then
        begin
          InPPU.Free;
          InPPU := nil;
@@ -481,11 +481,11 @@ implementation
       OutPPU.CreateStream(OutStream);
     { Create new header, with the new flags }
       OutPPU.Header:=InPPU.Header;
-      OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_in_library;
+      OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or UfInLibrary;
       if MakeStatic then
-       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_static_linked
+       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or UfStaticLinked
       else
-       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_shared_linked;
+       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or UfSharedLinked;
     { read until the object files are found }
       UntilB:=IBLinkUnitOFiles;
       repeat
@@ -981,7 +981,7 @@ implementation
               end;
             if not Assigned(Module) then
               InternalError(2014101001);
-            if (uf_in_library and Module.HeaderFlags)=0 then
+            if (UfInLibrary and Module.HeaderFlags)=0 then
               { unit is not part of a package, so no need to handle it }
               Continue;
             { loaded by a package? }

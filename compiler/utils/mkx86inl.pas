@@ -812,7 +812,7 @@ procedure ParseList(const APrefix, AFilename: string);
     CloseFile(fcinnr);
     CloseFile(fcpumminnr);
 
-    closefile(f);
+    CloseFile(f);
   end;
 
 begin

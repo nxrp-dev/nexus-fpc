@@ -75,7 +75,7 @@ implementation
        { symtable }
        symconst,SymTable,SymSym,symcpu,defutil,defcmp,
        { module }
-       FModule,ppu,
+       FModule,PPU,
        { pass 1 }
        pass_1,
        nmat,nadd,nmem,nset,ncnv,ninl,ncon,nld,nflw,nbas,nutils,

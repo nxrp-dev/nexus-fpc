@@ -60,7 +60,7 @@ unit scandir;
       SysUtils,
       CUtils,CFileUtl,
       Globals,WideStr,CPUInfo,tokens,
-      Verbose,CompHook,ppu,
+      Verbose,CompHook,PPU,
       Scanner,Switches,
       FModule,
       defutil,

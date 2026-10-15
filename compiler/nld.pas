@@ -212,7 +212,7 @@ implementation
 
     uses
       Verbose,GlobType,Globals,Systems,ConstExp,compinnr,
-      ppu,
+      PPU,
       SymTable,
       defutil,defcmp,
       CPUInfo,
@@ -283,7 +283,7 @@ implementation
         ppufile.getderef(symtableentryderef);
         SymTable:=nil;
         ppufile.getderef(fprocdefderef);
-        ppufile.getset(TPPUSet1(loadnodeflags));
+        ppufile.GetSet(TPPUSet1(loadnodeflags));
       end;
 
 
@@ -292,7 +292,7 @@ implementation
         inherited ppuwrite(ppufile);
         ppufile.putderef(symtableentryderef);
         ppufile.putderef(fprocdefderef);
-        ppufile.putset(TPPUSet1(loadnodeflags));
+        ppufile.PutSet(TPPUSet1(loadnodeflags));
       end;
 
 
@@ -658,16 +658,16 @@ implementation
     constructor TAssignmentNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getset(TPPUSet1(assignmentnodeflags));
-        assigntype:=TAssignType(ppufile.getbyte);
+        ppufile.GetSet(TPPUSet1(assignmentnodeflags));
+        assigntype:=TAssignType(ppufile.GetByte);
       end;
 
 
     procedure TAssignmentNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(assignmentnodeflags));
-        ppufile.putbyte(byte(assigntype));
+        ppufile.PutSet(TPPUSet1(assignmentnodeflags));
+        ppufile.PutByte(byte(assigntype));
       end;
 
 
@@ -1205,14 +1205,14 @@ implementation
     constructor TArrayConstructorNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getset(TPPUSet1(arrayconstructornodeflags));
+        ppufile.GetSet(TPPUSet1(arrayconstructornodeflags));
       end;
 
 
     procedure TArrayConstructorNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(arrayconstructornodeflags));
+        ppufile.PutSet(TPPUSet1(arrayconstructornodeflags));
       end;
 
 
@@ -1475,8 +1475,8 @@ implementation
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
         ppufile.getderef(typesymderef);
-        allowed:=ppufile.getboolean;
-        helperallowed:=ppufile.getboolean;
+        allowed:=ppufile.GetBoolean;
+        helperallowed:=ppufile.GetBoolean;
       end;
 
 
@@ -1485,8 +1485,8 @@ implementation
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
         ppufile.putderef(typesymderef);
-        ppufile.putboolean(allowed);
-        ppufile.putboolean(helperallowed);
+        ppufile.PutBoolean(allowed);
+        ppufile.PutBoolean(helperallowed);
       end;
 
 
@@ -1573,8 +1573,8 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(rttidefderef);
-        rttitype:=TRTTIType(ppufile.getbyte);
-        rttidatatype:=trttidatatype(ppufile.getbyte);
+        rttitype:=TRTTIType(ppufile.GetByte);
+        rttidatatype:=trttidatatype(ppufile.GetByte);
       end;
 
 
@@ -1582,8 +1582,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(rttidefderef);
-        ppufile.putbyte(byte(rttitype));
-        ppufile.putbyte(byte(rttidatatype));
+        ppufile.PutByte(byte(rttitype));
+        ppufile.PutByte(byte(rttidatatype));
       end;
 
 

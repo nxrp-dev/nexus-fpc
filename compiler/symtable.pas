@@ -440,7 +440,7 @@ implementation
       { codegen }
       ProcInfo,
       { ppu }
-      entfile,ppu,
+      EntFile,PPU,
       { parser }
       Scanner
       ;
@@ -481,9 +481,9 @@ implementation
     procedure TStoredSymTable.ppuload(ppufile:TCompilerPPUFile);
       begin
         { load the table's flags }
-        if ppufile.readentry<>ibsymtableoptions then
+        if ppufile.ReadEntry<>IBSymTableOptions then
           Message(unit_f_ppu_read_error);
-        ppufile.getset(TPPUSet1(tableoptions));
+        ppufile.GetSet(TPPUSet1(tableoptions));
 
         { load definitions }
         loaddefs(ppufile);
@@ -502,8 +502,8 @@ implementation
            needs_init_final;
 
          { write the table's flags }
-         ppufile.putset(TPPUSet1(tableoptions));
-         ppufile.writeentry(ibsymtableoptions);
+         ppufile.PutSet(TPPUSet1(tableoptions));
+         ppufile.WriteEntry(IBSymTableOptions);
 
          { write definitions }
          writedefs(ppufile);
@@ -519,35 +519,35 @@ implementation
         b   : byte;
       begin
          { load start of definition section, which holds the amount of defs }
-         if ppufile.readentry<>ibstartdefs then
+         if ppufile.ReadEntry<>IBStartDefs then
            Message(unit_f_ppu_read_error);
          { read definitions }
          repeat
-           b:=ppufile.readentry;
+           b:=ppufile.ReadEntry;
            def:=nil;
            case b of
-             ibpointerdef : def:=CPointerDef.ppuload(ppufile);
-             ibarraydef : def:=CArrayDef.ppuload(ppufile);
-             iborddef : def:=COrdDef.ppuload(ppufile);
-             ibfloatdef : def:=CFloatDef.ppuload(ppufile);
-             ibprocdef : def:=CProcDef.ppuload(ppufile);
-             ibshortstringdef : def:=CStringDef.loadshort(ppufile);
-             iblongstringdef : def:=CStringDef.loadlong(ppufile);
-             ibansistringdef : def:=CStringDef.loadansi(ppufile);
-             ibwidestringdef : def:=CStringDef.loadwide(ppufile);
-             ibunicodestringdef : def:=CStringDef.loadunicode(ppufile);
-             ibrecorddef : def:=CRecordDef.ppuload(ppufile);
-             ibobjectdef : def:=CObjectDef.ppuload(ppufile);
-             ibenumdef : def:=CEnumDef.ppuload(ppufile);
-             ibsetdef : def:=CSetDef.ppuload(ppufile);
-             ibprocvardef : def:=CProcVarDef.ppuload(ppufile);
-             ibfiledef : def:=CFileDef.ppuload(ppufile);
-             ibclassrefdef : def:=CClassRefDef.ppuload(ppufile);
-             ibformaldef : def:=CFormalDef.ppuload(ppufile);
-             ibvariantdef : def:=CVariantDef.ppuload(ppufile);
-             ibundefineddef : def:=CUndefinedDef.ppuload(ppufile);
-             ibenddefs : break;
-             ibend : Message(unit_f_ppu_read_error);
+             IBPointerDef : def:=CPointerDef.ppuload(ppufile);
+             IBArrayDef : def:=CArrayDef.ppuload(ppufile);
+             IBOrdDef : def:=COrdDef.ppuload(ppufile);
+             IBFloatDef : def:=CFloatDef.ppuload(ppufile);
+             IBProcDef : def:=CProcDef.ppuload(ppufile);
+             IBShortStringDef : def:=CStringDef.loadshort(ppufile);
+             IBLongStringDef : def:=CStringDef.loadlong(ppufile);
+             IBAnsiStringDef : def:=CStringDef.loadansi(ppufile);
+             IBWideStringDef : def:=CStringDef.loadwide(ppufile);
+             IBUnicodeStringDef : def:=CStringDef.loadunicode(ppufile);
+             IBRecordDef : def:=CRecordDef.ppuload(ppufile);
+             IBObjectDef : def:=CObjectDef.ppuload(ppufile);
+             IBEnumDef : def:=CEnumDef.ppuload(ppufile);
+             IBSetDef : def:=CSetDef.ppuload(ppufile);
+             IBProcVarDef : def:=CProcVarDef.ppuload(ppufile);
+             IBFileDef : def:=CFileDef.ppuload(ppufile);
+             IBClassRefDef : def:=CClassRefDef.ppuload(ppufile);
+             IBFormalDef : def:=CFormalDef.ppuload(ppufile);
+             IBVariantDef : def:=CVariantDef.ppuload(ppufile);
+             IBUndefinedDef : def:=CUndefinedDef.ppuload(ppufile);
+             IBEndDefs : break;
+             IBEnd : Message(unit_f_ppu_read_error);
            else
              Message1(unit_f_ppu_invalid_entry,ToStr(b));
            end;
@@ -564,30 +564,30 @@ implementation
         sym : TSym;
       begin
          { load start of definition section, which holds the amount of defs }
-         if ppufile.readentry<>ibstartsyms then
+         if ppufile.ReadEntry<>IBStartSyms then
           Message(unit_f_ppu_read_error);
          { now read the symbols }
          repeat
            sym:=nil;
-           b:=ppufile.readentry;
+           b:=ppufile.ReadEntry;
            case b of
-                ibtypesym : sym:=CTypeSym.ppuload(ppufile);
-                ibprocsym : sym:=CProcSym.ppuload(ppufile);
-               ibconstsym : sym:=CConstSym.ppuload(ppufile);
-           ibstaticvarsym : sym:=CStaticVarSym.ppuload(ppufile);
-            iblocalvarsym : sym:=CLocalVarSym.ppuload(ppufile);
-             ibparavarsym : sym:=CParaVarSym.ppuload(ppufile);
-            ibfieldvarsym : sym:=CFieldVarSym.ppuload(ppufile);
-         ibabsolutevarsym : sym:=CAbsoluteVarSym.ppuload(ppufile);
-                ibenumsym : sym:=CEnumSym.ppuload(ppufile);
-            ibpropertysym : sym:=CPropertySym.ppuload(ppufile);
-                ibunitsym : sym:=CUnitSym.ppuload(ppufile);
-               iblabelsym : sym:=CLabelSym.ppuload(ppufile);
-                 ibsyssym : sym:=CSysSym.ppuload(ppufile);
-               ibmacrosym : sym:=TMacro.ppuload(ppufile);
-           ibnamespacesym : sym:=CNamespaceSym.ppuload(ppufile);
-                ibendsyms : break;
-                    ibend : Message(unit_f_ppu_read_error);
+                IBTypeSym : sym:=CTypeSym.ppuload(ppufile);
+                IBProcSym : sym:=CProcSym.ppuload(ppufile);
+               IBConstSym : sym:=CConstSym.ppuload(ppufile);
+           IBStaticVarSym : sym:=CStaticVarSym.ppuload(ppufile);
+            IBLocalVarSym : sym:=CLocalVarSym.ppuload(ppufile);
+             IBParaVarSym : sym:=CParaVarSym.ppuload(ppufile);
+            IBFieldVarSym : sym:=CFieldVarSym.ppuload(ppufile);
+         IBAbsoluteVarSym : sym:=CAbsoluteVarSym.ppuload(ppufile);
+                IBEnumSym : sym:=CEnumSym.ppuload(ppufile);
+            IBPropertySym : sym:=CPropertySym.ppuload(ppufile);
+                IBUnitSym : sym:=CUnitSym.ppuload(ppufile);
+               IBLabelSym : sym:=CLabelSym.ppuload(ppufile);
+                 IBSysSym : sym:=CSysSym.ppuload(ppufile);
+               IBMacroSym : sym:=TMacro.ppuload(ppufile);
+           IBNamespaceSym : sym:=CNamespaceSym.ppuload(ppufile);
+                IBEndSyms : break;
+                    IBEnd : Message(unit_f_ppu_read_error);
            else
              Message1(unit_f_ppu_invalid_entry,ToStr(b));
            end;
@@ -610,8 +610,8 @@ implementation
             inc(defcount);
         { each definition get a number, write then the amount of defs to the
           ibstartdef entry }
-        ppufile.putlongint(defcount);
-        ppufile.writeentry(ibstartdefs);
+        ppufile.PutLongInt(defcount);
+        ppufile.WriteEntry(IBStartDefs);
         { now write the definition }
         for i:=0 to DefList.Count-1 do
           begin
@@ -623,7 +623,7 @@ implementation
               end;
           end;
         { write end of definitions }
-        ppufile.writeentry(ibenddefs);
+        ppufile.WriteEntry(IBEndDefs);
       end;
 
 
@@ -639,8 +639,8 @@ implementation
             inc(symcount);
         { each definition get a number, write then the amount of syms and the
           datasize to the ibsymdef entry }
-        ppufile.putlongint(symcount);
-        ppufile.writeentry(ibstartsyms);
+        ppufile.PutLongInt(symcount);
+        ppufile.WriteEntry(IBStartSyms);
         { foreach is used to write all symbols }
         for i:=0 to SymList.Count-1 do
           begin
@@ -652,7 +652,7 @@ implementation
               end;
           end;
         { end of symbols }
-        ppufile.writeentry(ibendsyms);
+        ppufile.WriteEntry(IBEndSyms);
       end;
 
     function TStoredSymTable.is_deref_built: boolean;
@@ -1170,15 +1170,15 @@ implementation
 
     procedure TAbstractRecordSymTable.ppuload(ppufile:TCompilerPPUFile);
       begin
-        if ppufile.readentry<>ibrecsymtableoptions then
+        if ppufile.ReadEntry<>IBRecSymTableOptions then
           Message(unit_f_ppu_read_error);
-        recordalignment:=shortint(ppufile.getbyte);
-        explicitrecordalignment:=shortint(ppufile.getbyte);
-        usefieldalignment:=shortint(ppufile.getbyte);
-        RecordAlignMin:=shortint(ppufile.getbyte);
+        recordalignment:=shortint(ppufile.GetByte);
+        explicitrecordalignment:=shortint(ppufile.GetByte);
+        usefieldalignment:=shortint(ppufile.GetByte);
+        RecordAlignMin:=shortint(ppufile.GetByte);
         if (usefieldalignment=C_alignment) then
-          fieldalignment:=shortint(ppufile.getbyte);
-        ppufile.getset(TPPUSet1(has_fields_with_mop));
+          fieldalignment:=shortint(ppufile.GetByte);
+        ppufile.GetSet(TPPUSet1(has_fields_with_mop));
         inherited ppuload(ppufile);
       end;
 
@@ -1188,20 +1188,20 @@ implementation
         oldtyp : byte;
       begin
          oldtyp:=ppufile.entrytyp;
-         ppufile.entrytyp:=subentryid;
+         ppufile.entrytyp:=SubEntryID;
          { in case of classes using C alignment, the alignment of the parent
            affects the alignment of fields of the childs }
-         ppufile.putbyte(byte(recordalignment));
-         ppufile.putbyte(byte(explicitrecordalignment));
-         ppufile.putbyte(byte(usefieldalignment));
-         ppufile.putbyte(byte(RecordAlignMin));
+         ppufile.PutByte(byte(recordalignment));
+         ppufile.PutByte(byte(explicitrecordalignment));
+         ppufile.PutByte(byte(usefieldalignment));
+         ppufile.PutByte(byte(RecordAlignMin));
          if (usefieldalignment=C_alignment) then
-           ppufile.putbyte(byte(fieldalignment));
+           ppufile.PutByte(byte(fieldalignment));
          { it's not really a "symtableoption", but loading this from the record
            def requires storing the set in the recorddef at least between
            ppuload and deref/derefimpl }
-         ppufile.putset(TPPUSet1(has_fields_with_mop));
-         ppufile.writeentry(ibrecsymtableoptions);
+         ppufile.PutSet(TPPUSet1(has_fields_with_mop));
+         ppufile.WriteEntry(IBRecSymTableOptions);
 
          inherited ppuwrite(ppufile);
 
@@ -2018,7 +2018,7 @@ implementation
         oldtyp : byte;
       begin
          oldtyp:=ppufile.entrytyp;
-         ppufile.entrytyp:=subentryid;
+         ppufile.entrytyp:=SubEntryID;
 
          inherited ppuwrite(ppufile);
 

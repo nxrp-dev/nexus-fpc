@@ -160,7 +160,7 @@ interface
          procedure section_set_reloc_datapos(p:TCoffObjSection;var datapos:aword);
          procedure section_write_header(p:TObject;arg:pointer);
        protected
-         function writedata(data:TObjData):boolean;override;
+         function WriteData(data:TObjData):boolean;override;
        public
          constructor createcoff(AWriter:TObjectWriter;awin32:boolean);
          destructor Destroy;override;
@@ -219,7 +219,7 @@ interface
          procedure globalsyms_write_symbol(p:TObject;arg:pointer);
          procedure ExeSectionList_write_header(p:TObject;arg:pointer);
        protected
-         function writedata:boolean;override;
+         function WriteData:boolean;override;
          procedure Order_ObjSectionList(ObjSectionList : TFPObjectList;const aPattern:string);override;
          procedure DoRelocationFixup(objsec:TObjSection);override;
        public
@@ -2151,7 +2151,7 @@ const pemagic : array[0..3] of byte = (
       end;
 
 
-    function TCoffObjOutput.writedata(data:TObjData):boolean;
+    function TCoffObjOutput.WriteData(data:TObjData):boolean;
       var
         datapos,
         sympos   : aword;
@@ -3067,7 +3067,7 @@ const pemagic : array[0..3] of byte = (
       end;
 
 
-    function TCoffexeoutput.writedata:boolean;
+    function TCoffexeoutput.WriteData:boolean;
       var
         i           : LongWord;
         header      : TCOFFHeader;

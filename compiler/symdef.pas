@@ -109,7 +109,7 @@ interface
 {$else symansistr}
           _fullownerhierarchyname : PShortString;
 {$endif symansistr}
-          procedure writeentry(ppufile: TCompilerPPUFile; ibnr: byte);
+          procedure WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
        protected
           typesymderef  : TDeref;
           procedure PPUWritePlatform(ppufile:TCompilerPPUFile);virtual;
@@ -1393,12 +1393,12 @@ implementation
       { parser }
       pgenutil,
       { module }
-      FModule,ppu,
+      FModule,PPU,
       { other }
       aasmbase,
       gendef,
       FPCHash,
-      entfile
+      EntFile
       ;
 
 {****************************************************************************
@@ -1938,8 +1938,8 @@ implementation
         cnt,i : LongInt;
         intfderef : PDeref;
       begin
-        ppufile.getset(TPPUSet1(flags));
-        cnt:=ppufile.getlongint;
+        ppufile.GetSet(TPPUSet1(flags));
+        cnt:=ppufile.GetLongInt;
         for i:=0 to cnt-1 do
           begin
             new(intfderef);
@@ -1953,8 +1953,8 @@ implementation
       var
         i : LongInt;
       begin
-        ppufile.putset(TPPUSet1(flags));
-        ppufile.putlongint(interfacesderef.count);
+        ppufile.PutSet(TPPUSet1(flags));
+        ppufile.PutLongInt(interfacesderef.count);
         for i:=0 to interfacesderef.count-1 do
           ppufile.putderef(PDeref(interfacesderef[i])^);
       end;
@@ -1983,10 +1983,10 @@ implementation
       end;
 
 
-    procedure TStoredDef.writeentry(ppufile: TCompilerPPUFile; ibnr: byte);
+    procedure TStoredDef.WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
       begin
         PPUWritePlatform(ppufile);
-        ppufile.writeentry(ibnr);
+        ppufile.WriteEntry(ibnr);
       end;
 
 
@@ -2082,15 +2082,15 @@ implementation
         symderef : PDeref;
       begin
          inherited create(dt);
-         DefId:=ppufile.getlongint;
+         DefId:=ppufile.GetLongInt;
          CurrentModule.deflist[DefId]:=self;
 {$ifdef EXTDEBUG}
          fillchar(fileinfo,sizeof(fileinfo),0);
 {$endif}
          { load }
          ppufile.getderef(typesymderef);
-         ppufile.getset(TPPUSet2(defoptions));
-         ppufile.getset(TPPUSet1(defstates));
+         ppufile.GetSet(TPPUSet2(defoptions));
+         ppufile.GetSet(TPPUSet1(defstates));
          if df_unique in defoptions then
            ppufile.getderef(orgdefderef);
          if df_genconstraint in defoptions then
@@ -2100,14 +2100,14 @@ implementation
            end;
          if [df_generic,df_specialization]*defoptions<>[] then
            begin
-             cnt:=ppufile.getlongint;
+             cnt:=ppufile.GetLongInt;
              if cnt>0 then
                begin
                  genericparas:=TFPHashObjectList.create(false);
                  genericparaderefs:=TFPList.create;
                  for i:=0 to cnt-1 do
                    begin
-                     genericparas.add(ppufile.getstring,nil);
+                     genericparas.add(ppufile.GetString,nil);
                      New(symderef);
                      ppufile.getderef(symderef^);
                      genericparaderefs.add(symderef);
@@ -2116,7 +2116,7 @@ implementation
            end;
          if df_generic in defoptions then
            begin
-             sizeleft:=ppufile.getlongint;
+             sizeleft:=ppufile.GetLongInt;
              initgeneric;
              while sizeleft>0 do
                begin
@@ -2124,7 +2124,7 @@ implementation
                    i:=sizeof(buf)
                  else
                    i:=sizeleft;
-                 ppufile.getdata(buf,i);
+                 ppufile.GetData(buf,i);
                  generictokenbuf.write(buf,i);
                  dec(sizeleft,i);
                end;
@@ -2281,12 +2281,12 @@ implementation
       begin
         if defid<0 then
           InternalError(2015101401);
-        ppufile.putlongint(DefId);
+        ppufile.PutLongInt(DefId);
         ppufile.putderef(typesymderef);
-        ppufile.putset(TPPUSet2(defoptions));
+        ppufile.PutSet(TPPUSet2(defoptions));
         oldintfcrc:=ppufile.DoCRC;
         ppufile.DoCRC:=false;
-        ppufile.putset(TPPUSet1(defstates));
+        ppufile.PutSet(TPPUSet1(defstates));
         if df_unique in defoptions then
           ppufile.putderef(orgdefderef);
         if df_genconstraint in defoptions then
@@ -2294,15 +2294,15 @@ implementation
         if [df_generic,df_specialization]*defoptions<>[] then
           begin
             if not Assigned(genericparas) then
-              ppufile.putlongint(0)
+              ppufile.PutLongInt(0)
             else
               begin
                 if not Assigned(genericparaderefs) then
                   InternalError(2014052305);
-                ppufile.putlongint(genericparas.count);
+                ppufile.PutLongInt(genericparas.count);
                 for i:=0 to genericparas.count-1 do
                   begin
-                    ppufile.putstring(genericparas.nameofindex(i));
+                    ppufile.PutString(genericparas.nameofindex(i));
                     ppufile.putderef(PDeref(genericparaderefs[i])^);
                   end;
               end;
@@ -2318,7 +2318,7 @@ implementation
               end
             else
               sizeleft:=0;
-            ppufile.putlongint(sizeleft);
+            ppufile.PutLongInt(sizeleft);
             while sizeleft>0 do
               begin
                 if sizeleft>sizeof(buf) then
@@ -2326,7 +2326,7 @@ implementation
                 else
                   i:=sizeleft;
                 generictokenbuf.read(buf,i);
-                ppufile.putdata(buf,i);
+                ppufile.PutData(buf,i);
                 dec(sizeleft,i);
               end;
           end;
@@ -2717,7 +2717,7 @@ implementation
          inherited ppuload(stringdef,ppufile);
          stringtype:=st_shortstring;
          encoding:=0;
-         len:=ppufile.getbyte;
+         len:=ppufile.GetByte;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2736,7 +2736,7 @@ implementation
          inherited ppuload(stringdef,ppufile);
          stringtype:=st_longstring;
          encoding:=0;
-         len:=ppufile.getasizeint;
+         len:=ppufile.GetASizeInt;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2754,8 +2754,8 @@ implementation
       begin
          inherited ppuload(stringdef,ppufile);
          stringtype:=st_ansistring;
-         len:=ppufile.getasizeint;
-         encoding:=ppufile.getword;
+         len:=ppufile.GetASizeInt;
+         encoding:=ppufile.GetWord;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2780,7 +2780,7 @@ implementation
            encoding:=CP_UTF16LE
          else
            encoding:=CP_UTF16BE;
-         len:=ppufile.getasizeint;
+         len:=ppufile.GetASizeInt;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2801,8 +2801,8 @@ implementation
       begin
          inherited ppuload(stringdef,ppufile);
          stringtype:=st_unicodestring;
-         len:=ppufile.getasizeint;
-         encoding:=ppufile.getword;
+         len:=ppufile.GetASizeInt;
+         encoding:=ppufile.GetWord;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2835,18 +2835,18 @@ implementation
 {$ifdef extdebug}
             if len > 255 then InternalError(12122002);
 {$endif}
-            ppufile.putbyte(byte(len))
+            ppufile.PutByte(byte(len))
            end
          else
-           ppufile.putasizeint(len);
+           ppufile.PutASizeInt(len);
          if stringtype in [st_ansistring,st_unicodestring] then
-           ppufile.putword(encoding);
+           ppufile.PutWord(encoding);
          case stringtype of
-            st_shortstring : writeentry(ppufile,ibshortstringdef);
-            st_longstring : writeentry(ppufile,iblongstringdef);
-            st_ansistring : writeentry(ppufile,ibansistringdef);
-            st_widestring : writeentry(ppufile,ibwidestringdef);
-            st_unicodestring : writeentry(ppufile,ibunicodestringdef);
+            st_shortstring : WriteEntry(ppufile,IBShortStringDef);
+            st_longstring : WriteEntry(ppufile,IBLongStringDef);
+            st_ansistring : WriteEntry(ppufile,IBAnsiStringDef);
+            st_widestring : WriteEntry(ppufile,IBWideStringDef);
+            st_unicodestring : WriteEntry(ppufile,IBUnicodeStringDef);
          end;
       end;
 
@@ -2995,9 +2995,9 @@ implementation
     constructor TEnumDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(enumdef,ppufile);
-         minval:=ppufile.getaint;
-         maxval:=ppufile.getaint;
-         savesize:=ppufile.getaint;
+         minval:=ppufile.GetAInt;
+         maxval:=ppufile.GetAInt;
+         savesize:=ppufile.GetAInt;
          has_jumps:=false;
          if df_copied_def in defoptions then
            begin
@@ -3182,12 +3182,12 @@ implementation
     procedure TEnumDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putaint(min);
-         ppufile.putaint(max);
-         ppufile.putaint(savesize);
+         ppufile.PutAInt(min);
+         ppufile.PutAInt(max);
+         ppufile.PutAInt(savesize);
          if df_copied_def in defoptions then
            ppufile.putderef(basedefderef);
-         writeentry(ppufile,ibenumdef);
+         WriteEntry(ppufile,IBEnumDef);
          if not (df_copied_def in defoptions) then
            TEnumSymTable(SymTable).ppuwrite(ppufile);
       end;
@@ -3219,7 +3219,7 @@ implementation
       begin
         ppufile.getderef(typesymderef);
         ppufile.getderef(typeconstrderef);
-        SetLength(paras,ppufile.getlongint);
+        SetLength(paras,ppufile.GetLongInt);
       end;
 
 
@@ -3227,7 +3227,7 @@ implementation
       begin
         ppufile.putderef(typesymderef);
         ppufile.putderef(typeconstrderef);
-        ppufile.putlongint(length(paras));
+        ppufile.PutLongInt(length(paras));
       end;
 
 
@@ -3417,7 +3417,7 @@ implementation
       var
         cnt,i : LongInt;
       begin
-        cnt:=ppufile.getlongint;
+        cnt:=ppufile.GetLongInt;
         if cnt>0 then
           begin
             result:=TRTTIAttributeList.create;
@@ -3435,12 +3435,12 @@ implementation
       begin
         if Assigned(attrlist) and Assigned(attrlist.RTTIAttributes) then
           begin
-            ppufile.putlongint(attrlist.RTTIAttributes.count);
+            ppufile.PutLongInt(attrlist.RTTIAttributes.count);
             for i:=0 to attrlist.RTTIAttributes.count-1 do
               TRTTIAttribute(attrlist.RTTIAttributes[i]).ppuwrite(ppufile);
           end
         else
-          ppufile.putlongint(0);
+          ppufile.PutLongInt(0);
       end;
 
 
@@ -3461,7 +3461,7 @@ implementation
     constructor TOrdDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(orddef,ppufile);
-         ordtype:=TOrdType(ppufile.getbyte);
+         ordtype:=TOrdType(ppufile.GetByte);
          low:=ppufile.getexprint;
          high:=ppufile.getexprint;
          setsize;
@@ -3567,10 +3567,10 @@ implementation
     procedure TOrdDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(ordtype));
+         ppufile.PutByte(byte(ordtype));
          ppufile.putexprint(low);
          ppufile.putexprint(high);
-         writeentry(ppufile,iborddef);
+         WriteEntry(ppufile,IBOrdDef);
       end;
 
 
@@ -3613,7 +3613,7 @@ implementation
     constructor TFloatDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(floatdef,ppufile);
-         floattype:=TFloatType(ppufile.getbyte);
+         floattype:=TFloatType(ppufile.GetByte);
          setsize;
          PPULoadPlatform(ppufile);
       end;
@@ -3689,8 +3689,8 @@ implementation
     procedure TFloatDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(floattype));
-         writeentry(ppufile,ibfloatdef);
+         ppufile.PutByte(byte(floattype));
+         WriteEntry(ppufile,IBFloatDef);
       end;
 
 
@@ -3741,7 +3741,7 @@ implementation
     constructor TFileDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(filedef,ppufile);
-         filetyp:=TFileTyp(ppufile.getbyte);
+         filetyp:=TFileTyp(ppufile.GetByte);
          if filetyp=ft_typed then
            ppufile.getderef(typedfiledefderef)
          else
@@ -3820,10 +3820,10 @@ implementation
     procedure TFileDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(filetyp));
+         ppufile.PutByte(byte(filetyp));
          if filetyp=ft_typed then
            ppufile.putderef(typedfiledefderef);
-         writeentry(ppufile,ibfiledef);
+         WriteEntry(ppufile,IBFileDef);
       end;
 
 
@@ -3868,7 +3868,7 @@ implementation
     constructor TVariantDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(variantdef,ppufile);
-         varianttype:=TVariantType(ppufile.getbyte);
+         varianttype:=TVariantType(ppufile.GetByte);
          setsize;
          PPULoadPlatform(ppufile);
       end;
@@ -3889,8 +3889,8 @@ implementation
     procedure TVariantDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(varianttype));
-         writeentry(ppufile,ibvariantdef);
+         ppufile.PutByte(byte(varianttype));
+         WriteEntry(ppufile,IBVariantDef);
       end;
 
 
@@ -4053,7 +4053,7 @@ implementation
     constructor TPointerDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(pointerdef,ppufile);
-         has_pointer_math:=(ppufile.getbyte<>0);
+         has_pointer_math:=(ppufile.GetByte<>0);
          PPULoadPlatform(ppufile);
       end;
 
@@ -4075,8 +4075,8 @@ implementation
     procedure TPointerDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(has_pointer_math));
-         writeentry(ppufile,ibpointerdef);
+         ppufile.PutByte(byte(has_pointer_math));
+         WriteEntry(ppufile,IBPointerDef);
       end;
 
 
@@ -4149,7 +4149,7 @@ implementation
     procedure TClassRefDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         writeentry(ppufile,ibclassrefdef);
+         WriteEntry(ppufile,IBClassRefDef);
       end;
 
 
@@ -4233,10 +4233,10 @@ implementation
       begin
          inherited ppuload(setdef,ppufile);
          ppufile.getderef(elementdefderef);
-         savesize:=ppufile.getasizeint;
-         setbase:=ppufile.getasizeint;
-         setlow:=ppufile.getasizeint;
-         setmax:=ppufile.getasizeint;
+         savesize:=ppufile.GetASizeInt;
+         setbase:=ppufile.GetASizeInt;
+         setlow:=ppufile.GetASizeInt;
+         setmax:=ppufile.GetASizeInt;
          PPULoadPlatform(ppufile);
       end;
 
@@ -4253,11 +4253,11 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.putderef(elementdefderef);
-         ppufile.putasizeint(savesize);
-         ppufile.putasizeint(setbase);
-         ppufile.putasizeint(setlow);
-         ppufile.putasizeint(setmax);
-         writeentry(ppufile,ibsetdef);
+         ppufile.PutASizeInt(savesize);
+         ppufile.PutASizeInt(setbase);
+         ppufile.PutASizeInt(setlow);
+         ppufile.PutASizeInt(setmax);
+         WriteEntry(ppufile,IBSetDef);
       end;
 
 
@@ -4315,7 +4315,7 @@ implementation
     constructor TFormalDef.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(formaldef,ppufile);
-         typed:=boolean(ppufile.getbyte);
+         typed:=boolean(ppufile.GetByte);
          savesize:=0;
          PPULoadPlatform(ppufile);
       end;
@@ -4324,8 +4324,8 @@ implementation
     procedure TFormalDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(typed));
-         writeentry(ppufile,ibformaldef);
+         ppufile.PutByte(byte(typed));
+         WriteEntry(ppufile,IBFormalDef);
       end;
 
 
@@ -4461,9 +4461,9 @@ implementation
          { the addresses are calculated later }
          ppufile.getderef(_elementdefderef);
          ppufile.getderef(rangedefderef);
-         lowrange:=ppufile.getasizeint;
-         highrange:=ppufile.getasizeint;
-         ppufile.getset(TPPUSet2(arrayoptions));
+         lowrange:=ppufile.GetASizeInt;
+         highrange:=ppufile.GetASizeInt;
+         ppufile.GetSet(TPPUSet2(arrayoptions));
          PPULoadPlatform(ppufile);
          SymTable:=TArraySymTable.create(self);
          TArraySymTable(SymTable).ppuload(ppufile)
@@ -4501,10 +4501,10 @@ implementation
          inherited ppuwrite(ppufile);
          ppufile.putderef(_elementdefderef);
          ppufile.putderef(rangedefderef);
-         ppufile.putasizeint(lowrange);
-         ppufile.putasizeint(highrange);
-         ppufile.putset(TPPUSet2(arrayoptions));
-         writeentry(ppufile,ibarraydef);
+         ppufile.PutASizeInt(lowrange);
+         ppufile.PutASizeInt(highrange);
+         ppufile.PutSet(TPPUSet2(arrayoptions));
+         WriteEntry(ppufile,IBArrayDef);
          TArraySymTable(SymTable).ppuwrite(ppufile);
       end;
 
@@ -4738,16 +4738,16 @@ implementation
         ro: TRTTIOption;
       begin
         inherited ppuload(dt,ppufile);
-        objrealname:=ppufile.getpshortstring;
+        objrealname:=ppufile.GetPShortString;
         objname:=StringDup(upper(objrealname^));
-        import_lib:=ppufile.getpshortstring;
+        import_lib:=ppufile.GetPShortString;
         { only used for external C++ classes and Java classes/records }
         if (import_lib^='') then
           StringDispose(import_lib);
-        ppufile.getset(TPPUSet4(objectoptions));
-        rtti.clause:=TRTTIClause(ppufile.getbyte);
+        ppufile.GetSet(TPPUSet4(objectoptions));
+        rtti.clause:=TRTTIClause(ppufile.GetByte);
         for ro in TRTTIOption do
-          ppufile.getset(TPPUSet1(rtti.options[ro]));
+          ppufile.GetSet(TPPUSet1(rtti.options[ro]));
       end;
 
     procedure TAbstractRecordDef.ppuwrite(ppufile: TCompilerPPUFile);
@@ -4755,15 +4755,15 @@ implementation
         ro: TRTTIOption;
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putstring(objrealname^);
+        ppufile.PutString(objrealname^);
         if Assigned(import_lib) then
-          ppufile.putstring(import_lib^)
+          ppufile.PutString(import_lib^)
         else
-          ppufile.putstring('');
-        ppufile.putset(TPPUSet4(objectoptions));
-        ppufile.putbyte(byte(rtti.clause));
+          ppufile.PutString('');
+        ppufile.PutSet(TPPUSet4(objectoptions));
+        ppufile.PutByte(byte(rtti.clause));
         for ro in TRTTIOption do
-          ppufile.putset(TPPUSet1(rtti.options[ro]));
+          ppufile.PutSet(TPPUSet1(rtti.options[ro]));
       end;
 
     destructor TAbstractRecordDef.Destroy;
@@ -5386,14 +5386,14 @@ implementation
         var
           i,j : LongInt;
         begin
-         if ppufile.getbyte=1 then
+         if ppufile.GetByte=1 then
            begin
              new(variantrecdesc);
              ppufile.getderef(variantrecdesc^.variantselectorderef);
-             SetLength(variantrecdesc^.branches,ppufile.getasizeint);
+             SetLength(variantrecdesc^.branches,ppufile.GetASizeInt);
              for i:=0 to high(variantrecdesc^.branches) do
                begin
-                 SetLength(variantrecdesc^.branches[i].values,ppufile.getasizeint);
+                 SetLength(variantrecdesc^.branches[i].values,ppufile.GetASizeInt);
                  for j:=0 to high(variantrecdesc^.branches[i].values) do
                    variantrecdesc^.branches[i].values[j]:=ppufile.getexprint;
                  readvariantrecdesc(variantrecdesc^.branches[i].nestedvariant);
@@ -5413,15 +5413,15 @@ implementation
          else
            begin
              SymTable:=TRecordSymTable.create(objrealname^,0,0);
-             TRecordSymTable(SymTable).fieldalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).recordalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).explicitrecordalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).padalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).usefieldalignment:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).RecordAlignMin:=shortint(ppufile.getbyte);
-             TRecordSymTable(SymTable).DataSize:=ppufile.getasizeint;
-             TRecordSymTable(SymTable).paddingsize:=ppufile.getword;
-             ppufile.getset(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
+             TRecordSymTable(SymTable).fieldalignment:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).recordalignment:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).explicitrecordalignment:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).padalignment:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).usefieldalignment:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).RecordAlignMin:=shortint(ppufile.GetByte);
+             TRecordSymTable(SymTable).DataSize:=ppufile.GetASizeInt;
+             TRecordSymTable(SymTable).paddingsize:=ppufile.GetWord;
+             ppufile.GetSet(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
              { position of ppuload_platform call must correspond
                to position of writeentry in ppuwrite method }
              PPULoadPlatform(ppufile);
@@ -5551,19 +5551,19 @@ implementation
         begin
          if Assigned(variantrecdesc) then
            begin
-             ppufile.putbyte(1);
+             ppufile.PutByte(1);
              ppufile.putderef(variantrecdesc^.variantselectorderef);
-             ppufile.putasizeint(length(variantrecdesc^.branches));
+             ppufile.PutASizeInt(length(variantrecdesc^.branches));
              for i:=0 to high(variantrecdesc^.branches) do
                begin
-                 ppufile.putasizeint(length(variantrecdesc^.branches[i].values));
+                 ppufile.PutASizeInt(length(variantrecdesc^.branches[i].values));
                  for j:=0 to high(variantrecdesc^.branches[i].values) do
                    ppufile.putexprint(variantrecdesc^.branches[i].values[j]);
                  writevariantrecdesc(variantrecdesc^.branches[i].nestedvariant);
                end;
            end
          else
-           ppufile.putbyte(0);
+           ppufile.PutByte(0);
         end;
 
       begin
@@ -5572,15 +5572,15 @@ implementation
            ppufile.putderef(cloneddefderef)
          else
            begin
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).fieldalignment));
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).recordalignment));
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).explicitrecordalignment));
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).padalignment));
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).usefieldalignment));
-             ppufile.putbyte(byte(TRecordSymTable(SymTable).RecordAlignMin));
-             ppufile.putasizeint(TRecordSymTable(SymTable).DataSize);
-             ppufile.putword(TRecordSymTable(SymTable).paddingsize);
-             ppufile.putset(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).fieldalignment));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).recordalignment));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).explicitrecordalignment));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).padalignment));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).usefieldalignment));
+             ppufile.PutByte(byte(TRecordSymTable(SymTable).RecordAlignMin));
+             ppufile.PutASizeInt(TRecordSymTable(SymTable).DataSize);
+             ppufile.PutWord(TRecordSymTable(SymTable).paddingsize);
+             ppufile.PutSet(TPPUSet1(TRecordSymTable(SymTable).managementoperators));
              { the variantrecdesc is needed only for iso-like new statements new(prec,1,2,3 ...);
                but because iso mode supports no units, there is no need to store the variantrecdesc
                in the ppu
@@ -5588,7 +5588,7 @@ implementation
              // writevariantrecdesc(variantrecdesc);
            end;
 
-         writeentry(ppufile,ibrecorddef);
+         WriteEntry(ppufile,IBRecordDef);
 
          if not(df_copied_def in defoptions) then
            TRecordSymTable(SymTable).ppuwrite(ppufile);
@@ -5825,9 +5825,9 @@ implementation
          minparacount:=0;
          maxparacount:=0;
          ppufile.getderef(returndefderef);
-         proctypeoption:=TProcTypeOption(ppufile.getbyte);
-         proccalloption:=TProcCallOption(ppufile.getbyte);
-         ppufile.getset(TPPUSet8(procoptions));
+         proctypeoption:=TProcTypeOption(ppufile.GetByte);
+         proccalloption:=TProcCallOption(ppufile.GetByte);
+         ppufile.GetSet(TPPUSet8(procoptions));
 
          funcretloc[callerside].init;
          if po_explicitparaloc in procoptions then
@@ -5846,9 +5846,9 @@ implementation
            exit;
          inherited ppuwrite(ppufile);
          ppufile.putderef(returndefderef);
-         ppufile.putbyte(ord(proctypeoption));
-         ppufile.putbyte(ord(proccalloption));
-         ppufile.putset(TPPUSet8(procoptions));
+         ppufile.PutByte(ord(proctypeoption));
+         ppufile.PutByte(ord(proccalloption));
+         ppufile.PutSet(TPPUSet8(procoptions));
 
          if (po_explicitparaloc in procoptions) then
            funcretloc[callerside].ppuwrite(ppufile);
@@ -6596,49 +6596,49 @@ implementation
          inherited ppuload(procdef,ppufile);
 {$ifdef symansistr}
          if po_has_mangledname in procoptions then
-           _mangledname:=ppufile.getansistring
+           _mangledname:=ppufile.GetAnsiString
          else
            _mangledname:='';
 {$else symansistr}
          if po_has_mangledname in procoptions then
-          _mangledname:=ppufile.getpshortstring
+          _mangledname:=ppufile.GetPShortString
          else
           _mangledname:=nil;
 {$endif symansistr}
-         extnumber:=ppufile.getword;
-         level:=ppufile.getbyte;
+         extnumber:=ppufile.GetWord;
+         level:=ppufile.GetByte;
          ppufile.getderef(structderef);
          ppufile.getderef(procsymderef);
          ppufile.getposinfo(fileinfo);
-         visibility:=TVisibility(ppufile.getbyte);
-         ppufile.getset(TPPUSet2(symoptions));
+         visibility:=TVisibility(ppufile.GetByte);
+         ppufile.GetSet(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
-           deprecatedmsg:=ppufile.getpshortstring
+           deprecatedmsg:=ppufile.GetPShortString
          else
            deprecatedmsg:=nil;
          { import stuff }
          if po_has_importdll in procoptions then
-           import_dll:=ppufile.getpshortstring
+           import_dll:=ppufile.GetPShortString
          else
            import_dll:=nil;
          if po_has_importname in procoptions then
-           import_name:=ppufile.getpshortstring
+           import_name:=ppufile.GetPShortString
          else
            import_name:=nil;
-         import_nr:=ppufile.getword;
+         import_nr:=ppufile.GetWord;
          if (po_msgint in procoptions) then
-           messageinf.i:=ppufile.getlongint;
+           messageinf.i:=ppufile.GetLongInt;
          if (po_msgstr in procoptions) then
-           messageinf.str:=ppufile.getpshortstring;
+           messageinf.str:=ppufile.GetPShortString;
          if (po_dispid in procoptions) then
-           dispid:=ppufile.getlongint;
+           dispid:=ppufile.GetLongInt;
          { inline stuff }
-         ppufile.getset(TPPUSet1(implprocoptions));
+         ppufile.GetSet(TPPUSet1(implprocoptions));
          if has_inlininginfo then
            begin
              ppufile.getderef(funcretsymderef);
              new(inlininginfo);
-             ppufile.getset(TPPUSet4(inlininginfo^.flags));
+             ppufile.GetSet(TPPUSet4(inlininginfo^.flags));
            end
          else
            begin
@@ -6648,12 +6648,12 @@ implementation
 
          aliasnames:=TCmdStrList.create;
          { count alias names }
-         aliasnamescount:=ppufile.getbyte;
+         aliasnamescount:=ppufile.GetByte;
          for i:=1 to aliasnamescount do
-           aliasnames.insert(ppufile.getstring);
+           aliasnames.insert(ppufile.GetString);
 
          { load the token stream containing the declaration }
-         sizeleft:=ppufile.getlongint;
+         sizeleft:=ppufile.GetLongInt;
          if sizeleft>0 then
            begin
              init_genericdecl;
@@ -6663,7 +6663,7 @@ implementation
                    i:=sizeof(buf)
                  else
                    i:=sizeleft;
-                 ppufile.getdata(buf,i);
+                 ppufile.GetData(buf,i);
                  genericdecltokenbuf.write(buf,i);
                  dec(sizeleft,i);
                end;
@@ -6773,41 +6773,41 @@ implementation
          inherited ppuwrite(ppufile);
 {$ifdef symansistr}
          if po_has_mangledname in procoptions then
-           ppufile.putansistring(_mangledname);
+           ppufile.PutAnsiString(_mangledname);
 {$else symansistr}
          if po_has_mangledname in procoptions then
-          ppufile.putstring(_mangledname^);
+          ppufile.PutString(_mangledname^);
 {$endif symansistr}
 
-         ppufile.putword(extnumber);
-         ppufile.putbyte(parast.symtablelevel);
+         ppufile.PutWord(extnumber);
+         ppufile.PutByte(parast.symtablelevel);
          ppufile.putderef(structderef);
          ppufile.putderef(procsymderef);
          ppufile.putposinfo(fileinfo);
-         ppufile.putbyte(byte(visibility));
-         ppufile.putset(TPPUSet2(symoptions));
+         ppufile.PutByte(byte(visibility));
+         ppufile.PutSet(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
-           ppufile.putstring(deprecatedmsg^);
+           ppufile.PutString(deprecatedmsg^);
          { import }
          if po_has_importdll in procoptions then
-           ppufile.putstring(import_dll^);
+           ppufile.PutString(import_dll^);
          if po_has_importname in procoptions then
-           ppufile.putstring(import_name^);
-         ppufile.putword(import_nr);
+           ppufile.PutString(import_name^);
+         ppufile.PutWord(import_nr);
          if (po_msgint in procoptions) then
-           ppufile.putlongint(messageinf.i);
+           ppufile.PutLongInt(messageinf.i);
          if (po_msgstr in procoptions) then
-           ppufile.putstring(messageinf.str^);
+           ppufile.PutString(messageinf.str^);
          if (po_dispid in procoptions) then
-           ppufile.putlongint(dispid);
+           ppufile.PutLongInt(dispid);
          { inline stuff }
          oldcrc:=ppufile.DoCRC;
          ppufile.DoCRC:=false;
-         ppufile.putset(TPPUSet1(implprocoptions));
+         ppufile.PutSet(TPPUSet1(implprocoptions));
          if has_inlininginfo then
            begin
              ppufile.putderef(funcretsymderef);
-             ppufile.putset(TPPUSet4(inlininginfo^.flags));
+             ppufile.PutSet(TPPUSet4(inlininginfo^.flags));
            end;
 
          { count alias names }
@@ -6820,11 +6820,11 @@ implementation
            end;
          if aliasnamescount>255 then
            InternalError(200711021);
-         ppufile.putbyte(aliasnamescount);
+         ppufile.PutByte(aliasnamescount);
          item:=TCmdStrListItem(aliasnames.first);
          while Assigned(item) do
           begin
-            ppufile.putstring(item.str);
+            ppufile.PutString(item.str);
             item:=TCmdStrListItem(item.next);
           end;
 
@@ -6835,7 +6835,7 @@ implementation
            begin
              sizeleft:=genericdecltokenbuf.size;
              genericdecltokenbuf.seek(0);
-             ppufile.putlongint(sizeleft);
+             ppufile.PutLongInt(sizeleft);
              while sizeleft>0 do
                begin
                  if sizeleft>sizeof(buf) then
@@ -6843,22 +6843,22 @@ implementation
                  else
                    i:=sizeleft;
                  genericdecltokenbuf.read(buf,i);
-                 ppufile.putdata(buf,i);
+                 ppufile.PutData(buf,i);
                  dec(sizeleft,i);
                end;
            end
          else
-           ppufile.putlongint(0);
+           ppufile.PutLongInt(0);
 
          { write this entry }
-         writeentry(ppufile,ibprocdef);
+         WriteEntry(ppufile,IBProcDef);
 
          { Save the para symtable, this is taken from the interface }
          TParaSymTable(parast).ppuwrite(ppufile);
 
          { save localsymtable for inline procedures or when local
            browser info is requested, this has no influence on the crc }
-         if store_localst and not ppufile.crc_only then
+         if store_localst and not ppufile.CRCOnly then
           begin
             oldcrc:=ppufile.DoCRC;
             ppufile.DoCRC:=false;
@@ -7621,7 +7621,7 @@ implementation
       begin
          inherited ppuload(procvardef,ppufile);
          { load para symtable }
-         parast:=TParaSymTable.create(self,ppufile.getbyte);
+         parast:=TParaSymTable.create(self,ppufile.GetByte);
          PPULoadPlatform(ppufile);
          TParaSymTable(parast).ppuload(ppufile);
       end;
@@ -7664,10 +7664,10 @@ implementation
 
         { Save the para symtable level (necessary to distinguish nested
           procvars) }
-        ppufile.putbyte(parast.symtablelevel);
+        ppufile.PutByte(parast.symtablelevel);
 
         { Write this entry }
-        writeentry(ppufile,ibprocvardef);
+        WriteEntry(ppufile,IBProcVarDef);
 
         { Save the para symtable, this is taken from the interface }
         TParaSymTable(parast).ppuwrite(ppufile);
@@ -7828,18 +7828,18 @@ implementation
          vmtentry : PVMTEntry;
       begin
          inherited ppuload(objectdef,ppufile);
-         objecttype:=TObjectTyp(ppufile.getbyte);
-         helpertype:=THelperType(ppufile.getbyte);
-         objextname:=ppufile.getpshortstring;
+         objecttype:=TObjectTyp(ppufile.GetByte);
+         helpertype:=THelperType(ppufile.GetByte);
+         objextname:=ppufile.GetPShortString;
          { only used for external Objective-C classes/protocols }
          if (objextname^='') then
            StringDispose(objextname);
          SymTable:=TObjectSymTable.create(self,objrealname^,0,0);
-         TObjectSymTable(SymTable).DataSize:=ppufile.getasizeint;
-         TObjectSymTable(SymTable).paddingsize:=ppufile.getword;
-         TObjectSymTable(SymTable).fieldalignment:=shortint(ppufile.getbyte);
-         TObjectSymTable(SymTable).recordalignment:=shortint(ppufile.getbyte);
-         TObjectSymTable(SymTable).RecordAlignMin:=shortint(ppufile.getbyte);
+         TObjectSymTable(SymTable).DataSize:=ppufile.GetASizeInt;
+         TObjectSymTable(SymTable).paddingsize:=ppufile.GetWord;
+         TObjectSymTable(SymTable).fieldalignment:=shortint(ppufile.GetByte);
+         TObjectSymTable(SymTable).recordalignment:=shortint(ppufile.GetByte);
+         TObjectSymTable(SymTable).RecordAlignMin:=shortint(ppufile.GetByte);
          ppufile.getderef(vmt_fieldderef);
          ppufile.getderef(childofderef);
 
@@ -7849,22 +7849,22 @@ implementation
            begin
               new(iidguid);
               ppufile.getguid(iidguid^);
-              iidstr:=ppufile.getpshortstring;
+              iidstr:=ppufile.GetPShortString;
            end;
-         abstractcnt:=ppufile.getlongint;
+         abstractcnt:=ppufile.GetLongInt;
 
          if objecttype=odt_helper then
            ppufile.getderef(extendeddefderef);
 
          vmtentries:=TFPList.Create;
-         vmtentries.count:=ppufile.getlongint;
+         vmtentries.count:=ppufile.GetLongInt;
          for i:=0 to vmtentries.count-1 do
            begin
              ppufile.getderef(d);
              new(vmtentry);
              vmtentry^.procdef:=nil;
              vmtentry^.procdefderef:=d;
-             vmtentry^.visibility:=TVisibility(ppufile.getbyte);
+             vmtentry^.visibility:=TVisibility(ppufile.GetByte);
              vmtentries[i]:=vmtentry;
            end;
 
@@ -7872,14 +7872,14 @@ implementation
          if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava] then
            begin
              ImplementedInterfaces:=TFPObjectList.Create(true);
-             implintfcount:=ppufile.getlongint;
+             implintfcount:=ppufile.GetLongInt;
              for i:=0 to implintfcount-1 do
                begin
                  ppufile.getderef(d);
                  ppufile.getderef(getterd);
                  ImplIntf:=TImplementedInterface.Create_deref(d,getterd);
-                 ImplIntf.IOffset:=ppufile.getlongint;
-                 byte(ImplIntf.IType):=ppufile.getbyte;
+                 ImplIntf.IOffset:=ppufile.GetLongInt;
+                 byte(ImplIntf.IType):=ppufile.GetByte;
                  ImplementedInterfaces.Add(ImplIntf);
                end;
            end
@@ -8030,61 +8030,61 @@ implementation
            to the interface of unit B. Nevertheless, unit C can indirectly
            depend on unit A via derefs, and these must be updated -> the
            indirect crc keeps track of such changes. }
-         old_do_indirect_crc:=ppufile.do_indirect_crc;
-         ppufile.do_indirect_crc:=true;
+         old_do_indirect_crc:=ppufile.DoIndirectCRC;
+         ppufile.DoIndirectCRC:=true;
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(objecttype));
-         ppufile.putbyte(byte(helpertype));
+         ppufile.PutByte(byte(objecttype));
+         ppufile.PutByte(byte(helpertype));
          if Assigned(objextname) then
-           ppufile.putstring(objextname^)
+           ppufile.PutString(objextname^)
          else
-           ppufile.putstring('');
-         ppufile.putasizeint(TObjectSymTable(SymTable).DataSize);
-         ppufile.putword(TObjectSymTable(SymTable).paddingsize);
-         ppufile.putbyte(byte(TObjectSymTable(SymTable).fieldalignment));
-         ppufile.putbyte(byte(TObjectSymTable(SymTable).recordalignment));
-         ppufile.putbyte(byte(TObjectSymTable(SymTable).RecordAlignMin));
+           ppufile.PutString('');
+         ppufile.PutASizeInt(TObjectSymTable(SymTable).DataSize);
+         ppufile.PutWord(TObjectSymTable(SymTable).paddingsize);
+         ppufile.PutByte(byte(TObjectSymTable(SymTable).fieldalignment));
+         ppufile.PutByte(byte(TObjectSymTable(SymTable).recordalignment));
+         ppufile.PutByte(byte(TObjectSymTable(SymTable).RecordAlignMin));
          ppufile.putderef(vmt_fieldderef);
          ppufile.putderef(childofderef);
          if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
            begin
               ppufile.putguid(iidguid^);
-              ppufile.putstring(iidstr^);
+              ppufile.PutString(iidstr^);
            end;
-         ppufile.putlongint(abstractcnt);
+         ppufile.PutLongInt(abstractcnt);
          if objecttype=odt_helper then
            ppufile.putderef(extendeddefderef);
 
-         ppufile.putlongint(vmtentries.count);
+         ppufile.PutLongInt(vmtentries.count);
          for i:=0 to vmtentries.count-1 do
            begin
              vmtentry:=PVMTEntry(vmtentries[i]);
              ppufile.putderef(vmtentry^.procdefderef);
-             ppufile.putbyte(byte(vmtentry^.visibility));
+             ppufile.PutByte(byte(vmtentry^.visibility));
            end;
 
          if Assigned(ImplementedInterfaces) then
            begin
-             ppufile.putlongint(ImplementedInterfaces.Count);
+             ppufile.PutLongInt(ImplementedInterfaces.Count);
              for i:=0 to ImplementedInterfaces.Count-1 do
                begin
                  ImplIntf:=TImplementedInterface(ImplementedInterfaces[i]);
                  ppufile.putderef(ImplIntf.intfdefderef);
                  ppufile.putderef(ImplIntf.ImplementsGetterDeref);
-                 ppufile.putlongint(ImplIntf.Ioffset);
-                 ppufile.putbyte(byte(ImplIntf.IType));
+                 ppufile.PutLongInt(ImplIntf.Ioffset);
+                 ppufile.PutByte(byte(ImplIntf.IType));
                end;
            end;
 
          if df_copied_def in defoptions then
            ppufile.putderef(cloneddefderef);
 
-         writeentry(ppufile,ibobjectdef);
+         WriteEntry(ppufile,IBObjectDef);
 
          if not(df_copied_def in defoptions) then
            TObjectSymTable(SymTable).ppuwrite(ppufile);
 
-         ppufile.do_indirect_crc:=old_do_indirect_crc;
+         ppufile.DoIndirectCRC:=old_do_indirect_crc;
       end;
 
 
@@ -9204,7 +9204,7 @@ implementation
     procedure TUndefinedDef.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         writeentry(ppufile,ibundefineddef);
+         WriteEntry(ppufile,IBUndefinedDef);
       end;
 
 

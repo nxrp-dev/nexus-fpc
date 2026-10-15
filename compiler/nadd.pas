@@ -145,7 +145,7 @@ implementation
       nstate,
       {$endif}
       CPUInfo,
-      ppu;
+      PPU;
 
 const
     BestRealLayoutCheck = 1 div Ord(SizeOf(BestRealRec) = SizeOf(BestReal));
@@ -200,7 +200,7 @@ const
     constructor TAddNode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(TPPUSet1(addnodeflags));
+        ppufile.GetSet(TPPUSet1(addnodeflags));
         ppufile.getderef(resultrealdefderef);
       end;
 
@@ -208,7 +208,7 @@ const
     procedure TAddNode.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(addnodeflags));
+        ppufile.PutSet(TPPUSet1(addnodeflags));
         ppufile.putderef(resultrealdefderef);
       end;
 

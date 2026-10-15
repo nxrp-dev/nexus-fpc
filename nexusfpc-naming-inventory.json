@@ -1,7 +1,7 @@
 {
   "goal": "Complete project-owned Pascal identifier naming normalization throughout nexus-fpc",
   "baseline_commit": "134125fdc4912dac50ae57dc7e3b385e7996fe78",
-  "status": "in_progress",
+  "status": "paused",
   "style": {
     "identifiers": "PascalCase with established semantic prefixes; preserve acronym spelling consistently",
     "type_prefix": "T",
@@ -144,6 +144,40 @@
             "compiler/cepiktimer.pas"
           ],
           "status": "owned_roles_reviewed_with_explicit_ABI_and_external_dependency_exceptions_provider_references_pending"
+        },
+        {
+          "batch": "024",
+          "name": "Package containers, metadata, entry buffering and import/export support",
+          "scope": [
+            "compiler/fpkg.pas",
+            "compiler/fpcp.pas",
+            "compiler/pcp.pas",
+            "compiler/nxpackagefile.pas",
+            "compiler/nxartifactid.pas",
+            "compiler/nxentrybuffer.pas",
+            "compiler/pkgutil.pas"
+          ],
+          "status": "owned_roles_reviewed_with_explicit_ABI_exceptions_provider_references_pending"
+        },
+        {
+          "batch": "024",
+          "name": "Coordinated CRC/endian fields in entry/unit readers",
+          "scope": [
+            "compiler/entfile.pas",
+            "compiler/fppu.pas",
+            "compiler/ppu.pas"
+          ],
+          "status": "selected_field_roles_validated_other_roles_pending"
+        },
+        {
+          "batch": "025",
+          "name": "Unit entry serialization, PPU headers/CRC and unit loading",
+          "scope": [
+            "compiler/entfile.pas",
+            "compiler/ppu.pas",
+            "compiler/fppu.pas"
+          ],
+          "status": "owned_roles_reviewed_with_explicit_ABI_exceptions_provider_references_pending"
         }
       ],
       "exceptions": [
@@ -1355,6 +1389,433 @@
             "Windows TTY branch is statically checked; Linux/i386/AArch64 builds do not compile host-Windows API calls."
           ],
           "evidence": "Before/after native bootstraps and cross/debug images identical; 998 object comparisons and targeted parsing/syscall/triple/resource/reference checks pass."
+        },
+        {
+          "batch": "024",
+          "scope": [
+            "compiler/fpkg.pas",
+            "compiler/fpcp.pas",
+            "compiler/pcp.pas",
+            "compiler/nxpackagefile.pas",
+            "compiler/nxartifactid.pas",
+            "compiler/nxentrybuffer.pas",
+            "compiler/pkgutil.pas"
+          ],
+          "contracts": [
+            {
+              "names": [
+                "fpkg",
+                "fpcp",
+                "pcp",
+                "nxpackagefile",
+                "nxartifactid",
+                "NXEntryBuffer",
+                "pkgutil"
+              ],
+              "reason": "Original unit declaration spelling preserves runtime initialization identity. Type declaration spelling and existing aliases retain RTTI/type identity."
+            },
+            {
+              "names": [
+                "Current_Package_Build_Identity",
+                "Add_Required_Package",
+                "Export_Unit",
+                "Load_Packages",
+                "Add_Package",
+                "Add_Package_Unit_Ref",
+                "Add_Package_Libs",
+                "Check_For_Indirect_Package_Usages",
+                "Emit_Package_Descriptor"
+              ],
+              "reason": "Public routine/method binary names contain these underscores; capitalization normalized without removing linkage characters."
+            },
+            {
+              "names": [
+                "FPC_PACKAGE_*",
+                "INITFINAL",
+                "FPC_THREADVARTABLES",
+                "FPC_RESOURCESTRINGTABLES",
+                "FPC_WIDEINITTABLES",
+                "FPC_RESSTRINITTABLES",
+                ".nxmeta",
+                "NXPM0001",
+                "NXP",
+                "NXU"
+              ],
+              "reason": "Runtime linker symbols, storage signatures and metadata section names are literal external contracts, not Pascal identifier renames."
+            },
+            {
+              "names": [
+                "z_stream",
+                "next_in",
+                "avail_in",
+                "next_out",
+                "avail_out",
+                "total_out",
+                "Z_DEFAULT_COMPRESSION",
+                "Z_FINISH",
+                "Z_OK",
+                "Z_STREAM_END"
+              ],
+              "reason": "Imported zlib provider identifiers await coordinated provider review; no provider declarations are claimed normalized by these references."
+            }
+          ],
+          "remaining_owned_spellings": {
+            "compiler/fpkg.pas": [
+              "Current_Package_Build_Identity",
+              "Package_Build_Identity",
+              "Register_InitDone_Proc",
+              "fpkg",
+              "rfReplaceAll"
+            ],
+            "compiler/fpcp.pas": [
+              "Add_Required_Package",
+              "Create_Data",
+              "Current_Package_Build_Identity",
+              "Embed_Package_Metadata",
+              "Package_SDK_Identity",
+              "SPB_PROGBITS",
+              "al_rotypedconsts",
+              "fpcp",
+              "new_section",
+              "package_f_cant_create_pcp",
+              "package_f_cant_find_pcp",
+              "package_f_pcp_cannot_write",
+              "package_t_packagesearch",
+              "package_t_pcp_loading",
+              "package_u_contained_unit",
+              "package_u_pcp_crc",
+              "package_u_pcp_file_too_short",
+              "package_u_pcp_flags",
+              "package_u_pcp_found",
+              "package_u_pcp_invalid_processor",
+              "package_u_pcp_invalid_target",
+              "package_u_pcp_invalid_version",
+              "package_u_pcp_name",
+              "package_u_pcp_time",
+              "package_u_ppl_filename",
+              "package_u_required_package",
+              "sec_user"
+            ],
+            "compiler/pcp.pas": [
+              "pcp"
+            ],
+            "compiler/nxpackagefile.pas": [
+              "Z_DEFAULT_COMPRESSION",
+              "Z_FINISH",
+              "Z_OK",
+              "Z_STREAM_END",
+              "avail_in",
+              "avail_out",
+              "fmOpenRead",
+              "fmShareDenyWrite",
+              "next_in",
+              "next_out",
+              "nxpackagefile",
+              "total_out",
+              "z_stream"
+            ],
+            "compiler/nxartifactid.pas": [
+              "nxartifactid"
+            ],
+            "compiler/nxentrybuffer.pas": [
+              "read"
+            ],
+            "compiler/pkgutil.pas": [
+              "AB_GLOBAL",
+              "AB_INDIRECT",
+              "AT_DATA",
+              "AT_FUNCTION",
+              "Add_Package",
+              "Add_Package_Libs",
+              "Add_Package_Unit_Ref",
+              "Check_For_Indirect_Package_Usages",
+              "Current_Package_Build_Identity",
+              "Emit_Package_Descriptor",
+              "Export_Unit",
+              "Load_Packages",
+              "Loaded_Units",
+              "Package_SDK_Identity",
+              "ab_external",
+              "ab_external_indirect",
+              "ab_global",
+              "ab_weak_external",
+              "al_globals",
+              "at_data",
+              "begin_anonymous_record",
+              "create_sizeint",
+              "create_sym",
+              "df_generic",
+              "df_has_global_ref",
+              "df_internal",
+              "ds_init_table_written",
+              "ds_rtti_table_written",
+              "emit_pooled_shortstring_const_ref",
+              "emit_tai",
+              "end_anonymous_record",
+              "eo_name",
+              "eo_no_sym_name",
+              "find_module_from_symtable",
+              "get_final_asmlist",
+              "get_vectorized_dead_strip_section_symbol_end",
+              "get_vectorized_dead_strip_section_symbol_start",
+              "has_alias_name",
+              "import_external_proc",
+              "is_class",
+              "is_interface",
+              "is_unit",
+              "link_always",
+              "link_shared",
+              "link_static",
+              "make_mangledname",
+              "mf_finalize",
+              "mf_has_resourcestrings",
+              "mf_init",
+              "mf_threadvars",
+              "oo_has_vmt",
+              "package_e_duplicate_package",
+              "package_w_unit_from_indirect_package",
+              "pkgutil",
+              "po_external",
+              "po_has_importdll",
+              "po_has_public_name",
+              "po_public",
+              "pocall_internproc",
+              "proc_get_importname",
+              "sec_data",
+              "sec_rodata",
+              "suffix_indirect",
+              "system_x86_64_linux",
+              "system_x86_64_win64",
+              "systems_indirect_var_imports",
+              "tcalo_make_dead_strippable",
+              "tcalo_new_section",
+              "tf_supports_packages",
+              "uf_in_library",
+              "uf_no_link",
+              "uf_shared_linked",
+              "uf_static_linked",
+              "vmt_mangledname",
+              "vo_has_global_ref",
+              "vo_is_public"
+            ]
+          },
+          "private_mangled_signature_exception": {
+            "Scope": "FPCP.TPCPPackage.SearchPackage.PackageExists",
+            "BeforeSignature": "hDNpdrQzZXoN",
+            "AfterSignature": "ANSISTRING$ANSISTRING$$BOOLEAN",
+            "Reason": "The shorter private routine name falls below the signature hashing length threshold. Function parameters, code/data and relocations are otherwise identical."
+          },
+          "evidence": "998 compiler-unit object comparisons, 76 regressions, 56 independent package fixtures, storage/buffer probes, and native writer round-trips in both storage modes."
+        },
+        {
+          "batch": "025",
+          "scope": [
+            "compiler/entfile.pas",
+            "compiler/ppu.pas",
+            "compiler/fppu.pas"
+          ],
+          "contracts": [
+            {
+              "names": [
+                "entfile",
+                "ppu",
+                "fppu",
+                "TPPUError",
+                "ppuentrytoobig",
+                "ppuentryerror",
+                "TUnitAsmListType",
+                "ualt_public",
+                "ualt_extern",
+                "TAvailableUnitFile",
+                "auPPU",
+                "auSrc"
+              ],
+              "reason": "Existing unit/type/enum declaration spellings preserve runtime initialization and RTTI identity."
+            },
+            {
+              "names": [
+                "PPU_Log",
+                "PPU_Log_Val",
+                "Inc_Log_Level",
+                "Dec_Log_Level",
+                "Re_Resolve",
+                "Dependent_Module_Has_Our_CRC",
+                "Dependent_Module_CRC_Mismatch",
+                "Get_Check_Uses",
+                "Is_Reload_Needed",
+                "Restore_State",
+                "Store_State",
+                "Recompile_From_Sources",
+                "Check_Sources_For_Recompile",
+                "Post_Load_Or_Compile",
+                "End_Of_Parsing"
+              ],
+              "reason": "Public routine and method link names retain significant underscore spelling."
+            },
+            {
+              "names": [
+                "Reverse_Byte",
+                "_Exp",
+                "update_crc",
+                "cpu_i386",
+                "cpu_x86_64"
+              ],
+              "reason": "Imported provider APIs, external floating-point record fields, conditional compile identifiers, or existing IN_PPUDUMP-only reference; not owned rename targets."
+            }
+          ],
+          "remaining_owned_spellings": {
+            "compiler/entfile.pas": [
+              "Dec_Log_Level",
+              "Inc_Log_Level",
+              "PPU_Log",
+              "PPU_Log_Val",
+              "Reverse_Byte",
+              "_Exp",
+              "cpu_i386",
+              "cpu_x86_64",
+              "entfile",
+              "fmCreate",
+              "fmOpenRead",
+              "read",
+              "write"
+            ],
+            "compiler/ppu.pas": [
+              "Do_Comment",
+              "PPU_Log",
+              "ppu",
+              "ppuentryerror",
+              "ppuentrytoobig",
+              "ualt_extern",
+              "ualt_public",
+              "update_crc"
+            ],
+            "compiler/fppu.pas": [
+              "AB_EXTERNAL",
+              "AT_FUNCTION",
+              "Check_Sources_For_Recompile",
+              "CompilerWide_Unicode_Strings",
+              "Dependent_Module_CRC_Mismatch",
+              "Dependent_Module_Has_Our_CRC",
+              "Do_Build",
+              "Do_Comment",
+              "Do_Release",
+              "End_Of_Parsing",
+              "Get_Check_Uses",
+              "Is_Reload_Needed",
+              "Post_Load_Or_Compile",
+              "Re_Resolve",
+              "Recompile_From_Sources",
+              "Register_File",
+              "Restore_State",
+              "Source_Time",
+              "Store_State",
+              "_Exports",
+              "add_extern_asmsym",
+              "auPPU",
+              "auSrc",
+              "buildderef_registered",
+              "crc_final",
+              "cs_check_unit_name",
+              "cs_checkpointer_called",
+              "cs_compilesystem",
+              "cs_nexus_profile",
+              "ctask_fast_backtrack",
+              "cycle_search_stamp",
+              "cycle_stamp",
+              "dependent_added",
+              "dependent_units",
+              "disconnect_depending_modules",
+              "do_recompile",
+              "do_reload",
+              "find_used_unit_compiling",
+              "fppu",
+              "in_interface",
+              "increase_cycle_stamp",
+              "interface_compiled",
+              "is_deref_built",
+              "is_derefimpl_built",
+              "is_main",
+              "is_unit",
+              "is_used",
+              "is_var",
+              "loaded_units",
+              "m_mac",
+              "main_dir",
+              "main_module",
+              "mf_checkpointer_called",
+              "mf_local_symtable",
+              "mf_nexus_profile",
+              "mf_release",
+              "mf_symansistr",
+              "mf_system_unit",
+              "mf_unicode_default",
+              "mo_has_deprecated_msg",
+              "ms_compile",
+              "ms_compiled",
+              "ms_compiled_waitcrc",
+              "ms_compiling_waitfinish",
+              "ms_load",
+              "ms_processed",
+              "ms_registered",
+              "ppu_discarded",
+              "ppu_waitingfor_crc",
+              "recompile_reason",
+              "remove_all_waitsforthisunit",
+              "remove_waitforunit_cycles",
+              "rr_build",
+              "rr_crcchanged",
+              "rr_noppu",
+              "rr_sourcenewer",
+              "scan_w_multiple_main_name_overrides",
+              "scc_tree_crc_wait",
+              "search_system_type",
+              "source_time",
+              "system_name",
+              "systems_linux",
+              "systems_windows",
+              "temp_dir",
+              "tf_p_ext_support",
+              "tf_supports_packages",
+              "ualt_extern",
+              "ualt_public",
+              "unit_e_different_wpo_file",
+              "unit_f_cant_compile_unit",
+              "unit_f_cant_find_ppu",
+              "unit_f_circular_unit_reference",
+              "unit_f_ppu_cannot_write",
+              "unit_f_ppu_invalid_entry",
+              "unit_f_ppu_read_error",
+              "unit_f_unit_name_error",
+              "unit_h_cond_not_set_in_last_compile",
+              "unit_h_cond_set_in_last_compile",
+              "unit_t_ppu_loading",
+              "unit_t_unitsearch",
+              "unit_u_finished_loading_unit",
+              "unit_u_forced_reload",
+              "unit_u_load_unit",
+              "unit_u_loading_from_package",
+              "unit_u_loading_unit",
+              "unit_u_ppu_crc",
+              "unit_u_ppu_file_too_short",
+              "unit_u_ppu_flags",
+              "unit_u_ppu_invalid_header",
+              "unit_u_ppu_invalid_long_version",
+              "unit_u_ppu_invalid_processor",
+              "unit_u_ppu_invalid_target",
+              "unit_u_ppu_invalid_version",
+              "unit_u_ppu_name",
+              "unit_u_ppu_source",
+              "unit_u_ppu_symansistr_mismatch",
+              "unit_u_ppu_time",
+              "unit_u_ppu_write",
+              "unit_u_recompile_crc_change",
+              "unit_u_registering_new_unit",
+              "unit_u_reresolving_unit",
+              "unit_u_source_modified",
+              "used_units"
+            ]
+          },
+          "evidence": "Native/cross/debug compiler images, compiler object comparisons, 76 regressions, 56 independent package fixtures, package storage/native writer checks and affected PPU utilities."
         }
       ],
       "remaining_candidate_report": "build/forge-bootstrap/naming-goal/compiler-type-candidates-after-batch-004.json",
@@ -7496,7 +7957,7 @@
     },
     {
       "id": "024",
-      "status": "validation_in_progress",
+      "status": "validated",
       "scope": [
         "compiler/fpkg.pas",
         "compiler/fpcp.pas",
@@ -7511,12 +7972,476 @@
       "files": 25,
       "baseline_revision": "8b556442164b92a6ceffe3212647fba57e7079a4",
       "scope_notes": [
-        "Compiler package model, package metadata, entry buffer and artifact helpers. Shared CRC/endian fields and references updated across compiler."
+        "Package model, PCP metadata and storage envelopes, artifact identity helpers, contiguous entry buffer, and package import/export support reviewed.",
+        "Nine private helpers, two CRC/endian fields and two untyped numeric package flags lose underscores; all other changes are capitalization.",
+        "Private SearchPackagePath avoids collision with the imported PackageSearchPath variable. Public underscore-bearing package routines retain linkage spelling.",
+        "NXArtifactID and NXEntryBuffer already use Pascal-style owned identifiers; reviewed without changing their source.",
+        "NXP/NXU/NXPM signatures, entry IDs, flags, record layout, envelope compression and fingerprint, runtime descriptor symbols and metadata section names remain unchanged.",
+        "56 independent fixtures cover embedded/sidecar envelopes, repeated loading and bounded unit streams, opposite-endian metadata, 1600 requirements, dependency diamonds/cycles, duplicate owners and malformed inputs.",
+        "Native package compiler round-trips embedded and sidecar storage with byte-identical objects, unit files, envelopes and decoded metadata, and does not modify the original contained unit.",
+        "Private nested PackageExists changes from a hashed signature to an explicit signature after its name becomes shorter. Exact scoped mangled-name alias is recorded in the object verifier; parameters, code/data/symbol semantics and relocations match.",
+        "No generated files changed; generated-source origin audit 021 remains applicable.",
+        "The user committed the batch source during validation. Audit remains anchored at the original 8b556442164b92a6ceffe3212647fba57e7079a4 checkpoint; source hashes verify unchanged content across the new commit.",
+        "Imported provider-owned APIs, enum/flag identifiers and zlib fields remain assigned to provider audits."
+      ],
+      "observed_head_at_validation": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9",
+      "audit": "build/forge-bootstrap/naming-goal/batch-024-audit.json",
+      "commands": [
+        "python3 /tmp/nexus_goal_batch024.py --preview",
+        "python3 /tmp/nexus_goal_batch024.py",
+        "python3 /tmp/nexus_goal_build024.py renamed",
+        "python3 /tmp/nexus_goal_build024.py cross",
+        "python3 /tmp/nexus_goal_verify024.py",
+        "python3 /tmp/nexus_goal_metadata024.py",
+        "python3 /tmp/nexus_goal_target024.py",
+        "python3 /tmp/nexus_goal_objects024.py",
+        "python3 /tmp/nexus_goal_probe024.py",
+        "python3 /tmp/nexus_goal_packages024.py",
+        "python3 /tmp/nexus_goal_writer024.py",
+        "python3 /tmp/nexus_goal_audit024.py",
+        "python3 /tmp/nexus_goal_record024.py"
+      ],
+      "source_hashes": [
+        {
+          "file": "compiler/entfile.pas",
+          "sha256": "8161e90729e8ff3b718b8547e1e8666b934d562e45619e3de9d8794b4978beb2"
+        },
+        {
+          "file": "compiler/fmodule.pas",
+          "sha256": "aa7297706474b3e39fb5e69f46a6e39f6d78feb4dbb9a4f7e4be1e9bfeda5834"
+        },
+        {
+          "file": "compiler/fpcp.pas",
+          "sha256": "985c1374f789829193cea07b98f11e29138fb790d1e6a9ead8610281516b1b1c"
+        },
+        {
+          "file": "compiler/fpkg.pas",
+          "sha256": "984f9fef71a3486643668269933acc0235a63c189f2325f41fe64eb835cdd3d2"
+        },
+        {
+          "file": "compiler/fppu.pas",
+          "sha256": "4b933bae05a17f21361475f63c698c2b53afe15de5c444105f622bfad3fe9e9f"
+        },
+        {
+          "file": "compiler/ngenutil.pas",
+          "sha256": "5f7275853f4898b2790188c0bdedac3cc507361163a65ed826bd7b4d45c8ad58"
+        },
+        {
+          "file": "compiler/nxpackagefile.pas",
+          "sha256": "85903c093835ddba5acc35c40c667d9780874c177743327bb6a31710b57176a4"
+        },
+        {
+          "file": "compiler/options.pas",
+          "sha256": "ace61710b3e489d687b02d416984112bc7a0e0785465596bb3ce2a584e33197f"
+        },
+        {
+          "file": "compiler/parser.pas",
+          "sha256": "eba212e15ca61e43c9b9d8e69202da5e2487421ffd669391ad267e92807c0378"
+        },
+        {
+          "file": "compiler/pcp.pas",
+          "sha256": "b5d308f8abbd7c843f000a95b89b180600e1863f9586405881375c60b6e2dd78"
+        },
+        {
+          "file": "compiler/pgenutil.pas",
+          "sha256": "31af623d56e4169627b7b45055b2239f5a82fa900c7e59fbbd1e3849994011d6"
+        },
+        {
+          "file": "compiler/pkgutil.pas",
+          "sha256": "84e2c2bc0cc440ff30b5ac04889d409d859a01c079a555cfd42dd3bc33fb8ccc"
+        },
+        {
+          "file": "compiler/pmodules.pas",
+          "sha256": "d2b9a1caaedce0a7d3fa1985db468cfe5998585c9ceb45ccd4aabc85f7b2a0c1"
+        },
+        {
+          "file": "compiler/ppu.pas",
+          "sha256": "4728287f100412d62a2acf43197cd01c1786a22d01d4e2d1362d34ae4cf7a1ce"
+        },
+        {
+          "file": "compiler/scanner.pas",
+          "sha256": "95ff62345c2eb832989a2af2c9be94ef16aa8762cfcd12a5c1cdaa5d49a7ab0c"
+        },
+        {
+          "file": "compiler/symdef.pas",
+          "sha256": "86903c43eb633d121584ef0de5c3734ccfbcdcdc2373232d8875dd0df5c8e8c6"
+        },
+        {
+          "file": "compiler/symsym.pas",
+          "sha256": "43c2277ed0aabe8fae7d68db6e44b21b2cae135a69f36cfe4b4c34a0ed7a5105"
+        },
+        {
+          "file": "compiler/symtype.pas",
+          "sha256": "b6284c57274e9f94253239d5e0fc4709afedd241148fe67185b1bb086ab8877b"
+        },
+        {
+          "file": "compiler/systems/i_android.pas",
+          "sha256": "ecbf8b4b8fd65b1692220351a645f5ce7e6cc0e4fc0c0bbd2acc65e5ba5bb392"
+        },
+        {
+          "file": "compiler/systems/i_darwin.pas",
+          "sha256": "539a236f82eb1b6589390eae04f0add69c711f3e092344bbfac62b27e638bd61"
+        },
+        {
+          "file": "compiler/systems/i_linux.pas",
+          "sha256": "b106f27633f5d07057f6e30bc6eaf265521ae782c0069c86515ea4f386b17b5b"
+        },
+        {
+          "file": "compiler/systems/i_win.pas",
+          "sha256": "9e478ea9d1e159e89685fc945c363ff32520fb6bb97bf37d9b37f3a408d3f385"
+        },
+        {
+          "file": "compiler/utils/ppufiles.pas",
+          "sha256": "afe40af4cdd9024b064e62d9f941d097c8d91921bec01abda6174893645bc68d"
+        },
+        {
+          "file": "compiler/utils/ppumove.pas",
+          "sha256": "1a8e1ffc37407faab0fda17dafa4c7e1cbb2d3e4eac59f82c531eb51db70a64e"
+        },
+        {
+          "file": "tests/dynamic-packages/package_metadata_test.pas",
+          "sha256": "1c5341245f663d28ee1c5936c08e6ed7d1dc19eaf023667c5a2416a9e9222cc8"
+        }
+      ],
+      "validation_summary": {
+        "GenerationsTwoAndThreeByteIdentical": true,
+        "CompilerSHA256": "34a9317f48eaa9fd2ccc83b8058964b6c2078b750058263f929e615154a065a8",
+        "CompilerByteIdenticalToBatch023": true,
+        "CrossCompilersBuilt": [
+          "i386",
+          "aarch64"
+        ],
+        "ExtdebugCompilerBuilt": true,
+        "CrossImagesByteIdenticalToBaseline": true,
+        "RegressionRuns": 76,
+        "MatchedBaselineRuns": 38,
+        "ByteIdenticalExecutables": 38,
+        "CompilerUnitObjectsChecked": 998,
+        "CodeDataSymbolsAndRelocationsMatchReviewedNames": true,
+        "PackageStorageProbeExecutableAndPayloadsByteIdentical": true,
+        "IndependentPackageFixtureCasesMatched": 56,
+        "NativePackageWriterModes": [
+          "embedded",
+          "sidecar"
+        ],
+        "NativePackageArtifactsAndDecodedMetadataByteIdentical": true,
+        "OriginalUnitUnchangedAfterPackaging": true,
+        "MetadataNamesPassed": true,
+        "WhitespaceWarnings": 0
+      },
+      "validation": [
+        "build/forge-bootstrap/naming-goal/batch-024-build/renamed/bootstrap-result.json",
+        "build/forge-bootstrap/naming-goal/batch-024-build/regression-result.json",
+        "build/forge-bootstrap/naming-goal/batch-024-build/cross-build-result.json",
+        "build/forge-bootstrap/naming-goal/batch-024-all-object-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-024-storage-probe-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-024-package-fixture-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-024-writer-validation.json"
+      ]
+    },
+    {
+      "id": "025",
+      "status": "validated",
+      "scope": [
+        "compiler/entfile.pas",
+        "compiler/ppu.pas",
+        "compiler/fppu.pas"
+      ],
+      "identifiers": 543,
+      "substitutions": 5653,
+      "files": 53,
+      "baseline_revision": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9",
+      "scope_notes": [
+        "Entry-file I/O, PPU headers and CRC, and unit loading/recompilation owned identifiers reviewed.",
+        "Private helpers/locals/parameters, CRC/header fields and untyped numeric flags lose underscores. Public underscore-bearing linked methods retain significant spelling.",
+        "Private LoadingModule, SavedCurrentModule and IsNewUnit avoid existing identifier collisions.",
+        "All non-identifier bytes, strings, comments, numeric flags, entry IDs, record layouts and serialized formats remain unchanged.",
+        "Native bootstrap, i386/AArch64, EXTDEBUG and DEBUG_PPU/CHECK_INPUTPOINTER_LIMITS compilers are byte-identical to same-revision baselines.",
+        "All compiled compiler-unit code/data/symbols/relocations match after reviewed private-name substitutions.",
+        "76 runtime regressions, 56 independent package fixtures, package storage probes, native embedded/sidecar writer round-trips, and affected PPU utilities pass.",
+        "No generated output changes; the changed mkx86inl generator source was rebuilt and its generated output matches the baseline.",
+        "DEBUG_GENERATE_INTERFACE_PPU and IN_PPUDUMP-only branches are statically audited; the pre-existing update_crc provider reference is preserved.",
+        "Imported provider-owned APIs/enums and existing type/unit declaration spellings remain assigned to provider audits or explicit runtime identity exceptions.",
+        "Work pauses at the user request after this validated batch. The repository-wide audit remains incomplete."
+      ],
+      "observed_head_at_validation": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9",
+      "audit": "build/forge-bootstrap/naming-goal/batch-025-audit.json",
+      "commands": [
+        "python3 /tmp/nexus_goal_build025.py baseline-stage",
+        "python3 /tmp/nexus_goal_build025.py baseline-full",
+        "python3 /tmp/nexus_goal_build025.py cross-baseline",
+        "python3 /tmp/nexus_goal_batch025.py --preview",
+        "python3 /tmp/nexus_goal_batch025.py",
+        "python3 /tmp/nexus_goal_build025.py renamed",
+        "python3 /tmp/nexus_goal_build025.py cross",
+        "python3 /tmp/nexus_goal_verify025.py",
+        "python3 /tmp/nexus_goal_metadata025.py baseline",
+        "python3 /tmp/nexus_goal_metadata025.py renamed",
+        "python3 /tmp/nexus_goal_target025.py",
+        "python3 /tmp/nexus_goal_objects025.py",
+        "python3 /tmp/nexus_goal_probe025.py",
+        "python3 /tmp/nexus_goal_packages025.py",
+        "python3 /tmp/nexus_goal_writer025.py",
+        "python3 /tmp/nexus_goal_utils025.py",
+        "python3 /tmp/nexus_goal_audit025.py",
+        "python3 /tmp/nexus_goal_record025.py"
+      ],
+      "source_hashes": [
+        {
+          "file": "compiler/aasmtai.pas",
+          "sha256": "59855103924ffe3311a6f43904f06bd85d0b1946df8aa59c1db33b9fcc6b5cef"
+        },
+        {
+          "file": "compiler/compiler.pas",
+          "sha256": "9a24140cb816213c96a63561951e86983cc9b80fba04b66de9cc0a268335a1c2"
+        },
+        {
+          "file": "compiler/ctask.pas",
+          "sha256": "24bd39d92d19149cf88b91357374f196d391e05675173e184caca8f5acb8ae69"
+        },
+        {
+          "file": "compiler/dbgdwarf.pas",
+          "sha256": "d936b614e198135d85dbc2fd6bb705d9e46b9fddf616782b8ec39bd971bb5bc8"
+        },
+        {
+          "file": "compiler/dbgstabs.pas",
+          "sha256": "b0539b7f8ea983d79dbc1a4fe32e2a19ed66d5b65b8c86c6a8f72ba6dce4600a"
+        },
+        {
+          "file": "compiler/entfile.pas",
+          "sha256": "df3334c40f53b918a516761d058708c57a9a7a191034e38baa09f2fbc638ddb8"
+        },
+        {
+          "file": "compiler/fmodule.pas",
+          "sha256": "d9fc07e636b424a905f55d194bad9c1135794618474d7840fc971ed197e48300"
+        },
+        {
+          "file": "compiler/fppu.pas",
+          "sha256": "2b7f71c2b80a7f71f924434abba13e592361d04c479da5da7e99aae2460f12de"
+        },
+        {
+          "file": "compiler/link.pas",
+          "sha256": "9409bfdf64b43921ec811080590fefa4bdd18526f0e481f2860323ad3a0e49a3"
+        },
+        {
+          "file": "compiler/machoutils.pas",
+          "sha256": "4c9e1ef287e8b7ff13faacc60d68a00fc6acb18fafdd8151811fe1dd73353e5b"
+        },
+        {
+          "file": "compiler/nadd.pas",
+          "sha256": "4ab28998fc796f483b21cc3a070c7382cc3bc72d92efc60d9f6cf4c62825dcf6"
+        },
+        {
+          "file": "compiler/nbas.pas",
+          "sha256": "6fd591e6982ef145aa3bd768c2bb016dcdc5c442e288ada50448f90138a5f1a3"
+        },
+        {
+          "file": "compiler/ncal.pas",
+          "sha256": "5f170c6f520abebce04def33e8804299d098cfd899673aa3aa2264c9cee43df8"
+        },
+        {
+          "file": "compiler/ncnv.pas",
+          "sha256": "c68e1308825e70738fa7862fc5451fc77a9bb27f25210f4e502ec9aec5322de0"
+        },
+        {
+          "file": "compiler/ncon.pas",
+          "sha256": "3c5658d8ab7ae3f409b00be2a358e54b2c30b7f055c800e05060979bd2044d5d"
+        },
+        {
+          "file": "compiler/nflw.pas",
+          "sha256": "cb1135ffe4ec1379f7170e4bcad860abfea4e83fc305927d3b5a1d6df47624a5"
+        },
+        {
+          "file": "compiler/ngenutil.pas",
+          "sha256": "cf2581a1bc0132dd69a4fabcd2abb0c53bb0c2f842c51785cc844cf751174ae8"
+        },
+        {
+          "file": "compiler/ninl.pas",
+          "sha256": "08988aeaa9fa907325b80db30d92c6f5d3e7f5931c85cae80ae2295ac74cd88a"
+        },
+        {
+          "file": "compiler/nld.pas",
+          "sha256": "4f27cc488d00b9c91098f8432387fab41f54e5a87467474ba745ec4d5cec73c7"
+        },
+        {
+          "file": "compiler/nmat.pas",
+          "sha256": "d978ea74cabca1bf72c10003c11fff3f1606c1920d77c388987f5d07f111ba82"
+        },
+        {
+          "file": "compiler/nmem.pas",
+          "sha256": "68ff7b3842a16603c8b7332daeef95c3f3852554f0e592158bad7c9f774c8e42"
+        },
+        {
+          "file": "compiler/node.pas",
+          "sha256": "dade0530bd474f4acd3636126f5a07f38fdb54562382540f49932bb8a6173e34"
+        },
+        {
+          "file": "compiler/nset.pas",
+          "sha256": "3d8d5d5f4cdc9ecd6f3e331263900752f7d8215e9820e1c803c0d77e1a226520"
+        },
+        {
+          "file": "compiler/ogbase.pas",
+          "sha256": "15fabb2d272321306a0821fadf48a902f6c43181c9fc91e496209d8a5349e63c"
+        },
+        {
+          "file": "compiler/ogcoff.pas",
+          "sha256": "db9da307dadc3bd67365f0d220d16cd8253308606024cf598f0fb9f6b68ee52e"
+        },
+        {
+          "file": "compiler/ogelf.pas",
+          "sha256": "0986b60ce9a7f07fe4b10d72f89e29702fba7a4140e5a96eeeed76b1b3a0f11a"
+        },
+        {
+          "file": "compiler/ogomf.pas",
+          "sha256": "2744b3983944e08092adf5c49ad3a310f2cc5d46dc3134209c60c95ef4c8484c"
+        },
+        {
+          "file": "compiler/owar.pas",
+          "sha256": "00ae36beca3ac5549066f8fff0ca817262d03bba6d2b2e2352c07402d21233ab"
+        },
+        {
+          "file": "compiler/owbase.pas",
+          "sha256": "aaa1784ec3739c7f808af53c0337020794c01602f9235d3b038dfdb56bedfde9"
+        },
+        {
+          "file": "compiler/owomflib.pas",
+          "sha256": "db859f0756b3f76b07ce2f48ab8843ef41ed99a1e769af5bd0e9b83f0f8ff1c6"
+        },
+        {
+          "file": "compiler/parabase.pas",
+          "sha256": "2d76e84bf147ace7b5da1784c10d3b909fcae36f35258477b2736af1bda1814d"
+        },
+        {
+          "file": "compiler/parser.pas",
+          "sha256": "172e1627c18b162b6311e1c0ab08a3d432c5549ad331a49d9fd673d0cb23f7dd"
+        },
+        {
+          "file": "compiler/pdecobj.pas",
+          "sha256": "cc20e14a250830c2d861d5224ed7a11d5e9f152740f93740bbc87f81e4c158e5"
+        },
+        {
+          "file": "compiler/pexports.pas",
+          "sha256": "2e3212e07a12d3546cb0d639e97f9256a8e09da041fcf37c58ab24d567a9650b"
+        },
+        {
+          "file": "compiler/pexpr.pas",
+          "sha256": "c781e65bfff943079292306c82aca39e078382a555b4525d49b7fb7b3ca09988"
+        },
+        {
+          "file": "compiler/pkgutil.pas",
+          "sha256": "4997017f05b7ef4a4b1271717bd4fd09ceecae432377997f724481833fa380e3"
+        },
+        {
+          "file": "compiler/pmodules.pas",
+          "sha256": "fc6950a071873235ef9e193de080d355929647de2f4bae1ec83d716559d08f07"
+        },
+        {
+          "file": "compiler/ppu.pas",
+          "sha256": "96d6223c5b436ea3e43a9872088f049fbe96f3fd01b861e389efde01eff315cf"
+        },
+        {
+          "file": "compiler/scandir.pas",
+          "sha256": "2d016b3fc078d22067b07213e8d1e3c67b0efa45580dc1331bc4156bd6ba3b9b"
+        },
+        {
+          "file": "compiler/scanner.pas",
+          "sha256": "68338bab2d24fb74b826a1342320d56caa8396ea723b7e4b49cb559c6033c92e"
+        },
+        {
+          "file": "compiler/symdef.pas",
+          "sha256": "9058f51d23f49396b50261c7c6f90016bfa5ec289b748572806d2e0ad05b02fe"
+        },
+        {
+          "file": "compiler/symsym.pas",
+          "sha256": "34c21813b762f4ad88c60923f5b3fbeecaec450e4fb5a254b6bda32805894ec8"
+        },
+        {
+          "file": "compiler/symtable.pas",
+          "sha256": "60de98de4de88b674236216c9fdb8126a360b70b065489c70ed765190c5e7f88"
+        },
+        {
+          "file": "compiler/symtype.pas",
+          "sha256": "2c6fce2f80f4c832489283a75b0460bbe9b8e50b3e4aded2e349b33e997640b6"
+        },
+        {
+          "file": "compiler/systems/t_android.pas",
+          "sha256": "b64ae362371e3f0f3dadb2acf1736d68ceb381d9c768ba4731e82303acb95fad"
+        },
+        {
+          "file": "compiler/utils/mkx86inl.pas",
+          "sha256": "0a9cb561ef7d8bd4f8d56a5a46e2e71be64fab9a9190e1af39043ccbf7d2b769"
+        },
+        {
+          "file": "compiler/utils/ppufiles.pas",
+          "sha256": "4cec355f4679d5b02e412c933346e174cf1502522ec6b8fd5bcadd9b7ce7427f"
+        },
+        {
+          "file": "compiler/utils/ppumove.pas",
+          "sha256": "912375f1fc870c8d30f46b3a4fb189ea8762c61eab9482bba2bbf3c1fb5e5c0c"
+        },
+        {
+          "file": "compiler/wpobase.pas",
+          "sha256": "d5931eddf977c22e0248b97a0f6d6c5f70155f1dc9c293a2501306decf7ef95c"
+        },
+        {
+          "file": "compiler/wpoinfo.pas",
+          "sha256": "283abad0626c05905d884befcab64295733dcca0e2cf7823f369a1ab18f68d92"
+        },
+        {
+          "file": "compiler/x86/rax86.pas",
+          "sha256": "a3f5b3d0a58329f784f28daa519de2040c0000742a440f752517660f188849dd"
+        },
+        {
+          "file": "compiler/x86/symi86.pas",
+          "sha256": "20b4ecf13b244d6c3e0384111b72d4dc49761d44abbcc5ae282e06815928885e"
+        },
+        {
+          "file": "compiler/x86/symx86.pas",
+          "sha256": "95d3d7e2e370fb0e47753da3e0eeaf6d083b7ed3f246bd772d6efa089fd7ff10"
+        }
+      ],
+      "validation_summary": {
+        "GenerationsTwoAndThreeByteIdentical": true,
+        "CompilerSHA256": "93d591ca289fc3daa86fe720f2a8417e30f650d25594d278ff3d466e5f2c8731",
+        "CompilerByteIdenticalToSameRevisionBaseline": true,
+        "CrossCompilersBuilt": [
+          "i386",
+          "aarch64"
+        ],
+        "ExtdebugCompilerBuilt": true,
+        "DebugPPUAndInputPointerChecksCompilerBuilt": true,
+        "CrossAndDebugImagesByteIdenticalToBaseline": true,
+        "RegressionRuns": 76,
+        "MatchedBaselineRuns": 38,
+        "ByteIdenticalExecutables": 38,
+        "CompilerUnitObjectsChecked": 1253,
+        "CodeDataSymbolsAndRelocationsMatchReviewedNames": true,
+        "PackageStorageProbeExecutableAndPayloadsByteIdentical": true,
+        "IndependentPackageFixtureCasesMatched": 56,
+        "NativePackageWriterModes": [
+          "embedded",
+          "sidecar"
+        ],
+        "NativePackageArtifactsAndDecodedMetadataByteIdentical": true,
+        "OriginalUnitUnchangedAfterPackaging": true,
+        "MetadataNamesPassed": true,
+        "PPUFilesAndPPUMoveExecutablesAndOutputsByteIdentical": true,
+        "WhitespaceWarnings": 0
+      },
+      "validation": [
+        "build/forge-bootstrap/naming-goal/batch-025-build/renamed/bootstrap-result.json",
+        "build/forge-bootstrap/naming-goal/batch-025-build/regression-result.json",
+        "build/forge-bootstrap/naming-goal/batch-025-build/cross-build-result.json",
+        "build/forge-bootstrap/naming-goal/batch-025-all-object-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-025-storage-probe-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-025-package-fixture-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-025-writer-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-025-utils-validation.json"
       ]
     }
   ],
   "verification": {
-    "status": "batch_024_validation_in_progress_repository_audit_in_progress",
+    "status": "batch_025_validated_paused_at_user_request_repository_audit_incomplete",
     "required": [
       "Repository-wide audit",
       "Native Linux seed plus three compiler/RTL generations",
@@ -7525,18 +8450,19 @@
       "Relevant regressions and cached-unit checks"
     ],
     "prior_evidence": "build/forge-bootstrap/naming-cleanup-pass2/",
-    "latest_validated_batch": "023",
-    "aggregate_diff_audit": "build/forge-bootstrap/naming-goal/batch-023-audit.json",
-    "latest_validated_compiler_batch": "023",
+    "latest_validated_batch": "025",
+    "aggregate_diff_audit": "build/forge-bootstrap/naming-goal/batch-025-audit.json",
+    "latest_validated_compiler_batch": "025",
     "unrelated_baseline_failures": "Two data2inc paths exit 216; two resource-thinning fixture paths exit 217; Charset GetASCII with nil buffer and unmapped Unicode value exits 216. All reproduce before the relevant naming batch.",
-    "source_files_in_aggregate_audit": 24,
-    "whitespace_audit": "build/forge-bootstrap/naming-goal/batch-023-audit.json",
-    "latest_native_bootstrap": "build/forge-bootstrap/naming-goal/batch-023-build/renamed/bootstrap-result.json",
-    "latest_regression_results": "build/forge-bootstrap/naming-goal/batch-023-build/regression-result.json",
-    "latest_cross_results": "build/forge-bootstrap/naming-goal/batch-023-build/cross-build-result.json",
+    "source_files_in_aggregate_audit": 53,
+    "whitespace_audit": "build/forge-bootstrap/naming-goal/batch-025-audit.json",
+    "latest_native_bootstrap": "build/forge-bootstrap/naming-goal/batch-025-build/renamed/bootstrap-result.json",
+    "latest_regression_results": "build/forge-bootstrap/naming-goal/batch-025-build/regression-result.json",
+    "latest_cross_results": "build/forge-bootstrap/naming-goal/batch-025-build/cross-build-result.json",
     "generated_origin_audit": "build/forge-bootstrap/naming-goal/batch-021-generated-origin-audit.json",
-    "current_checkpoint_revision": "8b556442164b92a6ceffe3212647fba57e7079a4",
-    "previous_checkpoint_audit": "build/forge-bootstrap/naming-goal/batches-001-022-audit.json"
+    "current_checkpoint_revision": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9",
+    "previous_checkpoint_audit": "build/forge-bootstrap/naming-goal/batches-001-022-audit.json",
+    "previous_checkpoint_revision": "cd0a66c7eeb9bc66411c3f041ae14aeb74456cf9"
   },
   "next_work": [
     "Continue RTL owned identifiers beyond the completed Charset/code-page audit. Continue remaining fcl-res constants/enums referenced by utilities.",

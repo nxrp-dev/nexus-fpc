@@ -26,7 +26,7 @@ unit ppu;
 interface
 
   uses
-    GlobType,ConstExp,entfile,NXArtifactID;
+    GlobType,ConstExp,EntFile,NXArtifactID;
 
 { Also write the ppu if only crc if done, this can be used with ppudump to
   see the differences between the intf and implementation }
@@ -46,61 +46,61 @@ const
   CurrentPPULongVersion = 39;
 
 { unit flags }
-  uf_big_endian          = $000004;
-  uf_in_library          = $000020; { is the file in another file than <ppufile>.* ? }
-  uf_smart_linked        = $000040; { the ppu can be smartlinked }
-  uf_static_linked       = $000080; { the ppu can be linked static }
-  uf_shared_linked       = $000100; { the ppu can be linked shared }
-  uf_lto_linked          = $000200; { the ppu can be used with LTO }
-  uf_no_link             = $000400; { unit has no .o generated, but can still have external linking! }
-  uf_little_endian       = $001000;
+  UfBigEndian          = $000004;
+  UfInLibrary          = $000020; { is the file in another file than <ppufile>.* ? }
+  UfSmartLinked        = $000040; { the ppu can be smartlinked }
+  UfStaticLinked       = $000080; { the ppu can be linked static }
+  UfSharedLinked       = $000100; { the ppu can be linked shared }
+  UfLTOLinked          = $000200; { the ppu can be used with LTO }
+  UfNoLink             = $000400; { unit has no .o generated, but can still have external linking! }
+  UfLittleEndian       = $001000;
 
 type
   { set type aliases. We cast all sets to a corresponding array type so
     that if the set changes size, compilation will fail and we know that
     we have have to increase the ppu version }
-  TPPUSet1 = array[0..0] of byte;
-  TPPUSet2 = array[0..1] of byte;
+  TPPUSet1 = array[0..0] of Byte;
+  TPPUSet2 = array[0..1] of Byte;
   { tppuset3 = array[0..2] of byte; (sets of 3 bytes are rounded up to 4 bytes) }
-  TPPUSet4 = array[0..3] of byte;
-  TPPUSet5 = array[0..4] of byte;
-  TPPUSet6 = array[0..5] of byte;
-  TPPUSet7 = array[0..6] of byte;
-  TPPUSet8 = array[0..7] of byte;
-  TPPUSet9 = array[0..8] of byte;
-  TPPUSet10 = array[0..9] of byte;
-  TPPUSet11 = array[0..10] of byte;
-  TPPUSet12 = array[0..11] of byte;
-  TPPUSet13 = array[0..12] of byte;
-  TPPUSet14 = array[0..13] of byte;
-  TPPUSet15 = array[0..14] of byte;
-  TPPUSet16 = array[0..15] of byte;
-  TPPUSet17 = array[0..16] of byte;
-  TPPUSet18 = array[0..17] of byte;
-  TPPUSet19 = array[0..18] of byte;
-  TPPUSet20 = array[0..19] of byte;
-  TPPUSet21 = array[0..20] of byte;
-  TPPUSet22 = array[0..21] of byte;
-  TPPUSet23 = array[0..22] of byte;
-  TPPUSet24 = array[0..23] of byte;
-  TPPUSet25 = array[0..24] of byte;
-  TPPUSet26 = array[0..25] of byte;
-  TPPUSet27 = array[0..26] of byte;
-  TPPUSet28 = array[0..27] of byte;
-  TPPUSet29 = array[0..28] of byte;
-  TPPUSet30 = array[0..29] of byte;
-  TPPUSet31 = array[0..30] of byte;
-  TPPUSet32 = array[0..31] of byte;
+  TPPUSet4 = array[0..3] of Byte;
+  TPPUSet5 = array[0..4] of Byte;
+  TPPUSet6 = array[0..5] of Byte;
+  TPPUSet7 = array[0..6] of Byte;
+  TPPUSet8 = array[0..7] of Byte;
+  TPPUSet9 = array[0..8] of Byte;
+  TPPUSet10 = array[0..9] of Byte;
+  TPPUSet11 = array[0..10] of Byte;
+  TPPUSet12 = array[0..11] of Byte;
+  TPPUSet13 = array[0..12] of Byte;
+  TPPUSet14 = array[0..13] of Byte;
+  TPPUSet15 = array[0..14] of Byte;
+  TPPUSet16 = array[0..15] of Byte;
+  TPPUSet17 = array[0..16] of Byte;
+  TPPUSet18 = array[0..17] of Byte;
+  TPPUSet19 = array[0..18] of Byte;
+  TPPUSet20 = array[0..19] of Byte;
+  TPPUSet21 = array[0..20] of Byte;
+  TPPUSet22 = array[0..21] of Byte;
+  TPPUSet23 = array[0..22] of Byte;
+  TPPUSet24 = array[0..23] of Byte;
+  TPPUSet25 = array[0..24] of Byte;
+  TPPUSet26 = array[0..25] of Byte;
+  TPPUSet27 = array[0..26] of Byte;
+  TPPUSet28 = array[0..27] of Byte;
+  TPPUSet29 = array[0..28] of Byte;
+  TPPUSet30 = array[0..29] of Byte;
+  TPPUSet31 = array[0..30] of Byte;
+  TPPUSet32 = array[0..31] of Byte;
 
   TPPUError=(ppuentrytoobig,ppuentryerror);
 
   TPPUHeader=record
-    common   : TEntryHeader;
-    checksum : cardinal; { checksum for this ppufile }
-    interface_checksum : cardinal;
-    deflistsize,
-    symlistsize : LongInt;
-    indirect_checksum: cardinal;
+    Common   : TEntryHeader;
+    Checksum : Cardinal; { checksum for this ppufile }
+    InterfaceChecksum : Cardinal;
+    DefListSize,
+    SymListSize : LongInt;
+    IndirectChecksum: Cardinal;
   end;
 
   TPPUEntry=TEntry;
@@ -109,44 +109,44 @@ type
 
   TPPUFile=class(TEntryFile)
   protected
-    procedure newheader;override;
-    function readheader: LongInt;override;
-    function outputallowed: boolean;override;
-    function getheadersize:LongInt;override;
-    function getheaderaddr:PEntryHeader;override;
-    procedure resetfile;override;
+    procedure NewHeader;override;
+    function ReadHeader: LongInt;override;
+    function OutputAllowed: Boolean;override;
+    function GetHeaderSize:LongInt;override;
+    function GetHeaderAddr:PEntryHeader;override;
+    procedure ResetFile;override;
 {$ifdef DEBUG_PPU}
-    procedure ppu_log(st :string);override;
+    procedure PPU_Log(ST :string);override;
 {$endif}
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
   public
-    writing_interface_ppu : boolean;
+    WritingInterfacePPU : Boolean;
 {$endif DEBUG_GENERATE_INTERFACE_PPU}
   public
-    header           : TPPUHeader;
+    Header           : TPPUHeader;
     { crc for the entire unit }
-    crc,
+    CRC,
     { crc for the interface definitions in this unit }
-    interface_crc,
+    InterfaceCRC,
     { crc of all object/class definitions in the interface of this unit, xor'ed
       by the crc's of all object/class definitions in the interfaces of units
       used by this unit. Reason: see mantis #13840 }
-    indirect_crc     : cardinal;
+    IndirectCRC     : Cardinal;
     DoCRC,
-    do_interface_crc,
-    do_indirect_crc  : boolean;
-    crc_only         : boolean;    { used to calculate interface_crc before implementation }
-    function  CheckPPUId:boolean;
-    procedure putdata(const b;len:integer);override;
-    procedure putdata(b : TByteDynArray);
-    procedure putdata(b : TAnsiCharDynArray);
-    constructor Create(const fn:string);
+    DoInterfaceCRC,
+    DoIndirectCRC  : Boolean;
+    CRCOnly         : Boolean;    { used to calculate interface_crc before implementation }
+    function  CheckPPUId:Boolean;
+    procedure PutData(const B;Len:Integer);override;
+    procedure PutData(B : TByteDynArray);
+    procedure PutData(B : TAnsiCharDynArray);
+    constructor Create(const FN:string);
     destructor Destroy;override;
   {read}
   { nothing special currently }
   {write}
-    function  createfile:boolean;override;
-    procedure writeheader;override;
+    function  CreateFile:Boolean;override;
+    procedure WriteHeader;override;
   end;
 
 implementation
@@ -161,12 +161,12 @@ implementation
                                   TPPUFile
 *****************************************************************************}
 
-constructor TPPUFile.Create(const fn:string);
+constructor TPPUFile.Create(const FN:string);
 begin
-  inherited Create(fn);
-  crc_only:=false;
+  inherited Create(FN);
+  CRCOnly:=False;
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-  writing_interface_ppu:=false;
+  WritingInterfacePPU:=False;
 {$endif}
 end;
 
@@ -175,99 +175,99 @@ begin
   inherited Destroy;
 end;
 
-function TPPUFile.CheckPPUId:boolean;
+function TPPUFile.CheckPPUId:Boolean;
 begin
-  CheckPPUId:=((Header.common.Id[1]=NexusPPUSignature[1]) and
-                (Header.common.Id[2]=NexusPPUSignature[2]) and
-                (Header.common.Id[3]=NexusPPUSignature[3]));
+  CheckPPUId:=((Header.Common.ID[1]=NexusPPUSignature[1]) and
+                (Header.Common.ID[2]=NexusPPUSignature[2]) and
+                (Header.Common.ID[3]=NexusPPUSignature[3]));
 end;
 
 
-procedure TPPUFile.newheader;
+procedure TPPUFile.NewHeader;
 var
-  s : string;
+  S : string;
 begin
-  fillchar(header,sizeof(TPPUHeader),0);
-  str(currentppuversion,s);
-  while length(s)<3 do
-   s:='0'+s;
-  with header.common do
+  FillChar(Header,SizeOf(TPPUHeader),0);
+  Str(CurrentPPUVersion,S);
+  while Length(S)<3 do
+   S:='0'+S;
+  with Header.Common do
    begin
-     Id[1]:=NexusPPUSignature[1];
-     Id[2]:=NexusPPUSignature[2];
-     Id[3]:=NexusPPUSignature[3];
-     Ver[1]:=s[1];
-     Ver[2]:=s[2];
-     Ver[3]:=s[3];
+     ID[1]:=NexusPPUSignature[1];
+     ID[2]:=NexusPPUSignature[2];
+     ID[3]:=NexusPPUSignature[3];
+     Ver[1]:=S[1];
+     Ver[2]:=S[2];
+     Ver[3]:=S[3];
    end;
 end;
 
 
-function TPPUFile.readheader: LongInt;
+function TPPUFile.ReadHeader: LongInt;
 var
-  is_valid : boolean;
+  IsValid : Boolean;
 begin
-  is_valid:=true;
-  result:=fsize;
-  if result<sizeof(TPPUHeader) then
-    is_valid:=false;
-  result:=f.Read(header,sizeof(TPPUHeader));
-  if (result<>sizeof(TPPUHeader)) then
-    is_valid:=false;
-  if not is_valid then
+  IsValid:=True;
+  Result:=FSize;
+  if Result<SizeOf(TPPUHeader) then
+    IsValid:=False;
+  Result:=F.Read(Header,SizeOf(TPPUHeader));
+  if (Result<>SizeOf(TPPUHeader)) then
+    IsValid:=False;
+  if not IsValid then
     begin
-      fillchar(header,sizeof(TPPUHeader),#0);
-      Do_Comment(VError,' Invalid header size '+ToStr(result)+' (expecting '+ToStr(sizeof(TPPUHeader))+')');
-      exit(-1);
+      FillChar(Header,SizeOf(TPPUHeader),#0);
+      Do_Comment(VError,' Invalid header size '+ToStr(Result)+' (expecting '+ToStr(SizeOf(TPPUHeader))+')');
+      Exit(-1);
     end;
   { The header is always stored in little endian order }
   { therefore swap if on a big endian machine          }
 {$IFDEF ENDIAN_BIG}
-  header.common.compiler := swapendian(header.common.compiler);
-  header.common.cpu := swapendian(header.common.cpu);
-  header.common.target := swapendian(header.common.target);
-  header.common.flags := swapendian(header.common.flags);
-  header.common.size := swapendian(header.common.size);
-  header.checksum := swapendian(header.checksum);
-  header.interface_checksum := swapendian(header.interface_checksum);
-  header.indirect_checksum := swapendian(header.indirect_checksum);
-  header.deflistsize:=swapendian(header.deflistsize);
-  header.symlistsize:=swapendian(header.symlistsize);
+  Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
+  Header.Common.CPU := SwapEndian(Header.Common.CPU);
+  Header.Common.Target := SwapEndian(Header.Common.Target);
+  Header.Common.Flags := SwapEndian(Header.Common.Flags);
+  Header.Common.Size := SwapEndian(Header.Common.Size);
+  Header.Checksum := SwapEndian(Header.Checksum);
+  Header.InterfaceChecksum := SwapEndian(Header.InterfaceChecksum);
+  Header.IndirectChecksum := SwapEndian(Header.IndirectChecksum);
+  Header.DefListSize:=SwapEndian(Header.DefListSize);
+  Header.SymListSize:=SwapEndian(Header.SymListSize);
 
   { the PPU DATA is stored in native order }
-  ChangeEndian := (header.common.flags and uf_little_endian) = uf_little_endian;
+  ChangeEndian := (Header.Common.Flags and UfLittleEndian) = UfLittleEndian;
 {$ELSE not ENDIAN_BIG}
-  ChangeEndian := (header.common.flags and uf_big_endian) = uf_big_endian;
+  ChangeEndian := (Header.Common.Flags and UfBigEndian) = UfBigEndian;
 {$ENDIF}
 end;
 
-function TPPUFile.outputallowed: boolean;
+function TPPUFile.OutputAllowed: Boolean;
 begin
-  result:=not crc_only;
+  Result:=not CRCOnly;
 end;
 
 {$ifdef DEBUG_PPU}
-procedure TPPUFile.ppu_log(st :string);
+procedure TPPUFile.PPU_Log(ST :string);
 begin
-  inherited ppu_log(st);
-  if flog_open then
+  inherited PPU_Log(ST);
+  if FLogOpen then
     begin
-      if DoCRC and (ppu_log_idx < BufferedPosition) then
+      if DoCRC and (PPULogIdx < BufferedPosition) then
         begin
-          write(flog,'New crc : ',HexStr(dword(crc),8));
-          WriteLn(flog);
-          write(flog,'New interface crc : ',HexStr(dword(interface_crc),8));
-          WriteLn(flog);
-          write(flog,'New indirect crc : ',HexStr(dword(indirect_crc),8));
-          WriteLn(flog);
+          Write(FLog,'New crc : ',HexStr(DWord(CRC),8));
+          WriteLn(FLog);
+          Write(FLog,'New interface crc : ',HexStr(DWord(InterfaceCRC),8));
+          WriteLn(FLog);
+          Write(FLog,'New indirect crc : ',HexStr(DWord(IndirectCRC),8));
+          WriteLn(FLog);
          end;
     end;
 {$ifdef IN_PPUDUMP}
   if update_crc then
     begin
-      WriteLn('New crc : ',HexStr(dword(crc),8));
-      WriteLn('New interface crc : ',HexStr(dword(interface_crc),8));
-      WriteLn('New indirect crc : ',HexStr(dword(indirect_crc),8));
+      WriteLn('New crc : ',HexStr(DWord(CRC),8));
+      WriteLn('New interface crc : ',HexStr(DWord(InterfaceCRC),8));
+      WriteLn('New indirect crc : ',HexStr(DWord(IndirectCRC),8));
     end;
 {$endif}
 end;
@@ -283,106 +283,106 @@ end;
                                 TPPUFile Writing
 *****************************************************************************}
 
-function TPPUFile.createfile:boolean;
+function TPPUFile.CreateFile:Boolean;
 begin
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-  if crc_only then
+  if CRCOnly then
     begin
-      fname:=fname+'.intf';
-      crc_only:=false;
-      writing_interface_ppu:=true;
+      FName:=FName+'.intf';
+      CRCOnly:=False;
+      WritingInterfacePPU:=True;
     end;
 {$endif}
-  result:=inherited createfile;
+  Result:=inherited CreateFile;
 end;
 
 
-procedure TPPUFile.writeheader;
+procedure TPPUFile.WriteHeader;
 var
-  opos : integer;
+  OPos : Integer;
 begin
-  if crc_only then
-   exit;
+  if CRCOnly then
+   Exit;
   { flush buffer }
-  writebuf;
+  WriteBuf;
   { update size (w/o header!) in the header }
-  header.common.size:=BufStart-sizeof(TPPUHeader);
+  Header.Common.Size:=BufStart-SizeOf(TPPUHeader);
   { set the endian flag }
 {$ifndef FPC_BIG_ENDIAN}
-    header.common.flags := header.common.flags or uf_little_endian;
+    Header.Common.Flags := Header.Common.Flags or UfLittleEndian;
 {$else not FPC_BIG_ENDIAN}
-    header.common.flags := header.common.flags or uf_big_endian;
+    Header.Common.Flags := Header.Common.Flags or UfBigEndian;
     { Now swap the header.common in the correct endian (always little endian) }
-    header.common.compiler := swapendian(header.common.compiler);
-    header.common.cpu := swapendian(header.common.cpu);
-    header.common.target := swapendian(header.common.target);
-    header.common.flags := swapendian(header.common.flags);
-    header.common.size := swapendian(header.common.size);
-    header.checksum := swapendian(header.checksum);
-    header.interface_checksum := swapendian(header.interface_checksum);
-    header.indirect_checksum := swapendian(header.indirect_checksum);
-    header.deflistsize:=swapendian(header.deflistsize);
-    header.symlistsize:=swapendian(header.symlistsize);
+    Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
+    Header.Common.CPU := SwapEndian(Header.Common.CPU);
+    Header.Common.Target := SwapEndian(Header.Common.Target);
+    Header.Common.Flags := SwapEndian(Header.Common.Flags);
+    Header.Common.Size := SwapEndian(Header.Common.Size);
+    Header.Checksum := SwapEndian(Header.Checksum);
+    Header.InterfaceChecksum := SwapEndian(Header.InterfaceChecksum);
+    Header.IndirectChecksum := SwapEndian(Header.IndirectChecksum);
+    Header.DefListSize:=SwapEndian(Header.DefListSize);
+    Header.SymListSize:=SwapEndian(Header.SymListSize);
 {$endif not FPC_BIG_ENDIAN}
 { write header and restore filepos after it }
-  opos:=f.Position;
-  f.Position:=0;
-  f.Write(header,sizeof(TPPUHeader));
-  f.Position:=opos;
+  OPos:=F.Position;
+  F.Position:=0;
+  F.Write(Header,SizeOf(TPPUHeader));
+  F.Position:=OPos;
 end;
 
 
-procedure TPPUFile.putdata(const b;len:integer);
+procedure TPPUFile.PutData(const B;Len:Integer);
 begin
   if DoCRC then
    begin
-     crc:=UpdateCRC32(crc,b,len);
-     if do_interface_crc then
+     CRC:=UpdateCRC32(CRC,B,Len);
+     if DoInterfaceCRC then
        begin
-         interface_crc:=UpdateCRC32(interface_crc,b,len);
+         InterfaceCRC:=UpdateCRC32(InterfaceCRC,B,Len);
          { indirect crc must only be calculated for the interface; changes
            to a class in the implementation cannot require another unit to
            be recompiled }
-         if do_indirect_crc then
+         if DoIndirectCRC then
            begin
-             indirect_crc:=UpdateCRC32(indirect_crc,b,len);
+             IndirectCRC:=UpdateCRC32(IndirectCRC,B,Len);
            end;
        end;
     end;
-  inherited putdata(b,len);
+  inherited PutData(B,Len);
   (*if not crc_only then
     writedata(b,len);
   inc(entryidx,len);*)
 end;
 
-procedure TPPUFile.putdata(b: TByteDynArray);
+procedure TPPUFile.PutData(B: TByteDynArray);
 begin
-  putdata(b[0],length(b));
+  PutData(B[0],Length(B));
 end;
 
-procedure TPPUFile.putdata(b: TAnsiCharDynArray);
+procedure TPPUFile.PutData(B: TAnsiCharDynArray);
 begin
-  putdata(b[0],length(b));
+  PutData(B[0],Length(B));
 end;
 
-function TPPUFile.getheadersize: LongInt;
+function TPPUFile.GetHeaderSize: LongInt;
 begin
-  result:=sizeof(header);
+  Result:=SizeOf(Header);
 end;
 
-function TPPUFile.getheaderaddr: PEntryHeader;
+function TPPUFile.GetHeaderAddr: PEntryHeader;
 begin
-  result:=@header;
+  Result:=@Header;
 end;
 
-procedure TPPUFile.resetfile;
+procedure TPPUFile.ResetFile;
 begin
-  crc:=0;
-  interface_crc:=0;
-  indirect_crc:=0;
-  do_interface_crc:=true;
-  do_indirect_crc:=false;
-  DoCRC:=true;
+  CRC:=0;
+  InterfaceCRC:=0;
+  IndirectCRC:=0;
+  DoInterfaceCRC:=True;
+  DoIndirectCRC:=False;
+  DoCRC:=True;
 end;
 
 

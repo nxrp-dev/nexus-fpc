@@ -106,8 +106,8 @@ interface
 
       TUsedUnit = class(TLinkedListItem)
         checksum,
-        interface_checksum,
-        indirect_checksum: cardinal;
+        InterfaceChecksum,
+        IndirectChecksum: cardinal;
         in_uses,
         in_interface    : boolean;
         u               : TModule;
@@ -154,8 +154,8 @@ interface
         recompile_reason : TRecompileReason;  { the reason why the unit should be recompiled }
         crc_final: boolean;
         crc,                       { valid when crc_final=true }
-        interface_crc,             { valid when interface_compiled=true }
-        indirect_crc  : cardinal;  { valid when interface_compiled=true }
+        InterfaceCRC,             { valid when interface_compiled=true }
+        IndirectCRC  : cardinal;  { valid when interface_compiled=true }
         headerflags   : cardinal;  { the PPU header flags }
         longversion   : cardinal;  { longer version than what fits in the ppu header }
         moduleflags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
@@ -300,7 +300,7 @@ interface
         function find_used_unit_compiling: TModule; // find a used module compiling/loading, even indirect
         class procedure increase_cycle_stamp;
         procedure disconnect_depending_modules; virtual;
-        function is_reload_needed(du: TDependentUnit): boolean; virtual; // true if reload needed after self changed
+        function Is_Reload_Needed(du: TDependentUnit): boolean; virtual; // true if reload needed after self changed
         class var finish_module: TFinishModuleEvent;
         procedure addimportedsym(sym:TSymEntry; check_if_exists: boolean = true);
         procedure derefimportedsymbols;
@@ -314,7 +314,7 @@ interface
         function  derefidx_unit(id:LongInt):LongInt;
         function  resolve_unit(id:LongInt):TModule;
         procedure allunitsused;
-        procedure end_of_parsing;virtual;
+        procedure End_Of_Parsing;virtual;
         procedure setmodulename(const s:string);
         procedure AddExternalImport(const libname,symname,symmangledname:string;OrdNr: LongInt;isvar:boolean;ImportByOrdinalOnly:boolean);
         procedure add_public_asmsym(sym:TAsmSymbol);
@@ -530,13 +530,13 @@ implementation
           checksum:=0;
         if _u.interface_compiled then
          begin
-           interface_checksum:=u.interface_crc;
-           indirect_checksum:=u.indirect_crc;
+           InterfaceChecksum:=u.InterfaceCRC;
+           IndirectChecksum:=u.IndirectCRC;
          end
         else
          begin
-           interface_checksum:=0;
-           indirect_checksum:=0;
+           InterfaceChecksum:=0;
+           IndirectChecksum:=0;
          end;
       end;
 
@@ -636,8 +636,8 @@ implementation
         FImportLibraryList:=TFPHashObjectList.Create(true);
         crc_final:=false;
         crc:=0;
-        interface_crc:=0;
-        indirect_crc:=0;
+        InterfaceCRC:=0;
+        IndirectCRC:=0;
         headerflags:=0;
         longversion:=0;
         moduleflags:=[];
@@ -1019,8 +1019,8 @@ implementation
         is_dbginfo_written:=false;
         crc_final:=false;
         crc:=0;
-        interface_crc:=0;
-        indirect_crc:=0;
+        InterfaceCRC:=0;
+        IndirectCRC:=0;
         headerflags:=0;
         longversion:=0;
         moduleflags:=[];
@@ -1137,7 +1137,7 @@ implementation
 
             InternalError(2026022510);
           end;
-          if not m.do_reload and is_reload_needed(dm) then
+          if not m.do_reload and Is_Reload_Needed(dm) then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
             WriteLn('PPUALGO tmodule.flagdependent ',ModuleName^,' state=',StateStr,', is used by ',BoolToStr(dm.in_interface,'interface','implementation'),' of ',m.ModuleName^,' ',m.StateStr);
@@ -1267,7 +1267,7 @@ implementation
           end;
       end;
 
-    function TModule.is_reload_needed(du: TDependentUnit): boolean;
+    function TModule.Is_Reload_Needed(du: TDependentUnit): boolean;
       { du.u is a module using this unit }
       begin
         Result:=(du.u.state in [ms_compiling_waitfinish,ms_compiled_waitcrc,ms_compiled,ms_processed])
@@ -1529,7 +1529,7 @@ implementation
           end;
       end;
 
-    procedure TModule.end_of_parsing;
+    procedure TModule.End_Of_Parsing;
       begin
         { free asmdata }
         if Assigned(asmdata) then

@@ -78,7 +78,7 @@ implementation
 
 uses
   FinPut,
-  fppu,
+  FPPU,
   aasmcpu;
 
 {$if defined(MEMDEBUG)}

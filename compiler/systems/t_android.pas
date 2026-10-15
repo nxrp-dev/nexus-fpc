@@ -29,7 +29,7 @@ interface
   uses
     GlobType,
     AAsmData,
-    SymSym,symdef,ppu,
+    SymSym,symdef,PPU,
     import,export,expunix,link;
 
   type

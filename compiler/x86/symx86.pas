@@ -73,14 +73,14 @@ implementation
   procedure TX86PointerDef.PPULoadPlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
-      x86pointertyp:=TX86PointerTyp(ppufile.getbyte);
+      x86pointertyp:=TX86PointerTyp(ppufile.GetByte);
     end;
 
 
   procedure TX86PointerDef.PPUWritePlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
-      ppufile.putbyte(byte(x86pointertyp));
+      ppufile.PutByte(byte(x86pointertyp));
     end;
 
 

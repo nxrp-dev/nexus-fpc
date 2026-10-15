@@ -36,7 +36,7 @@ implementation
        { global }
        Globals,GlobType,tokens,Verbose,ConstExp,
        Systems,
-       ppu,FModule,
+       PPU,FModule,
        { symtable }
        symconst,SymBase,symdef,symtype,SymSym,
        { pass 1 }

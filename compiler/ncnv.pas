@@ -326,7 +326,7 @@ implementation
 
    uses
       GlobType,Systems,ConstExp,compinnr,
-      CUtils,Verbose,Globals,WideStr,ppu,
+      CUtils,Verbose,Globals,WideStr,PPU,
       symconst,symdef,SymSym,symcpu,SymTable,
       ncon,ncal,nset,nadd,nmem,nmat,nbas,nutils,ninl,nflw,
       psub,
@@ -1050,8 +1050,8 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(totypedefderef);
-        convtype:=TConvertType(ppufile.getbyte);
-        ppufile.getset(TPPUSet1(convnodeflags));
+        convtype:=TConvertType(ppufile.GetByte);
+        ppufile.GetSet(TPPUSet1(convnodeflags));
       end;
 
 
@@ -1059,8 +1059,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(totypedefderef);
-        ppufile.putbyte(byte(convtype));
-        ppufile.putset(TPPUSet1(convnodeflags));
+        ppufile.PutByte(byte(convtype));
+        ppufile.PutSet(TPPUSet1(convnodeflags));
       end;
 
 

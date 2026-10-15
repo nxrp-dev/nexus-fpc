@@ -30,7 +30,7 @@ interface
       CMsgs,Verbose,
       CUtils,CClasses,CStreams,
       GlobType,Globals,GlobStat,FPCHash,FinPut,FModule,
-      SymBase,ppu,symtype;
+      SymBase,PPU,SymType;
 
     type
        { tppumodule }
@@ -38,97 +38,97 @@ interface
        TAvailableUnitFiles = set of TAvailableUnitFile;
 
        TPPUModule = class(TModule)
-          ppufile    : TCompilerPPUFile; { the PPU file }
-          sourcefn   : TPathStr; { Source specified with "uses .. in '..'" }
-          comments   : TCmdStrList;
-          nsprefix   : TCmdStr; { Namespace prefix the unit was found with }
-          constructor create(LoadedFrom:TModule;const amodulename: string; const afilename:TPathStr;_is_unit:boolean);
+          PPUFile    : TCompilerPPUFile; { the PPU file }
+          SourceFN   : TPathStr; { Source specified with "uses .. in '..'" }
+          Comments   : TCmdStrList;
+          NSPrefix   : TCmdStr; { Namespace prefix the unit was found with }
+          constructor Create(LoadedFrom:TModule;const AModuleName: string; const AFileName:TPathStr;AIsUnit:Boolean);
           destructor Destroy;override;
           function StateStr: string; override;
-          procedure checkstate; override;
-          procedure reset(for_recompile: boolean);override;
-          procedure re_resolve;
-          function  openppufile:boolean;
-          function  openppustream(strm:TCStream):boolean;
-          procedure getppucrc;
-          function dependent_module_has_our_crc: boolean;
-          function dependent_module_crc_mismatch: boolean;
-          procedure writeppu;
-          function loadppu(from_module : TModule) : boolean;
-          function get_check_uses(out check_impl_uses, check_crc: boolean): boolean;
-          function continueloadppu : boolean;
-          function canreload(out firstwaiting: TModule; ignore_do_reload: boolean): boolean;
-          procedure reload;
-          function ppuloadcancontinue(out firstwaiting: TModule): boolean;
-          function is_reload_needed(pu: TDependentUnit): boolean; override;
-          procedure restore_state;
-          procedure store_state;
-          procedure recompile_from_sources;
-          procedure check_sources_for_recompile;
-          procedure post_load_or_compile(from_module : TModule);
-          procedure discardppu;
-          procedure setdefgeneration;
-          procedure end_of_parsing;override;
+          procedure CheckState; override;
+          procedure Reset(ForRecompile: Boolean);override;
+          procedure Re_Resolve;
+          function  OpenPPUFile:Boolean;
+          function  OpenPPUStream(Strm:TCStream):Boolean;
+          procedure GetPPUCRC;
+          function Dependent_Module_Has_Our_CRC: Boolean;
+          function Dependent_Module_CRC_Mismatch: Boolean;
+          procedure WritePPU;
+          function LoadPPU(FromModule : TModule) : Boolean;
+          function Get_Check_Uses(out CheckImplUses, CheckCRC: Boolean): Boolean;
+          function ContinueLoadPPU : Boolean;
+          function CanReload(out FirstWaiting: TModule; IgnoreDoReload: Boolean): Boolean;
+          procedure Reload;
+          function PPULoadCanContinue(out FirstWaiting: TModule): Boolean;
+          function Is_Reload_Needed(Pu: TDependentUnit): Boolean; override;
+          procedure Restore_State;
+          procedure Store_State;
+          procedure Recompile_From_Sources;
+          procedure Check_Sources_For_Recompile;
+          procedure Post_Load_Or_Compile(FromModule : TModule);
+          procedure DiscardPPU;
+          procedure SetDefGeneration;
+          procedure End_Of_Parsing;override;
        private
-          packageppustream : TCStream; { owned while a package PPU is loaded }
-          unitimportsymsderefs : TFPList;
+          PackagePPUStream : TCStream; { owned while a package PPU is loaded }
+          UnitImportSymsDerefs : TFPList;
          { Each time a unit's defs are (re)created, its defsgeneration is
            set to the value of a global counter, and the global counter is
            increased. We only reresolve its dependent units' defs in case
            they have been resolved only for an older generation, in order to
            avoid endless resolving loops in case of cyclic dependencies. }
-          defsgeneration : LongInt;
-          stored_state: TGlobalState;
+          DefsGeneration : LongInt;
+          StoredState: TGlobalState;
 
-          function check_loadfrompackage: boolean;
-          function  openppu(ppufiletime:LongInt):boolean;
-          procedure mark_recompile_needed(reason: TRecompileReason);
-          function  search_unit_files(loaded_from : TModule; onlysource:boolean):TAvailableUnitFiles;
-          function  search_unit(loaded_from : TModule; onlysource,shortname:boolean):TAvailableUnitFiles;
-          function  loadfrompackage:boolean;
-          procedure load_interface;
-          procedure load_implementation;
-          function load_usedunits: boolean;
-          function load_usedunits_section: boolean;
-          function ppu_check_used_crcs: boolean;
-          procedure printcomments;
-          procedure queuecomment(const s:TMsgStr;v,w:LongInt);
-          procedure buildderefunitimportsyms;
-          procedure derefunitimportsyms;
-          procedure freederefunitimportsyms;
-          procedure writesourcefiles;
-          procedure writeusedunit(intf:boolean);
-          procedure writelinkcontainer(var p:TLinkContainer;id:byte;strippath:boolean);
-          procedure writederefmap;
-          procedure writederefdata;
-          procedure writeImportSymbols;
-          procedure writeResources;
-          procedure writeOrderedSymbols;
-          procedure writeUnitExports;
-          procedure writeunitimportsyms;
-          procedure writeasmsyms(kind:TUnitAsmListType;list:TFPHashObjectList);
-          procedure writeextraheader;
-          procedure readsourcefiles;
-          procedure readloadunit;
-          procedure readlinkcontainer(var p:TLinkContainer);
-          procedure readderefmap;
-          procedure readderefdata;
-          procedure readImportSymbols;
-          procedure readResources;
-          procedure readOrderedSymbols;
-          procedure readUnitExports;
-          procedure readwpofile;
-          procedure readunitimportsyms;
-          procedure readasmsyms;
-          procedure readextraheader;
+          function CheckLoadFromPackage: Boolean;
+          function  OpenPPU(PPUFileTime:LongInt):Boolean;
+          procedure MarkRecompileNeeded(Reason: TRecompileReason);
+          function  SearchUnitFiles(LoadingModule : TModule; OnlySource:Boolean):TAvailableUnitFiles;
+          function  SearchUnit(LoadingModule : TModule; OnlySource,ShortName:Boolean):TAvailableUnitFiles;
+          function  LoadFromPackage:Boolean;
+          procedure LoadInterface;
+          procedure LoadImplementation;
+          function LoadUsedUnits: Boolean;
+          function LoadUsedUnitsSection: Boolean;
+          function PPUCheckUsedCRCs: Boolean;
+          procedure PrintComments;
+          procedure QueueComment(const S:TMsgStr;V,W:LongInt);
+          procedure BuildDerefUnitImportSyms;
+          procedure DerefUnitImportSyms;
+          procedure FreeDerefUnitImportSyms;
+          procedure WriteSourceFiles;
+          procedure WriteUsedUnit(Intf:Boolean);
+          procedure WriteLinkContainer(var P:TLinkContainer;ID:Byte;StripPath:Boolean);
+          procedure WriteDerefMap;
+          procedure WriteDerefData;
+          procedure WriteImportSymbols;
+          procedure WriteResources;
+          procedure WriteOrderedSymbols;
+          procedure WriteUnitExports;
+          procedure WriteUnitImportSyms;
+          procedure WriteAsmSyms(Kind:TUnitAsmListType;List:TFPHashObjectList);
+          procedure WriteExtraHeader;
+          procedure ReadSourceFiles;
+          procedure ReadLoadUnit;
+          procedure ReadLinkContainer(var P:TLinkContainer);
+          procedure ReadDerefMap;
+          procedure ReadDerefData;
+          procedure ReadImportSymbols;
+          procedure ReadResources;
+          procedure ReadOrderedSymbols;
+          procedure ReadUnitExports;
+          procedure ReadWPOFile;
+          procedure ReadUnitImportSyms;
+          procedure ReadAsmSyms;
+          procedure ReadExtraHeader;
 {$IFDEF MACRO_DIFF_HINT}
-          procedure writeusedmacro(p:TNamedIndexItem;arg:pointer);
-          procedure writeusedmacros;
-          procedure readusedmacros;
+          procedure WriteUsedMacro(P:TNamedIndexItem;Arg:Pointer);
+          procedure WriteUsedMacros;
+          procedure ReadUsedMacros;
 {$ENDIF}
        end;
 
-    function registerunit(callermodule:TModule;const s : TIDString;const fn:string; out is_new:boolean) : TPPUModule;
+    function RegisterUnit(CallerModule:TModule;const S : TIDString;const FN:string; out IsNewUnit:Boolean) : TPPUModule;
 
 
 implementation
@@ -136,48 +136,48 @@ implementation
 uses
   SysUtils,
   CFileUtl,
-  Systems,version,options,
+  Systems,Version,Options,
   SymTable, SymSym,
-  wpoinfo,
+  WPOInfo,
   Scanner,
-  aasmbase,AAsmData,ogbase,
+  AAsmBase,AAsmData,Ogbase,
   CompHook,
-  entfile,FPkg,FPCP,export;
+  EntFile,FPkg,FPCP,Export;
 
 
 var
-  currentdefgeneration: LongInt;
+  CurrentDefGeneration: LongInt;
 
 {****************************************************************************
                                 TPPUMODULE
  ****************************************************************************}
 
-    constructor TPPUModule.create(LoadedFrom:TModule;const amodulename: string; const afilename:TPathStr;_is_unit:boolean);
+    constructor TPPUModule.Create(LoadedFrom:TModule;const AModuleName: string; const AFileName:TPathStr;AIsUnit:Boolean);
       begin
-        inherited create(LoadedFrom,amodulename,afilename,_is_unit);
-        ppufile:=nil;
-        sourcefn:=afilename;
-        unitimportsymsderefs:=TFPList.create;
+        inherited Create(LoadedFrom,AModuleName,AFileName,AIsUnit);
+        PPUFile:=nil;
+        SourceFN:=AFileName;
+        UnitImportSymsDerefs:=TFPList.Create;
       end;
 
 
     destructor TPPUModule.Destroy;
       begin
-        discardppu;
-        comments.free;
-        comments:=nil;
+        DiscardPPU;
+        Comments.Free;
+        Comments:=nil;
         { all derefs allocated with new
           are dispose'd inside this method }
-        freederefunitimportsyms;
-        unitimportsymsderefs.free;
-        unitimportsymsderefs:=nil;
+        FreeDerefUnitImportSyms;
+        UnitImportSymsDerefs.Free;
+        UnitImportSymsDerefs:=nil;
         inherited Destroy;
       end;
 
     function TPPUModule.StateStr: string;
       begin
         Result:=inherited StateStr;
-        if state<>ms_load then exit;
+        if State<>ms_load then Exit;
         if ppu_waitingfor_crc then
           Result:=Result+',waitcrc'
         else if interface_compiled then
@@ -186,416 +186,416 @@ var
           Result:=Result+',waitintf';
       end;
 
-    procedure TPPUModule.checkstate;
+    procedure TPPUModule.CheckState;
       begin
-        if state=ms_load then
+        if State=ms_load then
 
         else
-          inherited checkstate;
+          inherited CheckState;
       end;
 
-    procedure TPPUModule.reset(for_recompile : boolean);
+    procedure TPPUModule.Reset(ForRecompile : Boolean);
       begin
-        loadedfrommodule:=nil;
-        ppu_waitingfor_crc:=false;
-        discardppu;
-        freederefunitimportsyms;
-        unitimportsymsderefs.free;
-        unitimportsymsderefs:=TFPList.create;
-        inherited reset(for_recompile);
+        LoadedFromModule:=nil;
+        ppu_waitingfor_crc:=False;
+        DiscardPPU;
+        FreeDerefUnitImportSyms;
+        UnitImportSymsDerefs.Free;
+        UnitImportSymsDerefs:=TFPList.Create;
+        inherited Reset(ForRecompile);
       end;
 
-    procedure TPPUModule.re_resolve;
+    procedure TPPUModule.Re_Resolve;
 
       begin
         Message1(unit_u_reresolving_unit,ModuleName^);
         if TStoredSymTable(GlobalSymTable).is_deref_built then
-          TStoredSymTable(GlobalSymTable).deref(false);
+          TStoredSymTable(GlobalSymTable).Deref(False);
         if TStoredSymTable(GlobalSymTable).is_derefimpl_built then
-          TStoredSymTable(GlobalSymTable).derefimpl(false);
-        if Assigned(localsymtable) then
+          TStoredSymTable(GlobalSymTable).DerefImpl(False);
+        if Assigned(LocalSymTable) then
           begin
             { we have only builderef(impl)'d the registered symbols of
               the localsymtable -> also only deref those again }
-            if TStoredSymTable(localsymtable).is_deref_built then
-              TStoredSymTable(localsymtable).deref(true);
-            if TStoredSymTable(localsymtable).is_derefimpl_built then
-              TStoredSymTable(localsymtable).derefimpl(true);
+            if TStoredSymTable(LocalSymTable).is_deref_built then
+              TStoredSymTable(LocalSymTable).Deref(True);
+            if TStoredSymTable(LocalSymTable).is_derefimpl_built then
+              TStoredSymTable(LocalSymTable).DerefImpl(True);
           end;
-        derefimportedsymbols;
-        if Assigned(wpoinfo) then
+        DerefImportedSymbols;
+        if Assigned(WPOInfo) then
           begin
-            TUnitWPOInfo(wpoinfo).deref;
-            TUnitWPOInfo(wpoinfo).derefimpl;
+            TUnitWPOInfo(WPOInfo).Deref;
+            TUnitWPOInfo(WPOInfo).DerefImpl;
           end;
 
         { all dependent units were already flagged recursively for reload }
-        defsgeneration:=currentdefgeneration;
+        DefsGeneration:=CurrentDefGeneration;
       end;
 
 
-    procedure TPPUModule.queuecomment(const s:TMsgStr;v,w:LongInt);
+    procedure TPPUModule.QueueComment(const S:TMsgStr;V,W:LongInt);
     begin
-      if comments = nil then
-        comments := TCmdStrList.create;
-      comments.insert(s);
+      if Comments = nil then
+        Comments := TCmdStrList.Create;
+      Comments.Insert(S);
     end;
 
-    procedure TPPUModule.printcomments;
+    procedure TPPUModule.PrintComments;
     var
-      comment: string;
+      Comment: string;
     begin
-      if comments = nil then
-        exit;
+      if Comments = nil then
+        Exit;
       { comments are inserted in reverse order }
       repeat
-        comment := comments.getlast;
-        if length(comment) = 0 then
-          exit;
-        Do_Comment(VNormal, comment);
-      until false;
+        Comment := Comments.GetLast;
+        if Length(Comment) = 0 then
+          Exit;
+        Do_Comment(VNormal, Comment);
+      until False;
     end;
 
-    function TPPUModule.openppufile:boolean;
+    function TPPUModule.OpenPPUFile:Boolean;
       var
-        ppufiletime : LongInt;
+        PPUFileTime : LongInt;
       begin
-        openppufile:=false;
-        Message1(unit_t_ppu_loading,PPUFileName,@queuecomment);
+        OpenPPUFile:=False;
+        Message1(unit_t_ppu_loading,PPUFileName,@QueueComment);
       { Get ppufile time (also check if the file exists) }
-        ppufiletime:=getnamedfiletime(PPUFileName);
-        if ppufiletime=-1 then
-         exit;
+        PPUFileTime:=GetNamedFileTime(PPUFileName);
+        if PPUFileTime=-1 then
+         Exit;
       { Open the ppufile }
         Message1(unit_u_ppu_name,PPUFileName);
-        ppufile:=TCompilerPPUFile.create(PPUFileName);
-        if not ppufile.openfile then
+        PPUFile:=TCompilerPPUFile.Create(PPUFileName);
+        if not PPUFile.OpenFile then
          begin
-           discardppu;
+           DiscardPPU;
            Message(unit_u_ppu_file_too_short);
-           exit;
+           Exit;
          end;
-        result:=openppu(ppufiletime);
+        Result:=OpenPPU(PPUFileTime);
       end;
 
 
-    function TPPUModule.openppustream(strm:TCStream):boolean;
+    function TPPUModule.OpenPPUStream(Strm:TCStream):Boolean;
       begin
-        result:=false;
+        Result:=False;
       { Open the ppufile }
         Message1(unit_u_ppu_name,PPUFileName);
-        ppufile:=TCompilerPPUFile.create(PPUFileName);
-        if not ppufile.openstream(strm) then
+        PPUFile:=TCompilerPPUFile.Create(PPUFileName);
+        if not PPUFile.OpenStream(Strm) then
          begin
-           discardppu;
+           DiscardPPU;
            Message(unit_u_ppu_file_too_short);
-           exit;
+           Exit;
          end;
-        result:=openppu(-1);
+        Result:=OpenPPU(-1);
       end;
 
 
-    function TPPUModule.openppu(ppufiletime:LongInt):boolean;
+    function TPPUModule.OpenPPU(PPUFileTime:LongInt):Boolean;
 
-      function checkheader: boolean;
+      function CheckHeader: Boolean;
         var
-          psi: PSystemInfo;
-          system_name: shortstring;
+          Psi: PSystemInfo;
+          system_name: ShortString;
         begin
-          result:=false;
+          Result:=False;
           { check for a valid PPU file }
-            if not ppufile.CheckPPUId then
+            if not PPUFile.CheckPPUId then
              begin
-               Message(unit_u_ppu_invalid_header,@queuecomment);
-               exit;
+               Message(unit_u_ppu_invalid_header,@QueueComment);
+               Exit;
              end;
           { check for allowed PPU versions }
-            if not (ppufile.getversion = CurrentPPUVersion) then
+            if not (PPUFile.GetVersion = CurrentPPUVersion) then
              begin
-               Message2(unit_u_ppu_invalid_version,ToStr(ppufile.getversion),ToStr(CurrentPPUVersion),@queuecomment);
-               exit;
+               Message2(unit_u_ppu_invalid_version,ToStr(PPUFile.GetVersion),ToStr(CurrentPPUVersion),@QueueComment);
+               Exit;
              end;
           { check the target processor }
-            if TSystemCPU(ppufile.header.common.cpu)<>TargetCPU then
+            if TSystemCPU(PPUFile.Header.Common.CPU)<>TargetCPU then
              begin
-               Message1(unit_u_ppu_invalid_processor,cpu2str[Ord(TSystemCPU(ppufile.header.common.cpu))],@queuecomment);
-               exit;
+               Message1(unit_u_ppu_invalid_processor,CPU2Str[Ord(TSystemCPU(PPUFile.Header.Common.CPU))],@QueueComment);
+               Exit;
              end;
           { check target }
-            if TSystem(ppufile.header.common.target)<>TargetInfo.system then
+            if TSystem(PPUFile.Header.Common.Target)<>TargetInfo.System then
              begin
-               psi:=targetinfos[Ord(TSystem(ppufile.header.common.target))];
-               if Assigned(psi) then
-                 system_name:=psi^.shortname
+               Psi:=TargetInfos[Ord(TSystem(PPUFile.Header.Common.Target))];
+               if Assigned(Psi) then
+                 system_name:=Psi^.ShortName
                else
-                 system_name:='invalid ('+ToStr(ppufile.header.common.target)+')';
-               Message1(unit_u_ppu_invalid_target,system_name,@queuecomment);
-               exit;
+                 system_name:='invalid ('+ToStr(PPUFile.Header.Common.Target)+')';
+               Message1(unit_u_ppu_invalid_target,system_name,@QueueComment);
+               Exit;
              end;
-           result:=true;
+           Result:=True;
         end;
 
-      function checkextraheader: boolean;
+      function CheckExtraHeader: Boolean;
         begin
-          result:=false;
-          if ppufile.readentry<>ibextraheader then
+          Result:=False;
+          if PPUFile.ReadEntry<>IBExtraHeader then
             begin
               Message(unit_u_ppu_invalid_header);
-              exit;
+              Exit;
             end;
-          readextraheader;
-          if (longversion<>CurrentPPULongVersion) or
-             not ppufile.EndOfEntry then
+          ReadExtraHeader;
+          if (LongVersion<>CurrentPPULongVersion) or
+             not PPUFile.EndOfEntry then
             begin
-              Message2(unit_u_ppu_invalid_long_version,ToStr(longversion),ToStr(CurrentPPULongVersion),@queuecomment);
-              exit;
+              Message2(unit_u_ppu_invalid_long_version,ToStr(LongVersion),ToStr(CurrentPPULongVersion),@QueueComment);
+              Exit;
             end;
 
-          if {$ifdef symansistr}not{$endif}(mf_symansistr in moduleflags) then
+          if {$ifdef symansistr}not{$endif}(mf_symansistr in ModuleFlags) then
             begin
-              Message(unit_u_ppu_symansistr_mismatch,@queuecomment);
-              exit;
+              Message(unit_u_ppu_symansistr_mismatch,@QueueComment);
+              Exit;
             end;
            { Every unit, including released RTL/package units, must match the
              compiler invocation's default text model. }
-           if (mf_unicode_default in moduleflags) <> CompilerWide_Unicode_Strings then
+           if (mf_unicode_default in ModuleFlags) <> CompilerWide_Unicode_Strings then
              begin
                Comment(VNormal,
                  'PPU default text model does not match this compiler invocation');
-               exit;
+               Exit;
              end;
           { A profiling build may use an ordinary PPU, producing deliberately
             gapped coverage. An ordinary build must never reuse an instrumented
             PPU because that would retain profiler hooks. }
           if (ModuleName^<>'SYSINIT') and
              (ModuleName^<>'OBJPAS') and
-             not(mf_release in moduleflags) and
-             not(mf_system_unit in moduleflags) and
-             (mf_nexus_profile in moduleflags) and
+             not(mf_release in ModuleFlags) and
+             not(mf_system_unit in ModuleFlags) and
+             (mf_nexus_profile in ModuleFlags) and
              not(cs_nexus_profile in CurrentSettings.ModuleSwitches) then
             begin
               Comment(VNormal,
                 'PPU profiling state does not match the current Nexus profiling build');
-              exit;
+              Exit;
             end;
-          result:=true;
+          Result:=True;
         end;
 
       begin
-        openppu:=false;
-        if not checkheader or
-           not checkextraheader then
+        OpenPPU:=False;
+        if not CheckHeader or
+           not CheckExtraHeader then
           begin
-            discardppu;
-            exit;
+            DiscardPPU;
+            Exit;
           end;
 
       { Load values for easier access }
-        headerflags:=ppufile.header.common.flags;
-        crc:=ppufile.header.checksum;
-        crc_final:=true;
-        interface_crc:=ppufile.header.interface_checksum;
-        indirect_crc:=ppufile.header.indirect_checksum;
-        ChangeEndian:=ppufile.ChangeEndian;
+        HeaderFlags:=PPUFile.Header.Common.Flags;
+        CRC:=PPUFile.Header.Checksum;
+        crc_final:=True;
+        InterfaceCRC:=PPUFile.Header.InterfaceChecksum;
+        IndirectCRC:=PPUFile.Header.IndirectChecksum;
+        ChangeEndian:=PPUFile.ChangeEndian;
       { Show Debug info }
-        if ppufiletime<>-1 then
-          Message1(unit_u_ppu_time,FileTimeString(ppufiletime))
+        if PPUFileTime<>-1 then
+          Message1(unit_u_ppu_time,FileTimeString(PPUFileTime))
         else
           Message1(unit_u_ppu_time,'unknown');
-        Message1(unit_u_ppu_flags,ToStr(headerflags));
-        Message1(unit_u_ppu_crc,HexStr(ppufile.header.checksum,8));
-        Message1(unit_u_ppu_crc,HexStr(ppufile.header.interface_checksum,8)+' (intfc)');
-        Message1(unit_u_ppu_crc,HexStr(ppufile.header.indirect_checksum,8)+' (indc)');
-        Comment(VUsed,'Number of definitions: '+ToStr(ppufile.header.deflistsize));
-        Comment(VUsed,'Number of symbols: '+ToStr(ppufile.header.symlistsize));
-        openppu:=true;
+        Message1(unit_u_ppu_flags,ToStr(HeaderFlags));
+        Message1(unit_u_ppu_crc,HexStr(PPUFile.Header.Checksum,8));
+        Message1(unit_u_ppu_crc,HexStr(PPUFile.Header.InterfaceChecksum,8)+' (intfc)');
+        Message1(unit_u_ppu_crc,HexStr(PPUFile.Header.IndirectChecksum,8)+' (indc)');
+        Comment(VUsed,'Number of definitions: '+ToStr(PPUFile.Header.DefListSize));
+        Comment(VUsed,'Number of symbols: '+ToStr(PPUFile.Header.SymListSize));
+        OpenPPU:=True;
       end;
 
 
-    function TPPUModule.search_unit_files(loaded_from : TModule; onlysource:boolean):TAvailableUnitFiles;
+    function TPPUModule.SearchUnitFiles(LoadingModule : TModule; OnlySource:Boolean):TAvailableUnitFiles;
       var
-        found : TAvailableUnitFiles;
+        Found : TAvailableUnitFiles;
       begin
-        found:=search_unit(loaded_from,onlysource,false);
-        if (found=[]) and
-           (ft83 in AllowedFilenameTransFormations) and
-           (length(ModuleName^)>8) then
-           found:=search_unit(loaded_from,onlysource,true);
-        search_unit_files:=found;
+        Found:=SearchUnit(LoadingModule,OnlySource,False);
+        if (Found=[]) and
+           (Ft83 in AllowedFilenameTransFormations) and
+           (Length(ModuleName^)>8) then
+           Found:=SearchUnit(LoadingModule,OnlySource,True);
+        SearchUnitFiles:=Found;
       end;
 
-    function TPPUModule.search_unit(loaded_from : TModule; onlysource,shortname:boolean):TAvailableUnitFiles;
+    function TPPUModule.SearchUnit(LoadingModule : TModule; OnlySource,ShortName:Boolean):TAvailableUnitFiles;
       var
-         singlepathstring,
+         SinglePathString,
          FileName : TCmdStr;
 
-         Function UnitExists(const ext:string;var foundfile:TCmdStr;const prefix:TCmdStr):boolean;
+         Function UnitExists(const Ext:string;var FoundFile:TCmdStr;const Prefix:TCmdStr):Boolean;
          var
-           s : TCmdStr;
+           S : TCmdStr;
          begin
            if CheckVerbosity(VTried) then
-             Message1(unit_t_unitsearch,Singlepathstring+FileName+ext);
-           s:=FileName+ext;
-           if prefix<>'' then
-             s:=prefix+'.'+s;
-           UnitExists:=FindFile(s,Singlepathstring,true,foundfile);
+             Message1(unit_t_unitsearch,SinglePathString+FileName+Ext);
+           S:=FileName+Ext;
+           if Prefix<>'' then
+             S:=Prefix+'.'+S;
+           UnitExists:=FindFile(S,SinglePathString,True,FoundFile);
          end;
 
-         Function PPUSearchPath(const s,prefix:TCmdStr):boolean;
+         Function PPUSearchPath(const S,Prefix:TCmdStr):Boolean;
          var
-           found : boolean;
-           hs,
-           newname : TCmdStr;
+           Found : Boolean;
+           HS,
+           NewName : TCmdStr;
          begin
-           Found:=false;
-           singlepathstring:=FixPath(s,false);
+           Found:=False;
+           SinglePathString:=FixPath(S,False);
          { Check for PPU file }
-           Found:=UnitExists(TargetInfo.unitext,hs,prefix);
+           Found:=UnitExists(TargetInfo.UnitExt,HS,Prefix);
            if Found then
             Begin
-              SetFileName(hs,false);
-              if prefix<>'' then
+              SetFileName(HS,False);
+              if Prefix<>'' then
                 begin
-                  newname:=prefix+'.'+RealModuleName^;
+                  NewName:=Prefix+'.'+RealModuleName^;
                   StringDispose(RealModuleName);
-                  RealModuleName:=StringDup(newname);
+                  RealModuleName:=StringDup(NewName);
                   StringDispose(ModuleName);
-                  ModuleName:=StringDup(upper(newname));
+                  ModuleName:=StringDup(Upper(NewName));
                 end;
-              Found:=openppufile;
+              Found:=OpenPPUFile;
             End;
            PPUSearchPath:=Found;
          end;
 
-         Function SourceSearchPath(const s,prefix:TCmdStr):boolean;
+         Function SourceSearchPath(const S,Prefix:TCmdStr):Boolean;
          var
-           found   : boolean;
-           hs,
-           newname : TCmdStr;
+           Found   : Boolean;
+           HS,
+           NewName : TCmdStr;
          begin
-           Found:=false;
-           singlepathstring:=FixPath(s,false);
+           Found:=False;
+           SinglePathString:=FixPath(S,False);
          { Check for Sources }
-           ppufile:=nil;
+           PPUFile:=nil;
            recompile_reason:=rr_noppu;
          { Check for Pascal source }
-           Found:=UnitExists(SourceExt,hs,prefix);
+           Found:=UnitExists(SourceExt,HS,Prefix);
            if not Found and
               ((m_mac in CurrentSettings.ModeSwitches) or
-               (tf_p_ext_support in TargetInfo.flags)) then
+               (tf_p_ext_support in TargetInfo.Flags)) then
             begin
               { Check for .p, if mode is macpas}
-              Found:=UnitExists(pext,hs,prefix);
+              Found:=UnitExists(PExt,HS,Prefix);
             end;
            MainSource:='';
            if Found then
             begin
-              SourcesAvail:=true;
+              SourcesAvail:=True;
               { Load Filenames when found }
-              MainSource:=hs;
-              SetFileName(hs,false);
-              if prefix<>'' then
+              MainSource:=HS;
+              SetFileName(HS,False);
+              if Prefix<>'' then
                 begin
-                  newname:=prefix+'.'+RealModuleName^;
+                  NewName:=Prefix+'.'+RealModuleName^;
                   StringDispose(RealModuleName);
-                  RealModuleName:=StringDup(newname);
+                  RealModuleName:=StringDup(NewName);
                   StringDispose(ModuleName);
-                  ModuleName:=StringDup(upper(newname));
+                  ModuleName:=StringDup(Upper(NewName));
                 end;
             end
            else
-            SourcesAvail:=false;
+            SourcesAvail:=False;
            SourceSearchPath:=Found;
          end;
 
-         Function SearchPath(const s,prefix:TCmdStr):TAvailableUnitFiles;
+         Function SearchPath(const S,Prefix:TCmdStr):TAvailableUnitFiles;
          var
-           found : TAvailableUnitFiles;
+           Found : TAvailableUnitFiles;
          begin
            { First check for a ppu, then for the source }
-           found:=[];
-           if not onlysource then
-             if PPUSearchPath(s,prefix) then
-               Include(found,auPPU);
-           if found=[] then
-             if SourceSearchPath(s,prefix) then
-              Include(found,auSrc);
-           SearchPath:=found;
+           Found:=[];
+           if not OnlySource then
+             if PPUSearchPath(S,Prefix) then
+               Include(Found,auPPU);
+           if Found=[] then
+             if SourceSearchPath(S,Prefix) then
+              Include(Found,auSrc);
+           SearchPath:=Found;
          end;
 
-         Function SearchPathList(list:TSearchPathList;const prefix:TCmdStr):TAvailableUnitFiles;
+         Function SearchPathList(List:TSearchPathList;const Prefix:TCmdStr):TAvailableUnitFiles;
          var
-           hp : TCmdStrListItem;
-           found : TAvailableUnitFiles;
+           HP : TCmdStrListItem;
+           Found : TAvailableUnitFiles;
          begin
-           found:=[];
-           hp:=TCmdStrListItem(list.First);
-           while Assigned(hp) do
+           Found:=[];
+           HP:=TCmdStrListItem(List.First);
+           while Assigned(HP) do
             begin
-              found:=SearchPath(hp.Str,prefix);
-              if found<>[] then
-               break;
-              hp:=TCmdStrListItem(hp.next);
+              Found:=SearchPath(HP.Str,Prefix);
+              if Found<>[] then
+               Break;
+              HP:=TCmdStrListItem(HP.Next);
             end;
-           SearchPathList:=found;
+           SearchPathList:=Found;
          end;
 
-         function SearchPPUPaths(const prefix:TCmdStr):boolean;
+         function SearchPPUPaths(const Prefix:TCmdStr):Boolean;
          begin
-           result:=PPUSearchPath('.',prefix);
-           if (not result) and (OutputPath<>'') then
-            result:=PPUSearchPath(OutputPath,prefix);
-           if (not result) and Assigned(main_module) and (main_module.Path<>'')  then
-            result:=PPUSearchPath(main_module.Path,prefix);
+           Result:=PPUSearchPath('.',Prefix);
+           if (not Result) and (OutputPath<>'') then
+            Result:=PPUSearchPath(OutputPath,Prefix);
+           if (not Result) and Assigned(main_module) and (main_module.Path<>'')  then
+            Result:=PPUSearchPath(main_module.Path,Prefix);
          end;
 
-         function SearchSourcePaths(const prefix:TCmdStr):TAvailableUnitFiles;
+         function SearchSourcePaths(const Prefix:TCmdStr):TAvailableUnitFiles;
          begin
-           result:=[];
-           if SourceSearchPath('.',prefix) then
-              include(Result,auSrc);
-           if (result=[]) and Assigned(main_module) and (main_module.Path<>'') then
-             if SourceSearchPath(main_module.Path,prefix) then
-              include(Result,auSrc);
-           if (result=[]) and Assigned(loaded_from) then
-             result:=SearchPathList(loaded_from.LocalUnitSearchPath,prefix);
-           if (result=[]) then
-             result:=SearchPathList(UnitSearchPath,prefix);
+           Result:=[];
+           if SourceSearchPath('.',Prefix) then
+              Include(Result,auSrc);
+           if (Result=[]) and Assigned(main_module) and (main_module.Path<>'') then
+             if SourceSearchPath(main_module.Path,Prefix) then
+              Include(Result,auSrc);
+           if (Result=[]) and Assigned(LoadingModule) then
+             Result:=SearchPathList(LoadingModule.LocalUnitSearchPath,Prefix);
+           if (Result=[]) then
+             Result:=SearchPathList(UnitSearchPath,Prefix);
          end;
 
-         function SearchNamespaceList(const prefixes:TCmdStrList): TAvailableUnitFiles;
+         function SearchNamespaceList(const Prefixes:TCmdStrList): TAvailableUnitFiles;
          var
-           nsitem : TCmdStrListItem;
-           res : TAvailableUnitFiles;
+           NSItem : TCmdStrListItem;
+           Res : TAvailableUnitFiles;
          begin
-           res:=[];
-           nsitem:=TCmdStrListItem(prefixes.first);
-           while Assigned(nsitem) do
+           Res:=[];
+           NSItem:=TCmdStrListItem(Prefixes.First);
+           while Assigned(NSItem) do
              begin
-               if not onlysource then
+               if not OnlySource then
                  begin
-                   if SearchPPUPaths(nsitem.str) then
-                     Include(res,auPPU);
-                   if res<>[] then
-                     break;
+                   if SearchPPUPaths(NSItem.Str) then
+                     Include(Res,auPPU);
+                   if Res<>[] then
+                     Break;
                  end;
-               res:=SearchSourcePaths(nsitem.str);
-               if res<>[] then
-                 break;
-               nsitem:=TCmdStrListItem(nsitem.next);
+               Res:=SearchSourcePaths(NSItem.Str);
+               if Res<>[] then
+                 Break;
+               NSItem:=TCmdStrListItem(NSItem.Next);
              end;
-           if Assigned(nsitem) then
-             nsprefix:=nsitem.str;
-           result:=res;
+           if Assigned(NSItem) then
+             NSPrefix:=NSItem.Str;
+           Result:=Res;
          end;
 
 
        var
-         fnd : TAvailableUnitFiles;
-         hs : TPathStr;
+         Fnd : TAvailableUnitFiles;
+         HS : TPathStr;
        begin
-         fnd:=[];
-         if shortname then
+         Fnd:=[];
+         if ShortName then
            FileName:=FixFileName(Copy(RealModuleName^,1,8))
          else
            FileName:=FixFileName(RealModuleName^);
@@ -610,51 +610,51 @@ var
             8. global unit pathlist
             9. for each default namespace:
                   repeat 1 - 3 and 5 - 8 with namespace as prefix }
-         if not onlysource then
+         if not OnlySource then
            if SearchPPUPaths('') then
-             include(fnd,auPPU);
-         if (fnd=[]) and (sourcefn<>'') then
+             Include(Fnd,auPPU);
+         if (Fnd=[]) and (SourceFN<>'') then
           begin
             { the full filename is specified so we can't use here the
               searchpath (PFV) }
             if CheckVerbosity(VTried) then
-              Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,SourceExt));
-            if FindFile(ChangeFileExt(sourcefn,SourceExt),'',true,hs) then
-              include(fnd,auSrc);
-            if (fnd=[]) and
+              Message1(unit_t_unitsearch,ChangeFileExt(SourceFN,SourceExt));
+            if FindFile(ChangeFileExt(SourceFN,SourceExt),'',True,HS) then
+              Include(Fnd,auSrc);
+            if (Fnd=[]) and
                ((m_mac in CurrentSettings.ModeSwitches) or
-                (tf_p_ext_support in TargetInfo.flags)) then
+                (tf_p_ext_support in TargetInfo.Flags)) then
              begin
                if CheckVerbosity(VTried) then
-                 Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,pext));
-               if FindFile(ChangeFileExt(sourcefn,pext),'',true,hs) then
-                include(fnd,auSrc)
+                 Message1(unit_t_unitsearch,ChangeFileExt(SourceFN,PExt));
+               if FindFile(ChangeFileExt(SourceFN,PExt),'',True,HS) then
+                Include(Fnd,auSrc)
              end;
-            if [auSrc]=fnd then
+            if [auSrc]=Fnd then
              begin
-               SourcesAvail:=true;
+               SourcesAvail:=True;
                {$IFDEF DEBUG_PPU_CYCLES}
-               WriteLn('PPUALGO tppumodule.search_unit only sources, no ppu -> ',ModuleName^,' old=',state,' new=',ms_compile);
+               WriteLn('PPUALGO tppumodule.search_unit only sources, no ppu -> ',ModuleName^,' old=',State,' new=',ms_compile);
                {$ENDIF}
-               state:=ms_compile;
+               State:=ms_compile;
                recompile_reason:=rr_noppu;
-               MainSource:=hs;
-               SetFileName(hs,false);
+               MainSource:=HS;
+               SetFileName(HS,False);
              end;
           end;
-         if fnd=[] then
+         if Fnd=[] then
            begin
-             fnd:=SearchSourcePaths('');
+             Fnd:=SearchSourcePaths('');
              // current_namespacelist is set to the current module's namespacelist.
-             if (fnd=[]) and Assigned(CurrentNamespaceList) and (CurrentNamespaceList.count>0) then
-               fnd:=SearchNameSpaceList(CurrentNamespaceList);
-             if (fnd=[]) and (NamespaceList.count>0) then
-               fnd:=SearchNameSpaceList(NamespaceList);
+             if (Fnd=[]) and Assigned(CurrentNamespaceList) and (CurrentNamespaceList.Count>0) then
+               Fnd:=SearchNameSpaceList(CurrentNamespaceList);
+             if (Fnd=[]) and (NamespaceList.Count>0) then
+               Fnd:=SearchNameSpaceList(NamespaceList);
            end;
-         search_unit:=fnd;
+         SearchUnit:=Fnd;
       end;
 
-    function TPPUModule.loadfrompackage: boolean;
+    function TPPUModule.LoadFromPackage: Boolean;
       (*var
         singlepathstring,
         filename : TCmdStr;
@@ -701,89 +701,89 @@ var
           end;*)
 
       var
-        pkg : PPackageEntry;
-        pkgunit : PContainedUnit;
-        i,idx : LongInt;
+        Pkg : PPackageEntry;
+        PkgUnit : PContainedUnit;
+        I,Idx : LongInt;
       begin
-        result:=false;
-        for i:=0 to PackageList.count-1 do
+        Result:=False;
+        for I:=0 to PackageList.Count-1 do
           begin
-            pkg:=PPackageEntry(PackageList[i]);
-            if not Assigned(pkg^.package) then
+            Pkg:=PPackageEntry(PackageList[I]);
+            if not Assigned(Pkg^.Package) then
               InternalError(2013053103);
-            idx:=pkg^.package.ContainedModules.FindIndexOf(ModuleName^);
-            if idx>=0 then
+            Idx:=Pkg^.Package.ContainedModules.FindIndexOf(ModuleName^);
+            if Idx>=0 then
               begin
                 { the unit is part of this package }
-                pkgunit:=PContainedUnit(pkg^.package.ContainedModules[idx]);
-                if not Assigned(pkgunit^.module) then
-                  pkgunit^.module:=self;
+                PkgUnit:=PContainedUnit(Pkg^.Package.ContainedModules[Idx]);
+                if not Assigned(PkgUnit^.Module) then
+                  PkgUnit^.Module:=Self;
                 { ToDo: check whether we really don't need this anymore }
                 {filename:=pkgunit^.ppufile;
                 if not SearchPathList(unitsearchpath) then
                   exit};
-                packageppustream:=TPCPPackage(pkg^.package).GetModuleStream(self);
-                if not Assigned(packageppustream) then
+                PackagePPUStream:=TPCPPackage(Pkg^.Package).GetModuleStream(Self);
+                if not Assigned(PackagePPUStream) then
                   InternalError(2015103002);
-                if not openppustream(packageppustream) then
-                  exit;
-                package:=pkg^.package;
-                Message2(unit_u_loading_from_package,ModuleName^,pkg^.package.PackageName^);
+                if not OpenPPUStream(PackagePPUStream) then
+                  Exit;
+                Package:=Pkg^.Package;
+                Message2(unit_u_loading_from_package,ModuleName^,Pkg^.Package.PackageName^);
 
                 { Package PPUs use the same resumable dependency loading as
                   ordinary PPUs. Dependencies need not be ready yet. }
-                state:=ms_load;
-                FromPPU:=true;
-                load_interface;
+                State:=ms_load;
+                FromPPU:=True;
+                LoadInterface;
 
-                result:=true;
-                break;
+                Result:=True;
+                Break;
               end;
           end;
       end;
 
 
-    procedure TPPUModule.buildderefunitimportsyms;
+    procedure TPPUModule.BuildDerefUnitImportSyms;
       { called by writeppu }
       var
-        i : LongInt;
-        deref : PDeref;
-        importsym: TUnitImportSym;
+        I : LongInt;
+        Deref : PDeref;
+        ImportSym: TUnitImportSym;
       begin
-        unitimportsymsderefs.capacity:=unitimportsymsderefs.count+unitimportsyms.count;
-        for i:=0 to unitimportsyms.count-1 do
+        UnitImportSymsDerefs.Capacity:=UnitImportSymsDerefs.Count+UnitImportSyms.Count;
+        for I:=0 to UnitImportSyms.Count-1 do
           begin
-            importsym:=TUnitImportSym(unitimportsyms[i]);
-            new(deref);
-            deref^.build(importsym.sym);
-            unitimportsymsderefs.add(deref);
+            ImportSym:=TUnitImportSym(UnitImportSyms[I]);
+            New(Deref);
+            Deref^.Build(ImportSym.Sym);
+            UnitImportSymsDerefs.Add(Deref);
           end;
       end;
 
 
-    procedure TPPUModule.derefunitimportsyms;
+    procedure TPPUModule.DerefUnitImportSyms;
       { called at end of loading a ppu }
       var
-        i : LongInt;
-        sym : TSym;
+        I : LongInt;
+        Sym : TSym;
       begin
-        unitimportsyms.capacity:=unitimportsyms.count+unitimportsymsderefs.count;
-        for i:=0 to unitimportsymsderefs.count-1 do
+        UnitImportSyms.Capacity:=UnitImportSyms.Count+UnitImportSymsDerefs.Count;
+        for I:=0 to UnitImportSymsDerefs.Count-1 do
           begin
-            sym:=TSym(PDeref(unitimportsymsderefs[i])^.resolve);
-            addimportedsym(sym,false);
+            Sym:=TSym(PDeref(UnitImportSymsDerefs[I])^.Resolve);
+            AddImportedSym(Sym,False);
           end;
       end;
 
-    procedure TPPUModule.freederefunitimportsyms;
+    procedure TPPUModule.FreeDerefUnitImportSyms;
       var
-        i : LongInt;
-        deref : PDeref;
+        I : LongInt;
+        Deref : PDeref;
       begin
-        for i:=0 to unitimportsymsderefs.count-1 do
+        for I:=0 to UnitImportSymsDerefs.Count-1 do
           begin
-            deref:=PDeref(unitimportsymsderefs[i]);
-            system.dispose(deref);
+            Deref:=PDeref(UnitImportSymsDerefs[I]);
+            System.Dispose(Deref);
           end;
       end;
 
@@ -795,312 +795,312 @@ var
     var
       IsInitial: Boolean;
 
-    procedure TPPUModule.writeusedmacro(p:TNamedIndexItem;arg:pointer);
+    procedure TPPUModule.WriteUsedMacro(P:TNamedIndexItem;Arg:Pointer);
       begin
-        if TMacro(p).is_used or IsInitial then
+        if TMacro(P).is_used or IsInitial then
           begin
-            ppufile.putstring(p.name);
-            ppufile.putboolean(IsInitial);
-            ppufile.putboolean(TMacro(p).is_used);
+            PPUFile.PutString(P.Name);
+            PPUFile.PutBoolean(IsInitial);
+            PPUFile.PutBoolean(TMacro(P).is_used);
           end;
       end;
 
-    procedure TPPUModule.writeusedmacros;
+    procedure TPPUModule.WriteUsedMacros;
       var
-        oldcrc : boolean;
+        OldCRC : Boolean;
       begin
-        oldcrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
-        IsInitial:= true;
-        initialmacrosymtable.foreach(@writeusedmacro,nil);
-        IsInitial:= false;
+        OldCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
+        IsInitial:= True;
+        InitialMacroSymTable.ForEach(@WriteUsedMacro,nil);
+        IsInitial:= False;
         if Assigned(GlobalMacroSymTable) then
-          GlobalMacroSymTable.foreach(@writeusedmacro,nil);
-        localmacrosymtable.foreach(@writeusedmacro,nil);
-        ppufile.writeentry(ibusedmacros);
-        ppufile.DoCRC:=oldcrc;
+          GlobalMacroSymTable.ForEach(@WriteUsedMacro,nil);
+        LocalMacroSymTable.ForEach(@WriteUsedMacro,nil);
+        PPUFile.WriteEntry(IBUsedMacros);
+        PPUFile.DoCRC:=OldCRC;
       end;
 {$ENDIF}
 
-    procedure TPPUModule.writesourcefiles;
+    procedure TPPUModule.WriteSourceFiles;
       var
-        hp  : TInputFile;
-        ifile : sizeint;
-        oldcrc : boolean;
+        HP  : TInputFile;
+        IFile : SizeInt;
+        OldCRC : Boolean;
       begin
       { write the used source files }
-        oldcrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
+        OldCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
       { write source files directly in good order }
-        for ifile:=0 to SourceFiles.nfiles-1 do
+        for IFile:=0 to SourceFiles.NFiles-1 do
           begin
-            hp:=SourceFiles.files[ifile];
-            ppufile.putstring(hp.IncPath+hp.name);
-            ppufile.putlongint(hp.GetFileTime);
+            HP:=SourceFiles.Files[IFile];
+            PPUFile.PutString(HP.IncPath+HP.Name);
+            PPUFile.PutLongInt(HP.GetFileTime);
          end;
-        ppufile.writeentry(ibsourcefiles);
-        ppufile.DoCRC:=oldcrc;
+        PPUFile.WriteEntry(IBSourceFiles);
+        PPUFile.DoCRC:=OldCRC;
       end;
 
 
-    procedure TPPUModule.writeusedunit(intf:boolean);
+    procedure TPPUModule.WriteUsedUnit(Intf:Boolean);
       var
-        hp : TUsedUnit;
-        oldcrc : boolean;
-        u: TModule;
+        HP : TUsedUnit;
+        OldCRC : Boolean;
+        U: TModule;
       begin
         { write a reference for each used unit }
-        hp:=TUsedUnit(used_units.first);
-        while Assigned(hp) do
+        HP:=TUsedUnit(used_units.First);
+        while Assigned(HP) do
          begin
-           if hp.in_interface=intf then
+           if HP.in_interface=Intf then
              begin
-               u:=hp.u;
-               ppufile.putstring(u.RealModuleName^);
+               U:=HP.U;
+               PPUFile.PutString(U.RealModuleName^);
                { the checksum should not affect the crc of this unit ! (PFV) }
-               oldcrc:=ppufile.DoCRC;
-               ppufile.DoCRC:=false;
-               hp.checksum:=u.crc;
-               hp.interface_checksum:=u.interface_crc;
-               hp.indirect_checksum:=u.indirect_crc;
-               ppufile.putlongint(LongInt(hp.checksum));
-               ppufile.putlongint(LongInt(hp.interface_checksum));
-               ppufile.putlongint(LongInt(hp.indirect_checksum));
-               ppufile.DoCRC:=oldcrc;
+               OldCRC:=PPUFile.DoCRC;
+               PPUFile.DoCRC:=False;
+               HP.Checksum:=U.CRC;
+               HP.InterfaceChecksum:=U.InterfaceCRC;
+               HP.IndirectChecksum:=U.IndirectCRC;
+               PPUFile.PutLongInt(LongInt(HP.Checksum));
+               PPUFile.PutLongInt(LongInt(HP.InterfaceChecksum));
+               PPUFile.PutLongInt(LongInt(HP.IndirectChecksum));
+               PPUFile.DoCRC:=OldCRC;
                { Combine all indirect checksums from units used by this unit.
                  The indirect_crc contains the classes+records of this unit as well. }
-               if intf then
-                 ppufile.indirect_crc:=UpdateCRC32(ppufile.indirect_crc,u.indirect_crc,sizeof(u.indirect_crc));
+               if Intf then
+                 PPUFile.IndirectCRC:=UpdateCRC32(PPUFile.IndirectCRC,U.IndirectCRC,SizeOf(U.IndirectCRC));
              end;
-           hp:=TUsedUnit(hp.next);
+           HP:=TUsedUnit(HP.Next);
          end;
-        ppufile.writeentry(ibloadunit);
+        PPUFile.WriteEntry(IBLoadUnit);
       end;
 
 
-    procedure TPPUModule.writelinkcontainer(var p:TLinkContainer;id:byte;strippath:boolean);
+    procedure TPPUModule.WriteLinkContainer(var P:TLinkContainer;ID:Byte;StripPath:Boolean);
       var
-        hcontainer : TLinkContainer;
-        s : TPathStr;
-        mask : cardinal;
+        HContainer : TLinkContainer;
+        S : TPathStr;
+        Mask : Cardinal;
       begin
-        hcontainer:=TLinkContainer.Create;
-        while not p.empty do
+        HContainer:=TLinkContainer.Create;
+        while not P.Empty do
          begin
-           s:=p.get(mask);
-           if strippath then
-            ppufile.putstring(ExtractFileName(s))
+           S:=P.Get(Mask);
+           if StripPath then
+            PPUFile.PutString(ExtractFileName(S))
            else
-            ppufile.putstring(s);
-           ppufile.putlongint(mask);
-           hcontainer.add(s,mask);
+            PPUFile.PutString(S);
+           PPUFile.PutLongInt(Mask);
+           HContainer.Add(S,Mask);
          end;
-        ppufile.writeentry(id);
-        p.Free;
-        p:=hcontainer;
+        PPUFile.WriteEntry(ID);
+        P.Free;
+        P:=HContainer;
       end;
 
 
-    procedure TPPUModule.writederefmap;
+    procedure TPPUModule.WriteDerefMap;
       var
-        i : LongInt;
-        oldcrc : boolean;
+        I : LongInt;
+        OldCRC : Boolean;
       begin
         { This does not influence crc }
-        oldcrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
+        OldCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
         { The unit map used for resolving }
-        ppufile.putlongint(derefmapcnt);
-        for i:=0 to derefmapcnt-1 do
+        PPUFile.PutLongInt(DerefMapCnt);
+        for I:=0 to DerefMapCnt-1 do
           begin
-            if not Assigned(derefmap[i].u) then
+            if not Assigned(DerefMap[I].U) then
               InternalError(2005011512);
-            ppufile.putstring(derefmap[i].u.ModuleName^)
+            PPUFile.PutString(DerefMap[I].U.ModuleName^)
           end;
-        ppufile.writeentry(ibderefmap);
-        ppufile.DoCRC:=oldcrc;
+        PPUFile.WriteEntry(IBDerefMap);
+        PPUFile.DoCRC:=OldCRC;
       end;
 
 
-    procedure TPPUModule.writederefdata;
+    procedure TPPUModule.WriteDerefData;
       var
-        oldcrc : boolean;
-        len,hlen : LongInt;
-        buf : array[0..1023] of byte;
+        OldCRC : Boolean;
+        Len,HLen : LongInt;
+        Buf : array[0..1023] of Byte;
       begin
-        if LongWord(derefdataintflen)>derefdata.size then
+        if LongWord(DerefDataIntfLen)>DerefData.Size then
           InternalError(200310223);
-        derefdata.seek(0);
+        DerefData.Seek(0);
         { Write interface data }
-        len:=derefdataintflen;
-        while (len>0) do
+        Len:=DerefDataIntfLen;
+        while (Len>0) do
           begin
-            if len>1024 then
-              hlen:=1024
+            if Len>1024 then
+              HLen:=1024
             else
-              hlen:=len;
-            derefdata.read(buf,hlen);
-            ppufile.putdata(buf,hlen);
-            dec(len,hlen);
+              HLen:=Len;
+            DerefData.Read(Buf,HLen);
+            PPUFile.PutData(Buf,HLen);
+            Dec(Len,HLen);
           end;
         { Write implementation data, this does not influence crc }
-        oldcrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
-        len:=derefdata.size-derefdataintflen;
-        while (len>0) do
+        OldCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
+        Len:=DerefData.Size-DerefDataIntfLen;
+        while (Len>0) do
           begin
-            if len>1024 then
-              hlen:=1024
+            if Len>1024 then
+              HLen:=1024
             else
-              hlen:=len;
-            derefdata.read(buf,hlen);
-            ppufile.putdata(buf,hlen);
-            dec(len,hlen);
+              HLen:=Len;
+            DerefData.Read(Buf,HLen);
+            PPUFile.PutData(Buf,HLen);
+            Dec(Len,HLen);
           end;
-        if derefdata.pos<>derefdata.size then
+        if DerefData.Pos<>DerefData.Size then
           InternalError(200310224);
-        ppufile.DoCRC:=oldcrc;
-        ppufile.writeentry(ibderefdata);
+        PPUFile.DoCRC:=OldCRC;
+        PPUFile.WriteEntry(IBDerefData);
       end;
 
 
-    procedure TPPUModule.writeImportSymbols;
+    procedure TPPUModule.WriteImportSymbols;
       var
-        i,j : LongInt;
+        I,J : LongInt;
         ImportLibrary : TImportLibrary;
         ImportSymbol  : TImportSymbol;
       begin
-        for i:=0 to ImportLibraryList.Count-1 do
+        for I:=0 to ImportLibraryList.Count-1 do
           begin
-            ImportLibrary:=TImportLibrary(ImportLibraryList[i]);
-            ppufile.putstring(ImportLibrary.Name);
-            ppufile.putlongint(ImportLibrary.ImportSymbolList.Count);
-            for j:=0 to ImportLibrary.ImportSymbolList.Count-1 do
+            ImportLibrary:=TImportLibrary(ImportLibraryList[I]);
+            PPUFile.PutString(ImportLibrary.Name);
+            PPUFile.PutLongInt(ImportLibrary.ImportSymbolList.Count);
+            for J:=0 to ImportLibrary.ImportSymbolList.Count-1 do
               begin
-                ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[j]);
-                ppufile.putstring(ImportSymbol.Name);
-                ppufile.putstring(ImportSymbol.MangledName);
-                ppufile.putlongint(ImportSymbol.OrdNr);
-                ppufile.putbyte(byte(ImportSymbol.IsVar));
+                ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[J]);
+                PPUFile.PutString(ImportSymbol.Name);
+                PPUFile.PutString(ImportSymbol.MangledName);
+                PPUFile.PutLongInt(ImportSymbol.OrdNr);
+                PPUFile.PutByte(Byte(ImportSymbol.IsVar));
               end;
           end;
-        ppufile.writeentry(ibImportSymbols);
+        PPUFile.WriteEntry(IBImportSymbols);
       end;
 
 
-    procedure TPPUModule.writeResources;
+    procedure TPPUModule.WriteResources;
       var
-        res : TCmdStrListItem;
+        Res : TCmdStrListItem;
       begin
-        res:=TCmdStrListItem(ResourceFiles.First);
-        while res<>nil do
+        Res:=TCmdStrListItem(ResourceFiles.First);
+        while Res<>nil do
           begin
-            ppufile.putstring(res.FPStr);
-            res:=TCmdStrListItem(res.Next);
+            PPUFile.PutString(Res.FPStr);
+            Res:=TCmdStrListItem(Res.Next);
           end;
-        ppufile.writeentry(ibresources);
+        PPUFile.WriteEntry(IBResources);
       end;
 
 
-    procedure TPPUModule.writeOrderedSymbols;
+    procedure TPPUModule.WriteOrderedSymbols;
       var
-        res : TCmdStrListItem;
+        Res : TCmdStrListItem;
       begin
-        res:=TCmdStrListItem(linkorderedsymbols.First);
-        while res<>nil do
+        Res:=TCmdStrListItem(LinkOrderedSymbols.First);
+        while Res<>nil do
           begin
-            ppufile.putstring(res.FPStr);
-            res:=TCmdStrListItem(res.Next);
+            PPUFile.PutString(Res.FPStr);
+            Res:=TCmdStrListItem(Res.Next);
           end;
-        ppufile.writeentry(iborderedsymbols);
+        PPUFile.WriteEntry(IBOrderedSymbols);
       end;
 
 
-    procedure TPPUModule.writeUnitExports;
+    procedure TPPUModule.WriteUnitExports;
       var
-        hp : TExportedItem;
-        option : TExportOption;
-        flags : byte;
+        HP : TExportedItem;
+        Option : TExportOption;
+        Flags : Byte;
       begin
         { Optional metadata: units without exports retain the existing format. }
-        if not (TargetInfo.system in (systems_windows+systems_linux)) or
-           not Assigned(_exports.first) then
-          exit;
-        hp:=TExportedItem(_exports.first);
-        while Assigned(hp) do
+        if not (TargetInfo.System in (systems_windows+systems_linux)) or
+           not Assigned(_Exports.First) then
+          Exit;
+        HP:=TExportedItem(_Exports.First);
+        while Assigned(HP) do
           begin
-            ppufile.putstring(hp.name^);
-            ppufile.putstring(hp.internalname);
-            ppufile.putlongint(hp.index);
-            flags:=0;
-            for option:=low(TExportOption) to high(TExportOption) do
-              if option in hp.options then
-                flags:=flags or (1 shl ord(option));
-            ppufile.putbyte(flags);
-            ppufile.putbyte(ord(hp.is_var));
-            hp:=TExportedItem(hp.next);
+            PPUFile.PutString(HP.Name^);
+            PPUFile.PutString(HP.InternalName);
+            PPUFile.PutLongInt(HP.Index);
+            Flags:=0;
+            for Option:=Low(TExportOption) to High(TExportOption) do
+              if Option in HP.Options then
+                Flags:=Flags or (1 shl Ord(Option));
+            PPUFile.PutByte(Flags);
+            PPUFile.PutByte(Ord(HP.is_var));
+            HP:=TExportedItem(HP.Next);
           end;
-        ppufile.writeentry(ibunitexports);
+        PPUFile.WriteEntry(IBUnitExports);
       end;
 
 
-    procedure TPPUModule.writeunitimportsyms;
+    procedure TPPUModule.WriteUnitImportSyms;
       var
-        i : LongInt;
+        I : LongInt;
       begin
-        ppufile.putlongint(unitimportsymsderefs.count);
-        for i:=0 to unitimportsymsderefs.count-1 do
-          ppufile.putderef(PDeref(unitimportsymsderefs[i])^);
-        ppufile.writeentry(ibunitimportsyms);
+        PPUFile.PutLongInt(UnitImportSymsDerefs.Count);
+        for I:=0 to UnitImportSymsDerefs.Count-1 do
+          PPUFile.PutDeref(PDeref(UnitImportSymsDerefs[I])^);
+        PPUFile.WriteEntry(IBUnitImportSyms);
       end;
 
 
-    procedure TPPUModule.writeasmsyms(kind:TUnitAsmListType;list:TFPHashObjectList);
+    procedure TPPUModule.WriteAsmSyms(Kind:TUnitAsmListType;List:TFPHashObjectList);
       var
-        i : LongInt;
-        sym : TAsmSymbol;
+        I : LongInt;
+        Sym : TAsmSymbol;
       begin
-        ppufile.putbyte(ord(kind));
-        ppufile.putlongint(list.count);
-        for i:=0 to list.count-1 do
+        PPUFile.PutByte(Ord(Kind));
+        PPUFile.PutLongInt(List.Count);
+        for I:=0 to List.Count-1 do
           begin
-            sym:=TAsmSymbol(list[i]);
-            ppufile.putstring(sym.Name);
-            ppufile.putbyte(ord(sym.bind));
-            ppufile.putbyte(ord(sym.typ));
+            Sym:=TAsmSymbol(List[I]);
+            PPUFile.PutString(Sym.Name);
+            PPUFile.PutByte(Ord(Sym.Bind));
+            PPUFile.PutByte(Ord(Sym.Typ));
           end;
-        ppufile.writeentry(ibasmsymbols);
+        PPUFile.WriteEntry(IBAsmSymbols);
       end;
 
-    procedure TPPUModule.writeextraheader;
+    procedure TPPUModule.WriteExtraHeader;
       var
-        old_docrc: boolean;
+        OldDoCRC: Boolean;
       begin
         { create unit flags }
         if Do_Release then
-          include(moduleflags,mf_release);
-        if Assigned(localsymtable) then
-          include(moduleflags,mf_local_symtable);
+          Include(ModuleFlags,mf_release);
+        if Assigned(LocalSymTable) then
+          Include(ModuleFlags,mf_local_symtable);
         if cs_checkpointer_called in CurrentSettings.ModuleSwitches then
-          include(moduleflags,mf_checkpointer_called);
+          Include(ModuleFlags,mf_checkpointer_called);
         if cs_compilesystem in CurrentSettings.ModuleSwitches then
-          include(moduleflags,mf_system_unit);
+          Include(ModuleFlags,mf_system_unit);
         if cs_nexus_profile in CurrentSettings.ModuleSwitches then
-          include(moduleflags,mf_nexus_profile);
+          Include(ModuleFlags,mf_nexus_profile);
          if CompilerWide_Unicode_Strings then
-           include(moduleflags,mf_unicode_default);
+           Include(ModuleFlags,mf_unicode_default);
 
 
 {$ifdef symansistr}
-        include(moduleflags,mf_symansistr);
+        Include(ModuleFlags,mf_symansistr);
 {$endif}
 
-        old_docrc:=ppufile.DoCRC;
-        ppufile.DoCRC:=false;
-        ppufile.putlongint(LongInt(CurrentPPULongVersion));
-        ppufile.putset(TPPUSet4(moduleflags));
-        ppufile.writeentry(ibextraheader);
-        ppufile.DoCRC:=old_docrc;
+        OldDoCRC:=PPUFile.DoCRC;
+        PPUFile.DoCRC:=False;
+        PPUFile.PutLongInt(LongInt(CurrentPPULongVersion));
+        PPUFile.PutSet(TPPUSet4(ModuleFlags));
+        PPUFile.WriteEntry(IBExtraHeader);
+        PPUFile.DoCRC:=OldDoCRC;
       end;
 
 
@@ -1124,71 +1124,71 @@ var
   between different files.
 }
 
-    procedure TPPUModule.readusedmacros;
+    procedure TPPUModule.ReadUsedMacros;
       var
-        hs : string;
-        mac : TMacro;
-        was_initial,
-        was_used : boolean;
+        HS : string;
+        Mac : TMacro;
+        WasInitialSource,
+        WasUsed : Boolean;
       {Reads macros which was defined or used when the module was compiled.
        This is done when a ppu file is open, before it possibly is parsed.}
       begin
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
          begin
-           hs:=ppufile.getstring;
-           was_initial:=ppufile.getboolean;
-           was_used:=ppufile.getboolean;
-           mac:=TMacro(initialmacrosymtable.Find(hs));
-           if Assigned(mac) then
+           HS:=PPUFile.GetString;
+           WasInitialSource:=PPUFile.GetBoolean;
+           WasUsed:=PPUFile.GetBoolean;
+           Mac:=TMacro(InitialMacroSymTable.Find(HS));
+           if Assigned(Mac) then
              begin
 {$ifndef EXTDEBUG}
            { if we don't have the sources why tell }
               if SourcesAvail then
 {$endif ndef EXTDEBUG}
-               if (not was_initial) and was_used then
-                Message2(unit_h_cond_not_set_in_last_compile,hs,MainSource^);
+               if (not WasInitialSource) and WasUsed then
+                Message2(unit_h_cond_not_set_in_last_compile,HS,MainSource^);
              end
            else { not assigned }
-             if was_initial and
-                was_used then
-              Message2(unit_h_cond_set_in_last_compile,hs,MainSource^);
+             if WasInitialSource and
+                WasUsed then
+              Message2(unit_h_cond_set_in_last_compile,HS,MainSource^);
          end;
       end;
 {$ENDIF}
 
-    procedure TPPUModule.readsourcefiles;
+    procedure TPPUModule.ReadSourceFiles;
       var
-        temp,hs       : string;
+        Temp,HS       : string;
         IncPath      : string;
         temp_dir      : TCmdStr;
         main_dir      : TCmdStr;
-        found,
-        is_main       : boolean;
-        orgfiletime,
+        Found,
+        is_main       : Boolean;
+        OrgFileTime,
         source_time   : LongInt;
-        hp            : TInputFile;
+        HP            : TInputFile;
       begin
-        SourcesAvail:=not(mf_release in moduleflags);
-        is_main:=true;
+        SourcesAvail:=not(mf_release in ModuleFlags);
+        is_main:=True;
         main_dir:='';
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
          begin
-           hs:=SetDirSeparators(ppufile.getstring);
-           IncPath:=ExtractFilePath(hs);
-           orgfiletime:=ppufile.getlongint;
+           HS:=SetDirSeparators(PPUFile.GetString);
+           IncPath:=ExtractFilePath(HS);
+           OrgFileTime:=PPUFile.GetLongInt;
            temp_dir:='';
            if SourcesAvail then
              begin
-               if (headerflags and uf_in_library)<>0 then
+               if (HeaderFlags and UfInLibrary)<>0 then
                 begin
-                  SourcesAvail:=false;
-                  temp:=' library';
+                  SourcesAvail:=False;
+                  Temp:=' library';
                 end
-               else if pos('Macro ',hs)=1 then
+               else if Pos('Macro ',HS)=1 then
                 begin
                   { we don't want to find this file }
                   { but there is a problem with file indexing !! }
-                  temp:='';
+                  Temp:='';
                 end
                else
                 begin
@@ -1198,436 +1198,436 @@ var
                      3 path of main source
                      4 current dir
                      5 include/unit path }
-                  found:=false;
-                  if sourcefn<>'' then
+                  Found:=False;
+                  if SourceFN<>'' then
                   begin
-                    temp_dir:=ExtractFilePath(SetDirSeparators(sourcefn));
-                    Source_Time:=GetNamedFileTime(temp_dir+hs);
+                    temp_dir:=ExtractFilePath(SetDirSeparators(SourceFN));
+                    Source_Time:=GetNamedFileTime(temp_dir+HS);
                     if Source_Time<>-1 then
-                      hs:=temp_dir+hs;
+                      HS:=temp_dir+HS;
                   end else
                     Source_Time:=-1;
                   if Source_Time=-1 then
                     begin
-                      Source_Time:=GetNamedFileTime(path+hs);
+                      Source_Time:=GetNamedFileTime(Path+HS);
                       if Source_Time<>-1 then
-                        hs:=path+hs
+                        HS:=Path+HS
                       else
                        if not(is_main) then
                         begin
-                          Source_Time:=GetNamedFileTime(main_dir+hs);
+                          Source_Time:=GetNamedFileTime(main_dir+HS);
                           if Source_Time<>-1 then
-                            hs:=main_dir+hs;
+                            HS:=main_dir+HS;
                         end;
                     end;
                   if Source_Time=-1 then
-                    Source_Time:=GetNamedFileTime(hs);
+                    Source_Time:=GetNamedFileTime(HS);
                   if (Source_Time=-1) then
                     begin
                       if is_main then
-                        found:=UnitSearchPath.FindFile(hs,true,temp_dir)
+                        Found:=UnitSearchPath.FindFile(HS,True,temp_dir)
                       else
-                        found:=IncludeSearchPath.FindFile(hs,true,temp_dir);
-                      if found then
+                        Found:=IncludeSearchPath.FindFile(HS,True,temp_dir);
+                      if Found then
                        begin
                          Source_Time:=GetNamedFileTime(temp_dir);
                          if Source_Time<>-1 then
-                          hs:=temp_dir;
+                          HS:=temp_dir;
                        end;
                     end;
                   if Source_Time<>-1 then
                     begin
                       if is_main then
-                        main_dir:=ExtractFilePath(hs);
-                      temp:=' time '+FileTimeString(source_time);
-                      if (orgfiletime<>-1) and
-                         (source_time<>orgfiletime) then
+                        main_dir:=ExtractFilePath(HS);
+                      Temp:=' time '+FileTimeString(source_time);
+                      if (OrgFileTime<>-1) and
+                         (source_time<>OrgFileTime) then
                         begin
                           {$IFDEF DEBUG_PPU_CYCLES}
-                          WriteLn('PPUALGO tppumodule.readsourcefiles sourcechanged ',ModuleName^,' old=',state,' new=',ms_compile);
+                          WriteLn('PPUALGO tppumodule.readsourcefiles sourcechanged ',ModuleName^,' old=',State,' new=',ms_compile);
                           {$ENDIF}
-                          state:=ms_compile;
+                          State:=ms_compile;
                           recompile_reason:=rr_sourcenewer;
-                          Message2(unit_u_source_modified,hs,PPUFileName,@queuecomment);
-                          temp:=temp+' *';
+                          Message2(unit_u_source_modified,HS,PPUFileName,@QueueComment);
+                          Temp:=Temp+' *';
                         end;
                     end
                   else
                     begin
-                      SourcesAvail:=false;
-                      temp:=' not found';
+                      SourcesAvail:=False;
+                      Temp:=' not found';
                     end;
-                  hp:=TDOSInputFile.create(hs);
-                  hp.IncPath:=IncPath;
+                  HP:=TDOSInputFile.Create(HS);
+                  HP.IncPath:=IncPath;
                   { the indexing is wrong here PM }
-                  SourceFiles.Register_File(hp);
+                  SourceFiles.Register_File(HP);
                 end;
              end
            else
              begin
                { still register the source module for proper error messages
                  since source_avail for the module is still false, this should not hurt }
-               SourceFiles.Register_File(TDOSInputFile.create(hs));
+               SourceFiles.Register_File(TDOSInputFile.Create(HS));
 
-               temp:=' not available';
+               Temp:=' not available';
              end;
            if is_main then
              begin
-               MainSource:=hs;
+               MainSource:=HS;
              end;
-           Message1(unit_u_ppu_source,hs+temp,@queuecomment);
-           is_main:=false;
+           Message1(unit_u_ppu_source,HS+Temp,@QueueComment);
+           is_main:=False;
          end;
       { check if we want to rebuild every unit, only if the sources are
         available }
         if Do_Build and SourcesAvail then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
-            WriteLn('PPUALGO tppumodule.readsourcefiles do_build ',ModuleName^,' old=',state,' new=',ms_compile);
+            WriteLn('PPUALGO tppumodule.readsourcefiles do_build ',ModuleName^,' old=',State,' new=',ms_compile);
             {$ENDIF}
-            state:=ms_compile;
+            State:=ms_compile;
             recompile_reason:=rr_build;
           end;
       end;
 
 
-    procedure TPPUModule.readloadunit;
+    procedure TPPUModule.ReadLoadUnit;
       var
-        hs : string;
-        pu : TUsedUnit;
-        hp : TPPUModule;
-        indchecksum,
-        intfchecksum,
-        checksum : cardinal;
-        isnew : boolean;
+        HS : string;
+        Pu : TUsedUnit;
+        HP : TPPUModule;
+        IndChecksum,
+        IntfChecksum,
+        Checksum : Cardinal;
+        IsNew : Boolean;
 
       begin
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
          begin
-           hs:=ppufile.getstring;
-           checksum:=cardinal(ppufile.getlongint);
-           intfchecksum:=cardinal(ppufile.getlongint);
-           indchecksum:=cardinal(ppufile.getlongint);
+           HS:=PPUFile.GetString;
+           Checksum:=Cardinal(PPUFile.GetLongInt);
+           IntfChecksum:=Cardinal(PPUFile.GetLongInt);
+           IndChecksum:=Cardinal(PPUFile.GetLongInt);
            { set the state of this unit before registering, this is
              needed for a correct circular dependency check }
-           hp:=registerunit(self,hs,'',isnew);
-           if isnew then
-             UsedUnits.Concat(TUsedUnit.create(hp,in_interface,true,nil));
-           pu:=findusedunit(hp);
-           if pu=nil then
-             pu:=addusedunit(hp,false,nil);
-           pu.checksum:=checksum;
-           pu.interface_checksum:=intfchecksum;
-           pu.indirect_checksum:=indchecksum;
+           HP:=RegisterUnit(Self,HS,'',IsNew);
+           if IsNew then
+             UsedUnits.Concat(TUsedUnit.Create(HP,in_interface,True,nil));
+           Pu:=FindUsedUnit(HP);
+           if Pu=nil then
+             Pu:=AddUsedUnit(HP,False,nil);
+           Pu.Checksum:=Checksum;
+           Pu.InterfaceChecksum:=IntfChecksum;
+           Pu.IndirectChecksum:=IndChecksum;
          end;
-        in_interface:=false;
+        in_interface:=False;
       end;
 
 
-    procedure TPPUModule.readlinkcontainer(var p:TLinkContainer);
+    procedure TPPUModule.ReadLinkContainer(var P:TLinkContainer);
       var
-        s : string;
-        m : LongInt;
+        S : string;
+        M : LongInt;
       begin
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
          begin
-           s:=ppufile.getstring;
-           m:=ppufile.getlongint;
-           p.add(s,m);
+           S:=PPUFile.GetString;
+           M:=PPUFile.GetLongInt;
+           P.Add(S,M);
          end;
       end;
 
 
-    procedure TPPUModule.readderefmap;
+    procedure TPPUModule.ReadDerefMap;
       var
-        i : LongInt;
+        I : LongInt;
       begin
         { Load unit map used for resolving }
-        derefmapsize:=ppufile.getlongint;
-        derefmapcnt:=derefmapsize;
-        SetLength(derefmap,derefmapsize);
-        for i:=0 to derefmapsize-1 do
-          derefmap[i].ModuleName:=ppufile.getpshortstring;
+        DerefMapSize:=PPUFile.GetLongInt;
+        DerefMapCnt:=DerefMapSize;
+        SetLength(DerefMap,DerefMapSize);
+        for I:=0 to DerefMapSize-1 do
+          DerefMap[I].ModuleName:=PPUFile.GetPShortString;
       end;
 
 
-    procedure TPPUModule.readderefdata;
+    procedure TPPUModule.ReadDerefData;
       var
-        len,hlen : LongInt;
-        buf : array[0..1023] of byte;
+        Len,HLen : LongInt;
+        Buf : array[0..1023] of Byte;
       begin
-        len:=ppufile.entrysize;
-        while (len>0) do
+        Len:=PPUFile.EntrySize;
+        while (Len>0) do
           begin
-            if len>1024 then
-              hlen:=1024
+            if Len>1024 then
+              HLen:=1024
             else
-              hlen:=len;
-            ppufile.getdata(buf,hlen);
-            derefdata.write(buf,hlen);
-            dec(len,hlen);
+              HLen:=Len;
+            PPUFile.GetData(Buf,HLen);
+            DerefData.Write(Buf,HLen);
+            Dec(Len,HLen);
           end;
       end;
 
 
-    procedure TPPUModule.readImportSymbols;
+    procedure TPPUModule.ReadImportSymbols;
       var
-        j,
-        extsymcnt   : LongInt;
+        J,
+        ExtSymCnt   : LongInt;
         ImportLibrary  : TImportLibrary;
-        extsymname  : string;
-        extsymmangledname : string;
-        extsymordnr : LongInt;
-        extsymisvar : boolean;
+        ExtSymName  : string;
+        ExtSymMangledName : string;
+        ExtSymOrdNr : LongInt;
+        ExtSymIsVar : Boolean;
       begin
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
           begin
-            ImportLibrary:=TImportLibrary.Create(ImportLibraryList,ppufile.getstring);
-            extsymcnt:=ppufile.getlongint;
-            for j:=0 to extsymcnt-1 do
+            ImportLibrary:=TImportLibrary.Create(ImportLibraryList,PPUFile.GetString);
+            ExtSymCnt:=PPUFile.GetLongInt;
+            for J:=0 to ExtSymCnt-1 do
               begin
-                extsymname:=ppufile.getstring;
-                extsymmangledname:=ppufile.getstring;
-                extsymordnr:=ppufile.getlongint;
-                extsymisvar:=(ppufile.getbyte<>0);
-                TImportSymbol.Create(ImportLibrary.ImportSymbolList,extsymname,
-                  extsymmangledname,extsymordnr,extsymisvar);
+                ExtSymName:=PPUFile.GetString;
+                ExtSymMangledName:=PPUFile.GetString;
+                ExtSymOrdNr:=PPUFile.GetLongInt;
+                ExtSymIsVar:=(PPUFile.GetByte<>0);
+                TImportSymbol.Create(ImportLibrary.ImportSymbolList,ExtSymName,
+                  ExtSymMangledName,ExtSymOrdNr,ExtSymIsVar);
               end;
           end;
       end;
 
 
-    procedure TPPUModule.readResources;
+    procedure TPPUModule.ReadResources;
       begin
-        while not ppufile.endofentry do
-          resourcefiles.Insert(ppufile.getstring);
+        while not PPUFile.EndOfEntry do
+          ResourceFiles.Insert(PPUFile.GetString);
       end;
 
 
-    procedure TPPUModule.readOrderedSymbols;
+    procedure TPPUModule.ReadOrderedSymbols;
       begin
-        while not ppufile.endofentry do
-          linkorderedsymbols.Concat(ppufile.getstring);
+        while not PPUFile.EndOfEntry do
+          LinkOrderedSymbols.Concat(PPUFile.GetString);
       end;
 
 
-    procedure TPPUModule.readUnitExports;
+    procedure TPPUModule.ReadUnitExports;
       var
-        hp : TExportedItem;
-        option : TExportOption;
-        flags : byte;
+        HP : TExportedItem;
+        Option : TExportOption;
+        Flags : Byte;
       begin
-        while not ppufile.endofentry do
+        while not PPUFile.EndOfEntry do
           begin
-            hp:=TExportedItem.create;
-            hp.name:=StringDup(ppufile.getstring);
-            hp.internalname:=ppufile.getstring;
-            hp.index:=ppufile.getlongint;
-            flags:=ppufile.getbyte;
-            for option:=low(TExportOption) to high(TExportOption) do
-              if flags and (1 shl ord(option))<>0 then
-                include(hp.options,option);
-            hp.is_var:=ppufile.getbyte<>0;
-            _exports.concat(hp);
+            HP:=TExportedItem.Create;
+            HP.Name:=StringDup(PPUFile.GetString);
+            HP.InternalName:=PPUFile.GetString;
+            HP.Index:=PPUFile.GetLongInt;
+            Flags:=PPUFile.GetByte;
+            for Option:=Low(TExportOption) to High(TExportOption) do
+              if Flags and (1 shl Ord(Option))<>0 then
+                Include(HP.Options,Option);
+            HP.is_var:=PPUFile.GetByte<>0;
+            _Exports.Concat(HP);
           end;
       end;
 
 
-    procedure TPPUModule.readwpofile;
+    procedure TPPUModule.ReadWPOFile;
       var
-        orgwpofilename: string;
-        orgwpofiletime: LongInt;
+        OrgWPOFileName: string;
+        OrgWPOFileTime: LongInt;
       begin
         { check whether we are using the same wpo feedback input file as when
           this unit was compiled (same file name and file date)
         }
-        orgwpofilename:=ppufile.getstring;
-        orgwpofiletime:=ppufile.getlongint;
-        if (extractfilename(orgwpofilename)<>extractfilename(WPOFeedbackInput)) or
-           (orgwpofiletime<>GetNamedFileTime(orgwpofilename)) then
+        OrgWPOFileName:=PPUFile.GetString;
+        OrgWPOFileTime:=PPUFile.GetLongInt;
+        if (ExtractFileName(OrgWPOFileName)<>ExtractFileName(WPOFeedbackInput)) or
+           (OrgWPOFileTime<>GetNamedFileTime(OrgWPOFileName)) then
           { make sure we don't throw away a precompiled unit if the user simply
             forgot to specify the right wpo feedback file
           }
-          message3(unit_e_different_wpo_file,PPUFileName,orgwpofilename,FileTimeString(orgwpofiletime));
+          Message3(unit_e_different_wpo_file,PPUFileName,OrgWPOFileName,FileTimeString(OrgWPOFileTime));
       end;
 
 
-    procedure TPPUModule.readunitimportsyms;
+    procedure TPPUModule.ReadUnitImportSyms;
       var
-        c,i : LongInt;
-        deref : PDeref;
+        C,I : LongInt;
+        Deref : PDeref;
       begin
-        c:=ppufile.getlongint;
-        for i:=0 to c-1 do
+        C:=PPUFile.GetLongInt;
+        for I:=0 to C-1 do
           begin
-            new(deref);
-            ppufile.getderef(deref^);
-            unitimportsymsderefs.add(deref);
+            New(Deref);
+            PPUFile.GetDeref(Deref^);
+            UnitImportSymsDerefs.Add(Deref);
           end;
       end;
 
 
-    procedure TPPUModule.readasmsyms;
+    procedure TPPUModule.ReadAsmSyms;
       var
-        c,i : LongInt;
-        name : TSymStr;
-        bind : TAsmsymbind;
-        typ : TAsmsymtype;
-        list : TFPHashObjectList;
+        C,I : LongInt;
+        Name : TSymStr;
+        Bind : TAsmsymbind;
+        Typ : TAsmsymtype;
+        List : TFPHashObjectList;
       begin
-        case TUnitAsmListType(ppufile.getbyte) of
+        case TUnitAsmListType(PPUFile.GetByte) of
           ualt_public:
-            list:=publicasmsyms;
+            List:=PublicAsmSyms;
           ualt_extern:
-            list:=externasmsyms;
+            List:=ExternAsmSyms;
         end;
-        c:=ppufile.getlongint;
-        for i:=0 to c-1 do
+        C:=PPUFile.GetLongInt;
+        for I:=0 to C-1 do
           begin
-            name:=ppufile.getstring;
-            bind:=TAsmsymbind(ppufile.getbyte);
-            typ:=TAsmsymtype(ppufile.getbyte);
-            TAsmSymbol.Create(list,name,bind,typ);
+            Name:=PPUFile.GetString;
+            Bind:=TAsmsymbind(PPUFile.GetByte);
+            Typ:=TAsmsymtype(PPUFile.GetByte);
+            TAsmSymbol.Create(List,Name,Bind,Typ);
           end;
       end;
 
 
-    procedure TPPUModule.readextraheader;
+    procedure TPPUModule.ReadExtraHeader;
       begin
-        longversion:=cardinal(ppufile.getlongint);
-        ppufile.getset(TPPUSet4(moduleflags));
+        LongVersion:=Cardinal(PPUFile.GetLongInt);
+        PPUFile.GetSet(TPPUSet4(ModuleFlags));
       end;
 
 
-    procedure TPPUModule.load_interface;
+    procedure TPPUModule.LoadInterface;
       var
-        b : byte;
-        newmodulename : string;
+        B : Byte;
+        NewModuleName : string;
       begin
        { read interface part }
          repeat
-           b:=ppufile.readentry;
-           case b of
-             ibjvmnamespace :
+           B:=PPUFile.ReadEntry;
+           case B of
+             IBJVMNamespace :
                begin
-                 namespace:=ppufile.getpshortstring;
+                 Namespace:=PPUFile.GetPShortString;
                end;
-             ibmodulename :
+             IBModuleName :
                begin
-                 newmodulename:=ppufile.getstring;
+                 NewModuleName:=PPUFile.GetString;
                  if (cs_check_unit_name in CurrentSettings.GlobalSwitches) and
-                    (upper(newmodulename)<>ModuleName^) then
-                   Message2(unit_f_unit_name_error,RealModuleName^,newmodulename);
+                    (Upper(NewModuleName)<>ModuleName^) then
+                   Message2(unit_f_unit_name_error,RealModuleName^,NewModuleName);
                  StringDispose(ModuleName);
                  StringDispose(RealModuleName);
-                 ModuleName:=StringDup(upper(newmodulename));
-                 RealModuleName:=StringDup(newmodulename);
+                 ModuleName:=StringDup(Upper(NewModuleName));
+                 RealModuleName:=StringDup(NewModuleName);
                end;
-             ibextraheader:
+             IBExtraHeader:
                begin
-                 readextraheader;
+                 ReadExtraHeader;
                end;
-             ibfeatures :
+             IBFeatures :
                begin
-                 ppufile.getset(TPPUSet4(Features));
+                 PPUFile.GetSet(TPPUSet4(Features));
                end;
-             ibmoduleoptions:
+             IBModuleOptions:
                begin
-                 ppufile.getset(TPPUSet1(moduleoptions));
-                 if mo_has_deprecated_msg in moduleoptions then
+                 PPUFile.GetSet(TPPUSet1(ModuleOptions));
+                 if mo_has_deprecated_msg in ModuleOptions then
                    begin
-                     StringDispose(deprecatedmsg);
-                     deprecatedmsg:=ppufile.getpshortstring;
+                     StringDispose(DeprecatedMsg);
+                     DeprecatedMsg:=PPUFile.GetPShortString;
                    end;
                end;
-             ibsourcefiles :
-               readsourcefiles;
+             IBSourceFiles :
+               ReadSourceFiles;
 {$IFDEF MACRO_DIFF_HINT}
-             ibusedmacros :
-               readusedmacros;
+             IBUsedMacros :
+               ReadUsedMacros;
 {$ENDIF}
-             ibloadunit :
-               readloadunit;
-             iblinkunitofiles :
-               readlinkcontainer(LinkUnitOFiles);
-             iblinkunitstaticlibs :
-               readlinkcontainer(LinkUnitStaticLibs);
-             iblinkunitsharedlibs :
-               readlinkcontainer(LinkUnitSharedLibs);
-             iblinkotherofiles :
-               readlinkcontainer(LinkotherOFiles);
-             iblinkotherstaticlibs :
-               readlinkcontainer(LinkotherStaticLibs);
-             iblinkothersharedlibs :
-               readlinkcontainer(LinkotherSharedLibs);
-             iblinkotherframeworks :
-               readlinkcontainer(LinkOtherFrameworks);
-             ibmainname:
+             IBLoadUnit :
+               ReadLoadUnit;
+             IBLinkUnitOFiles :
+               ReadLinkContainer(LinkUnitOFiles);
+             IBLinkUnitStaticLibs :
+               ReadLinkContainer(LinkUnitStaticLibs);
+             IBLinkUnitSharedLibs :
+               ReadLinkContainer(LinkUnitSharedLibs);
+             IBLinkOtherOFiles :
+               ReadLinkContainer(LinkOtherOFiles);
+             IBLinkOtherStaticLibs :
+               ReadLinkContainer(LinkOtherStaticLibs);
+             IBLinkOtherSharedLibs :
+               ReadLinkContainer(LinkOtherSharedLibs);
+             IBLinkOtherFrameworks :
+               ReadLinkContainer(LinkOtherFrameworks);
+             IBMainName:
                begin
-                 mainname:=ppufile.getpshortstring;
+                 MainName:=PPUFile.GetPShortString;
                  if (MainAliasName<>DefaultMainAliasName) then
                    Message1(scan_w_multiple_main_name_overrides,MainAliasName);
-                 MainAliasName:=mainname^;
+                 MainAliasName:=MainName^;
                end;
-             ibImportSymbols :
-               readImportSymbols;
-             ibderefmap :
-               readderefmap;
-             ibderefdata :
-               readderefdata;
-             ibresources:
-               readResources;
-             iborderedsymbols:
-               readOrderedSymbols;
-             ibunitexports:
-               readUnitExports;
-             ibwpofile:
-               readwpofile;
-             ibendinterface :
-               break;
+             IBImportSymbols :
+               ReadImportSymbols;
+             IBDerefMap :
+               ReadDerefMap;
+             IBDerefData :
+               ReadDerefData;
+             IBResources:
+               ReadResources;
+             IBOrderedSymbols:
+               ReadOrderedSymbols;
+             IBUnitExports:
+               ReadUnitExports;
+             IBWPOFile:
+               ReadWPOFile;
+             IBEndInterface :
+               Break;
            else
-             Message1(unit_f_ppu_invalid_entry,ToStr(b));
+             Message1(unit_f_ppu_invalid_entry,ToStr(B));
            end;
            { we can already stop when we know that we must recompile }
-           if state=ms_compile then
-             exit;
-         until false;
+           if State=ms_compile then
+             Exit;
+         until False;
       end;
 
 
-    procedure TPPUModule.load_implementation;
+    procedure TPPUModule.LoadImplementation;
       var
-        b : byte;
+        B : Byte;
       begin
          { read implementation part }
          repeat
-           b:=ppufile.readentry;
-           case b of
-             ibloadunit :
-               readloadunit;
-             ibasmsymbols :
-               readasmsyms;
-             ibunitimportsyms:
-               readunitimportsyms;
-             ibendimplementation :
-               break;
+           B:=PPUFile.ReadEntry;
+           case B of
+             IBLoadUnit :
+               ReadLoadUnit;
+             IBAsmSymbols :
+               ReadAsmSyms;
+             IBUnitImportSyms:
+               ReadUnitImportSyms;
+             IBEndImplementation :
+               Break;
            else
-             Message1(unit_f_ppu_invalid_entry,ToStr(b));
+             Message1(unit_f_ppu_invalid_entry,ToStr(B));
            end;
-         until false;
+         until False;
       end;
 
 
-    procedure TPPUModule.writeppu;
+    procedure TPPUModule.WritePPU;
       var
-        lIndex: LongInt;
-        lAsmSymbols: TFPHashObjectList;
-        lSymbol: TAsmSymbol;
+        LIndex: LongInt;
+        LAsmSymbols: TFPHashObjectList;
+        LSymbol: TAsmSymbol;
       begin
          { A System unit built with a contradictory Char alias must never
            receive a PPU bearing the invocation's text-model flag. }
          if (cs_compilesystem in CurrentSettings.ModuleSwitches) and
-            (search_system_type('CHAR').typedef.size <>
+            (search_system_type('CHAR').TypeDef.Size <>
              1+Ord(CompilerWide_Unicode_Strings)) then
            Comment(VFatal,'System.Char width does not match this compiler invocation''s default text model');
 
@@ -1635,142 +1635,142 @@ var
 
          { create unit flags }
          { create new ppufile }
-         ppufile:=TCompilerPPUFile.create(PPUFileName);
-         if not ppufile.createfile then
+         PPUFile:=TCompilerPPUFile.Create(PPUFileName);
+         if not PPUFile.CreateFile then
           Message(unit_f_ppu_cannot_write);
 
 
          { extra header (sub version, module flags) }
-         writeextraheader;
+         WriteExtraHeader;
 
          { first the (JVM) namespace }
-         if Assigned(namespace) then
+         if Assigned(Namespace) then
            begin
-             ppufile.putstring(namespace^);
-             ppufile.writeentry(ibjvmnamespace);
+             PPUFile.PutString(Namespace^);
+             PPUFile.WriteEntry(IBJVMNamespace);
            end;
          { the unitname }
-         ppufile.putstring(RealModuleName^);
-         ppufile.writeentry(ibmodulename);
+         PPUFile.PutString(RealModuleName^);
+         PPUFile.WriteEntry(IBModuleName);
 
-         ppufile.putset(TPPUSet1(moduleoptions));
-         if mo_has_deprecated_msg in moduleoptions then
-           ppufile.putstring(deprecatedmsg^);
-         ppufile.writeentry(ibmoduleoptions);
+         PPUFile.PutSet(TPPUSet1(ModuleOptions));
+         if mo_has_deprecated_msg in ModuleOptions then
+           PPUFile.PutString(DeprecatedMsg^);
+         PPUFile.WriteEntry(IBModuleOptions);
 
          { write the alternate main procedure name if any }
-         if Assigned(mainname) then
+         if Assigned(MainName) then
            begin
-             ppufile.putstring(mainname^);
-             ppufile.writeentry(ibmainname);
+             PPUFile.PutString(MainName^);
+             PPUFile.WriteEntry(IBMainName);
            end;
 
          if cs_compilesystem in CurrentSettings.ModuleSwitches then
            begin
-             ppufile.putset(TPPUSet4(Features));
-             ppufile.writeentry(ibfeatures);
+             PPUFile.PutSet(TPPUSet4(Features));
+             PPUFile.WriteEntry(IBFeatures);
            end;
 
-         writesourcefiles;
+         WriteSourceFiles;
 {$IFDEF MACRO_DIFF_HINT}
-         writeusedmacros;
+         WriteUsedMacros;
 {$ENDIF}
 
          { write interface uses }
-         writeusedunit(true);
+         WriteUsedUnit(True);
 
          { write the objectfiles and libraries that come for this unit,
            preserve the containers because they are still needed to load
            the link.res.
             All doesn't depend on the crc! It doesn't matter
            if a unit is in a .o or .a file }
-         ppufile.DoCRC:=false;
+         PPUFile.DoCRC:=False;
          { write after source files, so that we know whether or not the compiler
            will recompile the unit when checking whether the correct wpo file is
            used (if it will recompile the unit anyway, it doesn't matter)
          }
          if (WPOFeedbackInput<>'') then
            begin
-             ppufile.putstring(WPOFeedbackInput);
-             ppufile.putlongint(getnamedfiletime(WPOFeedbackInput));
-             ppufile.writeentry(ibwpofile);
+             PPUFile.PutString(WPOFeedbackInput);
+             PPUFile.PutLongInt(GetNamedFileTime(WPOFeedbackInput));
+             PPUFile.WriteEntry(IBWPOFile);
            end;
-         writelinkcontainer(linkunitofiles,iblinkunitofiles,true);
-         writelinkcontainer(linkunitstaticlibs,iblinkunitstaticlibs,true);
-         writelinkcontainer(linkunitsharedlibs,iblinkunitsharedlibs,true);
-         writelinkcontainer(linkotherofiles,iblinkotherofiles,false);
-         writelinkcontainer(linkotherstaticlibs,iblinkotherstaticlibs,true);
-         writelinkcontainer(linkothersharedlibs,iblinkothersharedlibs,true);
-         writelinkcontainer(linkotherframeworks,iblinkotherframeworks,true);
-         writeImportSymbols;
-         writeResources;
-         writeOrderedSymbols;
-         writeUnitExports;
-         ppufile.DoCRC:=true;
+         WriteLinkContainer(LinkUnitOFiles,IBLinkUnitOFiles,True);
+         WriteLinkContainer(LinkUnitStaticLibs,IBLinkUnitStaticLibs,True);
+         WriteLinkContainer(LinkUnitSharedLibs,IBLinkUnitSharedLibs,True);
+         WriteLinkContainer(LinkOtherOFiles,IBLinkOtherOFiles,False);
+         WriteLinkContainer(LinkOtherStaticLibs,IBLinkOtherStaticLibs,True);
+         WriteLinkContainer(LinkOtherSharedLibs,IBLinkOtherSharedLibs,True);
+         WriteLinkContainer(LinkOtherFrameworks,IBLinkOtherFrameworks,True);
+         WriteImportSymbols;
+         WriteResources;
+         WriteOrderedSymbols;
+         WriteUnitExports;
+         PPUFile.DoCRC:=True;
 
          { generate implementation deref data, the interface deref data is
            already generated when calculating the interface crc }
          if (cs_compilesystem in CurrentSettings.ModuleSwitches) then
            begin
-             TStoredSymTable(GlobalSymTable).buildderef;
-             derefdataintflen:=derefdata.size;
+             TStoredSymTable(GlobalSymTable).BuildDeref;
+             DerefDataIntfLen:=DerefData.Size;
            end
          else
            { the unit may have been re-resolved, in which case the current
              position in derefdata is not necessarily at the end }
-            derefdata.seek(derefdata.size);
-         TStoredSymTable(GlobalSymTable).buildderefimpl;
-         TUnitWPOInfo(wpoinfo).buildderef;
-         TUnitWPOInfo(wpoinfo).buildderefimpl;
+            DerefData.Seek(DerefData.Size);
+         TStoredSymTable(GlobalSymTable).BuildDerefImpl;
+         TUnitWPOInfo(WPOInfo).BuildDeref;
+         TUnitWPOInfo(WPOInfo).BuildDerefImpl;
 
-         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.count > 0) then
+         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.Count > 0) then
             begin
-              TStoredSymTable(GlobalMacroSymTable).buildderef;
-              TStoredSymTable(GlobalMacroSymTable).buildderefimpl;
+              TStoredSymTable(GlobalMacroSymTable).BuildDeref;
+              TStoredSymTable(GlobalMacroSymTable).BuildDerefImpl;
             end;
 
-         if mf_local_symtable in moduleflags then
-           TStoredSymTable(localsymtable).buildderef_registered;
-         buildderefunitimportsyms;
-         writederefmap;
-         writederefdata;
+         if mf_local_symtable in ModuleFlags then
+           TStoredSymTable(LocalSymTable).buildderef_registered;
+         BuildDerefUnitImportSyms;
+         WriteDerefMap;
+         WriteDerefData;
 
-         ppufile.writeentry(ibendinterface);
+         PPUFile.WriteEntry(IBEndInterface);
 
          { write the symtable entries }
-         TStoredSymTable(GlobalSymTable).ppuwrite(ppufile);
+         TStoredSymTable(GlobalSymTable).PPUWrite(PPUFile);
 
-         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.count > 0) then
+         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.Count > 0) then
            begin
-             ppufile.putbyte(byte(true));
-             ppufile.writeentry(ibexportedmacros);
-             TStoredSymTable(GlobalMacroSymTable).ppuwrite(ppufile);
+             PPUFile.PutByte(Byte(True));
+             PPUFile.WriteEntry(IBExportedMacros);
+             TStoredSymTable(GlobalMacroSymTable).PPUWrite(PPUFile);
            end
          else
            begin
-             ppufile.putbyte(byte(false));
-             ppufile.writeentry(ibexportedmacros);
+             PPUFile.PutByte(Byte(False));
+             PPUFile.WriteEntry(IBExportedMacros);
            end;
 
          { everything after this doesn't affect the crc }
-         ppufile.DoCRC:=false;
+         PPUFile.DoCRC:=False;
 
          { write implementation uses }
-         writeusedunit(false);
+         WriteUsedUnit(False);
 
          { Calls and procedure addresses introduced by inlining or code
            generation need the same package import lookup as parsed calls. }
-         if tf_supports_packages in TargetInfo.flags then
+         if tf_supports_packages in TargetInfo.Flags then
            begin
-             lAsmSymbols:=TAsmData(asmdata).AsmSymbolDict;
-             for lIndex:=0 to lAsmSymbols.Count-1 do
+             LAsmSymbols:=TAsmData(AsmData).AsmSymbolDict;
+             for LIndex:=0 to LAsmSymbols.Count-1 do
                begin
-                 lSymbol:=TAsmSymbol(lAsmSymbols[lIndex]);
-                 if lSymbol.typ<>AT_FUNCTION then
-                   continue;
-                 case lSymbol.bind of
+                 LSymbol:=TAsmSymbol(LAsmSymbols[LIndex]);
+                 if LSymbol.Typ<>AT_FUNCTION then
+                   Continue;
+                 case LSymbol.Bind of
                    AB_EXTERNAL:
-                     add_extern_asmsym(lSymbol);
+                     add_extern_asmsym(LSymbol);
                    else
                      ;
                  end;
@@ -1778,187 +1778,187 @@ var
            end;
 
          { write all public assembler symbols }
-         writeasmsyms(ualt_public,publicasmsyms);
+         WriteAsmSyms(ualt_public,PublicAsmSyms);
 
          { write all external assembler symbols }
-         writeasmsyms(ualt_extern,externasmsyms);
+         WriteAsmSyms(ualt_extern,ExternAsmSyms);
 
          { write all symbols imported from another unit }
-         writeunitimportsyms;
+         WriteUnitImportSyms;
 
          { end of implementation }
-         ppufile.writeentry(ibendimplementation);
+         PPUFile.WriteEntry(IBEndImplementation);
 
          { write static symtable
            needed for local debugging of unit functions }
-         if mf_local_symtable in moduleflags then
-           TStoredSymTable(localsymtable).ppuwrite(ppufile);
+         if mf_local_symtable in ModuleFlags then
+           TStoredSymTable(LocalSymTable).PPUWrite(PPUFile);
 
          { write whole program optimisation-related information }
-         TUnitWPOInfo(wpoinfo).ppuwrite(ppufile);
+         TUnitWPOInfo(WPOInfo).PPUWrite(PPUFile);
 
          { the last entry ibend is written automatically }
 
          { flush to be sure }
-         ppufile.flush;
+         PPUFile.Flush;
 
          { save crc in current module also }
          if not crc_final then
            begin
-             crc_final:=true;
-             crc:=ppufile.crc;
+             crc_final:=True;
+             CRC:=PPUFile.CRC;
            end;
          { create and write header }
          { Note: the interface_crc and indirect_crc were computed in getppucrc
                  after the interface was compiled. The implementation must *not* effect them. }
-         ppufile.header.common.size:=ppufile.size;
-         ppufile.header.checksum:=crc;
-         ppufile.header.interface_checksum:=interface_crc;
-         ppufile.header.indirect_checksum:=indirect_crc;
-         ppufile.header.common.compiler:=WordVersion;
-         ppufile.header.common.cpu:=word(TargetCPU);
-         ppufile.header.common.target:=word(TargetInfo.system);
-         ppufile.header.common.flags:=headerflags;
-         ppufile.header.deflistsize:=CurrentModule.deflist.count;
-         ppufile.header.symlistsize:=CurrentModule.symlist.count;
-         ppufile.writeheader;
+         PPUFile.Header.Common.Size:=PPUFile.Size;
+         PPUFile.Header.Checksum:=CRC;
+         PPUFile.Header.InterfaceChecksum:=InterfaceCRC;
+         PPUFile.Header.IndirectChecksum:=IndirectCRC;
+         PPUFile.Header.Common.Compiler:=WordVersion;
+         PPUFile.Header.Common.CPU:=Word(TargetCPU);
+         PPUFile.Header.Common.Target:=Word(TargetInfo.System);
+         PPUFile.Header.Common.Flags:=HeaderFlags;
+         PPUFile.Header.DefListSize:=CurrentModule.DefList.Count;
+         PPUFile.Header.SymListSize:=CurrentModule.SymList.Count;
+         PPUFile.WriteHeader;
 
 
-         discardppu;
+         DiscardPPU;
       end;
 
 
-    procedure TPPUModule.getppucrc;
+    procedure TPPUModule.GetPPUCRC;
       begin
          { create new ppufile }
-         ppufile:=TCompilerPPUFile.create(PPUFileName);
-         ppufile.crc_only:=true;
-         if not ppufile.createfile then
+         PPUFile:=TCompilerPPUFile.Create(PPUFileName);
+         PPUFile.CRCOnly:=True;
+         if not PPUFile.CreateFile then
            Message(unit_f_ppu_cannot_write);
 
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
-        if ppufile.writing_interface_ppu then
-          ppufile.crc_only:=false;
+        if PPUFile.WritingInterfacePPU then
+          PPUFile.CRCOnly:=False;
 {$endif DEBUG_GENERATE_INTERFACE_PPU}
          { extra header (sub version, module flags) }
-         writeextraheader;
+         WriteExtraHeader;
 
          { first the (JVM) namespace }
-         if Assigned(namespace) then
+         if Assigned(Namespace) then
            begin
-             ppufile.putstring(namespace^);
-             ppufile.writeentry(ibjvmnamespace);
+             PPUFile.PutString(Namespace^);
+             PPUFile.WriteEntry(IBJVMNamespace);
            end;
 
          { the unitname }
-         ppufile.putstring(RealModuleName^);
-         ppufile.writeentry(ibmodulename);
+         PPUFile.PutString(RealModuleName^);
+         PPUFile.WriteEntry(IBModuleName);
 
-         ppufile.putset(TPPUSet1(moduleoptions));
-         if mo_has_deprecated_msg in moduleoptions then
-           ppufile.putstring(deprecatedmsg^);
-         ppufile.writeentry(ibmoduleoptions);
+         PPUFile.PutSet(TPPUSet1(ModuleOptions));
+         if mo_has_deprecated_msg in ModuleOptions then
+           PPUFile.PutString(DeprecatedMsg^);
+         PPUFile.WriteEntry(IBModuleOptions);
 
          { the interface units affect the crc }
-         writeusedunit(true);
+         WriteUsedUnit(True);
 
          { deref data of interface that affect the crc }
-         derefdata.reset;
-         TStoredSymTable(GlobalSymTable).buildderef;
-         derefdataintflen:=derefdata.size;
-         writederefmap;
-         writederefdata;
+         DerefData.Reset;
+         TStoredSymTable(GlobalSymTable).BuildDeref;
+         DerefDataIntfLen:=DerefData.Size;
+         WriteDerefMap;
+         WriteDerefData;
 
-         ppufile.writeentry(ibendinterface);
+         PPUFile.WriteEntry(IBEndInterface);
 
          { write the symtable entries }
-         TStoredSymTable(GlobalSymTable).ppuwrite(ppufile);
+         TStoredSymTable(GlobalSymTable).PPUWrite(PPUFile);
 
-         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.count > 0) then
+         if Assigned(GlobalMacroSymTable) and (GlobalMacroSymTable.SymList.Count > 0) then
            begin
-             ppufile.putbyte(byte(true));
-             ppufile.writeentry(ibexportedmacros);
-             TStoredSymTable(GlobalMacroSymTable).ppuwrite(ppufile);
+             PPUFile.PutByte(Byte(True));
+             PPUFile.WriteEntry(IBExportedMacros);
+             TStoredSymTable(GlobalMacroSymTable).PPUWrite(PPUFile);
            end
          else
            begin
-             ppufile.putbyte(byte(false));
-             ppufile.writeentry(ibexportedmacros);
+             PPUFile.PutByte(Byte(False));
+             PPUFile.WriteEntry(IBExportedMacros);
            end;
 
          { save crc  }
-         crc:=ppufile.crc;
+         CRC:=PPUFile.CRC;
          if in_interface then
            begin
              { Note: the interface_crc and indirect_crc are not affected by the implementation }
-             interface_crc:=ppufile.interface_crc;
-             indirect_crc:=ppufile.indirect_crc;
+             InterfaceCRC:=PPUFile.InterfaceCRC;
+             IndirectCRC:=PPUFile.IndirectCRC;
            end;
          { end of implementation, to generate a correct ppufile
            for ppudump when using DEBUG_GENERATE_INTERFACE_PPU define }
-         ppufile.writeentry(ibendimplementation);
+         PPUFile.WriteEntry(IBEndImplementation);
 
 
          { create and write header, this will only be used
            for debugging purposes }
-         ppufile.header.common.size:=ppufile.size;
-         ppufile.header.checksum:=crc;
-         ppufile.header.interface_checksum:=interface_crc;
-         ppufile.header.indirect_checksum:=indirect_crc;
-         ppufile.header.common.compiler:=WordVersion;
-         ppufile.header.common.cpu:=word(TargetCPU);
-         ppufile.header.common.target:=word(TargetInfo.system);
-         ppufile.header.common.flags:=headerflags;
-         ppufile.writeheader;
+         PPUFile.Header.Common.Size:=PPUFile.Size;
+         PPUFile.Header.Checksum:=CRC;
+         PPUFile.Header.InterfaceChecksum:=InterfaceCRC;
+         PPUFile.Header.IndirectChecksum:=IndirectCRC;
+         PPUFile.Header.Common.Compiler:=WordVersion;
+         PPUFile.Header.Common.CPU:=Word(TargetCPU);
+         PPUFile.Header.Common.Target:=Word(TargetInfo.System);
+         PPUFile.Header.Common.Flags:=HeaderFlags;
+         PPUFile.WriteHeader;
 
-         discardppu;
+         DiscardPPU;
       end;
 
-    function TPPUModule.dependent_module_has_our_crc: boolean;
+    function TPPUModule.Dependent_Module_Has_Our_CRC: Boolean;
       { returns true, if any dependent module has crc for this module }
       var
-        pu: TDependentUnit;
-        m: FModule.TModule;
+        Pu: TDependentUnit;
+        M: FModule.TModule;
       begin
-        pu:=TDependentUnit(dependent_units.First);
-        while Assigned(pu) do
+        Pu:=TDependentUnit(dependent_units.First);
+        while Assigned(Pu) do
           begin
-            m:=pu.u;
-            if m.FromPPU or (m.state in [ms_compiled,ms_processed]) then
-              exit(true);
-            pu:=TDependentUnit(pu.Next);
+            M:=Pu.U;
+            if M.FromPPU or (M.State in [ms_compiled,ms_processed]) then
+              Exit(True);
+            Pu:=TDependentUnit(Pu.Next);
           end;
-        Result:=false;
+        Result:=False;
       end;
 
-    function TPPUModule.dependent_module_crc_mismatch: boolean;
+    function TPPUModule.Dependent_Module_CRC_Mismatch: Boolean;
       { called after an interface crc or crc was computed.
         Checks if any dependent module needs a recompile.
         The compile goes back to the ctask scheduler which recompiles. }
       var
-        pu: TDependentUnit;
-        m: TPPUModule;
-        uu: TUsedUnit;
-        check_crc, used_by_interface: boolean;
+        Pu: TDependentUnit;
+        M: TPPUModule;
+        UU: TUsedUnit;
+        CheckCRC, UsedByInterface: Boolean;
       begin
-        Result:=false;
+        Result:=False;
         if not interface_compiled then
           InternalError(2026033101);
-        pu:=TDependentUnit(dependent_units.First);
-        while Assigned(pu) do
+        Pu:=TDependentUnit(dependent_units.First);
+        while Assigned(Pu) do
           begin
-            m:=TPPUModule(pu.u);
-            used_by_interface:=pu.in_interface;
-            pu:=TDependentUnit(pu.Next);
-            if not m.FromPPU then
+            M:=TPPUModule(Pu.U);
+            UsedByInterface:=Pu.in_interface;
+            Pu:=TDependentUnit(Pu.Next);
+            if not M.FromPPU then
               begin
-                if used_by_interface then
+                if UsedByInterface then
                   begin
-                    if not m.interface_compiled then continue;
+                    if not M.interface_compiled then Continue;
                   end
                 else
                   { uses by implementation }
-                  case m.state of
+                  case M.State of
                   ms_compiling_waitfinish,
                   ms_compiled_waitcrc:
                     ; { m has crc of its impl uses }
@@ -1966,96 +1966,96 @@ var
                   ms_processed:
                     InternalError(2026033111);
                   else
-                    continue; { m does not yet have its impl uses crc }
+                    Continue; { m does not yet have its impl uses crc }
                   end;
               end;
 
-            check_crc:=crc_final and (m.FromPPU or (m.state in [ms_compiled,ms_processed]));
-            uu:=TUsedUnit(m.used_units.First);
-            while Assigned(uu) do
+            CheckCRC:=crc_final and (M.FromPPU or (M.State in [ms_compiled,ms_processed]));
+            UU:=TUsedUnit(M.used_units.First);
+            while Assigned(UU) do
               begin
-                if (uu.u=self)
-                    and ( (interface_crc<>uu.interface_checksum)
-                        or (indirect_crc<>uu.indirect_checksum)
-                        or (check_crc and (crc<>uu.checksum) ) ) then
+                if (UU.U=Self)
+                    and ( (InterfaceCRC<>UU.InterfaceChecksum)
+                        or (IndirectCRC<>UU.IndirectChecksum)
+                        or (CheckCRC and (CRC<>UU.Checksum) ) ) then
                   begin
-                    Result:=true;
+                    Result:=True;
                     {$IFDEF DEBUG_PPU_CYCLES}
-                    WriteLn('PPUALGO tppumodule.dependent_module_crc_mismatch ',ModuleName^,' used by ',BoolToStr(uu.in_interface,'interface','implementation'),' of "',m.ModuleName^,'" old=',m.StateStr,' new=',ms_compile);
+                    WriteLn('PPUALGO tppumodule.dependent_module_crc_mismatch ',ModuleName^,' used by ',BoolToStr(UU.in_interface,'interface','implementation'),' of "',M.ModuleName^,'" old=',M.StateStr,' new=',ms_compile);
                     {$ENDIF}
-                    m.mark_recompile_needed(rr_crcchanged);
+                    M.MarkRecompileNeeded(rr_crcchanged);
                   end;
-                uu:=TUsedUnit(uu.Next);
+                UU:=TUsedUnit(UU.Next);
               end;
           end;
       end;
 
-    function TPPUModule.load_usedunits: boolean;
+    function TPPUModule.LoadUsedUnits: Boolean;
       { self is a ppu (or in a package) }
       begin
-        Result:=true;
-        if CurrentModule<>self then
+        Result:=True;
+        if CurrentModule<>Self then
           InternalError(200212284);
 
         if not interface_compiled then
         begin
           { load the used units from interface }
-          in_interface:=true;
-          if not load_usedunits_section then
-            exit(false); { e.g. fail or some used unit interface is not ready }
-          if CurrentModule<>self then
+          in_interface:=True;
+          if not LoadUsedUnitsSection then
+            Exit(False); { e.g. fail or some used unit interface is not ready }
+          if CurrentModule<>Self then
             InternalError(2026022317);
           { ok, now load the interface of this unit }
-          if CurrentModule<>self then
+          if CurrentModule<>Self then
             InternalError(200208187);
-          deflist.count:=ppufile.header.deflistsize;
-          symlist.count:=ppufile.header.symlistsize;
-          GlobalSymTable:=TGlobalSymTable.create(RealModuleName^,ModuleID);
-          TStoredSymTable(GlobalSymTable).ppuload(ppufile);
+          DefList.Count:=PPUFile.Header.DefListSize;
+          SymList.Count:=PPUFile.Header.SymListSize;
+          GlobalSymTable:=TGlobalSymTable.Create(RealModuleName^,ModuleID);
+          TStoredSymTable(GlobalSymTable).PPULoad(PPUFile);
 
-          if ppufile.readentry<>ibexportedmacros then
+          if PPUFile.ReadEntry<>IBExportedMacros then
             Message(unit_f_ppu_read_error);
-          if boolean(ppufile.getbyte) then
+          if Boolean(PPUFile.GetByte) then
             begin
-              GlobalMacroSymTable:=TMacroSymTable.Create(true);
-              TStoredSymTable(GlobalMacroSymTable).ppuload(ppufile)
+              GlobalMacroSymTable:=TMacroSymTable.Create(True);
+              TStoredSymTable(GlobalMacroSymTable).PPULoad(PPUFile)
             end;
 
-          interface_compiled:=true;
+          interface_compiled:=True;
 
           { read the implementation part, containing
             the implementation uses and ObjData }
-          in_interface:=false;
-          load_implementation;
+          in_interface:=False;
+          LoadImplementation;
         end;
 
         { now only read the implementation uses }
         if not ppu_waitingfor_crc then
         begin
-          if not load_usedunits_section then
-            exit(false); { fail or some used unit interface is not ready }
-          if CurrentModule<>self then
+          if not LoadUsedUnitsSection then
+            Exit(False); { fail or some used unit interface is not ready }
+          if CurrentModule<>Self then
             InternalError(2026022316);
         end;
 
         if not ppu_waitingfor_crc then
           begin
-            ppu_waitingfor_crc:=true;
+            ppu_waitingfor_crc:=True;
 
             { load implementation symtable }
-            if mf_local_symtable in moduleflags then
+            if mf_local_symtable in ModuleFlags then
               begin
-                localsymtable:=TStaticSymTable.create(RealModuleName^,ModuleID);
-                TStaticSymTable(localsymtable).ppuload(ppufile);
+                LocalSymTable:=TStaticSymTable.Create(RealModuleName^,ModuleID);
+                TStaticSymTable(LocalSymTable).PPULoad(PPUFile);
               end;
 
             { we can now dereference all pointers to the implementation parts }
-            TStoredSymTable(GlobalSymTable).derefimpl(false);
+            TStoredSymTable(GlobalSymTable).DerefImpl(False);
             { we've just loaded the localsymtable from the ppu file, so everything
               in it was registered by definition (otherwise it wouldn't have been in
               there) }
-            if Assigned(localsymtable) then
-              TStoredSymTable(localsymtable).derefimpl(false);
+            if Assigned(LocalSymTable) then
+              TStoredSymTable(LocalSymTable).DerefImpl(False);
 
             remove_waitforunit_cycles;
 
@@ -2066,54 +2066,54 @@ var
           If all used units are compiled, continue.
           otherwise some used units might still change }
         if find_used_unit_compiling<>nil then
-          exit(false);
+          Exit(False);
 
         { check that all used units have their crc and checksums match }
-        if not ppu_check_used_crcs then
-          exit(false);
-        ppu_waitingfor_crc:=false;
+        if not PPUCheckUsedCRCs then
+          Exit(False);
+        ppu_waitingfor_crc:=False;
 
-        derefunitimportsyms;
+        DerefUnitImportSyms;
 
         { read whole program optimisation-related information }
-        wpoinfo:=TUnitWPOInfo.ppuload(ppufile);
-        TUnitWPOInfo(wpoinfo).deref;
-        TUnitWPOInfo(wpoinfo).derefimpl;
+        WPOInfo:=TUnitWPOInfo.PPULoad(PPUFile);
+        TUnitWPOInfo(WPOInfo).Deref;
+        TUnitWPOInfo(WPOInfo).DerefImpl;
 
         remove_all_waitsforthisunit;
 
-        state:=ms_compiled;
+        State:=ms_compiled;
       end;
 
-    function TPPUModule.load_usedunits_section: boolean;
+    function TPPUModule.LoadUsedUnitsSection: Boolean;
       var
-        pu: TUsedUnit;
+        Pu: TUsedUnit;
         IntfCRCValid, CRCValid: Boolean;
       begin
-        Result:=true;
-        pu:=TUsedUnit(used_units.first);
-        while Assigned(pu) do
+        Result:=True;
+        Pu:=TUsedUnit(used_units.First);
+        while Assigned(Pu) do
         begin
-          if pu.in_interface=in_interface then
+          if Pu.in_interface=in_interface then
           begin
             { adddependency before loadppu for invalid cycle test }
-            if not pu.dependent_added then
+            if not Pu.dependent_added then
             begin
-              pu.u.adddependency(self,in_interface);
-              pu.dependent_added:=true;
+              Pu.U.AddDependency(Self,in_interface);
+              Pu.dependent_added:=True;
             end;
 
-            TPPUModule(pu.u).loadppu(self);
+            TPPUModule(Pu.U).LoadPPU(Self);
             { if this unit is scheduled for compilation or compiled we can stop }
-            if state<>ms_load then
+            if State<>ms_load then
             begin
               {$IFDEF DEBUG_PPU_CYCLES}
               WriteLn('tppumodule.load_usedunits_section STOPPED ',ModuleName^,' ',StateStr);
               {$ENDIF}
-              exit(false);
+              Exit(False);
             end;
             {$IFDEF DEBUG_PPU_CYCLES}
-            WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' (',StateStr,') ',BoolToStr(in_interface,'interface','implementation'),' uses "',pu.u.ModuleName^,'" state=',pu.u.StateStr);
+            WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' (',StateStr,') ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" state=',Pu.U.StateStr);
             {$ENDIF}
 
             { check crc(s) if recompile is needed.
@@ -2122,244 +2122,244 @@ var
               If an unit of a cycle is recompiled, the whole cycle is recompiled.
 
               If this ppu was compiled with -Ur only check interface_crc, not crc }
-            CRCValid:=(not pu.u.do_reload) and pu.u.crc_final;
-            IntfCRCValid:=(not pu.u.do_reload) and pu.u.interface_compiled;
+            CRCValid:=(not Pu.U.do_reload) and Pu.U.crc_final;
+            IntfCRCValid:=(not Pu.U.do_reload) and Pu.U.interface_compiled;
 
             if (IntfCRCValid and
-                     ((pu.u.interface_crc<>pu.interface_checksum) or
-                      (pu.u.indirect_crc<>pu.indirect_checksum)))
+                     ((Pu.U.InterfaceCRC<>Pu.InterfaceChecksum) or
+                      (Pu.U.IndirectCRC<>Pu.IndirectChecksum)))
                 or (CRCValid and
                   {$IFNDEF DisableUrCRC}
-                  (not (mf_release in moduleflags)) and
+                  (not (mf_release in ModuleFlags)) and
                   {$ENDIF}
-                  (pu.u.crc<>pu.checksum)
+                  (Pu.U.CRC<>Pu.Checksum)
                  ) then
             begin
-              Message2(unit_u_recompile_crc_change,RealModuleName^,pu.u.PPUFileName,@queuecomment);
+              Message2(unit_u_recompile_crc_change,RealModuleName^,Pu.U.PPUFileName,@QueueComment);
               {$IFDEF DEBUG_PPU_CYCLES}
-              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',pu.u.ModuleName^,'" old=',StateStr,' new=',ms_compile);
+              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'" old=',StateStr,' new=',ms_compile);
               {$ENDIF}
-              mark_recompile_needed(rr_crcchanged);
-              exit(false);
+              MarkRecompileNeeded(rr_crcchanged);
+              Exit(False);
             end;
 
-            if pu.u.do_reload
-                or (not pu.u.interface_compiled)
+            if Pu.U.do_reload
+                or (not Pu.U.interface_compiled)
                 or ctask_fast_backtrack then
             begin
               { this used unit is delayed
                 Important: do not break, load the remaining uses section, so the scheduler
                            has more information about cycles }
               {$IFDEF DEBUG_PPU_CYCLES}
-              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',pu.u.ModuleName^,'", state=',pu.u.StateStr,', waiting ...');
+              WriteLn('PPUALGO tppumodule.load_usedunits_section ',ModuleName^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',Pu.U.ModuleName^,'", state=',Pu.U.StateStr,', waiting ...');
               {$ENDIF}
-              ctask_fast_backtrack:=true;
-              Result:=false;
+              ctask_fast_backtrack:=True;
+              Result:=False;
             end;
           end;
-          pu:=TUsedUnit(pu.next);
+          Pu:=TUsedUnit(Pu.Next);
         end;
       end;
 
-    function TPPUModule.ppu_check_used_crcs: boolean;
+    function TPPUModule.PPUCheckUsedCRCs: Boolean;
     // check crcs
     var
-      pu: TUsedUnit;
+      Pu: TUsedUnit;
     begin
-      Result:=false;
-      pu:=TUsedUnit(used_units.first);
-      while Assigned(pu) do
+      Result:=False;
+      Pu:=TUsedUnit(used_units.First);
+      while Assigned(Pu) do
       begin
-        if pu.u.crc_final then
+        if Pu.U.crc_final then
         begin
-          if (pu.u.interface_crc<>pu.interface_checksum)
-              or (pu.u.indirect_crc<>pu.indirect_checksum)
-              or (pu.u.crc<>pu.checksum) then
+          if (Pu.U.InterfaceCRC<>Pu.InterfaceChecksum)
+              or (Pu.U.IndirectCRC<>Pu.IndirectChecksum)
+              or (Pu.U.CRC<>Pu.Checksum) then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
-            WriteLn('PPUALGO tppumodule.ppu_check_used_crcs ',ModuleName^,' interface uses "',pu.u.ModuleName^,'" old=',StateStr,' new=',ms_compile);
+            WriteLn('PPUALGO tppumodule.ppu_check_used_crcs ',ModuleName^,' interface uses "',Pu.U.ModuleName^,'" old=',StateStr,' new=',ms_compile);
             {$ENDIF}
-            mark_recompile_needed(rr_crcchanged);
-            exit;
+            MarkRecompileNeeded(rr_crcchanged);
+            Exit;
           end;
         end else begin
           { waiting for crc }
-          exit;
+          Exit;
         end;
-        pu:=TUsedUnit(pu.next);
+        Pu:=TUsedUnit(Pu.Next);
       end;
 
-      Result:=true;
+      Result:=True;
     end;
 
-    function TPPUModule.ppuloadcancontinue(out firstwaiting: TModule): boolean;
+    function TPPUModule.PPULoadCanContinue(out FirstWaiting: TModule): Boolean;
     var
-      pu: TUsedUnit;
+      Pu: TUsedUnit;
     begin
-      Result:=false;
-      firstwaiting:=nil;
-      if state<>ms_load then
+      Result:=False;
+      FirstWaiting:=nil;
+      if State<>ms_load then
         InternalError(2026020610);
 
       if do_reload and not interface_compiled then
-        exit(true);
+        Exit(True);
 
       if ppu_waitingfor_crc and (scc_tree_crc_wait<>nil) then
         begin
-          firstwaiting:=scc_tree_crc_wait;
-          exit; { the final load step needs all used units and their used units }
+          FirstWaiting:=scc_tree_crc_wait;
+          Exit; { the final load step needs all used units and their used units }
         end;
 
-      pu:=TUsedUnit(used_units.first);
-      while Assigned(pu) do
+      Pu:=TUsedUnit(used_units.First);
+      while Assigned(Pu) do
       begin
-        if pu.in_interface or interface_compiled then
+        if Pu.in_interface or interface_compiled then
         begin
-          if pu.u.do_reload
-              or not pu.u.interface_compiled
-              or (ppu_waitingfor_crc and not pu.u.crc_final
-                 {$IFNDEF DisableUrCRC}and not (mf_release in moduleflags){$ENDIF} ) then
+          if Pu.U.do_reload
+              or not Pu.U.interface_compiled
+              or (ppu_waitingfor_crc and not Pu.U.crc_final
+                 {$IFNDEF DisableUrCRC}and not (mf_release in ModuleFlags){$ENDIF} ) then
           begin
-            firstwaiting:=pu.u;
-            exit;
+            FirstWaiting:=Pu.U;
+            Exit;
           end;
         end;
-        pu:=TUsedUnit(pu.next);
+        Pu:=TUsedUnit(Pu.Next);
       end;
-      Result:=true;
+      Result:=True;
     end;
 
-    function TPPUModule.is_reload_needed(pu: TDependentUnit): boolean;
+    function TPPUModule.Is_Reload_Needed(Pu: TDependentUnit): Boolean;
       begin
-        if pu.u.state=ms_load then
-          Result:=pu.u.ppu_waitingfor_crc
-                or (pu.in_interface and pu.u.interface_compiled)
+        if Pu.U.State=ms_load then
+          Result:=Pu.U.ppu_waitingfor_crc
+                or (Pu.in_interface and Pu.U.interface_compiled)
         else
-          Result:=inherited is_reload_needed(pu);
+          Result:=inherited Is_Reload_Needed(Pu);
       end;
 
-    procedure TPPUModule.restore_state;
+    procedure TPPUModule.Restore_State;
       begin
-        SetCurrentModule(self);
-        if stored_state<>nil then
-          stored_state.restore;
+        SetCurrentModule(Self);
+        if StoredState<>nil then
+          StoredState.Restore;
       end;
 
-    procedure TPPUModule.store_state;
+    procedure TPPUModule.Store_State;
       begin
-        if stored_state=nil then
-          stored_state:=TGlobalState.Create(true)
+        if StoredState=nil then
+          StoredState:=TGlobalState.Create(True)
         else
-          stored_state.save(true);
+          StoredState.Save(True);
       end;
 
-    procedure TPPUModule.setdefgeneration;
+    procedure TPPUModule.SetDefGeneration;
       begin
-        defsgeneration:=currentdefgeneration;
-        inc(currentdefgeneration);
+        DefsGeneration:=CurrentDefGeneration;
+        Inc(CurrentDefGeneration);
       end;
 
-    procedure TPPUModule.end_of_parsing;
+    procedure TPPUModule.End_Of_Parsing;
       begin
         { free ppu }
-        discardppu;
+        DiscardPPU;
 
-        inherited end_of_parsing;
+        inherited End_Of_Parsing;
       end;
 
     { Returns true if the module was loaded from package }
-    function TPPUModule.check_loadfrompackage : boolean;
+    function TPPUModule.CheckLoadFromPackage : Boolean;
 
       begin
         { try to load it as a package unit first }
-        Result:=(PackageList.count>0) and loadfrompackage;
+        Result:=(PackageList.Count>0) and LoadFromPackage;
         if Result then
           begin
-            do_reload:=false;
+            do_reload:=False;
             { add the unit to the used units list of the program }
-            UsedUnits.concat(TUsedUnit.create(self,true,false,nil));
+            UsedUnits.Concat(TUsedUnit.Create(Self,True,False,nil));
           end;
       end;
 
-    procedure TPPUModule.recompile_from_sources;
+    procedure TPPUModule.Recompile_From_Sources;
 
       var
-        was_interfaced_compiled: Boolean;
+        WasInterfaceCompiled: Boolean;
       begin
-        SetCurrentModule(self);
-        check_sources_for_recompile;
+        SetCurrentModule(Self);
+        Check_Sources_For_Recompile;
 
         {$IFDEF DEBUG_PPU_CYCLES}
         WriteLn('PPUALGO tppumodule.recompile_from_sources ',ModuleName^,' old=',StateStr,' new=',ms_compile);
         {$ENDIF}
-        was_interfaced_compiled:=interface_compiled;
+        WasInterfaceCompiled:=interface_compiled;
         { disconnect used modules }
         disconnect_depending_modules;
         if FromPPU then
-          ppu_discarded:=true;
+          ppu_discarded:=True;
         { Flag modules to reload }
-        flagdependent;
+        FlagDependent;
         { Reset stack, parser, scanner, etc }
         if not FromPPU then
-          end_of_parsing;
+          End_Of_Parsing;
         { Reset the module }
-        reset(true);
+        Reset(True);
 
         { mark this module for recompilation }
-        state:=ms_compile;
-        if was_interfaced_compiled then
-          setdefgeneration;
+        State:=ms_compile;
+        if WasInterfaceCompiled then
+          SetDefGeneration;
       end;
 
-    procedure TPPUModule.check_sources_for_recompile;
+    procedure TPPUModule.Check_Sources_For_Recompile;
       var
-        pu: TUsedUnit;
+        Pu: TUsedUnit;
       begin
         { recompile the unit or give a fatal error if sources not available }
         if not SourcesAvail then
          begin
-           search_unit_files(loadedfrommodule,true);
+           SearchUnitFiles(LoadedFromModule,True);
            if not SourcesAvail then
             begin
-              printcomments;
+              PrintComments;
               if recompile_reason=rr_noppu then
                 begin
-                  pu:=TUsedUnit(loadedfrommodule.used_units.first);
-                  while Assigned(pu) do
+                  Pu:=TUsedUnit(LoadedFromModule.used_units.First);
+                  while Assigned(Pu) do
                     begin
-                      if pu.u=self then
-                        break;
-                      pu:=TUsedUnit(pu.next);
+                      if Pu.U=Self then
+                        Break;
+                      Pu:=TUsedUnit(Pu.Next);
                     end;
-                  if Assigned(pu) and Assigned(pu.unitsym) then
-                    MessagePos2(pu.unitsym.fileinfo,unit_f_cant_find_ppu,RealModuleName^,loadedfrommodule.RealModuleName^)
+                  if Assigned(Pu) and Assigned(Pu.UnitSym) then
+                    MessagePos2(Pu.UnitSym.FileInfo,unit_f_cant_find_ppu,RealModuleName^,LoadedFromModule.RealModuleName^)
                   else
-                    Message2(unit_f_cant_find_ppu,RealModuleName^,loadedfrommodule.RealModuleName^);
+                    Message2(unit_f_cant_find_ppu,RealModuleName^,LoadedFromModule.RealModuleName^);
                 end
               else
                 Message1(unit_f_cant_compile_unit,RealModuleName^);
             end;
          end;
         { we found the sources, we do not need the verbose messages anymore }
-        if comments <> nil then
+        if Comments <> nil then
         begin
-          comments.free;
-          comments:=nil;
+          Comments.Free;
+          Comments:=nil;
         end;
       end;
 
-    procedure TPPUModule.mark_recompile_needed(reason: TRecompileReason);
+    procedure TPPUModule.MarkRecompileNeeded(Reason: TRecompileReason);
       begin
         {$IFDEF DEBUG_PPU_CYCLES}
         WriteLn('PPUALGO tppumodule.mark_recompile_needed ',ModuleName^,' old=',StateStr,' new=',ms_compile);
         {$ENDIF}
-        recompile_reason:=reason;
-        do_recompile:=true;
-        do_reload:=true;
-        state:=ms_compile;
+        recompile_reason:=Reason;
+        do_recompile:=True;
+        do_reload:=True;
+        State:=ms_compile;
       end;
 
-    procedure TPPUModule.post_load_or_compile(from_module : TModule);
+    procedure TPPUModule.Post_Load_Or_Compile(FromModule : TModule);
       begin
         if in_interface then
           InternalError(200212283);
@@ -2367,210 +2367,210 @@ var
         { reopen the old module }
       end;
 
-    function TPPUModule.loadppu(from_module : TModule) : boolean;
+    function TPPUModule.LoadPPU(FromModule : TModule) : Boolean;
       const
-        ImplIntf : array[boolean] of string[15]=('implementation','interface');
+        ImplIntf : array[Boolean] of string[15]=('implementation','interface');
       var
-        old_module: TModule;
+        SavedCurrentModule: TModule;
       begin
-        Result:=false;
+        Result:=False;
 
         {$IFDEF DEBUG_PPU_CYCLES}
-        WriteLn('PPUALGO tppumodule.loadppu START ',ModuleName^,' (',StateStr,') used by "',from_module.ModuleName^,'" (',from_module.StateStr,')');
+        WriteLn('PPUALGO tppumodule.loadppu START ',ModuleName^,' (',StateStr,') used by "',FromModule.ModuleName^,'" (',FromModule.StateStr,')');
         {$ENDIF}
 
-        Message3(unit_u_load_unit,from_module.ModuleName^,
-                 ImplIntf[from_module.in_interface],
+        Message3(unit_u_load_unit,FromModule.ModuleName^,
+                 ImplIntf[FromModule.in_interface],
                  ModuleName^);
 
         if do_reload then
-          exit; { reload needed. see scheduler }
+          Exit; { reload needed. see scheduler }
 
-        if state>ms_registered then
-          exit(interface_compiled); { loading has already started or is finished }
+        if State>ms_registered then
+          Exit(interface_compiled); { loading has already started or is finished }
 
         if ppu_discarded then
-          exit; { the ppu crc didn't match and this module was reset, don't load the ppu }
+          Exit; { the ppu crc didn't match and this module was reset, don't load the ppu }
 
         if ctask_fast_backtrack then
-          exit; { return to scheduler }
+          Exit; { return to scheduler }
 
-        loadedfrommodule:=from_module;
+        LoadedFromModule:=FromModule;
 
-        old_module:=CurrentModule;
-        SetCurrentModule(self);
+        SavedCurrentModule:=CurrentModule;
+        SetCurrentModule(Self);
 
-        if check_loadfrompackage then
+        if CheckLoadFromPackage then
         begin
-          Result:=continueloadppu;
-          SetCurrentModule(old_module);
+          Result:=ContinueLoadPPU;
+          SetCurrentModule(SavedCurrentModule);
           {$IFDEF DEBUG_PPU_CYCLES}
-          WriteLn('PPUALGO tppumodule.loadppu from package: ',ModuleName^,' (',StateStr,') used by "',from_module.ModuleName^,'" (',from_module.StateStr,')');
+          WriteLn('PPUALGO tppumodule.loadppu from package: ',ModuleName^,' (',StateStr,') used by "',FromModule.ModuleName^,'" (',FromModule.StateStr,')');
           {$ENDIF}
-          exit;
+          Exit;
         end;
 
 
         { search ppu file }
         Message1(unit_u_loading_unit,ModuleName^);
-        if auPPU in search_unit_files(from_module,false) then
+        if auPPU in SearchUnitFiles(FromModule,False) then
         begin
-          state:=ms_load;
-          FromPPU:=true;
-          load_interface;
+          State:=ms_load;
+          FromPPU:=True;
+          LoadInterface;
         end
         else begin
           {$IFDEF DEBUG_PPU_CYCLES}
           WriteLn('PPUALGO tppumodule.try_load_ppufile ',ModuleName^,' no ppu found old=',StateStr,' new=',ms_compile);
           {$ENDIF}
           { recompile_reason is already set by search_unit_files }
-          state:=ms_compile;
+          State:=ms_compile;
         end;
 
-        Result:=continueloadppu;
+        Result:=ContinueLoadPPU;
 
-        SetCurrentModule(old_module);
+        SetCurrentModule(SavedCurrentModule);
       end;
 
-    function TPPUModule.get_check_uses(out check_impl_uses, check_crc: boolean): boolean;
+    function TPPUModule.Get_Check_Uses(out CheckImplUses, CheckCRC: Boolean): Boolean;
       begin
-        check_impl_uses:=false;
-        check_crc:=false;
+        CheckImplUses:=False;
+        CheckCRC:=False;
         if not interface_compiled then
-          exit(false);
-        Result:=true;
+          Exit(False);
+        Result:=True;
 
         { if implementation was parsed then implementation uses must be checked too }
-        if state=ms_load then
-          check_impl_uses:=ppu_waitingfor_crc
+        if State=ms_load then
+          CheckImplUses:=ppu_waitingfor_crc
         else if FromPPU then
-          check_impl_uses:=true
+          CheckImplUses:=True
         else
-          check_impl_uses:=state in [ms_compiling_waitfinish..ms_compiled,ms_processed];
+          CheckImplUses:=State in [ms_compiling_waitfinish..ms_compiled,ms_processed];
 
         { if the crc(s) of used unit are known }
-        check_crc:={$IFNDEF DisableUrCRC}not (mf_release in moduleflags) and{$ENDIF}
-                   (FromPPU or (state in [ms_load,ms_compiled,ms_processed]));
+        CheckCRC:={$IFNDEF DisableUrCRC}not (mf_release in ModuleFlags) and{$ENDIF}
+                   (FromPPU or (State in [ms_load,ms_compiled,ms_processed]));
       end;
 
-    function TPPUModule.continueloadppu: boolean;
+    function TPPUModule.ContinueLoadPPU: Boolean;
       var
-        old_module: TModule;
+        SavedCurrentModule: TModule;
       begin
-        Result:=false;
-        old_module:=CurrentModule;
+        Result:=False;
+        SavedCurrentModule:=CurrentModule;
 
-        restore_state;
+        Restore_State;
 
         if do_reload then
           InternalError(2026021017);
 
-        if state=ms_load then
+        if State=ms_load then
         begin
-          if load_usedunits then
+          if LoadUsedUnits then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
             WriteLn('PPUALGO tppumodule.continueloadppu ',ModuleName^,' finished state=',StateStr);
             {$ENDIF}
             Message1(unit_u_finished_loading_unit,ModuleName^);
-          end else if state=ms_load then
+          end else if State=ms_load then
           begin
             {$IFDEF DEBUG_PPU_CYCLES}
             WriteLn('PPUALGO tppumodule.continueloadppu ',ModuleName^,' delay state=',StateStr);
             {$ENDIF}
-            store_state;
+            Store_State;
             { loading unfinished or reset, restore current_module }
-            SetCurrentModule(old_module);
-            exit;
-          end else if state<>ms_compile then
+            SetCurrentModule(SavedCurrentModule);
+            Exit;
+          end else if State<>ms_compile then
             InternalError(2026020510);
         end;
 
         { PPU is not needed anymore }
-        if Assigned(ppufile) then
-          discardppu;
+        if Assigned(PPUFile) then
+          DiscardPPU;
 
-        if state=ms_compiled then
+        if State=ms_compiled then
         begin
-          Result:=true;
-          post_load_or_compile(loadedfrommodule);
-        end else if state=ms_compile then
-          mark_recompile_needed(recompile_reason);
+          Result:=True;
+          Post_Load_Or_Compile(LoadedFromModule);
+        end else if State=ms_compile then
+          MarkRecompileNeeded(recompile_reason);
 
         { finished or recompile: no need to store state }
-        FreeAndNil(stored_state);
+        FreeAndNil(StoredState);
 
         { we are back, restore current_module }
-        SetCurrentModule(old_module);
+        SetCurrentModule(SavedCurrentModule);
       end;
 
-    function TPPUModule.canreload(out firstwaiting: TModule; ignore_do_reload: boolean): boolean;
+    function TPPUModule.CanReload(out FirstWaiting: TModule; IgnoreDoReload: Boolean): Boolean;
       var
-        check_impl_uses, check_crc: Boolean;
-        pu: TUsedUnit;
+        CheckImplUses, CheckCRC: Boolean;
+        Pu: TUsedUnit;
       begin
-        firstwaiting:=nil;
-        if not get_check_uses(check_impl_uses, check_crc) then
-          exit(true);
+        FirstWaiting:=nil;
+        if not Get_Check_Uses(CheckImplUses, CheckCRC) then
+          Exit(True);
 
-        pu:=TUsedUnit(used_units.first);
-        while Assigned(pu) do
+        Pu:=TUsedUnit(used_units.First);
+        while Assigned(Pu) do
         begin
-          if pu.in_interface or check_impl_uses then
+          if Pu.in_interface or CheckImplUses then
           begin
-            if not pu.u.interface_compiled
-                or (pu.u.do_reload and not ignore_do_reload) then
+            if not Pu.U.interface_compiled
+                or (Pu.U.do_reload and not IgnoreDoReload) then
             begin
-              firstwaiting:=pu.u;
-              exit(false);
+              FirstWaiting:=Pu.U;
+              Exit(False);
             end;
           end;
-          pu:=TUsedUnit(pu.next);
+          Pu:=TUsedUnit(Pu.Next);
         end;
-        Result:=true;
+        Result:=True;
       end;
 
-    procedure TPPUModule.reload;
+    procedure TPPUModule.Reload;
       var
-        firstwaiting: TModule;
+        FirstWaiting: TModule;
       begin
         if not do_reload then
           InternalError(2026021015);
 
-        if state in [ms_compiled,ms_processed] then
+        if State in [ms_compiled,ms_processed] then
         begin
           WriteLn('tppumodule.reload_module ',ModuleName^,' ',StateStr);
           InternalError(2026022410);
         end;
 
-        if not canreload(firstwaiting,true) then
+        if not CanReload(FirstWaiting,True) then
         begin
           if do_reload then
           begin
             WriteLn('tppumodule.reload_module ',ModuleName^,' ',StateStr,' RELOAD FAILED');
             InternalError(2026022413);
           end;
-          exit;
+          Exit;
         end;
 
         {$IFDEF DEBUG_PPU_CYCLES}
         WriteLn('PPUALGO tppumodule.reload ',ModuleName^,' ',StateStr,' RELOADING');
         {$ENDIF}
         Message(unit_u_forced_reload);
-        do_reload:=false;
-        SetCurrentModule(self);
-        re_resolve;
+        do_reload:=False;
+        SetCurrentModule(Self);
+        Re_Resolve;
       end;
 
-    procedure TPPUModule.discardppu;
+    procedure TPPUModule.DiscardPPU;
       begin
         { PPU is not needed anymore }
-        if not Assigned(ppufile) then
-          exit;
-        ppufile.closefile;
-        ppufile.free;
-        ppufile:=nil;
-        FreeAndNil(packageppustream);
+        if not Assigned(PPUFile) then
+          Exit;
+        PPUFile.CloseFile;
+        PPUFile.Free;
+        PPUFile:=nil;
+        FreeAndNil(PackagePPUStream);
       end;
 
 {*****************************************************************************
@@ -2578,77 +2578,77 @@ var
 *****************************************************************************}
 
 
-    function registerunit(callermodule:TModule;const s : TIDString;const fn:string; out is_new:boolean) : TPPUModule;
+    function RegisterUnit(CallerModule:TModule;const S : TIDString;const FN:string; out IsNewUnit:Boolean) : TPPUModule;
 
-          function FindCycle(aFile, SearchFor: TPPUModule; var Cycle: TFPList): boolean;
+          function FindCycle(AFile, SearchFor: TPPUModule; var Cycle: TFPList): Boolean;
           var
-            aParent: TDependentUnit;
+            AParent: TDependentUnit;
           begin
             { check already visited }
-            if aFile.cycle_search_stamp=TPPUModule.cycle_stamp then
-              exit(false);
-            aFile.cycle_search_stamp:=TPPUModule.cycle_stamp; { mark visited }
+            if AFile.cycle_search_stamp=TPPUModule.cycle_stamp then
+              Exit(False);
+            AFile.cycle_search_stamp:=TPPUModule.cycle_stamp; { mark visited }
 
-            if aFile=SearchFor then
+            if AFile=SearchFor then
             begin
               { unit cycle found }
               if Cycle=nil then Cycle:=TFPList.Create;
-              Cycle.Add(aFile);
+              Cycle.Add(AFile);
               //Writeln('exit at ',aFile.modulename^,' callermodule=',callermodule.modulename^,' in_interface=',callermodule.in_interface);
-              exit(true);
+              Exit(True);
             end;
 
-            aParent:=TDependentUnit(aFile.dependent_units.First);
-            While Assigned(aParent) do
+            AParent:=TDependentUnit(AFile.dependent_units.First);
+            While Assigned(AParent) do
             begin
               //writeln('Registering ',Callermodule.modulename^,': checking cyclic dependency of ',aFile.modulename^, ' on ',aParent.u.modulename^);
-              if aParent.in_interface then
+              if AParent.in_interface then
               begin
                 // writeln('Registering ',Callermodule.get_modulename,': checking cyclic dependency of ',aFile.get_modulename, ' on ',aparent.u.get_modulename);
-                if FindCycle(TPPUModule(aParent.u),SearchFor,Cycle) then
+                if FindCycle(TPPUModule(AParent.U),SearchFor,Cycle) then
                 begin
                   //Writeln('Cycle found, exit at ',aParent.u.modulename^,' uses ',aFile.modulename^);
-                  Cycle.Add(aFile);
-                  exit(true);
+                  Cycle.Add(AFile);
+                  Exit(True);
                 end;
               end;
-              aParent:=TDependentUnit(aParent.Next);
+              AParent:=TDependentUnit(AParent.Next);
             end;
-            Result:=false;
+            Result:=False;
           end;
 
       var
-        ups   : TIDString;
-        hp    : TPPUModule;
-        cycle : TFPList;
+        Ups   : TIDString;
+        HP    : TPPUModule;
+        Cycle : TFPList;
 
       begin
         { Info }
-        ups:=upper(s);
+        Ups:=Upper(S);
 
         { search all loaded units, skip program/library }
-        hp:=TPPUModule(loaded_units.first);
-        while Assigned(hp) and ((hp.ModuleName^<>ups) or not hp.is_unit) do
-          hp:=TPPUModule(hp.next);
+        HP:=TPPUModule(loaded_units.First);
+        while Assigned(HP) and ((HP.ModuleName^<>Ups) or not HP.is_unit) do
+          HP:=TPPUModule(HP.Next);
 
-        is_new:=not Assigned(hp);
-        if is_new then
+        IsNewUnit:=not Assigned(HP);
+        if IsNewUnit then
         begin
           { the unit is not in the loaded units,
             we create an entry and register the unit }
-          Message1(unit_u_registering_new_unit,ups);
-          hp:=TPPUModule.create(callermodule,s,fn,true);
-          addloadedunit(hp);
+          Message1(unit_u_registering_new_unit,Ups);
+          HP:=TPPUModule.Create(CallerModule,S,FN,True);
+          AddLoadedUnit(HP);
         end
-        else if callermodule.in_interface then
+        else if CallerModule.in_interface then
         begin
           { check for a cycle }
           Cycle:=nil;
           try
             TModule.increase_cycle_stamp;
-            if FindCycle(TPPUModule(CallerModule),hp,Cycle) then
+            if FindCycle(TPPUModule(CallerModule),HP,Cycle) then
             begin
-              Message2(unit_f_circular_unit_reference,callermodule.RealModuleName^,hp.RealModuleName^);
+              Message2(unit_f_circular_unit_reference,CallerModule.RealModuleName^,HP.RealModuleName^);
             end;
           finally
             Cycle.Free;
@@ -2656,7 +2656,7 @@ var
         end;
 
         { return }
-        registerunit:=hp;
+        RegisterUnit:=HP;
       end;
 
 end.

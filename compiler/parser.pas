@@ -46,7 +46,7 @@ implementation
       CClasses,
       GlobType,tokens,Systems,Globals,Verbose,GlobStat,
       SymBase,SymTable,symdef,
-      FinPut,fppu,
+      FinPut,FPPU,
       AAsmData,
       CScript,gendef,
       CompHook,
@@ -68,7 +68,7 @@ implementation
          { Write Browser Collections }
          Do_ExtractSymbolInfo;
 
-       module.end_of_parsing;
+       module.End_Of_Parsing;
 
        { Restore all locally modified warning messages }
        RestoreLocalVerbosity(CurrentSettings.PMessage);

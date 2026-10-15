@@ -167,7 +167,7 @@ implementation
       aasmtai,aasmcnst,
       SymBase,SymTable,defutil,
       nadd,ncal,ncnv,ncon,nflw,ninl,nld,nmem,nutils,
-      ppu,
+      PPU,
       pass_1,
       export;
 

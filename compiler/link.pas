@@ -174,7 +174,7 @@ Implementation
 {$ifdef hasUnix}
       BaseUnix,
 {$endif hasUnix}
-      CScript,Globals,Verbose,CompHook,ppu,FPCHash,Triplet,tripletcpu,
+      CScript,Globals,Verbose,CompHook,PPU,FPCHash,Triplet,tripletcpu,
       aasmbase,aasmcpu,
       ogmap;
 
@@ -404,13 +404,13 @@ Implementation
            if mf_has_exports in moduleflags then
              HasExports:=true;
          { link unit files }
-           if (headerflags and uf_no_link)=0 then
+           if (headerflags and UfNoLink)=0 then
             begin
               { create mask which unit files need linking }
               mask:=link_always;
               { lto linking ?}
               if (cs_lto in CurrentSettings.ModuleSwitches) and
-                 ((headerflags and uf_lto_linked)<>0) and
+                 ((headerflags and UfLTOLinked)<>0) and
                  (not(cs_lto_nosystem in InitSettings.GlobalSwitches) or
                   (hp.ModuleName^<>'SYSTEM')) then
                 begin
@@ -421,10 +421,10 @@ Implementation
                   { static linking ? }
                   if (cs_link_static in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and uf_static_linked)=0 then
+                     if (headerflags and UfStaticLinked)=0 then
                       begin
                         { if static not avail then try smart linking }
-                        if (headerflags and uf_smart_linked)<>0 then
+                        if (headerflags and UfSmartLinked)<>0 then
                          begin
                            Message1(exec_t_unit_not_static_linkable_switch_to_smart,ModuleName^);
                            mask:=mask or link_smart;
@@ -438,10 +438,10 @@ Implementation
                   { smart linking ? }
                   if (cs_link_smart in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and uf_smart_linked)=0 then
+                     if (headerflags and UfSmartLinked)=0 then
                       begin
                         { if smart not avail then try static linking }
-                        if (headerflags and uf_static_linked)<>0 then
+                        if (headerflags and UfStaticLinked)<>0 then
                          begin
                            { if not create_smartlink_library, then smart linking happens using the
                              regular object files
@@ -459,10 +459,10 @@ Implementation
                   { shared linking }
                   if (cs_link_shared in CurrentSettings.GlobalSwitches) then
                    begin
-                     if (headerflags and uf_shared_linked)=0 then
+                     if (headerflags and UfSharedLinked)=0 then
                       begin
                         { if shared not avail then try static linking }
-                        if (headerflags and uf_static_linked)<>0 then
+                        if (headerflags and UfStaticLinked)<>0 then
                          begin
                            Message1(exec_t_unit_not_shared_linkable_switch_to_static,ModuleName^);
                            mask:=mask or link_static;

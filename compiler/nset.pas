@@ -549,7 +549,7 @@ implementation
       var
         b : byte;
       begin
-        ppufile.putboolean(p^.label_type = ltConstString);
+        ppufile.PutBoolean(p^.label_type = ltConstString);
         if (p^.label_type = ltConstString) then
           begin
             p^._low_str.ppuwrite(ppufile);
@@ -561,9 +561,9 @@ implementation
             ppufile.putexprint(p^._high);
           end;
 
-        ppufile.putlongint(p^.blockid);
+        ppufile.PutLongInt(p^.blockid);
         b:=ord(Assigned(p^.greater)) or (ord(Assigned(p^.less)) shl 1);
-        ppufile.putbyte(b);
+        ppufile.PutByte(b);
         if Assigned(p^.greater) then
           ppuwritecaselabel(ppufile,p^.greater);
         if Assigned(p^.less) then
@@ -577,7 +577,7 @@ implementation
         p : PCaseLabel;
       begin
         new(p);
-        if ppufile.getboolean then
+        if ppufile.GetBoolean then
           begin
             p^.label_type := ltConstString;
             p^._low_str := CStringConstNode.ppuload(stringconstn,ppufile);
@@ -591,8 +591,8 @@ implementation
             p^._high:=ppufile.getexprint;
           end;
 
-        p^.blockid:=ppufile.getlongint;
-        b:=ppufile.getbyte;
+        p^.blockid:=ppufile.GetLongInt;
+        b:=ppufile.GetByte;
         if (b and 1)=1 then
          p^.greater:=ppuloadcaselabel(ppufile)
         else
@@ -644,7 +644,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         elseblock:=ppuloadnode(ppufile);
-        cnt:=ppufile.getlongint();
+        cnt:=ppufile.GetLongInt();
         blocks:=TFPList.create;
         for i:=0 to cnt-1 do
           addblock(i,ppuloadnode(ppufile));
@@ -660,7 +660,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,elseblock);
-        ppufile.putlongint(blocks.count);
+        ppufile.PutLongInt(blocks.count);
         for i:=0 to blocks.count-1 do
           ppuwritenode(ppufile,PCaseBlock(blocks[i])^.statement);
         ppuwritecaselabel(ppufile,flabels);

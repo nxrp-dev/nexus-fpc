@@ -72,7 +72,7 @@ implementation
     Globals,
     symdef,
     Verbose,
-    entfile;
+    EntFile;
 
   procedure TUnitWPOInfo.clearderefinfo;
     begin
@@ -98,21 +98,21 @@ implementation
       { write the number of instantiated object types in this module,
         followed by the derefs of those types
       }
-      ppufile.putlongint(fcreatedobjtypes.count);
+      ppufile.PutLongInt(fcreatedobjtypes.count);
       for i:=0 to fcreatedobjtypes.count-1 do
         ppufile.putderef(fcreatedobjtypesderefs[i]);
-      ppufile.putlongint(fcreatedclassrefobjtypes.count);
+      ppufile.PutLongInt(fcreatedclassrefobjtypes.count);
       for i:=0 to fcreatedclassrefobjtypes.count-1 do
         ppufile.putderef(fcreatedclassrefobjtypesderefs[i]);
-      ppufile.putlongint(fmaybecreatedbyclassrefdeftypes.count);
+      ppufile.PutLongInt(fmaybecreatedbyclassrefdeftypes.count);
       for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
         ppufile.putderef(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
-      ppufile.putlongint(fcalledvmtentriestemplist.count);
+      ppufile.PutLongInt(fcalledvmtentriestemplist.count);
       for i:=0 to fcalledvmtentriestemplist.count-1 do
         TCalledVMTEntries(fcalledvmtentriestemplist[i]).ppuwrite(ppufile);
 
-      ppufile.writeentry(ibcreatedobjtypes);
+      ppufile.WriteEntry(IBCreatedObjTypes);
 
       { don't free deref arrays immediately after use, as the types may need
         re-resolving in case a unit needs to be reloaded
@@ -125,38 +125,38 @@ implementation
       i, len: LongInt;
     begin
       { load start of definition section, which holds the amount of defs }
-      if ppufile.readentry<>ibcreatedobjtypes then
+      if ppufile.ReadEntry<>IBCreatedObjTypes then
         message(unit_f_ppu_read_error);
 
       { don't load the wpo info from the units if we are not generating
         a wpo feedback file (that would just take time and memory)
       }
       if (InitSettings.GenWPOptimizerSwitches=[]) then
-        ppufile.skipdata(ppufile.entrysize)
+        ppufile.SkipData(ppufile.EntrySize)
       else
         begin
-          len:=ppufile.getlongint;
+          len:=ppufile.GetLongInt;
           fcreatedobjtypes:=TFPObjectList.create(false);
           fcreatedobjtypes.count:=len;
           SetLength(fcreatedobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fcreatedobjtypesderefs[i]);
 
-          len:=ppufile.getlongint;
+          len:=ppufile.GetLongInt;
           fcreatedclassrefobjtypes:=TFPObjectList.create(false);
           fcreatedclassrefobjtypes.count:=len;
           SetLength(fcreatedclassrefobjtypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fcreatedclassrefobjtypesderefs[i]);
 
-          len:=ppufile.getlongint;
+          len:=ppufile.GetLongInt;
           fmaybecreatedbyclassrefdeftypes:=TFPObjectList.create(false);
           fmaybecreatedbyclassrefdeftypes.count:=len;
           SetLength(fmaybecreatedbyclassrefdeftypesderefs,len);
           for i:=0 to len-1 do
             ppufile.getderef(fmaybecreatedbyclassrefdeftypesderefs[i]);
 
-          len:=ppufile.getlongint;
+          len:=ppufile.GetLongInt;
           fcalledvmtentriestemplist:=TFPObjectList.create(false);
           fcalledvmtentriestemplist.count:=len;
           fcalledvmtentries:=TFPHashList.create;

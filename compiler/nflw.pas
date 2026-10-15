@@ -298,7 +298,7 @@ implementation
 
     uses
       GlobType,Systems,ConstExp,compinnr,
-      CUtils,Verbose,Globals,ppu,
+      CUtils,Verbose,Globals,PPU,
       SymTable,paramgr,defcmp,defutil,htypechk,pass_1,
       ncal,nadd,ncon,nmem,nld,ncnv,nbas,nutils,ninl,nset,ngenutil,
     {$ifdef state_tracking}
@@ -1110,7 +1110,7 @@ implementation
         inherited ppuload(t,ppufile);
         t1:=ppuloadnode(ppufile);
         t2:=ppuloadnode(ppufile);
-        ppufile.getset(TPPUSet1(loopflags));
+        ppufile.GetSet(TPPUSet1(loopflags));
       end;
 
 
@@ -1119,7 +1119,7 @@ implementation
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,t1);
         ppuwritenode(ppufile,t2);
-        ppufile.putset(TPPUSet1(loopflags));
+        ppufile.PutSet(TPPUSet1(loopflags));
       end;
 
 
@@ -2367,8 +2367,8 @@ implementation
     constructor TGotoNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        labelnodeidx:=ppufile.getlongint;
-        exceptionblock:=ppufile.getbyte;
+        labelnodeidx:=ppufile.GetLongInt;
+        exceptionblock:=ppufile.GetByte;
       end;
 
 
@@ -2376,8 +2376,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         labelnodeidx:=labelnode.ppuidx;
-        ppufile.putlongint(labelnodeidx);
-        ppufile.putbyte(exceptionblock);
+        ppufile.PutLongInt(labelnodeidx);
+        ppufile.PutByte(exceptionblock);
       end;
 
 
@@ -2533,7 +2533,7 @@ implementation
     constructor TLabelNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        exceptionblock:=ppufile.getbyte;
+        exceptionblock:=ppufile.GetByte;
       end;
 
 
@@ -2558,7 +2558,7 @@ implementation
     procedure TLabelNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(exceptionblock);
+        ppufile.PutByte(exceptionblock);
       end;
 
 

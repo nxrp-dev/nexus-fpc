@@ -95,7 +95,7 @@ interface
          procedure section_create_relocsec(p:TObject;arg:pointer);
          procedure section_write_sechdr(p:TObject;arg:pointer);
        protected
-         function writedata(data:TObjData):boolean;override;
+         function WriteData(data:TObjData):boolean;override;
        public
          constructor Create(AWriter:TObjectWriter);override;
        end;
@@ -319,7 +319,7 @@ interface
          procedure MemPos_ExeSection(const aname:string);override;
          procedure DataPos_Start;override;
          procedure DataPos_ExeSection(const aname:string);override;
-         function writeData:boolean;override;
+         function WriteData:boolean;override;
          procedure GenerateLibraryImports(ImportLibraryList:TFPHashObjectList);override;
          property interpreter:PShortString read FInterpreter write FInterpreter;
        end;
@@ -1043,7 +1043,7 @@ implementation
       end;
 
 
-    function TElfObjectOutput.writedata(data:TObjData):boolean;
+    function TElfObjectOutput.WriteData(data:TObjData):boolean;
       var
         header : TELFHeader;
         shoffset,

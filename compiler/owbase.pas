@@ -37,7 +37,7 @@ type
     opened : boolean;
     buf    : TAnsiCharDynArray;
     bufidx : LongWord;
-    procedure writebuf;
+    procedure WriteBuf;
   protected
     fsize,
     fobjsize  : LongWord;
@@ -45,8 +45,8 @@ type
     constructor create;
     constructor createAr(const Aarfn:string);virtual;
     destructor  Destroy;override;
-    function  createfile(const fn:string):boolean;virtual;
-    procedure closefile;virtual;
+    function  CreateFile(const fn:string):boolean;virtual;
+    procedure CloseFile;virtual;
     procedure writesym(const sym:string);virtual;
     procedure write(const b;len:LongWord);virtual;
     procedure WriteZeros(l:LongWord);
@@ -78,7 +78,7 @@ type
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);virtual;
     destructor  Destroy;override;
     function  openfile(const fn:string):boolean;virtual;
-    procedure closefile;virtual;
+    procedure CloseFile;virtual;
     procedure seek(len:LongInt);virtual;
     function  read(out b;len:LongInt):boolean;virtual;
     function  readarray(a:TDynamicArray;len:LongInt):boolean;
@@ -116,7 +116,7 @@ end;
 destructor TObjectWriter.Destroy;
 begin
   if opened then
-   closefile;
+   CloseFile;
   buf:=nil;
 end;
 
@@ -126,9 +126,9 @@ begin
 end;
 
 
-function TObjectWriter.createfile(const fn:string):boolean;
+function TObjectWriter.CreateFile(const fn:string):boolean;
 begin
-  createfile:=false;
+  CreateFile:=false;
   f:=CFileStreamClass.Create(fn,fmCreate);
   if CStreamError<>0 then
     begin
@@ -139,16 +139,16 @@ begin
   fsize:=0;
   fobjsize:=0;
   opened:=true;
-  createfile:=true;
+  CreateFile:=true;
 end;
 
 
-procedure TObjectWriter.closefile;
+procedure TObjectWriter.CloseFile;
 var
   fn : string;
 begin
   if bufidx>0 then
-   writebuf;
+   WriteBuf;
   fn:=f.FileName;
   f.free;
   f := nil;
@@ -161,7 +161,7 @@ begin
 end;
 
 
-procedure TObjectWriter.writebuf;
+procedure TObjectWriter.WriteBuf;
 begin
   f.write(buf[0],bufidx);
   bufidx:=0;
@@ -187,14 +187,14 @@ begin
    begin
      bufleft:=BufSize-bufidx;
      if bufleft=0 then
-       Writebuf;
+       WriteBuf;
      if len>bufleft then
       begin
         move(p[idx],buf[bufidx],bufleft);
         dec(len,bufleft);
         inc(idx,bufleft);
         inc(bufidx,bufleft);
-        writebuf;
+        WriteBuf;
       end
      else
       begin
@@ -259,7 +259,7 @@ end;
 destructor TObjectReader.Destroy;
 begin
   if opened then
-    closefile;
+    CloseFile;
 end;
 
 
@@ -290,7 +290,7 @@ begin
 end;
 
 
-procedure TObjectReader.closefile;
+procedure TObjectReader.CloseFile;
 begin
   opened:=false;
   bufidx:=0;

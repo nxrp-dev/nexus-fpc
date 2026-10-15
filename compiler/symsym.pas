@@ -42,7 +42,7 @@ interface
        { this class is the base for all symbol objects }
        TStoredSym = class(TSym)
        private
-          procedure writeentry(ppufile: TCompilerPPUFile; ibnr: byte);
+          procedure WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
        protected
           procedure PPUWritePlatform(ppufile: TCompilerPPUFile);virtual;
           procedure PPULoadPlatform(ppufile: TCompilerPPUFile);virtual;
@@ -367,7 +367,7 @@ interface
 
        TPropertySym = class(TStoredSym)
          protected
-           procedure finalize_getter_or_setter_for_sym(getset: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef); virtual;
+           procedure finalize_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef); virtual;
          public
           propoptions   : TPropertyOptions;
           overriddenpropsym : TPropertySym;
@@ -397,10 +397,10 @@ interface
           procedure add_accessor_parameters(readprocdef, writeprocdef: TProcDef);
           procedure add_index_parameter(var paranr: word; readprocdef, writeprocdef: TProcDef);
           { set up the accessors for this property }
-          procedure add_getter_or_setter_for_sym(getset: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
+          procedure add_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
           procedure register_override(overriddenprop: TPropertySym);
           { inherit the read/write property }
-          procedure inherit_accessor(getset: TPropAccessListTypes); virtual;
+          procedure inherit_accessor(GetSet: TPropAccessListTypes); virtual;
        end;
        TPropertySymClass = class of TPropertySym;
 
@@ -538,7 +538,7 @@ implementation
        paramgr,
        ProcInfo,
        { ppu }
-       entfile,ppu
+       EntFile,PPU
        ;
 
 {****************************************************************************
@@ -633,17 +633,17 @@ implementation
     constructor TStoredSym.ppuload(st:TSymTyp;ppufile:TCompilerPPUFile);
       begin
 {$ifdef symansistr}
-         inherited Create(st,ppufile.getansistring);
+         inherited Create(st,ppufile.GetAnsiString);
 {$else symansistr}
-         inherited Create(st,ppufile.getstring);
+         inherited Create(st,ppufile.GetString);
 {$endif symansistr}
-         SymId:=ppufile.getlongint;
+         SymId:=ppufile.GetLongInt;
          CurrentModule.symlist[SymId]:=self;
          ppufile.getposinfo(fileinfo);
-         visibility:=TVisibility(ppufile.getbyte);
-         ppufile.getset(TPPUSet2(symoptions));
+         visibility:=TVisibility(ppufile.GetByte);
+         ppufile.GetSet(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
-           deprecatedmsg:=ppufile.getpshortstring
+           deprecatedmsg:=ppufile.GetPShortString
          else
            deprecatedmsg:=nil;
          RTTIAttributeList:=TRTTIAttributeList.ppuload(ppufile);
@@ -655,13 +655,13 @@ implementation
         oldcrc : boolean;
       begin
 {$ifdef symansistr}
-         ppufile.putansistring(realname);
+         ppufile.PutAnsiString(realname);
 {$else}
-         ppufile.putstring(realname);
+         ppufile.PutString(realname);
 {$endif}
-         ppufile.putlongint(SymId);
+         ppufile.PutLongInt(SymId);
          ppufile.putposinfo(fileinfo);
-         ppufile.putbyte(byte(visibility));
+         ppufile.PutByte(byte(visibility));
          { symoptions can differ between interface and implementation, except
            for overload (this is checked in pdecsub.proc_add_definition() )
 
@@ -671,9 +671,9 @@ implementation
          }
          oldcrc:=ppufile.DoCRC;
          ppufile.DoCRC:=false;
-         ppufile.putset(TPPUSet2(symoptions));
+         ppufile.PutSet(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
-           ppufile.putstring(deprecatedmsg^);
+           ppufile.PutString(deprecatedmsg^);
          ppufile.DoCRC:=oldcrc;
          TRTTIAttributeList.ppuwrite(RTTIAttributeList,ppufile);
       end;
@@ -709,10 +709,10 @@ implementation
       end;
 
 
-    procedure TStoredSym.writeentry(ppufile: TCompilerPPUFile; ibnr: byte);
+    procedure TStoredSym.WriteEntry(ppufile: TCompilerPPUFile; ibnr: byte);
       begin
         PPUWritePlatform(ppufile);
-        ppufile.writeentry(ibnr);
+        ppufile.WriteEntry(ibnr);
       end;
 
 
@@ -795,7 +795,7 @@ implementation
          else
            begin
               inherited ppuwrite(ppufile);
-              writeentry(ppufile,iblabelsym);
+              WriteEntry(ppufile,IBLabelSym);
            end;
       end;
 
@@ -838,7 +838,7 @@ implementation
     procedure TUnitSym.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         writeentry(ppufile,ibunitsym);
+         WriteEntry(ppufile,IBUnitSym);
       end;
 
 {****************************************************************************
@@ -891,7 +891,7 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.putderef(unitsymderef);
-         writeentry(ppufile,ibnamespacesym);
+         WriteEntry(ppufile,IBNamespaceSym);
       end;
 
     procedure TNamespaceSym.buildderef;
@@ -957,7 +957,7 @@ implementation
          inherited ppuload(procsym,ppufile);
          FProcdefList:=TFPObjectList.Create(false);
          FProcdefDerefList:=TFPList.Create;
-         pdcnt:=ppufile.getword;
+         pdcnt:=ppufile.GetWord;
          for i:=1 to pdcnt do
           begin
             ppufile.getderef(pdderef);
@@ -967,7 +967,7 @@ implementation
            begin
              fgenprocsymovlds:=TFPObjectList.create(false);
              fgenprocsymovldsderefs:=TFPList.create;
-             symcnt:=ppufile.getword;
+             symcnt:=ppufile.GetWord;
              for i:=1 to symcnt do
                begin
                  ppufile.getderef(symderef);
@@ -1000,7 +1000,7 @@ implementation
          inherited ppuwrite(ppufile);
          if fprocdefdereflist=nil then
            InternalError(2013121801);
-         ppufile.putword(FProcdefDerefList.Count);
+         ppufile.PutWord(FProcdefDerefList.Count);
          for i:=0 to FProcdefDerefList.Count-1 do
            begin
              d.dataidx:=PtrInt(FProcdefDerefList[i]);
@@ -1010,14 +1010,14 @@ implementation
            begin
              if not Assigned(fgenprocsymovldsderefs) then
                InternalError(2021010301);
-             ppufile.putword(fgenprocsymovldsderefs.count);
+             ppufile.PutWord(fgenprocsymovldsderefs.count);
              for i:=0 to fgenprocsymovldsderefs.count-1 do
                begin
                  d.dataidx:=ptrint(fgenprocsymovldsderefs[i]);
                  ppufile.putderef(d);
                end;
            end;
-         writeentry(ppufile,ibprocsym);
+         WriteEntry(ppufile,IBProcSym);
       end;
 
 
@@ -1583,7 +1583,7 @@ implementation
                                 TPROPERTYSYM
 ****************************************************************************}
 
-    procedure TPropertySym.finalize_getter_or_setter_for_sym(getset: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
+    procedure TPropertySym.finalize_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
       begin
         { do nothing by default }
       end;
@@ -1619,24 +1619,24 @@ implementation
         aset : TSmallSet;
       begin
          inherited ppuload(propertysym,ppufile);
-         ppufile.getset(TPPUSet2(propoptions));
+         ppufile.GetSet(TPPUSet2(propoptions));
          if ppo_overrides in propoptions then
            ppufile.getderef(overriddenpropsymderef);
          ppufile.getderef(propdefderef);
-         index:=ppufile.getlongint;
+         index:=ppufile.GetLongInt;
          if ppo_default_is_single in propoptions then
            begin
-             d:=ppufile.getreal;
+             d:=ppufile.GetReal;
 	     s:=Single(d);
              default:=PLongInt(@s)^;
            end
          else if ppo_default_is_set in propoptions then
            begin
-             ppufile.getset(TPPUSet4(aset));
+             ppufile.GetSet(TPPUSet4(aset));
              default:=PLongInt(@aset)^;
            end
          else
-           default:=ppufile.getlongint;
+           default:=ppufile.GetLongInt;
          ppufile.getderef(indexdefderef);
          for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
            propaccesslist[pap]:=ppufile.getpropaccesslist;
@@ -1760,7 +1760,7 @@ implementation
       end;
 
 
-    procedure TPropertySym.add_getter_or_setter_for_sym(getset: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
+    procedure TPropertySym.add_getter_or_setter_for_sym(GetSet: TPropAccessListTypes; sym: TSym; fielddef: TDef; accessordef: TProcDef);
       var
         cpo: TCompareParasOptions;
       begin
@@ -1773,16 +1773,16 @@ implementation
                 see tw3216.pas (FK) }
               cpo:=[cpo_allowdefaults,cpo_ignorehidden];
               { allow var-parameters for setters in case of VARPROPSETTER+ }
-              if (getset=palt_write) and
+              if (GetSet=palt_write) and
                  (cs_varpropsetter in CurrentSettings.LocalSwitches) then
                 include(cpo,cpo_ignorevarspez);
-              propaccesslist[getset].procdef:=TProcSym(sym).find_procdef_bypara(accessordef.paras,accessordef.returndef,cpo);
-              if not Assigned(propaccesslist[getset].procdef) or
+              propaccesslist[GetSet].procdef:=TProcSym(sym).find_procdef_bypara(accessordef.paras,accessordef.returndef,cpo);
+              if not Assigned(propaccesslist[GetSet].procdef) or
                  { because of cpo_ignorehidden we need to compare if it is a static class method and we have a class property }
-                 ((sp_static in symoptions)<>TProcDef(propaccesslist[getset].procdef).no_self_node) then
+                 ((sp_static in symoptions)<>TProcDef(propaccesslist[GetSet].procdef).no_self_node) then
                 Message(parser_e_ill_property_access_sym)
               else
-                finalize_getter_or_setter_for_sym(getset,sym,fielddef,accessordef);
+                finalize_getter_or_setter_for_sym(GetSet,sym,fielddef,accessordef);
             end;
           fieldvarsym :
             begin
@@ -1799,7 +1799,7 @@ implementation
                     ((sp_static in symoptions) <> (sp_static in sym.symoptions)) then
                    Message(parser_e_ill_property_access_sym)
                  else
-                   finalize_getter_or_setter_for_sym(getset,sym,fielddef,accessordef);
+                   finalize_getter_or_setter_for_sym(GetSet,sym,fielddef,accessordef);
                end
               else
                IncompatibleTypes(fielddef,propdef);
@@ -1817,7 +1817,7 @@ implementation
       end;
 
 
-    procedure TPropertySym.inherit_accessor(getset: TPropAccessListTypes);
+    procedure TPropertySym.inherit_accessor(GetSet: TPropAccessListTypes);
       begin
         { nothing to do by default }
       end;
@@ -1860,27 +1860,27 @@ implementation
         aset : TSmallSet;
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet2(propoptions));
+        ppufile.PutSet(TPPUSet2(propoptions));
         if ppo_overrides in propoptions then
           ppufile.putderef(overriddenpropsymderef);
         ppufile.putderef(propdefderef);
-        ppufile.putlongint(index);
+        ppufile.PutLongInt(index);
         if ppo_default_is_single in propoptions then
           begin
             s:=psingle(@default)^;
-            ppufile.putreal(s);
+            ppufile.PutReal(s);
           end
         else if ppo_default_is_set in propoptions then
           begin
             aset:=PSmallSet(@default)^;
-            ppufile.putset(TPPUSet4(aset));
+            ppufile.PutSet(TPPUSet4(aset));
           end
         else
-          ppufile.putlongint(default);
+          ppufile.PutLongInt(default);
         ppufile.putderef(indexdefderef);
         for pap:=low(TPropAccessListTypes) to high(TPropAccessListTypes) do
           ppufile.putpropaccesslist(propaccesslist[pap]);
-        writeentry(ppufile,ibpropertysym);
+        WriteEntry(ppufile,IBPropertySym);
         if [ppo_hasparameters,ppo_overrides]*propoptions=[ppo_hasparameters] then
           TParaSymTable(parast).ppuwrite(ppufile);
       end;
@@ -1904,11 +1904,11 @@ implementation
       begin
          inherited ppuload(st,ppufile);
          varstate:=vs_readwritten;
-         varspez:=TVarSpez(ppufile.getbyte);
-         varregable:=TVarRegable(ppufile.getbyte);
-         ppufile.getset(TPPUSet1(varsymaccess));
+         varspez:=TVarSpez(ppufile.GetByte);
+         varregable:=TVarRegable(ppufile.GetByte);
+         ppufile.GetSet(TPPUSet1(varsymaccess));
          ppufile.getderef(vardefderef);
-         ppufile.getset(TPPUSet4(varoptions));
+         ppufile.GetSet(TPPUSet4(varoptions));
       end;
 
 
@@ -1934,14 +1934,14 @@ implementation
         oldcrc : boolean;
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(varspez));
+         ppufile.PutByte(byte(varspez));
          oldcrc:=ppufile.DoCRC;
          ppufile.DoCRC:=false;
-         ppufile.putbyte(byte(varregable));
-         ppufile.putset(TPPUSet1(varsymaccess));
+         ppufile.PutByte(byte(varregable));
+         ppufile.PutSet(TPPUSet1(varsymaccess));
          ppufile.DoCRC:=oldcrc;
          ppufile.putderef(vardefderef);
-         ppufile.putset(TPPUSet4(varoptions));
+         ppufile.PutSet(TPPUSet4(varoptions));
       end;
 
 
@@ -2093,9 +2093,9 @@ implementation
     constructor TFieldVarSym.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(fieldvarsym,ppufile);
-         fieldoffset:=ppufile.getasizeint;
+         fieldoffset:=ppufile.GetASizeInt;
          if (vo_has_mangledname in varoptions) then
-           externalname:=ppufile.getpshortstring
+           externalname:=ppufile.GetPShortString
          else
            externalname:=nil;
          PPULoadPlatform(ppufile);
@@ -2105,10 +2105,10 @@ implementation
     procedure TFieldVarSym.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putasizeint(fieldoffset);
+         ppufile.PutASizeInt(fieldoffset);
          if (vo_has_mangledname in varoptions) then
-           ppufile.putstring(externalname^);
-         writeentry(ppufile,ibfieldvarsym);
+           ppufile.PutString(externalname^);
+         WriteEntry(ppufile,IBFieldVarSym);
       end;
 
 
@@ -2295,17 +2295,17 @@ implementation
          inherited ppuload(staticvarsym,ppufile);
 {$ifdef symansistr}
          if vo_has_mangledname in varoptions then
-           _mangledname:=ppufile.getansistring
+           _mangledname:=ppufile.GetAnsiString
          else
            _mangledname:='';
 {$else symansistr}
          if vo_has_mangledname in varoptions then
-           _mangledname:=ppufile.getpshortstring
+           _mangledname:=ppufile.GetPShortString
          else
            _mangledname:=nil;
 {$endif symansistr}
          if vo_has_section in varoptions then
-           section:=ppufile.getansistring;
+           section:=ppufile.GetAnsiString;
          ppufile.getderef(fieldvarsymderef);
          PPULoadPlatform(ppufile);
       end;
@@ -2338,14 +2338,14 @@ implementation
            mangledbasename has been set) }
          if vo_has_mangledname in varoptions then
 {$ifdef symansistr}
-           ppufile.putansistring(mangledname);
+           ppufile.PutAnsiString(mangledname);
 {$else symansistr}
-           ppufile.putstring(mangledname);
+           ppufile.PutString(mangledname);
 {$endif symansistr}
          if vo_has_section in varoptions then
-           ppufile.putansistring(section);
+           ppufile.PutAnsiString(section);
          ppufile.putderef(fieldvarsymderef);
-         writeentry(ppufile,ibstaticvarsym);
+         WriteEntry(ppufile,IBStaticVarSym);
       end;
 
 
@@ -2470,7 +2470,7 @@ implementation
     procedure TLocalVarSym.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         writeentry(ppufile,iblocalvarsym);
+         WriteEntry(ppufile,IBLocalVarSym);
       end;
 
 
@@ -2501,17 +2501,17 @@ implementation
     constructor TParaVarSym.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(paravarsym,ppufile);
-         paranr:=ppufile.getword;
-         univpara:=ppufile.getboolean;
+         paranr:=ppufile.GetWord;
+         univpara:=ppufile.GetBoolean;
 
          { The var state of parameter symbols is fixed after writing them so
            we write them to the unit file.
            This enables constant folding for inline procedures loaded from units
          }
-         varstate:=TVarState(ppufile.getbyte);
+         varstate:=TVarState(ppufile.GetByte);
 
          { read usage info }
-         refs:=ppufile.getbyte;
+         refs:=ppufile.GetByte;
 
          paraloc[calleeside].init;
          paraloc[callerside].init;
@@ -2527,8 +2527,8 @@ implementation
         oldcrc : boolean;
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putword(paranr);
-         ppufile.putboolean(univpara);
+         ppufile.PutWord(paranr);
+         ppufile.PutBoolean(univpara);
 
          { The var state of parameter symbols is fixed after writing them so
            we write them to the unit file.
@@ -2536,10 +2536,10 @@ implementation
          }
          oldcrc:=ppufile.DoCRC;
          ppufile.DoCRC:=false;
-         ppufile.putbyte(ord(varstate));
+         ppufile.PutByte(ord(varstate));
          { write also info about the usage of parameters,
            the absolute usage does not matter }
-         ppufile.putbyte(min(1,refs));
+         ppufile.PutByte(min(1,refs));
          ppufile.DoCRC:=oldcrc;
 
          if vo_has_explicit_paraloc in varoptions then
@@ -2547,7 +2547,7 @@ implementation
              paraloc[callerside].check_simple_location;
              paraloc[callerside].ppuwrite(ppufile);
            end;
-         writeentry(ppufile,ibparavarsym);
+         WriteEntry(ppufile,IBParaVarSym);
       end;
 
     function TParaVarSym.needs_finalization:boolean;
@@ -2617,14 +2617,14 @@ implementation
          inherited ppuload(absolutevarsym,ppufile);
          ref:=nil;
          asmname:=nil;
-         abstyp:=TAbsoluteTyp(ppufile.getbyte);
+         abstyp:=TAbsoluteTyp(ppufile.GetByte);
          case abstyp of
            tovar :
              ref:=ppufile.getpropaccesslist;
            toasm :
-             asmname:=ppufile.getpshortstring;
+             asmname:=ppufile.GetPShortString;
            toaddr :
-             addroffset:=ppufile.getpuint;
+             addroffset:=ppufile.GetPUInt;
          end;
          PPULoadPlatform(ppufile);
       end;
@@ -2633,16 +2633,16 @@ implementation
     procedure TAbsoluteVarSym.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(abstyp));
+         ppufile.PutByte(byte(abstyp));
          case abstyp of
            tovar :
              ppufile.putpropaccesslist(ref);
            toasm :
-             ppufile.putstring(asmname^);
+             ppufile.PutString(asmname^);
            toaddr :
-             ppufile.putpuint(addroffset);
+             ppufile.PutPUInt(addroffset);
          end;
-         writeentry(ppufile,ibabsolutevarsym);
+         WriteEntry(ppufile,IBAbsoluteVarSym);
       end;
 
 
@@ -2777,19 +2777,19 @@ implementation
             i  : LongInt;
          begin
            InitWideString(pw);
-           SetLengthWideString(pw,ppufile.getlongint);
+           SetLengthWideString(pw,ppufile.GetLongInt);
            { don't use getdata, because the compilerwidechars may have to
              be byteswapped
            }
            for i:=0 to pw.len-1 do
-             pw.data[i]:=ppufile.getword;
+             pw.data[i]:=ppufile.GetWord;
            value.valuews:=pw;
          end;
 
       begin
          inherited ppuload(constsym,ppufile);
          constdef:=nil;
-         consttyp:=TConstTyp(ppufile.getbyte);
+         consttyp:=TConstTyp(ppufile.GetByte);
          fillchar(value, sizeof(value), #0);
          case consttyp of
            constord :
@@ -2800,7 +2800,7 @@ implementation
            constpointer :
              begin
                ppufile.getderef(constdefderef);
-               value.valueordptr:=ppufile.getptruint;
+               value.valueordptr:=ppufile.GetPtrUInt;
              end;
            constwstring :
              begin
@@ -2810,9 +2810,9 @@ implementation
            constresourcestring :
               begin
               ppufile.getderef(constdefderef);
-              value.len:=ppufile.getlongint;
+              value.len:=ppufile.GetLongInt;
               GetMem(pc,value.len+1);
-              ppufile.getdata(pc^,value.len);
+              ppufile.GetData(pc^,value.len);
               pc[value.len]:=#0;
               value.valueptr:=pc;
               end;
@@ -2825,21 +2825,21 @@ implementation
              begin
                ppufile.getderef(constdefderef);
                new(pd);
-               pd^:=ppufile.getreal;
+               pd^:=ppufile.GetReal;
                value.valueptr:=pd;
              end;
            constset :
              begin
                ppufile.getderef(constdefderef);
                new(ps);
-               ppufile.getset(TPPUSet32(ps^));
+               ppufile.GetSet(TPPUSet32(ps^));
                value.valueptr:=ps;
              end;
            constguid :
              begin
                ppufile.getderef(constdefderef);
                new(PGUID(value.valueptr));
-               ppufile.getdata(value.valueptr^,sizeof(TGUID));
+               ppufile.GetData(value.valueptr^,sizeof(TGUID));
              end;
            constnil :
              ppufile.getderef(constdefderef);
@@ -2910,15 +2910,15 @@ implementation
         len : integer;
       begin
         len:=GetLengthWideString(value.valuews);
-        ppufile.putlongint(len);
+        ppufile.PutLongInt(len);
         if len>0 then
-          ppufile.putdata(value.valuews.data[0],value.valuews.len*sizeof(TCompilerWideChar));
+          ppufile.PutData(value.valuews.data[0],value.valuews.len*sizeof(TCompilerWideChar));
       end;
 
 
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putbyte(byte(consttyp));
+         ppufile.PutByte(byte(consttyp));
          case consttyp of
            constnil :
              ppufile.putderef(constdefderef);
@@ -2930,7 +2930,7 @@ implementation
            constpointer :
              begin
                ppufile.putderef(constdefderef);
-               ppufile.putptruint(value.valueordptr);
+               ppufile.PutPtrUInt(value.valueordptr);
              end;
            constwstring :
              begin
@@ -2940,8 +2940,8 @@ implementation
            conststring,constresourcestring:
              begin
              ppufile.putderef(constdefderef);
-             ppufile.putlongint(value.len);
-             ppufile.putdata(pchar(value.valueptr)^,value.len);
+             ppufile.PutLongInt(value.len);
+             ppufile.PutData(pchar(value.valueptr)^,value.len);
              end;
             constwresourcestring:
              begin
@@ -2951,22 +2951,22 @@ implementation
            constreal :
              begin
                ppufile.putderef(constdefderef);
-               ppufile.putreal(PBestReal(value.valueptr)^);
+               ppufile.PutReal(PBestReal(value.valueptr)^);
              end;
            constset :
              begin
                ppufile.putderef(constdefderef);
-               ppufile.putset(TPPUSet32(value.valueptr^));
+               ppufile.PutSet(TPPUSet32(value.valueptr^));
              end;
            constguid :
              begin
                ppufile.putderef(constdefderef);
-               ppufile.putdata(value.valueptr^,sizeof(TGUID));
+               ppufile.PutData(value.valueptr^,sizeof(TGUID));
              end;
          else
            InternalError(13);
          end;
-        writeentry(ppufile,ibconstsym);
+        WriteEntry(ppufile,IBConstSym);
       end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -3029,7 +3029,7 @@ implementation
       begin
          inherited ppuload(enumsym,ppufile);
          ppufile.getderef(definitionderef);
-         value:=ppufile.getlongint;
+         value:=ppufile.GetLongInt;
          PPULoadPlatform(ppufile);
       end;
 
@@ -3050,8 +3050,8 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.putderef(definitionderef);
-         ppufile.putlongint(value);
-         writeentry(ppufile,ibenumsym);
+         ppufile.PutLongInt(value);
+         WriteEntry(ppufile,IBEnumSym);
       end;
 
 
@@ -3083,7 +3083,7 @@ implementation
       begin
          inherited ppuload(typesym,ppufile);
          ppufile.getderef(typedefderef);
-         fprettyname:=ppufile.getansistring;
+         fprettyname:=ppufile.GetAnsiString;
          PPULoadPlatform(ppufile);
       end;
 
@@ -3105,8 +3105,8 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.putderef(typedefderef);
-         ppufile.putansistring(fprettyname);
-         writeentry(ppufile,ibtypesym);
+         ppufile.PutAnsiString(fprettyname);
+         WriteEntry(ppufile,IBTypeSym);
       end;
 
 
@@ -3145,7 +3145,7 @@ implementation
         s : shortstring;
       begin
          inherited ppuload(syssym,ppufile);
-         number:=TInlineNumber(ppufile.getlongint);
+         number:=TInlineNumber(ppufile.GetLongInt);
          PPULoadPlatform(ppufile);
          str(LongInt(number),s);
          if Assigned(syssym_list.find(s)) then
@@ -3161,8 +3161,8 @@ implementation
     procedure TSysSym.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putlongint(LongInt(number));
-         writeentry(ppufile,ibsyssym);
+         ppufile.PutLongInt(LongInt(number));
+         WriteEntry(ppufile,IBSysSym);
       end;
 
 
@@ -3192,12 +3192,12 @@ implementation
     constructor TMacro.ppuload(ppufile:TCompilerPPUFile);
       begin
          inherited ppuload(macrosym,ppufile);
-         defined:=ppufile.getboolean;
-         is_compiler_var:=ppufile.getboolean;
+         defined:=ppufile.GetBoolean;
+         is_compiler_var:=ppufile.GetBoolean;
          is_used:=false;
-         allocate_buftext(ppufile.getlongint);
+         allocate_buftext(ppufile.GetLongInt);
          if buflen>0 then
-           ppufile.getdata(buftext)
+           ppufile.GetData(buftext)
       end;
 
     destructor TMacro.Destroy;
@@ -3209,12 +3209,12 @@ implementation
     procedure TMacro.ppuwrite(ppufile:TCompilerPPUFile);
       begin
          inherited ppuwrite(ppufile);
-         ppufile.putboolean(defined);
-         ppufile.putboolean(is_compiler_var);
-         ppufile.putlongint(buflen);
+         ppufile.PutBoolean(defined);
+         ppufile.PutBoolean(is_compiler_var);
+         ppufile.PutLongInt(buflen);
          if buflen > 0 then
-           ppufile.putdata(buftext);
-         writeentry(ppufile,ibmacrosym);
+           ppufile.PutData(buftext);
+         WriteEntry(ppufile,IBMacroSym);
       end;
 
 

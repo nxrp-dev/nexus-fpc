@@ -819,11 +819,11 @@ implementation
       len: LongInt;
     begin
       ppufile.getderef(fobjdefderef);
-      len:=ppufile.getlongint;
+      len:=ppufile.GetLongInt;
       calledentries:=TBitSet.Create_ByteSize(len);
       if (len <> calledentries.DataSize) then
         InternalError(2009060301);
-      ppufile.readdata(calledentries.data);
+      ppufile.ReadData(calledentries.data);
     end;
 
 
@@ -838,8 +838,8 @@ implementation
   procedure TCalledVMTEntries.ppuwrite(ppufile: TCompilerPPUFile);
     begin
       ppufile.putderef(objdefderef);
-      ppufile.putlongint(calledentries.DataSize);
-      ppufile.putdata(calledentries.data);
+      ppufile.PutLongInt(calledentries.DataSize);
+      ppufile.PutData(calledentries.data);
     end;
 
 

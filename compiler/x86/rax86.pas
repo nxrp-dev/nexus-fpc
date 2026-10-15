@@ -71,7 +71,7 @@ type
     procedure FixupOpcode;virtual;
     { opcode adding }
     function ConcatInstruction(p : TAsmList) : TAI;override;
-    function getstring(aAddMemRefSize: boolean = true): string;
+    function GetString(aAddMemRefSize: boolean = true): string;
     { returns true, if the opcode might have an extension as used by AVX512 }
     function MightHaveExtension : boolean;
   end;
@@ -836,7 +836,7 @@ begin
               begin
                 Message2(asmr_w_check_mem_operand_negative_offset,
                          //std_op2str[opcode],
-			 getstring(false),
+			 GetString(false),
                          ToStr(memoffset));
               end
               else if ((tx86operand(operands[i]).hastype) and (memopsize < memrefsize)) or
@@ -847,7 +847,7 @@ begin
                   if memoffset = 0 then
                   begin
                     Message3(asmr_w_check_mem_operand_size3,
-			     getstring(false),
+			     GetString(false),
                              ToStr(memopsize),
                              ToStr(memrefsize)
                              );
@@ -855,7 +855,7 @@ begin
                   else
                   begin
                     Message4(asmr_w_check_mem_operand_size_offset,
-			     getstring(false),
+			     GetString(false),
                              ToStr(memopsize),
                              ToStr(memrefsize),
                              ToStr(memoffset)
@@ -2125,7 +2125,7 @@ begin
   result:=ai;
 end;
 
-function Tx86Instruction.getstring(aAddMemRefSize: boolean): string;
+function Tx86Instruction.GetString(aAddMemRefSize: boolean): string;
 var
   i : LongInt;
   s, sval : string;

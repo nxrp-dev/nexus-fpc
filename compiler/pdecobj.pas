@@ -49,7 +49,7 @@ implementation
       SymBase,SymSym,SymTable,symcreat,defcmp,
       node,ncon,
       FModule,Scanner,
-      pbase,pexpr,pdecsub,pdecvar,ptype,pdecl,pgenutil,pparautl,ppu
+      pbase,pexpr,pdecsub,pdecvar,ptype,pdecl,pgenutil,pparautl,PPU
       ;
 
     const

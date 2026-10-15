@@ -878,7 +878,7 @@ implementation
       SysUtils,
       Verbose,
       Globals,
-      ppu;
+      PPU;
 
     const
       pputaimarker = 254;
@@ -919,11 +919,11 @@ implementation
         t : TAIType;
       begin
         { marker }
-        b:=ppufile.getbyte;
+        b:=ppufile.GetByte;
         if b<>pputaimarker then
           InternalError(200208181);
         { load nodetype }
-        t:=TAIType(ppufile.getbyte);
+        t:=TAIType(ppufile.GetByte);
         if t<>ait_none then
          begin
            if t>high(TAIType) then
@@ -942,16 +942,16 @@ implementation
     procedure ppuwriteai(ppufile:TCompilerPPUFile;n:TAI);
       begin
         { marker, read by ppuloadnode }
-        ppufile.putbyte(pputaimarker);
+        ppufile.PutByte(pputaimarker);
         if Assigned(n) then
          begin
            { type, read by ppuloadnode }
-           ppufile.putbyte(byte(n.typ));
+           ppufile.PutByte(byte(n.typ));
            {writeln('taiwrite: ',taitypestr[n.typ]);}
            n.ppuwrite(ppufile);
          end
         else
-         ppufile.putbyte(byte(ait_none));
+         ppufile.PutByte(byte(ait_none));
       end;
 
 
@@ -974,17 +974,17 @@ implementation
     constructor TAISymbolPair.ppuload(t: TAIType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        kind:=TSymbolPairKind(ppufile.getbyte);
-        sym:=ppufile.getpshortstring;
-        value:=ppufile.getpshortstring;
+        kind:=TSymbolPairKind(ppufile.GetByte);
+        sym:=ppufile.GetPShortString;
+        value:=ppufile.GetPShortString;
       end;
 
     procedure TAISymbolPair.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(kind));
-        ppufile.putstring(sym^);
-        ppufile.putstring(value^);
+        ppufile.PutByte(byte(kind));
+        ppufile.PutString(sym^);
+        ppufile.PutString(value^);
       end;
 
 
@@ -1149,11 +1149,11 @@ implementation
     constructor TAISection.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        sectype:=TAsmSectiontype(ppufile.getbyte);
-        secalign:=ppufile.getlongint;
-        name:=ppufile.getpshortstring;
-        ppufile.getset(TPPUSet1(secflags));
-        secprogbits:=TSectionProgbits(ppufile.getbyte);
+        sectype:=TAsmSectiontype(ppufile.GetByte);
+        secalign:=ppufile.GetLongInt;
+        name:=ppufile.GetPShortString;
+        ppufile.GetSet(TPPUSet1(secflags));
+        secprogbits:=TSectionProgbits(ppufile.GetByte);
         sec:=nil;
         AssociativeSection:=nil;
       end;
@@ -1168,11 +1168,11 @@ implementation
     procedure TAISection.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(sectype));
-        ppufile.putlongint(secalign);
-        ppufile.putstring(name^);
-        ppufile.putset(TPPUSet1(secflags));
-        ppufile.putbyte(byte(secprogbits));
+        ppufile.PutByte(byte(sectype));
+        ppufile.PutLongInt(secalign);
+        ppufile.PutString(name^);
+        ppufile.PutSet(TPPUSet1(secflags));
+        ppufile.PutByte(byte(secprogbits));
       end;
 
 
@@ -1228,8 +1228,8 @@ implementation
       begin
         inherited Create;
         sym:=ppufile.getasmsymbol;
-        size:=ppufile.getaint;
-        is_global:=ppufile.getboolean;
+        size:=ppufile.GetAInt;
+        is_global:=ppufile.GetBoolean;
       end;
 
 
@@ -1237,8 +1237,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(sym);
-        ppufile.putaint(size);
-        ppufile.putboolean(is_global);
+        ppufile.PutAInt(size);
+        ppufile.PutBoolean(is_global);
       end;
 
 
@@ -1338,8 +1338,8 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         sym:=ppufile.getasmsymbol;
-        size:=ppufile.getlongint;
-        is_global:=ppufile.getboolean;
+        size:=ppufile.GetLongInt;
+        is_global:=ppufile.GetBoolean;
       end;
 
 
@@ -1347,8 +1347,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(sym);
-        ppufile.putlongint(size);
-        ppufile.putboolean(is_global);
+        ppufile.PutLongInt(size);
+        ppufile.PutBoolean(is_global);
       end;
 
 
@@ -1414,16 +1414,16 @@ implementation
     constructor TAIDirective.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        name:=ppufile.getansistring;
-        directive:=TAsmDirective(ppufile.getbyte);
+        name:=ppufile.GetAnsiString;
+        directive:=TAsmDirective(ppufile.GetByte);
       end;
 
 
     procedure TAIDirective.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putansistring(name);
-        ppufile.putbyte(byte(directive));
+        ppufile.PutAnsiString(name);
+        ppufile.PutByte(byte(directive));
       end;
 
 
@@ -1813,20 +1813,20 @@ implementation
     constructor TAIConst.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        consttype:=TAIConstType(ppufile.getbyte);
+        consttype:=TAIConstType(ppufile.GetByte);
         sym:=ppufile.getasmsymbol;
         endsym:=ppufile.getasmsymbol;
-        value:=ppufile.getint64;
+        value:=ppufile.GetInt64;
       end;
 
 
     procedure TAIConst.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(consttype));
+        ppufile.PutByte(byte(consttype));
         ppufile.putasmsymbol(sym);
         ppufile.putasmsymbol(endsym);
-        ppufile.putint64(value);
+        ppufile.PutInt64(value);
       end;
 
 
@@ -1980,16 +1980,16 @@ implementation
         constructor TAIRealConst.ppuload(t: TAIType; ppufile: TCompilerPPUFile);
       begin
         inherited;
-        realtyp:=TAIRealConstType(ppufile.getbyte);
+        realtyp:=TAIRealConstType(ppufile.GetByte);
         case realtyp of
           aitrealconst_s32bit:
-            value.s32val:=Single(ppufile.getreal);
+            value.s32val:=Single(ppufile.GetReal);
           aitrealconst_s64bit:
-            value.s64val:=Double(ppufile.getreal);
+            value.s64val:=Double(ppufile.GetReal);
           aitrealconst_s80bit:
-            value.s80val:=ppufile.getreal;
+            value.s80val:=ppufile.GetReal;
           aitrealconst_s64comp:
-            value.s64compval:=ppufile.getint64;
+            value.s64compval:=ppufile.GetInt64;
         end;
       end;
 
@@ -1997,17 +1997,17 @@ implementation
     procedure TAIRealConst.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(realtyp));
+        ppufile.PutByte(byte(realtyp));
         case realtyp of
           aitrealconst_s32bit:
-            ppufile.putreal(value.s32val);
+            ppufile.PutReal(value.s32val);
           aitrealconst_s64bit:
-            ppufile.putreal(value.s64val);
+            ppufile.PutReal(value.s64val);
           aitrealconst_s80bit:
-            ppufile.putreal(value.s80val);
+            ppufile.PutReal(value.s80val);
           aitrealconst_s64comp:
             begin
-              ppufile.putint64(value.s64compval);
+              ppufile.PutInt64(value.s64compval);
             end
         end;
       end;
@@ -2090,9 +2090,9 @@ implementation
         lNewLen : integer;
       begin
         inherited ppuload(t,ppufile);
-        lNewLen:=ppufile.getlongint;
+        lNewLen:=ppufile.GetLongInt;
         SetLength(str,lNewLen);
-        ppufile.getdata(str[0],lnewlen);
+        ppufile.GetData(str[0],lnewlen);
       end;
 
 
@@ -2102,8 +2102,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         lWriteLen:=length(str);
-        ppufile.putlongint(lWriteLen);
-        ppufile.putdata(str[0],lWriteLen);
+        ppufile.PutLongInt(lWriteLen);
+        ppufile.PutData(str[0],lWriteLen);
       end;
 
 
@@ -2142,7 +2142,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         labsym:=TAsmLabel(ppufile.getasmsymbol);
-        ppufile.getbyte; { was is_global flag, now unused }
+        ppufile.GetByte; { was is_global flag, now unused }
       end;
 
 
@@ -2150,7 +2150,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putasmsymbol(labsym);
-        ppufile.putbyte(0); { was is_global flag, now unused }
+        ppufile.PutByte(0); { was is_global flag, now unused }
       end;
 
 
@@ -2183,9 +2183,9 @@ implementation
         len : LongInt;
       begin
         inherited ppuload(t,ppufile);
-        len:=ppufile.getlongint;
+        len:=ppufile.GetLongInt;
         GetMem(str,len+1);
-        ppufile.getdata(str^,len);
+        ppufile.GetData(str^,len);
         str[len]:=#0;
       end;
 
@@ -2196,8 +2196,8 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         len:=StrLen(str);
-        ppufile.putlongint(len);
-        ppufile.putdata(str^,len);
+        ppufile.PutLongInt(len);
+        ppufile.PutData(str^,len);
       end;
 
 
@@ -2308,14 +2308,14 @@ implementation
     constructor TAICutObject.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        place:=TCutPlace(ppufile.getbyte);
+        place:=TCutPlace(ppufile.GetByte);
       end;
 
 
     procedure TAICutObject.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(place));
+        ppufile.PutByte(byte(place));
       end;
 
 
@@ -2334,14 +2334,14 @@ implementation
     constructor TAIMarker.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        kind:=TAsmMarker(ppufile.getbyte);
+        kind:=TAsmMarker(ppufile.GetByte);
       end;
 
 
     procedure TAIMarker.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(kind));
+        ppufile.PutByte(byte(kind));
       end;
 
 
@@ -2400,9 +2400,9 @@ implementation
     constructor TAITempAlloc.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        temppos:=ppufile.getlongint;
-        tempsize:=ppufile.getlongint;
-        allocation:=ppufile.getboolean;
+        temppos:=ppufile.GetLongInt;
+        tempsize:=ppufile.GetLongInt;
+        allocation:=ppufile.GetBoolean;
 {$ifdef EXTDEBUG}
         problem:=nil;
 {$endif EXTDEBUG}
@@ -2412,9 +2412,9 @@ implementation
     procedure TAITempAlloc.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putlongint(temppos);
-        ppufile.putlongint(tempsize);
-        ppufile.putboolean(allocation);
+        ppufile.PutLongInt(temppos);
+        ppufile.PutLongInt(tempsize);
+        ppufile.PutBoolean(allocation);
       end;
 
 
@@ -2480,18 +2480,18 @@ implementation
     constructor TAIRegAlloc.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getdata(reg,sizeof(TRegister));
-        ratype:=TRegAllocType(ppufile.getbyte);
-        keep:=ppufile.getboolean;
+        ppufile.GetData(reg,sizeof(TRegister));
+        ratype:=TRegAllocType(ppufile.GetByte);
+        keep:=ppufile.GetBoolean;
       end;
 
 
     procedure TAIRegAlloc.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putdata(reg,sizeof(TRegister));
-        ppufile.putbyte(byte(ratype));
-        ppufile.putboolean(keep);
+        ppufile.PutData(reg,sizeof(TRegister));
+        ppufile.PutByte(byte(ratype));
+        ppufile.PutBoolean(keep);
       end;
 
 
@@ -2808,16 +2808,16 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         { hopefully, we don't get problems with big/little endian here when cross compiling :/ }
-        ppufile.getdata(condition,sizeof(TAsmCond));
-        ops := ppufile.getbyte;
+        ppufile.GetData(condition,sizeof(TAsmCond));
+        ops := ppufile.GetByte;
         allocate_oper(ops);
         for i:=0 to ops-1 do
           ppuloadoper(ppufile,oper[i]^);
-        opcode:=TAsmOp(ppufile.getword);
+        opcode:=TAsmOp(ppufile.GetWord);
 {$ifdef x86}
-        ppufile.getdata(segprefix,sizeof(TRegister));
+        ppufile.GetData(segprefix,sizeof(TRegister));
 {$endif x86}
-        is_jmp:=ppufile.getboolean;
+        is_jmp:=ppufile.GetBoolean;
       end;
 
 
@@ -2826,15 +2826,15 @@ implementation
         i : integer;
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putdata(condition,sizeof(TAsmCond));
-        ppufile.putbyte(ops);
+        ppufile.PutData(condition,sizeof(TAsmCond));
+        ppufile.PutByte(ops);
         for i:=0 to ops-1 do
           ppuwriteoper(ppufile,oper[i]^);
-        ppufile.putword(word(opcode));
+        ppufile.PutWord(word(opcode));
 {$ifdef x86}
-        ppufile.putdata(segprefix,sizeof(TRegister));
+        ppufile.PutData(segprefix,sizeof(TRegister));
 {$endif x86}
-        ppufile.putboolean(is_jmp);
+        ppufile.PutBoolean(is_jmp);
       end;
 
 
@@ -2879,40 +2879,40 @@ implementation
 
     procedure TAICPUAbstract.ppuloadoper(ppufile:TCompilerPPUFile;var o:TOper);
       begin
-        o.typ:=TOpType(ppufile.getbyte);
-        o.ot:=ppufile.getlongint;
+        o.typ:=TOpType(ppufile.GetByte);
+        o.ot:=ppufile.GetLongInt;
         case o.typ of
           top_reg :
-            ppufile.getdata(o.reg,sizeof(TRegister));
+            ppufile.GetData(o.reg,sizeof(TRegister));
           top_ref :
             begin
               new(o.ref);
 {$ifdef x86}
-              ppufile.getdata(o.ref^.segment,sizeof(TRegister));
+              ppufile.GetData(o.ref^.segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.getdata(o.ref^.base,sizeof(TRegister));
-              ppufile.getdata(o.ref^.index,sizeof(TRegister));
-              ppufile.getdata(o.ref^.refaddr,sizeof(o.ref^.refaddr));
-              o.ref^.scalefactor:=ppufile.getbyte;
-              o.ref^.offset:=ppufile.getaint;
+              ppufile.GetData(o.ref^.base,sizeof(TRegister));
+              ppufile.GetData(o.ref^.index,sizeof(TRegister));
+              ppufile.GetData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
+              o.ref^.scalefactor:=ppufile.GetByte;
+              o.ref^.offset:=ppufile.GetAInt;
               o.ref^.symbol:=ppufile.getasmsymbol;
               o.ref^.relsymbol:=ppufile.getasmsymbol;
             end;
           top_const :
-            o.val:=ppufile.getaint;
+            o.val:=ppufile.GetAInt;
           top_local :
             begin
               new(o.localoper);
               with o.localoper^ do
                 begin
                   ppufile.getderef(localsymderef);
-                  localsymofs:=ppufile.getaint;
+                  localsymofs:=ppufile.GetAInt;
 {$ifdef x86}
-                  localsegment:=TRegister(ppufile.getlongint);
+                  localsegment:=TRegister(ppufile.GetLongInt);
 {$endif x86}
-                  localindexreg:=TRegister(ppufile.getlongint);
-                  localscale:=ppufile.getbyte;
-                  localgetoffset:=(ppufile.getbyte<>0);
+                  localindexreg:=TRegister(ppufile.GetLongInt);
+                  localscale:=ppufile.GetByte;
+                  localgetoffset:=(ppufile.GetByte<>0);
                 end;
             end;
           else
@@ -2923,38 +2923,38 @@ implementation
 
     procedure TAICPUAbstract.ppuwriteoper(ppufile:TCompilerPPUFile;const o:TOper);
       begin
-        ppufile.putbyte(byte(o.typ));
-        ppufile.putlongint(o.ot);
+        ppufile.PutByte(byte(o.typ));
+        ppufile.PutLongInt(o.ot);
         case o.typ of
           top_reg :
-            ppufile.putdata(o.reg,sizeof(TRegister));
+            ppufile.PutData(o.reg,sizeof(TRegister));
           top_ref :
             begin
 {$ifdef x86}
-              ppufile.putdata(o.ref^.segment,sizeof(TRegister));
+              ppufile.PutData(o.ref^.segment,sizeof(TRegister));
 {$endif x86}
-              ppufile.putdata(o.ref^.base,sizeof(TRegister));
-              ppufile.putdata(o.ref^.index,sizeof(TRegister));
-              ppufile.putdata(o.ref^.refaddr,sizeof(o.ref^.refaddr));
-              ppufile.putbyte(o.ref^.scalefactor);
-              ppufile.putaint(o.ref^.offset);
+              ppufile.PutData(o.ref^.base,sizeof(TRegister));
+              ppufile.PutData(o.ref^.index,sizeof(TRegister));
+              ppufile.PutData(o.ref^.refaddr,sizeof(o.ref^.refaddr));
+              ppufile.PutByte(o.ref^.scalefactor);
+              ppufile.PutAInt(o.ref^.offset);
               ppufile.putasmsymbol(o.ref^.symbol);
               ppufile.putasmsymbol(o.ref^.relsymbol);
             end;
           top_const :
-            ppufile.putaint(o.val);
+            ppufile.PutAInt(o.val);
           top_local :
             begin
               with o.localoper^ do
                 begin
                   ppufile.putderef(localsymderef);
-                  ppufile.putaint(localsymofs);
+                  ppufile.PutAInt(localsymofs);
 {$ifdef x86}
-                  ppufile.putlongint(LongInt(localsegment));
+                  ppufile.PutLongInt(LongInt(localsegment));
 {$endif x86}
-                  ppufile.putlongint(LongInt(localindexreg));
-                  ppufile.putbyte(localscale);
-                  ppufile.putbyte(byte(localgetoffset));
+                  ppufile.PutLongInt(LongInt(localindexreg));
+                  ppufile.PutByte(localscale);
+                  ppufile.PutByte(byte(localgetoffset));
                 end;
             end;
           else
@@ -3057,21 +3057,21 @@ implementation
     constructor TAIAlignAbstract.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        aligntype:=ppufile.getbyte;
+        aligntype:=ppufile.GetByte;
         fillsize:=0;
-        fillop:=ppufile.getbyte;
-        use_op:=ppufile.getboolean;
-        maxbytes:=ppufile.getbyte;
+        fillop:=ppufile.GetByte;
+        use_op:=ppufile.GetBoolean;
+        maxbytes:=ppufile.GetByte;
       end;
 
 
     procedure TAIAlignAbstract.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(aligntype);
-        ppufile.putbyte(fillop);
-        ppufile.putboolean(use_op);
-        ppufile.putbyte(maxbytes);
+        ppufile.PutByte(aligntype);
+        ppufile.PutByte(fillop);
+        ppufile.PutBoolean(use_op);
+        ppufile.PutByte(maxbytes);
       end;
 
 
@@ -3146,20 +3146,20 @@ implementation
     constructor TAISEHDirective.ppuload(t:TAIType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        kind:=TAsmSehDirective(ppufile.getbyte);
+        kind:=TAsmSehDirective(ppufile.GetByte);
         data.typ:=datatypemap[kind];
         case data.typ of
           sd_none: ;
           sd_string:
             begin
-              data.name:=ppufile.getpshortstring;
-              data.flags:=ppufile.getbyte;
+              data.name:=ppufile.GetPShortString;
+              data.flags:=ppufile.GetByte;
             end;
 
           sd_reg,sd_offset,sd_regoffset:
             begin
-              ppufile.getdata(data.reg,sizeof(TRegister));
-              data.offset:=ppufile.getdword;
+              ppufile.GetData(data.reg,sizeof(TRegister));
+              data.offset:=ppufile.GetDWord;
             end;
         end;
       end;
@@ -3174,19 +3174,19 @@ implementation
     procedure TAISEHDirective.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(ord(kind));
+        ppufile.PutByte(ord(kind));
         case data.typ of
           sd_none: ;
           sd_string:
             begin
-              ppufile.putstring(data.name^);
-              ppufile.putbyte(data.flags);
+              ppufile.PutString(data.name^);
+              ppufile.PutByte(data.flags);
             end;
 
           sd_reg,sd_offset,sd_regoffset:
             begin
-              ppufile.putdata(data.reg,sizeof(TRegister));
-              ppufile.putdword(data.offset);
+              ppufile.PutData(data.reg,sizeof(TRegister));
+              ppufile.PutDWord(data.offset);
             end;
         end;
       end;
@@ -3234,8 +3234,8 @@ implementation
     procedure TAIAttribute.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putdword(tag);
-        ppufile.putdword(value);
+        ppufile.PutDWord(tag);
+        ppufile.PutDWord(value);
       end;
 
 

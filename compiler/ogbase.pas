@@ -449,7 +449,7 @@ interface
       protected
         { writer }
         FWriter    : TObjectWriter;
-        function  writeData(Data:TObjData):boolean;virtual;abstract;
+        function  WriteData(Data:TObjData):boolean;virtual;abstract;
         property CObjData : TObjDataClass read FCObjData write FCObjData;
         procedure WriteSectionContent(Data:TObjData);
       public
@@ -640,7 +640,7 @@ interface
         ComdatGroups : TFPHashList;
         FixedSectionAlign : boolean;
         AllowUndefinedSymbols : boolean;
-        function  writeData:boolean;virtual;abstract;
+        function  WriteData:boolean;virtual;abstract;
         property CExeSection:TExeSectionClass read FCExeSection write FCExeSection;
         property CObjData:TObjDataClass read FCObjData write FCObjData;
         property CObjSymbol:TObjSymbolClass read FCObjSymbol write FCObjSymbol;
@@ -2010,7 +2010,7 @@ implementation
         result:=false;
         { start the writer already, so the .a generation can initialize
           the position of the current objectfile }
-        if not FWriter.createfile(fn) then
+        if not FWriter.CreateFile(fn) then
          Comment(VFatal,'Can''t create object '+fn);
         result:=true;
       end;
@@ -2019,11 +2019,11 @@ implementation
     function TObjOutput.writeobjectfile(Data:TObjData):boolean;
       begin
         if ErrorCount=0 then
-         result:=writeData(Data)
+         result:=WriteData(Data)
         else
          result:=true;
         { close the writer }
-        FWriter.closefile;
+        FWriter.CloseFile;
       end;
 
 
@@ -2383,15 +2383,15 @@ implementation
     function TExeOutput.WriteExeFile(const fn:string):boolean;
       begin
         result:=false;
-        if FWriter.createfile(fn) then
+        if FWriter.CreateFile(fn) then
          begin
            { Only write the .o if there are no errors }
            if ErrorCount=0 then
-             result:=writedata
+             result:=WriteData
            else
              result:=true;
            { close the writer }
-           FWriter.closefile;
+           FWriter.CloseFile;
          end
         else
          Comment(VFatal,'Can''t create executable '+fn);

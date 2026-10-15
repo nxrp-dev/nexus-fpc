@@ -369,7 +369,7 @@ implementation
 
     uses
       Verbose,Globals,Systems,
-      ppu,
+      PPU,
       SymSym,symconst,symdef,defutil,defcmp,
       pass_1,
       nutils,nld,ncnv,
@@ -743,14 +743,14 @@ implementation
     constructor TBlockNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getset(TPPUSet1(blocknodeflags));
+        ppufile.GetSet(TPPUSet1(blocknodeflags));
       end;
 
 
     procedure TBlockNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(blocknodeflags));
+        ppufile.PutSet(TPPUSet1(blocknodeflags));
       end;
 
 
@@ -1086,7 +1086,7 @@ implementation
         hp : TAI;
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getset(TPPUSet1(asmnodeflags));
+        ppufile.GetSet(TPPUSet1(asmnodeflags));
         if not(asmnf_get_asm_position in asmnodeflags) then
           begin
             p_asm:=TAsmList.create;
@@ -1110,7 +1110,7 @@ implementation
         hp : TAI;
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(asmnodeflags));
+        ppufile.PutSet(TPPUSet1(asmnodeflags));
 { TODO: FIXME Add saving of register sets}
         if not(asmnf_get_asm_position in asmnodeflags) then
           begin
@@ -1492,12 +1492,12 @@ implementation
       begin
         inherited ppuload(t,ppufile);
 
-        size:=ppufile.getlongint;
+        size:=ppufile.GetLongInt;
         new(tempinfo);
         fillchar(tempinfo^,sizeof(tempinfo^),0);
-        ppufile.getset(TPPUSet2(tempinfo^.flags));
+        ppufile.GetSet(TPPUSet2(tempinfo^.flags));
         ppufile.getderef(tempinfo^.typedefderef);
-        tempinfo^.temptype := TTempType(ppufile.getbyte);
+        tempinfo^.temptype := TTempType(ppufile.GetByte);
         tempinfo^.owner:=self;
         tempinfo^.withnode:=ppuloadnode(ppufile);
         ftemplvalue:=ppuloadnode(ppufile);
@@ -1507,10 +1507,10 @@ implementation
     procedure TTempCreateNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putlongint(size);
-        ppufile.putset(TPPUSet2(tempinfo^.flags));
+        ppufile.PutLongInt(size);
+        ppufile.PutSet(TPPUSet2(tempinfo^.flags));
         ppufile.putderef(tempinfo^.typedefderef);
-        ppufile.putbyte(byte(tempinfo^.temptype));
+        ppufile.PutByte(byte(tempinfo^.temptype));
         ppuwritenode(ppufile,tempinfo^.withnode);
         ppuwritenode(ppufile,ftemplvalue);
       end;
@@ -1673,14 +1673,14 @@ implementation
     constructor TTempRefNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        tempidx:=ppufile.getlongint;
+        tempidx:=ppufile.GetLongInt;
       end;
 
 
     procedure TTempRefNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putlongint(tempinfo^.owner.ppuidx);
+        ppufile.PutLongInt(tempinfo^.owner.ppuidx);
       end;
 
 
@@ -1830,16 +1830,16 @@ implementation
     constructor TTempDeleteNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        tempidx:=ppufile.getlongint;
-        release_to_normal:=(ppufile.getbyte<>0);
+        tempidx:=ppufile.GetLongInt;
+        release_to_normal:=(ppufile.GetByte<>0);
       end;
 
 
     procedure TTempDeleteNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putlongint(tempinfo^.owner.ppuidx);
-        ppufile.putbyte(byte(release_to_normal));
+        ppufile.PutLongInt(tempinfo^.owner.ppuidx);
+        ppufile.PutByte(byte(release_to_normal));
       end;
 
 

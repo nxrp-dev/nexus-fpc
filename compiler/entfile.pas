@@ -31,113 +31,113 @@ interface
 
 const
 { buffer sizes }
-  maxentrysize = 1024;
+  MaxEntrySize = 1024;
   // Unused, and wrong as there are entries that are larger then 1024 bytes
 
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-  default_entryfilebufsize   = 16384;
+  DefaultEntryFileBufSize   = 16384;
 {$else not CHECK_INPUTPOINTER_LIMITS}
-  entryfilebufsize   = 16384;
+  EntryFileBufSize   = 16384;
 {$endif CHECK_INPUTPOINTER_LIMITS}
 
 {ppu entries}
-  mainentryid         = 1;
-  subentryid          = 2;
+  MainEntryID         = 1;
+  SubEntryID          = 2;
   {special}
-  iberror             = 0;
-  ibextraheader       = 242;
-  ibpputable          = 243;
-  ibstartrequireds    = 244;
-  ibendrequireds      = 245;
-  ibstartcontained    = 246;
-  ibendcontained      = 247;
-  ibstartdefs         = 248;
-  ibenddefs           = 249;
-  ibstartsyms         = 250;
-  ibendsyms           = 251;
-  ibendinterface      = 252;
-  ibendimplementation = 253;
+  IBError             = 0;
+  IBExtraHeader       = 242;
+  IBPPUTable          = 243;
+  IBStartRequireds    = 244;
+  IBEndRequireds      = 245;
+  IBStartContained    = 246;
+  IBEndContained      = 247;
+  IBStartDefs         = 248;
+  IBEndDefs           = 249;
+  IBStartSyms         = 250;
+  IBEndSyms           = 251;
+  IBEndInterface      = 252;
+  IBEndImplementation = 253;
 //  ibendbrowser        = 254;
-  ibend               = 255;
+  IBEnd               = 255;
   {general}
-  ibmodulename           = 1;
-  ibsourcefiles          = 2;
-  ibloadunit             = 3;
-  ibinitunit             = 4;
-  iblinkunitofiles       = 5;
-  iblinkunitstaticlibs   = 6;
-  iblinkunitsharedlibs   = 7;
-  iblinkotherofiles      = 8;
-  iblinkotherstaticlibs  = 9;
-  iblinkothersharedlibs  = 10;
-  ibImportSymbols        = 11;
-  ibsymref               = 12;
-  ibdefref               = 13;
-  ibfeatures             = 14;
+  IBModuleName           = 1;
+  IBSourceFiles          = 2;
+  IBLoadUnit             = 3;
+  IBInitUnit             = 4;
+  IBLinkUnitOFiles       = 5;
+  IBLinkUnitStaticLibs   = 6;
+  IBLinkUnitSharedLibs   = 7;
+  IBLinkOtherOFiles      = 8;
+  IBLinkOtherStaticLibs  = 9;
+  IBLinkOtherSharedLibs  = 10;
+  IBImportSymbols        = 11;
+  IBSymRef               = 12;
+  IBDefRef               = 13;
+  IBFeatures             = 14;
 {$IFDEF MACRO_DIFF_HINT}
-  ibusedmacros           = 16;
+  IBUsedMacros           = 16;
 {$ENDIF}
-  ibderefdata            = 17;
-  ibexportedmacros       = 18;
-  ibderefmap             = 19;
+  IBDerefData            = 17;
+  IBExportedMacros       = 18;
+  IBDerefMap             = 19;
 
   {syms}
-  ibtypesym        = 20;
-  ibprocsym        = 21;
-  ibstaticvarsym   = 22;
-  ibconstsym       = 23;
-  ibenumsym        = 24;
+  IBTypeSym        = 20;
+  IBProcSym        = 21;
+  IBStaticVarSym   = 22;
+  IBConstSym       = 23;
+  IBEnumSym        = 24;
 //  ibtypedconstsym  = 25;
-  ibabsolutevarsym = 26;
-  ibpropertysym    = 27;
-  ibfieldvarsym    = 28;
-  ibunitsym        = 29;
-  iblabelsym       = 30;
-  ibsyssym         = 31;
-  ibnamespacesym   = 32;
-  iblocalvarsym    = 33;
-  ibparavarsym     = 34;
-  ibmacrosym       = 35;
+  IBAbsoluteVarSym = 26;
+  IBPropertySym    = 27;
+  IBFieldVarSym    = 28;
+  IBUnitSym        = 29;
+  IBLabelSym       = 30;
+  IBSysSym         = 31;
+  IBNamespaceSym   = 32;
+  IBLocalVarSym    = 33;
+  IBParaVarSym     = 34;
+  IBMacroSym       = 35;
   {definitions}
-  iborddef         = 40;
-  ibpointerdef     = 41;
-  ibarraydef       = 42;
-  ibprocdef        = 43;
-  ibshortstringdef = 44;
-  ibrecorddef      = 45;
-  ibfiledef        = 46;
-  ibformaldef      = 47;
-  ibobjectdef      = 48;
-  ibenumdef        = 49;
-  ibsetdef         = 50;
-  ibprocvardef     = 51;
-  ibfloatdef       = 52;
-  ibclassrefdef    = 53;
-  iblongstringdef  = 54;
-  ibansistringdef  = 55;
-  ibwidestringdef  = 56;
-  ibvariantdef     = 57;
-  ibundefineddef   = 58;
-  ibunicodestringdef = 59;
+  IBOrdDef         = 40;
+  IBPointerDef     = 41;
+  IBArrayDef       = 42;
+  IBProcDef        = 43;
+  IBShortStringDef = 44;
+  IBRecordDef      = 45;
+  IBFileDef        = 46;
+  IBFormalDef      = 47;
+  IBObjectDef      = 48;
+  IBEnumDef        = 49;
+  IBSetDef         = 50;
+  IBProcVarDef     = 51;
+  IBFloatDef       = 52;
+  IBClassRefDef    = 53;
+  IBLongStringDef  = 54;
+  IBAnsiStringDef  = 55;
+  IBWideStringDef  = 56;
+  IBVariantDef     = 57;
+  IBUndefinedDef   = 58;
+  IBUnicodeStringDef = 59;
   {implementation/ObjData}
-  ibnodetree       = 80;
-  ibasmsymbols     = 81;
-  ibresources      = 82;
-  ibcreatedobjtypes = 83;
-  ibwpofile         = 84;
-  ibmoduleoptions   = 85;
-  ibunitimportsyms  = 86;
-  iborderedsymbols  = 87;
-  ibunitexports    = 88;
+  IBNodeTree       = 80;
+  IBAsmSymbols     = 81;
+  IBResources      = 82;
+  IBCreatedObjTypes = 83;
+  IBWPOFile         = 84;
+  IBModuleOptions   = 85;
+  IBUnitImportSyms  = 86;
+  IBOrderedSymbols  = 87;
+  IBUnitExports    = 88;
 
-  ibmainname       = 90;
-  ibsymtableoptions = 91;
-  ibpackagefiles   = 92;
-  ibpackagename    = 93;
-  ibrecsymtableoptions = 94;
+  IBMainName       = 90;
+  IBSymTableOptions = 91;
+  IBPackageFiles   = 92;
+  IBPackageName    = 93;
+  IBRecSymTableOptions = 94;
   { target-specific things }
-  iblinkotherframeworks = 100;
-  ibjvmnamespace = 101;
+  IBLinkOtherFrameworks = 100;
+  IBJVMNamespace = 101;
 
 {$ifdef generic_cpu}
 { We need to use the correct size of aint and pint for
@@ -208,150 +208,150 @@ type
 
   { common part of the header for all kinds of entry files }
   TEntryHeader=record
-    id       : array[1..3] of char;
-    ver      : array[1..3] of char;
-    compiler : word;
-    cpu      : word;
-    target   : word;
-    flags    : dword;
-    size     : dword; { size of the ppufile without header }
+    ID       : array[1..3] of Char;
+    Ver      : array[1..3] of Char;
+    Compiler : Word;
+    CPU      : Word;
+    Target   : Word;
+    Flags    : DWord;
+    Size     : DWord; { size of the ppufile without header }
   end;
   PEntryHeader=^TEntryHeader;
 
   TEntry=packed record
-    size : LongInt;
-    id   : byte;
-    nr   : byte;
+    Size : LongInt;
+    ID   : Byte;
+    NR   : Byte;
   end;
 
   TEntryFile=class
   private
     FBuffer: TNXEntryBuffer;
-    function getposition:LongInt;
-    procedure setposition(value:LongInt);
+    function GetPosition:LongInt;
+    procedure SetPosition(Value:LongInt);
   protected
-    BufStart : integer;
-    entrybufstart,
-    entrystart,
-    entryidx : integer;
-    entry    : TEntry;
-    closed,
-    tempclosed : boolean;
-    closepos : integer;
+    BufStart : Integer;
+    EntryBufStart,
+    EntryStart,
+    EntryIdx : Integer;
+    Entry    : TEntry;
+    Closed,
+    TempClosed : Boolean;
+    ClosePos : Integer;
   protected
-    f        : TCStream;
+    F        : TCStream;
 {$ifdef DEBUG_PPU}
-    flog     : text;
-    flog_open : boolean;
-    ppu_log_level : LongInt;
-    ppu_log_idx : integer;
+    FLog     : Text;
+    FLogOpen : Boolean;
+    PPULogLevel : LongInt;
+    PPULogIdx : Integer;
 {$endif}
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-    entryfilebufsize :LongInt;
+    EntryFileBufSize :LongInt;
 {$endif CHECK_INPUTPOINTER_LIMITS}
-    mode     : byte; {0 - Closed, 1 - Reading, 2 - Writing}
-    fisfile  : boolean;
-    fname    : string;
-    fsize    : integer;
-    procedure newheader;virtual;abstract;
-    function readheader:LongInt;virtual;abstract;
-    function outputallowed:boolean;virtual;
-    procedure resetfile;virtual;abstract;
-    function getheadersize:LongInt;virtual;abstract;
-    function getheaderaddr:PEntryHeader;virtual;abstract;
+    Mode     : Byte; {0 - Closed, 1 - Reading, 2 - Writing}
+    FIsFile  : Boolean;
+    FName    : string;
+    FSize    : Integer;
+    procedure NewHeader;virtual;abstract;
+    function ReadHeader:LongInt;virtual;abstract;
+    function OutputAllowed:Boolean;virtual;
+    procedure ResetFile;virtual;abstract;
+    function GetHeaderSize:LongInt;virtual;abstract;
+    function GetHeaderAddr:PEntryHeader;virtual;abstract;
     procedure RaiseAssertion(Code: LongInt); virtual;
     function BufferedPosition:LongInt;inline;
   public
-    entrytyp : byte;
-    size             : integer;
-    ChangeEndian    : boolean; { Used in ppudump util }
+    EntryTyp : Byte;
+    Size             : Integer;
+    ChangeEndian    : Boolean; { Used in ppudump util }
 {$ifdef generic_cpu}
-    has_more,
+    HasMore,
 {$endif not generic_cpu}
-    error         : boolean;
-    constructor create(const fn:string
+    Error         : Boolean;
+    constructor Create(const FN:string
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-        ;aentryfilebufsize : LongInt = default_entryfilebufsize
+        ;AEntryFileBufSize : LongInt = DefaultEntryFileBufSize
 {$endif CHECK_INPUTPOINTER_LIMITS}
 	);
     destructor  Destroy;override;
-    function getversion:integer;
-    procedure flush; {$ifdef USEINLINE}inline;{$endif}
-    procedure closefile;virtual;
-    procedure newentry;
-    property position:LongInt read getposition write setposition;
+    function GetVersion:Integer;
+    procedure Flush; {$ifdef USEINLINE}inline;{$endif}
+    procedure CloseFile;virtual;
+    procedure NewEntry;
+    property Position:LongInt read GetPosition write SetPosition;
     { Warning: don't keep the stream open during a tempclose! }
-    function substream(ofs,len:LongInt):TCStream;
+    function SubStream(Ofs,Len:LongInt):TCStream;
     { Warning: don't use the put* or write* functions anymore when writing through this }
-    property stream:TCStream read f;
+    property Stream:TCStream read F;
 {$ifdef DEBUG_PPU}
-    procedure ppu_log(st :string);virtual;
-    procedure ppu_log_val(st :string);virtual;
-    procedure inc_log_level;
-    procedure dec_log_level;
+    procedure PPU_Log(ST :string);virtual;
+    procedure PPU_Log_Val(ST :string);virtual;
+    procedure Inc_Log_Level;
+    procedure Dec_Log_Level;
 {$endif}
   {read}
-    function  openfile:boolean;
-    function  openstream(strm:TCStream):boolean;
-    procedure reloadbuf;
-    procedure readdata(out b;len:integer);
-    procedure readdata(const b : TByteDynArray);
-    procedure readdata(const b : TAnsiCharDynArray);
-    procedure skipdata(len:integer);
-    function  readentry:byte;
-    function  EndOfEntry:boolean; {$ifdef USEINLINE}inline;{$endif}
-    function  entrysize:LongInt; {$ifdef USEINLINE}inline;{$endif}
-    function  entryleft:LongInt; {$ifdef USEINLINE}inline;{$endif}
-    procedure getdatabuf(out b;len:integer;out res:integer);
-    procedure getdata(out b;len:integer);
-    procedure getdata(b : TByteDynArray);
-    procedure getdata(b : TAnsiCharDynArray);
-    function  getbyte:byte;
-    function  getword:word;
-    function  getdword:dword;
-    function  getlongint:LongInt;
-    function getint64:int64;
-    function  getqword:qword;
-    function getaint:{$ifdef generic_cpu}int64{$else}aint{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function getasizeint:{$ifdef generic_cpu}int64{$else}asizeint{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function getpuint:{$ifdef generic_cpu}qword{$else}PUint{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function getaword:{$ifdef generic_cpu}qword{$else}aword{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function  getreal:BestReal;
-    function  getrealbytesize:byte;
-    function  getboolean:boolean; {$ifdef USEINLINE}inline;{$endif}
-    function  getstring:ShortString;
-    function  getpshortstring:PShortString;
-    function  getansistring:AnsiString;
-    procedure getset(out arr: array of byte);
-    function  skipuntilentry(untilb:byte):boolean;
+    function  OpenFile:Boolean;
+    function  OpenStream(Strm:TCStream):Boolean;
+    procedure ReloadBuf;
+    procedure ReadData(out B;Len:Integer);
+    procedure ReadData(const B : TByteDynArray);
+    procedure ReadData(const B : TAnsiCharDynArray);
+    procedure SkipData(Len:Integer);
+    function  ReadEntry:Byte;
+    function  EndOfEntry:Boolean; {$ifdef USEINLINE}inline;{$endif}
+    function  EntrySize:LongInt; {$ifdef USEINLINE}inline;{$endif}
+    function  EntryLeft:LongInt; {$ifdef USEINLINE}inline;{$endif}
+    procedure GetDataBuf(out B;Len:Integer;out Res:Integer);
+    procedure GetData(out B;Len:Integer);
+    procedure GetData(B : TByteDynArray);
+    procedure GetData(B : TAnsiCharDynArray);
+    function  GetByte:Byte;
+    function  GetWord:Word;
+    function  GetDWord:DWord;
+    function  GetLongInt:LongInt;
+    function GetInt64:Int64;
+    function  GetQWord:QWord;
+    function GetAInt:{$ifdef generic_cpu}Int64{$else}AInt{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function GetASizeInt:{$ifdef generic_cpu}Int64{$else}ASizeInt{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function GetPUInt:{$ifdef generic_cpu}QWord{$else}PUint{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function GetPtrUInt:{$ifdef generic_cpu}QWord{$else}TConstPtrUInt{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function GetAWord:{$ifdef generic_cpu}QWord{$else}AWord{$ifdef USEINLINE}; inline{$endif}{$endif};
+    function  GetReal:BestReal;
+    function  GetRealByteSize:Byte;
+    function  GetBoolean:Boolean; {$ifdef USEINLINE}inline;{$endif}
+    function  GetString:ShortString;
+    function  GetPShortString:PShortString;
+    function  GetAnsiString:AnsiString;
+    procedure GetSet(out Arr: array of Byte);
+    function  SkipUntilEntry(UntilB:Byte):Boolean;
   {write}
-    function  createfile:boolean;virtual;
-    function  createstream(strm:TCStream):boolean;
-    procedure writeheader;virtual;abstract;
-    procedure writebuf;
-    procedure writedata(const b;len:integer);
-    procedure writeentry(ibnr:byte);
-    procedure putdata(const b;len:integer);virtual;
-    procedure putbyte(b:byte); {$ifdef USEINLINE}inline;{$endif}
-    procedure putword(w:word); {$ifdef USEINLINE}inline;{$endif}
-    procedure putdword(w:dword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putlongint(l:LongInt); {$ifdef USEINLINE}inline;{$endif}
-    procedure putint64(i:int64); {$ifdef USEINLINE}inline;{$endif}
-    procedure putqword(q:qword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putaint(i:aint); {$ifdef USEINLINE}inline;{$endif}
-    procedure putasizeint(i:asizeint); {$ifdef USEINLINE}inline;{$endif}
-    procedure putpuint(i:PUint); {$ifdef USEINLINE}inline;{$endif}
-    procedure putptruint(v:TConstPtrUInt); {$ifdef USEINLINE}inline;{$endif}
-    procedure putaword(i:aword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putreal(d:BestReal);
-    procedure putboolean(b:boolean); {$ifdef USEINLINE}inline;{$endif}
-    procedure putstring(const s:ShortString); {$ifdef USEINLINE}inline;{$endif}
-    procedure putansistring(const s:AnsiString);
+    function  CreateFile:Boolean;virtual;
+    function  CreateStream(Strm:TCStream):Boolean;
+    procedure WriteHeader;virtual;abstract;
+    procedure WriteBuf;
+    procedure WriteData(const B;Len:Integer);
+    procedure WriteEntry(IBNR:Byte);
+    procedure PutData(const B;Len:Integer);virtual;
+    procedure PutByte(B:Byte); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutWord(W:Word); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutDWord(W:DWord); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutLongInt(L:LongInt); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutInt64(I:Int64); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutQWord(Q:QWord); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutAInt(I:AInt); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutASizeInt(I:ASizeInt); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutPUInt(I:PUint); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutPtrUInt(V:TConstPtrUInt); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutAWord(I:AWord); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutReal(D:BestReal);
+    procedure PutBoolean(B:Boolean); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutString(const S:ShortString); {$ifdef USEINLINE}inline;{$endif}
+    procedure PutAnsiString(const S:AnsiString);
 
-    procedure putset(const arr: array of byte);
+    procedure PutSet(const Arr: array of Byte);
     procedure TempClose;        // MG: not used, obsolete?
-    function  TempOpen:boolean; // MG: not used, obsolete?
+    function  TempOpen:Boolean; // MG: not used, obsolete?
   end;
 
 implementation
@@ -365,752 +365,752 @@ implementation
                               tentryfile
 *****************************************************************************}
 
-function TEntryFile.outputallowed: boolean;
+function TEntryFile.OutputAllowed: Boolean;
 begin
-  result:=true;
+  Result:=True;
 end;
 
 
 function TEntryFile.BufferedPosition: LongInt;
 begin
-  result:=BufStart+FBuffer.Position;
+  Result:=BufStart+FBuffer.Position;
 end;
 
 
-constructor TEntryFile.create(const fn:string
+constructor TEntryFile.Create(const FN:string
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-        ;aentryfilebufsize : LongInt = default_entryfilebufsize
+        ;AEntryFileBufSize : LongInt = DefaultEntryFileBufSize
 {$endif CHECK_INPUTPOINTER_LIMITS}
 	);
 begin
-  fname:=fn;
-  fisfile:=false;
-  ChangeEndian:=false;
-  mode:=0;
-  newheader;
-  error:=false;
-  closed:=true;
-  tempclosed:=false;
+  FName:=FN;
+  FIsFile:=False;
+  ChangeEndian:=False;
+  Mode:=0;
+  NewHeader;
+  Error:=False;
+  Closed:=True;
+  TempClosed:=False;
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
-  entryfilebufsize:=aentryfilebufsize;
+  EntryFileBufSize:=AEntryFileBufSize;
 {$endif CHECK_INPUTPOINTER_LIMITS}
-  FBuffer:=TNXEntryBuffer.Create(entryfilebufsize);
+  FBuffer:=TNXEntryBuffer.Create(EntryFileBufSize);
 {$ifdef DEBUG_PPU}
-  assign(flog,fn+'.debug-log');
-  flog_open:=false;
+  Assign(FLog,FN+'.debug-log');
+  FLogOpen:=False;
 {$endif DEBUG_PPU}
 end;
 
 
 destructor TEntryFile.Destroy;
 begin
-  closefile;
+  CloseFile;
 {$ifdef DEBUG_PPU}
-  if flog_open then
-    close(flog);
-  flog_open:=false;
+  if FLogOpen then
+    Close(FLog);
+  FLogOpen:=False;
 {$endif DEBUG_PPU}
   FBuffer.Free;
 end;
 
 {$ifdef DEBUG_PPU}
 
-function entryid_name(nr : byte) : string;
+function EntryIDName(NR : Byte) : string;
 begin
-  case nr of
+  case NR of
   {ppu entries}
-  mainentryid: entryid_name:='main_entry_id';
-  subentryid: entryid_name:='sub_entry_id';
+  MainEntryID: EntryIDName:='main_entry_id';
+  SubEntryID: EntryIDName:='sub_entry_id';
   else
-    entryid_name:='unknown entryid '+ToStr(nr);
+    EntryIDName:='unknown entryid '+ToStr(NR);
   end;
 end;
 
-function entry_name(nr : byte) : string;
+function EntryName(NR : Byte) : string;
 begin
-  case nr of
+  case NR of
   {special}
-  iberror: entry_name:='iberror';
-  ibextraheader: entry_name:='ibextraheader';
-  ibpputable: entry_name:='ibpputable';
-  ibstartrequireds: entry_name:='ibstartrequireds';
-  ibendrequireds: entry_name:='ibendrequireds';
-  ibstartcontained: entry_name:='ibstartcontained';
-  ibendcontained: entry_name:='ibendcontained';
-  ibstartdefs: entry_name:='ibstartdefs';
-  ibenddefs: entry_name:='ibenddefs';
-  ibstartsyms: entry_name:='ibstartsyms';
-  ibendsyms: entry_name:='ibendsyms';
-  ibendinterface: entry_name:='ibendinterface';
-  ibendimplementation: entry_name:='ibendimplementation';
+  IBError: EntryName:='iberror';
+  IBExtraHeader: EntryName:='ibextraheader';
+  IBPPUTable: EntryName:='ibpputable';
+  IBStartRequireds: EntryName:='ibstartrequireds';
+  IBEndRequireds: EntryName:='ibendrequireds';
+  IBStartContained: EntryName:='ibstartcontained';
+  IBEndContained: EntryName:='ibendcontained';
+  IBStartDefs: EntryName:='ibstartdefs';
+  IBEndDefs: EntryName:='ibenddefs';
+  IBStartSyms: EntryName:='ibstartsyms';
+  IBEndSyms: EntryName:='ibendsyms';
+  IBEndInterface: EntryName:='ibendinterface';
+  IBEndImplementation: EntryName:='ibendimplementation';
   // ibendbrowser: entry_name:='ibendbrowser';
-  ibend: entry_name:='ibend';
+  IBEnd: EntryName:='ibend';
   {general}
-  ibmodulename: entry_name:='ibmodulename';
-  ibsourcefiles: entry_name:='ibsourcefiles';
-  ibloadunit: entry_name:='ibloadunit';
-  ibinitunit: entry_name:='ibinitunit';
-  iblinkunitofiles: entry_name:='iblinkunitofiles';
-  iblinkunitstaticlibs: entry_name:='iblinkunitstaticlibs';
-  iblinkunitsharedlibs: entry_name:='iblinkunitsharedlibs';
-  iblinkotherofiles: entry_name:='iblinkotherofiles';
-  iblinkotherstaticlibs: entry_name:='iblinkotherstaticlibs';
-  iblinkothersharedlibs: entry_name:='iblinkothersharedlibs';
-  ibImportSymbols: entry_name:='ibImportSymbols';
-  ibsymref: entry_name:='ibsymref';
-  ibdefref: entry_name:='ibdefref';
-  ibfeatures: entry_name:='ibfeatures';
+  IBModuleName: EntryName:='ibmodulename';
+  IBSourceFiles: EntryName:='ibsourcefiles';
+  IBLoadUnit: EntryName:='ibloadunit';
+  IBInitUnit: EntryName:='ibinitunit';
+  IBLinkUnitOFiles: EntryName:='iblinkunitofiles';
+  IBLinkUnitStaticLibs: EntryName:='iblinkunitstaticlibs';
+  IBLinkUnitSharedLibs: EntryName:='iblinkunitsharedlibs';
+  IBLinkOtherOFiles: EntryName:='iblinkotherofiles';
+  IBLinkOtherStaticLibs: EntryName:='iblinkotherstaticlibs';
+  IBLinkOtherSharedLibs: EntryName:='iblinkothersharedlibs';
+  IBImportSymbols: EntryName:='ibImportSymbols';
+  IBSymRef: EntryName:='ibsymref';
+  IBDefRef: EntryName:='ibdefref';
+  IBFeatures: EntryName:='ibfeatures';
 {$IFDEF MACRO_DIFF_HINT}
-  ibusedmacros: entry_name:='ibusedmacros';
+  IBUsedMacros: EntryName:='ibusedmacros';
 {$ENDIF}
-  ibderefdata: entry_name:='ibderefdata';
-  ibexportedmacros: entry_name:='ibexportedmacros';
-  ibderefmap: entry_name:='ibderefmap';
+  IBDerefData: EntryName:='ibderefdata';
+  IBExportedMacros: EntryName:='ibexportedmacros';
+  IBDerefMap: EntryName:='ibderefmap';
 
   {syms}
-  ibtypesym: entry_name:='ibtypesym';
-  ibprocsym: entry_name:='ibprocsym';
-  ibstaticvarsym: entry_name:='ibstaticvarsym';
-  ibconstsym: entry_name:='ibconstsym';
-  ibenumsym: entry_name:='ibenumsym';
+  IBTypeSym: EntryName:='ibtypesym';
+  IBProcSym: EntryName:='ibprocsym';
+  IBStaticVarSym: EntryName:='ibstaticvarsym';
+  IBConstSym: EntryName:='ibconstsym';
+  IBEnumSym: EntryName:='ibenumsym';
   // ibtypedconstsym: entry_name:='ibtypedconstsym';
-  ibabsolutevarsym: entry_name:='ibabsolutevarsym';
-  ibpropertysym: entry_name:='ibpropertysym';
-  ibfieldvarsym: entry_name:='ibfieldvarsym';
-  ibunitsym: entry_name:='ibunitsym';
-  iblabelsym: entry_name:='iblabelsym';
-  ibsyssym: entry_name:='ibsyssym';
-  ibnamespacesym: entry_name:='ibnamespacesym';
-  iblocalvarsym: entry_name:='iblocalvarsym';
-  ibparavarsym: entry_name:='ibparavarsym';
-  ibmacrosym: entry_name:='ibmacrosym';
+  IBAbsoluteVarSym: EntryName:='ibabsolutevarsym';
+  IBPropertySym: EntryName:='ibpropertysym';
+  IBFieldVarSym: EntryName:='ibfieldvarsym';
+  IBUnitSym: EntryName:='ibunitsym';
+  IBLabelSym: EntryName:='iblabelsym';
+  IBSysSym: EntryName:='ibsyssym';
+  IBNamespaceSym: EntryName:='ibnamespacesym';
+  IBLocalVarSym: EntryName:='iblocalvarsym';
+  IBParaVarSym: EntryName:='ibparavarsym';
+  IBMacroSym: EntryName:='ibmacrosym';
   {definitions}
-  iborddef: entry_name:='iborddef';
-  ibpointerdef: entry_name:='ibpointerdef';
-  ibarraydef: entry_name:='ibarraydef';
-  ibprocdef: entry_name:='ibprocdef';
-  ibshortstringdef: entry_name:='ibshortstringdef';
-  ibrecorddef: entry_name:='ibrecorddef';
-  ibfiledef: entry_name:='ibfiledef';
-  ibformaldef: entry_name:='ibformaldef';
-  ibobjectdef: entry_name:='ibobjectdef';
-  ibenumdef: entry_name:='ibenumdef';
-  ibsetdef: entry_name:='ibsetdef';
-  ibprocvardef: entry_name:='ibprocvardef';
-  ibfloatdef: entry_name:='ibfloatdef';
-  ibclassrefdef: entry_name:='ibclassrefdef';
-  iblongstringdef: entry_name:='iblongstringdef';
-  ibansistringdef: entry_name:='ibansistringdef';
-  ibwidestringdef: entry_name:='ibwidestringdef';
-  ibvariantdef: entry_name:='ibvariantdef';
-  ibundefineddef: entry_name:='ibundefineddef';
-  ibunicodestringdef: entry_name:='ibunicodestringdef';
+  IBOrdDef: EntryName:='iborddef';
+  IBPointerDef: EntryName:='ibpointerdef';
+  IBArrayDef: EntryName:='ibarraydef';
+  IBProcDef: EntryName:='ibprocdef';
+  IBShortStringDef: EntryName:='ibshortstringdef';
+  IBRecordDef: EntryName:='ibrecorddef';
+  IBFileDef: EntryName:='ibfiledef';
+  IBFormalDef: EntryName:='ibformaldef';
+  IBObjectDef: EntryName:='ibobjectdef';
+  IBEnumDef: EntryName:='ibenumdef';
+  IBSetDef: EntryName:='ibsetdef';
+  IBProcVarDef: EntryName:='ibprocvardef';
+  IBFloatDef: EntryName:='ibfloatdef';
+  IBClassRefDef: EntryName:='ibclassrefdef';
+  IBLongStringDef: EntryName:='iblongstringdef';
+  IBAnsiStringDef: EntryName:='ibansistringdef';
+  IBWideStringDef: EntryName:='ibwidestringdef';
+  IBVariantDef: EntryName:='ibvariantdef';
+  IBUndefinedDef: EntryName:='ibundefineddef';
+  IBUnicodeStringDef: EntryName:='ibunicodestringdef';
   {implementation/ObjData}
-  ibnodetree: entry_name:='ibnodetree';
-  ibasmsymbols: entry_name:='ibasmsymbols';
-  ibresources: entry_name:='ibresources';
-  ibcreatedobjtypes: entry_name:='ibcreatedobjtypes';
-  ibwpofile: entry_name:='ibwpofile';
-  ibmoduleoptions: entry_name:='ibmoduleoptions';
-  ibunitimportsyms: entry_name:='ibunitimportsyms';
-  iborderedsymbols: entry_name:='iborderedsymbols';
-  ibunitexports: entry_name:='ibunitexports';
+  IBNodeTree: EntryName:='ibnodetree';
+  IBAsmSymbols: EntryName:='ibasmsymbols';
+  IBResources: EntryName:='ibresources';
+  IBCreatedObjTypes: EntryName:='ibcreatedobjtypes';
+  IBWPOFile: EntryName:='ibwpofile';
+  IBModuleOptions: EntryName:='ibmoduleoptions';
+  IBUnitImportSyms: EntryName:='ibunitimportsyms';
+  IBOrderedSymbols: EntryName:='iborderedsymbols';
+  IBUnitExports: EntryName:='ibunitexports';
 
-  ibmainname: entry_name:='ibmainname';
-  ibsymtableoptions: entry_name:='ibsymtableoptions';
+  IBMainName: EntryName:='ibmainname';
+  IBSymTableOptions: EntryName:='ibsymtableoptions';
   // ibrecsymtableoptions: entry_name:='ibrecsymtableoptions';
-  ibpackagefiles: entry_name:='ibpackagefiles';
-  ibpackagename: entry_name:='ibpackagename';
+  IBPackageFiles: EntryName:='ibpackagefiles';
+  IBPackageName: EntryName:='ibpackagename';
   { target-specific things }
-  iblinkotherframeworks: entry_name:='iblinkotherframeworks';
-  ibjvmnamespace: entry_name:='ibjvmnamespace';
+  IBLinkOtherFrameworks: EntryName:='iblinkotherframeworks';
+  IBJVMNamespace: EntryName:='ibjvmnamespace';
   else
-    entry_name:='unknown entry '+ToStr(nr);
+    EntryName:='unknown entry '+ToStr(NR);
   end;
 end;
 
-procedure TEntryFile.ppu_log(st :string);
+procedure TEntryFile.PPU_Log(ST :string);
 begin
-  if flog_open then
+  if FLogOpen then
     begin
-      WriteLn(flog,BufferedPosition,': ',st);
+      WriteLn(FLog,BufferedPosition,': ',ST);
     end;
 {$ifdef IN_PPUDUMP}
-  WriteLn(BufferedPosition,': ',st);
+  WriteLn(BufferedPosition,': ',ST);
 {$endif}
 end;
 
-procedure TEntryFile.inc_log_level;
+procedure TEntryFile.Inc_Log_Level;
 begin
-  inc(ppu_log_level);
+  Inc(PPULogLevel);
 end;
 
-procedure TEntryFile.ppu_log_val(st :string);
+procedure TEntryFile.PPU_Log_Val(ST :string);
 begin
-  if flog_open then
+  if FLogOpen then
     begin
-      WriteLn(flog,'(',ppu_log_level,') value: ',st);
+      WriteLn(FLog,'(',PPULogLevel,') value: ',ST);
     end;
 {$ifdef IN_PPUDUMP}
-  WriteLn('(',ppu_log_level,') value: ',st);
+  WriteLn('(',PPULogLevel,') value: ',ST);
 {$endif}
 end;
 
-procedure TEntryFile.dec_log_level;
+procedure TEntryFile.Dec_Log_Level;
 begin
-  dec(ppu_log_level);
+  Dec(PPULogLevel);
 end;
 {$endif}
 
-function TEntryFile.getversion:integer;
+function TEntryFile.GetVersion:Integer;
   var
-    l    : integer;
-    code : integer;
-    header : PEntryHeader;
+    L    : Integer;
+    Code : Integer;
+    Header : PEntryHeader;
   begin
-    header:=getheaderaddr;
-    Val(header^.ver[1]+header^.ver[2]+header^.ver[3],l,code);
-    if code=0 then
-     result:=l
+    Header:=GetHeaderAddr;
+    Val(Header^.Ver[1]+Header^.Ver[2]+Header^.Ver[3],L,Code);
+    if Code=0 then
+     Result:=L
     else
-     result:=0;
+     Result:=0;
   end;
 
-procedure TEntryFile.flush;
+procedure TEntryFile.Flush;
 begin
-  if mode=2 then
-   writebuf;
+  if Mode=2 then
+   WriteBuf;
 end;
 
 
 procedure TEntryFile.RaiseAssertion(Code: LongInt);
 begin
   { It's down to descendent classes to raise an internal error as desired. [Kit] }
-  error := true;
+  Error := True;
 end;
 
 
-procedure TEntryFile.closefile;
+procedure TEntryFile.CloseFile;
 begin
-  if mode<>0 then
+  if Mode<>0 then
    begin
-     flush;
+     Flush;
 {$ifdef DEBUG_PPU}
-     if (entry.nr<>0) and (mode=1) then
-       ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
+     if (Entry.NR<>0) and (Mode=1) then
+       PPU_Log('writeentry, id='+EntryIDName(Entry.ID)+' nr='+EntryName(Entry.NR)+' size='+ToStr(Entry.Size));
 {$endif}
-     if fisfile then
-       f.Free;
-       f := nil;
-     mode:=0;
-     closed:=true;
+     if FIsFile then
+       F.Free;
+       F := nil;
+     Mode:=0;
+     Closed:=True;
    end;
 end;
 
 
-procedure TEntryFile.setposition(value:LongInt);
+procedure TEntryFile.SetPosition(Value:LongInt);
 begin
-  if Assigned(f) then
-    f.Position:=value
+  if Assigned(F) then
+    F.Position:=Value
   else
-    if tempclosed then
-      closepos:=value;
+    if TempClosed then
+      ClosePos:=Value;
 end;
 
 
-function TEntryFile.getposition:LongInt;
+function TEntryFile.GetPosition:LongInt;
 begin
-  if Assigned(f) then
-    result:=f.Position
+  if Assigned(F) then
+    Result:=F.Position
   else
-    if tempclosed then
-      result:=closepos
+    if TempClosed then
+      Result:=ClosePos
     else
-      result:=0;
+      Result:=0;
 end;
 
 
-function TEntryFile.substream(ofs,len:LongInt):TCStream;
+function TEntryFile.SubStream(Ofs,Len:LongInt):TCStream;
 begin
-  result:=nil;
-  if Assigned(f) then
-    result:=TCRangeStream.Create(f,ofs,len);
+  Result:=nil;
+  if Assigned(F) then
+    Result:=TCRangeStream.Create(F,Ofs,Len);
 end;
 
 {*****************************************************************************
                               tentryfile Reading
 *****************************************************************************}
 
-function TEntryFile.openfile:boolean;
+function TEntryFile.OpenFile:Boolean;
 var
-  strm : TCStream;
+  Strm : TCStream;
 begin
-  openfile:=false;
+  OpenFile:=False;
   try
-    strm:=CFileStreamClass.Create(fname,fmOpenRead)
+    Strm:=CFileStreamClass.Create(FName,fmOpenRead)
   except
-    exit;
+    Exit;
   end;
-  openfile:=openstream(strm);
-  fisfile:=result;
+  OpenFile:=OpenStream(Strm);
+  FIsFile:=Result;
 end;
 
 
-function TEntryFile.openstream(strm:TCStream):boolean;
+function TEntryFile.OpenStream(Strm:TCStream):Boolean;
 var
-  i : LongInt;
+  I : LongInt;
 begin
-  openstream:=false;
-  f:=strm;
-  closed:=false;
+  OpenStream:=False;
+  F:=Strm;
+  Closed:=False;
 {$ifdef DEBUG_PPU}
   {$push}
   {$I-}
-  assign(flog,fname+'.debug-read-log');
-  rewrite(flog);
+  Assign(FLog,FName+'.debug-read-log');
+  Rewrite(FLog);
   if InOutRes=0 then
-    flog_open:=true;
+    FLogOpen:=True;
   {$pop}
 {$endif DEBUG_PPU}
 {read ppuheader}
-  fsize:=f.Size;
-  i:=readheader;
-  if i<0 then
-    exit;
+  FSize:=F.Size;
+  I:=ReadHeader;
+  if I<0 then
+    Exit;
 {reset buffer}
-  BufStart:=i;
+  BufStart:=I;
   FBuffer.Reset;
-  mode:=1;
-  FillChar(entry,sizeof(TEntry),0);
-  entryidx:=0;
-  entrystart:=0;
-  entrybufstart:=0;
-  error:=false;
-  openstream:=true;
+  Mode:=1;
+  FillChar(Entry,SizeOf(TEntry),0);
+  EntryIdx:=0;
+  EntryStart:=0;
+  EntryBufStart:=0;
+  Error:=False;
+  OpenStream:=True;
 end;
 
 
-procedure TEntryFile.reloadbuf;
+procedure TEntryFile.ReloadBuf;
 var
   RemainingSize: LongInt;
 begin
-  inc(BufStart,FBuffer.Size);
-  RemainingSize:=fsize-BufStart;
+  Inc(BufStart,FBuffer.Size);
+  RemainingSize:=FSize-BufStart;
   if RemainingSize<0 then
     RemainingSize:=0;
-  FBuffer.LoadFromStream(f,RemainingSize);
+  FBuffer.LoadFromStream(F,RemainingSize);
 end;
 
 
-procedure TEntryFile.readdata(out b;len:integer);
+procedure TEntryFile.ReadData(out B;Len:Integer);
 var
-  p : pchar;
-  ReadCount : integer;
+  P : PChar;
+  ReadCount : Integer;
 {$ifdef DEBUG_PPU}
-  i, StartLength : integer;
-  StartPointer : pchar;
+  I, StartLength : Integer;
+  StartPointer : PChar;
 {$endif DEBUG_PPU}
 begin
-  p:=pchar(@b);
+  P:=PChar(@B);
 {$ifdef DEBUG_PPU}
-  StartPointer:=p;
-  StartLength:=len;
+  StartPointer:=P;
+  StartLength:=Len;
 {$endif DEBUG_PPU}
-  while len>0 do
+  while Len>0 do
     begin
-      ReadCount:=FBuffer.Read(p^,len);
-      Dec(len,ReadCount);
-      Inc(p,ReadCount);
-      if len=0 then
+      ReadCount:=FBuffer.Read(P^,Len);
+      Dec(Len,ReadCount);
+      Inc(P,ReadCount);
+      if Len=0 then
         Break;
       ReloadBuf;
       if FBuffer.Size=0 then
         Exit;
     end;
 {$ifdef DEBUG_PPU}
-  if ppu_log_level <= 0 then
+  if PPULogLevel <= 0 then
     begin
-      ppu_log('readdata, length='+ToStr(StartLength)+' level='+ToStr(ppu_log_level));
-      for i:=0 to StartLength-1 do
-        ppu_log_val('p['+ToStr(i)+']=$'+HexStr(byte(StartPointer[i]),2));
+      PPU_Log('readdata, length='+ToStr(StartLength)+' level='+ToStr(PPULogLevel));
+      for I:=0 to StartLength-1 do
+        PPU_Log_Val('p['+ToStr(I)+']=$'+HexStr(Byte(StartPointer[I]),2));
     end;
 {$endif DEBUG_PPU}
 end;
 
-procedure TEntryFile.readdata(const b: TByteDynArray);
+procedure TEntryFile.ReadData(const B: TByteDynArray);
 begin
   ReadData(B[0],Length(B));
 end;
 
-procedure TEntryFile.readdata(const b: TAnsiCharDynArray);
+procedure TEntryFile.ReadData(const B: TAnsiCharDynArray);
 begin
   ReadData(B[0],Length(B));
 end;
 
 
-procedure TEntryFile.skipdata(len:integer);
+procedure TEntryFile.SkipData(Len:Integer);
 var
-  left : integer;
+  Left : Integer;
 begin
 {$ifdef DEBUG_PPU}
-  if len>0 then
-    ppu_log('explicit skipdata '+ToStr(len));
+  if Len>0 then
+    PPU_Log('explicit skipdata '+ToStr(Len));
 {$endif}
-  while len>0 do
+  while Len>0 do
    begin
-     left:=FBuffer.Remaining;
-     if len>left then
+     Left:=FBuffer.Remaining;
+     if Len>Left then
       begin
-        dec(len,left);
-        reloadbuf;
+        Dec(Len,Left);
+        ReloadBuf;
         if FBuffer.Size=0 then
-         exit;
+         Exit;
       end
      else
       begin
-        FBuffer.Advance(len);
-        exit;
+        FBuffer.Advance(Len);
+        Exit;
       end;
    end;
 end;
 
 
-function TEntryFile.readentry:byte;
+function TEntryFile.ReadEntry:Byte;
 begin
-  if entryidx<entry.size then
+  if EntryIdx<Entry.Size then
     begin
 {$ifdef generic_cpu}
-     has_more:=true;
+     HasMore:=True;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-     if entry.size-entryidx>0 then
-       ppu_log('skipdata '+ToStr(entry.size-entryidx));
+     if Entry.Size-EntryIdx>0 then
+       PPU_Log('skipdata '+ToStr(Entry.Size-EntryIdx));
 {$endif}
-     skipdata(entry.size-entryidx);
+     SkipData(Entry.Size-EntryIdx);
     end;
 {$ifdef DEBUG_PPU}
-  if entry.nr<>0 then
-    ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
-  ppu_log('entrystart');
+  if Entry.NR<>0 then
+    PPU_Log('writeentry, id='+EntryIDName(Entry.ID)+' nr='+EntryName(Entry.NR)+' size='+ToStr(Entry.Size));
+  PPU_Log('entrystart');
 {$endif}
-  readdata(entry,sizeof(TEntry));
+  ReadData(Entry,SizeOf(TEntry));
   if ChangeEndian then
-    entry.size:=swapendian(entry.size);
-  entrystart:=BufferedPosition;
-  entryidx:=0;
+    Entry.Size:=SwapEndian(Entry.Size);
+  EntryStart:=BufferedPosition;
+  EntryIdx:=0;
 {$ifdef generic_cpu}
-  has_more:=false;
+  HasMore:=False;
 {$endif not generic_cpu}
-  if not(entry.id in [mainentryid,subentryid]) then
+  if not(Entry.ID in [MainEntryID,SubEntryID]) then
    begin
-     readentry:=iberror;
-     error:=true;
-     exit;
+     ReadEntry:=IBError;
+     Error:=True;
+     Exit;
    end;
-  readentry:=entry.nr;
+  ReadEntry:=Entry.NR;
 end;
 
 
-function TEntryFile.endofentry: boolean;
+function TEntryFile.EndOfEntry: Boolean;
 begin
 {$ifdef generic_cpu}
-  endofentry:=(entryidx=entry.size);
+  EndOfEntry:=(EntryIdx=Entry.Size);
 {$else not generic_cpu}
-  endofentry:=(entryidx>=entry.size);
+  EndOfEntry:=(EntryIdx>=Entry.Size);
 {$endif not generic_cpu}
 end;
 
 
-function TEntryFile.entrysize:LongInt;
+function TEntryFile.EntrySize:LongInt;
 begin
-  entrysize:=entry.size;
+  EntrySize:=Entry.Size;
 end;
 
-function TEntryFile.entryleft:LongInt;
+function TEntryFile.EntryLeft:LongInt;
 begin
-  entryleft:=entry.size-entryidx;
+  EntryLeft:=Entry.Size-EntryIdx;
 end;
 
 
-procedure TEntryFile.getdatabuf(out b;len:integer;out res:integer);
+procedure TEntryFile.GetDataBuf(out B;Len:Integer;out Res:Integer);
 begin
-  if entryidx+len>entry.size then
-   res:=entry.size-entryidx
+  if EntryIdx+Len>Entry.Size then
+   Res:=Entry.Size-EntryIdx
   else
-   res:=len;
-  readdata(b,res);
-  inc(entryidx,res);
+   Res:=Len;
+  ReadData(B,Res);
+  Inc(EntryIdx,Res);
 end;
 
 
-procedure TEntryFile.getdata(out b;len:integer);
+procedure TEntryFile.GetData(out B;Len:Integer);
 begin
-  if entryidx+len>entry.size then
+  if EntryIdx+Len>Entry.Size then
    begin
-     error:=true;
-     exit;
+     Error:=True;
+     Exit;
    end;
-  readdata(b,len);
-  inc(entryidx,len);
+  ReadData(B,Len);
+  Inc(EntryIdx,Len);
 end;
 
-procedure TEntryFile.getdata(b: TByteDynArray);
+procedure TEntryFile.GetData(B: TByteDynArray);
 begin
-  if entryidx+Length(b)>entry.size then
+  if EntryIdx+Length(B)>Entry.Size then
    begin
-     error:=true;
-     exit;
+     Error:=True;
+     Exit;
    end;
-  readdata(b);
-  inc(entryidx,length(b));
+  ReadData(B);
+  Inc(EntryIdx,Length(B));
 end;
 
-procedure TEntryFile.getdata(b: TAnsiCharDynArray);
+procedure TEntryFile.GetData(B: TAnsiCharDynArray);
 begin
-  if entryidx+Length(b)>entry.size then
+  if EntryIdx+Length(B)>Entry.Size then
    begin
-     error:=true;
-     exit;
+     Error:=True;
+     Exit;
    end;
-  readdata(b);
-  inc(entryidx,length(b));
+  ReadData(B);
+  Inc(EntryIdx,Length(B));
 end;
 
 
-function TEntryFile.getbyte:byte;
+function TEntryFile.GetByte:Byte;
 begin
-  if entryidx>=entry.size then
+  if EntryIdx>=Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putbyte');
-  inc_log_level;
+  PPU_Log('putbyte');
+  Inc_Log_Level;
 {$endif}
   if FBuffer.Remaining>0 then
     begin
-      result:=PByte(FBuffer.Current)^;
+      Result:=PByte(FBuffer.Current)^;
       FBuffer.Advance(1);
     end
   else
-    readdata(result,1);
+    ReadData(Result,1);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx);
+  Inc(EntryIdx);
 end;
 
 
-function TEntryFile.getword:word;
+function TEntryFile.GetWord:Word;
 begin
-  if entryidx+2>entry.size then
+  if EntryIdx+2>Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putword');
-  inc_log_level;
+  PPU_Log('putword');
+  Inc_Log_Level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(word) then
+  if FBuffer.Remaining>=SizeOf(Word) then
     begin
-      result:=Unaligned(PWord(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(word));
+      Result:=Unaligned(PWord(FBuffer.Current)^);
+      FBuffer.Advance(SizeOf(Word));
     end
   else
-    readdata(result,sizeof(word));
+    ReadData(Result,SizeOf(Word));
   if ChangeEndian then
-   result:=swapendian(result);
+   Result:=SwapEndian(Result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,2);
+  Inc(EntryIdx,2);
 end;
 
 
-function TEntryFile.getlongint:LongInt;
+function TEntryFile.GetLongInt:LongInt;
 begin
-  if entryidx+4>entry.size then
+  if EntryIdx+4>Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putlongint');
-  inc_log_level;
+  PPU_Log('putlongint');
+  Inc_Log_Level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(LongInt) then
+  if FBuffer.Remaining>=SizeOf(LongInt) then
     begin
-      result:=Unaligned(PLongInt(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(LongInt));
+      Result:=Unaligned(PLongInt(FBuffer.Current)^);
+      FBuffer.Advance(SizeOf(LongInt));
     end
   else
-    readdata(result,sizeof(LongInt));
+    ReadData(Result,SizeOf(LongInt));
   if ChangeEndian then
-   result:=swapendian(result);
+   Result:=SwapEndian(Result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,4);
+  Inc(EntryIdx,4);
 end;
 
 
-function TEntryFile.getdword:dword;
+function TEntryFile.GetDWord:DWord;
 begin
-  if entryidx+4>entry.size then
+  if EntryIdx+4>Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putdword');
-  inc_log_level;
+  PPU_Log('putdword');
+  Inc_Log_Level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(dword) then
+  if FBuffer.Remaining>=SizeOf(DWord) then
     begin
-      result:=Unaligned(PDWord(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(dword));
+      Result:=Unaligned(PDWord(FBuffer.Current)^);
+      FBuffer.Advance(SizeOf(DWord));
     end
   else
-    readdata(result,sizeof(dword));
+    ReadData(Result,SizeOf(DWord));
   if ChangeEndian then
-   result:=swapendian(result);
+   Result:=SwapEndian(Result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,4);
+  Inc(EntryIdx,4);
 end;
 
 
-function TEntryFile.getint64:int64;
+function TEntryFile.GetInt64:Int64;
 begin
-  if entryidx+8>entry.size then
+  if EntryIdx+8>Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putint64');
-  inc_log_level;
+  PPU_Log('putint64');
+  Inc_Log_Level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(int64) then
+  if FBuffer.Remaining>=SizeOf(Int64) then
     begin
-      result:=Unaligned(PInt64(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(int64));
+      Result:=Unaligned(PInt64(FBuffer.Current)^);
+      FBuffer.Advance(SizeOf(Int64));
     end
   else
-    readdata(result,sizeof(int64));
+    ReadData(Result,SizeOf(Int64));
   if ChangeEndian then
-   result:=swapendian(result);
+   Result:=SwapEndian(Result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,8);
+  Inc(EntryIdx,8);
 end;
 
 
-function TEntryFile.getqword:qword;
+function TEntryFile.GetQWord:QWord;
 begin
-  if entryidx+8>entry.size then
+  if EntryIdx+8>Entry.Size then
    begin
-     error:=true;
-     result:=0;
-     exit;
+     Error:=True;
+     Result:=0;
+     Exit;
    end;
 {$ifdef DEBUG_PPU}
-  ppu_log('putqword');
-  inc_log_level;
+  PPU_Log('putqword');
+  Inc_Log_Level;
 {$endif}
-  if FBuffer.Remaining>=sizeof(qword) then
+  if FBuffer.Remaining>=SizeOf(QWord) then
     begin
-      result:=Unaligned(PQWord(FBuffer.Current)^);
-      FBuffer.Advance(sizeof(qword));
+      Result:=Unaligned(PQWord(FBuffer.Current)^);
+      FBuffer.Advance(SizeOf(QWord));
     end
   else
-    readdata(result,sizeof(qword));
+    ReadData(Result,SizeOf(QWord));
   if ChangeEndian then
-   result:=swapendian(result);
+   Result:=SwapEndian(Result);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,8);
+  Inc(EntryIdx,8);
 end;
 
 
-function TEntryFile.getaint:{$ifdef generic_cpu}int64{$else}aint{$endif};
+function TEntryFile.GetAInt:{$ifdef generic_cpu}Int64{$else}AInt{$endif};
 {$ifdef generic_cpu}
 var
-  header : PEntryHeader;
+  Header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putaint');
-  inc_log_level;
+  PPU_Log('putaint');
+  Inc_Log_Level;
 {$endif}
 {$ifdef generic_cpu}
-  header:=getheaderaddr;
-  if CpuAluBitSize[header^.cpu]=64 then
-    result:=getint64
-  else if CpuAluBitSize[header^.cpu]=32 then
-    result:=getlongint
-  else if CpuAluBitSize[header^.cpu]=16 then
-    result:=smallint(getword)
-  else if CpuAluBitSize[header^.cpu]=8 then
-    result:=shortint(getbyte)
+  Header:=GetHeaderAddr;
+  if CpuAluBitSize[Header^.CPU]=64 then
+    Result:=GetInt64
+  else if CpuAluBitSize[Header^.CPU]=32 then
+    Result:=GetLongInt
+  else if CpuAluBitSize[Header^.CPU]=16 then
+    Result:=SmallInt(GetWord)
+  else if CpuAluBitSize[Header^.CPU]=8 then
+    Result:=ShortInt(GetByte)
   else
     begin
-      error:=true;
-      result:=0;
+      Error:=True;
+      Result:=0;
     end;
 {$else not generic_cpu}
-  case sizeof(aint) of
-    8: result:=getint64;
-    4: result:=getlongint;
-    2: result:=smallint(getword);
-    1: result:=shortint(getbyte);
+  case SizeOf(AInt) of
+    8: Result:=GetInt64;
+    4: Result:=GetLongInt;
+    2: Result:=SmallInt(GetWord);
+    1: Result:=ShortInt(GetByte);
   else
     begin
       RaiseAssertion(2019041801);
-      result:=0;
+      Result:=0;
     end;
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-function TEntryFile.getasizeint:{$ifdef generic_cpu}int64{$else}asizeint{$endif};
+function TEntryFile.GetASizeInt:{$ifdef generic_cpu}Int64{$else}ASizeInt{$endif};
 {$ifdef generic_cpu}
 var
-  header : PEntryHeader;
+  Header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putasizeint');
-  inc_log_level;
+  PPU_Log('putasizeint');
+  Inc_Log_Level;
 {$endif}
 {$ifdef generic_cpu}
-  header:=getheaderaddr;
-  if CpuAddrBitSize[header^.cpu]=64 then
-    result:=getint64
-  else if CpuAddrBitSize[header^.cpu]=32 then
-    result:=getlongint
-  else if CpuAddrBitSize[header^.cpu]=16 then
+  Header:=GetHeaderAddr;
+  if CpuAddrBitSize[Header^.CPU]=64 then
+    Result:=GetInt64
+  else if CpuAddrBitSize[Header^.CPU]=32 then
+    Result:=GetLongInt
+  else if CpuAddrBitSize[Header^.CPU]=16 then
     begin
       { result:=smallint(getword);
         would have been logical, but it contradicts
@@ -1118,295 +1118,295 @@ begin
 	which uses 32-bit lngint type even for 16-bit
 	address size, to be able to cope with
 	I8086 seg:ofs huge addresses }
-      result:=getlongint;
+      Result:=GetLongInt;
     end
   else
     begin
-      error:=true;
-      result:=0;
+      Error:=True;
+      Result:=0;
     end;
 {$else not generic_cpu}
-  case sizeof(asizeint) of
-    8: result:=asizeint(getint64);
-    4: result:=asizeint(getlongint);
-    2: result:=asizeint(getword);
-    1: result:=asizeint(getbyte);
+  case SizeOf(ASizeInt) of
+    8: Result:=ASizeInt(GetInt64);
+    4: Result:=ASizeInt(GetLongInt);
+    2: Result:=ASizeInt(GetWord);
+    1: Result:=ASizeInt(GetByte);
   else
     begin
       RaiseAssertion(2019041802);
-      result:=0;
+      Result:=0;
     end;
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-function TEntryFile.getpuint:{$ifdef generic_cpu}qword{$else}PUint{$endif};
+function TEntryFile.GetPUInt:{$ifdef generic_cpu}QWord{$else}PUint{$endif};
 {$ifdef generic_cpu}
 var
-header : PEntryHeader;
+Header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putpuint');
-  inc_log_level;
+  PPU_Log('putpuint');
+  Inc_Log_Level;
 {$endif}
 {$ifdef generic_cpu}
-  header:=getheaderaddr;
-  if CpuAddrBitSize[header^.cpu]=64 then
-    result:=getqword
-  else if CpuAddrBitSize[header^.cpu]=32 then
-    result:=getdword
-  else if CpuAddrBitSize[header^.cpu]=16 then
-    result:=getword
+  Header:=GetHeaderAddr;
+  if CpuAddrBitSize[Header^.CPU]=64 then
+    Result:=GetQWord
+  else if CpuAddrBitSize[Header^.CPU]=32 then
+    Result:=GetDWord
+  else if CpuAddrBitSize[Header^.CPU]=16 then
+    Result:=GetWord
   else
     begin
-      error:=true;
-      result:=0;
+      Error:=True;
+      Result:=0;
     end;
 {$else not generic_cpu}
-  case sizeof(PUint) of
-    8: result:=getqword;
-    4: result:=getdword;
-    2: result:=getword;
-    1: result:=getbyte;
+  case SizeOf(PUint) of
+    8: Result:=GetQWord;
+    4: Result:=GetDWord;
+    2: Result:=GetWord;
+    1: Result:=GetByte;
   else
     begin
       RaiseAssertion(2019041803);
-      result:=0;
+      Result:=0;
     end;
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-function TEntryFile.getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$endif};
+function TEntryFile.GetPtrUInt:{$ifdef generic_cpu}QWord{$else}TConstPtrUInt{$endif};
 {$ifdef generic_cpu}
 var
-header : PEntryHeader;
+Header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putptruint');
-  inc_log_level;
+  PPU_Log('putptruint');
+  Inc_Log_Level;
 {$endif}
 {$ifdef generic_cpu}
-  header:=getheaderaddr;
-  if CpuAddrBitSize[header^.cpu]=64 then
-    result:=getqword
-  else result:=getdword;
+  Header:=GetHeaderAddr;
+  if CpuAddrBitSize[Header^.CPU]=64 then
+    Result:=GetQWord
+  else Result:=GetDWord;
 {$else not generic_cpu}
   {$ifdef cpu64bitaddr}
-  result:=TConstPtrUInt(getint64);
+  Result:=TConstPtrUInt(GetInt64);
   {$else}
-  result:=TConstPtrUInt(getlongint);
+  Result:=TConstPtrUInt(GetLongInt);
   {$endif}
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-function TEntryFile.getaword:{$ifdef generic_cpu}qword{$else}aword{$endif};
+function TEntryFile.GetAWord:{$ifdef generic_cpu}QWord{$else}AWord{$endif};
 {$ifdef generic_cpu}
 var
-header : PEntryHeader;
+Header : PEntryHeader;
 {$endif generic_cpu}
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putaword');
-  inc_log_level;
+  PPU_Log('putaword');
+  Inc_Log_Level;
 {$endif}
 {$ifdef generic_cpu}
-  header:=getheaderaddr;
-  if CpuAluBitSize[header^.cpu]=64 then
-    result:=getqword
-  else if CpuAluBitSize[header^.cpu]=32 then
-    result:=getdword
-  else if CpuAluBitSize[header^.cpu]=16 then
-    result:=getword
-  else if CpuAluBitSize[header^.cpu]=8 then
-    result:=getbyte
+  Header:=GetHeaderAddr;
+  if CpuAluBitSize[Header^.CPU]=64 then
+    Result:=GetQWord
+  else if CpuAluBitSize[Header^.CPU]=32 then
+    Result:=GetDWord
+  else if CpuAluBitSize[Header^.CPU]=16 then
+    Result:=GetWord
+  else if CpuAluBitSize[Header^.CPU]=8 then
+    Result:=GetByte
   else
     begin
-      error:=true;
-      result:=0;
+      Error:=True;
+      Result:=0;
     end;
 {$else not generic_cpu}
-  case sizeof(aword) of
-    8: result:=getqword;
-    4: result:=getdword;
-    2: result:=getword;
-    1: result:=getbyte;
+  case SizeOf(AWord) of
+    8: Result:=GetQWord;
+    4: Result:=GetDWord;
+    2: Result:=GetWord;
+    1: Result:=GetByte;
   else
     begin
       RaiseAssertion(2019041804);
-      result:=0;
+      Result:=0;
     end;
   end;
 {$endif not generic_cpu}
 {$ifdef DEBUG_PPU}
-  ppu_log_val(ToStr(result));
-  dec_log_level;
+  PPU_Log_Val(ToStr(Result));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
 
-function TEntryFile.getreal:BestReal;
+function TEntryFile.GetReal:BestReal;
 var
-  lDouble: TDoubleRec;
+  LDouble: TDoubleRec;
 {$ifdef FPC_HAS_TYPE_EXTENDED}
-  lExtended: TExtended80Rec;
+  LExtended: TExtended80Rec;
 {$endif}
 begin
-  if getrealbytesize=8 then
+  if GetRealByteSize=8 then
     begin
-      lDouble:=TDoubleRec(getqword);
-      Result:=lDouble.Value;
+      LDouble:=TDoubleRec(GetQWord);
+      Result:=LDouble.Value;
     end
   else
     begin
 {$ifdef FPC_HAS_TYPE_EXTENDED}
-      lExtended.Frac:=getqword;
-      lExtended._Exp:=getword;
-      Result:=lExtended.Value;
+      LExtended.Frac:=GetQWord;
+      LExtended._Exp:=GetWord;
+      Result:=LExtended.Value;
 {$else}
       { An ARM host cannot consume an x86 unit's real constants. }
-      error:=true;
+      Error:=True;
       Result:=0;
 {$endif}
     end;
 end;
 
-function TEntryFile.getrealbytesize:byte;
+function TEntryFile.GetRealByteSize:Byte;
 begin
-  if TargetInfo.cpu in [cpu_i386,cpu_x86_64] then
+  if TargetInfo.CPU in [cpu_i386,cpu_x86_64] then
     Result:=10
   else
     Result:=8;
 end;
 
-function TEntryFile.getboolean:boolean;
+function TEntryFile.GetBoolean:Boolean;
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putboolean');
+  PPU_Log('putboolean');
 {$endif}
-  result:=boolean(getbyte);
+  Result:=Boolean(GetByte);
 end;
 
 
-function TEntryFile.getstring:ShortString;
+function TEntryFile.GetString:ShortString;
 begin
-  result[0]:=chr(getbyte);
+  Result[0]:=Chr(GetByte);
 {$ifdef DEBUG_PPU}
-  ppu_log('putstring,size='+ToStr(length(result)+1));
-  inc_log_level;
+  PPU_Log('putstring,size='+ToStr(Length(Result)+1));
+  Inc_Log_Level;
 {$endif}
-  if entryidx+length(result)>entry.size then
+  if EntryIdx+Length(Result)>Entry.Size then
    begin
-     error:=true;
-     exit;
+     Error:=True;
+     Exit;
    end;
-  ReadData(result[1],length(result));
+  ReadData(Result[1],Length(Result));
 {$ifdef DEBUG_PPU}
-  ppu_log_val(result);
-  dec_log_level;
+  PPU_Log_Val(Result);
+  Dec_Log_Level;
 {$endif}
-  inc(entryidx,length(result));
+  Inc(EntryIdx,Length(Result));
 end;
 
-function TEntryFile.getpshortstring:PShortString;
+function TEntryFile.GetPShortString:PShortString;
 var
-  len: char;
+  Len: Char;
 begin
-  result:=nil;
-  len:=chr(getbyte);
+  Result:=nil;
+  Len:=Chr(GetByte);
 {$ifdef DEBUG_PPU}
-  ppu_log('putstring,size='+ToStr(ord(len)+1));
-  inc_log_level;
+  PPU_Log('putstring,size='+ToStr(Ord(Len)+1));
+  Inc_Log_Level;
 {$endif}
-  if entryidx+ord(len)>entry.size then
+  if EntryIdx+Ord(Len)>Entry.Size then
    begin
-     error:=true;
-     exit;
+     Error:=True;
+     Exit;
    end;
-  GetMem(result,ord(len)+1);
-  result^[0]:=len;
-  ReadData(result^[1],ord(len));
-  inc(entryidx,ord(len));
+  GetMem(Result,Ord(Len)+1);
+  Result^[0]:=Len;
+  ReadData(Result^[1],Ord(Len));
+  Inc(EntryIdx,Ord(Len));
 {$ifdef DEBUG_PPU}
-  ppu_log_val(result^);
-  dec_log_level;
+  PPU_Log_Val(Result^);
+  Dec_Log_Level;
 {$endif}
 end;
 
-function TEntryFile.getansistring:AnsiString;
+function TEntryFile.GetAnsiString:AnsiString;
 var
-  len: LongInt;
+  Len: LongInt;
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putansistring');
-  inc_log_level;
+  PPU_Log('putansistring');
+  Inc_Log_Level;
 {$endif}
-  len:=getlongint;
-  if entryidx+len>entry.size then
+  Len:=GetLongInt;
+  if EntryIdx+Len>Entry.Size then
    begin
-     error:=true;
-     result:='';
-     exit;
+     Error:=True;
+     Result:='';
+     Exit;
    end;
-  SetLength(result,len);
-  if len>0 then
-    getdata(result[1],len);
+  SetLength(Result,Len);
+  if Len>0 then
+    GetData(Result[1],Len);
 {$ifdef DEBUG_PPU}
-  ppu_log_val(result);
-  dec_log_level;
+  PPU_Log_Val(Result);
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.getset(out arr: array of byte);
+procedure TEntryFile.GetSet(out Arr: array of Byte);
 var
-  i : LongInt;
+  I : LongInt;
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putset');
-  inc_log_level;
+  PPU_Log('putset');
+  Inc_Log_Level;
 {$endif}
-  getdata(arr,sizeof(arr));
+  GetData(Arr,SizeOf(Arr));
   if ChangeEndian then
-    for i:=low(arr) to high(arr) do
-      arr[i]:=Reverse_Byte(arr[i]);
+    for I:=Low(Arr) to High(Arr) do
+      Arr[I]:=Reverse_Byte(Arr[I]);
 {$ifdef DEBUG_PPU}
-  for i:=low(arr) to high(arr) do
-    ppu_log_val('byte['+ToStr(i)+']=$'+HexStr(arr[i],2));
-  dec_log_level;
+  for I:=Low(Arr) to High(Arr) do
+    PPU_Log_Val('byte['+ToStr(I)+']=$'+HexStr(Arr[I],2));
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-function TEntryFile.skipuntilentry(untilb:byte):boolean;
+function TEntryFile.SkipUntilEntry(UntilB:Byte):Boolean;
 var
-  b : byte;
+  B : Byte;
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('skipuntilentry '+ToStr(untilb));
+  PPU_Log('skipuntilentry '+ToStr(UntilB));
 {$endif}
   repeat
-    b:=readentry;
-  until (b in [ibend,iberror]) or ((b=untilb) and (entry.id=mainentryid));
-  skipuntilentry:=(b=untilb);
+    B:=ReadEntry;
+  until (B in [IBEnd,IBError]) or ((B=UntilB) and (Entry.ID=MainEntryID));
+  SkipUntilEntry:=(B=UntilB);
 end;
 
 
@@ -1414,444 +1414,444 @@ end;
                               tentryfile Writing
 *****************************************************************************}
 
-function TEntryFile.createfile:boolean;
+function TEntryFile.CreateFile:Boolean;
 var
-  ok: boolean;
-  strm : TCStream;
+  Ok: Boolean;
+  Strm : TCStream;
 begin
-  createfile:=false;
-  strm:=nil;
-  if outputallowed then
+  CreateFile:=False;
+  Strm:=nil;
+  if OutputAllowed then
     begin
-      ok:=false;
+      Ok:=False;
       try
-        strm:=CFileStreamClass.Create(fname,fmCreate);
-        ok:=true;
+        Strm:=CFileStreamClass.Create(FName,fmCreate);
+        Ok:=True;
       except
       end;
-      if not ok then
-       exit;
+      if not Ok then
+       Exit;
     end;
-  createfile:=createstream(strm);
-  fisfile:=result;
+  CreateFile:=CreateStream(Strm);
+  FIsFile:=Result;
 end;
 
-function TEntryFile.createstream(strm:TCStream):boolean;
+function TEntryFile.CreateStream(Strm:TCStream):Boolean;
 begin
-  createstream:=false;
-  if outputallowed then
+  CreateStream:=False;
+  if OutputAllowed then
     begin
-      f:=strm;
-      mode:=2;
+      F:=Strm;
+      Mode:=2;
       {write header for sure}
-      f.Write(getheaderaddr^,getheadersize);
+      F.Write(GetHeaderAddr^,GetHeaderSize);
     end;
-  BufStart:=getheadersize;
+  BufStart:=GetHeaderSize;
   FBuffer.Reset;
 {reset}
-  resetfile;
-  error:=false;
-  size:=0;
-  entrytyp:=mainentryid;
+  ResetFile;
+  Error:=False;
+  Size:=0;
+  EntryTyp:=MainEntryID;
 {$ifdef DEBUG_PPU}
   {$push}
   {$I-}
-  assign(flog,fname+'.debug-write-log');
-  rewrite(flog);
+  Assign(FLog,FName+'.debug-write-log');
+  Rewrite(FLog);
   if InOutRes=0 then
-    flog_open:=true;
+    FLogOpen:=True;
   {$pop}
 {$endif DEBUG_PPU}
 {start}
-  newentry;
-  createstream:=true;
+  NewEntry;
+  CreateStream:=True;
 end;
 
 
-procedure TEntryFile.writebuf;
+procedure TEntryFile.WriteBuf;
 begin
-  if outputallowed and
+  if OutputAllowed and
      (FBuffer.Size <> 0) then
-    FBuffer.SaveToStream(f);
-  inc(BufStart,FBuffer.Size);
+    FBuffer.SaveToStream(F);
+  Inc(BufStart,FBuffer.Size);
   FBuffer.Reset;
 end;
 
 
-procedure TEntryFile.writedata(const b;len:integer);
+procedure TEntryFile.WriteData(const B;Len:Integer);
 {$ifdef DEBUG_PPU}
 var
-  idx : integer;
+  Idx : Integer;
 {$endif}
 begin
-  if not outputallowed then
-    exit;
-  FBuffer.Write(b,len);
+  if not OutputAllowed then
+    Exit;
+  FBuffer.Write(B,Len);
 {$ifdef DEBUG_PPU}
-  if (len > 0) and (ppu_log_level <= 0) then
+  if (Len > 0) and (PPULogLevel <= 0) then
     begin
-      ppu_log('writedata, length='+ToStr(len)+' level='+ToStr(ppu_log_level));
-      for idx:=0 to len-1 do
-        ppu_log_val('p['+ToStr(idx)+']=$'+HexStr(PByte(PtrUInt(@b)+PtrUInt(idx))^,2));
+      PPU_Log('writedata, length='+ToStr(Len)+' level='+ToStr(PPULogLevel));
+      for Idx:=0 to Len-1 do
+        PPU_Log_Val('p['+ToStr(Idx)+']=$'+HexStr(PByte(PtrUInt(@B)+PtrUInt(Idx))^,2));
     end;
 {$endif DEBUG_PPU}
 end;
 
 
-procedure TEntryFile.newentry;
+procedure TEntryFile.NewEntry;
 begin
-  with entry do
+  with Entry do
    begin
-     id:=entrytyp;
-     nr:=ibend;
-     size:=0;
+     ID:=EntryTyp;
+     NR:=IBEnd;
+     Size:=0;
    end;
 {Reset Entry State}
-  entryidx:=0;
-  entrybufstart:=BufStart;
-  entrystart:=BufferedPosition;
+  EntryIdx:=0;
+  EntryBufStart:=BufStart;
+  EntryStart:=BufferedPosition;
 {$ifdef DEBUG_PPU}
-  ppu_log('entrystart');
+  PPU_Log('entrystart');
 {$endif}
 {Alloc in buffer}
-  writedata(entry,sizeof(TEntry));
+  WriteData(Entry,SizeOf(TEntry));
 end;
 
 
-procedure TEntryFile.writeentry(ibnr:byte);
+procedure TEntryFile.WriteEntry(IBNR:Byte);
 var
-  opos : integer;
+  OPos : Integer;
 begin
 {create entry}
-  entry.id:=entrytyp;
-  entry.nr:=ibnr;
-  entry.size:=entryidx;
+  Entry.ID:=EntryTyp;
+  Entry.NR:=IBNR;
+  Entry.Size:=EntryIdx;
 {it's already been sent to disk ?}
-  if entrybufstart<>BufStart then
+  if EntryBufStart<>BufStart then
    begin
-    if outputallowed then
+    if OutputAllowed then
       begin
       {flush to be sure}
         WriteBuf;
       {write entry}
-        opos:=f.Position;
-        f.Position:=entrystart;
-        f.write(entry,sizeof(TEntry));
-        f.Position:=opos;
+        OPos:=F.Position;
+        F.Position:=EntryStart;
+        F.Write(Entry,SizeOf(TEntry));
+        F.Position:=OPos;
       end;
-     entrybufstart:=BufStart;
+     EntryBufStart:=BufStart;
    end
   else
-   FBuffer.Patch(entrystart-BufStart,entry,sizeof(entry));
+   FBuffer.Patch(EntryStart-BufStart,Entry,SizeOf(Entry));
 {$ifdef DEBUG_PPU}
-  ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+ToStr(entry.size));
+  PPU_Log('writeentry, id='+EntryIDName(Entry.ID)+' nr='+EntryName(Entry.NR)+' size='+ToStr(Entry.Size));
 {$endif}
 {Add New Entry, which is ibend by default}
-  entrystart:=BufferedPosition; {next entry position}
-  newentry;
+  EntryStart:=BufferedPosition; {next entry position}
+  NewEntry;
 end;
 
 
-procedure TEntryFile.putdata(const b;len:integer);
+procedure TEntryFile.PutData(const B;Len:Integer);
 begin
-  if outputallowed then
-    FBuffer.Write(b,len);
-  inc(entryidx,len);
+  if OutputAllowed then
+    FBuffer.Write(B,Len);
+  Inc(EntryIdx,Len);
 end;
 
 
-procedure TEntryFile.putbyte(b:byte);
+procedure TEntryFile.PutByte(B:Byte);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putbyte');
-  inc_log_level;
-  ppu_log_val(ToStr(b));
+  PPU_Log('putbyte');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(B));
 {$endif}
-  putdata(b,1);
+  PutData(B,1);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
-{$endif}
-end;
-
-
-procedure TEntryFile.putword(w:word);
-begin
-{$ifdef DEBUG_PPU}
-  ppu_log('putword');
-  inc_log_level;
-  ppu_log_val(ToStr(w));
-{$endif}
-  putdata(w,2);
-{$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putdword(w:dword);
+procedure TEntryFile.PutWord(W:Word);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putdword');
-  inc_log_level;
-  ppu_log_val(ToStr(w));
+  PPU_Log('putword');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(W));
 {$endif}
-  putdata(w,4);
+  PutData(W,2);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putlongint(l:LongInt);
+procedure TEntryFile.PutDWord(W:DWord);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putlongint');
-  inc_log_level;
-  ppu_log_val(ToStr(l));
+  PPU_Log('putdword');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(W));
 {$endif}
-  putdata(l,4);
+  PutData(W,4);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putint64(i:int64);
+procedure TEntryFile.PutLongInt(L:LongInt);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putint64');
-  inc_log_level;
-  ppu_log_val(ToStr(i));
+  PPU_Log('putlongint');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(L));
 {$endif}
-  putdata(i,8);
+  PutData(L,4);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putqword(q:qword);
+procedure TEntryFile.PutInt64(I:Int64);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putqword');
-  inc_log_level;
-  ppu_log_val(ToStr(q));
+  PPU_Log('putint64');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(I));
 {$endif}
-  putdata(q,sizeof(qword));
+  PutData(I,8);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putaint(i:aint);
+procedure TEntryFile.PutQWord(Q:QWord);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putaint');
-  inc_log_level;
-  case sizeof(aint) of
-    8: ppu_log('putint64');
-    4: ppu_log('putlongint');
-    2: ppu_log('putword');
-    1: ppu_log('putbyte');
+  PPU_Log('putqword');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(Q));
+{$endif}
+  PutData(Q,SizeOf(QWord));
+{$ifdef DEBUG_PPU}
+  Dec_Log_Level;
+{$endif}
+end;
+
+
+procedure TEntryFile.PutAInt(I:AInt);
+begin
+{$ifdef DEBUG_PPU}
+  PPU_Log('putaint');
+  Inc_Log_Level;
+  case SizeOf(AInt) of
+    8: PPU_Log('putint64');
+    4: PPU_Log('putlongint');
+    2: PPU_Log('putword');
+    1: PPU_Log('putbyte');
   end;
-  ppu_log_val(ToStr(i));
+  PPU_Log_Val(ToStr(I));
 {$endif}
-  putdata(i,sizeof(aint));
+  PutData(I,SizeOf(AInt));
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putasizeint(i: asizeint);
+procedure TEntryFile.PutASizeInt(I: ASizeInt);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putasizeint');
-  inc_log_level;
-  case sizeof(asizeint) of
-    8: ppu_log('putint64');
-    4: ppu_log('putlongint');
-    2: ppu_log('putword');
-    1: ppu_log('putbyte');
+  PPU_Log('putasizeint');
+  Inc_Log_Level;
+  case SizeOf(ASizeInt) of
+    8: PPU_Log('putint64');
+    4: PPU_Log('putlongint');
+    2: PPU_Log('putword');
+    1: PPU_Log('putbyte');
   end;
-  ppu_log_val(ToStr(i));
+  PPU_Log_Val(ToStr(I));
 {$endif}
-  putdata(i,sizeof(asizeint));
+  PutData(I,SizeOf(ASizeInt));
 {$ifdef DEBUG_PPU}
-  dec_log_level;
-{$endif}
-end;
-
-
-procedure TEntryFile.putpuint(i : PUint);
-begin
-{$ifdef DEBUG_PPU}
-  ppu_log('putpuint');
-  inc_log_level;
-  ppu_log_val(ToStr(i));
-{$endif}
-  putdata(i,sizeof(PUint));
-{$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
-procedure TEntryFile.putptruint(v:TConstPtrUInt);
+
+procedure TEntryFile.PutPUInt(I : PUint);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putptruint');
-  inc_log_level;
+  PPU_Log('putpuint');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(I));
+{$endif}
+  PutData(I,SizeOf(PUint));
+{$ifdef DEBUG_PPU}
+  Dec_Log_Level;
+{$endif}
+end;
+
+procedure TEntryFile.PutPtrUInt(V:TConstPtrUInt);
+begin
+{$ifdef DEBUG_PPU}
+  PPU_Log('putptruint');
+  Inc_Log_Level;
 {$endif}
   {$ifdef cpu64bitaddr}
-  putint64(int64(v));
+  PutInt64(Int64(V));
   {$else}
-  putlongint(LongInt(v));
+  PutLongInt(LongInt(V));
   {$endif}
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
 
 
-procedure TEntryFile.putaword(i:aword);
+procedure TEntryFile.PutAWord(I:AWord);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putaword');
-  inc_log_level;
-  ppu_log_val(ToStr(i));
+  PPU_Log('putaword');
+  Inc_Log_Level;
+  PPU_Log_Val(ToStr(I));
 {$endif}
-  putdata(i,sizeof(aword));
+  PutData(I,SizeOf(AWord));
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putreal(d:BestReal);
+procedure TEntryFile.PutReal(D:BestReal);
 var
-  lDouble: TDoubleRec;
+  LDouble: TDoubleRec;
 begin
-  if getrealbytesize=8 then
+  if GetRealByteSize=8 then
     begin
-      lDouble.Value:=d;
-      putqword(QWord(lDouble));
+      LDouble.Value:=D;
+      PutQWord(QWord(LDouble));
     end
   else
     begin
 {$ifdef FPC_HAS_TYPE_EXTENDED}
-      putqword(TExtended80Rec(d).Frac);
-      putword(TExtended80Rec(d)._Exp);
+      PutQWord(TExtended80Rec(D).Frac);
+      PutWord(TExtended80Rec(D)._Exp);
 {$else}
       InternalErrorProc(2026101101);
 {$endif}
     end;
 end;
 
-procedure TEntryFile.putboolean(b:boolean);
+procedure TEntryFile.PutBoolean(B:Boolean);
 begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putboolean');
-  inc_log_level;
+  PPU_Log('putboolean');
+  Inc_Log_Level;
 {$endif}
-  putbyte(byte(b));
+  PutByte(Byte(B));
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putstring(const s:ShortString);
+procedure TEntryFile.PutString(const S:ShortString);
 begin
 {$ifdef DEBUG_PPU}
   { The reading method uses getbyte, so fake it here }
-  ppu_log('putbyte');
-  inc_log_level;
+  PPU_Log('putbyte');
+  Inc_Log_Level;
   FBuffer.Advance(1);
-  ppu_log('putstring,size='+ToStr(length(s)+1));
+  PPU_Log('putstring,size='+ToStr(Length(S)+1));
   FBuffer.Retreat(1);
-  ppu_log_val(s);
+  PPU_Log_Val(S);
 {$endif}
-  putdata(s,length(s)+1);
+  PutData(S,Length(S)+1);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
 end;
 
 
-procedure TEntryFile.putansistring(const s:AnsiString);
+procedure TEntryFile.PutAnsiString(const S:AnsiString);
   var
-    len: LongInt;
+    Len: LongInt;
   begin
-    len:=length(s);
+    Len:=Length(S);
 {$ifdef DEBUG_PPU}
-  ppu_log('putansistring');
-  inc_log_level;
-  ppu_log_val(s);
+  PPU_Log('putansistring');
+  Inc_Log_Level;
+  PPU_Log_Val(S);
 {$endif}
-    putlongint(len);
-    if len>0 then
-      putdata(s[1],len);
+    PutLongInt(Len);
+    if Len>0 then
+      PutData(S[1],Len);
 {$ifdef DEBUG_PPU}
-  dec_log_level;
+  Dec_Log_Level;
 {$endif}
   end;
 
 
-procedure TEntryFile.putset(const arr: array of byte);
+procedure TEntryFile.PutSet(const Arr: array of Byte);
 {$ifdef DEBUG_PPU}
   var
-    i : byte;
+    I : Byte;
 {$endif}
   begin
 {$ifdef DEBUG_PPU}
-  ppu_log('putset');
-  inc_log_level;
+  PPU_Log('putset');
+  Inc_Log_Level;
 {$endif}
-    putdata(arr,sizeof(arr));
+    PutData(Arr,SizeOf(Arr));
 {$ifdef DEBUG_PPU}
-  for i:=0 to sizeof(arr)-1 do
-    ppu_log_val('byte['+ToStr(i)+']=$'+HexStr(arr[i],2));
-  dec_log_level;
+  for I:=0 to SizeOf(Arr)-1 do
+    PPU_Log_Val('byte['+ToStr(I)+']=$'+HexStr(Arr[I],2));
+  Dec_Log_Level;
 {$endif}
   end;
 
 
 procedure TEntryFile.TempClose;
   begin
-    if not closed then
+    if not Closed then
      begin
-       closepos:=f.Position;
-       f.Free;
-       f:=nil;
-       closed:=true;
-       tempclosed:=true;
+       ClosePos:=F.Position;
+       F.Free;
+       F:=nil;
+       Closed:=True;
+       TempClosed:=True;
      end;
   end;
 
 
-function TEntryFile.TempOpen:boolean;
+function TEntryFile.TempOpen:Boolean;
   begin
-    TempOpen:=false;
-    if not closed or not tempclosed then
-     exit;
+    TempOpen:=False;
+    if not Closed or not TempClosed then
+     Exit;
    { MG: not sure, if this is correct
      f.position:=0;
        No, f was freed in tempclose above, we need to
        recreate it.  PM 2011/06/06 }
     try
-      f:=CFileStreamClass.Create(fname,fmOpenRead);
+      F:=CFileStreamClass.Create(FName,fmOpenRead);
     except
-      exit;
+      Exit;
     end;
-    closed:=false;
-    tempclosed:=false;
+    Closed:=False;
+    TempClosed:=False;
 
   { restore state }
-    f.Position:=closepos;
-    TempOpen:=true;
+    F.Position:=ClosePos;
+    TempOpen:=True;
   end;
 
 end.

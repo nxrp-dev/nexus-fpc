@@ -43,13 +43,13 @@ implementation
        SysUtils,
        GlobType,Systems,tokens,
        CUtils,CFileUtl,CClasses,CompHook,
-       Globals,Verbose,FinPut,fppu,GlobStat,FPCP,FPkg,
+       Globals,Verbose,FinPut,FPPU,GlobStat,FPCP,FPkg,
        symconst,SymBase,symtype,symdef,SymSym,SymTable,defutil,symcreat,
        wpoinfo,
        aasmtai,AAsmData,aasmbase,aasmcpu,
        cgbase,ngenutil,
        nbas,nutils,ncgutil,
-       link,assemble,import,export,gendef,ppu,CompRsrc,DbgBase,
+       link,assemble,import,export,gendef,PPU,CompRsrc,DbgBase,
        CResStr,ProcInfo,
        objcgutl,
        PkgUtil,NXPackageFile,
@@ -134,17 +134,17 @@ implementation
     { Insert the used object file for this unit in the used list for this unit }
       begin
         curr.linkunitofiles.add(ExtractFileName(curr.ObjFileName),link_static);
-        curr.headerflags:=curr.headerflags or uf_static_linked;
+        curr.headerflags:=curr.headerflags or UfStaticLinked;
 
         if create_smartlink_library then
           begin
             curr.linkunitstaticlibs.add(curr.StaticLibFileName ,link_smart);
-            curr.headerflags:=curr.headerflags or uf_smart_linked;
+            curr.headerflags:=curr.headerflags or UfSmartLinked;
           end;
         if cs_lto in CurrentSettings.ModuleSwitches then
           begin
             curr.linkunitofiles.add(ChangeFileExt(curr.ObjFileName,LTOExt),link_lto);
-            curr.headerflags:=curr.headerflags or uf_lto_linked;
+            curr.headerflags:=curr.headerflags or UfLTOLinked;
           end;
       end;
 
@@ -197,11 +197,11 @@ implementation
 
       begin
         { load unit }
-        hp:=registerunit(curr,s,'',isnew);
+        hp:=RegisterUnit(curr,s,'',isnew);
         if isnew then
           UsedUnits.concat(TUsedUnit.create(hp,true,addasused,nil));
         hp.adddependency(curr,curr.in_interface); { adddependency before loadppu for invalid cycle test }
-        hp.loadppu(curr);
+        hp.LoadPPU(curr);
         TModule.finish_module(hp);
 
         { add to symtable stack }
@@ -455,7 +455,7 @@ implementation
            (TargetInfo.system=system_x86_64_win64) and
            (cs_nexus_profile in CurrentSettings.ModuleSwitches) then
           begin
-            profileunit:=registerunit(curr,'nxprofilerruntime','',isnew);
+            profileunit:=RegisterUnit(curr,'nxprofilerruntime','',isnew);
             if isnew then
               UsedUnits.concat(TUsedUnit.create(profileunit,false,true,nil));
             profilesym:=CUnitSym.create('NXPROFILERRUNTIME',nil);
@@ -584,7 +584,7 @@ implementation
               end;
              if not Assigned(hp2) then
                begin
-               hp2:=registerunit(curr,sorg,fn,isnew);
+               hp2:=RegisterUnit(curr,sorg,fn,isnew);
                if isnew then
                  UsedUnits.concat(TUsedUnit.create(hp2,curr.in_interface,true,nil));
                end
@@ -655,7 +655,7 @@ implementation
                  lu.adddependency(curr,frominterface);
                end;
                { always call loadppu for the cycle test }
-               TPPUModule(lu).loadppu(curr);
+               TPPUModule(lu).LoadPPU(curr);
                if not (curr.state in [ms_compile,ms_compiling_wait,ms_compiling_waitintf,ms_compiling_waitimpl]) then
                begin
                  {$IFDEF DEBUG_PPU_CYCLES}
@@ -724,12 +724,12 @@ implementation
 //           writeln('Must connect ',pu.u.modulename^,'(sym: ',pu.unitsym.realname,')');
            { save crc values }
            pu.checksum:=pu.u.crc;
-           pu.interface_checksum:=pu.u.interface_crc;
-           pu.indirect_checksum:=pu.u.indirect_crc;
-           if TPPUModule(pu.u).nsprefix<>'' then
+           pu.InterfaceChecksum:=pu.u.InterfaceCRC;
+           pu.IndirectChecksum:=pu.u.IndirectCRC;
+           if TPPUModule(pu.u).NSPrefix<>'' then
              begin
                { use the name as declared in the uses section for -Un }
-               sorg:=TPPUModule(pu.u).nsprefix+'.'+pu.unitsym.realname;
+               sorg:=TPPUModule(pu.u).NSPrefix+'.'+pu.unitsym.realname;
                { update unitsym now that we have access to the full name }
                pu.unitsym.free;
                pu.unitsym:=CUnitSym.create(sorg,pu.u);
@@ -1182,7 +1182,7 @@ type
 
         { Our interface is compiled, generate interface CRC and switch to implementation }
         if ErrorCount=0 then
-          TPPUModule(curr).getppucrc;
+          TPPUModule(curr).GetPPUCRC;
         curr.in_interface:=false;
         curr.interface_compiled:=true;
 
@@ -1225,7 +1225,7 @@ type
            SymTableStack.pop(curr.GlobalSymTable);
            end;
 
-        if (ErrorCount=0) and TPPUModule(curr).dependent_module_crc_mismatch then
+        if (ErrorCount=0) and TPPUModule(curr).Dependent_Module_CRC_Mismatch then
           { a dependent module needs recompile }
           curr.state:=ms_compiling_waitimpl;
 
@@ -1626,7 +1626,7 @@ type
            insertobjectfile(module)
          else
            begin
-             module.headerflags:=module.headerflags or uf_no_link;
+             module.headerflags:=module.headerflags or UfNoLink;
              exclude(module.moduleflags,mf_has_stabs_debuginfo);
              exclude(module.moduleflags,mf_has_dwarf_debuginfo);
            end;
@@ -1646,7 +1646,7 @@ type
         if ErrorCount=0 then
           begin
           wait_m:=module.find_used_unit_compiling;
-          wait_dep:=TPPUModule(module).dependent_module_has_our_crc;
+          wait_dep:=TPPUModule(module).Dependent_Module_Has_Our_CRC;
           if (wait_m<>nil) or wait_dep then
             begin
               { Some used units are still compiling, so their CRCs can change
@@ -1657,7 +1657,7 @@ type
               {$IFDEF Debug_FreeParseMem}
               WriteLn('finish_compile_unit ',module.RealModuleName^,' waiting for used unit CRCs...');
               {$ENDIF}
-              TPPUModule(module).getppucrc;
+              TPPUModule(module).GetPPUCRC;
               module.crc_final:=true;
               module.state:=ms_compiled_waitcrc;
               SetCurrentModule(old_module);
@@ -1693,19 +1693,19 @@ type
         SetCurrentModule(module);
 
         { Write out the ppufile after the object file has been created }
-        store_interface_crc:=module.interface_crc;
-        store_indirect_crc:=module.indirect_crc;
+        store_interface_crc:=module.InterfaceCRC;
+        store_indirect_crc:=module.IndirectCRC;
 {$ifdef EXTDEBUG}
         store_crc:=module.crc;
 {$endif EXTDEBUG}
         if result then
-          TPPUModule(module).writeppu;
+          TPPUModule(module).WritePPU;
 
         if not(cs_compilesystem in CurrentSettings.ModuleSwitches) then
           begin
-            if store_interface_crc<>module.interface_crc then
+            if store_interface_crc<>module.InterfaceCRC then
               Message1(unit_u_interface_crc_changed,module.PPUFileName);
-            if store_indirect_crc<>module.indirect_crc then
+            if store_indirect_crc<>module.IndirectCRC then
               Message1(unit_u_indirect_crc_changed,module.PPUFileName);
           end;
 {$ifdef EXTDEBUG}
@@ -1778,7 +1778,7 @@ type
         Message1(unit_u_finished_compiling,module.ModuleName^);
 
         module_is_done(module);
-        module.end_of_parsing;
+        module.End_Of_Parsing;
 
 {$ifdef DEBUG_NODE_XML}
         XMLFinalizeNodeFile('unit');

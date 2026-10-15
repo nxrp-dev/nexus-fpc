@@ -762,7 +762,7 @@ const
       m : TMachUInt64;
     begin
       m:=NtoLE(ofs);
-      Writedata(m, sizeof(m));
+      WriteData(m, sizeof(m));
     end;
 
 
@@ -1028,7 +1028,7 @@ const
       m : TMachUInt64;
     begin
       m:=NtoBE(ofs);
-      Writedata(m, sizeof(m));
+      WriteData(m, sizeof(m));
     end;
 
 

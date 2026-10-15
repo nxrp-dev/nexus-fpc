@@ -335,9 +335,9 @@ implementation
         hparaloc: PCGParaLocation;
         nparaloc: byte;
       begin
-        ppufile.putbyte(byte(Alignment));
-        ppufile.putbyte(ord(Size));
-        ppufile.putaint(IntSize);
+        ppufile.PutByte(byte(Alignment));
+        ppufile.PutByte(ord(Size));
+        ppufile.PutAInt(IntSize);
         ppufile.putderef(defderef);
         nparaloc:=0;
         hparaloc:=location;
@@ -346,17 +346,17 @@ implementation
             inc(nparaloc);
             hparaloc:=hparaloc^.Next;
           end;
-        ppufile.putbyte(nparaloc);
+        ppufile.PutByte(nparaloc);
         hparaloc:=location;
         while Assigned(hparaloc) do
           begin
-            ppufile.putbyte(byte(hparaloc^.Size));
-            ppufile.putbyte(byte(hparaloc^.loc));
+            ppufile.PutByte(byte(hparaloc^.Size));
+            ppufile.PutByte(byte(hparaloc^.loc));
             case hparaloc^.loc of
               LOC_REFERENCE:
                 begin
-                  ppufile.putlongint(LongInt(hparaloc^.reference.index));
-                  ppufile.putaint(hparaloc^.reference.offset);
+                  ppufile.PutLongInt(LongInt(hparaloc^.reference.index));
+                  ppufile.PutAInt(hparaloc^.reference.offset);
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER,
@@ -365,8 +365,8 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  ppufile.putbyte(hparaloc^.shiftval);
-                  ppufile.putlongint(LongInt(hparaloc^.register));
+                  ppufile.PutByte(hparaloc^.shiftval);
+                  ppufile.PutLongInt(LongInt(hparaloc^.register));
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)
                 or otherwise it hits the internalerror below. I don't know if this is
@@ -388,21 +388,21 @@ implementation
         nparaloc: byte;
       begin
         reset;
-        Alignment:=shortint(ppufile.getbyte);
-        Size:=TCgSize(ppufile.getbyte);
-        IntSize:=ppufile.getaint;
+        Alignment:=shortint(ppufile.GetByte);
+        Size:=TCgSize(ppufile.GetByte);
+        IntSize:=ppufile.GetAInt;
         ppufile.getderef(defderef);
-        nparaloc:=ppufile.getbyte;
+        nparaloc:=ppufile.GetByte;
         while nparaloc>0 do
           begin
             hparaloc:=add_location;
-            hparaloc^.size:=TCgSize(ppufile.getbyte);
-            hparaloc^.loc:=TCGLoc(ppufile.getbyte);
+            hparaloc^.size:=TCgSize(ppufile.GetByte);
+            hparaloc^.loc:=TCGLoc(ppufile.GetByte);
             case hparaloc^.loc of
               LOC_REFERENCE:
                 begin
-                  hparaloc^.reference.index:=TRegister(ppufile.getlongint);
-                  hparaloc^.reference.offset:=ppufile.getaint;
+                  hparaloc^.reference.index:=TRegister(ppufile.GetLongInt);
+                  hparaloc^.reference.offset:=ppufile.GetAInt;
                 end;
               LOC_FPUREGISTER,
               LOC_CFPUREGISTER,
@@ -411,8 +411,8 @@ implementation
               LOC_REGISTER,
               LOC_CREGISTER :
                 begin
-                  hparaloc^.shiftval:=ppufile.getbyte;
-                  hparaloc^.register:=TRegister(ppufile.getlongint);
+                  hparaloc^.shiftval:=ppufile.GetByte;
+                  hparaloc^.register:=TRegister(ppufile.GetLongInt);
                 end;
               { This seems to be required for systems using explicitparaloc (eg. MorphOS)
                 or otherwise it hits the internalerror below. I don't know if this is

@@ -187,7 +187,7 @@ implementation
 
     uses
       GlobType,Systems,ConstExp,
-      CUtils,Verbose,Globals,ppu,
+      CUtils,Verbose,Globals,PPU,
       symconst,defutil,defcmp,
       nadd,nbas,nflw,nutils,objcutil,
       wpobase,
@@ -345,7 +345,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(parentpdderef);
-        kind:=TLoadParentFPKind(ppufile.getbyte);
+        kind:=TLoadParentFPKind(ppufile.GetByte);
       end;
 
 
@@ -353,7 +353,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(parentpdderef);
-        ppufile.putbyte(byte(kind));
+        ppufile.PutByte(byte(kind));
       end;
 
 
@@ -436,7 +436,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(getprocvardefderef);
-        ppufile.getset(TPPUSet1(addrnodeflags));
+        ppufile.GetSet(TPPUSet1(addrnodeflags));
       end;
 
 
@@ -444,7 +444,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(getprocvardefderef);
-        ppufile.putset(TPPUSet1(addrnodeflags));
+        ppufile.PutSet(TPPUSet1(addrnodeflags));
       end;
 
     procedure TAddrNode.mark_write;
@@ -862,14 +862,14 @@ implementation
     constructor TDerefNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(TPPUSet1(derefnodeflags));
+        ppufile.GetSet(TPPUSet1(derefnodeflags));
       end;
 
 
     procedure TDerefNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(derefnodeflags));
+        ppufile.PutSet(TPPUSet1(derefnodeflags));
       end;
 
 
@@ -1095,14 +1095,14 @@ implementation
     constructor TVecNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(TPPUSet1(vecnodeflags));
+        ppufile.GetSet(TPPUSet1(vecnodeflags));
       end;
 
 
     procedure TVecNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(vecnodeflags));
+        ppufile.PutSet(TPPUSet1(vecnodeflags));
       end;
 
 

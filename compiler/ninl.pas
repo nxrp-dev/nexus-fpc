@@ -148,7 +148,7 @@ implementation
       GlobType,CUtils,CClasses,FModule,
       symconst,symdef,SymSym,symcpu,SymTable,paramgr,defcmp,defutil,SymBase,
       CPUInfo,cpubase,
-      pass_1,ppu,
+      pass_1,PPU,
       ncal,ncon,ncnv,nadd,nld,nbas,nflw,nmem,nmat,nutils,ngenutil,
       nobjc,objcdef,
       cgbase,ProcInfo;
@@ -186,16 +186,16 @@ implementation
     constructor TInlineNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
-        ppufile.getset(TPPUSet1(inlinenodeflags));
-        inlinenumber:=TInlineNumber(ppufile.getlongint);
+        ppufile.GetSet(TPPUSet1(inlinenodeflags));
+        inlinenumber:=TInlineNumber(ppufile.GetLongInt);
       end;
 
 
     procedure TInlineNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(inlinenodeflags));
-        ppufile.putlongint(LongInt(inlinenumber));
+        ppufile.PutSet(TPPUSet1(inlinenodeflags));
+        ppufile.PutLongInt(LongInt(inlinenumber));
       end;
 
 

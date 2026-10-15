@@ -77,7 +77,7 @@ procedure TI86AbsoluteVarSym.PPULoadPlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then
-      absseg:=ppufile.getboolean
+      absseg:=ppufile.GetBoolean
     else
       absseg:=false;
   end;
@@ -87,7 +87,7 @@ procedure TI86AbsoluteVarSym.PPUWritePlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then
-      ppufile.putboolean(absseg);
+      ppufile.PutBoolean(absseg);
   end;
 
 end.

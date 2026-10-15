@@ -44,8 +44,8 @@ type
   TArObjectWriter=class(TObjectWriter)
     constructor createAr(const Aarfn:string);override;
     destructor  Destroy;override;
-    function  createfile(const fn:string):boolean;override;
-    procedure closefile;override;
+    function  CreateFile(const fn:string):boolean;override;
+    procedure CloseFile;override;
     procedure writesym(const sym:string);override;
     procedure write(const b;len:LongWord);override;
   private
@@ -83,7 +83,7 @@ type
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);override;
     destructor  Destroy;override;
     function  openfile(const fn:string):boolean;override;
-    procedure closefile;override;
+    procedure CloseFile;override;
     procedure seek(len:LongInt);override;
   end;
 
@@ -228,17 +228,17 @@ implementation
       end;
 
 
-    function TArObjectWriter.createfile(const fn:string):boolean;
+    function TArObjectWriter.CreateFile(const fn:string):boolean;
       begin
         objfn:=fn;
         objpos:=ardata.size;
         ardata.seek(objpos + sizeof(TArHdr));
-        createfile:=true;
+        CreateFile:=true;
         fobjsize:=0;
       end;
 
 
-    procedure TArObjectWriter.closefile;
+    procedure TArObjectWriter.CloseFile;
       const
         LF:char=#10;
       var
@@ -357,7 +357,7 @@ implementation
 
     destructor  TArObjectReader.Destroy;
       begin
-        inherited closefile;
+        inherited CloseFile;
         ArSymbols.Free;
         ArSymbols := nil;
         LFNStrs:=nil;
@@ -545,7 +545,7 @@ implementation
       end;
 
 
-    procedure TArObjectReader.closefile;
+    procedure TArObjectReader.CloseFile;
       begin
         CurrMemberPos:=0;
         CurrMemberSize:=0;

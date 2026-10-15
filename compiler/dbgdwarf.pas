@@ -283,7 +283,7 @@ implementation
       version,Globals,Verbose,Systems,
       cpubase,CPUInfo,paramgr,
       FModule,
-      defutil,SymTable,symcpu,ppu
+      defutil,SymTable,symcpu,PPU
 {$ifdef OMFOBJSUPPORT}
       ,dbgcodeview
 {$endif OMFOBJSUPPORT}

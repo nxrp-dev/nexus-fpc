@@ -154,7 +154,7 @@ implementation
       defutil, cgutils, parabase,
       CPUInfo,cpubase,cpupi,paramgr,
       aasmbase,ProcInfo,
-      FinPut,FModule,ppu,
+      FinPut,FModule,PPU,
       symutil;
 
 

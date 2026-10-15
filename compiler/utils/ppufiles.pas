@@ -22,7 +22,7 @@ Program ppufiles;
 
 uses
   dos,
-  ppu,entfile,NXArtifactID;
+  PPU,EntFile,NXArtifactID;
 
 const
   Version   = 'Version 1.00';
@@ -130,8 +130,8 @@ Var
   begin
     while not inppu.endofentry do
      begin
-       AddFile(inppu.getstring);
-       inppu.getlongint;
+       AddFile(inppu.GetString);
+       inppu.GetLongInt;
      end;
   end;
 
@@ -151,7 +151,7 @@ begin
      Error('Error: Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC',false);
      Exit;
    end;
-  if inppu.getversion<>CurrentPPUVersion then
+  if inppu.GetVersion<>CurrentPPUVersion then
    begin
      inppu.free;
      Error('Error: Wrong PPU Version : '+PPUFn,false);
@@ -159,11 +159,11 @@ begin
    end;
 { read until the object files are found }
   repeat
-    b:=inppu.readentry;
+    b:=inppu.ReadEntry;
     case b of
-      ibextraheader:
+      IBExtraHeader:
         begin
-          ppulongversion:=cardinal(inppu.getlongint);
+          ppulongversion:=cardinal(inppu.GetLongInt);
           if ppulongversion<>CurrentPPULongVersion then
             begin
               inppu.free;
@@ -171,16 +171,16 @@ begin
               exit;
             end;
         end;
-      ibendinterface,
-      ibend :
+      IBEndInterface,
+      IBEnd :
         break;
-      iblinkunitstaticlibs :
+      IBLinkUnitStaticLibs :
         if showstatic then
          showfiles;
-      iblinkunitsharedlibs :
+      IBLinkUnitSharedLibs :
         if showshared then
          showfiles;
-      iblinkunitofiles :
+      IBLinkUnitOFiles :
         if showobjects then
          showfiles;
     end;

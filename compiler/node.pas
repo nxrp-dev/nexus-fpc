@@ -500,12 +500,12 @@ interface
 implementation
 
     uses
-       Verbose,entfile,
+       Verbose,EntFile,
        FinPut,CompHook,
 {$ifdef DEBUG_NODE_XML}
        CUtils,
 {$endif DEBUG_NODE_XML}
-       ppu,FModule,
+       PPU,FModule,
        symconst,
        nutils,nflw,
        defutil;
@@ -582,18 +582,18 @@ implementation
         hppuidx : LongInt;
       begin
         { marker }
-        b:=ppufile.getbyte;
+        b:=ppufile.GetByte;
         if b<>ppunodemarker then
           InternalError(200208151);
         { load nodetype }
-        t:=TNodeType(ppufile.getbyte);
+        t:=TNodeType(ppufile.GetByte);
         if t>high(TNodeType) then
           InternalError(200208152);
         if t<>emptynode then
          begin
            if not Assigned(nodeclass[t]) then
              InternalError(200208153);
-           hppuidx:=ppufile.getlongint;
+           hppuidx:=ppufile.GetLongInt;
            //writeln('load: ',nodetype2str[t]);
            { generate node of the correct class }
            result:=nodeclass[t].ppuload(t,ppufile);
@@ -608,23 +608,23 @@ implementation
     procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
       begin
         { marker, read by ppuloadnode }
-        ppufile.putbyte(ppunodemarker);
+        ppufile.PutByte(ppunodemarker);
         { type, read by ppuloadnode }
         if Assigned(n) then
          begin
-           ppufile.putbyte(byte(n.nodetype));
-           ppufile.putlongint(n.ppuidx);
+           ppufile.PutByte(byte(n.nodetype));
+           ppufile.PutLongInt(n.ppuidx);
            //writeln('write: ',nodetype2str[n.nodetype]);
            n.ppuwrite(ppufile);
          end
         else
-         ppufile.putbyte(byte(emptynode));
+         ppufile.PutByte(byte(emptynode));
       end;
 
 
     function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
       begin
-        if ppufile.readentry<>ibnodetree then
+        if ppufile.ReadEntry<>IBNodeTree then
           Message(unit_f_ppu_read_error);
         nodeppuidxcreate;
         result:=ppuloadnode(ppufile);
@@ -637,7 +637,7 @@ implementation
       begin
         nodeppuidxcreate;
         ppuwritenode(ppufile,n);
-        ppufile.writeentry(ibnodetree);
+        ppufile.WriteEntry(IBNodeTree);
         nodeppuidxfree;
       end;
 
@@ -790,12 +790,12 @@ implementation
       begin
         nodetype:=t;
         { tnode fields }
-        blocktype:=TBlockType(ppufile.getbyte);
+        blocktype:=TBlockType(ppufile.GetByte);
         ppufile.getposinfo(fileinfo);
-        ppufile.getset(TPPUSet5(LocalSwitches));
-        verbosity:=ppufile.getlongint;
+        ppufile.GetSet(TPPUSet5(LocalSwitches));
+        verbosity:=ppufile.GetLongInt;
         ppufile.getderef(resultdefderef);
-        ppufile.getset(TPPUSet2(flags));
+        ppufile.GetSet(TPPUSet2(flags));
         { updated by firstpass }
         expectloc:=LOC_INVALID;
         { updated by secondpass }
@@ -805,12 +805,12 @@ implementation
 
     procedure TNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
-        ppufile.putbyte(byte(blocktype));
+        ppufile.PutByte(byte(blocktype));
         ppufile.putposinfo(fileinfo);
-        ppufile.putset(TPPUSet5(LocalSwitches));
-        ppufile.putlongint(verbosity);
+        ppufile.PutSet(TPPUSet5(LocalSwitches));
+        ppufile.PutLongInt(verbosity);
         ppufile.putderef(resultdefderef);
-        ppufile.putset(TPPUSet2(flags));
+        ppufile.PutSet(TPPUSet2(flags));
       end;
 
 

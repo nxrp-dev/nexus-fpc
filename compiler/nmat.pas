@@ -117,7 +117,7 @@ implementation
       htypechk,pass_1,
       cgbase,
       ncon,ncnv,ncal,nadd,nld,nbas,nflw,ninl,
-      nutils,ppu;
+      nutils,PPU;
 
 {****************************************************************************
                               TMODDIVNODE
@@ -134,14 +134,14 @@ implementation
     constructor TModDivNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
-        ppufile.getset(TPPUSet1(moddivnodeflags));
+        ppufile.GetSet(TPPUSet1(moddivnodeflags));
       end;
 
 
     procedure TModDivNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(moddivnodeflags));
+        ppufile.PutSet(TPPUSet1(moddivnodeflags));
       end;
 
 

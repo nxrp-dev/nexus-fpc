@@ -326,7 +326,7 @@ implementation
 
     uses
       Systems,
-      Verbose,Globals,FModule,ppu,
+      Verbose,Globals,FModule,PPU,
       aasmbase,AAsmData,
       symconst,defutil,defcmp,
       htypechk,pass_1,
@@ -996,7 +996,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         originalindex:=-1;
-        ppufile.getset(TPPUSet1(callparaflags));
+        ppufile.GetSet(TPPUSet1(callparaflags));
         fparainit:=ppuloadnode(ppufile);
         fparacopyback:=ppuloadnode(ppufile);
       end;
@@ -1005,7 +1005,7 @@ implementation
     procedure TCallParaNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putset(TPPUSet1(callparaflags));
+        ppufile.PutSet(TPPUSet1(callparaflags));
         ppuwritenode(ppufile,fparainit);
         ppuwritenode(ppufile,fparacopyback);
       end;
@@ -1793,8 +1793,8 @@ implementation
 { TODO: FIXME: No withsymtable support}
         symtableproc:=nil;
         ppufile.getderef(procdefinitionderef);
-        ppufile.getset(TPPUSet4(callnodeflags));
-        intrinsiccode:=TInlineNumber(ppufile.getword);
+        ppufile.GetSet(TPPUSet4(callnodeflags));
+        intrinsiccode:=TInlineNumber(ppufile.GetWord);
       end;
 
 
@@ -1809,8 +1809,8 @@ implementation
         inherited ppuwrite(ppufile);
         ppufile.putderef(symtableprocentryderef);
         ppufile.putderef(procdefinitionderef);
-        ppufile.putset(TPPUSet4(callnodeflags));
-        ppufile.putword(word(intrinsiccode));
+        ppufile.PutSet(TPPUSet4(callnodeflags));
+        ppufile.PutWord(word(intrinsiccode));
       end;
 
 

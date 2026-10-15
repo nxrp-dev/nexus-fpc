@@ -86,8 +86,8 @@ type
     constructor createAr(const Aarfn:string);override;
     constructor createAr(const Aarfn:string;PageSize:Integer);
     destructor  Destroy;override;
-    function  createfile(const fn:string):boolean;override;
-    procedure closefile;override;
+    function  CreateFile(const fn:string):boolean;override;
+    procedure CloseFile;override;
     procedure writesym(const sym:string);override;
     procedure write(const b;len:LongWord);override;
   end;
@@ -124,7 +124,7 @@ type
     constructor createAr(const Aarfn:string;allow_nonar:boolean=false);override;
     destructor  Destroy;override;
     function  openfile(const fn:string):boolean;override;
-    procedure closefile;override;
+    procedure CloseFile;override;
     procedure seek(len:LongInt);override;
     property IsCaseSensitive: Boolean read FIsCaseSensitive;
   end;
@@ -215,16 +215,16 @@ implementation
       end;
 
 
-    function TOmfLibObjectWriter.createfile(const fn: string): boolean;
+    function TOmfLibObjectWriter.CreateFile(const fn: string): boolean;
       begin
         FCurrentModule:=TOmfLibObjectModule.Create(fn);
         FCurrentModuleIndex:=FObjectModules.Add(FCurrentModule);
-        createfile:=true;
+        CreateFile:=true;
         fobjsize:=0;
       end;
 
 
-    procedure TOmfLibObjectWriter.closefile;
+    procedure TOmfLibObjectWriter.CloseFile;
       var
         RawRec: TOmfRawRecord;
         ObjHeader: TOMFRecordTHEADR;
@@ -583,7 +583,7 @@ implementation
 
   destructor TOmfLibObjectReader.Destroy;
     begin
-      inherited closefile;
+      inherited CloseFile;
       LibSymbols.Free;
       LibSymbols := nil;
       inherited Destroy;
@@ -618,7 +618,7 @@ implementation
       result:=true;
     end;
 
-  procedure TOmfLibObjectReader.closefile;
+  procedure TOmfLibObjectReader.CloseFile;
     begin
       CurrMemberPos:=0;
       CurrMemberName:='';

@@ -33,7 +33,7 @@ interface
       { symtable }
       symconst,SymBase,
       { aasm }
-      aasmbase,ppu,
+      aasmbase,PPU,
       FinPut
       ;
 
@@ -1068,10 +1068,10 @@ implementation
 
     procedure TCompilerPPUFile.getguid(var g: TGUID);
       begin
-        LongInt(g.d1):=getlongint;
-        g.d2:=getword;
-        g.d3:=getword;
-        getdata(g.d4,sizeof(g.d4));
+        LongInt(g.d1):=GetLongInt;
+        g.d2:=GetWord;
+        g.d3:=GetWord;
+        GetData(g.d4,sizeof(g.d4));
       end;
 
 
@@ -1079,8 +1079,8 @@ implementation
 
     begin
       getexprint.overflow:=false;
-      getexprint.signed:=getboolean;
-      getexprint.svalue:=getint64;
+      getexprint.signed:=GetBoolean;
+      getexprint.svalue:=GetInt64;
     end;
 
 
@@ -1094,24 +1094,24 @@ implementation
           2-3 - amount of bytes for line
           4-5 - amount of bytes for column
         }
-        info:=getbyte;
+        info:=GetByte;
         case (info and $03) of
-         0 : p.fileindex:=getbyte;
-         1 : p.fileindex:=getword;
-         2 : p.fileindex:=(getbyte shl 16) or getword;
-         3 : p.fileindex:=getlongint;
+         0 : p.fileindex:=GetByte;
+         1 : p.fileindex:=GetWord;
+         2 : p.fileindex:=(GetByte shl 16) or GetWord;
+         3 : p.fileindex:=GetLongInt;
         end;
         case ((info shr 2) and $03) of
-         0 : p.line:=getbyte;
-         1 : p.line:=getword;
-         2 : p.line:=(getbyte shl 16) or getword;
-         3 : p.line:=getlongint;
+         0 : p.line:=GetByte;
+         1 : p.line:=GetWord;
+         2 : p.line:=(GetByte shl 16) or GetWord;
+         3 : p.line:=GetLongInt;
         end;
         case ((info shr 4) and $03) of
-         0 : p.column:=getbyte;
-         1 : p.column:=getword;
-         2 : p.column:=(getbyte shl 16) or getword;
-         3 : p.column:=getlongint;
+         0 : p.column:=GetByte;
+         1 : p.column:=GetWord;
+         2 : p.column:=(GetByte shl 16) or GetWord;
+         3 : p.column:=GetLongInt;
         end;
         p.moduleindex:=CurrentModule.ModuleID;
       end;
@@ -1119,7 +1119,7 @@ implementation
 
     procedure TCompilerPPUFile.getderef(var d:TDeref);
       begin
-        d.dataidx:=getlongint;
+        d.dataidx:=GetLongInt;
       end;
 
 
@@ -1133,7 +1133,7 @@ implementation
         p:=TPropAccessList.create;
         getderef(p.procdefderef);
         repeat
-          slt:=TSLType(getbyte);
+          slt:=TSLType(GetByte);
           case slt of
             sl_none :
               break;
@@ -1152,7 +1152,7 @@ implementation
               end;
             sl_vec :
               begin
-                idx:=getlongint;
+                idx:=GetLongInt;
                 getderef(hderef);
                 p.addconstderef(slt,idx,hderef);
               end;
@@ -1164,7 +1164,7 @@ implementation
 
     function  TCompilerPPUFile.getasmsymbol:TAsmSymbol;
       begin
-        getlongint;
+        GetLongInt;
         getasmsymbol:=nil;
       end;
 
@@ -1222,33 +1222,33 @@ implementation
            }
           end;
         { write data }
-        putbyte(info);
+        PutByte(info);
         case (info and $03) of
-         0 : putbyte(p.fileindex);
-         1 : putword(p.fileindex);
+         0 : PutByte(p.fileindex);
+         1 : PutWord(p.fileindex);
          2 : begin
-               putbyte(p.fileindex shr 16);
-               putword(p.fileindex and $ffff);
+               PutByte(p.fileindex shr 16);
+               PutWord(p.fileindex and $ffff);
              end;
-         3 : putlongint(p.fileindex);
+         3 : PutLongInt(p.fileindex);
         end;
         case ((info shr 2) and $03) of
-         0 : putbyte(p.line);
-         1 : putword(p.line);
+         0 : PutByte(p.line);
+         1 : PutWord(p.line);
          2 : begin
-               putbyte(p.line shr 16);
-               putword(p.line and $ffff);
+               PutByte(p.line shr 16);
+               PutWord(p.line and $ffff);
              end;
-         3 : putlongint(p.line);
+         3 : PutLongInt(p.line);
         end;
         case ((info shr 4) and $03) of
-         0 : putbyte(p.column);
-         1 : putword(p.column);
+         0 : PutByte(p.column);
+         1 : PutWord(p.column);
          2 : begin
-               putbyte(p.column shr 16);
-               putword(p.column and $ffff);
+               PutByte(p.column shr 16);
+               PutWord(p.column and $ffff);
              end;
-         3 : putlongint(p.column);
+         3 : PutLongInt(p.column);
         end;
         DoCRC:=oldcrc;
       end;
@@ -1256,10 +1256,10 @@ implementation
 
     procedure TCompilerPPUFile.putguid(const g: TGUID);
       begin
-        putlongint(LongInt(g.d1));
-        putword(g.d2);
-        putword(g.d3);
-        putdata(g.d4,sizeof(g.d4));
+        PutLongInt(LongInt(g.d1));
+        PutWord(g.d2);
+        PutWord(g.d3);
+        PutData(g.d4,sizeof(g.d4));
       end;
 
 
@@ -1268,8 +1268,8 @@ implementation
     begin
       if v.overflow then
         InternalError(200706102);
-      putboolean(v.signed);
-      putint64(v.svalue);
+      PutBoolean(v.signed);
+      PutInt64(v.svalue);
     end;
 
 
@@ -1281,14 +1281,14 @@ implementation
         DoCRC:=false;
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
 	{ Accept invalid marker inside getppucrc }
-        if writing_interface_ppu then
-          putlongint(d.dataidx)
+        if WritingInterfacePPU then
+          PutLongInt(d.dataidx)
         else
 {$endif}
-        if (d.dataidx=-1) and not crc_only then
+        if (d.dataidx=-1) and not CRCOnly then
           InternalError(2019022201)
         else
-          putlongint(d.dataidx);
+          PutLongInt(d.dataidx);
         DoCRC:=oldcrc;
       end;
 
@@ -1301,7 +1301,7 @@ implementation
         hp:=p.firstsym;
         while Assigned(hp) do
          begin
-           putbyte(byte(hp^.sltype));
+           PutByte(byte(hp^.sltype));
            case hp^.sltype of
              sl_call,
              sl_load,
@@ -1312,7 +1312,7 @@ implementation
                putderef(hp^.defderef);
              sl_vec :
                begin
-                 putlongint(int64(hp^.value));
+                 PutLongInt(int64(hp^.value));
                  putderef(hp^.valuedefderef);
                end;
              else
@@ -1320,13 +1320,13 @@ implementation
            end;
            hp:=hp^.next;
          end;
-        putbyte(byte(sl_none));
+        PutByte(byte(sl_none));
       end;
 
 
     procedure TCompilerPPUFile.putasmsymbol(s:TAsmSymbol);
       begin
-        putlongint(0);
+        PutLongInt(0);
       end;
 
 {$ifdef MEMDEBUG}

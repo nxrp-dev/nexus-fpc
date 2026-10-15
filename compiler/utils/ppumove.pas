@@ -35,7 +35,7 @@ uses
 {$else unix}
   dos,
 {$endif unix}
-  CUtils,ppu,entfile,Systems,NXArtifactID,
+  CUtils,PPU,EntFile,Systems,NXArtifactID,
   getopts;
 
 const
@@ -267,7 +267,7 @@ begin
      Error('Error: Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC',false);
      Exit;
    end;
-  ppuversion:=inppu.getversion;
+  ppuversion:=inppu.GetVersion;
   if ppuversion<>CurrentPPUVersion then
    begin
      inppu.free;
@@ -275,7 +275,7 @@ begin
      Exit;
    end;
 { No .o file generated for this ppu, just skip }
-  if (inppu.header.common.flags and uf_no_link)<>0 then
+  if (inppu.header.common.flags and UfNoLink)<>0 then
    begin
      inppu.free;
      If Not Quiet then
@@ -284,14 +284,14 @@ begin
      Exit;
    end;
 { Already a lib? }
-  if (inppu.header.common.flags and uf_in_library)<>0 then
+  if (inppu.header.common.flags and UfInLibrary)<>0 then
    begin
      inppu.free;
      Error('Error: PPU is already in a library : '+PPUFn,false);
      Exit;
    end;
 { We need a static linked unit }
-  if (inppu.header.common.flags and uf_static_linked)=0 then
+  if (inppu.header.common.flags and UfStaticLinked)=0 then
    begin
      inppu.free;
      Error('Error: PPU is not static linked : '+PPUFn,false);
@@ -302,19 +302,19 @@ begin
    outppu:=TPPUFile.create('ppumove.$$$')
   else
    outppu:=TPPUFile.create(PPLFn);
-  outppu.createfile;
+  outppu.CreateFile;
 { Create new header, with the new flags }
   outppu.header:=inppu.header;
-  outppu.header.common.flags:=outppu.header.common.flags or uf_in_library;
+  outppu.header.common.flags:=outppu.header.common.flags or UfInLibrary;
   if MakeStatic then
-   outppu.header.common.flags:=outppu.header.common.flags or uf_static_linked
+   outppu.header.common.flags:=outppu.header.common.flags or UfStaticLinked
   else
-   outppu.header.common.flags:=outppu.header.common.flags or uf_shared_linked;
+   outppu.header.common.flags:=outppu.header.common.flags or UfSharedLinked;
 { read until the object files are found }
-  untilb:=iblinkunitofiles;
+  untilb:=IBLinkUnitOFiles;
   repeat
-    b:=inppu.readentry;
-    if b in [ibendinterface,ibend] then
+    b:=inppu.ReadEntry;
+    if b in [IBEndInterface,IBEnd] then
      begin
        inppu.free;
        outppu.free;
@@ -323,9 +323,9 @@ begin
      end;
     if b<>untilb then
      begin
-       if b=ibextraheader then
+       if b=IBExtraHeader then
          begin
-           ppulongversion:=cardinal(inppu.getlongint);
+           ppulongversion:=cardinal(inppu.GetLongInt);
            if ppulongversion<>CurrentPPULongVersion then
              begin
                inppu.free;
@@ -333,39 +333,39 @@ begin
                Error('Error: Wrong PPU Long Version '+ToStr(ppulongversion)+' in '+PPUFn,false);
                Exit;
              end;
-           outppu.putlongint(LongInt(ppulongversion));
+           outppu.PutLongInt(LongInt(ppulongversion));
          end;
        repeat
-         inppu.getdatabuf(buffer^,BufSize,l);
-         outppu.putdata(buffer^,l);
+         inppu.GetDataBuf(buffer^,BufSize,l);
+         outppu.PutData(buffer^,l);
        until l<BufSize;
-       outppu.writeentry(b);
+       outppu.WriteEntry(b);
      end;
   until (b=untilb);
 { we have now reached the section for the files which need to be added,
   now add them to the list }
   case b of
-    iblinkunitofiles :
+    IBLinkUnitOFiles :
       begin
         { add all o files, and save the entry when not creating a static
           library to keep staticlinking possible (also keep possibility
           to link lto) }
         while not inppu.endofentry do
          begin
-           s:=inppu.getstring;
-           m:=inppu.getlongint;
+           s:=inppu.GetString;
+           m:=inppu.GetLongInt;
            if (not MakeStatic) or
               ((m and link_lto)<>0) then
             begin
               gotltofiles:=gotltofiles or ((m and link_lto)<>0);
-              outppu.putstring(s);
-              outppu.putlongint(m);
+              outppu.PutString(s);
+              outppu.PutLongInt(m);
             end;
            AddToLinkFiles(s);
          end;
         if not MakeStatic or
            gotltofiles then
-         outppu.writeentry(b);
+         outppu.WriteEntry(b);
       end;
 {    iblinkunitstaticlibs :
       begin
@@ -383,36 +383,36 @@ begin
 { just add a new entry with the new lib }
   if MakeStatic then
    begin
-     outppu.putstring(OutputfileForPPU);
+     outppu.PutString(OutputfileForPPU);
      if not gotltofiles then
-       outppu.putlongint(link_static)
+       outppu.PutLongInt(link_static)
      else
-       outppu.putlongint(link_static or link_lto);
-     outppu.writeentry(iblinkunitstaticlibs)
+       outppu.PutLongInt(link_static or link_lto);
+     outppu.WriteEntry(IBLinkUnitStaticLibs)
    end
   else
    begin
-     outppu.putstring(OutputfileForPPU);
+     outppu.PutString(OutputfileForPPU);
      if not gotltofiles then
-       outppu.putlongint(link_shared)
+       outppu.PutLongInt(link_shared)
      else
-       outppu.putlongint(link_shared or link_lto);
-     outppu.writeentry(iblinkunitsharedlibs);
+       outppu.PutLongInt(link_shared or link_lto);
+     outppu.WriteEntry(IBLinkUnitSharedLibs);
    end;
 { read all entries until the end and write them also to the new ppu }
   repeat
-    b:=inppu.readentry;
+    b:=inppu.ReadEntry;
   { don't write ibend, that's written automatically }
-    if b<>ibend then
+    if b<>IBEnd then
      begin
-       if b=iblinkothersharedlibs then
+       if b=IBLinkOtherSharedLibs then
          begin
            while not inppu.endofentry do
              begin
-               s:=inppu.getstring;
-               m:=inppu.getlongint;
+               s:=inppu.GetString;
+               m:=inppu.GetLongInt;
 
-               outppu.putstring(s);
+               outppu.PutString(s);
 
                { strip lib prefix }
                if copy(s,1,3)='lib' then
@@ -427,20 +427,20 @@ begin
 
                libs:=libs+' -l'+s;
 
-               outppu.putlongint(m);
+               outppu.PutLongInt(m);
              end;
          end
        else
          repeat
-           inppu.getdatabuf(buffer^,BufSize,l);
-           outppu.putdata(buffer^,l);
+           inppu.GetDataBuf(buffer^,BufSize,l);
+           outppu.PutData(buffer^,l);
          until l<BufSize;
-       outppu.writeentry(b);
+       outppu.WriteEntry(b);
      end;
-  until b=ibend;
+  until b=IBEnd;
 { write the last stuff and close }
   outppu.flush;
-  outppu.writeheader;
+  outppu.WriteHeader;
   outppu.free;
   inppu.free;
 { rename }

@@ -240,7 +240,7 @@ implementation
 
     uses
       CUtils,utcurrencyparse,
-      Verbose,Systems,SysUtils,ppu,
+      Verbose,Systems,SysUtils,PPU,
       defcmp,defutil,ProcInfo,
       AAsmData,aasmtai,
       cgbase,
@@ -554,11 +554,11 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
-        value_real:=ppufile.getreal;
-        i:=ppufile.getint64;
+        value_real:=ppufile.GetReal;
+        i:=ppufile.GetInt64;
         value_currency:=PCurrency(@i)^;
         FCurrencyRange:=crValid;
-        case ppufile.getbyte of
+        case ppufile.GetByte of
           1: FCurrencyRange:=crPositiveLimit;
           2: FCurrencyRange:=crOverflow;
         end;
@@ -570,9 +570,9 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
-        ppufile.putreal(value_real);
-        ppufile.putint64(PInt64(@value_currency)^);
-        ppufile.putbyte(Ord(FCurrencyRange));
+        ppufile.PutReal(value_real);
+        ppufile.PutInt64(PInt64(@value_currency)^);
+        ppufile.PutByte(Ord(FCurrencyRange));
         ppufile.putasmsymbol(lab_real);
       end;
 
@@ -884,7 +884,7 @@ implementation
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
-        value:=ppufile.getptruint;
+        value:=ppufile.GetPtrUInt;
       end;
 
 
@@ -892,7 +892,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
-        ppufile.putptruint(value);
+        ppufile.PutPtrUInt(value);
       end;
 
 
@@ -1035,8 +1035,8 @@ implementation
         i : LongInt;
       begin
         inherited ppuload(t,ppufile);
-        cst_type:=TConstStringType(ppufile.getbyte);
-        len:=ppufile.getlongint;
+        cst_type:=TConstStringType(ppufile.GetByte);
+        len:=ppufile.GetLongInt;
         if cst_type in [cst_widestring,cst_unicodestring] then
           begin
             InitWideString(valuews);
@@ -1045,14 +1045,14 @@ implementation
               be byteswapped
             }
             for i:=0 to valuews.len-1 do
-              valuews.data[i]:=ppufile.getword;
+              valuews.data[i]:=ppufile.GetWord;
           end
         else
           begin
             SetLength(valueas,len+1);
             valueas[len]:=#0;
             if len>0 then
-              ppufile.getdata(valueas[0],len);
+              ppufile.GetData(valueas[0],len);
           end;
         lab_str:=TAsmLabel(ppufile.getasmsymbol);
         if cst_type=cst_ansistring then
@@ -1063,13 +1063,13 @@ implementation
     procedure TStringConstNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
-        ppufile.putbyte(byte(cst_type));
-        ppufile.putlongint(len);
+        ppufile.PutByte(byte(cst_type));
+        ppufile.PutLongInt(len);
         if len>0 then
           if cst_type in [cst_widestring,cst_unicodestring] then
-            ppufile.putdata(valuews.data[0],len*sizeof(TCompilerWideChar))
+            ppufile.PutData(valuews.data[0],len*sizeof(TCompilerWideChar))
           else
-            ppufile.putdata(valueas[0],len);
+            ppufile.PutData(valueas[0],len);
         ppufile.putasmsymbol(lab_str);
         if cst_type=cst_ansistring then
           ppufile.putderef(astringdefderef);
@@ -1488,7 +1488,7 @@ implementation
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
         new(value_set);
-        ppufile.getset(TPPUSet32(value_set^));
+        ppufile.GetSet(TPPUSet32(value_set^));
       end;
 
 
@@ -1496,7 +1496,7 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
-        ppufile.putset(TPPUSet32(value_set^));
+        ppufile.PutSet(TPPUSet32(value_set^));
       end;
 
 
