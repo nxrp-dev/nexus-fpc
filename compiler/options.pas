@@ -38,7 +38,6 @@ Type
     LogoWritten,
     ABISetExplicitly,
     FPUSetExplicitly,
-    LinkInternSetExplicitly,
     CPUSetExplicitly,
     OptCPUSetExplicitly: boolean;
     FileLevel : LongInt;
@@ -1902,10 +1901,7 @@ begin
     (((TargetAsm.id=as_clang_gas) and
       (af_llvm in TargetAsm.flags)) or
      requestedwin64clang) and
-    (((cs_link_extern in InitSettings.GlobalSwitches) and
-      (TargetInfo.linkextern=ld_lld_windows)) or
-     (not(cs_link_extern in InitSettings.GlobalSwitches) and
-      (TargetInfo.link=ld_lld_windows)));
+    (TargetInfo.linkextern=ld_lld_windows);
 
 
 
@@ -1939,20 +1935,6 @@ begin
     begin
       Message(option_debug_external_unsupported);
       exclude(InitSettings.GlobalSwitches,cs_link_separate_dbg_file);
-    end;
-  { Also create a smartlinked version, on an assembler that
-    does not support smartlink sections like nasm?
-    This is not compatible with using internal linker. }
-  if ((cs_link_smart in InitSettings.GlobalSwitches) or
-      (cs_create_smart in InitSettings.ModuleSwitches)) and
-     (af_needar in TargetAsm.flags) and
-     not (af_smartlink_sections in TargetAsm.flags) and
-     not (cs_link_extern in InitSettings.GlobalSwitches) and
-     (TargetInfo.link<>ld_none) and
-      not (cs_link_nolink in InitSettings.GlobalSwitches) then
-    begin
-      Message(option_smart_link_requires_external_linker);
-      include(InitSettings.GlobalSwitches,cs_link_extern);
     end;
 end;
 
@@ -3581,11 +3563,8 @@ begin
        'd' : DontLinkStdlibPath:=TRUE;
        'e' :
          begin
-           If UnsetBool(More, j, opt, false) then
-             begin
-               exclude(InitSettings.GlobalSwitches,cs_link_extern);
-               LinkInternSetExplicitly:=true;
-             end
+           if UnsetBool(More, j, opt, false) then
+             UnsupportedPara(opt)
            else
              include(InitSettings.GlobalSwitches,cs_link_extern);
          end;
@@ -3598,13 +3577,10 @@ begin
          end;
        'i' :
          begin
-           If UnsetBool(More, j, opt, false) then
+           if UnsetBool(More, j, opt, false) then
              include(InitSettings.GlobalSwitches,cs_link_extern)
            else
-             begin
-               exclude(InitSettings.GlobalSwitches,cs_link_extern);
-               LinkInternSetExplicitly:=true;
-             end;
+             UnsupportedPara(opt);
          end;
        'm' :
          begin
@@ -4297,19 +4273,11 @@ begin
 
      SetTargetAsm(TargetInfo.assemextern);
 
-     { At least i8086 needs that for nasm and -CX
-       which is incompatible with internal linker }
      option.checkoptionscompatibility;
    end;
 
-  { Force use of external linker if there is no
-    internal linker or the linking is skipped }
-  if not(cs_link_extern in InitSettings.GlobalSwitches) and
-     ((TargetInfo.link=ld_none) or
-      (cs_link_nolink in InitSettings.GlobalSwitches)) then
-    begin
-      include(InitSettings.GlobalSwitches,cs_link_extern);
-    end;
+  { All retained targets use an external linker. }
+  include(InitSettings.GlobalSwitches,cs_link_extern);
 
   { turn off stripping if compiling with debuginfo }
   if (cs_debuginfo in InitSettings.ModuleSwitches) and
@@ -4454,14 +4422,6 @@ begin
 
   if not option.LinkTypeSetExplicitly then
     set_default_link_type;
-  if SourceInfo.endian<>TargetInfo.endian then
-    begin
-      if option.LinkInternSetExplicitly then
-        Message(link_w_unsupported_cross_endian_internal_linker)
-      else
-        include(InitSettings.GlobalSwitches,cs_link_extern);
-    end;
-
   { Default alignment settings,
     1. load the defaults for the target
     2. adapt defaults specifically for the target

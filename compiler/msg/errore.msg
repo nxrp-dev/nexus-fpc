@@ -28,7 +28,7 @@
 #   type_     type checking
 #   general_  general info
 #   exec_     calls to assembler, external linker, binder
-#   link_     internal linker
+#   link_     object-file and linking diagnostics
 #   package_  package handling
 #   sym_      symbol handling 
 #
@@ -3236,7 +3236,6 @@ exec_f_controllertype_expected=09036_F_To generate the correct linker call, a co
 # BeginOfTeX
 % \section{Executable information messages.}
 % This section lists all messages that the compiler emits when an executable program is produced,
-% and only when the internal linker is used.
 % \begin{description}
 execinfo_f_cant_process_executable=09128_F_Can't post process executable $1
 % Fatal error when the compiler is unable to post-process an executable.
@@ -3256,40 +3255,15 @@ execinfo_x_stackcommit=09134_X_Stack space committed: $1 bytes
 # EndOfTeX
 
 #
-# Internal linker messages
+# Object-file and linking messages
 #
 # 09224 is the last used one
 #
 # BeginOfTeX
 % \section{Linker messages}
-% This section lists messages produced by internal linker.
+% Diagnostics used by object-file readers and compilation.
 % \begin{description}
-link_f_executable_too_big=09200_F_Executable image size is too big for $1 target.
-% Fatal error when resulting executable is too big.
-link_w_32bit_absolute_reloc=09201_W_Object file "$1" contains 32 bit absolute relocation to symbol "$2".
-% Warning when 64 bit object file contains 32 bit absolute relocations.
-% In such case an executable image can be loaded into lower 4Gb of
-% address space only.
-link_e_program_segment_too_large=09202_E_Program segment too large (exceeds 64k by $1 bytes)
-% Error when a 16 bit program is compiled in the tiny memory model, but its size exceeds 64k
-link_e_code_segment_too_large=09203_E_Code segment "$1" too large (exceeds 64k by $2 bytes)
-% Error when a 16 bit program's code segment exceeds 64k bytes
-link_e_data_segment_too_large=09204_E_Data segment "$1" too large (exceeds 64k by $2 bytes)
-% Error when a 16 bit program's data segment exceeds 64k bytes
-link_e_segment_too_large=09205_E_Segment "$1" too large (exceeds 64k by $2 bytes)
-% Error when a 16 bit program contains a segment that exceeds 64k bytes
-link_e_group_too_large=09206_E_Group "$1" too large (exceeds 64k by $2 bytes)
-% Error when a 16 bit program's object modules define a segment group that
-% exceeds 64k bytes
-link_e_com_program_uses_segment_relocations=09207_E_Cannot create a .COM file, because the program contains segment relocations
-% Error occurs, when creating a tiny model DOS .COM file, but at least one of
-% the program's object modules contains segment relocations. Segment relocations
-% might be caused by the use of the Seg() function or by the SEG assembler
-% directive (either in pascal's built-in inline assembler, or in an externally
-% linked assembly module).
 link_w_program_uses_checkpointer=09208_W_Program "$1" uses experimental CheckPointer option
-link_e_duplicate_symbol=09209_E_Multiple defined symbol "$1"
-% The specified symbol is already defined inside the whole collection of object files.
 link_e_comdat_select_unsupported=09210_E_COMDAT selection mode $1 not supported (section: "$1")
 % The specified COMDAT selection mode is not supported.
 link_e_comdat_associative_section_expected=09211_E_Associative section expected for COMDAT section "$1"
@@ -3299,34 +3273,6 @@ link_e_comdat_not_matching=09212_E_COMDAT section selection mode doesn't match f
 % All COMDAT symbols/sections need to use the same selection mode.
 link_e_comdat_associative_section_not_found=09213_E_Associative COMDAT section for section "$1" not found
 % The COMDAT section expects an associative section, but it was not found inside the object file.
-link_d_comdat_discard_any=09214_D_Discarding duplicate symbol "$1" due to COMDAT selection mode
-% The COMDAT section specifies that any section with the same name might be selected and this
-% specific section was selected to be discarded.
-link_d_comdat_discard_size=09215_D_Discarding duplicate symbol "$1" with same size due to COMDAT selection mode
-% The COMDAT section specifies that any section with the same name and size might be selected
-% and this specific section was selected to be discarded.
-link_d_comdat_discard_content=09216_D_Discarding duplicate symbol "$1" with same content due to COMDAT selection mode
-% The COMDAT section specifies that any section with the same name and content might be selected
-% and this specific section was selected to be discarded.
-link_d_comdat_replace_size=09217_D_Replacing duplicate symbol "$1" with smaller size due to COMDAT selection mode
-% The COMDAT section specifies that the largest section with the same name should be selected
-% this specific section was larger than the previous largest one.
-link_e_comdat_size_differs=09218_E_Size of duplicate COMDAT symbol "$1" differs
-% The COMDAT section specifies that all sections with the same name need to have the same size,
-% but this section had a different size.
-link_e_comdat_content_differs=09219_E_Content of duplicate COMDAT symbol "$1" differs
-% The COMDAT section specifies that all sections with the same name need to have the same content,
-% but this section had a different size.
-link_e_comdat_selection_differs=09220_E_COMDAT selection mode for symbol "$1" differs
-% Two COMDAT sections with the same name have different COMDAT selection modes.
-link_e_undefined_symbol_in_obj=09221_E_Undefined symbol: $1 (first seen in $2)
-% The specified symbol is used, but not defined and was first seen in the specified object file.
-link_e_undefined_symbol=09222_E_Undefined symbol: $1
-% The specified symbol is used, but not defined.
-link_w_unsupported_cross_endian_internal_linker=09223_W_Internal linker in cross-endian configuration is work in progress
-% The internal linker does not correctly handle endianess conversion.
-link_f_executable_too_big_exceeds_X_by_Y_bytes=09224_F_Executable image size is too big for $1 target (exceeds $2 by $3 bytes).
-% The result File is too big
 % \end{description}
 # EndOfTeX
 
@@ -3716,7 +3662,6 @@ option_missing_arg=11054_E_Argument to "$1" is missing
 % Displayed when parameter must be followed by an argument.
 option_malformed_para=11055_E_Malformed parameter: $1
 % Given argument is not valid for parameter.
-option_smart_link_requires_external_linker=11056_W_Smart linking requires external linker
 option_com_files_require_tiny_model=11057_E_Creating .COM files is not supported in the current memory model. Only the tiny memory model supports making .COM files.
 % Do not enable experimental -gc option if -Ur option is given.
 option_gc_incompatible_with_release_flag=11058_W_Experimental CheckPointer option not enabled because it is incompatible with -Ur option.
@@ -3727,7 +3672,6 @@ option_invalid_target_architecture=11059_E_Unsupported target architecture -P$1,
 option_features_only_for_system_unit=11060_E_Feature switches are only supported while compiling the system unit.
 % To selected a certain feature, the system unit must be compiled with this feature enabled. All other units inherited the features set by the
 % system unit through the ppu of the system unit.
-option_debug_info_requires_external_linker=11061_N_The selected debug format is not supported by the internal linker, switching to external linking
 option_valgrind_heaptrc_mismatch=11062_E_You can not use both options ($1) ($2) at same time.
 option_unsupported_fpu=11063_F_The selected FPU type "$1" is not supported by the selected instruction set "$2"
 % Not all instruction sets support all FPU types. For example on ARM, Thumb(-1) supports no FPU/VFP instruction set
@@ -4518,7 +4462,6 @@ P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2XD_Try to link units dynamically      (defines FPC_LINK_DYNAMIC)
 **2Xe_Use external linker
 **2Xg_Create debuginfo in a separate file and add a debuglink section to executable
-**2Xi_Use internal linker
 L*2XlS<x>_LLVM utilities suffix (e.g. -7 in case clang is called clang-7)
 W*2XlS<x>_LLVM utilities suffix (e.g. -17 in case llvm-mc is called llvm-mc-17)
 **2XLA_Define library substitutions for linking

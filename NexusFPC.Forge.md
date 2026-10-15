@@ -45,6 +45,20 @@ its tools must be on PATH. The Android configuration uses the installed NDK
 at `C:\android\ndk\25.2.9519653`; its Clang executable and FPC
 `CompilerUtilitiesPath` are set in `NexusFPC.Forge.Config.nxscript`.
 
+The former FPC internal linker and its executable-image writers have been
+removed. All retained targets use external linking. `-Xi`, `-Xi+` and `-Xe-`
+are rejected; `-Xe` and `-Xi-` retain their external-linking meaning.
+Object-file writers and Windows import-library generation remain available.
+This removal does not change external linker selection: use `-XLL` to select
+LLD on Linux and Darwin.
+
+On a Linux host, check the removed options and native LLVM linking with:
+
+```bash
+bash tests/switches/Run-NXRemovedInternalLinkerTests.sh \
+  /path/to/ppcx64 /path/to/matching/rtl/units /tmp/nexus-linker-options
+```
+
 Each cross build creates a Windows-hosted compiler and the target RTL,
 including startup objects where required. Linux and Windows builds also link
 a small SysUtils/Classes smoke program. Apple and Android validation currently

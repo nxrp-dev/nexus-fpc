@@ -216,8 +216,7 @@ interface
           dirsep       : char;
           assem        : TAsm;
           assemextern  : TAsm; { external assembler, used by -a and -s }
-          link         : TLink;
-          linkextern   : TLink;  { external linker, used by -s }
+          linkextern   : TLink;  { external linker }
           ar           : TAr;
           res          : TRes;
           dbg          : TDbg;

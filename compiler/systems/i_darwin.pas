@@ -90,7 +90,6 @@ const
         dirsep       : '/';
         assem        : as_clang_asdarwin;
         assemextern  : as_clang_asdarwin;
-        link         : ld_none;
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
@@ -158,7 +157,6 @@ const
         dirsep       : '/';
         assem        : as_clang_asdarwin;
         assemextern  : as_clang_asdarwin;
-        link         : ld_none;
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
@@ -228,7 +226,6 @@ const
         dirsep       : '/';
         assem        : as_clang_asdarwin;
         assemextern  : as_clang_asdarwin;
-        link         : ld_none;
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
@@ -295,7 +292,6 @@ const
         dirsep       : '/';
         assem        : as_clang_asdarwin;
         assemextern  : as_clang_asdarwin;
-        link         : ld_none;
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
@@ -363,7 +359,6 @@ const
         dirsep       : '/';
         assem        : as_clang_asdarwin;
         assemextern  : as_clang_asdarwin;
-        link         : ld_none;
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
