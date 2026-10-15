@@ -52,6 +52,12 @@ Object-file writers and Windows import-library generation remain available.
 Linux and Darwin select LLD by default (`ld.lld` and `ld64.lld` respectively).
 `-XLL` explicitly selects that default; `-XLL-` retains the explicit `ld` override.
 
+NASM/MASM output writers and GNU AS/YASM assembler drivers are removed.
+Use the default Clang driver, `-Aas-clang` for non-Apple targets, or `-Aclang`
+for Apple targets. Pascal Intel/AT&T inline assembly and the internal
+ELF/PE-COFF object writers remain available. Validate with
+`bash tests/switches/Run-NXRemovedAssemblerTests.sh <compiler> <rtl-units> <output>`.
+
 OMF object/library readers and writers, Watcom OMF archivers, and the old OMF
 CodeView debug path are removed. `-Aomf`, `-gm` and `-godwarfomflinnum` are no
 longer accepted. Windows PE/COFF object and import-library support remains.
@@ -62,7 +68,7 @@ The OMF switch checks use the same three arguments as the linker checks below:
 STABS/STABX generation, register tables, and runtime readers are removed.
 `-gs`, `-gp`, and `-gostabsabsincludes` are rejected. Use `-g` or
 `-gw3`/`-gw4`/`-gw5` for DWARF, and `-gl` for runtime source locations.
-The current NXU long compatibility revision is 43; rebuild cached units and SDKs.
+The current NXU long compatibility revision is 44; rebuild cached units and SDKs.
 Validate with `bash tests/switches/Run-NXRemovedSTABSTests.sh <compiler> <rtl-units> <output>`.
 Mach-O debug-map constants and classification of foreign ELF debug sections
 remain for object-format interoperability; they do not enable STABS generation.

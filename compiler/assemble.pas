@@ -740,7 +740,7 @@ Implementation
 {$ifdef hasunix}
         DoPipe:=(cs_asm_pipe in CurrentSettings.GlobalSwitches) and
                 (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * CurrentSettings.GlobalSwitches) = []) and
-                ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin]));
+                ((asminfo^.id in [as_clang_gas,as_clang_asdarwin]));
 {$else hasunix}
         DoPipe:=false;
 {$endif}
@@ -2316,7 +2316,7 @@ Implementation
       var
         asmkind: TAsm;
       begin
-        for asmkind in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin] do
+        for asmkind in [as_clang_gas,as_clang_asdarwin] do
           if Assigned(asminfos[asmkind]) and
              (TargetInfo.system in asminfos[asmkind]^.supported_targets) then
             begin

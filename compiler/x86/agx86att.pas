@@ -428,49 +428,6 @@ interface
 
     const
 {$ifdef x86_64}
-       as_x86_64_as_info : TAsmInfo =
-          (
-            id     : as_gas;
-            idtxt  : 'AS';
-            asmbin : 'as';
-            asmcmd : '--64 -o $OBJ $BIGOBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_linux,system_x86_64_win64,
-                                 system_x86_64_android];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-       as_x86_64_yasm_info : TAsmInfo =
-          (
-            id     : as_yasm;
-            idtxt  : 'YASM';
-            asmbin : 'yasm';
-            asmcmd : '-a x86 -p gas -f $FORMAT -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_linux,system_x86_64_win64];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-       as_x86_64_gas_darwin_info : TAsmInfo =
-          (
-            id     : as_darwin;
-            idtxt  : 'AS-DARWIN';
-            asmbin : 'as';
-            asmcmd : '-o $OBJ $EXTRAOPT $ASM -arch x86_64';
-            supported_targets : [system_x86_64_darwin,system_x86_64_iphonesim];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : 'L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
        as_x86_64_clang_darwin_info : TAsmInfo =
           (
             id     : as_clang_asdarwin;
@@ -523,9 +480,6 @@ initialization
   RegisterAssembler(as_i386_clang_gas_info,Tx86ATTAssembler);
 {$endif i386}
 {$ifdef x86_64}
-  RegisterAssembler(as_x86_64_as_info,Tx86ATTAssembler);
-  RegisterAssembler(as_x86_64_yasm_info,Tx86ATTAssembler);
-  RegisterAssembler(as_x86_64_gas_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_gas_info,Tx86ATTAssembler);
 {$endif x86_64}

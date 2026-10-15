@@ -24,10 +24,10 @@ var s : string;
     line : LongInt;
     regcount:LongInt;
     regcount_bsstart:LongInt;
-    names,numbers,stdnames,intnames,nasmnames,attnames,dwarf16,dwarf32,dwarf64,ots,ops:
+    names,numbers,stdnames,intnames,attnames,dwarf16,dwarf32,dwarf64,ots,ops:
         array[0..max_regcount-1] of string[63];
-    regnumber_index,std_regname_index,int_regname_index,att_regname_index,
-    nasm_regname_index:array[0..max_regcount-1] of byte;
+    regnumber_index,std_regname_index,int_regname_index,att_regname_index:
+        array[0..max_regcount-1] of byte;
     i8086  : boolean;
     x86_64 : boolean;
     fileprefix : string;
@@ -208,37 +208,6 @@ begin
   until p=0;
 end;
 
-procedure build_nasm_regname_index;
-
-var h,i,j,p,t:byte;
-
-begin
-  {Build the registernumber2regindex index.
-   Step 1: Fill.}
-  for i:=0 to regcount-1 do
-    nasm_regname_index[i]:=i;
-  {Step 2: Sort. We use a Shell-Metzner sort.}
-  p:=regcount_bsstart;
-  repeat
-    for h:=0 to regcount-p-1 do
-      begin
-        i:=h;
-        repeat
-          j:=i+p;
-          if nasmnames[nasm_regname_index[j]]>=nasmnames[nasm_regname_index[i]] then
-            break;
-          t:=nasm_regname_index[i];
-          nasm_regname_index[i]:=nasm_regname_index[j];
-          nasm_regname_index[j]:=t;
-          if i<p then
-            break;
-          dec(i,p);
-        until false;
-      end;
-    p:=p shr 1;
-  until p=0;
-end;
-
 procedure read_x86reg_file;
 
 var infile:text;
@@ -268,8 +237,6 @@ begin
         attnames[regcount]:=readstr;
         readcomma;
         intnames[regcount]:=readstr;
-        readcomma;
-        nasmnames[regcount]:=readstr;
         readcomma;
         dwarf16[regcount]:=readstr;
         readcomma;
@@ -309,10 +276,10 @@ end;
 procedure write_inc_files;
 
 var attfile,intfile,otfile,
-    norfile,nasmfile,stdfile,
+    norfile,stdfile,
     numfile,dwrffile,confile,
     rnifile,irifile,srifile,
-    arifile,nrifile:text;
+    arifile:text;
     first:boolean;
 
 begin
@@ -322,7 +289,6 @@ begin
   openinc(stdfile,fileprefix+'std.inc');
   openinc(attfile,fileprefix+'att.inc');
   openinc(intfile,fileprefix+'int.inc');
-  openinc(nasmfile,fileprefix+'nasm.inc');
   openinc(dwrffile,fileprefix+'dwrf.inc');
   openinc(otfile,fileprefix+'ot.inc');
   openinc(norfile,fileprefix+'nor.inc');
@@ -330,7 +296,6 @@ begin
   openinc(srifile,fileprefix+'sri.inc');
   openinc(arifile,fileprefix+'ari.inc');
   openinc(irifile,fileprefix+'iri.inc');
-  openinc(nrifile,fileprefix+'nri.inc');
   first:=true;
   for i:=0 to regcount-1 do
     begin
@@ -340,14 +305,12 @@ begin
           WriteLn(stdfile,',');
           WriteLn(attfile,',');
           WriteLn(intfile,',');
-          WriteLn(nasmfile,',');
           WriteLn(dwrffile,',');
           WriteLn(otfile,',');
           WriteLn(rnifile,',');
           WriteLn(srifile,',');
           WriteLn(arifile,',');
           WriteLn(irifile,',');
-          WriteLn(nrifile,',');
         end
       else
         first:=false;
@@ -356,7 +319,6 @@ begin
       write(stdfile,'''',stdnames[i],'''');
       write(attfile,'''',attnames[i],'''');
       write(intfile,'''',intnames[i],'''');
-      write(nasmfile,'''',nasmnames[i],'''');
       if x86_64 then
         write(dwrffile,dwarf64[i])
       else if i8086 then
@@ -368,7 +330,6 @@ begin
       write(srifile,std_regname_index[i]);
       write(arifile,att_regname_index[i]);
       write(irifile,int_regname_index[i]);
-      write(nrifile,nasm_regname_index[i]);
     end;
   write(norfile,regcount);
   close(confile);
@@ -376,7 +337,6 @@ begin
   closeinc(attfile);
   closeinc(stdfile);
   closeinc(intfile);
-  closeinc(nasmfile);
   closeinc(dwrffile);
   closeinc(otfile);
   closeinc(norfile);
@@ -384,7 +344,6 @@ begin
   closeinc(srifile);
   closeinc(arifile);
   closeinc(irifile);
-  closeinc(nrifile);
   WriteLn('Done!');
   WriteLn(regcount,' registers processed');
 end;
@@ -432,8 +391,6 @@ begin
      regcount_bsstart:=regcount_bsstart*2;
    build_regnum_index;
    build_int_regname_index;
-   if not(x86_64) then
-     build_nasm_regname_index;
    build_std_regname_index;
    build_att_regname_index;
    write_inc_files;

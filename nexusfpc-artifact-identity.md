@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 43 |
+| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 44 |
 | Compiler package metadata | `.nxp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -60,6 +60,12 @@ XCOFF resource removal advances the long compatibility revision from 42 to 43.
 The retired resource format is removed from compiler target enums, and AIX
 machine kinds are removed from the resource library. Rebuild cached units and
 package SDKs; `NXU208` and `NXP004` remain unchanged.
+
+Obsolete assembler removal advances the long compatibility revision from 43 to 44.
+Saved assembler identifiers no longer contain GNU AS, NASM, MASM, or YASM
+drivers. Clang writers, inline-assembly readers, and internal ELF/PE-COFF object
+writers remain. Rebuild cached units and package SDKs; `NXU208` and `NXP004`
+remain unchanged.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`

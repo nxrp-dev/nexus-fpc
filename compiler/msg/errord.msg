@@ -4035,41 +4035,16 @@ F*0*_Es werden nur Optionen aufgelistet, die fÅr die voreingestellte oder ausgew
 # Choice of assembler used
 **1A<x>_Ausgabe Format:
 **2Adefault_Benutze den "default" Assembler
-3*2Aas_Assembliere mit Hilfe von GNU AS
-3*2Aas-darwin_Assembliere Darwin Mach-O mit Hilfe von GNU GAS
 3*2Acoff_COFF (Go32v2) mit Hilfe des internen Schreibers
 3*2Aelf_ELF (Linux) mit Hilfe des internen Schreibers
 3*2Amacho_Mach-O (Darwin, Intel-32-Bit) mit Hilfe des internen Schreibers
-3*2Amasm_Objektdatei mit Hilfe von Masm (Microsoft)
-3*2Anasm_Assembliere mit Hilfe von Nasm
-3*2Anasmcoff_COFF (Go32v2) Datei mit Hilfe von Nasm
-3*2Anasmdarwin_Macho32 Objektdatei mit Hilfe von Nasm (experimentell)
-3*2Anasmelf_ELF32 (Linux) Datei mit Hilfe von Nasm
-3*2Anasmobj_Objektdatei mit Hilfe von Nasm
-3*2Anasmwdosx_Win32/WDOSX Objektdatei mit Hilfe von Nasm
-3*2Anasmwin32_Win32 Objektdatei mit Hilfe von Nasm
 3*2Apecoff_PE_COFF (Win32) mit Hilfe des internen Schreibers
-3*2Atasm_Objektdatei mit Hilfe von Tasm (Borland)
-3*2Awasm_Objektdatei mit Hilfe von Wasm (Watcom)
-3*2Ayasm_Assembliere mit Hilfe von Yasm (experimentell)
-4*2Aas_Assembliere mit Hilfe von GNU AS
-4*2Aas-darwin_Assembliere Darwin Mach-O64 mit Hilfe von GNU GAS
 4*2Aelf_ELF (Linux-64-Bit) mit Hilfe des internen Schreibers
-4*2Agas_Assembliere mit Hilfe von GNU AS
-4*2Amasm_Win64 Objektdatei mit Hilfe von ml64 (Microsoft)
-4*2Anasm_Assembliere mit Hilfe von Nasm (experimentell)
-4*2Anasmdarwin_Assembliere darwin Macho64 Objektdatei mit Hilfe von Nasm (experimentell)
-4*2Anasmelf_Assembliere Linux-64-Bit Objektdatei mit Hilfe von Nasm (experimentell)
-4*2Anasmwin64_Assembliere Win64 Objektdatei mit Hilfe von Nasm (experimentell)
 4*2Apecoff_PE-COFF (Win64) mit Hilfe des internen Schreibers
-4*2Ayasm_Assembliere mit Hilfe von Yasm (experimentell)
-8*2Anasm_Assembliere mit Hilfe von Nasm
-8*2Anasmobj_Assembliere mit Hilfe von Nasm
 A*2Aas_Assembliere mit Hilfe von GNU AS
 A*2Aas-darwin_Assembliere mit Hilfe von GNU AS fÅr Darwin Zielsysteme
 A*2Aclang_Assembliere mit Hilfe von clang
 A*2Aelf_Assembliere mit Hilfe des internen ELF-Schreibers
-a*2Aas_Assembliere mit Hilfe von GNU AS
 a*2Aas-clang_AAssembliere mit Hilfe von clang fÅr andere Zielsysteme
 a*2Aclang_Assembliere mit Hilfe von clang fÅr Darwin/iOS Zielsysteme
 P*2Aas_Assembliere mit Hilfe von GNU AS

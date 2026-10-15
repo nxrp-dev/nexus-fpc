@@ -697,26 +697,6 @@ interface
     procedure DoneAsm;
 
 
-{*****************************************************************************
-                              External Symbol Chain
-                              used for agx86nsm and agx86int
-*****************************************************************************}
-
-    type
-      PExternChain = ^TExternChain;
-
-      TExternChain = Record
-        psym : PShortString;
-        is_defined : boolean;
-        next : PExternChain;
-      end;
-
-    var
-      FEC : PExternChain = nil;
-
-    procedure AddSymbol(symname : string; defined : boolean);
-    procedure FreeExternChainList;
-
 implementation
 
      uses
@@ -725,42 +705,6 @@ implementation
        Systems,
        itcpugas,
        CPUInfo;
-
-    procedure AddSymbol(symname : string; defined : boolean);
-    var
-       EC : PExternChain;
-    begin
-      EC:=FEC;
-      while Assigned(EC) do
-        begin
-          if EC^.psym^=symname then
-            begin
-              if defined then
-                EC^.is_defined:=true;
-              exit;
-            end;
-          EC:=EC^.next;
-        end;
-      New(EC);
-      EC^.next:=FEC;
-      FEC:=EC;
-      FEC^.psym:=StringDup(symname);
-      FEC^.is_defined := defined;
-    end;
-
-    procedure FreeExternChainList;
-    var
-       EC : PExternChain;
-    begin
-      EC:=FEC;
-      while Assigned(EC) do
-        begin
-          FEC:=EC^.next;
-          StringDispose(EC^.psym);
-          Dispose(EC);
-          EC:=FEC;
-        end;
-    end;
 
 {*****************************************************************************
                               Instruction table

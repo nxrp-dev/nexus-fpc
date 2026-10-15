@@ -3577,13 +3577,7 @@ option_help_pages=11025_[
 **2XS_link slim (definieert FPC_LINK_STATIC_SMART)
 **0*_Processor specifieke instellingen:
 3*1A_Output formaat
-3*2Aas_assembleer met GNU AS
 3*2Aasaout_assembleer met GNU AS voor aout (Go32v1)
-3*2Anasmcoff_Coff (Go32v2) bestand met Nasm
-3*2Anasmelf_elf32 (linux) bestand met Nasm
-3*2Anasmobj_obj bestand met Nasm
-3*2Amasm_obj bestand met Masm (Microsoft)
-3*2Atasm_obj bestand met Tasm (Borland)
 3*2Acoff_coff (Go32v2) met interne assembler
 3*2Apecoff_pecoff (Win32) met interne assembler
 3*1R<x>_Geef de grammatica voor de assemblerlezer op:

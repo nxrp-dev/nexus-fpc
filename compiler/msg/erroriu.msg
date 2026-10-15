@@ -2750,19 +2750,9 @@ option_help_pages=11025_[
 **2at_Elenca info allocaz./rilascio nei file asm
 **1A<x>_Formato di uscita:
 **2Adefault_Usa l'assemblatore di default
-3*2Aas_Assembla usando GNU AS
-3*2Anasmcoff_File COFF (Go32v2) con Nasm
-3*2Anasmelf_File ELF32 (Linux) con Nasm
-3*2Anasmwin32_File oggetto Win32 con Nasm
-3*2Anasmwdosx_File oggetto Win32/WDOSX con Nasm
-3*2Awasm_File oggetto con Wasm (Watcom)
-3*2Anasmobj_File oggetto con Nasm
-3*2Amasm_File oggetto con Masm (Microsoft)
-3*2Atasm_File oggetto con Tasm (Borland)
 3*2Aelf_File ELF (Linux) con assemblatore interno
 3*2Acoff_File COFF (Go32v2) con assemblatore interno
 3*2Apecoff_File PE-COFF (Win32) con assemblatore interno
-4*2Aas_Assembla using GNU AS
 6*2Aas_Unix o-file using GNU AS
 6*2Agas_GNU Motorola assembler
 6*2Amit_MIT Syntax (old GAS)

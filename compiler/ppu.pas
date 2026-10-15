@@ -43,7 +43,7 @@ const
   CurrentPPUVersion = 208;
   { for any other changes to the ppu format, increase this version number
     (it's a cardinal) }
-  CurrentPPULongVersion = 43;
+  CurrentPPULongVersion = 44;
 
 { unit flags }
   UfBigEndian          = $000004;

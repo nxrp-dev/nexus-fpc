@@ -104,22 +104,12 @@
      type
        TAsm = (as_none
              ,as_default
-             ,as_gas                   { standard gnu assembler }
              ,as_i386_pecoff
              ,as_i386_elf32
-             ,as_darwin
-             ,as_x86_64_masm
              ,as_x86_64_pecoff
              ,as_x86_64_elf64
-             ,as_yasm
-             ,as_i386_nasm
-             ,as_x86_64_nasm
-             ,as_x86_64_nasmwin64
-             ,as_x86_64_nasmelf
-             ,as_x86_64_nasmdarwin
              ,as_clang_asdarwin        { machine code assembler in Darwin as style assembled by clang }
              ,as_clang_gas             { machine code assembler in gas style assembled by clang }
-             ,as_win64_gas
        );
 
        TLink = (ld_none,

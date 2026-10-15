@@ -2163,19 +2163,9 @@ option_help_pages=11025_[
 **2at_wypisuje tymczasowe alokacje/zwalnianie do pliku asemblera
 **1A<x>_format wyj˜ciowy:
 **2Adefault_u¾ycie domy˜lnego asemblera
-3*2Aas_asemblacja przy u¾yciu GNU AS
-3*2Anasmcoff_plik coff (Go32v2) przy u¾yciu Nasm
-3*2Anasmelf_plik elf32 (Linux) przy u¾yciu Nasm
-3*2Anasmwin32_plik obj (Win32) przy u¾yciu Nasm
-3*2Anasmwdosx_plik obj (Win32/WDOSX) przy u¾yciu Nasm
-3*2Awasm_plik obj przy u¾yciu Wasm (Watcom)
-3*2Anasmobj_plik obj przy u¾yciu Nasm
-3*2Amasm_plik obj przy u¾yciu Masm (Microsoft)
-3*2Atasm_plik obj przy u¾yciu Tasm (Borland)
 3*2Aelf_bezpo˜redni zapis do pliku elf32 (Linux)
 3*2Acoff_bezpo˜redni zapis do pliku coff (Go32v2)
 3*2Apecoff_bezpo˜redni zapis do pliku pecoff (Win32)
-4*2Aas_asemblacja przy u¾yciu GNU AS
 6*2Aas_o-file (Unix) przy u¾yciu GNU AS
 6*2Agas_asembler GNU Motorola
 6*2Amit_skˆadnia MIT (dawniej GAS)

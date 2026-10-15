@@ -3651,13 +3651,6 @@ option_help_pages=11025_[
 **2XX_forsøg at linke intelligent        (definerer FPC_LINK_SMART)
 **0*_Processor-specifikke indstillinger:
 3*1A<x>_Udfilformat:
-3*2Aas_brug GNU AS som assembler
-3*2Anasmcoff_brug Nasm til at lave en coff-fil (Go32v2)
-3*2Anasmelf_brug Nasm til at lave en elf32-fil (Linux)
-3*2Awasm_brug Wasm til at lave en obj-fil (Watcom)
-3*2Anasmobj_brug Nasm til at lave en obj-fil
-3*2Amasm_brug Masm til at lave en obj-fil (Microsoft)
-3*2Atasm_brug Tasm til at lave en obj-fil (Borland)
 3*2Acoff_brug intern filgenerator til at lave coff-fil (Go32v2)
 3*2Apecoff_brug intern filgenerator til at lave pecoff-fil (Win32)
 3*1R<x>_Læsestil for assembler:

@@ -3524,19 +3524,9 @@ option_help_pages=11025_[
 **2at_רשימה זמנית אודות הקצאה/שחרור בקובץ הassembler
 **1A<x>_תסדירי פלט:
 **2Adefault_השתמש במאסף ברירת מחדל
-3*2Aas_אסוף עם GNU AS
-3*2Anasmcoff_קובץ COFF (Go32v2) בשימוש עם Nasm
-3*2Anasmelf_קובץ ELF32 (Linux) בשימוש עם Nasm
-3*2Anasmwin32_קובץ אובייקט Win32 בשימוש עם Nasm
-3*2Anasmwdosx_קובץ אובייקט Win32/WDOSX בשימוש עם Nasm
-3*2Awasm_קובץ obj בשימוש עם Wasm (Watcom)
-3*2Anasmobj_קובץ obj בשימוש עם Nasm
-3*2Amasm_קובץ obj בשימוש עם Masm (Microsoft)
-3*2Atasm_קובץ obj בשימוש Tasm (Borland)
 3*2Aelf_קובץ ELF32 (Linux) בשימוש כותב פנימי
 3*2Acoff_קובץ OFF (Go32v2) בשימוש כותב פנימי
 3*2Apecoff_קובץ pecoff (Win32) בשימוש כותב פנימי
-4*2Aas_אסוף עם GNU AS
 6*2Aas_קובץ-o Unix בשימוש GNU AS
 6*2Agas_GNU Motorola assembler
 6*2Amit_MIT Syntax (GAS ישן)

@@ -1809,13 +1809,7 @@ option_help_pages=11025_[
 **2XS_lien avec les librairies statiques (d‚finit FPC_LINK_STATIC)
 **0*_options sp‚cifiques au processeur :
 3*1A<x>_format de sortie :
-3*2Aas_fichier objet g‚n‚r‚ par GNU AS
 3*2Aasaout_fichier objet g‚n‚r‚ par GNU AS pour aout (Go32v1)
-3*2Anasmcoff_fichier COFF (Go32v2) avec Nasm
-3*2Anasmelf_fichier ELF32 (Linux) avec Nasm
-3*2Anasmobj_fichier OBJ avec Nasm
-3*2Amasm_fichier OBJ avec Masm (Microsoft)
-3*2Atasm_fichier OBJ avec Tasm (Borland)
 3*2Acoff_coff (Go32v2) using internal writer
 3*2Apecoff_pecoff (Win32) using internal writer
 3*1R<x>_type lecture assembleur :

@@ -3502,19 +3502,9 @@ option_help_pages=11025_[
 **2at_incluir informacion de reserva y liberación temporales en el archivo ensamblador
 **1A<x>_formato de salida:
 **2Adefault_usar ensamblador por defecto
-3*2Aas_ensamblar usando GNU AS
-3*2Anasmcoff_coff (Go32v2) usando Nasm
-3*2Anasmelf_elf32 (Linux) usando Nasm
-3*2Anasmwin32_objeto Win32 usando Nasm
-3*2Anasmwdosx_objeto Win32/WDOSX usando Nasm
-3*2Awasm_fichero obj usando Wasm (Watcom)
-3*2Anasmobj_fichero obj usando Nasm
-3*2Amasm_fichero obj usando Masm (Microsoft)
-3*2Atasm_fichero obj usando Tasm (Borland)
 3*2Aelf_elf32 (Linux) usando escritor interno
 3*2Acoff_coff (Go32v2) usando escritor interno
 3*2Apecoff_pecoff (Win32) usando escritor interno
-4*2Aas_ensamblar usando GNU AS
 6*2Aas_archivo o de Unix usando GNU AS
 6*2Agas_ensamblador GNU Motorola
 6*2Amit_Sintaxis MIT (GAS antiguo)

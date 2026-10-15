@@ -2563,19 +2563,9 @@ option_help_pages=11025_[
 **2at_еречислять выделения/освобождения вpеменных пеpеменных в ассемблеpном файле
 **1A<x>_Формат вывода:
 **2Adefault_Ассемблер по умолчанию
-3*2Aas_Ассемблер GNU AS
-3*2Anasmcoff_COFF файл (Go32v2), используя Nasm
-3*2Anasmelf_ELF32 файл (Linux), используя Nasm
-3*2Anasmwin32_Win32 объектный файл, используя Nasm
-3*2Anasmwdosx_Win32/WDOSX объектный файл, используя Nasm
-3*2Awasm_Obj файл, используя Wasm (Watcom)
-3*2Anasmobj_Obj файл, используя Nasm
-3*2Amasm_Obj файл, используя Masm (Microsoft)
-3*2Atasm_Obj файл, используя Tasm (Borland)
 3*2Aelf_ELF (Linux) используя внутренний генератор
 3*2Acoff_COFF (Go32v2) используя внутренний генератор
 3*2Apecoff_PE-COFF (Win32) используя внутренний генератор
-4*2Aas_Ассемблер GNU AS
 6*2Aas_Unix o-файл, используя GNU AS
 6*2Agas_GNU Motorola ассемблер
 6*2Amit_Синтаксис MIT (старый GAS)

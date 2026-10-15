@@ -3532,19 +3532,9 @@ option_help_pages=11025_[
 **2at_Daftarkan info alokasi/pelepasan temp dalam file assembler
 **1A<x>_Format output:
 **2Adefault_Gunakan assembler standar
-3*2Aas_Assemble menggunakan GNU AS
-3*2Anasmcoff_File COFF (Go32v2) menggunakan Nasm
-3*2Anasmelf_File ELF32 (Linux) menggunakan Nasm
-3*2Anasmwin32_File obyek Win32 menggunakan Nasm
-3*2Anasmwdosx_File obyek Win32/WDOSX menggunakan Nasm
-3*2Awasm_File Obj menggunakan Wasm (Watcom)
-3*2Anasmobj_File Obj menggunakan Nasm
-3*2Amasm_File Obj menggunakan Masm (Microsoft)
-3*2Atasm_File Obj menggunakan Tasm (Borland)
 3*2Aelf_ELF (Linux) menggunakan penulis internal
 3*2Acoff_COFF (Go32v2) menggunakan penulis internal
 3*2Apecoff_PE-COFF (Win32) menggunakan penulis internal
-4*2Aas_Rangkai menggunakan GNU AS
 6*2Aas_File-0 Unix menggunakan GNU AS
 6*2Agas_GNU Motorola assembler
 6*2Amit_Sintaks MIT (GAS lama)

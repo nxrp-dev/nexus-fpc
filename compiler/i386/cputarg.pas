@@ -49,9 +49,6 @@ implementation
     {$ifndef NOAG386ATT}
       ,agx86att
     {$endif}
-    {$ifndef NOAG386NSM}
-      ,agx86nsm
-    {$endif}
 
     {$ifndef NOOGCOFF}
       ,ogcoff

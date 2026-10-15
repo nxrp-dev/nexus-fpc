@@ -3586,19 +3586,9 @@ option_help_pages=11025_[
 **2at_liste les allocations de données temporaire dans la pile
 **1A<x>_format de sortie :
 **2Adefault_utilise l'assembleur défini par défaut
-3*2Aas_fichier objet généré par GNU AS
-3*2Anasmcoff_fichier COFF (Go32v2) avec Nasm
-3*2Anasmelf_fichier ELF32 (Linux) avec Nasm
-3*2Anasmwin32_fichier objet Win32 utilisant Nasm
-3*2Anasmwdosx_fichier objet Win32/WDOSX utilisant Nasm
-3*2Awasm_fichier objet utilisant Wasm (Watcom)
-3*2Anasmobj_fichier OBJ avec Nasm
-3*2Amasm_fichier OBJ avec Masm (Microsoft)
-3*2Atasm_fichier OBJ avec Tasm (Borland)
 3*2Aelf_elf32 (Linux) utilisant le writer interne
 3*2Acoff_coff (Go32v2) using internal writer
 3*2Apecoff_pecoff (Win32) using internal writer
-4*2Aas_fichier objet généré par GNU AS
 6*2Aas_fichier .o Unix utilisant GNU AS
 6*2Agas_assembleur GNU Motorola
 6*2Amit_syntaxe MIT (anciennement GAS)

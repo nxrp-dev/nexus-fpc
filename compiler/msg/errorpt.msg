@@ -3145,23 +3145,11 @@ option_help_pages=11025_[
 **2at_Lista informaá‰es tempor†rias alocaá∆o/liberaá∆o no arquivo assembler
 **1A<x>_Formato sa°da:
 **2Adefault_Usa montador assembler padr∆o
-3*2Aas_Monta usando o GNU AS
 3*2Amacho_Mach-O (Darwin, Intel 32 bit) usando gravador interno
-3*2Anasmcoff_Arquivo COFF (Go32v2) usando Nasm
-3*2Anasmelf_Arquivo ELF32 (Linux) usando Nasm
-3*2Anasmwin32_Arquivo objeto Win32 usando Nasm
-3*2Anasmwdosx_Arquivo objeto Win32/WDOSX usando Nasm
-3*2Awasm_Arquivo Obj usando Wasm (Watcom)
-3*2Anasmobj_Arquivo Obj usando Nasm
-3*2Amasm_Arquivo Obj usando Masm (Microsoft)
-3*2Atasm_Arquivo Obj usando Tasm (Borland)
 3*2Aelf_ELF (Linux) usando gravador interno
 3*2Acoff_COFF (Go32v2) usando gravador interno
 3*2Apecoff_PE-COFF (Win32) usando gravador interno
-4*2Aas_Monta usando o GNU AS
-4*2Agas_Monta usando o GNU GAS
 4*2Agas-darwin_Monta darwin Mach-O64 usando GNU GAS
-4*2Amasm_Win64 arquivo objeto usando ml64 (Microsoft)
 4*2Apecoff_PE-COFF (Win64) usando escritor interno
 4*2Aelf_ELF (Linux-64bit) usando escritor interno
 6*2Aas_Arquivo Unix .o usando o GNU AS

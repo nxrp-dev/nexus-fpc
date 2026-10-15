@@ -56,14 +56,8 @@ implementation
              Assemblers
 **************************************}
 
-    {$ifndef NOAGX86_64INT}
-      ,agx86int
-    {$endif}
     {$ifndef NOAGX86_64ATT}
       ,agx86att
-    {$endif}
-    {$ifndef NOAGX86_64NSM}
-      ,agx86nsm
     {$endif}
 
       ,ogcoff

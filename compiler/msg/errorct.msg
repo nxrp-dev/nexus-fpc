@@ -2141,19 +2141,10 @@ option_help_pages=11025_[
 **2at_Escriu info.d'alotj/desalotj temporal en el fitxer d'assemblador
 **1A<x>_format de la sortida:
 **2Adefault_Utilitza assemblador predeterminat 
-3*2Aas_Utilitza assemblador GNU AS
-3*2Anasmcoff_fitxer coff (Go32v2) utilitzant Nasm
 3*2Aasmelf_fitxer elf32 (Linux) utilitzant Nasm
-3*2Anasmwin32_fitxer objecte Win32 utilitzant Nasm
-3*2Anasmwdosx_fitxer objecte Win32/WDOSX utilitzant Nasm
-3*2Awasm_fitxer objecte utilitzant Wasm (Watcom)
-3*2Anasmobj_fitxer objecte utilitzant Nasm
-3*2Amasm_fitxer objecte utilitzant Masm (Microsoft)
-3*2Atasm_fitxer objecte utilitzant Tasm (Borland)
 3*2Aelf_elf32 (Linux) utilitzant escriptor intern
 3*2Acoff_coff (Go32v2) utilitzant escriptor intern
 3*2Apecoff_pecoff (Win32) utilitzant escriptor intern
-4*2Aas_assemblar utilitzant el GNU AS
 6*2Aas_fitxer objecte Unix utilitzant GNU AS
 6*2Agas_assemblador GNU Motorola
 6*2Amit_sintaxi MIT (antiga GAS)

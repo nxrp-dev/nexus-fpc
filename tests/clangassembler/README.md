@@ -79,3 +79,9 @@ make -C compiler compiler "FPC=$($PWD.Path -replace '\\','/')/compiler/ppcx64.ex
 and Darwin executable/shared-library command defaults and the explicit `ld`
 override. Use the same `TEST_I386`/`TEST_AARCH64` defines as the registration test.
 Linux native samples should also link and run without `-A` or `-XLL`.
+
+`nxinlineassembler.pas` executes both Intel and AT&T Pascal inline assembly.
+Run `bash tests/switches/Run-NXRemovedAssemblerTests.sh <compiler> <rtl-units> <output>`
+on Linux x86-64 to check it through the default Clang writer, explicit Clang, and the internal
+ELF writer, and verify that retired assembler options are rejected. NASM/MASM
+output and GNU AS/YASM drivers are removed; the inline-assembly readers remain.

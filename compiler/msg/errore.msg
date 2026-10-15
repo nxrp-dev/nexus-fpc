@@ -3961,41 +3961,19 @@ F*0*_Only options valid for the default or selected platform are listed.
 # Choice of assembler used
 **1A<x>_Output format:
 **2Adefault_Use default assembler
-3*2Aas_Assemble using GNU AS
-3*2Aas-darwin_Assemble Darwin Mach-O using GNU GAS
 3*2Acoff_COFF (Go32v2) using internal writer
+3*2Aas-clang_Assemble using clang
 3*2Aelf_ELF (Linux) using internal writer
 3*2Amacho_Mach-O (Darwin, Intel 32 bit) using internal writer
-3*2Amasm_Obj file using Masm (Microsoft)
-3*2Anasm_Assemble using Nasm
-3*2Anasmcoff_COFF (Go32v2) file using Nasm
-3*2Anasmdarwin_macho32 object file using Nasm (experimental)
-3*2Anasmelf_ELF32 (Linux) file using Nasm
-3*2Anasmobj_Obj file using Nasm
-3*2Anasmwdosx_Win32/WDOSX object file using Nasm
-3*2Anasmwin32_Win32 object file using Nasm
 3*2Apecoff_PE-COFF (Win32) using internal writer
-3*2Atasm_Obj file using Tasm (Borland)
-3*2Awasm_Obj file using Wasm (Watcom)
-3*2Ayasm_Assemble using Yasm (experimental)
-4*2Aas_Assemble using GNU AS
-4*2Aas-darwin_Assemble Darwin Mach-O using GNU GAS
+4*2Aas-clang_Assemble using clang for other targets
+4*2Aclang_Assemble using clang for Darwin targets
 4*2Aelf_ELF (Linux 64 bit) using internal writer
-4*2Agas_Assemble using GNU GAS
-4*2Amasm_Win64 object file using ml64 (Microsoft)
-4*2Anasm_Assemble using Nasm (experimental)
-4*2Anasmdarwin_Assemble darwin macho64 object file using Nasm (experimental)
-4*2Anasmelf_Assemble Linux 64 bit object file using Nasm (experimental)
-4*2Anasmwin64_Assemble Win64 object file using Nasm (experimental)
 4*2Apecoff_PE-COFF (Win64) using internal writer
-4*2Ayasm_Assemble using Yasm (experimental)
-8*2Anasm_Assemble using Nasm
-8*2Anasmobj_Assemble using Nasm
 A*2Aas_Assemble using GNU AS
 A*2Aas-darwin_Assemble using GNU AS for Darwin targets
 A*2Aclang_Assemble using clang
 A*2Aelf_Assemble using internal ELF writer
-a*2Aas_Assemble using GNU AS
 a*2Aas-clang_Assemble using clang for other targets
 a*2Aclang_Assemble using clang for darwin/ios targets
 P*2Aas_Assemble using GNU AS

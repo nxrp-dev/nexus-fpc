@@ -3393,41 +3393,16 @@ F*0*_仅列出对默认或选定平台有效的选项。
 # 使用的汇编器选择
 **1A<x>_输出格式:
 **2Adefault_使用默认汇编器
-3*2Aas_使用 GNU AS 汇编
-3*2Aas-darwin_使用 GNU GAS 汇编 Darwin Mach-O
 3*2Acoff_使用内部写入器生成 COFF (Go32v2)
 3*2Aelf_使用内部写入器生成 ELF (Linux)
 3*2Amacho_使用内部写入器生成 Mach-O (Darwin, Intel 32 位)
-3*2Amasm_使用 Masm (Microsoft) 生成 Obj 文件
-3*2Anasm_使用 Nasm 汇编
-3*2Anasmcoff_使用 Nasm 生成 COFF (Go32v2) 文件
-3*2Anasmdarwin_使用 Nasm 生成 macho32 目标文件(实验性)
-3*2Anasmelf_使用 Nasm 生成 ELF32 (Linux) 文件
-3*2Anasmobj_使用 Nasm 生成 Obj 文件
-3*2Anasmwdosx_使用 Nasm 生成 Win32/WDOSX 目标文件
-3*2Anasmwin32_使用 Nasm 生成 Win32 目标文件
 3*2Apecoff_使用内部写入器生成 PE-COFF (Win32)
-3*2Atasm_使用 Tasm (Borland) 生成 Obj 文件
-3*2Awasm_使用 Wasm (Watcom) 生成 Obj 文件
-3*2Ayasm_使用 Yasm 汇编(实验性)
-4*2Aas_使用 GNU AS 汇编
-4*2Aas-darwin_使用 GNU GAS 汇编 Darwin Mach-O
 4*2Aelf_使用内部写入器生成 ELF (Linux 64 位)
-4*2Agas_使用 GNU GAS 汇编
-4*2Amasm_使用 ml64 (Microsoft) 生成 Win64 目标文件
-4*2Anasm_使用 Nasm 汇编(实验性)
-4*2Anasmdarwin_使用 Nasm 汇编 darwin macho64 目标文件(实验性)
-4*2Anasmelf_使用 Nasm 汇编 Linux 64 位目标文件(实验性)
-4*2Anasmwin64_使用 Nasm 汇编 Win64 目标文件(实验性)
 4*2Apecoff_使用内部写入器生成 PE-COFF (Win64)
-4*2Ayasm_使用 Yasm 汇编(实验性)
-8*2Anasm_使用 Nasm 汇编
-8*2Anasmobj_使用 Nasm 汇编
 A*2Aas_使用 GNU AS 汇编
 A*2Aas-darwin_使用 GNU AS 为 Darwin 目标汇编
 A*2Aclang_使用 clang 汇编
 A*2Aelf_使用内部 ELF 写入器汇编
-a*2Aas_使用 GNU AS 汇编
 a*2Aas-clang_使用 clang 为其他目标汇编
 a*2Aclang_使用 clang 为 darwin/ios 目标汇编
 P*2Aas_使用 GNU AS 汇编
