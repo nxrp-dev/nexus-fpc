@@ -463,7 +463,6 @@ implementation
               { Allow classrefdef, which is required for
                 Typeof(self) in static class methods }
               if not(is_objc_class_or_protocol(p1.resultdef)) and
-                 not(is_java_class_or_interface(p1.resultdef)) and
                  ((p1.resultdef.typ = objectdef) or
                   (Assigned(CurrentProcInfo) and
                    ((po_classmethod in CurrentProcInfo.procdef.procoptions) or
@@ -1669,13 +1668,7 @@ implementation
                                   exit;
                                 end;
                             end;
-                          { in Java, constructors are not automatically inherited
-                            -> calling a constructor from a parent type will create
-                               an instance of that parent type! }
-                          if is_javaclass(structh) and
-                             (TCallNode(p1).procdefinition.proctypeoption=potype_constructor) and
-                             (TCallNode(p1).procdefinition.owner.defowner<>find_real_class_definition(TObjectDef(structh),false)) then
-                            Message(parser_e_java_no_inherited_constructor);
+
                           { Provide a warning if we try to create an instance of a
                             abstract class using the type name of that class. We
                             must not provide a warning if we use a "class of"
@@ -1725,8 +1718,7 @@ implementation
                        begin
                          p1:=CTypeNode.create(TTypeSym(sym).typedef);
                          if (is_class(TTypeSym(sym).typedef) or
-                             is_objcclass(TTypeSym(sym).typedef) or
-                             is_javaclass(TTypeSym(sym).typedef)) and
+                             is_objcclass(TTypeSym(sym).typedef)) and
                             not(Block_Type in [bt_type,bt_const_type,bt_var_type]) then
                            p1:=CLoadVMTAddrNode.create(p1);
                        end;
@@ -1972,13 +1964,9 @@ implementation
               (for "TClassHelper.Something") }
             { class reference ? }
             if is_class(hdef) or
-               is_objcclass(hdef) or
-               { Java interfaces also can have loadvmtaddrnodes,
-                 e.g. for expressions such as JLClass(intftype) }
-               is_java_class_or_interface(hdef) then
+               is_objcclass(hdef) then
              begin
-               if getaddr and (CurrentScanner.token=_POINT) and
-                  not is_javainterface(hdef) then
+               if getaddr and (CurrentScanner.token=_POINT) then
                 begin
                   consume(_POINT);
                   { allows @Object.Method }
@@ -2407,8 +2395,7 @@ implementation
 
                if is_class_or_interface_or_object(p1.resultdef) or
                   is_dispinterface(p1.resultdef) or
-                  is_record(p1.resultdef) or
-                  is_javaclass(p1.resultdef) then
+                  is_record(p1.resultdef) then
                  begin
                    { default property }
                    protsym:=search_default_property(TAbstractRecordDef(p1.resultdef));

@@ -74,3 +74,8 @@ make -C compiler compiler "FPC=$($PWD.Path -replace '\\','/')/compiler/ppcx64.ex
     CPU_TARGET=x86_64 OS_TARGET=win64 PPC_TARGET=x86_64 `
     CPU_UNITDIR=x86_64_cross EXENAME=ppcrossx64.exe 'LOCALOPT=-B'
 ```
+
+`nxllddefaults.pas` links against each backend's compiler units to check Linux
+and Darwin executable/shared-library command defaults and the explicit `ld`
+override. Use the same `TEST_I386`/`TEST_AARCH64` defines as the registration test.
+Linux native samples should also link and run without `-A` or `-XLL`.

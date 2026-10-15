@@ -408,13 +408,11 @@ uses
                           MessagePos(filepos,type_e_record_type_expected);
                       objectdef:
                         case TObjectDef(formaldef).objecttype of
-                          odt_class,
-                          odt_javaclass:
+                          odt_class:
                             MessagePos1(filepos,type_e_class_type_expected,paradef.typename);
                           odt_interfacecom,
                           odt_interfacecorba,
-                          odt_dispinterface,
-                          odt_interfacejava:
+                          odt_dispinterface:
                             MessagePos1(filepos,type_e_interface_type_expected,paradef.typename);
                           else
                             InternalError(2012101003);
@@ -435,16 +433,15 @@ uses
                       begin
                         paraobjdef:=TObjectDef(paradef);
                         formalobjdef:=TObjectDef(formaldef);
-                        if not (formalobjdef.objecttype in [odt_class,odt_javaclass,odt_interfacecom,odt_interfacecorba,odt_interfacejava,odt_dispinterface]) then
+                        if not (formalobjdef.objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface]) then
                           InternalError(2012101102);
-                        if formalobjdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_interfacejava,odt_dispinterface] then
+                        if formalobjdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface] then
                           begin
                             { this is either a concrete interface or class type (the
                               latter without specific implemented interfaces) }
                             case paraobjdef.objecttype of
                               odt_interfacecom,
                               odt_interfacecorba,
-                              odt_interfacejava,
                               odt_dispinterface:
                                 begin
                                   if (oo_is_forward in paraobjdef.objectoptions) and
@@ -466,8 +463,7 @@ uses
                                       result:=false;
                                     end;
                                 end;
-                              odt_class,
-                              odt_javaclass:
+                              odt_class:
                                 begin
                                   objdef:=paraobjdef;
                                   intffound:=false;
@@ -498,7 +494,7 @@ uses
                           begin
                             { this is either a "class" or a concrete instance with
                               or without implemented interfaces }
-                            if not (paraobjdef.objecttype in [odt_class,odt_javaclass]) then
+                            if not (paraobjdef.objecttype in [odt_class]) then
                               begin
                                 MessagePos1(filepos,type_e_class_type_expected,paraobjdef.typename);
                                 result:=false;
@@ -2444,12 +2440,11 @@ uses
                       single_type(def, [stoAllowSpecialization]);
                       { only types that are inheritable are allowed }
                       if (def.typ<>objectdef) or
-                          not (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_interfacejava,odt_javaclass]) then
+                          not (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba]) then
                         Message1(type_e_class_or_interface_type_expected,def.typename)
                       else
                         case TObjectDef(def).objecttype of
-                          odt_class,
-                          odt_javaclass:
+                          odt_class:
                             begin
                               if gcf_class in constraintdata.flags then
                                 { "class" + concrete class is not allowed }
@@ -2463,7 +2458,6 @@ uses
                             end;
                           odt_interfacecom,
                           odt_interfacecorba,
-                          odt_interfacejava,
                           odt_dispinterface:
                             constraintdata.interfaces.add(def);
                           else
@@ -2479,7 +2473,7 @@ uses
                   (constraintdata.interfaces.count>1) or
                   (
                     (basedef.typ=objectdef) and
-                    (TObjectDef(basedef).objecttype in [odt_javaclass,odt_class])
+                    (TObjectDef(basedef).objecttype in [odt_class])
                   ) then
                 begin
                   if basedef.typ=errordef then
@@ -2487,7 +2481,7 @@ uses
                     basedef:=class_tobject
                   else
                     if (basedef.typ<>objectdef) or
-                        not (TObjectDef(basedef).objecttype in [odt_javaclass,odt_class]) then
+                        not (TObjectDef(basedef).objecttype in [odt_class]) then
                       InternalError(2012101101);
                   basedef:=CObjectDef.create(TObjectDef(basedef).objecttype,defname,TObjectDef(basedef),false);
                   for i:=0 to constraintdata.interfaces.count-1 do

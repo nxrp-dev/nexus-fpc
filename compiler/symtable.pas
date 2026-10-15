@@ -3461,11 +3461,8 @@ implementation
         while Assigned(stackitem) do
           begin
             srsymtable:=stackitem^.SymTable;
-            { ObjC classes can't appear in generics or as nested class
-              definitions. Java classes can. }
-            if not(srsymtable.symtabletype in [recordsymtable,parasymtable]) or
-               (is_java_class_or_interface(pd) and
-                (srsymtable.symtabletype=ObjectSymtable)) then
+
+            if not(srsymtable.symtabletype in [recordsymtable,parasymtable]) then
               begin
                 srsym:=TSym(srsymtable.FindWithHash(hashedid));
                 if Assigned(srsym) and
@@ -3548,10 +3545,8 @@ implementation
           end;
         result:=false;
         hashedid.id:=s;
-        { an Objective-C  protocol or Java interface can inherit from multiple
-          other protocols/interfaces -> use ImplementedInterfaces instead }
-        if is_objcprotocol(classh) or
-           is_javainterface(classh) then
+
+        if is_objcprotocol(classh) then
           begin
             srsymtable:=classh.SymTable;
             srsym:=TSym(srsymtable.FindWithHash(hashedid));

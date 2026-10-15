@@ -592,8 +592,7 @@ implementation
                   is_chararray(def) or
                   is_widechararray(def) or
                   is_open_chararray(def) or
-                  is_open_widechararray(def) or
-                  (def=java_jlstring);
+                  is_open_widechararray(def);
       end;
 
     function chartype_for_stringlike(def : TDef) : TDef;
@@ -605,8 +604,6 @@ implementation
         else if is_pchar(def) or is_chararray(def) or is_open_chararray(def) then
           result:=cansichartype
         else if is_pwidechar(def) or is_pwidechar(def) or is_open_widechararray(def) then
-          result:=cwidechartype
-        else if def=java_jlstring then
           result:=cwidechartype
         else
           InternalError(2023012501);
@@ -2113,14 +2110,12 @@ implementation
             result:=tkEnumeration;
           objectdef:
             case TObjectDef(def).objecttype of
-              odt_class,
-              odt_javaclass:
+              odt_class:
                 result:=tkClass;
               odt_object:
                 result:=tkObject;
               odt_interfacecom,
-              odt_dispinterface,
-              odt_interfacejava:
+              odt_dispinterface:
                 result:=tkInterface;
               odt_interfacecorba:
                 result:=tkInterfaceCorba;

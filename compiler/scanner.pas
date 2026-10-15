@@ -1731,7 +1731,7 @@ type
                  if Assigned(srsym)and(srsym.typ=typesym) then
                    begin
                      def:=TTypeSym(srsym).typedef;
-                     if is_class_or_object(def) or is_record(def) or is_java_class_or_interface(def) then
+                     if is_class_or_object(def) or is_record(def) then
                        begin
                          preproc_consume(_POINT);
                          CurrentScanner.skipspace;

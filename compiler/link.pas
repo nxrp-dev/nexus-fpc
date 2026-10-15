@@ -908,8 +908,7 @@ Implementation
           end;
 
 
-        scripted_ar:=(TargetAr.id=ar_gnu_ar_scripted) or
-                     (TargetAr.id=ar_sdcc_sdar_scripted);
+        scripted_ar:=TargetAr.id=ar_gnu_ar_scripted;
 
         if scripted_ar then
           begin
@@ -1439,28 +1438,10 @@ Implementation
             arfinishcmd : 'gar s $LIB'
           );
 
-      ar_sdcc_sdar_info : TArInfo =
-          ( id          : ar_sdcc_sdar;
-          addfilecmd  : '';
-          arfirstcmd  : '';
-          arcmd       : 'sdar qS $LIB $FILES';
-          arfinishcmd : 'sdar s $LIB'
-          );
-
-      ar_sdcc_sdar_scripted_info : TArInfo =
-          (
-            id    : ar_sdcc_sdar_scripted;
-            addfilecmd  : '';
-            arfirstcmd  : '';
-            arcmd : 'sdar -M < $SCRIPT';
-            arfinishcmd : ''
-          );
 
 
 initialization
   RegisterAr(ar_gnu_ar_info);
   RegisterAr(ar_gnu_ar_scripted_info);
   RegisterAr(ar_gnu_gar_info);
-  RegisterAr(ar_sdcc_sdar_info);
-  RegisterAr(ar_sdcc_sdar_scripted_info);
 end.

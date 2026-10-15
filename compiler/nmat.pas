@@ -259,9 +259,7 @@ implementation
 
     function TModDivNode.use_moddiv64bitint_helper: boolean;
       begin
-        { not with an ifdef around the call to this routine, because e.g. the
-          Java VM has a signed 64 bit division opcode, but not an unsigned
-          one }
+        { Decide whether this operand combination requires a runtime helper. }
 {$if defined(cpu64bitalu) or defined(cpuhighleveltarget)}
         result:=false;
 {$else cpu64bitalu or cpuhighleveltarget}

@@ -70,14 +70,6 @@ interface
   }
   procedure str_parse_typedconst(list: TAsmList; str: AnsiString; ssym: TStaticVarSym);
 
-
-
-  { in the JVM, constructors are not automatically inherited (so you can hide
-    them). To emulate the Pascal behaviour, we have to automatically add
-    all parent constructors to the current class as well. We also have to do
-    the same for the (emulated) virtual class methods }
-  procedure add_missing_parent_constructors_intf(obj: TObjectDef; addvirtclassmeth: boolean; forcevis: TVisibility);
-
   { goes through all defs in st to add implementations for synthetic methods
     added earlier }
   procedure add_synthetic_method_implementations(st: TSymTable);
@@ -350,131 +342,6 @@ implementation
          Assigned(def.owner.realname) and
          (def.owner.ModuleID<>0) then
         result:=internal_macro_escape_unit_namespace_name+def.owner.realname^+'.';
-    end;
-
-
-  procedure add_missing_parent_constructors_intf(obj: TObjectDef; addvirtclassmeth: boolean; forcevis: TVisibility);
-    var
-      parent: TObjectDef;
-      def: TDef;
-      parentpd,
-      childpd: TProcDef;
-      i: LongInt;
-      srsym: TSym;
-      srsymtable: TSymTable;
-    begin
-      if (oo_is_external in obj.objectoptions) or
-         not Assigned(obj.childof) then
-        exit;
-      parent:=obj.childof;
-      { find all constructor in the parent }
-      for i:=0 to TObjectSymTable(parent.SymTable).deflist.count-1 do
-        begin
-          def:=TDef(TObjectSymTable(parent.SymTable).deflist[i]);
-          if (def.typ<>procdef) or
-             ((TProcDef(def).proctypeoption<>potype_constructor) and
-              (not addvirtclassmeth or
-               not([po_classmethod,po_virtualmethod]<=TProcDef(def).procoptions))) or
-             not is_visible_for_object(TProcDef(def),obj) then
-            continue;
-          parentpd:=TProcDef(def);
-          { do we have this constructor too? (don't use
-            search_struct_member/searchsym_in_class, since those will
-            search parents too) }
-          if searchsym_in_record(obj,parentpd.procsym.name,srsym,srsymtable) then
-            begin
-              { there's a symbol with the same name, is it a routine of the
-                same type with the same parameters? }
-              if srsym.typ=procsym then
-                begin
-                  childpd:=TProcSym(srsym).find_procdef_bytype_and_para(
-                    TProcDef(def).proctypeoption,parentpd.paras,nil,
-                    [cpo_ignorehidden,cpo_ignoreuniv,cpo_openequalisexact]);
-                  if Assigned(childpd) then
-                    continue;
-                end;
-            end;
-          { if we get here, we did not find it in the current objectdef ->
-            add }
-          childpd:=TProcDef(parentpd.getcopyas(procdef,pc_normal_no_hidden,'',true));
-          { get rid of the import name for inherited virtual class methods,
-            it has to be regenerated rather than amended }
-          if [po_classmethod,po_virtualmethod]<=childpd.procoptions then
-            begin
-              StringDispose(childpd.import_name);
-              exclude(childpd.procoptions,po_has_importname);
-            end;
-          if forcevis<>vis_none then
-            childpd.visibility:=forcevis;
-          if po_virtualmethod in childpd.procoptions then
-            include(childpd.procoptions,po_overridingmethod);
-          { ignore this artificially added procdef when looking for overloads }
-          include(childpd.procoptions,po_ignore_for_overload_resolution);
-          finish_copied_procdef(childpd,parentpd.procsym.realname,obj.SymTable,obj);
-          exclude(childpd.procoptions,po_external);
-          childpd.synthetickind:=tsk_anon_inherited;
-          include(obj.objectoptions,oo_has_constructor);
-        end;
-    end;
-
-
-  procedure implement_anon_inherited(pd: TProcDef);
-    var
-      str: AnsiString;
-      isclassmethod: boolean;
-    begin
-      isclassmethod:=
-        (po_classmethod in pd.procoptions) and
-        not(pd.proctypeoption in [potype_constructor,potype_destructor]);
-      str:='begin ';
-      if (pd.proctypeoption<>potype_constructor) and
-         not is_void(pd.returndef) then
-        str:=str+'result:=';
-      str:=str+'inherited end;';
-      str_parse_method_impl(str,pd,isclassmethod);
-    end;
-
-
-  procedure implement_jvm_clone(pd: TProcDef);
-    var
-      struct: TAbstractRecordDef;
-      str: AnsiString;
-      i: LongInt;
-      sym: TSym;
-      fsym: TFieldVarSym;
-    begin
-      if not(pd.struct.typ in [recorddef,objectdef]) then
-        InternalError(2011032802);
-      struct:=pd.struct;
-      { anonymous record types must get an artificial name, so we can generate
-        a typecast at the scanner level }
-      if (struct.typ=recorddef) and
-         not Assigned(struct.typesym) then
-        InternalError(2011032812);
-      { We cannot easily use the inherited clone in case we have to create a
-        deep copy of certain fields. The reason is that e.g. sets are pointers
-        at the JVM level, but not in Pascal. So the JVM clone routine will copy
-        the pointer to the set from the old record (= class instance) to the new
-        one, but we have no way to change this pointer itself from inside Pascal
-        code.
-
-        We solve this by relying on the fact that the JVM is garbage collected:
-        we simply declare a temporary instance on the stack, which will be
-        allocated/initialized by the temp generator. We return its address as
-        the result of the clone routine, so it remains live. }
-      str:='var __fpc_newcopy:'+ struct.typesym.realname+'; begin clone:=JLObject(@__fpc_newcopy);';
-      { copy all field contents }
-      for i:=0 to struct.SymTable.symlist.count-1 do
-        begin
-          sym:=TSym(struct.SymTable.symlist[i]);
-          if (sym.typ=fieldvarsym) then
-            begin
-              fsym:=TFieldVarSym(sym);
-              str:=str+'__fpc_newcopy.&'+fsym.realname+':=&'+fsym.realname+';';
-            end;
-        end;
-      str:=str+'end;';
-      str_parse_method_impl(str,pd,false);
     end;
 
 
@@ -862,10 +729,6 @@ implementation
           case pd.synthetickind of
             tsk_none:
               ;
-            tsk_anon_inherited:
-              implement_anon_inherited(pd);
-            tsk_jvm_clone:
-              implement_jvm_clone(pd);
             tsk_record_deepcopy:
               implement_record_deepcopy(pd);
             tsk_record_initialize:
@@ -884,19 +747,6 @@ implementation
                 else
                   implement_empty(pd);
               end;
-            tsk_jvm_enum_values,
-            tsk_jvm_enum_valueof,
-            tsk_jvm_enum_classconstr,
-            tsk_jvm_enum_jumps_constr,
-            tsk_jvm_enum_fpcordinal,
-            tsk_jvm_enum_fpcvalueof,
-            tsk_jvm_enum_long2set,
-            tsk_jvm_enum_bitset2set,
-            tsk_jvm_enum_set2set,
-            tsk_jvm_procvar_invoke,
-            tsk_jvm_procvar_intconstr,
-            tsk_jvm_virtual_clmethod:
-              InternalError(2011032801);
             tsk_wasm_suspending_first,
             tsk_wasm_suspending_last,
             tsk_wasm_promising:

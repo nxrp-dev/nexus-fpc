@@ -933,11 +933,7 @@ implementation
                     TypeCheckPass(p);
                   end;
                 { several object types have implicit dereferencing }
-                { is_implicit_pointer_object_type() returns true for records
-                  on the JVM target because they are implemented as classes
-                  there, but we definitely have to take their address here
-                  since otherwise a deep copy is made and changes are made to
-                  this copy rather than to the original one }
+
                 hasimplicitderef:=
                   is_implicit_pointer_object_type(p.resultdef) or
                   (p.resultdef.typ=classrefdef);
@@ -1125,9 +1121,7 @@ implementation
 
     procedure check_except_type_valid(var def: TDef);
       begin
-        if not (is_class(def) or is_javaclass(def) or
-            { skip showing error message the second time }
-            (def.typ=errordef)) then
+        if not (is_class(def) or (def.typ=errordef)) then
           begin
             Message1(type_e_class_type_expected,def.typename);
             def:=generrordef;

@@ -41,7 +41,7 @@ type
         (SubGen: TSubMachineTypeGeneric);
   end;
 
-  TObjFormat = (ofNone, ofRes, ofElf, ofCoff, ofXCoff, ofMachO, ofExt);
+  TObjFormat = (ofNone, ofRes, ofElf, ofCoff, ofMachO, ofExt);
   TObjFormats = set of TObjFormat;
 
 
@@ -75,8 +75,8 @@ var
     (Name : '';             Formats : [ofRes]),                   //mtnone
     (Name : 'i386';         Formats : [ofElf, ofCoff, ofMachO]),  //mti386
     (Name : 'x86_64';       Formats : [ofElf, ofCoff, ofMachO]),  //mtx86_64
-    (Name : 'powerpc';      Formats : [ofElf, ofXCoff, ofMachO]), //mtppc
-    (Name : 'powerpc64';    Formats : [ofElf, {ofXCoff,} ofMachO]), //mtppc64
+    (Name : 'powerpc';      Formats : [ofElf, ofMachO]), //mtppc
+    (Name : 'powerpc64';    Formats : [ofElf, ofMachO]), //mtppc64
     (Name : 'arm';          Formats : [ofElf, ofCoff, ofMachO]),  //mtarm
     (Name : 'armeb';        Formats : [ofElf]),                   //mtarmeb
     (Name : 'm68k';         Formats : [ofElf]),                   //mtm68k
@@ -113,7 +113,6 @@ var
                                                      mtLoongArch64,mtSPARC64]),
     (Name : 'coff';     Ext : '.o';      Machines : [mtI386,mtX8664,mtARM,
                                                      mtAArch64,mtPPC,mtPPC64]),
-    (Name : 'xcoff';    Ext : '.o';      Machines : [mtPPC{,mtppc64}]),
     (Name : 'mach-o';   Ext : '.or';     Machines : [mtI386,mtX8664,mtPPC,
                                                      mtPPC64,mtARM,mtAArch64]),
     (Name : 'external'; Ext : '.fpcres'; Machines : [mtBigEndian,mtLittleEndian])
@@ -166,7 +165,6 @@ begin
     ofRes  : Result:=mtNone;
     ofElf  : Result:=mtI386;
     ofCoff : Result:=mtI386;
-    ofXCoff: Result:=mtPPC;
     ofMachO: Result:=mtI386;
     {$IFDEF ENDIAN_BIG}
     ofExt  : Result:=mtBigEndian;

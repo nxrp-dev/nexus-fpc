@@ -227,18 +227,16 @@ interface
             given in bit, else in bytes }
           fieldoffset   : asizeint;
 
-          externalname  : PShortString;
 {$ifdef symansistr}
-          cachedmangledname: TSymStr; { mangled name for ObjC or Java }
+          cachedmangledname: TSymStr;
 {$else symansistr}
-          cachedmangledname: PShortString; { mangled name for ObjC or Java }
+          cachedmangledname: PShortString;
 {$endif symansistr}
           constructor create(const n : TSymStr;vsp:TVarSpez;def:TDef;vopts:TVarOptions);virtual;
           constructor ppuload(ppufile:TCompilerPPUFile);
           { do not override this routine in platform-specific subclasses,
             override ppuwrite_platform instead }
           procedure ppuwrite(ppufile:TCompilerPPUFile);override;final;
-          procedure set_externalname(const s:string);virtual;
           function bitoffset: ASizeUInt;
           function mangledname:TSymStr;override;
           destructor Destroy;override;
@@ -912,32 +910,8 @@ implementation
 ****************************************************************************}
 
     constructor TProcSym.create(const n : TSymStr);
-      var
-        i: LongInt;
       begin
-         if not(ts_lowercase_proc_start in CurrentSettings.TargetSwitches) or
-            (n='') then
-           inherited create(procsym,n)
-         else
-           begin
-             { YToX -> yToX
-               RC64Encode -> rc64Encode
-               Test -> test
-             }
-             i:=2;
-             while i<=length(n) do
-               begin
-                 if not(n[i] in ['A'..'Z']) then
-                   begin
-                     if (i>2) and
-                        (n[i] in ['a'..'z']) then
-                       dec(i);
-                     break;
-                   end;
-                 inc(i);
-               end;
-             inherited create(procsym,lower(copy(n,1,i-1))+copy(n,i,length(n)));
-           end;
+         inherited create(procsym,n);
          FProcdefList:=TFPObjectList.Create(false);
          FProcdefderefList:=nil;
          { the tprocdef have their own symoptions, make the procsym
@@ -2094,10 +2068,6 @@ implementation
       begin
          inherited ppuload(fieldvarsym,ppufile);
          fieldoffset:=ppufile.GetASizeInt;
-         if (vo_has_mangledname in varoptions) then
-           externalname:=ppufile.GetPShortString
-         else
-           externalname:=nil;
          PPULoadPlatform(ppufile);
       end;
 
@@ -2106,15 +2076,7 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.PutASizeInt(fieldoffset);
-         if (vo_has_mangledname in varoptions) then
-           ppufile.PutString(externalname^);
          WriteEntry(ppufile,IBFieldVarSym);
-      end;
-
-
-    procedure TFieldVarSym.set_externalname(const s: string);
-      begin
-        InternalError(2014033001);
       end;
 
 
@@ -2172,7 +2134,6 @@ implementation
 {$ifndef symansistr}
         StringDispose(cachedmangledname);
 {$endif symansistr}
-        StringDispose(externalname);
         inherited Destroy;
       end;
 

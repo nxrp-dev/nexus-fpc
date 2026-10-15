@@ -179,8 +179,7 @@ implementation
                         { we need a class type for classrefdef }
                         if (def.typ=classrefdef) and
                            not(is_class(TTypeSym(srsym).typedef)) and
-                           not(is_objcclass(TTypeSym(srsym).typedef)) and
-                           not(is_javaclass(TTypeSym(srsym).typedef)) then
+                           not(is_objcclass(TTypeSym(srsym).typedef)) then
                           MessagePos1(def.typesym.fileinfo,type_e_class_type_expected,TTypeSym(srsym).typedef.typename);
                         { this could also be a generic dummy that was not
                           overridden with a specific type }
@@ -262,7 +261,7 @@ implementation
         { handle types inside classes, e.g. TNode.TLongint }
         while (CurrentScanner.token=_POINT) do
           begin
-             if is_class_or_object(def) or is_record(def) or is_java_class_or_interface(def) then
+             if is_class_or_object(def) or is_record(def) then
                begin
                  if (def.typ=objectdef) then
                    def:=find_real_class_definition(TObjectDef(def),false);
@@ -1141,9 +1140,7 @@ implementation
          { make the record size aligned (has to be done before inserting the
            parameters, because that may depend on the record's size) }
          recst.addalignmentpadding;
-         { don't keep track of procdefs in a separate list, because the
-           compiler may add additional procdefs (e.g. property wrappers for
-           the jvm backend) }
+
          insert_struct_hidden_paras(TRecordDef(CurrentStructDef));
          { restore symtable stack }
          SymTableStack.pop(recst);
@@ -1993,8 +1990,7 @@ implementation
                     consume(_OF);
                     single_type(hdef,SingleTypeOptionsInTypeBlock[Block_Type=bt_type]);
                     if is_class(hdef) or
-                       is_objcclass(hdef) or
-                       is_javaclass(hdef) then
+                       is_objcclass(hdef) then
                       def:=CClassRefDef.create(hdef)
                     else
                       if hdef.typ=forwarddef then
@@ -2039,8 +2035,6 @@ implementation
                     def:=object_dec(odt_interfacecom,name,newsym,genericdef,genericlist,nil,ht_none);
                   it_interfacecorba:
                     def:=object_dec(odt_interfacecorba,name,newsym,genericdef,genericlist,nil,ht_none);
-                  it_interfacejava:
-                    def:=object_dec(odt_interfacejava,name,newsym,genericdef,genericlist,nil,ht_none);
                 end;
               end;
             _OBJCPROTOCOL :

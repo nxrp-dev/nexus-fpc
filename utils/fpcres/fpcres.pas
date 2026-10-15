@@ -25,7 +25,7 @@ uses
   ResReader, COFFReader, WinPEImageReader, ELFReader, MachOReader,
   ExternalReader, DFMReader, TLBReader, RCReader,
 //writers
-  ResWriter, COFFWriter, XCOFFWriter, ELFWriter, MachOWriter,
+  ResWriter, COFFWriter, ELFWriter, MachOWriter,
   ExternalWriter,
 //misc
   ELFConsts, COFFTypes, MachOTypes, ExternalTypes;
@@ -281,17 +281,6 @@ begin
   end;
 end;
 
-function SetUpXCOFFWriter : TCoffResourceWriter;
-begin
-  Result:=TXCoffResourceWriter.Create;
-  case CurrentTarget.Machine of
-//    mtnone :
-    mtPPC : Result.MachineType:=cmtppc32aix;
-//    mtppc64 : Result.MachineType:=cmtppc64aix;
-  end;
-end;
-
-
 function SetUpMachOWriter : TMachOResourceWriter;
 const
   ArmSubMachine2MachOSubMachine: array[TSubMachineTypeArm] of TMachOSubMachineTypeArm =
@@ -364,7 +353,6 @@ begin
       ofRes   : AWriter:=SetUpResWriter;
       ofElf   : AWriter:=SetUpELFWriter;
       ofCoff  : AWriter:=SetUpCOFFWriter;
-      ofXCoff : AWriter:=SetUpXCOFFWriter;
       ofMachO : AWriter:=SetUpMachOWriter;
       ofExt   : AWriter:=SetUpExternalWriter;
     end;

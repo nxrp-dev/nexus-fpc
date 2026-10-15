@@ -74,7 +74,6 @@ interface
         FProcsymtable : TSymTable;
         FOperator    : TToken;
         FCandidateProcs    : PCandidate;
-        FIgnoredCandidateProcs : TFPList;
         FProcCnt    : integer;
         FParaNode   : TNode;
         FParaLength : smallint;
@@ -546,9 +545,7 @@ implementation
                              (
                                is_implicit_pointer_object_type(rd) or
                                (rd.typ=pointerdef) or
-                               (rt=niln) or
-                               ((ld=java_jlstring) and
-                                is_stringlike(rd))
+                               (rt=niln)
                              )
                            ) and
                            (treetyp in identity_operators)
@@ -1341,8 +1338,7 @@ implementation
                                  else
                                    begin
                                      UninitializedVariableMessage(p.fileinfo,
-                                       { on the JVM, an uninitialized var-parameter
-                                         is just as fatal as a nil pointer dereference }
+
                                        not(vsf_use_hints in varstateflags),
                                        TLoadNode(p).SymTable.symtabletype=localsymtable,
                                        is_managed_type(TLoadNode(p).resultdef),
@@ -2204,8 +2200,6 @@ implementation
         i : LongInt;
         sym : TSym;
       begin
-        FIgnoredCandidateProcs.free;
-        FIgnoredCandidateProcs := nil;
         { free any symbols for anonymous parameter types that we're used for
           specialization when no specialization was picked }
         TFPList.FreeAndNilObjects(FParaAnonSyms);
@@ -2256,11 +2250,6 @@ implementation
               pd:=TProcDef(srsym.ProcdefList[j]);
               if not finalize_specialization(pd,spezcontext) then
                 continue;
-              if (po_ignore_for_overload_resolution in pd.procoptions) then
-                begin
-                  TFPList.AddOnDemand(FIgnoredCandidateProcs,pd);
-                  continue;
-                end;
               { in case of anonymous inherited, only match procdefs identical
                 to the current one (apart from hidden parameters), rather than
                 anything compatible to the parameters -- except in case of
@@ -2489,11 +2478,6 @@ implementation
                         pd:=TProcDef(TProcSym(srsym).ProcdefList[j]);
                         if not finalize_specialization(pd,spezcontext) then
                           continue;
-                        if (po_ignore_for_overload_resolution in pd.procoptions) then
-                          begin
-                            TFPList.AddOnDemand(FIgnoredCandidateProcs,pd);
-                            continue;
-                          end;
                         { Store first procsym found }
                         if not Assigned(FProcsym) then
                           FProcsym:=TProcSym(srsym);
@@ -3102,7 +3086,7 @@ implementation
                    n := nil;
                  end
               else if is_open_array(def_to) and
-                      is_class_or_interface_or_dispinterface_or_objc_or_java(TArrayDef(def_to).elementdef) and
+                      is_class_or_interface_or_dispinterface_or_objc(TArrayDef(def_to).elementdef) and
                       is_array_constructor(currpt.left.resultdef) and
                       Assigned(TArrayConstructorNode(currpt.left).left) then
                 begin
@@ -3565,32 +3549,6 @@ implementation
             end;
          end;
 
-        { if we've found one, check the procdefs ignored for overload choosing
-          to see whether they contain one from a child class with the same
-          parameters (so the overload choosing was not influenced by their
-          presence, but now that we've decided which overloaded version to call,
-          make sure we call the version closest in terms of visibility }
-        if (cntpd=1) and Assigned(FIgnoredCandidateProcs) then
-          begin
-            for res:=0 to FIgnoredCandidateProcs.count-1 do
-              begin
-                pd:=TProcDef(FIgnoredCandidateProcs[res]);
-                { stop searching when we start comparing methods of parent of
-                  the struct in which the current best method was found }
-                if Assigned(pd.struct) and
-                   (pd.struct<>TProcDef(bestpd).struct) and
-                   def_is_related(TProcDef(bestpd).struct,pd.struct) then
-                  break;
-                if (pd.proctypeoption=bestpd.proctypeoption) and
-                   ((pd.procoptions*[po_classmethod,po_methodpointer])=(bestpd.procoptions*[po_classmethod,po_methodpointer])) and
-                   (compare_paras(pd.paras,bestpd.paras,cp_all,[cpo_ignorehidden,cpo_ignoreuniv,cpo_openequalisexact])=te_exact) then
-                  begin
-                    { first one encountered is closest in terms of visibility }
-                    bestpd:=pd;
-                    break;
-                  end;
-              end;
-          end;
         result:=cntpd;
       end;
 
@@ -3793,32 +3751,6 @@ implementation
           end;
 
 
-        { if we've found one, check the procdefs ignored for overload choosing
-          to see whether they contain one from a child class with the same
-          parameters (so the overload choosing was not influenced by their
-          presence, but now that we've decided which overloaded version to call,
-          make sure we call the version closest in terms of visibility }
-        if (cntpd=1) and Assigned(FIgnoredCandidateProcs) then
-          begin
-            for res:=0 to FIgnoredCandidateProcs.count-1 do
-              begin
-                pd:=TProcDef(FIgnoredCandidateProcs[res]);
-                { stop searching when we start comparing methods of parent of
-                  the struct in which the current best method was found }
-                if Assigned(pd.struct) and
-                   (pd.struct<>TProcDef(bestpd).struct) and
-                   def_is_related(TProcDef(bestpd).struct,pd.struct) then
-                  break;
-                if (pd.proctypeoption=bestpd.proctypeoption) and
-                   ((pd.procoptions*[po_classmethod,po_methodpointer])=(bestpd.procoptions*[po_classmethod,po_methodpointer])) and
-                   (compare_paras(pd.paras,bestpd.paras,cp_all,[cpo_ignorehidden,cpo_ignoreuniv,cpo_openequalisexact])=te_exact) then
-                  begin
-                    { first one encountered is closest in terms of visibility }
-                    bestpd:=pd;
-                    break;
-                  end;
-              end;
-          end;
         result:=cntpd;
       end;
 

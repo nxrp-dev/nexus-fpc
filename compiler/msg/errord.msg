@@ -1544,21 +1544,12 @@ parser_e_no_typed_const=03317_E_Typisierte Konstanten sind hier nicht erlaubt, n
 % Java interfaces define a namespace in which formal constant can be defined,
 % but since they define no storage it is not possible to define typed constants
 % in them (those are more or less the same as initialised class fields).
-parser_e_java_no_inherited_constructor=03318_E_Konstruktoren werden in der JVM nicht automatisch geerbt; fÅge einen Konstruktur explizit hinzu, der, falls nîtig, den geerbten aufruft
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% For compatibility with external Java code, FPC does the same. If you require access to the same
-% constructors in a child class, define them in the child class and call the inherited one from
-% there.
 parser_d_internal_parser_string=03319_D_Parsen intern erzeugten Codes: $1
 % The compiler sometimes internally constructs Pascal code that is subsequently
 % injected into the program. These messages display such code, in order to help
 % with debugging errors in them.
 parser_e_feature_unsupported_for_vm=03320_E_Dieses Feature wird auf managed VM-Zielen nicht unterstÅtzt
 % Certain language features are not supported on targets that are managed virtual machines.
-parser_e_jvm_invalid_virtual_constructor_call=03321_E_Einen virtuellen Konstruktor fÅr die aktuelle Instanz innerhalb eines anderen Konstruktors aufzurufen, ist fÅr das JVM-Ziel nicht mîglich
-% The JVM does not natively support virtual constructor. Unforunately, we are not aware of a way to
-% emulate them in a way that makes it possible to support calling virtual constructors
-% for the current instance inside another constructor.
 parser_e_method_lower_visibility=03322_E_Die Åberschreibende Method "$1" kann keine niedrigere Sichtbarkeit ($2) haben als in der Elternklasse $3 ($4)
 % The JVM does not allow lowering the visibility of an overriding method.
 parser_e_nostackframe_without_assembler=03323_E_Prozedur/Funktion  mit der Aufrufoption NOSTACKFRAME aber ohne ASSEMBLER deklariert
@@ -2122,9 +2113,6 @@ type_w_range_check_error_bounds=04110_W_BereichsÅberschreitung bei der Berechnun
 % The constants are outside their allowed range.
 type_e_type_not_allowed_for_default=04111_E_Dieser Typ wird fÅr die intrinsische Funktion Default() nicht unterstÅtzt
 % Some types like for example Text and File Of X are not supported by the Default intrinsic.
-type_e_java_class_method_not_static_virtual=04112_E_JVM virtuelle Klassenmethoden kînnen nicht statisch sein
-% Virtual class methods cannot be static when targeting the JVM platform, because
-% the self pointer is required for correct dispatching.
 type_e_invalid_final_assignment=04113_E_Finale (Klassen-)Felder kînnen nur im (Klassen-)Konstruktur ihrer Klasse zugewiesen werden
 % It is only possible to assign a value to a final (class) field inside a (class) constructor of its owning class.
 type_e_no_managed_formal_assign_typecast=04114_E_Typecast fÅr nicht typisierte Parameter wird auf managed Plattformen nicht unterstÅtzt, weise stattdessen einfach einen Wert zu
@@ -2455,13 +2443,6 @@ sym_w_library_overload=05084_W_Mîglicher Bibliothekenkonflikt: Das Symbol "$1" a
 % the 'libname' part is only a hint, funcname might also be loaded
 % by another library. This warning appears if 'funcname' is used twice
 % with two different library names.
-sym_e_duplicate_id_create_java_constructor=05085_E_Kann den impliziten Konstruktor 'Create' nicht hinzufÅgen, weil der Bezeichner schon von "$1" verwendet wird
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% However, if a class does not explicitly declare at least one constructor, the compiler is
-% required to add a public, parameterless constructor. In Java, constructors are nameless,
-% but in FPC they are all called ``Create''. Therefore, if you do not add a constructor to
-% a Java class and furthermore use the ``Create'' identifier for another entity (e.g., a field,
-% or a parameterless method), the compiler cannot satisfy this requirement.
 sym_e_no_matching_inherited_parameterless_constructor=05086_E_Kann den voreingestellten Konstruktor fÅr die Klasse nicht erzeugen, weil die Elternklasse keinen parameterlosen Konstruktor hat
 % Java does not automatically add inherited constructors to child classes, so that they can be hidden.
 % However, if a class does not explicitly declare at least one constructor, the compiler is
@@ -4144,16 +4125,11 @@ A*2CI<x>_WÑhle den Befehlssatz fÅr ARM aus: ARM oder THUMB
 4*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
 p*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
 P*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
-J*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
 A*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
 W*2CT<x>_Optionen fÅr die ziel-spezifische Code-Erzeugung
-J*3CTautogetterprefix=X_  Erzeuge automatisch Getter fÅr Eigenschaften mit dem Prefix X (Leerstring schaltet aus)
-J*3CTautosetterprefix=X_  Erzeuge automatisch Setter fÅr Eigenschaften mit dem Prefix X (Leerstring schaltet aus)
 8*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
 3*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
 4*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
-J*3CTlowercaseprocstart_  Kleinschreibung des ersten Buchstabens bei Prozedur/Funktions/Methoden-Namen.
-J*2Cv_Var/out Parameter copy-out öberprÅfung
 A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2CX_Benutze Smartlinking
 **1d<x>_Definiere das Symbol <x>
@@ -4351,8 +4327,6 @@ a*2Tios_iOS
 a*2Tlinux_Linux
 a*2Twin64_Windows 64
 # jvm targets
-J*2Tandroid_Android
-J*2Tjava_Java
 # loongarch64 targets
 l*2Tlinux_Linux
 # mipsel targets

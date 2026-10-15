@@ -350,15 +350,8 @@ implementation
             exit;
          end;
 
-        { don't insert superfluous type conversions, but
-          in case of bitpacked accesses, the original type must
-          remain too so that not too many/few bits are laoded.
 
-          Also, in case the deftyp changes, don't ignore because lots of code
-          expects that if the resultdef is set to e.g. stringdef, it remains
-          that way (e.g., in case of Java where java_jlstring equals
-          unicodestring according to equal_defs, but an add node for strings
-          still expects the resultdef of the node to be a stringdef) }
+        { Preserve definition kinds and bitpacked access widths when removing casts. }
         if equal_defs(p.resultdef,def) and
            (p.resultdef.typ=def.typ) and
            not is_bitpacked_access(p) and
@@ -4931,14 +4924,12 @@ implementation
         else if (right.resultdef.typ=classrefdef) then
           begin
             { left maybe an interface reference }
-            if is_interfacecom(left.resultdef) or
-               is_javainterface(left.resultdef) then
+            if is_interfacecom(left.resultdef) then
               begin
                 { relation checks are not possible }
               end
             { or left must be a class }
-            else if is_class(left.resultdef) or
-                    is_javaclass(left.resultdef) then
+            else if is_class(left.resultdef) then
               begin
                 { the operands must be related }
                 if (not(def_is_related(TObjectDef(left.resultdef),
@@ -4961,8 +4952,7 @@ implementation
             end;
           end
         else if is_interface(right.resultdef) or
-                is_dispinterface(right.resultdef) or
-                is_javainterface(right.resultdef) then
+                is_dispinterface(right.resultdef) then
           begin
            case nodetype of
              isn:
@@ -4974,12 +4964,7 @@ implementation
            end;
 
             { left is a class or interface }
-            if is_javainterface(right.resultdef) then
-              begin
-                if not is_java_class_or_interface(left.resultdef) then
-                  CGMessage1(type_e_class_or_cominterface_type_expected,left.resultdef.typename);
-              end
-            else if not(is_class(left.resultdef) or
+            if not(is_class(left.resultdef) or
                    is_interfacecom(left.resultdef)) then
               CGMessage1(type_e_class_or_cominterface_type_expected,left.resultdef.typename)
             else

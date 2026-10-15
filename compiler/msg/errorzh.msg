@@ -1278,18 +1278,11 @@ parser_e_no_typed_const=03317_E_这里不允许类型化常量，只允许形式
 % Java 接口定义了一个可以定义形式常量的命名空间，
 % 但由于它们不定义存储，所以不能在其中定义类型化常量
 % (这些基本上与初始化的类字段相同)。
-parser_e_java_no_inherited_constructor=03318_E_在 JVM 中构造函数不会自动继承；如果需要，请显式添加调用继承构造函数的构造函数
-% Java 不会自动将继承的构造函数添加到子类中，这样它们就可以被隐藏。
-% 为了与外部 Java 代码兼容，FPC 也这样做。如果你需要在子类中访问相同的
-% 构造函数，请在子类中定义它们并从那里调用继承的构造函数。
 parser_d_internal_parser_string=03319_D_正在解析内部生成的代码：$1
 % 编译器有时会在内部构造 Pascal 代码，然后将其注入到程序中。
 % 这些消息显示这样的代码，以帮助调试其中的错误。
 parser_e_feature_unsupported_for_vm=03320_E_此语言功能在托管 VM 目标上不受支持
 % 某些语言功能在托管虚拟机目标上不受支持。
-parser_e_jvm_invalid_virtual_constructor_call=03321_E_在 JVM 目标上不能在另一个构造函数内部为当前实例调用虚拟构造函数
-% JVM 不原生支持虚拟构造函数。不幸的是，我们不知道有什么方法可以
-% 模拟它们，使得可以在另一个构造函数内部为当前实例调用虚拟构造函数。
 parser_e_method_lower_visibility=03322_E_重写方法"$1"的可见性($2)不能低于父类 $3 中的可见性($4)
 % JVM 不允许降低重写方法的可见性。
 parser_e_nostackframe_without_assembler=03323_E_过程/函数声明了 NOSTACKFRAME 调用选项但没有 ASSEMBLER
@@ -1797,8 +1790,6 @@ type_w_range_check_error_bounds=04110_W_计算常量时发生范围检查错误�
 % 常量超出其允许范围。
 type_e_type_not_allowed_for_default=04111_E_Default() 内部函数不支持此类型
 % Default 内部函数不支持某些类型，例如 Text 和 File Of X。
-type_e_java_class_method_not_static_virtual=04112_E_JVM 虚拟类方法不能是静态的
-% 在针对 JVM 平台时，虚拟类方法不能是静态的，因为正确的分派需要 self 指针。
 type_e_invalid_final_assignment=04113_E_final（类）字段只能在其类的（类）构造函数中赋值
 % 只能在拥有类的（类）构造函数内部为 final（类）字段赋值。
 type_e_no_managed_formal_assign_typecast=04114_E_在托管平台上无法对无类型参数进行类型转换，请直接为它们赋值
@@ -2061,13 +2052,6 @@ sym_w_library_overload=05084_W_可能的库冲突：库 "$2" 中的符号 "$1" �
 % 声明为 "external 'libname' name 'funcname'" 的函数中，
 % 'libname' 部分仅是提示，funcname 也可能被其他库加载。
 % 当 'funcname' 在两个不同的库名称中使用时会出现此警告。
-sym_e_duplicate_id_create_java_constructor=05085_E_无法添加隐式构造函数 'Create'，因为标识符已被 "$1" 使用
-% Java 不会自动将继承的构造函数添加到子类中，因此它们可以被隐藏。
-% 但是，如果一个类没有显式声明至少一个构造函数，编译器需要
-% 添加一个公共的无参数构造函数。在 Java 中，构造函数是无名的，
-% 但在 FPC 中它们都叫做 ``Create''。因此，如果您没有向 Java 类添加构造函数，
-% 并且还将 ``Create'' 标识符用于其他实体（例如字段或无参数方法），
-% 编译器就无法满足这个要求。
 sym_e_no_matching_inherited_parameterless_constructor=05086_E_无法为类生成默认构造函数，因为父类没有无参数构造函数
 % Java 不会自动将继承的构造函数添加到子类中，因此它们可以被隐藏。
 % 但是，如果一个类没有显式声明至少一个构造函数，编译器需要
@@ -3500,19 +3484,14 @@ A*2CI<x>_在 ARM 上选择指令集: ARM 或 THUMB
 4*2CT<x>_目标特定的代码生成选项
 p*2CT<x>_目标特定的代码生成选项
 P*2CT<x>_目标特定的代码生成选项
-J*2CT<x>_目标特定的代码生成选项
 A*2CT<x>_目标特定的代码生成选项
 W*2CT<x>_目标特定的代码生成选项
-J*3CTautogetterprefix=X_使用前缀 X 自动为属性创建 getter (空字符串禁用)
-J*3CTautosetterprefix=X_使用前缀 X 自动为属性创建 setter (空字符串禁用)
 8*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
 3*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
 4*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
 �栈
 �)的代码
-J*3CTlowercaseprocstart_将过程/函数/方法名称的第一个字符小写
 �代码
-J*2Cv_Var/out 参数复制检查
 A*2CV<x>_将线程变量模型设置为 <x>
 **2CX_同时创建智能链接库
 **1d<x>_定义符号 <x>
@@ -3712,8 +3691,6 @@ a*2Tios_iOS
 a*2Tlinux_Linux
 a*2Twin64_Windows 64
 # jvm 目标
-J*2Tandroid_Android
-J*2Tjava_Java
 # loongarch64 目标
 l*2Tlinux_Linux
 # mipsel 目标

@@ -835,7 +835,7 @@ implementation
 { TODO: HACK: unaligned test, maybe remove all unaligned locations (array of char) from the compiler}
                             { Use unaligned copy when the offset is not aligned }
                             len:=left.resultdef.size;
-                            { can be 0 in case of formaldef on JVM target }
+
                             if len=0 then
                               len:=sizeof(PInt);
 
@@ -1188,11 +1188,7 @@ implementation
         fillchar(paraloc,sizeof(paraloc),0);
         { Allocate always a temp, also if no elements are required, to
           be sure that location is valid (PFV) }
-        { on the JVM platform, an array can have 0 elements; since the length
-          of the array is part of the array itself, make sure we allocate one
-          of the proper length to avoid getting unexpected results later --
-          allocating a temp of size 0 also forces it to be size 4 on regular
-          targets }
+
         tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,(TArrayDef(resultdef).highrange+1)*elesize,tt_normal,location.reference);
         href:=location.reference;
         makearrayref(href,eledef);

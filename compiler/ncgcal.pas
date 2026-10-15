@@ -270,9 +270,7 @@ implementation
 
     procedure TCGCallParaNode.push_value_para;
       begin
-        { we've nothing to push when the size of the parameter is 0
-          -- except on platforms where the parameters are part of the signature
-             and checked by the runtime/backend compiler (e.g. JVM, LLVM) }
+        { Permissive backends do not need parameters with no storage. }
         if (left.resultdef.size=0) and
            not paramanager.has_strict_proc_signature then
           exit;

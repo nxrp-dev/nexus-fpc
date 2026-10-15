@@ -267,11 +267,7 @@ implementation
                 { Generate VMT variable for constructor/destructor }
                 if (pd.proctypeoption in [potype_constructor,potype_destructor]) and
                    not(is_cppclass(TProcDef(pd).struct) or
-                       is_record(TProcDef(pd).struct) or
-                       is_javaclass(TProcDef(pd).struct) or
-                       (
-                         { no vmt for record/type helper constructors }
-                         is_objectpascal_helper(TProcDef(pd).struct) and
+                       is_record(TProcDef(pd).struct) or (is_objectpascal_helper(TProcDef(pd).struct) and
                          (TObjectDef(TProcDef(pd).struct).extendeddef.typ<>objectdef)
                        )) and
                    not Assigned(pd.parast.find(name_vmt)) then
@@ -517,9 +513,7 @@ implementation
       begin
         // handle calling conventions of record methods
         oldpos:=CurrentFilePos;
-        { don't keep track of procdefs in a separate list, because the
-          compiler may add additional procdefs (e.g. property wrappers for
-          the jvm backend) }
+
         for i := 0 to astruct.SymTable.deflist.count - 1 do
           begin
             pd:=TDef(astruct.SymTable.deflist[i]);
@@ -1200,15 +1194,7 @@ implementation
          end;
 
         if sameparasfound and
-            not (currpd.proctypeoption=potype_operator) and
-            (
-              { allow overloads with different result types for external java
-                classes as Java supports covariant return types when implementing
-                interfaces and e.g. AbstractStringBuilder uses that }
-              not Assigned(currpd.struct) or
-              not is_java_class_or_interface(currpd.struct) or
-              not (oo_is_external in TObjectDef(currpd.struct).objectoptions)
-            ) then
+            not (currpd.proctypeoption=potype_operator) then
           begin
             MessagePos(currpd.fileinfo,parser_e_overloaded_have_same_parameters);
             TProcSym(currpd.procsym).write_parameter_lists(currpd);
@@ -1252,9 +1238,7 @@ implementation
           is not enough) }
         old_symtablestack:=SymTableStack;
         SymTableStack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
-        { create struct to hold local variables and parameters that are
-          accessed from within nested routines (start with extra dollar to prevent
-          the JVM from thinking this is a nested class in the unit) }
+
         nestedvarsst:=TRecordSymTable.create('$'+CurrentModule.RealModuleName^+'$$_fpc_nestedvars$'+pd.UniqueIDStr,
           CurrentSettings.alignment.LocalAlignMax,CurrentSettings.alignment.LocalAlignMin);
         nestedvarsdef:=CRecordDef.create(nestedvarsst.name^,nestedvarsst);

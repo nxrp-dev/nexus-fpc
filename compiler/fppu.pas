@@ -1508,10 +1508,6 @@ var
          repeat
            B:=PPUFile.ReadEntry;
            case B of
-             IBJVMNamespace :
-               begin
-                 Namespace:=PPUFile.GetPShortString;
-               end;
              IBModuleName :
                begin
                  NewModuleName:=PPUFile.GetString;
@@ -1642,13 +1638,6 @@ var
 
          { extra header (sub version, module flags) }
          WriteExtraHeader;
-
-         { first the (JVM) namespace }
-         if Assigned(Namespace) then
-           begin
-             PPUFile.PutString(Namespace^);
-             PPUFile.WriteEntry(IBJVMNamespace);
-           end;
          { the unitname }
          PPUFile.PutString(RealModuleName^);
          PPUFile.WriteEntry(IBModuleName);
@@ -1842,13 +1831,6 @@ var
 {$endif DEBUG_GENERATE_INTERFACE_PPU}
          { extra header (sub version, module flags) }
          WriteExtraHeader;
-
-         { first the (JVM) namespace }
-         if Assigned(Namespace) then
-           begin
-             PPUFile.PutString(Namespace^);
-             PPUFile.WriteEntry(IBJVMNamespace);
-           end;
 
          { the unitname }
          PPUFile.PutString(RealModuleName^);

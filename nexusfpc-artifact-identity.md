@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 41 |
+| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 43 |
 | Compiler package metadata | `.nxp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -49,6 +49,17 @@ STABS removal advances the compatibility revision from 40 to 41. Serialized
 assembly item/section/list kinds and saved compiler settings no longer contain
 STABS members. Rebuild cached units and package SDKs; `NXU208` and `NXP004`
 remain unchanged. Debug information uses DWARF.
+
+Java/JVM and SDCC cleanup advances the long compatibility revision from 41 to
+42. Java object kinds, synthetic method kinds, procedure/object options,
+JVM namespace records, field external names, and retired target switches are
+removed from compiler metadata. Rebuild cached units and package SDKs; the
+`NXU208` header and `NXP004` container remain unchanged.
+
+XCOFF resource removal advances the long compatibility revision from 42 to 43.
+The retired resource format is removed from compiler target enums, and AIX
+machine kinds are removed from the resource library. Rebuild cached units and
+package SDKs; `NXU208` and `NXP004` remain unchanged.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`

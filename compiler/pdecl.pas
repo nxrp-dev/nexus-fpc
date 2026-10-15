@@ -599,8 +599,7 @@ implementation
                    objecttype:=odt_interfacecom;
                  it_interfacecorba:
                    objecttype:=odt_interfacecorba;
-                 it_interfacejava:
-                   objecttype:=odt_interfacejava;
+
                end;
              _DISPINTERFACE :
                objecttype:=odt_dispinterface;
@@ -900,8 +899,7 @@ implementation
                     end;
                   if isunique then
                     begin
-                      if is_objc_class_or_protocol(hdef) or
-                         is_java_class_or_interface(hdef) then
+                      if is_objc_class_or_protocol(hdef) then
                         Message(parser_e_unique_unsupported);
 
                       if is_object(hdef) or
@@ -1105,8 +1103,7 @@ implementation
                     { change a forward and external class declaration into
                       formal external definition, so the compiler does not
                       expect an real definition later }
-                    if is_objc_class_or_protocol(hdef) or
-                       is_java_class_or_interface(hdef) then
+                    if is_objc_class_or_protocol(hdef) then
                       finalize_class_external_status(TObjectDef(hdef));
 
                     { Build VMT indexes, skip for type renaming and forward classes }

@@ -134,14 +134,12 @@
             ,ar_mpw_ar
             ,ar_gnu_ar_scripted
             ,ar_gnu_gar
-            ,ar_sdcc_sdar
-            ,ar_sdcc_sdar_scripted
        );
 
        TRes = (res_none
             ,res_gnu_windres,res_watcom_wrc_os2
             ,res_m68k_palmos,res_m68k_mpw
-            ,res_powerpc_mpw,res_elf,res_xcoff
+            ,res_powerpc_mpw,res_elf
             ,res_win64_gorc, res_macho, res_ext
        );
 
@@ -149,7 +147,7 @@
             ,res_single_file,res_no_compile);
 
        TDbg = (dbg_none
-            ,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
+            ,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5
        );
 
        TScriptType = (script_none

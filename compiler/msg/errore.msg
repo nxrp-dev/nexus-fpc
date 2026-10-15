@@ -1370,12 +1370,12 @@ parser_e_no_objc_published=03271_E_Objective-C classes cannot have published sec
 parser_f_need_objc=03272_F_This module requires an Objective-C mode switch to be compiled
 % This error indicates the use of Objective-C language features without an Objective-C mode switch
 % active. Enable one via the -M command line switch, or the {\$modeswitch x} directive.
-parser_e_must_use_override=03273_E_Inherited methods can only be overridden in Objective-C and Java, add "override" (inherited method defined in $1)
-parser_h_should_use_override=03274_H_Inherited methods can only be overridden in Objective-C and Java, add "override" (inherited method defined in $1).
-% It is not possible to \var{reintroduce} methods in Objective-C or Java like in Object Pascal. Methods with the same
+parser_e_must_use_override=03273_E_Inherited methods can only be overridden in Objective-C, add "override" (inherited method defined in $1)
+parser_h_should_use_override=03274_H_Inherited methods can only be overridden in Objective-C, add "override" (inherited method defined in $1).
+% It is not possible to \var{reintroduce} methods in Objective-C like in Object Pascal. Methods with the same
 % name always map to the same virtual method entry. In order to make this clear in the source code,
 % the compiler always requires the \var{override} directive to be specified when implementing overriding
-% Objective-C or Java methods in Pascal. If the implementation is external, this rule is relaxed because Objective-C and Java
+% Objective-C methods in Pascal. If the implementation is external, this rule is relaxed because Objective-C
 % do not have any \var{override}-style keyword (since it's the default and only behaviour in these languages),
 % which makes it hard for automated header conversion tools to include it everywhere.
 % The type in which the inherited method is defined is explicitly mentioned, because this may either
@@ -1384,8 +1384,8 @@ parser_e_objc_message_name_changed=03275_E_Message name "$1" in inherited class 
 % An overriding Objective-C method cannot have a different message name than an inherited method. The reason
 % is that these message names uniquely define the message to the Objective-C runtime, which means that
 % giving them a different message name breaks the ``override'' semantics.
-parser_e_unique_unsupported=03276_E_It is not yet possible to make unique copies of Objective-C or Java types
-% Duplicating an Objective-C or Java type using \var{type x = type y;} is not yet supported. You may be able to
+parser_e_unique_unsupported=03276_E_It is not yet possible to make unique copies of Objective-C types
+% Duplicating an Objective-C type using \var{type x = type y;} is not yet supported. You may be able to
 % obtain the desired effect using \var{type x = objcclass(y) end;} resp.{} \var{type x = class(y) end;} instead.
 parser_e_no_category_as_types=03277_E_Objective-C categories and Object Pascal class helpers cannot be used as types
 % It is not possible to declare a variable as an instance of an Objective-C
@@ -1467,8 +1467,8 @@ parser_f_no_generic_inside_generic=03297_F_Declaration of generic inside another
 % Since generics are implemented by recording tokens, it is not possible to
 % have declaration of a generic (type or method) inside another generic.
 parser_e_forward_intf_declaration_must_be_resolved=03298_E_Forward declaration "$1" must be resolved before a class can conform to or implement it
-% An Objective-C protocol or Java Interface must be fully defined before classes can conform to it.
-% This error occurs in the following situation (example for Objective-C, but the same goes for Java interfaces):
+% An Objective-C protocol must be fully defined before classes can conform to it.
+% This error occurs in the following situation (Objective-C example):
 % \begin{verbatim}
 %  Type MyProtocol = objcprotoocl;
 %       ChildClass = Class(NSObject,MyProtocol)
@@ -1529,21 +1529,12 @@ parser_e_no_typed_const=03317_E_Typed constants are not allowed here, only forma
 % Java interfaces define a namespace in which formal constant can be defined,
 % but since they define no storage it is not possible to define typed constants
 % in them (those are more or less the same as initialised class fields).
-parser_e_java_no_inherited_constructor=03318_E_Constructors are not automatically inherited in the JVM; explicitly add a constructor that calls the inherited one if you need it
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% For compatibility with external Java code, FPC does the same. If you require access to the same
-% constructors in a child class, define them in the child class and call the inherited one from
-% there.
 parser_d_internal_parser_string=03319_D_Parsing internally generated code: $1
 % The compiler sometimes internally constructs Pascal code that is subsequently
 % injected into the program. These messages display such code, in order to help
 % with debugging errors in them.
 parser_e_feature_unsupported_for_vm=03320_E_This language feature is not supported on managed VM targets
 % Certain language features are not supported on targets that are managed virtual machines.
-parser_e_jvm_invalid_virtual_constructor_call=03321_E_Calling a virtual constructor for the current instance inside another constructor is not possible on the JVM target
-% The JVM does not natively support virtual constructor. Unfortunately, we are not aware of a way to
-% emulate them in a way that makes it possible to support calling virtual constructors
-% for the current instance inside another constructor.
 parser_e_method_lower_visibility=03322_E_Overriding method "$1" cannot have a lower visibility ($2) than in parent class $3 ($4)
 % The JVM does not allow lowering the visibility of an overriding method.
 parser_e_nostackframe_without_assembler=03323_E_Procedure/Function declared with call option NOSTACKFRAME but without ASSEMBLER
@@ -2114,9 +2105,6 @@ type_w_range_check_error_bounds=04110_W_Range check error while evaluating const
 % The constants are outside their allowed range.
 type_e_type_not_allowed_for_default=04111_E_This type is not supported for the Default() intrinsic
 % Some types like for example Text and File Of X are not supported by the Default intrinsic.
-type_e_java_class_method_not_static_virtual=04112_E_JVM virtual class methods cannot be static
-% Virtual class methods cannot be static when targeting the JVM platform, because
-% the self pointer is required for correct dispatching.
 type_e_invalid_final_assignment=04113_E_Final (class) fields can only be assigned in their class' (class) constructor
 % It is only possible to assign a value to a final (class) field inside a (class) constructor of its owning class.
 type_e_no_managed_formal_assign_typecast=04114_E_It is not possible to typecast untyped parameters on managed platforms, simply assign a value to them instead.
@@ -2446,13 +2434,6 @@ sym_w_library_overload=05084_W_Possible library conflict: symbol "$1" from libra
 % the 'libname' part is only a hint, funcname might also be loaded
 % by another library. This warning appears if 'funcname' is used twice
 % with two different library names.
-sym_e_duplicate_id_create_java_constructor=05085_E_Cannot add implicit constructor 'Create' because identifier already used by "$1"
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% However, if a class does not explicitly declare at least one constructor, the compiler is
-% required to add a public, parameterless constructor. In Java, constructors are nameless,
-% but in FPC they are all called ``Create''. Therefore, if you do not add a constructor to
-% a Java class and furthermore use the ``Create'' identifier for another entity (e.g., a field,
-% or a parameterless method), the compiler cannot satisfy this requirement.
 sym_e_no_matching_inherited_parameterless_constructor=05086_E_Cannot generate default constructor for class, because parent has no parameterless constructor
 % Java does not automatically add inherited constructors to child classes, so that they can be hidden.
 % However, if a class does not explicitly declare at least one constructor, the compiler is
@@ -4071,16 +4052,11 @@ A*2CI<x>_Select instruction set on ARM: ARM or THUMB
 4*2CT<x>_Target-specific code generation options
 p*2CT<x>_Target-specific code generation options
 P*2CT<x>_Target-specific code generation options
-J*2CT<x>_Target-specific code generation options
 A*2CT<x>_Target-specific code generation options
 W*2CT<x>_Target-specific code generation options
-J*3CTautogetterprefix=X_  Automatically create getters for properties with prefix X (empty string disables)
-J*3CTautosetterprefix=X_  Automatically create setters for properties with prefix X (empty string disables)
 8*3CTcld_                 Emit a CLD instruction before using the x86 string instructions
 3*3CTcld_                 Emit a CLD instruction before using the x86 string instructions
 4*3CTcld_                 Emit a CLD instruction before using the x86 string instructions
-J*3CTlowercaseprocstart_  Lowercase the first character of procedure/function/method names
-J*2Cv_Var/out parameter copy-out checking
 A*2CV<x>_Set section threadvar model to <x>
 **2CX_Create also smartlinked library
 **1d<x>_Defines the symbol <x>
@@ -4281,8 +4257,6 @@ a*2Tios_iOS
 a*2Tlinux_Linux
 a*2Twin64_Windows 64
 # jvm targets
-J*2Tandroid_Android
-J*2Tjava_Java
 # loongarch64 targets
 l*2Tlinux_Linux
 # mipsel targets
@@ -4461,7 +4435,7 @@ W*2XlS<x>_LLVM utilities suffix (e.g. -17 in case llvm-mc is called llvm-mc-17)
 **2XLA_Define library substitutions for linking
 **2XLD_Exclude default order of standard libraries
 **2XLO_Define order of library linking
-**2XLL_Link using ld.lld GNU compatible LLVM linker (Linux and some BSD targets, experimental)
+**2XLL_Use LLVM linker (default on Linux and Darwin; -XLL- selects ld)
 **2Xm_Generate link map
 **2XM<x>_Set the name of the 'main' program routine (default is 'main')
 F*2Xp<x>_First search for the compiler binary in the directory <x>

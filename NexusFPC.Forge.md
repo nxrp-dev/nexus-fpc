@@ -49,8 +49,8 @@ The former FPC internal linker and its executable-image writers have been
 removed. All retained targets use external linking. `-Xi`, `-Xi+` and `-Xe-`
 are rejected; `-Xe` and `-Xi-` retain their external-linking meaning.
 Object-file writers and Windows import-library generation remain available.
-This removal does not change external linker selection: use `-XLL` to select
-LLD on Linux and Darwin.
+Linux and Darwin select LLD by default (`ld.lld` and `ld64.lld` respectively).
+`-XLL` explicitly selects that default; `-XLL-` retains the explicit `ld` override.
 
 OMF object/library readers and writers, Watcom OMF archivers, and the old OMF
 CodeView debug path are removed. `-Aomf`, `-gm` and `-godwarfomflinnum` are no
@@ -62,10 +62,24 @@ The OMF switch checks use the same three arguments as the linker checks below:
 STABS/STABX generation, register tables, and runtime readers are removed.
 `-gs`, `-gp`, and `-gostabsabsincludes` are rejected. Use `-g` or
 `-gw3`/`-gw4`/`-gw5` for DWARF, and `-gl` for runtime source locations.
-The current NXU long compatibility revision is 41; rebuild cached units and SDKs.
+The current NXU long compatibility revision is 43; rebuild cached units and SDKs.
 Validate with `bash tests/switches/Run-NXRemovedSTABSTests.sh <compiler> <rtl-units> <output>`.
 Mach-O debug-map constants and classification of foreign ELF debug sections
 remain for object-format interoperability; they do not enable STABS generation.
+
+Java/JVM compiler types, synthetic methods, namespace records, and naming
+switches are removed, as are the SDCC `sdar` archive drivers. Android JNI
+initialization and native Objective-C/C++ support remain. `{$namespace ...}`,
+`-CTautogetterprefix=...`, `-CTautosetterprefix=...`, and
+`-CTlowercaseprocstart` are retired. Pascal unit scopes still use `{$namespaces ...}`
+and `-FN`. Validate the retired options and native class behavior with
+`bash tests/switches/Run-NXRemovedJavaTests.sh <compiler> <rtl-units> <output>`.
+
+XCOFF resource output and AIX-specific resource records are removed from the
+compiler, `fpcres`, and `fcl-res`. `fpcres -of xcoff` is rejected. ELF, Windows
+COFF, Mach-O, RES, and external resource support remain available. Run
+`bash tests/resource-formats/Run-NXRemovedXCOFFTests.sh <fpcres> <output>`
+to check retired output rejection and retained resource object formats.
 
 On a Linux host, check the removed options and native LLVM linking with:
 

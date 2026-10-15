@@ -99,8 +99,6 @@ begin
     IMAGE_FILE_MACHINE_I386  : fMachineType:=cmti386;
     IMAGE_FILE_MACHINE_ARM   : fMachineType:=cmtarm;
     IMAGE_FILE_MACHINE_AMD64 : fMachineType:=cmtx8664;
-    IMAGE_FILE_MACHINE_POWERPC32_AIX : fMachineType:=cmtppc32aix;
-    IMAGE_FILE_MACHINE_POWERPC64_AIX : fMachineType:=cmtppc64aix;
     else
       begin
         fOppositeEndianess:=true;
@@ -108,8 +106,6 @@ begin
           IMAGE_FILE_MACHINE_I386  : fMachineType:=cmti386;
           IMAGE_FILE_MACHINE_ARM   : fMachineType:=cmtarm;
           IMAGE_FILE_MACHINE_AMD64 : fMachineType:=cmtx8664;
-          IMAGE_FILE_MACHINE_POWERPC32_AIX : fMachineType:=cmtppc32aix;
-          IMAGE_FILE_MACHINE_POWERPC64_AIX : fMachineType:=cmtppc64aix;
           else exit;
         end;
       end;

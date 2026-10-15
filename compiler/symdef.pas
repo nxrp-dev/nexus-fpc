@@ -337,7 +337,6 @@ interface
           objname,
           objrealname    : PShortString;
           { for C++ classes: name of the library this class is imported from }
-          { for Java classes/records: package name }
           import_lib     : PShortString;
           SymTable       : TSymTable;
           cloneddef      : TAbstractRecordDef;
@@ -362,8 +361,6 @@ interface
           function search_enumerator_get: TProcDef; virtual;
           function search_enumerator_move: TProcDef; virtual;
           function search_enumerator_current: TSym; virtual;
-          { JVM }
-          function jvm_full_typename(with_package_name: boolean): string;
           { check if the symtable contains a float field }
           function contains_float_field : boolean;
           { check if the symtable contains a field that spans an aword boundary }
@@ -500,9 +497,8 @@ interface
           iidstr         : PShortString;
           { store implemented interfaces defs and name mappings }
           ImplementedInterfaces : TFPObjectList;
-          { number of abstract methods (used by JVM target to determine whether
-            or not the class should be marked as abstract: must be done if 1 or
-            more abstract methods) }
+
+          { Number of abstract methods, including inherited methods. }
           abstractcnt    : LongInt;
           writing_class_record_dbginfo,
           { a class of this type has been created in this module }
@@ -962,12 +958,7 @@ interface
           { aliases to fields only required when a function is implemented in
             the current unit }
           property resultname: PShortString read GetResultName write SetResultName;
-          { temporary reference to structure containing copies of all local
-            variables and parameters accessed by nested routines; reference to
-            this structure is passed as "parent frame pointer" on targets that
-            lack this concept (at least JVM and LLVM); no need to save to/
-            restore from ppu, since nested routines are always in the same
-            unit }
+
           property parentfpstruct: TSym read GetParentFPStruct write SetParentFPStruct;
           { pointer to parentfpstruct's type (not yet valid during parsing, so
             cannot be used for $parentfp parameter) (no need to save to ppu) }
@@ -1286,28 +1277,6 @@ interface
 
 
 
-       { Java base types }
-       { java.lang.Object }
-       java_jlobject             : TObjectDef;
-       { java.lang.Throwable }
-       java_jlthrowable          : TObjectDef;
-       { FPC base type for records }
-       java_fpcbaserecordtype    : TObjectDef;
-       { java.lang.String }
-       java_jlstring             : TObjectDef;
-       { java.lang.Enum }
-       java_jlenum               : TObjectDef;
-       { java.util.EnumSet }
-       java_juenumset            : TObjectDef;
-       { java.util.BitSet }
-       java_jubitset             : TObjectDef;
-       { FPC java implementation of ansistrings }
-       java_ansistring           : TObjectDef;
-       { FPC java implementation of shortstrings }
-       java_shortstring          : TObjectDef;
-       { FPC java procvar base class }
-       java_procvarbase          : TObjectDef;
-
        { x86 vector types }
        x86_m64type,
        x86_m128type,
@@ -1342,8 +1311,7 @@ interface
     function is_classhelper(def: TDef): boolean;
     function is_class_or_interface(def: TDef): boolean;
     function is_class_or_interface_or_objc(def: TDef): boolean;
-    function is_class_or_interface_or_objc_or_java(def: TDef): boolean;
-    function is_class_or_interface_or_dispinterface_or_objc_or_java(def: TDef): boolean;
+    function is_class_or_interface_or_dispinterface_or_objc(def: TDef): boolean;
     function is_class_or_interface_or_object(def: TDef): boolean;
     function is_class_or_interface_or_dispinterface(def: TDef): boolean;
     function is_implicit_pointer_object_type(def: TDef): boolean;
@@ -1351,11 +1319,6 @@ interface
     function is_implicit_array_pointer(def: TDef): boolean;
     function is_class_or_object(def: TDef): boolean;
     function is_record(def: TDef): boolean;
-
-    function is_javaclass(def: TDef): boolean;
-    function is_javaclassref(def: TDef): boolean;
-    function is_javainterface(def: TDef): boolean;
-    function is_java_class_or_interface(def: TDef): boolean;
 
     procedure loadobjctypes;
     procedure maybeloadcocoatypes;
@@ -4726,11 +4689,6 @@ implementation
         objname:=StringDup(upper(n));
         objrealname:=StringDup(n);
         objectoptions:=[];
-        if Assigned(CurrentModule.namespace) then
-          begin
-            import_lib:=StringDup(CurrentModule.namespace^);
-            replace(import_lib^,'.','/');
-          end;
       end;
 
     constructor TAbstractRecordDef.ppuload(dt:TDefTyp;ppufile:TCompilerPPUFile);
@@ -4741,7 +4699,7 @@ implementation
         objrealname:=ppufile.GetPShortString;
         objname:=StringDup(upper(objrealname^));
         import_lib:=ppufile.GetPShortString;
-        { only used for external C++ classes and Java classes/records }
+
         if (import_lib^='') then
           StringDispose(import_lib);
         ppufile.GetSet(TPPUSet4(objectoptions));
@@ -5034,47 +4992,6 @@ implementation
             result:=sym;
             exit;
           end;
-      end;
-
-
-    function TAbstractRecordDef.jvm_full_typename(with_package_name: boolean): string;
-      var
-        st: TSymTable;
-        enclosingdef: TDef;
-      begin
-        if typ=objectdef then
-          result:=TObjectDef(self).objextname^
-        else if Assigned(typesym) then
-          result:=typesym.realname
-        { have to generate anonymous nested type in current unit/class/record }
-        else
-          InternalError(2011032601);
-
-        { in case of specializations, add some extras to prevent name conflicts
-          with nested classes }
-        if df_specialization in defoptions then
-          result:='$'+result+'$specialization$';
-
-        st:=owner;
-        while Assigned(st) and
-              (st.symtabletype in [objectsymtable,recordsymtable,localsymtable]) do
-          begin
-            { nested classes are named as "OuterClass$InnerClass" }
-            enclosingdef:=TDef(st.defowner);
-            if enclosingdef.typ=procdef then
-              result:=result+TProcDef(enclosingdef).procsym.realname+'$$'+ToStr(TProcDef(enclosingdef).procsym.symid)+'$'
-            else if enclosingdef.typ=objectdef then
-              result:=TObjectDef(enclosingdef).objextname^+'$'+result
-            else if Assigned(enclosingdef.typesym) then
-              result:=enclosingdef.typesym.realname+'$'+result
-            else
-              InternalError(2011060305);
-            st:=enclosingdef.owner;
-          end;
-
-        if with_package_name and
-           Assigned(import_lib) then
-          result:=import_lib^+'/'+result;
       end;
 
 
@@ -7811,7 +7728,7 @@ implementation
         if objecttype in [odt_interfacecorba,odt_interfacecom,odt_dispinterface] then
           prepareguid;
         { setup implemented interfaces }
-        if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava] then
+        if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
           ImplementedInterfaces:=TFPObjectList.Create(true)
         else
           ImplementedInterfaces:=nil;
@@ -7869,7 +7786,7 @@ implementation
            end;
 
          { load implemented interfaces }
-         if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava] then
+         if objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_objccategory] then
            begin
              ImplementedInterfaces:=TFPObjectList.Create(true);
              implintfcount:=ppufile.GetLongInt;
@@ -7907,7 +7824,7 @@ implementation
          if mf_system_unit in CurrentModule.moduleflags then
            begin
              if (childof=nil) and
-                (objecttype in [odt_class,odt_javaclass]) and
+                (objecttype in [odt_class]) and
                 (objname^='TOBJECT') then
                class_tobject:=self;
              if (childof=nil) and
@@ -7917,30 +7834,6 @@ implementation
                 else
                 if (objname^='IDISPATCH') then
                   interface_idispatch:=self;
-             if (objecttype=odt_javaclass) and
-                not(oo_is_formal in objectoptions) then
-               begin
-                 if (objname^='JLOBJECT') then
-                   java_jlobject:=self
-                 else if (objname^='JLTHROWABLE') then
-                   java_jlthrowable:=self
-                 else if (objname^='FPCBASERECORDTYPE') then
-                   java_fpcbaserecordtype:=self
-                 else if (objname^='JLSTRING') then
-                   java_jlstring:=self
-                 else if (objname^='ANSISTRINGCLASS') then
-                   java_ansistring:=self
-                 else if (objname^='SHORTSTRINGCLASS') then
-                   java_shortstring:=self
-                 else if (objname^='JLENUM') then
-                   java_jlenum:=self
-                 else if (objname^='JUENUMSET') then
-                   java_juenumset:=self
-                 else if (objname^='FPCBITSET') then
-                   java_jubitset:=self
-                 else if (objname^='FPCBASEPROCVARTYPE') then
-                   java_procvarbase:=self;
-               end;
            end;
          if (childof=nil) and
             (objecttype=odt_objcclass) and
@@ -8272,7 +8165,7 @@ implementation
         { initially has the same number of abstract methods as the parent }
         abstractcnt:=c.abstractcnt;
         { add the data of the ancestor class/object }
-        if (objecttype in [odt_class,odt_object,odt_objcclass,odt_javaclass]) then
+        if (objecttype in [odt_class,odt_object,odt_objcclass]) then
           begin
             TObjectSymTable(SymTable).DataSize:=TObjectSymTable(SymTable).DataSize+TObjectSymTable(c.SymTable).DataSize;
             { inherit recordalignment }
@@ -8301,7 +8194,7 @@ implementation
 
    procedure TObjectDef.insertvmt;
      begin
-        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
+        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
           exit;
         if (oo_has_vmt in objectoptions) then
           InternalError(2020100816)
@@ -8327,7 +8220,7 @@ implementation
 
    function TObjectDef.vmt_offset: asizeint;
      begin
-        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
+        if objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol] then
           result:=0
         else if (TObjectSymTable(SymTable).usefieldalignment<>bit_alignment) then
           result:=TFieldVarSym(vmt_field).fieldoffset
@@ -8338,7 +8231,7 @@ implementation
 
    procedure TObjectDef.check_forwards;
      begin
-        if not(objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcprotocol,odt_interfacejava]) then
+        if not(objecttype in [odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcprotocol]) then
           inherited;
         if (oo_is_forward in objectoptions) then
           begin
@@ -8383,7 +8276,7 @@ implementation
 
     function TObjectDef.size : asizeint;
       begin
-        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava] then
+        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
           result:=voidpointertype.size
         else
           result:=TObjectSymTable(SymTable).DataSize;
@@ -8392,7 +8285,7 @@ implementation
 
     function TObjectDef.alignment:shortint;
       begin
-        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava] then
+        if objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper] then
           alignment:=voidpointertype.alignment
         else
           alignment:=TObjectSymTable(SymTable).recordalignment;
@@ -8412,10 +8305,6 @@ implementation
           vmtmethodoffset:=0;
         odt_interfacecom,odt_interfacecorba,odt_dispinterface:
           vmtmethodoffset:=index*voidcodepointertype.size;
-        odt_javaclass,
-        odt_interfacejava:
-          { invalid }
-          vmtmethodoffset:=-1;
         else
           { the +2*sizeof(pint) is size and -size }
 {$ifdef WITHDMT}
@@ -8488,9 +8377,7 @@ implementation
                  childof.NeedsInitTable);
             odt_cppclass,
             odt_objcclass,
-            odt_objcprotocol,
-            odt_javaclass,
-            odt_interfacejava:
+            odt_objcprotocol:
               NeedsInitTable:=false;
             else
               InternalError(200108267);
@@ -9264,7 +9151,7 @@ implementation
         result:=
           Assigned(def) and
           (def.typ=objectdef) and
-          ((TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface,odt_interfacecorba,odt_interfacejava,odt_objcprotocol]) or
+          ((TObjectDef(def).objecttype in [odt_interfacecom,odt_dispinterface,odt_interfacecorba,odt_objcprotocol]) or
            is_objccategory(def));
       end;
 
@@ -9413,21 +9300,12 @@ implementation
       end;
 
 
-    function is_class_or_interface_or_objc_or_java(def: TDef): boolean;
+    function is_class_or_interface_or_dispinterface_or_objc(def: TDef): boolean;
       begin
         result:=
           Assigned(def) and
           (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava]);
-      end;
-
-
-    function is_class_or_interface_or_dispinterface_or_objc_or_java(def: TDef): boolean;
-      begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava]);
+          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol]);
       end;
 
 
@@ -9454,7 +9332,7 @@ implementation
         result:=
           Assigned(def) and
           (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava]);
+          (TObjectDef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper]);
       end;
 
     function is_implicit_array_pointer(def: TDef): boolean;
@@ -9475,38 +9353,6 @@ implementation
         result:=
           Assigned(def) and
           (def.typ=recorddef);
-      end;
-
-    function is_javaclass(def: TDef): boolean;
-      begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_javaclass);
-      end;
-
-    function is_javaclassref(def: TDef): boolean;
-      begin
-        is_javaclassref:=
-          Assigned(def) and
-          (def.typ=classrefdef) and
-          is_javaclass(TClassRefDef(def).pointeddef);
-      end;
-
-    function is_javainterface(def: TDef): boolean;
-      begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype=odt_interfacejava);
-      end;
-
-    function is_java_class_or_interface(def: TDef): boolean;
-      begin
-        result:=
-          Assigned(def) and
-          (def.typ=objectdef) and
-          (TObjectDef(def).objecttype in [odt_javaclass,odt_interfacejava]);
       end;
 
     procedure loadobjctypes;
@@ -9713,18 +9559,6 @@ implementation
        objc_fastenumerationstate:=nil;
 
 
-
-       { Java base types }
-       java_jlobject:=nil;
-       java_jlthrowable:=nil;
-       java_fpcbaserecordtype:=nil;
-       java_jlstring:=nil;
-       java_jlenum:=nil;
-       java_juenumset:=nil;
-       java_jubitset:=nil;
-       java_ansistring:=nil;
-       java_shortstring:=nil;
-       java_procvarbase:=nil;
 
        { x86 vector types }
        x86_m64type:=nil;

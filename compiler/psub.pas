@@ -526,28 +526,6 @@ implementation
                           CCallNode.createintern('fpc_help_constructor',para)));
                     end
                 else
-                  if is_javaclass(CurrentStructDef) then
-                    begin
-                      if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) and
-                         not CurrentProcInfo.ConstructorCallingConstructor then
-                       begin
-                         { call inherited constructor }
-                         if is_javaclass(CurrentStructDef) then
-                           srsym:=search_struct_member_no_helper(TObjectDef(CurrentStructDef).childof,'CREATE')
-                         else
-                           srsym:=search_struct_member_no_helper(java_fpcbaserecordtype,'CREATE');
-                         if Assigned(srsym) and
-                            (srsym.typ=procsym) then
-                           begin
-                             call:=CCallNode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[cnf_inherited],nil);
-                             exclude(TCallNode(call).callnodeflags,cnf_return_value_used);
-                             addstatement(newstatement,call);
-                           end
-                         else
-                           InternalError(2011010312);
-                       end;
-                    end
-                else
                   if not is_record(CurrentStructDef) and
                      not (
                             is_objectpascal_helper(CurrentStructDef) and
@@ -670,10 +648,6 @@ implementation
                       addstatement(newstatement,
                           CCallNode.createintern('fpc_help_destructor',para));
                     end
-                else if is_javaclass(CurrentStructDef) then
-                  begin
-                    { nothing to do }
-                  end
                 else
                   InternalError(200305105);
               end;

@@ -1404,21 +1404,12 @@ parser_e_no_typed_const=03317_E_Typed constants are not allowed here, only forma
 % Java interfaces define a namespace in which formal constant can be defined,
 % but since they define no storage it is not possible to define typed constants
 % in them (those are more or less the same as initialised class fields).
-parser_e_java_no_inherited_constructor=03318_E_Constructors are not automatically inherited in the JVM; explicitly add a constructor that calls the inherited one if you need it
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% For compatibility with external Java code, FPC does the same. If you require access to the same
-% constructors in a child class, define them in the child class and call the inherited one from
-% there.
 parser_d_internal_parser_string=03319_D_Parsing internally generated code: $1
 % The compiler sometimes internally constructs Pascal code that is subsequently
 % injected into the program. These messages display such code, in order to help
 % with debugging errors in them.
 parser_e_feature_unsupported_for_vm=03320_E_This language feature is not supported on managed VM targets
 % Certain language features are not supported on targets that are managed virtual machines.
-parser_e_jvm_invalid_virtual_constructor_call=03321_E_Calling a virtual constructor for the current instance inside another constructor is not possible on the JVM target
-% The JVM does not natively support virtual constructor. Unforunately, we are not aware of a way to
-% emulate them in a way that makes it possible to support calling virtual constructors
-% for the current instance inside another constructor.
 parser_e_method_lower_visibility=03322_E_Overriding method "$1" cannot have a lower visibility ($2) than in parent class $3 ($4)
 % The JVM does not allow lowering the visibility of an overriding method.
 parser_e_nostackframe_without_assembler=03323_E_Procedure/Function declared with call option NOSTACKFRAME but without ASSEMBLER
@@ -1877,9 +1868,6 @@ type_w_range_check_error_bounds=04110_W_range check error while evaluating const
 % The constants are outside their allowed range.
 type_e_type_not_allowed_for_default=04111_E_This type is not supported for the Default() intrinsic
 % Some types like for example Text and File Of X are not supported by the Default intrinsic.
-type_e_java_class_method_not_static_virtual=04112_E_JVM virtual class methods cannot be static
-% Virtual class methods cannot be static when targeting the JVM platform, because
-% the self pointer is required for correct dispatching.
 type_e_invalid_final_assignment=04113_E_Final (class) fields can only be assigned in their class' (class) constructor
 % It is only possible to assign a value to a final (class) field inside a (class) constructor of its owning class.
 type_e_no_managed_formal_assign_typecast=04114_E_It is not possible to typecast untyped parameters on managed platforms, simply assign a value to them instead.
@@ -2180,13 +2168,6 @@ sym_w_library_overload=05084_W_Possible library conflict: symbol "$1" from libra
 % the 'libname' part is only a hint, funcname might also be loaded
 % by another library. This warning appears if 'funcname' is used twice
 % with two different library names.
-sym_e_duplicate_id_create_java_constructor=05085_E_Cannot add implicit constructor 'Create' because identifier already used by "$1"
-% Java does not automatically add inherited constructors to child classes, so that they can be hidden.
-% However, if a class does not explicitly declare at least one constructor, the compiler is
-% required to add a public, parameterless constructor. In Java, constructors are nameless,
-% but in FPC they are all called ``Create''. Therefore, if you do not add a constructor to
-% a Java class and furthermore use the ``Create'' identifier for another entity (e.g., a field,
-% or a parameterless method), the compiler cannot satisfy this requirement.
 sym_e_no_matching_inherited_parameterless_constructor=05086_E_Cannot generate default constructor for class, because parent has no parameterless constructor
 % Java does not automatically add inherited constructors to child classes, so that they can be hidden.
 % However, if a class does not explicitly declare at least one constructor, the compiler is

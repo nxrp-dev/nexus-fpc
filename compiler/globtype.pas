@@ -146,8 +146,6 @@ interface
          cs_openstring,
          { macpas specific}
          cs_external_var, cs_externally_visible,
-         { jvm specific }
-         cs_check_var_copyout,
          cs_zerobasedstrings,
          { i8086 specific }
          cs_force_far_calls,
@@ -247,14 +245,6 @@ interface
 
        { global target-specific switches }
        TTargetSwitch = (ts_none,
-         { when automatically generating getters/setters for properties, use
-           these strings as prefixes for the generated getters/setter names }
-         ts_auto_getter_prefix,
-         ts_auto_setter_predix,
-         { lowercase the first character of routine names, used to generate
-           names that are compliant with Java coding standards from code
-           written according to Delphi coding standards }
-         ts_lowercase_proc_start,
          { emit a CLD instruction before using the x86 string instructions }
          ts_cld
        );
@@ -377,9 +367,6 @@ interface
 
        TargetSwitchStr : array[TTargetSwitch] of TTargetSwitchInfo = (
          (name: '';                    hasvalue: false; isglobal: true ; define: ''),
-         (name: 'AUTOGETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
-         (name: 'AUTOSETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
-         (name: 'LOWERCASEPROCSTART';  hasvalue: false; isglobal: true ; define: ''),
          (name: 'CLD';                 hasvalue: false; isglobal: true ; define: 'FPC_ENABLED_CLD')
        );
 
@@ -439,9 +426,7 @@ interface
          m_advanced_records,    { advanced record syntax with visibility sections, methods and properties }
          m_isolike_unary_minus, { unary minus like in iso pascal: same precedence level as binary minus/plus }
          m_systemcodepage,      { use system codepage as compiler codepage by default, emit ansistrings with system codepage }
-         m_final_fields,        { allows declaring fields as "final", which means they must be initialised
-                                  in the (class) constructor and are constant from then on (same as final
-                                  fields in Java) }
+         m_final_fields,
          m_default_unicodestring, { compiler-wide UnicodeString/UnicodeChar default }
          m_type_helpers,        { allows the declaration of "type helper" for all supported types
                                   (primitive types, records, classes, interfaces) }
@@ -483,8 +468,7 @@ interface
        { interface types }
        TInterfaceTypes = (
          it_interfacecom,
-         it_interfacecorba,
-         it_interfacejava
+         it_interfacecorba
        );
 
        { currently parsed block type }

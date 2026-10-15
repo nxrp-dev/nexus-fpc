@@ -74,3 +74,8 @@ Run with stock FPC 3.2.2 and with the corrected Nexus compiler, recording the
 compiler version, target and results. Repeat the runtime fixture with `-O1` as
 a control. If testing a newer upstream compiler, record its exact revision too;
 do not infer its behavior from the 3.2.2 result or matching source alone.
+
+`removed_java_native.pas` exercises retained constructor inheritance, overloads,
+CORBA interfaces, and virtual/final methods after retiring JVM compiler support.
+`removed_sdcc_registration.pas` links against matching compiler units to check
+that the retained archive drivers register and no SDCC archive command remains.

@@ -125,11 +125,8 @@ interface
           procedure order_parameters;
        protected
           pushedparasize : LongInt;
-          { Objective-C support: force the call node to call the routine with
-            this name rather than the name of symtableprocentry (don't store
-            to ppu, is set while processing the node). Also used on the JVM
-            target for calling virtual methods, as this is name-based and not
-            based on VMT entry locations }
+
+          { Objective-C call target override; resolved during node processing. }
           foverrideprocnamedef: TProcDef;
           property overrideprocnamedef: TProcDef read getoverrideprocnamedef;
        public
@@ -2623,8 +2620,7 @@ implementation
             begin
               if (methodpointer.resultdef.typ=classrefdef) or
                  (cnf_new_call in callnodeflags) then
-                if not is_javaclass(TDef(procdefinition.owner.defowner)) then
-                  begin
+                begin
                     if (cnf_new_call in callnodeflags) then
                       { old-style object: push 0 as self }
                       selftree:=CPointerConstNode.create(0,voidpointertype)
@@ -2639,10 +2635,6 @@ implementation
                           end;
                       end;
                   end
-                else
-                 { special handling for Java constructors, handled in
-                   tjvmcallnode.extra_pre_call_code }
-                  selftree:=CNothingNode.create
               else
                 begin
                   if methodpointer.nodetype=typen then
@@ -5054,7 +5046,7 @@ implementation
              po_interrupt,po_iocheck,po_assembler,po_msgstr,po_msgint,po_exports,po_external,po_overload,
              po_nostackframe,po_has_mangledname,po_has_public_name,po_forward,po_global,
              po_inline,po_compilerproc,po_has_importdll,po_has_importname,po_kylixlocal,po_dispid,po_delphi_nested_cc,
-             po_rtlproc,po_ignore_for_overload_resolution,po_auto_raised_visibility])=[]) then
+             po_rtlproc])=[]) then
            begin
              { check parameters for side effects }
              para:=TCallParaNode(left);
@@ -5136,9 +5128,7 @@ implementation
              doinlinesimplify(TNode(callcleanupblock));
            end;
 
-         { If a constructor calls another constructor of the same or of an
-           inherited class, some targets (jvm) have to generate different
-           entry code for the constructor. }
+
          if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) and
             (procdefinition.typ=procdef) and
             (TProcDef(procdefinition).proctypeoption=potype_constructor) and

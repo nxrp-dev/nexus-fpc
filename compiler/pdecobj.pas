@@ -138,8 +138,7 @@ implementation
           created instance, helper types return the extended type,
           object constructors return boolean }
         if is_class(pd.struct) or
-           is_record(pd.struct) or
-           is_javaclass(pd.struct) then
+           is_record(pd.struct) then
           pd.returndef:=pd.struct
         else
           if is_objectpascal_helper(pd.struct) then
@@ -163,7 +162,7 @@ implementation
       begin
         { check for a class, record or helper }
         if not((is_class_or_interface_or_dispinterface(CurrentStructDef) or is_record(CurrentStructDef) or
-                is_objectpascal_helper(CurrentStructDef) or is_java_class_or_interface(CurrentStructDef)) or
+                is_objectpascal_helper(CurrentStructDef)) or
                is_object(CurrentStructDef)) then
           Message(parser_e_syntax_error);
         consume(_PROPERTY);
@@ -336,7 +335,7 @@ implementation
       end;
 
 
-    procedure handleImplementedProtocolOrJavaIntf(intfdef : TObjectDef);
+    procedure handleImplementedProtocol(intfdef : TObjectDef);
       begin
         intfdef:=find_real_class_definition(intfdef,false);
         case current_objectdef.objecttype of
@@ -347,13 +346,6 @@ implementation
               begin
                  Message1(type_e_protocol_type_expected,intfdef.typename);
                  exit;
-              end;
-          odt_javaclass,
-          odt_interfacejava:
-            if not is_javainterface(intfdef) then
-              begin
-                Message1(type_e_interface_type_expected,intfdef.typename);
-                exit
               end;
           else
             InternalError(2011010807);
@@ -389,7 +381,7 @@ implementation
              if intf then
                handleImplementedInterface(TObjectDef(hdef))
              else
-               handleImplementedProtocolOrJavaIntf(TObjectDef(hdef));
+               handleImplementedProtocol(TObjectDef(hdef));
           end;
       end;
 
@@ -416,7 +408,7 @@ implementation
         p := nil;
       end;
 
-    procedure get_cpp_or_java_class_external_status(od: TObjectDef);
+    procedure get_cpp_class_external_status(od: TObjectDef);
       var
         hs: string;
       begin
@@ -479,14 +471,10 @@ implementation
 
 
     procedure parse_object_options;
-      var
-        gotexternal: boolean;
       begin
         case current_objectdef.objecttype of
-          odt_object,odt_class,
-          odt_javaclass:
+          odt_object,odt_class:
             begin
-              gotexternal:=false;
               while true do
                 begin
                   if try_to_consume(_ABSTRACT) then
@@ -494,28 +482,15 @@ implementation
                   else
                   if try_to_consume(_SEALED) then
                     include(CurrentStructDef.objectoptions,oo_is_sealed)
-                  else if (current_objectdef.objecttype=odt_javaclass) and
-                          (CurrentScanner.token=_ID) and
-                          (CurrentScanner.idtoken=_EXTERNAL) then
-                    begin
-                      get_cpp_or_java_class_external_status(current_objectdef);
-                      gotexternal:=true;
-                    end
-                  else
-                    break;
+                  else break;
                 end;
               { don't use <=, because there's a bug in the 2.6.0 SPARC code
                 generator regarding handling this expression }
               if ([oo_is_abstract, oo_is_sealed] * CurrentStructDef.objectoptions) = [oo_is_abstract, oo_is_sealed] then
                 Message(parser_e_abstract_and_sealed_conflict);
-              { set default external name in case of no external directive }
-              if (current_objectdef.objecttype=odt_javaclass) and
-                 not gotexternal then
-               get_cpp_or_java_class_external_status(current_objectdef)
             end;
-          odt_cppclass,
-          odt_interfacejava:
-            get_cpp_or_java_class_external_status(current_objectdef);
+          odt_cppclass:
+            get_cpp_class_external_status(current_objectdef);
           odt_objcclass,odt_objcprotocol,odt_objccategory:
             get_objc_class_or_protocol_external_status(current_objectdef);
           odt_helper: ; // nothing
@@ -557,14 +532,11 @@ implementation
                 { a mix of class, interfaces, objects and cppclasses
                   isn't allowed }
                 case current_objectdef.objecttype of
-                   odt_class,
-                   odt_javaclass:
+                   odt_class:
                      if (childof.objecttype<>current_objectdef.objecttype) then
                        begin
                           if (is_interface(childof) and
-                              is_class(current_objectdef)) or
-                             (is_javainterface(childof) and
-                              is_javaclass(current_objectdef)) then
+                              is_class(current_objectdef)) then
                             begin
                                { we insert the interface after the child
                                  is set, see below
@@ -618,13 +590,7 @@ implementation
                        intfchildof:=childof;
                        childof:=nil;
                      end;
-                   odt_interfacejava:
-                     begin
-                       if not(is_javainterface(childof)) then
-                         Message(parser_e_mix_of_classes_and_objects);
-                       intfchildof:=find_real_class_definition(childof,true);
-                       childof:=nil;
-                     end;
+
                    odt_object:
                      if not(is_object(childof)) then
                        Message(parser_e_mix_of_classes_and_objects)
@@ -660,10 +626,7 @@ implementation
                 childof:=interface_idispatch;
               odt_objcclass:
                 CGMessage(parser_h_no_objc_parent);
-              odt_javaclass:
-                { inherit from TObject by default for compatibility }
-                if current_objectdef<>java_jlobject then
-                  childof:=class_tobject;
+
               else
                 ;
             end;
@@ -685,13 +648,13 @@ implementation
 
         if hasparentdefined then
           begin
-            if current_objectdef.objecttype in [odt_class,odt_objcclass,odt_objcprotocol,odt_javaclass,odt_interfacejava] then
+            if current_objectdef.objecttype in [odt_class,odt_objcclass,odt_objcprotocol] then
               begin
                 if Assigned(intfchildof) then
                   if current_objectdef.objecttype=odt_class then
                     handleImplementedInterface(intfchildof)
                   else
-                    handleImplementedProtocolOrJavaIntf(intfchildof);
+                    handleImplementedProtocol(intfchildof);
                 readImplementedInterfacesAndProtocols(current_objectdef.objecttype=odt_class);
               end;
             consume(_RKLAMMER);
@@ -853,12 +816,7 @@ implementation
         end;
 
 
-      procedure chkjava(pd: TProcDef);
-        begin
-        end;
-
-
-        procedure chkcpp(pd:TProcDef);
+      procedure chkcpp(pd:TProcDef);
           begin
             { nothing currently }
           end;
@@ -932,7 +890,6 @@ implementation
 
                   chkcpp(result);
                   chkobjc(result);
-                  chkjava(result);
                 end;
 
               maybe_parse_hint_directives(result);
@@ -1053,7 +1010,7 @@ implementation
 
       procedure parse_const;
         begin
-          if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper,odt_javaclass,odt_interfacejava]) then
+          if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper]) then
             Message(parser_e_type_var_const_only_in_records_and_classes);
           consume(_CONST);
           object_member_blocktype:=bt_const;
@@ -1064,10 +1021,7 @@ implementation
 
       procedure parse_var(isthreadvar:boolean);
         begin
-          if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper,odt_javaclass]) and
-             { Java interfaces can contain static final class vars }
-             not((current_objectdef.objecttype=odt_interfacejava) and
-                 is_final and is_classdef) then
+          if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper]) then
             Message(parser_e_type_var_const_only_in_records_and_classes);
           if isthreadvar then
             consume(_THREADVAR)
@@ -1097,11 +1051,8 @@ implementation
           if not(CurrentScanner.token in [_FUNCTION,_PROCEDURE]) then
             check_unbound_attributes;
 
-          { Java interfaces can contain final class vars }
-          if is_interface(CurrentStructDef) or
-             (is_javainterface(CurrentStructDef) and
-              (not(is_final) or
-               (CurrentScanner.token<>_VAR))) then
+
+          if is_interface(CurrentStructDef) then
             Message(parser_e_no_static_method_in_interfaces)
           else
             { class methods are also allowed for Objective-C protocols }
@@ -1111,15 +1062,12 @@ implementation
 
       procedure parse_visibility(vis: TVisibility; oo: TObjectOption);
         begin
-          { Objective-C and Java classes do not support "published",
-            as basically everything is published.  }
+
           if (vis=vis_published) and
-             (is_objc_class_or_protocol(CurrentStructDef) or
-              is_java_class_or_interface(CurrentStructDef)) then
+             (is_objc_class_or_protocol(CurrentStructDef)) then
              Message(parser_e_no_objc_published)
           else if is_interface(CurrentStructDef) or
-             is_objc_protocol_or_category(CurrentStructDef) or
-             is_javainterface(CurrentStructDef) then
+             is_objc_protocol_or_category(CurrentStructDef) then
             Message(parser_e_no_access_specifier_in_interfaces);
           CurrentStructDef.SymTable.currentvisibility:=vis;
           consume(CurrentScanner.token);
@@ -1136,7 +1084,7 @@ implementation
 
       begin
         { empty class declaration ? }
-        if (current_objectdef.objecttype in [odt_class,odt_objcclass,odt_javaclass]) and
+        if (current_objectdef.objecttype in [odt_class,odt_objcclass]) and
            (CurrentScanner.token=_SEMICOLON) then
           exit;
 
@@ -1160,7 +1108,7 @@ implementation
             _TYPE :
               begin
                 check_unbound_attributes;
-                if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper,odt_javaclass,odt_interfacejava]) then
+                if not(current_objectdef.objecttype in [odt_class,odt_object,odt_helper]) then
                   Message(parser_e_type_var_const_only_in_records_and_classes);
                 consume(_TYPE);
                 object_member_blocktype:=bt_type;
@@ -1236,8 +1184,7 @@ implementation
                    _STRICT :
                      begin
                        if is_interface(CurrentStructDef) or
-                          is_objc_protocol_or_category(CurrentStructDef) or
-                          is_javainterface(CurrentStructDef) then
+                          is_objc_protocol_or_category(CurrentStructDef) then
                          Message(parser_e_no_access_specifier_in_interfaces);
                          consume(_STRICT);
                         if CurrentScanner.token=_ID then
@@ -1310,9 +1257,7 @@ implementation
                                    (
                                      is_objectpascal_helper(CurrentStructDef) and
                                      not class_fields
-                                   ) or
-                                   (is_javainterface(CurrentStructDef) and
-                                    not(class_fields and final_fields)) then
+                                   ) then
                                   Message(parser_e_no_vars_in_interfaces);
 
                                 if (CurrentStructDef.SymTable.currentvisibility=vis_published) and
@@ -1382,7 +1327,7 @@ implementation
                                 typedconstswritable:=cs_typed_const_writable in CurrentSettings.LocalSwitches;
                                 exclude(CurrentSettings.LocalSwitches,cs_typed_const_writable);
                               end;
-                            consts_dec(true,not is_javainterface(CurrentStructDef),hadgeneric);
+                            consts_dec(true,true,hadgeneric);
                             if final_fields and
                                typedconstswritable then
                               include(CurrentSettings.LocalSwitches,cs_typed_const_writable);
@@ -1507,31 +1452,7 @@ implementation
                   odt_class :
                     if (CurrentStructDef.objname^='TOBJECT') then
                       class_tobject:=current_objectdef;
-                  odt_javaclass:
-                    begin
-                      if (CurrentStructDef.objname^='TOBJECT') then
-                        class_tobject:=current_objectdef
-                      else if (current_objectdef.objname^='JLOBJECT') then
-                        java_jlobject:=current_objectdef
-                      else if (current_objectdef.objname^='JLTHROWABLE') then
-                        java_jlthrowable:=current_objectdef
-                      else if (current_objectdef.objname^='FPCBASERECORDTYPE') then
-                        java_fpcbaserecordtype:=current_objectdef
-                      else if (current_objectdef.objname^='JLSTRING') then
-                        java_jlstring:=current_objectdef
-                      else if (current_objectdef.objname^='ANSISTRINGCLASS') then
-                        java_ansistring:=current_objectdef
-                      else if (current_objectdef.objname^='SHORTSTRINGCLASS') then
-                        java_shortstring:=current_objectdef
-                      else if (current_objectdef.objname^='JLENUM') then
-                        java_jlenum:=current_objectdef
-                      else if (current_objectdef.objname^='JUENUMSET') then
-                        java_juenumset:=current_objectdef
-                      else if (current_objectdef.objname^='FPCBITSET') then
-                        java_jubitset:=current_objectdef
-                      else if (current_objectdef.objname^='FPCBASEPROCVARTYPE') then
-                        java_procvarbase:=current_objectdef;
-                    end;
+
                   else
                     ;
                 end;
@@ -1572,11 +1493,8 @@ implementation
            (current_objectdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_class,odt_helper]) then
           include(CurrentStructDef.objectoptions,oo_can_have_published);
 
-        { Objective-C/Java objectdefs can be "formal definitions", in which case
-          the syntax is "type tc = objcclass external;" -> we have to parse
-          its object options (external) already here, to make sure that such
-          definitions are recognised as formal defs }
-        if objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava] then
+
+        if objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory] then
           parse_object_options;
 
         { forward def? }
@@ -1620,7 +1538,7 @@ implementation
               include(current_objectdef.objectoptions,oo_is_classhelper);
 
             { parse list of options (abstract / sealed) }
-            if not(objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava]) then
+            if not(objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory]) then
               parse_object_options;
 
             SymTableStack.push(CurrentStructDef.SymTable);
@@ -1698,17 +1616,6 @@ implementation
                 CurrentStructDef.typesym:=nil;
               end;
 
-          if not(oo_is_external in CurrentStructDef.objectoptions) then
-            begin
-              { In Java, constructors are not automatically inherited (so you can
-                hide them). Emulate the Pascal behaviour for classes implemented
-                in Pascal (we cannot do it for classes implemented in Java, since
-                we obviously cannot add constructors to those) }
-              if is_javaclass(CurrentStructDef) then
-                begin
-                  add_missing_parent_constructors_intf(TObjectDef(CurrentStructDef),true,vis_none);
-                end;
-            end;
 
             SymTableStack.pop(CurrentStructDef.SymTable);
 
@@ -1734,13 +1641,11 @@ implementation
         if (oo_has_vmt in CurrentStructDef.objectoptions) and
            not(oo_is_forward in CurrentStructDef.objectoptions) and
            not(oo_has_constructor in CurrentStructDef.objectoptions) and
-           not is_objc_class_or_protocol(CurrentStructDef) and
-           not is_java_class_or_interface(CurrentStructDef) then
+           not is_objc_class_or_protocol(CurrentStructDef) then
           Message1(parser_w_virtual_without_constructor,CurrentStructDef.objrealname^);
 
         if is_interface(CurrentStructDef) or
-           is_objcprotocol(CurrentStructDef) or
-           is_javainterface(CurrentStructDef) then
+           is_objcprotocol(CurrentStructDef) then
           setinterfacemethodoptions
         else if is_objcclass(CurrentStructDef) then
           setobjcclassmethodoptions;

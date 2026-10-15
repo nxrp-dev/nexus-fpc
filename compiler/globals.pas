@@ -430,13 +430,6 @@ Const
 
        Features : TFeatures;
 
-       { prefix added to automatically generated setters/getters. If empty,
-         no getters/setters will be automatically generated except if required
-         for visibility reasons (but in that case the names will be mangled so
-         they are unique) }
-       Prop_Auto_Getter_Prefix,
-       Prop_Auto_Setter_Prefix : string;
-
        CGBackend: TCGBackend;
 
        Inside_Asm_Statement : Boolean = False;
@@ -479,7 +472,7 @@ Const
           RecordAlignMax : 0;
           MaxCRecordAlign : 0;
         );
-        GlobalSwitches : [cs_check_unit_name,cs_link_static];
+        GlobalSwitches : [cs_check_unit_name,cs_link_static,cs_link_lld];
         TargetSwitches : [];
         ModuleSwitches : [cs_extsyntax,cs_implicit_exceptions];
         LocalSwitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_refcountedstrings];

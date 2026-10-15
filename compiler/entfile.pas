@@ -137,7 +137,6 @@ const
   IBRecSymTableOptions = 94;
   { target-specific things }
   IBLinkOtherFrameworks = 100;
-  IBJVMNamespace = 101;
 
 {$ifdef generic_cpu}
 { We need to use the correct size of aint and pint for
@@ -523,7 +522,6 @@ begin
   IBPackageName: EntryName:='ibpackagename';
   { target-specific things }
   IBLinkOtherFrameworks: EntryName:='iblinkotherframeworks';
-  IBJVMNamespace: EntryName:='ibjvmnamespace';
   else
     EntryName:='unknown entry '+ToStr(NR);
   end;

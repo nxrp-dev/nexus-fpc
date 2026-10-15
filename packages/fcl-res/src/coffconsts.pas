@@ -42,8 +42,6 @@ const
   IMAGE_FILE_MACHINE_THUMB           = $01c2;
   IMAGE_FILE_MACHINE_AM33            = $01d3;
 }
-  IMAGE_FILE_MACHINE_POWERPC32_AIX   = $01DF;  // IBM AIX 32 bit PowerPC
-  IMAGE_FILE_MACHINE_POWERPC64_AIX   = $01EF;  // IBM AIX 62 bit PowerPC
 {
   IMAGE_FILE_MACHINE_POWERPC         = $01F0;  // IBM PowerPC Little-Endian
   IMAGE_FILE_MACHINE_POWERPCFP       = $01f1;
@@ -183,33 +181,9 @@ const
   IMAGE_REL_ARM64_BRANCH14      = $0010;  // The 14-bit offset to the relocation target, for instructions TBZ and TBNZ.
   IMAGE_REL_ARM64_REL32         = $0011;  // The 32-bit relative address from the byte following the relocation.
 
-// AIX PPC32/PPC64 relocation types.
-
-  IMAGE_REL_PPC_POS             = $1F00;  // A(sym) Positive Relocation
-
-
 const
   // storage classes
   IMAGE_SYM_CLASS_STATIC        = $0003;
-
-  // XCOFF
-  IMAGE_SYM_CLASS_EXT           = 2;
-  IMAGE_SYM_CLASS_HIDEXT        = 107;
-
-  XTY_ER = 0;
-  XTY_SD = 1;
-  XTY_LD = 2;
-  XTY_CM = 3;
-
-  XMC_RW = 5;
-
-  // section types
-  STYP_DATA = $40;
-  STYP_BSS = $80;
-
-const
-  XCoffRsrcSectName    = 'fpc.resources';
-  XCoffHandlesSectName = 'fpc.reshandles';
 
 
 implementation

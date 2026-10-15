@@ -413,7 +413,6 @@ end;
 procedure TCoffResourceWriter.WriteSymbolTable(aStream: TStream; aResources : TResources);
 var
   st : TCoffSectionTable;
-  aux : TXCoffAuxSymbol32;
   offs : dword;
 begin
   fSymTablePtr:=aStream.Position;
@@ -453,8 +452,6 @@ begin
     cmtarm      : Result.machine:=IMAGE_FILE_MACHINE_ARM;
     cmtx8664    : Result.machine:=IMAGE_FILE_MACHINE_AMD64;
     cmtaarch64  : Result.machine:=IMAGE_FILE_MACHINE_ARM64;
-    cmtppc32aix : Result.machine:=IMAGE_FILE_MACHINE_POWERPC32_AIX;
-    cmtppc64aix : Result.machine:=IMAGE_FILE_MACHINE_POWERPC64_AIX;
   end;
   Result.numsects:=1;
   Result.timestamp:=0; //DateTimeToTimeT(now);   //we need a crossplatform way to have it UTC
@@ -528,22 +525,11 @@ procedure TCoffResourceWriter.SetMachineType(AValue: TCoffMachineType);
 begin
   fMachineType:=AValue;
 {$IFDEF ENDIAN_BIG}
-  if fMachineType in [cmti386,cmtx8664,cmtarm,cmtaarch64] then
-    fOppositeEndianess:=true;
+  fOppositeEndianess:=true;
 {$ELSE}
-  if fMachineType in [cmtppc32aix,cmtppc64aix] then
-    fOppositeEndianess:=true;
+  fOppositeEndianess:=false;
 {$ENDIF}
-  case fMachineType of
-    cmti386,
-    cmtx8664,
-    cmtarm,
-    cmtaarch64:
-      fSymStorageClass:=IMAGE_SYM_CLASS_STATIC;
-    cmtppc32aix,
-    cmtppc64aix:
-      fSymStorageClass:=IMAGE_SYM_CLASS_HIDEXT;
-  end;
+  fSymStorageClass:=IMAGE_SYM_CLASS_STATIC;
   fRelocations.MachineType:=fMachineType;
 end;
 
@@ -740,8 +726,6 @@ begin
     cmtarm      : reloctype:=IMAGE_REL_ARM_ADDR32NB;
     cmtx8664    : reloctype:=IMAGE_REL_AMD64_ADDR32NB;
     cmtaarch64  : reloctype:=IMAGE_REL_ARM64_ADDR32NB;
-    cmtppc32aix : reloctype:=IMAGE_REL_PPC_POS;
-    cmtppc64aix : reloctype:=IMAGE_REL_PPC_POS;
   end;
   Add(aAddress,reloctype,aSectSymTableIndex);
 end;

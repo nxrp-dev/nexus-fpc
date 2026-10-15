@@ -1108,32 +1108,6 @@ implementation
       end;
 
 
-    procedure try_read_field_external(vs: TAbstractVarSym);
-      var
-        extname: string;
-      begin
-        if try_to_consume(_EXTERNAL) then
-          begin
-            consume(_NAME);
-            extname:=get_stringconst;
-            TFieldVarSym(vs).set_externalname(extname);
-            consume(_SEMICOLON);
-          end;
-      end;
-
-
-    procedure try_read_field_external_sc(sc:TFPObjectList);
-    var
-      vs: TAbstractVarSym;
-    begin
-      { only allowed for one var }
-      vs:=TAbstractVarSym(sc[0]);
-      if sc.count>1 then
-        Message1(parser_e_directive_only_one_var,arraytokeninfo[CurrentScanner.idtoken].str);
-      try_read_field_external(vs);
-    end;
-
-
     procedure read_var_decls(options:TVarDecOptions;out had_generic:boolean);
 
         procedure read_default_value(sc : TFPObjectList);
@@ -1839,11 +1813,7 @@ implementation
                      include(options,vd_class);
                      removeclassoption:=true;
                    end;
-                 { Fields in Java classes/interfaces can have a separately
-                   specified external name }
-                 if is_java_class_or_interface(TDef(recst.defowner)) and
-                    (oo_is_external in TObjectDef(recst.defowner).objectoptions) then
-                   try_read_field_external_sc(sc);
+
                end;
              if (visibility=vis_published) and
                 not(is_class(hdef)) then

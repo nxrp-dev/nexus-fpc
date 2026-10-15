@@ -42,18 +42,6 @@ uses
              ResFlags : [];
           );
 
-       Res_XCOFF_Info : TResInfo =
-          (
-             ID     : res_xcoff;
-             ResBin : 'fpcres';
-             ResCmd : '-o $OBJ -a $ARCH -of xcoff $DBG';
-             { cross compiled windres can be used to compile .rc files on other platforms }
-             RCBin  : 'windres';
-             RCCmd  : '--include $INC -O res -D FPC -o $RES $RC';
-             ResourceFileClass : nil;
-             ResFlags : [];
-          );
-
        Res_Ext_Info : TResInfo =
           (
              ID     : res_ext;

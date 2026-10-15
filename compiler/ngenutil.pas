@@ -61,9 +61,7 @@ interface
      public
       class procedure procdef_block_add_implicit_initialize_nodes(pd: TProcDef; var stat: TStatementNode);
       class procedure procdef_block_add_implicit_finalize_nodes(pd: TProcDef; var stat: TStatementNode);
-      { returns true if the unit requires an initialisation section (e.g.,
-        to force class constructors for the JVM target to initialise global
-        records/arrays) }
+
       class function force_init: boolean; virtual;
       { idem for finalization }
       class function force_final: boolean; virtual;
@@ -1536,7 +1534,7 @@ implementation
     var
       tcb: TTAITypedConstBuilder;
     begin
-      if (TargetRes.id in [res_elf,res_macho,res_xcoff]) or
+      if (TargetRes.id in [res_elf,res_macho]) or
          { generate the FPC_RESLOCATION symbol even when using external resources,
            because in SysInit we can only reference it unconditionally }
          ((TargetRes.id=res_ext) and (TargetInfo.system in systems_darwin)) then

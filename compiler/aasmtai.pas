@@ -282,8 +282,6 @@ interface
         asd_extern,asd_nasm_import, asd_toc_entry,
         asd_reference,asd_no_dead_strip,asd_weak_reference,asd_lazy_reference,
         asd_weak_definition,
-        { for Jasmin }
-        asd_jclass,asd_jinterface,asd_jsuper,asd_jfield,asd_jlimit,asd_jline,
         { .ent/.end for MIPS }
         asd_ent,asd_ent_end,
         { supported by recent clang-based assemblers for data-in-code  }
@@ -319,8 +317,6 @@ interface
         'indirect_symbol',
         'extern','nasm_import', 'tc', 'reference',
         'no_dead_strip','weak','lazy_reference','weak',
-        { for Jasmin }
-        'class','interface','super','field','limit','line',
         { .ent/.end for MIPS }
         'ent','end',
         { supported by recent clang-based assemblers for data-in-code }

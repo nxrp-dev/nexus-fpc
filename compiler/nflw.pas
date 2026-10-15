@@ -2634,8 +2634,7 @@ implementation
              set_varstate(left,vs_read,[vsf_must_be_valid]);
              if CodeGenError then
               exit;
-             if not is_class(left.resultdef) and
-                not is_javaclass(left.resultdef) then
+             if not is_class(left.resultdef) then
                CGMessage1(type_e_class_type_expected,left.resultdef.typename);
              { insert needed typeconvs for addr,frame }
              if Assigned(right) then
@@ -2916,8 +2915,7 @@ implementation
       begin
          result:=nil;
          resultdef:=voidtype;
-         if not is_class(excepttype) and
-            not is_javaclass(excepttype) then
+         if not is_class(excepttype) then
            CGMessage1(type_e_class_type_expected,excepttype.typename);
          if Assigned(left) then
            TypeCheckPass(left);

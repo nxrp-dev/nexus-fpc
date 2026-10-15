@@ -49,9 +49,7 @@ interface
         pd_cppobject,    { directive can be used with cppclass }
         pd_objcclass,    { directive can be used with objcclass }
         pd_objcprot,     { directive can be used with objcprotocol }
-        pd_nothelper,    { directive can not be used with record/class helper declaration }
-        pd_javaclass,    { directive can be used with Java class }
-        pd_intfjava      { directive can be used with Java interface }
+        pd_nothelper     { directive can not be used with record/class helper declaration }
       );
       TPDFlags=set of TPDFlag;
 
@@ -1455,8 +1453,7 @@ implementation
                   { Set return type, class constructors return the
                     created instance, object constructors return boolean }
                   if is_class(pd.struct) or
-                     is_record(pd.struct) or
-                     is_javaclass(pd.struct) then
+                     is_record(pd.struct) then
                     pd.returndef:=pd.struct
                   else
                     if is_objectpascal_helper(pd.struct) then
@@ -1912,9 +1909,7 @@ begin
   if is_objectpascal_helper(TProcDef(pd).struct) and
       (m_objfpc in CurrentSettings.ModeSwitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_FINAL].str);
-  if (po_virtualmethod in pd.procoptions) or
-     (is_javaclass(TProcDef(pd).struct) and
-      (po_classmethod in pd.procoptions)) then
+  if (po_virtualmethod in pd.procoptions) then
     include(pd.procoptions,po_finalmethod)
   else
     Message(parser_e_only_virtual_methods_final);
@@ -1955,8 +1950,6 @@ var
 {$endif WITHDMT}
 begin
   if Assigned(pd.owner) and
-     (not Assigned(pd.owner.defowner) or
-      not is_java_class_or_interface(TDef(pd.owner.defowner))) and
      (po_external in pd.procoptions) then
     Message2(parser_e_proc_dir_conflict,'EXTERNAL','"VIRTUAL"');
 
@@ -2036,14 +2029,13 @@ begin
       if m_objfpc in CurrentSettings.ModeSwitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_OVERRIDE].str)
     end
-  else if not(is_class_or_interface_or_objc_or_java(TProcDef(pd).struct)) then
+  else if not(is_class_or_interface_or_objc(TProcDef(pd).struct)) then
     Message(parser_e_no_object_override)
   else if is_objccategory(TProcDef(pd).struct) then
     Message(parser_e_no_category_override)
   else if (po_external in pd.procoptions) and
           not is_objc_class_or_protocol(TProcDef(pd).struct) and
-          not is_cppclass(TProcDef(pd).struct) and
-          not is_java_class_or_interface(TProcDef(pd).struct) then
+          not is_cppclass(TProcDef(pd).struct) then
     Message2(parser_e_proc_dir_conflict,'OVERRIDE','"EXTERNAL"');
 end;
 
@@ -2131,8 +2123,7 @@ begin
     end
   else
     if not(is_class_or_interface_or_object(TProcDef(pd).struct)) and
-       not(is_objccategory(TProcDef(pd).struct)) and
-       not(is_javaclass(TProcDef(pd).struct)) then
+       not(is_objccategory(TProcDef(pd).struct)) then
       Message(parser_e_no_object_reintroduce);
 end;
 
@@ -2215,20 +2206,9 @@ procedure pd_external(pd:TAbstractProcDef);
 var
   hs : string;
   v:TConstExprInt;
-  is_java_external: boolean;
 begin
   if pd.typ<>procdef then
     InternalError(2003042615);
-  { Allow specifying a separate external name for methods in external Java
-    because its identifier naming constraints are laxer than FPC's
-    (e.g., case sensitive).
-    Limitation: only allows specifying the symbol name and not the package name,
-    and only for external classes/interfaces }
-  is_java_external:=
-    (pd.typ=procdef) and
-    Assigned(pd.owner) and
-    is_java_class_or_interface(TDef(pd.owner.defowner)) and
-    (oo_is_external in TObjectDef(pd.owner.defowner).objectoptions);
   with TProcDef(pd) do
     begin
       forwarddef:=false;
@@ -2239,8 +2219,7 @@ begin
         This isn't really correct, an contant string expression follows
         so we check if an semicolon follows, else a string constant have to
         follow (FK) }
-      if not is_java_external and
-         not(CurrentScanner.token=_SEMICOLON) and not(CurrentScanner.idtoken=_NAME) then
+      if not(CurrentScanner.token=_SEMICOLON) and not(CurrentScanner.idtoken=_NAME) then
         begin
           { Always add library prefix and suffix to create an uniform name }
           hs:=get_stringconst;
@@ -2286,8 +2265,7 @@ begin
         end
       else
         begin
-          if (CurrentScanner.idtoken=_NAME) or
-             is_java_external then
+          if (CurrentScanner.idtoken=_NAME) then
            begin
              consume(_NAME);
              import_name:=StringDup(get_stringconst);
@@ -2355,7 +2333,7 @@ var
    (
     (
       idtok:_ABSTRACT;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord,pd_javaclass];
+      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
       handler  : @pd_abstract;
       pocall   : pocall_none;
       pooption : [po_abstractmethod];
@@ -2445,7 +2423,7 @@ var
       mutexclpo     : [po_external,po_interrupt,po_inline]
     ),(
       idtok:_EXTERNAL;
-      pd_flags : [pd_implemen,pd_interface,pd_notobject,pd_notobjintf,pd_cppobject,pd_notrecord,pd_nothelper,pd_javaclass,pd_intfjava];
+      pd_flags : [pd_implemen,pd_interface,pd_notobject,pd_notobjintf,pd_cppobject,pd_notrecord,pd_nothelper];
       handler  : @pd_external;
       pocall   : pocall_none;
       pooption : [po_external];
@@ -2464,7 +2442,7 @@ var
       mutexclpo     : [po_external]
     ),(
       idtok:_FINAL;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord,pd_javaclass];
+      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
       handler  : @pd_final;
       pocall   : pocall_none;
       pooption : [po_finalmethod];
@@ -2595,7 +2573,7 @@ var
       mutexclpo     : []
     ),(
       idtok:_OVERLOAD;
-      pd_flags : [pd_implemen,pd_interface,pd_body,pd_javaclass,pd_intfjava,pd_objcclass,pd_objcprot];
+      pd_flags : [pd_implemen,pd_interface,pd_body,pd_objcclass,pd_objcprot];
       handler  : @pd_overload;
       pocall   : pocall_none;
       pooption : [po_overload];
@@ -2604,7 +2582,7 @@ var
       mutexclpo     : []
     ),(
       idtok:_OVERRIDE;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_javaclass,pd_intfjava,pd_notrecord];
+      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_notrecord];
       handler  : @pd_override;
       pocall   : pocall_none;
       pooption : [po_overridingmethod,po_virtualmethod];
@@ -2640,7 +2618,7 @@ var
       mutexclpo     : [po_external]
     ),(
       idtok:_REINTRODUCE;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_notrecord,pd_javaclass];
+      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_objcclass,pd_notrecord];
       handler  : @pd_reintroduce;
       pocall   : pocall_none;
       pooption : [po_reintroduce];
@@ -2678,7 +2656,7 @@ var
       mutexclpo     : []
     ),(
       idtok:_STATIC;
-      pd_flags : [pd_interface,pd_implemen,pd_body,pd_object,pd_record,pd_javaclass,pd_notobjintf];
+      pd_flags : [pd_interface,pd_implemen,pd_body,pd_object,pd_record,pd_notobjintf];
       handler  : @pd_static;
       pocall   : pocall_none;
       pooption : [po_staticmethod];
@@ -2708,7 +2686,7 @@ var
       mutexclpo     : [po_external,po_assembler,po_interrupt,po_exports]
     ),(
       idtok:_VIRTUAL;
-      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord,pd_javaclass];
+      pd_flags : [pd_interface,pd_object,pd_notobjintf,pd_notrecord];
       handler  : @pd_virtual;
       pocall   : pocall_none;
       pooption : [po_virtualmethod];
@@ -2939,25 +2917,11 @@ var
         { check if method and directive not for object, like public.
           This needs to be checked also for procvars }
         if (pd_notobject in proc_direcdata[p].pd_flags) and
-           (SymTableStack.top.symtabletype=ObjectSymtable) and
-           { directive allowed for cpp classes? }
-           not((pd_cppobject in proc_direcdata[p].pd_flags) and is_cppclass(TDef(SymTableStack.top.defowner))) and
-           not((pd_javaclass in proc_direcdata[p].pd_flags) and is_javaclass(TDef(SymTableStack.top.defowner))) and
-           not((pd_intfjava in proc_direcdata[p].pd_flags) and is_javainterface(TDef(SymTableStack.top.defowner))) then
+           (SymTableStack.top.symtabletype=ObjectSymtable) and not((pd_cppobject in proc_direcdata[p].pd_flags) and is_cppclass(TDef(SymTableStack.top.defowner))) then
            exit;
 
         if (pd_notrecord in proc_direcdata[p].pd_flags) and
            (SymTableStack.top.symtabletype=recordsymtable) then
-           exit;
-
-        { check if method and directive not for java class }
-        if not(pd_javaclass in proc_direcdata[p].pd_flags) and
-           is_javaclass(TDef(SymTableStack.top.defowner)) then
-          exit;
-
-        { check if method and directive not for java interface }
-        if not(pd_intfjava in proc_direcdata[p].pd_flags) and
-           is_javainterface(TDef(SymTableStack.top.defowner)) then
           exit;
 
         { Keep track of the token's position in the file so it's correctly indicated if an error occurs. }

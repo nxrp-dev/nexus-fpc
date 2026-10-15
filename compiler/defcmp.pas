@@ -181,9 +181,8 @@ interface
 
     { Checks whether to defs are related to each other. Thereby the following  }
     { cases of curdef are implemented:                                         }
-    { - stringdef: on JVM JLObject, JLString and AnsiString are compatible     }
-    { - recorddef: on JVM records are compatible to java_fpcbaserecordtype     }
-    {              and JLObject                                                }
+
+
     { - objectdef: if it inherits from otherdef or they are equal              }
     function def_is_related(curdef,otherdef:TDef):boolean;
 
@@ -892,22 +891,6 @@ implementation
                       begin
                         doconv:=tc_intf_2_string;
                         eq:=te_convert_l1;
-                      end
-                     else if (def_from=java_jlstring) then
-                       begin
-                         if is_wide_or_unicode_string(def_to) then
-                           begin
-                             doconv:=tc_equal;
-                             eq:=te_equal;
-                           end
-                         else if def_to.typ=stringdef then
-                           begin
-                             doconv:=tc_string_2_string;
-                             if is_ansistring(def_to) then
-                               eq:=te_convert_l2
-                             else
-                               eq:=te_convert_l3
-                           end;
                       end;
                    end;
                  else
@@ -1040,12 +1023,9 @@ implementation
                    begin
                      { ugly, but delphi allows it }
                      if (cdo_explicit in cdoptions) and
-                        is_class_or_interface_or_dispinterface_or_objc_or_java(def_from) then
+                        is_class_or_interface_or_dispinterface_or_objc(def_from) then
                        begin
-                         { in Java enums /are/ class instances, and hence such
-                           typecasts must not be treated as integer-like
-                           conversions
-                         }
+
                          if m_delphi in CurrentSettings.ModeSwitches then
                            begin
                              doconv:=tc_int_2_int;
@@ -1491,19 +1471,14 @@ implementation
                      { allow explicit typecasts from enums to pointer.
                        Support for delphi compatibility
                      }
-                     { in Java enums /are/ class instances, and hence such
-                       typecasts must not be treated as integer-like conversions
-                     }
+
                      if (((cdo_explicit in cdoptions) and
                           (m_delphi in CurrentSettings.ModeSwitches)
                          ) or
                          (cdo_internal in cdoptions)
                         ) then
                        begin
-                         { in Java enums /are/ class instances, and hence such
-                           typecasts must not be treated as integer-like
-                           conversions
-                         }
+
                          if m_delphi in CurrentSettings.ModeSwitches then
                            begin
                              doconv:=tc_int_2_int;
@@ -1824,31 +1799,7 @@ implementation
                     here }
                   eq:=te_convert_l3;
                 end
-               { string -> java.lang.string }
-               else if (def_to=java_jlstring) and
-                       ((def_from.typ=stringdef) or
-                        (fromtreetype=stringconstn)) then
-                 begin
-                   if is_wide_or_unicode_string(def_from) or
-                      ((fromtreetype=stringconstn) and
-                       (cs_refcountedstrings in CurrentSettings.LocalSwitches) and
-                       (m_default_unicodestring in CurrentSettings.ModeSwitches)) then
-                     begin
-                       doconv:=tc_equal;
-                       eq:=te_equal
-                     end
-                   else
-                     begin
-                       doconv:=tc_string_2_string;
-                       eq:=te_convert_l2;
-                     end;
-                 end
-               else if (def_to=java_jlstring) and
-                       is_anychar(def_from) then
-                 begin
-                   doconv:=tc_char_2_string;
-                   eq:=te_convert_l2
-                 end
+
                else if is_funcref(def_to) and
                    (def_from.typ=procdef) and
                    (po_anonymous in TProcDef(def_from).procoptions) then
@@ -1902,9 +1853,7 @@ implementation
                    else if ((is_interface(def_to) and
                              is_class(def_from)) or
                             (is_objcprotocol(def_to) and
-                             is_objcclass(def_from)) or
-                            (is_javainterface(def_to) and
-                             is_javaclass(def_from))) and
+                             is_objcclass(def_from))) and
                            Assigned(TObjectDef(def_from).ImplementedInterfaces) then
                      begin
                         { we've to search in parent classes as well }
@@ -1957,13 +1906,7 @@ implementation
                      end
                    { ugly, but delphi allows it (enables typecasting ordinals/
                      enums of any size to pointer-based object defs) }
-                   { in Java enums /are/ class instances, and hence such
-                     typecasts must not be treated as integer-like conversions;
-                     arbitrary constants cannot be converted into classes/
-                     pointer-based values either on the JVM -> always return
-                     false and let it be handled by the regular explicit type
-                     casting code
-                   }
+
                    else if ((def_from.typ=enumdef) or
                             ((def_from.typ=orddef) and
                              not is_void(def_from))) and
@@ -2747,8 +2690,8 @@ implementation
           (equal_defs(parentretdef,childretdef)) or
           ((parentretdef.typ=objectdef) and
            (childretdef.typ=objectdef) and
-           is_class_or_interface_or_objc_or_java(parentretdef) and
-           is_class_or_interface_or_objc_or_java(childretdef) and
+           is_class_or_interface_or_objc(parentretdef) and
+           is_class_or_interface_or_objc(childretdef) and
            (def_is_related(TObjectDef(childretdef),TObjectDef(parentretdef))))
       end;
 
@@ -2831,36 +2774,22 @@ implementation
               exit;
           end;
 
-        { Objective-C protocols and Java interfaces can use multiple
-           inheritance }
-        if (realself.objecttype in [odt_objcprotocol,odt_interfacejava]) then
+
+        { Objective-C protocols support multiple inheritance. }
+        if (realself.objecttype in [odt_objcprotocol]) then
           begin
             result:=is_related_interface_multiple(realself,otherdef);
             exit;
           end;
 
-        { formally declared Objective-C and Java classes match Objective-C/Java
-          classes with the same name. In case of Java, the package must also
-          match (still required even though we looked up the real definitions
-          above, because these may be two different formal declarations that
-          cannot be resolved yet) }
-        if (realself.objecttype in [odt_objcclass,odt_javaclass]) and
+
+        if (realself.objecttype in [odt_objcclass]) and
            (TObjectDef(otherdef).objecttype=curdef.objecttype) and
            ((oo_is_formal in curdef.objectoptions) or
             (oo_is_formal in TObjectDef(otherdef).objectoptions)) and
            (curdef.objrealname^=TObjectDef(otherdef).objrealname^) then
           begin
-            { check package name for Java }
-            if curdef.objecttype=odt_objcclass then
-              result:=true
-            else
-              begin
-                result:=
-                  Assigned(curdef.import_lib)=Assigned(TObjectDef(otherdef).import_lib);
-                if result and
-                   Assigned(curdef.import_lib) then
-                  result:=curdef.import_lib^=TObjectDef(otherdef).import_lib^;
-              end;
+            result:=true;
             exit;
           end;
 

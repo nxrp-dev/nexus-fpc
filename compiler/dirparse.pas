@@ -313,25 +313,7 @@ implementation
                     Exclude(A,Opt)
                 end
               else
-                begin
-                  if not GotValue or
-                     not DoSet then
-                    Result:=False
-                  else
-                    begin
-                      case Opt of
-                        ts_auto_getter_prefix:
-                          Prop_Auto_Getter_Prefix:=Value;
-                        ts_auto_setter_predix:
-                          Prop_Auto_Setter_Prefix:=Value;
-                        else
-                          begin
-                            WriteLn('Internalerror 2012053001');
-                            Halt(1);
-                          end;
-                      end;
-                    end;
-                end;
+                Result:=False;
             end
           else
             Result:=False;

@@ -271,7 +271,6 @@ interface
         finishstate: pointer;
         specializestate : pointer;
 
-        namespace: PShortString; { for JVM target: corresponds to Java package name }
 
         { for targets that initialise typed constants via explicit assignments
           instead of by generating an initialised data section (holds typed
@@ -685,7 +684,6 @@ implementation
         mode_switch_allowed:= true;
         moduleoptions:=[];
         deprecatedmsg:=nil;
-        namespace:=nil;
         tcinitcode:=nil;
         _exports:=TLinkedList.Create;
         dllscannerinputlist:=TFPHashList.Create;
@@ -789,7 +787,6 @@ implementation
         used_rtti_attrs := nil;
         StringDispose(asmprefix);
         StringDispose(deprecatedmsg);
-        StringDispose(namespace);
         tcinitcode.free;
         tcinitcode := nil;
         localunitsearchpath.Free;
@@ -1002,7 +999,6 @@ implementation
         in_global:=true;
         mode_switch_allowed:=true;
         StringDispose(deprecatedmsg);
-        StringDispose(namespace);
         tcinitcode.free;
         tcinitcode:=nil;
         localunitsearchpath.Free;

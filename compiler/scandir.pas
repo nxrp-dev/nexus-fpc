@@ -1028,30 +1028,6 @@ unit scandir;
                   s:=CurrentScanner.orgpattern;
                 end;
             end;
-        end;
-    end;
-
-    procedure dir_namespace;
-      var
-        s : string;
-      begin
-        { used to define Java package names for all types declared in the
-          current unit }
-        if not CurrentModule.in_global then
-          Message(scan_w_switch_is_global)
-        else
-          begin
-            CurrentScanner.skipspace;
-            CurrentScanner.readstring;
-            s:=CurrentScanner.orgpattern;
-            while CurrentScanner.c='.' do
-              begin
-                CurrentScanner.readchar;
-                CurrentScanner.readstring;
-                s:=s+'.'+CurrentScanner.orgpattern;
-              end;
-            disposestr(CurrentModule.namespace);
-            CurrentModule.namespace:=StringDup(s);
           end;
       end;
 
@@ -2048,7 +2024,6 @@ unit scandir;
         AddDirective('TEXTBLOCK',directive_all, @dir_textblock);
         AddDirective('MULTILINESTRINGLINEENDING',directive_all, @dir_multilinestringlineending);
         AddDirective('MULTILINESTRINGTRIMLEFT',directive_all, @dir_multilinestringtrimleft);
-        AddDirective('NAMESPACE',directive_all, @dir_namespace);
         AddDirective('NAMESPACES',directive_all, @dir_namespaces);
         AddDirective('NODEFINE',directive_all, @dir_nodefine);
         AddDirective('NOTE',directive_all, @dir_note);

@@ -221,16 +221,11 @@ implementation
           hasequalpara:=(compare_paras(vmtpd.paras,pd.paras,cp_none,[cpo_ignoreuniv,cpo_ignorehidden])>=te_equal);
 
           { check that we are not trying to override a final method }
-          { in Java, new virtual inheritance trees can never be started ->
-            treat all methods as "overriding" in the context of this check
-            (Java does check whether the mangled names are identical, so if they
-             are not we can stil get away with it) }
+
           if (po_finalmethod in vmtpd.procoptions) and
              hasequalpara and
-             ((po_overridingmethod in pd.procoptions) or
-              (is_javaclass(_class) and
-               (pd.mangledname=vmtpd.mangledname))) and
-             (is_class(_class) or is_objectpascal_helper(_class) or is_javaclass(_class)) then
+             ((po_overridingmethod in pd.procoptions)) and
+             (is_class(_class) or is_objectpascal_helper(_class)) then
             MessagePos1(pd.fileinfo,parser_e_final_can_no_be_overridden,pd.fullprocname(false))
           else
           { old definition has virtual
@@ -242,8 +237,8 @@ implementation
                { new one does not have reintroduce in case of an objccategory }
                (is_objccategory(_class) and
                  not(po_reintroduce in pd.procoptions)) or
-               { new one does not have override in case of objpas/objc/java class/intf/proto }
-               ((is_class_or_interface_or_objc_or_java(_class) or is_objectpascal_helper(_class)) and
+
+               ((is_class_or_interface_or_objc(_class) or is_objectpascal_helper(_class)) and
                 not is_objccategory(_class) and
                 not(po_overridingmethod in pd.procoptions)
                )
@@ -255,24 +250,13 @@ implementation
                   hasequalpara
                  ) then
                 begin
-                  if not(po_reintroduce in pd.procoptions) and
-                     not(po_java_nonvirtual in vmtpd.procoptions) then
+                  if not(po_reintroduce in pd.procoptions) then
                     if not(is_objc_class_or_protocol(_class))
                        then
                       MessagePos1(pd.fileinfo,parser_w_should_use_override,pd.fullprocname(false))
                     else
                       begin
-                        { In Objective-C, you cannot create a new VMT entry to
-                          start a new inheritance tree. We therefore give an
-                          error when the class is implemented in Pascal, to
-                          avoid confusion due to things working differently
-                          with Object Pascal classes.
 
-                          In case of external classes, we only give a hint,
-                          because requiring override everywhere may make
-                          automated header translation tools too complex.
-
-                          The same goes for Java. }
                         if hasequalpara then
                           begin
                             if not(oo_is_external in _class.objectoptions) then
@@ -296,12 +280,7 @@ implementation
                           check_msg_str(vmtpd,pd);
                         if updatevalues then
                           begin
-                            { in case of Java, copy the real name from the parent,
-                              since overriding "Destroy" with "destroy" is not
-                              going to work very well }
-                            if is_java_class_or_interface(_class) and
-                               (pd.procsym.realname<>vmtpd.procsym.realname) then
-                              pd.procsym.realname:=vmtpd.procsym.realname;
+
                             { in case we are overriding an abstract method,
                               decrease the number of abstract methods in this class }
                             if (po_abstractmethod in vmtpd.procoptions) then
@@ -353,17 +332,7 @@ implementation
                     visibility update the vmt info }
                   if vmtentryvis>pd.visibility then
                     begin
-                      if po_auto_raised_visibility in vmtpd.procoptions then
-                        begin
-                          if updatevalues then
-                            begin
-                              pd.visibility:=vmtentryvis;
-                              { this one's visibility is now also auto-raised }
-                              include(pd.procoptions,po_auto_raised_visibility);
-                            end
-                        end
-                      else
-                        MessagePos4(pd.fileinfo,parser_n_ignore_lower_visibility,
+                      MessagePos4(pd.fileinfo,parser_n_ignore_lower_visibility,
                           pd.fullprocname(false),
                           visibilityname[pd.visibility],TObjectDef(vmtpd.owner.defowner).objrealname^,visibilityname[vmtentryvis])
                       end
@@ -385,12 +354,7 @@ implementation
                       if (vmtpd.extnumber<>i) then
                         InternalError(200611084);
                       pd.extnumber:=vmtpd.extnumber;
-                      { in case of Java, copy the real name from the parent,
-                        since overriding "Destroy" with "destroy" is not
-                        going to work very well }
-                      if is_java_class_or_interface(_class) and
-                         (pd.procsym.realname<>vmtpd.procsym.realname) then
-                        pd.procsym.realname:=vmtpd.procsym.realname;
+
                       vmtpd:=pd;
                     end;
                   result:=true;
@@ -408,12 +372,10 @@ implementation
                      if not(po_reintroduce in pd.procoptions) then
                        begin
                          if not is_object(_class) and
-                            not is_objc_class_or_protocol(_class) and
-                            not is_java_class_or_interface(_class) then
+                            not is_objc_class_or_protocol(_class) then
                            MessagePos1(pd.fileinfo,parser_w_should_use_override,pd.fullprocname(false))
                          else
-                           { objects don't allow starting a new virtual tree
-                             and neither do Objective-C or Java }
+
                            MessagePos1(pd.fileinfo,parser_e_header_dont_match_forward,vmtpd.fullprocname(false));
                        end;
                      { disable/hide old VMT entry }
@@ -574,12 +536,7 @@ implementation
                   begin
                     if (TObjectDef(implprocdef.struct).objecttype<>odt_objcclass) then
                       begin
-                        { in case of Java, copy the real name from the parent,
-                          since overriding "Destroy" with "destroy" is not
-                          going to work very well }
-                        if is_javaclass(implprocdef.struct) and
-                           (implprocdef.procsym.realname<>TProcDef(def).procsym.realname) then
-                          implprocdef.procsym.realname:=TProcDef(def).procsym.realname;
+
                         ImplIntf.AddImplProc(implprocdef);
                       end
                     else
@@ -775,10 +732,8 @@ implementation
            odt_objcclass,
            odt_objccategory,
            odt_objcprotocol,
-           odt_javaclass,
            odt_interfacecom_property,
-           odt_interfacecom_function,
-           odt_interfacejava] then
+           odt_interfacecom_function] then
          exit;
 
         { don't generate VMT for generics (only use duplicates/overrides detection) }
@@ -883,8 +838,7 @@ implementation
         insert_struct_hidden_paras(_class);
         build_interface_mappings;
         if Assigned(_class.ImplementedInterfaces) and
-           not(is_objc_class_or_protocol(_class)) and
-           not(is_java_class_or_interface(_class)) then
+           not(is_objc_class_or_protocol(_class)) then
           begin
             { Optimize interface tables to reuse wrappers }
             intf_optimize_vtbls;
@@ -901,14 +855,9 @@ implementation
         ImplIntf : TImplementedInterface;
         i: LongInt;
       begin
-        { Find Procdefs implementing the interfaces (both Objective-C protocols
-          and Java interfaces can have multiple parent interfaces, but in that
-          case obviously no implementations are required) }
+
         if Assigned(_class.ImplementedInterfaces) and
-           not(_class.objecttype in [odt_objcprotocol,odt_interfacejava]) and
-           // abstract java classes do not have to implement all interface
-           // methods. todo: check that non-abstract descendents do!
-           not((_class.objecttype=odt_javaclass) and (oo_is_abstract in _class.objectoptions)) then
+           not(_class.objecttype in [odt_objcprotocol]) then
           begin
             { Collect implementor functions into the tImplementedInterface.procdefs }
             case _class.objecttype of
@@ -920,13 +869,9 @@ implementation
                       intf_get_procdefs_recursive(ImplIntf,ImplIntf.IntfDef)
                     end;
                 end;
-              odt_objcclass,
-              odt_javaclass:
+              odt_objcclass:
                 begin
-                  { Object Pascal interfaces are afterwards optimized via the
-                    intf_optimize_vtbls() method, but we can't do this for
-                    protocols/Java interfaces -> check for duplicates here
-                    already. }
+
                   handledprotocols:=TFPObjectList.create(false);
                   for i:=0 to _class.ImplementedInterfaces.count-1 do
                     begin

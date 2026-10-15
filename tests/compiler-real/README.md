@@ -6,7 +6,7 @@ ARM. Win64 applications now have a distinct ten-byte Extended. Currency and
 Comp keep their integer representation on Win64/ARM. Microsoft `CExtended`
 remains Double, including C varargs conversions.
 
-NXU long revision 41 retains the revision-39 ten-byte real payloads for x86
+NXU long revision 43 retains the revision-39 ten-byte real payloads for x86
 targets and eight-byte payloads for ARM targets. Rebuild the compiler, RTL, packages and consumers.
 Currency literal range state and exact scaled values survive PPU reuse.
 

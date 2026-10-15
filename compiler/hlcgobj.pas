@@ -4538,10 +4538,7 @@ implementation
             if (dst_size.size<src_size.size) then
               begin
                 hregister2:=getregisterfordef(list,src_size);
-                { prevent problems with memory locations -- at this high
-                  level we cannot twiddle with the reference offset, since
-                  that may not mean anything (e.g., it refers to fixed-sized
-                  stack slots on Java) }
+
                 a_load_loc_reg(list,src_size,src_size,l,hregister2);
                 a_load_reg_reg(list,src_size,dst_size,hregister2,hregister);
               end

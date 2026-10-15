@@ -84,7 +84,7 @@ interface
         { write the VMT to al_globals }
         procedure writevmt;
         procedure writeinterfaceids(list: TAsmList);
-        { should the VMT writer be used at all (e.g., not for the JVM target) }
+
         class function use_vmt_writer: boolean; virtual;
       end;
       TVMTWriterClass = class of TVMTWriter;
