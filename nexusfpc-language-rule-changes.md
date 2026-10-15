@@ -41,6 +41,7 @@ Ordinary bug fixes that restore established Free Pascal behavior do not belong h
 | [NXLR-0005](#nxlr-0005-removal-of-kylix-and-turbo-pascal-compatibility-options) | Removal of Kylix and Turbo Pascal compatibility options | Implemented |
 | [NXLR-0006](#nxlr-0006-removal-of-nearfar-procedure-directives) | Removal of near/far procedure directives | Implemented |
 | [NXLR-0007](#nxlr-0007-removal-of-n-and-a5-legacy-options) | Removal of `$N` and `-a5` legacy options | Implemented |
+| [NXLR-0008](#nxlr-0008-c-style-assignment-operators-enabled-by-default) | C-style assignment operators enabled by default | Implemented |
 
 ## NXLR-0001: Complete Tokenization of Conditionally Compiled Source
 
@@ -601,6 +602,48 @@ forms and both `-a5` forms.
 ### Decision History
 
 - 2026-10-03: Removed both legacy options at the project owner's direction.
+
+## NXLR-0008: C-Style Assignment Operators Enabled by Default
+
+- Status: Implemented
+- Decision date: 2026-10-15
+- Implemented in: `compiler/globals.pas`, default module switches
+- Released in: Not released
+- Applies to: All retained compiler modes and targets
+- Supersedes: None
+
+### Rule
+
+C-style assignment operators `+=`, `-=`, `*=`, and `/=` are enabled by default.
+Programs and units do not need `-Sc` or `{$COPERATORS ON}` to use them.
+
+Explicit controls retain their existing behavior: `-Sc-` and
+`{$COPERATORS OFF}` disable these operators; `-Sc` and `{$COPERATORS ON}` enable
+them. A source directive controls its own module and can override the initial
+command-line setting. The explicit strict-syntax reset `-Ss` remains unchanged.
+
+### Upstream Free Pascal Behavior
+
+Free Pascal 3.2.2 disables C-style assignments by default. They can be enabled
+with `-Sc` or `{$COPERATORS ON}`.
+
+### Rationale and Compatibility
+
+The default matches Nexus application build settings and permits existing
+fpGUI source to compile without a separate command-line opt-in. This accepts
+previously rejected source without changing the meaning of valid assignments.
+Explicit opt-outs continue to reject C-style assignments with the existing
+diagnostic. Units shared with upstream FPC can retain an explicit directive.
+
+### Tests
+
+`tests/switches/Run-NXCOperatorsTests.sh` checks all four operators at runtime,
+the default and six retained language modes, command-line opt-out, source
+opt-out, source opt-in overriding the command line, and directive ordering.
+
+### Decision History
+
+- 2026-10-15: Enabled by default at the project owner's direction.
 
 ## Change Record Format
 

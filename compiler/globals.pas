@@ -474,7 +474,7 @@ Const
         );
         GlobalSwitches : [cs_check_unit_name,cs_link_static,cs_link_lld];
         TargetSwitches : [];
-        ModuleSwitches : [cs_extsyntax,cs_implicit_exceptions];
+        ModuleSwitches : [cs_extsyntax,cs_implicit_exceptions,cs_support_c_operators];
         LocalSwitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_refcountedstrings];
         ModeSwitches : FPCModeSwitches + [m_default_ansistring];
         OptimizerSwitches : [];
