@@ -35,7 +35,7 @@ function Assert-Same([string]$Left, [string]$Right) {
     if ((Get-FileHash -LiteralPath $Left).Hash -ne (Get-FileHash -LiteralPath $Right).Hash) { throw "Generated file mismatch: $Left; $Right" }
 }
 $names = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','plex','pyacc')
+    'rstconv','bin2obj')
 foreach ($name in $names) {
     if (-not (Test-Path -LiteralPath (Join-Path $bin ($name+'.exe')))) { throw "Missing release tool: $name" }
 }
@@ -49,17 +49,14 @@ try {
     Assert-Contains 'driver-identity.log' $identity.Identity
 
     [IO.File]::WriteAllBytes((Join-Path $OutputRoot 'bytes.bin'),[byte[]]@(1,2,3,127))
-    Run-Step 'data-include' (Join-Path $bin 'data2inc.exe') @('-b','-s','bytes.bin','data.inc','DataBytes')
     Run-Step 'binary-include' (Join-Path $bin 'bin2obj.exe') @('-c','ObjBytes','-o','object.inc','bytes.bin')
     Write-Fixture 'native.pas' @'
 program native;
 {$mode objfpc}{$H+}
 uses SysUtils;
-{$i data.inc}
 {$i object.inc}
 resourcestring Greeting = 'forge-tools-ok';
 begin
-  if (Ord(DataBytes[0,1])<>1) or (Ord(DataBytes[0,4])<>127) then Halt(1);
   if (ObjBytes[0]<>1) or (ObjBytes[3]<>127) then Halt(2);
   WriteLn(Greeting);
 end.
@@ -70,14 +67,8 @@ end.
     Run-Step 'ppu-read' (Join-Path $bin 'ppufiles.exe') @('-O',(Join-Path $rtl 'sysutils.nxu'))
     Assert-Contains 'ppu-read.log' 'sysutils.o'
     Run-Step 'ppumove-help' (Join-Path $bin 'ppumove.exe') @('-h')
-    Run-Step 'postw32-help' (Join-Path $bin 'postw32.exe') @('--help')
     Run-Step 'resource-strings' (Join-Path $bin 'rstconv.exe') @('-i','native.rsj','-o','native.po')
     Assert-Contains 'native.po' 'forge-tools-ok'
-    Write-Fixture 'depunit.pas' "unit depunit;`ninterface`nimplementation`nend.`n"
-    Write-Fixture 'dependency.pas' "program dependency;`nuses depunit;`nbegin`nend.`n"
-    Run-Step 'dependencies' (Join-Path $bin 'ppdep.exe') @('dependency.pas')
-    Assert-Contains 'dependencies.log' 'depunit'
-
     # LLVM is the required toolchain. The compiler owns normalization and LLD
     # receives RES directly; there is no standalone resource converter.
     $null = Get-Command clang.exe, llvm-rc.exe -CommandType Application -ErrorAction Stop
@@ -98,54 +89,6 @@ end.
     Run-Step 'resource-compile' $driver ($compile + @('resourceprobe.pas'))
     Run-Step 'resource-runtime' (Join-Path $OutputRoot 'resourceprobe.exe') @()
     Assert-Contains 'resource-runtime.log' 'resource-ok'
-
-    Write-Fixture 'lexer.l' @'
-%{
-program lexer;
-uses lexlib;
-%}
-%%
-[0-9]+  return(7);
-"ok"    return(8);
-.       ;
-%%
-begin
-  Assign(yyinput, 'lexer.input'); Reset(yyinput);
-  if yylex<>7 then Halt(1);
-  if yytext<>'123' then Halt(2);
-  if yylex<>8 then Halt(3);
-  if yytext<>'ok' then Halt(4);
-  Close(yyinput);
-end.
-'@
-    Write-Fixture 'lexer.input' '123 ok '
-    Write-Fixture 'parser.y' @'
-%{
-program parser;
-uses yacclib;
-var supplied: Boolean;
-%}
-%token NUMBER
-%%
-input: NUMBER ;
-%%
-function yylex: Integer;
-begin
-  if supplied then yylex:=0 else begin supplied:=True; yylex:=NUMBER; end;
-end;
-begin
-  supplied:=False;
-  if yyparse<>0 then Halt(1);
-end.
-'@
-    $parserUnits = '-Fu'+(Join-Path $bootstrap 'tools/packages/tplylib/src')
-    foreach ($kind in @('lexer','parser')) {
-        $generator = if ($kind -eq 'lexer') { 'plex.exe' } else { 'pyacc.exe' }
-        $inputFile = if ($kind -eq 'lexer') { 'lexer.l' } else { 'parser.y' }
-        Run-Step ($kind+'-generate') (Join-Path $bin $generator) @($inputFile,($kind+'.pas'))
-        Run-Step ($kind+'-compile') $driver ($compile + @('-Sg',$parserUnits,($kind+'.pas')))
-        Run-Step ($kind+'-run') (Join-Path $OutputRoot ($kind+'.exe')) @()
-    }
 
     # Native release generators must reproduce the stock-seed generator outputs.
     $generated = Join-Path $OutputRoot 'tables'

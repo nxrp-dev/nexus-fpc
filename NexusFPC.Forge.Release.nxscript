@@ -14,7 +14,7 @@ Group ReleaseAssembly {
         Source: "build/forge-bootstrap/tools/bin";
         Destination: "build/forge-bootstrap/distribution/bin/x86_64-win64";
         Recursive: True;
-        IncludeMasks: ["*.exe", "*.cod"];
+        IncludeMasks: ["*.exe"];
     }
     CopyFile I386Compiler {
         Source: "build/forge-bootstrap/cross/i386-linux/ppcross386.exe";

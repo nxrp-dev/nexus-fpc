@@ -10,7 +10,7 @@ Group ReleaseTools {
         Source: "utils";
         Destination: "build/forge-bootstrap/tools/source";
         Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc", "*.cod"];
+        IncludeMasks: ["*.pas", "*.inc"];
         ExcludeNames: "units;bin";
     }
     CopyFile Stage_rtl_objpas {
@@ -52,12 +52,6 @@ Group ReleaseTools {
     CopyFile Stage_hash {
         Source: "packages/hash/src";
         Destination: "build/forge-bootstrap/tools/packages/hash/src";
-        Recursive: True;
-        IncludeMasks: ["*.pas", "*.inc"];
-    }
-    CopyFile Stage_tplylib {
-        Source: "packages/tplylib/src";
-        Destination: "build/forge-bootstrap/tools/packages/tplylib/src";
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];
     }
@@ -125,20 +119,6 @@ Group ReleaseTools {
         Output: "build/forge-bootstrap/tools/bin/msg2inc.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/msg2inc";
     }
-    CreateDirectory Units_data2inc { Path: "build/forge-bootstrap/tools/units/data2inc"; }
-    FPC Build_data2inc (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/data2inc.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/data2inc.pas";
-        Output: "build/forge-bootstrap/tools/bin/data2inc.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/data2inc";
-    }
-    CreateDirectory Units_ppdep { Path: "build/forge-bootstrap/tools/units/ppdep"; }
-    FPC Build_ppdep (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/ppdep.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/ppdep.pas";
-        Output: "build/forge-bootstrap/tools/bin/ppdep.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/ppdep";
-    }
     CreateDirectory Units_rstconv { Path: "build/forge-bootstrap/tools/units/rstconv"; }
     FPC Build_rstconv (HostTool) {
         Source: ["build/forge-bootstrap/tools/source/rstconv.pas"];
@@ -152,37 +132,6 @@ Group ReleaseTools {
         EntryPoint: "build/forge-bootstrap/tools/source/bin2obj.pas";
         Output: "build/forge-bootstrap/tools/bin/bin2obj.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/bin2obj";
-    }
-    CreateDirectory Units_postw32 { Path: "build/forge-bootstrap/tools/units/postw32"; }
-    FPC Build_postw32 (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/postw32.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/postw32.pas";
-        Output: "build/forge-bootstrap/tools/bin/postw32.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/postw32";
-    }
-    CreateDirectory Units_plex { Path: "build/forge-bootstrap/tools/units/plex"; }
-    FPC Build_plex (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/tply/plex.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/tply/plex.pas";
-        Output: "build/forge-bootstrap/tools/bin/plex.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/plex";
-        LabelAndGoto: True;
-    }
-    CreateDirectory Units_pyacc { Path: "build/forge-bootstrap/tools/units/pyacc"; }
-    FPC Build_pyacc (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/tply/pyacc.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/tply/pyacc.pas";
-        Output: "build/forge-bootstrap/tools/bin/pyacc.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/pyacc";
-        LabelAndGoto: True;
-    }
-    CopyFile LexerSkeleton {
-        Source: "build/forge-bootstrap/tools/source/tply/yylex.cod";
-        Destination: "build/forge-bootstrap/tools/bin/yylex.cod";
-    }
-    CopyFile ParserSkeleton {
-        Source: "build/forge-bootstrap/tools/source/tply/yyparse.cod";
-        Destination: "build/forge-bootstrap/tools/bin/yyparse.cod";
     }
     CopyFile NativeCompiler {
         Source: "build/forge-bootstrap/cycle3/ppcx64.exe";

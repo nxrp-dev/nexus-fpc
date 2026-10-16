@@ -16,7 +16,7 @@ $targets = @(
 )
 $compilers = @{i386='ppcross386.exe'; x86_64='ppcrossx64.exe'; aarch64='ppcrossa64.exe'}
 $tools = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','plex','pyacc')
+    'rstconv','bin2obj')
 
 function Require-File([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing release input: $Path" }
@@ -64,7 +64,6 @@ try {
     if ($InputsOnly) {
         Require-File $identityFile
         foreach ($name in $tools) { Require-File (Join-Path $toolBin ($name+'.exe')) }
-        foreach ($name in @('yylex.cod','yyparse.cod')) { Require-File (Join-Path $toolBin $name) }
         $native = Join-Path $bootstrap 'cycle3/ppcx64.exe'
         Assert-Same $native (Join-Path $toolBin 'ppcx64.exe')
         $canonical = @{x86_64=$native}
@@ -83,7 +82,7 @@ try {
         foreach ($compiler in $canonical.Values) {
             & (Join-Path $SourceRoot 'scripts/Test-NexusFPCBuildIdentity.ps1') -Compiler $compiler -IdentityFile $identityFile
         }
-        Write-Host 'PASS release inputs: 20 tools, three matching compiler families, 13 target RTLs'
+        Write-Host "PASS release inputs: $($tools.Count) tools, three matching compiler families, 13 target RTLs"
         exit 0
     }
 
@@ -95,7 +94,7 @@ try {
     New-Item -ItemType Directory -Path $OutputRoot | Out-Null
     $steps = [Collections.Generic.List[object]]::new()
     $bin = Join-Path $ReleaseRoot 'bin/x86_64-win64'
-    foreach ($name in ($tools | ForEach-Object { $_+'.exe' }) + @('ppcx64.exe','yylex.cod','yyparse.cod')) {
+    foreach ($name in ($tools | ForEach-Object { $_+'.exe' }) + @('ppcx64.exe')) {
         Assert-Same (Join-Path $toolBin $name) (Join-Path $bin $name)
     }
     foreach ($cpu in @('i386','aarch64')) {

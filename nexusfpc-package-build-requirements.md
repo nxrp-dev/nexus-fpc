@@ -26,6 +26,8 @@ FPCUnit helper. `fcl-process` moved to Nexus
 `packages/nexus-packages/fcl-process` on the same date, preserving its
 source, examples, tests and static review report. Rows marked relocated record
 other moves to Nexus; the other listed directories are in this repository.
+`tplylib` and the TP Lex/Yacc tools were retired on 2026-10-16 after their last
+production consumer, the RC parser, was removed. They are not bootstrap inputs.
 `src` is the usual source root; exceptions and platform-specific paths are below.
 
 | Package | Declared dependencies | Details worth preserving |
@@ -41,7 +43,7 @@ other moves to Nexus; the other listed directories are in this repository.
 | `fcl-net` | `fcl-base`, `fcl-xml`, `rtl-extra`; `fcl-async` on Linux | OS-specific include directories. |
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
 | `fcl-registry` | `fcl-base`, `fcl-xml` | Includes `tests/tregtestframework.pas`. |
-| `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM; no resource dependency on `tplylib`. |
+| `fcl-res` | RTL metadata reader closure; `fcl-base` for the optional `restool` example | Retained FileInfo, RES/PE/ELF/Mach-O readers and version models. Compiler resources use RTL-only catalog/adapters and LLVM. |
 | `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |
 | `iconvenc` | — | Recipe marks libc required. |
@@ -54,7 +56,6 @@ other moves to Nexus; the other listed directories are in this repository.
 | `rtl-extra` | — | OS-specific source selection, particularly Android `clocale`. |
 | `rtl-generics` | `rtl-objpas` | Sources in `src`, includes in `src/inc`. |
 | `rtl-objpas` | — | Sources in `src/inc` and platform directories; CPU-specific includes. |
-| `tplylib` | — | `lexlib.pas`, `yacclib.pas`; recipe option `-Sg`. |
 | `univint` | — | Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; recipe used `-Mmacpas` and individual-unit compilation. |
 | `winunits-base` | `fcl-registry`, `fcl-base`, `rtl-extra` | `buildwinutilsbase.pas` aggregate, implicit units and `w32default.res`; recipe marks libc required. |
 | `x11` | — | Bindings and their external libraries must be assessed from the selected units. |

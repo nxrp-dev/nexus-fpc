@@ -15,8 +15,7 @@ FPC HostTool {
         "build/forge-bootstrap/tools/packages/fcl-res/src",
         "build/forge-bootstrap/tools/packages/fcl-json/src",
         "build/forge-bootstrap/tools/packages/paszlib/src",
-        "build/forge-bootstrap/tools/packages/hash/src",
-        "build/forge-bootstrap/tools/packages/tplylib/src"
+        "build/forge-bootstrap/tools/packages/hash/src"
     ];
     IncludePaths: [
         "build/forge-bootstrap/tools/packages/rtl-objpas/src/inc",

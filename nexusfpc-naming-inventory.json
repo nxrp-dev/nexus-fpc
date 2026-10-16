@@ -39690,5 +39690,29 @@
       "validation": "build/clang-concurrency-removal/validation.json",
       "naming_normalization_remains_paused": true
     }
+  ],
+  "retired_components": [
+    {
+      "date": "2026-10-16",
+      "paths": [
+        "utils/tply",
+        "packages/tplylib"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "RC parser retirement leaves no production consumer. Remove the generators, runtime units, grammar/template origins and release wiring together. Earlier naming batches and exceptions remain historical records.",
+      "baseline_commit": "814f931dab"
+    },
+    {
+      "date": "2026-10-16",
+      "paths": [
+        "utils/ppdep.pas",
+        "utils/postw32.pas",
+        "utils/data2inc.pas",
+        "utils/data2inc.exm"
+      ],
+      "status": "removed_by_owner_instruction",
+      "reason": "Unused release utilities and associated example retired; bin2obj/rstconv production consumers and creumap RTL generator remain.",
+      "baseline_commit": "814f931dab17857caa48be270cc67bcb930912e8"
+    }
   ]
 }

@@ -1,14 +1,16 @@
-This directory contains some utilities that come with the Free Pascal
-Compiler. NexusFPC builds release utilities through Forge's Bootstrap/Tools
-projects and installs their distribution through the Release project.
-See ../NexusFPC.Forge.md for commands and the complete tool inventory.
+This directory contains retained Free Pascal utilities. NexusFPC builds
+release tools through Forge's Bootstrap/Tools projects and installs their
+distribution through the Release project. See ../NexusFPC.Forge.md.
 
-Currently, the following things are provided:
+bin2obj : Converts binary data into Pascal include files; used by fpGUI's
+          image-generation tooling.
+rstconv : Converts resource-string tables to gettext PO or RC STRINGTABLE;
+          used by fpGUI's localization tooling.
+creumap : Generates Pascal character-mapping units and binary maps from
+          Unicode mapping files. Retained for RTL table regeneration;
+          it is not a shipped release executable.
 
-ppdep   : Creates a makefile which includes all interdependant units.
+The Pascal Lex/Yacc tools, ppdep, postw32, data2inc and its example,
+fpcmake/fpgmake generators, and utility make recipes are retired.
 
-tply/   : Pascal Lex and Yacc
-The fpcmake/fpgmake generators and utility make recipes are retired.
-
-Happy Coding !
 The Free Pascal Development Team.

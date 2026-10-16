@@ -252,20 +252,17 @@ To rebuild just the tools after a completed bootstrap:
 ```
 
 The Tools Project exports its binary directory and driver.
-It builds these 16 Win64 tools using the verified native compiler:
+It builds these 11 Win64 tools using the verified native compiler:
 
 | Purpose | Executables |
 | --- | --- |
 | Compiler launcher and PPU tools | `fpc`, `ppufiles`, `ppumove` |
 | Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
-| Data, dependencies and translations | `data2inc`, `bin2obj`, `ppdep`, `rstconv` |
-| Executable metadata | `postw32` |
-| Lexer/parser generators | `plex`, `pyacc` |
+| Binary includes and translations | `bin2obj`, `rstconv` |
 
-The output directory includes `ppcx64.exe` beside `fpc.exe`, and `yylex.cod` and
-`yyparse.cod` beside their generators. The launcher can therefore find its native
-compiler without an installed FPC on PATH. The Release Project adds the matching
-target RTLs and compiler-relative configuration for application unit searches.
+The output directory includes `ppcx64.exe` beside `fpc.exe`. The launcher can
+therefore find its native compiler without an installed FPC on PATH. The Release
+Project adds the matching target RTLs and compiler-relative configuration for application unit searches.
 
 Each tools build clears its own output tree, stages tool and required package
 source, and uses separate unit directories for each executable. It consumes no
@@ -285,17 +282,24 @@ Use `-f rc` directly for STRINGTABLE output. Validate with
 `bash tests/resource-formats/Run-NXRstConvTests.sh <rstconv> <output>`.
 
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
-PPU reading, dependency and translation output,
-compiler-driven RC embedding, generated lexer/parser compilation and execution,
-and regeneration of the compiler tables/messages. `ppumove` and `postw32`
-receive help/startup checks, not exhaustive behavioral tests.
+PPU reading and translation output,
+compiler-driven RC embedding and regeneration of the compiler tables/messages.
+`ppumove` receives a help/startup check, not exhaustive behavioral testing.
 
-Runtime checks required small source corrections: `ppdep` now sizes string
-results before writing them; the lexer/parser helpers allocate strings normally;
-lexer nodes use typed allocation including alignment padding; and the instruction/
-register generators check for empty lines before indexing. No compiler backend
-or Forge engine changes were required. `ppdep` remains a line-oriented scanner:
-its fixture places the program and uses clauses on separate lines.
+The unused `ppdep`, `postw32`, and `data2inc` tools and `data2inc.exm` example
+are retired. They had no production invocation in the retained repositories.
+Windows subsystem/stack settings are already passed directly to LLD.
+`bin2obj` and `rstconv` remain for fpGUI image generation and localization;
+`creumap` remains as the RTL character-table generator, outside the shipped
+tool inventory. Historical notices remain in
+[the Nexus attribution ledger](../nexus/ATTRIBUTIONS.md#free-pascal-and-nexusfpc).
+
+The unused TP Lex/Yacc generators (`plex`, `pyacc`), their grammar/templates,
+and `tplylib` runtime units are retired. After removal of the RC parser, only
+the generators and their own release tests used that library. Compiler and RTL
+bootstrap use the retained `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`,
+`mka64reg` and `msg2inc` generators. Historical TP Lex/Yacc attribution remains
+in [the Nexus attribution ledger](../nexus/ATTRIBUTIONS.md#free-pascal-and-nexusfpc).
 
 ## Release assembly
 

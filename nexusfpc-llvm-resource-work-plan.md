@@ -124,6 +124,65 @@ outputs are under the authorized worktree, with no repository `build` directory.
 Sibling Nexus changes are the Setup fixture migration and its attribution record;
 pre-existing `fcl-image` removals are outside this migration's changes.
 
+### Owner-approved TP Lex/Yacc follow-up, 16 October 2026
+
+After completing the resource migration, the owner authorized removal of the
+remaining TP Lex/Yacc generators and library. `utils/tply` and
+`packages/tplylib` are retired, including the generated parser, `pyacc.y`
+grammar origin, skeleton templates and namespace wrappers. Forge no longer
+stages/builds/packages the tools or library, and the release checks no longer
+expect them. The 14 retained tools include all compiler bootstrap generators.
+Earlier plan references to preserving optional `plex`/`pyacc` describe the
+original scope and are superseded by this follow-up decision.
+
+The removal covers 30 files / 15,450 physical lines, including documentation
+and license text; the files and original notices remain in Git at `814f931dab`.
+Historical authorship is recorded in the Nexus attribution ledger. Validation
+artifacts are in `/media/kcollins/dev/worktree/tply-removal-20261016-o891vuma`.
+No compiler/RTL implementation or compiled-unit format changes are involved.
+
+Follow-up validation passes: Forge's actual compilation/contract validator
+accepts Bootstrap, Tools and Release in the isolated expected directory layout;
+Tools has exactly 14 compiler operations, matching both release-test tool lists.
+All six retained compiler generators build from stock FPC 3.2.2 with its matching
+RTL, and their 59 current table/message includes match the verified bootstrap
+byte-for-byte. No operational generator/library references remain. The initial
+probe omitted existing Forge dependencies (`Process` at its relocated Nexus
+path, `pthreads`, `fpsha256`, and `nxpackagefile`); completing its source paths
+resolved those harness failures without changing product code. An obsolete
+64-file harness threshold was corrected after verifying all 59 current outputs.
+`validation.json`, `bootstrap-generators/comparisons.json`, and the
+`forge-{bootstrap,tools,release}.log` files preserve the results. Compiler and RTL
+sources are unchanged; a new complete bootstrap was not run for this removal.
+PowerShell release checks were code-reviewed, not executed on Linux.
+
+### Owner-approved unused utility follow-up, 16 October 2026
+
+The owner subsequently authorized retirement of `utils/ppdep.pas`,
+`utils/postw32.pas`, `utils/data2inc.pas` and `utils/data2inc.exm`: four files /
+1,980 physical lines. Their Forge compiler operations, release-tool lists,
+example-dependent fixture code and self-tests are removed. The release now has
+11 tools. `bin2obj` and `rstconv` remain because fpGUI invokes them for image
+generation and localization; `creumap` remains for regenerating the retained
+RTL character tables. Windows linker code already supplies subsystem and stack
+options directly to LLD.
+
+Original authorship/notices remain in Git at `814f931dab` and in the Nexus
+attribution ledger. Validation artifacts are isolated in
+`/media/kcollins/dev/worktree/legacy-utils-removal-20261016-5fe9d174`.
+Compiler/RTL sources and compiled-unit formats are unchanged.
+
+Follow-up checks pass: Forge's actual compilation/contract validator accepts
+Bootstrap, Tools and Release; the 11 Tools operations agree with both release
+manifest lists. Fresh `bin2obj`/`rstconv` builds pass on Linux. The exact updated
+release smoke source compiles/runs using `bin2obj` output, its resourcestring
+converts to PO, and the retained RST/RSJ/PO/RC/codepage regression passes.
+The standalone harness initially omitted `hash` and `rtl-objpas` source paths;
+using the existing full Forge HostTool package closure resolved those harness
+failures without a product change. `commands.json`, `host-tool-paths.json`,
+`forge-*.log` and `validation.json` retain the evidence. No complete bootstrap
+was rerun for this removal. Native PowerShell checks were reviewed, not executed.
+
 ### Historical implementation batches
 
 The following records describe earlier stages and comparison oracles. References
@@ -390,14 +449,14 @@ Existing executable metadata readers can retain old-format reading where a demon
 
 ## Impact inventory
 
-The [file inventory](nexusfpc-llvm-resource-inventory.csv) contains **256 entries**, with the requested categories, classes where declared, tool/options responsibilities, changes and gates. Entries include unchanged dependencies, generated wrappers, diagnostics, tests and external consumers; this is not a claim that 256 files need editing.
+The [file inventory](nexusfpc-llvm-resource-inventory.csv) contains **285 entries**, with the requested categories, classes where declared, tool/options responsibilities, changes and gates. Entries include unchanged dependencies, generated wrappers, diagnostics, tests and external consumers; this is not a claim that 285 files need editing.
 
 | Category | Entries | Main components |
 | --- | --- | --- |
-| Retain unchanged | 81 | Runtime APIs, metadata reader closure, restored FileInfo, version model, optional restool extraction models and parser-generator library |
+| Retain unchanged | 76 | Runtime APIs, metadata reader closure, restored FileInfo, version model and optional restool extraction models |
 | Modify | 120 | Compiler catalog/adapters/LLVM pipeline, NXU 45 persistence, ownership, target/link wiring, Forge/release checks, fixtures and documentation |
 | Replace | 1 | Legacy compiler resource orchestration replaced by the synchronous integrated pipeline |
-| Remove | 54 | RC parser/preprocessor origins and outputs, resource writers, sidecar runtime/tools, obsolete registrations and duplicate sidecar tests |
+| Remove | 88 | RC parser/preprocessor origins and outputs, resource writers, sidecar runtime/tools, obsolete registrations, duplicate sidecar tests and subsequent TP Lex/Yacc/unused-utility retirements |
 | Requires further investigation | 0 | Earlier Setup and optional-model questions resolved; unsupported legacy JPEG wrapper retained unchanged and excluded from supported-input passes |
 
 The largest concrete replacement/removal candidates are 11,434 physical lines in the RC parser/preprocessor family, 2,942 in the native resource writer family, and 1,640 in standalone `fpcres`. Counts include comments and generated files, exclude namespaced wrappers, and are gross candidates rather than a net deletion estimate. A new catalog, adapters and emitter replace some of their behavior. Keep `elfdefaulttarget.inc` and `machodefaulttarget.inc`: both readers and writers include them, so writer removal does not make them dead code.
