@@ -38,7 +38,7 @@ Group ReleaseTools {
         IncludeMasks: ["*.pas", "*.inc"];
     }
     CopyFile Stage_fcl_json {
-        Source: "packages/fcl-json/src";
+        Source: "../../nexus/packages/nexus-packages/serialization/fcl-json/src";
         Destination: "build/forge-bootstrap/tools/packages/fcl-json/src";
         Recursive: True;
         IncludeMasks: ["*.pas", "*.inc"];

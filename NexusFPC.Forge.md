@@ -203,6 +203,12 @@ No make/fpmake process is used for these generation steps.
 ## Release tools
 
 `NexusFPC.Forge.Tools.nxscript` runs as an ordered Group at the end of Bootstrap.
+FCL JSON source is owned by the `nexus-packages` checkout at
+`../../nexus/packages/nexus-packages/serialization/fcl-json/src`, following the
+same workspace layout as the Forge dialect and templates. Keep that checkout
+available when building release tools. The tools stage a private source copy;
+their build does not consume installed JSON units or require a package SDK.
+
 To rebuild just the tools after a completed bootstrap:
 
 ```powershell

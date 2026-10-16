@@ -20,8 +20,13 @@ These are the explicitly declared package dependencies in each package's former
 `fpmake.pas`. The RTL is implicit. A dash means no additional package dependency
 was declared, not that the package needs no system libraries. Dependencies may
 cover optional units or tests; they are not necessarily required by every unit.
-All listed package directories still exist. `src` is the usual source root;
-the exceptions and platform-specific paths are recorded below.
+`fcl-json` moved to Nexus `packages/nexus-packages/serialization/fcl-json` on
+2026-10-15; its `FCLJSON.nxpackage` builds the runtime units without the optional
+FPCUnit helper. `fcl-process` moved to Nexus
+`packages/nexus-packages/fcl-process` on the same date, preserving its
+source, examples, tests and static review report. The remaining listed
+directories are in this repository. `src` is the usual source root;
+exceptions and platform-specific paths are below.
 
 | Package | Declared dependencies | Details worth preserving |
 | --- | --- | --- |
