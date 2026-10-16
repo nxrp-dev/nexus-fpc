@@ -42,7 +42,7 @@ exceptions and platform-specific paths are below.
 | `fcl-process` | `fcl-base` | `src`, platform includes; recipe option `-S2h`. |
 | `fcl-registry` | `fcl-base`, `fcl-xml` | Includes `tests/tregtestframework.pas`. |
 | `fcl-res` | `rtl-objpas`, `fcl-base`, `tplylib` | Used by release resource tools; current Forge tool staging already includes these sources. |
-| `fcl-xml` | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | `src/xmliconv.pas` uses `iconvenc`; recipe option `-S2h`. AIX is historical, not an added Nexus target. |
+| `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |
 | `iconvenc` | — | Recipe marks libc required. |
 | `iosxlocale` | `univint` | Apple locale bindings. |
