@@ -2,6 +2,12 @@
 
 Started: 2026-10-10. Scope: NexusFPC's `packages/univint` and `packages/cocoaint`.
 
+Relocated unchanged on 2026-10-16 to Nexus
+`packages/nexus-packages-apple/univint` and `cocoaint`, alongside `iosxlocale`.
+The [relocation record](../nexus/packages/nexus-packages-apple/MIGRATION.md)
+owns current locations and build instructions. Paths below describe the
+historical cleanup; no new code review was performed for the relocation.
+
 Apple targets supported by this cleanup are 64-bit Intel and ARM64. Remove
 nonfunctional APIs and declarations exclusive to 32-bit processes first. A
 32-bit integer field in a usable 64-bit API is not a 32-bit-only API. Preserve

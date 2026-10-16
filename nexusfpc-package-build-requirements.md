@@ -29,11 +29,15 @@ source, examples, tests and static review report. Rows marked relocated record
 other moves to Nexus; the other listed directories are in this repository.
 `tplylib` and the TP Lex/Yacc tools were retired on 2026-10-16 after their last
 production consumer, the RC parser, was removed. They are not bootstrap inputs.
+The Apple-only packages `univint`, `cocoaint` and `iosxlocale` moved on
+2026-10-16 to the dedicated `nexus-packages-apple` repository, cloned at Nexus
+`packages/nexus-packages-apple`. Their snapshots, hashes and migration results
+are saved there. Code review was explicitly waived for that relocation.
 `src` is the usual source root; exceptions and platform-specific paths are below.
 
 | Package | Declared dependencies | Details worth preserving |
 | --- | --- | --- |
-| `cocoaint` | `univint` | Darwin, x86_64/aarch64; `MACOSALL`, `COCOAALL`, `LEGACY_SETNEEDSDISPLAY` defines. |
+| `cocoaint` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/cocoaint`. Darwin, x86_64/aarch64; `MACOSALL`, `COCOAALL`, `LEGACY_SETNEEDSDISPLAY` defines retained. |
 | `fcl-async` | — | `fpasync.pas` uses `libasync`; the retained implementation is in `src/unix`. |
 | `fcl-base` | `rtl-objpas`; `univint` on Apple targets | OS include paths and event-log resource described below. |
 | `fcl-db` (relocated) | `fcl-base`, `fcl-xml`, `rtl-objpas`, `rtl-extra`, `fcl-json`; transitive `pthreads` and encoding/compression/hash helpers | Moved on 2026-10-16 to Nexus `packages/nexus-packages/db/fcl-db`; `FCLDB.nxpackage` builds 66 runtime units. The saved review preserves the original source/hashes, regression proofs, corrections and retained-suite results. |
@@ -48,7 +52,7 @@ production consumer, the RC parser, was removed. They are not bootstrap inputs.
 | `fcl-xml` (relocated) | `fcl-base`; `iconvenc` on Linux/Apple/AIX in the old recipe | Moved on 2026-10-16 to Nexus `packages/nexus-packages/serialization/fcl-xml`; `FCLXML.nxpackage` builds the runtime units and target encoding adapter. Retained source/test evidence and corrections are documented in the package review. |
 | `hash` | `rtl-objpas`, `rtl-extra` | CPU-specific assembler includes; old `unixcrypt` target restricted to Linux. |
 | `iconvenc` | — | Recipe marks libc required. |
-| `iosxlocale` | `univint` | Apple locale bindings. |
+| `iosxlocale` (relocated) | `univint` | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/iosxlocale`; locale and wide-string bindings. |
 | `jni` | — | `src/jni.pas`; recipe used `-Ur` and individual-unit compilation. Native JNI is independent of the retired JVM compiler backend. |
 | `libffi` | `rtl-objpas` | `ffi.pas`, `ffi.manager.pas`; recipe marks libc required. The recipe builds Pascal bindings, not libffi C sources. |
 | `pasjpeg` | — | `jctrans.pas` plus the `buildpasjpeg.pas` aggregate; `jconfig.inc`. |
@@ -57,7 +61,7 @@ production consumer, the RC parser, was removed. They are not bootstrap inputs.
 | `rtl-extra` | — | OS-specific source selection, particularly Android `clocale`. |
 | `rtl-generics` | `rtl-objpas` | Sources in `src`, includes in `src/inc`. |
 | `rtl-objpas` | — | Sources in `src/inc` and platform directories; CPU-specific includes. |
-| `univint` | — | Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; recipe used `-Mmacpas` and individual-unit compilation. |
+| `univint` (relocated) | — | Moved 2026-10-16 to Nexus `packages/nexus-packages-apple/univint`. Apple x86_64/aarch64; `MacOS.pas`, `MacOSAll.pas`, implicit units; the nxbuild recipe preserves MacPas mode. |
 | `winunits-base` | `fcl-registry`, `fcl-base`, `rtl-extra` | `buildwinutilsbase.pas` aggregate, implicit units and `w32default.res`; recipe marks libc required. |
 | `x11` | — | Bindings and their external libraries must be assessed from the selected units. |
 
