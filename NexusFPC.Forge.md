@@ -241,7 +241,7 @@ Makefile generators (`fpcmake`/`fpgmake`), the retrying file-deletion utility
 `rmwait`, and the configuration generator `fpcmkcfg` are retired. Forge copies
 the fixed release configuration directly. The `fpmkunit` and `fcl-process`
 sources are no longer staged for release tools; package selection remains
-separate. The JVM resource utility (`fpcjres`) is also excluded.
+separate. The JVM resource utility (`fpcjres`) has been removed.
 
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
 PPU reading, dependency and translation output,

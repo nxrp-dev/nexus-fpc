@@ -28,4 +28,9 @@ for arch in littleendian bigendian; do
     "$converter" -of external -a "$arch" -o "$arch.fpcres" fixture.res >"$arch.log" 2>&1
     test -s "$arch.fpcres"
 done
-echo 'PASS: XCOFF rejected; retained resource formats produce readable objects'
+for arch in i386 x86_64 aarch64; do
+    "$converter" -of elf -a x86_64 -o "coff-$arch-readback.o" "coff-$arch.o" \
+        >"coff-$arch-readback.log" 2>&1
+    cmp elf-x86_64.o "coff-$arch-readback.o"
+done
+echo 'PASS: XCOFF rejected; retained resource objects readable; COFF read-back preserves resources'
