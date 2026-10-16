@@ -243,6 +243,11 @@ the fixed release configuration directly. The `fpmkunit` and `fcl-process`
 sources are no longer staged for release tools; package selection remains
 separate. The JVM resource utility (`fpcjres`) has been removed.
 
+`rstconv` retains gettext PO and RC STRINGTABLE output. OS/2 MSG output and
+the OS/2-style inline MESSAGETABLE mode are removed; `-f msg` and `-s` are rejected.
+Use `-f rc` directly for STRINGTABLE output. Validate with
+`bash tests/resource-formats/Run-NXRstConvTests.sh <rstconv> <output>`.
+
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
 PPU reading, dependency and translation output,
 resource conversion/sharing, generated lexer/parser compilation and execution,

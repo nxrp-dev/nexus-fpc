@@ -33,16 +33,10 @@ resourcestring
     '  -o file        Write output to specified file (REQUIRED)'+LineEnding+
     '  -f format      Specifies the output format:'+LineEnding+
     '                 po    GNU gettext .po (portable) format (DEFAULT)'+LineEnding+
-    '                 msg   IBM OS/2 MSG file format'+LineEnding+
     '                 rc    Resource compiler .rc format'+LineEnding+LineEnding+
     '.po format only options are:'+LineEnding+
     '  -c char set    Adds a header specifying the given character set (OPTIONAL).'+LineEnding+LineEnding+
-    'OS/2 MSG file only options are:'+LineEnding+
-    '  -c identifier  Specifies the component identifier (REQUIRED).'+LineEnding+
-    '                 Identifier is any three chars in upper case.'+LineEnding+
-    '  -n number      Specifies the first message number [1-9999] (OPTIONAL).'+LineEnding+LineEnding+
     'Resource compiler script only options are:'+LineEnding+
-    '  -s             Use STRINGTABLE instead of MESSAGETABLE'+LineEnding+
     '  -c identifier  Use identifier as ID base (ID+n) (OPTIONAL)'+LineEnding+
     '  -n number      Specifies the first ID number (OPTIONAL)'+LineEnding+
     '.rsj-input format-only options are:'+LineEnding+
@@ -51,11 +45,9 @@ resourcestring
 
 
   InvalidOption = 'Invalid option - ';
-  RequiredOption = 'Required option is absent - ';
   OptionAlreadySpecified = 'Option has already been specified - ';
   NoOutFileName = 'No output filename specified';
   InvalidOutputFormat = 'Invalid output format -';
-  MessageNumberTooBig = 'Message number too big';
   InvalidRange = 'Invalid range of the first message number';
   MissingOption = 'Missing option after parameter ';
   UnsupportedOutputCodePage = 'Unsupported output code page specified: ';
@@ -75,7 +67,6 @@ var
   Identifier: String;
   OutputCodePage: LongInt;
   FirstMessage: Word;
-  MessageTable: Boolean;
 
 procedure ReadRSTFile;
 var
@@ -245,8 +236,7 @@ begin
   Close(F);
 end;
 
-// This routine stores rst file in rc format. Can be written as MESSAGETABLE
-// as STRINGTABLE. Beware! OS/2 RC doesn't support lines longer than 255 chars.
+// Convert the resource string table into a resource compiler STRINGTABLE.
 procedure ConvertToRC;
 var
   I, J: Integer;
@@ -259,10 +249,7 @@ begin
   Assign(F, OutFileName);
   Rewrite(F);
 
-  If MessageTable then
-    WriteLn(F, 'MESSAGETABLE')
-  else
-    WriteLn(F, 'STRINGTABLE');
+  WriteLn(F, 'STRINGTABLE');
 
   WriteLn(F, 'BEGIN');
   If Identifier<>'' then WriteLn(F, '#define ', Identifier);
@@ -305,59 +292,6 @@ begin
   Close(F);
 end;
 
-// This routine stores rst file in OS/2 msg format. This format is preffered
-// for help screens, messages, etc.
-procedure ConvertToOS2MSG;
-var
-  I, J: Integer;
-  F: Text;
-  Item: TConstItem;
-  S: String;
-begin
-  If (ConstItems.Count+FirstMessage-1)>9999 then
-  begin
-    WriteLn(MessageNumberTooBig);
-    Halt(1);
-  end;
-
-  Identifier:=Copy(UpperCase(Identifier), 1, 3);
-
-  Assign(F, OutFileName);
-  Rewrite(F);
-
-  WriteLn(F, Identifier);
-
-  // Fake entry, because MKMSGF limitation
-  WriteLn(F, Format('%s%.4d?: ',[Identifier, FirstMessage-1]));
-
-  for I := 0 to ConstItems.Count - 1 do begin
-    Item := TConstItem(ConstItems.Items[I]);
-
-    // Prepare comment string
-    // Convert string to C-style syntax
-    S := '';
-    J:=1;
-    while J<=Length(Item.Value) do
-    begin
-      if Copy(Item.Value, J, 2)=#13#10 then
-      begin
-        S:=S+#13#10';';
-        Inc(J, 2);
-      end else begin
-        S := S + Item.Value[J];
-        Inc(J);
-      end;
-    end;
-
-    // Write msg entry
-    WriteLn(F, ';', Item.ModuleName, '.', Item.ConstName);
-    WriteLn(F, Format(';%s%.4dP: %s %%0',[Identifier, I+FirstMessage, S]));
-    WriteLn(F, Format('%s%.4dP: %s %%0',[Identifier, I+FirstMessage, Item.Value]));
-  end;
-
-  Close(F);
-end;
-
 type
   TConversionProc = procedure;
 var
@@ -381,7 +315,6 @@ begin
   HeaderCharSet:='';
   Identifier:='';
   FirstMessage:=0;
-  MessageTable:=True;
   OutputCodePage:=-1;
 
   I := 1;
@@ -407,10 +340,7 @@ begin
       end;
       if ParamStr(I + 1) = 'po' then
         OutputFormat:='po'
-      else if ParamStr(I + 1) = 'msg' then begin
-        OutputFormat:='msg';
-        ConversionProc := @ConvertToOS2MSG;
-      end else if ParamStr(I + 1) = 'rc' then begin
+      else if ParamStr(I + 1) = 'rc' then begin
         OutputFormat:='rc';
         ConversionProc := @ConvertToRC;
       end else begin
@@ -434,13 +364,6 @@ begin
         Identifier:=ParamStr(I+1);
       end;
       Inc(I, 2);
-    end else if ParamStr(I) = '-s' then begin
-      if not MessageTable then begin
-        WriteLn(StdErr, OptionAlreadySpecified, '-s');
-        Halt(1);
-      end;
-      MessageTable:=False;
-      Inc(I);
     end else if ParamStr(I) = '-n' then begin
       if FirstMessage <> 0 then begin
         WriteLn(StdErr, OptionAlreadySpecified, '-n');
@@ -487,13 +410,8 @@ begin
     Halt(1);
   end;
 
-  If ((OutputFormat<>'msg') and (OutputFormat<>'rc')) and ((Identifier<>'') or (FirstMessage<>0)) then begin
+  If (OutputFormat<>'rc') and ((Identifier<>'') or (FirstMessage<>0)) then begin
     WriteLn(StdErr, InvalidOption, '');
-    Halt(1);
-  end;
-
-  If (OutputFormat='msg') and (Identifier='') then begin
-    WriteLn(StdErr, RequiredOption, '-c');
     Halt(1);
   end;
 
