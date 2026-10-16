@@ -28,7 +28,7 @@ unit tests.generics.trees;
 interface
 
 uses
-  fpcunit, testregistry, testutils, tests.generics.utils,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, tests.generics.utils,
   Classes, SysUtils, Generics.Collections;
 
 type
@@ -38,7 +38,7 @@ type
   { TTestTrees }
 
   TTestTrees = class(TTestCollections)
-  published
+  public
     procedure Test_IndexedAVLTree_Add_General;
     procedure Test_IndexedAVLTree_Add;
     procedure Test_IndexedAVLTree_Delete;
@@ -46,6 +46,8 @@ type
 
     procedure Test_TAVLTreeMap_Notification;
   end;
+
+procedure RegistertestsgenericstreesTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -76,11 +78,11 @@ begin
       LNodes.Add(LTree.Add('0'+i.ToString));
       LNumbers.Clear;
       for n in LTree.Nodes do
-        Check(LNumbers.Add(LTree.NodeToIndex(n)), 'Wrong index (duplicate) of '+ i.ToString + ' for node ' + n.Key);
+        TestContext.AssertTrue(LNumbers.Add(LTree.NodeToIndex(n)), 'Wrong index (duplicate) of '+ i.ToString + ' for node ' + n.Key);
       for j := 0 to LNodes.Count - 1 do
-        Check(LNumbers.Contains(j), 'Missing index ' + j.ToString + ' for i = ' + i.ToString);
+        TestContext.AssertTrue(LNumbers.Contains(j), 'Missing index ' + j.ToString + ' for i = ' + i.ToString);
       LTree.ConsistencyCheck;
-      CheckEquals(i+1, LTree.Count, 'Wrong tree count');
+      TestContext.AssertTrue((i+1)=(LTree.Count), 'Wrong tree count');
     end;
   finally
     LNodes.Free;
@@ -127,11 +129,11 @@ begin
       LTree.Delete(LNodes.ExtractIndex(Random(LNodes.count)));
       LNumbers.Clear;
       for n in LTree.Nodes do
-        Check(LNumbers.Add(LTree.NodeToIndex(n)), 'Wrong index (duplicate) of '+ i.ToString + ' for node ' + n.Key);
+        TestContext.AssertTrue(LNumbers.Add(LTree.NodeToIndex(n)), 'Wrong index (duplicate) of '+ i.ToString + ' for node ' + n.Key);
       for j := 0 to LNodes.Count - 1 do
-        Check(LNumbers.Contains(j), 'Missing index ' + j.ToString + ' for i = ' + i.ToString);
+        TestContext.AssertTrue(LNumbers.Contains(j), 'Missing index ' + j.ToString + ' for i = ' + i.ToString);
       LTree.ConsistencyCheck;
-      CheckEquals(_COUNT-i, LTree.Count, 'Wrong tree count');
+      TestContext.AssertTrue((_COUNT-i)=(LTree.Count), 'Wrong tree count');
     end;
   finally
     LNodes.Free;
@@ -146,18 +148,18 @@ var
 begin
   LTree := TMapTree.Create;
   try
-    Check(LTree.Add('A', 1)<>nil);
-    Check(LTree.Add('B', 2)<>nil);
-    Check(LTree.Add('C', 3)<>nil);
-    CheckEquals(LTree.Items['A'], 1);
-    CheckEquals(LTree.Items['B'], 2);
-    CheckEquals(LTree.Items['C'], 3);
+    TestContext.AssertTrue(LTree.Add('A', 1)<>nil, '');
+    TestContext.AssertTrue(LTree.Add('B', 2)<>nil, '');
+    TestContext.AssertTrue(LTree.Add('C', 3)<>nil, '');
+    TestContext.AssertTrue((LTree.Items['A'])=(1), '');
+    TestContext.AssertTrue((LTree.Items['B'])=(2), '');
+    TestContext.AssertTrue((LTree.Items['C'])=(3), '');
     LTree.Items['A'] := 4;
     LTree.Items['B'] := 5;
     LTree.Items['C'] := 6;
-    CheckEquals(LTree.Items['A'], 4);
-    CheckEquals(LTree.Items['B'], 5);
-    CheckEquals(LTree.Items['C'], 6);
+    TestContext.AssertTrue((LTree.Items['A'])=(4), '');
+    TestContext.AssertTrue((LTree.Items['B'])=(5), '');
+    TestContext.AssertTrue((LTree.Items['C'])=(6), '');
   finally
     LTree.Free;
   end;
@@ -193,7 +195,7 @@ begin
     LNode.Value := 'Fff';
     NotificationAdd(LTree, ['Eee', 'Fff'], cnAdded);
     NotificationAdd(LTree, 'Eee', 'Fff', LNode, cnAdded, false, false);
-    AssertTrue(LTree.AddNode(LNode));
+    TestContext.AssertTrue(LTree.AddNode(LNode), '');
     AssertNotificationsExecutedNodeStr;
     AssertNotificationsExecutedStr;
 
@@ -223,7 +225,61 @@ begin
   end;
 end;
 
-begin
-  RegisterTest(TTestTrees);
-end.
 
+procedure RunTTestTreesTest_IndexedAVLTree_Add_General(AContext: TNXTestContext);
+var lFixture: TTestTrees;
+begin
+  lFixture:=TTestTrees.Create(AContext, 'Test_IndexedAVLTree_Add_General');
+  try
+    lFixture.Test_IndexedAVLTree_Add_General;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTreesTest_IndexedAVLTree_Add(AContext: TNXTestContext);
+var lFixture: TTestTrees;
+begin
+  lFixture:=TTestTrees.Create(AContext, 'Test_IndexedAVLTree_Add');
+  try
+    lFixture.Test_IndexedAVLTree_Add;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTreesTest_IndexedAVLTree_Delete(AContext: TNXTestContext);
+var lFixture: TTestTrees;
+begin
+  lFixture:=TTestTrees.Create(AContext, 'Test_IndexedAVLTree_Delete');
+  try
+    lFixture.Test_IndexedAVLTree_Delete;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTreesTest_IndexedAVLTree_Items(AContext: TNXTestContext);
+var lFixture: TTestTrees;
+begin
+  lFixture:=TTestTrees.Create(AContext, 'Test_IndexedAVLTree_Items');
+  try
+    lFixture.Test_IndexedAVLTree_Items;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTreesTest_TAVLTreeMap_Notification(AContext: TNXTestContext);
+var lFixture: TTestTrees;
+begin
+  lFixture:=TTestTrees.Create(AContext, 'Test_TAVLTreeMap_Notification');
+  try
+    lFixture.Test_TAVLTreeMap_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericstreesTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.trees.TTestTrees');
+  lSuite.AddTest('Test_IndexedAVLTree_Add_General', @RunTTestTreesTest_IndexedAVLTree_Add_General);
+  lSuite.AddTest('Test_IndexedAVLTree_Add', @RunTTestTreesTest_IndexedAVLTree_Add);
+  lSuite.AddTest('Test_IndexedAVLTree_Delete', @RunTTestTreesTest_IndexedAVLTree_Delete);
+  lSuite.AddTest('Test_IndexedAVLTree_Items', @RunTTestTreesTest_IndexedAVLTree_Items);
+  lSuite.AddTest('Test_TAVLTreeMap_Notification', @RunTTestTreesTest_TAVLTreeMap_Notification);
+end;
+
+end.

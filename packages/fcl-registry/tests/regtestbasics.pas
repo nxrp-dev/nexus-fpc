@@ -7,17 +7,25 @@ unit RegTestBasics;
 interface
 
 uses
-  fpcunit, testutils, testregistry, testdecorator, Classes, SysUtils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils;
 
 type
 
   { TTestBasics }
 
-  TTestBasics = class(TTestCase)
+  TTestBasics = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     procedure DeleteUserXmlFile;
   protected
-  published
+  public
     procedure TestSimpleWinRegistry;
     procedure TestDoubleWrite;
     procedure bug16395;
@@ -25,6 +33,8 @@ type
     Procedure TestInt64;
     Procedure TestDeleteSubkey;
   end;
+
+procedure RegisterRegTestBasicsTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -49,7 +59,7 @@ begin
 {$else}
   FN:=includetrailingpathdelimiter(GetAppConfigDir(False))+'reg.xml';
   if FileExists(FN) then
-    AssertTrue(DeleteFile(FN));
+    TestContext.AssertTrue(DeleteFile(FN), '');
 {$endif}
 end;
 
@@ -61,9 +71,9 @@ begin
   Registry.RootKey:=HKEY_LOCAL_MACHINE;
 
   // use a hopefully non existing key
-  AssertFalse(Registry.KeyExists('FPC1234'));
+  TestContext.AssertTrue(not (Registry.KeyExists('FPC1234')), '');
 {$ifdef windows}
-  AssertTrue(Registry.KeyExists('SOFTWARE'));
+  TestContext.AssertTrue(Registry.KeyExists('SOFTWARE'), '');
 {$endif}
 
   Registry.Free;
@@ -114,7 +124,7 @@ begin
     r.RootKey := HKEY_CURRENT_USER;
     r.OpenKey('FirstNode',false);
     s := r.ReadString('string1');
-    AssertEquals('Failed to read back an empty string', '', s);
+    TestContext.AssertTrue(('')=(s), 'Failed to read back an empty string');
     r.WriteString('string1', 'string_value_1');
     r.CloseKey;
   finally
@@ -127,7 +137,7 @@ begin
     r.RootKey := HKEY_CURRENT_USER;
     r.OpenKey('FirstNode',false);
     s := r.ReadString('string1');
-    AssertEquals('Failed changing empty string value to non-empty one', 'string_value_1',s);
+    TestContext.AssertTrue(('string_value_1')=(s), 'Failed changing empty string value to non-empty one');
 
     r.WriteString('string1', '');
     r.CloseKey;
@@ -140,7 +150,7 @@ begin
     r.RootKey := HKEY_CURRENT_USER;
     r.OpenKey('FirstNode',false);
     s := r.ReadString('string1');
-    AssertEquals('Failed changing non-empty string value to empty one', '', s);
+    TestContext.AssertTrue(('')=(s), 'Failed changing non-empty string value to empty one');
     r.CloseKey;
   finally
     r.Free;
@@ -153,7 +163,7 @@ begin
     t:=StringOfChar('*',4000);
     r.WriteString('LongString',T);
     s := r.ReadString('LongString');
-    AssertEquals('Writing long string works OK', t, s);
+    TestContext.AssertTrue((t)=(s), 'Writing long string works OK');
     r.CloseKey;
   finally
     r.Free;
@@ -180,7 +190,7 @@ begin
       SL.Clear;
       ReadStringList('me',SL);
       For I:=0 to 10 do
-        AssertEquals('String '+IntToStr(i),IntToStr(I),SL[I]);
+        TestContext.AssertTrue((IntToStr(I))=(SL[I]), 'String '+IntToStr(i));
     finally
       Free;
     end;
@@ -202,7 +212,7 @@ begin
       OpenKey('Software/Test',True);
       WriteInt64('you',Def);
       I64:=ReadInt64('you');
-      AssertEquals('Value written and read',Def,I64);
+      TestContext.AssertTrue((Def)=(I64), 'Value written and read');
     finally
       Free;
     end;
@@ -232,7 +242,7 @@ begin
     B := R. DeleteKey(TwoFull);
     if B then B := R.DeleteKey(OneFull);
     if B then B := R.DeleteKey(Base);
-    AssertTrue('cleanup OK',B);
+    TestContext.AssertTrue(B, 'cleanup OK');
   end;
   finally
     R.Free;
@@ -248,25 +258,25 @@ begin
     R.RootKey := HKEY_CURRENT_USER;
 
     B := R.OpenKey(Base, True);
-    AssertTrue(format('OpenKey(''%s'') failed.',[Base]),B);
+    TestContext.AssertTrue(B, format('OpenKey(''%s'') failed.',[Base]));
 
     B := R.OpenKey('One',True);
-    AssertTrue(format('OpenKey(''%s'') failed.',[OneFull]),B);
+    TestContext.AssertTrue(B, format('OpenKey(''%s'') failed.',[OneFull]));
 
     B := R.OpenKey('Two',True);
-    AssertTrue(format('OpenKey(''%s'') failed.',[TwoFull]),B);
+    TestContext.AssertTrue(B, format('OpenKey(''%s'') failed.',[TwoFull]));
 
     R.CloseKey;
 
     B := R.KeyExists(TwoFull);
-    AssertTrue(format('KeyExists(''%s'') failed.',[TwoFull]),B);
+    TestContext.AssertTrue(B, format('KeyExists(''%s'') failed.',[TwoFull]));
 
     R.CloseKey;
     B := R.OpenKey(Base,False);
-    AssertTrue(format('OpenKey(''%s'') failed.',[Base]),B);
+    TestContext.AssertTrue(B, format('OpenKey(''%s'') failed.',[Base]));
 
     B := R.DeleteKey('One');
-    AssertTrue(format('DeleteKey(''%s'') should have succeeded, but it failed.',[OneFull]),B);
+    TestContext.AssertTrue(B, format('DeleteKey(''%s'') should have succeeded, but it failed.',[OneFull]));
   finally
     R.Free;
     CleanUp(ExceptObject <> nil);
@@ -274,7 +284,78 @@ begin
 end;
 
 
-initialization
-  RegisterTest(TTestBasics);
-end.
 
+constructor TTestBasics.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestBasicsTestSimpleWinRegistry(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'TestSimpleWinRegistry');
+  try
+    lFixture.TestSimpleWinRegistry;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBasicsTestDoubleWrite(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'TestDoubleWrite');
+  try
+    lFixture.TestDoubleWrite;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBasicsbug16395(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'bug16395');
+  try
+    lFixture.bug16395;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBasicsTestStringList(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'TestStringList');
+  try
+    lFixture.TestStringList;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBasicsTestInt64(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'TestInt64');
+  try
+    lFixture.TestInt64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBasicsTestDeleteSubkey(AContext: TNXTestContext);
+var lFixture: TTestBasics;
+begin
+  lFixture:=TTestBasics.Create(AContext, 'TestDeleteSubkey');
+  try
+    lFixture.TestDeleteSubkey;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterRegTestBasicsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('RegTestBasics.TTestBasics');
+  lSuite.AddTest('TestSimpleWinRegistry', @RunTTestBasicsTestSimpleWinRegistry);
+  lSuite.AddTest('TestDoubleWrite', @RunTTestBasicsTestDoubleWrite);
+  lSuite.AddTest('bug16395', @RunTTestBasicsbug16395);
+  lSuite.AddTest('TestStringList', @RunTTestBasicsTestStringList);
+  lSuite.AddTest('TestInt64', @RunTTestBasicsTestInt64);
+  lSuite.AddTest('TestDeleteSubkey', @RunTTestBasicsTestDeleteSubkey);
+end;
+
+end.

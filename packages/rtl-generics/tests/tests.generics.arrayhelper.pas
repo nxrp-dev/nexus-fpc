@@ -28,20 +28,27 @@ unit tests.generics.arrayhelper;
 interface
 
 uses
-  fpcunit, testregistry, testutils,
-  Classes, SysUtils, Generics.Defaults, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Defaults, Generics.Collections;
 
 type
 
   { TTestArrayHelper }
 
-  TTestArrayHelper = class(TTestCase)
+  TTestArrayHelper = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   protected
     procedure CheckBinarySearch(const AArray: TArray<Integer>;
       AValue: Integer; AExpectedResult: boolean; out ASearchResult: TBinarySearchResult);
     procedure CheckSearchResult(const ASearchResult: TBinarySearchResult;
       AValue: Integer; ACandidateIndex, AFoundIndex: SizeInt; ACompareResult: Boolean);
-  published
+  public
     procedure Test_BinarySearch_Integers;
     procedure Test_BinarySearch_EmptyArray;
     procedure Test_IndexOf;
@@ -53,6 +60,8 @@ type
     procedure Test_Reverse;
   end;
 
+procedure RegistertestsgenericsarrayhelperTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TTestArrayHelper }
@@ -61,9 +70,7 @@ procedure TTestArrayHelper.CheckBinarySearch(const AArray: TArray<Integer>;
   AValue: Integer; AExpectedResult: boolean; out
   ASearchResult: TBinarySearchResult);
 begin
-  CheckEquals(AExpectedResult,
-    TArrayHelper<Integer>.BinarySearch(AArray,AValue,ASearchResult),
-    'Wrong BinarySearch result for ' + AValue.ToString);
+  TestContext.AssertTrue((AExpectedResult)=(TArrayHelper<Integer>.BinarySearch(AArray,AValue,ASearchResult)), 'Wrong BinarySearch result for ' + AValue.ToString);
 end;
 
 procedure TTestArrayHelper.CheckSearchResult(const
@@ -72,9 +79,9 @@ procedure TTestArrayHelper.CheckSearchResult(const
 begin
   with ASearchResult do
   begin
-    CheckEquals(ACandidateIndex, CandidateIndex, 'Wrong binary search result (CandidateIndex) for ' + AValue.ToString);
-    CheckEquals(AFoundIndex, FoundIndex, 'Wrong binary search result (FoundIndex) for ' + AValue.ToString);
-    Check(ACompareResult, 'Wrong binary search result (CompareResult) for ' + AValue.ToString);
+    TestContext.AssertTrue((ACandidateIndex)=(CandidateIndex), 'Wrong binary search result (CandidateIndex) for ' + AValue.ToString);
+    TestContext.AssertTrue((AFoundIndex)=(FoundIndex), 'Wrong binary search result (FoundIndex) for ' + AValue.ToString);
+    TestContext.AssertTrue(ACompareResult, 'Wrong binary search result (CompareResult) for ' + AValue.ToString);
   end;
 end;
 
@@ -105,9 +112,9 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,15,20);
-  AssertEquals('Correct find result for 9', 4, TArrayHelper<Integer>.IndexOf(A,9,TComparer<Integer>.Default));
-  AssertEquals('Correctfind result for 33', -1, TArrayHelper<Integer>.IndexOf(A,33,TComparer<Integer>.Default));
-  AssertEquals('Correct find result for 9 using default comparer', 4, TArrayHelper<Integer>.IndexOf(A,9));
+  TestContext.AssertTrue((4)=(TArrayHelper<Integer>.IndexOf(A,9,TComparer<Integer>.Default)), 'Correct find result for 9');
+  TestContext.AssertTrue((-1)=(TArrayHelper<Integer>.IndexOf(A,33,TComparer<Integer>.Default)), 'Correctfind result for 33');
+  TestContext.AssertTrue((4)=(TArrayHelper<Integer>.IndexOf(A,9)), 'Correct find result for 9 using default comparer');
 end;
 
 procedure TTestArrayHelper.Test_FirstIndexOf;
@@ -116,8 +123,8 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,9,20);
-  AssertEquals('Correct find result for 9', 4, TArrayHelper<Integer>.FirstIndexOf(A,9,TComparer<Integer>.Default));
-  AssertEquals('Correct find result for 9 using default comparer', 4, TArrayHelper<Integer>.FirstIndexOf(A,9));
+  TestContext.AssertTrue((4)=(TArrayHelper<Integer>.FirstIndexOf(A,9,TComparer<Integer>.Default)), 'Correct find result for 9');
+  TestContext.AssertTrue((4)=(TArrayHelper<Integer>.FirstIndexOf(A,9)), 'Correct find result for 9 using default comparer');
 end;
 
 procedure TTestArrayHelper.Test_LastIndexOf;
@@ -125,8 +132,8 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,9,20);
-  AssertEquals('Correct find result for 9', 7, TArrayHelper<Integer>.LastIndexOf(A,9,TComparer<Integer>.Default));
-  AssertEquals('Correct find result for 9 using default comparer', 7, TArrayHelper<Integer>.LastIndexOf(A,9));
+  TestContext.AssertTrue((7)=(TArrayHelper<Integer>.LastIndexOf(A,9,TComparer<Integer>.Default)), 'Correct find result for 9');
+  TestContext.AssertTrue((7)=(TArrayHelper<Integer>.LastIndexOf(A,9)), 'Correct find result for 9 using default comparer');
 end;
 
 procedure TTestArrayHelper.Test_Min;
@@ -134,11 +141,11 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,15,20);
-  AssertEquals('Correct min', 1, TArrayHelper<Integer>.Min(A,TComparer<Integer>.Default,-1));
-  AssertEquals('Correct min using default comparer', 1, TArrayHelper<Integer>.Min(A,-1));
+  TestContext.AssertTrue((1)=(TArrayHelper<Integer>.Min(A,TComparer<Integer>.Default,-1)), 'Correct min');
+  TestContext.AssertTrue((1)=(TArrayHelper<Integer>.Min(A,-1)), 'Correct min using default comparer');
   a:=[];
-  AssertEquals('No min', -1, TArrayHelper<Integer>.Min(A,TComparer<Integer>.Default,-1));
-  AssertEquals('No min using default comparer', -1, TArrayHelper<Integer>.Min(A,-1));
+  TestContext.AssertTrue((-1)=(TArrayHelper<Integer>.Min(A,TComparer<Integer>.Default,-1)), 'No min');
+  TestContext.AssertTrue((-1)=(TArrayHelper<Integer>.Min(A,-1)), 'No min using default comparer');
 end;
 
 procedure TTestArrayHelper.Test_Max;
@@ -146,11 +153,11 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,15,20);
-  AssertEquals('Correct max', 20, TArrayHelper<Integer>.Max(A,TComparer<Integer>.Default,-1));
-  AssertEquals('Correct max using default comparer', 20, TArrayHelper<Integer>.Max(A,-1));
+  TestContext.AssertTrue((20)=(TArrayHelper<Integer>.Max(A,TComparer<Integer>.Default,-1)), 'Correct max');
+  TestContext.AssertTrue((20)=(TArrayHelper<Integer>.Max(A,-1)), 'Correct max using default comparer');
   a:=[];
-  AssertEquals('No max ', -1, TArrayHelper<Integer>.Max(A,TComparer<Integer>.Default,-1));
-  AssertEquals('No max using default comparer', -1, TArrayHelper<Integer>.Max(A,-1));
+  TestContext.AssertTrue((-1)=(TArrayHelper<Integer>.Max(A,TComparer<Integer>.Default,-1)), 'No max ');
+  TestContext.AssertTrue((-1)=(TArrayHelper<Integer>.Max(A,-1)), 'No max using default comparer');
 end;
 
 procedure TTestArrayHelper.Test_Contains;
@@ -158,10 +165,10 @@ var
   a: TArray<Integer>;
 begin
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,15,20);
-  AssertTrue('Have 15', TArrayHelper<Integer>.Contains(A,15,TComparer<Integer>.Default));
-  AssertFalse('Does not have 15',TArrayHelper<Integer>.Contains(A,14,TComparer<Integer>.Default));
+  TestContext.AssertTrue(TArrayHelper<Integer>.Contains(A,15,TComparer<Integer>.Default), 'Have 15');
+  TestContext.AssertTrue(not (TArrayHelper<Integer>.Contains(A,14,TComparer<Integer>.Default)), 'Does not have 15');
   a:=[];
-  AssertFalse('Empty does not have 15', TArrayHelper<Integer>.Contains(A,15,TComparer<Integer>.Default));
+  TestContext.AssertTrue(not (TArrayHelper<Integer>.Contains(A,15,TComparer<Integer>.Default)), 'Empty does not have 15');
 end;
 
 procedure TTestArrayHelper.Test_Reverse;
@@ -173,16 +180,117 @@ begin
   len:=Length(a);
   TArrayHelper<Integer>.Reverse(a,b);
   for I:=0 to Length(a)-1 do
-    AssertEquals('At index i',a[len-i-1],b[i]);
+    TestContext.AssertTrue((a[len-i-1])=(b[i]), 'At index i');
   a := TArray<Integer>.Create(1,3,5,7,9,11,13,15,20);
   b:=a;
   len:=Length(a);
   TArrayHelper<Integer>.Reverse(a,a);
   for I:=0 to Length(b)-1 do
-    AssertEquals('At index i',a[len-i-1],b[i]);
+    TestContext.AssertTrue((a[len-i-1])=(b[i]), 'At index i');
 end;
 
-begin
-  RegisterTest(TTestArrayHelper);
-end.
 
+constructor TTestArrayHelper.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestArrayHelperTest_BinarySearch_Integers(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_BinarySearch_Integers');
+  try
+    lFixture.Test_BinarySearch_Integers;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_BinarySearch_EmptyArray(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_BinarySearch_EmptyArray');
+  try
+    lFixture.Test_BinarySearch_EmptyArray;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_IndexOf(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_IndexOf');
+  try
+    lFixture.Test_IndexOf;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_FirstIndexOf(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_FirstIndexOf');
+  try
+    lFixture.Test_FirstIndexOf;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_LastIndexOf(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_LastIndexOf');
+  try
+    lFixture.Test_LastIndexOf;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_Min(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_Min');
+  try
+    lFixture.Test_Min;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_Max(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_Max');
+  try
+    lFixture.Test_Max;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_Contains(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_Contains');
+  try
+    lFixture.Test_Contains;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestArrayHelperTest_Reverse(AContext: TNXTestContext);
+var lFixture: TTestArrayHelper;
+begin
+  lFixture:=TTestArrayHelper.Create(AContext, 'Test_Reverse');
+  try
+    lFixture.Test_Reverse;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericsarrayhelperTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.arrayhelper.TTestArrayHelper');
+  lSuite.AddTest('Test_BinarySearch_Integers', @RunTTestArrayHelperTest_BinarySearch_Integers);
+  lSuite.AddTest('Test_BinarySearch_EmptyArray', @RunTTestArrayHelperTest_BinarySearch_EmptyArray);
+  lSuite.AddTest('Test_IndexOf', @RunTTestArrayHelperTest_IndexOf);
+  lSuite.AddTest('Test_FirstIndexOf', @RunTTestArrayHelperTest_FirstIndexOf);
+  lSuite.AddTest('Test_LastIndexOf', @RunTTestArrayHelperTest_LastIndexOf);
+  lSuite.AddTest('Test_Min', @RunTTestArrayHelperTest_Min);
+  lSuite.AddTest('Test_Max', @RunTTestArrayHelperTest_Max);
+  lSuite.AddTest('Test_Contains', @RunTTestArrayHelperTest_Contains);
+  lSuite.AddTest('Test_Reverse', @RunTTestArrayHelperTest_Reverse);
+end;
+
+end.

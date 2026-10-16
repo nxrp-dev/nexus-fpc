@@ -28,7 +28,7 @@ unit tests.generics.sets;
 interface
 
 uses
-  fpcunit, testregistry, testutils, tests.generics.utils,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, tests.generics.utils,
   Classes, SysUtils, Generics.Collections;
 
 type
@@ -42,8 +42,8 @@ type
   protected
     procedure Test_TCustomSet_Notification(ASet: TCustomSet<string>);
   public
-    constructor Create; override;
-  published
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     procedure Test_HashSet_General;
     procedure Test_SortedSet_General;
     procedure Test_SortedHashSet_General;
@@ -69,6 +69,8 @@ var
 
 procedure CheckSet_10(ASet: TCustomSet<Integer>; ASortedList: TSortedList<Integer>);
 
+procedure RegistertestsgenericssetsTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TGenericTestSets }
@@ -79,8 +81,8 @@ var
   i: Integer;
 begin with GTest do begin
   for i in ANumbers do
-    AssertTrue('Can''t find number ' + i.ToString, ASet.Contains(i));
-  AssertEquals(ASet.Count, Length(ANumbers));
+    TestContext.AssertTrue(ASet.Contains(i), 'Can''t find number ' + i.ToString);
+  TestContext.AssertTrue((ASet.Count)=(Length(ANumbers)), '');
 end end;
 
 class procedure TGenericTestSets<T>.Test_Set_General;
@@ -95,8 +97,8 @@ begin with GTest do begin
 
   for i := 0 to 4 do
   begin
-    AssertTrue(NumbersA.Add(i * 2));
-    AssertTrue(NumbersB.Add((i * 2) + 1));
+    TestContext.AssertTrue(NumbersA.Add(i * 2), '');
+    TestContext.AssertTrue(NumbersB.Add((i * 2) + 1), '');
   end;
 
   ValidateSet(NumbersA, [0, 2, 4, 6, 8]);
@@ -106,27 +108,27 @@ begin with GTest do begin
   NumbersC := T.Create(NumbersA);
   NumbersC.UnionWith(NumbersB);
   ValidateSet(NumbersC, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-  AssertFalse(NumbersC.Add(5));
-  AssertFalse(NumbersC.AddRange([6, 7]));
-  AssertEquals(NumbersC.Count, 10);
+  TestContext.AssertTrue(not (NumbersC.Add(5)), '');
+  TestContext.AssertTrue(not (NumbersC.AddRange([6, 7])), '');
+  TestContext.AssertTrue((NumbersC.Count)=(10), '');
 
   { ExceptWith }
   NumbersC.ExceptWith(NumbersB);
-  AssertEquals(NumbersC.Count, 5);
+  TestContext.AssertTrue((NumbersC.Count)=(5), '');
   ValidateSet(NumbersC, [0, 2, 4, 6, 8]);
-  AssertTrue(NumbersC.AddRange(NumbersB));
+  TestContext.AssertTrue(NumbersC.AddRange(NumbersB), '');
   ValidateSet(NumbersC, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
   { SymmetricExceptWith }
   NumbersA.Clear;
-  AssertEquals(NumbersA.Count, 0);
+  TestContext.AssertTrue((NumbersA.Count)=(0), '');
   NumbersB.Clear;
-  AssertEquals(NumbersB.Count, 0);
+  TestContext.AssertTrue((NumbersB.Count)=(0), '');
   NumbersC.Clear;
-  AssertEquals(NumbersC.Count, 0);
-  AssertTrue(NumbersA.AddRange([0, 1, 2, 3, 4, 5]));
+  TestContext.AssertTrue((NumbersC.Count)=(0), '');
+  TestContext.AssertTrue(NumbersA.AddRange([0, 1, 2, 3, 4, 5]), '');
   ValidateSet(NumbersA, [0, 1, 2, 3, 4, 5]);
-  AssertTrue(NumbersB.AddRange([3, 4, 5, 6, 7, 8, 9]));
+  TestContext.AssertTrue(NumbersB.AddRange([3, 4, 5, 6, 7, 8, 9]), '');
   ValidateSet(NumbersB, [3, 4, 5, 6, 7, 8, 9]);
   NumbersC.Free;
   NumbersC := T.Create(NumbersA);
@@ -136,14 +138,14 @@ begin with GTest do begin
 
   { IntersectWith }
   NumbersA.Clear;
-  AssertEquals(NumbersA.Count, 0);
+  TestContext.AssertTrue((NumbersA.Count)=(0), '');
   NumbersB.Clear;
-  AssertEquals(NumbersB.Count, 0);
+  TestContext.AssertTrue((NumbersB.Count)=(0), '');
   NumbersC.Clear;
-  AssertEquals(NumbersC.Count, 0);
-  AssertTrue(NumbersA.AddRange([0, 1, 2, 3, 4, 5]));
-  AssertTrue(NumbersB.AddRange([3, 4, 5, 6, 7, 8, 9]));
-  AssertTrue(NumbersC.AddRange(NumbersA));
+  TestContext.AssertTrue((NumbersC.Count)=(0), '');
+  TestContext.AssertTrue(NumbersA.AddRange([0, 1, 2, 3, 4, 5]), '');
+  TestContext.AssertTrue(NumbersB.AddRange([3, 4, 5, 6, 7, 8, 9]), '');
+  TestContext.AssertTrue(NumbersC.AddRange(NumbersA), '');
   NumbersC.IntersectWith(NumbersB);
   ValidateSet(NumbersC, [3, 4, 5]);
 
@@ -161,20 +163,20 @@ var
   pi: PInteger;
 begin with GTest do begin
   Numbers := T.Create;
-  AssertTrue(Numbers.AddRange([8, 4, 6, 2, 0, 9, 5, 7, 3, 1]));
+  TestContext.AssertTrue(Numbers.AddRange([8, 4, 6, 2, 0, 9, 5, 7, 3, 1]), '');
   ValidateSet(Numbers, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
   j := 0;
   for i in TCustomSet<Integer>(Numbers) do
   begin
-    AssertEquals(i, SORTED_NUMBERS[j]);
+    TestContext.AssertTrue((i)=(SORTED_NUMBERS[j]), '');
     Inc(j);
   end;
 
   j := 0;
   for pi in TCustomSet<Integer>(Numbers).Ptr^ do
   begin
-    AssertEquals(pi^, SORTED_NUMBERS[j]);
+    TestContext.AssertTrue((pi^)=(SORTED_NUMBERS[j]), '');
     Inc(j);
   end;
 
@@ -185,11 +187,11 @@ procedure CheckSet_10(ASet: TCustomSet<Integer>; ASortedList: TSortedList<Intege
 var
   i: Integer;
 begin with GTest do begin
-  AssertEquals(ASortedList.Count, 10);
+  TestContext.AssertTrue((ASortedList.Count)=(10), '');
   for i := 0 to 9 do
   begin
-    AssertEquals(i, ASortedList[i]);
-    AssertTrue(ASet.Contains(i));
+    TestContext.AssertTrue((i)=(ASortedList[i]), '');
+    TestContext.AssertTrue(ASet.Contains(i), '');
   end;
 end end;
 
@@ -202,7 +204,7 @@ var
 begin with GTest do begin
   Numbers := T.Create;
   LSortedList := TSortedList<Integer>.Create;
-  AssertTrue(Numbers.AddRange([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+  TestContext.AssertTrue(Numbers.AddRange([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), '');
   ValidateSet(Numbers, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
   for i in TCustomSet<Integer>(Numbers) do
@@ -222,9 +224,9 @@ end end;
 
 { TTestSets }
 
-constructor TTestSets.Create;
+constructor TTestSets.Create(AContext: TNXTestContext; const ACaseName: string);
 begin
-  inherited Create;
+  inherited Create(AContext, ACaseName);
   GTest := Self;
 end;
 
@@ -272,17 +274,17 @@ begin
 
     { Add + AddRange }
     NotificationAdd(ASet, ['Aaa', 'Bbb', 'Ccc', 'Ddd', 'Eee', 'Fff', 'Ggg'], cnAdded);
-    AssertTrue(ASet.Add('Aaa'));
-    AssertTrue(ASet.AddRange(['Bbb', 'Ccc']));
-    AssertTrue(ASet.AddRange(LStringsObj));
-    AssertTrue(ASet.AddRange(LStringsIntf));
+    TestContext.AssertTrue(ASet.Add('Aaa'), '');
+    TestContext.AssertTrue(ASet.AddRange(['Bbb', 'Ccc']), '');
+    TestContext.AssertTrue(ASet.AddRange(LStringsObj), '');
+    TestContext.AssertTrue(ASet.AddRange(LStringsIntf), '');
     AssertNotificationsExecutedStr;
 
     { Remove and Extract }
     NotificationAdd(ASet, 'Ccc', cnRemoved);
     NotificationAdd(ASet, 'Aaa', cnExtracted);
-    AssertTrue(ASet.Remove('Ccc'));
-    AssertEquals(ASet.Extract('Aaa'), 'Aaa');
+    TestContext.AssertTrue(ASet.Remove('Ccc'), '');
+    TestContext.AssertTrue((ASet.Extract('Aaa'))=('Aaa'), '');
     AssertNotificationsExecutedStr;
 
     { ExceptWith }
@@ -308,8 +310,8 @@ begin
     { Small clean up }
     NotificationAdd(ASet, 'Eee', cnRemoved);
     NotificationAdd(ASet, 'Ggg', cnExtracted);
-    AssertTrue(ASet.Remove('Eee'));
-    AssertEquals(ASet.Extract('Ggg'), 'Ggg');
+    TestContext.AssertTrue(ASet.Remove('Eee'), '');
+    TestContext.AssertTrue((ASet.Extract('Ggg'))=('Ggg'), '');
     AssertNotificationsExecutedStr;
 
     { UnionWith }
@@ -321,7 +323,7 @@ begin
 
     { Clear }
     NotificationAdd(ASet, 'FPC', cnRemoved);
-    AssertTrue(ASet.Remove('FPC'));
+    TestContext.AssertTrue(ASet.Remove('FPC'), '');
     AssertNotificationsExecutedStr;
     NotificationAdd(ASet, 'Polandball', cnRemoved);
     ASet.Clear;
@@ -352,7 +354,101 @@ begin
   Test_TCustomSet_Notification(TSortedHashSet<string>.Create);
 end;
 
-begin
-  RegisterTest(TTestSets);
-end.
 
+procedure RunTTestSetsTest_HashSet_General(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_HashSet_General');
+  try
+    lFixture.Test_HashSet_General;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_SortedSet_General(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_SortedSet_General');
+  try
+    lFixture.Test_SortedSet_General;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_SortedHashSet_General(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_SortedHashSet_General');
+  try
+    lFixture.Test_SortedHashSet_General;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_HashSet(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_HashSet');
+  try
+    lFixture.Test_HashSet;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_SortedSet(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_SortedSet');
+  try
+    lFixture.Test_SortedSet;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_SortedHashSet(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_SortedHashSet');
+  try
+    lFixture.Test_SortedHashSet;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_THashSet_Notification(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_THashSet_Notification');
+  try
+    lFixture.Test_THashSet_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_TSortedSet_Notification(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_TSortedSet_Notification');
+  try
+    lFixture.Test_TSortedSet_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSetsTest_TSortedHashSet_Notification(AContext: TNXTestContext);
+var lFixture: TTestSets;
+begin
+  lFixture:=TTestSets.Create(AContext, 'Test_TSortedHashSet_Notification');
+  try
+    lFixture.Test_TSortedHashSet_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericssetsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.sets.TTestSets');
+  lSuite.AddTest('Test_HashSet_General', @RunTTestSetsTest_HashSet_General);
+  lSuite.AddTest('Test_SortedSet_General', @RunTTestSetsTest_SortedSet_General);
+  lSuite.AddTest('Test_SortedHashSet_General', @RunTTestSetsTest_SortedHashSet_General);
+  lSuite.AddTest('Test_HashSet', @RunTTestSetsTest_HashSet);
+  lSuite.AddTest('Test_SortedSet', @RunTTestSetsTest_SortedSet);
+  lSuite.AddTest('Test_SortedHashSet', @RunTTestSetsTest_SortedHashSet);
+  lSuite.AddTest('Test_THashSet_Notification', @RunTTestSetsTest_THashSet_Notification);
+  lSuite.AddTest('Test_TSortedSet_Notification', @RunTTestSetsTest_TSortedSet_Notification);
+  lSuite.AddTest('Test_TSortedHashSet_Notification', @RunTTestSetsTest_TSortedHashSet_Notification);
+end;
+
+end.

@@ -5,9 +5,8 @@ unit tests.rtti.intercept;
 interface
 
 uses
-{$IFDEF FPC}
-  fpcunit, testregistry,
-{$ELSE FPC}
+obNXTestContext, obNXTestRegistry, obNXTestSuite, {$IFDEF FPC}
+  {$ELSE FPC}
   TestFramework,
 {$ENDIF FPC}
   SysUtils, Classes, typinfo, Rtti;
@@ -49,7 +48,15 @@ type
 
   { TTestVirtualMethodInterceptor }
 
-  TTestVirtualMethodInterceptor = class(TTestCase)
+  TTestVirtualMethodInterceptor = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FBeforeCount: Integer;
     FAfterCount: Integer;
@@ -70,8 +77,8 @@ type
     procedure DoException(aInstance: TObject; aMethod: TRttiMethod; const aArgs: TValueArray; out aRaiseException: Boolean; aTheException: Exception; out aResult: TValue);
     function CreateInterceptor(aClass: TClass): TVirtualMethodInterceptor;
   protected
-    procedure SetUp; override;
-  published
+    procedure SetUp; virtual;
+  public
     procedure TestBeforeAfterFire;
     procedure TestUnproxifyRestores;
     procedure TestSuppressInvoke;
@@ -84,6 +91,8 @@ type
     procedure TestChildOverride;
     procedure TestNoRttiVirtualMethodNotCrash;
   end;
+
+procedure RegistertestsrttiinterceptTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -147,7 +156,7 @@ end;
 procedure TTestVirtualMethodInterceptor.SetUp;
 
 begin
-  inherited SetUp;
+
   FBeforeCount:=0;
   FAfterCount:=0;
   FExceptCount:=0;
@@ -211,12 +220,12 @@ begin
   except
     on e: ENotImplemented do
       begin
-      Ignore('Method implementations not supported on this platform: ' + e.Message);
+      TestContext.Skip('Method implementations not supported on this platform: ' + e.Message);
       Result:=nil;
       end;
     on e: EInsufficientRtti do
       begin
-      Ignore('Insufficient RTTI: ' + e.Message);
+      TestContext.Skip('Insufficient RTTI: ' + e.Message);
       Result:=nil;
       end;
   end;
@@ -238,14 +247,14 @@ begin
     itc.OnAfter:=@DoAfter;
     itc.Proxify(obj);
     res:=obj.Add(2, 3);
-    CheckEquals(5, res, 'Original method result');
-    CheckEquals(1, FBeforeCount, 'OnBefore fired once');
-    CheckEquals(1, FAfterCount, 'OnAfter fired once');
-    CheckEquals('Add', FLastMethodName, 'Intercepted method name');
-    CheckSame(obj, FLastInstance, 'Instance passed to handler');
-    CheckEquals(2, FLastArgCount, 'Argument count (Self excluded)');
-    CheckEquals(2, FArg0, 'First argument');
-    CheckEquals(3, FArg1, 'Second argument');
+    TestContext.AssertTrue((5)=(res), 'Original method result');
+    TestContext.AssertTrue((1)=(FBeforeCount), 'OnBefore fired once');
+    TestContext.AssertTrue((1)=(FAfterCount), 'OnAfter fired once');
+    TestContext.AssertTrue(('Add')=(FLastMethodName), 'Intercepted method name');
+    TestContext.AssertTrue((obj)=(FLastInstance), 'Instance passed to handler');
+    TestContext.AssertTrue((2)=(FLastArgCount), 'Argument count (Self excluded)');
+    TestContext.AssertTrue((2)=(FArg0), 'First argument');
+    TestContext.AssertTrue((3)=(FArg1), 'Second argument');
     itc.Unproxify(obj);
   finally
     obj.Free;
@@ -267,11 +276,11 @@ begin
     itc.OnBefore:=@DoBefore;
     itc.Proxify(obj);
     obj.Add(1, 1);
-    CheckEquals(1, FBeforeCount, 'Fired while proxified');
+    TestContext.AssertTrue((1)=(FBeforeCount), 'Fired while proxified');
     itc.Unproxify(obj);
-    CheckTrue(obj.ClassType = TInterceptSample, 'Class restored after Unproxify');
+    TestContext.AssertTrue(obj.ClassType = TInterceptSample, 'Class restored after Unproxify');
     obj.Add(1, 1);
-    CheckEquals(1, FBeforeCount, 'Not fired after Unproxify');
+    TestContext.AssertTrue((1)=(FBeforeCount), 'Not fired after Unproxify');
   finally
     obj.Free;
     itc.Free;
@@ -295,7 +304,7 @@ begin
     itc.OnBefore:=@DoBefore;
     itc.Proxify(obj);
     res:=obj.Add(2, 3);
-    CheckEquals(42, res, 'Suppressed call returns the supplied result');
+    TestContext.AssertTrue((42)=(res), 'Suppressed call returns the supplied result');
   finally
     obj.Free;
     itc.Free;
@@ -318,7 +327,7 @@ begin
     itc.OnAfter:=@DoAfter;
     itc.Proxify(obj);
     res:=obj.Add(2, 3);
-    CheckEquals(10, res, 'OnAfter doubled the result');
+    TestContext.AssertTrue((10)=(res), 'OnAfter doubled the result');
   finally
     obj.Free;
     itc.Free;
@@ -347,9 +356,9 @@ begin
       on e: EInterceptTest do
         raised:=True;
     end;
-    CheckEquals(1, FExceptCount, 'OnException fired');
-    CheckEquals('boom', FLastExceptionMsg, 'Exception message');
-    CheckTrue(raised, 'Exception was re-raised');
+    TestContext.AssertTrue((1)=(FExceptCount), 'OnException fired');
+    TestContext.AssertTrue(('boom')=(FLastExceptionMsg), 'Exception message');
+    TestContext.AssertTrue(raised, 'Exception was re-raised');
   finally
     obj.Free;
     itc.Free;
@@ -373,9 +382,9 @@ begin
     try
       obj.Boom;
     except
-      Fail('Exception should have been swallowed');
+      TestContext.Fail('Exception should have been swallowed');
     end;
-    CheckEquals(1, FExceptCount, 'OnException fired');
+    TestContext.AssertTrue((1)=(FExceptCount), 'OnException fired');
   finally
     obj.Free;
     itc.Free;
@@ -397,8 +406,8 @@ begin
     itc.OnBefore:=@DoBefore;
     itc.Proxify(obj);
     res:=obj.NonVirtualAdd(2, 3);
-    CheckEquals(5, res, 'Non-virtual method result');
-    CheckEquals(0, FBeforeCount, 'Non-virtual methods are not intercepted');
+    TestContext.AssertTrue((5)=(res), 'Non-virtual method result');
+    TestContext.AssertTrue((0)=(FBeforeCount), 'Non-virtual methods are not intercepted');
   finally
     obj.Free;
     itc.Free;
@@ -417,9 +426,9 @@ begin
   obj:=TInterceptSample.Create;
   try
     itc.Proxify(obj);
-    CheckTrue(obj is TInterceptSample, '"is" still holds after Proxify');
-    CheckTrue(obj.InheritsFrom(TInterceptSample), 'InheritsFrom still holds');
-    CheckTrue(itc.ProxyClass.ClassParent = TInterceptSample, 'Proxy descends from original');
+    TestContext.AssertTrue(obj is TInterceptSample, '"is" still holds after Proxify');
+    TestContext.AssertTrue(obj.InheritsFrom(TInterceptSample), 'InheritsFrom still holds');
+    TestContext.AssertTrue(itc.ProxyClass.ClassParent = TInterceptSample, 'Proxy descends from original');
     itc.Unproxify(obj);
   finally
     obj.Free;
@@ -444,9 +453,9 @@ begin
     itc.Proxify(obj);
     value:=10;
     obj.Accumulate(value, 5);
-    CheckEquals(15, value, 'var parameter written back through interception');
-    CheckEquals(1, FBeforeCount, 'OnBefore fired');
-    CheckEquals(1, FAfterCount, 'OnAfter fired');
+    TestContext.AssertTrue((15)=(value), 'var parameter written back through interception');
+    TestContext.AssertTrue((1)=(FBeforeCount), 'OnBefore fired');
+    TestContext.AssertTrue((1)=(FAfterCount), 'OnAfter fired');
   finally
     obj.Free;
     itc.Free;
@@ -468,8 +477,8 @@ begin
     itc.OnBefore:=@DoBefore;
     itc.Proxify(obj);
     res:=obj.Add(2, 3);
-    CheckEquals(1005, res, 'Childmost override is invoked');
-    CheckEquals(1, FBeforeCount, 'OnBefore fired once for the override');
+    TestContext.AssertTrue((1005)=(res), 'Childmost override is invoked');
+    TestContext.AssertTrue((1)=(FBeforeCount), 'OnBefore fired once for the override');
   finally
     obj.Free;
     itc.Free;
@@ -492,7 +501,7 @@ begin
       a proxified virtual method without RTTI must still be callable 
       (falling through to the original implementation) and must not
       cause an access violation because of a too-small proxy VMT. }
-    CheckEquals(4711, obj.Value, 'Non-RTTI virtual method callable when proxified');
+    TestContext.AssertTrue((4711)=(obj.Value), 'Non-RTTI virtual method callable when proxified');
     itc.Unproxify(obj);
   finally
     obj.Free;
@@ -501,6 +510,139 @@ begin
 end;
 
 
-initialization
-  RegisterTest(TTestVirtualMethodInterceptor);
+
+constructor TTestVirtualMethodInterceptor.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestBeforeAfterFire(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestBeforeAfterFire');
+  try
+    lFixture.SetUp;
+    lFixture.TestBeforeAfterFire;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestUnproxifyRestores(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestUnproxifyRestores');
+  try
+    lFixture.SetUp;
+    lFixture.TestUnproxifyRestores;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestSuppressInvoke(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestSuppressInvoke');
+  try
+    lFixture.SetUp;
+    lFixture.TestSuppressInvoke;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestModifyResult(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestModifyResult');
+  try
+    lFixture.SetUp;
+    lFixture.TestModifyResult;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestExceptionReraise(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestExceptionReraise');
+  try
+    lFixture.SetUp;
+    lFixture.TestExceptionReraise;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestExceptionSwallow(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestExceptionSwallow');
+  try
+    lFixture.SetUp;
+    lFixture.TestExceptionSwallow;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestNonVirtualNotIntercepted(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestNonVirtualNotIntercepted');
+  try
+    lFixture.SetUp;
+    lFixture.TestNonVirtualNotIntercepted;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestIsOperatorAndParent(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestIsOperatorAndParent');
+  try
+    lFixture.SetUp;
+    lFixture.TestIsOperatorAndParent;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestVarParameter(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestVarParameter');
+  try
+    lFixture.SetUp;
+    lFixture.TestVarParameter;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestChildOverride(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestChildOverride');
+  try
+    lFixture.SetUp;
+    lFixture.TestChildOverride;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVirtualMethodInterceptorTestNoRttiVirtualMethodNotCrash(AContext: TNXTestContext);
+var lFixture: TTestVirtualMethodInterceptor;
+begin
+  lFixture:=TTestVirtualMethodInterceptor.Create(AContext, 'TestNoRttiVirtualMethodNotCrash');
+  try
+    lFixture.SetUp;
+    lFixture.TestNoRttiVirtualMethodNotCrash;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsrttiinterceptTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.rtti.intercept.TTestVirtualMethodInterceptor');
+  lSuite.AddTest('TestBeforeAfterFire', @RunTTestVirtualMethodInterceptorTestBeforeAfterFire);
+  lSuite.AddTest('TestUnproxifyRestores', @RunTTestVirtualMethodInterceptorTestUnproxifyRestores);
+  lSuite.AddTest('TestSuppressInvoke', @RunTTestVirtualMethodInterceptorTestSuppressInvoke);
+  lSuite.AddTest('TestModifyResult', @RunTTestVirtualMethodInterceptorTestModifyResult);
+  lSuite.AddTest('TestExceptionReraise', @RunTTestVirtualMethodInterceptorTestExceptionReraise);
+  lSuite.AddTest('TestExceptionSwallow', @RunTTestVirtualMethodInterceptorTestExceptionSwallow);
+  lSuite.AddTest('TestNonVirtualNotIntercepted', @RunTTestVirtualMethodInterceptorTestNonVirtualNotIntercepted);
+  lSuite.AddTest('TestIsOperatorAndParent', @RunTTestVirtualMethodInterceptorTestIsOperatorAndParent);
+  lSuite.AddTest('TestVarParameter', @RunTTestVirtualMethodInterceptorTestVarParameter);
+  lSuite.AddTest('TestChildOverride', @RunTTestVirtualMethodInterceptorTestChildOverride);
+  lSuite.AddTest('TestNoRttiVirtualMethodNotCrash', @RunTTestVirtualMethodInterceptorTestNoRttiVirtualMethodNotCrash);
+end;
+
 end.

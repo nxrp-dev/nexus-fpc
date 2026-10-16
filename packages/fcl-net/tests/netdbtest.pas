@@ -5,7 +5,7 @@ unit netdbtest;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, Sockets, math, netdb;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Sockets, math, netdb;
 
 const
   FAKETLD = 'doesnotexist';
@@ -90,12 +90,20 @@ type
 
   { TNetDbTest }
 
-  TNetDbTest= class(TTestCase)
+  TNetDbTest= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   strict private
     tsl: TStringList;
   protected
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
 
     procedure BuildFakeRR_A(out RR: TFakeRR; nm: String; ttl: Cardinal;
       val: String);
@@ -192,7 +200,7 @@ type
     procedure BuildFakeResponseTXT(nm: ShortString; out fr: TFakeDNSResponse);
     procedure BuildFakeResponseSRV(nm: ShortString; out fr: TFakeDNSResponse);
 
-  published
+  public
     procedure TestBuildPayloadSimple;
     procedure TestBuildPayloadSimpleEmpty;
     procedure TestBuildPayloadSimpleEndDot;
@@ -386,6 +394,8 @@ type
     procedure TestCompressShortDomain;
     procedure TestCompressShortDomainTCP;
   end;
+
+procedure RegisternetdbtestTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -1222,16 +1232,16 @@ begin
   // rather than hardwire the length we calculate it so that no matter
   // what the fake domain the test passes.
   el := (Length(FAKEDOMAIN)+1)+(Length(FAKETLD)+1)+5;
-  AssertEquals('Payload byte count wrong:', el, R);
+  TestContext.AssertTrue((el)=(R), 'Payload byte count wrong:');
   I := 0;
   J := 0;
   S := stringfromlabel(Q.Payload,I);
-  AssertEquals('Wrong domain name returned:',FAKEFQDN, S);
+  TestContext.AssertTrue((FAKEFQDN)=(S), 'Wrong domain name returned:');
   Move(Q.Payload[I],J,SizeOf(Word));
-  AssertEquals('Wrong query type', DNSQRY_A, NToHs(J));
+  TestContext.AssertTrue((DNSQRY_A)=(NToHs(J)), 'Wrong query type');
   Inc(I,2);
   Move(Q.Payload[I],J,SizeOf(Word));
-  AssertEquals('Wrong class', 1, NToHs(J));
+  TestContext.AssertTrue((1)=(NToHs(J)), 'Wrong class');
 end;
 
 {
@@ -1243,7 +1253,7 @@ var
   R: Integer;
 begin
   R := BuildPayLoad(Q, '', DNSQRY_A, 1);
-  AssertEquals('Payload byte count wrong:',-1, R);
+  TestContext.AssertTrue((-1)=(R), 'Payload byte count wrong:');
 end;
 
 {
@@ -1261,7 +1271,7 @@ begin
   // what the fake domain the test passes.
   el := (Length(FAKEDOMAIN)+1)+(Length(FAKETLD)+1)+5;
   R := BuildPayLoad(Q, FAKEFQDN+'.', DNSQRY_A, 1);
-  AssertEquals('Payload byte count wrong:',el, R);
+  TestContext.AssertTrue((el)=(R), 'Payload byte count wrong:');
 end;
 
 {
@@ -1274,7 +1284,7 @@ var
   R: Integer;
 begin
   R := BuildPayLoad(Q, '.'+FAKEFQDN, DNSQRY_A, 1);
-  AssertEquals('Payload byte count wrong:',-1, R);
+  TestContext.AssertTrue((-1)=(R), 'Payload byte count wrong:');
 end;
 
 {
@@ -1287,7 +1297,7 @@ var
   R: Integer;
 begin
   R := BuildPayLoad(Q, FAKEDOMAIN+'.....'+FAKETLD, DNSQRY_A, 1);
-  AssertEquals('Payload byte count wrong:',-1, R);
+  TestContext.AssertTrue((-1)=(R), 'Payload byte count wrong:');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_A;
@@ -1299,23 +1309,20 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an A RR.', DNSQRY_A, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong A record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong A record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[1], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.5.1', HostAddrToStr(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an A RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong A record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong A record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[1], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.5.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_A;
@@ -1327,23 +1334,20 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an A RR.', DNSQRY_A, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong A record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong A record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[1], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.5.1', HostAddrToStr(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an A RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong A record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong A record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[1], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.5.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_A;
@@ -1355,23 +1359,20 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an A RR.', DNSQRY_A, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong A record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong A record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[1], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.5.1', HostAddrToStr(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an A RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong A record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong A record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[1], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.5.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_A;
@@ -1383,23 +1384,20 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an A RR.', DNSQRY_A, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong A record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong A record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[1], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.5.1', HostAddrToStr(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an A RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong A record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong A record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[1], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('127.0.5.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_AAAA;
@@ -1411,23 +1409,20 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an AAAA RR.',DNSQRY_AAAA, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong AAAA record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong AAAA record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4', HostAddrToStr6(ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1], qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::92E6:BAFF:FE44:FFBB', HostAddrToStr6(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an AAAA RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong AAAA record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong AAAA record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0], qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1], qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::92E6:BAFF:FE44:FFBB')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_AAAA;
@@ -1439,27 +1434,22 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an AAAA RR.',DNSQRY_AAAA, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong AAAA record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong AAAA record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[0],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::92E6:BAFF:FE44:FFBB',
-    HostAddrToStr6(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an AAAA RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong AAAA record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong AAAA record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::92E6:BAFF:FE44:FFBB')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_AAAA;
@@ -1471,27 +1461,22 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an AAAA RR.',DNSQRY_AAAA, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong AAAA record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong AAAA record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[0],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::92E6:BAFF:FE44:FFBB',
-    HostAddrToStr6(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an AAAA RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong AAAA record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong AAAA record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::92E6:BAFF:FE44:FFBB')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_AAAA;
@@ -1503,27 +1488,22 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an AAAA RR.',DNSQRY_AAAA, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertEquals('Wrong AAAA record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertEquals('Wrong AAAA record name for RR 1', FAKEFQDN,
-    RRArr[1].RRName);
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[0],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1],
-    qd.Payload, ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::92E6:BAFF:FE44:FFBB',
-    HostAddrToStr6(ip));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an AAAA RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong AAAA record name for RR 0');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[1].RRName), 'Wrong AAAA record name for RR 1');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1],
+    qd.Payload, ip), 'Did not get RR AAAA data.');
+  TestContext.AssertTrue(('FE80::92E6:BAFF:FE44:FFBB')=(HostAddrToStr6(ip)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_MX;
@@ -1537,34 +1517,30 @@ var
   ip6: THostAddr6;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an MX RR.',DNSQRY_MX, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_MX)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an MX RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, mxrec));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    mxrec.exchange);
-  AssertEquals('Wrong MX preference', 10, mxrec.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, mxrec), 'Did not get RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(mxrec.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(mxrec.preference), 'Wrong MX preference');
 
-  AssertEquals('Should be 2 additional RR records.',2,NToHs(qd.h.arcount));
+  TestContext.AssertTrue((2)=(NToHs(qd.h.arcount)), 'Should be 2 additional RR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, NToHs(qd.h.arcount));
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1], qd.Payload, ip6));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1], qd.Payload, ip6), 'Did not get RR AAAA data.');
 
-  AssertEquals('Wrong ip for A.', '172.16.27.238', HostAddrToStr(ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip6));
+  TestContext.AssertTrue(('172.16.27.238')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip6)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_MX;
@@ -1578,34 +1554,30 @@ var
   ip6: THostAddr6;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an MX RR.',DNSQRY_MX, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_MX)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an MX RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, mxrec));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    mxrec.exchange);
-  AssertEquals('Wrong MX preference', 10, mxrec.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, mxrec), 'Did not get RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(mxrec.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(mxrec.preference), 'Wrong MX preference');
 
-  AssertEquals('Should be 2 additional RR records.',2,NToHs(qd.h.arcount));
+  TestContext.AssertTrue((2)=(NToHs(qd.h.arcount)), 'Should be 2 additional RR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, NToHs(qd.h.arcount));
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1], qd.Payload, ip6));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1], qd.Payload, ip6), 'Did not get RR AAAA data.');
 
-  AssertEquals('Wrong ip for A.', '172.16.27.238', HostAddrToStr(ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip6));
+  TestContext.AssertTrue(('172.16.27.238')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip6)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_MX;
@@ -1619,35 +1591,31 @@ var
   ip6: THostAddr6;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an MX RR.',DNSQRY_MX, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_MX)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an MX RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, mxrec));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    mxrec.exchange);
-  AssertEquals('Wrong MX preference', 10, mxrec.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, mxrec), 'Did not get RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(mxrec.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(mxrec.preference), 'Wrong MX preference');
 
-  AssertEquals('Should be 2 additional RR records.',2,NToHs(qd.h.arcount));
+  TestContext.AssertTrue((2)=(NToHs(qd.h.arcount)), 'Should be 2 additional RR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, NToHs(qd.h.arcount));
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1], qd.Payload,
-    ip6));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1], qd.Payload,
+    ip6), 'Did not get RR AAAA data.');
 
-  AssertEquals('Wrong ip for A.', '172.16.27.238', HostAddrToStr(ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip6));
+  TestContext.AssertTrue(('172.16.27.238')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip6)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_MX;
@@ -1661,35 +1629,31 @@ var
   ip6: THostAddr6;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an MX RR.',DNSQRY_MX, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_MX)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an MX RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, mxrec));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    mxrec.exchange);
-  AssertEquals('Wrong MX preference', 10, mxrec.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, mxrec), 'Did not get RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(mxrec.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(mxrec.preference), 'Wrong MX preference');
 
-  AssertEquals('Should be 2 additional RR records.',2,NToHs(qd.h.arcount));
+  TestContext.AssertTrue((2)=(NToHs(qd.h.arcount)), 'Should be 2 additional RR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, NToHs(qd.h.arcount));
-  AssertEquals('Wrong number of resource records.', 2, Length(RRArr));
-  AssertEquals('RR 0 is not an A RR.',DNSQRY_A, RRarr[0].RRMeta.Atype);
-  AssertEquals('RR 1 is not an AAAA RR.', DNSQRY_AAAA, RRarr[1].RRMeta.Atype);
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertTrue('Did not get RR AAAA data.', DNSRRGetAAAA(RRArr[1], qd.Payload,
-    ip6));
+  TestContext.AssertTrue((2)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_A)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an A RR.');
+  TestContext.AssertTrue((DNSQRY_AAAA)=(RRarr[1].RRMeta.Atype), 'RR 1 is not an AAAA RR.');
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[1], qd.Payload,
+    ip6), 'Did not get RR AAAA data.');
 
-  AssertEquals('Wrong ip for A.', '172.16.27.238', HostAddrToStr(ip));
-  AssertEquals('Wrong ip for AAAA.', 'FE80::3B92:3429:FF16:A3E4',
-    HostAddrToStr6(ip6));
+  TestContext.AssertTrue(('172.16.27.238')=(HostAddrToStr(ip)), 'Wrong ip for A.');
+  TestContext.AssertTrue(('FE80::3B92:3429:FF16:A3E4')=(HostAddrToStr6(ip6)), 'Wrong ip for AAAA.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_SOA;
@@ -1701,29 +1665,25 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_SOA;
@@ -1735,29 +1695,25 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_SOA;
@@ -1769,29 +1725,25 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_SOA;
@@ -1803,29 +1755,25 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_CNAME;
@@ -1837,18 +1785,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong CNAME record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong CNAME record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_CNAME;
@@ -1860,18 +1806,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong CNAME record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong CNAME record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_CNAME;
@@ -1883,18 +1827,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong CNAME record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong CNAME record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_CNAME;
@@ -1906,19 +1848,17 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong CNAME record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload,
-    s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong CNAME record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload,
+    s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_NS;
@@ -1930,18 +1870,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_NS;
@@ -1953,18 +1891,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_NS;
@@ -1976,18 +1912,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_NS;
@@ -1999,18 +1933,16 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_PTR;
@@ -2024,18 +1956,16 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_PTR;
@@ -2049,18 +1979,16 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_PTR;
@@ -2074,18 +2002,16 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_PTR;
@@ -2099,18 +2025,16 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_TXT;
@@ -2123,20 +2047,16 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_TXT;
@@ -2149,20 +2069,16 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_TXT;
@@ -2175,20 +2091,16 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_TXT;
@@ -2201,20 +2113,16 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 procedure TNetDbTest.TestDnsQueryUDP_SRV;
@@ -2226,25 +2134,23 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SRV data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 procedure TNetDbTest.TestDnsQueryTCP_SRV;
@@ -2256,25 +2162,23 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressUDP_SRV;
@@ -2286,25 +2190,23 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SRV data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 procedure TNetDbTest.TestDnsQueryCompressTCP_SRV;
@@ -2316,25 +2218,23 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to compressed querydata',
-    BuildQueryData(fakeresp, qd, anslen, True));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen, True), 'Unable to convert fake dns response to compressed querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
-  AssertEquals('Wrong record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong record name for RR 0');
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 {
@@ -2349,15 +2249,14 @@ var
   RRArr: TRRNameDataArray;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildTruncatedQueryData(fakeresp, qd, anslen,40));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildTruncatedQueryData(fakeresp, qd, anslen,40), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
   // the header says there are 2 A records, but it's a trap!
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   // truncation of buffer means this call returns 0 RRs.
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of RRs', 0, Length(RRArr));
+  TestContext.AssertTrue((0)=(Length(RRArr)), 'Wrong number of RRs');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeA;
@@ -2369,19 +2268,18 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // Change start position for RR[0] to end of buffer - 4
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   qd.Payload[Length(qd.Payload)-1] := $AA; // sentinel marker we can look for
 
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '0.0.0.170', HostAddrToStr(ip));
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('0.0.0.170')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeA;
@@ -2393,16 +2291,15 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // Change start position for RR[0] to end of buffer - 3
   RRArr[0].RDataSt := Length(qd.Payload) - (RRArr[0].RRMeta.RDLength - 3);
-  AssertFalse('Got RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
+  TestContext.AssertTrue(not (DNSRRGetA(RRArr[0], qd.Payload, ip)), 'Got RR A data.');
 end;
 
 {
@@ -2418,17 +2315,16 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
   // Change start position for RR[0]
   RRArr[0].RDataSt := Length(qd.Payload) - SizeOf(THostAddr6);
   qd.Payload[Length(qd.Payload)-1] := $AA;
-  AssertTrue('Got RR AAAA data.', DNSRRGetAAAA(RRArr[0], qd.Payload, ip));
-  AssertEquals($AA, ip.u6_addr8[15]);
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0], qd.Payload, ip), 'Got RR AAAA data.');
+  TestContext.AssertTrue(($AA)=(ip.u6_addr8[15]), '');
 end;
 
 {
@@ -2443,17 +2339,16 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
   // Change start position for RR[0]. attempting to read 16 bytes
   // from this position will pass the end of the buffer.
   RRArr[0].RDataSt := Length(qd.Payload) - (SizeOf(THostAddr6)-1);
   qd.Payload[Length(qd.Payload)-1] := $AA;
-  AssertFalse('Got RR AAAA data.', DNSRRGetAAAA(RRArr[0], qd.Payload, ip));
+  TestContext.AssertTrue(not (DNSRRGetAAAA(RRArr[0], qd.Payload, ip)), 'Got RR AAAA data.');
 end;
 
 {
@@ -2468,11 +2363,10 @@ var
   fmx: TDNSRR_MX;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // move the MX RR bytes to the end of the payload buffer.
@@ -2480,10 +2374,9 @@ begin
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Got RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, fmx));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    fmx.exchange);
-  AssertEquals('Wrong MX preference', 10, fmx.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, fmx), 'Got RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(fmx.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(fmx.preference), 'Wrong MX preference');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeMX;
@@ -2495,11 +2388,10 @@ var
   fmx: TDNSRR_MX;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // move the MX RR bytes to the end of the payload buffer. We omit the last
@@ -2510,12 +2402,11 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength-2));
 
-  AssertTrue('Got RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, fmx));
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, fmx), 'Got RR MX data.');
   // stringfromlabel should drop the last label, so the result should be just
   // missing the tld.
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEDOMAIN,
-    fmx.exchange);
-  AssertEquals('Wrong MX preference', 10, fmx.preference);
+  TestContext.AssertTrue(('mailer.'+FAKEDOMAIN)=(fmx.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(fmx.preference), 'Wrong MX preference');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeSOA;
@@ -2527,32 +2418,29 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
 
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
   // move the SOA RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeSOA;
@@ -2564,15 +2452,14 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
 
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
   // move the SOA RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
@@ -2580,8 +2467,8 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength-1));
 
-  AssertFalse('Got RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
+  TestContext.AssertTrue(not (DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec)), 'Got RR SOA data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeSRV;
@@ -2593,27 +2480,26 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
   // move the SRV RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SRV data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeSRV;
@@ -2625,14 +2511,13 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
   // move the SRV RR bytes to the end of the payload buffer. ensure that
   // we're one byte short to try and trick the code into reading past the
@@ -2642,8 +2527,8 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength - 1));
 
-  AssertFalse('Got RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
+  TestContext.AssertTrue(not (DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec)), 'Got RR SRV data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeCNAME;
@@ -2655,22 +2540,21 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
 
   // move the cname to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 {
@@ -2686,14 +2570,13 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
 
   // move the cname to the end of the buffer. we drop two bytes off the end of
   // the cname, because there's a 0 byte at the end of a label if not a ptr.
@@ -2706,9 +2589,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakecname.'+FAKEDOMAIN)=(s), 'Wrong CNAME.');
 end;
 
 {
@@ -2723,24 +2606,22 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
 
   // move the ns to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeNS;
@@ -2752,14 +2633,13 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
 
   // move the ns to the end of the buffer. we drop two bytes off the end of
   // the ns, because there's a 0 byte at the end of a label if not a ptr.
@@ -2772,9 +2652,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakens.'+FAKEDOMAIN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgePTR;
@@ -2788,24 +2668,22 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
 
   // move the ptr to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgePTR;
@@ -2819,16 +2697,14 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
 
   // move the ns to the end of the buffer. we drop two bytes off the end of
   // the ns, because there's a 0 byte at the end of a label if not a ptr.
@@ -2841,9 +2717,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakeptrans.'+FAKEDOMAIN)=(s), 'Wrong PTR.');
 end;
 
 {
@@ -2859,25 +2735,21 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
 
   // Move the text record to the end of the buffer
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 {
@@ -2893,16 +2765,14 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
 
   // Move the text record to the end of the buffer, cutting off the last
   // 2 bytes. this means the length byte for the second string will point
@@ -2911,8 +2781,7 @@ begin
   RRArr[0].RDataSt := Length(qd.Payload) - (RRArr[0].RRMeta.RDLength - 2);
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength - 2));
-  AssertFalse('Did not get RR TXT data.',
-    DNSRRGetText(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(not (DNSRRGetText(RRArr[0], qd.Payload, s)), 'Did not get RR TXT data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPA;
@@ -2924,18 +2793,17 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // Change start position for RR[0] to end of buffer - 4
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   qd.Payload[Length(qd.Payload)-1] := $AA; // sentinel marker we can look for
-  AssertTrue('Did not get RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '0.0.0.170', HostAddrToStr(ip));
+  TestContext.AssertTrue(DNSRRGetA(RRArr[0], qd.Payload, ip), 'Did not get RR A data.');
+  TestContext.AssertTrue(('0.0.0.170')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPA;
@@ -2947,16 +2815,15 @@ var
   ip: THostAddr;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // Change start position for RR[0] to end of buffer - 3
   RRArr[0].RDataSt := Length(qd.Payload) - (RRArr[0].RRMeta.RDLength - 2);
-  AssertFalse('Got RR A data.', DNSRRGetA(RRArr[0], qd.Payload, ip));
+  TestContext.AssertTrue(not (DNSRRGetA(RRArr[0], qd.Payload, ip)), 'Got RR A data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPAAAA;
@@ -2968,17 +2835,16 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
   // Change start position for RR[0]
   RRArr[0].RDataSt := Length(qd.Payload) - SizeOf(THostAddr6);
   qd.Payload[Length(qd.Payload)-1] := $AA;
-  AssertTrue('Got RR AAAA data.', DNSRRGetAAAA(RRArr[0], qd.Payload, ip));
-  AssertEquals($AA, ip.u6_addr8[15]);
+  TestContext.AssertTrue(DNSRRGetAAAA(RRArr[0], qd.Payload, ip), 'Got RR AAAA data.');
+  TestContext.AssertTrue(($AA)=(ip.u6_addr8[15]), '');
 end;
 
 procedure TNetDbTest.TestDNsRRBufferPastEdgeTCPAAAA;
@@ -2990,16 +2856,15 @@ var
   ip: THostAddr6;
 begin
   BuildFakeResponseAAAA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of AAAA records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of AAAA records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
   // Change start position for RR[0]. attempting to read 16 bytes
   // from this position will pass the end of the buffer.
   RRArr[0].RDataSt := Length(qd.Payload) - (SizeOf(THostAddr6)-1);
-  AssertFalse('Got RR AAAA data.', DNSRRGetAAAA(RRArr[0], qd.Payload, ip));
+  TestContext.AssertTrue(not (DNSRRGetAAAA(RRArr[0], qd.Payload, ip)), 'Got RR AAAA data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPMX;
@@ -3011,11 +2876,10 @@ var
   fmx: TDNSRR_MX;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // move the MX RR bytes to the end of the payload buffer.
@@ -3023,10 +2887,9 @@ begin
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Got RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, fmx));
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEFQDN,
-    fmx.exchange);
-  AssertEquals('Wrong MX preference', 10, fmx.preference);
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, fmx), 'Got RR MX data.');
+  TestContext.AssertTrue(('mailer.'+FAKEFQDN)=(fmx.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(fmx.preference), 'Wrong MX preference');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPMX;
@@ -3038,11 +2901,10 @@ var
   fmx: TDNSRR_MX;
 begin
   BuildFakeResponseMX(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of MX records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of MX records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
 
   // move the MX RR bytes to the end of the payload buffer. We omit the last
@@ -3053,12 +2915,11 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength-2));
 
-  AssertTrue('Got RR MX data.', DNSRRGetMX(RRArr[0], qd.Payload, fmx));
+  TestContext.AssertTrue(DNSRRGetMX(RRArr[0], qd.Payload, fmx), 'Got RR MX data.');
   // stringfromlabel should drop the last label, so the result should be just
   // missing the tld.
-  AssertEquals('Wrong MX hostname', 'mailer.'+FAKEDOMAIN,
-    fmx.exchange);
-  AssertEquals('Wrong MX preference', 10, fmx.preference);
+  TestContext.AssertTrue(('mailer.'+FAKEDOMAIN)=(fmx.exchange), 'Wrong MX hostname');
+  TestContext.AssertTrue((10)=(fmx.preference), 'Wrong MX preference');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPSOA;
@@ -3070,32 +2931,29 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
 
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
   // move the SOA RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
-  AssertEquals('Wrong mname hostname', 'mn.'+FAKEFQDN,
-    soarec.mname);
-  AssertEquals('Wrong rname hostname', 'rn.'+FAKEFQDN,
-    soarec.rname);
-  AssertEquals('Wrong SOA serial', 76543210, soarec.serial);
-  AssertEquals('Wrong SOA refresh', 123, soarec.refresh);
-  AssertEquals('Wrong SOA retry', 456, soarec.retry);
-  AssertEquals('Wrong SOA expire', 789, soarec.expire);
-  AssertEquals('Wrong SOA min', 60, soarec.min);
+  TestContext.AssertTrue(DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec), 'Did not get RR SOA data.');
+  TestContext.AssertTrue(('mn.'+FAKEFQDN)=(soarec.mname), 'Wrong mname hostname');
+  TestContext.AssertTrue(('rn.'+FAKEFQDN)=(soarec.rname), 'Wrong rname hostname');
+  TestContext.AssertTrue((76543210)=(soarec.serial), 'Wrong SOA serial');
+  TestContext.AssertTrue((123)=(soarec.refresh), 'Wrong SOA refresh');
+  TestContext.AssertTrue((456)=(soarec.retry), 'Wrong SOA retry');
+  TestContext.AssertTrue((789)=(soarec.expire), 'Wrong SOA expire');
+  TestContext.AssertTrue((60)=(soarec.min), 'Wrong SOA min');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPSOA;
@@ -3107,15 +2965,14 @@ var
   soarec: TDNSRR_SOA;
 begin
   BuildFakeResponseSOA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SOA records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SOA records.');
 
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SOA RR.',DNSQRY_SOA, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SOA)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SOA RR.');
 
   // move the SOA RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
@@ -3123,8 +2980,8 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength-1));
 
-  AssertFalse('Got RR SOA data.', DNSRRGetSOA(RRArr[0], qd.Payload,
-    soarec));
+  TestContext.AssertTrue(not (DNSRRGetSOA(RRArr[0], qd.Payload,
+    soarec)), 'Got RR SOA data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPSRV;
@@ -3136,27 +2993,26 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
   // move the SRV RR bytes to the end of the payload buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
-  AssertEquals('Wrong SRV priority', 22, srvrec.priority);
-  AssertEquals('Wrong SRV weight', 44, srvrec.weight);
-  AssertEquals('Wrong SRV port', 2201, srvrec.port);
+  TestContext.AssertTrue(DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec), 'Did not get RR SRV data.');
+  TestContext.AssertTrue((22)=(srvrec.priority), 'Wrong SRV priority');
+  TestContext.AssertTrue((44)=(srvrec.weight), 'Wrong SRV weight');
+  TestContext.AssertTrue((2201)=(srvrec.port), 'Wrong SRV port');
 
-  AssertEquals('Wrong SRV hostname', '_this._that._other', srvrec.target);
+  TestContext.AssertTrue(('_this._that._other')=(srvrec.target), 'Wrong SRV hostname');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPSRV;
@@ -3168,14 +3024,13 @@ var
   srvrec: TDNSRR_SRV;
 begin
   BuildFakeResponseSRV(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of SRV records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of SRV records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an SRV RR.',DNSQRY_SRV, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_SRV)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an SRV RR.');
 
   // move the SRV RR bytes to the end of the payload buffer. ensure that
   // we're one byte short to try and trick the code into reading past the
@@ -3185,8 +3040,8 @@ begin
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength - 1));
 
-  AssertFalse('Got RR SRV data.', DNSRRGetSRV(RRArr[0], qd.Payload,
-    srvrec));
+  TestContext.AssertTrue(not (DNSRRGetSRV(RRArr[0], qd.Payload,
+    srvrec)), 'Got RR SRV data.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPCNAME;
@@ -3198,22 +3053,21 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
 
   // move the cname to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
+  TestContext.AssertTrue(('fakecname.'+FAKEFQDN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPCNAME;
@@ -3225,14 +3079,13 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseCNAME(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of CNAME records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of CNAME records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an CNAME RR.',DNSQRY_CNAME, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_CNAME)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an CNAME RR.');
 
   // move the cname to the end of the buffer. we drop two bytes off the end of
   // the cname, because there's a 0 byte at the end of a label if not a ptr.
@@ -3245,9 +3098,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR CNAME data.', DNSRRGetCNAME(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetCNAME(RRArr[0], qd.Payload, s), 'Did not get RR CNAME data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong CNAME.', 'fakecname.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakecname.'+FAKEDOMAIN)=(s), 'Wrong CNAME.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPNS;
@@ -3259,24 +3112,22 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong NS record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong NS record name for RR 0');
 
   // move the ns to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPNS;
@@ -3288,14 +3139,13 @@ var
   s: TDNSDomainName;
 begin
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
 
   // move the ns to the end of the buffer. we drop two bytes off the end of
   // the ns, because there's a 0 byte at the end of a label if not a ptr.
@@ -3308,9 +3158,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR NS data.', DNSRRGetNS(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetNS(RRArr[0], qd.Payload, s), 'Did not get RR NS data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong NS.', 'fakens.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakens.'+FAKEDOMAIN)=(s), 'Wrong NS.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPPTR;
@@ -3324,24 +3174,22 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
 
   // move the ptr to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
 
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEFQDN, s);
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
+  TestContext.AssertTrue(('fakeptrans.'+FAKEFQDN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPPTR;
@@ -3355,16 +3203,14 @@ begin
   // the str passed in to this function doesn't really matter, but using
   // a proper in-addr.arpa domain helps keep it clear what we're testing.
   BuildFakeResponsePTR('0.5.0.127.in-addr.arpa', fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of PTR records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of PTR records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an PTR RR.',DNSQRY_PTR, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong PTR record name for RR 0', '0.5.0.127.in-addr.arpa',
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_PTR)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an PTR RR.');
+  TestContext.AssertTrue(('0.5.0.127.in-addr.arpa')=(RRArr[0].RRName), 'Wrong PTR record name for RR 0');
 
   // move the ns to the end of the buffer. we drop two bytes off the end of
   // the ns, because there's a 0 byte at the end of a label if not a ptr.
@@ -3377,9 +3223,9 @@ begin
 
   // lie about the rdlength too!
   Dec(RRArr[0].RRMeta.RDLength,2);
-  AssertTrue('Did not get RR PTR data.', DNSRRGetPTR(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(DNSRRGetPTR(RRArr[0], qd.Payload, s), 'Did not get RR PTR data.');
   // last label will get removed, leaving just the domain part.
-  AssertEquals('Wrong PTR.', 'fakeptrans.'+FAKEDOMAIN, s);
+  TestContext.AssertTrue(('fakeptrans.'+FAKEDOMAIN)=(s), 'Wrong PTR.');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferEdgeTCPTXT;
@@ -3392,25 +3238,21 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
 
   // Move the text record to the end of the buffer
   oldstart := RRArr[0].RDataSt;
   RRArr[0].RDataSt := Length(qd.Payload) - RRArr[0].RRMeta.RDLength;
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt, RRArr[0].RRMeta.RDLength);
-  AssertTrue('Did not get RR TXT data.', DNSRRGetText(RRArr[0], qd.Payload, s));
-  AssertEquals(
-    'v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!',
-      s);
+  TestContext.AssertTrue(DNSRRGetText(RRArr[0], qd.Payload, s), 'Did not get RR TXT data.');
+  TestContext.AssertTrue(('v=spf1 mx a:lists.'+FAKEFQDN+'Always look on the bright side of life!')=(s), '');
 end;
 
 procedure TNetDbTest.TestDnsRRBufferPastEdgeTCPTXT;
@@ -3423,16 +3265,14 @@ var
 begin
   s := '';
   BuildFakeResponseTXT(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of TXT records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of TXT records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not a TXT RR.',DNSQRY_TXT, RRarr[0].RRMeta.Atype);
-  AssertEquals('Wrong TXT record name for RR 0', FAKEFQDN,
-    RRArr[0].RRName);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_TXT)=(RRarr[0].RRMeta.Atype), 'RR 0 is not a TXT RR.');
+  TestContext.AssertTrue((FAKEFQDN)=(RRArr[0].RRName), 'Wrong TXT record name for RR 0');
 
   // Move the text record to the end of the buffer, cutting off the last
   // 2 bytes. this means the length byte for the second string will point
@@ -3441,8 +3281,7 @@ begin
   RRArr[0].RDataSt := Length(qd.Payload) - (RRArr[0].RRMeta.RDLength - 2);
   CopyBytesTo(qd.Payload, oldstart, RRArr[0].RDataSt,
     (RRArr[0].RRMeta.RDLength - 2));
-  AssertFalse('Did not get RR TXT data.',
-    DNSRRGetText(RRArr[0], qd.Payload, s));
+  TestContext.AssertTrue(not (DNSRRGetText(RRArr[0], qd.Payload, s)), 'Did not get RR TXT data.');
 end;
 
 {
@@ -3458,25 +3297,22 @@ var
   t: Cardinal;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
 
   // get an RR from its normal position. need this to calculate the length.
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, ansstart,  rrn));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, ansstart,  rrn), 'NextNameRR should succeed.');
 
   // calculate the size in bytes of the rr so we can copy it to the end
   // of the payload buffer
   t := (rrn.RDataSt + rrn.RRMeta.RDLength) - ansstart;
   CopyBytesTo(qd.Payload,ansstart,Length(qd.Payload)-t, t);
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, Length(qd.Payload)-t,  rrn));
-  AssertEquals(DNSQRY_A, rrn.RRMeta.Atype);
-  AssertEquals(300, rrn.RRMeta.TTL);
-  AssertTrue(DNSRRGetA(rrn, qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, Length(qd.Payload)-t,  rrn), 'NextNameRR should succeed.');
+  TestContext.AssertTrue((DNSQRY_A)=(rrn.RRMeta.Atype), '');
+  TestContext.AssertTrue((300)=(rrn.RRMeta.TTL), '');
+  TestContext.AssertTrue(DNSRRGetA(rrn, qd.Payload, ip), '');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 {
@@ -3491,22 +3327,19 @@ var
   t: Cardinal;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
 
   // get an RR from its normal position. need this to calculate the length.
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, ansstart,  rrn));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, ansstart,  rrn), 'NextNameRR should succeed.');
 
   // calculate the size in bytes of the rr so we can copy it to the end
   // of the payload buffer
   t := (rrn.RDataSt + rrn.RRMeta.RDLength) - ansstart;
   // copy the bytes, but leave off the last one. leave the rdlength unchanged.
   CopyBytesTo(qd.Payload,ansstart,Length(qd.Payload)-(t-1), t-1);
-  AssertFalse('NextNameRR should fail.',
-    NextNameRR(qd.Payload, Length(qd.Payload)-(t-1),  rrn));
+  TestContext.AssertTrue(not (NextNameRR(qd.Payload, Length(qd.Payload)-(t-1),  rrn)), 'NextNameRR should fail.');
 end;
 
 procedure TNetDbTest.TestNextNameRREdgeTCPA;
@@ -3519,25 +3352,22 @@ var
   t: Cardinal;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
 
   // get an RR from its normal position. need this to calculate the length.
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, ansstart,  rrn));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, ansstart,  rrn), 'NextNameRR should succeed.');
 
   // calculate the size in bytes of the rr so we can copy it to the end
   // of the payload buffer
   t := (rrn.RDataSt + rrn.RRMeta.RDLength) - ansstart;
   CopyBytesTo(qd.Payload,ansstart,Length(qd.Payload)-t, t);
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, Length(qd.Payload)-t,  rrn));
-  AssertEquals(DNSQRY_A, rrn.RRMeta.Atype);
-  AssertEquals(300, rrn.RRMeta.TTL);
-  AssertTrue(DNSRRGetA(rrn, qd.Payload, ip));
-  AssertEquals('Wrong ip for A.', '127.0.0.1', HostAddrToStr(ip));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, Length(qd.Payload)-t,  rrn), 'NextNameRR should succeed.');
+  TestContext.AssertTrue((DNSQRY_A)=(rrn.RRMeta.Atype), '');
+  TestContext.AssertTrue((300)=(rrn.RRMeta.TTL), '');
+  TestContext.AssertTrue(DNSRRGetA(rrn, qd.Payload, ip), '');
+  TestContext.AssertTrue(('127.0.0.1')=(HostAddrToStr(ip)), 'Wrong ip for A.');
 end;
 
 procedure TNetDbTest.TestNextNameRRPastEdgeTCPA;
@@ -3549,22 +3379,19 @@ var
   t: Cardinal;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
 
   // get an RR from its normal position. need this to calculate the length.
-  AssertTrue('NextNameRR should succeed.',
-    NextNameRR(qd.Payload, ansstart,  rrn));
+  TestContext.AssertTrue(NextNameRR(qd.Payload, ansstart,  rrn), 'NextNameRR should succeed.');
 
   // calculate the size in bytes of the rr so we can copy it to the end
   // of the payload buffer
   t := (rrn.RDataSt + rrn.RRMeta.RDLength) - ansstart;
   // copy the bytes, but leave off the last one. leave the rdlength unchanged.
   CopyBytesTo(qd.Payload,ansstart,Length(qd.Payload)-(t-1), t-1);
-  AssertFalse('NextNameRR should fail.',
-    NextNameRR(qd.Payload, Length(qd.Payload)-(t-1),  rrn));
+  TestContext.AssertTrue(not (NextNameRR(qd.Payload, Length(qd.Payload)-(t-1),  rrn)), 'NextNameRR should fail.');
 end;
 
 {
@@ -3579,14 +3406,13 @@ var
   RRArr: TRRNameDataArray;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := High(Word);
   anslen := High(Word);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, anslen);
-  AssertEquals(0, Length(RRArr));
+  TestContext.AssertTrue((0)=(Length(RRArr)), '');
 end;
 
 procedure TNetDbTest.TestGetRRrecordsInvalidStartTCP;
@@ -3597,14 +3423,13 @@ var
   RRArr: TRRNameDataArray;
 begin
   BuildFakeResponseA(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := High(Word);
   anslen := High(Word);
-  AssertEquals('Wrong number of A records.', 2, qd.h.ancount);
+  TestContext.AssertTrue((2)=(qd.h.ancount), 'Wrong number of A records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, anslen);
-  AssertEquals(0, Length(RRArr));
+  TestContext.AssertTrue((0)=(Length(RRArr)), '');
 end;
 
 procedure TNetDbTest.TestGetFixLenStrSimple;
@@ -3630,7 +3455,7 @@ begin
   // rdlength is word, so len byte for str is at offset 2 and str starts
   // at offset 3.
   GetFixlenStr(pl, 3, pl[2], res);
-  AssertEquals(s, res);
+  TestContext.AssertTrue((s)=(res), '');
 end;
 
 procedure TNetDbTest.TestGetFixLenStrSimpleTCP;
@@ -3656,7 +3481,7 @@ begin
   // rdlength is word, so len byte for str is at offset 2 and str starts
   // at offset 3.
   GetFixlenStr(pl, 3, pl[2], res);
-  AssertEquals(s, res);
+  TestContext.AssertTrue((s)=(res), '');
 end;
 
 procedure TNetDbTest.TestGetFixLenStrSimpleAtEdge;
@@ -3681,7 +3506,7 @@ begin
   SetLength(buf, offset);
   BufferToPayload(buf, pl);
   GetFixlenStr(pl, n+1, pl[n], res);
-  AssertEquals(s, res);
+  TestContext.AssertTrue((s)=(res), '');
 end;
 
 procedure TNetDbTest.TestGetFixLenStrSimpleTCPAtEdge;
@@ -3706,7 +3531,7 @@ begin
   SetLength(buf, offset);
   BufferToPayload(buf, pl);
   GetFixlenStr(pl, n+1, pl[n], res);
-  AssertEquals(s, res);
+  TestContext.AssertTrue((s)=(res), '');
 end;
 
 {
@@ -3720,7 +3545,7 @@ begin
   pl[Length(pl) - 2] := 30;
   pl[Length(pl) - 1] := Ord('a');
   GetFixlenStr(pl, Length(pl)-1, pl[Length(pl)-2], res);
-  AssertEquals('', res);
+  TestContext.AssertTrue(('')=(res), '');
 end;
 
 procedure TNetDbTest.TestGetFixLenStrSimpleTCPPastEdge;
@@ -3731,7 +3556,7 @@ begin
   pl[Length(pl) - 2] := 30;
   pl[Length(pl) - 1] := Ord('a');
   GetFixlenStr(pl, Length(pl)-1, pl[Length(pl)-2], res);
-  AssertEquals('', res);
+  TestContext.AssertTrue(('')=(res), '');
 end;
 
 {
@@ -3751,14 +3576,13 @@ begin
   // we can use any of CNAME, NS or PTR because these RRs are just a single
   // domain name or series of labels.
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
 
   // move the ns to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
@@ -3771,8 +3595,8 @@ begin
   // need this var because stringfromlabel expects a longint that's a var type.
   startpos := RRarr[0].RDataSt;
   s := stringfromlabel(qd.Payload, startpos);
-  AssertEquals('fakens.'+FAKEFQDN, s);
-  AssertEquals(Length(qd.Payload), startpos);
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), '');
+  TestContext.AssertTrue((Length(qd.Payload))=(startpos), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCountAsLastByteTCP;
@@ -3787,14 +3611,13 @@ begin
   // we can use any of CNAME, NS or PTR because these RRs are just a single
   // domain name or series of labels.
   BuildFakeResponseNS(FAKEFQDN, fakeresp);
-  AssertTrue('Unable to convert fake dns response to querydata',
-    BuildQueryData(fakeresp, qd, anslen));
-  AssertTrue('CheckAnswer should return true.', CheckAnswer(qd.h,qd.h));
+  TestContext.AssertTrue(BuildQueryData(fakeresp, qd, anslen), 'Unable to convert fake dns response to querydata');
+  TestContext.AssertTrue(CheckAnswer(qd.h,qd.h), 'CheckAnswer should return true.');
   ansstart := SkipAnsQueries(qd, anslen);
-  AssertEquals('Wrong number of NS records.', 1, qd.h.ancount);
+  TestContext.AssertTrue((1)=(qd.h.ancount), 'Wrong number of NS records.');
   RRArr := GetRRrecords(qd.Payload, ansstart, qd.h.ancount);
-  AssertEquals('Wrong number of resource records.', 1, Length(RRArr));
-  AssertEquals('RR 0 is not an NS RR.',DNSQRY_NS, RRarr[0].RRMeta.Atype);
+  TestContext.AssertTrue((1)=(Length(RRArr)), 'Wrong number of resource records.');
+  TestContext.AssertTrue((DNSQRY_NS)=(RRarr[0].RRMeta.Atype), 'RR 0 is not an NS RR.');
 
   // move the ns to the end of the buffer.
   oldstart := RRArr[0].RDataSt;
@@ -3807,8 +3630,8 @@ begin
   // need this var because stringfromlabel expects a longint that's a var type.
   startpos := RRarr[0].RDataSt;
   s := stringfromlabel(qd.Payload, startpos);
-  AssertEquals('fakens.'+FAKEFQDN, s);
-  AssertEquals(Length(qd.Payload), startpos);
+  TestContext.AssertTrue(('fakens.'+FAKEFQDN)=(s), '');
+  TestContext.AssertTrue((Length(qd.Payload))=(startpos), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompress;
@@ -3833,7 +3656,7 @@ begin
   WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs);
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, offset2);
-  AssertEquals(FAKEFQDN,s);
+  TestContext.AssertTrue((FAKEFQDN)=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressTCP;
@@ -3858,7 +3681,7 @@ begin
   WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs);
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, offset2);
-  AssertEquals(FAKEFQDN,s);
+  TestContext.AssertTrue((FAKEFQDN)=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressWithUncompressedLabel;
@@ -3884,11 +3707,11 @@ begin
   dmbs := DomainNameToByteStream('foo.' + FAKEFQDN, stt);
   len := CalcRdLength(dmbs);
   // len is 4 for 'foo' (including its length byte) and 2 for the pointer.
-  AssertEquals(6, len);
+  TestContext.AssertTrue((6)=(len), '');
   WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs);
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, so);
-  AssertEquals('foo.'+FAKEFQDN,s);
+  TestContext.AssertTrue(('foo.'+FAKEFQDN)=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressWithUncompressedLabelTCP;
@@ -3914,11 +3737,11 @@ begin
   dmbs := DomainNameToByteStream('foo.' + FAKEFQDN, stt);
   len := CalcRdLength(dmbs);
   // len is 4 for 'foo' (including its length byte) and 2 for the pointer.
-  AssertEquals(6, len);
+  TestContext.AssertTrue((6)=(len), '');
   WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs);
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, so);
-  AssertEquals('foo.'+FAKEFQDN,s);
+  TestContext.AssertTrue(('foo.'+FAKEFQDN)=(s), '');
 end;
 
 {
@@ -3953,7 +3776,7 @@ begin
   // read back the label.
   offset2 := Length(pl) - 2;
   s := stringfromlabel(pl, offset2);
-  AssertEquals(FAKEFQDN,s);
+  TestContext.AssertTrue((FAKEFQDN)=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressEndBufferTCP;
@@ -3985,7 +3808,7 @@ begin
   // read back the label.
   offset2 := Length(pl) - 2;
   s := stringfromlabel(pl, offset2);
-  AssertEquals(FAKEFQDN,s);
+  TestContext.AssertTrue((FAKEFQDN)=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressSplit;
@@ -4000,7 +3823,7 @@ begin
   offset := Length(pl) - 1;
   pl[offset] := 192;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressSplitTCP;
@@ -4015,7 +3838,7 @@ begin
   offset := Length(pl) - 1;
   pl[offset] := 192;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressPtrFwd;
@@ -4034,7 +3857,7 @@ begin
   pl[offset] := ptr.b1;
   pl[offset+1] := ptr.b2;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressPtrFwdTCP;
@@ -4053,7 +3876,7 @@ begin
   pl[offset] := ptr.b1;
   pl[offset+1] := ptr.b2;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressAllPtrStart;
@@ -4065,7 +3888,7 @@ begin
   FillByte(pl, Length(pl), 192);
   offset := 0;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelCompressAllPtrStartTCP;
@@ -4077,7 +3900,7 @@ begin
   FillByte(pl, Length(pl), 192);
   offset := 0;
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 {
@@ -4099,7 +3922,7 @@ begin
   pl[offset+1] := ptr.b2;
 
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 {
@@ -4121,7 +3944,7 @@ begin
   pl[offset+1] := ptr.b2;
 
   s := stringfromlabel(pl, offset);
-  AssertEquals('', s);
+  TestContext.AssertTrue(('')=(s), '');
 end;
 
 procedure TNetDbTest.TestStringFromLabelInfiniteLoop;
@@ -4209,7 +4032,7 @@ begin
 
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, offset2);
-  AssertEquals(shortdomain, s);
+  TestContext.AssertTrue((shortdomain)=(s), '');
 end;
 
 procedure TNetDbTest.TestCompressShortDomainTCP;
@@ -4237,7 +4060,7 @@ begin
 
   BufferToPayload(buf,pl);
   s := stringfromlabel(pl, offset2);
-  AssertEquals(shortdomain, s);
+  TestContext.AssertTrue((shortdomain)=(s), '');
 end;
 
 procedure TNetDbTest.SetUp;
@@ -4331,12 +4154,12 @@ begin
   etw := CalcRdLength(dmbs);
   if WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs) < etw
   then
-    Fail('Cannot write RR name to buffer at offset '+ inttostr(offset));
+    TestContext.Fail('Cannot write RR name to buffer at offset '+ inttostr(offset));
 
   if (offset + SizeOf(rr.Atype) + SizeOf(rr.AClass) + SizeOf(rr.TTL)) >
     Length(buf)
   then
-    Fail('Not enough space to add RR type,class,ttl at offset '+ inttostr(offset));
+    TestContext.Fail('Not enough space to add RR type,class,ttl at offset '+ inttostr(offset));
 
   // Write the RR type, class and TTL.
   WriteNumToBuffer(buf, offset,rr.Atype);
@@ -4375,12 +4198,12 @@ begin
     DNSQRY_SRV:
         res := WriteSRVasRData(buf, offset, rr.fsrv);
   else
-    Fail('Called to handle RR type '+inttostr(rr.Atype)+
+    TestContext.Fail('Called to handle RR type '+inttostr(rr.Atype)+
       ' but no code to handle it.');
   end;
 
   if res.bw < res.etw then
-    Fail('Unable to write RR of type ' +inttostr(RR.Atype) +
+    TestContext.Fail('Unable to write RR of type ' +inttostr(RR.Atype) +
       ', name "'  + rr.RRName + '" to buffer at offset '+inttostr(offset)+
       '. Wrote '+inttostr(res.bw)+' bytes, expected to write '+
         inttostr(res.etw)+' bytes.');
@@ -4405,12 +4228,12 @@ begin
   etw := CalcRdLength(dmbs);
   if WriteDNSDomainByteStreamToBuffer(buf, offset, dmbs) < etw
   then
-    Fail('Cannot write RR name to buffer at offset '+ inttostr(offset));
+    TestContext.Fail('Cannot write RR name to buffer at offset '+ inttostr(offset));
 
   if (offset + SizeOf(rr.Atype) + SizeOf(rr.AClass) + SizeOf(rr.TTL)) >
     Length(buf)
   then
-    Fail('Not enough space to add RR type,class,ttl at offset '+ inttostr(offset));
+    TestContext.Fail('Not enough space to add RR type,class,ttl at offset '+ inttostr(offset));
 
   // Write the RR type, class and TTL.
   WriteNumToBuffer(buf, offset,rr.Atype);
@@ -4461,12 +4284,12 @@ begin
         res := WriteSRVasRData(buf, offset, rr.fsrv);
       end;
   else
-    Fail('Called to handle RR type '+inttostr(rr.Atype)+
+    TestContext.Fail('Called to handle RR type '+inttostr(rr.Atype)+
       ' but no code to handle it.');
   end;
 
   if res.bw < res.etw then
-    Fail('Unable to write RR of type ' +inttostr(RR.Atype) +
+    TestContext.Fail('Unable to write RR of type ' +inttostr(RR.Atype) +
       ', name "'  + rr.RRName + '" to buffer at offset '+inttostr(offset)+
       '. Wrote '+inttostr(res.bw)+' bytes, expected to write '+
         inttostr(res.etw)+' bytes.');
@@ -4502,7 +4325,7 @@ begin
   // qclass.
   if WriteDNSDomainByteStreamToBuffer(buf, offset, dbs) < CalcRdLength(dbs)
   then
-    Fail('Cannot write name to buffer at offset '+ inttostr(offset));
+    TestContext.Fail('Cannot write name to buffer at offset '+ inttostr(offset));
 
   WriteNumToBuffer(buf, offset, fdr.qry.qtype);
   WriteNumToBuffer(buf, offset, fdr.qry.qclass);
@@ -4608,8 +4431,1228 @@ begin
   Result := BufferToPayload(buf, qd.Payload);
 end;
 
-initialization
 
-  RegisterTest(TNetDbTest);
+constructor TNetDbTest.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTNetDbTestTestBuildPayloadSimple(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestBuildPayloadSimple');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBuildPayloadSimple; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestBuildPayloadSimpleEmpty(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestBuildPayloadSimpleEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBuildPayloadSimpleEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestBuildPayloadSimpleEndDot(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestBuildPayloadSimpleEndDot');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBuildPayloadSimpleEndDot; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestBuildPayloadSimpleStartDot(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestBuildPayloadSimpleStartDot');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBuildPayloadSimpleStartDot; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestBuildPayloadSimpleMultipleDot(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestBuildPayloadSimpleMultipleDot');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBuildPayloadSimpleMultipleDot; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_A(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_A');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_A; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_A(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_A');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_A; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_A(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_A');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_A; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_A(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_A');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_A; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_AAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_AAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_AAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_AAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_AAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_AAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_AAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_AAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_AAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_AAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_AAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_AAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_MX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_MX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_MX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_MX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_MX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_MX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_MX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_MX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_MX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_MX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_MX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_MX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_SOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_SOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_SOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_SOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_SOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_SOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_SOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_SOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_SOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_SOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_SOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_SOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_CNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_CNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_CNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_CNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_CNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_CNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_CNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_CNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_CNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_CNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_CNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_CNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_NS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_NS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_NS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_NS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_NS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_NS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_NS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_NS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_NS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_NS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_NS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_NS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_PTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_PTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_PTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_PTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_PTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_PTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_PTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_PTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_PTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_PTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_PTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_PTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_TXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_TXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_TXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_TXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_TXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_TXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_TXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_TXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_TXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_TXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_TXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_TXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryUDP_SRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryUDP_SRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryUDP_SRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTCP_SRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTCP_SRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTCP_SRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressUDP_SRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressUDP_SRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressUDP_SRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryCompressTCP_SRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryCompressTCP_SRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryCompressTCP_SRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsQueryTruncateRR_UDP_A(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsQueryTruncateRR_UDP_A');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsQueryTruncateRR_UDP_A; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeAAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeAAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeAAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDNsRRBufferPastEdgeAAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDNsRRBufferPastEdgeAAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDNsRRBufferPastEdgeAAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeMX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeMX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeMX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeMX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeMX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeMX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeSOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeSOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeSOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeSOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeSOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeSOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeSRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeSRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeSRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeSRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeSRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeSRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeCNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeCNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeCNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeCNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeCNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeCNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeNS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeNS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeNS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeNS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeNS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeNS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgePTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgePTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgePTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgePTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgePTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgePTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPAAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPAAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPAAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDNsRRBufferPastEdgeTCPAAAA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDNsRRBufferPastEdgeTCPAAAA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDNsRRBufferPastEdgeTCPAAAA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPMX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPMX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPMX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPMX(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPMX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPMX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPSOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPSOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPSOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPSOA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPSOA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPSOA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPSRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPSRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPSRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPSRV(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPSRV');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPSRV; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPCNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPCNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPCNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPCNAME(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPCNAME');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPCNAME; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPNS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPNS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPNS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPNS(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPNS');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPNS; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPPTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPPTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPPTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPPTR(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPPTR');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPPTR; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferEdgeTCPTXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferEdgeTCPTXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferEdgeTCPTXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestDnsRRBufferPastEdgeTCPTXT(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestDnsRRBufferPastEdgeTCPTXT');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDnsRRBufferPastEdgeTCPTXT; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestNextNameRREdgeA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestNextNameRREdgeA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNextNameRREdgeA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestNextNameRRPastEdgeA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestNextNameRRPastEdgeA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNextNameRRPastEdgeA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestNextNameRREdgeTCPA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestNextNameRREdgeTCPA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNextNameRREdgeTCPA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestNextNameRRPastEdgeTCPA(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestNextNameRRPastEdgeTCPA');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNextNameRRPastEdgeTCPA; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetRRrecordsInvalidStart(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetRRrecordsInvalidStart');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetRRrecordsInvalidStart; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetRRrecordsInvalidStartTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetRRrecordsInvalidStartTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetRRrecordsInvalidStartTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimple(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimple');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimple; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimpleTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimpleTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimpleTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimpleAtEdge(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimpleAtEdge');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimpleAtEdge; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimpleTCPAtEdge(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimpleTCPAtEdge');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimpleTCPAtEdge; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimplePastEdge(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimplePastEdge');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimplePastEdge; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestGetFixLenStrSimpleTCPPastEdge(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestGetFixLenStrSimpleTCPPastEdge');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetFixLenStrSimpleTCPPastEdge; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCountAsLastByte(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCountAsLastByte');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCountAsLastByte; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCountAsLastByteTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCountAsLastByteTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCountAsLastByteTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompress(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompress');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompress; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressWithUncompressedLabel(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressWithUncompressedLabel');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressWithUncompressedLabel; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressWithUncompressedLabelTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressWithUncompressedLabelTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressWithUncompressedLabelTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressEndBuffer(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressEndBuffer');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressEndBuffer; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressEndBufferTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressEndBufferTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressEndBufferTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressSplit(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressSplit');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressSplit; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressSplitTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressSplitTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressSplitTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressPtrFwd(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressPtrFwd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressPtrFwd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressPtrFwdTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressPtrFwdTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressPtrFwdTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressAllPtrStart(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressAllPtrStart');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressAllPtrStart; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressAllPtrStartTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressAllPtrStartTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressAllPtrStartTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressedZero(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressedZero');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressedZero; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelCompressedZeroTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelCompressedZeroTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelCompressedZeroTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelInfiniteLoop(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelInfiniteLoop');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelInfiniteLoop; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestStringFromLabelInfiniteLoopTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestStringFromLabelInfiniteLoopTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestStringFromLabelInfiniteLoopTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestCompressShortDomain(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestCompressShortDomain');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCompressShortDomain; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNetDbTestTestCompressShortDomainTCP(AContext: TNXTestContext);
+var lFixture: TNetDbTest;
+begin
+  lFixture:=TNetDbTest.Create(AContext, 'TestCompressShortDomainTCP');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCompressShortDomainTCP; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisternetdbtestTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('netdbtest.TNetDbTest');
+  lSuite.AddTest('TestBuildPayloadSimple', @RunTNetDbTestTestBuildPayloadSimple);
+  lSuite.AddTest('TestBuildPayloadSimpleEmpty', @RunTNetDbTestTestBuildPayloadSimpleEmpty);
+  lSuite.AddTest('TestBuildPayloadSimpleEndDot', @RunTNetDbTestTestBuildPayloadSimpleEndDot);
+  lSuite.AddTest('TestBuildPayloadSimpleStartDot', @RunTNetDbTestTestBuildPayloadSimpleStartDot);
+  lSuite.AddTest('TestBuildPayloadSimpleMultipleDot', @RunTNetDbTestTestBuildPayloadSimpleMultipleDot);
+  lSuite.AddTest('TestDnsQueryUDP_A', @RunTNetDbTestTestDnsQueryUDP_A);
+  lSuite.AddTest('TestDnsQueryTCP_A', @RunTNetDbTestTestDnsQueryTCP_A);
+  lSuite.AddTest('TestDnsQueryCompressUDP_A', @RunTNetDbTestTestDnsQueryCompressUDP_A);
+  lSuite.AddTest('TestDnsQueryCompressTCP_A', @RunTNetDbTestTestDnsQueryCompressTCP_A);
+  lSuite.AddTest('TestDnsQueryUDP_AAAA', @RunTNetDbTestTestDnsQueryUDP_AAAA);
+  lSuite.AddTest('TestDnsQueryTCP_AAAA', @RunTNetDbTestTestDnsQueryTCP_AAAA);
+  lSuite.AddTest('TestDnsQueryCompressUDP_AAAA', @RunTNetDbTestTestDnsQueryCompressUDP_AAAA);
+  lSuite.AddTest('TestDnsQueryCompressTCP_AAAA', @RunTNetDbTestTestDnsQueryCompressTCP_AAAA);
+  lSuite.AddTest('TestDnsQueryUDP_MX', @RunTNetDbTestTestDnsQueryUDP_MX);
+  lSuite.AddTest('TestDnsQueryTCP_MX', @RunTNetDbTestTestDnsQueryTCP_MX);
+  lSuite.AddTest('TestDnsQueryCompressUDP_MX', @RunTNetDbTestTestDnsQueryCompressUDP_MX);
+  lSuite.AddTest('TestDnsQueryCompressTCP_MX', @RunTNetDbTestTestDnsQueryCompressTCP_MX);
+  lSuite.AddTest('TestDnsQueryUDP_SOA', @RunTNetDbTestTestDnsQueryUDP_SOA);
+  lSuite.AddTest('TestDnsQueryTCP_SOA', @RunTNetDbTestTestDnsQueryTCP_SOA);
+  lSuite.AddTest('TestDnsQueryCompressUDP_SOA', @RunTNetDbTestTestDnsQueryCompressUDP_SOA);
+  lSuite.AddTest('TestDnsQueryCompressTCP_SOA', @RunTNetDbTestTestDnsQueryCompressTCP_SOA);
+  lSuite.AddTest('TestDnsQueryUDP_CNAME', @RunTNetDbTestTestDnsQueryUDP_CNAME);
+  lSuite.AddTest('TestDnsQueryTCP_CNAME', @RunTNetDbTestTestDnsQueryTCP_CNAME);
+  lSuite.AddTest('TestDnsQueryCompressUDP_CNAME', @RunTNetDbTestTestDnsQueryCompressUDP_CNAME);
+  lSuite.AddTest('TestDnsQueryCompressTCP_CNAME', @RunTNetDbTestTestDnsQueryCompressTCP_CNAME);
+  lSuite.AddTest('TestDnsQueryUDP_NS', @RunTNetDbTestTestDnsQueryUDP_NS);
+  lSuite.AddTest('TestDnsQueryTCP_NS', @RunTNetDbTestTestDnsQueryTCP_NS);
+  lSuite.AddTest('TestDnsQueryCompressUDP_NS', @RunTNetDbTestTestDnsQueryCompressUDP_NS);
+  lSuite.AddTest('TestDnsQueryCompressTCP_NS', @RunTNetDbTestTestDnsQueryCompressTCP_NS);
+  lSuite.AddTest('TestDnsQueryUDP_PTR', @RunTNetDbTestTestDnsQueryUDP_PTR);
+  lSuite.AddTest('TestDnsQueryTCP_PTR', @RunTNetDbTestTestDnsQueryTCP_PTR);
+  lSuite.AddTest('TestDnsQueryCompressUDP_PTR', @RunTNetDbTestTestDnsQueryCompressUDP_PTR);
+  lSuite.AddTest('TestDnsQueryCompressTCP_PTR', @RunTNetDbTestTestDnsQueryCompressTCP_PTR);
+  lSuite.AddTest('TestDnsQueryUDP_TXT', @RunTNetDbTestTestDnsQueryUDP_TXT);
+  lSuite.AddTest('TestDnsQueryTCP_TXT', @RunTNetDbTestTestDnsQueryTCP_TXT);
+  lSuite.AddTest('TestDnsQueryCompressUDP_TXT', @RunTNetDbTestTestDnsQueryCompressUDP_TXT);
+  lSuite.AddTest('TestDnsQueryCompressTCP_TXT', @RunTNetDbTestTestDnsQueryCompressTCP_TXT);
+  lSuite.AddTest('TestDnsQueryUDP_SRV', @RunTNetDbTestTestDnsQueryUDP_SRV);
+  lSuite.AddTest('TestDnsQueryTCP_SRV', @RunTNetDbTestTestDnsQueryTCP_SRV);
+  lSuite.AddTest('TestDnsQueryCompressUDP_SRV', @RunTNetDbTestTestDnsQueryCompressUDP_SRV);
+  lSuite.AddTest('TestDnsQueryCompressTCP_SRV', @RunTNetDbTestTestDnsQueryCompressTCP_SRV);
+  lSuite.AddTest('TestDnsQueryTruncateRR_UDP_A', @RunTNetDbTestTestDnsQueryTruncateRR_UDP_A);
+  lSuite.AddTest('TestDnsRRBufferEdgeA', @RunTNetDbTestTestDnsRRBufferEdgeA);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeA', @RunTNetDbTestTestDnsRRBufferPastEdgeA);
+  lSuite.AddTest('TestDnsRRBufferEdgeAAAA', @RunTNetDbTestTestDnsRRBufferEdgeAAAA);
+  lSuite.AddTest('TestDNsRRBufferPastEdgeAAAA', @RunTNetDbTestTestDNsRRBufferPastEdgeAAAA);
+  lSuite.AddTest('TestDnsRRBufferEdgeMX', @RunTNetDbTestTestDnsRRBufferEdgeMX);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeMX', @RunTNetDbTestTestDnsRRBufferPastEdgeMX);
+  lSuite.AddTest('TestDnsRRBufferEdgeSOA', @RunTNetDbTestTestDnsRRBufferEdgeSOA);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeSOA', @RunTNetDbTestTestDnsRRBufferPastEdgeSOA);
+  lSuite.AddTest('TestDnsRRBufferEdgeSRV', @RunTNetDbTestTestDnsRRBufferEdgeSRV);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeSRV', @RunTNetDbTestTestDnsRRBufferPastEdgeSRV);
+  lSuite.AddTest('TestDnsRRBufferEdgeCNAME', @RunTNetDbTestTestDnsRRBufferEdgeCNAME);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeCNAME', @RunTNetDbTestTestDnsRRBufferPastEdgeCNAME);
+  lSuite.AddTest('TestDnsRRBufferEdgeNS', @RunTNetDbTestTestDnsRRBufferEdgeNS);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeNS', @RunTNetDbTestTestDnsRRBufferPastEdgeNS);
+  lSuite.AddTest('TestDnsRRBufferEdgePTR', @RunTNetDbTestTestDnsRRBufferEdgePTR);
+  lSuite.AddTest('TestDnsRRBufferPastEdgePTR', @RunTNetDbTestTestDnsRRBufferPastEdgePTR);
+  lSuite.AddTest('TestDnsRRBufferEdgeTXT', @RunTNetDbTestTestDnsRRBufferEdgeTXT);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTXT', @RunTNetDbTestTestDnsRRBufferPastEdgeTXT);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPA', @RunTNetDbTestTestDnsRRBufferEdgeTCPA);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPA', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPA);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPAAAA', @RunTNetDbTestTestDnsRRBufferEdgeTCPAAAA);
+  lSuite.AddTest('TestDNsRRBufferPastEdgeTCPAAAA', @RunTNetDbTestTestDNsRRBufferPastEdgeTCPAAAA);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPMX', @RunTNetDbTestTestDnsRRBufferEdgeTCPMX);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPMX', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPMX);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPSOA', @RunTNetDbTestTestDnsRRBufferEdgeTCPSOA);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPSOA', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPSOA);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPSRV', @RunTNetDbTestTestDnsRRBufferEdgeTCPSRV);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPSRV', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPSRV);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPCNAME', @RunTNetDbTestTestDnsRRBufferEdgeTCPCNAME);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPCNAME', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPCNAME);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPNS', @RunTNetDbTestTestDnsRRBufferEdgeTCPNS);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPNS', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPNS);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPPTR', @RunTNetDbTestTestDnsRRBufferEdgeTCPPTR);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPPTR', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPPTR);
+  lSuite.AddTest('TestDnsRRBufferEdgeTCPTXT', @RunTNetDbTestTestDnsRRBufferEdgeTCPTXT);
+  lSuite.AddTest('TestDnsRRBufferPastEdgeTCPTXT', @RunTNetDbTestTestDnsRRBufferPastEdgeTCPTXT);
+  lSuite.AddTest('TestNextNameRREdgeA', @RunTNetDbTestTestNextNameRREdgeA);
+  lSuite.AddTest('TestNextNameRRPastEdgeA', @RunTNetDbTestTestNextNameRRPastEdgeA);
+  lSuite.AddTest('TestNextNameRREdgeTCPA', @RunTNetDbTestTestNextNameRREdgeTCPA);
+  lSuite.AddTest('TestNextNameRRPastEdgeTCPA', @RunTNetDbTestTestNextNameRRPastEdgeTCPA);
+  lSuite.AddTest('TestGetRRrecordsInvalidStart', @RunTNetDbTestTestGetRRrecordsInvalidStart);
+  lSuite.AddTest('TestGetRRrecordsInvalidStartTCP', @RunTNetDbTestTestGetRRrecordsInvalidStartTCP);
+  lSuite.AddTest('TestGetFixLenStrSimple', @RunTNetDbTestTestGetFixLenStrSimple);
+  lSuite.AddTest('TestGetFixLenStrSimpleTCP', @RunTNetDbTestTestGetFixLenStrSimpleTCP);
+  lSuite.AddTest('TestGetFixLenStrSimpleAtEdge', @RunTNetDbTestTestGetFixLenStrSimpleAtEdge);
+  lSuite.AddTest('TestGetFixLenStrSimpleTCPAtEdge', @RunTNetDbTestTestGetFixLenStrSimpleTCPAtEdge);
+  lSuite.AddTest('TestGetFixLenStrSimplePastEdge', @RunTNetDbTestTestGetFixLenStrSimplePastEdge);
+  lSuite.AddTest('TestGetFixLenStrSimpleTCPPastEdge', @RunTNetDbTestTestGetFixLenStrSimpleTCPPastEdge);
+  lSuite.AddTest('TestStringFromLabelCountAsLastByte', @RunTNetDbTestTestStringFromLabelCountAsLastByte);
+  lSuite.AddTest('TestStringFromLabelCountAsLastByteTCP', @RunTNetDbTestTestStringFromLabelCountAsLastByteTCP);
+  lSuite.AddTest('TestStringFromLabelCompress', @RunTNetDbTestTestStringFromLabelCompress);
+  lSuite.AddTest('TestStringFromLabelCompressTCP', @RunTNetDbTestTestStringFromLabelCompressTCP);
+  lSuite.AddTest('TestStringFromLabelCompressWithUncompressedLabel', @RunTNetDbTestTestStringFromLabelCompressWithUncompressedLabel);
+  lSuite.AddTest('TestStringFromLabelCompressWithUncompressedLabelTCP', @RunTNetDbTestTestStringFromLabelCompressWithUncompressedLabelTCP);
+  lSuite.AddTest('TestStringFromLabelCompressEndBuffer', @RunTNetDbTestTestStringFromLabelCompressEndBuffer);
+  lSuite.AddTest('TestStringFromLabelCompressEndBufferTCP', @RunTNetDbTestTestStringFromLabelCompressEndBufferTCP);
+  lSuite.AddTest('TestStringFromLabelCompressSplit', @RunTNetDbTestTestStringFromLabelCompressSplit);
+  lSuite.AddTest('TestStringFromLabelCompressSplitTCP', @RunTNetDbTestTestStringFromLabelCompressSplitTCP);
+  lSuite.AddTest('TestStringFromLabelCompressPtrFwd', @RunTNetDbTestTestStringFromLabelCompressPtrFwd);
+  lSuite.AddTest('TestStringFromLabelCompressPtrFwdTCP', @RunTNetDbTestTestStringFromLabelCompressPtrFwdTCP);
+  lSuite.AddTest('TestStringFromLabelCompressAllPtrStart', @RunTNetDbTestTestStringFromLabelCompressAllPtrStart);
+  lSuite.AddTest('TestStringFromLabelCompressAllPtrStartTCP', @RunTNetDbTestTestStringFromLabelCompressAllPtrStartTCP);
+  lSuite.AddTest('TestStringFromLabelCompressedZero', @RunTNetDbTestTestStringFromLabelCompressedZero);
+  lSuite.AddTest('TestStringFromLabelCompressedZeroTCP', @RunTNetDbTestTestStringFromLabelCompressedZeroTCP);
+  lSuite.AddTest('TestStringFromLabelInfiniteLoop', @RunTNetDbTestTestStringFromLabelInfiniteLoop);
+  lSuite.AddTest('TestStringFromLabelInfiniteLoopTCP', @RunTNetDbTestTestStringFromLabelInfiniteLoopTCP);
+  lSuite.AddTest('TestCompressShortDomain', @RunTNetDbTestTestCompressShortDomain);
+  lSuite.AddTest('TestCompressShortDomainTCP', @RunTNetDbTestTestCompressShortDomainTCP);
+end;
+
 end.
-

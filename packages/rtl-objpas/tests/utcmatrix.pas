@@ -18,7 +18,7 @@ unit utcmatrix;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, utmathvectorbase, types, system.math.vectors;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, utmathvectorbase, types, system.math.vectors;
 
 Type
 
@@ -36,7 +36,7 @@ Type
     Property M1 : TMatrix Index 1 Read GetM Write SetM;
     Property M2 : TMatrix Index 2 Read GetM Write SetM;
     Property M3 : TMatrix Index 3 Read GetM Write SetM;
-  Published
+  public
     procedure TestHookUp;
     Procedure TestCreateRotation;
     Procedure TestCreateScaling;
@@ -57,6 +57,8 @@ Type
     Procedure TTestScale;
   end;
 
+
+procedure RegisterutcmatrixTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -102,7 +104,7 @@ begin
   For I:=1 to 3 do
     For R:=0 to 2 do
       For C:=0 to 2 do
-       AssertEquals(Format('M%d[%d,%d]',[I,C,R]),0.0,FM[I].M[R].V[C]);
+       TestContext.AssertTrue((0.0)=(FM[I].M[R].V[C]), Format('M%d[%d,%d]',[I,C,R]));
 end;
 
 procedure TTestMatrix.TestCreateRotation;
@@ -150,14 +152,14 @@ procedure TTestMatrix.TTestEqual;
 begin
   M1:=TMatrix.CreateTranslation(2,3);
   M2:=TMatrix.CreateTranslation(2,3);
-  AssertTrue('Equal translation',M1=M2);
+  TestContext.AssertTrue(M1=M2, 'Equal translation');
   M2:=TMatrix.CreateTranslation(0,0);
-  AssertFalse('NEqual translation',M1=M2);
+  TestContext.AssertTrue(not (M1=M2), 'NEqual translation');
   M1:=TMatrix.CreateScaling(2,3);
   M2:=TMatrix.CreateScaling(2,3);
-  AssertTrue('Equal Scaling',M1=M2);
+  TestContext.AssertTrue(M1=M2, 'Equal Scaling');
   M2:=TMatrix.CreateScaling(0,0);
-  AssertFalse('NEqual Scaling',M1=M2);
+  TestContext.AssertTrue(not (M1=M2), 'NEqual Scaling');
 end;
 
 procedure TTestMatrix.TTestMultiply;
@@ -267,23 +269,23 @@ end;
 procedure TTestMatrix.TTestDeterminant;
 begin
   M1:=TMatrix.CreateRotation(Pi/2);
-  AssertEquals('Det 1',1,M1.Determinant);
+  TestContext.AssertTrue((1)=(M1.Determinant), 'Det 1');
   M1:=TMatrix.CreateRotation(Pi/3);
-  AssertEquals('Det 1',1,M1.Determinant);
+  TestContext.AssertTrue((1)=(M1.Determinant), 'Det 1');
 end;
 
 procedure TTestMatrix.TTestEqualsTo;
 begin
   M1:=TMatrix.CreateTranslation(2,3);
   M2:=TMatrix.CreateTranslation(2,3);
-  AssertTrue('Equal translation',M1.EqualsTo(M2));
+  TestContext.AssertTrue(M1.EqualsTo(M2), 'Equal translation');
   M2:=TMatrix.CreateTranslation(0,0);
-  AssertFalse('NEqual translation',M1.EqualsTo(M2));
+  TestContext.AssertTrue(not (M1.EqualsTo(M2)), 'NEqual translation');
   M1:=TMatrix.CreateScaling(2,3);
   M2:=TMatrix.CreateScaling(2,3);
-  AssertTrue('Equal Scaling',M1.EqualsTo(M2));
+  TestContext.AssertTrue(M1.EqualsTo(M2), 'Equal Scaling');
   M2:=TMatrix.CreateScaling(0,0);
-  AssertFalse('NEqual Scaling',M1.EqualsTo(M2));
+  TestContext.AssertTrue(not (M1.EqualsTo(M2)), 'NEqual Scaling');
 
 end;
 
@@ -322,7 +324,209 @@ begin
 end;
 
 
-initialization
-  RegisterTest(TTestMatrix);
-end.
 
+procedure RunTTestMatrixTestHookUp(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TestHookUp');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookUp; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTestCreateRotation(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TestCreateRotation');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotation; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTestCreateScaling(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TestCreateScaling');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateScaling; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTestCreateTranslation(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TestCreateTranslation');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateTranslation; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestEqual(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestEqual');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestEqual; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiply(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiply');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiply; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiplyPointf(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiplyPointf');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiplyPointf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiplyVector(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiplyVector');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiplyVector; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiplyPoint3D(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiplyPoint3D');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiplyPoint3D; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiplyFactor1(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiplyFactor1');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiplyFactor1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestMultiplyFactor2(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestMultiplyFactor2');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestMultiplyFactor2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestDiv(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestDiv');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestDiv; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestAdjoint(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestAdjoint');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestAdjoint; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestDeterminant(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestDeterminant');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestDeterminant; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestEqualsTo(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestEqualsTo');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestEqualsTo; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestExtractScale(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestExtractScale');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestExtractScale; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestInverse(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestInverse');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestInverse; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrixTTestScale(AContext: TNXTestContext);
+var lFixture: TTestMatrix;
+begin
+  lFixture:=TTestMatrix.Create(AContext, 'TTestScale');
+  try
+    lFixture.SetUp;
+    try lFixture.TTestScale; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcmatrixTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcmatrix.TTestMatrix');
+  lSuite.AddTest('TestHookUp', @RunTTestMatrixTestHookUp);
+  lSuite.AddTest('TestCreateRotation', @RunTTestMatrixTestCreateRotation);
+  lSuite.AddTest('TestCreateScaling', @RunTTestMatrixTestCreateScaling);
+  lSuite.AddTest('TestCreateTranslation', @RunTTestMatrixTestCreateTranslation);
+  lSuite.AddTest('TTestEqual', @RunTTestMatrixTTestEqual);
+  lSuite.AddTest('TTestMultiply', @RunTTestMatrixTTestMultiply);
+  lSuite.AddTest('TTestMultiplyPointf', @RunTTestMatrixTTestMultiplyPointf);
+  lSuite.AddTest('TTestMultiplyVector', @RunTTestMatrixTTestMultiplyVector);
+  lSuite.AddTest('TTestMultiplyPoint3D', @RunTTestMatrixTTestMultiplyPoint3D);
+  lSuite.AddTest('TTestMultiplyFactor1', @RunTTestMatrixTTestMultiplyFactor1);
+  lSuite.AddTest('TTestMultiplyFactor2', @RunTTestMatrixTTestMultiplyFactor2);
+  lSuite.AddTest('TTestDiv', @RunTTestMatrixTTestDiv);
+  lSuite.AddTest('TTestAdjoint', @RunTTestMatrixTTestAdjoint);
+  lSuite.AddTest('TTestDeterminant', @RunTTestMatrixTTestDeterminant);
+  lSuite.AddTest('TTestEqualsTo', @RunTTestMatrixTTestEqualsTo);
+  lSuite.AddTest('TTestExtractScale', @RunTTestMatrixTTestExtractScale);
+  lSuite.AddTest('TTestInverse', @RunTTestMatrixTTestInverse);
+  lSuite.AddTest('TTestScale', @RunTTestMatrixTTestScale);
+end;
+
+end.

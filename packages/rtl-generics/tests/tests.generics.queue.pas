@@ -5,7 +5,7 @@ unit tests.generics.queue;
 interface
 
 uses
-  fpcunit, testregistry, Classes, SysUtils, Generics.Defaults, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Defaults, Generics.Collections;
 
 
 Type
@@ -16,7 +16,15 @@ Type
 
   { TTestSimpleQueue }
 
-  TTestSimpleQueue = Class(TTestCase)
+  TTestSimpleQueue = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FQueue : TMySimpleQueue;
     FnotifyMessage : String;
@@ -30,10 +38,10 @@ Type
     procedure DoValueNotify(ASender: TObject; const AItem: String; AAction: TCollectionNotification);
   Public
     Procedure SetExpectValues(aMessage : string; AKeys : Array of String; AActions : Array of TCollectionNotification; DoReverse : Boolean = False);
-    Procedure SetUp; override;
-    Procedure TearDown; override;
+    Procedure SetUp; virtual;
+    Procedure TearDown; virtual;
     Property Queue : TMySimpleQueue Read FQueue;
-  Published
+  public
     Procedure TestEmpty;
     Procedure TestAdd;
     Procedure TestClear;
@@ -62,21 +70,31 @@ Type
 
   { TTestSingleObjectQueue }
 
-  TTestSingleObjectQueue = Class(TTestCase)
+  TTestSingleObjectQueue = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FOQueue: TSingleObjectQueue;
     FList : TFPList;
     procedure DoAdd(aID: Integer);
     procedure DoDestroy(Sender: TObject);
   Public
-    Procedure SetUp; override;
-    Procedure TearDown; override;
+    Procedure SetUp; virtual;
+    Procedure TearDown; virtual;
     Property Queue : TSingleObjectQueue Read FOQueue;
-  Published
+  public
     Procedure TestEmpty;
     Procedure TestFreeOnDequeue;
     Procedure TestNoFreeOnDeQueue;
   end;
+
+procedure RegistertestsgenericsqueueTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -86,20 +104,20 @@ procedure TTestSingleObjectQueue.SetUp;
 begin
   FOQueue:=TSingleObjectQueue.Create(True);
   FList:=TFPList.Create;
-  inherited SetUp;
+
 end;
 
 procedure TTestSingleObjectQueue.TearDown;
 begin
   FreeAndNil(FOQueue);
   FreeAndNil(FList);
-  inherited TearDown;
+
 end;
 
 procedure TTestSingleObjectQueue.TestEmpty;
 begin
-  AssertNotNull('Have object',Queue);
-  AssertEquals('Have empty object',0,Queue.Count);
+  TestContext.AssertTrue((Queue)<>nil, 'Have object');
+  TestContext.AssertTrue((0)=(Queue.Count), 'Have empty object');
 end;
 
 procedure TTestSingleObjectQueue.DoAdd(aID : Integer);
@@ -120,7 +138,7 @@ Var
 
 begin
   I:=FList.IndexOf(Sender);
-  AssertTrue('Have object in Queue',I<>-1);
+  TestContext.AssertTrue(I<>-1, 'Have object in Queue');
   FList.Delete(I);
 end;
 
@@ -128,18 +146,18 @@ procedure TTestSingleObjectQueue.TestFreeOnDeQueue;
 
 begin
   DoAdd(1);
-  AssertEquals('Have obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have obj');
   Queue.Dequeue;
-  AssertEquals('Have no obj',0,FList.Count);
+  TestContext.AssertTrue((0)=(FList.Count), 'Have no obj');
 end;
 
 procedure TTestSingleObjectQueue.TestNoFreeOnDeQueue;
 begin
   Queue.OwnsObjects:=False;
   DoAdd(1);
-  AssertEquals('Have obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have obj');
   Queue.DeQueue;
-  AssertEquals('Have  obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have  obj');
 end;
 
 
@@ -162,7 +180,7 @@ end;
 
 procedure TTestSimpleQueue.SetUp;
 begin
-  inherited SetUp;
+
   FQueue:=TMySimpleQueue.Create;
   FCurrentValueNotify:=0;
   FExpectValues:=[];
@@ -174,13 +192,13 @@ begin
   // So we don't get clear messages
   FQueue.OnNotify:=Nil;
   FreeAndNil(FQueue);
-  inherited TearDown;
+
 end;
 
 procedure TTestSimpleQueue.TestEmpty;
 begin
-  AssertNotNull('Have dictionary',Queue);
-  AssertEquals('empty dictionary',0,Queue.Count);
+  TestContext.AssertTrue((Queue)<>nil, 'Have dictionary');
+  TestContext.AssertTrue((0)=(Queue.Count), 'empty dictionary');
 end;
 
 procedure TTestSimpleQueue.DoAdd(aCount : Integer; aOffset : Integer=0);
@@ -199,17 +217,17 @@ procedure TTestSimpleQueue.TestAdd;
 
 begin
   DoAdd(1);
-  AssertEquals('Count OK',1,Queue.Count);
+  TestContext.AssertTrue((1)=(Queue.Count), 'Count OK');
   DoAdd(1,1);
-  AssertEquals('Count OK',2,Queue.Count);
+  TestContext.AssertTrue((2)=(Queue.Count), 'Count OK');
 end;
 
 procedure TTestSimpleQueue.TestClear;
 begin
   DoAdd(3);
-  AssertEquals('Count OK',3,Queue.Count);
+  TestContext.AssertTrue((3)=(Queue.Count), 'Count OK');
   Queue.Clear;
-  AssertEquals('Count after clear OK',0,Queue.Count);
+  TestContext.AssertTrue((0)=(Queue.Count), 'Count after clear OK');
 end;
 
 procedure TTestSimpleQueue.DoGetValue(Match: String; ExceptionClass: TClass);
@@ -232,25 +250,25 @@ begin
   if ExceptionClass=Nil then
     begin
     if EC<>Nil then
-      Fail('Got exception '+EC.ClassName+' with message: '+EM);
-    AssertEquals('Value is correct',Match,A)
+      TestContext.Fail('Got exception '+EC.ClassName+' with message: '+EM);
+    TestContext.AssertTrue((Match)=(A), 'Value is correct')
     end
   else
     begin
     if EC=Nil then
-      Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
+      TestContext.Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
     if EC<>ExceptionClass then
-      Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
+      TestContext.Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
     end;
 end;
 
 procedure TTestSimpleQueue.DoValueNotify(ASender: TObject; const AItem: String; AAction: TCollectionNotification);
 begin
 //  Writeln(FnotifyMessage+' value Notification',FCurrentValueNotify);
-  AssertSame(FnotifyMessage+' value Correct sender', FQueue,aSender);
+  TestContext.AssertTrue((FQueue)=(aSender), FnotifyMessage+' value Correct sender');
   if (FCurrentValueNotify>=Length(FExpectValues)) then
-    Fail(FnotifyMessage+' Too many value notificiations');
-  AssertEquals(FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify),FExpectValues[FCurrentValueNotify],aItem);
+    TestContext.Fail(FnotifyMessage+' Too many value notificiations');
+  TestContext.AssertTrue((FExpectValues[FCurrentValueNotify])=(aItem), FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify));
   Inc(FCurrentValueNotify);
 end;
 
@@ -264,7 +282,7 @@ begin
   FnotifyMessage:=aMessage;
   FCurrentValueNotify:=0;
   L:=Length(aKeys);
-  AssertEquals('SetExpectValues: Lengths arrays equal',l,Length(aActions));
+  TestContext.AssertTrue((l)=(Length(aActions)), 'SetExpectValues: Lengths arrays equal');
   SetLength(FExpectValues,L);
   SetLength(FExpectValueAction,L);
   Dec(L);
@@ -302,7 +320,7 @@ begin
   DoAdd(3);
   For I:=1 to 3 do
     begin
-    AssertEquals('Peek ',IntToStr(I),FQueue.Peek);
+    TestContext.AssertTrue((IntToStr(I))=(FQueue.Peek), 'Peek ');
     DoGetValue(IntToStr(I));
     end;
 end;
@@ -316,15 +334,15 @@ end;
 
 procedure TTestSimpleQueue.DoneExpectValues;
 begin
-  AssertEquals(FnotifyMessage+' Expected number of values seen',Length(FExpectValues),FCurrentValueNotify);
+  TestContext.AssertTrue((Length(FExpectValues))=(FCurrentValueNotify), FnotifyMessage+' Expected number of values seen');
 end;
 
 procedure TTestSimpleQueue.TestDequeue;
 
 begin
   DoAdd(3);
-  AssertEquals('1',Queue.Dequeue);
-  AssertEquals('Count',2,Queue.Count);
+  TestContext.AssertTrue(('1')=(Queue.Dequeue), '');
+  TestContext.AssertTrue((2)=(Queue.Count), 'Count');
 end;
 
 procedure TTestSimpleQueue.TestToArray;
@@ -338,11 +356,11 @@ Var
 begin
   DoAdd(3);
   A:=Queue.ToArray;
-  AssertEquals('Length Ok',3,Length(A));
+  TestContext.AssertTrue((3)=(Length(A)), 'Length Ok');
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('Value '+SI,SI,A[i-1]);
+    TestContext.AssertTrue((SI)=(A[i-1]), 'Value '+SI);
     end;
 end;
 
@@ -360,7 +378,7 @@ begin
   For A in Queue do
     begin
     SI:=IntToStr(I);
-    AssertEquals('Value '+SI,SI,A);
+    TestContext.AssertTrue((SI)=(A), 'Value '+SI);
     Inc(I);
     end;
 end;
@@ -382,7 +400,169 @@ begin
   DoneExpectValues;
 end;
 
-begin
-  RegisterTests([ TTestSimpleQueue,TTestSingleObjectQueue]);
-end.
 
+constructor TTestSimpleQueue.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestSingleObjectQueue.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSimpleQueueTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestAdd(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestClear(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestGetValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestGetValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestPeek(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestPeek');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPeek; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestDequeue(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestDequeue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDequeue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestToArray(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestToArray');
+  try
+    lFixture.SetUp;
+    try lFixture.TestToArray; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestEnumerator(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestEnumerator');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEnumerator; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestValueNotification(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestValueNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleQueueTestValueNotificationDelete(AContext: TNXTestContext);
+var lFixture: TTestSimpleQueue;
+begin
+  lFixture:=TTestSimpleQueue.Create(AContext, 'TestValueNotificationDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotificationDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectQueueTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectQueue;
+begin
+  lFixture:=TTestSingleObjectQueue.Create(AContext, 'TestEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectQueueTestFreeOnDequeue(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectQueue;
+begin
+  lFixture:=TTestSingleObjectQueue.Create(AContext, 'TestFreeOnDequeue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFreeOnDequeue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectQueueTestNoFreeOnDeQueue(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectQueue;
+begin
+  lFixture:=TTestSingleObjectQueue.Create(AContext, 'TestNoFreeOnDeQueue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoFreeOnDeQueue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericsqueueTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.queue.TTestSimpleQueue');
+  lSuite.AddTest('TestEmpty', @RunTTestSimpleQueueTestEmpty);
+  lSuite.AddTest('TestAdd', @RunTTestSimpleQueueTestAdd);
+  lSuite.AddTest('TestClear', @RunTTestSimpleQueueTestClear);
+  lSuite.AddTest('TestGetValue', @RunTTestSimpleQueueTestGetValue);
+  lSuite.AddTest('TestPeek', @RunTTestSimpleQueueTestPeek);
+  lSuite.AddTest('TestDequeue', @RunTTestSimpleQueueTestDequeue);
+  lSuite.AddTest('TestToArray', @RunTTestSimpleQueueTestToArray);
+  lSuite.AddTest('TestEnumerator', @RunTTestSimpleQueueTestEnumerator);
+  lSuite.AddTest('TestValueNotification', @RunTTestSimpleQueueTestValueNotification);
+  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleQueueTestValueNotificationDelete);
+  lSuite:=ARegistry.AddSuite('tests.generics.queue.TTestSingleObjectQueue');
+  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectQueueTestEmpty);
+  lSuite.AddTest('TestFreeOnDequeue', @RunTTestSingleObjectQueueTestFreeOnDequeue);
+  lSuite.AddTest('TestNoFreeOnDeQueue', @RunTTestSingleObjectQueueTestNoFreeOnDeQueue);
+end;
+
+end.

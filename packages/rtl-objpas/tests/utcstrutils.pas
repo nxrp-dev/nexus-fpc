@@ -6,17 +6,27 @@ unit utcstrutils;
 interface
 
 uses
-  sysutils, strutils, fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, sysutils, strutils;
 
 Type
 
   { TTestStrUtils }
 
-  TTestStrUtils = class(TTestCase)
-  Published
+  TTestStrUtils = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     Procedure TestNaturalCompareText;
 
   end;
+
+procedure RegisterutcstrutilsTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -77,7 +87,7 @@ begin
   begin
     got := NaturalCompareText(cs.a, cs.b);
     Desc:=Format('a = ''%s'', b = ''%s'' ',[cs.a, cs.b]);
-    AssertEquals(Desc,cs.expect,got);
+    TestContext.AssertTrue((cs.expect)=(got), Desc);
   end;
   SetLength(fuzz, NFuzzStrings);
   fuzz[0] := '';
@@ -91,7 +101,7 @@ begin
       comparisons[iA, iB] := NaturalCompareText(fuzz[iA], fuzz[iB]);
       comparisons[iB, iA] := NaturalCompareText(fuzz[iB], fuzz[iA]);
       Desc:=Format('Antisymmetry: a= ''%s'', b= ''%s'' ',[fuzz[iA],fuzz[iB]]);
-      AssertEquals('Expect '+Desc, -comparisons[iB, iA], comparisons[iA, iB]);
+      TestContext.AssertTrue((-comparisons[iB, iA])=(comparisons[iA, iB]), 'Expect '+Desc);
     end;
 
   for iA := 0 to High(fuzz) do
@@ -101,12 +111,33 @@ begin
       for iC := 0 to High(fuzz) do
         begin
           Desc:=Format('Transitivity: a= ''%s'', b= ''%s'' , c= ''%s'' ',[fuzz[iA], fuzz[iB], fuzz[iC]]);
-          AssertFalse(Desc,(comparisons[iB, iC] = ab) and (comparisons[iA, iC] <> ab));
+          TestContext.AssertTrue(not ((comparisons[iB, iC] = ab) and (comparisons[iA, iC] <> ab)), Desc);
         end;
     end;
 end;
 
-initialization
-  RegisterTest(TTestStrUtils);
-end.
 
+constructor TTestStrUtils.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestStrUtilsTestNaturalCompareText(AContext: TNXTestContext);
+var lFixture: TTestStrUtils;
+begin
+  lFixture:=TTestStrUtils.Create(AContext, 'TestNaturalCompareText');
+  try
+    lFixture.TestNaturalCompareText;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcstrutilsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcstrutils.TTestStrUtils');
+  lSuite.AddTest('TestNaturalCompareText', @RunTTestStrUtilsTestNaturalCompareText);
+end;
+
+end.

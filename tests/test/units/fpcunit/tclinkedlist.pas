@@ -5,14 +5,22 @@ unit tclinkedlist;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, fplists;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fplists;
 
 type
 
   { TTestLinkedList }
 
-  TTestLinkedList= class(TTestCase)
-  published
+  TTestLinkedList= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     procedure TestCreate;
     procedure TestAdd;
     procedure TestAdd2;
@@ -22,6 +30,8 @@ type
     procedure TestRemove3;
     Procedure TestVisit;
   end;
+
+procedure RegistertclinkedlistTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -34,10 +44,10 @@ Var
 begin
   LL:=TLinkedList.Create(TLinkedListItem);
   Try
-    AssertEquals('Item class is TLinkedListItem.',TLinkedListItem,LL.ItemClass);
-    AssertEquals('Item count is 0',0,LL.Count);
+    TestContext.AssertTrue((TLinkedListItem)=(LL.ItemClass), 'Item class is TLinkedListItem.');
+    TestContext.AssertTrue((0)=(LL.Count), 'Item count is 0');
     If (LL.Root<>Nil) then
-      Fail('Root is not nil')
+      TestContext.Fail('Root is not nil')
   Finally
     LL.Free;
   end;
@@ -53,10 +63,10 @@ begin
   LL:=TLinkedList.Create(TLinkedListItem);
   Try
     I:=LL.Add;
-    AssertEquals('Add result is TLinkedListItem.',TLinkedListItem,I.ClassType);
-    AssertEquals('Item count is 1',1,LL.Count);
+    TestContext.AssertTrue((TLinkedListItem)=(I.ClassType), 'Add result is TLinkedListItem.');
+    TestContext.AssertTrue((1)=(LL.Count), 'Item count is 1');
     If (I<>LL.Root) then
-      Fail('Root item is not added item');
+      TestContext.Fail('Root item is not added item');
   Finally
     LL.Free;
   end;
@@ -74,7 +84,7 @@ begin
     For I:=1 to 3 do
       LL.Add;
     LL.Clear;
-    AssertEquals('Item count after clear is 0',0,LL.Count);
+    TestContext.AssertTrue((0)=(LL.Count), 'Item count after clear is 0');
   Finally
     LL.Free;
   end;
@@ -92,9 +102,9 @@ begin
     I1:=LL.Add;
     I2:=LL.Add;
     If (I2<>LL.Root) then
-      Fail('Root item is not last added item');
+      TestContext.Fail('Root item is not last added item');
     If (I2.Next<>I1) then
-      Fail('Items ordered in the wrong way');
+      TestContext.Fail('Items ordered in the wrong way');
   Finally
     LL.Free;
   end;
@@ -112,9 +122,9 @@ begin
     I:=LL.Add;
     Try
       LL.RemoveItem(I);
-      AssertEquals('After remove Item count is 0',0,LL.Count);
+      TestContext.AssertTrue((0)=(LL.Count), 'After remove Item count is 0');
       If (Nil<>LL.Root) then
-        Fail('Root item is not nil after last removed item');
+        TestContext.Fail('Root item is not nil after last removed item');
     Finally
       I.Free;
     end;
@@ -136,9 +146,9 @@ begin
     Try
       I2:=LL.Add;
       LL.RemoveItem(I1);
-      AssertEquals('After remove first Item count is 1',1,LL.Count);
+      TestContext.AssertTrue((1)=(LL.Count), 'After remove first Item count is 1');
       If (I2<>LL.Root) then
-        Fail('Root item is not I2 after remove of I1');
+        TestContext.Fail('Root item is not I2 after remove of I1');
     Finally
       I1.Free;
     end;
@@ -161,9 +171,9 @@ begin
     I3:=LL.Add;
     LL.RemoveItem(I2);
     Try
-      AssertEquals('After remove I2 Item count is 2',2,LL.Count);
+      TestContext.AssertTrue((2)=(LL.Count), 'After remove I2 Item count is 2');
       If (I3.Next<>I1) then
-        Fail('After Remove of I2, I3.Next<>I1');
+        TestContext.Fail('After Remove of I2, I3.Next<>I1');
     Finally
       I2.Free;
     end;
@@ -212,14 +222,14 @@ begin
     V:=TCountVisitor.Create(-1);
     Try
       LL.Foreach(V);
-      AssertEquals('Counter visited all items',5,V.FCount);
+      TestContext.AssertTrue((5)=(V.FCount), 'Counter visited all items');
     Finally
       V.Free;
     end;
     V:=TCountVisitor.Create(3);
     Try
       LL.Foreach(V);
-      AssertEquals('Counter visited 3 items',3,V.FCount);
+      TestContext.AssertTrue((3)=(V.FCount), 'Counter visited 3 items');
     Finally
       V.Free;
     end;
@@ -230,8 +240,98 @@ begin
 end;
 
 
-initialization
 
-  RegisterTest(TTestLinkedList);
+constructor TTestLinkedList.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestLinkedListTestCreate(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestCreate');
+  try
+    lFixture.TestCreate;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestAdd(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestAdd');
+  try
+    lFixture.TestAdd;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestAdd2(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestAdd2');
+  try
+    lFixture.TestAdd2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestClear(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestClear');
+  try
+    lFixture.TestClear;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestRemove(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestRemove');
+  try
+    lFixture.TestRemove;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestRemove2(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestRemove2');
+  try
+    lFixture.TestRemove2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestRemove3(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestRemove3');
+  try
+    lFixture.TestRemove3;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestLinkedListTestVisit(AContext: TNXTestContext);
+var lFixture: TTestLinkedList;
+begin
+  lFixture:=TTestLinkedList.Create(AContext, 'TestVisit');
+  try
+    lFixture.TestVisit;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertclinkedlistTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tclinkedlist.TTestLinkedList');
+  lSuite.AddTest('TestCreate', @RunTTestLinkedListTestCreate);
+  lSuite.AddTest('TestAdd', @RunTTestLinkedListTestAdd);
+  lSuite.AddTest('TestAdd2', @RunTTestLinkedListTestAdd2);
+  lSuite.AddTest('TestClear', @RunTTestLinkedListTestClear);
+  lSuite.AddTest('TestRemove', @RunTTestLinkedListTestRemove);
+  lSuite.AddTest('TestRemove2', @RunTTestLinkedListTestRemove2);
+  lSuite.AddTest('TestRemove3', @RunTTestLinkedListTestRemove3);
+  lSuite.AddTest('TestVisit', @RunTTestLinkedListTestVisit);
+end;
+
 end.
-

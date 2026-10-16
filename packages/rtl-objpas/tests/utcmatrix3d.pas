@@ -18,7 +18,7 @@ unit utcmatrix3d;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, utmathvectorbase, types, system.math.vectors;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, utmathvectorbase, types, system.math.vectors;
 
 Type
   { TTestMatrix3D }
@@ -35,10 +35,10 @@ Type
     Property M1 : TMatrix3D Index 1 Read GetM Write SetM;
     Property M2 : TMatrix3D Index 2 Read GetM Write SetM;
     Property M3 : TMatrix3D Index 3 Read GetM Write SetM;
-  Published
+  public
     procedure TestHookUp;
-    constructor TestCreate;
-    constructor TestCreateArray;
+    procedure TestCreate;
+    procedure TestCreateArray;
 
     Procedure TestZero;
 
@@ -80,6 +80,8 @@ Type
     Procedure TestTranspose;
   end;
 
+
+procedure Registerutcmatrix3dTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -124,10 +126,10 @@ begin
   For I:=1 to 3 do
     For R:=0 to 3 do
       For C:=0 to 3 do
-        AssertEquals(Format('M%d[%d,%d]',[I,C,R]),0.0,FM[I].M[R].V[C]);
+        TestContext.AssertTrue((0.0)=(FM[I].M[R].V[C]), Format('M%d[%d,%d]',[I,C,R]));
 end;
 
-constructor TTestMatrix3D.TestCreate;
+procedure TTestMatrix3D.TestCreate;
 begin
   M1:=TMatrix3D.Create(1,2,3,4,
                        5,6,7,8,
@@ -148,7 +150,7 @@ begin
   AssertMatrix3D('Create',M2,M1);
 end;
 
-constructor TTestMatrix3D.TestCreateArray;
+procedure TTestMatrix3D.TestCreateArray;
 begin
   M1:=TMatrix3D.Create([ 1,  2,  3,  4,
                          5,  6,  7,  8,
@@ -572,12 +574,12 @@ procedure TTestMatrix3D.TestDeterminant;
 begin
   // Test 75
   M1:=TMatrix3D.CreateRotationZ(Pi/3);
-  AssertEquals('Determinant',1.0,M1.Determinant);
+  TestContext.AssertTrue((1.0)=(M1.Determinant), 'Determinant');
   // Test 76
   M1:=TMatrix3D.Create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
-  AssertEquals('Determinant',0,M1.Determinant);
+  TestContext.AssertTrue((0)=(M1.Determinant), 'Determinant');
   M1:=TMatrix3D.Create(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
-  AssertEquals('Determinant',1,M1.Determinant);
+  TestContext.AssertTrue((1)=(M1.Determinant), 'Determinant');
 end;
 
 procedure TTestMatrix3D.TestEyePosition;
@@ -630,7 +632,397 @@ begin
   AssertMatrix3D('Transposed',M2,M3);
 end;
 
-initialization
-   RegisterTest(TTestMatrix3D);
-end.
 
+procedure RunTTestMatrix3DTestHookUp(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestHookUp');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookUp; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestZero(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestZero');
+  try
+    lFixture.SetUp;
+    try lFixture.TestZero; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateLookAtDirLH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateLookAtDirLH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateLookAtDirLH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateLookAtDirRH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateLookAtDirRH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateLookAtDirRH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateLookAtLH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateLookAtLH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateLookAtLH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateLookAtRH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateLookAtRH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateLookAtRH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateOrthoLH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateOrthoLH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateOrthoLH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateOrthoOffCenterLH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateOrthoOffCenterLH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateOrthoOffCenterLH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateOrthoOffCenterRH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateOrthoOffCenterRH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateOrthoOffCenterRH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateOrthoRH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateOrthoRH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateOrthoRH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreatePerspectiveFovLH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreatePerspectiveFovLH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreatePerspectiveFovLH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreatePerspectiveFovRH(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreatePerspectiveFovRH');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreatePerspectiveFovRH; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotation(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotation');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotation; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotationX(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotationX');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotationX; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotationY(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotationY');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotationY; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotationZ(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotationZ');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotationZ; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotationHeadingPitchBank(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotationHeadingPitchBank');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotationHeadingPitchBank; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateRotationYawPitchRoll(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateRotationYawPitchRoll');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateRotationYawPitchRoll; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateScaling(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateScaling');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateScaling; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreateTranslation(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestCreateTranslation');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateTranslation; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestMultiplyPoint(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestMultiplyPoint');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyPoint; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestMultiplyMatrix(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestMultiplyMatrix');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyMatrix; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestMultiplyVector3D(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestMultiplyVector3D');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyVector3D; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestMultiplyFactor(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestMultiplyFactor');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyFactor; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestMultiplyFactor2(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestMultiplyFactor2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyFactor2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestDiv(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestDiv');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDiv; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestAdjoint(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestAdjoint');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdjoint; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestDeterminant(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestDeterminant');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeterminant; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestEyePosition(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestEyePosition');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEyePosition; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestInverse(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestInverse');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInverse; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestScale(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestScale');
+  try
+    lFixture.SetUp;
+    try lFixture.TestScale; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestToMatrix(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestToMatrix');
+  try
+    lFixture.SetUp;
+    try lFixture.TestToMatrix; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestTranspose(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext, 'TestTranspose');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTranspose; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMatrix3DTestCreate(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext,'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+
+procedure RunTTestMatrix3DTestCreateArray(AContext: TNXTestContext);
+var lFixture: TTestMatrix3D;
+begin
+  lFixture:=TTestMatrix3D.Create(AContext,'TestCreateArray');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateArray; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure Registerutcmatrix3dTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcmatrix3d.TTestMatrix3D');
+  lSuite.AddTest('TestCreate', @RunTTestMatrix3DTestCreate);
+  lSuite.AddTest('TestCreateArray', @RunTTestMatrix3DTestCreateArray);
+  lSuite.AddTest('TestHookUp', @RunTTestMatrix3DTestHookUp);
+  lSuite.AddTest('TestZero', @RunTTestMatrix3DTestZero);
+  lSuite.AddTest('TestCreateLookAtDirLH', @RunTTestMatrix3DTestCreateLookAtDirLH);
+  lSuite.AddTest('TestCreateLookAtDirRH', @RunTTestMatrix3DTestCreateLookAtDirRH);
+  lSuite.AddTest('TestCreateLookAtLH', @RunTTestMatrix3DTestCreateLookAtLH);
+  lSuite.AddTest('TestCreateLookAtRH', @RunTTestMatrix3DTestCreateLookAtRH);
+  lSuite.AddTest('TestCreateOrthoLH', @RunTTestMatrix3DTestCreateOrthoLH);
+  lSuite.AddTest('TestCreateOrthoOffCenterLH', @RunTTestMatrix3DTestCreateOrthoOffCenterLH);
+  lSuite.AddTest('TestCreateOrthoOffCenterRH', @RunTTestMatrix3DTestCreateOrthoOffCenterRH);
+  lSuite.AddTest('TestCreateOrthoRH', @RunTTestMatrix3DTestCreateOrthoRH);
+  lSuite.AddTest('TestCreatePerspectiveFovLH', @RunTTestMatrix3DTestCreatePerspectiveFovLH);
+  lSuite.AddTest('TestCreatePerspectiveFovRH', @RunTTestMatrix3DTestCreatePerspectiveFovRH);
+  lSuite.AddTest('TestCreateRotation', @RunTTestMatrix3DTestCreateRotation);
+  lSuite.AddTest('TestCreateRotationX', @RunTTestMatrix3DTestCreateRotationX);
+  lSuite.AddTest('TestCreateRotationY', @RunTTestMatrix3DTestCreateRotationY);
+  lSuite.AddTest('TestCreateRotationZ', @RunTTestMatrix3DTestCreateRotationZ);
+  lSuite.AddTest('TestCreateRotationHeadingPitchBank', @RunTTestMatrix3DTestCreateRotationHeadingPitchBank);
+  lSuite.AddTest('TestCreateRotationYawPitchRoll', @RunTTestMatrix3DTestCreateRotationYawPitchRoll);
+  lSuite.AddTest('TestCreateScaling', @RunTTestMatrix3DTestCreateScaling);
+  lSuite.AddTest('TestCreateTranslation', @RunTTestMatrix3DTestCreateTranslation);
+  lSuite.AddTest('TestMultiplyPoint', @RunTTestMatrix3DTestMultiplyPoint);
+  lSuite.AddTest('TestMultiplyMatrix', @RunTTestMatrix3DTestMultiplyMatrix);
+  lSuite.AddTest('TestMultiplyVector3D', @RunTTestMatrix3DTestMultiplyVector3D);
+  lSuite.AddTest('TestMultiplyFactor', @RunTTestMatrix3DTestMultiplyFactor);
+  lSuite.AddTest('TestMultiplyFactor2', @RunTTestMatrix3DTestMultiplyFactor2);
+  lSuite.AddTest('TestDiv', @RunTTestMatrix3DTestDiv);
+  lSuite.AddTest('TestAdjoint', @RunTTestMatrix3DTestAdjoint);
+  lSuite.AddTest('TestDeterminant', @RunTTestMatrix3DTestDeterminant);
+  lSuite.AddTest('TestEyePosition', @RunTTestMatrix3DTestEyePosition);
+  lSuite.AddTest('TestInverse', @RunTTestMatrix3DTestInverse);
+  lSuite.AddTest('TestScale', @RunTTestMatrix3DTestScale);
+  lSuite.AddTest('TestToMatrix', @RunTTestMatrix3DTestToMatrix);
+  lSuite.AddTest('TestTranspose', @RunTTestMatrix3DTestTranspose);
+end;
+
+end.

@@ -5,20 +5,28 @@ unit tests.generics.dictionary2;
 interface
 
 uses
-  fpcunit, testregistry, Classes, SysUtils, Generics.Defaults, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Defaults, Generics.Collections;
 
 Type
 
   { TTestGenDictionary }
 
-  generic TTestGenDictionary<T> = Class(TTestCase)
+  generic TTestGenDictionary<T> = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FDict : T;
     FAddMethod: (amAdd, amAddPair, amTryAdd, amAddOrSet, amGetOrAdd);
     //FCheckOrder = ()
   Public
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
     procedure RecreateDict;
 
     procedure DoTestAddByMethod(ATestVal: integer; AnAddDup: Boolean = False); virtual;
@@ -30,7 +38,7 @@ Type
     procedure AssertCount(AnExpCount: integer);
 
     procedure DoRunTestAdd;
-  Published
+  public
     Procedure TestAddModify;
 
     Procedure TestAdd;
@@ -45,7 +53,7 @@ Type
   generic TTestGenDictionary_TryAdd<T> = Class(specialize TTestGenDictionary<T>)
   public
     procedure DoTestAddByMethod(ATestVal: integer; AnAddDup: Boolean = False); override;
-  published
+  public
     Procedure TestTryAdd;
     Procedure TestGetOrAdd;
   end;
@@ -79,6 +87,8 @@ Type
   end;
 
 
+
+procedure Registertestsgenericsdictionary2Tests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -142,7 +152,7 @@ end;
 
 procedure TTestGenDictionary.SetUp;
 begin
-  inherited SetUp;
+
   FDict := T.Create;
 end;
 
@@ -173,14 +183,14 @@ begin
     amGetOrAdd: // not supported
     begin
       try FDict.Add(k, v); except GotExcept := True; end;
-      AssertEquals('dup exception', GotExcept, AnAddDup);
+      TestContext.AssertTrue((GotExcept)=(AnAddDup), 'dup exception');
     end;
     amAddPair:
     begin
       APair.Key := k;
       APair.Value := v;
       try FDict.Add(APair); except GotExcept := True; end;
-      AssertEquals('dup exception', GotExcept, AnAddDup);
+      TestContext.AssertTrue((GotExcept)=(AnAddDup), 'dup exception');
     end;
     amAddOrSet:
       FDict.AddOrSetValue(k, v);
@@ -202,10 +212,10 @@ var
   ValGotten, k: AnsiString;
 begin
   k := IntToStr(ATestVal);
-  AssertTrue('Has key '+k, FDict.ContainsKey(k));
-  AssertEquals('Value for Key '+k, FDict[k], 'Val'+k);
-  AssertTrue('Try key '+k, FDict.TryGetValue(k, ValGotten));
-  AssertEquals('Tried value for Key '+k, ValGotten, 'Val'+k);
+  TestContext.AssertTrue(FDict.ContainsKey(k), 'Has key '+k);
+  TestContext.AssertTrue((FDict[k])=('Val'+k), 'Value for Key '+k);
+  TestContext.AssertTrue(FDict.TryGetValue(k, ValGotten), 'Try key '+k);
+  TestContext.AssertTrue((ValGotten)=('Val'+k), 'Tried value for Key '+k);
 end;
 
 procedure TTestGenDictionary.AssertKeyNotFound(ATestVal: integer);
@@ -213,8 +223,8 @@ var
   ValGotten, k: AnsiString;
 begin
   k := IntToStr(ATestVal);
-  AssertFalse('Not has key '+k, FDict.ContainsKey(k));
-  AssertFalse('Not try key '+k, FDict.TryGetValue(k, ValGotten));
+  TestContext.AssertTrue(not (FDict.ContainsKey(k)), 'Not has key '+k);
+  TestContext.AssertTrue(not (FDict.TryGetValue(k, ValGotten)), 'Not try key '+k);
 end;
 
 procedure TTestGenDictionary.AssertEmpty;
@@ -226,7 +236,7 @@ end;
 
 procedure TTestGenDictionary.AssertCount(AnExpCount: integer);
 begin
-  AssertEquals('Count', FDict.Count, AnExpCount);
+  TestContext.AssertTrue((FDict.Count)=(AnExpCount), 'Count');
 end;
 
 procedure TTestGenDictionary.DoRunTestAdd;
@@ -344,13 +354,13 @@ begin
   AssertCount(1);
 
   FDict.AddOrSetValue('998', 'B');
-  AssertEquals(FDict['998'], 'B');
+  TestContext.AssertTrue((FDict['998'])=('B'), '');
   AssertKeyVal(-999);
   AssertCount(2);
 
   FDict.AddOrSetValue('-999', 'A');
-  AssertEquals(FDict['-999'], 'A');
-  AssertEquals(FDict['998'], 'B');
+  TestContext.AssertTrue((FDict['-999'])=('A'), '');
+  TestContext.AssertTrue((FDict['998'])=('B'), '');
   AssertCount(2);
 
 end;
@@ -401,32 +411,32 @@ begin
     amAdd:
     begin
       try FDict.Add(k, v); except GotExcept := True; end;
-      AssertEquals('dup exception', GotExcept, AnAddDup);
+      TestContext.AssertTrue((GotExcept)=(AnAddDup), 'dup exception');
     end;
     amAddPair:
     begin
       APair.Key := k;
       APair.Value := v;
       try FDict.Add(APair); except GotExcept := True; end;
-      AssertEquals('dup exception', GotExcept, AnAddDup);
+      TestContext.AssertTrue((GotExcept)=(AnAddDup), 'dup exception');
     end;
     amTryAdd:
     begin
       if AnAddDup then
-        AssertFalse( FDict.TryAdd(k, v) )
+        TestContext.AssertTrue(not (FDict.TryAdd(k, v)), '')
       else
-        AssertTrue( FDict.TryAdd(k, v) );
+        TestContext.AssertTrue(FDict.TryAdd(k, v), '');
     end;
     amAddOrSet:
       FDict.AddOrSetValue(k, v);
     amGetOrAdd:
     begin
       p := FDict.GetOrAddMutableValue(k);
-      AssertTrue(p <> nil);
+      TestContext.AssertTrue(p <> nil, '');
       if AnAddDup then
-        AssertTrue(p^ = v)
+        TestContext.AssertTrue(p^ = v, '')
       else
-        AssertTrue(p^ = '');
+        TestContext.AssertTrue(p^ = '', '');
       p^ := v;
     end;
   end;
@@ -445,31 +455,1079 @@ begin
 end;
 
 
+type TNXDictionaryCase17 = specialize TTestGenDictionary< specialize THashMap<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase16 = specialize TTestGenDictionary< specialize TFastHashMap<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase15 = specialize TTestGenDictionary< specialize TCuckooD6<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase14 = specialize TTestGenDictionary< specialize TCuckooD4<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase13 = specialize TTestGenDictionary< specialize TCuckooD2<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase12 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString, TTestDoubleHashFactory2> >;
+
+type TNXDictionaryCase11 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString, TTestDoubleHashFactory> >;
+
+type TNXDictionaryCase10 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase9 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString, TTestHashFactory2> >;
+
+type TNXDictionaryCase8 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString, TTestHashFactory> >;
+
+type TNXDictionaryCase7 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase6 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString, TTestHashFactory2> >;
+
+type TNXDictionaryCase5 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString, TTestHashFactory> >;
+
+type TNXDictionaryCase4 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString> >;
+
+type TNXDictionaryCase3 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLP<AnsiString, AnsiString, TTestHashFactory2> >;
+
+type TNXDictionaryCase2 = specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLP<AnsiString, AnsiString, TTestHashFactory> >;
+
+type TNXDictionaryCase1 = specialize TTestGenDictionary_TryAdd< specialize TDictionary<AnsiString, AnsiString> >;
+
+constructor TTestGenDictionary.Create(AContext: TNXTestContext; const ACaseName: string);
 begin
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TDictionary<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLP<AnsiString, AnsiString, TTestHashFactory> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLP<AnsiString, AnsiString, TTestHashFactory2> >);
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
 
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString, TTestHashFactory> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingLPT<AnsiString, AnsiString, TTestHashFactory2> >);
+procedure RunTNXDictionaryCase1TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
 
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString, TTestHashFactory> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingQP<AnsiString, AnsiString, TTestHashFactory2> >);
+procedure RunTNXDictionaryCase1TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
 
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString, TTestDoubleHashFactory> >);
-  RegisterTest(specialize TTestGenDictionary_TryAdd< specialize TOpenAddressingDH<AnsiString, AnsiString, TTestDoubleHashFactory2> >);
+procedure RunTNXDictionaryCase1TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
 
-  RegisterTest(specialize TTestGenDictionary< specialize TCuckooD2<AnsiString, AnsiString> >);
-  //RegisterTest(specialize TTestGenDictionary< specialize TCuckooD2<AnsiString, AnsiString, TTestDoubleHashFactory> >);
-  //RegisterTest(specialize TTestGenDictionary< specialize TCuckooD2<AnsiString, AnsiString, TTestDoubleHashFactory2> >);
+procedure RunTNXDictionaryCase1TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
 
-  RegisterTest(specialize TTestGenDictionary< specialize TCuckooD4<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary< specialize TCuckooD6<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary< specialize TFastHashMap<AnsiString, AnsiString> >);
-  RegisterTest(specialize TTestGenDictionary< specialize THashMap<AnsiString, AnsiString> >);
+procedure RunTNXDictionaryCase1TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase1TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase1;
+begin
+  lFixture:=TNXDictionaryCase1.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase2TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase2;
+begin
+  lFixture:=TNXDictionaryCase2.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase3TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase3;
+begin
+  lFixture:=TNXDictionaryCase3.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase4TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase4;
+begin
+  lFixture:=TNXDictionaryCase4.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase5TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase5;
+begin
+  lFixture:=TNXDictionaryCase5.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase6TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase6;
+begin
+  lFixture:=TNXDictionaryCase6.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase7TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase7;
+begin
+  lFixture:=TNXDictionaryCase7.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase8TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase8;
+begin
+  lFixture:=TNXDictionaryCase8.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase9TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase9;
+begin
+  lFixture:=TNXDictionaryCase9.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase10TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase10;
+begin
+  lFixture:=TNXDictionaryCase10.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase11TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase11;
+begin
+  lFixture:=TNXDictionaryCase11.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestTryAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase12TestGetOrAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase12;
+begin
+  lFixture:=TNXDictionaryCase12.Create(AContext, 'TestGetOrAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetOrAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase13TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase13;
+begin
+  lFixture:=TNXDictionaryCase13.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase13TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase13;
+begin
+  lFixture:=TNXDictionaryCase13.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase13TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase13;
+begin
+  lFixture:=TNXDictionaryCase13.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase13TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase13;
+begin
+  lFixture:=TNXDictionaryCase13.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase14TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase14;
+begin
+  lFixture:=TNXDictionaryCase14.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase14TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase14;
+begin
+  lFixture:=TNXDictionaryCase14.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase14TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase14;
+begin
+  lFixture:=TNXDictionaryCase14.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase14TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase14;
+begin
+  lFixture:=TNXDictionaryCase14.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase15TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase15;
+begin
+  lFixture:=TNXDictionaryCase15.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase15TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase15;
+begin
+  lFixture:=TNXDictionaryCase15.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase15TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase15;
+begin
+  lFixture:=TNXDictionaryCase15.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase15TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase15;
+begin
+  lFixture:=TNXDictionaryCase15.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase16TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase16;
+begin
+  lFixture:=TNXDictionaryCase16.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase16TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase16;
+begin
+  lFixture:=TNXDictionaryCase16.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase16TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase16;
+begin
+  lFixture:=TNXDictionaryCase16.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase16TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase16;
+begin
+  lFixture:=TNXDictionaryCase16.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase17TestAddModify(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase17;
+begin
+  lFixture:=TNXDictionaryCase17.Create(AContext, 'TestAddModify');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddModify; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase17TestAdd(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase17;
+begin
+  lFixture:=TNXDictionaryCase17.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase17TestAddPair(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase17;
+begin
+  lFixture:=TNXDictionaryCase17.Create(AContext, 'TestAddPair');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddPair; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTNXDictionaryCase17TestAddOrSet(AContext: TNXTestContext);
+var lFixture: TNXDictionaryCase17;
+begin
+  lFixture:=TNXDictionaryCase17.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure Registertestsgenericsdictionary2Tests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase1');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase1TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase1TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase1TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase1TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase1TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase1TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase2');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase2TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase2TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase2TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase2TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase2TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase2TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase3');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase3TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase3TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase3TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase3TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase3TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase3TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase4');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase4TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase4TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase4TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase4TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase4TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase4TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase5');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase5TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase5TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase5TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase5TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase5TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase5TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase6');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase6TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase6TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase6TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase6TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase6TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase6TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase7');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase7TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase7TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase7TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase7TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase7TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase7TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase8');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase8TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase8TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase8TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase8TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase8TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase8TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase9');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase9TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase9TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase9TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase9TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase9TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase9TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase10');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase10TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase10TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase10TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase10TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase10TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase10TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase11');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase11TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase11TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase11TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase11TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase11TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase11TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase12');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase12TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase12TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase12TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase12TestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTNXDictionaryCase12TestTryAdd);
+  lSuite.AddTest('TestGetOrAdd', @RunTNXDictionaryCase12TestGetOrAdd);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase13');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase13TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase13TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase13TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase13TestAddOrSet);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase14');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase14TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase14TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase14TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase14TestAddOrSet);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase15');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase15TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase15TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase15TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase15TestAddOrSet);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase16');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase16TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase16TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase16TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase16TestAddOrSet);
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary2.TNXDictionaryCase17');
+  lSuite.AddTest('TestAddModify', @RunTNXDictionaryCase17TestAddModify);
+  lSuite.AddTest('TestAdd', @RunTNXDictionaryCase17TestAdd);
+  lSuite.AddTest('TestAddPair', @RunTNXDictionaryCase17TestAddPair);
+  lSuite.AddTest('TestAddOrSet', @RunTNXDictionaryCase17TestAddOrSet);
+end;
 
 end.
-

@@ -6,8 +6,7 @@ unit utcfpmonitor;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry,
-{$ifdef windows}
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, {$ifdef windows}
   fpwinmonitor
 {$else}
   fpmonitor
@@ -45,22 +44,30 @@ Type
   end;
   { TTestMonitorSupport }
 
-  TTestMonitorSupport = Class(TTestCase)
+  TTestMonitorSupport = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FThrdCount : Integer;
     FObj : Array[1..MaxObjCount] of  TTestObject;
     FThrd : Array[1..MaxThrdCount] of TThread;
     function DoCreateThread(aObj: TTestObject; aOperation: TThreadOperation; aId: Integer; aTimeout: Cardinal): TTestThread;
-    class procedure AssertEquals(Msg: String; aExpected, aActual: TThreadOperation); overload;
+
     function GetObj(AIndex: Integer): TTestObject;
     procedure ThreadDone(Sender : TObject);
     procedure WaitForAllThreads(aTimeOut: Cardinal=0);
   public
-    Procedure Setup; override;
-    Procedure TearDown; override;
+    Procedure Setup; virtual;
+    Procedure TearDown; virtual;
     Property Obj1 : TTestObject Index 1 Read GetObj;
     Property Obj2 : TTestObject Index 2 Read GetObj;
-  Published
+  public
     Procedure TestHookup;
     Procedure TestLock;
     Procedure TestLockMulti;
@@ -69,6 +76,8 @@ Type
     Procedure TestPulseAll;
     procedure TestWait;
   end;
+
+procedure RegisterutcfpmonitorTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -208,7 +217,7 @@ var
   I : Integer;
 
 begin
-  inherited Setup;
+
   FThrdCount:=0;
   For I:=1 to MaxObjCount do
     FObj[i]:=TTestObject.Create;
@@ -227,7 +236,7 @@ begin
     FreeAndNil(FObj[i]);
   For I:=1 to MaxThrdCount do
     FThrd[i]:=Nil;
-  inherited TearDown;
+
 end;
 
 procedure TTestMonitorSupport.TestHookup;
@@ -237,9 +246,9 @@ var
 
 begin
   For I:=1 to MaxObjCount do
-    AssertNotNull('Obj '+IntToStr(i),FObj[I]);
+    TestContext.AssertTrue((FObj[I])<>nil, 'Obj '+IntToStr(i));
   For I:=1 to MaxThrdCount do
-    AssertNull('Thrd '+IntToStr(i),FThrd[I]);
+    TestContext.AssertTrue((FThrd[I])=nil, 'Thrd '+IntToStr(i));
 end;
 
 function TTestMonitorSupport.DoCreateThread(aObj: TTestObject; aOperation: TThreadOperation; aId : Integer; aTimeout: Cardinal): TTestThread;
@@ -250,11 +259,7 @@ begin
   Result:=TTestThread(FThrd[FThrdCount]);
 end;
 
-class procedure TTestMonitorSupport.AssertEquals(Msg: String; aExpected, aActual: TThreadOperation);
-begin
-  AssertEquals(Msg,GetEnumName(TypeInfo(TOperationResult),Ord(aExpected)),
-                   GetEnumName(TypeInfo(TOperationResult),Ord(aActual)));
-end;
+
 
 procedure TTestMonitorSupport.TestLock;
 
@@ -268,8 +273,8 @@ begin
   N:=GetTickCount64;
   TMonitor.Exit(Obj1);
   WaitForAllThreads;
-  AssertTrue('Thread lock timestamp ',N<=FObj[1].Res[1].Tick);
-  AssertEquals('Thread did a lock ',toEnter,Obj1.Res[1].Op);
+  TestContext.AssertTrue(N<=FObj[1].Res[1].Tick, 'Thread lock timestamp ');
+  TestContext.AssertTrue((toEnter)=(Obj1.Res[1].Op), 'Thread did a lock ');
 end;
 
 procedure TTestMonitorSupport.TestLockMulti;
@@ -286,8 +291,8 @@ begin
   N:=GetTickCount64;
   TMonitor.Exit(Obj1);
   WaitForAllThreads;
-  AssertTrue('Thread lock timestamp ',N<=FObj[1].Res[1].Tick);
-  AssertEquals('Thread did a lock ',toEnter,Obj1.Res[1].Op);
+  TestContext.AssertTrue(N<=FObj[1].Res[1].Tick, 'Thread lock timestamp ');
+  TestContext.AssertTrue((toEnter)=(Obj1.Res[1].Op), 'Thread did a lock ');
 end;
 
 procedure TTestMonitorSupport.TestTryLock;
@@ -299,8 +304,8 @@ begin
   TMonitor.Exit(Obj1);
   Writeln(GetTickCount64,': Thread ',ptruint(GetCurrentThreadID),' Released lock');
   WaitForAllThreads;
-  AssertEquals('Thread tried a lock ',toTryEnter,Obj1.Res[1].Op);
-  AssertFalse('Thread lock failed ',Obj1.Res[1].Res);
+  TestContext.AssertTrue((toTryEnter)=(Obj1.Res[1].Op), 'Thread tried a lock ');
+  TestContext.AssertTrue(not (Obj1.Res[1].Res), 'Thread lock failed ');
 end;
 
 procedure TTestMonitorSupport.TestPulse;
@@ -317,9 +322,9 @@ begin
   TMonitor.Wait(Obj1,500);
   TMonitor.Exit(Obj1);
   WaitForAllThreads;
-  AssertTrue('Thread pulse timestamp ',N<=FObj[1].Res[1].Tick);
-  AssertEquals('Thread did a pulse',toPulse,Obj1.Res[1].Op);
-  AssertTrue('Thread Wait was successful',Obj1.Res[1].Res);
+  TestContext.AssertTrue(N<=FObj[1].Res[1].Tick, 'Thread pulse timestamp ');
+  TestContext.AssertTrue((toPulse)=(Obj1.Res[1].Op), 'Thread did a pulse');
+  TestContext.AssertTrue(Obj1.Res[1].Res, 'Thread Wait was successful');
 end;
 
 procedure TTestMonitorSupport.TestPulseAll;
@@ -338,9 +343,9 @@ begin
   WaitForAllThreads(WaitTimeOut*MaxThrdCount);
   For I:=1 to MaxThrdCount do
     begin
-    AssertEquals('Thread '+IntToStr(i)+' did a Wait',toPulseAll,Obj1.Res[i].Op);
-    AssertTrue('Thread '+IntToStr(i)+' Wait was successful',Obj1.Res[i].Res);
-    AssertTrue('Thread '+IntToStr(i)+' pulse timestamp ',N<=FObj[1].Res[i].Tick);
+    TestContext.AssertTrue((toPulseAll)=(Obj1.Res[i].Op), 'Thread '+IntToStr(i)+' did a Wait');
+    TestContext.AssertTrue(Obj1.Res[i].Res, 'Thread '+IntToStr(i)+' Wait was successful');
+    TestContext.AssertTrue(N<=FObj[1].Res[i].Tick, 'Thread '+IntToStr(i)+' pulse timestamp ');
     end;
 end;
 
@@ -356,12 +361,100 @@ begin
   N:=GetTickCount64;
   TMonitor.Pulse(Obj1);
   WaitForAllThreads;
-  AssertEquals('Thread did a Wait',toWait,Obj1.Res[1].Op);
-  AssertTrue('Thread Wait was successful',Obj1.Res[1].Res);
-  AssertTrue('Thread pulse timestamp ',N<=FObj[1].Res[1].Tick);
+  TestContext.AssertTrue((toWait)=(Obj1.Res[1].Op), 'Thread did a Wait');
+  TestContext.AssertTrue(Obj1.Res[1].Res, 'Thread Wait was successful');
+  TestContext.AssertTrue(N<=FObj[1].Res[1].Tick, 'Thread pulse timestamp ');
 end;
 
-initialization
-  RegisterTest(TTestMonitorSupport);
-end.
 
+constructor TTestMonitorSupport.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestMonitorSupportTestHookup(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestHookup');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookup; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestLock(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestLock');
+  try
+    lFixture.SetUp;
+    try lFixture.TestLock; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestLockMulti(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestLockMulti');
+  try
+    lFixture.SetUp;
+    try lFixture.TestLockMulti; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestTryLock(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestTryLock');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryLock; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestPulse(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestPulse');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPulse; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestPulseAll(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestPulseAll');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPulseAll; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMonitorSupportTestWait(AContext: TNXTestContext);
+var lFixture: TTestMonitorSupport;
+begin
+  lFixture:=TTestMonitorSupport.Create(AContext, 'TestWait');
+  try
+    lFixture.SetUp;
+    try lFixture.TestWait; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcfpmonitorTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcfpmonitor.TTestMonitorSupport');
+  lSuite.AddTest('TestHookup', @RunTTestMonitorSupportTestHookup);
+  lSuite.AddTest('TestLock', @RunTTestMonitorSupportTestLock);
+  lSuite.AddTest('TestLockMulti', @RunTTestMonitorSupportTestLockMulti);
+  lSuite.AddTest('TestTryLock', @RunTTestMonitorSupportTestTryLock);
+  lSuite.AddTest('TestPulse', @RunTTestMonitorSupportTestPulse);
+  lSuite.AddTest('TestPulseAll', @RunTTestMonitorSupportTestPulseAll);
+  lSuite.AddTest('TestWait', @RunTTestMonitorSupportTestWait);
+end;
+
+end.

@@ -5,18 +5,26 @@ unit utestsha512;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils, testregistry, fpsha512, fphashutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fpsha512, fphashutils;
 
 type
 
   { TTestSHA512 }
 
-  TTestSHA512 = class(TTestCase)
+  TTestSHA512 = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Public
     Procedure TestHexString(Const aString,aDigest : String);
     Procedure TestBase64String(Const aString,aDigest : String);
     Procedure TestHMACString(Const aString,aKey,aDigest : String);
-  published
+  public
     procedure TestEmpty;
     procedure TestSmallString;
     procedure TestLargeString;
@@ -28,12 +36,20 @@ type
 
   { TTestSHA384 }
 
-  TTestSHA384 = class(TTestCase)
+  TTestSHA384 = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Public
     Procedure TestHexString(Const aString,aDigest : String);
     Procedure TestBase64String(Const aString,aDigest : String);
     Procedure TestHMACString(Const aString,aKey,aDigest : String);
-  published
+  public
     procedure TestEmpty;
     procedure TestSmallString;
     procedure TestLargeString;
@@ -43,6 +59,8 @@ type
     procedure TestHMACStream;
   end;
 
+
+procedure Registerutestsha512Tests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -61,7 +79,7 @@ begin
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   TSHA512.DigestHexa(S, Digest);
-  AssertEquals('Correct hex digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
 procedure TTestSHA512.TestBase64String(const aString, aDigest: String);
@@ -73,7 +91,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
   TSHA512.DigestBase64(S,False,Digest);
-  AssertEquals('Correct base64 digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
 procedure TTestSHA512.TestHMACString(const aString, aKey, aDigest: String);
@@ -85,7 +103,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
   TSHA512.HMACHexa(K,S,Digest);
-  AssertEquals('Correct base64 digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
 
@@ -159,7 +177,7 @@ begin
   BytesToHexStr(Res,@Test1Out,SizeOf(Test1Out));
   S:=TStringStream.Create('abc');
   try
-    AssertEquals('Correct hash',Res,TSHA512.StreamHexa(S));
+    TestContext.AssertTrue((Res)=(TSHA512.StreamHexa(S)), 'Correct hash');
   finally
     S.Free;
   end;
@@ -178,7 +196,7 @@ begin
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   TSHA384.DigestHexa(S, Digest);
-  AssertEquals('Correct hex digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
 procedure TTestSHA384.TestBase64String(const aString, aDigest: String);
@@ -190,7 +208,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
   TSHA384.DigestBase64(S,False,Digest);
-  AssertEquals('Correct base64 digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
 procedure TTestSHA384.TestHMACString(const aString, aKey, aDigest: String);
@@ -202,7 +220,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
   TSHA384.HMACHexa(K,S,Digest);
-  AssertEquals('Correct base64 digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
 const
@@ -270,7 +288,7 @@ begin
   BytesToHexStr(Res,@Test1Out384,SizeOf(Test1Out384));
   S:=TStringStream.Create('abc');
   try
-    AssertEquals('Correct hash',Res,TSHA384.StreamHexa(S));
+    TestContext.AssertTrue((Res)=(TSHA384.StreamHexa(S)), 'Correct hash');
   finally
     S.Free;
   end;
@@ -278,7 +296,166 @@ end;
 
 
 
-initialization
-  RegisterTests([TTestSHA512,TTestSHA384]);
-end.
 
+constructor TTestSHA512.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestSHA384.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSHA512TestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestEmpty');
+  try
+    lFixture.TestEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestSmallString(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestSmallString');
+  try
+    lFixture.TestSmallString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestLargeString(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestLargeString');
+  try
+    lFixture.TestLargeString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestEmptyBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestEmptyBase64');
+  try
+    lFixture.TestEmptyBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestSmallBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestSmallBase64');
+  try
+    lFixture.TestSmallBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestSmallHMAC(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestSmallHMAC');
+  try
+    lFixture.TestSmallHMAC;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA512TestHMACStream(AContext: TNXTestContext);
+var lFixture: TTestSHA512;
+begin
+  lFixture:=TTestSHA512.Create(AContext, 'TestHMACStream');
+  try
+    lFixture.TestHMACStream;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestEmpty');
+  try
+    lFixture.TestEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestSmallString(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestSmallString');
+  try
+    lFixture.TestSmallString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestLargeString(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestLargeString');
+  try
+    lFixture.TestLargeString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestEmptyBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestEmptyBase64');
+  try
+    lFixture.TestEmptyBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestSmallBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestSmallBase64');
+  try
+    lFixture.TestSmallBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestSmallHMAC(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestSmallHMAC');
+  try
+    lFixture.TestSmallHMAC;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA384TestHMACStream(AContext: TNXTestContext);
+var lFixture: TTestSHA384;
+begin
+  lFixture:=TTestSHA384.Create(AContext, 'TestHMACStream');
+  try
+    lFixture.TestHMACStream;
+  finally lFixture.Free; end;
+end;
+
+procedure Registerutestsha512Tests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utestsha512.TTestSHA512');
+  lSuite.AddTest('TestEmpty', @RunTTestSHA512TestEmpty);
+  lSuite.AddTest('TestSmallString', @RunTTestSHA512TestSmallString);
+  lSuite.AddTest('TestLargeString', @RunTTestSHA512TestLargeString);
+  lSuite.AddTest('TestEmptyBase64', @RunTTestSHA512TestEmptyBase64);
+  lSuite.AddTest('TestSmallBase64', @RunTTestSHA512TestSmallBase64);
+  lSuite.AddTest('TestSmallHMAC', @RunTTestSHA512TestSmallHMAC);
+  lSuite.AddTest('TestHMACStream', @RunTTestSHA512TestHMACStream);
+  lSuite:=ARegistry.AddSuite('utestsha512.TTestSHA384');
+  lSuite.AddTest('TestEmpty', @RunTTestSHA384TestEmpty);
+  lSuite.AddTest('TestSmallString', @RunTTestSHA384TestSmallString);
+  lSuite.AddTest('TestLargeString', @RunTTestSHA384TestLargeString);
+  lSuite.AddTest('TestEmptyBase64', @RunTTestSHA384TestEmptyBase64);
+  lSuite.AddTest('TestSmallBase64', @RunTTestSHA384TestSmallBase64);
+  lSuite.AddTest('TestSmallHMAC', @RunTTestSHA384TestSmallHMAC);
+  lSuite.AddTest('TestHMACStream', @RunTTestSHA384TestHMACStream);
+end;
+
+end.

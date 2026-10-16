@@ -8,9 +8,8 @@ unit tests.rtti;
 interface
 
 uses
-{$IFDEF FPC}
-  fpcunit,testregistry, testutils,
-{$ELSE FPC}
+obNXTestContext, obNXTestRegistry, obNXTestSuite, {$IFDEF FPC}
+  {$ELSE FPC}
   TestFramework,
 {$ENDIF FPC}
   Classes, SysUtils, typinfo,
@@ -20,8 +19,16 @@ type
 
   { TTestRTTI }
 
-  TTestRTTI= class(TTestCase)
-  published
+  TTestRTTI= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     //procedure GetTypes;
     procedure GetTypeInteger;
     procedure GetTypePointer;
@@ -86,11 +93,19 @@ type
   { TTestExtendedRTTI }
   // Note: the tests assume that TObject has no RTTI associated with it.
   // The tests need to be adapted so they will work in both cases.
-  TTestExtendedRTTI = class(TTestCase)
+  TTestExtendedRTTI = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FCtx: TRttiContext;
-    Procedure AssertEquals(Msg : String; aExpected,aActual : TMemberVisibility); overload;
-    Procedure AssertEquals(Msg : String; aExpected,aActual : TTypeKind);overload;
+
+
     procedure CheckField(aIdx: Integer; aData: TRttiField; aName: String; aKind: TTypeKind; aVisibility: TMemberVisibility;
       aStrict: Boolean=False);
     procedure CheckMethod(aPrefix: string; aIdx: Integer; aData: TRttiMethod; aName: String; aVisibility: TMemberVisibility;
@@ -98,14 +113,14 @@ type
     procedure CheckProperty(aIdx: Integer; aData: TRttiProperty; aName: String; aKind: TTypeKind; aVisibility: TMemberVisibility;
       isStrict: Boolean=False);
   public
-    Procedure Setup; override;
-    Procedure TearDown; override;
+    Procedure Setup; virtual;
+    Procedure TearDown; virtual;
   end;
 
   { TTestClassExtendedRTTI }
 
   TTestClassExtendedRTTI = class(TTestExtendedRtti)
-  published
+  public
     Procedure TestFields;
     Procedure TestDeclaredFields;
     Procedure TestProperties;
@@ -127,7 +142,7 @@ type
   { TTestRecordExtendedRTTI }
 
   TTestRecordExtendedRTTI = class(TTestExtendedRtti)
-  published
+  public
     Procedure TestFields;
     Procedure TestProperties;
     Procedure TestDeclaredMethods;
@@ -136,6 +151,8 @@ type
     Procedure TestPublicFieldAttributes;
   end;
 
+
+procedure RegistertestsrttiTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -200,7 +217,7 @@ begin
           if E.ClassType=EInvalidCast then
             HadException := true;
       end;
-      Check(HadException, 'No or invalid exception on invalid cast');
+      TestContext.AssertTrue(HadException, 'No or invalid exception on invalid cast');
     finally
       AtestClass.Free;
     end;
@@ -220,11 +237,11 @@ begin
   try
     ARttiType := c.GetType(TTestValueClass);
     AProperty := ARttiType.GetProperty('aBoolean');
-    CheckEquals(AProperty.IsReadable, true);
+    TestContext.AssertTrue((AProperty.IsReadable)=(true), '');
     AProperty := ARttiType.GetProperty('aGetBoolean');
-    CheckEquals(AProperty.IsReadable, true);
+    TestContext.AssertTrue((AProperty.IsReadable)=(true), '');
     AProperty := ARttiType.GetProperty('aWriteOnly');
-    CheckEquals(AProperty.IsReadable, False);
+    TestContext.AssertTrue((AProperty.IsReadable)=(False), '');
   finally
     c.Free;
   end;
@@ -240,11 +257,11 @@ begin
   try
     ARttiType := c.GetType(TTestValueClass);
     AProperty := ARttiType.GetProperty('aBoolean');
-    CheckEquals(AProperty.IsWritable, true);
+    TestContext.AssertTrue((AProperty.IsWritable)=(true), '');
     AProperty := ARttiType.GetProperty('aGetBoolean');
-    CheckEquals(AProperty.IsWritable, false);
+    TestContext.AssertTrue((AProperty.IsWritable)=(false), '');
     AProperty := ARttiType.GetProperty('aWriteOnly');
-    CheckEquals(AProperty.IsWritable, True);
+    TestContext.AssertTrue((AProperty.IsWritable)=(True), '');
   finally
     c.Free;
   end;
@@ -269,8 +286,8 @@ begin
     aClass:=TMyAnnotatedClass.Create;
     aType := c.GetType(aClass.ClassInfo);
     custAttr:=aType.GetAttribute(TMyAttribute);
-    CheckEquals(custAttr.ClassType,TMyAttribute,'Correct class');
-    CheckEquals('something',MyAttr.value,'Correct value');
+    TestContext.AssertTrue((custAttr.ClassType)=(TMyAttribute), 'Correct class');
+    TestContext.AssertTrue(('something')=(MyAttr.value), 'Correct value');
   finally
     aClass.Free;
 //    custAttr.Free;
@@ -293,19 +310,19 @@ begin
     ATestClass.ABoolean := true;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('aBoolean');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(true,AValue.AsBoolean);
+      TestContext.AssertTrue((true)=(AValue.AsBoolean), '');
       ATestClass.ABoolean := false;
-      CheckEquals(true, AValue.AsBoolean);
-      CheckEquals('True', AValue.ToString);
-      CheckEquals(True, AValue.IsOrdinal);
-      CheckEquals(1, AValue.AsOrdinal);
+      TestContext.AssertTrue((true)=(AValue.AsBoolean), '');
+      TestContext.AssertTrue(('True')=(AValue.ToString), '');
+      TestContext.AssertTrue((True)=(AValue.IsOrdinal), '');
+      TestContext.AssertTrue((1)=(AValue.AsOrdinal), '');
     finally
       AtestClass.Free;
     end;
-      CheckEquals(True,AValue.AsBoolean);
+      TestContext.AssertTrue((True)=(AValue.AsBoolean), '');
   finally
     c.Free;
   end;
@@ -325,20 +342,20 @@ begin
     ATestClass.AShortString := 'Hello World';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('aShortString');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals('Hello World',AValue.AsString);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
       ATestClass.AShortString := 'Foobar';
-      CheckEquals('Hello World', AValue.AsString);
-      CheckEquals(False, AValue.IsOrdinal);
-      CheckEquals(False, AValue.IsObject);
-      CheckEquals(False, AValue.IsArray);
-      CheckEquals(False, AValue.IsClass);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
+      TestContext.AssertTrue((False)=(AValue.IsOrdinal), '');
+      TestContext.AssertTrue((False)=(AValue.IsObject), '');
+      TestContext.AssertTrue((False)=(AValue.IsArray), '');
+      TestContext.AssertTrue((False)=(AValue.IsClass), '');
     finally
       AtestClass.Free;
     end;
-    CheckEquals('Hello World',AValue.AsString);
+    TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
   finally
     c.Free;
   end;
@@ -358,18 +375,18 @@ begin
     ATestClass.AInteger := 472349;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('ainteger');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(472349,AValue.AsInteger);
+      TestContext.AssertTrue((472349)=(AValue.AsInteger), '');
       ATestClass.AInteger := 12;
-      CheckEquals(472349, AValue.AsInteger);
-      CheckEquals('472349', AValue.ToString);
-      CheckEquals(True, AValue.IsOrdinal);
+      TestContext.AssertTrue((472349)=(AValue.AsInteger), '');
+      TestContext.AssertTrue(('472349')=(AValue.ToString), '');
+      TestContext.AssertTrue((True)=(AValue.IsOrdinal), '');
     finally
       AtestClass.Free;
     end;
-      CheckEquals(472349,AValue.AsInteger);
+      TestContext.AssertTrue((472349)=(AValue.AsInteger), '');
   finally
     c.Free;
   end;
@@ -390,27 +407,27 @@ begin
     ATestClass.AString := 'Hello World';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('astring');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals('Hello World',AValue.AsString);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
       ATestClass.AString := 'Goodbye World';
-      CheckEquals('Hello World',AValue.AsString);
-      CheckEquals('Hello World',AValue.ToString);
-      Check(TypeInfo(string)=AValue.TypeInfo);
-      Check(AValue.TypeData=GetTypeData(AValue.TypeInfo));
-      Check(AValue.IsEmpty=false);
-      Check(AValue.IsObject=false);
-      Check(AValue.IsClass=false);
-      CheckEquals(AValue.IsOrdinal, false);
-      CheckEquals(AValue.TryAsOrdinal(i), false);
-      CheckEquals(AValue.IsType(TypeInfo(string)), true);
-      CheckEquals(AValue.IsType(TypeInfo(integer)), false);
-      CheckEquals(AValue.IsArray, false);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
+      TestContext.AssertTrue(('Hello World')=(AValue.ToString), '');
+      TestContext.AssertTrue(TypeInfo(string)=AValue.TypeInfo, '');
+      TestContext.AssertTrue(AValue.TypeData=GetTypeData(AValue.TypeInfo), '');
+      TestContext.AssertTrue(AValue.IsEmpty=false, '');
+      TestContext.AssertTrue(AValue.IsObject=false, '');
+      TestContext.AssertTrue(AValue.IsClass=false, '');
+      TestContext.AssertTrue((AValue.IsOrdinal)=(false), '');
+      TestContext.AssertTrue((AValue.TryAsOrdinal(i))=(false), '');
+      TestContext.AssertTrue((AValue.IsType(TypeInfo(string)))=(true), '');
+      TestContext.AssertTrue((AValue.IsType(TypeInfo(integer)))=(false), '');
+      TestContext.AssertTrue((AValue.IsArray)=(false), '');
     finally
       AtestClass.Free;
     end;
-    CheckEquals('Hello World',AValue.AsString);
+    TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
   finally
     c.Free;
   end;
@@ -430,14 +447,14 @@ begin
     ATestClass.ABoolean := true;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('aGetBoolean');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(true,AValue.AsBoolean);
+      TestContext.AssertTrue((true)=(AValue.AsBoolean), '');
     finally
       AtestClass.Free;
     end;
-      CheckEquals(True,AValue.AsBoolean);
+      TestContext.AssertTrue((True)=(AValue.AsBoolean), '');
   finally
     c.Free;
   end;
@@ -457,14 +474,14 @@ begin
     ATestClass.AShortString := 'Hello World';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('aGetShortString');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals('Hello World',AValue.AsString);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
     finally
       AtestClass.Free;
     end;
-    CheckEquals('Hello World',AValue.AsString);
+    TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
   finally
     c.Free;
   end;
@@ -486,14 +503,14 @@ begin
     ATestClass.AObject := O;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('AObject');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(O.GetHashCode, AValue.AsObject.GetHashCode);
+      TestContext.AssertTrue((O.GetHashCode)=(AValue.AsObject.GetHashCode), '');
     finally
       AtestClass.Free;
     end;
-    CheckEquals(O.GetHashCode, AValue.AsObject.GetHashCode);
+    TestContext.AssertTrue((O.GetHashCode)=(AValue.AsObject.GetHashCode), '');
   finally
     c.Free;
     O.Free;
@@ -516,14 +533,14 @@ begin
     ATestClass.AUnknown := i;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('AUnknown');
       AValue := AProperty.GetValue(ATestClass);
-      Check(i = AValue.AsInterface);
+      TestContext.AssertTrue(i = AValue.AsInterface, '');
     finally
       AtestClass.Free;
     end;
-    Check(i = AValue.AsInterface);
+    TestContext.AssertTrue(i = AValue.AsInterface, '');
   finally
     c.Free;
   end;
@@ -547,36 +564,36 @@ begin
     ATestClass.AComp := 5;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
 
       AProperty := ARttiType.GetProperty('ASingle');
       AValueS := AProperty.GetValue(ATestClass);
-      CheckEquals(1.1, AValueS.AsExtended, 0.001);
+      TestContext.AssertTrue(Abs((1.1)-(AValueS.AsExtended))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('ADouble');
       AValueD := AProperty.GetValue(ATestClass);
-      CheckEquals(2.2, AValueD.AsExtended, 0.001);
+      TestContext.AssertTrue(Abs((2.2)-(AValueD.AsExtended))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('AExtended');
       AValueE := AProperty.GetValue(ATestClass);
-      CheckEquals(3.3, AValueE.AsExtended, 0.001);
+      TestContext.AssertTrue(Abs((3.3)-(AValueE.AsExtended))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('ACurrency');
       AValueC := AProperty.GetValue(ATestClass);
-      CheckEquals(4.0, AValueC.AsExtended, 0.001);
+      TestContext.AssertTrue(Abs((4.0)-(AValueC.AsExtended))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('AComp');
       AValueCm := AProperty.GetValue(ATestClass);
-      CheckEquals(5.0, AValueCm.AsExtended, 0.001);
+      TestContext.AssertTrue(Abs((5.0)-(AValueCm.AsExtended))<=(0.001), 'Floating comparison');
     finally
       AtestClass.Free;
     end;
 
-    CheckEquals(1.1, AValueS.AsExtended, 0.001);
-    CheckEquals(2.2, AValueD.AsExtended, 0.001);
-    CheckEquals(3.3, AValueE.AsExtended, 0.001);
-    CheckEquals(4.0, AValueC.AsExtended, 0.001);
-    CheckEquals(5.0, AValueCm.AsExtended, 0.001);
+    TestContext.AssertTrue(Abs((1.1)-(AValueS.AsExtended))<=(0.001), 'Floating comparison');
+    TestContext.AssertTrue(Abs((2.2)-(AValueD.AsExtended))<=(0.001), 'Floating comparison');
+    TestContext.AssertTrue(Abs((3.3)-(AValueE.AsExtended))<=(0.001), 'Floating comparison');
+    TestContext.AssertTrue(Abs((4.0)-(AValueC.AsExtended))<=(0.001), 'Floating comparison');
+    TestContext.AssertTrue(Abs((5.0)-(AValueCm.AsExtended))<=(0.001), 'Floating comparison');
   finally
     c.Free;
   end;
@@ -598,14 +615,14 @@ begin
     ATestClass.AArray := A;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('AArray');
       AValue := AProperty.GetValue(ATestClass);
 
-      CheckEquals(A[0], AValue.GetArrayElement(0).AsInteger);
-      CheckEquals(A[1], AValue.GetArrayElement(1).AsInteger);
-      CheckEquals(A[2], AValue.GetArrayElement(2).AsInteger);
-      CheckEquals(A[3], AValue.GetArrayElement(3).AsInteger);
+      TestContext.AssertTrue((A[0])=(AValue.GetArrayElement(0).AsInteger), '');
+      TestContext.AssertTrue((A[1])=(AValue.GetArrayElement(1).AsInteger), '');
+      TestContext.AssertTrue((A[2])=(AValue.GetArrayElement(2).AsInteger), '');
+      TestContext.AssertTrue((A[3])=(AValue.GetArrayElement(3).AsInteger), '');
     finally
       AtestClass.Free;
     end;
@@ -628,19 +645,19 @@ begin
     ATestClass.AEnumeration := en3;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('AEnumeration');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(Ord(en3),AValue.AsOrdinal);
+      TestContext.AssertTrue((Ord(en3))=(AValue.AsOrdinal), '');
       ATestClass.AEnumeration := en1;
-      CheckEquals(Ord(en3), AValue.AsOrdinal);
-      CheckEquals('en3', AValue.ToString);
-      CheckEquals(True, AValue.IsOrdinal);
+      TestContext.AssertTrue((Ord(en3))=(AValue.AsOrdinal), '');
+      TestContext.AssertTrue(('en3')=(AValue.ToString), '');
+      TestContext.AssertTrue((True)=(AValue.IsOrdinal), '');
     finally
       AtestClass.Free;
     end;
 
-    CheckEquals(Ord(en3),AValue.AsOrdinal);
+    TestContext.AssertTrue((Ord(en3))=(AValue.AsOrdinal), '');
   finally
     c.Free;
   end;
@@ -661,29 +678,29 @@ begin
     ATestClass.AWideChar := 'W';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
 
       AProperty := ARttiType.GetProperty('AChar');
       AValueC := AProperty.GetValue(ATestClass);
-      CheckEquals('C',AValueC.AsAnsiChar);
+      TestContext.AssertTrue(('C')=(AValueC.AsAnsiChar), '');
       ATestClass.AChar := 'N';
-      CheckEquals('C', AValueC.AsAnsiChar);
-      CheckEquals('C', AValueC.ToString);
-      CheckEquals(True, AValueC.IsOrdinal);
+      TestContext.AssertTrue(('C')=(AValueC.AsAnsiChar), '');
+      TestContext.AssertTrue(('C')=(AValueC.ToString), '');
+      TestContext.AssertTrue((True)=(AValueC.IsOrdinal), '');
 
       AProperty := ARttiType.GetProperty('AWideChar');
       AValueW := AProperty.GetValue(ATestClass);
-      CheckEquals('W',AValueW.AsWideChar);
+      TestContext.AssertTrue(('W')=(AValueW.AsWideChar), '');
       ATestClass.AWideChar := 'Z';
-      CheckEquals('W', AValueW.AsWideChar);
-      CheckEquals('W', AValueW.ToString);
-      CheckEquals(True, AValueW.IsOrdinal);
+      TestContext.AssertTrue(('W')=(AValueW.AsWideChar), '');
+      TestContext.AssertTrue(('W')=(AValueW.ToString), '');
+      TestContext.AssertTrue((True)=(AValueW.IsOrdinal), '');
     finally
       AtestClass.Free;
     end;
 
-    CheckEquals('C',AValueC.AsAnsiChar);
-    CheckEquals('W',AValueW.AsWideChar);
+    TestContext.AssertTrue(('C')=(AValueC.AsAnsiChar), '');
+    TestContext.AssertTrue(('W')=(AValueW.AsWideChar), '');
   finally
     c.Free;
   end;
@@ -709,13 +726,13 @@ begin
     ATestClass.RecordProp:=R;
     try
       ARttiType := c.GetType(TRecordRttiClass);
-      CheckNotNull(ARttiType,'Type');
+      TestContext.AssertTrue((ARttiType)<>nil, 'Type');
       AProperty := ARttiType.GetProperty('RecordProp');
-      CheckNotNull(aProperty,'Prop');
+      TestContext.AssertTrue((aProperty)<>nil, 'Prop');
       AValue := AProperty.GetValue(ATestClass);
       P:=PRTTIRecord(AValue.GetReferenceToRawData);
-      AssertEquals('a',23,P^.A);
-      AssertEquals('b',54,P^.B);
+      TestContext.AssertTrue((23)=(P^.A), 'a');
+      TestContext.AssertTrue((54)=(P^.B), 'b');
     finally
       AtestClass.Free;
     end;
@@ -743,9 +760,9 @@ begin
       s := 'ipse lorem or something like that';
       TValue.Make(@s, TypeInfo(string), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.AString, s);
+      TestContext.AssertTrue((ATestClass.AString)=(s), '');
       s := 'Another string';
-      CheckEquals(ATestClass.AString, 'ipse lorem or something like that');
+      TestContext.AssertTrue((ATestClass.AString)=('ipse lorem or something like that'), '');
     finally
       AtestClass.Free;
     end;
@@ -773,9 +790,9 @@ begin
       i := -43573;
       TValue.Make(@i, TypeInfo(Integer), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.AInteger, i);
+      TestContext.AssertTrue((ATestClass.AInteger)=(i), '');
       i := 1;
-      CheckEquals(ATestClass.AInteger, -43573);
+      TestContext.AssertTrue((ATestClass.AInteger)=(-43573), '');
     finally
       AtestClass.Free;
     end;
@@ -803,12 +820,12 @@ begin
       b := true;
       TValue.Make(@b, TypeInfo(Boolean), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.ABoolean, b);
+      TestContext.AssertTrue((ATestClass.ABoolean)=(b), '');
       b := false;
-      CheckEquals(ATestClass.ABoolean, true);
+      TestContext.AssertTrue((ATestClass.ABoolean)=(true), '');
       TValue.Make(@b, TypeInfo(Boolean), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.ABoolean, false);
+      TestContext.AssertTrue((ATestClass.ABoolean)=(false), '');
     finally
       AtestClass.Free;
     end;
@@ -837,19 +854,19 @@ begin
       s := 'ipse lorem or something like that';
       TValue.Make(@s, TypeInfo(String), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.AShortString, s);
+      TestContext.AssertTrue((ATestClass.AShortString)=(s), '');
       s := 'Another string';
-      CheckEquals(ATestClass.AShortString, 'ipse lorem or something like that');
+      TestContext.AssertTrue((ATestClass.AShortString)=('ipse lorem or something like that'), '');
 
       ss := 'Hello World';
       TValue.Make(@ss, TypeInfo(ShortString), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.AShortString, ss);
+      TestContext.AssertTrue((ATestClass.AShortString)=(ss), '');
       ss := 'Foobar';
-      CheckEquals(ATestClass.AShortString, 'Hello World');
+      TestContext.AssertTrue((ATestClass.AShortString)=('Hello World'), '');
 
       AProperty.SetValue(ATestClass, 'Another string');
-      CheckEquals(ATestClass.AShortString, 'Another string');
+      TestContext.AssertTrue((ATestClass.AShortString)=('Another string'), '');
     finally
       AtestClass.Free;
     end;
@@ -879,12 +896,12 @@ begin
       O := TPersistent.Create;
       TValue.Make(@O, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(ATestClass.AObject.GetHashCode, O.GetHashCode);
+      TestContext.AssertTrue((ATestClass.AObject.GetHashCode)=(O.GetHashCode), '');
       O.Free;
 
       O := TPersistent.Create;
       AProperty.SetValue(ATestClass, O);
-      CheckEquals(ATestClass.AObject.GetHashCode, O.GetHashCode);
+      TestContext.AssertTrue((ATestClass.AObject.GetHashCode)=(O.GetHashCode), '');
       O.Free;
     finally
       AtestClass.Free;
@@ -915,13 +932,13 @@ begin
       i := TInterfacedObject.Create;
       TValue.Make(@i, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      Check(ATestClass.AUnknown = i);
+      TestContext.AssertTrue(ATestClass.AUnknown = i, '');
 
     {$ifdef fpc}
       { Delphi does not provide an implicit assignment overload for IUnknown }
       i := TInterfacedObject.Create;
       AProperty.SetValue(ATestClass, i);
-      Check(ATestClass.AUnknown = i);
+      TestContext.AssertTrue(ATestClass.AUnknown = i, '');
     {$endif}
     finally
       AtestClass.Free;
@@ -957,11 +974,11 @@ begin
       S := 1.1;
       TValue.Make(@S, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(S, ATestClass.ASingle, 0.001);
+      TestContext.AssertTrue(Abs((S)-(ATestClass.ASingle))<=(0.001), 'Floating comparison');
 
       S := 1.2;
       AProperty.SetValue(ATestClass, S);
-      CheckEquals(S, ATestClass.ASingle, 0.001);
+      TestContext.AssertTrue(Abs((S)-(ATestClass.ASingle))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('ADouble');
       TypeInfo := GetPropInfo(ATestClass, 'ADouble')^.PropType{$ifndef fpc}^{$endif};
@@ -969,11 +986,11 @@ begin
       D := 2.1;
       TValue.Make(@D, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(D, ATestClass.ADouble, 0.001);
+      TestContext.AssertTrue(Abs((D)-(ATestClass.ADouble))<=(0.001), 'Floating comparison');
 
       D := 2.2;
       AProperty.SetValue(ATestClass, D);
-      CheckEquals(D, ATestClass.ADouble, 0.001);
+      TestContext.AssertTrue(Abs((D)-(ATestClass.ADouble))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('AExtended');
       TypeInfo := GetPropInfo(ATestClass, 'AExtended')^.PropType{$ifndef fpc}^{$endif};
@@ -981,11 +998,11 @@ begin
       E := 3.1;
       TValue.Make(@E, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(E, ATestClass.AExtended, 0.001);
+      TestContext.AssertTrue(Abs((E)-(ATestClass.AExtended))<=(0.001), 'Floating comparison');
 
       E := 3.2;
       AProperty.SetValue(ATestClass, E);
-      CheckEquals(E, ATestClass.AExtended, 0.001);
+      TestContext.AssertTrue(Abs((E)-(ATestClass.AExtended))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('ACurrency');
       TypeInfo := GetPropInfo(ATestClass, 'ACurrency')^.PropType{$ifndef fpc}^{$endif};
@@ -993,11 +1010,11 @@ begin
       Cur := 40;
       TValue.Make(@Cur, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(Cur, ATestClass.ACurrency, 0.001);
+      TestContext.AssertTrue(Abs((Cur)-(ATestClass.ACurrency))<=(0.001), 'Floating comparison');
 
       Cur := 41;
       AProperty.SetValue(ATestClass, Cur);
-      CheckEquals(Cur, ATestClass.ACurrency, 0.001);
+      TestContext.AssertTrue(Abs((Cur)-(ATestClass.ACurrency))<=(0.001), 'Floating comparison');
 
       AProperty := ARttiType.GetProperty('AComp');
       TypeInfo := GetPropInfo(ATestClass, 'AComp')^.PropType{$ifndef fpc}^{$endif};
@@ -1005,11 +1022,11 @@ begin
       Cmp := 50;
       TValue.Make(@Cmp, TypeInfo, AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(Cmp, ATestClass.AComp, 0.001);
+      TestContext.AssertTrue(Abs((Cmp)-(ATestClass.AComp))<=(0.001), 'Floating comparison');
 
       Cmp := 51;
       AProperty.SetValue(ATestClass, Cmp);
-      CheckEquals(Cmp, ATestClass.AComp, 0.001);
+      TestContext.AssertTrue(Abs((Cmp)-(ATestClass.AComp))<=(0.001), 'Floating comparison');
     finally
       AtestClass.Free;
     end;
@@ -1042,7 +1059,7 @@ begin
       AProperty.SetValue(ATestClass, AValue);
 
       for i := 0 to High(A) do
-        CheckEquals(A[i], ATestClass.AArray[i]);
+        TestContext.AssertTrue((A[i])=(ATestClass.AArray[i]), '');
     finally
       AtestClass.Free;
     end;
@@ -1070,7 +1087,7 @@ begin
       E := en2;
       TValue.Make(@E, TypeInfo(TTestEnumeration), AValue);
       AProperty.SetValue(ATestClass, AValue);
-      CheckEquals(Ord(E), Ord(ATestClass.AEnumeration));
+      TestContext.AssertTrue((Ord(E))=(Ord(ATestClass.AEnumeration)), '');
     finally
       AtestClass.Free;
     end;
@@ -1094,20 +1111,20 @@ begin
     ATestClass.AWideChar := 'W';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
 
       AProperty := ARttiType.GetProperty('AChar');
       AValueC := AProperty.GetValue(ATestClass);
-      CheckEquals('C', AValueC.AsAnsiChar);
+      TestContext.AssertTrue(('C')=(AValueC.AsAnsiChar), '');
 
       AProperty := ARttiType.GetProperty('AWideChar');
       AValueW := AProperty.GetValue(ATestClass);
-      CheckEquals('W', AValueW.AsWideChar);
+      TestContext.AssertTrue(('W')=(AValueW.AsWideChar), '');
     finally
       AtestClass.Free;
     end;
-      CheckEquals('C', AValueC.AsAnsiChar);
-      CheckEquals('W', AValueW.AsWideChar);
+      TestContext.AssertTrue(('C')=(AValueC.AsAnsiChar), '');
+      TestContext.AssertTrue(('W')=(AValueW.AsWideChar), '');
   finally
     c.Free;
   end;
@@ -1132,12 +1149,12 @@ begin
     ATestClass.RecordProp:=R;
     try
       ARttiType := c.GetType(TRecordRttiClass);
-      CheckNotNull(ARttiType,'Type');
+      TestContext.AssertTrue((ARttiType)<>nil, 'Type');
       AProperty := ARttiType.GetProperty('RecordProp');
-      CheckNotNull(aProperty,'Prop');
+      TestContext.AssertTrue((aProperty)<>nil, 'Prop');
       AProperty.SetValue(ATestClass,TValue.specialize From<TRttiRecord>(R));
-      AssertEquals('a',23,aTestClass.RecordProp.A);
-      AssertEquals('b',54,aTestClass.RecordProp.B);
+      TestContext.AssertTrue((23)=(aTestClass.RecordProp.A), 'a');
+      TestContext.AssertTrue((54)=(aTestClass.RecordProp.B), 'b');
     finally
       AtestClass.Free;
     end;
@@ -1160,14 +1177,14 @@ begin
     ATestClass.AInteger := 472349;
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('agetinteger');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals(472349,AValue.AsInteger);
+      TestContext.AssertTrue((472349)=(AValue.AsInteger), '');
     finally
       AtestClass.Free;
     end;
-      CheckEquals(472349,AValue.AsInteger);
+      TestContext.AssertTrue((472349)=(AValue.AsInteger), '');
   finally
     c.Free;
   end;
@@ -1187,14 +1204,14 @@ begin
     ATestClass.AString := 'Hello World';
     try
       ARttiType := c.GetType(ATestClass.ClassInfo);
-      Check(assigned(ARttiType));
+      TestContext.AssertTrue(assigned(ARttiType), '');
       AProperty := ARttiType.GetProperty('agetstring');
       AValue := AProperty.GetValue(ATestClass);
-      CheckEquals('Hello World',AValue.AsString);
+      TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
     finally
       AtestClass.Free;
     end;
-    CheckEquals('Hello World',AValue.AsString);
+    TestContext.AssertTrue(('Hello World')=(AValue.AsString), '');
   finally
     c.Free;
   end;
@@ -1210,20 +1227,20 @@ begin
   c := TRttiContext.Create;
   try
     ARttiType := c.GetType(TTestValueClass);
-    Check(assigned(ARttiType));
-    CheckEquals(ARttiType.Name,'TTestValueClass');
-    Check(ARttiType.TypeKind=tkClass);
+    TestContext.AssertTrue(assigned(ARttiType), '');
+    TestContext.AssertTrue((ARttiType.Name)=('TTestValueClass'), '');
+    TestContext.AssertTrue(ARttiType.TypeKind=tkClass, '');
 //    CheckEquals(ARttiType.IsPublicType,false);
-    CheckEquals(ARttiType.TypeSize,SizeOf(TObject));
-    CheckEquals(ARttiType.IsManaged,false);
-    CheckEquals(ARttiType.BaseType.classname,'TRttiInstanceType');
-    CheckEquals(ARttiType.IsInstance,True);
-    CheckEquals(ARttiType.AsInstance.DeclaringUnitName,'tests.rtti.types');
-    Check(ARttiType.BaseType.Name='TObject');
-    Check(ARttiType.AsInstance.BaseType.Name='TObject');
-    CheckEquals(ARttiType.IsOrdinal,False);
-    CheckEquals(ARttiType.IsRecord,False);
-    CheckEquals(ARttiType.IsSet,False);
+    TestContext.AssertTrue((ARttiType.TypeSize)=(SizeOf(TObject)), '');
+    TestContext.AssertTrue((ARttiType.IsManaged)=(false), '');
+    TestContext.AssertTrue((ARttiType.BaseType.classname)=('TRttiInstanceType'), '');
+    TestContext.AssertTrue((ARttiType.IsInstance)=(True), '');
+    TestContext.AssertTrue((ARttiType.AsInstance.DeclaringUnitName)=('tests.rtti.types'), '');
+    TestContext.AssertTrue(ARttiType.BaseType.Name='TObject', '');
+    TestContext.AssertTrue(ARttiType.AsInstance.BaseType.Name='TObject', '');
+    TestContext.AssertTrue((ARttiType.IsOrdinal)=(False), '');
+    TestContext.AssertTrue((ARttiType.IsRecord)=(False), '');
+    TestContext.AssertTrue((ARttiType.IsSet)=(False), '');
   finally
     c.Free;
   end;
@@ -1239,9 +1256,9 @@ begin
 
   LType := LContext.GetType(TypeInfo(integer));
 {$ifdef fpc}
-  CheckEquals(LType.Name, 'LongInt');
+  TestContext.AssertTrue((LType.Name)=('LongInt'), '');
 {$else}
-  CheckEquals(LType.Name, 'Integer');
+  TestContext.AssertTrue((LType.Name)=('Integer'), '');
 {$endif}
 
   LContext.Free;
@@ -1283,18 +1300,18 @@ begin
   LType := LContext.GetType(TypeInfo(TGetClassProperties));
   PropList := LType.GetProperties;
 
-  CheckEquals(4, length(PropList));
-  CheckEquals('PubPropRO', PropList[0].Name);
-  CheckEquals('PubPropRW', PropList[1].Name);
-  CheckEquals('PubPropSetRO', PropList[2].Name);
-  CheckEquals('PubPropSetRW', PropList[3].Name);
+  TestContext.AssertTrue((4)=(length(PropList)), '');
+  TestContext.AssertTrue(('PubPropRO')=(PropList[0].Name), '');
+  TestContext.AssertTrue(('PubPropRW')=(PropList[1].Name), '');
+  TestContext.AssertTrue(('PubPropSetRO')=(PropList[2].Name), '');
+  TestContext.AssertTrue(('PubPropSetRW')=(PropList[3].Name), '');
 
   LType := LContext.GetType(TypeInfo(TGetClassPropertiesSub));
   PropList2 := LType.GetProperties;
 
-  CheckEquals(Length(PropList), Length(PropList2));
+  TestContext.AssertTrue((Length(PropList))=(Length(PropList2)), '');
   for i := 0 to High(PropList) do
-    Check(PropList[i] = PropList2[i], 'Property instances are not equal');
+    TestContext.AssertTrue(PropList[i] = PropList2[i], 'Property instances are not equal');
 
   LContext.Free;
 end;
@@ -1315,7 +1332,7 @@ begin
     AGetClassProperties.PubPropRW:=12345;
 
     AValue := LType.GetProperty('PubPropRW').GetValue(AGetClassProperties);
-    CheckEquals(12345, AValue.AsInteger);
+    TestContext.AssertTrue((12345)=(AValue.AsInteger), '');
 
   finally
     AGetClassProperties.Free;
@@ -1339,118 +1356,118 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(TypeInfo(IInterface));
-    Check(t is TRttiInterfaceType, 'Type is not an interface type');
+    TestContext.AssertTrue(t is TRttiInterfaceType, 'Type is not an interface type');
 
-    Check(not Assigned(t.BaseType), 'Base type is assigned');
+    TestContext.AssertTrue(not Assigned(t.BaseType), 'Base type is assigned');
 
     ti1 := TRttiInterfaceType(t);
-    Check(not Assigned(ti1.BaseType), 'Base type is assigned');
+    TestContext.AssertTrue(not Assigned(ti1.BaseType), 'Base type is assigned');
 
     methods := t.GetMethods;
-    CheckEquals(0, Length(methods), 'Overall method count does not match');
+    TestContext.AssertTrue((0)=(Length(methods)), 'Overall method count does not match');
 
     methods := t.GetDeclaredMethods;
-    CheckEquals(0, Length(methods), 'Declared method conut does not match');
+    TestContext.AssertTrue((0)=(Length(methods)), 'Declared method conut does not match');
 
     t := context.GetType(TypeInfo(ITestInterface));
-    Check(t is TRttiInterfaceType, 'Type is not an interface type');
+    TestContext.AssertTrue(t is TRttiInterfaceType, 'Type is not an interface type');
 
-    Check(Assigned(t.BaseType), 'Base type is not assigned');
-    Check(t.BaseType = TRttiType(ti1), 'Base type does not match');
+    TestContext.AssertTrue(Assigned(t.BaseType), 'Base type is not assigned');
+    TestContext.AssertTrue(t.BaseType = TRttiType(ti1), 'Base type does not match');
 
     ti2 := TRttiInterfaceType(t);
-    Check(Assigned(ti2.BaseType), 'Base type is not assigned');
-    Check(ti2.BaseType = ti1, 'Base type does not match');
+    TestContext.AssertTrue(Assigned(ti2.BaseType), 'Base type is not assigned');
+    TestContext.AssertTrue(ti2.BaseType = ti1, 'Base type does not match');
 
     methods := t.GetMethods;
-    CheckEquals(4, Length(methods), 'Overall method count does not match');
+    TestContext.AssertTrue((4)=(Length(methods)), 'Overall method count does not match');
 
     methods := t.GetDeclaredMethods;
-    CheckEquals(4, Length(methods), 'Declared method count does not match');
+    TestContext.AssertTrue((4)=(Length(methods)), 'Declared method count does not match');
 
     method := methods[0];
-    CheckEquals(method.Name, 'Test', 'Method name of Test does not match');
-    Check(method.CallingConvention = DefaultCC, 'Calling convention of Test does not match');
-    Check(method.MethodKind = mkProcedure, 'Method kind of Test does not match');
-    Check(method.DispatchKind = dkInterface, 'Dispatch kind of Test does not match');
-    Check(not Assigned(method.CodeAddress), 'Code address of Test is not Nil');
-    CheckEquals(method.VirtualIndex, 3, 'Virtual index of Test does not match');
-    Check(not Assigned(method.ReturnType), 'Return type of Test is not Nil');
+    TestContext.AssertTrue((method.Name)=('Test'), 'Method name of Test does not match');
+    TestContext.AssertTrue(method.CallingConvention = DefaultCC, 'Calling convention of Test does not match');
+    TestContext.AssertTrue(method.MethodKind = mkProcedure, 'Method kind of Test does not match');
+    TestContext.AssertTrue(method.DispatchKind = dkInterface, 'Dispatch kind of Test does not match');
+    TestContext.AssertTrue(not Assigned(method.CodeAddress), 'Code address of Test is not Nil');
+    TestContext.AssertTrue((method.VirtualIndex)=(3), 'Virtual index of Test does not match');
+    TestContext.AssertTrue(not Assigned(method.ReturnType), 'Return type of Test is not Nil');
     params := method.GetParameters;
-    CheckEquals(0, Length(params), 'Parameter count of Test does not match');
+    TestContext.AssertTrue((0)=(Length(params)), 'Parameter count of Test does not match');
 
     method := methods[1];
-    CheckEquals(method.Name, 'Test2', 'Method name of Test2 does not match');
-    Check(method.CallingConvention = DefaultCC, 'Calling convention of Test2 does not match');
-    Check(method.MethodKind = mkFunction, 'Method kind of Test2 does not match');
-    Check(method.DispatchKind = dkInterface, 'Dispatch kind of Test2 does not match');
-    Check(not Assigned(method.CodeAddress), 'Code address of Test2 is not Nil');
-    CheckEquals(method.VirtualIndex, 4, 'Virtual index of Test2 does not match');
-    Check(Assigned(method.ReturnType), 'Return type of Test2 is Nil');
-    Check(method.ReturnType.TypeKind = tkInteger, 'Return type of Test2 is not an ordinal');
+    TestContext.AssertTrue((method.Name)=('Test2'), 'Method name of Test2 does not match');
+    TestContext.AssertTrue(method.CallingConvention = DefaultCC, 'Calling convention of Test2 does not match');
+    TestContext.AssertTrue(method.MethodKind = mkFunction, 'Method kind of Test2 does not match');
+    TestContext.AssertTrue(method.DispatchKind = dkInterface, 'Dispatch kind of Test2 does not match');
+    TestContext.AssertTrue(not Assigned(method.CodeAddress), 'Code address of Test2 is not Nil');
+    TestContext.AssertTrue((method.VirtualIndex)=(4), 'Virtual index of Test2 does not match');
+    TestContext.AssertTrue(Assigned(method.ReturnType), 'Return type of Test2 is Nil');
+    TestContext.AssertTrue(method.ReturnType.TypeKind = tkInteger, 'Return type of Test2 is not an ordinal');
     params := method.GetParameters;
-    CheckEquals(0, Length(params), 'Parameter count of Test2 does not match');
+    TestContext.AssertTrue((0)=(Length(params)), 'Parameter count of Test2 does not match');
 
     method := methods[2];
-    CheckEquals(method.Name, 'Test3', 'Method name of Test3 does not match');
-    Check(method.CallingConvention = DefaultCC, 'Calling convention of Test3 does not match');
-    Check(method.MethodKind = mkProcedure, 'Method kind of Test3 does not match');
-    Check(method.DispatchKind = dkInterface, 'Dispatch kind of Test3 does not match');
-    Check(not Assigned(method.CodeAddress), 'Code address of Test3 is not Nil');
-    CheckEquals(method.VirtualIndex, 5, 'Virtual index of Test3 does not match');
-    Check(not Assigned(method.ReturnType), 'Return type of Test3 is not Nil');
+    TestContext.AssertTrue((method.Name)=('Test3'), 'Method name of Test3 does not match');
+    TestContext.AssertTrue(method.CallingConvention = DefaultCC, 'Calling convention of Test3 does not match');
+    TestContext.AssertTrue(method.MethodKind = mkProcedure, 'Method kind of Test3 does not match');
+    TestContext.AssertTrue(method.DispatchKind = dkInterface, 'Dispatch kind of Test3 does not match');
+    TestContext.AssertTrue(not Assigned(method.CodeAddress), 'Code address of Test3 is not Nil');
+    TestContext.AssertTrue((method.VirtualIndex)=(5), 'Virtual index of Test3 does not match');
+    TestContext.AssertTrue(not Assigned(method.ReturnType), 'Return type of Test3 is not Nil');
 
     params := method.GetParameters;
-    CheckEquals(4, Length(params), 'Parameter count of Test3 does not match');
+    TestContext.AssertTrue((4)=(Length(params)), 'Parameter count of Test3 does not match');
 
     param := params[0];
-    CheckEquals(param.Name, 'aArg1', 'Parameter name of Test3.aArg1 does not match');
-    Check(param.Flags = [], 'Parameter flags of Test3.aArg1 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test3.aArg1 is Nil');
-    Check(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test3.aArg1 is not an ordinal');
+    TestContext.AssertTrue((param.Name)=('aArg1'), 'Parameter name of Test3.aArg1 does not match');
+    TestContext.AssertTrue(param.Flags = [], 'Parameter flags of Test3.aArg1 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test3.aArg1 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test3.aArg1 is not an ordinal');
 
     param := params[1];
-    CheckEquals(param.Name, 'aArg2', 'Parameter name of Test3.aArg2 does not match');
-    Check(param.Flags = [pfConst], 'Parameter flags of Test3.aArg2 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test3.aArg2 is Nil');
-    Check(param.ParamType.TypeKind = tkAnsiString, 'Parameter type of Test3.aArg2 is not a string');
+    TestContext.AssertTrue((param.Name)=('aArg2'), 'Parameter name of Test3.aArg2 does not match');
+    TestContext.AssertTrue(param.Flags = [pfConst], 'Parameter flags of Test3.aArg2 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test3.aArg2 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = tkAnsiString, 'Parameter type of Test3.aArg2 is not a string');
 
     param := params[2];
-    CheckEquals(param.Name, 'aArg3', 'Parameter name of Test3.aArg3 does not match');
-    Check(param.Flags = [pfVar], 'Parameter flags of Test3.aArg3 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test3.aArg3 is Nil');
-    Check(param.ParamType.TypeKind = {$ifdef fpc}tkBool{$else}tkEnumeration{$endif}, 'Parameter type of Test3.aArg3 is not a boolean');
+    TestContext.AssertTrue((param.Name)=('aArg3'), 'Parameter name of Test3.aArg3 does not match');
+    TestContext.AssertTrue(param.Flags = [pfVar], 'Parameter flags of Test3.aArg3 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test3.aArg3 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = {$ifdef fpc}tkBool{$else}tkEnumeration{$endif}, 'Parameter type of Test3.aArg3 is not a boolean');
 
     param := params[3];
-    CheckEquals(param.Name, 'aArg4', 'Parameter name of Test3.aArg4 does not match');
-    Check(param.Flags = [pfOut], 'Parameter flags of Test3.aArg4 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test3.aArg4 is Nil');
-    Check(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test3.aArg4 is not a string');
+    TestContext.AssertTrue((param.Name)=('aArg4'), 'Parameter name of Test3.aArg4 does not match');
+    TestContext.AssertTrue(param.Flags = [pfOut], 'Parameter flags of Test3.aArg4 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test3.aArg4 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test3.aArg4 is not a string');
 
     method := methods[3];
-    CheckEquals(method.Name, 'Test4', 'Method name of Test4 does not match');
-    Check(method.CallingConvention = DefaultCC, 'Calling convention of Test4 does not match');
-    Check(method.MethodKind = mkFunction, 'Method kind of Test4 does not match');
-    Check(method.DispatchKind = dkInterface, 'Dispatch kind of Test4 does not match');
-    Check(not Assigned(method.CodeAddress), 'Code address of Test4 is not Nil');
-    CheckEquals(method.VirtualIndex, 6, 'Virtual index of Test4 does not match');
-    Check(Assigned(method.ReturnType), 'Return type of Test4 is not Nil');
-    Check(method.ReturnType.TypeKind = tkAnsiString, 'Return type of Test4 is not a string');
+    TestContext.AssertTrue((method.Name)=('Test4'), 'Method name of Test4 does not match');
+    TestContext.AssertTrue(method.CallingConvention = DefaultCC, 'Calling convention of Test4 does not match');
+    TestContext.AssertTrue(method.MethodKind = mkFunction, 'Method kind of Test4 does not match');
+    TestContext.AssertTrue(method.DispatchKind = dkInterface, 'Dispatch kind of Test4 does not match');
+    TestContext.AssertTrue(not Assigned(method.CodeAddress), 'Code address of Test4 is not Nil');
+    TestContext.AssertTrue((method.VirtualIndex)=(6), 'Virtual index of Test4 does not match');
+    TestContext.AssertTrue(Assigned(method.ReturnType), 'Return type of Test4 is not Nil');
+    TestContext.AssertTrue(method.ReturnType.TypeKind = tkAnsiString, 'Return type of Test4 is not a string');
 
     params := method.GetParameters;
-    CheckEquals(2, Length(params), 'Parameter count of Test4 does not match');
+    TestContext.AssertTrue((2)=(Length(params)), 'Parameter count of Test4 does not match');
 
     param := params[0];
-    CheckEquals(param.Name, 'aArg1', 'Parameter name of Test4.aArg1 does not match');
-    Check(param.Flags = [pfArray, pfReference], 'Parameter flags of Test4.aArg1 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test4.aArg1 is Nil');
-    Check(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test4.aArg1 is not an ordinal');
+    TestContext.AssertTrue((param.Name)=('aArg1'), 'Parameter name of Test4.aArg1 does not match');
+    TestContext.AssertTrue(param.Flags = [pfArray, pfReference], 'Parameter flags of Test4.aArg1 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test4.aArg1 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = tkInteger, 'Parameter type of Test4.aArg1 is not an ordinal');
 
     param := params[1];
-    CheckEquals(param.Name, 'aArg2', 'Parameter name of Test4.aArg2 does not match');
-    Check(param.Flags = [pfArray, pfReference], 'Parameter flags of Test4.aArg2 do not match');
-    Check(Assigned(param.ParamType), 'Parameter type of Test4.aArg2 is Nil');
-    Check(param.ParamType.TypeKind = tkRecord, 'Parameter type of Test4.aArg2 is not a record');
+    TestContext.AssertTrue((param.Name)=('aArg2'), 'Parameter name of Test4.aArg2 does not match');
+    TestContext.AssertTrue(param.Flags = [pfArray, pfReference], 'Parameter flags of Test4.aArg2 do not match');
+    TestContext.AssertTrue(Assigned(param.ParamType), 'Parameter type of Test4.aArg2 is Nil');
+    TestContext.AssertTrue(param.ParamType.TypeKind = tkRecord, 'Parameter type of Test4.aArg2 is not a record');
   finally
     context.Free;
   end;
@@ -1467,7 +1484,7 @@ begin
     intf := TVirtualInterface.Create(PTypeInfo(TypeInfo(IInterface))) as IInterface;
   except
     on e: ENotImplemented do
-      Ignore('RawThunk not implemented');
+      TestContext.Skip('RawThunk not implemented');
   end;
   { if all went well QueryInterface and _AddRef were called and now we call
     _Release as well }
@@ -1484,12 +1501,12 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(TypeInfo(ICORBATest));
-    Check(t is TRttiInterfaceType, 'Type is not a raw interface type');
+    TestContext.AssertTrue(t is TRttiInterfaceType, 'Type is not a raw interface type');
 
-    Check(not Assigned(t.BaseType), 'Base type is assigned');
+    TestContext.AssertTrue(not Assigned(t.BaseType), 'Base type is assigned');
 
     ti := TRttiInterfaceType(t);
-    Check(not Assigned(ti.BaseType), 'Base type is assigned');
+    TestContext.AssertTrue(not Assigned(ti.BaseType), 'Base type is assigned');
   finally
     context.Free;
   end;
@@ -1506,61 +1523,61 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(PTypeInfo(TypeInfo(TArrayOfLongintStatic)));
-    Check(t is TRttiArrayType, 'Type is not a TRttiArrayType');
+    TestContext.AssertTrue(t is TRttiArrayType, 'Type is not a TRttiArrayType');
 
     a := TRttiArrayType(t);
-    CheckEquals(1, a.DimensionCount, 'Dimension count does not match');
-    CheckEquals(4, a.TotalElementCount, 'Total element count does not match');
+    TestContext.AssertTrue((1)=(a.DimensionCount), 'Dimension count does not match');
+    TestContext.AssertTrue((4)=(a.TotalElementCount), 'Total element count does not match');
 
     el := a.ElementType;
-    Check(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
-    Check(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
+    TestContext.AssertTrue(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
 
     t := a.Dimensions[0];
     {$ifdef fpc}
-    Check(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
 
     o := TRttiOrdinalType(t);
     { Currently this is a full type :/ }
     {CheckEquals(0, o.MinValue, 'Minimum value of 1st dimension does not match');
     CheckEquals(3, o.MaxValue, 'Maximum value of 1st dimension does not match');}
     {$else}
-    Check(t = Nil, 'Index type is not Nil');
+    TestContext.AssertTrue(t = Nil, 'Index type is not Nil');
     {$endif}
 
     t := context.GetType(PTypeInfo(TypeInfo(TArrayOfLongint2DStatic)));
-    Check(t is TRttiArrayType, 'Type is not a TRttiArrayType');
+    TestContext.AssertTrue(t is TRttiArrayType, 'Type is not a TRttiArrayType');
 
     a := TRttiArrayType(t);
-    CheckEquals(2, a.DimensionCount, 'Dimension count does not match');
-    CheckEquals(4 * 3, a.TotalElementCount, 'Total element count does not match');
+    TestContext.AssertTrue((2)=(a.DimensionCount), 'Dimension count does not match');
+    TestContext.AssertTrue((4 * 3)=(a.TotalElementCount), 'Total element count does not match');
 
     el := a.ElementType;
-    Check(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
-    Check(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
+    TestContext.AssertTrue(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
 
     t := a.Dimensions[0];
     {$ifdef fpc}
-    Check(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
 
     o := TRttiOrdinalType(t);
     { Currently this is a full type :/ }
     {CheckEquals(0, o.MinValue, 'Minimum value of 1st dimension does not match');
     CheckEquals(3, o.MaxValue, 'Maximum value of 1st dimension does not match');}
     {$else}
-    Check(t = Nil, 'Index type is not Nil');
+    TestContext.AssertTrue(t = Nil, 'Index type is not Nil');
     {$endif}
 
     t := a.Dimensions[1];
     {$ifdef fpc}
-    Check(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(t is TRttiOrdinalType, 'Index type is not a TRttiOrdinalType');
 
     o := TRttiOrdinalType(t);
     { Currently this is a full type :/ }
     {CheckEquals(2, o.MinValue, 'Minimum value of 1st dimension does not match');
     CheckEquals(4, o.MaxValue, 'Maximum value of 1st dimension does not match');}
     {$else}
-    Check(t = Nil, 'Index type is not Nil');
+    TestContext.AssertTrue(t = Nil, 'Index type is not Nil');
     {$endif}
   finally
     context.Free;
@@ -1576,17 +1593,17 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(PTypeInfo(TypeInfo(TArrayOfLongintDyn)));
-    Check(t is TRttiDynamicArrayType, 'Type is not a TRttiDynamicArrayType');
+    TestContext.AssertTrue(t is TRttiDynamicArrayType, 'Type is not a TRttiDynamicArrayType');
 
     a := TRttiDynamicArrayType(t);
 
-    CheckEquals('tests.rtti.types', LowerCase(a.DeclaringUnitName), 'Unit type does not match for dynamic array');
-    CheckEquals(a.ElementSize, SizeUInt(SizeOf(LongInt)), 'Element size does not match for dynamic array');
+    TestContext.AssertTrue(('tests.rtti.types')=(LowerCase(a.DeclaringUnitName)), 'Unit type does not match for dynamic array');
+    TestContext.AssertTrue((a.ElementSize)=(SizeUInt(SizeOf(LongInt))), 'Element size does not match for dynamic array');
 
     el := a.ElementType;
-    Check(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
+    TestContext.AssertTrue(el is TRttiOrdinalType, 'Element type is not a TRttiOrdinalType');
 
-    Check(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
+    TestContext.AssertTrue(el = context.GetType(PTypeInfo(TypeInfo(LongInt))), 'Element type is not a LongInt');
 
     { ToDo: check OLE type }
   finally
@@ -1604,43 +1621,43 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(PTypeInfo(TypeInfo(TTestProc)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
 
     p := t as TRttiProcedureType;
-    Check(p.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(not Assigned(p.ReturnType), 'Return type is assigned');
-    CheckEquals(0, Length(p.GetParameters), 'Procedure variable has parameters');
+    TestContext.AssertTrue(p.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(not Assigned(p.ReturnType), 'Return type is assigned');
+    TestContext.AssertTrue((0)=(Length(p.GetParameters)), 'Procedure variable has parameters');
 
     t := context.GetType(PTypeInfo(TypeInfo(TTestFunc1)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
 
     p := t as TRttiProcedureType;
-    Check(p.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(Assigned(p.ReturnType), 'Return type is not assigned');
+    TestContext.AssertTrue(p.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(Assigned(p.ReturnType), 'Return type is not assigned');
     //Check(p.ReturnType is TRttiOrdinalType, 'Return type is not an ordinal type');
-    CheckEquals(0, Length(p.GetParameters), 'Procedure variable has parameters');
+    TestContext.AssertTrue((0)=(Length(p.GetParameters)), 'Procedure variable has parameters');
 
     t := context.GetType(PTypeInfo(TypeInfo(TTestFunc2)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiProcedureType, 'Rtti Type is not a procedure type');
 
     p := t as TRttiProcedureType;
-    Check(p.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(Assigned(p.ReturnType), 'Return type is not assigned');
-    Check(p.ReturnType is TRttiStringType, 'Return type is not a string type');
+    TestContext.AssertTrue(p.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(Assigned(p.ReturnType), 'Return type is not assigned');
+    TestContext.AssertTrue(p.ReturnType is TRttiStringType, 'Return type is not a string type');
 
     params := p.GetParameters;
-    CheckEquals(2, Length(params), 'Procedure variable has incorrect amount of parameters');
+    TestContext.AssertTrue((2)=(Length(params)), 'Procedure variable has incorrect amount of parameters');
 
-    Check(params[0].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 1 is not an ordinal type');
+    TestContext.AssertTrue(params[0].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 1 is not an ordinal type');
     //Check(params[0].ParamType is TRttiOrdinalType, 'Parameter 1 is not an ordinal type');
-    Check(pfArray in params[1].Flags, 'Parameter 2 is not an array');
-    Check(params[1].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 2 is not an ordinal array');
+    TestContext.AssertTrue(pfArray in params[1].Flags, 'Parameter 2 is not an array');
+    TestContext.AssertTrue(params[1].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 2 is not an ordinal array');
   finally
     context.Free;
   end;
@@ -1656,43 +1673,43 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(PTypeInfo(TypeInfo(TTestMethod)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiMethodType, 'Rtti Type is not a method type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiMethodType, 'Rtti Type is not a method type');
 
     m := t as TRttiMethodType;
-    Check(m.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(not Assigned(m.ReturnType), 'Return type is assigned');
-    CheckEquals(0, Length(m.GetParameters), 'Method variable has parameters');
+    TestContext.AssertTrue(m.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(not Assigned(m.ReturnType), 'Return type is assigned');
+    TestContext.AssertTrue((0)=(Length(m.GetParameters)), 'Method variable has parameters');
 
     t := context.GetType(PTypeInfo(TypeInfo(TTestMethod1)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiMethodType, 'Rtti Type is not a method type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiMethodType, 'Rtti Type is not a method type');
 
     m := t as TRttiMethodType;
-    Check(m.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(Assigned(m.ReturnType), 'Return type is not assigned');
+    TestContext.AssertTrue(m.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(Assigned(m.ReturnType), 'Return type is not assigned');
     //Check(p.ReturnType is TRttiOrdinalType, 'Return type is not an ordinal type');
-    CheckEquals(0, Length(m.GetParameters), 'Method variable has parameters');
+    TestContext.AssertTrue((0)=(Length(m.GetParameters)), 'Method variable has parameters');
 
     t := context.GetType(PTypeInfo(TypeInfo(TTestMethod2)));
-    Check(Assigned(t), 'Rtti Type is Nil');
-    Check(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
-    Check(t is TRttiMethodType, 'Rtti Type is not a method type');
+    TestContext.AssertTrue(Assigned(t), 'Rtti Type is Nil');
+    TestContext.AssertTrue(t is TRttiInvokableType, 'Rtti Type is not an invokeable');
+    TestContext.AssertTrue(t is TRttiMethodType, 'Rtti Type is not a method type');
 
     m := t as TRttiMethodType;
-    Check(m.CallingConvention = DefaultCC, 'Calling convention does not match');
-    Check(Assigned(m.ReturnType), 'Return type is not assigned');
-    Check(m.ReturnType is TRttiStringType, 'Return type is not a string type');
+    TestContext.AssertTrue(m.CallingConvention = DefaultCC, 'Calling convention does not match');
+    TestContext.AssertTrue(Assigned(m.ReturnType), 'Return type is not assigned');
+    TestContext.AssertTrue(m.ReturnType is TRttiStringType, 'Return type is not a string type');
 
     params := m.GetParameters;
-    CheckEquals(2, Length(params), 'Method variable has incorrect amount of parameters');
+    TestContext.AssertTrue((2)=(Length(params)), 'Method variable has incorrect amount of parameters');
 
-    Check(params[0].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 1 is not an ordinal type');
+    TestContext.AssertTrue(params[0].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 1 is not an ordinal type');
     //Check(params[0].ParamType is TRttiOrdinalType, 'Parameter 1 is not an ordinal type');
-    Check(pfArray in params[1].Flags, 'Parameter 2 is not an array');
-    Check(params[1].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 2 is not an ordinal array');
+    TestContext.AssertTrue(pfArray in params[1].Flags, 'Parameter 2 is not an array');
+    TestContext.AssertTrue(params[1].ParamType.TypeKind in [tkInteger, tkInt64], 'Parameter 2 is not an ordinal array');
   finally
     context.Free;
   end;
@@ -1700,23 +1717,15 @@ end;
 
 { TTestExtendedRTTI }
 
-procedure TTestExtendedRTTI.AssertEquals(Msg: String; aExpected, aActual: TMemberVisibility);
-begin
-  AssertEquals(Msg,GetEnumName(TypeInfo(TMemberVisibility),Ord(aExpected)),
-                   GetEnumName(TypeInfo(TMemberVisibility),Ord(aActual)));
-end;
 
-procedure TTestExtendedRTTI.AssertEquals(Msg: String; aExpected, aActual: TTypeKind);
-begin
-  AssertEquals(Msg,GetEnumName(TypeInfo(TTypeKind),Ord(aExpected)),
-                   GetEnumName(TypeInfo(TTypeKind),Ord(aActual)));
-end;
+
+
 
 
 procedure TTestExtendedRTTI.Setup;
 
 begin
-  Inherited;
+
   FCtx:=TRttiContext.Create;
   FCtx.UsePublishedOnly:=False;
 end;
@@ -1724,7 +1733,7 @@ end;
 procedure TTestExtendedRTTI.TearDown;
 begin
   FCtx.Free;
-  inherited TearDown;
+
 end;
 
 Procedure TTestExtendedRTTI.CheckField(aIdx : Integer; aData: TRttiField; aName : String; aKind : TTypeKind; aVisibility : TMemberVisibility; aStrict : Boolean = False);
@@ -1734,11 +1743,11 @@ Var
 
 begin
   Msg:='Checking field '+IntToStr(aIdx)+' ('+aName+') ';
-  AssertNotNull(Msg+'Have data',AData);
-  AssertEquals(Msg+'name',aName,aData.Name);
-  AssertEquals(Msg+'kind',aKind,aData.FieldType.TypeKind);
-  AssertEquals(Msg+'visibility',aVisibility,aData.Visibility);
-  AssertEquals(Msg+'strict',aStrict,aData.StrictVisibility);
+  TestContext.AssertTrue((AData)<>nil, Msg+'Have data');
+  TestContext.AssertTrue((aName)=(aData.Name), Msg+'name');
+  TestContext.AssertTrue((aKind)=(aData.FieldType.TypeKind), Msg+'kind');
+  TestContext.AssertTrue((aVisibility)=(aData.Visibility), Msg+'visibility');
+  TestContext.AssertTrue((aStrict)=(aData.StrictVisibility), Msg+'strict');
 end;
 
 Procedure TTestExtendedRTTI.CheckProperty(aIdx : Integer; aData: TRttiProperty; aName : String; aKind : TTypeKind; aVisibility : TMemberVisibility; isStrict : Boolean = False);
@@ -1748,11 +1757,11 @@ Var
 
 begin
   Msg:='Checking prop '+IntToStr(aIdx)+' ('+aName+') ';
-  AssertNotNull(Msg+'Have data',AData);
-  AssertEquals(Msg+'name',aName, aData.Name);
-  AssertEquals(Msg+'kind',aKind, aData.PropertyType.TypeKind);
-  AssertEquals(Msg+'visibility',aVisibility,aData.Visibility);
-  AssertEquals(Msg+'strict',isStrict,aData.StrictVisibility);
+  TestContext.AssertTrue((AData)<>nil, Msg+'Have data');
+  TestContext.AssertTrue((aName)=(aData.Name), Msg+'name');
+  TestContext.AssertTrue((aKind)=(aData.PropertyType.TypeKind), Msg+'kind');
+  TestContext.AssertTrue((aVisibility)=(aData.Visibility), Msg+'visibility');
+  TestContext.AssertTrue((isStrict)=(aData.StrictVisibility), Msg+'strict');
 end;
 
 Procedure TTestExtendedRTTI.CheckMethod(aPrefix : string; aIdx : Integer; aData: TRttiMethod; aName : String; aVisibility : TMemberVisibility; aStrict : Boolean = False);
@@ -1762,10 +1771,10 @@ Var
 
 begin
   Msg:=aPrefix+': Checking method '+IntToStr(aIdx)+' ('+aName+') ';
-  AssertNotNull(Msg+'Have data',AData);
-  AssertEquals(Msg+'name',aData.Name,aName);
-  AssertEquals(Msg+'visibility',aVisibility,aData.Visibility);
-  AssertEquals(Msg+'strict',aData.StrictVisibility,aStrict);
+  TestContext.AssertTrue((AData)<>nil, Msg+'Have data');
+  TestContext.AssertTrue((aData.Name)=(aName), Msg+'name');
+  TestContext.AssertTrue((aVisibility)=(aData.Visibility), Msg+'visibility');
+  TestContext.AssertTrue((aData.StrictVisibility)=(aStrict), Msg+'strict');
 end;
 
 procedure TTestClassExtendedRTTI.TestFields;
@@ -1778,9 +1787,9 @@ Var
 
 begin
   Obj:=FCtx.GetType(TFieldRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetFields;
-  AssertEquals('Class field Count',10,Length(A));
+  TestContext.AssertTrue((10)=(Length(A)), 'Class field Count');
   CheckField(0, A[0],'FPrivateA',tkInteger,mvPrivate);
   CheckField(1, A[1],'FPrivateB',tkInteger,mvPrivate,True);
   CheckField(2, A[2],'FProtectedA',tkInteger,mvProtected);
@@ -1793,8 +1802,8 @@ begin
   CheckField(9, A[9],'FPublishedD',tkClass,mvPublished);
 
   t := TFieldRTTI.Create;
-  AssertEquals('Legacy Field 0', A[8].Offset, Integer(PByte(t.FieldAddress('FPublishedC')) - PByte(t)));
-  AssertEquals('Legacy Field 1', A[9].Offset, Integer(PByte(t.FieldAddress('FPublishedD')) - PByte(t)));
+  TestContext.AssertTrue((A[8].Offset)=(Integer(PByte(t.FieldAddress('FPublishedC')) - PByte(t))), 'Legacy Field 0');
+  TestContext.AssertTrue((A[9].Offset)=(Integer(PByte(t.FieldAddress('FPublishedD')) - PByte(t))), 'Legacy Field 1');
   T.Free;
 end;
 
@@ -1810,16 +1819,16 @@ Var
 
 begin
   Obj:=FCtx.GetType(TFieldRTTIChild.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Obj2:=FCtx.GetType(TFieldRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj2.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj2.ClassType), 'Correct class type');
   A:=RttiData.GetFields;
-  AssertEquals('Class field Count',11,Length(A));
+  TestContext.AssertTrue((11)=(Length(A)), 'Class field Count');
   For I:=1 to 10 do
-    AssertSame('Field parent'+IntToStr(i)+' is parent class', Obj2,A[I].Parent);
+    TestContext.AssertTrue((Obj2)=(A[I].Parent), 'Field parent'+IntToStr(i)+' is parent class');
   A:=RttiData.GetDeclaredFields;
-  AssertEquals('Class declared field Count',1,Length(A));
-  AssertSame('Declared Field parent is sels', Obj,A[0].Parent);
+  TestContext.AssertTrue((1)=(Length(A)), 'Class declared field Count');
+  TestContext.AssertTrue((Obj)=(A[0].Parent), 'Declared Field parent is sels');
 end;
 
 procedure TTestClassExtendedRTTI.TestProperties;
@@ -1833,10 +1842,10 @@ Var
 
 begin
   Obj:=FCtx.GetType(TFieldRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetProperties;
   aCount:=Length(A);
-  AssertEquals('Property Count',8,aCount);
+  TestContext.AssertTrue((8)=(aCount), 'Property Count');
   CheckProperty(0, A[0],'PrivateA',tkInteger,mvPrivate);
   CheckProperty(1, A[1],'PrivateB',tkInteger,mvPrivate,True);
   CheckProperty(2, A[2],'ProtectedA',tkInteger,mvProtected);
@@ -1858,10 +1867,10 @@ Var
 
 begin
   Obj:=FCtx.GetType(TMethodClassRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetDeclaredMethods;
   aCount:=Length(A);
-  AssertEquals('Full Count',12,aCount);
+  TestContext.AssertTrue((12)=(aCount), 'Full Count');
   CheckMethod('Full',0, A[0],'PrivateMethodA',mvPrivate);
   CheckMethod('Full',1, A[1],'PrivateMethodB',mvPrivate,True);
   CheckMethod('Full',2, A[2],'PrivateMethodC',mvPrivate);
@@ -1875,8 +1884,8 @@ begin
   CheckMethod('Full',10, A[10],'PublishedMethodB',mvPublished);
   CheckMethod('Full',11, A[11],'PublishedMethodC',mvPublished);
   Parms:=A[9].GetParameters;
-  AssertEquals('Parameter length',1,Length(Parms));
-  AssertEquals('Parameter name','a',Parms[0].Name);
+  TestContext.AssertTrue((1)=(Length(Parms)), 'Parameter length');
+  TestContext.AssertTrue(('a')=(Parms[0].Name), 'Parameter name');
 end;
 
 procedure TTestClassExtendedRTTI.TestMethods;
@@ -1888,14 +1897,14 @@ Var
 
 begin
   Obj:=FCtx.GetType(TAdditionalMethodClassRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetMethods;
   aCount:=Length(A);
-  AssertEquals('Full Count',13,aCount);
+  TestContext.AssertTrue((13)=(aCount), 'Full Count');
   CheckMethod('Full',0, A[0],'PublicAdditionalMethod',mvPublic);
   A:=RttiData.GetDeclaredMethods;
   aCount:=Length(A);
-  AssertEquals('Full declared Count',1,aCount);
+  TestContext.AssertTrue((1)=(aCount), 'Full declared Count');
   CheckMethod('Full declared',1, A[0],'PublicAdditionalMethod',mvPublic);
 end;
 
@@ -1908,9 +1917,9 @@ var
 begin
   Obj:=FCtx.GetType(TAdditionalMethodClassRTTI.ClassInfo);
   M1:=RttiData.GetMethod('PublicAdditionalMethod');
-  AssertNotNull('have method',m1);
+  TestContext.AssertTrue((m1)<>nil, 'have method');
   M2:=RttiData.GetMethod(@TAdditionalMethodClassRTTI.PublicAdditionalMethod);
-  AssertSame('Correct method ',M1,M2);
+  TestContext.AssertTrue((M1)=(M2), 'Correct method ');
 end;
 
 procedure TTestClassExtendedRTTI.TestMethodsInherited;
@@ -1923,19 +1932,19 @@ Var
 
 begin
   Obj:=FCtx.GetType(TAdditionalMethodClassRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Obj2:=FCtx.GetType(TMethodClassRTTI.ClassInfo);
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetMethods;
   aCount:=Length(A);
-  AssertEquals('Full Count',13,aCount);
+  TestContext.AssertTrue((13)=(aCount), 'Full Count');
   For I:=1 to 12 do
-    AssertSame('Parent is RTTI of parent class',Obj2,A[I].Parent);
+    TestContext.AssertTrue((Obj2)=(A[I].Parent), 'Parent is RTTI of parent class');
   A:=RttiData.GetDeclaredMethods;
   aCount:=Length(A);
-  AssertEquals('Full declared Count',1,aCount);
+  TestContext.AssertTrue((1)=(aCount), 'Full declared Count');
   CheckMethod('Full declared',1, A[0],'PublicAdditionalMethod',mvPublic);
-  AssertSame('Parent is RTTI of parent class',Obj,A[0].Parent);
+  TestContext.AssertTrue((Obj)=(A[0].Parent), 'Parent is RTTI of parent class');
 end;
 
 procedure TTestClassExtendedRTTI.TestPrivateFieldAttributes;
@@ -1950,19 +1959,19 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TFieldObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Fld:=RttiData.GetField('PrivateField');
-  AssertNotNull('Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',3,Length(Attrs));
-  AssertEquals('Attribute 1 name','WeakAttribute',Attrs[0].ClassName);
-  AssertEquals('Attribute 2 name','MyAttribute',Attrs[1].ClassName);
-  AssertEquals('Attribute 2 name','My2Attribute',Attrs[2].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((3)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('WeakAttribute')=(Attrs[0].ClassName), 'Attribute 1 name');
+  TestContext.AssertTrue(('MyAttribute')=(Attrs[1].ClassName), 'Attribute 2 name');
+  TestContext.AssertTrue(('My2Attribute')=(Attrs[2].ClassName), 'Attribute 2 name');
   O:=Attrs[2];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My2Attribute);
-  AssertEquals('Attribute value ',2,M2.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My2Attribute), 'Attribute class ');
+  TestContext.AssertTrue((2)=(M2.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestProtectedFieldAttributes;
@@ -1977,17 +1986,17 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TFieldObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Fld:=RttiData.GetField('ProtectedField');
-  AssertNotNull('Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My2Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My2Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My2Attribute);
-  AssertEquals('Attribute value ',3,M2.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My2Attribute), 'Attribute class ');
+  TestContext.AssertTrue((3)=(M2.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestPublicFieldAttributes;
@@ -2003,45 +2012,45 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TFieldObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   aCount:=0;
   For Fld in RttiData.GetFields do
     if Fld.Visibility=mvPublic then
       inc(aCount);
-  AssertEquals('Field count',3,aCount);
+  TestContext.AssertTrue((3)=(aCount), 'Field count');
   // PublicField
   Fld:=RttiData.GetField('PublicField');
-  AssertNotNull('Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'Attribute value ');
   // A
   Fld:=RttiData.GetField('A');
-  AssertNotNull('A Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'A Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('A Have attribute data',Pointer(Attrs));
-  AssertEquals('A Attribute count',1,Length(Attrs));
-  AssertEquals('A Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'A Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'A Attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'A Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('A: Attribute class ',O);
-  AssertEquals('A: Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('A: Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'A: Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'A: Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'A: Attribute value ');
   // B
   Fld:=RttiData.GetField('B');
-  AssertNotNull('B Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'B Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('B Have attribute data',Pointer(Attrs));
-  AssertEquals('A Attribute count',1,Length(Attrs));
-  AssertEquals('A Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'B Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'A Attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'A Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('B: Attribute class ',O);
-  AssertEquals('B: Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('B: Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'B: Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'B: Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'B: Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestPrivatePropertyAttributes;
@@ -2057,20 +2066,20 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TPropertyObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   aCount:=0;
   Prop:=RttiData.GetProperty('PrivateProperty');
-  AssertNotNull('Have property',Prop);
+  TestContext.AssertTrue((Prop)<>nil, 'Have property');
   Attrs:=Prop.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',3,Length(Attrs));
-  AssertEquals('Attribute 1 name','WeakAttribute',Attrs[0].ClassName);
-  AssertEquals('Attribute 2 name','MyAttribute',Attrs[1].ClassName);
-  AssertEquals('Attribute 2 name','My2Attribute',Attrs[2].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((3)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('WeakAttribute')=(Attrs[0].ClassName), 'Attribute 1 name');
+  TestContext.AssertTrue(('MyAttribute')=(Attrs[1].ClassName), 'Attribute 2 name');
+  TestContext.AssertTrue(('My2Attribute')=(Attrs[2].ClassName), 'Attribute 2 name');
   O:=Attrs[2];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My2Attribute);
-  AssertEquals('Attribute value ',2,M2.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My2Attribute), 'Attribute class ');
+  TestContext.AssertTrue((2)=(M2.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestProtectedPropertyAttributes;
@@ -2085,17 +2094,17 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TPropertyObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Prop:=RttiData.GetProperty('ProtectedProperty');
-  AssertNotNull('Have property',Prop);
+  TestContext.AssertTrue((Prop)<>nil, 'Have property');
   Attrs:=Prop.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My2Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My2Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My2Attribute);
-  AssertEquals('Attribute value ',3,M2.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My2Attribute), 'Attribute class ');
+  TestContext.AssertTrue((3)=(M2.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestPublicPropertyAttributes;
@@ -2110,17 +2119,17 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TPropertyObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Prop:=RttiData.GetProperty('PublicProperty');
-  AssertNotNull('Have property',Prop);
+  TestContext.AssertTrue((Prop)<>nil, 'Have property');
   Attrs:=Prop.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestPublishedPropertyAttributes;
@@ -2135,17 +2144,17 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TPropertyObject));
-  AssertEquals('Correct class type',TRttiInstanceType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiInstanceType)=(Obj.ClassType), 'Correct class type');
   Prop:=RttiData.GetProperty('PublishedProperty');
-  AssertNotNull('Have property',Prop);
+  TestContext.AssertTrue((Prop)<>nil, 'Have property');
   Attrs:=Prop.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('Attribute value ',5,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'Attribute class ');
+  TestContext.AssertTrue((5)=(M3.Int), 'Attribute value ');
 end;
 
 procedure TTestClassExtendedRTTI.TestGetStaticProperty;
@@ -2157,7 +2166,7 @@ begin
   Obj:=FCtx.GetType(TypeInfo(TTestAttr2Class));
   TTestAttr2Class.StaticProp:=4539;
   Prop:=rttiData.GetProperty('StaticProp');
-  AssertEquals('Class property is set or got incorrectly via methods', 4539, Prop.GetValue(nil).AsInteger);
+  TestContext.AssertTrue((4539)=(Prop.GetValue(nil).AsInteger), 'Class property is set or got incorrectly via methods');
 end;
 
 procedure TTestClassExtendedRTTI.TestSetStaticProperty;
@@ -2170,7 +2179,7 @@ begin
   Prop:=rttiData.GetProperty('StaticProp');
   // Write
   Prop.SetValue(nil, 4539);
-  AssertEquals('Property correctly set',4539,TTestAttr2Class.StaticProp);
+  TestContext.AssertTrue((4539)=(TTestAttr2Class.StaticProp), 'Property correctly set');
 end;
 
 
@@ -2186,10 +2195,10 @@ Var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TRecordFieldRTTI));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetFields;
   aCount:=Length(A);
-  AssertEquals('Record fields Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Record fields Count');
   CheckField(0, A[0],'FRPrivateA',tkInteger,mvPrivate);
   CheckField(1, A[1],'FRPrivateB',tkInteger,mvPrivate);
   CheckField(4, A[2],'FRPublicA',tkInteger,mvPublic);
@@ -2197,10 +2206,10 @@ begin
 
 
   Obj:=FCtx.GetType(TypeInfo(TRecordFieldRTTIMixed));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetFields;
   aCount:=Length(A);
-  AssertEquals('Mixed record fields Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Mixed record fields Count');
   CheckField(0, A[0],'FRPrivateA',tkInteger,mvPrivate);
   CheckField(1, A[1],'FRPrivateB',tkInteger,mvPrivate);
   CheckField(4, A[2],'FRPublicA',tkInteger,mvPublic);
@@ -2219,20 +2228,20 @@ Var
 begin
   // TRecordFieldRTTI
   Obj:=FCtx.GetType(TypeInfo(TRecordFieldRTTI));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetProperties;
   aCount:=Length(A);
-  AssertEquals('Record property Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Record property Count');
   CheckProperty(0, A[0],'RPrivateA',tkInteger,mvPrivate);
   CheckProperty(1, A[1],'RPrivateB',tkInteger,mvPrivate);
   CheckProperty(2, A[2],'RPublicA',tkInteger,mvPublic);
   CheckProperty(3, A[3],'RPublicB',tkInteger,mvPublic);
   // TRecordFieldRTTIMixed
   Obj:=FCtx.GetType(TypeInfo(TRecordFieldRTTIMixed));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetProperties;
   aCount:=Length(A);
-  AssertEquals('Record mixed property Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Record mixed property Count');
   CheckProperty(0, A[0],'RPrivateA',tkInteger,mvPrivate);
   CheckProperty(1, A[1],'RPrivateB',tkInteger,mvPrivate);
   CheckProperty(2, A[2],'RPublicA',tkInteger,mvPublic);
@@ -2249,18 +2258,18 @@ Var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TRecordMethodRTTI));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetDeclaredMethods;
   aCount:=Length(A);
-  AssertEquals('Method Full Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Method Full Count');
   CheckMethod('Full',0, A[0],'PrivateMethodA',mvPrivate);
   CheckMethod('Full',1, A[1],'PrivateMethodB',mvPrivate);
   CheckMethod('Full',2, A[2],'PublicMethodA',mvPublic);
   CheckMethod('Full',3, A[3],'PublicMethodB',mvPublic);
   Parms:=A[3].GetParameters;
-  AssertEquals('Parameter length',1,Length(Parms));
-  AssertNotNull('Have Parameter',Parms[0]);
-  AssertEquals('Parameter name','I',Parms[0].Name);
+  TestContext.AssertTrue((1)=(Length(Parms)), 'Parameter length');
+  TestContext.AssertTrue((Parms[0])<>nil, 'Have Parameter');
+  TestContext.AssertTrue(('I')=(Parms[0].Name), 'Parameter name');
 end;
 
 procedure TTestRecordExtendedRTTI.TestMethods;
@@ -2271,11 +2280,11 @@ Var
   aCount : Integer;
 begin
   Obj:=FCtx.GetType(TypeInfo(TRecordMethodRTTI));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   A:=RttiData.GetDeclaredMethods;
   aCount:=Length(A);
   // Just check that the count is correct
-  AssertEquals('Method Full Count',4,aCount);
+  TestContext.AssertTrue((4)=(aCount), 'Method Full Count');
 end;
 
 Procedure TTestRecordExtendedRTTI.TestPrivateFieldAttributes;
@@ -2290,19 +2299,19 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TFieldRecord));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   Fld:=RttiData.GetField('PrivateField');
-  AssertNotNull('Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',3,Length(Attrs));
-  AssertEquals('Attribute 1 name','WeakAttribute',Attrs[0].ClassName);
-  AssertEquals('Attribute 2 name','MyAttribute',Attrs[1].ClassName);
-  AssertEquals('Attribute 2 name','My2Attribute',Attrs[2].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((3)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('WeakAttribute')=(Attrs[0].ClassName), 'Attribute 1 name');
+  TestContext.AssertTrue(('MyAttribute')=(Attrs[1].ClassName), 'Attribute 2 name');
+  TestContext.AssertTrue(('My2Attribute')=(Attrs[2].ClassName), 'Attribute 2 name');
   O:=Attrs[2];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My2Attribute);
-  AssertEquals('Attribute value ',2,M2.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My2Attribute), 'Attribute class ');
+  TestContext.AssertTrue((2)=(M2.Int), 'Attribute value ');
 end;
 
 Procedure TTestRecordExtendedRTTI.TestPublicFieldAttributes;
@@ -2318,58 +2327,743 @@ var
 
 begin
   Obj:=FCtx.GetType(TypeInfo(TFieldRecord));
-  AssertEquals('Correct class type',TRttiRecordType,Obj.ClassType);
+  TestContext.AssertTrue((TRttiRecordType)=(Obj.ClassType), 'Correct class type');
   aCount:=0;
   For Fld in RttiData.GetFields do
     if Fld.Visibility=mvPublic then
       inc(aCount);
-  AssertEquals('Field count',3,aCount);
+  TestContext.AssertTrue((3)=(aCount), 'Field count');
   // PublicField
   Fld:=RttiData.GetField('PublicField');
-  AssertNotNull('Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('Have attribute data',Pointer(Attrs));
-  AssertEquals('attribute count',1,Length(Attrs));
-  AssertEquals('Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('Attribute class ',O);
-  AssertEquals('Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('Attribute value ',3,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'Attribute class ');
+  TestContext.AssertTrue((3)=(M3.Int), 'Attribute value ');
   // A
   Fld:=RttiData.GetField('A');
-  AssertNotNull('A Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'A Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('A Have attribute data',Pointer(Attrs));
-  AssertEquals('A Attribute count',1,Length(Attrs));
-  AssertEquals('A Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'A Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'A Attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'A Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('A: Attribute class ',O);
-  AssertEquals('A: Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('A: Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'A: Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'A: Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'A: Attribute value ');
   // B
   Fld:=RttiData.GetField('B');
-  AssertNotNull('B Have field',Fld);
+  TestContext.AssertTrue((Fld)<>nil, 'B Have field');
   Attrs:=Fld.GetAttributes;
-  AssertNotNull('B Have attribute data',Pointer(Attrs));
-  AssertEquals('A Attribute count',1,Length(Attrs));
-  AssertEquals('A Attribute 1 name','My3Attribute',Attrs[0].ClassName);
+  TestContext.AssertTrue((Pointer(Attrs))<>nil, 'B Have attribute data');
+  TestContext.AssertTrue((1)=(Length(Attrs)), 'A Attribute count');
+  TestContext.AssertTrue(('My3Attribute')=(Attrs[0].ClassName), 'A Attribute 1 name');
   O:=Attrs[0];
-  AssertNotNull('B: Attribute class ',O);
-  AssertEquals('B: Attribute class ',O.ClassType,My3Attribute);
-  AssertEquals('B: Attribute value ',4,M3.Int);
+  TestContext.AssertTrue((O)<>nil, 'B: Attribute class ');
+  TestContext.AssertTrue((O.ClassType)=(My3Attribute), 'B: Attribute class ');
+  TestContext.AssertTrue((4)=(M3.Int), 'B: Attribute value ');
 end;
+
+constructor TTestRTTI.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestExtendedRTTI.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestRTTIGetTypeInteger(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'GetTypeInteger');
+  try
+    lFixture.GetTypeInteger;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTIGetTypePointer(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'GetTypePointer');
+  try
+    lFixture.GetTypePointer;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTIGetClassProperties(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'GetClassProperties');
+  try
+    lFixture.GetClassProperties;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTIGetClassPropertiesValue(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'GetClassPropertiesValue');
+  try
+    lFixture.GetClassPropertiesValue;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestTRttiTypeProperties(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestTRttiTypeProperties');
+  try
+    lFixture.TestTRttiTypeProperties;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueString');
+  try
+    lFixture.TestPropGetValueString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueInteger(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueInteger');
+  try
+    lFixture.TestPropGetValueInteger;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueBoolean(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueBoolean');
+  try
+    lFixture.TestPropGetValueBoolean;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueShortString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueShortString');
+  try
+    lFixture.TestPropGetValueShortString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueProcString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueProcString');
+  try
+    lFixture.TestPropGetValueProcString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueProcInteger(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueProcInteger');
+  try
+    lFixture.TestPropGetValueProcInteger;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueProcBoolean(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueProcBoolean');
+  try
+    lFixture.TestPropGetValueProcBoolean;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueProcShortString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueProcShortString');
+  try
+    lFixture.TestPropGetValueProcShortString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueObject(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueObject');
+  try
+    lFixture.TestPropGetValueObject;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueInterface(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueInterface');
+  try
+    lFixture.TestPropGetValueInterface;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueFloat(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueFloat');
+  try
+    lFixture.TestPropGetValueFloat;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueDynArray(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueDynArray');
+  try
+    lFixture.TestPropGetValueDynArray;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueEnumeration(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueEnumeration');
+  try
+    lFixture.TestPropGetValueEnumeration;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueChars(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueChars');
+  try
+    lFixture.TestPropGetValueChars;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropGetValueRecord(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropGetValueRecord');
+  try
+    lFixture.TestPropGetValueRecord;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueString');
+  try
+    lFixture.TestPropSetValueString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueInteger(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueInteger');
+  try
+    lFixture.TestPropSetValueInteger;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueBoolean(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueBoolean');
+  try
+    lFixture.TestPropSetValueBoolean;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueShortString(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueShortString');
+  try
+    lFixture.TestPropSetValueShortString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueObject(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueObject');
+  try
+    lFixture.TestPropSetValueObject;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueInterface(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueInterface');
+  try
+    lFixture.TestPropSetValueInterface;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueFloat(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueFloat');
+  try
+    lFixture.TestPropSetValueFloat;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueDynArray(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueDynArray');
+  try
+    lFixture.TestPropSetValueDynArray;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueEnumeration(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueEnumeration');
+  try
+    lFixture.TestPropSetValueEnumeration;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueChars(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueChars');
+  try
+    lFixture.TestPropSetValueChars;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestPropSetValueRecord(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestPropSetValueRecord');
+  try
+    lFixture.TestPropSetValueRecord;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestGetValueStringCastError(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestGetValueStringCastError');
+  try
+    lFixture.TestGetValueStringCastError;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestGetIsReadable(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestGetIsReadable');
+  try
+    lFixture.TestGetIsReadable;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestIsWritable(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestIsWritable');
+  try
+    lFixture.TestIsWritable;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestGetAttribute(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestGetAttribute');
+  try
+    lFixture.TestGetAttribute;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestInterface(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestInterface');
+  try
+    lFixture.TestInterface;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestInterfaceRaw(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestInterfaceRaw');
+  try
+    lFixture.TestInterfaceRaw;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestArray(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestArray');
+  try
+    lFixture.TestArray;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestDynArray(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestDynArray');
+  try
+    lFixture.TestDynArray;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestProcVar(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestProcVar');
+  try
+    lFixture.TestProcVar;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestMethod(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestMethod');
+  try
+    lFixture.TestMethod;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRTTITestRawThunk(AContext: TNXTestContext);
+var lFixture: TTestRTTI;
+begin
+  lFixture:=TTestRTTI.Create(AContext, 'TestRawThunk');
+  try
+    lFixture.TestRawThunk;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestFields(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestFields');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFields; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestDeclaredFields(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestDeclaredFields');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeclaredFields; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestProperties(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestProperties');
+  try
+    lFixture.SetUp;
+    try lFixture.TestProperties; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestDeclaredMethods(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestDeclaredMethods');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeclaredMethods; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestMethods(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestMethods');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMethods; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestMethodByAddress(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestMethodByAddress');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMethodByAddress; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestMethodsInherited(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestMethodsInherited');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMethodsInherited; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestPrivateFieldAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestPrivateFieldAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPrivateFieldAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestProtectedFieldAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestProtectedFieldAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestProtectedFieldAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestPublicFieldAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestPublicFieldAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPublicFieldAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestPrivatePropertyAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestPrivatePropertyAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPrivatePropertyAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestProtectedPropertyAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestProtectedPropertyAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestProtectedPropertyAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestPublicPropertyAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestPublicPropertyAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPublicPropertyAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestPublishedPropertyAttributes(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestPublishedPropertyAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPublishedPropertyAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestGetStaticProperty(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestGetStaticProperty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetStaticProperty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestClassExtendedRTTITestSetStaticProperty(AContext: TNXTestContext);
+var lFixture: TTestClassExtendedRTTI;
+begin
+  lFixture:=TTestClassExtendedRTTI.Create(AContext, 'TestSetStaticProperty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetStaticProperty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestFields(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestFields');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFields; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestProperties(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestProperties');
+  try
+    lFixture.SetUp;
+    try lFixture.TestProperties; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestDeclaredMethods(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestDeclaredMethods');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeclaredMethods; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestMethods(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestMethods');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMethods; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestPrivateFieldAttributes(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestPrivateFieldAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPrivateFieldAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecordExtendedRTTITestPublicFieldAttributes(AContext: TNXTestContext);
+var lFixture: TTestRecordExtendedRTTI;
+begin
+  lFixture:=TTestRecordExtendedRTTI.Create(AContext, 'TestPublicFieldAttributes');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPublicFieldAttributes; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsrttiTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.rtti.TTestRTTI');
+  lSuite.AddTest('GetTypeInteger', @RunTTestRTTIGetTypeInteger);
+  lSuite.AddTest('GetTypePointer', @RunTTestRTTIGetTypePointer);
+  lSuite.AddTest('GetClassProperties', @RunTTestRTTIGetClassProperties);
+  lSuite.AddTest('GetClassPropertiesValue', @RunTTestRTTIGetClassPropertiesValue);
+  lSuite.AddTest('TestTRttiTypeProperties', @RunTTestRTTITestTRttiTypeProperties);
+  lSuite.AddTest('TestPropGetValueString', @RunTTestRTTITestPropGetValueString);
+  lSuite.AddTest('TestPropGetValueInteger', @RunTTestRTTITestPropGetValueInteger);
+  lSuite.AddTest('TestPropGetValueBoolean', @RunTTestRTTITestPropGetValueBoolean);
+  lSuite.AddTest('TestPropGetValueShortString', @RunTTestRTTITestPropGetValueShortString);
+  lSuite.AddTest('TestPropGetValueProcString', @RunTTestRTTITestPropGetValueProcString);
+  lSuite.AddTest('TestPropGetValueProcInteger', @RunTTestRTTITestPropGetValueProcInteger);
+  lSuite.AddTest('TestPropGetValueProcBoolean', @RunTTestRTTITestPropGetValueProcBoolean);
+  lSuite.AddTest('TestPropGetValueProcShortString', @RunTTestRTTITestPropGetValueProcShortString);
+  lSuite.AddTest('TestPropGetValueObject', @RunTTestRTTITestPropGetValueObject);
+  lSuite.AddTest('TestPropGetValueInterface', @RunTTestRTTITestPropGetValueInterface);
+  lSuite.AddTest('TestPropGetValueFloat', @RunTTestRTTITestPropGetValueFloat);
+  lSuite.AddTest('TestPropGetValueDynArray', @RunTTestRTTITestPropGetValueDynArray);
+  lSuite.AddTest('TestPropGetValueEnumeration', @RunTTestRTTITestPropGetValueEnumeration);
+  lSuite.AddTest('TestPropGetValueChars', @RunTTestRTTITestPropGetValueChars);
+  lSuite.AddTest('TestPropGetValueRecord', @RunTTestRTTITestPropGetValueRecord);
+  lSuite.AddTest('TestPropSetValueString', @RunTTestRTTITestPropSetValueString);
+  lSuite.AddTest('TestPropSetValueInteger', @RunTTestRTTITestPropSetValueInteger);
+  lSuite.AddTest('TestPropSetValueBoolean', @RunTTestRTTITestPropSetValueBoolean);
+  lSuite.AddTest('TestPropSetValueShortString', @RunTTestRTTITestPropSetValueShortString);
+  lSuite.AddTest('TestPropSetValueObject', @RunTTestRTTITestPropSetValueObject);
+  lSuite.AddTest('TestPropSetValueInterface', @RunTTestRTTITestPropSetValueInterface);
+  lSuite.AddTest('TestPropSetValueFloat', @RunTTestRTTITestPropSetValueFloat);
+  lSuite.AddTest('TestPropSetValueDynArray', @RunTTestRTTITestPropSetValueDynArray);
+  lSuite.AddTest('TestPropSetValueEnumeration', @RunTTestRTTITestPropSetValueEnumeration);
+  lSuite.AddTest('TestPropSetValueChars', @RunTTestRTTITestPropSetValueChars);
+  lSuite.AddTest('TestPropSetValueRecord', @RunTTestRTTITestPropSetValueRecord);
+  lSuite.AddTest('TestGetValueStringCastError', @RunTTestRTTITestGetValueStringCastError);
+  lSuite.AddTest('TestGetIsReadable', @RunTTestRTTITestGetIsReadable);
+  lSuite.AddTest('TestIsWritable', @RunTTestRTTITestIsWritable);
+  lSuite.AddTest('TestGetAttribute', @RunTTestRTTITestGetAttribute);
+  lSuite.AddTest('TestInterface', @RunTTestRTTITestInterface);
+  lSuite.AddTest('TestInterfaceRaw', @RunTTestRTTITestInterfaceRaw);
+  lSuite.AddTest('TestArray', @RunTTestRTTITestArray);
+  lSuite.AddTest('TestDynArray', @RunTTestRTTITestDynArray);
+  lSuite.AddTest('TestProcVar', @RunTTestRTTITestProcVar);
+  lSuite.AddTest('TestMethod', @RunTTestRTTITestMethod);
+  lSuite.AddTest('TestRawThunk', @RunTTestRTTITestRawThunk);
+  lSuite:=ARegistry.AddSuite('tests.rtti.TTestClassExtendedRTTI');
+  lSuite.AddTest('TestFields', @RunTTestClassExtendedRTTITestFields);
+  lSuite.AddTest('TestDeclaredFields', @RunTTestClassExtendedRTTITestDeclaredFields);
+  lSuite.AddTest('TestProperties', @RunTTestClassExtendedRTTITestProperties);
+  lSuite.AddTest('TestDeclaredMethods', @RunTTestClassExtendedRTTITestDeclaredMethods);
+  lSuite.AddTest('TestMethods', @RunTTestClassExtendedRTTITestMethods);
+  lSuite.AddTest('TestMethodByAddress', @RunTTestClassExtendedRTTITestMethodByAddress);
+  lSuite.AddTest('TestMethodsInherited', @RunTTestClassExtendedRTTITestMethodsInherited);
+  lSuite.AddTest('TestPrivateFieldAttributes', @RunTTestClassExtendedRTTITestPrivateFieldAttributes);
+  lSuite.AddTest('TestProtectedFieldAttributes', @RunTTestClassExtendedRTTITestProtectedFieldAttributes);
+  lSuite.AddTest('TestPublicFieldAttributes', @RunTTestClassExtendedRTTITestPublicFieldAttributes);
+  lSuite.AddTest('TestPrivatePropertyAttributes', @RunTTestClassExtendedRTTITestPrivatePropertyAttributes);
+  lSuite.AddTest('TestProtectedPropertyAttributes', @RunTTestClassExtendedRTTITestProtectedPropertyAttributes);
+  lSuite.AddTest('TestPublicPropertyAttributes', @RunTTestClassExtendedRTTITestPublicPropertyAttributes);
+  lSuite.AddTest('TestPublishedPropertyAttributes', @RunTTestClassExtendedRTTITestPublishedPropertyAttributes);
+  lSuite.AddTest('TestGetStaticProperty', @RunTTestClassExtendedRTTITestGetStaticProperty);
+  lSuite.AddTest('TestSetStaticProperty', @RunTTestClassExtendedRTTITestSetStaticProperty);
+  lSuite:=ARegistry.AddSuite('tests.rtti.TTestRecordExtendedRTTI');
+  lSuite.AddTest('TestFields', @RunTTestRecordExtendedRTTITestFields);
+  lSuite.AddTest('TestProperties', @RunTTestRecordExtendedRTTITestProperties);
+  lSuite.AddTest('TestDeclaredMethods', @RunTTestRecordExtendedRTTITestDeclaredMethods);
+  lSuite.AddTest('TestMethods', @RunTTestRecordExtendedRTTITestMethods);
+  lSuite.AddTest('TestPrivateFieldAttributes', @RunTTestRecordExtendedRTTITestPrivateFieldAttributes);
+  lSuite.AddTest('TestPublicFieldAttributes', @RunTTestRecordExtendedRTTITestPublicFieldAttributes);
+end;
+
 
 
 
 initialization
 {$ifdef fpc}
-  RegisterTest(TTestRTTI);
-  RegisterTest(TTestClassExtendedRTTI);
-  RegisterTest(TTestRecordExtendedRTTI);
+
+
+
 {$else fpc}
-  RegisterTest(TTestRTTI.Suite);
-  RegisterTest(TTestClassExtendedRTTI.suite);
-  RegisterTest(TTestRecordExtendedRTTI.Suite);
+
+
+
 {$endif fpc}
 end.
 

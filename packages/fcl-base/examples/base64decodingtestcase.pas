@@ -15,19 +15,27 @@ unit Base64DecodingTestCase;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils, testregistry, base64;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, base64;
 
 type
 
   { TBase64DecodingStreamTestCase }
 
-  TBase64DecodingStreamTestCase = class(TTestCase)
+  TBase64DecodingStreamTestCase = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     Base64Stream: TBase64DecodingStream;
     SourceStream: TStream;
   protected
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
     // utility
     procedure WriteToSourceStream(s:AnsiString);
     function NoiseCharString:ansistring; // all non-base64 alphabet characters
@@ -36,7 +44,7 @@ type
     procedure TestGetSize(mode:TBase64DecodingMode; s:AnsiString; expectedSize:Int64);
     procedure TestDecode (mode:TBase64DecodingMode; s, expected: AnsiString);
     procedure TestReset  (mode:TBase64DecodingMode; s:AnsiString; start:array of Int64; expected:array of ansistring);
-  published
+  public
     procedure TestGetSizeStrict1;
     procedure TestGetSizeStrict2;
     procedure TestGetSizeStrict3;
@@ -90,6 +98,8 @@ type
     procedure TestResetMIME2;
     procedure TestResetMIME3;
   end;
+
+procedure RegisterBase64DecodingTestCaseTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -210,10 +220,10 @@ begin
   Base64Stream.Mode := mode;
   WriteToSourceStream(s);
   Size := Base64Stream.Size;
-  AssertEquals('Correct size calculated by Size getter', Size, expectedSize);
+  TestContext.AssertTrue((Size)=(expectedSize), 'Correct size calculated by Size getter');
 end;
 
-procedure TBase64DecodingStreamTestCase.TestDecode(mode: TBase64DecodingMode; s, expected: );
+procedure TBase64DecodingStreamTestCase.TestDecode(mode: TBase64DecodingMode; s, expected: AnsiString);
 var
   Buf: array[0..63] of AnsiChar;
   si: Integer;
@@ -226,13 +236,13 @@ begin
   si := 1;  // index into expected
   repeat
     count := Base64Stream.Read(Buf, Random(SizeOf(Buf))+1);
-    AssertTrue('Not too many bytes decoded', si + count - 1 <= Length(expected));
+    TestContext.AssertTrue(si + count - 1 <= Length(expected), 'Not too many bytes decoded');
     for i := 0 to count-1 do
-      AssertEquals('Correctly decoded byte', expected[si + i], Buf[i]);
+      TestContext.AssertTrue((expected[si + i])=(Buf[i]), 'Correctly decoded byte');
     Inc(si, count);
-    AssertEquals('Returned size is correct', Length(expected), Base64Stream.Size);
+    TestContext.AssertTrue((Length(expected))=(Base64Stream.Size), 'Returned size is correct');
   until Base64Stream.EOF;
-  AssertEquals('Correct decoded length', Length(expected), si-1);
+  TestContext.AssertTrue((Length(expected))=(si-1), 'Correct decoded length');
 end;
 
 procedure TBase64DecodingStreamTestCase.TestReset(mode: TBase64DecodingMode; s: ansistring; start: array of Int64; expected: array of ansistring);
@@ -245,7 +255,7 @@ var
 begin
   Base64Stream.Mode := mode;
   WriteToSourceStream(s);
-  AssertEquals('start and expected arrays have same length',Length(start),Length(expected));
+  TestContext.AssertTrue((Length(start))=(Length(expected)), 'start and expected arrays have same length');
   for startI := 0 to High(start) do begin
     SourceStream.Position := start[startI];
     Base64Stream.Reset;
@@ -253,13 +263,13 @@ begin
     len := 0;
     repeat
       count := Base64Stream.Read(Buf, Random(SizeOf(Buf))+1);
-      AssertTrue('Not too many bytes decoded', len + count <= Length(expected[startI]));
+      TestContext.AssertTrue(len + count <= Length(expected[startI]), 'Not too many bytes decoded');
       for i := 0 to count-1 do
-        AssertEquals(Format('Correctly decoded byte at %d',[len+i]), expected[startI][len + i + 1], Buf[i]);
+        TestContext.AssertTrue((expected[startI][len + i + 1])=(Buf[i]), Format('Correctly decoded byte at %d',[len+i]));
       Inc(len, count);
-      AssertEquals('Returned size is correct', Length(expected[startI]), Base64Stream.Size);
+      TestContext.AssertTrue((Length(expected[startI]))=(Base64Stream.Size), 'Returned size is correct');
     until Base64Stream.EOF;
-    AssertEquals('Correct decoded length', Length(expected[startI]), len);
+    TestContext.AssertTrue((Length(expected[startI]))=(len), 'Correct decoded length');
   end;
 end;
 
@@ -323,9 +333,590 @@ procedure TBase64DecodingStreamTestCase.TestResetMIME1; begin TestReset(bdmMIME,
 procedure TBase64DecodingStreamTestCase.TestResetMIME2; begin TestReset(bdmMIME,'QmFzZTY0IERlY29kaW5nIFN1Y2NlZWRlZCE=',[0,4,8],['Base64 Decoding Succeeded!','e64 Decoding Succeeded!',' Decoding Succeeded!']); end;
 procedure TBase64DecodingStreamTestCase.TestResetMIME3; begin TestReset(bdmMIME,'Qm!@#$%^&*()F!@#$%^&*()z!@#$%^&*()ZTY0IERlY29kaW5nIFN1Y2NlZWRlZCE=',[0,24,34,38,62,66],['Base64 Decoding Succeeded!','e64 Decoding Succeeded!','e64 Decoding Succeeded!',' Decoding Succeeded!','d!','']); end;
 
-initialization
 
-  RegisterTest(TBase64DecodingStreamTestCase);
+constructor TBase64DecodingStreamTestCase.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeStrict1(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeStrict1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeStrict1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeStrict2(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeStrict2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeStrict2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeStrict3(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeStrict3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeStrict3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeStrict4(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeStrict4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeStrict4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeStrict5(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeStrict5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeStrict5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME01(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME01');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME01; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME02(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME02');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME02; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME03(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME03');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME03; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME04(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME04');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME04; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME05(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME05');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME05; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME06(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME06');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME06; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME07(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME07');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME07; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME08(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME08');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME08; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME09(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME09');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME09; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME10(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME10');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME10; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME11(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME11');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME11; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME12(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME12');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME12; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME13(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME13');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME13; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME14(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME14');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME14; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME15(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME15');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME15; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME16(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME16');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME16; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME17(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME17');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME17; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME18(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME18');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME18; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME19(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME19');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME19; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME20(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME20');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME20; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME21(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME21');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME21; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestGetSizeMIME22(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestGetSizeMIME22');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetSizeMIME22; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict01(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict01');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict01; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict02(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict02');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict02; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict03(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict03');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict03; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict04(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict04');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict04; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict05(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict05');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict05; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict06(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict06');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict06; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict07(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict07');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict07; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict08(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict08');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict08; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict09(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict09');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict09; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeStrict10(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeStrict10');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeStrict10; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME1(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME2(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME3(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME4(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME5(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME6(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME6');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME6; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME7(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME7');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME7; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME8(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME8');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME8; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestDecodeMIME9(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestDecodeMIME9');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDecodeMIME9; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetStrict1(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetStrict1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetStrict1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetStrict2(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetStrict2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetStrict2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetStrict3(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetStrict3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetStrict3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetMIME1(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetMIME1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetMIME1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetMIME2(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetMIME2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetMIME2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTBase64DecodingStreamTestCaseTestResetMIME3(AContext: TNXTestContext);
+var lFixture: TBase64DecodingStreamTestCase;
+begin
+  lFixture:=TBase64DecodingStreamTestCase.Create(AContext, 'TestResetMIME3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResetMIME3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterBase64DecodingTestCaseTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('Base64DecodingTestCase.TBase64DecodingStreamTestCase');
+  lSuite.AddTest('TestGetSizeStrict1', @RunTBase64DecodingStreamTestCaseTestGetSizeStrict1);
+  lSuite.AddTest('TestGetSizeStrict2', @RunTBase64DecodingStreamTestCaseTestGetSizeStrict2);
+  lSuite.AddTest('TestGetSizeStrict3', @RunTBase64DecodingStreamTestCaseTestGetSizeStrict3);
+  lSuite.AddTest('TestGetSizeStrict4', @RunTBase64DecodingStreamTestCaseTestGetSizeStrict4);
+  lSuite.AddTest('TestGetSizeStrict5', @RunTBase64DecodingStreamTestCaseTestGetSizeStrict5);
+  lSuite.AddTest('TestGetSizeMIME01', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME01);
+  lSuite.AddTest('TestGetSizeMIME02', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME02);
+  lSuite.AddTest('TestGetSizeMIME03', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME03);
+  lSuite.AddTest('TestGetSizeMIME04', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME04);
+  lSuite.AddTest('TestGetSizeMIME05', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME05);
+  lSuite.AddTest('TestGetSizeMIME06', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME06);
+  lSuite.AddTest('TestGetSizeMIME07', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME07);
+  lSuite.AddTest('TestGetSizeMIME08', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME08);
+  lSuite.AddTest('TestGetSizeMIME09', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME09);
+  lSuite.AddTest('TestGetSizeMIME10', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME10);
+  lSuite.AddTest('TestGetSizeMIME11', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME11);
+  lSuite.AddTest('TestGetSizeMIME12', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME12);
+  lSuite.AddTest('TestGetSizeMIME13', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME13);
+  lSuite.AddTest('TestGetSizeMIME14', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME14);
+  lSuite.AddTest('TestGetSizeMIME15', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME15);
+  lSuite.AddTest('TestGetSizeMIME16', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME16);
+  lSuite.AddTest('TestGetSizeMIME17', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME17);
+  lSuite.AddTest('TestGetSizeMIME18', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME18);
+  lSuite.AddTest('TestGetSizeMIME19', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME19);
+  lSuite.AddTest('TestGetSizeMIME20', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME20);
+  lSuite.AddTest('TestGetSizeMIME21', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME21);
+  lSuite.AddTest('TestGetSizeMIME22', @RunTBase64DecodingStreamTestCaseTestGetSizeMIME22);
+  lSuite.AddTest('TestDecodeStrict01', @RunTBase64DecodingStreamTestCaseTestDecodeStrict01);
+  lSuite.AddTest('TestDecodeStrict02', @RunTBase64DecodingStreamTestCaseTestDecodeStrict02);
+  lSuite.AddTest('TestDecodeStrict03', @RunTBase64DecodingStreamTestCaseTestDecodeStrict03);
+  lSuite.AddTest('TestDecodeStrict04', @RunTBase64DecodingStreamTestCaseTestDecodeStrict04);
+  lSuite.AddTest('TestDecodeStrict05', @RunTBase64DecodingStreamTestCaseTestDecodeStrict05);
+  lSuite.AddTest('TestDecodeStrict06', @RunTBase64DecodingStreamTestCaseTestDecodeStrict06);
+  lSuite.AddTest('TestDecodeStrict07', @RunTBase64DecodingStreamTestCaseTestDecodeStrict07);
+  lSuite.AddTest('TestDecodeStrict08', @RunTBase64DecodingStreamTestCaseTestDecodeStrict08);
+  lSuite.AddTest('TestDecodeStrict09', @RunTBase64DecodingStreamTestCaseTestDecodeStrict09);
+  lSuite.AddTest('TestDecodeStrict10', @RunTBase64DecodingStreamTestCaseTestDecodeStrict10);
+  lSuite.AddTest('TestDecodeMIME1', @RunTBase64DecodingStreamTestCaseTestDecodeMIME1);
+  lSuite.AddTest('TestDecodeMIME2', @RunTBase64DecodingStreamTestCaseTestDecodeMIME2);
+  lSuite.AddTest('TestDecodeMIME3', @RunTBase64DecodingStreamTestCaseTestDecodeMIME3);
+  lSuite.AddTest('TestDecodeMIME4', @RunTBase64DecodingStreamTestCaseTestDecodeMIME4);
+  lSuite.AddTest('TestDecodeMIME5', @RunTBase64DecodingStreamTestCaseTestDecodeMIME5);
+  lSuite.AddTest('TestDecodeMIME6', @RunTBase64DecodingStreamTestCaseTestDecodeMIME6);
+  lSuite.AddTest('TestDecodeMIME7', @RunTBase64DecodingStreamTestCaseTestDecodeMIME7);
+  lSuite.AddTest('TestDecodeMIME8', @RunTBase64DecodingStreamTestCaseTestDecodeMIME8);
+  lSuite.AddTest('TestDecodeMIME9', @RunTBase64DecodingStreamTestCaseTestDecodeMIME9);
+  lSuite.AddTest('TestResetStrict1', @RunTBase64DecodingStreamTestCaseTestResetStrict1);
+  lSuite.AddTest('TestResetStrict2', @RunTBase64DecodingStreamTestCaseTestResetStrict2);
+  lSuite.AddTest('TestResetStrict3', @RunTBase64DecodingStreamTestCaseTestResetStrict3);
+  lSuite.AddTest('TestResetMIME1', @RunTBase64DecodingStreamTestCaseTestResetMIME1);
+  lSuite.AddTest('TestResetMIME2', @RunTBase64DecodingStreamTestCaseTestResetMIME2);
+  lSuite.AddTest('TestResetMIME3', @RunTBase64DecodingStreamTestCaseTestResetMIME3);
+end;
 
 end.
-

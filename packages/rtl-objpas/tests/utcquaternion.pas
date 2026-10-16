@@ -19,7 +19,7 @@ unit utcquaternion;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, utmathvectorbase, types, system.math.vectors;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, utmathvectorbase, types, system.math.vectors;
 
 Type
   { TTestQuaternion3D }
@@ -36,7 +36,7 @@ Type
     Property Q1 : TQuaternion3D Index 1 Read GetQ Write SetQ;
     Property Q2 : TQuaternion3D Index 2 Read GetQ Write SetQ;
     Property Q3 : TQuaternion3D Index 3 Read GetQ Write SetQ;
-  Published
+  public
     procedure TestHookUp;
     procedure TestCreateVectorAngle;
     procedure TestCreateVectorVector;
@@ -46,13 +46,14 @@ Type
     procedure TestMultiply;
   end;
 
+procedure RegisterutcquaternionTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TTestQuaternion3D }
 
 procedure TTestQuaternion3D.Clear;
 begin
-
 end;
 
 function TTestQuaternion3D.GetQ(AIndex: Integer): TQuaternion3D;
@@ -85,9 +86,9 @@ var
 begin
   For I:=1 to 3 do
     begin
-    AssertEquals(Format('Q%d.Real',[I]),0.0,FQ[I].RealPart);
+    TestContext.AssertTrue((0.0)=(FQ[I].RealPart), Format('Q%d.Real',[I]));
     For J:=0 to 2 do
-      AssertEquals(Format('Q%d.ImagPart[%d]',[I,J]),0.0,FQ[I].ImagPart.V[J]);
+      TestContext.AssertTrue((0.0)=(FQ[I].ImagPart.V[J]), Format('Q%d.ImagPart[%d]',[I,J]));
     end;
 end;
 
@@ -170,8 +171,88 @@ begin
 end;
 
 
-Initialization
-  RegisterTest(TTestQuaternion3D);
+
+procedure RunTTestQuaternion3DTestHookUp(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestHookUp');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookUp; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestCreateVectorAngle(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestCreateVectorAngle');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateVectorAngle; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestCreateVectorVector(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestCreateVectorVector');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateVectorVector; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestCreateYawPitchRoll(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestCreateYawPitchRoll');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateYawPitchRoll; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestCreateMatrix(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestCreateMatrix');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateMatrix; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestAssignToMatrix(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestAssignToMatrix');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssignToMatrix; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestQuaternion3DTestMultiply(AContext: TNXTestContext);
+var lFixture: TTestQuaternion3D;
+begin
+  lFixture:=TTestQuaternion3D.Create(AContext, 'TestMultiply');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiply; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcquaternionTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcquaternion.TTestQuaternion3D');
+  lSuite.AddTest('TestHookUp', @RunTTestQuaternion3DTestHookUp);
+  lSuite.AddTest('TestCreateVectorAngle', @RunTTestQuaternion3DTestCreateVectorAngle);
+  lSuite.AddTest('TestCreateVectorVector', @RunTTestQuaternion3DTestCreateVectorVector);
+  lSuite.AddTest('TestCreateYawPitchRoll', @RunTTestQuaternion3DTestCreateYawPitchRoll);
+  lSuite.AddTest('TestCreateMatrix', @RunTTestQuaternion3DTestCreateMatrix);
+  lSuite.AddTest('TestAssignToMatrix', @RunTTestQuaternion3DTestAssignToMatrix);
+  lSuite.AddTest('TestMultiply', @RunTTestQuaternion3DTestMultiply);
+end;
 
 end.
-

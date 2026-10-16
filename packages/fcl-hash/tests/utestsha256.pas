@@ -5,18 +5,26 @@ unit utestsha256;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils, testregistry, fpecc, fpsha256, fphashutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, fpecc, fpsha256, fphashutils;
 
 type
 
   { TTestSHA256 }
 
-  TTestSHA256 = class(TTestCase)
+  TTestSHA256 = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Public
     Procedure TestHexString(Const aString,aDigest : String);
     Procedure TestBase64String(Const aString,aDigest : String);
     Procedure TestHMACString(Const aString,aKey,aDigest : String);
-  published
+  public
     procedure TestEmpty;
     procedure TestSmallString;
     procedure TestEmptyBase64;
@@ -27,7 +35,15 @@ type
 
   { TTestECDSASHA256 }
 
-  TTestECDSASHA256 = Class(TTestCase)
+  TTestECDSASHA256 = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
     // base64url encoded
     Const
     aInput =
@@ -42,11 +58,13 @@ type
         'AwEHoUQDQgAEqTjyg2z65i+zbyUZW8BQ+K87DNsICRaEH7Fy7Rm3MseXy9ItSCQU'+ #10+
         'VeJbtO6kYUA00mx7bKoC1sx5sbtFExnYPQ=='+ #10+
         '-----END EC PRIVATE KEY-----';
-   Published
+   public
      Procedure TestSignVerify;
      Procedure TestVerify;
      Procedure TestVerifyFromKey;
    end;
+
+procedure Registerutestsha256Tests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -67,10 +85,10 @@ var
 begin
   S:=TStringStream.Create(APrivateKeyPem);
   try
-    AssertTrue('Loaded key',PemLoadECDSA(S,aPrivateKey,aPublicKey,X,Y));
-    AssertTrue('Encrypted',TECDSA.SignSHA256(aInput,aPrivateKey,aSignature));
+    TestContext.AssertTrue(PemLoadECDSA(S,aPrivateKey,aPublicKey,X,Y), 'Loaded key');
+    TestContext.AssertTrue(TECDSA.SignSHA256(aInput,aPrivateKey,aSignature), 'Encrypted');
     EccPublicKeyFromPrivateKey(aPublicKey,aPrivateKey);
-    AssertTrue('Verified our own',TECDSA.SignSHA256(aInput,aPrivateKey,aSignature));
+    TestContext.AssertTrue(TECDSA.SignSHA256(aInput,aPrivateKey,aSignature), 'Verified our own');
   finally
     S.Free;
   end;
@@ -88,11 +106,11 @@ var
 begin
   S:=TStringStream.Create(APrivateKeyPem);
   try
-    AssertTrue('Loaded key',PemLoadECDSA(S,aPrivateKey,aPublicKey,X,Y));
-    AssertTrue('Encrypted',TECDSA.SignSHA256(aInput,aPrivateKey,aSignature));
+    TestContext.AssertTrue(PemLoadECDSA(S,aPrivateKey,aPublicKey,X,Y), 'Loaded key');
+    TestContext.AssertTrue(TECDSA.SignSHA256(aInput,aPrivateKey,aSignature), 'Encrypted');
     // Now verify with result of someone else (random elements)
     BytesToVar(Base64URL.Decode(aOutput),aSignature,SizeOf(aSignature));
-    AssertTrue('Verified other',TECDSA.VerifySHA256(aInput,aPrivateKey,aSignature));
+    TestContext.AssertTrue(TECDSA.VerifySHA256(aInput,aPrivateKey,aSignature), 'Verified other');
   finally
     S.Free;
   end;
@@ -115,7 +133,7 @@ var
 
 begin
   BytesToVar(Base64URL.Decode(aOutput2),aSignature,SizeOf(aSignature));
-  AssertTrue('Verified other',TECDSA.VerifySHA256(aInput2,aPrivateKey2,aSignature));
+  TestContext.AssertTrue(TECDSA.VerifySHA256(aInput2,aPrivateKey2,aSignature), 'Verified other');
 end;
 
 { TTestSHA256 }
@@ -131,7 +149,7 @@ begin
   Digest:='';
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   TSHA256.DigestHexa(S, Digest);
-  AssertEquals('Correct hex digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct hex digest');
 end;
 
 procedure TTestSHA256.TestBase64String(const aString, aDigest: String);
@@ -143,7 +161,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   Digest:='';
   TSHA256.DigestBase64(S,False,Digest);
-  AssertEquals('Correct base64 digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct base64 digest');
 end;
 
 procedure TTestSHA256.TestHMACString(const aString, aKey, aDigest: String);
@@ -155,7 +173,7 @@ begin
   S:=TEncoding.UTF8.GetAnsiBytes(aString);
   K:=TEncoding.UTF8.GetAnsiBytes(aKey);
   TSHA256.HMACHexa(K,S,Digest);
-  AssertEquals('Correct digest',aDigest, Digest);
+  TestContext.AssertTrue((aDigest)=(Digest), 'Correct digest');
 end;
 
 procedure TTestSHA256.TestEmpty;
@@ -197,13 +215,122 @@ Var
 begin
   S:=TStringStream.Create('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
   try
-    AssertEquals('Correct hash','3964294B664613798D1A477EB8AD02118B48D0C5738C427613202F2ED123B5F1',TSHA256.StreamHexa(S));
+    TestContext.AssertTrue(('3964294B664613798D1A477EB8AD02118B48D0C5738C427613202F2ED123B5F1')=(TSHA256.StreamHexa(S)), 'Correct hash');
   finally
     S.Free;
   end;
 end;
 
-initialization
-  RegisterTests([TTestSHA256,TTestECDSASHA256]);
-end.
 
+constructor TTestSHA256.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestECDSASHA256.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSHA256TestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestEmpty');
+  try
+    lFixture.TestEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA256TestSmallString(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestSmallString');
+  try
+    lFixture.TestSmallString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA256TestEmptyBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestEmptyBase64');
+  try
+    lFixture.TestEmptyBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA256TestSmallBase64(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestSmallBase64');
+  try
+    lFixture.TestSmallBase64;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA256TestSmallHMAC(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestSmallHMAC');
+  try
+    lFixture.TestSmallHMAC;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSHA256TestHMACStream(AContext: TNXTestContext);
+var lFixture: TTestSHA256;
+begin
+  lFixture:=TTestSHA256.Create(AContext, 'TestHMACStream');
+  try
+    lFixture.TestHMACStream;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestECDSASHA256TestSignVerify(AContext: TNXTestContext);
+var lFixture: TTestECDSASHA256;
+begin
+  lFixture:=TTestECDSASHA256.Create(AContext, 'TestSignVerify');
+  try
+    lFixture.TestSignVerify;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestECDSASHA256TestVerify(AContext: TNXTestContext);
+var lFixture: TTestECDSASHA256;
+begin
+  lFixture:=TTestECDSASHA256.Create(AContext, 'TestVerify');
+  try
+    lFixture.TestVerify;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestECDSASHA256TestVerifyFromKey(AContext: TNXTestContext);
+var lFixture: TTestECDSASHA256;
+begin
+  lFixture:=TTestECDSASHA256.Create(AContext, 'TestVerifyFromKey');
+  try
+    lFixture.TestVerifyFromKey;
+  finally lFixture.Free; end;
+end;
+
+procedure Registerutestsha256Tests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utestsha256.TTestSHA256');
+  lSuite.AddTest('TestEmpty', @RunTTestSHA256TestEmpty);
+  lSuite.AddTest('TestSmallString', @RunTTestSHA256TestSmallString);
+  lSuite.AddTest('TestEmptyBase64', @RunTTestSHA256TestEmptyBase64);
+  lSuite.AddTest('TestSmallBase64', @RunTTestSHA256TestSmallBase64);
+  lSuite.AddTest('TestSmallHMAC', @RunTTestSHA256TestSmallHMAC);
+  lSuite.AddTest('TestHMACStream', @RunTTestSHA256TestHMACStream);
+  lSuite:=ARegistry.AddSuite('utestsha256.TTestECDSASHA256');
+  lSuite.AddTest('TestSignVerify', @RunTTestECDSASHA256TestSignVerify);
+  lSuite.AddTest('TestVerify', @RunTTestECDSASHA256TestVerify);
+  lSuite.AddTest('TestVerifyFromKey', @RunTTestECDSASHA256TestVerifyFromKey);
+end;
+
+end.

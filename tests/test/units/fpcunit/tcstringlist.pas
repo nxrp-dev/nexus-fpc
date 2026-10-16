@@ -5,13 +5,21 @@ unit tcstringlist;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils;
 
 type
 
   { TTestTStringList }
 
-  TTestTStringList= class(TTestCase)
+  TTestTStringList= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     procedure AddB;
     procedure DeleteNegativeIndex;
@@ -26,9 +34,9 @@ type
   protected
     List : TStringList;
     Procedure FillList(ACount : Integer);
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestCreate;
     procedure TestAdd;
     procedure TestAddIndex;
@@ -72,71 +80,73 @@ type
     Property LastSender : TObject Read FSender;
   end;
 
+procedure RegistertcstringlistTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 procedure TTestTStringList.TestCreate;
 begin
-  AssertEquals('Empty list has count 0',0,List.Count);
-  AssertEquals('Empty list has sorted false',False,List.Sorted);
+  TestContext.AssertTrue((0)=(List.Count), 'Empty list has count 0');
+  TestContext.AssertTrue((False)=(List.Sorted), 'Empty list has sorted false');
   If List.Duplicates<>dupIgnore then
-    Fail('Empty list has duplicates=dupIgnore');
+    TestContext.Fail('Empty list has duplicates=dupIgnore');
 end;
 
 procedure TTestTStringList.TestAdd;
 
 begin
   FillList(1);
-  AssertEquals('Add 1 element, count is 1',1,List.Count);
-  AssertEquals('Add 1 element, last element is "Item 1"','Item 1',List[0]);
+  TestContext.AssertTrue((1)=(List.Count), 'Add 1 element, count is 1');
+  TestContext.AssertTrue(('Item 1')=(List[0]), 'Add 1 element, last element is "Item 1"');
 end;
 
 procedure TTestTStringList.TestAddIndex;
 
 begin
-  AssertEquals('Add first element at index 0',0,List.Add('First'));
-  AssertEquals('Add second element, at index 1',1,List.Add('second'));
+  TestContext.AssertTrue((0)=(List.Add('First')), 'Add first element at index 0');
+  TestContext.AssertTrue((1)=(List.Add('second')), 'Add second element, at index 1');
 end;
 
 procedure TTestTStringList.TestAdd2;
 
 begin
   FillList(2);
-  AssertEquals('Add 2 elements, count is 2',2,List.Count);
-  AssertEquals('Add 2 elements, first element is "Item 1"','Item 1',List[0]);
-  AssertEquals('Add 2 elements, second element is "Item 2"','Item 2',List[1]);
+  TestContext.AssertTrue((2)=(List.Count), 'Add 2 elements, count is 2');
+  TestContext.AssertTrue(('Item 1')=(List[0]), 'Add 2 elements, first element is "Item 1"');
+  TestContext.AssertTrue(('Item 2')=(List[1]), 'Add 2 elements, second element is "Item 2"');
 end;
 
 procedure TTestTStringList.TestInsertFirst;
 begin
   FillList(3);
   List.Insert(0,'New');
-  AssertEquals('Insert 1 in 3, count is 4',4,List.Count);
-  AssertEquals('Insert 1 in 3, first is inserted','New',List[0]);
-  AssertEquals('Insert 1 in 3, second is old first','Item 1',List[1]);
+  TestContext.AssertTrue((4)=(List.Count), 'Insert 1 in 3, count is 4');
+  TestContext.AssertTrue(('New')=(List[0]), 'Insert 1 in 3, first is inserted');
+  TestContext.AssertTrue(('Item 1')=(List[1]), 'Insert 1 in 3, second is old first');
 end;
 
 procedure TTestTStringList.TestInsertMiddle;
 begin
   FillList(3);
   List.Insert(1,'New');
-  AssertEquals('Insert 1 in 3, count is 4',4,List.Count);
-  AssertEquals('Insert 1 in 3, 1 is inserted','New',List[1]);
-  AssertEquals('Insert 1 in 3, 2 is old 2','Item 2',List[2]);
-  AssertEquals('Insert 1 in 3, 0 is untouched','Item 1',List[0]);
+  TestContext.AssertTrue((4)=(List.Count), 'Insert 1 in 3, count is 4');
+  TestContext.AssertTrue(('New')=(List[1]), 'Insert 1 in 3, 1 is inserted');
+  TestContext.AssertTrue(('Item 2')=(List[2]), 'Insert 1 in 3, 2 is old 2');
+  TestContext.AssertTrue(('Item 1')=(List[0]), 'Insert 1 in 3, 0 is untouched');
 end;
 
 procedure TTestTStringList.TestClear;
 begin
   FillList(3);
   List.Clear;
-  AssertEquals('Clear: count is 0',0,List.Count);
+  TestContext.AssertTrue((0)=(List.Count), 'Clear: count is 0');
 end;
 
 procedure TTestTStringList.TestIndexOf;
 begin
   FillList(11);
-  AssertEquals('Find third element',2,List.IndexOf('Item 3'));
-  AssertEquals('Find third element, wrong case',2,List.IndexOf('ITEM 3'));
+  TestContext.AssertTrue((2)=(List.IndexOf('Item 3')), 'Find third element');
+  TestContext.AssertTrue((2)=(List.IndexOf('ITEM 3')), 'Find third element, wrong case');
 end;
 
 procedure TTestTStringList.TestDelete;
@@ -144,9 +154,9 @@ procedure TTestTStringList.TestDelete;
 begin
   FillList(3);
   List.Delete(1);
-  AssertEquals('Delete 1 from 3, count is 2',2,List.Count);
-  AssertEquals('Delete 1 from 3, first is "Item 1"','Item 1',List[0]);
-  AssertEquals('Delete 1 from 3, second is "Item 3"','Item 3',List[1]);
+  TestContext.AssertTrue((2)=(List.Count), 'Delete 1 from 3, count is 2');
+  TestContext.AssertTrue(('Item 1')=(List[0]), 'Delete 1 from 3, first is "Item 1"');
+  TestContext.AssertTrue(('Item 3')=(List[1]), 'Delete 1 from 3, second is "Item 3"');
 end;
 
 procedure TTestTStringList.TestExchange;
@@ -154,10 +164,10 @@ procedure TTestTStringList.TestExchange;
 begin
   FillList(3);
   List.Exchange(0,2);
-  AssertEquals('Exchange 0 and 2, count is 3',3,List.Count);
-  AssertEquals('Exchange 0 and 2, first is "Item 3"','Item 3',List[0]);
-  AssertEquals('Exchange 0 and 2, second is "Item 2"','Item 2',List[1]);
-  AssertEquals('Exchange 0 and 2, third is "Item 1"','Item 1',List[2]);
+  TestContext.AssertTrue((3)=(List.Count), 'Exchange 0 and 2, count is 3');
+  TestContext.AssertTrue(('Item 3')=(List[0]), 'Exchange 0 and 2, first is "Item 3"');
+  TestContext.AssertTrue(('Item 2')=(List[1]), 'Exchange 0 and 2, second is "Item 2"');
+  TestContext.AssertTrue(('Item 1')=(List[2]), 'Exchange 0 and 2, third is "Item 1"');
 end;
 
 procedure TTestTStringList.DeleteNegativeIndex;
@@ -221,24 +231,24 @@ end;
 procedure TTestTStringList.TestAccesIndexOutOfBounds;
 begin
   FillList(3);
-  AssertException('Access Negative Index',EStringListError,@AccessNegativeIndex);
-  AssertException('Access Index too big',EStringListError,@AccessTooBigIndex);
+  TestContext.AssertRaises(EStringListError, @AccessNegativeIndex, 'Access Negative Index');
+  TestContext.AssertRaises(EStringListError, @AccessTooBigIndex, 'Access Index too big');
 end;
 
 procedure TTestTStringList.TestDeleteIndexOutOfBounds;
 begin
   FillList(3);
-  AssertException('Delete Negative Index',EStringListError,@DeleteNegativeIndex);
-  AssertException('Delete Index too big',EStringListError,@DeleteTooBigIndex);
+  TestContext.AssertRaises(EStringListError, @DeleteNegativeIndex, 'Delete Negative Index');
+  TestContext.AssertRaises(EStringListError, @DeleteTooBigIndex, 'Delete Index too big');
 end;
 
 procedure TTestTStringList.TestExchangeIndexOutOfBounds;
 begin
   FillList(3);
-  AssertException('Exchange Negative first index',EStringListError,@ExchangeNegativeIndex1);
-  AssertException('Exchange Negative second index',EStringListError,@ExchangeNegativeIndex2);
-  AssertException('Exchange first Index too big',EStringListError,@ExchangeTooBigIndex1);
-  AssertException('Exchange second Index too big',EStringListError,@ExchangeTooBigIndex2);
+  TestContext.AssertRaises(EStringListError, @ExchangeNegativeIndex1, 'Exchange Negative first index');
+  TestContext.AssertRaises(EStringListError, @ExchangeNegativeIndex2, 'Exchange Negative second index');
+  TestContext.AssertRaises(EStringListError, @ExchangeTooBigIndex1, 'Exchange first Index too big');
+  TestContext.AssertRaises(EStringListError, @ExchangeTooBigIndex2, 'Exchange second Index too big');
 end;
 
 procedure TTestTStringList.TestSort;
@@ -252,7 +262,7 @@ begin
   List.Sort;
   For I:=0 to List.Count-1 do
     If (List[i]<>'Item '+IntToStr(I+1)) then
-      Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
+      TestContext.Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
 end;
 
 procedure TTestTStringList.TestSorted;
@@ -265,16 +275,16 @@ begin
   List.Sorted:=True;
   For I:=0 to List.Count-1 do
     If (List[i]<>'Item '+IntToStr(I+1)) then
-      Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
+      TestContext.Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
 end;
 
 procedure TTestTStringList.TestSortedAdd;
 begin
   List.Sorted:=True;
   List.Add('B');
-  AssertEquals('Add second element at first location in sorted list',0,List.Add('A'));
-  AssertEquals('Add third element at first location in sorted list',1,List.Add('AB'));
-  AssertEquals('Add fourth element at last location in sorted list',3,List.Add('C'));
+  TestContext.AssertTrue((0)=(List.Add('A')), 'Add second element at first location in sorted list');
+  TestContext.AssertTrue((1)=(List.Add('AB')), 'Add third element at first location in sorted list');
+  TestContext.AssertTrue((3)=(List.Add('C')), 'Add fourth element at last location in sorted list');
 end;
 
 procedure TTestTStringList.TestSortedAddAll;
@@ -287,7 +297,7 @@ begin
   FillList(9);
   For I:=0 to List.Count-1 do
     If (List[i]<>'Item '+IntToStr(I+1)) then
-      Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
+      TestContext.Fail(Format('Item at position %d is out of place (%s)',[I,List[i]]));
 end;
 
 procedure TTestTStringList.AddB;
@@ -301,8 +311,8 @@ begin
   List.Sorted:=True;
   List.Duplicates:=dupError;
   List.Add('B');
-  AssertEquals('Add second element at first location in sorted list',0,List.Add('A'));
-  AssertException(EStringListError,@AddB);
+  TestContext.AssertTrue((0)=(List.Add('A')), 'Add second element at first location in sorted list');
+  TestContext.AssertRaises(EStringListError, @AddB, '');
 end;
 
 procedure TTestTStringList.TestSortedAddDuplicate;
@@ -311,9 +321,9 @@ begin
   List.Sorted:=True;
   List.Duplicates:=dupAccept;
   List.Add('B');
-  AssertEquals('Add second element at first location in sorted list',0,List.Add('A'));
-  AssertEquals('Add third element at first location in sorted list',1,List.Add('B'));
-  AssertEquals('Add fourth element at last location in sorted list',3,List.Add('C'));
+  TestContext.AssertTrue((0)=(List.Add('A')), 'Add second element at first location in sorted list');
+  TestContext.AssertTrue((1)=(List.Add('B')), 'Add third element at first location in sorted list');
+  TestContext.AssertTrue((3)=(List.Add('C')), 'Add fourth element at last location in sorted list');
 end;
 
 procedure TTestTStringList.TestSortedIndexOf;
@@ -324,8 +334,8 @@ begin
   List.Sorted:=True;
   FillList(11);
   // 1 10 11 2 3 - so index 4
-  AssertEquals('Find third element',4,List.IndexOf('Item 3'));
-  AssertEquals('Find third element, wrong case',4,List.IndexOf('ITEM 3'));
+  TestContext.AssertTrue((4)=(List.IndexOf('Item 3')), 'Find third element');
+  TestContext.AssertTrue((4)=(List.IndexOf('ITEM 3')), 'Find third element, wrong case');
 end;
 
 procedure TTestTStringList.TestChange;
@@ -338,9 +348,9 @@ begin
   try
     List.OnChange:=@S.Change;
     List.Add('new');
-    AssertEquals('Change count equals 1 after add',1,S.ChangeCount);
+    TestContext.AssertTrue((1)=(S.ChangeCount), 'Change count equals 1 after add');
     If List<>S.LastSender then
-      Fail('Sender is list');
+      TestContext.Fail('Sender is list');
   finally
     S.Free;
   end;
@@ -358,15 +368,15 @@ begin
     Try
     List.OnChange:=@S.Change;
     List.Add('new');
-      AssertEquals('Change count equals 0 after add (beginupdate)',0,S.ChangeCount);
+      TestContext.AssertTrue((0)=(S.ChangeCount), 'Change count equals 0 after add (beginupdate)');
       If (Nil<>S.LastSender) then
-        Fail('Sender is nil');
+        TestContext.Fail('Sender is nil');
     Finally
       List.EndUpdate;
     end;
-    AssertEquals('Change count equals 1 after add endupdate',1,S.ChangeCount);
+    TestContext.AssertTrue((1)=(S.ChangeCount), 'Change count equals 1 after add endupdate');
     If List<>S.LastSender then
-      Fail('Sender is list');
+      TestContext.Fail('Sender is list');
   finally
     S.Free;
   end;
@@ -385,29 +395,29 @@ begin
       // Count is 1, no notification
       List.OnChange:=@S.Change;
       List.Add('new');
-      AssertEquals('Change count equals 0 after add (1st beginupdate)',0,S.ChangeCount);
+      TestContext.AssertTrue((0)=(S.ChangeCount), 'Change count equals 0 after add (1st beginupdate)');
       If (Nil<>S.LastSender) then
-        Fail('Sender is nil');
+        TestContext.Fail('Sender is nil');
       List.BeginUpdate;
       Try
         List.Add('new2');
         // Count is 2, no notification
-        AssertEquals('Change count equals 0 after add (2nd beginupdate)',0,S.ChangeCount);
+        TestContext.AssertTrue((0)=(S.ChangeCount), 'Change count equals 0 after add (2nd beginupdate)');
         If (Nil<>S.LastSender) then
-          Fail('Sender is nil');
+          TestContext.Fail('Sender is nil');
       Finally
         List.EndUpdate;
       end;
       // Count is 1 again, no notification
-      AssertEquals('Change count equals 0 after first endupdate',0,S.ChangeCount);
+      TestContext.AssertTrue((0)=(S.ChangeCount), 'Change count equals 0 after first endupdate');
       If (Nil<>S.LastSender) then
-        Fail('Sender is nil after first endupdate');
+        TestContext.Fail('Sender is nil after first endupdate');
     Finally
       List.EndUpdate;
     end;
-    AssertEquals('Change count equals 1 after add endupdate',1,S.ChangeCount);
+    TestContext.AssertTrue((1)=(S.ChangeCount), 'Change count equals 1 after add endupdate');
     If List<>S.LastSender then
-      Fail('Sender is list');
+      TestContext.Fail('Sender is list');
   finally
     S.Free;
   end;
@@ -424,7 +434,7 @@ begin
   try
     List.OnChange:=@S.Change;
     List.Clear;
-    AssertEquals('Change count equals 1 after clear',1,S.ChangeCount);
+    TestContext.AssertTrue((1)=(S.ChangeCount), 'Change count equals 1 after clear');
   finally
     S.Free;
   end;
@@ -437,10 +447,10 @@ Const
 
 begin
   List.Text:=Lines;
-  AssertEquals('3 lines set',3,List.Count);
-  AssertEquals('First line is "Line 1"','Line 1',List[0]);
-  AssertEquals('Second line is "Line 2"','Line 2',List[1]);
-  AssertEquals('Third line is "Line 3"','Line 3',List[2]);
+  TestContext.AssertTrue((3)=(List.Count), '3 lines set');
+  TestContext.AssertTrue(('Line 1')=(List[0]), 'First line is "Line 1"');
+  TestContext.AssertTrue(('Line 2')=(List[1]), 'Second line is "Line 2"');
+  TestContext.AssertTrue(('Line 3')=(List[2]), 'Third line is "Line 3"');
 end;
 
 procedure TTestTStringList.TestSetTextEOL;
@@ -450,9 +460,9 @@ Const
 
 begin
   List.Text:=Lines;
-  AssertEquals('2 lines set',2,List.Count);
-  AssertEquals('First line is "Line 1"','Line 1',List[0]);
-  AssertEquals('Second line is "Line 2"','Line 2',List[1]);
+  TestContext.AssertTrue((2)=(List.Count), '2 lines set');
+  TestContext.AssertTrue(('Line 1')=(List[0]), 'First line is "Line 1"');
+  TestContext.AssertTrue(('Line 2')=(List[1]), 'Second line is "Line 2"');
 end;
 
 procedure TTestTStringList.TestSetTextEOLEmpty;
@@ -462,10 +472,10 @@ Const
 
 begin
   List.Text:=Lines;
-  AssertEquals('3 lines set',3,List.Count);
-  AssertEquals('First line is "Line 1"','Line 1',List[0]);
-  AssertEquals('Second line is "Line 2"','Line 2',List[1]);
-  AssertEquals('Third line is empty','',List[2]);
+  TestContext.AssertTrue((3)=(List.Count), '3 lines set');
+  TestContext.AssertTrue(('Line 1')=(List[0]), 'First line is "Line 1"');
+  TestContext.AssertTrue(('Line 2')=(List[1]), 'Second line is "Line 2"');
+  TestContext.AssertTrue(('')=(List[2]), 'Third line is empty');
 end;
 
 procedure TTestTStringList.TestSetTextEmpty;
@@ -475,11 +485,11 @@ Const
 
 begin
   List.Text:=Lines;
-  AssertEquals('4 lines set',4,List.Count);
-  AssertEquals('First line is "Line 1"','Line 1',List[0]);
-  AssertEquals('Second line is empty','',List[1]);
-  AssertEquals('Third line is empty','',List[2]);
-  AssertEquals('Fourth line is "Line 2"','Line 2',List[3]);
+  TestContext.AssertTrue((4)=(List.Count), '4 lines set');
+  TestContext.AssertTrue(('Line 1')=(List[0]), 'First line is "Line 1"');
+  TestContext.AssertTrue(('')=(List[1]), 'Second line is empty');
+  TestContext.AssertTrue(('')=(List[2]), 'Third line is empty');
+  TestContext.AssertTrue(('Line 2')=(List[3]), 'Fourth line is "Line 2"');
 end;
 
 
@@ -517,7 +527,326 @@ begin
   FSender:=Nil;
 end;
 
-initialization
-  RegisterTest(TTestTStringList);
-end.
 
+constructor TTestTStringList.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestTStringListTestCreate(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestAdd(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestAddIndex(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestAddIndex');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddIndex; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestAdd2(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestAdd2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestInsertFirst(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestInsertFirst');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInsertFirst; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestInsertMiddle(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestInsertMiddle');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInsertMiddle; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestDelete(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestClear(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestIndexOf(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestIndexOf');
+  try
+    lFixture.SetUp;
+    try lFixture.TestIndexOf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestExchange(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestExchange');
+  try
+    lFixture.SetUp;
+    try lFixture.TestExchange; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestAccesIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestAccesIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAccesIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestDeleteIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestDeleteIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeleteIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestExchangeIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestExchangeIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestExchangeIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSort(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSort');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSort; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSorted(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSorted');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSorted; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSortedAdd(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSortedAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSortedAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSortedAddAll(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSortedAddAll');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSortedAddAll; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSortedDupError(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSortedDupError');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSortedDupError; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSortedAddDuplicate(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSortedAddDuplicate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSortedAddDuplicate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSortedIndexOf(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSortedIndexOf');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSortedIndexOf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestChange(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestChange');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChange; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestChangeAgain(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestChangeAgain');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeAgain; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestChangeCount(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestChangeCount');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeCount; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestChangeClear(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestChangeClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSetText(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSetText');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetText; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSetTextEOL(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSetTextEOL');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetTextEOL; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSetTextEmpty(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSetTextEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetTextEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTStringListTestSetTextEOLEmpty(AContext: TNXTestContext);
+var lFixture: TTestTStringList;
+begin
+  lFixture:=TTestTStringList.Create(AContext, 'TestSetTextEOLEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetTextEOLEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcstringlistTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcstringlist.TTestTStringList');
+  lSuite.AddTest('TestCreate', @RunTTestTStringListTestCreate);
+  lSuite.AddTest('TestAdd', @RunTTestTStringListTestAdd);
+  lSuite.AddTest('TestAddIndex', @RunTTestTStringListTestAddIndex);
+  lSuite.AddTest('TestAdd2', @RunTTestTStringListTestAdd2);
+  lSuite.AddTest('TestInsertFirst', @RunTTestTStringListTestInsertFirst);
+  lSuite.AddTest('TestInsertMiddle', @RunTTestTStringListTestInsertMiddle);
+  lSuite.AddTest('TestDelete', @RunTTestTStringListTestDelete);
+  lSuite.AddTest('TestClear', @RunTTestTStringListTestClear);
+  lSuite.AddTest('TestIndexOf', @RunTTestTStringListTestIndexOf);
+  lSuite.AddTest('TestExchange', @RunTTestTStringListTestExchange);
+  lSuite.AddTest('TestAccesIndexOutOfBounds', @RunTTestTStringListTestAccesIndexOutOfBounds);
+  lSuite.AddTest('TestDeleteIndexOutOfBounds', @RunTTestTStringListTestDeleteIndexOutOfBounds);
+  lSuite.AddTest('TestExchangeIndexOutOfBounds', @RunTTestTStringListTestExchangeIndexOutOfBounds);
+  lSuite.AddTest('TestSort', @RunTTestTStringListTestSort);
+  lSuite.AddTest('TestSorted', @RunTTestTStringListTestSorted);
+  lSuite.AddTest('TestSortedAdd', @RunTTestTStringListTestSortedAdd);
+  lSuite.AddTest('TestSortedAddAll', @RunTTestTStringListTestSortedAddAll);
+  lSuite.AddTest('TestSortedDupError', @RunTTestTStringListTestSortedDupError);
+  lSuite.AddTest('TestSortedAddDuplicate', @RunTTestTStringListTestSortedAddDuplicate);
+  lSuite.AddTest('TestSortedIndexOf', @RunTTestTStringListTestSortedIndexOf);
+  lSuite.AddTest('TestChange', @RunTTestTStringListTestChange);
+  lSuite.AddTest('TestChangeAgain', @RunTTestTStringListTestChangeAgain);
+  lSuite.AddTest('TestChangeCount', @RunTTestTStringListTestChangeCount);
+  lSuite.AddTest('TestChangeClear', @RunTTestTStringListTestChangeClear);
+  lSuite.AddTest('TestSetText', @RunTTestTStringListTestSetText);
+  lSuite.AddTest('TestSetTextEOL', @RunTTestTStringListTestSetTextEOL);
+  lSuite.AddTest('TestSetTextEmpty', @RunTTestTStringListTestSetTextEmpty);
+  lSuite.AddTest('TestSetTextEOLEmpty', @RunTTestTStringListTestSetTextEOLEmpty);
+end;
+
+end.

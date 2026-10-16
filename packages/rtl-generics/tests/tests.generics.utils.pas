@@ -23,8 +23,7 @@ unit tests.generics.utils;
 interface
 
 uses
-  fpcunit, testutils, testregistry,
-  Classes, SysUtils, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Collections;
 
 type
   TNotificationRec<T> = record
@@ -45,7 +44,15 @@ type
     Executed: boolean;
   end;
 
-  TTestCollections = class(TTestCase)
+  TTestCollections = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private type
     TNotificationRec_String = TNotificationRec<string>;
     TNotificationRec_TObject = TNotificationRec<TObject>;
@@ -92,7 +99,7 @@ type
     procedure CreateObjects(var AArray: TArray<TObject>; ACount: Integer);
     procedure FreeObjects(AArray: TArray<TObject>);
   public
-    constructor Create; override;
+
     destructor Destroy; override;
   end;
 
@@ -158,6 +165,8 @@ function EnumerableStringsIntf(const AItems: array of string): IEnumerable<strin
 function EnumerableStringsObj(const AItems: array of string): TEnumerable<string>;
 function EnumerableObjectsIntf(const AItems: array of TObject): IEnumerable<TObject>;
 function EnumerableObjectsObj(const AItems: array of TObject): TEnumerable<TObject>;
+
+procedure RegistertestsgenericsutilsTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -285,8 +294,8 @@ var
   p: ^TNotificationNodeRec_String;
 begin
   for p in NotificationsListNode_String.Ptr^ do
-    AssertTrue(p^.Executed);
-  AssertEquals(NotificationsNodesIndex, NotificationsListNode_String.Count);
+    TestContext.AssertTrue(p^.Executed, '');
+  TestContext.AssertTrue((NotificationsNodesIndex)=(NotificationsListNode_String.Count), '');
   ClearNotificationsStr;
 end;
 
@@ -301,8 +310,8 @@ var
   p: ^TNotificationNodeRec_Empty;
 begin
   for p in NotificationsListNode_Empty.Ptr^ do
-    AssertTrue(p^.Executed);
-  AssertEquals(NotificationsNodesIndex, NotificationsListNode_Empty.Count);
+    TestContext.AssertTrue(p^.Executed, '');
+  TestContext.AssertTrue((NotificationsNodesIndex)=(NotificationsListNode_Empty.Count), '');
   ClearNotificationsStr;
 end;
 
@@ -317,8 +326,8 @@ var
   p: ^TNotificationRec_String;
 begin
   for p in NotificationsListStr.Ptr^ do
-    AssertTrue(p^.Executed);
-  AssertEquals(NotificationsIndex, NotificationsListStr.Count);
+    TestContext.AssertTrue(p^.Executed, '');
+  TestContext.AssertTrue((NotificationsIndex)=(NotificationsListStr.Count), '');
   ClearNotificationsStr;
 end;
 
@@ -333,8 +342,8 @@ var
   p: ^TNotificationRec_TObject;
 begin
   for p in NotificationsListObj.Ptr^ do
-    AssertTrue(p^.Executed);
-  AssertEquals(NotificationsIndex, NotificationsListObj.Count);
+    TestContext.AssertTrue(p^.Executed, '');
+  TestContext.AssertTrue((NotificationsIndex)=(NotificationsListObj.Count), '');
   ClearNotificationsObj;
 end;
 
@@ -348,16 +357,16 @@ procedure TTestCollections.NotifyTestNodeStr(ASender: TObject; ANode: PNode_Stri
 var
   LNotification: TNotificationNodeRec_String;
 begin
-  AssertTrue(NotificationsNodesIndex < NotificationsListNode_String.Count);
+  TestContext.AssertTrue(NotificationsNodesIndex < NotificationsListNode_String.Count, '');
   LNotification := NotificationsListNode_String[NotificationsNodesIndex];
-  AssertTrue(ASender = LNotification.Sender);
-  AssertEquals(ANode.Key, LNotification.Key);
-  AssertEquals(ANode.Value, LNotification.Value);
+  TestContext.AssertTrue(ASender = LNotification.Sender, '');
+  TestContext.AssertTrue((ANode.Key)=(LNotification.Key), '');
+  TestContext.AssertTrue((ANode.Value)=(LNotification.Value), '');
   if not LNotification.IgnoreNodePtr then
-    AssertSame(ANode, LNotification.Node);
-  AssertTrue(AAction = LNotification.Action);
-  AssertEquals(ADispose, LNotification.Dispose);
-  AssertFalse(LNotification.Executed);
+    TestContext.AssertTrue((ANode)=(LNotification.Node), '');
+  TestContext.AssertTrue(AAction = LNotification.Action, '');
+  TestContext.AssertTrue((ADispose)=(LNotification.Dispose), '');
+  TestContext.AssertTrue(not (LNotification.Executed), '');
   LNotification.Executed := True;
   NotificationsListNode_String[NotificationsNodesIndex] := LNotification;
   Inc(NotificationsNodesIndex)
@@ -367,15 +376,15 @@ procedure TTestCollections.NotifyTestNodeEmpty(ASender: TObject; ANode: PNode_Em
 var
   LNotification: TNotificationNodeRec_Empty;
 begin
-  AssertTrue(NotificationsNodesIndex < NotificationsListNode_Empty.Count);
+  TestContext.AssertTrue(NotificationsNodesIndex < NotificationsListNode_Empty.Count, '');
   LNotification := NotificationsListNode_Empty[NotificationsNodesIndex];
-  AssertTrue(ASender = LNotification.Sender);
-  AssertEquals(ANode.Key, LNotification.Key);
+  TestContext.AssertTrue(ASender = LNotification.Sender, '');
+  TestContext.AssertTrue((ANode.Key)=(LNotification.Key), '');
   if not LNotification.IgnoreNodePtr then
-    AssertSame(ANode, LNotification.Node);
-  AssertTrue(AAction = LNotification.Action);
-  AssertEquals(ADispose, LNotification.Dispose);
-  AssertFalse(LNotification.Executed);
+    TestContext.AssertTrue((ANode)=(LNotification.Node), '');
+  TestContext.AssertTrue(AAction = LNotification.Action, '');
+  TestContext.AssertTrue((ADispose)=(LNotification.Dispose), '');
+  TestContext.AssertTrue(not (LNotification.Executed), '');
   LNotification.Executed := True;
   NotificationsListNode_Empty[NotificationsNodesIndex] := LNotification;
   Inc(NotificationsNodesIndex)
@@ -385,12 +394,12 @@ procedure TTestCollections.NotifyTestStr(ASender: TObject; const AItem: string; 
 var
   LNotification: TNotificationRec_String;
 begin
-  AssertTrue(NotificationsIndex < NotificationsListStr.Count);
+  TestContext.AssertTrue(NotificationsIndex < NotificationsListStr.Count, '');
   LNotification := NotificationsListStr[NotificationsIndex];
-  AssertTrue(ASender = LNotification.Sender);
-  AssertEquals(AItem, LNotification.Item);
-  AssertTrue(AAction = LNotification.Action);
-  AssertFalse(LNotification.Executed);
+  TestContext.AssertTrue(ASender = LNotification.Sender, '');
+  TestContext.AssertTrue((AItem)=(LNotification.Item), '');
+  TestContext.AssertTrue(AAction = LNotification.Action, '');
+  TestContext.AssertTrue(not (LNotification.Executed), '');
   LNotification.Executed := True;
   NotificationsListStr[NotificationsIndex] := LNotification;
   Inc(NotificationsIndex)
@@ -400,12 +409,12 @@ procedure TTestCollections.NotifyTestObj(ASender: TObject; const AItem: TObject;
 var
   LNotification: TNotificationRec_TObject;
 begin
-  AssertTrue(NotificationsIndex < NotificationsListObj.Count);
+  TestContext.AssertTrue(NotificationsIndex < NotificationsListObj.Count, '');
   LNotification := NotificationsListObj[NotificationsIndex];
-  AssertTrue(ASender = LNotification.Sender);
-  AssertTrue(AItem = LNotification.Item);
-  AssertTrue(AAction = LNotification.Action);
-  AssertFalse(LNotification.Executed);
+  TestContext.AssertTrue(ASender = LNotification.Sender, '');
+  TestContext.AssertTrue(AItem = LNotification.Item, '');
+  TestContext.AssertTrue(AAction = LNotification.Action, '');
+  TestContext.AssertTrue(not (LNotification.Executed), '');
   LNotification.Executed := True;
   NotificationsListObj[NotificationsIndex] := LNotification;
   Inc(NotificationsIndex)
@@ -428,9 +437,11 @@ begin
     o.Free;
 end;
 
-constructor TTestCollections.Create;
+constructor TTestCollections.Create(AContext: TNXTestContext; const ACaseName: string);
 begin
-  inherited;
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
   NotificationsListStr := TList<TNotificationRec_String>.Create;
   NotificationsListObj := TList<TNotificationRec_TObject>.Create;
   NotificationsListNode_String := TList<TNotificationNodeRec_String>.Create;
@@ -532,5 +543,12 @@ begin
   inherited Destroy;
 end;
 
-end.
 
+
+procedure RegistertestsgenericsutilsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+
+end;
+
+end.

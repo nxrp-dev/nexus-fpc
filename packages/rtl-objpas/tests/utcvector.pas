@@ -18,7 +18,7 @@ unit utcvector;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, types, utmathvectorbase, system.math.vectors;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, types, utmathvectorbase, system.math.vectors;
 
 Type
 
@@ -36,7 +36,7 @@ Type
     Property V1 : TVector Index 1 Read GetV Write SetV;
     Property V2 : TVector Index 2 Read GetV Write SetV;
     Property V3 : TVector Index 3 Read GetV Write SetV;
-  Published
+  public
     procedure TestHookUp;
     Procedure TestZero;
     Procedure TestCreate;
@@ -56,6 +56,8 @@ Type
     Procedure TestDotProduct;
     Procedure TestToPointF;
   end;
+
+procedure RegisterutcvectorTests(ARegistry: TNXTestRegistry);
 
 implementation
 { TTestVector }
@@ -103,26 +105,26 @@ var
 begin
   For I:=1 to 3 do
     begin
-    AssertEquals('Vector '+intTostr(i)+'.X',0.0,FV[I].X);
-    AssertEquals('Vector '+intTostr(i)+'.Y',0.0,FV[I].Y);
-    AssertEquals('Vector '+intTostr(i)+'.W',0.0,FV[I].W);
+    TestContext.AssertTrue((0.0)=(FV[I].X), 'Vector '+intTostr(i)+'.X');
+    TestContext.AssertTrue((0.0)=(FV[I].Y), 'Vector '+intTostr(i)+'.Y');
+    TestContext.AssertTrue((0.0)=(FV[I].W), 'Vector '+intTostr(i)+'.W');
     end;
 end;
 
 procedure TTestVector.TestZero;
 begin
   V1:=TVector.Zero;
-  AssertEquals('Vector.X',0.0,V1.X);
-  AssertEquals('Vector.Y',0.0,V1.Y);
-  AssertEquals('Vector.W',0.0,V1.W);
+  TestContext.AssertTrue((0.0)=(V1.X), 'Vector.X');
+  TestContext.AssertTrue((0.0)=(V1.Y), 'Vector.Y');
+  TestContext.AssertTrue((0.0)=(V1.W), 'Vector.W');
 end;
 
 procedure TTestVector.TestCreate;
 begin
   V1:=TVector.Create(1,2);
-  AssertEquals('Vector.X',1.0,V1.X);
-  AssertEquals('Vector.Y',2.0,V1.Y);
-  AssertEquals('Vector.W',DefaultVectorWidth,V1.W);
+  TestContext.AssertTrue((1.0)=(V1.X), 'Vector.X');
+  TestContext.AssertTrue((2.0)=(V1.Y), 'Vector.Y');
+  TestContext.AssertTrue((DefaultVectorWidth)=(V1.W), 'Vector.W');
 end;
 
 procedure TTestVector.TestCreateW;
@@ -156,13 +158,13 @@ Var
 begin
   V1:=TVector.Create(1,2,3);
   P:=V1;
-  AssertEquals('Assign 1',PointF(0.3333,0.6666),P);
+  TestContext.AssertTrue((PointF(0.3333,0.6666))=(P), 'Assign 1');
   V1:=TVector.Create(1,2,1);
   P:=V1;
-  AssertEquals('Assign 2',PointF(1,2),P);
+  TestContext.AssertTrue((PointF(1,2))=(P), 'Assign 2');
   V1:=TVector.Create(1,2,0);
   P:=V1;
-  AssertEquals('Assign 3',PointF(1,2),P);
+  TestContext.AssertTrue((PointF(1,2))=(P), 'Assign 3');
 end;
 
 procedure TTestVector.TestAdd;
@@ -194,26 +196,26 @@ procedure TTestVector.TestEqual;
 begin
   V1:=TVector.Create(1,2,3);
   V2:=TVector.Create(1,2,3);
-  AssertTrue('Equal 1',V1=V2);
+  TestContext.AssertTrue(V1=V2, 'Equal 1');
   V2:=TVector.Create(3,2,1);
-  AssertFalse('Equal 2',V1=V2);
+  TestContext.AssertTrue(not (V1=V2), 'Equal 2');
   V2:=TVector.Create(1+TEpsilon.Vector*0.99,2,3);
-  AssertTrue('Equal within precision',V1=V2);
+  TestContext.AssertTrue(V1=V2, 'Equal within precision');
   V2:=TVector.Create(1+TEpsilon.Vector*1.1,2,3);
-  AssertFalse('Unequal outside precision',V1=V2);
+  TestContext.AssertTrue(not (V1=V2), 'Unequal outside precision');
 end;
 
 procedure TTestVector.TestNotEqual;
 begin
   V1:=TVector.Create(1,2,3);
   V2:=TVector.Create(1,2,3);
-  AssertFalse('Not Equal',V1<>V2);
+  TestContext.AssertTrue(not (V1<>V2), 'Not Equal');
   V2:=TVector.Create(3,2,1);
-  AssertTrue('Equal',V1<>V2);
+  TestContext.AssertTrue(V1<>V2, 'Equal');
   V2:=TVector.Create(1+TEpsilon.Vector*0.99,2,3);
-  AssertFalse('Equal within precision',V1<>V2);
+  TestContext.AssertTrue(not (V1<>V2), 'Equal within precision');
   V2:=TVector.Create(1+TEpsilon.Vector*1.1,2,3);
-  AssertTrue('Unequal outside precision',V1<>V2);
+  TestContext.AssertTrue(V1<>V2, 'Unequal outside precision');
 end;
 
 procedure TTestVector.TestSubtract;
@@ -227,9 +229,9 @@ end;
 procedure TTestVector.TestLength;
 begin
   V1:=TVector.Create(3,4,0);
-  AssertEquals('Length 1',5,V1.Length);
+  TestContext.AssertTrue((5)=(V1.Length), 'Length 1');
   V1:=TVector.Create(3,4,1);
-  AssertEquals('Length 1',Sqrt(26),V1.Length,TEpsilon.Vector);
+  TestContext.AssertTrue(Abs((Sqrt(26))-(V1.Length))<=(TEpsilon.Vector), 'Length 1');
 end;
 
 procedure TTestVector.TestNormalize;
@@ -237,11 +239,11 @@ begin
   V1:=TVector.Create(3,4,0);
   V2:=V1.Normalize;
   AssertVector('No width',3/5,4/5,0,V2);
-  AssertEquals('Length 1',1,V2.Length,TEpsilon.Vector);
+  TestContext.AssertTrue(Abs((1)-(V2.Length))<=(TEpsilon.Vector), 'Length 1');
   V1:=TVector.Create(3,4,1);
   V2:=V1.Normalize;
   AssertVector('No width',3/Sqrt(26),4/Sqrt(26),1/Sqrt(26),V2);
-  AssertEquals('Length 1',1,V2.Length,TEpsilon.Vector);
+  TestContext.AssertTrue(Abs((1)-(V2.Length))<=(TEpsilon.Vector), 'Length 1');
 end;
 
 procedure TTestVector.TestCrossProduct;
@@ -260,9 +262,9 @@ procedure TTestVector.TestDotProduct;
 begin
   V1:=TVector.Create(3,4,9);
   V2:=TVector.Create(3,4,9);
-  AssertEquals('Test 1',9+16+81,V1.DotProduct(V2));
+  TestContext.AssertTrue((9+16+81)=(V1.DotProduct(V2)), 'Test 1');
   V2:=TVector.Create(1,1,0);
-  AssertEquals('Test 1',7,V1.DotProduct(V2));
+  TestContext.AssertTrue((7)=(V1.DotProduct(V2)), 'Test 1');
 end;
 
 procedure TTestVector.TestToPointF;
@@ -273,14 +275,216 @@ var
 begin
   V1:=TVector.Create(1,2,3);
   P:=V1.ToPointF;
-  AssertEquals('ToPointF 1',PointF(0.3333,0.6666),P);
+  TestContext.AssertTrue((PointF(0.3333,0.6666))=(P), 'ToPointF 1');
   V1:=TVector.Create(1,2,1);
   P:=V1.ToPointF;
-  AssertEquals('ToPointF 2',PointF(1,2),P);
+  TestContext.AssertTrue((PointF(1,2))=(P), 'ToPointF 2');
 end;
 
 
-initialization
-  RegisterTest(TTestVector);
-end.
 
+procedure RunTTestVectorTestHookUp(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestHookUp');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookUp; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestZero(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestZero');
+  try
+    lFixture.SetUp;
+    try lFixture.TestZero; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestCreate(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestCreateW(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestCreateW');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateW; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestAssign(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestAssign');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssign; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestAssignPointf(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestAssignPointf');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssignPointf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestAssignToPointf(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestAssignToPointf');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssignToPointf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestAdd(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestMultiplyFactor(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestMultiplyFactor');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyFactor; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestDivide(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestDivide');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDivide; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestEqual(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestEqual');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEqual; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestNotEqual(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestNotEqual');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNotEqual; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestSubtract(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestSubtract');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSubtract; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestLength(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestLength');
+  try
+    lFixture.SetUp;
+    try lFixture.TestLength; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestNormalize(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestNormalize');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNormalize; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestCrossProduct(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestCrossProduct');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCrossProduct; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestDotProduct(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestDotProduct');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDotProduct; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestVectorTestToPointF(AContext: TNXTestContext);
+var lFixture: TTestVector;
+begin
+  lFixture:=TTestVector.Create(AContext, 'TestToPointF');
+  try
+    lFixture.SetUp;
+    try lFixture.TestToPointF; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcvectorTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcvector.TTestVector');
+  lSuite.AddTest('TestHookUp', @RunTTestVectorTestHookUp);
+  lSuite.AddTest('TestZero', @RunTTestVectorTestZero);
+  lSuite.AddTest('TestCreate', @RunTTestVectorTestCreate);
+  lSuite.AddTest('TestCreateW', @RunTTestVectorTestCreateW);
+  lSuite.AddTest('TestAssign', @RunTTestVectorTestAssign);
+  lSuite.AddTest('TestAssignPointf', @RunTTestVectorTestAssignPointf);
+  lSuite.AddTest('TestAssignToPointf', @RunTTestVectorTestAssignToPointf);
+  lSuite.AddTest('TestAdd', @RunTTestVectorTestAdd);
+  lSuite.AddTest('TestMultiplyFactor', @RunTTestVectorTestMultiplyFactor);
+  lSuite.AddTest('TestDivide', @RunTTestVectorTestDivide);
+  lSuite.AddTest('TestEqual', @RunTTestVectorTestEqual);
+  lSuite.AddTest('TestNotEqual', @RunTTestVectorTestNotEqual);
+  lSuite.AddTest('TestSubtract', @RunTTestVectorTestSubtract);
+  lSuite.AddTest('TestLength', @RunTTestVectorTestLength);
+  lSuite.AddTest('TestNormalize', @RunTTestVectorTestNormalize);
+  lSuite.AddTest('TestCrossProduct', @RunTTestVectorTestCrossProduct);
+  lSuite.AddTest('TestDotProduct', @RunTTestVectorTestDotProduct);
+  lSuite.AddTest('TestToPointF', @RunTTestVectorTestToPointF);
+end;
+
+end.

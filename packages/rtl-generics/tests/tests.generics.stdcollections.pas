@@ -31,14 +31,14 @@ unit tests.generics.stdcollections;
 interface
 
 uses
-  fpcunit, testutils, testregistry, tests.generics.utils,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, tests.generics.utils,
   Classes, SysUtils, Generics.Collections, Generics.Defaults;
 
 type
   TTestStdCollections = class(TTestCollections)
   private
     procedure Test_TList_Notification(AList: TList<string>); overload;
-  published
+  public
     // Tests from Castle Game Engine
     procedure Test_List;
     procedure Test_FreeingManually;
@@ -68,23 +68,25 @@ type
   TGenericListBox<T> = class
   private class var
     F : TList<TComponentClass>;
-    class procedure Test(ATest: TTestCase);
+    class procedure Test(AContext: TNXTestContext);
   end;
+
+procedure RegistertestsgenericsstdcollectionsTests(ARegistry: TNXTestRegistry);
 
 implementation
 
-class procedure TGenericListBox<T>.Test(ATest: TTestCase);
+class procedure TGenericListBox<T>.Test(AContext: TNXTestContext);
 begin
   F := TList<TComponentClass>.Create;
   F.Add(TDataModule);
   F.Add(nil);
   with TList<TComponentClass>.Create(F) do
   begin
-    ATest.AssertTrue(Count = 2);
-    ATest.AssertTrue(F[0] = Items[0]);
-    ATest.AssertTrue(F[1] = Items[1]);
-    ATest.AssertTrue(F[0] = TDataModule);
-    ATest.AssertTrue(F[1] = nil);
+    AContext.AssertTrue(Count = 2);
+    AContext.AssertTrue(F[0] = Items[0]);
+    AContext.AssertTrue(F[1] = Items[1]);
+    AContext.AssertTrue(F[0] = TDataModule);
+    AContext.AssertTrue(F[1] = nil);
     Free;
   end;
   F.Free;
@@ -118,21 +120,21 @@ begin
     A := TApple.Create;
     Apples.Add(A);
 
-    AssertEquals(3, Apples.Count);
-    AssertEquals(2, Apples.IndexOf(A));
+    TestContext.AssertTrue((3)=(Apples.Count), '');
+    TestContext.AssertTrue((2)=(Apples.IndexOf(A)), '');
 
     Apples.Delete(0);
 
-    AssertEquals(2, Apples.Count);
-    AssertEquals(1, Apples.IndexOf(A));
+    TestContext.AssertTrue((2)=(Apples.Count), '');
+    TestContext.AssertTrue((1)=(Apples.IndexOf(A)), '');
 
     Apples.Remove(A);
 
-    AssertEquals(1, Apples.Count);
+    TestContext.AssertTrue((1)=(Apples.Count), '');
 
     Apples.Delete(0);
 
-    AssertEquals(0, Apples.Count);
+    TestContext.AssertTrue((0)=(Apples.Count), '');
   finally FreeAndNil(Apples) end;
 end;
 
@@ -180,13 +182,13 @@ begin
       Apples2.AddRange(Apples);
       Apples2.AddRange(Apples);
       Apples2.AddRange(Apples);
-      AssertEquals(6, Apples2.Count);
-      AssertEquals('One', Apples2[0].Name);
-      AssertEquals('Two', Apples2[1].Name);
-      AssertEquals('One', Apples2[2].Name);
-      AssertEquals('Two', Apples2[3].Name);
-      AssertEquals('One', Apples2[4].Name);
-      AssertEquals('Two', Apples2[5].Name);
+      TestContext.AssertTrue((6)=(Apples2.Count), '');
+      TestContext.AssertTrue(('One')=(Apples2[0].Name), '');
+      TestContext.AssertTrue(('Two')=(Apples2[1].Name), '');
+      TestContext.AssertTrue(('One')=(Apples2[2].Name), '');
+      TestContext.AssertTrue(('Two')=(Apples2[3].Name), '');
+      TestContext.AssertTrue(('One')=(Apples2[4].Name), '');
+      TestContext.AssertTrue(('Two')=(Apples2[5].Name), '');
     finally FreeAndNil(Apples2) end;
   finally FreeAndNil(Apples) end;
 end;
@@ -219,10 +221,10 @@ begin
 
     L.Sort(TAppleComparer.Construct(@CompareApples));
 
-    AssertEquals(3, L.Count);
-    AssertEquals('11', L[0].Name);
-    AssertEquals('22', L[1].Name);
-    AssertEquals('33', L[2].Name);
+    TestContext.AssertTrue((3)=(L.Count), '');
+    TestContext.AssertTrue(('11')=(L[0].Name), '');
+    TestContext.AssertTrue(('22')=(L[1].Name), '');
+    TestContext.AssertTrue(('33')=(L[2].Name), '');
   finally FreeAndNil(L) end;
 end;
 
@@ -254,10 +256,10 @@ begin
 
     L.Pack;
 
-    AssertEquals(3, L.Count);
-    AssertEquals('11', L[0].Name);
-    AssertEquals('33', L[1].Name);
-    AssertEquals('22', L[2].Name);
+    TestContext.AssertTrue((3)=(L.Count), '');
+    TestContext.AssertTrue(('11')=(L[0].Name), '');
+    TestContext.AssertTrue(('33')=(L[1].Name), '');
+    TestContext.AssertTrue(('22')=(L[2].Name), '');
   finally FreeAndNil(L) end;
 end;
 
@@ -285,54 +287,54 @@ begin
     R2.B := 44;
     List.Add(R2);
 
-    AssertEquals(3, List.Count);
-    AssertEquals(11, List[0].A);
-    AssertEquals(22, List[0].B);
-    AssertEquals(33, List[1].A);
-    AssertEquals(44, List[1].B);
-    AssertEquals(33, List[2].A);
-    AssertEquals(44, List[2].B);
+    TestContext.AssertTrue((3)=(List.Count), '');
+    TestContext.AssertTrue((11)=(List[0].A), '');
+    TestContext.AssertTrue((22)=(List[0].B), '');
+    TestContext.AssertTrue((33)=(List[1].A), '');
+    TestContext.AssertTrue((44)=(List[1].B), '');
+    TestContext.AssertTrue((33)=(List[2].A), '');
+    TestContext.AssertTrue((44)=(List[2].B), '');
 
     List.Delete(2);
 
-    AssertEquals(2, List.Count);
-    AssertEquals(11, List[0].A);
-    AssertEquals(22, List[0].B);
-    AssertEquals(33, List[1].A);
-    AssertEquals(44, List[1].B);
+    TestContext.AssertTrue((2)=(List.Count), '');
+    TestContext.AssertTrue((11)=(List[0].A), '');
+    TestContext.AssertTrue((22)=(List[0].B), '');
+    TestContext.AssertTrue((33)=(List[1].A), '');
+    TestContext.AssertTrue((44)=(List[1].B), '');
 
-    AssertEquals(0, List.IndexOf(R1));
-    AssertEquals(1, List.IndexOf(R2));
+    TestContext.AssertTrue((0)=(List.IndexOf(R1)), '');
+    TestContext.AssertTrue((1)=(List.IndexOf(R2)), '');
 
     // change R1 and R2, to make sure it doesn't matter for tests
     R1.A := 111111;
     R1.B := 222222;
     R2.A := 333333;
     R2.B := 444444;
-    AssertEquals(-1, List.IndexOf(R1));
-    AssertEquals(-1, List.IndexOf(R2));
+    TestContext.AssertTrue((-1)=(List.IndexOf(R1)), '');
+    TestContext.AssertTrue((-1)=(List.IndexOf(R2)), '');
 
     R.A := 11;
     R.B := 22;
-    AssertEquals(0, List.IndexOf(R));
+    TestContext.AssertTrue((0)=(List.IndexOf(R)), '');
 
     R.A := 33;
     R.B := 44;
-    AssertEquals(1, List.IndexOf(R));
+    TestContext.AssertTrue((1)=(List.IndexOf(R)), '');
 
     R.A := 11;
     R.B := 22;
     List.Remove(R);
-    AssertEquals(1, List.Count);
-    AssertEquals(33, List[0].A);
-    AssertEquals(44, List[0].B);
+    TestContext.AssertTrue((1)=(List.Count), '');
+    TestContext.AssertTrue((33)=(List[0].A), '');
+    TestContext.AssertTrue((44)=(List[0].B), '');
 
     R.A := 666;
     R.B := 22;
     List.Remove(R); // does nothing, no such record
-    AssertEquals(1, List.Count);
-    AssertEquals(33, List[0].A);
-    AssertEquals(44, List[0].B);
+    TestContext.AssertTrue((1)=(List.Count), '');
+    TestContext.AssertTrue((33)=(List[0].A), '');
+    TestContext.AssertTrue((44)=(List[0].B), '');
   finally FreeAndNil(List) end;
 end;
 
@@ -358,54 +360,54 @@ begin
     R2[1] := 44;
     List.Add(R2);
 
-    AssertEquals(3, List.Count);
-    AssertEquals(11, List[0][0]);
-    AssertEquals(22, List[0][1]);
-    AssertEquals(33, List[1][0]);
-    AssertEquals(44, List[1][1]);
-    AssertEquals(33, List[2][0]);
-    AssertEquals(44, List[2][1]);
+    TestContext.AssertTrue((3)=(List.Count), '');
+    TestContext.AssertTrue((11)=(List[0][0]), '');
+    TestContext.AssertTrue((22)=(List[0][1]), '');
+    TestContext.AssertTrue((33)=(List[1][0]), '');
+    TestContext.AssertTrue((44)=(List[1][1]), '');
+    TestContext.AssertTrue((33)=(List[2][0]), '');
+    TestContext.AssertTrue((44)=(List[2][1]), '');
 
     List.Delete(2);
 
-    AssertEquals(2, List.Count);
-    AssertEquals(11, List[0][0]);
-    AssertEquals(22, List[0][1]);
-    AssertEquals(33, List[1][0]);
-    AssertEquals(44, List[1][1]);
+    TestContext.AssertTrue((2)=(List.Count), '');
+    TestContext.AssertTrue((11)=(List[0][0]), '');
+    TestContext.AssertTrue((22)=(List[0][1]), '');
+    TestContext.AssertTrue((33)=(List[1][0]), '');
+    TestContext.AssertTrue((44)=(List[1][1]), '');
 
-    AssertEquals(0, List.IndexOf(R1));
-    AssertEquals(1, List.IndexOf(R2));
+    TestContext.AssertTrue((0)=(List.IndexOf(R1)), '');
+    TestContext.AssertTrue((1)=(List.IndexOf(R2)), '');
 
     // change R1 and R2, to make sure it doesn't matter for tests
     R1[0] := 111111;
     R1[1] := 222222;
     R2[0] := 333333;
     R2[1] := 444444;
-    AssertEquals(-1, List.IndexOf(R1));
-    AssertEquals(-1, List.IndexOf(R2));
+    TestContext.AssertTrue((-1)=(List.IndexOf(R1)), '');
+    TestContext.AssertTrue((-1)=(List.IndexOf(R2)), '');
 
     R[0] := 11;
     R[1] := 22;
-    AssertEquals(0, List.IndexOf(R));
+    TestContext.AssertTrue((0)=(List.IndexOf(R)), '');
 
     R[0] := 33;
     R[1] := 44;
-    AssertEquals(1, List.IndexOf(R));
+    TestContext.AssertTrue((1)=(List.IndexOf(R)), '');
 
     R[0] := 11;
     R[1] := 22;
     List.Remove(R);
-    AssertEquals(1, List.Count);
-    AssertEquals(33, List[0][0]);
-    AssertEquals(44, List[0][1]);
+    TestContext.AssertTrue((1)=(List.Count), '');
+    TestContext.AssertTrue((33)=(List[0][0]), '');
+    TestContext.AssertTrue((44)=(List[0][1]), '');
 
     R[0] := 666;
     R[1] := 22;
     List.Remove(R); // does nothing, no such item
-    AssertEquals(1, List.Count);
-    AssertEquals(33, List[0][0]);
-    AssertEquals(44, List[0][1]);
+    TestContext.AssertTrue((1)=(List.Count), '');
+    TestContext.AssertTrue((33)=(List[0][0]), '');
+    TestContext.AssertTrue((44)=(List[0][1]), '');
   finally FreeAndNil(List) end;
 end;
 
@@ -425,8 +427,8 @@ type
 
   procedure AssertMethodsEqual(const M1, M2: TMyMethod);
   begin
-    AssertTrue(TMethod(M1).Code = TMethod(M2).Code);
-    AssertTrue(TMethod(M1).Data = TMethod(M2).Data);
+    TestContext.AssertTrue(TMethod(M1).Code = TMethod(M2).Code, '');
+    TestContext.AssertTrue(TMethod(M1).Data = TMethod(M2).Data, '');
   end;
 
 var
@@ -444,7 +446,7 @@ begin
     List.Add(C2.Foo);
     List.Add(C2.Foo);
 
-    AssertEquals(3, List.Count);
+    TestContext.AssertTrue((3)=(List.Count), '');
     M := C1.Foo;
     AssertMethodsEqual(List[0], M);
     M := C2.Foo;
@@ -453,24 +455,24 @@ begin
 
     List.Delete(2);
 
-    AssertEquals(2, List.Count);
+    TestContext.AssertTrue((2)=(List.Count), '');
     M := C1.Foo;
     AssertMethodsEqual(List[0], M);
     M := C2.Foo;
     AssertMethodsEqual(List[1], M);
 
-    AssertEquals(0, List.IndexOf(C1.Foo));
-    AssertEquals(1, List.IndexOf(C2.Foo));
+    TestContext.AssertTrue((0)=(List.IndexOf(C1.Foo)), '');
+    TestContext.AssertTrue((1)=(List.IndexOf(C2.Foo)), '');
 
-    AssertEquals(-1, List.IndexOf(C3.Foo));
+    TestContext.AssertTrue((-1)=(List.IndexOf(C3.Foo)), '');
 
     List.Remove(C1.Foo);
-    AssertEquals(1, List.Count);
+    TestContext.AssertTrue((1)=(List.Count), '');
     M := C2.Foo;
     AssertMethodsEqual(List[0], M);
 
     List.Remove(C3.Foo); // does nothing, no such item
-    AssertEquals(1, List.Count);
+    TestContext.AssertTrue((1)=(List.Count), '');
     M := C2.Foo;
     AssertMethodsEqual(List[0], M);
   finally FreeAndNil(List) end;
@@ -493,10 +495,10 @@ begin
   for i in LRandomOrder do
     LSortedList.Add(i);
 
-  AssertEquals('Wrong Count value for TSortedList', Length(LRandomOrder), LSortedList.Count);
+  TestContext.AssertTrue((Length(LRandomOrder))=(LSortedList.Count), 'Wrong Count value for TSortedList');
 
   for i := 0 to 19 do
-    AssertEquals(Format('Wrong item (%d) index (%d) in TSortedList',[LSortedList[i], i]), i, LSortedList[i]);
+    TestContext.AssertTrue((i)=(LSortedList[i]), Format('Wrong item (%d) index (%d) in TSortedList',[LSortedList[i], i]));
 
   LSortedList.Free;
 end;
@@ -515,23 +517,23 @@ begin
   for i := 1 to 5 do
   begin
     LQueue.Enqueue(i);
-    AssertEquals(LQueue.Peek, 1);
+    TestContext.AssertTrue((LQueue.Peek)=(1), '');
   end;
 
-  AssertEquals(LQueue.Dequeue, 1);
-  AssertEquals(LQueue.Extract, 2);
+  TestContext.AssertTrue((LQueue.Dequeue)=(1), '');
+  TestContext.AssertTrue((LQueue.Extract)=(2), '');
 
   j := 0;
   for i in LQueue do
   begin
-    AssertEquals(i, NUMBERS[j]);
+    TestContext.AssertTrue((i)=(NUMBERS[j]), '');
     Inc(j);
   end;
 
   j := 0;
   for pi in LQueue.Ptr^ do
   begin
-    AssertEquals(pi^, NUMBERS[j]);
+    TestContext.AssertTrue((pi^)=(NUMBERS[j]), '');
     Inc(j);
   end;
 
@@ -578,7 +580,7 @@ begin
     AList.Remove('Aaa');
     AList.Delete(0);
     AList.DeleteRange(0, 5);
-    AssertEquals(AList.Count, 0);
+    TestContext.AssertTrue((AList.Count)=(0), '');
     AssertNotificationsExecutedStr;
 
     { ExtractIndex, Extract }
@@ -587,8 +589,8 @@ begin
     AList.AddRange(['Aaa', 'Bbb', 'Ccc']);
     AssertNotificationsExecutedStr;
     NotificationAdd(AList, ['Aaa', 'Bbb'], cnExtracted);
-    AssertEquals(AList.ExtractIndex(0), 'Aaa');
-    AssertEquals(AList.Extract('Bbb'), 'Bbb');
+    TestContext.AssertTrue((AList.ExtractIndex(0))=('Aaa'), '');
+    TestContext.AssertTrue((AList.Extract('Bbb'))=('Bbb'), '');
     AssertNotificationsExecutedStr;
 
     { SetItem }
@@ -638,12 +640,12 @@ begin
 
     { Dequeue }
     NotificationAdd(LQueue, 'Aaa', cnRemoved);
-    AssertEquals(LQueue.Dequeue, 'Aaa');
+    TestContext.AssertTrue((LQueue.Dequeue)=('Aaa'), '');
     AssertNotificationsExecutedStr;
 
     { Extract }
     NotificationAdd(LQueue, 'Bbb', cnExtracted);
-    AssertEquals(LQueue.Extract, 'Bbb');
+    TestContext.AssertTrue((LQueue.Extract)=('Bbb'), '');
     AssertNotificationsExecutedStr;
 
     { Clear }
@@ -681,12 +683,12 @@ begin
 
     { Pop }
     NotificationAdd(LStack, 'Ddd', cnRemoved);
-    AssertEquals(LStack.Pop, 'Ddd');
+    TestContext.AssertTrue((LStack.Pop)=('Ddd'), '');
     AssertNotificationsExecutedStr;
 
     { Extract }
     NotificationAdd(LStack, 'Ccc', cnExtracted);
-    AssertEquals(LStack.Extract, 'Ccc');
+    TestContext.AssertTrue((LStack.Extract)=('Ccc'), '');
     AssertNotificationsExecutedStr;
 
     { Clear }
@@ -753,7 +755,7 @@ begin
     LList.Remove(O[0]);
     LList.Delete(0);
     LList.DeleteRange(0, 5);
-    AssertEquals(LList.Count, 0);
+    TestContext.AssertTrue((LList.Count)=(0), '');
     AssertNotificationsExecutedObj;
 
     { ExtractIndex, Extract }
@@ -762,8 +764,8 @@ begin
     LList.AddRange([O[0], O[1], O[2]]);
     AssertNotificationsExecutedObj;
     NotificationAdd(LList, [O[0], O[1]], cnExtracted);
-    AssertTrue(LList.ExtractIndex(0) = O[0]);
-    AssertTrue(LList.Extract(O[1]) = O[1]);
+    TestContext.AssertTrue(LList.ExtractIndex(0) = O[0], '');
+    TestContext.AssertTrue(LList.Extract(O[1]) = O[1], '');
     AssertNotificationsExecutedObj;
 
     { SetItem }
@@ -807,7 +809,7 @@ begin
 
     { Extract }
     NotificationAdd(LQueue, O[1], cnExtracted);
-    AssertTrue(LQueue.Extract = O[1]);
+    TestContext.AssertTrue(LQueue.Extract = O[1], '');
     AssertNotificationsExecutedObj;
 
     { Clear }
@@ -848,12 +850,12 @@ begin
 
     { Pop }
     NotificationAdd(LStack, O[3], cnRemoved);
-    AssertTrue(LStack.Pop = O[3]);
+    TestContext.AssertTrue(LStack.Pop = O[3], '');
     AssertNotificationsExecutedObj;
 
     { Extract }
     NotificationAdd(LStack, O[2], cnExtracted);
-    AssertTrue(LStack.Extract = O[2]);
+    TestContext.AssertTrue(LStack.Extract = O[2], '');
     AssertNotificationsExecutedObj;
 
     { Clear }
@@ -876,7 +878,7 @@ end;
 
 procedure TTestStdCollections.Test_GenericListBox;
 begin
-  TGenericListBox<Integer>.Test(Self);
+  TGenericListBox<Integer>.Test(TestContext);
 end;
 
 procedure TTestStdCollections.Test_TrimExcess;
@@ -892,23 +894,23 @@ begin
   try
     LList.AddRange([1, 2, 3, 4, 5, 6]);
     LList.DeleteRange(2, 3);
-    CheckNotEquals(LList.Capacity, LList.Count);
+    TestContext.AssertTrue((LList.Capacity)<>(LList.Count), '');
     LList.TrimExcess;
-    AssertEquals(LList.Capacity, LList.Count);
+    TestContext.AssertTrue((LList.Capacity)=(LList.Count), '');
 
     LQueue.Enqueue(1);
     LQueue.Enqueue(2);
     LQueue.Dequeue;
-    CheckNotEquals(LQueue.Capacity, LQueue.Count);
+    TestContext.AssertTrue((LQueue.Capacity)<>(LQueue.Count), '');
     LQueue.TrimExcess;
-    AssertEquals(LQueue.Capacity, LQueue.Count);
+    TestContext.AssertTrue((LQueue.Capacity)=(LQueue.Count), '');
 
     LStack.Push(1);
     LStack.Push(2);
     LStack.Pop;
-    CheckNotEquals(LStack.Capacity, LStack.Count);
+    TestContext.AssertTrue((LStack.Capacity)<>(LStack.Count), '');
     LStack.TrimExcess;
-    AssertEquals(LStack.Capacity, LStack.Count);
+    TestContext.AssertTrue((LStack.Capacity)=(LStack.Count), '');
   finally
     LStack.Free;
     LQueue.Free;
@@ -916,6 +918,201 @@ begin
   end;
 end;
 
+
+procedure RunTTestStdCollectionsTest_List(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
 begin
-  RegisterTest(TTestStdCollections);
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_List');
+  try
+    lFixture.Test_List;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_FreeingManually(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_FreeingManually');
+  try
+    lFixture.Test_FreeingManually;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_AddingLists(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_AddingLists');
+  try
+    lFixture.Test_AddingLists;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_Sort(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_Sort');
+  try
+    lFixture.Test_Sort;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_Pack(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_Pack');
+  try
+    lFixture.Test_Pack;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_RecordsList(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_RecordsList');
+  try
+    lFixture.Test_RecordsList;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_VectorsList(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_VectorsList');
+  try
+    lFixture.Test_VectorsList;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_MethodsList(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_MethodsList');
+  try
+    lFixture.Test_MethodsList;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_SortedList(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_SortedList');
+  try
+    lFixture.Test_SortedList;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_Queue(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_Queue');
+  try
+    lFixture.Test_Queue;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_GenericListBox(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_GenericListBox');
+  try
+    lFixture.Test_GenericListBox;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TList_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TList_Notification');
+  try
+    lFixture.Test_TList_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TSortedList_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TSortedList_Notification');
+  try
+    lFixture.Test_TSortedList_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TQueue_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TQueue_Notification');
+  try
+    lFixture.Test_TQueue_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TStack_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TStack_Notification');
+  try
+    lFixture.Test_TStack_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TObjectList_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TObjectList_Notification');
+  try
+    lFixture.Test_TObjectList_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TObjectQueue_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TObjectQueue_Notification');
+  try
+    lFixture.Test_TObjectQueue_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TObjectStack_Notification(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TObjectStack_Notification');
+  try
+    lFixture.Test_TObjectStack_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestStdCollectionsTest_TrimExcess(AContext: TNXTestContext);
+var lFixture: TTestStdCollections;
+begin
+  lFixture:=TTestStdCollections.Create(AContext, 'Test_TrimExcess');
+  try
+    lFixture.Test_TrimExcess;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericsstdcollectionsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.stdcollections.TTestStdCollections');
+  lSuite.AddTest('Test_List', @RunTTestStdCollectionsTest_List);
+  lSuite.AddTest('Test_FreeingManually', @RunTTestStdCollectionsTest_FreeingManually);
+  lSuite.AddTest('Test_AddingLists', @RunTTestStdCollectionsTest_AddingLists);
+  lSuite.AddTest('Test_Sort', @RunTTestStdCollectionsTest_Sort);
+  lSuite.AddTest('Test_Pack', @RunTTestStdCollectionsTest_Pack);
+  lSuite.AddTest('Test_RecordsList', @RunTTestStdCollectionsTest_RecordsList);
+  lSuite.AddTest('Test_VectorsList', @RunTTestStdCollectionsTest_VectorsList);
+  lSuite.AddTest('Test_MethodsList', @RunTTestStdCollectionsTest_MethodsList);
+  lSuite.AddTest('Test_SortedList', @RunTTestStdCollectionsTest_SortedList);
+  lSuite.AddTest('Test_Queue', @RunTTestStdCollectionsTest_Queue);
+  lSuite.AddTest('Test_GenericListBox', @RunTTestStdCollectionsTest_GenericListBox);
+  lSuite.AddTest('Test_TList_Notification', @RunTTestStdCollectionsTest_TList_Notification);
+  lSuite.AddTest('Test_TSortedList_Notification', @RunTTestStdCollectionsTest_TSortedList_Notification);
+  lSuite.AddTest('Test_TQueue_Notification', @RunTTestStdCollectionsTest_TQueue_Notification);
+  lSuite.AddTest('Test_TStack_Notification', @RunTTestStdCollectionsTest_TStack_Notification);
+  lSuite.AddTest('Test_TObjectList_Notification', @RunTTestStdCollectionsTest_TObjectList_Notification);
+  lSuite.AddTest('Test_TObjectQueue_Notification', @RunTTestStdCollectionsTest_TObjectQueue_Notification);
+  lSuite.AddTest('Test_TObjectStack_Notification', @RunTTestStdCollectionsTest_TObjectStack_Notification);
+  lSuite.AddTest('Test_TrimExcess', @RunTTestStdCollectionsTest_TrimExcess);
+end;
+
 end.

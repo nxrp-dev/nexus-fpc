@@ -5,7 +5,7 @@ unit tccomponent;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils;
 
 type
 
@@ -58,15 +58,23 @@ type
 
   { TTestTComponentBase }
 
-  TTestTComponentBase = class(TTestCase)
+  TTestTComponentBase = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   protected
     FRoot : TMyComponent;
     Procedure CreateComponents(ACount : Integer);
     Procedure CreateComponents(ACount : Integer; Const BaseName : String);
     Procedure CreateComponents(ACount : Integer; AClass : TComponentClass);
     Procedure CreateComponents(ACount : Integer; AClass : TComponentClass; Const BaseName : String);
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
   end;
 
   { TTestTComponent }
@@ -77,7 +85,7 @@ type
     procedure TestTextName;
     procedure TestNumberName;
     procedure TestNumberTextName;
-  Published
+  public
     Procedure TestCreate;
     Procedure TestName;
     procedure TestIdentiFierName;
@@ -99,11 +107,13 @@ type
     N : TNotificationSink;
     procedure SetUp; override;
     procedure TearDown; override;
-  Published
+  public
     Procedure TestInsertNotification;
     Procedure TestRemoveNotification;
   end;
 
+
+procedure RegistertccomponentTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -157,17 +167,17 @@ procedure TTestTComponent.TestCreate;
 begin
   FreeAndNil(Froot);
   FRoot:=TMyComponent.Create(Nil);
-  AssertEquals('Empty name','',FRoot.Name);
-  AssertEquals('No owned components',0,FRoot.ComponentCount);
+  TestContext.AssertTrue(('')=(FRoot.Name), 'Empty name');
+  TestContext.AssertTrue((0)=(FRoot.ComponentCount), 'No owned components');
   If (FRoot.ComponentState<>[]) then
-    Fail('Componentstate is not empty');
+    TestContext.Fail('Componentstate is not empty');
   If (FRoot.Owner<>Nil) then
-    Fail('Owner is not nil');
+    TestContext.Fail('Owner is not nil');
 end;
 
 procedure TTestTComponent.TestName;
 begin
-  AssertEquals('Name is Root','Root',FRoot.Name);
+  TestContext.AssertTrue(('Root')=(FRoot.Name), 'Name is Root');
 end;
 
 procedure TTestTComponent.TestOwner;
@@ -178,16 +188,16 @@ Var
 begin
   C:=TComponent.Create(FRoot);
   If (C.Owner<>FRoot) then
-    Fail('Owner not saved after create');
+    TestContext.Fail('Owner not saved after create');
 end;
 
 procedure TTestTComponent.TestChildren;
 begin
   CreateComponents(3,'Child');
-  AssertEquals('Componentcount is 3',3,FRoot.ComponentCount);
-  AssertEquals('Child component 0 is child1','Child1',FRoot.Components[0].Name);
-  AssertEquals('Child component 1 is child2','Child2',FRoot.Components[1].Name);
-  AssertEquals('Child component 2 is child3','Child3',FRoot.Components[2].Name);
+  TestContext.AssertTrue((3)=(FRoot.ComponentCount), 'Componentcount is 3');
+  TestContext.AssertTrue(('Child1')=(FRoot.Components[0].Name), 'Child component 0 is child1');
+  TestContext.AssertTrue(('Child2')=(FRoot.Components[1].Name), 'Child component 1 is child2');
+  TestContext.AssertTrue(('Child3')=(FRoot.Components[2].Name), 'Child component 2 is child3');
 end;
 
 procedure TTestTComponent.TestDestroyChild;
@@ -201,9 +211,9 @@ begin
   try
     TMyComponent(FRoot.Components[0]).OnDestroy:=@S.Event;
     FreeAndNil(FRoot);
-    AssertEquals('One child destroyed',1,S.FEventcount);
+    TestContext.AssertTrue((1)=(S.FEventcount), 'One child destroyed');
     If (S.FLastSender=Nil) then
-      Fail('No sender passed');
+      TestContext.Fail('No sender passed');
   finally
     S.Free;
   end;
@@ -222,9 +232,9 @@ begin
     For I:=0 to 2 do
       TMyComponent(FRoot.Components[I]).OnDestroy:=@S.Event;
     FreeAndNil(FRoot);
-    AssertEquals('One child destroyed',3,S.FEventcount);
+    TestContext.AssertTrue((3)=(S.FEventcount), 'One child destroyed');
     If (S.FLastSender=Nil) then
-      Fail('No sender passed');
+      TestContext.Fail('No sender passed');
   finally
     S.Free;
   end;
@@ -239,7 +249,7 @@ end;
 procedure TTestTComponent.TestUniqueName;
 begin
   CreateComponents(3,'Child');
-  AssertException('Unique name',EComponentError,@TestDoubleName);
+  TestContext.AssertRaises(EComponentError, @TestDoubleName, 'Unique name');
 end;
 
 procedure TTestTComponent.TestRemoveComponent;
@@ -252,8 +262,8 @@ begin
   C:=FRoot.Components[0];
   FRoot.RemoveComponent(C);
   Try
-    AssertEquals('No components left',0,FRoot.ComponentCount);
-    AssertSame('Component has no owner',Nil,C.Owner);
+    TestContext.AssertTrue((0)=(FRoot.ComponentCount), 'No components left');
+    TestContext.AssertTrue((Nil)=(C.Owner), 'Component has no owner');
   Finally
     C.Free;
   end;
@@ -278,18 +288,18 @@ end;
 
 procedure TTestTComponent.TestIdentiFierName;
 begin
-  AssertException('Identifier name',EComponentError,@TestTextName);
+  TestContext.AssertRaises(EComponentError, @TestTextName, 'Identifier name');
 end;
 
 procedure TTestTComponent.TestIdentiFierNameTwo;
 
 begin
-  AssertException('Identifier name',EComponentError,@TestNumberTextName);
+  TestContext.AssertRaises(EComponentError, @TestNumberTextName, 'Identifier name');
 end;
 
 procedure TTestTComponent.TestIdentiFierNameThree;
 begin
-  AssertException('Identifier name',EComponentError,@TestNumberName);
+  TestContext.AssertRaises(EComponentError, @TestNumberName, 'Identifier name');
 end;
 
 procedure TTestTComponent.TestIdentiFierNameFour;
@@ -305,7 +315,7 @@ begin
     Failed:=True;
   end;
   If Failed then
-    Fail('No identifier ending on 1 accepted ?');
+    TestContext.Fail('No identifier ending on 1 accepted ?');
 end;
 
 { TMyComponent }
@@ -405,9 +415,9 @@ Var
 
 begin
   CreateComponents(1);
-  AssertEquals('One notification received',1,N.EventCount);
+  TestContext.AssertTrue((1)=(N.EventCount), 'One notification received');
   E:=N.Notifications[0];
-  AssertEquals('Insert notification received',Ord(opInsert),Ord(E.AOperation));
+  TestContext.AssertTrue((Ord(opInsert))=(Ord(E.AOperation)), 'Insert notification received');
 end;
 
 procedure TTestTComponentNotifies.TestRemoveNotification;
@@ -422,7 +432,7 @@ begin
   C:=FRoot.Components[0];
   FRoot.RemoveComponent(C);
   Try
-    AssertEquals('One notification received',1,N.EventCount);
+    TestContext.AssertTrue((1)=(N.EventCount), 'One notification received');
     E:=N.Notifications[0];
   Finally
     C.Free;
@@ -430,8 +440,173 @@ begin
 end;
 
 
-initialization
 
-  RegisterTests([TTestTComponent,TTestTComponentNotifies]);
+constructor TTestTComponentBase.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestTComponentTestCreate(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestName(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestName');
+  try
+    lFixture.SetUp;
+    try lFixture.TestName; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestIdentiFierName(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestIdentiFierName');
+  try
+    lFixture.SetUp;
+    try lFixture.TestIdentiFierName; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestIdentiFierNameTwo(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestIdentiFierNameTwo');
+  try
+    lFixture.SetUp;
+    try lFixture.TestIdentiFierNameTwo; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestIdentiFierNameThree(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestIdentiFierNameThree');
+  try
+    lFixture.SetUp;
+    try lFixture.TestIdentiFierNameThree; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestIdentiFierNameFour(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestIdentiFierNameFour');
+  try
+    lFixture.SetUp;
+    try lFixture.TestIdentiFierNameFour; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestOwner(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestOwner');
+  try
+    lFixture.SetUp;
+    try lFixture.TestOwner; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestChildren(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestChildren');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChildren; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestDestroyChild(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestDestroyChild');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDestroyChild; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestDestroyChildren(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestDestroyChildren');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDestroyChildren; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestUniqueName(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestUniqueName');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUniqueName; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentTestRemoveComponent(AContext: TNXTestContext);
+var lFixture: TTestTComponent;
+begin
+  lFixture:=TTestTComponent.Create(AContext, 'TestRemoveComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRemoveComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentNotifiesTestInsertNotification(AContext: TNXTestContext);
+var lFixture: TTestTComponentNotifies;
+begin
+  lFixture:=TTestTComponentNotifies.Create(AContext, 'TestInsertNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInsertNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTComponentNotifiesTestRemoveNotification(AContext: TNXTestContext);
+var lFixture: TTestTComponentNotifies;
+begin
+  lFixture:=TTestTComponentNotifies.Create(AContext, 'TestRemoveNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRemoveNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertccomponentTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tccomponent.TTestTComponent');
+  lSuite.AddTest('TestCreate', @RunTTestTComponentTestCreate);
+  lSuite.AddTest('TestName', @RunTTestTComponentTestName);
+  lSuite.AddTest('TestIdentiFierName', @RunTTestTComponentTestIdentiFierName);
+  lSuite.AddTest('TestIdentiFierNameTwo', @RunTTestTComponentTestIdentiFierNameTwo);
+  lSuite.AddTest('TestIdentiFierNameThree', @RunTTestTComponentTestIdentiFierNameThree);
+  lSuite.AddTest('TestIdentiFierNameFour', @RunTTestTComponentTestIdentiFierNameFour);
+  lSuite.AddTest('TestOwner', @RunTTestTComponentTestOwner);
+  lSuite.AddTest('TestChildren', @RunTTestTComponentTestChildren);
+  lSuite.AddTest('TestDestroyChild', @RunTTestTComponentTestDestroyChild);
+  lSuite.AddTest('TestDestroyChildren', @RunTTestTComponentTestDestroyChildren);
+  lSuite.AddTest('TestUniqueName', @RunTTestTComponentTestUniqueName);
+  lSuite.AddTest('TestRemoveComponent', @RunTTestTComponentTestRemoveComponent);
+  lSuite:=ARegistry.AddSuite('tccomponent.TTestTComponentNotifies');
+  lSuite.AddTest('TestInsertNotification', @RunTTestTComponentNotifiesTestInsertNotification);
+  lSuite.AddTest('TestRemoveNotification', @RunTTestTComponentNotifiesTestRemoveNotification);
+end;
+
 end.
-

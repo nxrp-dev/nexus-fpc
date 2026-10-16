@@ -5,14 +5,14 @@ Unit tccompstreaming;
 interface
 
 Uses
-  SysUtils,Classes,tcstreaming,fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, SysUtils,Classes,tcstreaming;
 
 Type
 
 { TTestComponentStream }
 
 TTestComponentStream = Class(TTestStreaming)
-  Published
+  public
     Procedure TestTEmptyComponent;
     Procedure TestTIntegerComponent;
     Procedure TestTIntegerComponent2;
@@ -101,20 +101,30 @@ TTestComponentStream = Class(TTestStreaming)
 
   { TTestCollectionStream }
 
-  TTestCollectionStream = Class(TTestCase)
+  TTestCollectionStream = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
 
   private
     procedure CompareColl(CA, CB: TMyColl);
     function CreateColl(Anr: Integer): TCollComp;
     function EmptyComp: TCollComp;
     procedure TestNr(ACount: Integer);
-  Published
+  public
     procedure Test1;
     procedure Test2;
     procedure Test3;
     procedure TestClear;
     procedure TestEmpty;
   end;
+
+procedure RegistertccompstreamingTests(ARegistry: TNXTestRegistry);
 
 Implementation
 
@@ -360,8 +370,6 @@ begin
     ExpectFlags([],0);
     ExpectBareString('TInt64Component5');
     ExpectBareString('TestTInt64Component5');
-    ExpectBareString('Int64Prop');
-    ExpectInteger(7);
     ExpectEndOfList;
     ExpectEndOfList;
   Finally
@@ -701,12 +709,8 @@ begin
     ExpectFlags([],0);
     ExpectBareString('TEnumComponent2');
     ExpectBareString('TestTEnumComponent2');
-{$ifndef FPC}
-    // FPC does not stream an undeclared default value, it assumes the
-    // 0-the value is the default.
     ExpectBareString('Dice');
     ExpectIdent('one');
-{$endif FPC}
     ExpectEndOfList;
     ExpectEndOfList;
   Finally
@@ -818,13 +822,9 @@ begin
     ExpectFlags([],0);
     ExpectBareString('TSetComponent2');
     ExpectBareString('TestTSetComponent2');
-{$ifndef FPC}
-    // Same as for sets: a set with undeclared default is regarded as
-    // A set with default [], and is not streamed if it is empty.
     ExpectBareString('Throw');
     ExpectValue(vaSet);
     ExpectBareString('');
-{$endif FPC}
     ExpectEndOfList;
     ExpectEndOfList;
   Finally
@@ -1322,11 +1322,11 @@ Var
   I : Integer;
 
 begin
-  AssertEquals('Counts differ: %d %d',CA.Count,CB.Count);
+  TestContext.AssertTrue((CA.Count)=(CB.Count), 'Counts differ: %d %d');
   For I:=0 to CA.Count-1 do
     begin
-    AssertEquals(Format('Nr property of element %d equals',[I]),CA[i].Nr,CB[i].Nr);
-    AssertEquals(Format('Str property of element %d equals',[I]),CA[i].Str,CB[i].Str);
+    TestContext.AssertTrue((CA[i].Nr)=(CB[i].Nr), Format('Nr property of element %d equals',[I]));
+    TestContext.AssertTrue((CA[i].Str)=(CB[i].Str), Format('Str property of element %d equals',[I]));
     end;
 end;
 
@@ -1433,6 +1433,575 @@ begin
   TestNr(3);
 end;
 
+
+constructor TTestCollectionStream.Create(AContext: TNXTestContext; const ACaseName: string);
 begin
-  RegisterTests([TTestComponentStream,TTestCollectionStream]);
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestComponentStreamTestTEmptyComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEmptyComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEmptyComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTIntegerComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTIntegerComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTIntegerComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTIntegerComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTIntegerComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTIntegerComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTIntegerComponent3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTIntegerComponent3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTIntegerComponent3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTIntegerComponent4(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTIntegerComponent4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTIntegerComponent4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTIntegerComponent5(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTIntegerComponent5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTIntegerComponent5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component4(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component5(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTInt64Component6(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTInt64Component6');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTInt64Component6; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTStringComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTStringComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTStringComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTStringComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTStringComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTStringComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTWideStringComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTWideStringComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTWideStringComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTWideStringComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTWideStringComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTWideStringComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTSingleComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTSingleComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTSingleComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTDoubleComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTDoubleComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTDoubleComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTExtendedComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTExtendedComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTExtendedComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCompComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCompComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCompComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCurrencyComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCurrencyComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCurrencyComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTDateTimeComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTDateTimeComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTDateTimeComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTDateTimeComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTDateTimeComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTDateTimeComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTDateTimeComponent3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTDateTimeComponent3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTDateTimeComponent3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTEnumComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEnumComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEnumComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTEnumComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEnumComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEnumComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTEnumComponent3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEnumComponent3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEnumComponent3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTEnumComponent4(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEnumComponent4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEnumComponent4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTEnumComponent5(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTEnumComponent5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTEnumComponent5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTSetComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTSetComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTSetComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTSetComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTSetComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTSetComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTSetComponent3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTSetComponent3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTSetComponent3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTSetComponent4(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTSetComponent4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTSetComponent4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTMultipleComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTMultipleComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTMultipleComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTPersistentComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTPersistentComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTPersistentComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCollectionComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCollectionComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCollectionComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCollectionComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCollectionComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCollectionComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCollectionComponent3(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCollectionComponent3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCollectionComponent3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCollectionComponent4(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCollectionComponent4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCollectionComponent4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTCollectionComponent5(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTCollectionComponent5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTCollectionComponent5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTOwnedComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTOwnedComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTOwnedComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTStreamedOwnedComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTStreamedOwnedComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTStreamedOwnedComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTStreamedOwnedComponents(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTStreamedOwnedComponents');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTStreamedOwnedComponents; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTMethodComponent(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTMethodComponent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTMethodComponent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTMethodComponent2(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTMethodComponent2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTMethodComponent2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestComponentStreamTestTOwnedInterface(AContext: TNXTestContext);
+var lFixture: TTestComponentStream;
+begin
+  lFixture:=TTestComponentStream.Create(AContext, 'TestTOwnedInterface');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTOwnedInterface; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestCollectionStreamTest1(AContext: TNXTestContext);
+var lFixture: TTestCollectionStream;
+begin
+  lFixture:=TTestCollectionStream.Create(AContext, 'Test1');
+  try
+    lFixture.Test1;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestCollectionStreamTest2(AContext: TNXTestContext);
+var lFixture: TTestCollectionStream;
+begin
+  lFixture:=TTestCollectionStream.Create(AContext, 'Test2');
+  try
+    lFixture.Test2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestCollectionStreamTest3(AContext: TNXTestContext);
+var lFixture: TTestCollectionStream;
+begin
+  lFixture:=TTestCollectionStream.Create(AContext, 'Test3');
+  try
+    lFixture.Test3;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestCollectionStreamTestClear(AContext: TNXTestContext);
+var lFixture: TTestCollectionStream;
+begin
+  lFixture:=TTestCollectionStream.Create(AContext, 'TestClear');
+  try
+    lFixture.TestClear;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestCollectionStreamTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestCollectionStream;
+begin
+  lFixture:=TTestCollectionStream.Create(AContext, 'TestEmpty');
+  try
+    lFixture.TestEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertccompstreamingTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tccompstreaming.TTestComponentStream');
+  lSuite.AddTest('TestTEmptyComponent', @RunTTestComponentStreamTestTEmptyComponent);
+  lSuite.AddTest('TestTIntegerComponent', @RunTTestComponentStreamTestTIntegerComponent);
+  lSuite.AddTest('TestTIntegerComponent2', @RunTTestComponentStreamTestTIntegerComponent2);
+  lSuite.AddTest('TestTIntegerComponent3', @RunTTestComponentStreamTestTIntegerComponent3);
+  lSuite.AddTest('TestTIntegerComponent4', @RunTTestComponentStreamTestTIntegerComponent4);
+  lSuite.AddTest('TestTIntegerComponent5', @RunTTestComponentStreamTestTIntegerComponent5);
+  lSuite.AddTest('TestTInt64Component', @RunTTestComponentStreamTestTInt64Component);
+  lSuite.AddTest('TestTInt64Component2', @RunTTestComponentStreamTestTInt64Component2);
+  lSuite.AddTest('TestTInt64Component3', @RunTTestComponentStreamTestTInt64Component3);
+  lSuite.AddTest('TestTInt64Component4', @RunTTestComponentStreamTestTInt64Component4);
+  lSuite.AddTest('TestTInt64Component5', @RunTTestComponentStreamTestTInt64Component5);
+  lSuite.AddTest('TestTInt64Component6', @RunTTestComponentStreamTestTInt64Component6);
+  lSuite.AddTest('TestTStringComponent', @RunTTestComponentStreamTestTStringComponent);
+  lSuite.AddTest('TestTStringComponent2', @RunTTestComponentStreamTestTStringComponent2);
+  lSuite.AddTest('TestTWideStringComponent', @RunTTestComponentStreamTestTWideStringComponent);
+  lSuite.AddTest('TestTWideStringComponent2', @RunTTestComponentStreamTestTWideStringComponent2);
+  lSuite.AddTest('TestTSingleComponent', @RunTTestComponentStreamTestTSingleComponent);
+  lSuite.AddTest('TestTDoubleComponent', @RunTTestComponentStreamTestTDoubleComponent);
+  lSuite.AddTest('TestTExtendedComponent', @RunTTestComponentStreamTestTExtendedComponent);
+  lSuite.AddTest('TestTCompComponent', @RunTTestComponentStreamTestTCompComponent);
+  lSuite.AddTest('TestTCurrencyComponent', @RunTTestComponentStreamTestTCurrencyComponent);
+  lSuite.AddTest('TestTDateTimeComponent', @RunTTestComponentStreamTestTDateTimeComponent);
+  lSuite.AddTest('TestTDateTimeComponent2', @RunTTestComponentStreamTestTDateTimeComponent2);
+  lSuite.AddTest('TestTDateTimeComponent3', @RunTTestComponentStreamTestTDateTimeComponent3);
+  lSuite.AddTest('TestTEnumComponent', @RunTTestComponentStreamTestTEnumComponent);
+  lSuite.AddTest('TestTEnumComponent2', @RunTTestComponentStreamTestTEnumComponent2);
+  lSuite.AddTest('TestTEnumComponent3', @RunTTestComponentStreamTestTEnumComponent3);
+  lSuite.AddTest('TestTEnumComponent4', @RunTTestComponentStreamTestTEnumComponent4);
+  lSuite.AddTest('TestTEnumComponent5', @RunTTestComponentStreamTestTEnumComponent5);
+  lSuite.AddTest('TestTSetComponent', @RunTTestComponentStreamTestTSetComponent);
+  lSuite.AddTest('TestTSetComponent2', @RunTTestComponentStreamTestTSetComponent2);
+  lSuite.AddTest('TestTSetComponent3', @RunTTestComponentStreamTestTSetComponent3);
+  lSuite.AddTest('TestTSetComponent4', @RunTTestComponentStreamTestTSetComponent4);
+  lSuite.AddTest('TestTMultipleComponent', @RunTTestComponentStreamTestTMultipleComponent);
+  lSuite.AddTest('TestTPersistentComponent', @RunTTestComponentStreamTestTPersistentComponent);
+  lSuite.AddTest('TestTCollectionComponent', @RunTTestComponentStreamTestTCollectionComponent);
+  lSuite.AddTest('TestTCollectionComponent2', @RunTTestComponentStreamTestTCollectionComponent2);
+  lSuite.AddTest('TestTCollectionComponent3', @RunTTestComponentStreamTestTCollectionComponent3);
+  lSuite.AddTest('TestTCollectionComponent4', @RunTTestComponentStreamTestTCollectionComponent4);
+  lSuite.AddTest('TestTCollectionComponent5', @RunTTestComponentStreamTestTCollectionComponent5);
+  lSuite.AddTest('TestTOwnedComponent', @RunTTestComponentStreamTestTOwnedComponent);
+  lSuite.AddTest('TestTStreamedOwnedComponent', @RunTTestComponentStreamTestTStreamedOwnedComponent);
+  lSuite.AddTest('TestTStreamedOwnedComponents', @RunTTestComponentStreamTestTStreamedOwnedComponents);
+  lSuite.AddTest('TestTMethodComponent', @RunTTestComponentStreamTestTMethodComponent);
+  lSuite.AddTest('TestTMethodComponent2', @RunTTestComponentStreamTestTMethodComponent2);
+  lSuite.AddTest('TestTOwnedInterface', @RunTTestComponentStreamTestTOwnedInterface);
+  lSuite:=ARegistry.AddSuite('tccompstreaming.TTestCollectionStream');
+  lSuite.AddTest('Test1', @RunTTestCollectionStreamTest1);
+  lSuite.AddTest('Test2', @RunTTestCollectionStreamTest2);
+  lSuite.AddTest('Test3', @RunTTestCollectionStreamTest3);
+  lSuite.AddTest('TestClear', @RunTTestCollectionStreamTestClear);
+  lSuite.AddTest('TestEmpty', @RunTTestCollectionStreamTestEmpty);
+end;
+
 end.

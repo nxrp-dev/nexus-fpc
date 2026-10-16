@@ -9,9 +9,8 @@ unit Tests.Rtti.Impl;
 interface
 
 uses
-{$IFDEF FPC}
-  fpcunit,testregistry, testutils,
-{$ELSE FPC}
+obNXTestContext, obNXTestRegistry, obNXTestSuite, {$IFDEF FPC}
+  {$ELSE FPC}
   TestFramework,
 {$ENDIF FPC}
   sysutils, typinfo, Rtti,
@@ -24,7 +23,15 @@ uses
 type
   { TTestImplBase }
 
-  TTestImplBase = class(TTestCase)
+  TTestImplBase = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Protected
 
     InputArgs: array of TValue;
@@ -60,9 +67,9 @@ TTestImpl = class(TTestCase)
     intf: ITestInterface;
   public
     procedure DoTestIntfImpl(aIndex: LongInt; const aInputArgs, aOutputArgs: TValueArray; const aInOutMapping: array of SizeInt; aResult: TValue);
-    procedure Setup; override;
-    procedure teardown; override;
-    published
+    procedure Setup; virtual;
+    procedure teardown; virtual;
+    public
     Procedure Test1;
     procedure Test2;
     procedure Test3;
@@ -123,9 +130,9 @@ TTestImpl = class(TTestCase)
     procedure DoStep(const aname: string);
   public
     procedure DoTestIntfImpl(aCall : TIntfCallCallBack; const aName : string; const aInputArgs, aOutputArgs: TValueArray; const aInOutMapping: array of SizeInt; aResult: TValue);
-    procedure Setup; override;
-    procedure teardown; override;
-  published
+    procedure Setup; virtual;
+    procedure teardown; virtual;
+  public
     Procedure Test1;
     procedure Test2;
     procedure Test3;
@@ -154,7 +161,7 @@ TTestImpl = class(TTestCase)
   { TTestMethodVars }
 
   TTestMethodVars = class(TTestImplBase)
-  Published
+  public
     Procedure TestMethodVar1;
     Procedure TestMethodVar2;
     procedure TestMethodVar3;
@@ -183,7 +190,7 @@ TTestImpl = class(TTestCase)
   { TTestProcVars }
 
   TTestProcVars = class (TTestImplBase)
-  Published
+  public
     Procedure TestProcVar1;
     Procedure TestProcVar2;
     procedure TestProcVar3;
@@ -210,6 +217,8 @@ TTestImpl = class(TTestCase)
   end;
 
 
+procedure RegisterTestsRttiImplTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 
@@ -222,15 +231,15 @@ var
 
 begin
   selfofs := 1;
-  Status('In Callback');
+  WriteLn('In Callback');
   InvokedMethodName :=  aMethod.Name;
-  //  Status('Self: ' + HexStr(Self));
+  //  WriteLn('Self: ' + HexStr(Self));
   if Assigned(aMethod.ReturnType) then
     aResult := CopyValue(ResultValue);
-  // Status('Setting input args');
+  // WriteLn('Setting input args');
   SetLength(InputArgs, Length(aArgs));
   for i := 0 to High(aArgs) do begin
-    // Status('Arg %d: %p %p %s', [i, aArgs[i].GetReferenceToRawData, PPointer(aArgs[i].GetReferenceToRawData)^, aArgs[i].TypeInfo^.Name]);
+    // WriteLn(Format('Arg %d: %p %p %s', [i, aArgs[i].GetReferenceToRawData, PPointer(aArgs[i].GetReferenceToRawData)^, aArgs[i].TypeInfo^.Name]));
     // Writeln('Untyped: ',Assigned(InputUntypedTypes[i]));
     if Assigned(InputUntypedTypes[i]) then
       begin
@@ -245,7 +254,7 @@ begin
   for i := 0 to High(InOutMapping) do begin
     Move(OutputArgs[i].GetReferenceToRawData^, aArgs[InOutMapping[i] + selfofs].GetReferenceToRawData^, OutputArgs[i].DataSize);
   end;
-  Status('Callback done');
+  WriteLn('Callback done');
 end;
 
 procedure TTestImplBase.DoIntfImpl(aIntf: IInterface; aTypeInfo: PTypeInfo; aIndex: LongInt; aInputArgs, aOutputArgs: TValueArray; aInOutMapping: array of SizeInt; aResult: TValue);
@@ -266,16 +275,16 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(aTypeInfo);
-    Check(t is TRttiInterfaceType, 'Not a interface type: ' + aTypeInfo^.Name);
+    TestContext.AssertTrue(t is TRttiInterfaceType, 'Not a interface type: ' + aTypeInfo^.Name);
     intf := t as TRttiInterfaceType;
 
     method := intf.GetMethod(name);
-    Check(Assigned(method), 'Method not found: ' + name);
+    TestContext.AssertTrue(Assigned(method), 'Method not found: ' + name);
 
-    Status('Executing method %s', [name]);
+    WriteLn(Format('Executing method %s', [name]));
 
-    CheckEquals(Length(aOutputArgs), Length(aInOutMapping), 'Invalid in/out mapping');
-    Check(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
+    TestContext.AssertTrue((Length(aOutputArgs))=(Length(aInOutMapping)), 'Invalid in/out mapping');
+    TestContext.AssertTrue(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
 
     params := method.GetParameters;
 
@@ -304,17 +313,17 @@ begin
     ResultValue := aResult;
 
     res := method.Invoke(instance, aInputArgs);
-    Status('After invoke');
+    WriteLn('After invoke');
 
-    CheckEquals(name, InvokedMethodName, 'Invoked method name differs for ' + name);
-    Check(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
-    Check(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
-    CheckEquals(Length(input), Length(InputArgs), 'Count of input args differs for ' + name);
+    TestContext.AssertTrue((name)=(InvokedMethodName), 'Invoked method name differs for ' + name);
+    TestContext.AssertTrue(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
+    TestContext.AssertTrue(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
+    TestContext.AssertTrue((Length(input))=(Length(InputArgs)), 'Count of input args differs for ' + name);
     for i := 0 to High(input) do begin
-      Check(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
     end;
     for i := 0 to High(aOutputArgs) do begin
-      Check(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
     end;
   finally
     context.Free;
@@ -327,33 +336,33 @@ procedure TTestImplBase.OnHandleInvokable(aInvokable: TRttiInvokableType; const 
 var
   selfofs, i: SizeInt;
 begin
-  CheckTrue((aInvokable is TRttiMethodType) or (aInvokable is TRttiProcedureType), 'Invokable is not a method or procedure variable: ' + aInvokable.ClassName);
+  TestContext.AssertTrue((aInvokable is TRttiMethodType) or (aInvokable is TRttiProcedureType), 'Invokable is not a method or procedure variable: ' + aInvokable.ClassName);
 
   selfofs := 0;
   if aInvokable is TRttiMethodType then
     selfofs := 1;
 
-  Status('In Callback');
-  Status('Self: ' + HexStr(Self));
+  WriteLn('In Callback');
+  WriteLn('Self: ' + HexStr(Self));
   if Assigned(aInvokable.ReturnType) then
     aResult := CopyValue(ResultValue);
-  Status('Setting input args');
+  WriteLn('Setting input args');
   SetLength(InputArgs, Length(aArgs));
   for i := 0 to High(aArgs) do begin
-    Status('Arg %d: %p %p', [i, aArgs[i].GetReferenceToRawData, PPointer(aArgs[i].GetReferenceToRawData)^]);
+    WriteLn(Format('Arg %d: %p %p', [i, aArgs[i].GetReferenceToRawData, PPointer(aArgs[i].GetReferenceToRawData)^]));
     if Assigned(InputUntypedTypes[i]) then
       TValue.Make(PPointer(aArgs[i].GetReferenceToRawData)^, InputUntypedTypes[i], InputArgs[i])
     else
       InputArgs[i] := CopyValue(aArgs[i]);
   end;
-  Status('Setting output args');
+  WriteLn('Setting output args');
   { Note: account for Self }
   for i := 0 to High(InOutMapping) do begin
-    Status('OutputArg %d -> Arg %d', [i, InOutMapping[i] + selfofs]);
+    WriteLn(Format('OutputArg %d -> Arg %d', [i, InOutMapping[i] + selfofs]));
     { check input arg type? }
     Move(OutputArgs[i].GetReferenceToRawData^, aArgs[InOutMapping[i] + selfofs].GetReferenceToRawData^, OutputArgs[i].DataSize);
   end;
-  Status('Callback done');
+  WriteLn('Callback done');
 end;
 
 procedure TTestImplBase.DoMethodImpl(aTypeInfo: PTypeInfo; aInputArgs,
@@ -377,13 +386,13 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(aTypeInfo);
-    Check(t is TRttiMethodType, 'Not a method variable: ' + name);
+    TestContext.AssertTrue(t is TRttiMethodType, 'Not a method variable: ' + name);
     method := t as TRttiMethodType;
 
-    Status('Executing method %s', [name]);
+    WriteLn(Format('Executing method %s', [name]));
 
-    CheckEquals(Length(aOutputArgs), Length(aInOutMapping), 'Invalid in/out mapping');
-    Check(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
+    TestContext.AssertTrue((Length(aOutputArgs))=(Length(aInOutMapping)), 'Invalid in/out mapping');
+    TestContext.AssertTrue(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
 
     params := method.GetParameters;
 
@@ -407,7 +416,7 @@ begin
       on e: ENotImplemented do
         Exit;
     end;
-    CheckNotNull(impl, 'Method implementation is Nil');
+    TestContext.AssertTrue((impl)<>nil, 'Method implementation is Nil');
 
     mrec.Data := Self;
     mrec.Code := impl.CodeAddress;
@@ -422,16 +431,16 @@ begin
     ResultValue := aResult;
 
     res := method.Invoke(callable, aInputArgs);
-    Status('After invoke');
+    WriteLn('After invoke');
 
-    Check(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
-    Check(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
-    CheckEquals(Length(input), Length(InputArgs), 'Count of input args differs for ' + name);
+    TestContext.AssertTrue(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
+    TestContext.AssertTrue(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
+    TestContext.AssertTrue((Length(input))=(Length(InputArgs)), 'Count of input args differs for ' + name);
     for i := 0 to High(input) do begin
-      Check(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
     end;
     for i := 0 to High(aOutputArgs) do begin
-      Check(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
     end;
   finally
     impl.Free;
@@ -460,13 +469,13 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(aTypeInfo);
-    Check(t is TRttiProcedureType, 'Not a procedure variable: ' + name);
+    TestContext.AssertTrue(t is TRttiProcedureType, 'Not a procedure variable: ' + name);
     proc := t as TRttiProcedureType;
 
-    Status('Executing procedure %s', [name]);
+    WriteLn(Format('Executing procedure %s', [name]));
 
-    CheckEquals(Length(aOutputArgs), Length(aInOutMapping), 'Invalid in/out mapping');
-    Check(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
+    TestContext.AssertTrue((Length(aOutputArgs))=(Length(aInOutMapping)), 'Invalid in/out mapping');
+    TestContext.AssertTrue(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
 
     params := proc.GetParameters;
 
@@ -488,7 +497,7 @@ begin
       on e: ENotImplemented do
         Exit;
     end;
-    CheckNotNull(impl, 'Method implementation is Nil');
+    TestContext.AssertTrue((impl)<>nil, 'Method implementation is Nil');
 
     cp := impl.CodeAddress;
     TValue.Make(@cp, aTypeInfo, callable);
@@ -502,16 +511,16 @@ begin
     ResultValue := aResult;
 
     res := proc.Invoke(callable, aInputArgs);
-    Status('After invoke');
+    WriteLn('After invoke');
 
-    Check(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
-    Check(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
-    CheckEquals(Length(input), Length(InputArgs), 'Count of input args differs for ' + name);
+    TestContext.AssertTrue(EqualValues(ResultValue, res), 'Reported result value differs from returned for ' + name);
+    TestContext.AssertTrue(EqualValues(aResult, res), 'Expected result value differs from returned for ' + name);
+    TestContext.AssertTrue((Length(input))=(Length(InputArgs)), 'Count of input args differs for ' + name);
     for i := 0 to High(input) do begin
-      Check(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs for %s', [i + 1, name]));
     end;
     for i := 0 to High(aOutputArgs) do begin
-      Check(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
+      TestContext.AssertTrue(EqualValues(aOutputArgs[i], aInputArgs[InOutMapping[i]]), Format('New output argument %d differs from expected output for %s', [i + 1, name]));
     end;
   finally
     impl.Free;
@@ -529,14 +538,14 @@ end;
 procedure TTestIntfMethods.Setup;
 
 begin
-  inherited;
+
   try
     intf := TVirtualInterface.Create(PTypeInfo(TypeInfo(ITestInterface)), {$ifdef fpc}@{$endif}OnHandleIntfMethod) as ITestInterface;
   except
     on e: ENotImplemented do
-      Ignore('TVirtualInterface not supported for ' + {$I %FPCTARGETCPU%} + '-' + {$I %FPCTARGETOS%}+': '+E.Message);
+      TestContext.Skip('TVirtualInterface not supported for ' + {$I %FPCTARGETCPU%} + '-' + {$I %FPCTARGETOS%}+': '+E.Message);
   end;
-  Check(Assigned(intf), 'ITestInterface instance is Nil');
+  TestContext.AssertTrue(Assigned(intf), 'ITestInterface instance is Nil');
 end;
 
 procedure TTestIntfMethods.DoTestIntfImpl(aIndex: LongInt; const aInputArgs, aOutputArgs: TValueArray; const aInOutMapping: array of SizeInt; aResult: TValue);
@@ -776,15 +785,15 @@ begin
   context := TRttiContext.Create;
   try
     t := context.GetType(TypeInfo(ITestInterface));
-    Check(t is TRttiInterfaceType, 'Not a interface type !');
+    TestContext.AssertTrue(t is TRttiInterfaceType, 'Not a interface type !');
     intf := t as TRttiInterfaceType;
     method := intf.GetMethod(aname);
-    Check(Assigned(method), 'Method not found: ' + aname);
+    TestContext.AssertTrue(Assigned(method), 'Method not found: ' + aname);
     params := method.GetParameters;
   dostep('a');
-  CheckEquals(Length(aOutputArgs), Length(aInOutMapping), 'Invalid in/out mapping');
+  TestContext.AssertTrue((Length(aOutputArgs))=(Length(aInOutMapping)), 'Invalid in/out mapping');
   dostep('b');
-  Check(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
+  TestContext.AssertTrue(Length(aOutputArgs) <= Length(aInputArgs), 'Output args not part of input args');
   dostep('c');
   TValue.Make(@FIntf, TypeInfo(ITestInterface), instance);
   dostep('d');
@@ -828,24 +837,24 @@ begin
   dostep('m');
   aCall(self.FIntf);
   dostep('n');
-  CheckEquals(aName, InvokedMethodName, 'Invoked method name differs');
+  TestContext.AssertTrue((aName)=(InvokedMethodName), 'Invoked method name differs');
   dostep('o');
-  Check(EqualValues(ResultValue, FActualResult), Format('Actual result %s value differs from saved expected %s',[FActualResult.ToString,ResultValue.ToString]));
+  TestContext.AssertTrue(EqualValues(ResultValue, FActualResult), Format('Actual result %s value differs from saved expected %s',[FActualResult.ToString,ResultValue.ToString]));
   dostep('p');
-  Check(EqualValues(aResult, FActualResult), Format('Actual result %s value differs from expected %s',[FActualResult.ToString, aResult.ToString]));
+  TestContext.AssertTrue(EqualValues(aResult, FActualResult), Format('Actual result %s value differs from expected %s',[FActualResult.ToString, aResult.ToString]));
   dostep('q');
-  CheckEquals(Length(input), Length(InputArgs), 'Count of input args differs');
+  TestContext.AssertTrue((Length(input))=(Length(InputArgs)), 'Count of input args differs');
   dostep('q1');
   for i := 0 to Length(InputArgs)-1 do
   begin
     // Can't compare untyped in direct call.
     if (I=0) or Assigned(Params[I-1].ParamType) then
-      Check(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs (actual: %s, expected: %s)', [i,input[i].tostring, InputArgs[i].toString]));
+      TestContext.AssertTrue(EqualValues(input[i], InputArgs[i]), Format('Input argument %d differs (actual: %s, expected: %s)', [i,input[i].tostring, InputArgs[i].toString]));
   end;
   dostep('r');
-  CheckEquals(Length(aOutputArgs), Length(RecordedOutputArgs), 'Count of recorded and expected output args differs');
+  TestContext.AssertTrue((Length(aOutputArgs))=(Length(RecordedOutputArgs)), 'Count of recorded and expected output args differs');
   for i := 0 to High(aOutputArgs) do begin
-    Check(EqualValues(aOutputArgs[i], RecordedOutputArgs[i]), Format('New output argument %d (%s) differs from expected output (%s)', [i + 1, RecordedOutputArgs[i].ToString, aOutputArgs[i].toString]));
+    TestContext.AssertTrue(EqualValues(aOutputArgs[i], RecordedOutputArgs[i]), Format('New output argument %d (%s) differs from expected output (%s)', [i + 1, RecordedOutputArgs[i].ToString, aOutputArgs[i].toString]));
   end;
   dostep('s');
   finally
@@ -857,21 +866,21 @@ end;
 
 procedure TTestDirectIntfCalls.Setup;
 begin
-  inherited;
+
   try
     Fintf := TVirtualInterface.Create(PTypeInfo(TypeInfo(ITestInterface)), {$ifdef fpc}@{$endif}OnHandleIntfMethod) as ITestInterface;
   except
     on e: ENotImplemented do
-      Ignore('TVirtualInterface not supported for ' + {$I %FPCTARGETCPU%} + '-' + {$I %FPCTARGETOS%}+': '+E.Message);
+      TestContext.Skip('TVirtualInterface not supported for ' + {$I %FPCTARGETCPU%} + '-' + {$I %FPCTARGETOS%}+': '+E.Message);
   end;
-  Check(Assigned(Fintf), 'ITestInterface instance is Nil');
+  TestContext.AssertTrue(Assigned(Fintf), 'ITestInterface instance is Nil');
   FActualResult:=TValue.Empty;
 end;
 
 procedure TTestDirectIntfCalls.teardown;
 begin
   FIntf:=nil;
-  inherited teardown;
+
 end;
 
 procedure TTestDirectIntfCalls.CallTestMethod1(aIntf : ITestInterface);
@@ -1763,15 +1772,996 @@ end;
 
 {$endif fpc}
 
+constructor TTestImplBase.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestIntfMethodsTest1(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test1');
+  try
+    lFixture.SetUp;
+    try lFixture.Test1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest2(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test2');
+  try
+    lFixture.SetUp;
+    try lFixture.Test2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest3(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test3');
+  try
+    lFixture.SetUp;
+    try lFixture.Test3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest4(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test4');
+  try
+    lFixture.SetUp;
+    try lFixture.Test4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest5(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test5');
+  try
+    lFixture.SetUp;
+    try lFixture.Test5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest6(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test6');
+  try
+    lFixture.SetUp;
+    try lFixture.Test6; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest7(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test7');
+  try
+    lFixture.SetUp;
+    try lFixture.Test7; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest8(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test8');
+  try
+    lFixture.SetUp;
+    try lFixture.Test8; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest9(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test9');
+  try
+    lFixture.SetUp;
+    try lFixture.Test9; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest10(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test10');
+  try
+    lFixture.SetUp;
+    try lFixture.Test10; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest11(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test11');
+  try
+    lFixture.SetUp;
+    try lFixture.Test11; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest12(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test12');
+  try
+    lFixture.SetUp;
+    try lFixture.Test12; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest13(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test13');
+  try
+    lFixture.SetUp;
+    try lFixture.Test13; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest14(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test14');
+  try
+    lFixture.SetUp;
+    try lFixture.Test14; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest15(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test15');
+  try
+    lFixture.SetUp;
+    try lFixture.Test15; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest16(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test16');
+  try
+    lFixture.SetUp;
+    try lFixture.Test16; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest17(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test17');
+  try
+    lFixture.SetUp;
+    try lFixture.Test17; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest18(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test18');
+  try
+    lFixture.SetUp;
+    try lFixture.Test18; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest19(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test19');
+  try
+    lFixture.SetUp;
+    try lFixture.Test19; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest20(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test20');
+  try
+    lFixture.SetUp;
+    try lFixture.Test20; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest21(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test21');
+  try
+    lFixture.SetUp;
+    try lFixture.Test21; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest21s(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test21s');
+  try
+    lFixture.SetUp;
+    try lFixture.Test21s; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestIntfMethodsTest22(AContext: TNXTestContext);
+var lFixture: TTestIntfMethods;
+begin
+  lFixture:=TTestIntfMethods.Create(AContext, 'Test22');
+  try
+    lFixture.SetUp;
+    try lFixture.Test22; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest1(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test1');
+  try
+    lFixture.SetUp;
+    try lFixture.Test1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest2(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test2');
+  try
+    lFixture.SetUp;
+    try lFixture.Test2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest3(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test3');
+  try
+    lFixture.SetUp;
+    try lFixture.Test3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest4(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test4');
+  try
+    lFixture.SetUp;
+    try lFixture.Test4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest5(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test5');
+  try
+    lFixture.SetUp;
+    try lFixture.Test5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest6(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test6');
+  try
+    lFixture.SetUp;
+    try lFixture.Test6; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest7(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test7');
+  try
+    lFixture.SetUp;
+    try lFixture.Test7; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest8(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test8');
+  try
+    lFixture.SetUp;
+    try lFixture.Test8; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest9(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test9');
+  try
+    lFixture.SetUp;
+    try lFixture.Test9; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest10(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test10');
+  try
+    lFixture.SetUp;
+    try lFixture.Test10; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest11(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test11');
+  try
+    lFixture.SetUp;
+    try lFixture.Test11; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest12(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test12');
+  try
+    lFixture.SetUp;
+    try lFixture.Test12; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest13(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test13');
+  try
+    lFixture.SetUp;
+    try lFixture.Test13; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest14(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test14');
+  try
+    lFixture.SetUp;
+    try lFixture.Test14; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest15(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test15');
+  try
+    lFixture.SetUp;
+    try lFixture.Test15; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest16(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test16');
+  try
+    lFixture.SetUp;
+    try lFixture.Test16; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest17(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test17');
+  try
+    lFixture.SetUp;
+    try lFixture.Test17; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest18(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test18');
+  try
+    lFixture.SetUp;
+    try lFixture.Test18; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest19(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test19');
+  try
+    lFixture.SetUp;
+    try lFixture.Test19; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest20(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test20');
+  try
+    lFixture.SetUp;
+    try lFixture.Test20; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest21(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test21');
+  try
+    lFixture.SetUp;
+    try lFixture.Test21; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest21s(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test21s');
+  try
+    lFixture.SetUp;
+    try lFixture.Test21s; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestDirectIntfCallsTest22(AContext: TNXTestContext);
+var lFixture: TTestDirectIntfCalls;
+begin
+  lFixture:=TTestDirectIntfCalls.Create(AContext, 'Test22');
+  try
+    lFixture.SetUp;
+    try lFixture.Test22; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar1(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar1');
+  try
+    lFixture.TestMethodVar1;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar2(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar2');
+  try
+    lFixture.TestMethodVar2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar3(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar3');
+  try
+    lFixture.TestMethodVar3;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar4(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar4');
+  try
+    lFixture.TestMethodVar4;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar5(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar5');
+  try
+    lFixture.TestMethodVar5;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar6(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar6');
+  try
+    lFixture.TestMethodVar6;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar7(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar7');
+  try
+    lFixture.TestMethodVar7;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar8(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar8');
+  try
+    lFixture.TestMethodVar8;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar9(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar9');
+  try
+    lFixture.TestMethodVar9;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar10(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar10');
+  try
+    lFixture.TestMethodVar10;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar11(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar11');
+  try
+    lFixture.TestMethodVar11;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar12(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar12');
+  try
+    lFixture.TestMethodVar12;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar13(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar13');
+  try
+    lFixture.TestMethodVar13;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar14(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar14');
+  try
+    lFixture.TestMethodVar14;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar15(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar15');
+  try
+    lFixture.TestMethodVar15;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar16(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar16');
+  try
+    lFixture.TestMethodVar16;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar17(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar17');
+  try
+    lFixture.TestMethodVar17;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar18(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar18');
+  try
+    lFixture.TestMethodVar18;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar19(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar19');
+  try
+    lFixture.TestMethodVar19;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar20(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar20');
+  try
+    lFixture.TestMethodVar20;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar21(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar21');
+  try
+    lFixture.TestMethodVar21;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar21as(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar21as');
+  try
+    lFixture.TestMethodVar21as;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestMethodVarsTestMethodVar21ss(AContext: TNXTestContext);
+var lFixture: TTestMethodVars;
+begin
+  lFixture:=TTestMethodVars.Create(AContext, 'TestMethodVar21ss');
+  try
+    lFixture.TestMethodVar21ss;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar1(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar1');
+  try
+    lFixture.TestProcVar1;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar2(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar2');
+  try
+    lFixture.TestProcVar2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar3(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar3');
+  try
+    lFixture.TestProcVar3;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar4(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar4');
+  try
+    lFixture.TestProcVar4;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar5(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar5');
+  try
+    lFixture.TestProcVar5;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar6(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar6');
+  try
+    lFixture.TestProcVar6;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar7(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar7');
+  try
+    lFixture.TestProcVar7;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar8(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar8');
+  try
+    lFixture.TestProcVar8;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar9(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar9');
+  try
+    lFixture.TestProcVar9;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar10(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar10');
+  try
+    lFixture.TestProcVar10;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar11(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar11');
+  try
+    lFixture.TestProcVar11;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar12(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar12');
+  try
+    lFixture.TestProcVar12;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar13(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar13');
+  try
+    lFixture.TestProcVar13;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar14(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar14');
+  try
+    lFixture.TestProcVar14;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar15(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar15');
+  try
+    lFixture.TestProcVar15;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar16(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar16');
+  try
+    lFixture.TestProcVar16;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar17(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar17');
+  try
+    lFixture.TestProcVar17;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar18(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar18');
+  try
+    lFixture.TestProcVar18;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar19(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar19');
+  try
+    lFixture.TestProcVar19;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar20(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar20');
+  try
+    lFixture.TestProcVar20;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar21(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar21');
+  try
+    lFixture.TestProcVar21;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar21as(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar21as');
+  try
+    lFixture.TestProcVar21as;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestProcVarsTestProcVar21ss(AContext: TNXTestContext);
+var lFixture: TTestProcVars;
+begin
+  lFixture:=TTestProcVars.Create(AContext, 'TestProcVar21ss');
+  try
+    lFixture.TestProcVar21ss;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterTestsRttiImplTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('Tests.Rtti.Impl.TTestIntfMethods');
+  lSuite.AddTest('Test1', @RunTTestIntfMethodsTest1);
+  lSuite.AddTest('Test2', @RunTTestIntfMethodsTest2);
+  lSuite.AddTest('Test3', @RunTTestIntfMethodsTest3);
+  lSuite.AddTest('Test4', @RunTTestIntfMethodsTest4);
+  lSuite.AddTest('Test5', @RunTTestIntfMethodsTest5);
+  lSuite.AddTest('Test6', @RunTTestIntfMethodsTest6);
+  lSuite.AddTest('Test7', @RunTTestIntfMethodsTest7);
+  lSuite.AddTest('Test8', @RunTTestIntfMethodsTest8);
+  lSuite.AddTest('Test9', @RunTTestIntfMethodsTest9);
+  lSuite.AddTest('Test10', @RunTTestIntfMethodsTest10);
+  lSuite.AddTest('Test11', @RunTTestIntfMethodsTest11);
+  lSuite.AddTest('Test12', @RunTTestIntfMethodsTest12);
+  lSuite.AddTest('Test13', @RunTTestIntfMethodsTest13);
+  lSuite.AddTest('Test14', @RunTTestIntfMethodsTest14);
+  lSuite.AddTest('Test15', @RunTTestIntfMethodsTest15);
+  lSuite.AddTest('Test16', @RunTTestIntfMethodsTest16);
+  lSuite.AddTest('Test17', @RunTTestIntfMethodsTest17);
+  lSuite.AddTest('Test18', @RunTTestIntfMethodsTest18);
+  lSuite.AddTest('Test19', @RunTTestIntfMethodsTest19);
+  lSuite.AddTest('Test20', @RunTTestIntfMethodsTest20);
+  lSuite.AddTest('Test21', @RunTTestIntfMethodsTest21);
+  lSuite.AddTest('Test21s', @RunTTestIntfMethodsTest21s);
+  lSuite.AddTest('Test22', @RunTTestIntfMethodsTest22);
+  lSuite:=ARegistry.AddSuite('Tests.Rtti.Impl.TTestDirectIntfCalls');
+  lSuite.AddTest('Test1', @RunTTestDirectIntfCallsTest1);
+  lSuite.AddTest('Test2', @RunTTestDirectIntfCallsTest2);
+  lSuite.AddTest('Test3', @RunTTestDirectIntfCallsTest3);
+  lSuite.AddTest('Test4', @RunTTestDirectIntfCallsTest4);
+  lSuite.AddTest('Test5', @RunTTestDirectIntfCallsTest5);
+  lSuite.AddTest('Test6', @RunTTestDirectIntfCallsTest6);
+  lSuite.AddTest('Test7', @RunTTestDirectIntfCallsTest7);
+  lSuite.AddTest('Test8', @RunTTestDirectIntfCallsTest8);
+  lSuite.AddTest('Test9', @RunTTestDirectIntfCallsTest9);
+  lSuite.AddTest('Test10', @RunTTestDirectIntfCallsTest10);
+  lSuite.AddTest('Test11', @RunTTestDirectIntfCallsTest11);
+  lSuite.AddTest('Test12', @RunTTestDirectIntfCallsTest12);
+  lSuite.AddTest('Test13', @RunTTestDirectIntfCallsTest13);
+  lSuite.AddTest('Test14', @RunTTestDirectIntfCallsTest14);
+  lSuite.AddTest('Test15', @RunTTestDirectIntfCallsTest15);
+  lSuite.AddTest('Test16', @RunTTestDirectIntfCallsTest16);
+  lSuite.AddTest('Test17', @RunTTestDirectIntfCallsTest17);
+  lSuite.AddTest('Test18', @RunTTestDirectIntfCallsTest18);
+  lSuite.AddTest('Test19', @RunTTestDirectIntfCallsTest19);
+  lSuite.AddTest('Test20', @RunTTestDirectIntfCallsTest20);
+  lSuite.AddTest('Test21', @RunTTestDirectIntfCallsTest21);
+  lSuite.AddTest('Test21s', @RunTTestDirectIntfCallsTest21s);
+  lSuite.AddTest('Test22', @RunTTestDirectIntfCallsTest22);
+  lSuite:=ARegistry.AddSuite('Tests.Rtti.Impl.TTestMethodVars');
+  lSuite.AddTest('TestMethodVar1', @RunTTestMethodVarsTestMethodVar1);
+  lSuite.AddTest('TestMethodVar2', @RunTTestMethodVarsTestMethodVar2);
+  lSuite.AddTest('TestMethodVar3', @RunTTestMethodVarsTestMethodVar3);
+  lSuite.AddTest('TestMethodVar4', @RunTTestMethodVarsTestMethodVar4);
+  lSuite.AddTest('TestMethodVar5', @RunTTestMethodVarsTestMethodVar5);
+  lSuite.AddTest('TestMethodVar6', @RunTTestMethodVarsTestMethodVar6);
+  lSuite.AddTest('TestMethodVar7', @RunTTestMethodVarsTestMethodVar7);
+  lSuite.AddTest('TestMethodVar8', @RunTTestMethodVarsTestMethodVar8);
+  lSuite.AddTest('TestMethodVar9', @RunTTestMethodVarsTestMethodVar9);
+  lSuite.AddTest('TestMethodVar10', @RunTTestMethodVarsTestMethodVar10);
+  lSuite.AddTest('TestMethodVar11', @RunTTestMethodVarsTestMethodVar11);
+  lSuite.AddTest('TestMethodVar12', @RunTTestMethodVarsTestMethodVar12);
+  lSuite.AddTest('TestMethodVar13', @RunTTestMethodVarsTestMethodVar13);
+  lSuite.AddTest('TestMethodVar14', @RunTTestMethodVarsTestMethodVar14);
+  lSuite.AddTest('TestMethodVar15', @RunTTestMethodVarsTestMethodVar15);
+  lSuite.AddTest('TestMethodVar16', @RunTTestMethodVarsTestMethodVar16);
+  lSuite.AddTest('TestMethodVar17', @RunTTestMethodVarsTestMethodVar17);
+  lSuite.AddTest('TestMethodVar18', @RunTTestMethodVarsTestMethodVar18);
+  lSuite.AddTest('TestMethodVar19', @RunTTestMethodVarsTestMethodVar19);
+  lSuite.AddTest('TestMethodVar20', @RunTTestMethodVarsTestMethodVar20);
+  lSuite.AddTest('TestMethodVar21', @RunTTestMethodVarsTestMethodVar21);
+  lSuite.AddTest('TestMethodVar21as', @RunTTestMethodVarsTestMethodVar21as);
+  lSuite.AddTest('TestMethodVar21ss', @RunTTestMethodVarsTestMethodVar21ss);
+  lSuite:=ARegistry.AddSuite('Tests.Rtti.Impl.TTestProcVars');
+  lSuite.AddTest('TestProcVar1', @RunTTestProcVarsTestProcVar1);
+  lSuite.AddTest('TestProcVar2', @RunTTestProcVarsTestProcVar2);
+  lSuite.AddTest('TestProcVar3', @RunTTestProcVarsTestProcVar3);
+  lSuite.AddTest('TestProcVar4', @RunTTestProcVarsTestProcVar4);
+  lSuite.AddTest('TestProcVar5', @RunTTestProcVarsTestProcVar5);
+  lSuite.AddTest('TestProcVar6', @RunTTestProcVarsTestProcVar6);
+  lSuite.AddTest('TestProcVar7', @RunTTestProcVarsTestProcVar7);
+  lSuite.AddTest('TestProcVar8', @RunTTestProcVarsTestProcVar8);
+  lSuite.AddTest('TestProcVar9', @RunTTestProcVarsTestProcVar9);
+  lSuite.AddTest('TestProcVar10', @RunTTestProcVarsTestProcVar10);
+  lSuite.AddTest('TestProcVar11', @RunTTestProcVarsTestProcVar11);
+  lSuite.AddTest('TestProcVar12', @RunTTestProcVarsTestProcVar12);
+  lSuite.AddTest('TestProcVar13', @RunTTestProcVarsTestProcVar13);
+  lSuite.AddTest('TestProcVar14', @RunTTestProcVarsTestProcVar14);
+  lSuite.AddTest('TestProcVar15', @RunTTestProcVarsTestProcVar15);
+  lSuite.AddTest('TestProcVar16', @RunTTestProcVarsTestProcVar16);
+  lSuite.AddTest('TestProcVar17', @RunTTestProcVarsTestProcVar17);
+  lSuite.AddTest('TestProcVar18', @RunTTestProcVarsTestProcVar18);
+  lSuite.AddTest('TestProcVar19', @RunTTestProcVarsTestProcVar19);
+  lSuite.AddTest('TestProcVar20', @RunTTestProcVarsTestProcVar20);
+  lSuite.AddTest('TestProcVar21', @RunTTestProcVarsTestProcVar21);
+  lSuite.AddTest('TestProcVar21as', @RunTTestProcVarsTestProcVar21as);
+  lSuite.AddTest('TestProcVar21ss', @RunTTestProcVarsTestProcVar21ss);
+end;
+
+
 
 initialization
 {$ifdef fpc}
-  RegisterTest(TTestIntfMethods);
-  RegisterTest(TTestMethodVars);
-  RegisterTest(TTestProcVars);
-  RegisterTest(TTestDirectIntfCalls)
-{$else fpc}
-  RegisterTest(TTestIntfMethods.Suite);
+
+
+
+
 {$endif fpc}
 end.
 

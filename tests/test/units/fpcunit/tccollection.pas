@@ -5,7 +5,7 @@ unit tccollection;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils;
 
 type
 
@@ -43,7 +43,15 @@ type
 
   { TTestTCollection }
 
-  TTestTCollection= class(TTestCase)
+  TTestTCollection= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     procedure AccessNegativeIndex;
     procedure AccessTooBigIndex;
@@ -55,9 +63,9 @@ type
     FColl : TMyCollection;
     Function MyItem(I : integer) : TMyItem;
     procedure AddItems(ACount : Integer);
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestCreate;
     procedure TestAdd;
     procedure TestItemCollection;
@@ -87,28 +95,30 @@ type
     Procedure TestNotifyDelete;
   end;
 
+procedure RegistertccollectionTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 procedure TTestTCollection.TestCreate;
 begin
-  AssertEquals('Item count 0 at create',0,FColl.Count);
-  AssertEquals('ItemClass is TMyItem',TMyItem,FColl.ItemClass);
+  TestContext.AssertTrue((0)=(FColl.Count), 'Item count 0 at create');
+  TestContext.AssertTrue((TMyItem)=(FColl.ItemClass), 'ItemClass is TMyItem');
 end;
 
 procedure TTestTCollection.TestAdd;
 begin
   AddItems(1);
-  AssertEquals('Item count is 1 after add',1,FColl.Count);
-  AssertEquals('Item class is correct',FColl.ItemClass,FColl.Items[0].ClassType);
-  AssertEquals('Item index is 0',0,FColl.Items[0].Index);
-  AssertEquals('Item ID is 0',0,FColl.Items[0].Id);
+  TestContext.AssertTrue((1)=(FColl.Count), 'Item count is 1 after add');
+  TestContext.AssertTrue((FColl.ItemClass)=(FColl.Items[0].ClassType), 'Item class is correct');
+  TestContext.AssertTrue((0)=(FColl.Items[0].Index), 'Item index is 0');
+  TestContext.AssertTrue((0)=(FColl.Items[0].Id), 'Item ID is 0');
 end;
 
 procedure TTestTCollection.TestItemCollection;
 begin
   AddItems(1);
   If MyItem(0).Collection<>FColl then
-    Fail('Item''s Collection is not collection');
+    TestContext.Fail('Item''s Collection is not collection');
 end;
 
 procedure TTestTCollection.TestAddTwo;
@@ -118,13 +128,13 @@ Var
 
 begin
   AddItems(3);
-  AssertEquals('Item count is 3 after add',3,FColl.Count);
+  TestContext.AssertTrue((3)=(FColl.Count), 'Item count is 3 after add');
   For I:=0 to 2 do
     begin
-    AssertEquals(Format('Item %d class is correct',[i]),FColl.ItemClass,FColl.Items[i].ClassType);
-    AssertEquals(Format('Item %d index is 0',[i]),i,FColl.Items[i].Index);
-    AssertEquals(Format('Item %d ID is 0',[i]),i,FColl.Items[i].Id);
-    AssertEquals(Format('Item %d ID is %d',[i,i+1]),i+1,MyItem(i).Nr);
+    TestContext.AssertTrue((FColl.ItemClass)=(FColl.Items[i].ClassType), Format('Item %d class is correct',[i]));
+    TestContext.AssertTrue((i)=(FColl.Items[i].Index), Format('Item %d index is 0',[i]));
+    TestContext.AssertTrue((i)=(FColl.Items[i].Id), Format('Item %d ID is 0',[i]));
+    TestContext.AssertTrue((i+1)=(MyItem(i).Nr), Format('Item %d ID is %d',[i,i+1]));
     end;
 end;
 
@@ -132,36 +142,36 @@ procedure TTestTCollection.TestDelete;
 begin
   AddItems(3);
   FColl.Delete(1);
-  AssertEquals('Item count after delete',2,FColl.Count);
-  AssertEquals('Item 0 ok after delete',1,MyItem(0).Nr);
-  AssertEquals('Item 1 ok after delete',3,MyItem(1).Nr);
+  TestContext.AssertTrue((2)=(FColl.Count), 'Item count after delete');
+  TestContext.AssertTrue((1)=(MyItem(0).Nr), 'Item 0 ok after delete');
+  TestContext.AssertTrue((3)=(MyItem(1).Nr), 'Item 1 ok after delete');
 end;
 
 procedure TTestTCollection.TestClear;
 begin
   AddItems(3);
   FColl.Clear;
-  AssertEquals('Item count after clear',0,FColl.Count);
+  TestContext.AssertTrue((0)=(FColl.Count), 'Item count after clear');
 end;
 
 procedure TTestTCollection.TestFreeItem;
 begin
   AddItems(3);
   MyItem(1).Free;
-  AssertEquals('Item count after free',2,FColl.Count);
-  AssertEquals('Item 0 ok after free',1,MyItem(0).Nr);
-  AssertEquals('Item 1 ok after free',3,MyItem(1).Nr);
+  TestContext.AssertTrue((2)=(FColl.Count), 'Item count after free');
+  TestContext.AssertTrue((1)=(MyItem(0).Nr), 'Item 0 ok after free');
+  TestContext.AssertTrue((3)=(MyItem(1).Nr), 'Item 1 ok after free');
 end;
 
 procedure TTestTCollection.TestMoveForward;
 begin
   AddItems(5);
   MyItem(4).Index:=1;
-  AssertEquals('Item 0 ok after move',1,MyItem(0).Nr);
-  AssertEquals('Item 1 ok after move',5,MyItem(1).Nr);
-  AssertEquals('Item 2 ok after move',2,MyItem(2).Nr);
-  AssertEquals('Item 3 ok after move',3,MyItem(3).Nr);
-  AssertEquals('Item 4 ok after move',4,MyItem(4).Nr);
+  TestContext.AssertTrue((1)=(MyItem(0).Nr), 'Item 0 ok after move');
+  TestContext.AssertTrue((5)=(MyItem(1).Nr), 'Item 1 ok after move');
+  TestContext.AssertTrue((2)=(MyItem(2).Nr), 'Item 2 ok after move');
+  TestContext.AssertTrue((3)=(MyItem(3).Nr), 'Item 3 ok after move');
+  TestContext.AssertTrue((4)=(MyItem(4).Nr), 'Item 4 ok after move');
 end;
 
 procedure TTestTCollection.TestMoveBackward;
@@ -169,11 +179,11 @@ procedure TTestTCollection.TestMoveBackward;
 begin
   AddItems(5);
   MyItem(1).Index:=3;
-  AssertEquals('Item 0 ok after move',1,MyItem(0).Nr);
-  AssertEquals('Item 1 ok after move',3,MyItem(1).Nr);
-  AssertEquals('Item 2 ok after move',4,MyItem(2).Nr);
-  AssertEquals('Item 3 ok after move',2,MyItem(3).Nr);
-  AssertEquals('Item 4 ok after move',5,MyItem(4).Nr);
+  TestContext.AssertTrue((1)=(MyItem(0).Nr), 'Item 0 ok after move');
+  TestContext.AssertTrue((3)=(MyItem(1).Nr), 'Item 1 ok after move');
+  TestContext.AssertTrue((4)=(MyItem(2).Nr), 'Item 2 ok after move');
+  TestContext.AssertTrue((2)=(MyItem(3).Nr), 'Item 3 ok after move');
+  TestContext.AssertTrue((5)=(MyItem(4).Nr), 'Item 4 ok after move');
 end;
 
 procedure TTestTCollection.TestID;
@@ -186,27 +196,27 @@ begin
   FColl.Delete(2);
   FColl.Delete(2);
   I:=TMyItem(FColl.Add);
-  AssertEquals('ID keeps counting up',5,I.Id)
+  TestContext.AssertTrue((5)=(I.Id), 'ID keeps counting up')
 end;
 
 procedure TTestTCollection.TestItemOwner;
 begin
   AddItems(1);
   If (MyItem(0).GetOwner<>FColl) then
-    Fail('Item owner is not collection');
+    TestContext.Fail('Item owner is not collection');
 end;
 
 procedure TTestTCollection.TestDisplayName;
 begin
   AddItems(1);
-  AssertEquals('Displayname is classname','TMyItem',MyItem(0).DisplayName);
+  TestContext.AssertTrue(('TMyItem')=(MyItem(0).DisplayName), 'Displayname is classname');
 end;
 
 procedure TTestTCollection.TestItemNamePath;
 begin
   AddItems(2);
-  AssertEquals('Item namepath is collection namepath+index',FColl.GetNamePath+'[0]',MyItem(0).GetNamePath);
-  AssertEquals('Item namepath is collection namepath+index',FColl.GetNamePath+'[1]',MyItem(1).GetNamePath);
+  TestContext.AssertTrue((FColl.GetNamePath+'[0]')=(MyItem(0).GetNamePath), 'Item namepath is collection namepath+index');
+  TestContext.AssertTrue((FColl.GetNamePath+'[1]')=(MyItem(1).GetNamePath), 'Item namepath is collection namepath+index');
 end;
 
 procedure TTestTCollection.TestOwnerItemNamePath;
@@ -220,7 +230,7 @@ begin
     TMyCollection(FColl).FOwner:=P;
     AddItems(2);
     TMyCollection(FColl).PropName:='Something';
-    AssertEquals('Item namepath is collection namepath+index','TPersistent.Something[0]',MyItem(0).GetNamePath);
+    TestContext.AssertTrue(('TPersistent.Something[0]')=(MyItem(0).GetNamePath), 'Item namepath is collection namepath+index');
   finally
     P.Free;
   end;
@@ -237,7 +247,7 @@ begin
     TMyCollection(FColl).FOwner:=P;
     AddItems(2);
     TMyCollection(FColl).PropName:='Something';
-    AssertEquals('Namepath is collection namepath+index','TPersistent.Something',FColl.GetNamePath);
+    TestContext.AssertTrue(('TPersistent.Something')=(FColl.GetNamePath), 'Namepath is collection namepath+index');
   finally
     P.Free;
   end;
@@ -255,12 +265,12 @@ begin
   try
     I:=FCol2.Add;
     I.Collection:=FColl;
-    AssertEquals('Moved item, count of source is zero',0,FCol2.Count);
-    AssertEquals('Moved item, count of dest is 1',3,FColl.Count);
-    AssertEquals('Moved item, index is 2',2,I.Index);
+    TestContext.AssertTrue((0)=(FCol2.Count), 'Moved item, count of source is zero');
+    TestContext.AssertTrue((3)=(FColl.Count), 'Moved item, count of dest is 1');
+    TestContext.AssertTrue((2)=(I.Index), 'Moved item, index is 2');
     If (FColl.Items[0].Collection<>FColl) then
-      Fail('Collection owner is not set correctly after move');
-    AssertEquals('Moved item, ID is 2',2,I.ID);
+      TestContext.Fail('Collection owner is not set correctly after move');
+    TestContext.AssertTrue((2)=(I.ID), 'Moved item, ID is 2');
   finally
     FCol2.free;
   end;
@@ -282,8 +292,8 @@ end;
 procedure TTestTCollection.TestAccesIndexOutOfBounds;
 begin
   AddItems(3);
-  AssertException('Access Negative Index',EListError,@AccessNegativeIndex);
-  AssertException('Access Index too big',EListError,@AccessTooBigIndex);
+  TestContext.AssertRaises(EListError, @AccessNegativeIndex, 'Access Negative Index');
+  TestContext.AssertRaises(EListError, @AccessTooBigIndex, 'Access Index too big');
 end;
 
 procedure TTestTCollection.DeleteNegativeIndex;
@@ -299,8 +309,8 @@ end;
 procedure TTestTCollection.TestDeleteIndexOutOfBounds;
 begin
   AddItems(3);
-  AssertException('Delete Negative Index',EListError,@DeleteNegativeIndex);
-  AssertException('Delete Index too big',EListError,@DeleteTooBigIndex);
+  TestContext.AssertRaises(EListError, @DeleteNegativeIndex, 'Delete Negative Index');
+  TestContext.AssertRaises(EListError, @DeleteTooBigIndex, 'Delete Index too big');
 end;
 
 procedure TTestTCollection.MoveNegativeIndex;
@@ -316,16 +326,16 @@ end;
 procedure TTestTCollection.TestMoveIndexOutOfBounds;
 begin
   AddItems(3);
-  AssertException('Move Negative first index',EListError,@MoveNegativeIndex);
-  AssertException('Exchange Negative second index',EListError,@MoveTooBigIndex);
+  TestContext.AssertRaises(EListError, @MoveNegativeIndex, 'Move Negative first index');
+  TestContext.AssertRaises(EListError, @MoveTooBigIndex, 'Exchange Negative second index');
 end;
 
 procedure TTestTCollection.TestUpdateAdd;
 begin
   AddItems(1);
   If (FColl.FLastUpdate<>Nil) then
-    Fail('update item found !');
-  AssertEquals('Update count is 1',1,FColl.FUpdateCount);
+    TestContext.Fail('update item found !');
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Update count is 1');
 
 end;
 
@@ -335,8 +345,8 @@ begin
   FColl.ResetUpdate;
   FColl.Delete(0);
   If (FColl.FLastUpdate<>Nil) then
-    Fail('update item found !');
-  AssertEquals('Update count is 1',1,FColl.FUpdateCount);
+    TestContext.Fail('update item found !');
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Update count is 1');
 
 end;
 
@@ -345,9 +355,9 @@ begin
   AddItems(1);
   FColl.ResetUpdate;
   MyItem(0).DisplayName:='Something';
-  AssertEquals('Display name notification. Update count is 1',1,FColl.FUpdateCount);
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Display name notification. Update count is 1');
   If (FColl.FLastUpdate<>MyItem(0)) then
-    Fail('No displayname update');
+    TestContext.Fail('No displayname update');
 end;
 
 procedure TTestTCollection.TestUpdateCount;
@@ -356,15 +366,15 @@ begin
   Try
     AddItems(2);
 
-    AssertEquals('Beginupdate; adds. Update count is 0',0,FColl.FUpdateCount);
+    TestContext.AssertTrue((0)=(FColl.FUpdateCount), 'Beginupdate; adds. Update count is 0');
     If (FColl.FLastUpdate<>Nil) then
-      Fail('Beginupdate; FlastUpdate not nil');
+      TestContext.Fail('Beginupdate; FlastUpdate not nil');
   finally
     FColl.EndUpdate;
   end;
-  AssertEquals('Endupdate; adds. Update count is 1',1,FColl.FUpdateCount);
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Endupdate; adds. Update count is 1');
   If (FColl.FLastUpdate<>Nil) then
-    Fail('Endupdate; FlastUpdate not nil');
+    TestContext.Fail('Endupdate; FlastUpdate not nil');
 end;
 
 procedure TTestTCollection.TestUpdateCountNested;
@@ -375,21 +385,21 @@ begin
     FColl.BeginUpdate;
     Try
       AddItems(2);
-      AssertEquals('Beginupdate 2; adds. Update count is 0',0,FColl.FUpdateCount);
+      TestContext.AssertTrue((0)=(FColl.FUpdateCount), 'Beginupdate 2; adds. Update count is 0');
       If (FColl.FLastUpdate<>Nil) then
-        Fail('Beginupdate 2; FlastUpdate not nil');
+        TestContext.Fail('Beginupdate 2; FlastUpdate not nil');
     finally
       FColl.EndUpdate;
     end;
-    AssertEquals('Endupdate 1; Update count is 0',0,FColl.FUpdateCount);
+    TestContext.AssertTrue((0)=(FColl.FUpdateCount), 'Endupdate 1; Update count is 0');
     If (FColl.FLastUpdate<>Nil) then
-      Fail('EndUpdate 1; FlastUpdate not nil');
+      TestContext.Fail('EndUpdate 1; FlastUpdate not nil');
   finally
     FColl.EndUpdate;
   end;
-  AssertEquals('Endupdate 2; adds. Update count is 1',1,FColl.FUpdateCount);
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Endupdate 2; adds. Update count is 1');
   If (FColl.FLastUpdate<>Nil) then
-    Fail('Endupdate 2; FlastUpdate not nil');
+    TestContext.Fail('Endupdate 2; FlastUpdate not nil');
 end;
 
 procedure TTestTCollection.TestUpdateMove;
@@ -397,18 +407,18 @@ begin
   AddItems(5);
   FColl.ResetUpdate;
   MyItem(4).Index:=2;
-  AssertEquals('Moved item. Update count is 1',1,FColl.FUpdateCount);
+  TestContext.AssertTrue((1)=(FColl.FUpdateCount), 'Moved item. Update count is 1');
   If (FColl.FLastUpdate<>Nil) then
-    Fail('Moved item notification - not all items updated');
+    TestContext.Fail('Moved item notification - not all items updated');
 end;
 
 procedure TTestTCollection.TestNotifyAdd;
 begin
   AddItems(1);
   If (FColl.FLastNotifyItem<>MyItem(0)) then
-    Fail('No notify item found !');
-  AssertEquals('Notify count is 1',1,FColl.FNotifyCount);
-  AssertEquals('Notify action is cnAdded',Ord(cnAdded),Ord(FColl.FLastNotify));
+    TestContext.Fail('No notify item found !');
+  TestContext.AssertTrue((1)=(FColl.FNotifyCount), 'Notify count is 1');
+  TestContext.AssertTrue((Ord(cnAdded))=(Ord(FColl.FLastNotify)), 'Notify action is cnAdded');
 end;
 
 procedure TTestTCollection.TestNotifyDelete;
@@ -418,8 +428,8 @@ begin
   FColl.ResetNotify;
   FColl.Delete(1);
   // cnDeleting/cnExtracting. Can't currently test for 2 events...
-  AssertEquals('Notify count is 2',2,FColl.FNotifyCount);
-  AssertEquals('Notify action is cnExtracted',Ord(cnExtracting),Ord(FColl.FLastNotify));
+  TestContext.AssertTrue((2)=(FColl.FNotifyCount), 'Notify count is 2');
+  TestContext.AssertTrue((Ord(cnExtracting))=(Ord(FColl.FLastNotify)), 'Notify action is cnExtracted');
 end;
 
 function TTestTCollection.MyItem(I: integer): TMyItem;
@@ -489,8 +499,315 @@ begin
   FLastNotifyItem:=Nil;
 end;
 
-initialization
 
-  RegisterTest(TTestTCollection);
+constructor TTestTCollection.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestTCollectionTestCreate(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestAdd(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestItemCollection(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestItemCollection');
+  try
+    lFixture.SetUp;
+    try lFixture.TestItemCollection; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestAddTwo(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestAddTwo');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddTwo; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestDelete(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestClear(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestFreeItem(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestFreeItem');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFreeItem; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestMoveForward(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestMoveForward');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMoveForward; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestMoveBackward(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestMoveBackward');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMoveBackward; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestID(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestID');
+  try
+    lFixture.SetUp;
+    try lFixture.TestID; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestItemOwner(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestItemOwner');
+  try
+    lFixture.SetUp;
+    try lFixture.TestItemOwner; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestDisplayName(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestDisplayName');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDisplayName; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestOwnerNamePath(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestOwnerNamePath');
+  try
+    lFixture.SetUp;
+    try lFixture.TestOwnerNamePath; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestItemNamePath(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestItemNamePath');
+  try
+    lFixture.SetUp;
+    try lFixture.TestItemNamePath; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestOwnerItemNamePath(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestOwnerItemNamePath');
+  try
+    lFixture.SetUp;
+    try lFixture.TestOwnerItemNamePath; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestChangeCollection(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestChangeCollection');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeCollection; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestAccesIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestAccesIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAccesIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestDeleteIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestDeleteIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDeleteIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestMoveIndexOutOfBounds(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestMoveIndexOutOfBounds');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMoveIndexOutOfBounds; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateAdd(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateDelete(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateDisplayName(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateDisplayName');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateDisplayName; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateCount(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateCount');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateCount; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateCountNested(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateCountNested');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateCountNested; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestUpdateMove(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestUpdateMove');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUpdateMove; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestNotifyAdd(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestNotifyAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNotifyAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTCollectionTestNotifyDelete(AContext: TNXTestContext);
+var lFixture: TTestTCollection;
+begin
+  lFixture:=TTestTCollection.Create(AContext, 'TestNotifyDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNotifyDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertccollectionTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tccollection.TTestTCollection');
+  lSuite.AddTest('TestCreate', @RunTTestTCollectionTestCreate);
+  lSuite.AddTest('TestAdd', @RunTTestTCollectionTestAdd);
+  lSuite.AddTest('TestItemCollection', @RunTTestTCollectionTestItemCollection);
+  lSuite.AddTest('TestAddTwo', @RunTTestTCollectionTestAddTwo);
+  lSuite.AddTest('TestDelete', @RunTTestTCollectionTestDelete);
+  lSuite.AddTest('TestClear', @RunTTestTCollectionTestClear);
+  lSuite.AddTest('TestFreeItem', @RunTTestTCollectionTestFreeItem);
+  lSuite.AddTest('TestMoveForward', @RunTTestTCollectionTestMoveForward);
+  lSuite.AddTest('TestMoveBackward', @RunTTestTCollectionTestMoveBackward);
+  lSuite.AddTest('TestID', @RunTTestTCollectionTestID);
+  lSuite.AddTest('TestItemOwner', @RunTTestTCollectionTestItemOwner);
+  lSuite.AddTest('TestDisplayName', @RunTTestTCollectionTestDisplayName);
+  lSuite.AddTest('TestOwnerNamePath', @RunTTestTCollectionTestOwnerNamePath);
+  lSuite.AddTest('TestItemNamePath', @RunTTestTCollectionTestItemNamePath);
+  lSuite.AddTest('TestOwnerItemNamePath', @RunTTestTCollectionTestOwnerItemNamePath);
+  lSuite.AddTest('TestChangeCollection', @RunTTestTCollectionTestChangeCollection);
+  lSuite.AddTest('TestAccesIndexOutOfBounds', @RunTTestTCollectionTestAccesIndexOutOfBounds);
+  lSuite.AddTest('TestDeleteIndexOutOfBounds', @RunTTestTCollectionTestDeleteIndexOutOfBounds);
+  lSuite.AddTest('TestMoveIndexOutOfBounds', @RunTTestTCollectionTestMoveIndexOutOfBounds);
+  lSuite.AddTest('TestUpdateAdd', @RunTTestTCollectionTestUpdateAdd);
+  lSuite.AddTest('TestUpdateDelete', @RunTTestTCollectionTestUpdateDelete);
+  lSuite.AddTest('TestUpdateDisplayName', @RunTTestTCollectionTestUpdateDisplayName);
+  lSuite.AddTest('TestUpdateCount', @RunTTestTCollectionTestUpdateCount);
+  lSuite.AddTest('TestUpdateCountNested', @RunTTestTCollectionTestUpdateCountNested);
+  lSuite.AddTest('TestUpdateMove', @RunTTestTCollectionTestUpdateMove);
+  lSuite.AddTest('TestNotifyAdd', @RunTTestTCollectionTestNotifyAdd);
+  lSuite.AddTest('TestNotifyDelete', @RunTTestTCollectionTestNotifyDelete);
+end;
+
 end.
-

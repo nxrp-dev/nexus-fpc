@@ -5,18 +5,26 @@ unit tcpersistent;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils;
 
 type
 
   { TTestTPersistent }
 
-  TTestTPersistent= class(TTestCase)
+  TTestTPersistent= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   protected
     Instance : TPersistent;
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestPropCount;
     procedure TestNamePath;
   end;
@@ -37,14 +45,22 @@ type
 
   { TTestPersistentDescendent }
 
-  TTestPersistentDescendent = class(TTestCase)
+  TTestPersistentDescendent = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     procedure WrongAssign;
   Protected
     Instance : TMyPersistent;
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestPropCount;
     procedure TestNamePath;
     procedure TestNamePathWithOwner;
@@ -52,6 +68,8 @@ type
     Procedure TestAssignFail;
   end;
 
+
+procedure RegistertcpersistentTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -66,12 +84,12 @@ Var
 begin
   P:=Nil;
   ACOunt:=GetPropList(Instance,P);
-  AssertEquals('Property count of TPersistence is zero',0,ACount);
+  TestContext.AssertTrue((0)=(ACount), 'Property count of TPersistence is zero');
 end;
 
 procedure TTestTPersistent.TestNamePath;
 begin
-  AssertEquals('Namepath is class name if there is no owner','TPersistent',Instance.GetNamePath);
+  TestContext.AssertTrue(('TPersistent')=(Instance.GetNamePath), 'Namepath is class name if there is no owner');
 end;
 
 procedure TTestTPersistent.SetUp;
@@ -105,13 +123,13 @@ Var
 begin
   P:=Nil;
   ACount:=GetPropList(Instance,P);
-  AssertEquals('Property count of TPersistence is zero',1,ACount);
+  TestContext.AssertTrue((1)=(ACount), 'Property count of TPersistence is zero');
   Freemem(p);
 end;
 
 procedure TTestPersistentDescendent.TestNamePath;
 begin
-  AssertEquals('Namepath is class name if there is no owner','TMyPersistent',Instance.GetNamePath);
+  TestContext.AssertTrue(('TMyPersistent')=(Instance.GetNamePath), 'Namepath is class name if there is no owner');
 end;
 
 procedure TTestPersistentDescendent.TestNamePathWithOwner;
@@ -123,7 +141,7 @@ begin
   AOwner:=TMyPersistent.Create;
   try
     Instance.FOwner:=AOwner;
-    AssertEquals('Namepath is owner namepath plus class name','TMyPersistent.TMyPersistent',Instance.GetNamePath);
+    TestContext.AssertTrue(('TMyPersistent.TMyPersistent')=(Instance.GetNamePath), 'Namepath is owner namepath plus class name');
   finally
     Aowner.Free;
   end;
@@ -139,7 +157,7 @@ begin
   try
     I2.MyProp:=2;
     Instance.Assign(I2);
-    AssertEquals('Property passed on during assign',2,Instance.MyProp);
+    TestContext.AssertTrue((2)=(Instance.MyProp), 'Property passed on during assign');
   finally
     I2.Free;
   end;
@@ -149,7 +167,7 @@ end;
 procedure TTestPersistentDescendent.TestAssignFail;
 
 begin
-  AssertException('Assigning the wrong class',EConvertError,@WrongAssign);
+  TestContext.AssertRaises(EConvertError, @WrongAssign, 'Assigning the wrong class');
 end;
 
 procedure TTestPersistentDescendent.WrongAssign;
@@ -180,8 +198,103 @@ begin
     Inherited;
 end;
 
-initialization
 
-  RegisterTests([TTestTPersistent,TTestPersistentDescendent]);
+constructor TTestTPersistent.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestPersistentDescendent.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestTPersistentTestPropCount(AContext: TNXTestContext);
+var lFixture: TTestTPersistent;
+begin
+  lFixture:=TTestTPersistent.Create(AContext, 'TestPropCount');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPropCount; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestTPersistentTestNamePath(AContext: TNXTestContext);
+var lFixture: TTestTPersistent;
+begin
+  lFixture:=TTestTPersistent.Create(AContext, 'TestNamePath');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNamePath; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPersistentDescendentTestPropCount(AContext: TNXTestContext);
+var lFixture: TTestPersistentDescendent;
+begin
+  lFixture:=TTestPersistentDescendent.Create(AContext, 'TestPropCount');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPropCount; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPersistentDescendentTestNamePath(AContext: TNXTestContext);
+var lFixture: TTestPersistentDescendent;
+begin
+  lFixture:=TTestPersistentDescendent.Create(AContext, 'TestNamePath');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNamePath; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPersistentDescendentTestNamePathWithOwner(AContext: TNXTestContext);
+var lFixture: TTestPersistentDescendent;
+begin
+  lFixture:=TTestPersistentDescendent.Create(AContext, 'TestNamePathWithOwner');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNamePathWithOwner; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPersistentDescendentTestAssign(AContext: TNXTestContext);
+var lFixture: TTestPersistentDescendent;
+begin
+  lFixture:=TTestPersistentDescendent.Create(AContext, 'TestAssign');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssign; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPersistentDescendentTestAssignFail(AContext: TNXTestContext);
+var lFixture: TTestPersistentDescendent;
+begin
+  lFixture:=TTestPersistentDescendent.Create(AContext, 'TestAssignFail');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAssignFail; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcpersistentTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcpersistent.TTestTPersistent');
+  lSuite.AddTest('TestPropCount', @RunTTestTPersistentTestPropCount);
+  lSuite.AddTest('TestNamePath', @RunTTestTPersistentTestNamePath);
+  lSuite:=ARegistry.AddSuite('tcpersistent.TTestPersistentDescendent');
+  lSuite.AddTest('TestPropCount', @RunTTestPersistentDescendentTestPropCount);
+  lSuite.AddTest('TestNamePath', @RunTTestPersistentDescendentTestNamePath);
+  lSuite.AddTest('TestNamePathWithOwner', @RunTTestPersistentDescendentTestNamePathWithOwner);
+  lSuite.AddTest('TestAssign', @RunTTestPersistentDescendentTestAssign);
+  lSuite.AddTest('TestAssignFail', @RunTTestPersistentDescendentTestAssignFail);
+end;
+
 end.
-

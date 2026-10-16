@@ -6,14 +6,22 @@ unit tcstrutils;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, strutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, strutils;
 
 type
 
-  TTestSearchBuf= class(TTestCase)
+  TTestSearchBuf= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     Procedure TestSearch(Sub:String; Start : Integer; O : TStringSearchOptions; Expected : Integer);
-  published
+  public
     procedure TestSimple;
     procedure TestSimpleNoRes;
     procedure TestSimpleDown;
@@ -41,12 +49,22 @@ type
   end;
 
 
-  TTestGeneral = class(TTestCase)
-  published
+  TTestGeneral = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     procedure TestIndexStr;
     procedure TestMatchStr;
   end;
 
+
+procedure RegistertcstrutilsTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -80,13 +98,13 @@ begin
   If (PR=Nil) then
     begin
     If (Expected<>-1) then
-      Fail(Format('Search for "%s" failed, expected result at %d',[Sub,Expected]));
+      TestContext.Fail(Format('Search for "%s" failed, expected result at %d',[Sub,Expected]));
     end
   else
     begin
     I:=(PR-P)+1;
     If (I<>Expected) then
-      Fail(Format('Wrong result for search for "%s", expected result at %d, got %d',[Sub,Expected,I]));
+      TestContext.Fail(Format('Wrong result for search for "%s", expected result at %d, got %d',[Sub,Expected,I]));
     end;
 end;
 
@@ -200,7 +218,7 @@ Const
 
   begin
     R:=DecodeSoundexInt(CreateInt(S));
-    AssertEquals('Decoded Soundexint equals original soundex result:',S,R);
+    TestContext.AssertTrue((S)=(R), 'Decoded Soundexint equals original soundex result:');
   end;
 
 Var
@@ -271,21 +289,21 @@ var
   a: array of UnicodeString;
 begin
   s := 'Henry';
-  AssertTrue('Failed on 1', IndexStr(s, ['Brian', 'Jim', 'Henry']) = 2);
-  AssertTrue('Failed on 2', IndexStr(s, ['Brian', 'Jim', 'henry']) = -1);
-  AssertTrue('Failed on 3', IndexStr(s, ['BRIAN', 'JIM', 'HENRY']) = -1);
+  TestContext.AssertTrue(IndexStr(s, ['Brian', 'Jim', 'Henry']) = 2, 'Failed on 1');
+  TestContext.AssertTrue(IndexStr(s, ['Brian', 'Jim', 'henry']) = -1, 'Failed on 2');
+  TestContext.AssertTrue(IndexStr(s, ['BRIAN', 'JIM', 'HENRY']) = -1, 'Failed on 3');
   s := 'HENRY';
-  AssertTrue('Failed on 4', IndexStr(s, ['BRIAN', 'HENRY', 'JIM']) = 1);
+  TestContext.AssertTrue(IndexStr(s, ['BRIAN', 'HENRY', 'JIM']) = 1, 'Failed on 4');
 
   SetLength(a, 3);
   a[0] := 'Brian';
   a[1] := 'Jim';
   a[2] := 'Henry';
-  AssertTrue('Failed on 5', IndexStr(s, a) = -1);
+  TestContext.AssertTrue(IndexStr(s, a) = -1, 'Failed on 5');
   s := 'Henry';
-  AssertTrue('Failed on 6', IndexStr(s, a) = 2);
+  TestContext.AssertTrue(IndexStr(s, a) = 2, 'Failed on 6');
   a[2] := 'henry';
-  AssertTrue('Failed on 7', IndexStr(s, a) = -1);
+  TestContext.AssertTrue(IndexStr(s, a) = -1, 'Failed on 7');
 end;
 
 procedure TTestGeneral.TestMatchStr;
@@ -294,27 +312,309 @@ var
   a: array of UnicodeString;
 begin
   s := 'Henry';
-  AssertEquals('Failed on 1', True, MatchStr(s, ['Brian', 'Jim', 'Henry']));
-  AssertEquals('Failed on 2', False, MatchStr(s, ['Brian', 'Jim', 'henry']));
-  AssertEquals('Failed on 3', False, MatchStr(s, ['BRIAN', 'JIM', 'HENRY']));
+  TestContext.AssertTrue((True)=(MatchStr(s, ['Brian', 'Jim', 'Henry'])), 'Failed on 1');
+  TestContext.AssertTrue((False)=(MatchStr(s, ['Brian', 'Jim', 'henry'])), 'Failed on 2');
+  TestContext.AssertTrue((False)=(MatchStr(s, ['BRIAN', 'JIM', 'HENRY'])), 'Failed on 3');
   s := 'HENRY';
-  AssertEquals('Failed on 4', True, MatchStr(s, ['BRIAN', 'HENRY', 'JIM']));
+  TestContext.AssertTrue((True)=(MatchStr(s, ['BRIAN', 'HENRY', 'JIM'])), 'Failed on 4');
 
   SetLength(a, 3);
   a[0] := 'Brian';
   a[1] := 'Jim';
   a[2] := 'Henry';
-  AssertEquals('Failed on 5', False, MatchStr(s, a));
+  TestContext.AssertTrue((False)=(MatchStr(s, a)), 'Failed on 5');
   s := 'Henry';
-  AssertEquals('Failed on 6', True, MatchStr(s, a));
+  TestContext.AssertTrue((True)=(MatchStr(s, a)), 'Failed on 6');
   a[2] := 'henry';
-  AssertEquals('Failed on 7', False, MatchStr(s, a));
+  TestContext.AssertTrue((False)=(MatchStr(s, a)), 'Failed on 7');
+end;
+
+constructor TTestSearchBuf.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestGeneral.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSearchBufTestSimple(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimple');
+  try
+    lFixture.TestSimple;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleNoRes(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleNoRes');
+  try
+    lFixture.TestSimpleNoRes;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleDown');
+  try
+    lFixture.TestSimpleDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleDownNoRes(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleDownNoRes');
+  try
+    lFixture.TestSimpleDownNoRes;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestNotExistDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestNotExistDown');
+  try
+    lFixture.TestNotExistDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestNotExist(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestNotExist');
+  try
+    lFixture.TestNotExist;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleDownPos(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleDownPos');
+  try
+    lFixture.TestSimpleDownPos;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimplePos(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimplePos');
+  try
+    lFixture.TestSimplePos;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleCaseSensitive(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleCaseSensitive');
+  try
+    lFixture.TestSimpleCaseSensitive;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleCaseSensitiveDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleCaseSensitiveDown');
+  try
+    lFixture.TestSimpleCaseSensitiveDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleWholeWord(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleWholeWord');
+  try
+    lFixture.TestSimpleWholeWord;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimpleWholeWordDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimpleWholeWordDown');
+  try
+    lFixture.TestSimpleWholeWordDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimplePartialend(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimplePartialend');
+  try
+    lFixture.TestSimplePartialend;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSimplePartialStart(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSimplePartialStart');
+  try
+    lFixture.TestSimplePartialStart;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestEndMatchDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestEndMatchDown');
+  try
+    lFixture.TestEndMatchDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestEndMatch(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestEndMatch');
+  try
+    lFixture.TestEndMatch;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestWholeWordAtStart(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestWholeWordAtStart');
+  try
+    lFixture.TestWholeWordAtStart;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestWholeWordAtStartDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestWholeWordAtStartDown');
+  try
+    lFixture.TestWholeWordAtStartDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestWholeWordAtEnd(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestWholeWordAtEnd');
+  try
+    lFixture.TestWholeWordAtEnd;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestWholeWordAtEndDown(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestWholeWordAtEndDown');
+  try
+    lFixture.TestWholeWordAtEndDown;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestEmptySearchString(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestEmptySearchString');
+  try
+    lFixture.TestEmptySearchString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestSelstartBeforeBuf(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestSelstartBeforeBuf');
+  try
+    lFixture.TestSelstartBeforeBuf;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBuftestSelstartAfterBuf(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'testSelstartAfterBuf');
+  try
+    lFixture.testSelstartAfterBuf;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSearchBufTestDecodeSoundexInt(AContext: TNXTestContext);
+var lFixture: TTestSearchBuf;
+begin
+  lFixture:=TTestSearchBuf.Create(AContext, 'TestDecodeSoundexInt');
+  try
+    lFixture.TestDecodeSoundexInt;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestGeneralTestIndexStr(AContext: TNXTestContext);
+var lFixture: TTestGeneral;
+begin
+  lFixture:=TTestGeneral.Create(AContext, 'TestIndexStr');
+  try
+    lFixture.TestIndexStr;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestGeneralTestMatchStr(AContext: TNXTestContext);
+var lFixture: TTestGeneral;
+begin
+  lFixture:=TTestGeneral.Create(AContext, 'TestMatchStr');
+  try
+    lFixture.TestMatchStr;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcstrutilsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcstrutils.TTestSearchBuf');
+  lSuite.AddTest('TestSimple', @RunTTestSearchBufTestSimple);
+  lSuite.AddTest('TestSimpleNoRes', @RunTTestSearchBufTestSimpleNoRes);
+  lSuite.AddTest('TestSimpleDown', @RunTTestSearchBufTestSimpleDown);
+  lSuite.AddTest('TestSimpleDownNoRes', @RunTTestSearchBufTestSimpleDownNoRes);
+  lSuite.AddTest('TestNotExistDown', @RunTTestSearchBufTestNotExistDown);
+  lSuite.AddTest('TestNotExist', @RunTTestSearchBufTestNotExist);
+  lSuite.AddTest('TestSimpleDownPos', @RunTTestSearchBufTestSimpleDownPos);
+  lSuite.AddTest('TestSimplePos', @RunTTestSearchBufTestSimplePos);
+  lSuite.AddTest('TestSimpleCaseSensitive', @RunTTestSearchBufTestSimpleCaseSensitive);
+  lSuite.AddTest('TestSimpleCaseSensitiveDown', @RunTTestSearchBufTestSimpleCaseSensitiveDown);
+  lSuite.AddTest('TestSimpleWholeWord', @RunTTestSearchBufTestSimpleWholeWord);
+  lSuite.AddTest('TestSimpleWholeWordDown', @RunTTestSearchBufTestSimpleWholeWordDown);
+  lSuite.AddTest('TestSimplePartialend', @RunTTestSearchBufTestSimplePartialend);
+  lSuite.AddTest('TestSimplePartialStart', @RunTTestSearchBufTestSimplePartialStart);
+  lSuite.AddTest('TestEndMatchDown', @RunTTestSearchBufTestEndMatchDown);
+  lSuite.AddTest('TestEndMatch', @RunTTestSearchBufTestEndMatch);
+  lSuite.AddTest('TestWholeWordAtStart', @RunTTestSearchBufTestWholeWordAtStart);
+  lSuite.AddTest('TestWholeWordAtStartDown', @RunTTestSearchBufTestWholeWordAtStartDown);
+  lSuite.AddTest('TestWholeWordAtEnd', @RunTTestSearchBufTestWholeWordAtEnd);
+  lSuite.AddTest('TestWholeWordAtEndDown', @RunTTestSearchBufTestWholeWordAtEndDown);
+  lSuite.AddTest('TestEmptySearchString', @RunTTestSearchBufTestEmptySearchString);
+  lSuite.AddTest('TestSelstartBeforeBuf', @RunTTestSearchBufTestSelstartBeforeBuf);
+  lSuite.AddTest('testSelstartAfterBuf', @RunTTestSearchBuftestSelstartAfterBuf);
+  lSuite.AddTest('TestDecodeSoundexInt', @RunTTestSearchBufTestDecodeSoundexInt);
+  lSuite:=ARegistry.AddSuite('tcstrutils.TTestGeneral');
+  lSuite.AddTest('TestIndexStr', @RunTTestGeneralTestIndexStr);
+  lSuite.AddTest('TestMatchStr', @RunTTestGeneralTestMatchStr);
 end;
 
 
+
 initialization
-  RegisterTest(TTestSearchBuf);
-  RegisterTest(TTestGeneral);
+
+
   writeln ('Testing with ', WhichSearchbuf, ' implementation');
   writeln;
 end.

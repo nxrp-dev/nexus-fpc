@@ -5,13 +5,21 @@ unit tcrecompile;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, tstppuutils;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, tstppuutils;
 
 type
 
   { TTestRecompile }
 
-  TTestRecompile = class(TTestCase)
+  TTestRecompile = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FCompiled: TStringList;
     FIncPath: string;
@@ -22,8 +30,8 @@ type
     FStep: string;
     FUnitPath: string;
   protected
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
     procedure CleanOutputDir; overload;
     procedure CleanOutputDir(Dir: string); overload;
     procedure Compile;
@@ -40,10 +48,10 @@ type
     property OptionUr: boolean read FOptionUr write FOptionUr;
     property Step: string read FStep write FStep;
   public
-    constructor Create; override;
+
     procedure GetCompiler;
     procedure CheckCompiler;
-  published
+  public
     // simple
     procedure TestSystemPPUNotFound;
     procedure TestTwoUnits; // 2 units, recompile first
@@ -92,6 +100,8 @@ type
   end;
 
 
+procedure RegistertcrecompileTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 
@@ -99,7 +109,7 @@ implementation
 
 procedure TTestRecompile.SetUp;
 begin
-  inherited SetUp;
+
   UnitPath:='';
   IncPath:='';
   OutDir:='';
@@ -111,7 +121,7 @@ end;
 procedure TTestRecompile.TearDown;
 begin
   FreeAndNil(FCompiled);
-  inherited TearDown;
+
 end;
 
 procedure TTestRecompile.CleanOutputDir;
@@ -126,13 +136,13 @@ var
   r: LongInt;
 begin
   if Dir='' then
-    Fail('TTestRecompile.CleanOutputDir: missing Dir');
+    TestContext.Fail('TTestRecompile.CleanOutputDir: missing Dir');
   if Dir[length(Dir)]=PathDelim then
     Delete(Dir,length(Dir),1);
 
   if not DirectoryExists(Dir) then
     if not CreateDir(Dir) then
-      Fail('unable to create output directory "'+Dir+'"');
+      TestContext.Fail('unable to create output directory "'+Dir+'"');
 
   writeln('CleanOutputDir ',Dir);
   r:=FindFirst(Dir+PathDelim+AllFilesMask,faAnyFile,Info);
@@ -152,7 +162,7 @@ begin
 
       Filename:=Dir+PathDelim+Info.Name;
       if not DeleteFile(Filename) then
-        Fail('unable to delete "'+Filename+'"');
+        TestContext.Fail('unable to delete "'+Filename+'"');
     until FindNext(Info)<>0;
   finally
     FindClose(Info);
@@ -167,17 +177,17 @@ var
 begin
   Compiled.Clear;
   if UnitPath='' then
-    Fail('missing UnitPath, Step='+Step);
+    TestContext.Fail('missing UnitPath, Step='+Step);
 
   if OutDir='' then
-    Fail('missing OutDir, Step='+Step);
+    TestContext.Fail('missing OutDir, Step='+Step);
   if not DirectoryExists(OutDir) then
-    Fail('OutDir not found "'+OutDir+'", Step='+Step);
+    TestContext.Fail('OutDir not found "'+OutDir+'", Step='+Step);
 
   if MainSrc='' then
-    Fail('missing MainSrc, Step='+Step);
+    TestContext.Fail('missing MainSrc, Step='+Step);
   if not FileExists(MainSrc) then
-    Fail('main src file not found "'+MainSrc+'", Step='+Step);
+    TestContext.Fail('main src file not found "'+MainSrc+'", Step='+Step);
 
   Lines:=nil;
   Params:=TStringList.Create;
@@ -190,7 +200,7 @@ begin
       Params.Add('-Ur');
     Params.Add(MainSrc);
     if not RunTool(PP,Params,'',false,true,Lines) then
-      Fail('compile failed, Step='+Step);
+      TestContext.Fail('compile failed, Step='+Step);
 
     for i:=0 to Lines.Count-1 do
     begin
@@ -217,7 +227,7 @@ begin
   // check that all Must are compiled
   for i:=0 to length(Must)-1 do
     if (Compiled=nil) or (Compiled.IndexOf(Must[i])<0) then
-      Fail('missing compiling "'+Must[i]+'", Step='+Step);
+      TestContext.Fail('missing compiling "'+Must[i]+'", Step='+Step);
 
   // check that only Must and Optional are compiled
   for i:=0 to Compiled.Count-1 do
@@ -228,7 +238,7 @@ begin
     j:=length(Optional)-1;
     while (j>=0) and (Optional[j]<>Compiled[i]) do dec(j);
     if j<0 then
-      Fail('unexpected compiling "'+Compiled[i]+'", Step='+Step);
+      TestContext.Fail('unexpected compiling "'+Compiled[i]+'", Step='+Step);
   end;
 end;
 
@@ -238,7 +248,7 @@ var
 begin
   Age1:=FileAge(aFilename);
   if Age1<0 then
-    Fail('file not found "'+aFilename+'"');
+    TestContext.Fail('file not found "'+aFilename+'"');
   FileSetDate(aFilename,Age1+2);
 end;
 
@@ -248,10 +258,10 @@ var
 begin
   Age1:=FileAge(File1);
   if Age1<0 then
-    Fail('file not found "'+File1+'"');
+    TestContext.Fail('file not found "'+File1+'"');
   Age2:=FileAge(File2);
   if Age2<0 then
-    Fail('file not found "'+File2+'"');
+    TestContext.Fail('file not found "'+File2+'"');
   if Age1<>Age2 then exit;
   FileSetDate(File2,Age2-2);
 end;
@@ -262,17 +272,19 @@ var
 begin
   Age1:=FileAge(File1);
   if Age1<0 then
-    Fail('file not found "'+File1+'"');
+    TestContext.Fail('file not found "'+File1+'"');
   Age2:=FileAge(File2);
   if Age2<0 then
-    Fail('file not found "'+File2+'"');
+    TestContext.Fail('file not found "'+File2+'"');
   if Age1=Age2 then exit;
   FileSetDate(File2,Age1);
 end;
 
-constructor TTestRecompile.Create;
+constructor TTestRecompile.Create(AContext: TNXTestContext; const ACaseName: string);
 begin
   inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
 
   GetCompiler;
 end;
@@ -295,6 +307,8 @@ begin
 end;
 
 procedure TTestRecompile.CheckCompiler;
+
+
 
   procedure E(Msg: string);
   begin
@@ -327,7 +341,7 @@ begin
     Params.Add('-FE'+OutDir);
     Params.Add(MainSrc);
     if RunTool(PP,Params,'',false,false,Lines) then
-      Fail('compile succeeded without system.nxu');
+      TestContext.Fail('compile succeeded without system.nxu');
   finally
     Lines.Free;
     Params.Free;
@@ -1070,8 +1084,342 @@ begin
   CheckCompiled(['generic_cycle1_prg.pas']);
 end;
 
-initialization
-  RegisterTests([TTestRecompile]);
+
+
+procedure RunTTestRecompileTestSystemPPUNotFound(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestSystemPPUNotFound');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSystemPPUNotFound; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestTwoUnits(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestTwoUnits');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTwoUnits; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestChangeLeaf1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestChangeLeaf1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeLeaf1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestChangeInner1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestChangeInner1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeInner1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestPrgVariant(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestPrgVariant');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPrgVariant; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestUnitVariant(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestUnitVariant');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUnitVariant; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle2_ChangeB(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle2_ChangeB');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle2_ChangeB; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle3_ChangeC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle3_ChangeC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle3_ChangeC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle3_ChangeC_Intf(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle3_ChangeC_Intf');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle3_ChangeC_Intf; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycleImpl3_ChangeC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycleImpl3_ChangeC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycleImpl3_ChangeC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle2_ChangeB_CRC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle2_ChangeB_CRC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle2_ChangeB_CRC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle22_ChangeC_CRC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle22_ChangeC_CRC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle22_ChangeC_CRC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestCycle32_ChangeC_CRC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestCycle32_ChangeC_CRC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCycle32_ChangeC_CRC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestBug41457(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestBug41457');
+  try
+    lFixture.SetUp;
+    try lFixture.TestBug41457; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestPrgNameClash1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestPrgNameClash1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPrgNameClash1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestUr_ignoreinclude1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestUr_ignoreinclude1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUr_ignoreinclude1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestUr_newmainsrc1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestUr_newmainsrc1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUr_newmainsrc1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestUr_cycle2(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestUr_cycle2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUr_cycle2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestUr_pkg1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestUr_pkg1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUr_pkg1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestInline1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestInline1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInline1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestChangeInlineBody(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestChangeInlineBody');
+  try
+    lFixture.SetUp;
+    try lFixture.TestChangeInlineBody; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestImplInline1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestImplInline1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestImplInline1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestImplInline2(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestImplInline2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestImplInline2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestImplInline_Bug41291(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestImplInline_Bug41291');
+  try
+    lFixture.SetUp;
+    try lFixture.TestImplInline_Bug41291; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestImplInline3(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestImplInline3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestImplInline3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestAncestor_ChangeInheritedMethod(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestAncestor_ChangeInheritedMethod');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAncestor_ChangeInheritedMethod; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestGeneric_ChangeC(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestGeneric_ChangeC');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGeneric_ChangeC; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestGeneric_IndirectUses(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestGeneric_IndirectUses');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGeneric_IndirectUses; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestGeneric_Cycle1(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestGeneric_Cycle1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGeneric_Cycle1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestRecompileTestGeneric_Cycle2(AContext: TNXTestContext);
+var lFixture: TTestRecompile;
+begin
+  lFixture:=TTestRecompile.Create(AContext, 'TestGeneric_Cycle2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGeneric_Cycle2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcrecompileTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcrecompile.TTestRecompile');
+  lSuite.AddTest('TestSystemPPUNotFound', @RunTTestRecompileTestSystemPPUNotFound);
+  lSuite.AddTest('TestTwoUnits', @RunTTestRecompileTestTwoUnits);
+  lSuite.AddTest('TestChangeLeaf1', @RunTTestRecompileTestChangeLeaf1);
+  lSuite.AddTest('TestChangeInner1', @RunTTestRecompileTestChangeInner1);
+  lSuite.AddTest('TestPrgVariant', @RunTTestRecompileTestPrgVariant);
+  lSuite.AddTest('TestUnitVariant', @RunTTestRecompileTestUnitVariant);
+  lSuite.AddTest('TestCycle2_ChangeB', @RunTTestRecompileTestCycle2_ChangeB);
+  lSuite.AddTest('TestCycle3_ChangeC', @RunTTestRecompileTestCycle3_ChangeC);
+  lSuite.AddTest('TestCycle3_ChangeC_Intf', @RunTTestRecompileTestCycle3_ChangeC_Intf);
+  lSuite.AddTest('TestCycleImpl3_ChangeC', @RunTTestRecompileTestCycleImpl3_ChangeC);
+  lSuite.AddTest('TestCycle2_ChangeB_CRC', @RunTTestRecompileTestCycle2_ChangeB_CRC);
+  lSuite.AddTest('TestCycle22_ChangeC_CRC', @RunTTestRecompileTestCycle22_ChangeC_CRC);
+  lSuite.AddTest('TestCycle32_ChangeC_CRC', @RunTTestRecompileTestCycle32_ChangeC_CRC);
+  lSuite.AddTest('TestBug41457', @RunTTestRecompileTestBug41457);
+  lSuite.AddTest('TestPrgNameClash1', @RunTTestRecompileTestPrgNameClash1);
+  lSuite.AddTest('TestUr_ignoreinclude1', @RunTTestRecompileTestUr_ignoreinclude1);
+  lSuite.AddTest('TestUr_newmainsrc1', @RunTTestRecompileTestUr_newmainsrc1);
+  lSuite.AddTest('TestUr_cycle2', @RunTTestRecompileTestUr_cycle2);
+  lSuite.AddTest('TestUr_pkg1', @RunTTestRecompileTestUr_pkg1);
+  lSuite.AddTest('TestInline1', @RunTTestRecompileTestInline1);
+  lSuite.AddTest('TestChangeInlineBody', @RunTTestRecompileTestChangeInlineBody);
+  lSuite.AddTest('TestImplInline1', @RunTTestRecompileTestImplInline1);
+  lSuite.AddTest('TestImplInline2', @RunTTestRecompileTestImplInline2);
+  lSuite.AddTest('TestImplInline_Bug41291', @RunTTestRecompileTestImplInline_Bug41291);
+  lSuite.AddTest('TestImplInline3', @RunTTestRecompileTestImplInline3);
+  lSuite.AddTest('TestAncestor_ChangeInheritedMethod', @RunTTestRecompileTestAncestor_ChangeInheritedMethod);
+  lSuite.AddTest('TestGeneric_ChangeC', @RunTTestRecompileTestGeneric_ChangeC);
+  lSuite.AddTest('TestGeneric_IndirectUses', @RunTTestRecompileTestGeneric_IndirectUses);
+  lSuite.AddTest('TestGeneric_Cycle1', @RunTTestRecompileTestGeneric_Cycle1);
+  lSuite.AddTest('TestGeneric_Cycle2', @RunTTestRecompileTestGeneric_Cycle2);
+end;
 
 end.
-

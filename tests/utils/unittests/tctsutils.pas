@@ -5,24 +5,32 @@ unit tctsutils;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, tsutils, tstypes;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, tsutils, tstypes;
 
 Type
 
   { TTestUtilsCase }
 
-  TTestUtilsCase = class(TTestCase)
+  TTestUtilsCase = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FConfig : TConfig;
     FFileName : String;
     FReadResult : Boolean;
   Public
-    procedure SetUp; override;
-    procedure TearDown; override;
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
     procedure DoRead;
     procedure CreateFile(const aLines : Array of string);
     Property ReadResult : Boolean Read FReadResult;
-  Published
+  public
     procedure TestNoFile;
     procedure TestEmptyFile;
     procedure TestNoPercent;
@@ -53,26 +61,28 @@ Type
     Procedure TestInteractive;
   end;
 
+procedure RegistertctsutilsTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TTestUtilsCase }
 
 procedure TTestUtilsCase.SetUp;
 begin
-  inherited SetUp;
+
   FReadResult:=False;
-  FFileName:=GetTempDir(False)+TestName+'.pas';
+  FFileName:=GetTempDir(False)+CaseName+'.pas';
   if FileExists(FFileName) then
     if not DeleteFile(FFileName) then
-      Fail('Failed to delete file '+FFileName);
+      TestContext.Fail('Failed to delete file '+FFileName);
 end;
 
 procedure TTestUtilsCase.TearDown;
 begin
   if (FFileName<>'') and FileExists(FFileName) then
     if not DeleteFile(FFileName) then
-      Fail('Failed to delete file '+FFileName);
-  inherited TearDown;
+      TestContext.Fail('Failed to delete file '+FFileName);
+
 end;
 
 procedure TTestUtilsCase.DoRead;
@@ -96,206 +106,525 @@ end;
 procedure TTestUtilsCase.TestNoFile;
 begin
   DoRead;
-  AssertFalse('Not read',ReadResult);
+  TestContext.AssertTrue(not (ReadResult), 'Not read');
 end;
 
 procedure TTestUtilsCase.TestEmptyFile;
 begin
   CreateFile([]);
   DoRead;
-  AssertTrue('read',ReadResult);
+  TestContext.AssertTrue(ReadResult, 'read');
 end;
 
 procedure TTestUtilsCase.TestNoPercent;
 begin
   CreateFile(['{CPU=X}']);
   DoRead;
-  AssertTrue('read',ReadResult);
-  AssertEquals('No value','',FCOnfig.NeedCPU);
+  TestContext.AssertTrue(ReadResult, 'read');
+  TestContext.AssertTrue(('')=(FCOnfig.NeedCPU), 'No value');
 end;
 
 procedure TTestUtilsCase.TestNoEndComment;
 begin
   CreateFile(['{ %CPU=X']);
   DoRead;
-  AssertTrue('read',ReadResult);
-  AssertEquals('No value','',FConfig.NeedCPU);
+  TestContext.AssertTrue(ReadResult, 'read');
+  TestContext.AssertTrue(('')=(FConfig.NeedCPU), 'No value');
 end;
 
 procedure TTestUtilsCase.TestSpaces;
 begin
   CreateFile(['{ %CPU = X }']);
   DoRead;
-  AssertTrue('read',ReadResult);
-  AssertEquals('No value','X',FConfig.NeedCPU);
+  TestContext.AssertTrue(ReadResult, 'read');
+  TestContext.AssertTrue(('X')=(FConfig.NeedCPU), 'No value');
 end;
 
 procedure TTestUtilsCase.TestCodeAndNote;
 begin
   CreateFile(['{%KNOWNRUNERROR=123X }']);
   DoRead;
-  AssertTrue('read',ReadResult);
-  AssertEquals('Runerror value',123,FConfig.KnownRunError);
-  AssertEquals('RunError note','X',FConfig.KnownRunNote);
+  TestContext.AssertTrue(ReadResult, 'read');
+  TestContext.AssertTrue((123)=(FConfig.KnownRunError), 'Runerror value');
+  TestContext.AssertTrue(('X')=(FConfig.KnownRunNote), 'RunError note');
 end;
 
 procedure TTestUtilsCase.TestConfig;
 begin
   CreateFile(['{%CONFIGFILE=X.CFG Y.CFG}']);
   DoRead;
-  AssertTrue('read',ReadResult);
-  AssertEquals('Runerror value','X.CFG',FConfig.ConfigFileSrc);
-  AssertEquals('RunError note','Y.CFG',FConfig.ConfigFileDst);
+  TestContext.AssertTrue(ReadResult, 'read');
+  TestContext.AssertTrue(('X.CFG')=(FConfig.ConfigFileSrc), 'Runerror value');
+  TestContext.AssertTrue(('Y.CFG')=(FConfig.ConfigFileDst), 'RunError note');
 end;
 
 procedure TTestUtilsCase.TestNeedOptions;
 begin
   CreateFile(['{%OPT=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.NeedOptions);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.NeedOptions), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestDelOptions;
 begin
   CreateFile(['{%DELOPT=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.DelOptions);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.DelOptions), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestNeedTarget;
 begin
   CreateFile(['{%TARGET=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.NeedTarget);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.NeedTarget), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestSkipTarget;
 begin
   CreateFile(['{%SKIPTARGET=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.SkipTarget);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.SkipTarget), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestNeedCPU;
 begin
   CreateFile(['{%SKIPEMU=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.SkipEmu);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.SkipEmu), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestSkipCPU;
 begin
   CreateFile(['{%SKIPEMU=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.SkipEmu);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.SkipEmu), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestSkipEMU;
 begin
   CreateFile(['{%SKIPEMU=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.SkipEmu);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.SkipEmu), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestMinVersion;
 begin
   CreateFile(['{%VERSION=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.MinVersion);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.MinVersion), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestMaxVersion;
 begin
   CreateFile(['{%MAXVERSION=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.MaxVersion);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.MaxVersion), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestResultCode;
 begin
   CreateFile(['{%RESULT=1}']);
   DoRead;
-  AssertEquals('Value',1,FConfig.ResultCode);
+  TestContext.AssertTrue((1)=(FConfig.ResultCode), 'Value');
 end;
 
 procedure TTestUtilsCase.TestUsesGraph;
 begin
   CreateFile(['{%GRAPH}']);
   DoRead;
-  AssertTrue('Value',FConfig.UsesGraph);
+  TestContext.AssertTrue(FConfig.UsesGraph, 'Value');
 end;
 
 procedure TTestUtilsCase.TestShouldFail;
 begin
   CreateFile(['{%FAIL}']);
   DoRead;
-  AssertTrue('Value',FConfig.ShouldFail);
+  TestContext.AssertTrue(FConfig.ShouldFail, 'Value');
 end;
 
 procedure TTestUtilsCase.TestNoRun;
 begin
   CreateFile(['{%NORUN}']);
   DoRead;
-  AssertTrue('Value',FConfig.NoRun);
+  TestContext.AssertTrue(FConfig.NoRun, 'Value');
 end;
 
 procedure TTestUtilsCase.TestNeedLibrary;
 begin
   CreateFile(['{%NEEDLIBRARY}']);
   DoRead;
-  AssertTrue('Value',FConfig.NeedLibrary);
+  TestContext.AssertTrue(FConfig.NeedLibrary, 'Value');
 end;
 
 procedure TTestUtilsCase.TestNeedAfter;
 begin
   CreateFile(['{%NEEDEDAFTER}']);
   DoRead;
-  AssertTrue('Value',FConfig.NeededAfter);
+  TestContext.AssertTrue(FConfig.NeededAfter, 'Value');
 end;
 
 procedure TTestUtilsCase.TestTimeout;
 begin
   CreateFile(['{%TIMEOUT=123}']);
   DoRead;
-  AssertEquals('Value',123,FConfig.Timeout)
+  TestContext.AssertTrue((123)=(FConfig.Timeout), 'Value')
 end;
 
 procedure TTestUtilsCase.TestFiles;
 begin
   CreateFile(['{%FILES=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.Files);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.Files), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestWPOParas;
 begin
   CreateFile(['{%WPOPARAS=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.wpoparas);;
+  TestContext.AssertTrue(('XYZ')=(FConfig.wpoparas), 'Value');;
 end;
 
 procedure TTestUtilsCase.TestWPOPasses;
 begin
   CreateFile(['{%WPOPASSES=2}']);
   DoRead;
-  AssertEquals('Value',2,FConfig.wpopasses);
+  TestContext.AssertTrue((2)=(FConfig.wpopasses), 'Value');
 end;
 
 procedure TTestUtilsCase.TestDelFiles;
 begin
   CreateFile(['{%DELFILES=XYZ}']);
   DoRead;
-  AssertEquals('Value','XYZ',FConfig.DelFiles);
+  TestContext.AssertTrue(('XYZ')=(FConfig.DelFiles), 'Value');
 end;
 
 procedure TTestUtilsCase.TestInteractive;
 begin
   CreateFile(['{%INTERACTIVE}']);
   DoRead;
-  AssertTrue('Value',FConfig.IsInteractive);
+  TestContext.AssertTrue(FConfig.IsInteractive, 'Value');
 end;
 
-initialization
-  RegisterTest(TTestUtilsCase);
-end.
 
+constructor TTestUtilsCase.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestUtilsCaseTestNoFile(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNoFile');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoFile; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestEmptyFile(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestEmptyFile');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmptyFile; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNoPercent(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNoPercent');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoPercent; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNoEndComment(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNoEndComment');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoEndComment; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestSpaces(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestSpaces');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSpaces; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestCodeAndNote(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestCodeAndNote');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCodeAndNote; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestConfig(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestConfig');
+  try
+    lFixture.SetUp;
+    try lFixture.TestConfig; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNeedOptions(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNeedOptions');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNeedOptions; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestDelOptions(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestDelOptions');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelOptions; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNeedTarget(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNeedTarget');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNeedTarget; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestSkipTarget(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestSkipTarget');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSkipTarget; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNeedCPU(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNeedCPU');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNeedCPU; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestSkipCPU(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestSkipCPU');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSkipCPU; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestSkipEMU(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestSkipEMU');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSkipEMU; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestMinVersion(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestMinVersion');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMinVersion; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestMaxVersion(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestMaxVersion');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMaxVersion; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestResultCode(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestResultCode');
+  try
+    lFixture.SetUp;
+    try lFixture.TestResultCode; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestUsesGraph(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestUsesGraph');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUsesGraph; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestShouldFail(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestShouldFail');
+  try
+    lFixture.SetUp;
+    try lFixture.TestShouldFail; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNoRun(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNoRun');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoRun; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNeedLibrary(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNeedLibrary');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNeedLibrary; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestNeedAfter(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestNeedAfter');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNeedAfter; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestTimeout(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestTimeout');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTimeout; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestFiles(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestFiles');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFiles; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestWPOParas(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestWPOParas');
+  try
+    lFixture.SetUp;
+    try lFixture.TestWPOParas; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestWPOPasses(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestWPOPasses');
+  try
+    lFixture.SetUp;
+    try lFixture.TestWPOPasses; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestDelFiles(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestDelFiles');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelFiles; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestUtilsCaseTestInteractive(AContext: TNXTestContext);
+var lFixture: TTestUtilsCase;
+begin
+  lFixture:=TTestUtilsCase.Create(AContext, 'TestInteractive');
+  try
+    lFixture.SetUp;
+    try lFixture.TestInteractive; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertctsutilsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tctsutils.TTestUtilsCase');
+  lSuite.AddTest('TestNoFile', @RunTTestUtilsCaseTestNoFile);
+  lSuite.AddTest('TestEmptyFile', @RunTTestUtilsCaseTestEmptyFile);
+  lSuite.AddTest('TestNoPercent', @RunTTestUtilsCaseTestNoPercent);
+  lSuite.AddTest('TestNoEndComment', @RunTTestUtilsCaseTestNoEndComment);
+  lSuite.AddTest('TestSpaces', @RunTTestUtilsCaseTestSpaces);
+  lSuite.AddTest('TestCodeAndNote', @RunTTestUtilsCaseTestCodeAndNote);
+  lSuite.AddTest('TestConfig', @RunTTestUtilsCaseTestConfig);
+  lSuite.AddTest('TestNeedOptions', @RunTTestUtilsCaseTestNeedOptions);
+  lSuite.AddTest('TestDelOptions', @RunTTestUtilsCaseTestDelOptions);
+  lSuite.AddTest('TestNeedTarget', @RunTTestUtilsCaseTestNeedTarget);
+  lSuite.AddTest('TestSkipTarget', @RunTTestUtilsCaseTestSkipTarget);
+  lSuite.AddTest('TestNeedCPU', @RunTTestUtilsCaseTestNeedCPU);
+  lSuite.AddTest('TestSkipCPU', @RunTTestUtilsCaseTestSkipCPU);
+  lSuite.AddTest('TestSkipEMU', @RunTTestUtilsCaseTestSkipEMU);
+  lSuite.AddTest('TestMinVersion', @RunTTestUtilsCaseTestMinVersion);
+  lSuite.AddTest('TestMaxVersion', @RunTTestUtilsCaseTestMaxVersion);
+  lSuite.AddTest('TestResultCode', @RunTTestUtilsCaseTestResultCode);
+  lSuite.AddTest('TestUsesGraph', @RunTTestUtilsCaseTestUsesGraph);
+  lSuite.AddTest('TestShouldFail', @RunTTestUtilsCaseTestShouldFail);
+  lSuite.AddTest('TestNoRun', @RunTTestUtilsCaseTestNoRun);
+  lSuite.AddTest('TestNeedLibrary', @RunTTestUtilsCaseTestNeedLibrary);
+  lSuite.AddTest('TestNeedAfter', @RunTTestUtilsCaseTestNeedAfter);
+  lSuite.AddTest('TestTimeout', @RunTTestUtilsCaseTestTimeout);
+  lSuite.AddTest('TestFiles', @RunTTestUtilsCaseTestFiles);
+  lSuite.AddTest('TestWPOParas', @RunTTestUtilsCaseTestWPOParas);
+  lSuite.AddTest('TestWPOPasses', @RunTTestUtilsCaseTestWPOPasses);
+  lSuite.AddTest('TestDelFiles', @RunTTestUtilsCaseTestDelFiles);
+  lSuite.AddTest('TestInteractive', @RunTTestUtilsCaseTestInteractive);
+end;
+
+end.

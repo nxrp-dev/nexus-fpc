@@ -5,7 +5,7 @@ unit tcresref;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, TypInfo, testutils, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, TypInfo;
 
 type
 
@@ -34,7 +34,15 @@ type
 
   { TTestResolveReference }
 
-  TTestResolveReference = class(TTestCase)
+  TTestResolveReference = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     RootA : TRootA;
     RootB : TRootB;
@@ -45,9 +53,9 @@ type
     UnrA : TObject;
     UnrB : TObject;
   protected
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestAddInst1;
     procedure TestAddInst2;
     procedure TestAddInst3;
@@ -70,6 +78,8 @@ type
     procedure TestFixupReferences2;
     procedure TestFixupReferences3;
   end;
+
+procedure RegistertcresrefTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -218,9 +228,9 @@ Var
 begin
   A:=AddToResolveList(RootA);
   If Not (A is TUnresolvedInstance) then
-    Fail('AddToResolveList returns TUnresolvedInstance');
-  AssertSame('UNresolvedinstance.Instance is RootA',RootA,TUnresolvedInstance(A).Instance);
-  AssertSame('UNresolvedinstance.Next is nil',Nil,TUnresolvedInstance(A).Next);
+    TestContext.Fail('AddToResolveList returns TUnresolvedInstance');
+  TestContext.AssertTrue((RootA)=(TUnresolvedInstance(A).Instance), 'UNresolvedinstance.Instance is RootA');
+  TestContext.AssertTrue((Nil)=(TUnresolvedInstance(A).Next), 'UNresolvedinstance.Next is nil');
 end;
 
 procedure TTestResolveReference.TestAddInst2;
@@ -231,7 +241,7 @@ Var
 begin
   A:=AddToResolveList(RootA);
   B:=AddToResolveList(RootA);
-  AssertSame('UNresolvedinstance.Instance is RootA',A,B);
+  TestContext.AssertTrue((A)=(B), 'UNresolvedinstance.Instance is RootA');
 end;
 
 procedure TTestResolveReference.TestAddInst3;
@@ -242,7 +252,7 @@ Var
 begin
   A:=AddToResolveList(RootA);
   B:=AddToResolveList(RootB);
-  AssertSame('UnresolvedInstances are chained',A,B.Next);
+  TestContext.AssertTrue((A)=(B.Next), 'UnresolvedInstances are chained');
 end;
 
 
@@ -254,12 +264,12 @@ Var
 begin
   R:=SetupARef1A(Self);
   If (UnrA=Nil) then
-    Fail('UnresolvedInstance A not set');
-  AssertSame('TUnresolvedReference FRoot is rootA',RootA,R.FRoot);
-  AssertSame('TUnresolvedReference FPropInfo is PropA1',PropA1,R.FPropInfo);
-  AssertEquals('TUnresolvedReference FGlobal is rootB','RootB',R.FGlobal);
-  AssertEquals('TUnresolvedReference FRelative is A','A',R.FRelative);
-  AssertSame('Unresolved is root object',TUnresolvedinstance(UnrA).RootUnresolved,R);
+    TestContext.Fail('UnresolvedInstance A not set');
+  TestContext.AssertTrue((RootA)=(R.FRoot), 'TUnresolvedReference FRoot is rootA');
+  TestContext.AssertTrue((PropA1)=(R.FPropInfo), 'TUnresolvedReference FPropInfo is PropA1');
+  TestContext.AssertTrue(('RootB')=(R.FGlobal), 'TUnresolvedReference FGlobal is rootB');
+  TestContext.AssertTrue(('A')=(R.FRelative), 'TUnresolvedReference FRelative is A');
+  TestContext.AssertTrue((TUnresolvedinstance(UnrA).RootUnresolved)=(R), 'Unresolved is root object');
 end;
 
 procedure TTestResolveReference.TestAdd3;
@@ -271,11 +281,11 @@ Var
 begin
   R1:=SetupARef1A(Self);
   R2:=SetupARef2B(Self);
-  AssertSame('TUnresolvedReference FRoot is rootA',RootA,R2.FRoot);
-  AssertSame('TUnresolvedReference FPropInfo is PropA2',PropA2,R2.FPropInfo);
-  AssertEquals('TUnresolvedReference FGlobal is rootB','RootB',R2.FGlobal);
-  AssertEquals('TUnresolvedReference FRelative is A','B',R2.FRelative);
-  AssertSame('Unresolved references are chained',R1,R2.Next);
+  TestContext.AssertTrue((RootA)=(R2.FRoot), 'TUnresolvedReference FRoot is rootA');
+  TestContext.AssertTrue((PropA2)=(R2.FPropInfo), 'TUnresolvedReference FPropInfo is PropA2');
+  TestContext.AssertTrue(('RootB')=(R2.FGlobal), 'TUnresolvedReference FGlobal is rootB');
+  TestContext.AssertTrue(('B')=(R2.FRelative), 'TUnresolvedReference FRelative is A');
+  TestContext.AssertTrue((R1)=(R2.Next), 'Unresolved references are chained');
 end;
 
 procedure TTestResolveReference.TestFixupReferenceNames1;
@@ -287,8 +297,8 @@ begin
   L:=TstringList.Create;
   try
     GetFixupReferenceNames(RootA,L);
-    AssertEquals('Number of referenced components in root component RootA is 1',1,L.Count);
-    AssertEquals('Root component referred to is RootB','RootB',L[0]);
+    TestContext.AssertTrue((1)=(L.Count), 'Number of referenced components in root component RootA is 1');
+    TestContext.AssertTrue(('RootB')=(L[0]), 'Root component referred to is RootB');
   finally
     L.Free;
   end;
@@ -305,8 +315,8 @@ begin
   L:=TstringList.Create;
   try
     GetFixupReferenceNames(RootA,L);
-    AssertEquals('Number of referenced components in root component RootA is 1',1,L.Count);
-    AssertEquals('Root component referred to is always RootB','RootB',L[0]);
+    TestContext.AssertTrue((1)=(L.Count), 'Number of referenced components in root component RootA is 1');
+    TestContext.AssertTrue(('RootB')=(L[0]), 'Root component referred to is always RootB');
   finally
     L.Free;
   end;
@@ -323,7 +333,7 @@ begin
   L:=TstringList.Create;
   try
     GetFixupReferenceNames(RootB,L);
-    AssertEquals('Number of referenced components in root component RootB is 0',0,L.Count);
+    TestContext.AssertTrue((0)=(L.Count), 'Number of referenced components in root component RootB is 0');
   finally
     L.Free;
   end;
@@ -340,8 +350,8 @@ begin
   L:=TstringList.Create;
   try
     GetFixupinstanceNames(RootA,'RootB',L);
-    AssertEquals('Number of references in RootA to component RootB is 1',1,L.Count);
-    AssertEquals('Subcomponent of RootB referenced is A','A',L[0]);
+    TestContext.AssertTrue((1)=(L.Count), 'Number of references in RootA to component RootB is 1');
+    TestContext.AssertTrue(('A')=(L[0]), 'Subcomponent of RootB referenced is A');
   finally
     L.Free;
   end;
@@ -357,11 +367,11 @@ begin
   L:=TstringList.Create;
   try
     GetFixupinstanceNames(RootA,'RootB',L);
-    AssertEquals('Number of references in RootA to component RootB is 2',2,L.Count);
+    TestContext.AssertTrue((2)=(L.Count), 'Number of references in RootA to component RootB is 2');
     If L.IndexOf('A')=-1 then
-      Fail('A is not in list of references to RootB');
+      TestContext.Fail('A is not in list of references to RootB');
     If L.IndexOf('B')=-1 then
-      Fail('B is not in list of references to RootB');
+      TestContext.Fail('B is not in list of references to RootB');
   finally
     L.Free;
   end;
@@ -377,7 +387,7 @@ begin
   L:=TstringList.Create;
   try
     GetFixupinstanceNames(RootA,'RootA',L);
-    AssertEquals('Number of references in RootA to component RootA is 0',0,L.Count);
+    TestContext.AssertTrue((0)=(L.Count), 'Number of references in RootA to component RootA is 0');
   finally
     L.Free;
   end;
@@ -393,7 +403,7 @@ begin
   L:=TstringList.Create;
   try
     GetFixupinstanceNames(RootB,'RootB',L);
-    AssertEquals('Number of references in RootB to component RootB is 0',0,L.Count);
+    TestContext.AssertTrue((0)=(L.Count), 'Number of references in RootB to component RootB is 0');
   finally
     L.Free;
   end;
@@ -409,7 +419,7 @@ begin
   L:=TstringList.Create;
   try
     GetFixupinstanceNames(RootB,'RootB',L);
-    AssertEquals('Number of references in RootB to component RootB is 0',0,L.Count);
+    TestContext.AssertTrue((0)=(L.Count), 'Number of references in RootB to component RootB is 0');
   finally
     L.Free;
   end;
@@ -428,8 +438,8 @@ begin
   R1:=SetupARef1A(Self);
   R2:=SetupARef2B(Self);
   RedirectFixupReferences(RootA,'RootB','RootC');
-  AssertEquals('Redirected R1.Root is RootC','RootC',R1.FGLobal);
-  AssertEquals('Redirected R1.Root is RootC','RootC',R2.FGLobal);
+  TestContext.AssertTrue(('RootC')=(R1.FGLobal), 'Redirected R1.Root is RootC');
+  TestContext.AssertTrue(('RootC')=(R2.FGLobal), 'Redirected R1.Root is RootC');
 end;
 
 procedure TTestResolveReference.TestRedirectFixupReferences2;
@@ -443,8 +453,8 @@ begin
   R1:=SetupARef1A(Self);
   R2:=SetupBRef2B(Self);
   RedirectFixupReferences(RootA,'RootB','RootC');
-  AssertEquals('Redirected R1.Root is RootC','RootC',R1.FGLobal);
-  AssertEquals('R2.Root is not redirected, remains RootA','RootA',R2.FGLobal);
+  TestContext.AssertTrue(('RootC')=(R1.FGLobal), 'Redirected R1.Root is RootC');
+  TestContext.AssertTrue(('RootA')=(R2.FGLobal), 'R2.Root is not redirected, remains RootA');
 end;
 
 procedure TTestResolveReference.TestRedirectFixupReferences3;
@@ -456,8 +466,8 @@ begin
   R1:=SetupARef1A(Self);
   R2:=SetupARef2B(Self);
   RedirectFixupReferences(RootA,'RootC','RootQ');
-  AssertEquals('R1.Root is not redirected, remains RootB','RootB',R1.FGLobal);
-  AssertEquals('R2.Root is not redirected, remains RootB','RootB',R2.FGLobal);
+  TestContext.AssertTrue(('RootB')=(R1.FGLobal), 'R1.Root is not redirected, remains RootB');
+  TestContext.AssertTrue(('RootB')=(R2.FGLobal), 'R2.Root is not redirected, remains RootB');
 end;
 
 // procedure RemoveFixupReferences(Root: TComponent; const RootName: string);
@@ -467,7 +477,7 @@ begin
   SetupARef1A(Self);
   SetupARef2A(Self);
   RemoveFixupReferences(RootA,'RootB');
-  AssertSame('No references left',Nil,NeedResolving.Root);
+  TestContext.AssertTrue((Nil)=(NeedResolving.Root), 'No references left');
 end;
 
 procedure TTestResolveReference.TestRemoveFixupReferences2;
@@ -482,7 +492,7 @@ begin
   R1:=SetupARef1A(Self);
   R2:=SetupBRef2A(Self);
   RemoveFixupReferences(RootA,'RootB');
-  AssertSame('1 reference left',RB,NeedResolving.Root);
+  TestContext.AssertTrue((RB)=(NeedResolving.Root), '1 reference left');
 end;
 
 
@@ -491,8 +501,8 @@ procedure TTestResolveReference.TestFixupReferences1;
 begin
   SetupARef1A(Self);
   GlobalFixupReferences;
-  AssertSame('RootA.Ref1 resolved to RootB.A',RootB.FindComponent('A'),RootA.Ref1);
-  AssertEquals('No more resolving needs to be done',0,NeedResolving.Count);
+  TestContext.AssertTrue((RootB.FindComponent('A'))=(RootA.Ref1), 'RootA.Ref1 resolved to RootB.A');
+  TestContext.AssertTrue((0)=(NeedResolving.Count), 'No more resolving needs to be done');
 end;
 
 procedure TTestResolveReference.TestFixupReferences2;
@@ -508,8 +518,8 @@ begin
   // Add existing
   SetupARef1A(Self);
   GlobalFixupReferences;
-  AssertSame('RootA.Ref1 resolved to RootB.A',RootB.FindComponent('A'),RootA.Ref1);
-  AssertSame('Reference to RootC unresolved',RI,NeedResolving.Root);
+  TestContext.AssertTrue((RootB.FindComponent('A'))=(RootA.Ref1), 'RootA.Ref1 resolved to RootB.A');
+  TestContext.AssertTrue((RI)=(NeedResolving.Root), 'Reference to RootC unresolved');
 end;
 
 procedure TTestResolveReference.TestFixupReferences3;
@@ -525,13 +535,258 @@ begin
   // Add existing
   SetupARef1A(Self);
   GlobalFixupReferences;
-  AssertSame('RootA.Ref1 resolved to RootB.A',RootB.FindComponent('A'),RootA.Ref1);
-  AssertSame('Reference to RootC unresolved',RI,NeedResolving.Root);
-  AssertSame('Reference to RootC unresolved',RI.RootUnresolved,UR);
+  TestContext.AssertTrue((RootB.FindComponent('A'))=(RootA.Ref1), 'RootA.Ref1 resolved to RootB.A');
+  TestContext.AssertTrue((RI)=(NeedResolving.Root), 'Reference to RootC unresolved');
+  TestContext.AssertTrue((RI.RootUnresolved)=(UR), 'Reference to RootC unresolved');
 end;
 
+constructor TTestResolveReference.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestResolveReferenceTestAddInst1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestAddInst1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddInst1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestAddInst2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestAddInst2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddInst2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestAddInst3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestAddInst3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddInst3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestAdd2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestAdd2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestAdd3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestAdd3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferenceNames1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferenceNames1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferenceNames1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferenceNames2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferenceNames2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferenceNames2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferenceNames3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferenceNames3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferenceNames3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupInstanceNames1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupInstanceNames1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupInstanceNames1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupInstanceNames2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupInstanceNames2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupInstanceNames2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupInstanceNames3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupInstanceNames3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupInstanceNames3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupInstanceNames4(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupInstanceNames4');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupInstanceNames4; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupInstanceNames5(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupInstanceNames5');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupInstanceNames5; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestRedirectFixupReferences1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestRedirectFixupReferences1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRedirectFixupReferences1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestRedirectFixupReferences2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestRedirectFixupReferences2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRedirectFixupReferences2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestRedirectFixupReferences3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestRedirectFixupReferences3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRedirectFixupReferences3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestRemoveFixupReferences1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestRemoveFixupReferences1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRemoveFixupReferences1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestRemoveFixupReferences2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestRemoveFixupReferences2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRemoveFixupReferences2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferences1(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferences1');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferences1; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferences2(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferences2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferences2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestResolveReferenceTestFixupReferences3(AContext: TNXTestContext);
+var lFixture: TTestResolveReference;
+begin
+  lFixture:=TTestResolveReference.Create(AContext, 'TestFixupReferences3');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFixupReferences3; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcresrefTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcresref.TTestResolveReference');
+  lSuite.AddTest('TestAddInst1', @RunTTestResolveReferenceTestAddInst1);
+  lSuite.AddTest('TestAddInst2', @RunTTestResolveReferenceTestAddInst2);
+  lSuite.AddTest('TestAddInst3', @RunTTestResolveReferenceTestAddInst3);
+  lSuite.AddTest('TestAdd2', @RunTTestResolveReferenceTestAdd2);
+  lSuite.AddTest('TestAdd3', @RunTTestResolveReferenceTestAdd3);
+  lSuite.AddTest('TestFixupReferenceNames1', @RunTTestResolveReferenceTestFixupReferenceNames1);
+  lSuite.AddTest('TestFixupReferenceNames2', @RunTTestResolveReferenceTestFixupReferenceNames2);
+  lSuite.AddTest('TestFixupReferenceNames3', @RunTTestResolveReferenceTestFixupReferenceNames3);
+  lSuite.AddTest('TestFixupInstanceNames1', @RunTTestResolveReferenceTestFixupInstanceNames1);
+  lSuite.AddTest('TestFixupInstanceNames2', @RunTTestResolveReferenceTestFixupInstanceNames2);
+  lSuite.AddTest('TestFixupInstanceNames3', @RunTTestResolveReferenceTestFixupInstanceNames3);
+  lSuite.AddTest('TestFixupInstanceNames4', @RunTTestResolveReferenceTestFixupInstanceNames4);
+  lSuite.AddTest('TestFixupInstanceNames5', @RunTTestResolveReferenceTestFixupInstanceNames5);
+  lSuite.AddTest('TestRedirectFixupReferences1', @RunTTestResolveReferenceTestRedirectFixupReferences1);
+  lSuite.AddTest('TestRedirectFixupReferences2', @RunTTestResolveReferenceTestRedirectFixupReferences2);
+  lSuite.AddTest('TestRedirectFixupReferences3', @RunTTestResolveReferenceTestRedirectFixupReferences3);
+  lSuite.AddTest('TestRemoveFixupReferences1', @RunTTestResolveReferenceTestRemoveFixupReferences1);
+  lSuite.AddTest('TestRemoveFixupReferences2', @RunTTestResolveReferenceTestRemoveFixupReferences2);
+  lSuite.AddTest('TestFixupReferences1', @RunTTestResolveReferenceTestFixupReferences1);
+  lSuite.AddTest('TestFixupReferences2', @RunTTestResolveReferenceTestFixupReferences2);
+  lSuite.AddTest('TestFixupReferences3', @RunTTestResolveReferenceTestFixupReferences3);
+end;
+
+
 initialization
-  RegisterTest(TTestResolveReference);
+
   InitCriticalSection(ResolveSection);
 
 finalization

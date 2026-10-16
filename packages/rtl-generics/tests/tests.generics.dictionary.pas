@@ -5,7 +5,7 @@ unit tests.generics.dictionary;
 interface
 
 uses
-  fpcunit, testregistry, Classes, SysUtils, Generics.Defaults, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Defaults, Generics.Collections;
 
 Type
   TMySimpleDict = Class(Specialize TDictionary<Integer,String>);
@@ -15,7 +15,15 @@ Type
 {$ENDIF}
   { TTestSimpleDictionary }
 
-  TTestSimpleDictionary = Class(TTestCase)
+  TTestSimpleDictionary = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FDict : TMySimpleDict;
     FnotifyMessage : String;
@@ -35,10 +43,10 @@ Type
   Public
     Procedure SetExpectKeys(aMessage : string; AKeys : Array of Integer; AActions : Array of TCollectionNotification; DoReverse : Boolean = False);
     Procedure SetExpectValues(aMessage : string; AKeys : Array of String; AActions : Array of TCollectionNotification; DoReverse : Boolean = False);
-    Procedure SetUp; override;
-    Procedure TearDown; override;
+    Procedure SetUp; virtual;
+    Procedure TearDown; virtual;
     Property Dict : TMySimpleDict Read FDict;
-  Published
+  public
     Procedure TestEmpty;
     Procedure TestAdd;
     Procedure TestClear;
@@ -62,13 +70,15 @@ Type
     procedure TestKeyValueNotificationSet;
   end;
 
+procedure RegistertestsgenericsdictionaryTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TTestSimpleDictionary }
 
 procedure TTestSimpleDictionary.SetUp;
 begin
-  inherited SetUp;
+
   FDict:=TMySimpleDict.Create;
   FCurrentKeyNotify:=0;
   FCurrentValueNotify:=0;
@@ -84,13 +94,13 @@ begin
   FDict.OnKeyNotify:=Nil;
   FDict.OnValueNotify:=Nil;
   FreeAndNil(FDict);
-  inherited TearDown;
+
 end;
 
 procedure TTestSimpleDictionary.TestEmpty;
 begin
-  AssertNotNull('Have dictionary',Dict);
-  AssertEquals('empty dictionary',0,Dict.Count);
+  TestContext.AssertTrue((Dict)<>nil, 'Have dictionary');
+  TestContext.AssertTrue((0)=(Dict.Count), 'empty dictionary');
 end;
 
 procedure TTestSimpleDictionary.DoAdd(aCount : Integer; aOffset : Integer=0);
@@ -109,19 +119,19 @@ procedure TTestSimpleDictionary.TestAdd;
 
 begin
   DoAdd(1);
-  AssertEquals('Count OK',1,Dict.Count);
-  AssertTrue('Has added value',Dict.ContainsKey(1));
+  TestContext.AssertTrue((1)=(Dict.Count), 'Count OK');
+  TestContext.AssertTrue(Dict.ContainsKey(1), 'Has added value');
   DoAdd(1,1);
-  AssertEquals('Count OK',2,Dict.Count);
-  AssertTrue('Has added value',Dict.ContainsKey(2));
+  TestContext.AssertTrue((2)=(Dict.Count), 'Count OK');
+  TestContext.AssertTrue(Dict.ContainsKey(2), 'Has added value');
 end;
 
 procedure TTestSimpleDictionary.TestClear;
 begin
   DoAdd(3);
-  AssertEquals('Count OK',3,Dict.Count);
+  TestContext.AssertTrue((3)=(Dict.Count), 'Count OK');
   Dict.Clear;
-  AssertEquals('Count after clear OK',0,Dict.Count);
+  TestContext.AssertTrue((0)=(Dict.Count), 'Count after clear OK');
 end;
 
 procedure TTestSimpleDictionary.TestTryGetValue;
@@ -135,10 +145,10 @@ begin
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertTrue('Have value '+SI,Dict.TryGetValue(I,A));
-    AssertEquals('Value is correct '+SI,SI,A);
+    TestContext.AssertTrue(Dict.TryGetValue(I,A), 'Have value '+SI);
+    TestContext.AssertTrue((SI)=(A), 'Value is correct '+SI);
     end;
-  AssertFalse('Have no value 4',Dict.TryGetValue(4,A));
+  TestContext.AssertTrue(not (Dict.TryGetValue(4,A)), 'Have no value 4');
 end;
 
 procedure TTestSimpleDictionary.DoGetValue(aKey: Integer; Match: String; ExceptionClass: TClass);
@@ -161,15 +171,15 @@ begin
   if ExceptionClass=Nil then
     begin
     if EC<>Nil then
-      Fail('Got exception '+EC.ClassName+' with message: '+EM);
-    AssertEquals('Value is correct for '+IntToStr(aKey),Match,A)
+      TestContext.Fail('Got exception '+EC.ClassName+' with message: '+EM);
+    TestContext.AssertTrue((Match)=(A), 'Value is correct for '+IntToStr(aKey))
     end
   else
     begin
     if EC=Nil then
-      Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
+      TestContext.Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
     if EC<>ExceptionClass then
-      Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
+      TestContext.Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
     end;
 end;
 
@@ -178,9 +188,9 @@ var
   I,J : integer;
 begin
   Writeln(FnotifyMessage+' Notification ',FCurrentKeyNotify);
-  AssertSame(FnotifyMessage+' Correct sender', FDict,aSender);
+  TestContext.AssertTrue((FDict)=(aSender), FnotifyMessage+' Correct sender');
   if (FCurrentKeyNotify>=Length(FExpectKeys)) then
-    Fail(FnotifyMessage+' Too many notificiations');
+    TestContext.Fail(FnotifyMessage+' Too many notificiations');
   if AAction=cnRemoved then
     begin
       j:=-1;
@@ -192,10 +202,10 @@ begin
 	    break;
 	  end;
       if j=-1 then
-        Fail(FnotifyMessage+' Notification Key '+IntToStr(aItem)+' not found');
+        TestContext.Fail(FnotifyMessage+' Notification Key '+IntToStr(aItem)+' not found');
     end
   else
-    AssertEquals(FnotifyMessage+' Notification Key no '+IntToStr(FCurrentKeyNotify),FExpectKeys[FCurrentKeyNotify],aItem);
+    TestContext.AssertTrue((FExpectKeys[FCurrentKeyNotify])=(aItem), FnotifyMessage+' Notification Key no '+IntToStr(FCurrentKeyNotify));
   Inc(FCurrentKeyNotify);
 end;
 
@@ -204,13 +214,13 @@ var
   I,J : integer;
 begin
   Writeln(FnotifyMessage+' value Notification ',FCurrentValueNotify);
-  AssertSame(FnotifyMessage+' value Correct sender', FDict,aSender);
+  TestContext.AssertTrue((FDict)=(aSender), FnotifyMessage+' value Correct sender');
   if (FCurrentValueNotify>=Length(FExpectValues)) then
-    Fail(FnotifyMessage+' Too many value notificiations');
+    TestContext.Fail(FnotifyMessage+' Too many value notificiations');
   if AAction=cnRemoved then
     begin
       j:=-1;
-      for i:=0 to Length(FExpectKeys)-1 do
+      for i:=0 to Length(FExpectValues)-1 do
         if AItem=FExpectValues[i] then
 	  begin
             j:=i;
@@ -218,10 +228,10 @@ begin
 	    break;
 	  end;
       if j=-1 then
-        Fail(FnotifyMessage+' Notification value '+AItem+' not found');
+        TestContext.Fail(FnotifyMessage+' Notification value '+AItem+' not found');
     end
   else
-    AssertEquals(FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify),FExpectValues[FCurrentValueNotify],aItem);
+    TestContext.AssertTrue((FExpectValues[FCurrentValueNotify])=(aItem), FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify));
   Inc(FCurrentValueNotify);
 end;
 
@@ -235,7 +245,7 @@ begin
   FnotifyMessage:=aMessage;
   FCurrentKeyNotify:=0;
   L:=Length(aKeys);
-  AssertEquals('SetExpectkeys: Lengths arrays equal',l,Length(aActions));
+  TestContext.AssertTrue((l)=(Length(aActions)), 'SetExpectkeys: Lengths arrays equal');
   SetLength(FExpectKeys,L);
   SetLength(FExpectKeyAction,L);
   Dec(L);
@@ -262,7 +272,7 @@ begin
   FnotifyMessage:=aMessage;
   FCurrentValueNotify:=0;
   L:=Length(aKeys);
-  AssertEquals('SetExpectValues: Lengths arrays equal',l,Length(aActions));
+  TestContext.AssertTrue((l)=(Length(aActions)), 'SetExpectValues: Lengths arrays equal');
   SetLength(FExpectValues,L);
   SetLength(FExpectValueAction,L);
   Dec(L);
@@ -307,18 +317,18 @@ end;
 
 procedure TTestSimpleDictionary.DoneExpectKeys;
 begin
-  AssertEquals(FnotifyMessage+' Expected number of keys seen',Length(FExpectKeys),FCurrentKeyNotify);
+  TestContext.AssertTrue((Length(FExpectKeys))=(FCurrentKeyNotify), FnotifyMessage+' Expected number of keys seen');
 end;
 
 procedure TTestSimpleDictionary.DoneExpectValues;
 begin
-  AssertEquals(FnotifyMessage+' Expected number of values seen',Length(FExpectValues),FCurrentValueNotify);
+  TestContext.AssertTrue((Length(FExpectValues))=(FCurrentValueNotify), FnotifyMessage+' Expected number of values seen');
 end;
 
 procedure TTestSimpleDictionary.TestAddDuplicate;
 begin
   DoAdd(3);
-  AssertException('Cannot add duplicate',EDictionary,@DoAdd2);
+  TestContext.AssertRaises(EDictionary, @DoAdd2, 'Cannot add duplicate');
 end;
 
 procedure TTestSimpleDictionary.TestAddOrSet;
@@ -331,9 +341,9 @@ end;
 
 procedure TTestSimpleDictionary.TestTryAdd;
 begin
-  AssertTrue(Dict.TryAdd(1, 'Foobar'));
-  AssertFalse(Dict.TryAdd(1, 'Foo'));
-  AssertTrue(Dict.TryAdd(2, 'Bar'));
+  TestContext.AssertTrue(Dict.TryAdd(1, 'Foobar'), '');
+  TestContext.AssertTrue(not (Dict.TryAdd(1, 'Foo')), '');
+  TestContext.AssertTrue(Dict.TryAdd(2, 'Bar'), '');
 end;
 
 procedure TTestSimpleDictionary.TestContainsKey;
@@ -344,8 +354,8 @@ Var
 begin
   DoAdd(3);
   For I:=1 to 3 do
-    AssertTrue('Has '+IntToStr(i),Dict.ContainsKey(I));
-  AssertFalse('Has not 4',Dict.ContainsKey(4));
+    TestContext.AssertTrue(Dict.ContainsKey(I), 'Has '+IntToStr(i));
+  TestContext.AssertTrue(not (Dict.ContainsKey(4)), 'Has not 4');
 end;
 
 procedure TTestSimpleDictionary.TestContainsValue;
@@ -356,8 +366,8 @@ Var
 begin
   DoAdd(3);
   For I:=1 to 3 do
-    AssertTrue('Has '+IntToStr(i),Dict.ContainsValue(IntToStr(i)));
-  AssertFalse('Has not 4',Dict.ContainsValue('4'));
+    TestContext.AssertTrue(Dict.ContainsValue(IntToStr(i)), 'Has '+IntToStr(i));
+  TestContext.AssertTrue(not (Dict.ContainsValue('4')), 'Has not 4');
 end;
 
 procedure TTestSimpleDictionary.TestDelete;
@@ -365,8 +375,8 @@ procedure TTestSimpleDictionary.TestDelete;
 begin
   DoAdd(3);
   Dict.Remove(2);
-  AssertEquals('Count',2,Dict.Count);
-  AssertFalse('Has not 2',Dict.ContainsKey(2));
+  TestContext.AssertTrue((2)=(Dict.Count), 'Count');
+  TestContext.AssertTrue(not (Dict.ContainsKey(2)), 'Has not 2');
 end;
 
 procedure TTestSimpleDictionary.TestToArray;
@@ -384,12 +394,12 @@ begin
   DoAdd(3);
   A:=Dict.ToArray;
   specialize TArrayHelper<TMyPair>.Sort(A{$ifndef fpc}, specialize TComparer<TMySimpleDict.TMyPair>.Default{$endif});
-  AssertEquals('Length Ok',3,Length(A));
+  TestContext.AssertTrue((3)=(Length(A)), 'Length Ok');
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('key '+SI,I,A[i-1].Key);
-    AssertEquals('Value '+SI,SI,A[i-1].Value);
+    TestContext.AssertTrue((I)=(A[i-1].Key), 'key '+SI);
+    TestContext.AssertTrue((SI)=(A[i-1].Value), 'Value '+SI);
     end;
 end;
 
@@ -404,11 +414,11 @@ begin
   DoAdd(3);
   A:=Dict.Keys.ToArray;
   specialize TArrayHelper<Integer>.Sort(A{$ifndef fpc}, specialize TComparer<Integer>.Default{$endif});
-  AssertEquals('Length Ok',3,Length(A));
+  TestContext.AssertTrue((3)=(Length(A)), 'Length Ok');
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('key '+SI,I,A[i-1]);
+    TestContext.AssertTrue((I)=(A[i-1]), 'key '+SI);
     end;
 end;
 
@@ -422,11 +432,11 @@ begin
   DoAdd(3);
   A:=Dict.Values.ToArray;
   specialize TArrayHelper<String>.Sort(A{$ifndef fpc}, specialize TComparer<String>.Default{$endif});
-  AssertEquals('Length Ok',3,Length(A));
+  TestContext.AssertTrue((3)=(Length(A)), 'Length Ok');
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('Value '+SI,SI,A[i-1]);
+    TestContext.AssertTrue((SI)=(A[i-1]), 'Value '+SI);
     end;
 end;
 
@@ -460,10 +470,10 @@ begin
       begin
       SI:=IntToStr(I);
       J:=IL.IndexOf(A.Key);
-      AssertTrue('key '+SI,J>=0);
+      TestContext.AssertTrue(J>=0, 'key '+SI);
       IL.Delete(J);
       J:=SL.IndexOf(A.Value);
-      AssertTrue('value '+SI,J>=0);
+      TestContext.AssertTrue(J>=0, 'value '+SI);
       SL.Delete(J);
       Inc(I);
       end;
@@ -528,7 +538,249 @@ begin
   DoneExpectValues;
 end;
 
-begin
-  RegisterTest(TTestSimpleDictionary);
-end.
 
+constructor TTestSimpleDictionary.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSimpleDictionaryTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestAdd(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestClear(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestTryGetValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestTryGetValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryGetValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestGetValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestGetValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestSetValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestSetValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSetValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestAddDuplicate(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestAddDuplicate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddDuplicate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestAddOrSet(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestAddOrSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddOrSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestTryAdd(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestTryAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestTryAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestContainsKey(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestContainsKey');
+  try
+    lFixture.SetUp;
+    try lFixture.TestContainsKey; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestContainsValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestContainsValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestContainsValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestDelete(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestToArray(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestToArray');
+  try
+    lFixture.SetUp;
+    try lFixture.TestToArray; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestKeys(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestKeys');
+  try
+    lFixture.SetUp;
+    try lFixture.TestKeys; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestValues(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestValues');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValues; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestEnumerator(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestEnumerator');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEnumerator; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestNotification(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestNotificationDelete(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestNotificationDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNotificationDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestValueNotification(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestValueNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestValueNotificationDelete(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestValueNotificationDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotificationDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleDictionaryTestKeyValueNotificationSet(AContext: TNXTestContext);
+var lFixture: TTestSimpleDictionary;
+begin
+  lFixture:=TTestSimpleDictionary.Create(AContext, 'TestKeyValueNotificationSet');
+  try
+    lFixture.SetUp;
+    try lFixture.TestKeyValueNotificationSet; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericsdictionaryTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.dictionary.TTestSimpleDictionary');
+  lSuite.AddTest('TestEmpty', @RunTTestSimpleDictionaryTestEmpty);
+  lSuite.AddTest('TestAdd', @RunTTestSimpleDictionaryTestAdd);
+  lSuite.AddTest('TestClear', @RunTTestSimpleDictionaryTestClear);
+  lSuite.AddTest('TestTryGetValue', @RunTTestSimpleDictionaryTestTryGetValue);
+  lSuite.AddTest('TestGetValue', @RunTTestSimpleDictionaryTestGetValue);
+  lSuite.AddTest('TestSetValue', @RunTTestSimpleDictionaryTestSetValue);
+  lSuite.AddTest('TestAddDuplicate', @RunTTestSimpleDictionaryTestAddDuplicate);
+  lSuite.AddTest('TestAddOrSet', @RunTTestSimpleDictionaryTestAddOrSet);
+  lSuite.AddTest('TestTryAdd', @RunTTestSimpleDictionaryTestTryAdd);
+  lSuite.AddTest('TestContainsKey', @RunTTestSimpleDictionaryTestContainsKey);
+  lSuite.AddTest('TestContainsValue', @RunTTestSimpleDictionaryTestContainsValue);
+  lSuite.AddTest('TestDelete', @RunTTestSimpleDictionaryTestDelete);
+  lSuite.AddTest('TestToArray', @RunTTestSimpleDictionaryTestToArray);
+  lSuite.AddTest('TestKeys', @RunTTestSimpleDictionaryTestKeys);
+  lSuite.AddTest('TestValues', @RunTTestSimpleDictionaryTestValues);
+  lSuite.AddTest('TestEnumerator', @RunTTestSimpleDictionaryTestEnumerator);
+  lSuite.AddTest('TestNotification', @RunTTestSimpleDictionaryTestNotification);
+  lSuite.AddTest('TestNotificationDelete', @RunTTestSimpleDictionaryTestNotificationDelete);
+  lSuite.AddTest('TestValueNotification', @RunTTestSimpleDictionaryTestValueNotification);
+  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleDictionaryTestValueNotificationDelete);
+  lSuite.AddTest('TestKeyValueNotificationSet', @RunTTestSimpleDictionaryTestKeyValueNotificationSet);
+end;
+
+end.

@@ -19,7 +19,7 @@ unit utcpoint;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, types, utmathvectorbase, system.math.vectors;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, types, utmathvectorbase, system.math.vectors;
 
 type
     { TTestPoint3D }
@@ -36,7 +36,7 @@ type
     Property P1 : TPoint3D Index 1 Read GetP Write SetP;
     Property P2 : TPoint3D Index 2 Read GetP Write SetP;
     Property P3 : TPoint3D Index 3 Read GetP Write SetP;
-  Published
+  public
     procedure TestHookUp;
     Procedure TestZero;
     Procedure TestCreate;
@@ -64,6 +64,8 @@ type
     Procedure TestRotate;
   end;
 
+
+procedure RegisterutcpointTests(ARegistry: TNXTestRegistry);
 
 implementation
 { TTestPoint3D }
@@ -113,9 +115,9 @@ var
 begin
   For I:=1 to 3 do
     begin
-    AssertEquals('Point3D '+intTostr(i)+'.X',0.0,FP[I].X);
-    AssertEquals('Point3D '+intTostr(i)+'.Y',0.0,FP[I].Y);
-    AssertEquals('Point3D '+intTostr(i)+'.Z',0.0,FP[I].Z);
+    TestContext.AssertTrue((0.0)=(FP[I].X), 'Point3D '+intTostr(i)+'.X');
+    TestContext.AssertTrue((0.0)=(FP[I].Y), 'Point3D '+intTostr(i)+'.Y');
+    TestContext.AssertTrue((0.0)=(FP[I].Z), 'Point3D '+intTostr(i)+'.Z');
     end;
 end;
 
@@ -186,9 +188,9 @@ procedure TTestPoint3D.TestEqual;
 begin
   P1:=TPoint3D.Create(1,2,3);
   P2:=TPoint3D.Create(5,4,3);
-  AssertFalse('Equal NOk',P1=P2);
+  TestContext.AssertTrue(not (P1=P2), 'Equal NOk');
   P2:=TPoint3D.Create(1,2,3);
-  AssertTrue('Equal OK',P1=P2);
+  TestContext.AssertTrue(P1=P2, 'Equal OK');
 end;
 
 procedure TTestPoint3D.TestDivide;
@@ -202,9 +204,9 @@ procedure TTestPoint3D.TestUnEqual;
 begin
   P1:=TPoint3D.Create(1,2,3);
   P2:=TPoint3D.Create(5,4,3);
-  AssertTrue('unEqual Ok',P1<>P2);
+  TestContext.AssertTrue(P1<>P2, 'unEqual Ok');
   P2:=TPoint3D.Create(1,2,3);
-  AssertFalse('unEqual OK',P1<>P2);
+  TestContext.AssertTrue(not (P1<>P2), 'unEqual OK');
 end;
 
 procedure TTestPoint3D.TestUnaryMinus;
@@ -218,16 +220,16 @@ procedure TTestPoint3D.TestAngleCosine;
 begin
   P1:=TPoint3D.Create(1,0,0);
   P2:=TPoint3D.Create(0,1,0);
-  AssertEquals('Angle',0, P1.AngleCosine(P2));
+  TestContext.AssertTrue((0)=(P1.AngleCosine(P2)), 'Angle');
   P1:=TPoint3D.Create(1,0,0);
   P2:=TPoint3D.Create(0,0,1);
-  AssertEquals('Angle',0, P1.AngleCosine(P2));
+  TestContext.AssertTrue((0)=(P1.AngleCosine(P2)), 'Angle');
   P1:=TPoint3D.Create(0,1,0);
   P2:=TPoint3D.Create(0,0,1);
-  AssertEquals('Angle',0, P1.AngleCosine(P2));
+  TestContext.AssertTrue((0)=(P1.AngleCosine(P2)), 'Angle');
   P1:=TPoint3D.Create(0,1,0);
   P2:=TPoint3D.Create(1,1,0);
-  AssertEquals('Angle',c45, P1.AngleCosine(P2));
+  TestContext.AssertTrue(Abs((c45)-(P1.AngleCosine(P2)))<=TEpsilon.Vector, 'Angle');
 end;
 
 procedure TTestPoint3D.TestCrossProduct;
@@ -246,41 +248,41 @@ procedure TTestPoint3D.TestDistance;
 begin
   P1:=TPoint3D.Create(1,1,0);
   P2:=TPoint3D.Create(1,2,0);
-  AssertEquals('Dist 1,',1,P1.Distance(P2));
+  TestContext.AssertTrue((1)=(P1.Distance(P2)), 'Dist 1,');
   P1:=TPoint3D.Create(0,1,1);
   P2:=TPoint3D.Create(0,2,1);
-  AssertEquals('Dist 2,',1,P1.Distance(P2));
+  TestContext.AssertTrue((1)=(P1.Distance(P2)), 'Dist 2,');
   P1:=TPoint3D.Create(0,0,0);
   P2:=TPoint3D.Create(1,1,0);
-  AssertEquals('Dist 3,',c45*2,P1.Distance(P2));
+  TestContext.AssertTrue(Abs((c45*2)-(P1.Distance(P2)))<=TEpsilon.Vector, 'Dist 3,');
 end;
 
 procedure TTestPoint3D.TestDotProduct;
 begin
   P1:=TPoint3D.Create(3,4,9);
   P2:=TPoint3D.Create(3,4,9);
-  AssertEquals('Test 1',9+16+81,P1.DotProduct(P2));
+  TestContext.AssertTrue((9+16+81)=(P1.DotProduct(P2)), 'Test 1');
   P2:=TPoint3D.Create(1,1,0);
-  AssertEquals('Test 1',7,P1.DotProduct(P2));
+  TestContext.AssertTrue((7)=(P1.DotProduct(P2)), 'Test 1');
 end;
 
 procedure TTestPoint3D.TestEqualsTo;
 begin
   P1:=TPoint3D.Create(3,4,9);
   P2:=TPoint3D.Create(3,4,9);
-  AssertTrue('Test 1',P1.EqualsTo(P2));
+  TestContext.AssertTrue(P1.EqualsTo(P2), 'Test 1');
   P2:=TPoint3D.Create(1,1,1);
-  AssertFalse('Test 2',P1.EqualsTo(P2));
+  TestContext.AssertTrue(not (P1.EqualsTo(P2)), 'Test 2');
 end;
 
 procedure TTestPoint3D.TestLength;
 begin
   P1:=TPoint3D.Create(1,0,0);
-  AssertEquals('Dist 1,',1,P1.Length);
+  TestContext.AssertTrue((1)=(P1.Length), 'Dist 1,');
   P1:=TPoint3D.Create(0,1,1);
-  AssertEquals('Dist 2,',c45*2,P1.Length);
+  TestContext.AssertTrue(Abs((c45*2)-(P1.Length))<=TEpsilon.Vector, 'Dist 2,');
   P1:=TPoint3D.Create(1,1,1);
-  AssertEquals('Dist 3,',1.7321,P1.Length);
+  TestContext.AssertTrue(Abs((Sqrt(3))-(P1.Length))<=TEpsilon.Vector, 'Dist 3,');
 end;
 
 procedure TTestPoint3D.TestMidPoint;
@@ -353,7 +355,286 @@ begin
   AssertPoint3D('Rotate 2',0,0,-1,P3); // Z is pointing down!
 end;
 
-initialization
-  RegisterTests([TTestPoint3D]);
-end.
 
+procedure RunTTestPoint3DTestHookUp(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestHookUp');
+  try
+    lFixture.SetUp;
+    try lFixture.TestHookUp; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestZero(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestZero');
+  try
+    lFixture.SetUp;
+    try lFixture.TestZero; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestCreate(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestCreate2DPointAndZ(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestCreate2DPointAndZ');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate2DPointAndZ; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestCreateVector3D(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestCreateVector3D');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreateVector3D; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestAdd(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestMultiplyFactor(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestMultiplyFactor');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiplyFactor; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestMultiply(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestMultiply');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMultiply; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestSubtract(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestSubtract');
+  try
+    lFixture.SetUp;
+    try lFixture.TestSubtract; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestEqual(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestEqual');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEqual; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestDivide(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestDivide');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDivide; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestUnEqual(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestUnEqual');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUnEqual; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestUnaryMinus(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestUnaryMinus');
+  try
+    lFixture.SetUp;
+    try lFixture.TestUnaryMinus; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestAngleCosine(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestAngleCosine');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAngleCosine; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestCrossProduct(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestCrossProduct');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCrossProduct; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestDistance(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestDistance');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDistance; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestDotProduct(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestDotProduct');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDotProduct; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestEqualsTo(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestEqualsTo');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEqualsTo; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestLength(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestLength');
+  try
+    lFixture.SetUp;
+    try lFixture.TestLength; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestMidPoint(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestMidPoint');
+  try
+    lFixture.SetUp;
+    try lFixture.TestMidPoint; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestNormalize(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestNormalize');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNormalize; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestOffsetPoint(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestOffsetPoint');
+  try
+    lFixture.SetUp;
+    try lFixture.TestOffsetPoint; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestOffsetDelta(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestOffsetDelta');
+  try
+    lFixture.SetUp;
+    try lFixture.TestOffsetDelta; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestReflect(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestReflect');
+  try
+    lFixture.SetUp;
+    try lFixture.TestReflect; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPoint3DTestRotate(AContext: TNXTestContext);
+var lFixture: TTestPoint3D;
+begin
+  lFixture:=TTestPoint3D.Create(AContext, 'TestRotate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestRotate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutcpointTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utcpoint.TTestPoint3D');
+  lSuite.AddTest('TestHookUp', @RunTTestPoint3DTestHookUp);
+  lSuite.AddTest('TestZero', @RunTTestPoint3DTestZero);
+  lSuite.AddTest('TestCreate', @RunTTestPoint3DTestCreate);
+  lSuite.AddTest('TestCreate2DPointAndZ', @RunTTestPoint3DTestCreate2DPointAndZ);
+  lSuite.AddTest('TestCreateVector3D', @RunTTestPoint3DTestCreateVector3D);
+  lSuite.AddTest('TestAdd', @RunTTestPoint3DTestAdd);
+  lSuite.AddTest('TestMultiplyFactor', @RunTTestPoint3DTestMultiplyFactor);
+  lSuite.AddTest('TestMultiply', @RunTTestPoint3DTestMultiply);
+  lSuite.AddTest('TestSubtract', @RunTTestPoint3DTestSubtract);
+  lSuite.AddTest('TestEqual', @RunTTestPoint3DTestEqual);
+  lSuite.AddTest('TestDivide', @RunTTestPoint3DTestDivide);
+  lSuite.AddTest('TestUnEqual', @RunTTestPoint3DTestUnEqual);
+  lSuite.AddTest('TestUnaryMinus', @RunTTestPoint3DTestUnaryMinus);
+  lSuite.AddTest('TestAngleCosine', @RunTTestPoint3DTestAngleCosine);
+  lSuite.AddTest('TestCrossProduct', @RunTTestPoint3DTestCrossProduct);
+  lSuite.AddTest('TestDistance', @RunTTestPoint3DTestDistance);
+  lSuite.AddTest('TestDotProduct', @RunTTestPoint3DTestDotProduct);
+  lSuite.AddTest('TestEqualsTo', @RunTTestPoint3DTestEqualsTo);
+  lSuite.AddTest('TestLength', @RunTTestPoint3DTestLength);
+  lSuite.AddTest('TestMidPoint', @RunTTestPoint3DTestMidPoint);
+  lSuite.AddTest('TestNormalize', @RunTTestPoint3DTestNormalize);
+  lSuite.AddTest('TestOffsetPoint', @RunTTestPoint3DTestOffsetPoint);
+  lSuite.AddTest('TestOffsetDelta', @RunTTestPoint3DTestOffsetDelta);
+  lSuite.AddTest('TestReflect', @RunTTestPoint3DTestReflect);
+  lSuite.AddTest('TestRotate', @RunTTestPoint3DTestRotate);
+end;
+
+end.

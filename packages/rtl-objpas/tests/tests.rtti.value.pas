@@ -5,12 +5,20 @@ unit tests.rtti.value;
 interface
 
 uses
-  fpcunit,testregistry, testutils, typinfo,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, typinfo,
   Classes, SysUtils, Rtti;
 
 Type
-  TTestValueGeneral = Class(TTestCase)
-  Published
+  TTestValueGeneral = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     procedure TestDataSize;
     procedure TestDataSizeEmpty;
     procedure TestReferenceRawData;
@@ -23,13 +31,21 @@ Type
     procedure TestAssignTime;
   end;
 
-  TTestValueSimple = Class(TTestCase)
+  TTestValueSimple = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     procedure MakeFromOrdinalTObject;
     procedure MakeFromOrdinalSet;
     procedure MakeFromOrdinalString;
     procedure MakeFromOrdinalNil;
-  Published
+  public
     // Moved here from Tests.rtti
     procedure TestIsType;
     procedure TestMakeNil;
@@ -64,8 +80,16 @@ Type
 
   { TTestValueArray }
 
-  TTestValueArray = class(TTestCase)
-  Published
+  TTestValueArray = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
+  public
     procedure TestMakeArrayDynamic;
     procedure TestMakeArrayStatic;
     procedure TestMakeFromArray;
@@ -77,20 +101,28 @@ Type
 
   { TTestValueVariant }
 
-  TTestValueVariant = class(TTestCase)
+  TTestValueVariant = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FSrc: Variant;
     FValue: TValue;
     FVarRec: TVarRec;
   Public
-    Procedure Setup; override;
-    Procedure TearDown; override;
+    Procedure Setup; virtual;
+    Procedure TearDown; virtual;
     Procedure DoFromVariant;
     Procedure DoFromVarRec;
     Property Value : TValue Read FValue;
     Property Src : Variant Read FSrc;
     Property VarRec : TVarRec Read FVarRec;
-  Published
+  public
     Procedure TestFromVariantInteger;
     Procedure TestFromVariantBoolean;
     Procedure TestFromVariantSmallInt;
@@ -148,6 +180,8 @@ Type
   end;
 
 
+procedure RegistertestsrttivalueTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 uses tests.rtti.types, variants;
@@ -156,7 +190,7 @@ uses tests.rtti.types, variants;
 
 procedure TTestValueVariant.Setup;
 begin
-  inherited Setup;
+
   FValue:=Default(TValue);
   FSrc:=unassigned;
 end;
@@ -165,7 +199,7 @@ procedure TTestValueVariant.TearDown;
 begin
   FValue:=Default(TValue);
   FSrc:=unassigned;
-  inherited TearDown;
+
 end;
 
 procedure TTestValueVariant.DoFromVariant;
@@ -183,11 +217,11 @@ begin
   FVarrec.VType:=vtInteger;
   FVarrec.VInteger:=1;
   DoFromVarRec;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Integer)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Integer)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarrecBoolean;
@@ -195,11 +229,11 @@ begin
   FVarrec.VType:=vtBoolean;
   FVarrec.VBoolean:=True;
   DoFromVarRec;
-  CheckEquals(True,Value.AsBoolean,'Value');
-  CheckTrue(TypeInfo(Boolean)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((True)=(Value.AsBoolean), 'Value');
+  TestContext.AssertTrue(TypeInfo(Boolean)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecChar;
@@ -207,11 +241,11 @@ begin
   FVarrec.VType:=vtChar;
   FVarrec.VChar:='c';
   DoFromVarRec;
-  CheckEquals('c',Value.AsAnsiChar,'Value');
-  CheckTrue(TypeInfo(AnsiChar)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue(('c')=(Value.AsAnsiChar), 'Value');
+  TestContext.AssertTrue(TypeInfo(AnsiChar)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecExtended;
@@ -224,11 +258,11 @@ begin
   FVarRec.VExtended:=@E;
   FVarRec.vType:=vtExtended;
   DoFromVarRec;
-  CheckEquals(1.23,Value.AsExtended,0.01,'Value');
-  CheckTrue(TypeInfo(Extended)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((1.23)-(Value.AsExtended))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(Extended)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecString;
@@ -241,11 +275,11 @@ begin
   FVarrec.VType:=vtString;
   FVarrec.VString:=@S;
   DoFromVarRec;
-  CheckEquals('123',Value.AsString,'Value');
-  CheckTrue(TypeInfo(ShortString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('123')=(Value.AsString), 'Value');
+  TestContext.AssertTrue(TypeInfo(ShortString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecPointer;
@@ -257,11 +291,11 @@ begin
   FVarrec.VType:=vtPointer;
   FVarrec.VString:=@S;
   DoFromVarRec;
-  CheckTrue(@S=Value.AsPointer,'Value');
-  CheckTrue(TypeInfo(Pointer)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(@S=Value.AsPointer, 'Value');
+  TestContext.AssertTrue(TypeInfo(Pointer)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecPChar;
@@ -273,12 +307,12 @@ begin
   FVarrec.VType:=vtPChar;
   FVarrec.VPChar:=PAnsiChar(S);
   DoFromVarRec;
-  CheckTrue(S=Value.AsAnsiString,'Value');
+  TestContext.AssertTrue(S=Value.AsAnsiString, 'Value');
   // In delphi it is String, but not widestring !
-  CheckTrue(TypeInfo(AnsiString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(TypeInfo(AnsiString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecObject;
@@ -290,12 +324,12 @@ begin
   FVarrec.VType:=vtObject;
   FVarrec.VObject:=C;
   DoFromVarRec;
-  CheckSame(C,Value.AsObject,'Value');
+  TestContext.AssertTrue((C)=(Value.AsObject), 'Value');
   // In delphi it is String, but not widestring !
-  CheckTrue(TypeInfo(TComponent)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, True,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(TypeInfo(TComponent)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(True), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecClass;
@@ -307,12 +341,12 @@ begin
   FVarrec.VType:=vtClass;
   FVarrec.VClass:=C;
   DoFromVarRec;
-  CheckEquals(C,Value.AsClass,'Value');
+  TestContext.AssertTrue((C)=(Value.AsClass), 'Value');
   // In delphi it is String, but not widestring !
-  CheckTrue(TypeInfo(TClass)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, True,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(TypeInfo(TClass)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(True), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 
 end;
 
@@ -321,11 +355,11 @@ begin
   FVarrec.VType:=vtWideChar;
   FVarrec.VWideChar:='c';
   DoFromVarRec;
-  CheckEquals('c',Value.AsWideChar,'Value');
-  CheckTrue(TypeInfo(WideChar)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue(('c')=(Value.AsWideChar), 'Value');
+  TestContext.AssertTrue(TypeInfo(WideChar)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecPWideChar;
@@ -337,11 +371,11 @@ begin
   FVarrec.VType:=vtPWideChar;
   FVarrec.VPWideChar:=PWideChar(S);
   DoFromVarRec;
-  CheckEquals('123',Value.AsUnicodeString,'Value');
-  CheckTrue(TypeInfo(WideString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('123')=(Value.AsUnicodeString), 'Value');
+  TestContext.AssertTrue(TypeInfo(WideString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecAnsiString;
@@ -353,11 +387,11 @@ begin
   FVarrec.VType:=vtAnsiString;
   FVarrec.VAnsiString:=Pointer(S);
   DoFromVarRec;
-  CheckEquals('123',Value.AsAnsiString,'Value');
-  CheckTrue(TypeInfo(AnsiString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('123')=(Value.AsAnsiString), 'Value');
+  TestContext.AssertTrue(TypeInfo(AnsiString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecCurrency;
@@ -370,11 +404,11 @@ begin
   FVarRec.VCurrency:=@C;
   FVarRec.vType:=vtCurrency;
   DoFromVarRec;
-  CheckEquals(1.23,Value.AsCurrency,0.01,'Value');
-  CheckTrue(TypeInfo(Currency)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((1.23)-(Value.AsCurrency))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(Currency)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecVariant;
@@ -387,11 +421,11 @@ begin
   FVarRec.VVariant:=@V;
   FVarRec.vType:=vtVariant;
   DoFromVarRec;
-  CheckEquals(V,String(Value.AsVariant),'Value');
-  CheckTrue(TypeInfo(Variant)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue((V)=(String(Value.AsVariant)), 'Value');
+  TestContext.AssertTrue(TypeInfo(Variant)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecInterface;
@@ -403,11 +437,11 @@ begin
   FVarRec.VInterface:=U;
   FVarRec.VType:=vtInterface;
   DoFromVarRec;
-  CheckTrue(U=Value.AsInterface,'Value');
-  CheckTrue(TypeInfo(IInterface)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(U=Value.AsInterface, 'Value');
+  TestContext.AssertTrue(TypeInfo(IInterface)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecWideString;
@@ -419,11 +453,11 @@ begin
   FVarrec.VType:=vtWideString;
   FVarrec.VWideString:=Pointer(S);
   DoFromVarRec;
-  CheckEquals('123',Value.AsUnicodeString,'Value');
-  CheckTrue(TypeInfo(WideString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('123')=(Value.AsUnicodeString), 'Value');
+  TestContext.AssertTrue(TypeInfo(WideString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecInt64;
@@ -436,11 +470,11 @@ begin
   FVarRec.VInt64:=@I;
   FVarRec.vType:=vtInt64;
   DoFromVarRec;
-  CheckEquals(1,Value.AsInt64,'Value');
-  CheckTrue(TypeInfo(Int64)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInt64), 'Value');
+  TestContext.AssertTrue(TypeInfo(Int64)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecQWord;
@@ -454,11 +488,11 @@ begin
   FVarRec.VQWord:=@Q;
   FVarRec.vType:=vtQWord;
   DoFromVarRec;
-  CheckEquals(1,Value.AsUInt64,'Value');
-  CheckTrue(TypeInfo(QWord)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsUInt64), 'Value');
+  TestContext.AssertTrue(TypeInfo(QWord)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVarRecUnicodeString;
@@ -471,11 +505,11 @@ begin
   FVarrec.VType:=vtUnicodeString;
   FVarrec.VUnicodeString:=Pointer(S);
   DoFromVarRec;
-  CheckEquals('123',Value.AsUnicodeString,'Value');
-  CheckTrue(TypeInfo(UnicodeString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('123')=(Value.AsUnicodeString), 'Value');
+  TestContext.AssertTrue(TypeInfo(UnicodeString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 
@@ -485,11 +519,11 @@ procedure TTestValueVariant.TestFromVariantInteger;
 begin
   FSrc:=Integer(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Longint)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Longint)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 
@@ -497,22 +531,22 @@ procedure TTestValueVariant.TestFromVariantBoolean;
 begin
   FSrc:=True;
   DoFromVariant;
-  CheckEquals(True,Value.AsBoolean,'Value');
-  CheckTrue(TypeInfo(Boolean)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((True)=(Value.AsBoolean), 'Value');
+  TestContext.AssertTrue(TypeInfo(Boolean)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantSmallInt;
 begin
   FSrc:=SmallInt(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(SmallInt)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(SmallInt)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantOleStr;
@@ -520,77 +554,77 @@ procedure TTestValueVariant.TestFromVariantOleStr;
 begin
   FSrc:=WideString('1.23');
   DoFromVariant;
-  CheckEquals('1.23',Value.AsUnicodeString,'Value');
-  CheckTrue(TypeInfo(WideString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('1.23')=(Value.AsUnicodeString), 'Value');
+  TestContext.AssertTrue(TypeInfo(WideString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantInt64;
 begin
   FSrc:=Int64(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInt64,'Value');
-  CheckTrue(TypeInfo(Int64)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInt64), 'Value');
+  TestContext.AssertTrue(TypeInfo(Int64)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantQWord;
 begin
   FSrc:=QWord(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInt64,'Value');
-  CheckTrue(TypeInfo(QWord)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInt64), 'Value');
+  TestContext.AssertTrue(TypeInfo(QWord)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantShortInt;
 begin
   FSrc:=ShortInt(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Shortint)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Shortint)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantByte;
 begin
   FSrc:=Byte(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Byte)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Byte)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantWord;
 begin
   FSrc:=Word(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Word)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Word)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantLongWord;
 begin
   FSrc:=Cardinal(1);
   DoFromVariant;
-  CheckEquals(1,Value.AsInteger,'Value');
-  CheckTrue(TypeInfo(Cardinal)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue((1)=(Value.AsInteger), 'Value');
+  TestContext.AssertTrue(TypeInfo(Cardinal)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantSingle;
@@ -598,22 +632,22 @@ begin
   FSrc:=Single(1.23); // Results in double...
   VarCast(FSrc,FSrc,varSingle);
   DoFromVariant;
-  CheckEquals(1.23,Value.AsSingle,0.01,'Value');
-  CheckTrue(TypeInfo(Single)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((1.23)-(Value.AsSingle))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(Single)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantDouble;
 begin
   FSrc:=Double(1.23);
   DoFromVariant;
-  CheckEquals(1.23,Value.AsDouble,0.01,'Value');
-  CheckTrue(TypeInfo(Double)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((1.23)-(Value.AsDouble))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(Double)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantDate;
@@ -625,11 +659,11 @@ begin
   D:=Time;
   FSrc:=D;
   DoFromVariant;
-  CheckEquals(D,Value.AsDateTime,0.01,'Value');
-  CheckTrue(TypeInfo(TDateTime)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((D)-(Value.AsDateTime))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(TDateTime)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantDispatch;
@@ -640,11 +674,11 @@ begin
   U:=TMyUNknown.Create;
   FSrc:=U;
   DoFromVariant;
-  CheckTrue(U=Value.AsInterface,'Value');
-  CheckTrue(TypeInfo(IDispatch)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(U=Value.AsInterface, 'Value');
+  TestContext.AssertTrue(TypeInfo(IDispatch)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantError;
@@ -653,11 +687,11 @@ begin
   TVarData(FSrc).verror:=S_FALSE;
   TVarData(FSrc).vtype:=varError;
   DoFromVariant;
-  CheckTrue(S_FALSE=Value.AsError,'Value');
-  CheckTrue(TypeInfo(HRESULT)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, True,'Ordinal');
+  TestContext.AssertTrue(S_FALSE=Value.AsError, 'Value');
+  TestContext.AssertTrue(TypeInfo(HRESULT)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(True), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantUnknown;
@@ -669,33 +703,33 @@ begin
   U:=TMyUNknown.Create;
   FSrc:=U;
   DoFromVariant;
-  CheckTrue(U=Value.AsInterface,'Value');
-  CheckTrue(TypeInfo(IInterface)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(U=Value.AsInterface, 'Value');
+  TestContext.AssertTrue(TypeInfo(IInterface)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantCurrency;
 begin
   FSrc:=Currency(1.23);
   DoFromVariant;
-  CheckEquals(1.23,Value.AsCurrency,0.01,'Value');
-  CheckTrue(TypeInfo(Currency)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(Abs((1.23)-(Value.AsCurrency))<=(0.01), 'Value');
+  TestContext.AssertTrue(TypeInfo(Currency)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantString;
 begin
   FSrc:='1.23';
   DoFromVariant;
-  CheckEquals('1.23',Value.AsString,'Value');
-  CheckTrue(TypeInfo(AnsiString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('1.23')=(Value.AsString), 'Value');
+  TestContext.AssertTrue(TypeInfo(AnsiString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 procedure TTestValueVariant.TestFromVariantUnicodeString;
@@ -703,11 +737,11 @@ begin
   TVarData(FSrc).vustring:=Pointer(UnicodeString('1.23'));
   TVarData(FSrc).vtype:=varUString;
   DoFromVariant;
-  CheckEquals('1.23',Value.AsString,'Value');
-  CheckTrue(TypeInfo(UnicodeString)=Value.TypeInfo,'Correct typeinfo');
-  CheckEquals(Value.IsClass, False,'Class');
-  CheckEquals(Value.IsObject, False,'Object');
-  CheckEquals(Value.IsOrdinal, False,'Ordinal');
+  TestContext.AssertTrue(('1.23')=(Value.AsString), 'Value');
+  TestContext.AssertTrue(TypeInfo(UnicodeString)=Value.TypeInfo, 'Correct typeinfo');
+  TestContext.AssertTrue((Value.IsClass)=(False), 'Class');
+  TestContext.AssertTrue((Value.IsObject)=(False), 'Object');
+  TestContext.AssertTrue((Value.IsOrdinal)=(False), 'Ordinal');
 end;
 
 
@@ -719,10 +753,10 @@ Var
 
 begin
   S:=ArrayOfConstToTValueArray([1,'something',1.23]);
-  CheckEquals(3,Length(S),'Length');
-  CheckEquals(1,S[0].AsInteger,'Value 1');
-  CheckEquals('something',S[1].AsString,'Value 3');
-  CheckEquals(1.23,S[2].AsDouble,0.01,'Value 3');
+  TestContext.AssertTrue((3)=(Length(S)), 'Length');
+  TestContext.AssertTrue((1)=(S[0].AsInteger), 'Value 1');
+  TestContext.AssertTrue(('something')=(S[1].AsString), 'Value 3');
+  TestContext.AssertTrue(Abs((1.23)-(S[2].AsDouble))<=(0.01), 'Value 3');
 end;
 
 procedure TTestValueVariant.TestCastAnsiString;
@@ -734,8 +768,8 @@ begin
   s := 'Test';
   v := s;
   vvar := TValue.{$ifdef fpc}specialize{$endif}From<Variant>(v);
-  CheckTrue(vvar.TryCast(TypeInfo(AnsiString), vstr));
-  CheckEquals(s, vstr.AsAnsiString);
+  TestContext.AssertTrue(vvar.TryCast(TypeInfo(AnsiString), vstr), '');
+  TestContext.AssertTrue((s)=(vstr.AsAnsiString), '');
 end;
 
 {$ifndef FPC_WIDESTRING_EQUAL_UNICODESTRING}
@@ -749,8 +783,8 @@ begin
   TVarData(v).vType := varUString;
   TVarData(v).vuString := Pointer(u);
   vvar := TValue.{$ifdef fpc}specialize{$endif}From<Variant>(v);
-  CheckTrue(vvar.TryCast(TypeInfo(UnicodeString), vstr));
-  CheckEquals(u, vstr.AsUnicodeString);
+  TestContext.AssertTrue(vvar.TryCast(TypeInfo(UnicodeString), vstr), '');
+  TestContext.AssertTrue((u)=(vstr.AsUnicodeString), '');
 end;
 {$endif}
 
@@ -763,8 +797,8 @@ begin
   w := 'Test';
   v := w;
   vvar := TValue.{$ifdef fpc}specialize{$endif}From<Variant>(v);
-  CheckTrue(vvar.TryCast(TypeInfo(WideString), vstr));
-  CheckEquals(w, vstr.AsUnicodeString);
+  TestContext.AssertTrue(vvar.TryCast(TypeInfo(WideString), vstr), '');
+  TestContext.AssertTrue((w)=(vstr.AsUnicodeString), '');
 end;
 
 procedure TTestValueVariant.TestCastShortString;
@@ -776,8 +810,8 @@ begin
   s := 'Test';
   v := s;
   vvar := TValue.{$ifdef fpc}specialize{$endif}From<Variant>(v);
-  CheckTrue(vvar.TryCast(TypeInfo(ShortString), vstr));
-  CheckEquals(s, vstr.AsAnsiString);
+  TestContext.AssertTrue(vvar.TryCast(TypeInfo(ShortString), vstr), '');
+  TestContext.AssertTrue((s)=(vstr.AsAnsiString), '');
 end;
 
 { TMyUNknown }
@@ -823,20 +857,20 @@ begin
   l := 42;
   ml := 42;
   TValue.Make(@l, TypeInfo(LongInt), v);
-  Check(v.IsType(TypeInfo(LongInt)));
-  Check(not v.IsType(TypeInfo(TMyLongInt)));
-  Check(not v.IsType(TypeInfo(String)));
-  Check(v.{$ifdef fpc}specialize{$endif} IsType<LongInt>);
-  Check(not v.{$ifdef fpc}specialize{$endif} IsType<TMyLongInt>);
-  Check(not v.{$ifdef fpc}specialize{$endif} IsType<String>);
+  TestContext.AssertTrue(v.IsType(TypeInfo(LongInt)), '');
+  TestContext.AssertTrue(not v.IsType(TypeInfo(TMyLongInt)), '');
+  TestContext.AssertTrue(not v.IsType(TypeInfo(String)), '');
+  TestContext.AssertTrue(v.{$ifdef fpc}specialize{$endif} IsType<LongInt>, '');
+  TestContext.AssertTrue(not v.{$ifdef fpc}specialize{$endif} IsType<TMyLongInt>, '');
+  TestContext.AssertTrue(not v.{$ifdef fpc}specialize{$endif} IsType<String>, '');
 
   TValue.Make(@ml, TypeInfo(TMyLongInt), v);
-  Check(v.IsType(TypeInfo(TMyLongInt)));
-  Check(not v.IsType(TypeInfo(LongInt)));
-  Check(not v.IsType(TypeInfo(String)));
-  Check(v.{$ifdef fpc}specialize{$endif} IsType<TMyLongInt>);
-  Check(not v.{$ifdef fpc}specialize{$endif} IsType<LongInt>);
-  Check(not v.{$ifdef fpc}specialize{$endif} IsType<String>);
+  TestContext.AssertTrue(v.IsType(TypeInfo(TMyLongInt)), '');
+  TestContext.AssertTrue(not v.IsType(TypeInfo(LongInt)), '');
+  TestContext.AssertTrue(not v.IsType(TypeInfo(String)), '');
+  TestContext.AssertTrue(v.{$ifdef fpc}specialize{$endif} IsType<TMyLongInt>, '');
+  TestContext.AssertTrue(not v.{$ifdef fpc}specialize{$endif} IsType<LongInt>, '');
+  TestContext.AssertTrue(not v.{$ifdef fpc}specialize{$endif} IsType<String>, '');
 end;
 
 procedure TTestValueSimple.TestMakeNil;
@@ -844,55 +878,55 @@ var
   value: TValue;
 begin
   TValue.Make(Nil, Nil, value);
-  CheckTrue(value.Kind = tkUnknown);
-  CheckTrue(value.IsEmpty);
-  CheckTrue(value.IsObject);
-  CheckTrue(value.IsClass);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsArray);
-  CheckTrue(value.AsObject = Nil);
-  CheckTrue(value.AsClass = Nil);
-  CheckTrue(value.AsInterface = Nil);
-  CheckEquals(0, value.AsOrdinal);
+  TestContext.AssertTrue(value.Kind = tkUnknown, '');
+  TestContext.AssertTrue(value.IsEmpty, '');
+  TestContext.AssertTrue(value.IsObject, '');
+  TestContext.AssertTrue(value.IsClass, '');
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(value.AsObject = Nil, '');
+  TestContext.AssertTrue(value.AsClass = Nil, '');
+  TestContext.AssertTrue(value.AsInterface = Nil, '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
 
   TValue.Make(Nil, TypeInfo(TObject), value);
-  CheckTrue(value.IsEmpty);
-  CheckTrue(value.IsObject);
-  CheckTrue(value.IsClass);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsArray);
-  CheckTrue(value.AsObject=Nil);
-  CheckTrue(value.AsClass=Nil);
-  CheckTrue(value.AsInterface=Nil);
-  CheckEquals(0, value.AsOrdinal);
+  TestContext.AssertTrue(value.IsEmpty, '');
+  TestContext.AssertTrue(value.IsObject, '');
+  TestContext.AssertTrue(value.IsClass, '');
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(value.AsObject=Nil, '');
+  TestContext.AssertTrue(value.AsClass=Nil, '');
+  TestContext.AssertTrue(value.AsInterface=Nil, '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
 
   TValue.Make(Nil, TypeInfo(TClass), value);
-  CheckTrue(value.IsEmpty);
-  CheckTrue(value.IsClass);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsArray);
-  CheckTrue(value.AsObject=Nil);
-  CheckTrue(value.AsClass=Nil);
-  CheckTrue(value.AsInterface=Nil);
-  CheckEquals(0, value.AsOrdinal);
+  TestContext.AssertTrue(value.IsEmpty, '');
+  TestContext.AssertTrue(value.IsClass, '');
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(value.AsObject=Nil, '');
+  TestContext.AssertTrue(value.AsClass=Nil, '');
+  TestContext.AssertTrue(value.AsInterface=Nil, '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
 
   TValue.Make(Nil, TypeInfo(LongInt), value);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsEmpty);
-  CheckFalse(value.IsClass);
-  CheckFalse(value.IsObject);
-  CheckFalse(value.IsArray);
-  CheckEquals(0, value.AsOrdinal);
-  CheckEquals(0, value.AsInteger);
-  CheckEquals(0, value.AsInt64);
-  CheckEquals(0, value.AsUInt64);
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsEmpty), '');
+  TestContext.AssertTrue(not (value.IsClass), '');
+  TestContext.AssertTrue(not (value.IsObject), '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
+  TestContext.AssertTrue((0)=(value.AsInteger), '');
+  TestContext.AssertTrue((0)=(value.AsInt64), '');
+  TestContext.AssertTrue((0)=(value.AsUInt64), '');
 
   TValue.Make(Nil, TypeInfo(String), value);
-  CheckFalse(value.IsEmpty);
-  CheckFalse(value.IsObject);
-  CheckFalse(value.IsClass);
-  CheckFalse(value.IsArray);
-  CheckEquals('', value.AsString);
+  TestContext.AssertTrue(not (value.IsEmpty), '');
+  TestContext.AssertTrue(not (value.IsObject), '');
+  TestContext.AssertTrue(not (value.IsClass), '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(('')=(value.AsString), '');
 end;
 
 procedure TTestValueSimple.TestMakeObject;
@@ -903,11 +937,11 @@ begin
   ATestClass := TTestValueClass.Create;
   ATestClass.AInteger := 54329;
   TValue.Make(@ATestClass, TypeInfo(TTestValueClass),AValue);
-  CheckEquals(AValue.IsClass, False);
-  CheckEquals(AValue.IsObject, True);
-  Check(AValue.AsObject=ATestClass);
-  Check(PPointer(AValue.GetReferenceToRawData)^ = Pointer(ATestClass));
-  CheckEquals(TTestValueClass(AValue.AsObject).AInteger, 54329);
+  TestContext.AssertTrue((AValue.IsClass)=(False), '');
+  TestContext.AssertTrue((AValue.IsObject)=(True), '');
+  TestContext.AssertTrue(AValue.AsObject=ATestClass, '');
+  TestContext.AssertTrue(PPointer(AValue.GetReferenceToRawData)^ = Pointer(ATestClass), '');
+  TestContext.AssertTrue((TTestValueClass(AValue.AsObject).AInteger)=(54329), '');
   ATestClass.Free;
 end;
 
@@ -920,16 +954,16 @@ begin
   arr[0] := 42;
   arr[1] := 21;
   TValue.Make(@arr, TypeInfo(TArrayOfLongintDyn), value);
-  CheckEquals(value.IsArray, True);
-  CheckEquals(value.IsObject, False);
-  CheckEquals(value.IsOrdinal, False);
-  CheckEquals(value.IsClass, False);
-  CheckEquals(value.GetArrayLength, 2);
-  CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-  CheckEquals(value.GetArrayElement(1).AsInteger, 21);
-  Check(PPointer(value.GetReferenceToRawData)^ = Pointer(arr));
+  TestContext.AssertTrue((value.IsArray)=(True), '');
+  TestContext.AssertTrue((value.IsObject)=(False), '');
+  TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+  TestContext.AssertTrue((value.IsClass)=(False), '');
+  TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+  TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+  TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
+  TestContext.AssertTrue(PPointer(value.GetReferenceToRawData)^ = Pointer(arr), '');
   value.SetArrayElement(0, Integer(84));
-  CheckEquals(arr[0], 84);
+  TestContext.AssertTrue((arr[0])=(84), '');
 end;
 
 procedure TTestValueArray.TestMakeArrayStatic;
@@ -944,16 +978,16 @@ begin
   arr[0] := 42;
   arr[1] := 21;
   TValue.Make(@arr, TypeInfo(TArrStat), value);
-  CheckEquals(value.IsArray, True);
-  CheckEquals(value.IsObject, False);
-  CheckEquals(value.IsOrdinal, False);
-  CheckEquals(value.IsClass, False);
-  CheckEquals(value.GetArrayLength, 2);
-  CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-  CheckEquals(value.GetArrayElement(1).AsInteger, 21);
+  TestContext.AssertTrue((value.IsArray)=(True), '');
+  TestContext.AssertTrue((value.IsObject)=(False), '');
+  TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+  TestContext.AssertTrue((value.IsClass)=(False), '');
+  TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+  TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+  TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
   value.SetArrayElement(0, integer(84));
   { since this is a static array the original array isn't touched! }
-  CheckEquals(arr[0], 42);
+  TestContext.AssertTrue((arr[0])=(42), '');
 
   arr2D[0, 0] := 42;
   arr2D[0, 1] := 21;
@@ -961,33 +995,35 @@ begin
   arr2D[1, 1] := 63;
 
   TValue.Make(@arr2D, TypeInfo(TArrStat2D), value);
-  CheckEquals(value.IsArray, True);
-  CheckEquals(value.GetArrayLength, 4);
-  CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-  CheckEquals(value.GetArrayElement(1).AsInteger, 21);
-  CheckEquals(value.GetArrayElement(2).AsInteger, 84);
-  CheckEquals(value.GetArrayElement(3).AsInteger, 63);
+  TestContext.AssertTrue((value.IsArray)=(True), '');
+  TestContext.AssertTrue((value.GetArrayLength)=(4), '');
+  TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+  TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
+  TestContext.AssertTrue((value.GetArrayElement(2).AsInteger)=(84), '');
+  TestContext.AssertTrue((value.GetArrayElement(3).AsInteger)=(63), '');
 end;
 
 {$ifdef fpc}
 procedure TTestValueArray.TestMakeArrayOpen;
+
+
 
   procedure TestOpenArrayValueCopy(aArr: array of LongInt);
   var
     value: TValue;
   begin
     TValue.MakeOpenArray(@aArr[0], Length(aArr), PTypeInfo(TypeInfo(aArr)), value);
-    CheckEquals(value.IsArray, True);
-    CheckEquals(value.IsOpenArray, True);
-    CheckEquals(value.IsObject, False);
-    CheckEquals(value.IsOrdinal, False);
-    CheckEquals(value.IsClass, False);
-    CheckEquals(value.GetArrayLength, 2);
-    CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-    CheckEquals(value.GetArrayElement(1).AsInteger, 21);
+    TestContext.AssertTrue((value.IsArray)=(True), '');
+    TestContext.AssertTrue((value.IsOpenArray)=(True), '');
+    TestContext.AssertTrue((value.IsObject)=(False), '');
+    TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+    TestContext.AssertTrue((value.IsClass)=(False), '');
+    TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+    TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+    TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
     value.SetArrayElement(0, Integer(84));
     { since this is an open array the original array is modified! }
-    CheckEquals(aArr[0], 84);
+    TestContext.AssertTrue((aArr[0])=(84), '');
   end;
 
   procedure TestOpenArrayValueVar(var aArr: array of LongInt);
@@ -995,17 +1031,17 @@ procedure TTestValueArray.TestMakeArrayOpen;
     value: TValue;
   begin
     TValue.MakeOpenArray(@aArr[0], Length(aArr), PTypeInfo(TypeInfo(aArr)), value);
-    CheckEquals(value.IsArray, True);
-    CheckEquals(value.IsOpenArray, True);
-    CheckEquals(value.IsObject, False);
-    CheckEquals(value.IsOrdinal, False);
-    CheckEquals(value.IsClass, False);
-    CheckEquals(value.GetArrayLength, 2);
-    CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-    CheckEquals(value.GetArrayElement(1).AsInteger, 21);
+    TestContext.AssertTrue((value.IsArray)=(True), '');
+    TestContext.AssertTrue((value.IsOpenArray)=(True), '');
+    TestContext.AssertTrue((value.IsObject)=(False), '');
+    TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+    TestContext.AssertTrue((value.IsClass)=(False), '');
+    TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+    TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+    TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
     value.SetArrayElement(0, 84);
     { since this is an open array the original array is modified! }
-    CheckEquals(aArr[0], 84);
+    TestContext.AssertTrue((aArr[0])=(84), '');
   end;
 
   procedure TestOpenArrayValueOut(var aArr: array of LongInt);
@@ -1013,21 +1049,21 @@ procedure TTestValueArray.TestMakeArrayOpen;
     value: TValue;
   begin
     TValue.MakeOpenArray(@aArr[0], Length(aArr), PTypeInfo(TypeInfo(aArr)), value);
-    CheckEquals(value.IsArray, True);
-    CheckEquals(value.IsOpenArray, True);
-    CheckEquals(value.IsObject, False);
-    CheckEquals(value.IsOrdinal, False);
-    CheckEquals(value.IsClass, False);
-    CheckEquals(value.GetArrayLength, 2);
-    CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-    CheckEquals(value.GetArrayElement(1).AsInteger, 21);
+    TestContext.AssertTrue((value.IsArray)=(True), '');
+    TestContext.AssertTrue((value.IsOpenArray)=(True), '');
+    TestContext.AssertTrue((value.IsObject)=(False), '');
+    TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+    TestContext.AssertTrue((value.IsClass)=(False), '');
+    TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+    TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+    TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(21), '');
     value.SetArrayElement(0, 84);
     value.SetArrayElement(1, 128);
     { since this is an open array the original array is modified! }
-    CheckEquals(aArr[0], 84);
-    CheckEquals(aArr[1], 128);
-    CheckEquals(value.GetArrayElement(0).AsInteger, 84);
-    CheckEquals(value.GetArrayElement(1).AsInteger, 128);
+    TestContext.AssertTrue((aArr[0])=(84), '');
+    TestContext.AssertTrue((aArr[1])=(128), '');
+    TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(84), '');
+    TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(128), '');
   end;
 
 var
@@ -1037,13 +1073,13 @@ begin
 
   arr := [42, 21];
   TestOpenArrayValueVar(arr);
-  CheckEquals(arr[0], 84);
-  CheckEquals(arr[1], 21);
+  TestContext.AssertTrue((arr[0])=(84), '');
+  TestContext.AssertTrue((arr[1])=(21), '');
 
   arr := [42, 21];
   TestOpenArrayValueOut(arr);
-  CheckEquals(arr[0], 84);
-  CheckEquals(arr[1], 128);
+  TestContext.AssertTrue((arr[0])=(84), '');
+  TestContext.AssertTrue((arr[1])=(128), '');
 end;
 
 {$endif}
@@ -1057,11 +1093,11 @@ begin
   fs := 3.14;
 
   TValue.Make(@fs, TypeInfo(Single), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=fs);
-  Check(v.GetReferenceToRawData <> @fs);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=fs, '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fs, '');
 
   try
     hadexcept := False;
@@ -1070,7 +1106,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No signed type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No signed type conversion exception');
 
   try
     hadexcept := False;
@@ -1079,7 +1115,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No unsigned type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No unsigned type conversion exception');
 end;
 
 procedure TTestValueSimple.TestMakeDouble;
@@ -1091,11 +1127,11 @@ begin
   fd := 3.14;
 
   TValue.Make(@fd, TypeInfo(Double), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=fd);
-  Check(v.GetReferenceToRawData <> @fd);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=fd, '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fd, '');
 
   try
     hadexcept := False;
@@ -1104,7 +1140,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No signed type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No signed type conversion exception');
 
   try
     hadexcept := False;
@@ -1113,7 +1149,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No unsigned type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No unsigned type conversion exception');
 end;
 
 procedure TTestValueSimple.TestMakeExtended;
@@ -1125,11 +1161,11 @@ begin
   fe := 3.14;
 
   TValue.Make(@fe, TypeInfo(Extended), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=fe);
-  Check(v.GetReferenceToRawData <> @fe);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=fe, '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fe, '');
 
   try
     hadexcept := False;
@@ -1138,7 +1174,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No signed type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No signed type conversion exception');
 
   try
     hadexcept := False;
@@ -1147,7 +1183,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No unsigned type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No unsigned type conversion exception');
 end;
 
 procedure TTestValueSimple.TestMakeCurrency;
@@ -1159,12 +1195,12 @@ begin
   fcu := 3.14;
 
   TValue.Make(@fcu, TypeInfo(Currency), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=Extended(fcu));
-  Check(v.AsCurrency=fcu);
-  Check(v.GetReferenceToRawData <> @fcu);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=Extended(fcu), '');
+  TestContext.AssertTrue(v.AsCurrency=fcu, '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fcu, '');
 
   try
     hadexcept := False;
@@ -1173,7 +1209,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No signed type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No signed type conversion exception');
 
   try
     hadexcept := False;
@@ -1182,7 +1218,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No unsigned type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No unsigned type conversion exception');
 end;
 
 procedure TTestValueSimple.TestMakeComp;
@@ -1198,29 +1234,29 @@ begin
   if v.Kind <> tkFloat then
     Exit;
 
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=Extended(fco));
-  Check(v.GetReferenceToRawData <> @fco);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=Extended(fco), '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fco, '');
 
   try
     hadexcept := False;
-    CheckEquals(v.AsInt64, 314);
+    TestContext.AssertTrue((v.AsInt64)=(314), '');
   except
     hadexcept := True;
   end;
 
-  CheckFalse(hadexcept, 'Had signed type conversion exception');
+  TestContext.AssertTrue(not (hadexcept), 'Had signed type conversion exception');
 
   try
     hadexcept := False;
-    CheckEquals(v.AsUInt64, 314);
+    TestContext.AssertTrue((v.AsUInt64)=(314), '');
   except
     hadexcept := True;
   end;
 
-  CheckFalse(hadexcept, 'Had unsigned type conversion exception');
+  TestContext.AssertTrue(not (hadexcept), 'Had unsigned type conversion exception');
 end;
 
 procedure TTestValueSimple.TestMakeEnum;
@@ -1231,17 +1267,17 @@ begin
   e := te1;
 
   TValue.Make(@e, TypeInfo(TTestEnum), v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @e);
-  Check(TTestEnum(v.AsOrdinal) = te1);
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @e, '');
+  TestContext.AssertTrue(TTestEnum(v.AsOrdinal) = te1, '');
 end;
 
 procedure TTestValueSimple.TestMakeAnsiChar;
@@ -1252,18 +1288,18 @@ begin
   c := #20;
 
   TValue.Make(@c, TypeInfo(AnsiChar), v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @c);
-  Check(AnsiChar(v.AsOrdinal) = #20);
-  Check(v.AsAnsiChar = #20);
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @c, '');
+  TestContext.AssertTrue(AnsiChar(v.AsOrdinal) = #20, '');
+  TestContext.AssertTrue(v.AsAnsiChar = #20, '');
 end;
 
 procedure TTestValueSimple.TestMakeWideChar;
@@ -1274,18 +1310,18 @@ begin
   c := #$1234;
 
   TValue.Make(@c, TypeInfo(WideChar), v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @c);
-  Check(WideChar(v.AsOrdinal) = #$1234);
-  Check(v.AsWideChar = #$1234);
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @c, '');
+  TestContext.AssertTrue(WideChar(v.AsOrdinal) = #$1234, '');
+  TestContext.AssertTrue(v.AsWideChar = #$1234, '');
 end;
 
 procedure TTestValueSimple.TestMakeNativeInt;
@@ -1298,26 +1334,26 @@ begin
   fni := 2021;
 
   TValue.Make(fni, TypeInfo(LongInt), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, True);
-  Check(NativeInt(v.GetReferenceToRawData) <> fni);
-  CheckEquals(v.AsOrdinal, 2021);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(True), '');
+  TestContext.AssertTrue(NativeInt(v.GetReferenceToRawData) <> fni, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(2021), '');
 
   s := 'Hello World';
   TValue.Make(NativeInt(s), TypeInfo(AnsiString), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  CheckEquals(v.AsString, s);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue((v.AsString)=(s), '');
 
   o := TObject.Create;
   TValue.Make(NativeInt(o), TypeInfo(TObject), v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, True);
-  CheckEquals(v.IsOrdinal, False);
-  Check(PPointer(v.GetReferenceToRawData)^ = Pointer(o));
-  Check(v.AsObject = o);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(True), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(PPointer(v.GetReferenceToRawData)^ = Pointer(o), '');
+  TestContext.AssertTrue(v.AsObject = o, '');
   o.Free;
 end;
 
@@ -1330,17 +1366,17 @@ begin
   vv := 'Some String';
 
   TValue.Make(@vv, TypeInfo(Variant), v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(not v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(not v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @vv);
-  Check(String(v.AsVariant) = 'Some String');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @vv, '');
+  TestContext.AssertTrue(String(v.AsVariant) = 'Some String', '');
 end;
 
 procedure TTestValueArray.TestMakeFromArray;
@@ -1357,37 +1393,37 @@ begin
   ti := PTypeInfo(TypeInfo(LongInt));
 
   v := TValue.FromArray(TypeInfo(TArrayOfLongintDyn), arr);
-  Check(not v.IsEmpty, 'Array is empty');
-  Check(v.IsArray, 'Value is not an array');
-  CheckEquals(Length(arr), v.GetArrayLength, 'Array length does not match');
+  TestContext.AssertTrue(not v.IsEmpty, 'Array is empty');
+  TestContext.AssertTrue(v.IsArray, 'Value is not an array');
+  TestContext.AssertTrue((Length(arr))=(v.GetArrayLength), 'Array length does not match');
   for i := 0 to High(arr) do begin
     varr := v.GetArrayElement(i);
-    Check(varr.TypeInfo = ti, 'Type info of array element does not match');
-    Check(varr.IsOrdinal, 'Array element is not an ordinal');
-    Check(varr.AsInteger = arr[i].AsInteger, 'Value of array element does not match');
+    TestContext.AssertTrue(varr.TypeInfo = ti, 'Type info of array element does not match');
+    TestContext.AssertTrue(varr.IsOrdinal, 'Array element is not an ordinal');
+    TestContext.AssertTrue(varr.AsInteger = arr[i].AsInteger, 'Value of array element does not match');
   end;
 
   subarr := Copy(arr, 0, 4);
   v := TValue.FromArray(TypeInfo(TArrayOfLongintStatic), subarr);
-  Check(not v.IsEmpty, 'Array is empty');
-  Check(v.IsArray, 'Value is not an array');
-  CheckEquals(Length(subarr), v.GetArrayLength, 'Array length does not match');
+  TestContext.AssertTrue(not v.IsEmpty, 'Array is empty');
+  TestContext.AssertTrue(v.IsArray, 'Value is not an array');
+  TestContext.AssertTrue((Length(subarr))=(v.GetArrayLength), 'Array length does not match');
   for i := 0 to High(subarr) do begin
     varr := v.GetArrayElement(i);
-    Check(varr.TypeInfo = ti, 'Type info of array element does not match');
-    Check(varr.IsOrdinal, 'Array element is not an ordinal');
-    Check(varr.AsInteger = subarr[i].AsInteger, 'Value of array element does not match');
+    TestContext.AssertTrue(varr.TypeInfo = ti, 'Type info of array element does not match');
+    TestContext.AssertTrue(varr.IsOrdinal, 'Array element is not an ordinal');
+    TestContext.AssertTrue(varr.AsInteger = subarr[i].AsInteger, 'Value of array element does not match');
   end;
 
   v := TValue.FromArray(TypeInfo(TArrayOfLongint2DStatic), arr);
-  Check(not v.IsEmpty, 'Array is empty');
-  Check(v.IsArray, 'Value is not an array');
-  CheckEquals(Length(arr), v.GetArrayLength, 'Array length does not match');
+  TestContext.AssertTrue(not v.IsEmpty, 'Array is empty');
+  TestContext.AssertTrue(v.IsArray, 'Value is not an array');
+  TestContext.AssertTrue((Length(arr))=(v.GetArrayLength), 'Array length does not match');
   for i := 0 to High(arr) do begin
     varr := v.GetArrayElement(i);
-    Check(varr.TypeInfo = ti, 'Type info of array element does not match');
-    Check(varr.IsOrdinal, 'Array element is not an ordinal');
-    Check(varr.AsInteger = arr[i].AsInteger, 'Value of array element does not match');
+    TestContext.AssertTrue(varr.TypeInfo = ti, 'Type info of array element does not match');
+    TestContext.AssertTrue(varr.IsOrdinal, 'Array element is not an ordinal');
+    TestContext.AssertTrue(varr.AsInteger = arr[i].AsInteger, 'Value of array element does not match');
   end;
 end;
 
@@ -1396,25 +1432,25 @@ var
   value: TValue;
 begin
   TValue.{$ifdef fpc}specialize{$endif} Make<TObject>(Nil, value);
-  CheckTrue(value.IsEmpty);
-  CheckTrue(value.IsObject);
-  CheckTrue(value.IsClass);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsArray);
-  CheckTrue(value.AsObject=Nil);
-  CheckTrue(value.AsClass=Nil);
-  CheckTrue(value.AsInterface=Nil);
-  CheckEquals(0, value.AsOrdinal);
+  TestContext.AssertTrue(value.IsEmpty, '');
+  TestContext.AssertTrue(value.IsObject, '');
+  TestContext.AssertTrue(value.IsClass, '');
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(value.AsObject=Nil, '');
+  TestContext.AssertTrue(value.AsClass=Nil, '');
+  TestContext.AssertTrue(value.AsInterface=Nil, '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
 
   TValue.{$ifdef fpc}specialize{$endif} Make<TClass>(Nil, value);
-  CheckTrue(value.IsEmpty);
-  CheckTrue(value.IsClass);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsArray);
-  CheckTrue(value.AsObject=Nil);
-  CheckTrue(value.AsClass=Nil);
-  CheckTrue(value.AsInterface=Nil);
-  CheckEquals(0, value.AsOrdinal);
+  TestContext.AssertTrue(value.IsEmpty, '');
+  TestContext.AssertTrue(value.IsClass, '');
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(value.AsObject=Nil, '');
+  TestContext.AssertTrue(value.AsClass=Nil, '');
+  TestContext.AssertTrue(value.AsInterface=Nil, '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
 end;
 
 procedure TTestValueSimple.TestMakeGenericLongInt;
@@ -1422,15 +1458,15 @@ var
   value: TValue;
 begin
   TValue.{$ifdef fpc}specialize{$endif} Make<LongInt>(0, value);
-  CheckTrue(value.IsOrdinal);
-  CheckFalse(value.IsEmpty);
-  CheckFalse(value.IsClass);
-  CheckFalse(value.IsObject);
-  CheckFalse(value.IsArray);
-  CheckEquals(0, value.AsOrdinal);
-  CheckEquals(0, value.AsInteger);
-  CheckEquals(0, value.AsInt64);
-  CheckEquals(0, value.AsUInt64);
+  TestContext.AssertTrue(value.IsOrdinal, '');
+  TestContext.AssertTrue(not (value.IsEmpty), '');
+  TestContext.AssertTrue(not (value.IsClass), '');
+  TestContext.AssertTrue(not (value.IsObject), '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue((0)=(value.AsOrdinal), '');
+  TestContext.AssertTrue((0)=(value.AsInteger), '');
+  TestContext.AssertTrue((0)=(value.AsInt64), '');
+  TestContext.AssertTrue((0)=(value.AsUInt64), '');
 end;
 
 procedure TTestValueSimple.TestMakeGenericString;
@@ -1438,11 +1474,11 @@ var
   value: TValue;
 begin
   TValue.{$ifdef fpc}specialize{$endif} Make<String>('test', value);
-  CheckFalse(value.IsEmpty);
-  CheckFalse(value.IsObject);
-  CheckFalse(value.IsClass);
-  CheckFalse(value.IsArray);
-  CheckEquals('test', value.AsString);
+  TestContext.AssertTrue(not (value.IsEmpty), '');
+  TestContext.AssertTrue(not (value.IsObject), '');
+  TestContext.AssertTrue(not (value.IsClass), '');
+  TestContext.AssertTrue(not (value.IsArray), '');
+  TestContext.AssertTrue(('test')=(value.AsString), '');
 end;
 
 procedure TTestValueSimple.TestMakeGenericObject;
@@ -1453,11 +1489,11 @@ begin
   TestClass := TTestValueClass.Create;
   TestClass.AInteger := 54329;
   TValue.{$ifdef fpc}specialize{$endif} Make<TTestValueClass>(TestClass, value);
-  CheckEquals(value.IsClass, False);
-  CheckEquals(value.IsObject, True);
-  Check(value.AsObject=TestClass);
-  Check(PPointer(value.GetReferenceToRawData)^ = Pointer(TestClass));
-  CheckEquals(TTestValueClass(value.AsObject).AInteger, 54329);
+  TestContext.AssertTrue((value.IsClass)=(False), '');
+  TestContext.AssertTrue((value.IsObject)=(True), '');
+  TestContext.AssertTrue(value.AsObject=TestClass, '');
+  TestContext.AssertTrue(PPointer(value.GetReferenceToRawData)^ = Pointer(TestClass), '');
+  TestContext.AssertTrue((TTestValueClass(value.AsObject).AInteger)=(54329), '');
   TestClass.Free;
 end;
 
@@ -1470,11 +1506,11 @@ begin
   fd := 3.14;
 
   TValue.{$ifdef fpc}specialize{$endif} Make<Double>(fd, v);
-  CheckEquals(v.IsClass, False);
-  CheckEquals(v.IsObject, False);
-  CheckEquals(v.IsOrdinal, False);
-  Check(v.AsExtended=fd);
-  Check(v.GetReferenceToRawData <> @fd);
+  TestContext.AssertTrue((v.IsClass)=(False), '');
+  TestContext.AssertTrue((v.IsObject)=(False), '');
+  TestContext.AssertTrue((v.IsOrdinal)=(False), '');
+  TestContext.AssertTrue(v.AsExtended=fd, '');
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @fd, '');
 
   try
     hadexcept := False;
@@ -1483,7 +1519,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No signed type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No signed type conversion exception');
 
   try
     hadexcept := False;
@@ -1492,7 +1528,7 @@ begin
     hadexcept := True;
   end;
 
-  CheckTrue(hadexcept, 'No unsigned type conversion exception');
+  TestContext.AssertTrue(hadexcept, 'No unsigned type conversion exception');
 end;
 
 
@@ -1504,18 +1540,18 @@ begin
   c := #20;
 
   TValue.{$ifdef fpc}specialize{$endif} Make<AnsiChar>(c, v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @c);
-  Check(AnsiChar(v.AsOrdinal) = #20);
-  Check(v.AsAnsiChar = #20);
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @c, '');
+  TestContext.AssertTrue(AnsiChar(v.AsOrdinal) = #20, '');
+  TestContext.AssertTrue(v.AsAnsiChar = #20, '');
 end;
 
 procedure TTestValueSimple.TestMakeGenericWideChar;
@@ -1526,18 +1562,18 @@ begin
   c := #$1234;
 
   TValue.{$ifdef fpc}specialize{$endif} Make<WideChar>(c, v);
-  Check(not v.IsClass);
-  Check(not v.IsArray);
-  Check(not v.IsEmpty);
+  TestContext.AssertTrue(not v.IsClass, '');
+  TestContext.AssertTrue(not v.IsArray, '');
+  TestContext.AssertTrue(not v.IsEmpty, '');
 {$ifdef fpc}
-  Check(not v.IsOpenArray);
+  TestContext.AssertTrue(not v.IsOpenArray, '');
 {$endif}
-  Check(not v.IsObject);
-  Check(v.IsOrdinal);
+  TestContext.AssertTrue(not v.IsObject, '');
+  TestContext.AssertTrue(v.IsOrdinal, '');
 
-  Check(v.GetReferenceToRawData <> @c);
-  Check(WideChar(v.AsOrdinal) = #$1234);
-  Check(v.AsWideChar = #$1234);
+  TestContext.AssertTrue(v.GetReferenceToRawData <> @c, '');
+  TestContext.AssertTrue(WideChar(v.AsOrdinal) = #$1234, '');
+  TestContext.AssertTrue(v.AsWideChar = #$1234, '');
 end;
 
 procedure TTestValueSimple.MakeFromOrdinalTObject;
@@ -1565,41 +1601,41 @@ var
   v: TValue;
 begin
   v := TValue.FromOrdinal(TypeInfo(LongInt), 42);
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, 42);
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(42), '');
 
   v := TValue.FromOrdinal(TypeInfo(Boolean), Ord(True));
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, Ord(True));
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(Ord(True)), '');
 
   v := TValue.FromOrdinal(TypeInfo(Int64), $1234123412341234);
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, $1234123412341234);
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=($1234123412341234), '');
 
   v := TValue.FromOrdinal(TypeInfo(QWord), $1234123412341234);
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, $1234123412341234);
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=($1234123412341234), '');
 
   v := TValue.FromOrdinal(TypeInfo(LongBool), Ord(True));
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, Ord(True));
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(Ord(True)), '');
 
   v := TValue.FromOrdinal(TypeInfo(TTestEnum), Ord(te1));
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, Ord(te1));
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(Ord(te1)), '');
 
   v := TValue.FromOrdinal(TypeInfo(AnsiChar), Ord(#20));
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, Ord(#20));
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(Ord(#20)), '');
 
   v := TValue.FromOrdinal(TypeInfo(WideChar), Ord(#$1234));
-  Check(v.IsOrdinal);
-  CheckEquals(v.AsOrdinal, Ord(#$1234));
+  TestContext.AssertTrue(v.IsOrdinal, '');
+  TestContext.AssertTrue((v.AsOrdinal)=(Ord(#$1234)), '');
 
-  CheckException({$ifdef fpc}@{$endif}MakeFromOrdinalNil, EInvalidCast);
-  CheckException({$ifdef fpc}@{$endif}MakeFromOrdinalTObject, EInvalidCast);
-  CheckException({$ifdef fpc}@{$endif}MakeFromOrdinalSet, EInvalidCast);
-  CheckException({$ifdef fpc}@{$endif}MakeFromOrdinalString, EInvalidCast);
+  TestContext.AssertRaises(EInvalidCast, {$ifdef fpc}@{$endif}MakeFromOrdinalNil, '');
+  TestContext.AssertRaises(EInvalidCast, {$ifdef fpc}@{$endif}MakeFromOrdinalTObject, '');
+  TestContext.AssertRaises(EInvalidCast, {$ifdef fpc}@{$endif}MakeFromOrdinalSet, '');
+  TestContext.AssertRaises(EInvalidCast, {$ifdef fpc}@{$endif}MakeFromOrdinalString, '');
 end;
 
 procedure TTestValueSimple.TestTryCastUnicodeString;
@@ -1610,7 +1646,7 @@ var
 begin
   S := 'str';
   V := S;
-  CheckTrue(V.TryCast(TypeInfo(UnicodeString), V2),'Cast OK');
+  TestContext.AssertTrue(V.TryCast(TypeInfo(UnicodeString), V2), 'Cast OK');
 end;
 
 type
@@ -1621,6 +1657,8 @@ type
   TTestIntfObject = class(TInterfacedObject);
 
 procedure TTestValueSimple.TestMakeManagedRecord;
+
+
   function GetValue: TValue;
   var
     R: TMyManagedRecord;
@@ -1636,7 +1674,7 @@ begin
   V := GetValue();
   P := AllocMem(64);
   R := V.{$ifdef fpc}specialize{$endif} AsType<TMyManagedRecord>;
-  Check((R.Intf as TTestIntfObject).RefCount >= 2, 'RefCount should be >= 2. One ref in in V, and another one is in R');
+  TestContext.AssertTrue((R.Intf as TTestIntfObject).RefCount >= 2, 'RefCount should be >= 2. One ref in in V, and another one is in R');
   FreeMem(P);
 end;
 
@@ -1660,7 +1698,7 @@ begin
   V := GetValue();
   P := AllocMem(64);
   Arr := V.{$ifdef fpc}specialize{$endif} AsType<TArrayOfRec>;
-  Check((Arr[0].Intf as TTestIntfObject).RefCount >= 2, 'RefCount should be >= 2. One ref in in V, and another one is in Arr');
+  TestContext.AssertTrue((Arr[0].Intf as TTestIntfObject).RefCount >= 2, 'RefCount should be >= 2. One ref in in V, and another one is in Arr');
   FreeMem(P);
 end;
 
@@ -1670,6 +1708,8 @@ end;
 {$ifdef fpc}
 procedure TTestValueArray.TestOpenArrayToDyn;
 
+
+
   procedure OpenArrayProc(aArr: array of LongInt);
   var
     value: TValue;
@@ -1677,17 +1717,17 @@ procedure TTestValueArray.TestOpenArrayToDyn;
 {$ifndef InLazIDE}
     value := specialize OpenArrayToDynArrayValue<LongInt>(aArr);
 {$endif}
-    CheckEquals(value.IsArray, True);
-    CheckEquals(value.IsOpenArray, False);
-    CheckEquals(value.IsObject, False);
-    CheckEquals(value.IsOrdinal, False);
-    CheckEquals(value.IsClass, False);
-    CheckEquals(value.GetArrayLength, 2);
-    CheckEquals(value.GetArrayElement(0).AsInteger, 42);
-    CheckEquals(value.GetArrayElement(1).AsInteger, 84);
+    TestContext.AssertTrue((value.IsArray)=(True), '');
+    TestContext.AssertTrue((value.IsOpenArray)=(False), '');
+    TestContext.AssertTrue((value.IsObject)=(False), '');
+    TestContext.AssertTrue((value.IsOrdinal)=(False), '');
+    TestContext.AssertTrue((value.IsClass)=(False), '');
+    TestContext.AssertTrue((value.GetArrayLength)=(2), '');
+    TestContext.AssertTrue((value.GetArrayElement(0).AsInteger)=(42), '');
+    TestContext.AssertTrue((value.GetArrayElement(1).AsInteger)=(84), '');
     value.SetArrayElement(0, Integer(21));
     { since this is a copy the original array is not modified! }
-    CheckEquals(aArr[0], 42);
+    TestContext.AssertTrue((aArr[0])=(42), '');
   end;
 
 begin
@@ -1744,116 +1784,116 @@ var
 begin
   u8:=245;
   TValue.Make(@u8, TypeInfo(UInt8), value);
-  CheckEquals(1, value.DataSize, 'Size of UInt8 differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of UInt8 differs');
   u16:=789;
   TValue.Make(@u16, TypeInfo(UInt16), value);
-  CheckEquals(2, value.DataSize, 'Size of UInt16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of UInt16 differs');
   u32:=568789;
   TValue.Make(@u32, TypeInfo(UInt32), value);
-  CheckEquals(4, value.DataSize, 'Size of UInt32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of UInt32 differs');
   u64:=$abdcefadbcef;
   TValue.Make(@u64, TypeInfo(UInt64), value);
-  CheckEquals(8, value.DataSize, 'Size of UInt64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of UInt64 differs');
   s8:=-32;
   TValue.Make(@s8, TypeInfo(Int8), value);
-  CheckEquals(1, value.DataSize, 'Size of Int8 differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of Int8 differs');
   s16:=-5345;
   TValue.Make(@s16, TypeInfo(Int16), value);
-  CheckEquals(2, value.DataSize, 'Size of Int16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of Int16 differs');
   s32:=-234567;
   TValue.Make(@s32, TypeInfo(Int32), value);
-  CheckEquals(4, value.DataSize, 'Size of Int32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Int32 differs');
   s64:=23456789012;
   TValue.Make(@s64, TypeInfo(Int64), value);
-  CheckEquals(8, value.DataSize, 'Size of Int64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Int64 differs');
   b8:=false;
   TValue.Make(@b8, TypeInfo(Boolean), value);
-  CheckEquals(1, value.DataSize, 'Size of Boolean differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of Boolean differs');
 {$ifdef fpc}
   b16:=true;
   TValue.Make(@b16, TypeInfo(Boolean16), value);
-  CheckEquals(2, value.DataSize, 'Size of Boolean16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of Boolean16 differs');
   b32:=false;
   TValue.Make(@b32, TypeInfo(Boolean32), value);
-  CheckEquals(4, value.DataSize, 'Size of Boolean32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Boolean32 differs');
   b64:=true;
   TValue.Make(@b64, TypeInfo(Boolean64), value);
-  CheckEquals(8, value.DataSize, 'Size of Boolean64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Boolean64 differs');
 {$endif}
   bl8:=true;
   TValue.Make(@bl8, TypeInfo(ByteBool), value);
-  CheckEquals(1, value.DataSize, 'Size of ByteBool differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of ByteBool differs');
   bl16:=false;
   TValue.Make(@bl16, TypeInfo(WordBool), value);
-  CheckEquals(2, value.DataSize, 'Size of WordBool differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of WordBool differs');
   bl32:=false;
   TValue.Make(@bl32, TypeInfo(LongBool), value);
-  CheckEquals(4, value.DataSize, 'Size of LongBool differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of LongBool differs');
 {$ifdef fpc}
   bl64:=true;
   TValue.Make(@bl64, TypeInfo(QWordBool), value);
-  CheckEquals(8, value.DataSize, 'Size of QWordBool differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of QWordBool differs');
 {$endif}
   f32:=4.567;
   TValue.Make(@f32, TypeInfo(Single), value);
-  CheckEquals(4, value.DataSize, 'Size of Single differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Single differs');
   f64:=-3456.678;
   TValue.Make(@f64, TypeInfo(Double), value);
-  CheckEquals(8, value.DataSize, 'Size of Double differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Double differs');
 {$ifdef FPC_HAS_TYPE_EXTENDED}
   f80:=-2345.678;
   TValue.Make(@f80, TypeInfo(Extended), value);
-  CheckEquals(10, value.DataSize, 'Size of Extended differs');
+  TestContext.AssertTrue((10)=(value.DataSize), 'Size of Extended differs');
 {$endif}
   fcu:=56.78;
   TValue.Make(@fcu, TypeInfo(Currency), value);
-  CheckEquals(SizeOf(Currency), value.DataSize, 'Size of Currency differs');
+  TestContext.AssertTrue((SizeOf(Currency))=(value.DataSize), 'Size of Currency differs');
   fco:=456;
   TValue.Make(@fco, TypeInfo(Comp), value);
-  CheckEquals(SizeOf(Comp), value.DataSize, 'Size of Comp differs');
+  TestContext.AssertTrue((SizeOf(Comp))=(value.DataSize), 'Size of Comp differs');
   ss := '';
   TValue.Make(@ss, TypeInfo(ShortString), value);
-  CheckEquals(254, value.DataSize, 'Size ofShortString differs');
+  TestContext.AssertTrue((254)=(value.DataSize), 'Size ofShortString differs');
   sa:= '';
   TValue.Make(@sa, TypeInfo(AnsiString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of AnsiString differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of AnsiString differs');
   sw := '';
   TValue.Make(@sw, TypeInfo(WideString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of WideString differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of WideString differs');
   su:='';
   TValue.Make(@su, TypeInfo(UnicodeString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of UnicodeString differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of UnicodeString differs');
   o := TTestValueClass.Create;
   TValue.Make(@o, TypeInfo(TObject), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of TObject differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of TObject differs');
   o.Free;
   c := TObject;
   TValue.Make(@c, TypeInfo(TClass), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of TClass differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of TClass differs');
   i := Nil;
   TValue.Make(@i, TypeInfo(IInterface), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of IInterface differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of IInterface differs');
   TValue.Make(@t, TypeInfo(TTestRecord), value);
-  CheckEquals(SizeOf(TTestRecord), value.DataSize, 'Size of TTestRecord differs');
+  TestContext.AssertTrue((SizeOf(TTestRecord))=(value.DataSize), 'Size of TTestRecord differs');
   proc := Nil;
   TValue.Make(@proc, TypeInfo(TTestProc), value);
-  CheckEquals(SizeOf(TTestProc), value.DataSize, 'Size of TTestProc differs');
+  TestContext.AssertTrue((SizeOf(TTestProc))=(value.DataSize), 'Size of TTestProc differs');
   method := Nil;
   TValue.Make(@method, TypeInfo(TTestMethod), value);
-  CheckEquals(SizeOf(TTestMethod), value.DataSize, 'Size of TTestMethod differs');
+  TestContext.AssertTrue((SizeOf(TTestMethod))=(value.DataSize), 'Size of TTestMethod differs');
   TValue.Make(@_as, TypeInfo(TArrayOfLongintStatic), value);
-  CheckEquals(SizeOf(TArrayOfLongintStatic), value.DataSize, 'Size of TArrayOfLongintStatic differs');
+  TestContext.AssertTrue((SizeOf(TArrayOfLongintStatic))=(value.DataSize), 'Size of TArrayOfLongintStatic differs');
   TValue.Make(@ad, TypeInfo(TArrayOfLongintDyn), value);
-  CheckEquals(SizeOf(TArrayOfLongintDyn), value.DataSize, 'Size of TArrayOfLongintDyn differs');
+  TestContext.AssertTrue((SizeOf(TArrayOfLongintDyn))=(value.DataSize), 'Size of TArrayOfLongintDyn differs');
   e:=low(TTestEnum);
   TValue.Make(@e, TypeInfo(TTestEnum), value);
-  CheckEquals(SizeOf(TTestEnum), value.DataSize, 'Size of TTestEnum differs');
+  TestContext.AssertTrue((SizeOf(TTestEnum))=(value.DataSize), 'Size of TTestEnum differs');
   s:=[low(TTestEnum),high(TTestEnum)];
   TValue.Make(@s, TypeInfo(TTestSet), value);
-  CheckEquals(SizeOf(TTestSet), value.DataSize, 'Size of TTestSet differs');
+  TestContext.AssertTrue((SizeOf(TTestSet))=(value.DataSize), 'Size of TTestSet differs');
   p := Self;
   TValue.Make(@p, TypeInfo(Pointer), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of Pointer differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of Pointer differs');
 end;
 
 procedure TTestValueGeneral.TestDataSizeEmpty;
@@ -1861,140 +1901,136 @@ var
   value: TValue;
 begin
   TValue.Make(Nil, TypeInfo(UInt8), value);
-  CheckEquals(1, value.DataSize, 'Size of UInt8 differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of UInt8 differs');
   TValue.Make(Nil, TypeInfo(UInt16), value);
-  CheckEquals(2, value.DataSize, 'Size of UInt16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of UInt16 differs');
   TValue.Make(Nil, TypeInfo(UInt32), value);
-  CheckEquals(4, value.DataSize, 'Size of UInt32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of UInt32 differs');
   TValue.Make(Nil, TypeInfo(UInt64), value);
-  CheckEquals(8, value.DataSize, 'Size of UInt64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of UInt64 differs');
   TValue.Make(Nil, TypeInfo(Int8), value);
-  CheckEquals(1, value.DataSize, 'Size of Int8 differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of Int8 differs');
   TValue.Make(Nil, TypeInfo(Int16), value);
-  CheckEquals(2, value.DataSize, 'Size of Int16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of Int16 differs');
   TValue.Make(Nil, TypeInfo(Int32), value);
-  CheckEquals(4, value.DataSize, 'Size of Int32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Int32 differs');
   TValue.Make(Nil, TypeInfo(Int64), value);
-  CheckEquals(8, value.DataSize, 'Size of Int64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Int64 differs');
   TValue.Make(Nil, TypeInfo(Boolean), value);
-  CheckEquals(1, value.DataSize, 'Size of Boolean differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of Boolean differs');
 {$ifdef fpc}
   TValue.Make(Nil, TypeInfo(Boolean16), value);
-  CheckEquals(2, value.DataSize, 'Size of Boolean16 differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of Boolean16 differs');
   TValue.Make(Nil, TypeInfo(Boolean32), value);
-  CheckEquals(4, value.DataSize, 'Size of Boolean32 differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Boolean32 differs');
   TValue.Make(Nil, TypeInfo(Boolean64), value);
-  CheckEquals(8, value.DataSize, 'Size of Boolean64 differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Boolean64 differs');
 {$endif}
   TValue.Make(Nil, TypeInfo(ByteBool), value);
-  CheckEquals(1, value.DataSize, 'Size of ByteBool differs');
+  TestContext.AssertTrue((1)=(value.DataSize), 'Size of ByteBool differs');
   TValue.Make(Nil, TypeInfo(WordBool), value);
-  CheckEquals(2, value.DataSize, 'Size of WordBool differs');
+  TestContext.AssertTrue((2)=(value.DataSize), 'Size of WordBool differs');
   TValue.Make(Nil, TypeInfo(LongBool), value);
-  CheckEquals(4, value.DataSize, 'Size of LongBool differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of LongBool differs');
 {$ifdef fpc}
   TValue.Make(Nil, TypeInfo(QWordBool), value);
-  CheckEquals(8, value.DataSize, 'Size of QWordBool differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of QWordBool differs');
 {$endif}
   TValue.Make(Nil, TypeInfo(Single), value);
-  CheckEquals(4, value.DataSize, 'Size of Single differs');
+  TestContext.AssertTrue((4)=(value.DataSize), 'Size of Single differs');
   TValue.Make(Nil, TypeInfo(Double), value);
-  CheckEquals(8, value.DataSize, 'Size of Double differs');
+  TestContext.AssertTrue((8)=(value.DataSize), 'Size of Double differs');
 {$ifdef FPC_HAS_TYPE_EXTENDED}
   TValue.Make(Nil, TypeInfo(Extended), value);
-  CheckEquals(10, value.DataSize, 'Size of Extended differs');
+  TestContext.AssertTrue((10)=(value.DataSize), 'Size of Extended differs');
 {$endif}
   TValue.Make(Nil, TypeInfo(Currency), value);
-  CheckEquals(SizeOf(Currency), value.DataSize, 'Size of Currency differs');
+  TestContext.AssertTrue((SizeOf(Currency))=(value.DataSize), 'Size of Currency differs');
   TValue.Make(Nil, TypeInfo(Comp), value);
-  CheckEquals(SizeOf(Comp), value.DataSize, 'Size of Comp differs');
+  TestContext.AssertTrue((SizeOf(Comp))=(value.DataSize), 'Size of Comp differs');
   TValue.Make(Nil, TypeInfo(ShortString), value);
-  CheckEquals(254, value.DataSize, 'Size of ShortString differs');
+  TestContext.AssertTrue((254)=(value.DataSize), 'Size of ShortString differs');
   TValue.Make(Nil, TypeInfo(AnsiString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of Pointer differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of Pointer differs');
   TValue.Make(Nil, TypeInfo(WideString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of WideString differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of WideString differs');
   TValue.Make(Nil, TypeInfo(UnicodeString), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of UnicodeString differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of UnicodeString differs');
   TValue.Make(Nil, TypeInfo(TObject), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of TObject differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of TObject differs');
   TValue.Make(Nil, TypeInfo(TClass), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of TClass differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of TClass differs');
   TValue.Make(Nil, TypeInfo(IInterface), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of IInterface differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of IInterface differs');
   TValue.Make(Nil, TypeInfo(TTestRecord), value);
-  CheckEquals(SizeOf(TTestRecord), value.DataSize, 'Size of TTestRecord differs');
+  TestContext.AssertTrue((SizeOf(TTestRecord))=(value.DataSize), 'Size of TTestRecord differs');
   TValue.Make(Nil, TypeInfo(TTestProc), value);
-  CheckEquals(SizeOf(TTestProc), value.DataSize, 'Size of TTestProc differs');
+  TestContext.AssertTrue((SizeOf(TTestProc))=(value.DataSize), 'Size of TTestProc differs');
   TValue.Make(Nil, TypeInfo(TTestMethod), value);
-  CheckEquals(SizeOf(TTestMethod), value.DataSize, 'Size of TTestMethod differs');
+  TestContext.AssertTrue((SizeOf(TTestMethod))=(value.DataSize), 'Size of TTestMethod differs');
   TValue.Make(Nil, TypeInfo(TArrayOfLongintStatic), value);
-  CheckEquals(SizeOf(TArrayOfLongintStatic), value.DataSize, 'Size of TArrayOfLongintStatic differs');
+  TestContext.AssertTrue((SizeOf(TArrayOfLongintStatic))=(value.DataSize), 'Size of TArrayOfLongintStatic differs');
   TValue.Make(Nil, TypeInfo(TArrayOfLongintDyn), value);
-  CheckEquals(SizeOf(TArrayOfLongintDyn), value.DataSize, 'Size of TArrayOfLongintDyn differs');
+  TestContext.AssertTrue((SizeOf(TArrayOfLongintDyn))=(value.DataSize), 'Size of TArrayOfLongintDyn differs');
   TValue.Make(Nil, TypeInfo(TTestEnum), value);
-  CheckEquals(SizeOf(TTestEnum), value.DataSize, 'Size of TTestEnum differs');
+  TestContext.AssertTrue((SizeOf(TTestEnum))=(value.DataSize), 'Size of TTestEnum differs');
   TValue.Make(Nil, TypeInfo(TTestSet), value);
-  CheckEquals(SizeOf(TTestSet), value.DataSize, 'Size of TTestSet differs');
+  TestContext.AssertTrue((SizeOf(TTestSet))=(value.DataSize), 'Size of TTestSet differs');
   TValue.Make(Nil, TypeInfo(Pointer), value);
-  CheckEquals(SizeOf(Pointer), value.DataSize, 'Size of Pointer differs');
+  TestContext.AssertTrue((SizeOf(Pointer))=(value.DataSize), 'Size of Pointer differs');
 end;
 
 procedure TTestValueGeneral.TestIsManaged;
 begin
-  CheckEquals(true, IsManaged(TypeInfo(ansistring)), 'IsManaged for tkAString');
-  CheckEquals(true, IsManaged(TypeInfo(widestring)), 'IsManaged for tkWString');
-  CheckEquals(true, IsManaged(TypeInfo(Variant)), 'IsManaged for tkVariant');
-  CheckEquals(true, IsManaged(TypeInfo(TArrayOfManagedRec)),
-    'IsManaged for tkArray (with managed ElType)');
-  CheckEquals(true, IsManaged(TypeInfo(TArrayOfString)),
-    'IsManaged for tkArray (with managed ElType)');
-  CheckEquals(true, IsManaged(TypeInfo(TManagedRec)), 'IsManaged for tkRecord');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(ansistring))), 'IsManaged for tkAString');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(widestring))), 'IsManaged for tkWString');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(Variant))), 'IsManaged for tkVariant');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TArrayOfManagedRec))), 'IsManaged for tkArray (with managed ElType)');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TArrayOfString))), 'IsManaged for tkArray (with managed ElType)');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TManagedRec))), 'IsManaged for tkRecord');
   {$ifdef fpc}
-  CheckEquals(true, IsManaged(TypeInfo(TManagedRecOp)), 'IsManaged for tkRecord');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TManagedRecOp))), 'IsManaged for tkRecord');
   {$endif}
-  CheckEquals(true, IsManaged(TypeInfo(IInterface)), 'IsManaged for tkInterface');
-  CheckEquals(true, IsManaged(TypeInfo(TManagedObj)), 'IsManaged for tkObject');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(IInterface))), 'IsManaged for tkInterface');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TManagedObj))), 'IsManaged for tkObject');
   {$ifdef fpc}
-  CheckEquals(true, IsManaged(TypeInfo(specialize TArray<byte>)), 'IsManaged for tkDynArray');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(specialize TArray<byte>))), 'IsManaged for tkDynArray');
   {$else}
-  CheckEquals(true, IsManaged(TypeInfo(TArray<byte>)), 'IsManaged for tkDynArray');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(TArray<byte>))), 'IsManaged for tkDynArray');
   {$endif}
-  CheckEquals(true, IsManaged(TypeInfo(unicodestring)), 'IsManaged for tkUString');
-  CheckEquals(false, IsManaged(TypeInfo(shortstring)), 'IsManaged for tkSString');
-  CheckEquals(false, IsManaged(TypeInfo(Byte)), 'IsManaged for tkInteger');
-  CheckEquals(false, IsManaged(TypeInfo(Char)), 'IsManaged for tkChar');
-  CheckEquals(false, IsManaged(TypeInfo(TTestEnum)), 'IsManaged for tkEnumeration');
-  CheckEquals(false, IsManaged(TypeInfo(Single)), 'IsManaged for tkFloat');
-  CheckEquals(false, IsManaged(TypeInfo(TTestSet)), 'IsManaged for tkSet');
+  TestContext.AssertTrue((true)=(IsManaged(TypeInfo(unicodestring))), 'IsManaged for tkUString');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(shortstring))), 'IsManaged for tkSString');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Byte))), 'IsManaged for tkInteger');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Char))), 'IsManaged for tkChar');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TTestEnum))), 'IsManaged for tkEnumeration');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Single))), 'IsManaged for tkFloat');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TTestSet))), 'IsManaged for tkSet');
   {$ifdef fpc}
-  CheckEquals(false, IsManaged(TypeInfo(TTestMethod)), 'IsManaged for tkMethod');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TTestMethod))), 'IsManaged for tkMethod');
   {$else}
   { Delphi bug (or sabotage). For some reason Delphi considers method pointers to be managed (only in newer versions, probably since XE7) :/ }
-  CheckEquals(RTLVersion >= 28, IsManaged(TypeInfo(TTestMethod)), 'IsManaged for tkMethod');
+  TestContext.AssertTrue((RTLVersion >= 28)=(IsManaged(TypeInfo(TTestMethod))), 'IsManaged for tkMethod');
   {$endif}
-  CheckEquals(false, IsManaged(TypeInfo(TArrayOfByte)),
-    'IsManaged for tkArray (with non managed ElType)');
-  CheckEquals(false, IsManaged(TypeInfo(TArrayOfNonManagedRec)),
-    'IsManaged for tkArray (with non managed ElType)');
-  CheckEquals(false, IsManaged(TypeInfo(TNonManagedRec)), 'IsManaged for tkRecord');
-  CheckEquals(false, IsManaged(TypeInfo(TObject)), 'IsManaged for tkClass');
-  CheckEquals(false, IsManaged(TypeInfo(TNonManagedObj)), 'IsManaged for tkObject');
-  CheckEquals(false, IsManaged(TypeInfo(WideChar)), 'IsManaged for tkWChar');
-  CheckEquals(false, IsManaged(TypeInfo(Boolean)), 'IsManaged for tkBool');
-  CheckEquals(false, IsManaged(TypeInfo(Int64)), 'IsManaged for tkInt64');
-  CheckEquals(false, IsManaged(TypeInfo(UInt64)), 'IsManaged for tkQWord');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TArrayOfByte))), 'IsManaged for tkArray (with non managed ElType)');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TArrayOfNonManagedRec))), 'IsManaged for tkArray (with non managed ElType)');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TNonManagedRec))), 'IsManaged for tkRecord');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TObject))), 'IsManaged for tkClass');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TNonManagedObj))), 'IsManaged for tkObject');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(WideChar))), 'IsManaged for tkWChar');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Boolean))), 'IsManaged for tkBool');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Int64))), 'IsManaged for tkInt64');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(UInt64))), 'IsManaged for tkQWord');
   {$ifdef fpc}
-  CheckEquals(false, IsManaged(TypeInfo(ICORBATest)), 'IsManaged for tkInterfaceRaw');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(ICORBATest))), 'IsManaged for tkInterfaceRaw');
   {$endif}
-  CheckEquals(false, IsManaged(TypeInfo(TTestProc)), 'IsManaged for tkProcVar');
-  CheckEquals(false, IsManaged(TypeInfo(TTestHelper)), 'IsManaged for tkHelper');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TTestProc))), 'IsManaged for tkProcVar');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TTestHelper))), 'IsManaged for tkHelper');
   {$ifdef fpc}
-  CheckEquals(false, IsManaged(TypeInfo(file)), 'IsManaged for tkFile');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(file))), 'IsManaged for tkFile');
   {$endif}
-  CheckEquals(false, IsManaged(TypeInfo(TClass)), 'IsManaged for tkClassRef');
-  CheckEquals(false, IsManaged(TypeInfo(Pointer)), 'IsManaged for tkPointer');
-  CheckEquals(false, IsManaged(nil), 'IsManaged for nil');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(TClass))), 'IsManaged for tkClassRef');
+  TestContext.AssertTrue((false)=(IsManaged(TypeInfo(Pointer))), 'IsManaged for tkPointer');
+  TestContext.AssertTrue((false)=(IsManaged(nil)), 'IsManaged for nil');
 end;
 
 Type
@@ -2011,16 +2047,16 @@ begin
   T1:=TValue. specialize From<TEnum1>(en1_1);
   T2:=T1. specialize Cast<TEnum3>;
 //  T3:=T2. specialize AsType<TEnum3>;
-  CheckTrue((en1_1 = T2. specialize AsType<TEnum3>), 'en1_1 = (TValue.From<TEnum1>(en1_1).Cast<TEnum3>.AsType<TEnum3>)');
-  CheckFalse(TValue. specialize From<Integer>(32).TryCast(TypeInfo(AnsiChar), TempV), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(AnsiChar), V)');
-  CheckFalse(TValue. specialize From<Integer>(32).TryCast(TypeInfo(WideChar), TempV), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(WideChar), V)');
+  TestContext.AssertTrue((en1_1 = T2. specialize AsType<TEnum3>), 'en1_1 = (TValue.From<TEnum1>(en1_1).Cast<TEnum3>.AsType<TEnum3>)');
+  TestContext.AssertTrue(not (TValue. specialize From<Integer>(32).TryCast(TypeInfo(AnsiChar), TempV)), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(AnsiChar), V)');
+  TestContext.AssertTrue(not (TValue. specialize From<Integer>(32).TryCast(TypeInfo(WideChar), TempV)), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(WideChar), V)');
 {$ifdef fpc}
-  CheckFalse(TValue. specialize From<Integer>(32).TryCast(TypeInfo(UnicodeChar), TempV), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(UnicodeChar), V)');
+  TestContext.AssertTrue(not (TValue. specialize From<Integer>(32).TryCast(TypeInfo(UnicodeChar), TempV)), 'not (TValue.From<Integer>(32).TryCast(TypeInfo(UnicodeChar), V)');
 {$endif}
-  CheckTrue(Byte(397) = (TValue. specialize From<Integer>(397). specialize Cast<Byte>(). specialize AsType<Byte>), 'Byte(397) = (TValue.From<Integer>(397).Cast<Byte>().AsType<Byte>)');
-  CheckTrue(32 = (TValue. specialize From<Byte>(32). specialize Cast<Integer>(). specialize AsType<Integer>), '32 = (TValue.From<Byte>(32).Cast<Integer>().AsType<Integer>)');
+  TestContext.AssertTrue(Byte(397) = (TValue. specialize From<Integer>(397). specialize Cast<Byte>(). specialize AsType<Byte>), 'Byte(397) = (TValue.From<Integer>(397).Cast<Byte>().AsType<Byte>)');
+  TestContext.AssertTrue(32 = (TValue. specialize From<Byte>(32). specialize Cast<Integer>(). specialize AsType<Integer>), '32 = (TValue.From<Byte>(32).Cast<Integer>().AsType<Integer>)');
 
-  CheckTrue('test_str' = TValue.{$ifdef fpc}specialize{$endif} From<ShortString>('test_str')
+  TestContext.AssertTrue('test_str' = TValue.{$ifdef fpc}specialize{$endif} From<ShortString>('test_str')
               .{$ifdef fpc}specialize{$endif} Cast<AnsiString>
               .{$ifdef fpc}specialize{$endif} AsType<AnsiString>, 'TValue.From<shortring>.Cast<AnsiString> failed');
 end;
@@ -2030,7 +2066,7 @@ var
   V : TValue;
 begin
   V:=Pointer(Nil);
-  AssertSame('Correct type info', TypeInfo(Pointer),V.TypeInfo);
+  TestContext.AssertTrue((TypeInfo(Pointer))=(V.TypeInfo), 'Correct type info');
 end;
 
 procedure TTestValueGeneral.TestAssignDateTime;
@@ -2040,8 +2076,8 @@ var
 begin
   dt := Now;
   v := dt;
-  AssertSame('Incorrect type info', TypeInfo(TDateTime), V.TypeInfo);
-  CheckEquals(dt, V.AsDateTime, 'Incorrect value');
+  TestContext.AssertTrue((TypeInfo(TDateTime))=(V.TypeInfo), 'Incorrect type info');
+  TestContext.AssertTrue((dt)=(V.AsDateTime), 'Incorrect value');
 end;
 
 procedure TTestValueGeneral.TestAssignDate;
@@ -2051,8 +2087,8 @@ var
 begin
   d := Date;
   v := d;
-  AssertSame('Incorrect type info', TypeInfo(TDate), V.TypeInfo);
-  CheckEquals(d, V.AsDateTime, 'Incorrect value');
+  TestContext.AssertTrue((TypeInfo(TDate))=(V.TypeInfo), 'Incorrect type info');
+  TestContext.AssertTrue((d)=(V.AsDateTime), 'Incorrect value');
 end;
 
 procedure TTestValueGeneral.TestAssignTime;
@@ -2062,8 +2098,8 @@ var
 begin
   t := Time;
   v := t;
-  AssertSame('Incorrect type info', TypeInfo(System.TTime), V.TypeInfo);
-  CheckEquals(t, V.AsDateTime, 'Incorrect value');
+  TestContext.AssertTrue((TypeInfo(System.TTime))=(V.TypeInfo), 'Incorrect type info');
+  TestContext.AssertTrue((t)=(V.AsDateTime), 'Incorrect value');
 end;
 
 procedure TTestValueGeneral.TestReferenceRawData;
@@ -2079,38 +2115,38 @@ begin
   str := 'Hello World';
   UniqueString(str);
   TValue.Make(@str, TypeInfo(String), value);
-  Check(PPointer(value.GetReferenceToRawData)^ = Pointer(str), 'Reference to string data differs');
+  TestContext.AssertTrue(PPointer(value.GetReferenceToRawData)^ = Pointer(str), 'Reference to string data differs');
 
   intf := TInterfacedObject.Create;
   TValue.Make(@intf, TypeInfo(IInterface), value);
-  Check(PPointer(value.GetReferenceToRawData)^ = Pointer(intf), 'Reference to interface data differs');
+  TestContext.AssertTrue(PPointer(value.GetReferenceToRawData)^ = Pointer(intf), 'Reference to interface data differs');
 
   i := 42;
   TValue.Make(@i, TypeInfo(LongInt), value);
-  Check(value.GetReferenceToRawData <> @i, 'Reference to longint is equal');
-  Check(PLongInt(value.GetReferenceToRawData)^ = PLongInt(@i)^, 'Reference to longint data differs');
+  TestContext.AssertTrue(value.GetReferenceToRawData <> @i, 'Reference to longint is equal');
+  TestContext.AssertTrue(PLongInt(value.GetReferenceToRawData)^ = PLongInt(@i)^, 'Reference to longint data differs');
 
   test.value1 := 42;
   test.value2 := 'Hello World';
   TValue.Make(@test, TypeInfo(TTestRecord), value);
-  Check(value.GetReferenceToRawData <> @test, 'Reference to record is equal');
-  Check(PTestRecord(value.GetReferenceToRawData)^.value1 = PTestRecord(@test)^.value1, 'Reference to record data value1 differs');
-  Check(PTestRecord(value.GetReferenceToRawData)^.value2 = PTestRecord(@test)^.value2, 'Reference to record data value2 differs');
+  TestContext.AssertTrue(value.GetReferenceToRawData <> @test, 'Reference to record is equal');
+  TestContext.AssertTrue(PTestRecord(value.GetReferenceToRawData)^.value1 = PTestRecord(@test)^.value1, 'Reference to record data value1 differs');
+  TestContext.AssertTrue(PTestRecord(value.GetReferenceToRawData)^.value2 = PTestRecord(@test)^.value2, 'Reference to record data value2 differs');
 
   SetLength(arrdyn, 3);
   arrdyn[0] := 42;
   arrdyn[1] := 23;
   arrdyn[2] := 49;
   TValue.Make(@arrdyn, TypeInfo(TArrayOfLongintDyn), value);
-  Check(PPointer(value.GetReferenceToRawData)^ = Pointer(arrdyn), 'Reference to dynamic array data differs');
+  TestContext.AssertTrue(PPointer(value.GetReferenceToRawData)^ = Pointer(arrdyn), 'Reference to dynamic array data differs');
 
   arrstat[0] := 42;
   arrstat[1] := 23;
   arrstat[2] := 49;
   arrstat[3] := 59;
   TValue.Make(@arrstat, TypeInfo(TArrayOfLongintStatic), value);
-  Check(value.GetReferenceToRawData <> @arrstat, 'Reference to static array is equal');
-  Check(PLongInt(value.GetReferenceToRawData)^ = PLongInt(@arrstat)^, 'Reference to static array data differs');
+  TestContext.AssertTrue(value.GetReferenceToRawData <> @arrstat, 'Reference to static array is equal');
+  TestContext.AssertTrue(PLongInt(value.GetReferenceToRawData)^ = PLongInt(@arrstat)^, 'Reference to static array data differs');
 end;
 
 procedure TTestValueGeneral.TestReferenceRawDataEmpty;
@@ -2118,34 +2154,884 @@ var
   value: TValue;
 begin
   TValue.Make(Nil, TypeInfo(String), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty String is not assigned');
-  Check(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty String data is assigned');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty String is not assigned');
+  TestContext.AssertTrue(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty String data is assigned');
 
   TValue.Make(Nil, TypeInfo(IInterface), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty interface is not assigned');
-  Check(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty interface data is assigned');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty interface is not assigned');
+  TestContext.AssertTrue(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty interface data is assigned');
 
   TValue.Make(Nil, TypeInfo(LongInt), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty LongInt is not assigned');
-  Check(PLongInt(value.GetReferenceToRawData)^ = 0, 'Empty longint data is not 0');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty LongInt is not assigned');
+  TestContext.AssertTrue(PLongInt(value.GetReferenceToRawData)^ = 0, 'Empty longint data is not 0');
 
   TValue.Make(Nil, TypeInfo(TTestRecord), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty record is not assigned');
-  Check(PTestRecord(value.GetReferenceToRawData)^.value1 = 0, 'Empty record data value1 is not 0');
-  Check(PTestRecord(value.GetReferenceToRawData)^.value2 = '', 'Empty record data value2 is not empty');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty record is not assigned');
+  TestContext.AssertTrue(PTestRecord(value.GetReferenceToRawData)^.value1 = 0, 'Empty record data value1 is not 0');
+  TestContext.AssertTrue(PTestRecord(value.GetReferenceToRawData)^.value2 = '', 'Empty record data value2 is not empty');
 
   TValue.Make(Nil, TypeInfo(TArrayOfLongintDyn), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty dynamic array is not assigned');
-  Check(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty dynamic array data is assigned');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty dynamic array is not assigned');
+  TestContext.AssertTrue(not Assigned(PPointer(value.GetReferenceToRawData)^), 'Empty dynamic array data is assigned');
 
   TValue.Make(Nil, TypeInfo(TArrayOfLongintStatic), value);
-  Check(Assigned(value.GetReferenceToRawData()), 'Reference to empty static array is not assigned');
-  Check(PLongInt(value.GetReferenceToRawData)^ = 0, 'Empty static array data is not 0');
+  TestContext.AssertTrue(Assigned(value.GetReferenceToRawData()), 'Reference to empty static array is not assigned');
+  TestContext.AssertTrue(PLongInt(value.GetReferenceToRawData)^ = 0, 'Empty static array data is not 0');
 end;
 
-initialization
-  RegisterTest(TTestValueGeneral);
-  RegisterTest(TTestValueSimple);
-  RegisterTest(TTestValueSimple);
-  RegisterTest(TTestValueVariant);
+
+constructor TTestValueGeneral.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestValueSimple.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestValueArray.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestValueVariant.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestValueGeneralTestDataSize(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestDataSize');
+  try
+    lFixture.TestDataSize;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestDataSizeEmpty(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestDataSizeEmpty');
+  try
+    lFixture.TestDataSizeEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestReferenceRawData(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestReferenceRawData');
+  try
+    lFixture.TestReferenceRawData;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestReferenceRawDataEmpty(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestReferenceRawDataEmpty');
+  try
+    lFixture.TestReferenceRawDataEmpty;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestIsManaged(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestIsManaged');
+  try
+    lFixture.TestIsManaged;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestCasts(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestCasts');
+  try
+    lFixture.TestCasts;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestAssignPointer(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestAssignPointer');
+  try
+    lFixture.TestAssignPointer;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestAssignDateTime(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestAssignDateTime');
+  try
+    lFixture.TestAssignDateTime;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestAssignDate(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestAssignDate');
+  try
+    lFixture.TestAssignDate;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueGeneralTestAssignTime(AContext: TNXTestContext);
+var lFixture: TTestValueGeneral;
+begin
+  lFixture:=TTestValueGeneral.Create(AContext, 'TestAssignTime');
+  try
+    lFixture.TestAssignTime;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestIsType(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestIsType');
+  try
+    lFixture.TestIsType;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeNil(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeNil');
+  try
+    lFixture.TestMakeNil;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeObject(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeObject');
+  try
+    lFixture.TestMakeObject;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeSingle(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeSingle');
+  try
+    lFixture.TestMakeSingle;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeDouble(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeDouble');
+  try
+    lFixture.TestMakeDouble;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeExtended(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeExtended');
+  try
+    lFixture.TestMakeExtended;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeCurrency(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeCurrency');
+  try
+    lFixture.TestMakeCurrency;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeComp(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeComp');
+  try
+    lFixture.TestMakeComp;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeEnum(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeEnum');
+  try
+    lFixture.TestMakeEnum;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeAnsiChar(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeAnsiChar');
+  try
+    lFixture.TestMakeAnsiChar;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeWideChar(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeWideChar');
+  try
+    lFixture.TestMakeWideChar;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeNativeInt(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeNativeInt');
+  try
+    lFixture.TestMakeNativeInt;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeVariant(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeVariant');
+  try
+    lFixture.TestMakeVariant;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericNil(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericNil');
+  try
+    lFixture.TestMakeGenericNil;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericLongInt(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericLongInt');
+  try
+    lFixture.TestMakeGenericLongInt;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericString(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericString');
+  try
+    lFixture.TestMakeGenericString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericObject(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericObject');
+  try
+    lFixture.TestMakeGenericObject;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericDouble(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericDouble');
+  try
+    lFixture.TestMakeGenericDouble;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericAnsiChar(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericAnsiChar');
+  try
+    lFixture.TestMakeGenericAnsiChar;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeGenericWideChar(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeGenericWideChar');
+  try
+    lFixture.TestMakeGenericWideChar;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestFromOrdinal(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestFromOrdinal');
+  try
+    lFixture.TestFromOrdinal;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestTryCastUnicodeString(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestTryCastUnicodeString');
+  try
+    lFixture.TestTryCastUnicodeString;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeManagedRecord(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeManagedRecord');
+  try
+    lFixture.TestMakeManagedRecord;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueSimpleTestMakeStaticArrayOfManagedRecord(AContext: TNXTestContext);
+var lFixture: TTestValueSimple;
+begin
+  lFixture:=TTestValueSimple.Create(AContext, 'TestMakeStaticArrayOfManagedRecord');
+  try
+    lFixture.TestMakeStaticArrayOfManagedRecord;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantInteger(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantInteger');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantInteger; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantBoolean(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantBoolean');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantBoolean; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantSmallInt(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantSmallInt');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantSmallInt; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantOleStr(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantOleStr');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantOleStr; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantInt64(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantInt64');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantInt64; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantQWord(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantQWord');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantQWord; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantShortInt(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantShortInt');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantShortInt; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantByte(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantByte');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantByte; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantWord(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantWord');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantWord; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantLongWord(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantLongWord');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantLongWord; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantSingle(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantSingle');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantSingle; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantDouble(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantDouble');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantDouble; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantDate(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantDate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantDate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantDispatch(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantDispatch');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantDispatch; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantError(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantError');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantError; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantUnknown(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantUnknown');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantUnknown; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantCurrency(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantCurrency');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantCurrency; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVariantUnicodeString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVariantUnicodeString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVariantUnicodeString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarrecInteger(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarrecInteger');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarrecInteger; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarrecBoolean(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarrecBoolean');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarrecBoolean; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecChar(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecChar');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecChar; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecExtended(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecExtended');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecExtended; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecPointer(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecPointer');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecPointer; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecPChar(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecPChar');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecPChar; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecObject(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecObject');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecObject; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecClass(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecClass');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecClass; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecWideChar(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecWideChar');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecWideChar; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecPWideChar(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecPWideChar');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecPWideChar; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecAnsiString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecAnsiString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecAnsiString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecCurrency(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecCurrency');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecCurrency; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecVariant(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecVariant');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecVariant; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecInterface(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecInterface');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecInterface; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecWideString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecWideString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecWideString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecInt64(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecInt64');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecInt64; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecQWord(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecQWord');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecQWord; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestFromVarRecUnicodeString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestFromVarRecUnicodeString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFromVarRecUnicodeString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestArrayOfConstToTValue(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestArrayOfConstToTValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestArrayOfConstToTValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestCastAnsiString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestCastAnsiString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCastAnsiString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+{$IFNDEF FPC_WIDESTRING_EQUAL_UNICODESTRING}
+procedure RunTTestValueVariantTestCastUnicodeString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestCastUnicodeString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCastUnicodeString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+{$ENDIF}
+
+
+procedure RunTTestValueVariantTestCastWideString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestCastWideString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCastWideString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestValueVariantTestCastShortString(AContext: TNXTestContext);
+var lFixture: TTestValueVariant;
+begin
+  lFixture:=TTestValueVariant.Create(AContext, 'TestCastShortString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCastShortString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsrttivalueTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.rtti.value.TTestValueGeneral');
+  lSuite.AddTest('TestDataSize', @RunTTestValueGeneralTestDataSize);
+  lSuite.AddTest('TestDataSizeEmpty', @RunTTestValueGeneralTestDataSizeEmpty);
+  lSuite.AddTest('TestReferenceRawData', @RunTTestValueGeneralTestReferenceRawData);
+  lSuite.AddTest('TestReferenceRawDataEmpty', @RunTTestValueGeneralTestReferenceRawDataEmpty);
+  lSuite.AddTest('TestIsManaged', @RunTTestValueGeneralTestIsManaged);
+  lSuite.AddTest('TestCasts', @RunTTestValueGeneralTestCasts);
+  lSuite.AddTest('TestAssignPointer', @RunTTestValueGeneralTestAssignPointer);
+  lSuite.AddTest('TestAssignDateTime', @RunTTestValueGeneralTestAssignDateTime);
+  lSuite.AddTest('TestAssignDate', @RunTTestValueGeneralTestAssignDate);
+  lSuite.AddTest('TestAssignTime', @RunTTestValueGeneralTestAssignTime);
+  lSuite:=ARegistry.AddSuite('tests.rtti.value.TTestValueSimple');
+  lSuite.AddTest('TestIsType', @RunTTestValueSimpleTestIsType);
+  lSuite.AddTest('TestMakeNil', @RunTTestValueSimpleTestMakeNil);
+  lSuite.AddTest('TestMakeObject', @RunTTestValueSimpleTestMakeObject);
+  lSuite.AddTest('TestMakeSingle', @RunTTestValueSimpleTestMakeSingle);
+  lSuite.AddTest('TestMakeDouble', @RunTTestValueSimpleTestMakeDouble);
+  lSuite.AddTest('TestMakeExtended', @RunTTestValueSimpleTestMakeExtended);
+  lSuite.AddTest('TestMakeCurrency', @RunTTestValueSimpleTestMakeCurrency);
+  lSuite.AddTest('TestMakeComp', @RunTTestValueSimpleTestMakeComp);
+  lSuite.AddTest('TestMakeEnum', @RunTTestValueSimpleTestMakeEnum);
+  lSuite.AddTest('TestMakeAnsiChar', @RunTTestValueSimpleTestMakeAnsiChar);
+  lSuite.AddTest('TestMakeWideChar', @RunTTestValueSimpleTestMakeWideChar);
+  lSuite.AddTest('TestMakeNativeInt', @RunTTestValueSimpleTestMakeNativeInt);
+  lSuite.AddTest('TestMakeVariant', @RunTTestValueSimpleTestMakeVariant);
+  lSuite.AddTest('TestMakeGenericNil', @RunTTestValueSimpleTestMakeGenericNil);
+  lSuite.AddTest('TestMakeGenericLongInt', @RunTTestValueSimpleTestMakeGenericLongInt);
+  lSuite.AddTest('TestMakeGenericString', @RunTTestValueSimpleTestMakeGenericString);
+  lSuite.AddTest('TestMakeGenericObject', @RunTTestValueSimpleTestMakeGenericObject);
+  lSuite.AddTest('TestMakeGenericDouble', @RunTTestValueSimpleTestMakeGenericDouble);
+  lSuite.AddTest('TestMakeGenericAnsiChar', @RunTTestValueSimpleTestMakeGenericAnsiChar);
+  lSuite.AddTest('TestMakeGenericWideChar', @RunTTestValueSimpleTestMakeGenericWideChar);
+  lSuite.AddTest('TestFromOrdinal', @RunTTestValueSimpleTestFromOrdinal);
+  lSuite.AddTest('TestTryCastUnicodeString', @RunTTestValueSimpleTestTryCastUnicodeString);
+  lSuite.AddTest('TestMakeManagedRecord', @RunTTestValueSimpleTestMakeManagedRecord);
+  lSuite.AddTest('TestMakeStaticArrayOfManagedRecord', @RunTTestValueSimpleTestMakeStaticArrayOfManagedRecord);
+  lSuite:=ARegistry.AddSuite('tests.rtti.value.TTestValueVariant');
+  lSuite.AddTest('TestFromVariantInteger', @RunTTestValueVariantTestFromVariantInteger);
+  lSuite.AddTest('TestFromVariantBoolean', @RunTTestValueVariantTestFromVariantBoolean);
+  lSuite.AddTest('TestFromVariantSmallInt', @RunTTestValueVariantTestFromVariantSmallInt);
+  lSuite.AddTest('TestFromVariantOleStr', @RunTTestValueVariantTestFromVariantOleStr);
+  lSuite.AddTest('TestFromVariantInt64', @RunTTestValueVariantTestFromVariantInt64);
+  lSuite.AddTest('TestFromVariantQWord', @RunTTestValueVariantTestFromVariantQWord);
+  lSuite.AddTest('TestFromVariantShortInt', @RunTTestValueVariantTestFromVariantShortInt);
+  lSuite.AddTest('TestFromVariantByte', @RunTTestValueVariantTestFromVariantByte);
+  lSuite.AddTest('TestFromVariantWord', @RunTTestValueVariantTestFromVariantWord);
+  lSuite.AddTest('TestFromVariantLongWord', @RunTTestValueVariantTestFromVariantLongWord);
+  lSuite.AddTest('TestFromVariantSingle', @RunTTestValueVariantTestFromVariantSingle);
+  lSuite.AddTest('TestFromVariantDouble', @RunTTestValueVariantTestFromVariantDouble);
+  lSuite.AddTest('TestFromVariantDate', @RunTTestValueVariantTestFromVariantDate);
+  lSuite.AddTest('TestFromVariantDispatch', @RunTTestValueVariantTestFromVariantDispatch);
+  lSuite.AddTest('TestFromVariantError', @RunTTestValueVariantTestFromVariantError);
+  lSuite.AddTest('TestFromVariantUnknown', @RunTTestValueVariantTestFromVariantUnknown);
+  lSuite.AddTest('TestFromVariantCurrency', @RunTTestValueVariantTestFromVariantCurrency);
+  lSuite.AddTest('TestFromVariantString', @RunTTestValueVariantTestFromVariantString);
+  lSuite.AddTest('TestFromVariantUnicodeString', @RunTTestValueVariantTestFromVariantUnicodeString);
+  lSuite.AddTest('TestFromVarrecInteger', @RunTTestValueVariantTestFromVarrecInteger);
+  lSuite.AddTest('TestFromVarrecBoolean', @RunTTestValueVariantTestFromVarrecBoolean);
+  lSuite.AddTest('TestFromVarRecChar', @RunTTestValueVariantTestFromVarRecChar);
+  lSuite.AddTest('TestFromVarRecExtended', @RunTTestValueVariantTestFromVarRecExtended);
+  lSuite.AddTest('TestFromVarRecString', @RunTTestValueVariantTestFromVarRecString);
+  lSuite.AddTest('TestFromVarRecPointer', @RunTTestValueVariantTestFromVarRecPointer);
+  lSuite.AddTest('TestFromVarRecPChar', @RunTTestValueVariantTestFromVarRecPChar);
+  lSuite.AddTest('TestFromVarRecObject', @RunTTestValueVariantTestFromVarRecObject);
+  lSuite.AddTest('TestFromVarRecClass', @RunTTestValueVariantTestFromVarRecClass);
+  lSuite.AddTest('TestFromVarRecWideChar', @RunTTestValueVariantTestFromVarRecWideChar);
+  lSuite.AddTest('TestFromVarRecPWideChar', @RunTTestValueVariantTestFromVarRecPWideChar);
+  lSuite.AddTest('TestFromVarRecAnsiString', @RunTTestValueVariantTestFromVarRecAnsiString);
+  lSuite.AddTest('TestFromVarRecCurrency', @RunTTestValueVariantTestFromVarRecCurrency);
+  lSuite.AddTest('TestFromVarRecVariant', @RunTTestValueVariantTestFromVarRecVariant);
+  lSuite.AddTest('TestFromVarRecInterface', @RunTTestValueVariantTestFromVarRecInterface);
+  lSuite.AddTest('TestFromVarRecWideString', @RunTTestValueVariantTestFromVarRecWideString);
+  lSuite.AddTest('TestFromVarRecInt64', @RunTTestValueVariantTestFromVarRecInt64);
+  lSuite.AddTest('TestFromVarRecQWord', @RunTTestValueVariantTestFromVarRecQWord);
+  lSuite.AddTest('TestFromVarRecUnicodeString', @RunTTestValueVariantTestFromVarRecUnicodeString);
+  lSuite.AddTest('TestArrayOfConstToTValue', @RunTTestValueVariantTestArrayOfConstToTValue);
+  lSuite.AddTest('TestCastAnsiString', @RunTTestValueVariantTestCastAnsiString);
+  {$IFNDEF FPC_WIDESTRING_EQUAL_UNICODESTRING}
+  lSuite.AddTest('TestCastUnicodeString', @RunTTestValueVariantTestCastUnicodeString);
+  {$ENDIF}
+  lSuite.AddTest('TestCastWideString', @RunTTestValueVariantTestCastWideString);
+  lSuite.AddTest('TestCastShortString', @RunTTestValueVariantTestCastShortString);
+end;
+
 end.

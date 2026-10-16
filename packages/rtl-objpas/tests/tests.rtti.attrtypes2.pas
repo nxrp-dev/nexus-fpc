@@ -60,11 +60,12 @@ type
 
 implementation
 
-uses fpcunit;
+uses obNXTestContext;
 
 procedure Check(ACondition: boolean; const AMessage: string);
 begin
-  TAssert.AssertTrue(AMessage,ACondition);
+  if not ACondition then
+    raise ENXTestFailure.Create(AMessage);
 end;
 
 

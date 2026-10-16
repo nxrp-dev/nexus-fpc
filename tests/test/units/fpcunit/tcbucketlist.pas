@@ -5,8 +5,7 @@ unit tcbucketlist;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils, testregistry,
-  contnrs;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, contnrs;
 
 type
   TMyBucketList = Class(TBucketList)
@@ -18,7 +17,15 @@ type
 
   { TTestBucketList }
 
-  TTestBucketList= class(TTestCase)
+  TTestBucketList= class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FList : TMyBucketList;
     FData : Array[1..10] of PtrInt;
@@ -27,9 +34,9 @@ type
     Procedure AddPointers(ACount : Integer);
     function GetCount: Integer;
   protected
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
+    procedure SetUp; virtual;
+    procedure TearDown; virtual;
+  public
     procedure TestCreate;
     procedure TestAdd;
     procedure TestAdd2;
@@ -38,6 +45,8 @@ type
     procedure TestDelete2;
     procedure TestClear;
   end;
+
+procedure RegistertcbucketlistTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -67,8 +76,8 @@ Var
 
 begin
   P:=FList.add(FPointers[1],Pointer(FData[1]));
-  AssertSame('Add returns data pointer',P,Pointer(FData[1]));
-  AssertEquals('Item count is 1',1,GetCount);
+  TestContext.AssertTrue((P)=(Pointer(FData[1])), 'Add returns data pointer');
+  TestContext.AssertTrue((1)=(GetCount), 'Item count is 1');
 end;
 
 procedure TTestBucketList.TestAdd2;
@@ -78,7 +87,7 @@ begin
   With TCounter.Create do
     try
       FList.ForEach(@CountItems);
-      AssertEquals('Item count is 1',2,Count);
+      TestContext.AssertTrue((2)=(Count), 'Item count is 1');
     Finally
       Free;
     end;
@@ -117,7 +126,7 @@ procedure TTestBucketList.TestAddDuplicate;
 
 begin
   AddPointers(1);
-  self.AssertException('Adding duplicate raises exception',EListError,@DoDuplicate);
+  TestContext.AssertRaises(EListError, @DoDuplicate, 'Adding duplicate raises exception');
 end;
 
 procedure TTestBucketList.TestDelete;
@@ -125,9 +134,9 @@ procedure TTestBucketList.TestDelete;
 begin
   AddPointers(3);
   FList.Remove(FPointers[3]);
-  AssertEquals('Deleted no longer exists',False,Flist.Exists(FPointers[3]));
-  AssertEquals('Remaining 2 exists',True,Flist.Exists(FPointers[2]));
-  AssertEquals('Remaining 1 exists',True,Flist.Exists(FPointers[1]));
+  TestContext.AssertTrue((False)=(Flist.Exists(FPointers[3])), 'Deleted no longer exists');
+  TestContext.AssertTrue((True)=(Flist.Exists(FPointers[2])), 'Remaining 2 exists');
+  TestContext.AssertTrue((True)=(Flist.Exists(FPointers[1])), 'Remaining 1 exists');
 end;
 
 procedure TTestBucketList.TestDelete2;
@@ -135,25 +144,25 @@ procedure TTestBucketList.TestDelete2;
 begin
   AddPointers(3);
   FList.Remove(FPointers[3]);
-  AssertEquals('Count after delete is 2',2,GetCount);
+  TestContext.AssertTrue((2)=(GetCount), 'Count after delete is 2');
   FList.Remove(FPointers[2]);
-  AssertEquals('Count after delete is 2',1,GetCount);
+  TestContext.AssertTrue((1)=(GetCount), 'Count after delete is 2');
   FList.Remove(FPointers[1]);
-  AssertEquals('Count after delete is 2',0,GetCount);
+  TestContext.AssertTrue((0)=(GetCount), 'Count after delete is 2');
 end;
 
 procedure TTestBucketList.TestClear;
 begin
   AddPointers(10);
   FList.Clear;
-  AssertEquals('Count after Clear is 0',0,GetCount);
+  TestContext.AssertTrue((0)=(GetCount), 'Count after Clear is 0');
 end;
 
 procedure TTestBucketList.TestCreate;
 
 begin
-  AssertEquals('Count should be 64',64,Flist.BucketCount);
-  AssertEquals('Item count is 0',0,GetCount);
+  TestContext.AssertTrue((64)=(Flist.BucketCount), 'Count should be 64');
+  TestContext.AssertTrue((0)=(GetCount), 'Item count is 0');
 end;
 
 procedure TTestBucketList.SetUp;
@@ -175,8 +184,95 @@ begin
   FreeAndNil(FList);
 end;
 
-initialization
 
-  RegisterTest(TTestBucketList);
+constructor TTestBucketList.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestBucketListTestCreate(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestCreate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestCreate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestAdd(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestAdd2(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestAdd2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestAddDuplicate(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestAddDuplicate');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAddDuplicate; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestDelete(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestDelete2(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestDelete2');
+  try
+    lFixture.SetUp;
+    try lFixture.TestDelete2; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestBucketListTestClear(AContext: TNXTestContext);
+var lFixture: TTestBucketList;
+begin
+  lFixture:=TTestBucketList.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertcbucketlistTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tcbucketlist.TTestBucketList');
+  lSuite.AddTest('TestCreate', @RunTTestBucketListTestCreate);
+  lSuite.AddTest('TestAdd', @RunTTestBucketListTestAdd);
+  lSuite.AddTest('TestAdd2', @RunTTestBucketListTestAdd2);
+  lSuite.AddTest('TestAddDuplicate', @RunTTestBucketListTestAddDuplicate);
+  lSuite.AddTest('TestDelete', @RunTTestBucketListTestDelete);
+  lSuite.AddTest('TestDelete2', @RunTTestBucketListTestDelete2);
+  lSuite.AddTest('TestClear', @RunTTestBucketListTestClear);
+end;
+
 end.
-

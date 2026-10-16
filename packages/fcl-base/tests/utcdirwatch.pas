@@ -5,9 +5,9 @@ unit utcdirwatch;
 interface
 
 uses
-  Classes, SysUtils, punit, testutils, testregistry, dirwatch;
+  Classes, SysUtils, obNXTestContext, obNXTestRegistry, obNXTestSuite, dirwatch;
 
-procedure RegisterTests;
+procedure RegisterutcdirwatchTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -41,7 +41,7 @@ var
   Events : TEventObject;
 
 // Helper functions from the original test case
-procedure CleanDirs(aDir: String);
+procedure CleanDirs(AContext: TNXTestContext; aDir: String);
 Var
   Info : TSearchRec;
   lDir,lFull : String;
@@ -55,13 +55,13 @@ begin
           begin
           if not ((Info.Name='.') or (Info.Name='..')) then
             begin
-            CleanDirs(lFull);
+            CleanDirs(AContext, lFull);
             if not RemoveDir(lFull) then
-              Fail('Failed to remove directory '+lFull)
+              AContext.Fail('Failed to remove directory '+lFull)
             end;
           end
         else if not DeleteFile(lFull) then
-          Fail('Failed to remove file '+lFull)
+          AContext.Fail('Failed to remove file '+lFull)
       until FindNext(Info)<>0;
     finally
       FindClose(Info);
@@ -116,10 +116,10 @@ begin
   end;
 end;
 
-procedure DoDeleteFile(const aName: string);
+procedure DoDeleteFile(AContext: TNXTestContext; const aName: string);
 begin
   If not DeleteFile(FTestDir+aName) then
-    Fail('Failed to delete file '+FTestDir+aName);
+    AContext.Fail('Failed to delete file '+FTestDir+aName);
 end;
 
 procedure TEventObject.HandleCreateFile(Sender: TObject);
@@ -127,27 +127,28 @@ begin
   DoCreateFile('name.txt');
 end;
 
-procedure AssertEventsEquals(const Msg: String; aExpected, aActual: TWatchFileEvents);
+procedure AssertEventsEquals(AContext: TNXTestContext; const Msg: String; aExpected, aActual: TWatchFileEvents);
 begin
-  AssertEquals(Msg,SetToString(PTypeInfo(TypeInfo(TWatchFileEvents)),Longint(aExpected),False),
-                   SetToString(PTypeInfo(TypeInfo(TWatchFileEvents)),Longint(aActual),False));
+  AContext.AssertTrue((SetToString(PTypeInfo(TypeInfo(TWatchFileEvents)),Longint(aExpected),False))=(SetToString(PTypeInfo(TypeInfo(TWatchFileEvents)),Longint(aActual),False)), Msg);
 end;
 
-procedure AssertChange(const Msg: String; aIndex: Integer; aEntry: TWatchDirectoryEntry; aEvents: TWatchFileEvents; const aFileName: string = '');
+procedure AssertChange(AContext: TNXTestContext; const Msg: String; aIndex: Integer; aEntry: TWatchDirectoryEntry; aEvents: TWatchFileEvents; const aFileName: string = '');
 var
   M : String;
 begin
   M:=Msg+Format(' [%d]: ',[aIndex]);
-  AssertTrue(M+'correct index',aIndex<Length(FChanged));
-  AssertSame(M+'correct dir entry',aEntry,FChanged[aIndex].Dir);
-  AssertEventsEquals(M+'correct changes',aEvents,FChanged[aIndex].Events);
+  AContext.AssertTrue(aIndex<Length(FChanged), M+'correct index');
+  AContext.AssertTrue((aEntry)=(FChanged[aIndex].Dir), M+'correct dir entry');
+  AssertEventsEquals(AContext, M+'correct changes',aEvents,FChanged[aIndex].Events);
   if aFileName<>'' then
-    AssertEquals(M+'correct fileName',aFileName,FChanged[aIndex].FN);
+    AContext.AssertTrue((aFileName)=(FChanged[aIndex].FN), M+'correct fileName');
 end;
 
 // Per-test setup and teardown
 procedure TestSetup;
 begin
+  Events:=TEventObject.Create;
+  BaseDir:=IncludeTrailingPathDelimiter(GetTempDir(False))+'nx-dirwatch-'+IntToStr(GetProcessID)+PathDelim;
   FDirWatch:=TDirwatch.Create(Nil);
   FTestDir:=IncludeTrailingPathDelimiter(BaseDir);
   ForceDirectories(FTestDir);
@@ -158,80 +159,82 @@ begin
   SetLength(FChanged, 0);
 end;
 
-procedure TestTearDown;
+procedure TestTearDown(AContext: TNXTestContext);
 begin
   FDirWatch.Free;
-  CleanDirs(FTestDir);
+  CleanDirs(AContext, FTestDir);
+  RemoveDir(FTestDir);
+  FreeAndNil(Events);
 end;
 
 // Flattened Tests
-function TestDirWatch_TestHookUp: TTestString;
+procedure TestDirWatch_TestHookUp(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
-    AssertNotNull('Have watch',FDirWatch);
-    AssertEquals('No watches',0,FDirWatch.Watches.Count);
-    AssertTrue('Have test dir',FTestDir<>'');
-    AssertTrue('test dir exists',DirectoryExists(FTestDir));
-    AssertEquals('No max check count',0,FMaxLoopCount);
-    AssertEquals('No check count',0,FCheckCount);
-    AssertTrue('No docheckone',FDoCheckOne=nil);
+    AContext.AssertTrue((FDirWatch)<>nil, 'Have watch');
+    AContext.AssertTrue((0)=(FDirWatch.Watches.Count), 'No watches');
+    AContext.AssertTrue(FTestDir<>'', 'Have test dir');
+    AContext.AssertTrue(DirectoryExists(FTestDir), 'test dir exists');
+    AContext.AssertTrue((0)=(FMaxLoopCount), 'No max check count');
+    AContext.AssertTrue((0)=(FCheckCount), 'No check count');
+    AContext.AssertTrue(FDoCheckOne=nil, 'No docheckone');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestAddFile: TTestString;
+procedure TestDirWatch_TestAddFile(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.AddWatch(FTestDir,[feCreate]);
     FDirWatch.InitWatch;
     DoCreateFile('name.txt');
-    AssertEquals('Change detected', 1, FDirWatch.Check);
-    AssertChange('Create',0,FDirWatch.Watches[0],[feCreate],'name.txt');
+    AContext.AssertTrue((1)=(FDirWatch.Check), 'Change detected');
+    AssertChange(AContext, 'Create',0,FDirWatch.Watches[0],[feCreate],'name.txt');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestAppendFile: TTestString;
+procedure TestDirWatch_TestAppendFile(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.AddWatch(FTestDir,[feModify]);
     DoCreateFile('name.txt');
     FDirWatch.InitWatch;
     DoAppendFile('name.txt');
-    AssertEquals('Change detected',1,FDirWatch.Check);
-    AssertChange('Change detected',0,FDirWatch.Watches[0],[feModify],'name.txt');
+    AContext.AssertTrue((1)=(FDirWatch.Check), 'Change detected');
+    AssertChange(AContext, 'Change detected',0,FDirWatch.Watches[0],[feModify],'name.txt');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestDeleteFile: TTestString;
+procedure TestDirWatch_TestDeleteFile(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.AddWatch(FTestDir,[feDelete]);
     DoCreateFile('name.txt');
     FDirWatch.InitWatch;
-    DoDeleteFile('name.txt');
-    AssertEquals('Change detected',1,FDirWatch.Check);
-    AssertChange('Change detected',0,FDirWatch.Watches[0],[feDelete],'name.txt');
+    DoDeleteFile(AContext, 'name.txt');
+    AContext.AssertTrue((1)=(FDirWatch.Check), 'Change detected');
+    AssertChange(AContext, 'Change detected',0,FDirWatch.Watches[0],[feDelete],'name.txt');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestLoopNoThread: TTestString;
+procedure TestDirWatch_TestLoopNoThread(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.AddWatch(FTestDir,[feCreate]);
@@ -239,17 +242,17 @@ begin
     FDoCheckOne:=@Events.HandleCreateFile;
     FMaxLoopCount:=2;
     FDirWatch.StartLoop;
-    AssertChange('Change detected',0,FDirWatch.Watches[0],[feCreate],'name.txt');
+    AssertChange(AContext, 'Change detected',0,FDirWatch.Watches[0],[feCreate],'name.txt');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestLoopThread: TTestString;
+procedure TestDirWatch_TestLoopThread(AContext: TNXTestContext);
 var
   I : Integer;
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.AddWatch(FTestDir,[feCreate]);
@@ -263,62 +266,38 @@ begin
       CheckSynchronize;
       inc(i);
     until (I>=50) or (length(FChanged)>0);
-    AssertChange('Change detected',0,FDirWatch.Watches[0],[feCreate],'name.txt');
+    AssertChange(AContext, 'Change detected',0,FDirWatch.Watches[0],[feCreate],'name.txt');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-function TestDirWatch_TestAddFileBaseDir: TTestString;
+procedure TestDirWatch_TestAddFileBaseDir(AContext: TNXTestContext);
 begin
-  Result := '';
+
   TestSetup;
   try
     FDirwatch.BaseDir:=FTestDir;
-    AssertTrue('Create Subdir ',ForceDirectories(FTestDir+'sub'));
+    AContext.AssertTrue(ForceDirectories(FTestDir+'sub'), 'Create Subdir ');
     FDirwatch.AddWatch('',[feCreate]);
     FDirWatch.InitWatch;
     DoCreateFile('sub/name.txt');
-    AssertEquals('Subdirs not watched',0,FDirWatch.Check);
+    AContext.AssertTrue((0)=(FDirWatch.Check), 'Subdirs not watched');
   finally
-    TestTearDown;
+    TestTearDown(AContext);
   end;
 end;
 
-// Suite setup and registration
-procedure GetBaseDir;
-var
-  FN : string;
+procedure RegisterutcdirwatchTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
 begin
-  BaseDir:=IncludeTrailingPathDelimiter(GetTempDir)+'Dirwatch'+PathDelim;
-  FN:=ExtractFilePath(ParamStr(0))+'config.ini';
-  If FileExists(FN) then
-    With TMemIniFile.Create(FN) do
-      try
-        BaseDir:=ReadString('dirwatch','basedir',BaseDir);
-      finally
-        Free;
-      end;
+  lSuite:=ARegistry.AddSuite('utcdirwatch.TDirWatchTests');
+  lSuite.AddTest('TestHookUp', @TestDirWatch_TestHookUp);
+  lSuite.AddTest('TestAddFile', @TestDirWatch_TestAddFile);
+  lSuite.AddTest('TestAppendFile', @TestDirWatch_TestAppendFile);
+  lSuite.AddTest('TestDeleteFile', @TestDirWatch_TestDeleteFile);
+  lSuite.AddTest('TestLoopNoThread', @TestDirWatch_TestLoopNoThread);
+  lSuite.AddTest('TestLoopThread', @TestDirWatch_TestLoopThread);
+  lSuite.AddTest('TestAddFileBaseDir', @TestDirWatch_TestAddFileBaseDir);
 end;
-
-function SuiteSetup: string;
-begin
-  Result := '';
-  GetBaseDir;
-end;
-
-procedure RegisterTests;
-var
-  lSuite : PSuite;
-begin
-  lSuite:=AddSuite('TDirWatchTests', @SuiteSetup, nil, nil, true);
-  AddTest('TestHookUp', @TestDirWatch_TestHookUp, lSuite);
-  AddTest('TestAddFile', @TestDirWatch_TestAddFile, lSuite);
-  AddTest('TestAppendFile', @TestDirWatch_TestAppendFile, lSuite);
-  AddTest('TestDeleteFile', @TestDirWatch_TestDeleteFile, lSuite);
-  AddTest('TestLoopNoThread', @TestDirWatch_TestLoopNoThread, lSuite);
-  AddTest('TestLoopThread', @TestDirWatch_TestLoopThread, lSuite);
-  AddTest('TestAddFileBaseDir', @TestDirWatch_TestAddFileBaseDir, lSuite);
-end;
-
 end.

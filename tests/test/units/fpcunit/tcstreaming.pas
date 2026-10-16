@@ -5,13 +5,21 @@ unit tcstreaming;
 interface
 
 Uses
-  SysUtils,Classes, fpcunit, testutils, testregistry;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, SysUtils,Classes;
 
 Type
 
   { TTestStreaming }
 
-  TTestStreaming = Class(TTestCase)
+  TTestStreaming = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FStream : TMemoryStream;
     Function ReadByte : byte;
@@ -21,10 +29,10 @@ Type
     function ReadBareStr: string;
     function ReadString(V : TValueType): string;
     function ReadWideString(V : TValueType): WideString;
-    Procedure Fail(FMt : String; Args : Array of const); overload;
+
   Public
-    Procedure Setup; override;
-    Procedure TearDown; override;
+    Procedure Setup; virtual;
+    Procedure TearDown; virtual;
     Procedure SaveToStream(C : TComponent);
     Function ReadValue : TValueType;
     Procedure ExpectValue(AValue : TValueType);
@@ -44,6 +52,8 @@ Type
     Procedure ExpectSignature;
     Procedure ExpectEndOfStream;
   end;
+
+procedure RegistertcstreamingTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -66,7 +76,7 @@ Var
 begin
   B:=ReadByte;
   If (B<>AValue) then
-    Fail('Expected byte %d, got %d',[AValue,B]);
+    TestContext.Fail(Format('Expected byte %d, got %d', [AValue,B]));
 end;
 
 procedure TTestStreaming.ExpectCurrency(AValue: Currency);
@@ -78,7 +88,7 @@ begin
   ExpectValue(vaCurrency);
   FStream.Read(C,Sizeof(C));
   If (C<>AValue) then
-    Fail('Expected currency %f, got %f',[AValue,C]);
+    TestContext.Fail(Format('Expected currency %f, got %f', [AValue,C]));
 end;
 
 procedure TTestStreaming.ExpectDate(AValue: TDateTime);
@@ -90,7 +100,7 @@ begin
   ExpectValue(vaDate);
   FStream.Read(C,Sizeof(C));
   If (C<>AValue) then
-    Fail('Expected datetime %f, got %f',[AValue,C]);
+    TestContext.Fail(Format('Expected datetime %f, got %f', [AValue,C]));
 end;
 
 procedure TTestStreaming.ExpectEndofList;
@@ -107,7 +117,7 @@ begin
   ExpectValue(vaExtended);
   FStream.Read(E,Sizeof(E));
   If Abs(E-AValue)>0.01 then
-    Fail('Expected extended %f, got %f',[AValue,E]);
+    TestContext.Fail(Format('Expected extended %f, got %f', [AValue,E]));
 end;
 
 procedure TTestStreaming.ExpectFlags(Flags: TFilerFlags;
@@ -132,9 +142,9 @@ begin
   else
     FStream.Position:=FStream.Position-1;
   If (FLags<>F) then
-    Fail('Wrong Flags, expected %d, got %d',[Integer(Flags),B]);
+    TestContext.Fail(Format('Wrong Flags, expected %d, got %d', [Integer(Flags),B]));
   If I<>APosition then
-    Fail('Wrong position, expected %d, got %d',[APosition,I]);
+    TestContext.Fail(Format('Wrong position, expected %d, got %d', [APosition,I]));
 end;
 
 procedure TTestStreaming.ExpectIdent(AValue: String);
@@ -161,10 +171,10 @@ begin
     vaNull:
       S := 'Null';
   else
-    Fail('Expected identifier property type, got %s',[valName(V)]);
+    TestContext.Fail(Format('Expected identifier property type, got %s', [valName(V)]));
   end;
   If (S<>AValue) then
-    Fail('Wrong identifier %s, expected %s',[S,AValue]);
+    TestContext.Fail(Format('Wrong identifier %s, expected %s', [S,AValue]));
 end;
 
 procedure TTestStreaming.ExpectInt64(AValue: Int64);
@@ -181,10 +191,10 @@ begin
     vaInt32 : I:=ReadInteger;
     vaInt64 : I:=ReadInt64;
   else
-    Fail('Expected integer property type, got %s',[valName(V)]);
+    TestContext.Fail(Format('Expected integer property type, got %s', [valName(V)]));
   end;
   If (AValue<>I) then
-    Fail('Expected integer %d, but got %d',[AValue,I]);
+    TestContext.Fail(Format('Expected integer %d, but got %d', [AValue,I]));
 end;
 
 procedure TTestStreaming.ExpectInteger(AValue: Integer);
@@ -200,10 +210,10 @@ begin
     vaInt16 : I:=ReadWord;
     vaInt32 : I:=ReadInteger;
   else
-    Fail('Expected integer  property type, got %s',[valName(V)]);
+    TestContext.Fail(Format('Expected integer  property type, got %s', [valName(V)]));
   end;
   If (AValue<>I) then
-    Fail('Expected integer %d, but got %d',[AValue,I]);
+    TestContext.Fail(Format('Expected integer %d, but got %d', [AValue,I]));
 end;
 
 
@@ -220,7 +230,7 @@ begin
   L:=ReadInteger;
   E:=Longint(Sig);
   if L<>E then
-    Fail('Invalid signature %d, expected %d',[L,E]);
+    TestContext.Fail(Format('Invalid signature %d, expected %d', [L,E]));
 end;
 
 procedure TTestStreaming.ExpectSingle(AValue: Single);
@@ -232,7 +242,7 @@ begin
   ExpectValue(vaSingle);
   FStream.Read(S,SizeOf(Single));
   If Abs(AValue-S)>0.0001 then
-    Fail('Expected single %f, but got %s',[AValue,S]);
+    TestContext.Fail(Format('Expected single %f, but got %s', [AValue,S]));
 end;
 
 function TTestStreaming.ReadString(V : TValueType): string;
@@ -242,7 +252,7 @@ var
   B : Byte;
 
 begin
-  If V in [vaWString, vaUTF8String] then
+  If V in [vaWString, vaUString, vaUTF8String] then
     Result := ReadWideString(V)
   else
     begin
@@ -256,7 +266,7 @@ begin
       vaLString:
         FStream.Read(L, SizeOf(Integer));
     else
-      Fail('Wrong type %s, expected string type.',[ValName(V)]);
+      TestContext.Fail(Format('Wrong type %s, expected string type.', [ValName(V)]));
     end;
     SetLength(Result, L);
     If (L>0) then
@@ -277,7 +287,7 @@ begin
     begin
     L := 0;
     case V of
-      vaWString:
+      vaWString, vaUString:
         begin
         FStream.Read(L, SizeOf(Integer));
         SetLength(Result, L);
@@ -291,7 +301,7 @@ begin
         Result:=Temp
         end;
     else
-      Fail('Wrong type %s, expected widestring type.',[ValName(V)]);
+      TestContext.Fail(Format('Wrong type %s, expected widestring type.', [ValName(V)]));
     end;
   end;
 end;
@@ -303,12 +313,12 @@ Var
   S : String;
 begin
   V:=ReadValue;
-  If v in [vaString,vaLstring,vaWString,vaUTF8String] then
+  If v in [vaString,vaLstring,vaWString,vaUString,vaUTF8String] then
     S:=ReadString(V)
   else
-    Fail('Expected string type, but got : %s',[ValName(V)]);
+    TestContext.Fail(Format('Expected string type, but got : %s', [ValName(V)]));
   If (S<>AValue) then
-    Fail('Expected string "%s", but got "%s"',[AVAlue,S]);
+    TestContext.Fail(Format('Expected string "%s", but got "%s"', [AVAlue,S]));
 end;
 
 procedure TTestStreaming.ExpectValue(AValue: TValueType);
@@ -319,7 +329,7 @@ Var
 begin
   V:=ReadValue;
   If (V<>AValue) then
-    Fail('Expecting value %s, but read %s',[ValName(AValue),ValName(V)]);
+    TestContext.Fail(Format('Expecting value %s, but read %s', [ValName(AValue),ValName(V)]));
 end;
 
 procedure TTestStreaming.ExpectWideString(AValue: WideString);
@@ -330,19 +340,16 @@ Var
 
 begin
   V:=ReadValue;
-  If v in [vaString,vaLstring,vaWString,vaUTF8String] then
+  If v in [vaString,vaLstring,vaWString,vaUString,vaUTF8String] then
     W:=ReadWideString(V)
   else
-    Fail('Expected string type, but got : %s',[ValName(V)]);
+    TestContext.Fail(Format('Expected string type, but got : %s', [ValName(V)]));
   If (W<>AValue) then
-    Fail('Expected string "%s", but got "%s"',[AVAlue,W]);
+    TestContext.Fail(Format('Expected string "%s", but got "%s"', [AVAlue,W]));
 end;
 
 
-procedure TTestStreaming.Fail(Fmt: String; Args: array of const);
-begin
-  Fail(Format(Fmt,Args));
-end;
+
 
 function TTestStreaming.ReadValue: TValueType;
 {$IFDEF FPC}
@@ -422,14 +429,27 @@ Var
 begin
   S:=ReadBareStr;
   If (S<>AValue) then
-    Fail('Expected bare string %s, got :%s',[AValue,S]);
+    TestContext.Fail(Format('Expected bare string %s, got :%s', [AValue,S]));
 end;
 
 procedure TTestStreaming.ExpectEndOfStream;
 begin
   If (FStream.Position<>FStream.Size) then
-    Fail('Expected at end of stream, current position=%d, size=%d',
-          [FStream.Position,FStream.Size]);
+    TestContext.Fail(Format('Expected at end of stream, current position=%d, size=%d', [FStream.Position,FStream.Size]));
+end;
+
+
+constructor TTestStreaming.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RegistertcstreamingTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+
 end;
 
 end.

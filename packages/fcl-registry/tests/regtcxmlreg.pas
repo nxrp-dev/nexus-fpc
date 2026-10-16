@@ -5,25 +5,35 @@ unit regtcxmlreg;
 interface
 
 uses
-  fpcunit, testutils, testregistry, testdecorator, Classes, SysUtils, xmlreg;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, xmlreg;
 
 Type
 
   { TTestXMLRegistry }
 
-  TTestXMLRegistry = Class(TTestCase)
+  TTestXMLRegistry = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FXMLReg: TXmlRegistry;
   Protected
-    Procedure Setup; override;
-    Procedure TearDown; override;
+    Procedure Setup; virtual;
+    Procedure TearDown; virtual;
     Property XMLReg : TXmlRegistry Read FXMLReg;
-  Published
+  public
     Procedure TestReadBufDataDWord;
     Procedure TestReadBufDataString;
     Procedure TestReadBufDataBinary;
   end;
 
+
+procedure RegisterregtcxmlregTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -31,7 +41,7 @@ implementation
 
 procedure TTestXMLRegistry.Setup;
 begin
-  inherited Setup;
+
   DeleteFile('test.xml');
   FXMLReg:=TXmlRegistry.Create('test.xml');
 end;
@@ -40,7 +50,7 @@ procedure TTestXMLRegistry.TearDown;
 begin
   FreeAndNil(FXMLReg);
   DeleteFile('test.xml');
-  inherited TearDown;
+
 end;
 
 procedure TTestXMLRegistry.TestReadBufDataDWord;
@@ -57,9 +67,9 @@ begin
   XMLReg.SetValueData('b',dtDWORD,C,SizeOf(C));
   XMLReg.Flush;
   DS:=SizeOf(SmallInt);
-  AssertEquals('Cannot read, buffer size too small',False,XMLReg.GetValueData('b',dt,I,ds));
-  AssertTrue('Correct data type reported',dt=dtDWord);
-  AssertEquals('Correct data buffer size reported',SizeOf(C),DS);
+  TestContext.AssertTrue((False)=(XMLReg.GetValueData('b',dt,I,ds)), 'Cannot read, buffer size too small');
+  TestContext.AssertTrue(dt=dtDWord, 'Correct data type reported');
+  TestContext.AssertTrue((SizeOf(C))=(DS), 'Correct data buffer size reported');
 
 end;
 
@@ -77,9 +87,9 @@ begin
   XMLReg.Flush;
   DS:=SizeOf(S1) div 2;
   S2:=StringOfChar('*',DS);
-  AssertEquals('Cannot read, buffer size too small',False,XMLReg.GetValueData('b',dt,S2[1],ds));
-  AssertTrue('Correct data type reported',dt=dtString);
-  AssertEquals('Correct data buffer size reported',Length(S1),DS);
+  TestContext.AssertTrue((False)=(XMLReg.GetValueData('b',dt,S2[1],ds)), 'Cannot read, buffer size too small');
+  TestContext.AssertTrue(dt=dtString, 'Correct data type reported');
+  TestContext.AssertTrue((Length(S1))=(DS), 'Correct data buffer size reported');
 end;
 
 procedure TTestXMLRegistry.TestReadBufDataBinary;
@@ -100,12 +110,56 @@ begin
   SetLength(S2,DS);
   For I:=0 to DS-1 do
     S2[I]:=i;
-  AssertEquals('Cannot read, buffer size too small',False,XMLReg.GetValueData('b',dt,S2[0],DS));
-  AssertTrue('Correct data type reported',dt=dtBinary);
-  AssertEquals('Correct data buffer size reported',Length(S1),DS);
+  TestContext.AssertTrue((False)=(XMLReg.GetValueData('b',dt,S2[0],DS)), 'Cannot read, buffer size too small');
+  TestContext.AssertTrue(dt=dtBinary, 'Correct data type reported');
+  TestContext.AssertTrue((Length(S1))=(DS), 'Correct data buffer size reported');
 end;
 
-begin
-  RegisterTest(TTestXMLRegistry);
-end.
 
+constructor TTestXMLRegistry.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestXMLRegistryTestReadBufDataDWord(AContext: TNXTestContext);
+var lFixture: TTestXMLRegistry;
+begin
+  lFixture:=TTestXMLRegistry.Create(AContext, 'TestReadBufDataDWord');
+  try
+    lFixture.SetUp;
+    try lFixture.TestReadBufDataDWord; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestXMLRegistryTestReadBufDataString(AContext: TNXTestContext);
+var lFixture: TTestXMLRegistry;
+begin
+  lFixture:=TTestXMLRegistry.Create(AContext, 'TestReadBufDataString');
+  try
+    lFixture.SetUp;
+    try lFixture.TestReadBufDataString; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestXMLRegistryTestReadBufDataBinary(AContext: TNXTestContext);
+var lFixture: TTestXMLRegistry;
+begin
+  lFixture:=TTestXMLRegistry.Create(AContext, 'TestReadBufDataBinary');
+  try
+    lFixture.SetUp;
+    try lFixture.TestReadBufDataBinary; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterregtcxmlregTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('regtcxmlreg.TTestXMLRegistry');
+  lSuite.AddTest('TestReadBufDataDWord', @RunTTestXMLRegistryTestReadBufDataDWord);
+  lSuite.AddTest('TestReadBufDataString', @RunTTestXMLRegistryTestReadBufDataString);
+  lSuite.AddTest('TestReadBufDataBinary', @RunTTestXMLRegistryTestReadBufDataBinary);
+end;
+
+end.

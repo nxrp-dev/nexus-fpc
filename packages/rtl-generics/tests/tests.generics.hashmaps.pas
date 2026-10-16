@@ -32,7 +32,7 @@ unit tests.generics.hashmaps;
 interface
 
 uses
-  fpcunit, testregistry, testutils, tests.generics.utils,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, tests.generics.utils,
   typinfo, Classes, SysUtils, StrUtils, Generics.Collections, Generics.Defaults;
 
 type
@@ -47,7 +47,7 @@ type
     procedure CountAsKey_Notify(const AKind: string; ASender: TObject; const AItem: Integer; AAction: TCollectionNotification);
     procedure CountAsKey_NotifyValue(ASender: TObject; const AItem: Integer; AAction: TCollectionNotification);
     procedure CountAsKey_NotifyKey(ASender: TObject; const AItem: Integer; AAction: TCollectionNotification);
-  published
+  public
     procedure Test_CountAsKey_OpenAddressingLP;
     procedure Test_CountAsKey_OpenAddressingLPT;
     procedure Test_CountAsKey_OpenAddressingQP;
@@ -74,6 +74,8 @@ type
     procedure Test_TryGetValueEmpty_xxHash32Pascal;
   end;
 
+procedure RegistertestsgenericshashmapsTests(ARegistry: TNXTestRegistry);
+
 implementation
 
 { TTestHashMaps }
@@ -86,7 +88,7 @@ begin
   if Assigned(AAction) then
     LCollectionNotificationStr := GetEnumName(TypeInfo(TCollectionNotification), Ord(AAction^));
 
-  AssertEquals(AWhat + LCollectionNotificationStr, AExpectedValue, AValue);
+  TestContext.AssertTrue((AExpectedValue)=(AValue), AWhat + LCollectionNotificationStr);
 end;
 
 procedure TTestHashMaps.CountAsKey_Notify(const AKind: string; ASender: TObject; const
@@ -209,8 +211,8 @@ try
   NotificationAdd(LDictionary, ['Aaa', 'Bbb'], cnExtracted);
   with LDictionary.ExtractPair('Aaa') do
   begin
-    AssertEquals(Key, 'Aaa');
-    AssertEquals(Value, 'Bbb');
+    TestContext.AssertTrue((Key)=('Aaa'), '');
+    TestContext.AssertTrue((Value)=('Bbb'), '');
   end;
   AssertNotificationsExecutedStr;
 
@@ -299,9 +301,9 @@ end;
       LDictionary.Add(i, EmptyRecord);
     LDictionary.Remove(1);
 
-    CheckNotEquals(LDictionary.Capacity, LDictionary.Count);
+    TestContext.AssertTrue((LDictionary.Capacity)<>(LDictionary.Count), '');
     LDictionary.TrimExcess;
-    AssertEquals(LDictionary.Capacity, 8);
+    TestContext.AssertTrue((LDictionary.Capacity)=(8), '');
   finally
     LDictionary.Free;
   end;
@@ -340,26 +342,26 @@ begin
   LObjects := TDictionary<string, TObject>.Create;
   try
     LObjects.TryGetValue('blah', LFoundObject);
-    AssertTrue(nil = LFoundObject);
+    TestContext.AssertTrue(nil = LFoundObject, '');
 
     LObject := TObject.Create;
     LObjects.AddOrSetValue('nope', LObject);
 
     LObjects.TryGetValue('blah', LFoundObject);
-    AssertTrue(nil = LFoundObject);
+    TestContext.AssertTrue(nil = LFoundObject, '');
 
     LObject := TObject.Create;
     LObjects.AddOrSetValue('blah', LObject);
 
     LObjects.TryGetValue('blah', LFoundObject);
-    AssertTrue(LObject = LFoundObject);
+    TestContext.AssertTrue(LObject = LFoundObject, '');
 
     LObjects.Remove('blah');
 
     LObject.Free;
 
     LObjects.TryGetValue('blah', LFoundObject);
-    AssertTrue(nil = LFoundObject);
+    TestContext.AssertTrue(nil = LFoundObject, '');
 
     LObjects['nope'].Free;
   finally
@@ -373,14 +375,14 @@ end;
     Map.AddOrSetValue('some key', 'some value');
 
     B := Map.TryGetValue('some key', V);
-    AssertTrue(B);
-    AssertEquals('some value', V);
+    TestContext.AssertTrue(B, '');
+    TestContext.AssertTrue(('some value')=(V), '');
 
     B := Map.TryGetValue('some other key', V);
-    AssertFalse(B);
+    TestContext.AssertTrue(not (B), '');
 
     B := Map.TryGetValue('', V);
-    AssertFalse(B);
+    TestContext.AssertTrue(not (B), '');
   finally
     FreeAndNil(Map)
   end;
@@ -404,7 +406,211 @@ begin
   TEST_TRYGETEMPTYVALUE;
 end;
 
-begin
-  RegisterTest(TTestHashMaps);
-end.
 
+procedure RunTTestHashMapsTest_CountAsKey_OpenAddressingLP(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_OpenAddressingLP');
+  try
+    lFixture.Test_CountAsKey_OpenAddressingLP;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_OpenAddressingLPT(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_OpenAddressingLPT');
+  try
+    lFixture.Test_CountAsKey_OpenAddressingLPT;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_OpenAddressingQP(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_OpenAddressingQP');
+  try
+    lFixture.Test_CountAsKey_OpenAddressingQP;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_OpenAddressingDH(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_OpenAddressingDH');
+  try
+    lFixture.Test_CountAsKey_OpenAddressingDH;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_CuckooD2(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_CuckooD2');
+  try
+    lFixture.Test_CountAsKey_CuckooD2;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_CuckooD4(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_CuckooD4');
+  try
+    lFixture.Test_CountAsKey_CuckooD4;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CountAsKey_CuckooD6(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CountAsKey_CuckooD6');
+  try
+    lFixture.Test_CountAsKey_CuckooD6;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_OpenAddressingLP_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_OpenAddressingLP_Notification');
+  try
+    lFixture.Test_OpenAddressingLP_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_OpenAddressingLPT_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_OpenAddressingLPT_Notification');
+  try
+    lFixture.Test_OpenAddressingLPT_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_OpenAddressingQP_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_OpenAddressingQP_Notification');
+  try
+    lFixture.Test_OpenAddressingQP_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_OpenAddressingDH_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_OpenAddressingDH_Notification');
+  try
+    lFixture.Test_OpenAddressingDH_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CuckooD2_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CuckooD2_Notification');
+  try
+    lFixture.Test_CuckooD2_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CuckooD4_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CuckooD4_Notification');
+  try
+    lFixture.Test_CuckooD4_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CuckooD6_Notification(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CuckooD6_Notification');
+  try
+    lFixture.Test_CuckooD6_Notification;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_OpenAddressingLP_TrimExcess(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_OpenAddressingLP_TrimExcess');
+  try
+    lFixture.Test_OpenAddressingLP_TrimExcess;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_CuckooD2_TrimExcess(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_CuckooD2_TrimExcess');
+  try
+    lFixture.Test_CuckooD2_TrimExcess;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_ObjectDictionary(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_ObjectDictionary');
+  try
+    lFixture.Test_ObjectDictionary;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_TryAddOrSetOrGetValue(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_TryAddOrSetOrGetValue');
+  try
+    lFixture.Test_TryAddOrSetOrGetValue;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_TryGetValueEmpty_xxHash32(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_TryGetValueEmpty_xxHash32');
+  try
+    lFixture.Test_TryGetValueEmpty_xxHash32;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestHashMapsTest_TryGetValueEmpty_xxHash32Pascal(AContext: TNXTestContext);
+var lFixture: TTestHashMaps;
+begin
+  lFixture:=TTestHashMaps.Create(AContext, 'Test_TryGetValueEmpty_xxHash32Pascal');
+  try
+    lFixture.Test_TryGetValueEmpty_xxHash32Pascal;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericshashmapsTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.hashmaps.TTestHashMaps');
+  lSuite.AddTest('Test_CountAsKey_OpenAddressingLP', @RunTTestHashMapsTest_CountAsKey_OpenAddressingLP);
+  lSuite.AddTest('Test_CountAsKey_OpenAddressingLPT', @RunTTestHashMapsTest_CountAsKey_OpenAddressingLPT);
+  lSuite.AddTest('Test_CountAsKey_OpenAddressingQP', @RunTTestHashMapsTest_CountAsKey_OpenAddressingQP);
+  lSuite.AddTest('Test_CountAsKey_OpenAddressingDH', @RunTTestHashMapsTest_CountAsKey_OpenAddressingDH);
+  lSuite.AddTest('Test_CountAsKey_CuckooD2', @RunTTestHashMapsTest_CountAsKey_CuckooD2);
+  lSuite.AddTest('Test_CountAsKey_CuckooD4', @RunTTestHashMapsTest_CountAsKey_CuckooD4);
+  lSuite.AddTest('Test_CountAsKey_CuckooD6', @RunTTestHashMapsTest_CountAsKey_CuckooD6);
+  lSuite.AddTest('Test_OpenAddressingLP_Notification', @RunTTestHashMapsTest_OpenAddressingLP_Notification);
+  lSuite.AddTest('Test_OpenAddressingLPT_Notification', @RunTTestHashMapsTest_OpenAddressingLPT_Notification);
+  lSuite.AddTest('Test_OpenAddressingQP_Notification', @RunTTestHashMapsTest_OpenAddressingQP_Notification);
+  lSuite.AddTest('Test_OpenAddressingDH_Notification', @RunTTestHashMapsTest_OpenAddressingDH_Notification);
+  lSuite.AddTest('Test_CuckooD2_Notification', @RunTTestHashMapsTest_CuckooD2_Notification);
+  lSuite.AddTest('Test_CuckooD4_Notification', @RunTTestHashMapsTest_CuckooD4_Notification);
+  lSuite.AddTest('Test_CuckooD6_Notification', @RunTTestHashMapsTest_CuckooD6_Notification);
+  lSuite.AddTest('Test_OpenAddressingLP_TrimExcess', @RunTTestHashMapsTest_OpenAddressingLP_TrimExcess);
+  lSuite.AddTest('Test_CuckooD2_TrimExcess', @RunTTestHashMapsTest_CuckooD2_TrimExcess);
+  lSuite.AddTest('Test_ObjectDictionary', @RunTTestHashMapsTest_ObjectDictionary);
+  lSuite.AddTest('Test_TryAddOrSetOrGetValue', @RunTTestHashMapsTest_TryAddOrSetOrGetValue);
+  lSuite.AddTest('Test_TryGetValueEmpty_xxHash32', @RunTTestHashMapsTest_TryGetValueEmpty_xxHash32);
+  lSuite.AddTest('Test_TryGetValueEmpty_xxHash32Pascal', @RunTTestHashMapsTest_TryGetValueEmpty_xxHash32Pascal);
+end;
+
+end.

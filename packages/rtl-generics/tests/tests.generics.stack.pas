@@ -5,7 +5,7 @@ unit tests.generics.stack;
 interface
 
 uses
-  fpcunit, testregistry, Classes, SysUtils, Generics.Defaults, Generics.Collections;
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, Generics.Defaults, Generics.Collections;
 
 
 Type
@@ -16,7 +16,15 @@ Type
 
   { TTestSimpleStack }
 
-  TTestSimpleStack = Class(TTestCase)
+  TTestSimpleStack = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   Private
     FStack : TMySimpleStack;
     FnotifyMessage : String;
@@ -30,10 +38,10 @@ Type
     procedure DoValueNotify(ASender: TObject; const AItem: String; AAction: TCollectionNotification);
   Public
     Procedure SetExpectValues(aMessage : string; AKeys : Array of String; AActions : Array of TCollectionNotification; DoReverse : Boolean = False);
-    Procedure SetUp; override;
-    Procedure TearDown; override;
+    Procedure SetUp; virtual;
+    Procedure TearDown; virtual;
     Property Stack : TMySimpleStack Read FStack;
-  Published
+  public
     Procedure TestEmpty;
     Procedure TestAdd;
     Procedure TestClear;
@@ -62,21 +70,31 @@ Type
 
   { TTestSingleObjectStack }
 
-  TTestSingleObjectStack = Class(TTestCase)
+  TTestSingleObjectStack = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   private
     FOStack: TSingleObjectStack;
     FList : TFPList;
     procedure DoAdd(aID: Integer);
     procedure DoDestroy(Sender: TObject);
   Public
-    Procedure SetUp; override;
-    Procedure TearDown; override;
+    Procedure SetUp; virtual;
+    Procedure TearDown; virtual;
     Property Stack : TSingleObjectStack Read FOStack;
-  Published
+  public
     Procedure TestEmpty;
     Procedure TestFreeOnPop;
     Procedure TestNoFreeOnPop;
   end;
+
+procedure RegistertestsgenericsstackTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -86,7 +104,7 @@ procedure TTestSingleObjectStack.SetUp;
 begin
   FOStack:=TSingleObjectStack.Create(True);
   FList:=TFPList.Create;
-  inherited SetUp;
+
 end;
 
 procedure TTestSingleObjectStack.TearDown;
@@ -103,13 +121,13 @@ begin
     A.Free;
     end;
   FreeAndNil(FList);
-  inherited TearDown;
+
 end;
 
 procedure TTestSingleObjectStack.TestEmpty;
 begin
-  AssertNotNull('Have object',Stack);
-  AssertEquals('Have empty object',0,Stack.Count);
+  TestContext.AssertTrue((Stack)<>nil, 'Have object');
+  TestContext.AssertTrue((0)=(Stack.Count), 'Have empty object');
 end;
 
 procedure TTestSingleObjectStack.DoAdd(aID : Integer);
@@ -130,7 +148,7 @@ Var
 
 begin
   I:=FList.IndexOf(Sender);
-  AssertTrue('Have object in Stack',I<>-1);
+  TestContext.AssertTrue(I<>-1, 'Have object in Stack');
   FList.Delete(I);
 end;
 
@@ -138,18 +156,18 @@ procedure TTestSingleObjectStack.TestFreeOnPop;
 
 begin
   DoAdd(1);
-  AssertEquals('Have obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have obj');
   Stack.Pop;
-  AssertEquals('Have no obj',0,FList.Count);
+  TestContext.AssertTrue((0)=(FList.Count), 'Have no obj');
 end;
 
 procedure TTestSingleObjectStack.TestNoFreeOnPop;
 begin
   Stack.OwnsObjects:=False;
   DoAdd(1);
-  AssertEquals('Have obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have obj');
   Stack.Pop;
-  AssertEquals('Have  obj',1,FList.Count);
+  TestContext.AssertTrue((1)=(FList.Count), 'Have  obj');
 end;
 
 
@@ -172,7 +190,7 @@ end;
 
 procedure TTestSimpleStack.SetUp;
 begin
-  inherited SetUp;
+
   FStack:=TMySimpleStack.Create;
   FCurrentValueNotify:=0;
   FExpectValues:=[];
@@ -184,13 +202,13 @@ begin
   // So we don't get clear messages
   FStack.OnNotify:=Nil;
   FreeAndNil(FStack);
-  inherited TearDown;
+
 end;
 
 procedure TTestSimpleStack.TestEmpty;
 begin
-  AssertNotNull('Have dictionary',Stack);
-  AssertEquals('empty dictionary',0,Stack.Count);
+  TestContext.AssertTrue((Stack)<>nil, 'Have dictionary');
+  TestContext.AssertTrue((0)=(Stack.Count), 'empty dictionary');
 end;
 
 procedure TTestSimpleStack.DoAdd(aCount : Integer);
@@ -207,17 +225,17 @@ procedure TTestSimpleStack.TestAdd;
 
 begin
   DoAdd(1);
-  AssertEquals('Count OK',1,Stack.Count);
+  TestContext.AssertTrue((1)=(Stack.Count), 'Count OK');
   DoAdd(1);
-  AssertEquals('Count OK',2,Stack.Count);
+  TestContext.AssertTrue((2)=(Stack.Count), 'Count OK');
 end;
 
 procedure TTestSimpleStack.TestClear;
 begin
   DoAdd(3);
-  AssertEquals('Count OK',3,Stack.Count);
+  TestContext.AssertTrue((3)=(Stack.Count), 'Count OK');
   Stack.Clear;
-  AssertEquals('Count after clear OK',0,Stack.Count);
+  TestContext.AssertTrue((0)=(Stack.Count), 'Count after clear OK');
 end;
 
 procedure TTestSimpleStack.DoGetValue(Match: String; ExceptionClass: TClass);
@@ -240,25 +258,25 @@ begin
   if ExceptionClass=Nil then
     begin
     if EC<>Nil then
-      Fail('Got exception '+EC.ClassName+' with message: '+EM);
-    AssertEquals('Value is correct',Match,A)
+      TestContext.Fail('Got exception '+EC.ClassName+' with message: '+EM);
+    TestContext.AssertTrue((Match)=(A), 'Value is correct')
     end
   else
     begin
     if EC=Nil then
-      Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
+      TestContext.Fail('Expected exception '+ExceptionClass.ClassName+' but got none');
     if EC<>ExceptionClass then
-      Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
+      TestContext.Fail('Expected exception class '+ExceptionClass.ClassName+' but got '+EC.ClassName+' with message '+EM);
     end;
 end;
 
 procedure TTestSimpleStack.DoValueNotify(ASender: TObject; const AItem: String; AAction: TCollectionNotification);
 begin
 //  Writeln(FnotifyMessage+' value Notification',FCurrentValueNotify);
-  AssertSame(FnotifyMessage+' value Correct sender', FStack,aSender);
+  TestContext.AssertTrue((FStack)=(aSender), FnotifyMessage+' value Correct sender');
   if (FCurrentValueNotify>=Length(FExpectValues)) then
-    Fail(FnotifyMessage+' Too many value notificiations');
-  AssertEquals(FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify),FExpectValues[FCurrentValueNotify],aItem);
+    TestContext.Fail(FnotifyMessage+' Too many value notificiations');
+  TestContext.AssertTrue((FExpectValues[FCurrentValueNotify])=(aItem), FnotifyMessage+' Notification value no '+IntToStr(FCurrentValueNotify));
   Inc(FCurrentValueNotify);
 end;
 
@@ -272,7 +290,7 @@ begin
   FnotifyMessage:=aMessage;
   FCurrentValueNotify:=0;
   L:=Length(aKeys);
-  AssertEquals('SetExpectValues: Lengths arrays equal',l,Length(aActions));
+  TestContext.AssertTrue((l)=(Length(aActions)), 'SetExpectValues: Lengths arrays equal');
   SetLength(FExpectValues,L);
   SetLength(FExpectValueAction,L);
   Dec(L);
@@ -310,7 +328,7 @@ begin
   DoAdd(3);
   For I:=3 downto 1 do
     begin
-    AssertEquals('Peek ',IntToStr(I),FStack.Peek);
+    TestContext.AssertTrue((IntToStr(I))=(FStack.Peek), 'Peek ');
     DoGetValue(IntToStr(I));
     end;
 end;
@@ -324,7 +342,7 @@ end;
 
 procedure TTestSimpleStack.DoneExpectValues;
 begin
-  AssertEquals(FnotifyMessage+' Expected number of values seen',Length(FExpectValues),FCurrentValueNotify);
+  TestContext.AssertTrue((Length(FExpectValues))=(FCurrentValueNotify), FnotifyMessage+' Expected number of values seen');
 end;
 
 procedure TTestSimpleStack.TestPop;
@@ -338,9 +356,9 @@ begin
   For I:=3 downto 1 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('Value '+SI,SI,FStack.Pop);
+    TestContext.AssertTrue((SI)=(FStack.Pop), 'Value '+SI);
     end;
-  AssertEquals('Count',0,Stack.Count);
+  TestContext.AssertTrue((0)=(Stack.Count), 'Count');
 end;
 
 procedure TTestSimpleStack.TestToArray;
@@ -353,11 +371,11 @@ Var
 begin
   DoAdd(3);
   A:=Stack.ToArray;
-  AssertEquals('Length Ok',3,Length(A));
+  TestContext.AssertTrue((3)=(Length(A)), 'Length Ok');
   For I:=1 to 3 do
     begin
     SI:=IntToStr(I);
-    AssertEquals('Value '+SI,SI,A[i-1]);
+    TestContext.AssertTrue((SI)=(A[i-1]), 'Value '+SI);
     end;
 end;
 
@@ -375,7 +393,7 @@ begin
   For A in Stack do
     begin
     SI:=IntToStr(i);
-    AssertEquals('Value '+SI,SI,A);
+    TestContext.AssertTrue((SI)=(A), 'Value '+SI);
     Inc(I);
     end;
 end;
@@ -397,7 +415,169 @@ begin
   DoneExpectValues;
 end;
 
-begin
-  RegisterTests([ TTestSimpleStack,TTestSingleObjectStack]);
-end.
 
+constructor TTestSimpleStack.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+constructor TTestSingleObjectStack.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestSimpleStackTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestAdd(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestAdd');
+  try
+    lFixture.SetUp;
+    try lFixture.TestAdd; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestClear(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestClear');
+  try
+    lFixture.SetUp;
+    try lFixture.TestClear; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestGetValue(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestGetValue');
+  try
+    lFixture.SetUp;
+    try lFixture.TestGetValue; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestPeek(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestPeek');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPeek; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestPop(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestPop');
+  try
+    lFixture.SetUp;
+    try lFixture.TestPop; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestToArray(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestToArray');
+  try
+    lFixture.SetUp;
+    try lFixture.TestToArray; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestEnumerator(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestEnumerator');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEnumerator; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestValueNotification(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestValueNotification');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotification; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSimpleStackTestValueNotificationDelete(AContext: TNXTestContext);
+var lFixture: TTestSimpleStack;
+begin
+  lFixture:=TTestSimpleStack.Create(AContext, 'TestValueNotificationDelete');
+  try
+    lFixture.SetUp;
+    try lFixture.TestValueNotificationDelete; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectStackTestEmpty(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectStack;
+begin
+  lFixture:=TTestSingleObjectStack.Create(AContext, 'TestEmpty');
+  try
+    lFixture.SetUp;
+    try lFixture.TestEmpty; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectStackTestFreeOnPop(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectStack;
+begin
+  lFixture:=TTestSingleObjectStack.Create(AContext, 'TestFreeOnPop');
+  try
+    lFixture.SetUp;
+    try lFixture.TestFreeOnPop; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestSingleObjectStackTestNoFreeOnPop(AContext: TNXTestContext);
+var lFixture: TTestSingleObjectStack;
+begin
+  lFixture:=TTestSingleObjectStack.Create(AContext, 'TestNoFreeOnPop');
+  try
+    lFixture.SetUp;
+    try lFixture.TestNoFreeOnPop; finally lFixture.TearDown; end;
+  finally lFixture.Free; end;
+end;
+
+procedure RegistertestsgenericsstackTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('tests.generics.stack.TTestSimpleStack');
+  lSuite.AddTest('TestEmpty', @RunTTestSimpleStackTestEmpty);
+  lSuite.AddTest('TestAdd', @RunTTestSimpleStackTestAdd);
+  lSuite.AddTest('TestClear', @RunTTestSimpleStackTestClear);
+  lSuite.AddTest('TestGetValue', @RunTTestSimpleStackTestGetValue);
+  lSuite.AddTest('TestPeek', @RunTTestSimpleStackTestPeek);
+  lSuite.AddTest('TestPop', @RunTTestSimpleStackTestPop);
+  lSuite.AddTest('TestToArray', @RunTTestSimpleStackTestToArray);
+  lSuite.AddTest('TestEnumerator', @RunTTestSimpleStackTestEnumerator);
+  lSuite.AddTest('TestValueNotification', @RunTTestSimpleStackTestValueNotification);
+  lSuite.AddTest('TestValueNotificationDelete', @RunTTestSimpleStackTestValueNotificationDelete);
+  lSuite:=ARegistry.AddSuite('tests.generics.stack.TTestSingleObjectStack');
+  lSuite.AddTest('TestEmpty', @RunTTestSingleObjectStackTestEmpty);
+  lSuite.AddTest('TestFreeOnPop', @RunTTestSingleObjectStackTestFreeOnPop);
+  lSuite.AddTest('TestNoFreeOnPop', @RunTTestSingleObjectStackTestNoFreeOnPop);
+end;
+
+end.

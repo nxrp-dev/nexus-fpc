@@ -5,21 +5,31 @@ unit utestpem;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, basenenc,
+  obNXTestContext, obNXTestRegistry, obNXTestSuite, Classes, SysUtils, basenenc,
   fpTLSBigInt, fppem, fprsa, fphashutils, fpecc;
 
 Type
 
   { TTestPEM }
 
-  TTestPEM = Class(TTestCase)
+  TTestPEM = class(TObject)
+  private
+    FContext: TNXTestContext;
+    FCaseName: string;
+  protected
+    property TestContext: TNXTestContext read FContext;
+    property CaseName: string read FCaseName;
+  public
+    constructor Create(AContext: TNXTestContext; const ACaseName: string);
   protected
     procedure GetPEM_PrivateKeyRSA2048bit(out PrivatePEM, PublicPEM: Ansistring);
-  Published
+  public
     Procedure TestECC_Load;
     Procedure TestRSA_RS256Verify;
     Procedure TestRSA_PrivatePublicPEM_NoPassphrase;
   end;
+
+procedure RegisterutestpemTests(ARegistry: TNXTestRegistry);
 
 implementation
 
@@ -115,16 +125,16 @@ begin
     PrivateKey:=Default(TEccPrivateKey);
     PublicKey:=Default(TEccPublicKey);
     Res:=FileExists(PrivateKeyFile) and PemIsECDSA(PrivateKeyFile, List);
-    AssertTrue('Have file with Key',Res);
+    TestContext.AssertTrue(Res, 'Have file with Key');
     if Res then
       PemLoadPublicKey64FromList(List, PrivateKey, PublicKey, PublicKeyX64, PublicKeyY64);
-    AssertEquals('Private key',resprivatekey,BytesToHexStr(BytesFromVar(@PrivateKey,Sizeof(PrivateKey))));
-    AssertEquals('Public  key',respublickey,BytesToHexStr(BytesFromVar(@PublicKey,Sizeof(PublicKey))));
-    AssertEquals('X',resX,PublicKeyX64);
-    AssertEquals('Y',resY,PublicKeyY64);
+    TestContext.AssertTrue((resprivatekey)=(BytesToHexStr(BytesFromVar(@PrivateKey,Sizeof(PrivateKey)))), 'Private key');
+    TestContext.AssertTrue((respublickey)=(BytesToHexStr(BytesFromVar(@PublicKey,Sizeof(PublicKey)))), 'Public  key');
+    TestContext.AssertTrue((resX)=(PublicKeyX64), 'X');
+    TestContext.AssertTrue((resY)=(PublicKeyY64), 'Y');
     XHex:=base16.Encode(base64url.Decode(PublicKeyX64),False);
     YHex:=base16.Encode(base64url.Decode(PublicKeyY64),False);
-    AssertEquals('Public as X,Y',ResXY,LowerCase(XHex+YHex));
+    TestContext.AssertTrue((ResXY)=(LowerCase(XHex+YHex)), 'Public as X,Y');
 
 //    Writeln('X ', PublicKeyX64,' -> ',XHex);
 //    Writeln('Y ', PublicKeyY64,' -> ',YHex);
@@ -136,7 +146,7 @@ end;
 procedure TTestPEM.TestRSA_RS256Verify;
 begin
   if not fprsa.TestRS256Verify then
-    Fail('TestRS256Verify');
+    TestContext.Fail('TestRS256Verify');
 end;
 
 procedure TTestPEM.TestRSA_PrivatePublicPEM_NoPassphrase;
@@ -156,20 +166,20 @@ begin
     // load public key
     DER:=PemToDER(PublicPEM,_BEGIN_PUBLIC_KEY,_END_PUBLIC_KEY);
     if length(DER)=0 then
-      Fail('PemToDER public key');
+      TestContext.Fail('PemToDER public key');
     RSAInitFromPublicKeyDER(PublicRSA,DER);
 
     // load private key
     DER:=PemToDER(PrivatePEM,_BEGIN_RSA_PRIVATE_KEY,_END_RSA_PRIVATE_KEY);
     if length(DER)=0 then
-      Fail('PemToDER private rsa key');
+      TestContext.Fail('PemToDER private rsa key');
     RSAInitFromPrivateKeyDER(PrivateRSA,DER);
 
-    AssertEquals('PublicRSA.ModulusLen=PrivateRSA.ModulusLen',PublicRSA.ModulusLen,PrivateRSA.ModulusLen);
+    TestContext.AssertTrue((PublicRSA.ModulusLen)=(PrivateRSA.ModulusLen), 'PublicRSA.ModulusLen=PrivateRSA.ModulusLen');
     if BICompare(PublicRSA.M,PrivateRSA.M)<>0 then
-      Fail('PublicRSA.M = PrivateRSA.M');
+      TestContext.Fail('PublicRSA.M = PrivateRSA.M');
     if BICompare(PublicRSA.E,PrivateRSA.E)<>0 then
-      Fail('PublicRSA.E = PrivateRSA.E');
+      TestContext.Fail('PublicRSA.E = PrivateRSA.E');
 
     Original:=SecretMsg;
 
@@ -177,17 +187,17 @@ begin
     SetLength(Encrypted{%H-},PublicRSA.ModulusLen);
     EncryptedLen:=RSAEncryptSign(PublicRSA,@Original[1],length(Original),@Encrypted[1],false);
     if EncryptedLen<PublicRSA.ModulusLen then
-      AssertEquals('EncryptedLen = ModulusLen',EncryptedLen,PublicRSA.ModulusLen);
+      TestContext.AssertTrue((EncryptedLen)=(PublicRSA.ModulusLen), 'EncryptedLen = ModulusLen');
 
     // decrypt with private key
     SetLength(Decrypted{%H-},EncryptedLen);
     DecryptedLen:=RSADecryptVerify(PrivateRSA,@Encrypted[1],@Decrypted[1],EncryptedLen,false);
 
     if DecryptedLen<>length(Original) then
-      AssertEquals('DecryptedLen = length(Original)',DecryptedLen,length(Original));
+      TestContext.AssertTrue((DecryptedLen)=(length(Original)), 'DecryptedLen = length(Original)');
     SetLength(Decrypted,DecryptedLen);
     if Decrypted<>Original then
-      Fail('Decrypted = Original');
+      TestContext.Fail('Decrypted = Original');
 
   finally
     RSAFree(PublicRSA);
@@ -195,7 +205,48 @@ begin
   end;
 end;
 
-initialization
-  RegisterTest(TTestPEM);
-end.
 
+constructor TTestPEM.Create(AContext: TNXTestContext; const ACaseName: string);
+begin
+  inherited Create;
+  FContext:=AContext;
+  FCaseName:=ACaseName;
+end;
+
+procedure RunTTestPEMTestECC_Load(AContext: TNXTestContext);
+var lFixture: TTestPEM;
+begin
+  lFixture:=TTestPEM.Create(AContext, 'TestECC_Load');
+  try
+    lFixture.TestECC_Load;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPEMTestRSA_RS256Verify(AContext: TNXTestContext);
+var lFixture: TTestPEM;
+begin
+  lFixture:=TTestPEM.Create(AContext, 'TestRSA_RS256Verify');
+  try
+    lFixture.TestRSA_RS256Verify;
+  finally lFixture.Free; end;
+end;
+
+procedure RunTTestPEMTestRSA_PrivatePublicPEM_NoPassphrase(AContext: TNXTestContext);
+var lFixture: TTestPEM;
+begin
+  lFixture:=TTestPEM.Create(AContext, 'TestRSA_PrivatePublicPEM_NoPassphrase');
+  try
+    lFixture.TestRSA_PrivatePublicPEM_NoPassphrase;
+  finally lFixture.Free; end;
+end;
+
+procedure RegisterutestpemTests(ARegistry: TNXTestRegistry);
+var lSuite: TNXTestSuite;
+begin
+  lSuite:=ARegistry.AddSuite('utestpem.TTestPEM');
+  lSuite.AddTest('TestECC_Load', @RunTTestPEMTestECC_Load);
+  lSuite.AddTest('TestRSA_RS256Verify', @RunTTestPEMTestRSA_RS256Verify);
+  lSuite.AddTest('TestRSA_PrivatePublicPEM_NoPassphrase', @RunTTestPEMTestRSA_PrivatePublicPEM_NoPassphrase);
+end;
+
+end.
